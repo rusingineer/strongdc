@@ -34,7 +34,7 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, C
 	ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
-	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(NULL) { };
+	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), leftMargin(0) { };
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;
@@ -91,44 +91,6 @@ public:
 		int cnt;
 	};
 
-	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-		if (!hBrBg) {
-			bHandled = FALSE;
-			return S_OK;
-		}
-		bHandled = TRUE;
-		HDC dc = (HDC)wParam;
-		int n = GetItemCount();
-		RECT r = {0, 0, 0, 0}, full;
-		GetClientRect(&full);
-
-		if (n > 0) {
-			GetItemRect(0, &r, LVIR_BOUNDS);
-			r.bottom = r.top + ((r.bottom - r.top) * n);
-		}
-
-		RECT full2 = full; // Keep a backup
-
-		full.right = 3;
-		full.left = 0;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.left = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.top = r.bottom;
-		full.right = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		return S_OK;
-	}
-
-	void setFlickerFree(HBRUSH flickerBrush) {
-		hBrBg = flickerBrush;
-	}
-
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
@@ -168,6 +130,57 @@ public:
 
 		strcpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;
+	}
+
+	void setLeftEraseBackgroundMargin(int _leftMargin)
+	{
+		leftMargin = _leftMargin;
+	}
+
+	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+		bHandled = FALSE;
+		if(!leftMargin) 
+			return 0;
+
+		HBRUSH hBrBg = (HBRUSH)GetClassLong(m_hWnd, GCL_HBRBACKGROUND);
+		dcassert(hBrBg);
+		if(!hBrBg) return 0;
+
+		bHandled = TRUE;
+		HDC dc = (HDC)wParam;
+		int n = GetItemCount();
+		RECT r = {0, 0, 0, 0}, full;
+		GetClientRect(&full);
+
+
+
+		if (n > 0) {
+			GetItemRect(0, &r, LVIR_BOUNDS);
+			r.bottom = r.top + ((r.bottom - r.top) * n);
+		}
+
+		RECT full2 = full; // Keep a backup
+
+
+		full.bottom = r.top;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.right = r.left + leftMargin; // state image
+		//full.left = 0;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.left = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.top = r.bottom;
+		full.right = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		
+		return S_OK;
 	}
 
 	// Sorting
@@ -283,7 +296,18 @@ public:
 				high = mid - 1;
 			} else if(comp == 1) {
 				low = mid + 1;
+			} else if(comp == 2){
+				if(sortAscending)
+					low = mid + 1;
+				else
+					high = mid -1;
+			} else if(comp == -2){
+				if(!sortAscending)
+					low = mid + 1;
+				else
+					high = mid -1;
 			}
+
 		}
 
 		comp = T::compareItems(a, b, sortColumn);
@@ -301,7 +325,7 @@ public:
 	}
 	int getSortColumn() { return sortColumn; }
 	bool isAscending() { return sortAscending; }
-	void setAscending(bool asc){sortAscending = asc;updateArrow();}
+	void setAscending(bool s) {sortAscending = s;}
 
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
@@ -310,11 +334,17 @@ private:
 
 	int sortColumn;
 	bool sortAscending;
-	HBRUSH hBrBg;
+	int leftMargin;
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
 		int result = T::compareItems((T*)lParam1, (T*)lParam2, t->sortColumn);
+
+		if(result == 2)
+			result = (t->sortAscending ? 1 : -1);
+		else if(result == -2)
+			result = (t->sortAscending ? -1 : 1);
+
 		return (t->sortAscending ? result : -result);
 	}
 };

@@ -6,7 +6,6 @@
 * automatické odstraòování pomalých zdrojù lze vypnout
 * zmìnìn vzhled dialogu pøi pádu programu
 * zmìnìn styl nabídek na XP (zDC++)
-* vylepšena minimální velikost segmentu
 * pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
 * vylepšeno pøijímání pøíkazù od klientù (CZDC++)
 * opraven problém se stejnými pøezdívkami na Toomaxxu
@@ -28,10 +27,8 @@
 * opraven bug v DC++ emulaci (THX PPK)
 * opravena nemožnost stahovat od klientù založených na DC++ 0.402 CVS a vyšších
 * spouštìcí logo není Vždy na vrchu
-* zmìna v userfiltru (DCDM++)
 * opraven memory leak v SearchFrame
 * pøidány ikonky online/offline/away do Oblíbených uživatelù
-* znovu pøidáno Mapování souboru v pamìti, standardnì vypnuto (RevConnect)
 * pøidáno nìkolik nových zvukových událostí
 * pøidána kontrola uživatele, který se pøipojí na hub
 * opraveno naèítání RAW pøíkazù
@@ -41,6 +38,8 @@
 * pøedìlán userfilter + regulérní pøíkazy
 * pøidán filtr do hledání (podporuje regulérní pøíkazy)
 * když je k dispozici Tiger Tree, jsou pøi poškozeném soubor staženy pouze chybné bloky
+* odstranìna volba pro neposílání tagu
+* zmìny podle RevConnectu 0.403b
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

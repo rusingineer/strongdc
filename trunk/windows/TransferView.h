@@ -149,7 +149,7 @@ private:
 	class ItemInfo;	
 	int PreviewAppsSize;
 public:
-	TypedListViewCtrlCleanup<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
+	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
 private:
 	enum {
 		ADD_ITEM,
@@ -276,7 +276,7 @@ private:
 	ItemInfo::Map transferItems;
 	ItemInfo::List mainItems;
 
-	TypedListViewCtrlCleanup<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
+	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
 	static int columnSizes[];
 
@@ -314,6 +314,7 @@ private:
 	void ExpandAll();
 	void Expand(ItemInfo* i, int a);
 	void setMainItem(ItemInfo* i);
+	void insertSubItem(ItemInfo* j, int idx);
 
 };
 

@@ -39,7 +39,6 @@ PropPage::Item CZDCPage::items[] = {
 
 CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::FLOOD_CACHE, ResourceManager::SETTINGS_ODC_FLOOD_CACHE },
-	{ SettingsManager::MEMORY_MAPPED_FILE, ResourceManager::SETTINGS_MEMORY_MAPPED_FILE },
 	{ SettingsManager::EMPTY_WORKING_SET, ResourceManager::SETTINGS_EMPTY_WORKING_SET },
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
 	{ SettingsManager::CHECK_TTH, ResourceManager::CHECK_TTH_AFTER_DOWNLOAD },
