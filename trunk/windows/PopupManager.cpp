@@ -61,6 +61,11 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	//Create a new popup
 	PopupWnd *p = new PopupWnd(aMsg, aTitle, rc);
 			
+	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
+		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
+		SetLayeredWindowAttributes(p->m_hWnd, 0, 200, LWA_ALPHA);
+	}
+
 	//move the window to the top of the z-order and display it
 	p->SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 	p->ShowWindow(SW_SHOWNA);

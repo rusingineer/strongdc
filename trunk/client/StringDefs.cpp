@@ -785,6 +785,7 @@ string ResourceManager::strings[] = {
 "Reason", 
 "Private message arrived", 
 "Popup type", 
+"Background image", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1570,4 +1571,5 @@ string ResourceManager::names[] = {
 "Reason", 
 "PrivateMessage", 
 "PopupType", 
+"BackgroundImage", 
 };

@@ -788,5 +788,6 @@ enum Strings { // @DontAdd
 	REASON, // "Reason"
 	PRIVATE_MESSAGE, // "Private message arrived"
 	POPUP_TYPE, // "Popup type"
+	BACKGROUND_IMAGE, // "Background image"
 	LAST // @DontAdd
 };

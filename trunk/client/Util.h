@@ -654,6 +654,9 @@ struct noCaseStringHash {
 
 /** Case insensitive string comparison */
 struct noCaseStringEq {
+	bool operator()(const string* a, const string* b) const {
+		return a == b || Util::stricmp(*a, *b) == 0;
+	}
 	bool operator()(const string& a, const string& b) const {
 		return Util::stricmp(a.c_str(), b.c_str()) == 0;
 	}
@@ -661,6 +664,9 @@ struct noCaseStringEq {
 
 /** Case insensitive string ordering */
 struct noCaseStringLess {
+	bool operator()(const string* a, const string* b) const {
+		return Util::stricmp(*a, *b) < 0;
+	}
 	bool operator()(const string& a, const string& b) const {
 		return Util::stricmp(a.c_str(), b.c_str()) < 0;
 	}

@@ -28,6 +28,7 @@
 #include "../client/CriticalSection.h"
 #include "../client/ConnectionManagerListener.h"
 #include "../client/ConnectionManager.h"
+#include "../client/HashManager.h"
 
 #include "OMenu.h"
 #include "UCHandler.h"
@@ -38,6 +39,7 @@
 
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
+	private HashManagerListener,
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>
 {
 public:
@@ -357,6 +359,10 @@ private:
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
 	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true); }
+
+	virtual void on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw() { }
+	virtual void on(HashManagerListener::Finished) throw() { }
+	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw();
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload);
 

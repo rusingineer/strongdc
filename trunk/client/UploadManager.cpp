@@ -103,16 +103,11 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		return false;
 	}
 
-	File* f;
-	try {
-		f = new File(file, File::READ, File::OPEN);
-	} catch(const FileException&) {
-		aSource->fileNotAvail();
-		return false;
-	}
-
 	if(aType == "file") {
 		userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
+
+		try {
+			File* f = new File(file, File::READ, File::OPEN);
 
 			size = f->getSize();
 
@@ -135,12 +130,16 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if((aStartPos + aBytes) < size) {
 				is = new LimitedInputStream<true>(is, aBytes);
 			}	
+
+		} catch(const Exception&) {
+			aSource->fileNotAvail();
+			return false;
+		}
+
 	} else if(aType == "tthl") {
-		free = f->getSize() <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024);
-		delete f;
 		// TTH Leaves...
 		TigerTree tree;
-		if(!HashManager::getInstance()->getTree(file, tree)) {
+		if(!HashManager::getInstance()->getTree(file, NULL, tree)) {
 			aSource->fileNotAvail();
 			return false;
 	}
@@ -151,6 +150,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		is = new TreeInputStream<TigerHash>(tree);	
 		leaves = true;
 		
+		free = true;
+
 	} else {
 		aSource->fileNotAvail();
 				return false;

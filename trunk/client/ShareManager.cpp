@@ -732,10 +732,14 @@ void ShareManager::generateNmdcList() {
 }
 
 static const string& escaper(const string& n, string& tmp) {
-	if(SimpleXML::needsEscape(n, false, false)) {
+/*	if(SimpleXML::needsEscape(n, false, false)) {
 		tmp.clear();
 		tmp.append(n);
 		return SimpleXML::escape(tmp, false, false);
+	}*/
+	if(Util::needsUtf8(n) || SimpleXML::needsEscape(n, false, false)) {
+		tmp = n;
+		return SimpleXML::escape(Util::toUtf8(tmp), false, false);
 	}
 	return n;
 }
@@ -768,7 +772,7 @@ void ShareManager::Directory::toNmdc(string& nmdc, string& indent, string& tmp2)
 void ShareManager::Directory::toXml(OutputStream& xmlFile, string& indent, string& tmp2) {
 	xmlFile.write(indent);
 	xmlFile.write(LITERAL("<Directory Name=\""));
-	xmlFile.write(escaper(Util::toUtf8(name, tmp2), tmp2));
+	xmlFile.write(escaper(name, tmp2));
 	xmlFile.write(LITERAL("\">\r\n"));
 
 	indent += '\t';
@@ -781,7 +785,7 @@ void ShareManager::Directory::toXml(OutputStream& xmlFile, string& indent, strin
 
 		xmlFile.write(indent);
 		xmlFile.write(LITERAL("<File Name=\""));
-		xmlFile.write(escaper(Util::toUtf8(f.getName(), tmp2), tmp2));
+		xmlFile.write(escaper(f.getName(), tmp2));
 		xmlFile.write(LITERAL("\" Size=\""));
 		xmlFile.write(Util::toString(f.getSize()));
 		if(f.getTTH()) {

@@ -822,6 +822,9 @@
 				RelativePath=".\windows\OperaColorsPage.h">
 			</File>
 			<File
+				RelativePath=".\windows\picturewindow.h">
+			</File>
+			<File
 				RelativePath=".\windows\PopupDlg.h">
 			</File>
 			<File

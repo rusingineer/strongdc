@@ -55,6 +55,7 @@ public:
 		COMMAND_HANDLER(IDC_SETTINGS_ODC_MENUBAR_USETWO, BN_CLICKED, onMenubarClicked)
 		COMMAND_HANDLER(IDC_SETTINGS_ODC_MENUBAR_BUMPED, BN_CLICKED, onMenubarClicked)
 		COMMAND_HANDLER(IDC_IMAGEBROWSE, BN_CLICKED, onImageBrowse)
+		COMMAND_HANDLER(IDC_IMAGEBROWSE2, BN_CLICKED, onImageBrowse)
 
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 	END_MSG_MAP()
@@ -122,7 +123,7 @@ private:
 	CButton ctrlProgressUpDrawer;
 	CButton ctrlProgressSegmentDrawer;
 
-		void checkBox(int id, bool b) {
+	void checkBox(int id, bool b) {
 		CheckDlgButton(id, b ? BST_CHECKED : BST_UNCHECKED);
 	}
 	bool getCheckbox(int id) {

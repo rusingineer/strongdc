@@ -531,7 +531,10 @@ bool User::connectionTimeout() {
 	if(connectionTimeouts == 10) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 		updated();
-		QueueManager::getInstance()->removeTestSUR(nick);
+		try {
+			QueueManager::getInstance()->removeTestSUR(nick);
+		} catch(...) {
+		}
 		sendRawCommand(SETTING(TIMEOUT_RAW));
 		return true;
 	}

@@ -211,9 +211,9 @@ public:
 		QueueItem::StringMap& getQueue() { return queue; };
 		void move(QueueItem* qi, const string& aTarget);
 		void remove(QueueItem* qi) {
-			if(lastInsert != queue.end() && lastInsert->first == qi->getTarget())
+			if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
 				lastInsert = queue.end();
-			queue.erase(qi->getTarget());
+			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 				FileChunksInfo::Free(qi->getTempTarget());

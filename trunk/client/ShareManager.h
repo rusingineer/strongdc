@@ -272,6 +272,7 @@ private:
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw();
 	virtual void on(HashManagerListener::Finished) throw();
+	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw() { }
 
 	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {
