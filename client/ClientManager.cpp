@@ -230,6 +230,30 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	return i->second;
 }
 
+void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto) {
+	Lock l(cs);
+
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		if((*i)->isConnected()) {
+			(*i)->search(aSizeMode, aSize, aFileType, aString, _auto);
+		}
+	}
+}
+
+void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString) {
+	Lock l(cs);
+
+	for(StringIter it = who.begin(); it != who.end(); ++it) {
+		string& client = *it;
+		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
+			Client* c = *j;
+			if(c->isConnected() && c->getIpPort() == client) {
+				c->search(aSizeMode, aSize, aFileType, aString);
+			}
+		}
+	}
+}
+
 void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	{
 		Lock l(cs);

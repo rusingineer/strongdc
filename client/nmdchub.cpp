@@ -819,7 +819,7 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
-	string tmp = toNmdc(aString);
+	string tmp = toNmdc((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : aString);
 	string::size_type i;
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';

@@ -762,9 +762,14 @@ void QueueFrame::moveSelectedDir() {
 }
 
 void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
+	tstring t(target);
+
+	if(t[t.length() - 1] != PATH_SEPARATOR)
+		t += PATH_SEPARATOR;
+
 	HTREEITEM next = ctrlDirs.GetChildItem(ht);
 	while(next != NULL) {
-		moveDir(next, target + Util::getLastDir(getDir(next)));
+		moveDir(next, t + Util::getLastDir(getDir(next)));
 		next = ctrlDirs.GetNextSiblingItem(next);
 	}
 	tstring* s = (tstring*)ctrlDirs.GetItemData(ht);
@@ -773,7 +778,7 @@ void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 	
 	for(DirectoryIter i = p.first; i != p.second; ++i) {
 		QueueItemInfo* qi = i->second;
-		QueueManager::getInstance()->move(Text::fromT(qi->getTarget()), Text::fromT(target + qi->getTargetFileName()));
+		QueueManager::getInstance()->move(Text::fromT(qi->getTarget()), Text::fromT(t + qi->getTargetFileName()));
 	}			
 }
 
@@ -950,7 +955,7 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		
 		if(ii->getTTH() != NULL) {
-			SearchFrame::openWindow(Text::toT(ii->getTTH()->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			WinUtil::searchHash(ii->getTTH());
 		} else {
 			tstring searchString = Text::toT(SearchManager::clean(Text::fromT(ii->getTargetFileName())));
 			

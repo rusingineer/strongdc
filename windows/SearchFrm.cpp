@@ -465,12 +465,9 @@ void SearchFrame::onEnter() {
 	ctrlStatus.SetText(2, _T(""));
 	ctrlStatus.SetText(3, _T(""));
 	droppedResults = 0;
-	isHash = (ftype == SearchManager::TYPE_HASH);
+	isHash = (ftype == SearchManager::TYPE_TTH);
 
 	SetWindowText((TSTRING(SEARCH) + _T(" - ") + s).c_str());
-
-	if(ftype == SearchManager::TYPE_HASH)
-		s = _T("TTH:") + s;
 
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
 		(SearchManager::TypeModes)ftype, mode);

@@ -167,9 +167,9 @@ public:
 protected:
 	struct Counts {
 		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
-		long normal;
-		long registered;
-		long op;
+		volatile long normal;
+		volatile long registered;
+		volatile long op;
 		bool operator !=(const Counts& rhs) { return normal != rhs.normal || registered != rhs.registered || op != rhs.op; };
 	};
 

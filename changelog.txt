@@ -41,13 +41,16 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven problém pøi sdílení celé koøenové složky
 * nástroj pro zjištìní TTH hashuje ve vlastním threadu (THX Prologic)
 * pøidána položka pro otevøení stavu hashování do hlavního menu (fulDC)
-* opraveno stažení souboru pokud existuje doèasný soubory stejné velikosti
+* opraveno stažení souboru pokud již existuje doèasný soubor plné velikosti
 * aktualizováno na ZLIB 1.2.2
 * odstranìno odstraòování diakritiky
 * zmìna barev se projeví ihned (CZDC++)
 * pøidány vlajky státù (CZDC++)
 * aktivní/pasivní režim lze zvolit pro každý oblíbený hub
 * pøidána položka Otevøít vlastní seznam souborù do hlavního menu (fulDC)
+* vylepšeno odpojování pomalých stahování (sekundy; pouze pøi segm. stahování)
+* opraveno pøesouvání podsložek ve frontì
+* pøidána podpora protokolu file:// do chatu
 
 
 	-- StrongDC++ 1.00 RC8 --

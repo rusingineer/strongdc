@@ -708,8 +708,11 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
 		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? TSTRING(CONNECTING) : TSTRING(WAITING_TO_RETRY);
-		if(i->statusString == TSTRING(CONNECTING)) i->status = ItemInfo::STATUS_WAITING;
-		else i->status = ItemInfo::STATUS_RUNNING;
+		if(i->statusString == TSTRING(CONNECTING)) {
+			i->status = ItemInfo::STATUS_WAITING;
+		} else {
+			i->status = ItemInfo::STATUS_RUNNING;
+		}
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
@@ -720,13 +723,12 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				i->file = Text::toT(Util::getFileName(qi->getTarget()));
 				i->path = Text::toT(Util::getFilePath(qi->getTarget()));
 				i->size = qi->getSize();				
-				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 				i->Target = Text::toT(qi->getTarget());
 				i->downloadTarget = Text::toT(qi->getTempTarget());
 				i->qi = qi;
 				i->tth = qi->getTTH();
 			}
-	
+			i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 			dcdebug("OnConnectionStatus\n");
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
@@ -1038,8 +1040,8 @@ void TransferView::on(HashManagerListener::Verifying, const string& fileName, in
 
 		int64_t hashedSize = i->size - remainingBytes;
 
-		i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
-		i->upper->statusString = i->statusString;
+		//i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
+		i->upper->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1131,7 +1133,7 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
-				i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
+				//i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 				i->upper->finished = true;
 			}
 
@@ -1267,8 +1269,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 			dcdebug("3. cyklus\n");
 			h->pocetUseru -= 1;
 
-			h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
-
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 
 			i->upper = findMainItem(i->Target);
@@ -1289,6 +1289,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 					}
 					PostMessage(WM_SPEAKER, UNSET_STATE, (LPARAM)h);
 				}
+				h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 				PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 			}
 		}

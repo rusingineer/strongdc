@@ -348,14 +348,14 @@ void PrivateFrame::onEnter()
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	ClientManager::getInstance()->removeListener(this);
+		ClientManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-	Lock l(cs);
-	frames.erase(user);
+		Lock l(cs);
+		frames.erase(user);
 
 		bHandled = FALSE;
 		return 0;

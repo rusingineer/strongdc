@@ -343,7 +343,7 @@ void WinUtil::init(HWND hWnd) {
 	file.CreatePopupMenu();
 
 	file.AppendMenu(MF_STRING, IDC_OPEN_FILE_LIST, CTSTRING(MENU_OPEN_FILE_LIST));
-	file.AppendMenu(MF_STRING, IDC_OPEN_MY_LIST, CTSTRING(MENU_OPEN_MY_LIST));
+	file.AppendMenu(MF_STRING, IDC_OPEN_MY_LIST, CTSTRING(MENU_OPEN_OWN_LIST));
 	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
 	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -1029,7 +1029,7 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	// this data within DC++, we must identify the client/mod in the user agent, so abuse can be 
 	// tracked down and the code can be fixed
 	if(aHash != NULL) {
-		openLink(Text::toT("http://bitzi.com/lookup/tree:tiger:" + aHash->toBase32()));
+		openLink(_T("http://bitzi.com/lookup/tree:tiger:") + Text::toT(aHash->toBase32()));
 	}
 }
 
@@ -1039,13 +1039,13 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	}
 }
 
-void WinUtil::searchHash(TTHValue* aHash) {
+ void WinUtil::searchHash(TTHValue* aHash) {
 	 if(aHash != NULL) {
-		SearchFrame::openWindow(Text::toT(aHash->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+		SearchFrame::openWindow(Text::toT(aHash->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_TTH);
  	}
-}
+ }
 
-void WinUtil::registerDchubHandler() {
+ void WinUtil::registerDchubHandler() {
 	HKEY hk;
 	TCHAR Buf[512];
 	tstring app = _T("\"") + Text::toT(Util::getAppName()) + _T("\" %1");
@@ -1303,7 +1303,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 						QueueManager::getInstance()->add(Text::fromT(fname), fsize, Text::fromT(fhash));
 						break;
 					case SettingsManager::MAGNET_AUTO_SEARCH:
-						SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+						SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_TTH);
 						break;
 				};
 			} else {
@@ -1345,7 +1345,8 @@ bool WinUtil::parseDBLClick(const tstring& aString, string::size_type start, str
 		(Util::strnicmp(aString.c_str() + start, _T("www."), 4) == 0) ||
 		(Util::strnicmp(aString.c_str() + start, _T("ftp://"), 6) == 0) ||
 		(Util::strnicmp(aString.c_str() + start, _T("irc://"), 6) == 0) ||
-		(Util::strnicmp(aString.c_str() + start, _T("https://"), 8) == 0) )	
+		(Util::strnicmp(aString.c_str() + start, _T("https://"), 8) == 0) ||
+		(Util::strnicmp(aString.c_str() + start, _T("file://"), 7) == 0) )
 	{
 
 		openLink(aString.substr(start, end-start));

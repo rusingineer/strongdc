@@ -406,7 +406,17 @@ void ShareManager::renameDirectory(const string& oName, const string& nName) thr
 	} else {
 		// Valid newName, lets rename
 		i->first = nName;
+
+		//rename the directory, so it will be updated once
+		//a new list is generated.
+		if( directories.find(i->second) != directories.end() ) {
+			directories.find(i->second)->second->setName(nName);
+		}
 	}
+
+	//Do not call setDirty here since there might be more
+	//dirs that should be renamed, this is to avoid creating
+	//a new list during renaming.
 }
 
 int64_t ShareManager::getShareSize(const string& aDir) throw() {
@@ -1118,7 +1128,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 
 void ShareManager::search(SearchResult::List& results, const string& aString, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults) {
 	RLock l(cs);
-	if(aFileType == SearchManager::TYPE_HASH) {
+	if(aFileType == SearchManager::TYPE_TTH) {
 		if(aString.compare(0, 4, "TTH:") == 0) {
 			TTHValue tth(aString.substr(4));
 			HashFileIter i = tthIndex.find(&tth);

@@ -45,7 +45,6 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
 	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
-	{ SettingsManager::AUTO_DROP_SOURCE, ResourceManager::SETTINGS_AUTO_DROP_SOURCE },
 	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
 	{ SettingsManager::REALTIME_QUEUE_UPDATE, ResourceManager::QUEUE_UPDATING },
