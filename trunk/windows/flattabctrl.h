@@ -82,10 +82,15 @@ public:
 		TabInfo* ti = *i;
 		if(active == ti)
 			active = NULL;
+		if(moving == ti)
+			moving = NULL;
 		delete ti;
 		tabs.erase(i);
-		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
-		viewOrder.erase(find(viewOrder.begin(), viewOrder.end(), aWnd));
+		WindowIter foundTab = find(viewOrder.begin(), viewOrder.end(), aWnd);
+		dcassert(foundTab != viewOrder.end());
+		if (foundTab != viewOrder.end())
+			viewOrder.erase(foundTab);
+
 		nextTab = viewOrder.end();
 		if(!viewOrder.empty())
 			--nextTab;

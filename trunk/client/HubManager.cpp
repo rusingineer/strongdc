@@ -626,7 +626,6 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
-
 	dontSave = false;
 }
 
@@ -684,6 +683,7 @@ void HubManager::refresh() {
 		c->downloadFile(publicListServer);
 		running = true;
 	}
+
 }
 
 UserCommand::List HubManager::getUserCommands(int ctx, const string& hub, bool op) {

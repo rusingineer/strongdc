@@ -895,7 +895,8 @@ again:
 
 	int64_t freeBlock = 0;
 
-	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)) {
+	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)
+		 && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
 		message = STRING(ALL_FILE_SLOTS_TAKEN);		
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		if(q == NULL) reuse = false;

@@ -93,7 +93,7 @@ Command Download::getCommand(bool zlib, bool tthf) {
 	if(!BOOLSETTING(OLD_SEGMENTED_DWNLDING) && !isSet(FLAG_TREE_DOWNLOAD)) {
 		FileChunksInfo::Ptr chunks = FileChunksInfo::Get(getTempTarget());
 		int64_t blockSize = chunks->GetBlockEnd(getStartPos()) - getStartPos();
-		int64_t needToDownload = min((int64_t)(1024*1024),(int64_t)(getSize() - getPos()));
+		int64_t needToDownload = min((int64_t)(chunks->iSmallestBlockSize / 2),(int64_t)(getSize() - getPos()));
 		setSegmentSize(min(blockSize, needToDownload));
 		cmd.addParam(Util::toString(getSegmentSize()));
 	} else {
@@ -408,6 +408,7 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 		}
 
 		if(prepareFile(aSource, (bytes == -1) ? -1 : (BOOLSETTING(OLD_SEGMENTED_DWNLDING) ? (aSource->getDownload()->getPos() + bytes) : aSource->getDownload()->getSize()))) {
+			aSource->getDownload()->setSegmentSize(bytes);
 			aSource->setDataMode();
 		}
 	}
@@ -607,13 +608,14 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 
 	aSource->setState(UserConnection::STATE_DONE);
 
-	if(!aSource->getIsRunning()) {
+	if(aSource->getIsRunningFile() != d->getTarget()) {
 		if(q != NULL && q->getActiveSegments().size() == 1) {
 			q->setStart(GET_TICK());
 		}
-		fire(DownloadManagerListener::Starting(), d);
 	}
-	aSource->setIsRunning(false);
+	fire(DownloadManagerListener::Starting(), d);
+
+	aSource->setIsRunningFile(Util::emptyString);
 	
 	return true;
 }	
@@ -630,7 +632,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(!BOOLSETTING(OLD_SEGMENTED_DWNLDING)) {
 				int64_t position = d->getPos() - d->getStartPos();
 				if((aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) && (position >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					aSource->setIsRunning(true);
+					aSource->setIsRunningFile(d->getTargetFileName());
 					aSource->setDownload(NULL);
 					removeDownload(d, false);
 					aSource->setLineMode();
@@ -647,7 +649,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			u->setDownloadSpeed(d->getAverageSpeed());
 
 			d->setPos(e.pos);
-			if(d->getPos() == d->getSize()){
+			if((d->getPos() == d->getSize()) ||
+				(!BOOLSETTING(OLD_SEGMENTED_DWNLDING) && aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && ((d->getPos() - d->getStartPos()) >= d->getSegmentSize()))){
 				aSource->setDownload(NULL);
 				removeDownload(d, false);
 				aSource->setLineMode();
@@ -688,8 +691,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 
 			d->setPos(e.pos);
-			if(d->getPos() == d->getSize())
+			if((d->getPos() == d->getSize()) ||
+				(!BOOLSETTING(OLD_SEGMENTED_DWNLDING) && aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && ((d->getPos() - d->getStartPos()) >= d->getSegmentSize()))) {
 				aSource->setLineMode();
+			}
 			handleEndData(aSource);
 			return;	
 		}
@@ -835,7 +840,8 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		return;
 	}
 
-	bool reconn = (d->getPos() != d->getSize());
+	bool reconn = (d->getPos() != d->getSize()) &&
+				!(!BOOLSETTING(OLD_SEGMENTED_DWNLDING) && aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && ((d->getPos() - d->getStartPos()) >= d->getSegmentSize()));
 	dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
 	// Check if we have some crc:s...

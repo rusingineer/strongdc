@@ -43,7 +43,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_UPLOAD_QUEUE);
 
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
@@ -172,7 +172,7 @@ void UploadQueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 }
 
 LRESULT UploadQueueFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			QueueManager::getInstance()->addList(User, QueueItem::FLAG_CLIENT_VIEW);
@@ -187,7 +187,7 @@ LRESULT UploadQueueFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 }
 
 LRESULT UploadQueueFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->clearUserFiles(User);
@@ -207,19 +207,21 @@ LRESULT UploadQueueFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	// Get the bounding rectangle of the client area. 
 	RECT rc;
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-	if(showTree) {
-		ctrlQueued.GetClientRect(&rc);
-		ctrlQueued.ScreenToClient(&pt); 
-	} else {
 		ctrlList.GetClientRect(&rc);
 		ctrlList.ScreenToClient(&pt); 
+	if(PtInRect(&rc, pt) && ctrlList.GetSelectedCount() > 0) {
+		usingUserMenu = false;
+		ctrlList.ClientToScreen(&pt);
+		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		return TRUE;
 	}
-	// Hit-test
-	if(PtInRect(&rc, pt)) {
-		if(showTree && ctrlQueued.GetSelectedItem() != NULL) {
+	ctrlList.ClientToScreen(&pt);
+	ctrlQueued.GetClientRect(&rc);
+	ctrlQueued.ScreenToClient(&pt); 
+	if(PtInRect(&rc, pt) && ctrlQueued.GetSelectedItem() != NULL) {
+		usingUserMenu = true;
 			UINT a = 0;
 			HTREEITEM ht = ctrlQueued.HitTest(pt, &a);
 			if(ht != NULL && ht != ctrlQueued.GetSelectedItem())
@@ -229,27 +231,12 @@ LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 			ctrlQueued.ClientToScreen(&pt);
 			contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			return TRUE;
-		} else if (ctrlList.GetSelectedCount() > 0) {
-			ctrlList.ClientToScreen(&pt);
-//		string x = getSelectedNick();
-	
-//		if(!x.empty())
-//			contextMenu.InsertSeparatorFirst(x);
-
-			contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-	
-//		if(!x.empty())
-//			contextMenu.RemoveFirstItem();
-
-			return TRUE; 
-		}
-	}
-	
+	}	
 	return FALSE; 
 }
 
 LRESULT UploadQueueFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			PrivateFrame::openWindow(User);
@@ -264,7 +251,7 @@ LRESULT UploadQueueFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, H
 }
 
 LRESULT UploadQueueFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlot(User);
@@ -279,7 +266,7 @@ LRESULT UploadQueueFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 };
 
 LRESULT UploadQueueFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlotHour(User);
@@ -294,7 +281,7 @@ LRESULT UploadQueueFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 };
 
 LRESULT UploadQueueFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlotDay(User);
@@ -309,7 +296,7 @@ LRESULT UploadQueueFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 };
 
 LRESULT UploadQueueFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlotWeek(User);
@@ -324,7 +311,7 @@ LRESULT UploadQueueFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 };
 
 LRESULT UploadQueueFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->unreserveSlot(User);
@@ -339,7 +326,7 @@ LRESULT UploadQueueFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 };
 
 LRESULT UploadQueueFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(showTree) {
+	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			HubManager::getInstance()->addFavoriteUser(User);
@@ -514,8 +501,9 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		int j = ctrlList.GetItemCount();
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
-			UploadQueueItem* UQI = ctrlList.getItemData(i); 
-			UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
+			UploadQueueItem* UQI = ctrlList.getItemData(i);
+			if(UQI)
+				UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
 			ctrlList.updateItem(i);
 		}
 	}

@@ -61,7 +61,6 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
-		COMMAND_DEBUG(aLine, DebugManager::CLIENT_IN, getRemoteIp());
 
 //	if(aLine.length() < 2)
 //		return;

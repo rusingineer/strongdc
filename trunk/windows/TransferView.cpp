@@ -475,8 +475,6 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 }
 
 LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	ctrlTransfers.SetRedraw(FALSE);
-
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
@@ -497,6 +495,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
+		ctrlTransfers.SetRedraw(FALSE);
 		for(vector<ItemInfo*>::iterator j = v->begin(); j != v->end(); ++j) {
 			ItemInfo* i = *j;
 			i->update();
@@ -510,6 +509,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		  (ctrlTransfers.getSortColumn() == COLUMN_RATIO)) {
 			ctrlTransfers.resort();
 		}
+		ctrlTransfers.SetRedraw(TRUE);
 		
 		delete v;
 	} else if(wParam == SET_STATE) {
@@ -541,7 +541,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.updateItem(i->upper);
 	}
 
-	ctrlTransfers.SetRedraw(TRUE);
 	return 0;
 }
 
@@ -800,15 +799,11 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
 
-			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
-			if(qi) {
-				i->qi = qi;
-				int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-				if((i->upper != NULL) && (pocetSegmentu < 1)) {
-					i->upper->status = ItemInfo::STATUS_WAITING;
-					if(!i->upper->finished)
-						i->upper->statusString = Text::toT(aReason);
-				}
+			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
+			if((i->upper != NULL) && (pocetSegmentu < 1)) {
+				i->upper->status = ItemInfo::STATUS_WAITING;
+				if(!i->upper->finished)
+					i->upper->statusString = Text::toT(aReason);
 			}
 		}
 			
@@ -854,12 +849,15 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 				i->upper->pos = i->upper->actual;
 				i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 				i->upper->finished = false;
-				if(i->qi->getActiveSegments().size() <= 1)
+				if((aDownload->getUserConnection()->getIsRunningFile() != Text::fromT(i->Target))&& (i->qi->getActiveSegments().size() <= 1))
 					i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
 		}
 				
 		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
-		i->statusString = TSTRING(DOWNLOAD_STARTING);
+
+		if(aDownload->getUserConnection()->getIsRunningFile() != Text::fromT(i->Target))
+			i->statusString = TSTRING(DOWNLOAD_STARTING);
+
 		if(i->user->isClientOp())
 			i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
 		else 
@@ -914,6 +912,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			int NS = 0;
 			int64_t tmp = 0;
 			double pomerKomprese = 0;
+			bool komprese = false;
 			double a = 0;
 
 			for(Download::List::const_iterator h = dl.begin(); h != dl.end(); ++h) {
@@ -923,6 +922,9 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				if (e->getTarget() == d->getTarget()) {
 					tmp += e->getRunningAverage();
 					a = ch->getRatio();
+					if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
+						komprese = true;
+					}
 					if(a>0) {
 						pomerKomprese += a;
 						++NS;
@@ -956,7 +958,10 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				i->upper->pos = total;
 				i->upper->size = d->getSize();
 				i->upper->timeLeft = i->timeLeft;
-				(pomerKomprese < 1) ? i->upper->setFlag(ItemInfo::FLAG_COMPRESSED) : i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
+				if(komprese)
+					i->upper->setFlag(ItemInfo::FLAG_COMPRESSED);
+				else	
+					i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 			}
 
 			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
@@ -1064,7 +1069,6 @@ void TransferView::on(HashManagerListener::Verifying, const string& fileName, in
 
 		int64_t hashedSize = i->size - remainingBytes;
 
-		//i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}

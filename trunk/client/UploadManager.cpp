@@ -376,6 +376,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
+			i = NULL;
 			delete *i;
 		}
 		UploadQueueItems.erase(ii);
@@ -522,11 +523,11 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 }
 
 void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
-	Lock l(cs);
 	if( (!aUser->isOnline()) && 
 		(aUser->isSet(User::QUIT_HUB)) && 
 		(BOOLSETTING(AUTO_KICK)) ){
 
+		Lock l(cs);
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			Upload* u = *i;
 			if(u->getUser() == aUser) {
@@ -538,8 +539,6 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}
-	}
-	if(aUser->isOnline() == false) {
 		clearUserFiles(aUser);
 	}
 }
