@@ -623,8 +623,8 @@ int ShareManager::run() {
 					newDirs.insert(make_pair(i->first, dp));
 				}
 			}
-	{
-		WLock l(cs);
+			{
+				WLock l(cs);
 				StringPairList dirs = virtualMap;
 				for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
 					removeDirectory(i->second);
@@ -1285,13 +1285,21 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, TTHValu
 				Directory::File::Iter it = d->files.insert(Directory::File(name, size, d, root)).first;
 				addFile(d, it);
 			}
+
 		}
+}
+
+void ShareManager::on(HashManagerListener::Finished) {
+	setDirty();
+	generateXmlList();
+	LogManager::getInstance()->message(STRING(HASHING_FINISHED), true);
 }
 
 void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
 	if(BOOLSETTING(AUTO_UPDATE_LIST)) {
 		if(lastFullUpdate + 60 * 60 * 1000 < tick) {
 			try {
+				setDirty();
 				refresh(true, true);
 			} catch(const ShareException&) {
 			}

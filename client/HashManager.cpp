@@ -31,7 +31,8 @@ static const u_int32_t HASH_FILE_VERSION=1;
 void HashManager::checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
 	Lock l(cs);
 	if(!store.checkTTH(aFileName, aSize, aTimeStamp)) {
-		hasher.hashFile(aFileName, aSize);
+		hasher.hashFile(aFileName, aSize);	
+		fileCount++;
 	}
 }
 
@@ -47,6 +48,7 @@ bool HashManager::getTree(const string& aFileName, TigerTree& tt) {
 
 void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_t speed) {
 	TTHValue* root = NULL;
+	bool done = false;
 	{
 		Lock l(cs);
 		store.addFile(aFileName, tth, true);
@@ -55,6 +57,12 @@ void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_
 
 	if(root != NULL) {
 		fire(HashManagerListener::TTHDone(), aFileName, root);
+		
+		{
+			Lock l(cs);
+			if(--fileCount == 0)
+				done = true;
+		}
 	}
 
 	string fn = aFileName;
@@ -69,6 +77,8 @@ void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_
 	} else if(speed == 0) {
 		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn, true);
 	}
+	if(done)
+		fire(HashManagerListener::Finished());
 }
 
 void HashManager::HashStore::addFile(const string& aFileName, const TigerTree& tth, bool aUsed) {
