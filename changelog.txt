@@ -17,6 +17,7 @@
 * zmìnìn vzhled dialogu O programu (oDC++)
 * vylepšena aktualizace nových verzí (oDC++)
 * vylepšeny profily klientù (DCDM++)
+* opraveno nekoneènì pøipojování k uživateli, který je ve frontì vícekrát, pøi stahování na max segmentù
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

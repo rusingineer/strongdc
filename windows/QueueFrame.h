@@ -463,6 +463,7 @@ private:
 	virtual void on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::StatusUpdated, QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
 	virtual void on(QueueManagerListener::SearchStringUpdated, QueueItem* aQI) throw();
+
 };
 
 #endif // !defined(AFX_QUEUEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

@@ -913,14 +913,17 @@ Download* QueueManager::getDownload(User::Ptr& aUser) throw() {
 	Lock l(cs);
 
 	QueueItem* q = userQueue.getNext(aUser);
-	
+
+znovu:
 	if(q == NULL)
 		return NULL;
 
 	int k = q->getCurrents().size();
-
-	if(k<getMaxSegments(q->getTargetFileName(),q->getSize()))
-	{
+	string jmeno = q->getTargetFileName();
+	if(!(k < getMaxSegments(jmeno, q->getSize()))) {
+		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+		goto znovu;
+	}
 
 	Download *d;
 
@@ -953,10 +956,6 @@ again:
 	}
 
 	return d;
-	} else 
-		{
-			return NULL;
-		}
 }
 
 
