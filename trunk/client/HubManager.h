@@ -142,14 +142,15 @@ public:
 	typedef List::iterator Iter;
 
 	FavoriteHubEntry() throw() : connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true) { };
 	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), 
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true) { };
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
-		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth)
+		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
+		userliststate(rhs.userliststate)
 	// CDM EXTENSION BEGINS FAVS
 	, rawOne(rhs.rawOne)
 	, rawTwo(rhs.rawOne)

@@ -47,7 +47,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent11", "KickMsgRecent12", "KickMsgRecent13", "KickMsgRecent14", "KickMsgRecent15", 
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
-	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID",
+	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID", "DownSpeed", "UpSpeed",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch", "FullRow", 
@@ -91,7 +91,7 @@ const string SettingsManager::settingTags[] =
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
-	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI",
+	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -102,6 +102,9 @@ const string SettingsManager::connectionSpeeds[] = { "Modem", "ISDN",
 "Satellite", "Wireless", "Cable", "DSL", "LAN(T1)", "LAN(T3)" };
 
 const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC++" };
+
+const string SettingsManager::speeds[] = { "33.3K","56K","64K","128K","150K","192K",
+"256K","350K","384K","512K","600K","768K","1024K","1536K","2048K","4096K","10M","100M" };
 
 SettingsManager::SettingsManager()
 {
@@ -368,6 +371,7 @@ SettingsManager::SettingsManager()
 	setDefault(AUTOSAVE_QUEUE, 30);
 	setDefault(SHOW_SEGMENT_COLOR, true);
 	setDefault(USE_OLD_SHARING_UI, false);
+	setDefault(SHOW_DESCRIPTION_SPEED, false);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

@@ -217,6 +217,7 @@ int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew) {
 }
 
 void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor ) {
+	myMess = false;
 	msg = sMsg;
 	sText = strchr(sMsg+_tcslen(sAuthor), ' ');
 	msg = msg.substr(0, (msg.length()-sText.GetLength()));
@@ -290,7 +291,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			if(rpl && (smiles < maxsmiles)) {
 				bRedrawControl = true;
 				strstp(sText, beforeAppendText, Delimiter, afterAppendText);
-				AppendTextOnly(sMyNick, "", beforeAppendText, cf, sAuthor, !bRedrawControl);
+				AppendTextOnly(sMyNick, "", beforeAppendText, cf, "", !bRedrawControl);
 
 				COLORREF clrBkColor = m_TextStyleGeneral.crBackColor;
 				if (bMyMessage)
@@ -301,7 +302,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 				smiles++;
 			} else {
 				if (strlen(sText) > 0) {
-					AppendTextOnly(sMyNick, "", sText, cf, sAuthor, !bRedrawControl);
+					AppendTextOnly(sMyNick, "", sText, cf, "", !bRedrawControl);
 				}
 				break;
 			}
@@ -310,7 +311,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			EndRedrawAppendTextOnly();
 		}
 	} else {
-		AppendTextOnly(sMyNick, "", sText, cf, sAuthor );
+		AppendTextOnly(sMyNick, "", sText, cf, "");
 	}
 }
 
@@ -321,7 +322,6 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	POINT cr;
 	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
-
 	lTextLength = GetTextLengthEx( GTL_PRECISE );
 
 	boAtTheEnd = ( lSelEndSaved >= ( lTextLength - 2 ) );
@@ -352,7 +352,7 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	sMsgLower = sText;
 	sMsgLower.MakeLower();
 	sNick = sMyNick;
-	if ( sNick == sAuthor ) {
+	if(sNick == sAuthor || myMess == true ) {
 		// Moje vlastni zprava
 		lSelEnd = GetTextLengthEx( GTL_PRECISE );
 		SetSel( lSelBegin, lSelEnd );
@@ -693,7 +693,8 @@ bool ChatCtrl::GetAutoScroll() {
 
 void ChatCtrl::SetAutoScroll( bool boAutoScroll ) {
 	m_boAutoScroll = boAutoScroll;
-	 if(boAutoScroll) GoToEnd();
+	 if(boAutoScroll)
+		GoToEnd();
 }
 
 LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {

@@ -85,7 +85,7 @@ private:
 
 	CAboutDlg(const CAboutDlg&) { dcassert(0); };
 	
-	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
+	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
 

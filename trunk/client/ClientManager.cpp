@@ -71,8 +71,8 @@ void ClientManager::putClient(Client* aClient) {
 	delete aClient;
 }
 
-void ClientManager::infoUpdated() {
-	if(GET_TICK() > (quickTick + 10000)) {
+void ClientManager::infoUpdated(bool antispam) {
+	if(GET_TICK() > (quickTick + 10000) || antispam == false) {
 	Lock l(cs);
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {

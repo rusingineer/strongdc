@@ -52,6 +52,7 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SOCKS_RESOLVE, ResourceManager::SETTINGS_SOCKS5_RESOLVE },
 	{ IDC_GETIP, ResourceManager::GET_IP },
 	{ IDC_UPDATEIP, ResourceManager::UPDATE_IP },
+	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -60,6 +61,9 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_EMAIL,		SettingsManager::EMAIL,			PropPage::T_STR }, 
 	{ IDC_DESCRIPTION,	SettingsManager::DESCRIPTION,	PropPage::T_STR }, 
 //	{ IDC_CONNECTION,	SettingsManager::CONNECTION,	PropPage::T_STR }, 
+	{ IDC_DOWN_COMBO,	SettingsManager::DOWN_SPEED,	PropPage::T_STR },  
+	{ IDC_UP_COMBO,		SettingsManager::UP_SPEED,		PropPage::T_STR },  
+	{ IDC_SHOW_SPEED_CHECK, SettingsManager::SHOW_DESCRIPTION_SPEED, PropPage::T_BOOL },
 	{ IDC_SERVER,		SettingsManager::SERVER,		PropPage::T_STR }, 
 	{ IDC_PORT,			SettingsManager::IN_PORT,		PropPage::T_INT }, 
 	{ IDC_SOCKS_SERVER, SettingsManager::SOCKS_SERVER,	PropPage::T_STR },
@@ -89,7 +93,6 @@ void GeneralPage::write()
 		x.erase(i, 1);
 
 	SetDlgItemText(IDC_SERVER, x.c_str());
-	//GetDlgItemText(IDC_CONNECTION, tmp, 1024);
 	
 	PropPage::write((HWND)(*this), items);
 
@@ -119,8 +122,19 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	//ctrlConnection.Create(m_hWnd, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 	//	WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST);
 	ConnTypes.CreateFromImage(IDB_USERS, 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-     ctrlConnection.SetImageList(ConnTypes);	
-	
+    ctrlConnection.SetImageList(ConnTypes);	
+
+	ctrlDownloadSpeed.Attach(GetDlgItem(IDC_DOWN_COMBO));
+	ctrlUploadSpeed.Attach(GetDlgItem(IDC_UP_COMBO));
+
+	for(int i = 0; i < SettingsManager::SP_LAST; i++) {
+		ctrlDownloadSpeed.AddString(SettingsManager::speeds[i].c_str());
+		ctrlUploadSpeed.AddString(SettingsManager::speeds[i].c_str());
+	}
+
+	ctrlDownloadSpeed.SetCurSel(ctrlDownloadSpeed.FindString(0, SETTING(DOWN_SPEED).c_str()));
+	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, SETTING(UP_SPEED).c_str()));
+
 	int q = 1;
 	for(int i = 0; i < SettingsManager::SPEED_LAST; i++)
 		//ctrlConnection.AddString(SettingsManager::connectionSpeeds[i].c_str());

@@ -340,6 +340,7 @@
 #define IDC_IMAGEBROWSE                 1225
 #define IDC_CLIENT_TESTSUR_RESPONSE     1225
 #define IDC_SETTINGS_MAX_HASH_SPEED     1225
+#define IDC_SHOW_SPEED_CHECK            1225
 #define IDC_TOOLBAR_POSSIBLE            1226
 #define IDC_CLIENT_USER_CON_COM         1226
 #define IDC_SETTINGS_MBS                1226
@@ -416,6 +417,8 @@
 #define IDC_IMPORT                      1269
 #define IDC_EXPORT                      1270
 #define IDC_SETTINGS_GET_USER_COUNTRY   1271
+#define IDC_UP_COMBO                    1273
+#define IDC_DOWN_COMBO                  1274
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -636,7 +639,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1273
+#define _APS_NEXT_CONTROL_VALUE         1274
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

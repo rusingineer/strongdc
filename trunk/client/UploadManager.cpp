@@ -120,8 +120,9 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				aBytes = size - aStartPos;
 	}
 
+
 			if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
-				aSource->fileNotAvail();
+					aSource->fileNotAvail();
 				delete f;
 				return false;
 	}
@@ -466,12 +467,12 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			// Pokud vznikne priznak Fireball nebo FileServer, posleme ho jednorazove vsem hubum
 			// Nove pripojenym hubum se posle v ramci pripojovani
 			if ( m_boFireball && !boFireballSent ) {
-				ClientManager::getInstance()->infoUpdated();
+		ClientManager::getInstance()->infoUpdated(true);
 				boFireballSent = true;
 				boFileServerSent = true; // Zamezime odeslani MyInfo, kdyz FileServer vznikne po FireBall
 			}
 			else if ( m_boFileServer && !boFileServerSent ) {
-				ClientManager::getInstance()->infoUpdated();
+		ClientManager::getInstance()->infoUpdated(true);
 				boFileServerSent = true;
 			}
 }

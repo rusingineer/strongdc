@@ -123,7 +123,7 @@ public:
 		}
 		cmd.addParam(Util::toAdcFile(getSource()));
 		cmd.addParam(Util::toString(getPos()));
-		cmd.addParam(Util::toString(getSize()));
+		cmd.addParam(Util::toString(getSize()-getPos()));
 
 		if(zlib && getSize() != -1 && BOOLSETTING(COMPRESS_TRANSFERS)) {
 			setFlag(FLAG_ZDOWNLOAD);
