@@ -19,6 +19,8 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
+/*#include "atlctrlxp.h"
+#include "atlctrlxp2.h"*/
 
 #include "MainFrm.h"
 #include "AboutDlg.h"
@@ -174,6 +176,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	AddSimpleReBarBand(hWndCmdBar);
 	AddSimpleReBarBand(hWndToolBar, NULL, TRUE);
 	CreateSimpleStatusBar();
+
+	//Crea XP like Menu
+	m_CmdBar.AddToolbar(hWndToolBar);
+    m_CmdBar.Prepare();
 
 	ctrlStatus.Attach(m_hWndStatusBar);
 	ctrlStatus.SetSimple(FALSE);

@@ -192,27 +192,21 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 void HubFrame::openWindow(const string& aServer, const string& aNick /* = Util::emptyString */, const string& aPassword /* = Util::emptyString */, const string& aDescription /* = Util::emptyString */, 
 		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
-							// CDM EXTENSION BEGINS FAVS
 							, const string& rawOne /*= Util::emptyString*/
 							, const string& rawTwo /*= Util::emptyString*/
 							, const string& rawThree /*= Util::emptyString*/
 							, const string& rawFour /*= Util::emptyString*/
 							, const string& rawFive /*= Util::emptyString*/
-						//	, bool userIp /*= false*/
-							// CDM EXTENSION ENDS		
 		) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
 		HubFrame* frm = new HubFrame(aServer, aNick, aPassword, aDescription, 
 			windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate
-			// CDM EXTENSION BEGINS FAVS
 			, rawOne
 			, rawTwo 
 			, rawThree 
 			, rawFour 
 			, rawFive 
-//			, userIp 
-			// CDM EXTENSION ENDS			
 			);
 		frames[aServer] = frm;
 
@@ -434,7 +428,8 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 	if(ctrlUsers.getSortColumn() == UserInfo::COLUMN_NICK) {
 		// Sort order of the other columns changes too late when the user's updated
 		UserInfo* ui = i->second;
-		dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
+		//dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
+		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) return NULL;
 		return ctrlUsers.getSortPos(ui);
 	}
 	return ctrlUsers.findItem(aUser->getNick());
@@ -598,11 +593,10 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	}
 	if (bHideUser) {
 		if (i != -1) {
-			//delete (UserInfo*) ctrlUsers.getItemData(i);
 			UserInfo* ui = ctrlUsers.getItemData(i);
-			ctrlUsers.deleteItem(i);
+			ctrlUsers.deleteItem(i, false);
 			dcassert(userMap[u] == ui);
-			userMap.erase(u);
+			userMap.erase(u);			
 //			delete ui;
 		}
 		return false;
@@ -1325,23 +1319,19 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 	if(wParam == VK_TAB) {
 		onTab();
 		return 0;
-	} else if ( wParam == VK_ESCAPE ){
+	} else if (wParam == VK_ESCAPE) {
 		// Clear find text and give the focus back to the message box
 		ctrlMessage.SetFocus();
 		ctrlClient.SetSel(-1, -1);
 		ctrlClient.SendMessage(EM_SCROLL, SB_BOTTOM, 0);
 		ctrlClient.InvalidateRect(NULL);
-		currentNeedle="";
-	} else if( wParam == VK_F3 && ( GetKeyState(VK_LSHIFT)&(0x80) )  ) {
-		currentNeedle=findTextPopup();
-		findText(currentNeedle);
+		currentNeedle = "";
+	} else if((wParam == VK_F3 && GetKeyState(VK_SHIFT) & 0x8000) ||
+		(wParam == 'F' && GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000)) {
+		findText(findTextPopup());
 		return 0;
-	}else if(wParam == VK_F3) {
-		string whattofind;
-		whattofind=currentNeedle;
-		if (whattofind.empty())
-			whattofind=findTextPopup();
-		findText(whattofind);
+	} else if(wParam == VK_F3) {
+		findText(currentNeedle.empty() ? findTextPopup() : currentNeedle);
 		return 0;
 	}
 
@@ -1674,13 +1664,16 @@ void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
 }
 
 void HubFrame::updateEntireUserList() {
-	Lock l(updateCS);
-	User::NickMap& um = client->lockUserList();
-	updateList.reserve(um.size());
-	for(User::NickMap::const_iterator i = um.begin(); i != um.end(); ++i) {
-		updateList.push_back(make_pair(i->second, UPDATE_USERS));
-	}
-	client->unlockUserList();
+		User::NickMap& lst = client->lockUserList();
+		ctrlUsers.SetRedraw(FALSE);
+		for(User::NickIter i = lst.begin(); i != lst.end(); ++i) {
+			updateUser(i->second);
+		}
+		client->unlockUserList();
+		ctrlUsers.SetRedraw(TRUE);
+		ctrlUsers.resort();
+	
+
 	if(!updateList.empty()) {
 		PostMessage(WM_SPEAKER, UPDATE_USERS);
 	}

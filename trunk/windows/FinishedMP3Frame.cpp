@@ -70,6 +70,7 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	updateList(FinishedManager::getInstance()->lockMP3List());
 	FinishedManager::getInstance()->unlockList();
 
+
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -79,7 +80,7 @@ LRESULT FinishedMP3Frame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	FinishedManager::getInstance()->removeListener(this);
 	
 		closed = true;
-//		CZDCLib::setButtonPressed(IDC_FINISHED, false);
+		CZDCLib::setButtonPressed(IDC_FINISHEDMP3, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
@@ -107,7 +108,6 @@ LRESULT FinishedMP3Frame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	return 0;
 }
 
-//void FinishedMP3Frame::on(FinishedManagerListener::AddedDl, FinishedItem* entry) throw() { }
 void FinishedMP3Frame::on(FinishedManagerListener::Added_MP3Dl(), FinishedMP3Item* entry) throw() {
 	PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 };

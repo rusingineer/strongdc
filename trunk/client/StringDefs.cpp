@@ -264,7 +264,6 @@ string ResourceManager::strings[] = {
 "Automatically follow redirects", 
 "Automatically disconnect users who leave the hub (does not disconnect when hub goes down / you leave it)", 
 "Automatically search for alternative download locations", 
-"Use exact filename when matching autosearches", 
 "Automatically match queue for auto search hits", 
 "Use default search strings in auto search when no string is specified", 
 "Automatically refresh share list every hour", 
@@ -678,7 +677,9 @@ string ResourceManager::strings[] = {
 "Color of inactive part", 
 "String not found: ", 
 "Show speed", 
-"Down/Up:"
+"Down/Up:",
+"Load few last lines from log on new PM", 
+"Lines from log on new PM"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -943,7 +944,6 @@ string ResourceManager::names[] = {
 "SettingsAutoFollow", 
 "SettingsAutoKick", 
 "SettingsAutoSearch", 
-"SettingsAutoSearchExact", 
 "SettingsAutoSearchAutoMatch", 
 "SettingsAutoSearchAutoString", 
 "SettingsAutoUpdateList", 
@@ -1357,5 +1357,7 @@ string ResourceManager::names[] = {
 "SegmentPartColor", 
 "StringNotFound", 
 "ShowSpeed", 
-"Du"
+"Du",
+"SetczdcPmLog",
+"SetczdcPmLines"
 };

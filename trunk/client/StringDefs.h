@@ -267,7 +267,6 @@ enum Strings { // @DontAdd
 	SETTINGS_AUTO_FOLLOW, // "Automatically follow redirects"
 	SETTINGS_AUTO_KICK, // "Automatically disconnect users who leave the hub (does not disconnect when hub goes down / you leave it)"
 	SETTINGS_AUTO_SEARCH, // "Automatically search for alternative download locations"
-	SETTINGS_AUTO_SEARCH_EXACT, // "Use exact filename when matching autosearches"
 	SETTINGS_AUTO_SEARCH_AUTO_MATCH, // "Automatically match queue for auto search hits"
 	SETTINGS_AUTO_SEARCH_AUTO_STRING, // "Use default search strings in auto search when no string is specified"
 	SETTINGS_AUTO_UPDATE_LIST, // "Automatically refresh share list every hour"
@@ -682,5 +681,7 @@ enum Strings { // @DontAdd
 	STRING_NOT_FOUND, // "String not found: "
 	SHOW_SPEED, // "Show speed"
 	DU, // "Down/Up:"
+	SETCZDC_PM_LOG, // "Load few last lines from log on new PM"
+	SETCZDC_PM_LINES, // "Lines from log on new PM"
 	LAST // @DontAdd
 };

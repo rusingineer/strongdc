@@ -426,7 +426,7 @@
 #define IDC_UP_COMBO                    1273
 #define IDC_DOWN_COMBO                  1274
 #define IDC_SLASH                       1275
-#define IDC_COMBO1                      1276
+#define IDC_BLOCK_COMBO                 1276
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -594,6 +594,7 @@
 #define IDC_SETCZDC_MAX_EMOTICONS2      10117
 #define IDC_SAVEQUEUE_TEXT              10117
 #define IDC_CZDC_WINAMP                 10120
+#define IDC_SETCZDC_PM_LINES            10121
 #define IDC_CZDC_AVAILABLE_STYLES       10122
 #define IDC_CZDC_PREVIEW                10123
 #define IDC_CZDC_DW_SPEEED1             10124
@@ -618,7 +619,9 @@
 #define IDC_COPY_EXACT_SHARE            10145
 #define IDC_COPY_IP                     10146
 #define IDC_COPY_NICK_IP                10147
+#define IDC_PM_LINES                    10147
 #define IDC_COPY_ALL                    10148
+#define IDC_PM_LINESSPIN                10148
 #define IDC_COPY_ISP                    10149
 #define IDC_CHECKLIST                   10150
 #define ID_GET_TTH                      10151

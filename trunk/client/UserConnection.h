@@ -319,7 +319,7 @@ private:
 		user = aUser;
 	};
 
-	void onLine(const string& aLine) throw();
+	void onLine(const char* aLine) throw();
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
@@ -332,7 +332,12 @@ private:
         lastActivity = GET_TICK();
         fire(UserConnectionListener::Connected(), this); 
     }
-	virtual void on(Line, const string&) throw();
+	virtual void on(Line, const string& line) throw() {
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + line + "|");
+
+		onLine(line.c_str());
+	}
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 
         lastActivity = GET_TICK(); 
         fire(UserConnectionListener::Data(), this, data, len); 
@@ -347,6 +352,9 @@ private:
     }
 	virtual void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
 	virtual void on(Failed, const string&) throw();
+
+	char *temp;
+	void processBlock(const char* param, int type) throw();
 };
 
 #endif // !defined(AFX_USERCONNECTION_H__52BFD1A0_9924_4C07_BAFA_FB9682884841__INCLUDED_)

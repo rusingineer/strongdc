@@ -111,8 +111,8 @@ public:
 		SUPPORTS_USERIP2 = 0x04,
 	};
 
-	User::NickMap& lockUserList() { cs.enter(); return users; };
-	void unlockUserList() { cs.leave(); };
+	User::NickMap& lockUserList() throw() { cs.enter(); return users; };
+	void unlockUserList() throw() { cs.leave(); };
 
 	void disconnect() throw();
 	void myInfo();
@@ -235,7 +235,6 @@ public:
 	bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
 
 	GETSET(int, supportFlags, SupportFlags);
-
 private:
 
 	struct ClientAdapter : public NmdcHubListener {
@@ -287,8 +286,8 @@ private:
 	bool validatenicksent;
 	int64_t lastbytesshared;
 
-	char *cmd, *param, *dscrptn, *temp;
-	int paramlen, dscrptnlen;
+	char *dscrptn, *temp;
+	int dscrptnlen;
 	
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;
@@ -305,7 +304,7 @@ private:
 	void connect();
 
 	void clearUsers();
-	void onLine(const char *aLine) throw();
+	void onLine(const char* aLine) throw();
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();

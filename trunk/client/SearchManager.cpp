@@ -167,7 +167,7 @@ int SearchManager::run() {
 void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address) {
 	string x((char*)buf, aLen);
 	if(x.compare(0, 4, "$SR ") == 0) {
-		onNMDCData(buf, aLen, address, true);
+		onNMDCData(buf, aLen, address);
 	} else if(x.compare(1, 4, "RES ") == 0) {
 		Command c(x);
 		if(c.getParameters().empty())
@@ -198,6 +198,8 @@ void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address)
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		}
+	} else {
+		dcdebug("SearchManager::onData Unknown command %s\n", (char*)buf);
 	}
 }
 
@@ -216,15 +218,12 @@ string SearchManager::clean(const string& aSearchString) {
 	return tmp;
 }
 
-void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& address, bool withSR) {
+void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& address) {
 	string x((char*)buf, aLen);
 		string::size_type i, j;
 		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
 		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-	if(withSR)
 		i = 4;
-	else
-		i = 0;
 
 		if( (j = safestring::SafeFind(x,' ', i)) == string::npos) {
 			return;

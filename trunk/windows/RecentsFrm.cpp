@@ -140,6 +140,8 @@ LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		HubManager::getInstance()->removeListener(this);
 
 		closed = true;
+
+		CZDCLib::setButtonPressed(IDC_RECENTS, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

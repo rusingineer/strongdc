@@ -140,10 +140,6 @@ public:
 	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST) {
 		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode);
 	}
-	void addToSearchQueue(const string& aName, const string& aTarget, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool bFront = false);
-	void addToSearchQueue(const string& aName, const string& aTarget, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool bFront = false) {
-		addToSearchQueue(aName, aTarget, Util::toInt64(aSize), aTypeMode, aSizeMode, bFront);
-	}
 	
 	void search(StringList& who, const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST);
 	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST) {
@@ -157,7 +153,7 @@ public:
 		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
 	void onNMDCSearchResult(const string& aLine) {
-		onNMDCData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString, false);
+		onNMDCData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
 	
 private:
@@ -167,6 +163,7 @@ private:
 	bool stop;
 	bool isoponhub;
 	friend class Singleton<SearchManager>;
+	char* temp;
 
 	SearchManager() : socket(NULL), port(0), stop(false) {  };
 
@@ -182,7 +179,7 @@ private:
 	};
 
 	void onData(const u_int8_t* buf, int aLen, const string& address);
-	void onNMDCData(const u_int8_t* buf, int aLen, const string& address, bool withSR);
+	void onNMDCData(const u_int8_t* buf, int aLen, const string& address);
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)

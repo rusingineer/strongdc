@@ -406,6 +406,11 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		SetSel( lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd );
 		boOK = SetSelectionCharFormat( m_TextStyleMyNick );
 		lSearchFrom = lMyNickEnd;
+		if ( sNick != sAuthorNick )	 	
+        {	 	
+	        if (!SETTING(CHATNAMEFILE).empty())	 	
+		        PlaySound(SETTING(CHATNAMEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
+        }
 	}
 
 	// Zvyrazneni vsech vyskytu nicku Favorite useru

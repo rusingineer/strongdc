@@ -31,6 +31,7 @@
 #include "resource.h"
 #include "CZDCLib.h"
 
+#include <wininet.h>
 
 // Some utilities for handling HLS colors, taken from Jean-Michel LE FOL's codeproject
 // article on WTL OfficeXP Menus
