@@ -1571,7 +1571,7 @@ void QueueManager::autoDropSource(User::Ptr& aUser)
     DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
 }
 
-void QueueManager::sendAutoSearch(Client* c)
+/*void QueueManager::sendAutoSearch(Client* c)
 {
     Lock l(cs);
 	QueueItem::StringMap& queue = fileQueue.getQueue();
@@ -1583,7 +1583,7 @@ void QueueManager::sendAutoSearch(Client* c)
 			c->search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, "TTH:" + i->second->getTTH()->toBase32(), true);
 		}
 	}
-}
+}*/
 
 /**
  * @file

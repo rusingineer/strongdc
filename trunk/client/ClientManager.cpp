@@ -238,6 +238,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 
 void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	{
+		// TODO: Fix crash in critical section
 		Lock l(cs);
 		aUser->setIp(Util::emptyString);
 		aUser->setHost(Util::emptyString);

@@ -68,7 +68,6 @@ UploadManager::~UploadManager() throw() {
 	ClientManager::getInstance()->removeListener(this);
 	for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
 		for_each(ii->second.begin(), ii->second.end(), DeleteFunction<UploadQueueItem*>());
-		UploadQueueItems.erase(ii);
 	}
 	while(true) {
 		{

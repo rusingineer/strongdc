@@ -621,7 +621,6 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			}
 		}
 
-		QueueManager::getInstance()->sendAutoSearch(this);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
 	} else if(strncmp(aLine, "$OpList ", 8) == 0) {
 		User::List v;
