@@ -518,14 +518,18 @@ void TransferView::InsertItem(ItemInfo* i) {
 	bool add = true;
 	if(!mainItems.empty()) {
 
-		for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
-			ItemInfo* m = *q;
+		int q = 0;
+//		for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
+		while(q<mainItems.size()) {
+			//ItemInfo* m = *q;
+			ItemInfo* m = mainItems[q];
 			if(m->Target == i->Target)
 			{
 				add = false;
 				i->upper = m;
 				break;
 			}
+			q++;
 		}
 	}
 
@@ -698,24 +702,23 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
-		if(ctrlTransfers.findItem(i) != -1) ctrlTransfers.deleteItem(i);
+//		if(ctrlTransfers.findItem(i) != -1)
+			ctrlTransfers.deleteItem(i);
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
 		if( (i->type == ItemInfo::TYPE_DOWNLOAD) && (i->user != (User::Ptr)NULL))
 		{
-//			if(i->Target != i->oldTarget) setMainItem(i);
-//			i->oldTarget = i->Target;
 			i->update();
 			if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
 		} else i->update();
 
-		if(ctrlTransfers.findItem(i) != -1) {
+	//	if(ctrlTransfers.findItem(i) != -1) {
 			ctrlTransfers.updateItem(i);
 			if(ctrlTransfers.getSortColumn() != COLUMN_USER)
 				ctrlTransfers.resort();
-		}
+	//	}
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
@@ -728,7 +731,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				i->update();
 				if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
 			} else 	i->update();
-			if(ctrlTransfers.findItem(i) != -1) { ctrlTransfers.updateItem(i); }
+			//if(ctrlTransfers.findItem(i) != -1)
+			  ctrlTransfers.updateItem(i);
 		}
 
 		if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
@@ -744,28 +748,35 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 void TransferView::setMainItem(ItemInfo* i) {
 	if(i->upper != NULL) {
 		i->upper->pocetUseru -= 1;
+		int q = 0;
 		bool existuje = false;
 		dcdebug("1. cyklus\n");
 		if(!mainItems.empty()) {
-			for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
-				ItemInfo* m = *q;
+//			for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
+
+			while(q<mainItems.size()) {
+//				ItemInfo* m = *q;
+				ItemInfo* m = mainItems[q];
 				if(m->Target == i->Target)
 				{
 					i->upper = m;
 					break;
 				}
+				q++;
 			}
 		}
 		dcdebug("2. cyklus\n");
-		if(ctrlTransfers.findItem(i) != -1) ctrlTransfers.deleteItem(i);	
+//		if (ctrlTransfers.findItem(i) != -1) 
+//		{	
+			ctrlTransfers.deleteItem(i);	
+//		}
 		dcdebug("3. cyklus\n");
 		InsertItem(i);
 		if(!mainItems.empty()) {
 			int q = 0;
 			dcdebug("4. cyklus\n");
-			xxx:
+			while(q<mainItems.size()) {
 				ItemInfo* m = mainItems[q];
-				existuje = false;
 				for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 					ItemInfo* n = j->second;
 					if(m->Target == n->Target)
@@ -774,6 +785,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 						break;
 					}
 				}
+				
 				if(!existuje)
 				{
 					if(IsBadReadPtr(m, 4) == 0) {
@@ -782,7 +794,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 					}
 				}
 				q++;
-			if(q<mainItems.size()) goto xxx;
+			}
 	
 		}	
 	}
@@ -961,8 +973,11 @@ void TransferView::onConnectionStatus(ConnectionQueueItem* aCqi) {
 			}
 		}
 	}	
-				if(i->Target != i->oldTarget) setMainItem(i);
-				i->oldTarget = i->Target;
+
+			dcdebug("OnConnectionStatus");
+
+			if(i->Target != i->oldTarget) setMainItem(i);
+			i->oldTarget = i->Target;
 
 				if(i->qi)		
 				if(i->qi->getCurrents().size() <= 1)
@@ -982,21 +997,22 @@ void TransferView::onConnectionRemoved(ConnectionQueueItem* aCqi) {
 	bool existuje = false;
 	{
 		Lock l(cs);
+		dcdebug("onConnectionRemoved");
 		ItemInfo::MapIter ii = transferItems.find(aCqi);
 		dcassert(ii != transferItems.end());
 		i = ii->second;
 
-		if(i->upper != NULL)
-		{
-			i->upper->pocetUseru -= 1;
-			i->updateMask |= ItemInfo::MASK_USER;
-			i->update();
-			ctrlTransfers.updateItem(i->upper);
-		}
-
 		h = i->upper;
 		isDownload = (i->type == ItemInfo::TYPE_DOWNLOAD);
 		transferItems.erase(ii);
+	}
+
+	if(h != NULL)
+	{
+		h->pocetUseru -= 1;
+		i->updateMask |= ItemInfo::MASK_USER;
+		i->update();
+		ctrlTransfers.updateItem(h);
 	}
 
 	if(isDownload) {
@@ -1011,12 +1027,12 @@ void TransferView::onConnectionRemoved(ConnectionQueueItem* aCqi) {
 
 		if(!existuje)
 		{
-			if(IsBadReadPtr(h,4) == 0) {
-				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
-				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
-			}
+					if(IsBadReadPtr(h,4) == 0) {
+						mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
+						PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
+					}
+				}
 		}
-	}
 
 
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
@@ -1029,10 +1045,11 @@ void TransferView::onConnectionFailed(ConnectionQueueItem* aCqi, const string& a
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
 		i->statusString = aReason;
-
-	//	if(i->Target != i->oldTarget) setMainItem(i);
-	//	i->oldTarget = i->Target;
-
+	}
+		if(i->Target != i->oldTarget) setMainItem(i);
+		i->oldTarget = i->Target;
+	{
+		Lock l(cs);
 		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1))
 			i->upper->statusString = aReason;
 			
@@ -1057,6 +1074,7 @@ void TransferView::onDownloadStarting(Download* aDownload) {
 		i->path = Util::getFilePath(aDownload->getTarget());
 		i->Target = aDownload->getTarget();
 	}
+		dcdebug("OnDownloadStarting");
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
 	{
@@ -1082,12 +1100,13 @@ void TransferView::onDownloadStarting(Download* aDownload) {
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
-		if(!aDownload->isSet(Download::FLAG_USER_LIST))	
-		{	if (!SETTING(BEGINFILE).empty())
-					PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-		}
 	}
-	
+
+	if(!aDownload->isSet(Download::FLAG_USER_LIST))	
+	{	if (!SETTING(BEGINFILE).empty())
+			PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+	}
+
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -1161,6 +1180,7 @@ void TransferView::onDownloadFailed(Download* aDownload, const string& aReason) 
 		i->path = Util::getFilePath(aDownload->getTarget());
 		i->Target = aDownload->getTarget();
 	}
+		dcdebug("OnDownloadFailed");
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
 	{
