@@ -19,7 +19,7 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
-#include "..\Client\PluginManager.h"
+#include "../Client/HubManager.h"
 
 #include "AVIPreview.h"
 #include "PreviewDlg.h"
@@ -32,8 +32,8 @@ PropPage::TextItem AVIPreview::texts[] = {
 };
 
 
-LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/){
-	PropPage::translate((HWND)(*this), texts);
+LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	PropPage::translate((HWND)(*this), texts); 
 
 	CRect rc;
 
@@ -48,7 +48,7 @@ LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
 	// Do specialized reading here
-	PreviewApplication::List lst = PluginManager::getInstance()->getPreviewApps();
+	PreviewApplication::List lst = HubManager::getInstance()->getPreviewApps();
 	for(PreviewApplication::Iter i = lst.begin(); i != lst.end(); ++i) {
 		PreviewApplication::Ptr pa = *i;	
 		addEntry(pa, ctrlCommands.GetItemCount());
@@ -56,8 +56,7 @@ LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
-void AVIPreview::write(){
-}
+void AVIPreview::write(){ }
 
 void AVIPreview::addEntry(PreviewApplication::Ptr pa, int pos) {
 	StringList lst;
@@ -72,7 +71,7 @@ void AVIPreview::addEntry(PreviewApplication::Ptr pa, int pos) {
 LRESULT AVIPreview::onAddMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	PreviewDlg dlg;
 	if(dlg.DoModal() == IDOK){
-		addEntry(PluginManager::getInstance()->addPreviewApp(dlg.name, dlg.application, dlg.argument, dlg.extensions), ctrlCommands.GetItemCount());
+		addEntry(HubManager::getInstance()->addPreviewApp(dlg.name, dlg.application, dlg.argument, dlg.extensions), ctrlCommands.GetItemCount());
 	}
 	return 0;
 }
@@ -81,7 +80,7 @@ LRESULT AVIPreview::onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	if(ctrlCommands.GetSelectedCount() == 1) {
 		int sel = ctrlCommands.GetSelectedIndex();
 		PreviewApplication pa;
-		PluginManager::getInstance()->getPreviewApp(sel, pa);
+		HubManager::getInstance()->getPreviewApp(sel, pa);
 
 		PreviewDlg dlg;
 		dlg.name = pa.getName();
@@ -95,7 +94,7 @@ LRESULT AVIPreview::onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 			pa.setArguments(dlg.argument);
 			pa.setExtension(dlg.extensions);
 
-			PluginManager::getInstance()->updatePreviewApp(sel, pa);
+			HubManager::getInstance()->updatePreviewApp(sel, pa);
 
 			ctrlCommands.SetItemText(sel, 0, dlg.name.c_str());
 			ctrlCommands.SetItemText(sel, 1, dlg.application.c_str());
@@ -110,7 +109,7 @@ LRESULT AVIPreview::onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 LRESULT AVIPreview::onRemoveMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	if(ctrlCommands.GetSelectedCount() == 1) {
 		int sel = ctrlCommands.GetSelectedIndex();
-		PluginManager::getInstance()->removePreviewApp(sel);
+		HubManager::getInstance()->removePreviewApp(sel);
 		ctrlCommands.DeleteItem(sel);
 	}
 	return 0;

@@ -206,6 +206,21 @@ public:
 	GETSET(string, shared, Shared);	
 };
 
+class PreviewApplication {
+public:
+	typedef PreviewApplication* Ptr;
+	typedef vector<Ptr> List;
+	typedef List::iterator Iter;
+
+	PreviewApplication() throw() {}
+	PreviewApplication(string n, string a, string r, string e) : name(n), application(a), arguments(r), extension(e) {};
+	~PreviewApplication() throw() { }	
+
+	GETSET(string, name, Name);
+	GETSET(string, application, Application);
+	GETSET(string, arguments, Arguments);
+	GETSET(string, extension, Extension);
+};
 
 class HubManagerListener {
 public:
@@ -252,6 +267,8 @@ public:
 
 	User::List& getFavoriteUsers() { return users; };
 	
+	PreviewApplication::List& getPreviewApps() { return previewApplications; };
+	
 	void addFavoriteUser(User::Ptr& aUser);
 	void removeFavoriteUser(User::Ptr& aUser);
 
@@ -279,6 +296,29 @@ public:
 				return r;
 			}
 		}
+		return NULL;
+	}
+
+	PreviewApplication* addPreviewApp(string name, string application, string arguments, string extension){
+		PreviewApplication* pa = new PreviewApplication(name, application, arguments, extension);
+		previewApplications.push_back(pa);
+		return pa;
+	}
+
+	PreviewApplication* removePreviewApp(int index){
+		if(previewApplications.size()>index)
+			previewApplications.erase(previewApplications.begin() + index);	
+		return NULL;
+	}
+
+	PreviewApplication* getPreviewApp(int index, PreviewApplication &pa){
+		if(previewApplications.size()>index)
+			pa = *previewApplications[index];	
+		return NULL;
+	}
+	
+	PreviewApplication* updatePreviewApp(int index, PreviewApplication &pa){
+		*previewApplications[index] = pa;
 		return NULL;
 	}
 
@@ -556,6 +596,7 @@ private:
 	HubEntry::List publicHubs;
 	FavoriteHubEntry::List favoriteHubs;
 	RecentHubEntry::List recentHubs;
+	PreviewApplication::List previewApplications;
 	UserCommand::List userCommands;
 	User::List users;
 	ClientProfile::List clientProfiles;
@@ -587,6 +628,7 @@ private:
 		
 		for_each(favoriteHubs.begin(), favoriteHubs.end(), DeleteFunction<FavoriteHubEntry*>());
 		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction<RecentHubEntry*>());
+		for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction<PreviewApplication*>());
 	}
 	
 	string downloadBuf;
@@ -624,10 +666,17 @@ private:
 	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() {
 		load(xml);
 		recentload(xml);
+		previewload(xml);
+	}
+
+	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {
+		previewsave(xml);
 	}
 
 	void load(SimpleXML* aXml);
 	void recentload(SimpleXML* aXml);
+	void previewload(SimpleXML* aXml);
+	void previewsave(SimpleXML* aXml);
 	void loadClientProfiles(SimpleXML* aXml);
 };
 

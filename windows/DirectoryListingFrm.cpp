@@ -33,14 +33,11 @@
 
 void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUser, const string& start) {
 	DirectoryListingFrame* frame = new DirectoryListingFrame(aFile, aUser, start);
-	if(!BOOLSETTING(POPUP_FILELIST)) {
-		::LockWindowUpdate(WinUtil::mdiClient);
+	if(BOOLSETTING(POPUNDER_FILELIST))
+		WinUtil::hiddenCreateEx(frame);
+	else
 	frame->CreateEx(WinUtil::mdiClient);
-		frame->ShowWindow(SW_SHOWMINIMIZED);
-		::LockWindowUpdate(NULL);
-	} else {
-		frame->CreateEx(WinUtil::mdiClient);
-	}
+
 }
 
 DirectoryListingFrame::DirectoryListingFrame(const string& aFile, const User::Ptr& aUser, const string& s) :

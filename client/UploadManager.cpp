@@ -270,7 +270,8 @@ void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSourc
 	dcassert(aSource->getState() == UserConnection::STATE_DONE);
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);
-	u->addPos(aBytes, aActual);
+	u->addPos(aBytes);
+	u->addActual(aActual);	
 	throttleBytesTransferred(aActual);
 }
 

@@ -50,7 +50,7 @@ public:
 	void update();
 
 	GETSET(string, shared, Shared)
-	GETSET(string, uuploadSpeed, UuploadSpeed);
+	GETSET(string, uploadSpeed, UploadSpeed);
 	GETSET(bool, op, Op);
 	GETSET(string, exactshare, ExactShare)
 

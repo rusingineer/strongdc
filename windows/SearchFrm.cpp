@@ -935,24 +935,21 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;
 			// Check previous search results for dupes
-			if(BOOLSETTING(FILTER_SEARCH)) {
-				for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
-					SearchInfo* si2 = ctrlResults.getItemData(i);
-					SearchResult* sr2 = si2->sr;
+			for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
+				SearchInfo* si2 = ctrlResults.getItemData(i);
+				SearchResult* sr2 = si2->sr;
 
-					if(si2->subItems.size() > 0)
-						for(int k = 0, l = si2->subItems.size(); k < l; ++k) {
-							SearchResult* sr3 = si2->subItems[k]->sr;
-							if((sr->getUser()->getNick() == sr3->getUser()->getNick()) && (sr->getFile() == sr3->getFile())) {
-								delete si;
-								return 0;
-							}
+				if(si2->subItems.size() > 0)
+					for(int k = 0, l = si2->subItems.size(); k < l; ++k) {
+						SearchResult* sr3 = si2->subItems[k]->sr;
+						if((sr->getUser()->getNick() == sr3->getUser()->getNick()) && (sr->getFile() == sr3->getFile())) {
+							delete si;
+							return 0;
 						}
-
-					if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
-						delete si;
-						return 0;
 					}
+				if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
+					delete si;
+					return 0;
 				}
 			}
 

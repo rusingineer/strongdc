@@ -50,6 +50,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
 	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
 	{ SettingsManager::ENABLE403FEATURES, ResourceManager::ENABLE_DC403_FEATURES },
+	{ SettingsManager::AUTO_DROP_SOURCE, ResourceManager::SETTINGS_AUTO_DROP_SOURCE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

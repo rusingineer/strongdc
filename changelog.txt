@@ -3,7 +3,7 @@
 * NetLimiter je detekován pouze pokud se omezuje StrongDC++
 * pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
 * automatické hledání alternativ podle RevConnectu
-* odstranìno automatické odstraòování zdrojù pomalejších 1kB/s
+* automatické odstraòování pomalých zdrojù lze vypnout
 * zmìnìn vzhled dialogu pøi pádu programu
 * zmìnìn styl nabídek na XP (zDC++)
 * vylepšena minimální velikost segmentu
@@ -38,7 +38,7 @@
 * nìkolik novinek a zmìn z CZDC++
 * pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
 * opraveno importování tématu
-* pøedìlán userfilter (fulDC)
+* pøedìlán userfilter + regulérní pøíkazy
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

@@ -25,7 +25,7 @@
 #include "SimpleXML.h"
 #include "Util.h"
 #include "File.h"
-#include "PluginManager.h"
+#include "HubManager.h"
 #include "StringTokenizer.h"
 
 const string SettingsManager::settingTags[] =
@@ -67,7 +67,7 @@ const string SettingsManager::settingTags[] =
 	"ShowStatusbar",
 	"ShowToolbar", "ShowTransferview", 
 	"OptionalInfo", "GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
-	"PopupFilelist", "CzertHiddenSettingA", "FilterSearchResults", "CzertHiddenSettingB", "ExtraSlots", 
+	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
 	"TextMyOwnBackColor", "TextMyOwnForeColor", "TextMyOwnBold", "TextMyOwnItalic", 
 	"TextPrivateBackColor", "TextPrivateForeColor", "TextPrivateBold", "TextPrivateItalic", 
@@ -96,7 +96,8 @@ const string SettingsManager::settingTags[] =
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
-	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment",
+	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment", "PopunderPm", "PopunderFilelist",
+	"AutoDropSource",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -208,6 +209,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
 	setDefault(MEMORY_MAPPED_FILE, false);
+	setDefault(AUTO_DROP_SOURCE, true);
 	
 	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
@@ -218,6 +220,8 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_TRANSFERVIEW, true);
 	setDefault(SHOW_STATUSBAR, true);
 	setDefault(SHOW_TOOLBAR, true);
+	setDefault(POPUNDER_PM, false);
+	setDefault(POPUNDER_FILELIST, false);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
@@ -225,8 +229,6 @@ SettingsManager::SettingsManager()
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(GET_UPDATE_INFO, true);
 	setDefault(SEARCH_PASSIVE, false);
-	setDefault(POPUP_FILELIST, true);
-	setDefault(FILTER_SEARCH, true);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_NORMAL, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, 0);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
@@ -418,14 +420,14 @@ void SettingsManager::load(string const& aFileName)
 		xmltext = f.read();		
 	} catch(const FileException&) {
 		// ...
-		PluginManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
+		HubManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
 		setTemp();
 		return;
 	}
 
 	if(xmltext.empty()) {
 		// Nothing to load...
-		PluginManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
+		HubManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
 		setTemp();
 		return;
 	}

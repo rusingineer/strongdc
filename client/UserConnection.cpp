@@ -73,7 +73,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
 			return;
 
-		if(Util::stricmp(temp, "File Not Available") == 0) {
+		if(Util::stricmp(temp, "File Not Available") == 0 || 
+			strstr(temp,/*path/file*/" no more exists") != NULL) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
 			fire(UserConnectionListener::Failed(), this, temp);

@@ -24,7 +24,7 @@ const string& UserInfo::getText(int col) const {
 		case COLUMN_DESCRIPTION: return user->getDescription();
 		case COLUMN_TAG: return user->getTag();
 		case COLUMN_CONNECTION: return user->getConnection();
-		case COLUMN_UPLOAD_SPEED: return uuploadSpeed;
+		case COLUMN_UPLOAD_SPEED: return uploadSpeed;
 		case COLUMN_EMAIL: return user->getEmail();
 		case COLUMN_CLIENTID: return user->getClientType();
 		case  COLUMN_VERSION: return user->getVersion();
@@ -63,7 +63,7 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		case COLUMN_DESCRIPTION: return Util::stricmp(a->user->getDescription(), b->user->getDescription());
 		case COLUMN_TAG: return Util::stricmp(a->user->getTag(), b->user->getTag());
 		case COLUMN_CONNECTION: return Util::stricmp(a->user->getConnection(), b->user->getConnection());
-		case COLUMN_UPLOAD_SPEED: return compare(a->uuploadSpeed,b->uuploadSpeed);
+		case COLUMN_UPLOAD_SPEED: return compare(a->uploadSpeed,b->uploadSpeed);
 		case COLUMN_EMAIL: return Util::stricmp(a->user->getEmail(), b->user->getEmail());
 		case COLUMN_CLIENTID: return Util::stricmp(a->user->getClientType(), b->user->getClientType());
 		case COLUMN_VERSION: return Util::stricmp(a->user->getVersion(), b->user->getVersion());
@@ -80,31 +80,22 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 }
 
 void UserInfo::update() {
-	if(user->getDownloadSpeed()<1)
-		{
-			string s1=user->getDescription();
-			if((s1.find_last_of('@')==-1)){
-			const string& tmp = user->getConnection();
-			int status = user->getStatus();
-			string Omezeni = user->getUpload();
+	if(user->getDownloadSpeed()<1) {
+		const string& tmp = user->getConnection();
+		int status = user->getStatus();
+		string Omezeni = user->getUpload();
 
-			if (!Omezeni.empty())
-			 { s1=Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";}
-			else
-			if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { s1 = ">=100 kB/s"; }
-			else if(tmp == "28.8Kbps") { s1 = "*max. 2.1 kB/s"; }
-			else if(tmp == "33.6Kbps") { s1 = "*max. 3 kB/s"; }
-			else if(tmp == "56Kbps") { s1 = "*max. 4.2 kB/s"; }
-			else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { s1 = "*max. 6 kB/s"; }
-			else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { s1 = "*max. 10 kB/s"; }
-			else { s1 = "N/A"; }
-					}
-				else 
-			{
-				s1.erase(0,s1.find_last_of('@')+1);
-			}
-			uuploadSpeed = s1;
-		} else uuploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
+		if (!Omezeni.empty()) {
+			uploadSpeed = Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";
+		} else
+		if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = ">=100 kB/s"; }
+		else if(tmp == "28.8Kbps") { uploadSpeed = "*max. 2.1 kB/s"; }
+		else if(tmp == "33.6Kbps") { uploadSpeed = "*max. 3 kB/s"; }
+		else if(tmp == "56Kbps") { uploadSpeed = "*max. 4.2 kB/s"; }
+		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = "*max. 6 kB/s"; }
+		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = "*max. 10 kB/s"; }
+		else { uploadSpeed = "N/A"; }
+	} else uploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
 
 	shared = Util::formatBytes(user->getBytesShared());
 	op = user->isSet(User::OP);

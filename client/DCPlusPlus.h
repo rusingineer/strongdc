@@ -101,9 +101,15 @@ template<typename T, bool flag> struct ReferenceSelector {
 template<typename T> struct ReferenceSelector<T,true> {
 	typedef const T& ResultType;
 };
+
 template<typename T> struct TypeTraits {
 	typedef typename ReferenceSelector<T,(sizeof(T)>sizeof(char*))>::ResultType
 		ParameterType;
+};
+
+// Force string to be returned by reference
+template<> struct TypeTraits<string> {
+	typedef ReferenceSelector<string, true>::ResultType ParameterType;
 };
 
 #define GETSET(type, name, name2) \

@@ -46,18 +46,17 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
 	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()), 
-	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()), currPos(0) { 
+	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
 		setFlag(Download::FLAG_USER_LIST);
 	if(qi->isSet(QueueItem::FLAG_MP3_INFO))
 		setFlag(Download::FLAG_MP3_INFO);
+	if(qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
+		setFlag(Download::FLAG_CHECK_FILE_LIST);
 	if(qi->isSet(QueueItem::FLAG_TESTSUR)) {
 		setFlag(Download::FLAG_TESTSUR);
-		if(qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
-			setFlag(Download::FLAG_CHECK_FILE_LIST);
-
 	} else {
 	if(qi->isSet(QueueItem::FLAG_RESUME))
 		setFlag(Download::FLAG_RESUME);
@@ -77,6 +76,14 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	throttleZeroCounters();
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20 && BOOLSETTING(AUTO_DROP_SOURCE) ) // check every 20 sec
+        {
+            if((*i)->getRunningAverage() < 1230){
+                QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
+                continue;
+            }
+        }
+
 		if(((*i)->getTotal() > 0) && (!(*i)->finished)) {
 			tickList.push_back(*i);
 			QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
@@ -344,7 +351,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	}
 
 	if(prepareFile(aSource, aFileLength)) {
-		aSource->setDataMode(/*aFileLength*/);
+		aSource->setDataMode(/*aFileLength - aSource->getDownload()->getStartPos()*/);
 		aSource->startSend();
 	}
 }
@@ -603,7 +610,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
 
-	d->setFlag(Download::FLAG_SEGMENT_STARTED);
 	fire(DownloadManagerListener::Starting(), d);
 	
 	return true;
@@ -615,12 +621,25 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	
 	try {
 		try{
-			d->setCurrPos(d->getPos() + aLen);
-			d->addPos(d->getFile()->write(aData, aLen), aLen);			
+			if(!d->isSet(Download::FLAG_USER_LIST) && BOOLSETTING(LOG_SEGMENT)) {
+				string log = Util::toString(d->getPos())+" => ";
+					log += Util::toString(d->getPos()+aLen)+" - ";
+					log += aSource->getUser()->getNick()+" @ ";
+					log += Util::formatBytes(d->getRunningAverage())+"/s ";
+					log += d->isSet(Download::FLAG_TREE_DOWNLOAD) ? "TreeDownload, " : "";
+					log += d->isSet(Download::FLAG_TREE_TRIED) ? "TreeTried, " : "";
+					log += d->isSet(Download::FLAG_ZDOWNLOAD) ? "GetZBlock, " : "";
+					log += d->isSet(Download::FLAG_UTF8) ? "Utf8, " : "";
+//					log += d->treeValid ? "TTHL, " : "";
+//					log += getTTH() ? "TTH leaf: "+getTigerTree().getLeaves()[1] : "TTH: None";
+				LogManager::getInstance()->log(d->getTargetFileName()+".segment",log);
+			}
+
+			d->addPos(d->getFile()->write(aData, aLen));			
 		} catch(const BlockDLException) {
-			//d->setCurrPos(d->getPos() + aLen);
-			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			d->getFile()->flush();
+			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));			
+			d->finished = true;
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource, false, true);
@@ -630,13 +649,17 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			handleEndData(aSource);
 			return;	
 		}
+
+
+		d->addActual(aLen);
 		if(d->getPos() == d->getSize()) {
 			handleEndData(aSource);
 			aSource->setLineMode();
 		}
+
+
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
-
 		//d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
@@ -821,9 +844,8 @@ noCRC:
 	}
 	
 	// Check hash
-	if((BOOLSETTING(CHECK_TTH)) && (!d->isSet(Download::FLAG_USER_LIST)) && (!d->isSet(Download::FLAG_MP3_INFO)))
-	{
-		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));		
+	if((BOOLSETTING(CHECK_TTH)) && (!d->isSet(Download::FLAG_USER_LIST)) && (!d->isSet(Download::FLAG_MP3_INFO))) {
+		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));
 		TTHValue* hash1 = new TTHValue(HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget()).getRoot());
 		TTHValue* hash2 = q->getTTH();
 
@@ -889,6 +911,7 @@ noCRC:
 	aSource->setDownload(NULL);
 	removeDownload(d, true, true);	
 	checkDownloads(aSource, true);
+
 }
 
 void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource) throw() { 

@@ -460,7 +460,6 @@ private:
 	int findUser(const User::Ptr& aUser);
 
 	bool updateUser(const User::Ptr& u);
-	void removeUser(const User::Ptr& u);
 	void updateUserList();
 	void addAsFavorite();
 
