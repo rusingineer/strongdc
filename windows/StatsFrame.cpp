@@ -37,19 +37,17 @@ LRESULT StatsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 LRESULT StatsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	if(!closed) {
-		closed = true;		
+	if(timerId != 0)
+		KillTimer(timerId);
 
+		closed = true;		
 		CZDCLib::setButtonPressed(IDC_NET_STATS, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-	if(timerId != 0)
-		KillTimer(timerId);
-
 		MDIDestroy(m_hWnd);
 		return 0;
 	}	
-
 }
 
 void StatsFrame::drawLine(CDC& dc, StatIter begin, StatIter end, CRect& rc, CRect& crc) {
@@ -223,5 +221,3 @@ void StatsFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */) {
  * @file
  * $Id$
  */
-
-

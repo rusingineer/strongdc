@@ -96,7 +96,6 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		UploadManager::getInstance()->removeListener(this);
-
 		CZDCLib::setButtonPressed(IDC_UPLOAD_QUEUE, false);
 		closed = true;
 		PostMessage(WM_CLOSE);
@@ -150,18 +149,6 @@ void UploadQueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	SetSplitterRect(rc);
 }
 
-LRESULT UploadQueueFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	switch(wParam) 
-	{
-	case VK_DELETE:
-		onRemove(0, 0, 0, bHandled);
-		break;
-	default:
-		bHandled = FALSE;
-	}
-	return 0;
-}
-
 LRESULT UploadQueueFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string nick;
 	if (!(nick = getSelectedNick()).empty()) {
@@ -196,7 +183,6 @@ LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 			ctrlQueued.ClientToScreen(&pt);
 		else
 			ctrlList.ClientToScreen(&pt);
-
 	string x = getSelectedNick();
 	
 	if(!x.empty())

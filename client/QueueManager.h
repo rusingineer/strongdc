@@ -70,7 +70,9 @@ private:
 class ConnectionQueueItem;
 class QueueLoader;
 
-class QueueManager : public Singleton<QueueManager>, public Speaker<QueueManagerListener>, TimerManagerListener, SearchManagerListener, ClientManagerListener{
+class QueueManager : public Singleton<QueueManager>, public Speaker<QueueManagerListener>, private TimerManagerListener, 
+	private SearchManagerListener, private ClientManagerListener
+{
 public:
 	/** Add a file with hash to the queue. */
 	bool add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException); 
@@ -93,14 +95,13 @@ public:
 			QueueItem::FLAG_USER_LIST | aFlags,  QueueItem::DEFAULT, 
 			Util::emptyString, true);
 	}
-	// CDM EXTENSION BEGINS
+
 	void addTestSUR(User::Ptr aUser) throw(QueueException, FileException) {
 		string fileName = "TestSUR"+aUser->getNick();
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(fileName, -1, aUser, file, NULL, Util::emptyString, QueueItem::FLAG_TESTSUR);
 		//aUser->uncacheClientInfo();
 	}
-	// CDM EXTENSION ENDS
 
 	/** Readd a source that was removed */
 	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
@@ -126,6 +127,7 @@ public:
 		Lock l(cs);
 		fileQueue.find(sl, aSize, suffix);
 	}
+
 	void getTargetsByTTH(StringList& sl, TTHValue* tth) throw() {
 		Lock l(cs);
 		QueueItem::List ql;
@@ -133,7 +135,7 @@ public:
 		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
 			sl.push_back((*i)->getTarget());
 		}
-	};
+	}
 
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
@@ -145,22 +147,21 @@ public:
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
 		return (userQueue.getNext(aUser, minPrio) != NULL);
-	};
+	}
 	
 	void importNMQueue(const string& aFile) throw(FileException);
 	void loadQueue() throw();
 	void saveQueue() throw();
 	
-	void autoDropSource(User::Ptr& aUser);
 	string getTopAutoSearchString();	
-	void updateSource(QueueItem* qi) {
-		fire(QueueManagerListener::StatusUpdated(), qi);
-	}
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
 	QueueItem* getRunning(const User::Ptr& aUser);
-//private:
+	void updateSource(QueueItem* qi) {
+		fire(QueueManagerListener::StatusUpdated(), qi);
+	}
+
 
 	/** All queue items by target */
 	class FileQueue {
@@ -190,9 +191,8 @@ public:
 			queue.erase(qi->getTarget());
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST ))
 				delete FileDataInfo::GetFileDataInfo(qi->getTempTarget());
-
 			delete qi;
-		};
+		}
 
 	private:
 	void add(QueueItem* qi);
@@ -218,11 +218,11 @@ public:
 		bool isRunning(const User::Ptr& aUser) const { 
 			return (running.find(aUser) != running.end());
 		};
-		/** Currently running downloads, a QueueItem is always either here or in the userQueue */
-		QueueItem::UserMap running;
 	private:
 		/** QueueItems by priority and user (this is where the download order is determined) */
 		QueueItem::UserListMap userQueue[QueueItem::LAST];	
+		/** Currently running downloads, a QueueItem is always either here or in the userQueue */
+		QueueItem::UserMap running;
 	};
 
 	friend class QueueLoader;
@@ -266,7 +266,7 @@ public:
 			dirty = true;
 			lastSave = GET_TICK();
 		}
-	};
+	}
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
@@ -285,4 +285,3 @@ public:
  * @file
  * $Id$
  */
- 

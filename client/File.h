@@ -219,16 +219,8 @@ public:
 	}
 
 	static bool existsFile(const string& aFileName) { 
-		File* f = NULL;
-		try {
-			f = new File(aFileName, File::READ, File::OPEN);			
-			try { f->close(); }
-			catch(const Exception&) { }
-			delete f;
-			return true;
-		}
-		catch(const FileException&) { }
-		return false;
+		DWORD attr = GetFileAttributes(aFileName.c_str());
+		return (attr != 0xFFFFFFFF);
 	}
 
 	static void deleteFile(const string& aFileName) throw() { ::DeleteFile(aFileName.c_str()); };
@@ -487,4 +479,3 @@ private:
  * @file
  * $Id$
  */
-

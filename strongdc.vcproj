@@ -635,6 +635,9 @@
 				RelativePath=".\windows\DownloadPage.h">
 			</File>
 			<File
+				RelativePath=".\windows\ExceptionDlg.h">
+			</File>
+			<File
 				RelativePath=".\windows\ExListViewCtrl.h">
 			</File>
 			<File

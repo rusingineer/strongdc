@@ -704,5 +704,7 @@ enum Strings { // @DontAdd
 	ALTERNATES_SEND, // "Send alternate search for: "
 	COLLAPSE_ALL,
 	EXPAND_ALL,
+	PB, // "PB"
+	EB, // "EB"	
 	LAST // @DontAdd
 };

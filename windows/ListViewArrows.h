@@ -22,8 +22,8 @@
 template<class T>
 class ListViewArrows {
 public:
-	ListViewArrows() { };
-	virtual ~ListViewArrows() { };
+	ListViewArrows() { }
+	virtual ~ListViewArrows() { }
 
 	typedef ListViewArrows<T> thisClass;
 
@@ -153,4 +153,3 @@ private:
 * @file
 * $Id$
 */
-

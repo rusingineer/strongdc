@@ -71,8 +71,9 @@ public:
 	}
 	
 private:
-	bool closed;
+
 	bool dirty;
+	bool closed;
 	CEdit ctrlPad;
 };
 
@@ -82,4 +83,3 @@ private:
  * @file
  * $Id$
  */
-

@@ -22,7 +22,6 @@
 #include "HashManager.h"
 #include "CryptoManager.h"
 #include "SimpleXML.h"
-#include "LogManager.h"
 #include "File.h"
 
 #define HASH_FILE_VERSION_STRING "1"
@@ -61,11 +60,6 @@ void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_
 		fn.erase(0, i);
 		fn.insert(0, "...");
 	}
-/*	if(speed > 0) {
-		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn + " (" + Util::formatBytes(speed) + "/s)");
-	} else if(speed == 0) {
-		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn);
-	}*/
 }
 
 void HashManager::HashStore::addFile(const string& aFileName, const TigerTree& tth, bool aUsed) {
@@ -440,7 +434,6 @@ int HashManager::Hasher::run() {
 			if(!w.empty()) {
 				fname = *w.begin();
 				w.erase(w.begin());
-
 				int k = w.size();
 				if(k>pocetHashu) pocetHashu = k;
 				if(k != 0) {
@@ -525,7 +518,6 @@ int HashManager::Hasher::run() {
 		{	procenta = 0;			
 			LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);
 		}
-#ifdef _WIN32
 		if(buf != NULL && (last || stop)) {
 			if(virtualBuf) {
 #ifdef _WIN32
@@ -536,7 +528,6 @@ int HashManager::Hasher::run() {
 			}
 			buf = NULL;
 		}
-#endif
 	}
 	return 0;
 }
@@ -553,43 +544,60 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 
 	bool virtualBuf = true;
 
-			if(!fname.empty()) {
-			if(buf == NULL) {
-				virtualBuf = true;
-				buf = (u_int8_t*)VirtualAlloc(NULL, 2*BUF_SIZE, MEM_COMMIT, PAGE_READWRITE);
-			}
-			if(buf == NULL) {
-				virtualBuf = false;
-				buf = new u_int8_t[BUF_SIZE];
-			}
-			try {
-				File f(fname, File::READ, File::OPEN);
-				size_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), (size_t)MIN_BLOCK_SIZE);
-
-				TigerTree slowTTH(bs, f.getLastModified());
-				TigerTree* tth = &slowTTH;
-				size_t n = 0;
+	if(!fname.empty()) {
 #ifdef _WIN32
-				TigerTree fastTTH(bs, f.getLastModified());
-				tth = &fastTTH;
-				if(!virtualBuf || !fastHash(fname, buf, fastTTH)) {
-					tth = &slowTTH;
-#endif
-					do {
-						size_t bufSize = BUF_SIZE;
-						n = f.read(buf, bufSize);
-						tth->update(buf, n);
-					} while (n > 0/* && !stop*/);
-				}
-
-				f.close();
-				tth->finalize();
-				return *tth;
-				//HashManager::getInstance()->hashDone(fname, *tth);
-			} catch(const FileException&) {
-				// Ignore, it'll be readded on the next share refresh...
-			}
+		if(buf == NULL) {
+			virtualBuf = true;
+			buf = (u_int8_t*)VirtualAlloc(NULL, 2*BUF_SIZE, MEM_COMMIT, PAGE_READWRITE);
 		}
+#endif
+		if(buf == NULL) {
+			virtualBuf = false;
+			buf = new u_int8_t[BUF_SIZE];
+		}
+		try {
+			File f(fname, File::READ, File::OPEN);
+			size_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), (size_t)MIN_BLOCK_SIZE);
+/*#ifdef _WIN32
+			int64_t size = f.getSize();
+			u_int32_t start = GET_TICK();
+#endif*/
+
+			TigerTree slowTTH(bs, f.getLastModified());
+			TigerTree* tth = &slowTTH;
+			size_t n = 0;
+#ifdef _WIN32
+			TigerTree fastTTH(bs, f.getLastModified());
+			tth = &fastTTH;
+			if(!virtualBuf || !fastHash(fname, buf, fastTTH)) {
+				tth = &slowTTH;
+				u_int32_t lastRead = GET_TICK();
+#endif
+				do {
+					size_t bufSize = BUF_SIZE;
+#ifdef _WIN32
+					if(SETTING(MAX_HASH_SPEED) > 0) {
+						u_int32_t now = GET_TICK();
+						u_int32_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
+						if(lastRead + minTime > now) {
+							Thread::sleep(minTime - (now - lastRead));
+						}
+					}
+#else
+#warning FIXME - Add speed measurement and throttling for non WIN32 platforms
+#endif
+					n = f.read(buf, bufSize);
+					tth->update(buf, n);
+				} while (n > 0 && !stop);
+#ifdef _WIN32
+			}
+#endif
+			f.close();
+			tth->finalize();			
+			return *tth;
+		} catch(const FileException&) {
+		}
+	}
 	return 0;
 }
 /**

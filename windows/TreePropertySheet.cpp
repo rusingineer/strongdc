@@ -34,14 +34,9 @@ int TreePropertySheet::PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam) {
 
 LRESULT TreePropertySheet::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /* bHandled */) {
 	tree_icons.CreateFromImage(IDB_O_SETTINGS_DLG, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	
 	hideTab();
 	addTree();
 	fillTree();
-
-	/*CenterWindow(GetParent());
-	ShowWindow(SW_SHOW);*/
-
 	return 0;
 }
 
@@ -81,8 +76,7 @@ void TreePropertySheet::addTree()
 	CRect rc(SPACE_LEFT, rcPage.top, TREE_WIDTH, rcPage.bottom);
 
 	ctrlTree.Create(m_hWnd, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, WS_EX_CLIENTEDGE, IDC_PAGE);
-	ctrlTree.SetImageList(tree_icons, TVSIL_NORMAL);	
-
+	ctrlTree.SetImageList(tree_icons, TVSIL_NORMAL);
 }
 
 void TreePropertySheet::fillTree() {

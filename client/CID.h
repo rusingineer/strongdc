@@ -59,7 +59,6 @@ public:
 	static const u_int64_t zero = 0;
 private:
 	u_int64_t cid;
-
 };
 
 #endif

@@ -42,9 +42,7 @@
 #include "DownloadDirsPage.h"
 
 bool PropertiesDlg::needUpdate = false;
-PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SETTINGS))
-{
-
+PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SETTINGS)) {
 	pages[0] = new GeneralPage(s);
 	pages[1] = new UploadPage(s);
 	pages[2] = new DownloadPage(s);	
@@ -53,7 +51,6 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SET
 	pages[5] = new Advanced2Page(s);
 	pages[6] = new UCPage(s);
 	pages[7] = new CZDCPage(s);
-
 	pages[8] = new DownloadDirsPage(s);
 	pages[9] = new PropPageTextStyles(s);
 	pages[10] = new OperaColorsPage(s);
@@ -65,7 +62,6 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SET
 	pages[16] = new ToolbarPage(s);
 	pages[17] = new ClientsPage(s);	
 
-
 	for(int i=0; i<numPages; i++) {
 		AddPage(pages[i]->getPSP());
 	}
@@ -75,28 +71,24 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SET
 	m_psh.dwFlags &= ~PSH_HASHELP;
 }
 
-PropertiesDlg::~PropertiesDlg()
-{
+PropertiesDlg::~PropertiesDlg() {
 	for(int i=0; i<numPages; i++) {
 		delete pages[i];
 	}
 }
 
-void PropertiesDlg::write()
-{
+void PropertiesDlg::write() {
 	for(int i=0; i<numPages; i++)
 	{
 		// Check HWND of page to see if it has been created
 		const HWND page = PropSheet_IndexToHwnd((HWND)*this, i);
 
 		if(page != NULL)
-			pages[i]->write();
-		
+			pages[i]->write();	
 	}
 }
 
-LRESULT PropertiesDlg::onOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled)
-{
+LRESULT PropertiesDlg::onOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
 	write();
 	bHandled = FALSE;
 	return TRUE;
@@ -106,4 +98,3 @@ LRESULT PropertiesDlg::onOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
  * @file
  * $Id$
  */
-

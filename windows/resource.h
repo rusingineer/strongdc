@@ -372,6 +372,7 @@
 #define IDC_SEGMENT6_MIN                1230
 #define IDC_DOWNLOADDIR_DIR             1230
 #define IDC_USE_EXTRA_VERSION           1230
+#define IDC_TTH                         1230
 #define IDC_DOWNLOADDIR_NAME            1231
 #define IDC_CLIENT_NO_ACTION            1231
 #define IDC_SEGMENT8_MIN                1232

@@ -251,13 +251,11 @@ void HubManager::save() {
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
 			xml.addChildAttrib("UserListState", (*i)->getUserListState());
-			// CDM EXTENSION BEGINS FAVS
 			xml.addChildAttrib("RawOne", (*i)->getRawOne());
 			xml.addChildAttrib("RawTwo", (*i)->getRawTwo());
 			xml.addChildAttrib("RawThree", (*i)->getRawThree());
 			xml.addChildAttrib("RawFour", (*i)->getRawFour());
 			xml.addChildAttrib("RawFive", (*i)->getRawFive());
-			// CDM EXTENSION ENDS
 		}
 		xml.stepOut();
 		xml.addTag("Users");
@@ -300,12 +298,9 @@ void HubManager::save() {
 	} catch(const Exception& e) {
 		dcdebug("HubManager::save: %s\n", e.getError().c_str());
 	}
-	// CDM EXTENSION BEGINS (profiles)
 	saveClientProfiles();
-
-	// CDM EXTENSION ENDS
 }
-// CDM EXTENSION BEGINS (profiles)
+
 void HubManager::saveClientProfiles() {
 	try {
 		SimpleXML xml;
@@ -387,6 +382,7 @@ void HubManager::recentsave() {
 		dcdebug("HubManager::recentsave: %s\n", e.getError().c_str());
 	}
 }
+
 void HubManager::loadClientProfiles(SimpleXML* aXml) {
 	string n,v,t,e,l,p,s,te,u,st,c,r,ta,us,ch;
 	aXml->resetCurrentChild();
@@ -456,7 +452,7 @@ void HubManager::loadClientProfiles() {
 		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
 	}
 }
-// CDM EXTENSION ENDS
+
 void HubManager::load() {
 	
 	// Add standard op commands
@@ -485,9 +481,8 @@ void HubManager::load() {
 	} catch(const Exception& e) {
 		dcdebug("HubManager::load: %s\n", e.getError().c_str());
 	}
-	// CDM EXTENSION BEGINS (profiles)
-	loadClientProfiles();
 
+	loadClientProfiles();
 	try {
 		SimpleXML xml;
 		xml.fromXML(File(Util::getAppPath() + RECENTS_FILE, File::READ, File::OPEN).read());
@@ -518,13 +513,11 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setPassword(aXml->getChildAttrib("Password"));
 			e->setServer(aXml->getChildAttrib("Server"));
 			e->setUserDescription(aXml->getChildAttrib("UserDescription"));
-			// CDM EXTENSION BEGINS FAVS
 			e->setRawOne(aXml->getChildAttrib("RawOne"));
 			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
 			e->setRawThree(aXml->getChildAttrib("RawThree"));
 			e->setRawFour(aXml->getChildAttrib("RawFour"));
 			e->setRawFive(aXml->getChildAttrib("RawFive"));
-			// CDM EXTENSION ENDS
 			favoriteHubs.push_back(e);
 		}
 		aXml->stepOut();

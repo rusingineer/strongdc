@@ -246,7 +246,6 @@ public:
 	void load(const string& aFileName);
 	void save(const string& aFileName);
 
-//PDC {
 	struct DownloadDirectory {
 		string dir, ext, name;
 	};
@@ -294,13 +293,9 @@ public:
 		return (find(NeverDownload.begin(), NeverDownload.end(), user) != NeverDownload.end());
 	}
 	
-//PDC }
-
 private:
-//PDC {
 	DDList DownloadDirectories;
 	vector<string> NeverDownload;
-//PDC }
 
 	friend class Singleton<SettingsManager>;
 	SettingsManager();
@@ -342,4 +337,3 @@ private:
  * @file
  * $Id$
  */
-

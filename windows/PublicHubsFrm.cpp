@@ -73,7 +73,7 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlHubs.setSort(COLUMN_USERS, ExListViewCtrl::SORT_INT, false);
 	ctrlHubs.SetFocus();
 
-	ctrlHub.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+	ctrlHub.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
 	ctrlHub.SetFont(WinUtil::systemFont);
 	
@@ -94,7 +94,7 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlAddress.SetWindowText(CSTRING(MANUAL_ADDRESS));
 	ctrlAddress.SetFont(WinUtil::systemFont);
 	
-	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
 	filterContainer.SubclassWindow(ctrlFilter.m_hWnd);
 	ctrlFilter.SetFont(WinUtil::systemFont);
@@ -134,7 +134,6 @@ LRESULT PublicHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 	if(item->iItem != -1) {
 		char buf[256];
 		
-// iDC++
 		RecentHubEntry r;
 		ctrlHubs.GetItemText(item->iItem, COLUMN_NAME, buf, 256);
 		r.setName(buf);
@@ -147,8 +146,6 @@ LRESULT PublicHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 		ctrlHubs.GetItemText(item->iItem, COLUMN_SERVER, buf, 256);
 		r.setServer(buf);
 		HubManager::getInstance()->addRecent(r);
-// iDC++
-
 		HubFrame::openWindow(buf);
 	}
 
@@ -194,7 +191,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		while((i = tmp.find(' ')) != string::npos)
 			tmp.erase(i, 1);
 
-// iDC++
+
 		RecentHubEntry r;
 		r.setName("***");
 		r.setDescription("***");
@@ -202,7 +199,6 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		r.setShared("*");
 		r.setServer(tmp);
 		HubManager::getInstance()->addRecent(r);
-// iDC++
 
 		HubFrame::openWindow(tmp);
 			
@@ -211,7 +207,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 			char buf[256];
 			int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
 			ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
-// iDC++
+
 			RecentHubEntry r;
 			ctrlHubs.GetItemText(i, COLUMN_NAME, buf, 256);
 			r.setName(buf);
@@ -224,7 +220,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 			ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 			r.setServer(buf);
 			HubManager::getInstance()->addRecent(r);
-// iDC++
+
 			HubFrame::openWindow(buf);
 		}
 	}
@@ -272,7 +268,7 @@ LRESULT PublicHubsFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/,
 		string::size_type i;
 		while((i = tmp.find(' ')) != string::npos)
 			tmp.erase(i, 1);
-// iDC++
+
 		RecentHubEntry r;
 		r.setName("***");
 		r.setDescription("***");
@@ -280,7 +276,7 @@ LRESULT PublicHubsFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/,
 		r.setShared("*");
 		r.setServer(tmp);
 		HubManager::getInstance()->addRecent(r);
-// iDC++		
+		
 		HubFrame::openWindow(tmp);
 	} else {
 		bHandled = FALSE;
@@ -395,7 +391,6 @@ void PublicHubsFrame::updateList() {
 			l.push_back(i->getReliability()+" %");
 			l.push_back(i->getRating());
 			l.push_back(i->getPort());
-			//
 
 			ctrlHubs.insert(ctrlHubs.GetItemCount(), l);
 			visibleHubs++;
@@ -483,4 +478,3 @@ LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
  * @file
  * $Id$
  */
-

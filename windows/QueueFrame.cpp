@@ -29,9 +29,7 @@
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
 #include "../client/FileDataInfo.h"
-//pdc {
 #include "../client/PluginManager.h"
-//pdc }
 
 #define FILE_LIST_NAME "File Lists"
 
@@ -233,7 +231,6 @@ void QueueFrame::QueueItemInfo::update() {
 				} else {
 					display->columns[COLUMN_STATUS] = STRING(RUNNING);
 				}
-
 			} 
 		}
 		if(colMask & MASK_SIZE) {
@@ -256,9 +253,9 @@ void QueueFrame::QueueItemInfo::update() {
 				case QueueItem::HIGHEST: display->columns[COLUMN_PRIORITY] = STRING(HIGHEST); break;
 				default: dcasserta(0); break;
 			}
-		if(getAutoPriority()) {
-			display->columns[COLUMN_PRIORITY] += " (" + STRING(AUTO) + ")";
-		}
+			if(getAutoPriority()) {
+				display->columns[COLUMN_PRIORITY] += " (" + STRING(AUTO) + ")";
+			}
 		}
 
 		if(colMask & MASK_PATH) {
@@ -282,12 +279,12 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += STRING(ROLLBACK_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_CRC_FAILED)) {
 						tmp += STRING(SFV_INCONSISTENCY);
-					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
-						tmp += STRING(SLOW_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
 						tmp += STRING(TTH_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						tmp += STRING(INVALID_TREE);
+					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
+						tmp += STRING(SLOW_USER);
 					}
 					tmp += ')';
 				}
@@ -393,14 +390,10 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 		while(next != NULL) {
 			if(next != fileLists) {
 				string* stmp = (string*)ctrlDirs.GetItemData(next);
-				if (stmp != NULL) {
 					if(Util::strnicmp(*stmp, dir, 3) == 0)
 						break;
 				}
-			}
 			next = ctrlDirs.GetNextSiblingItem(next);
-			if (next == NULL)
-				break;
 		}
 
 	if(next == NULL) {
@@ -893,9 +886,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
 	ctrlQueue.ScreenToClient(&pt);
-
 	for(int i=1;i<8;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
-
 	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
 		usingDirMenu = false;
 		CMenuItemInfo mi;
@@ -916,7 +907,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			readdMenu.RemoveMenu(0, MF_BYPOSITION);
 		}
 
-
 		WinUtil::ClearPreviewMenu(previewMenu);
 		singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
 
@@ -928,6 +918,11 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			string ext = Util::getFileExt(ii->getTargetFileName());
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+				if(previewMenu.GetMenuItemCount() > 0) {
+					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_ENABLED);
+				} else {
+					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
+				}
 			previewMenu.InsertSeparatorFirst(CSTRING(PREVIEW_MENU));
 
 			menuItems = 0;
@@ -970,8 +965,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			else { //no bad sources for this item
 				singleMenu.EnableMenuItem((UINT)(HMENU)readdMenu, MF_GRAYED);
 			}
-			if(ii->getTTH()) {
+			if(ii->getTTH() != NULL) {
                 singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+            } else {
+            	singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
             }
 
 			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
@@ -1205,7 +1202,6 @@ LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		int i = -1;
 		while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(),!ctrlQueue.getItemData(i)->getAutoPriority());
-//			if(viewmode == PriorityView) RemakeList();
 		}
 	}
 	return 0;
@@ -1279,7 +1275,6 @@ void QueueFrame::setAutoPriority(HTREEITEM ht, const bool& ap) {
 	DirectoryPair dp = directories.equal_range(name);
 	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
 		QueueManager::getInstance()->setAutoPriority(i->second->getTarget(), ap);
-//		QueueManager::getInstance()->setPriority(i->second->getTarget(), i->second->calculateAutoPriority());
 	}
 }
 
@@ -1490,6 +1485,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	switch(cd->nmcd.dwDrawStage) {
 	case CDDS_PREPAINT:
 		return CDRF_NOTIFYITEMDRAW;
+
 	case CDDS_ITEMPREPAINT:
 		{
 			QueueItemInfo *ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
@@ -1499,6 +1495,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			}				
 		}
 		return CDRF_NOTIFYSUBITEMDRAW;
+
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_DOWNLOADED) {

@@ -58,7 +58,6 @@ void HttpConnection::downloadFile(const string& aUrl) {
 			fire(HttpConnectionListener::TypeNormal(), this);
 		}
 	}
-	// end of XML Addition
 
 	if(SETTING(HTTP_PROXY).empty()) {
 		Util::decodeUrl(currentUrl, server, port, file);

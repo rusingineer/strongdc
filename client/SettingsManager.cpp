@@ -211,6 +211,10 @@ SettingsManager::SettingsManager()
 	setDefault(UPDATE_URL, "http://www.fin-overclocking.net/");
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
+	setDefault(SHOW_TRANSFERS, true);
+	setDefault(SHOW_STATUS_BAR, true);
+	setDefault(SHOW_TOOLBAR, true);
+
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SEND_EXTENDED_INFO, true);
@@ -338,9 +342,6 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_LOCK, false);
 
 	setDefault(EXPAND_QUEUE, true);
-	setDefault(SHOW_TRANSFERS, true);
-	setDefault(SHOW_TOOLBAR, true);
-	setDefault(SHOW_STATUS_BAR, true);
 	setDefault(TRANSFER_SPLIT_SIZE, 8000);
 	setDefault(I_DOWN_SPEED, 0);
 	setDefault(H_DOWN_SPEED, 0);
@@ -462,7 +463,6 @@ void SettingsManager::load(string const& aFileName)
 			xml.stepOut();
 		}
 
-//PDC {
 		if(xml.findChild("DownloadDirectories")) {
 			xml.stepIn();
 
@@ -485,7 +485,6 @@ void SettingsManager::load(string const& aFileName)
 			xml.stepOut();
 		} 
 		xml.resetCurrentChild();
-//PDC }
 
 		fire(SettingsManagerListener::Load(), &xml);
 
@@ -538,7 +537,6 @@ void SettingsManager::save(string const& aFileName) {
 	}
 	xml.stepOut();
 	
-//PDC {
 	xml.addTag("DownloadDirectories");
 	xml.stepIn();
 
@@ -556,7 +554,6 @@ void SettingsManager::save(string const& aFileName) {
 		xml.addTag("User", *i);
 	}
 	xml.stepOut();
-//PDC }
 
 	fire(SettingsManagerListener::Save(), &xml);
 
@@ -574,10 +571,8 @@ void SettingsManager::save(string const& aFileName) {
 	}
 }
 
-//PDC {
 string SettingsManager::getDownloadDir(string ext){
 	if(ext.size() > 1) {
-//		int size = DownloadDirectories.size();
 		for(SettingsManager::DDList::iterator i = DownloadDirectories.begin(); i != DownloadDirectories.end(); ++i) {
 			StringList tok = StringTokenizer(i->ext, ';').getTokens();
 			for(StringList::iterator j = tok.begin(); j != tok.end(); ++j) {
@@ -588,10 +583,8 @@ string SettingsManager::getDownloadDir(string ext){
 	}
 	return SETTING(DOWNLOAD_DIRECTORY);
 }
-//PDC }
 
 /**
  * @file
  * $Id$
  */
-

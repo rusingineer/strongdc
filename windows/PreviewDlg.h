@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <atlcrack.h>
 #include "../client/Util.h"
 
 class PreviewDlg : public CDialogImpl<PreviewDlg> {
@@ -36,7 +37,7 @@ public:
 
 	enum { IDD = IDD_PREVIEW };
 
-	BEGIN_MSG_MAP(CommandDlg)
+	BEGIN_MSG_MAP_EX(CommandDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_SETFOCUS, onFocus)
 		COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
@@ -57,8 +58,7 @@ public:
 		if(wID == IDOK) {
 			char buf[256];
 
-			if((ctrlName.GetWindowTextLength() == 0) || (ctrlApplication.GetWindowTextLength()== 0))
-			{
+			if((ctrlName.GetWindowTextLength() == 0) || (ctrlApplication.GetWindowTextLength()== 0)){
 				MessageBox("Name and command must not be empty");
 				return 0;
 			}

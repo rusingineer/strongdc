@@ -207,7 +207,6 @@ public:
 		// DownloadManager
 		STATE_FILELENGTH,
 		STATE_TREE,
-		STATE_SEGMENT_OFF
 	};
 
 	int getNumber() { return (((u_int32_t)this)>>2) & 0x7fff; };
@@ -337,7 +336,6 @@ private:
 	virtual void on(Line, const string& line) throw() {
 		if (BOOLSETTING(DEBUG_COMMANDS))
 			DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + line + "|");
-
 		onLine(line.c_str());
 	}
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 
@@ -365,4 +363,3 @@ private:
  * @file
  * $Id$
  */
-

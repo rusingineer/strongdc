@@ -36,7 +36,6 @@ class QueueFrame : public MDITabChildWindowImpl<QueueFrame, RGB(0, 0, 0), IDR_QU
 	private QueueManagerListener, public CSplitterImpl<QueueFrame>
 {
 public:
-
 	DECLARE_FRAME_WND_CLASS_EX("QueueFrame", IDR_QUEUE, 0, COLOR_3DFACE);
 
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
@@ -116,7 +115,6 @@ public:
 	void removeDir(HTREEITEM ht);
 	void setPriority(HTREEITEM ht, const QueueItem::Priority& p);
 	void setAutoPriority(HTREEITEM ht, const bool& ap);
-
 
 	LRESULT onItemChangedQueue(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLISTVIEW* lv = (NMLISTVIEW*)pnmh;
@@ -465,7 +463,6 @@ private:
 	virtual void on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::StatusUpdated, QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
 	virtual void on(QueueManagerListener::SearchStringUpdated, QueueItem* aQI) throw();
-
 };
 
 #endif // !defined(AFX_QUEUEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

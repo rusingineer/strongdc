@@ -56,8 +56,6 @@ public:
 		CHAIN_MSG_MAP(splitBase)
 	ALT_MSG_MAP(SHOWTREE_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowTree)
-	ALT_MSG_MAP(UPLOADQUEUE_MESSAGE_MAP)
-		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
 	END_MSG_MAP()
 
 	// Message handlers
@@ -67,7 +65,6 @@ public:
 	LRESULT onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
-	LRESULT onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);

@@ -5,8 +5,7 @@
 	#include "AGArrayTemplates.h"
 #endif
 
-CAGPtrArray::CAGPtrArray()
-{
+CAGPtrArray::CAGPtrArray() {
 	m_pData = NULL;
 	m_nSize = m_nMaxSize = m_nGrowBy = 0;
 }
@@ -35,26 +34,17 @@ void CAGPtrArray::SetSize(int nNewSize, int nGrowBy) {
 		memset(m_pData, 0, nNewSize * sizeof(void*));  // zero fill
 
 		m_nSize = m_nMaxSize = nNewSize;
-	}
-	else if (nNewSize <= m_nMaxSize)
-	{
+	} else if (nNewSize <= m_nMaxSize) {
 		// it fits
-		if (nNewSize > m_nSize)
-		{
+		if (nNewSize > m_nSize) {
 			// initialize the new elements
-
 			memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
-
 		}
-
 		m_nSize = nNewSize;
-	}
-	else
-	{
+	} else {
 		// otherwise, grow array
 		int nGrowBy = m_nGrowBy;
-		if (nGrowBy == 0)
-		{
+		if (nGrowBy == 0) {
 			// heuristically determine growth when nGrowBy == 0
 			//  (this avoids heap fragmentation in many situations)
 			nGrowBy = min(1024, max(4, m_nSize / 8));
@@ -79,7 +69,6 @@ void CAGPtrArray::SetSize(int nNewSize, int nGrowBy) {
 
 		memset(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
 
-
 		// get rid of old stuff (note: no destructors called)
 		delete[] (BYTE*)m_pData;
 		m_pData = pNewData;
@@ -88,14 +77,12 @@ void CAGPtrArray::SetSize(int nNewSize, int nGrowBy) {
 	}
 }
 
-void CAGPtrArray::SetAllocSize(int nNewSize, int nGrowBy)
-{
+void CAGPtrArray::SetAllocSize(int nNewSize, int nGrowBy) {
 	SetSize(nNewSize, nGrowBy);
 	m_nSize = 0;
 }
 
-int CAGPtrArray::Append(const CAGPtrArray& src)
-{
+int CAGPtrArray::Append(const CAGPtrArray& src) {
 	dcassert(this != &src);   // cannot append to itself
 
 	int nOldSize = m_nSize;
@@ -106,27 +93,22 @@ int CAGPtrArray::Append(const CAGPtrArray& src)
 	return nOldSize;
 }
 
-void CAGPtrArray::Copy(const CAGPtrArray& src)
-{
+void CAGPtrArray::Copy(const CAGPtrArray& src) {
 	dcassert(this != &src);   // cannot append to itself
 
 	SetSize(src.m_nSize);
 
 	memcpy(m_pData, src.m_pData, src.m_nSize * sizeof(void*));
-
 }
 
-void CAGPtrArray::FreeExtra()
-{
-	if (m_nSize != m_nMaxSize)
-	{
+void CAGPtrArray::FreeExtra() {
+	if (m_nSize != m_nMaxSize) {
 		// shrink to desired size
 #ifdef SIZE_T_MAX
 		dcassert(m_nSize <= SIZE_T_MAX/sizeof(void*)); // no overflow
 #endif
 		void** pNewData = NULL;
-		if (m_nSize != 0)
-		{
+		if (m_nSize != 0) {
 			pNewData = (void**) new BYTE[m_nSize * sizeof(void*)];
 			// copy new data from old
 			memcpy(pNewData, m_pData, m_nSize * sizeof(void*));
@@ -139,10 +121,7 @@ void CAGPtrArray::FreeExtra()
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-void CAGPtrArray::SetAtGrow(int nIndex, void* newElement)
-{
+void CAGPtrArray::SetAtGrow(int nIndex, void* newElement) {
 	dcassert(nIndex >= 0);
 
 	if (nIndex >= m_nSize)
@@ -150,23 +129,14 @@ void CAGPtrArray::SetAtGrow(int nIndex, void* newElement)
 	m_pData[nIndex] = newElement;
 }
 
-
-
-
-
-void CAGPtrArray::InsertAt(int nIndex, void* newElement, int nCount)
-{
-
+void CAGPtrArray::InsertAt(int nIndex, void* newElement, int nCount) {
 	dcassert(nIndex >= 0);    // will expand to meet need
 	dcassert(nCount > 0);     // zero or negative size not allowed
 
-	if (nIndex >= m_nSize)
-	{
+	if (nIndex >= m_nSize) {
 		// adding after the end of the array
 		SetSize(nIndex + nCount);  // grow so nIndex is valid
-	}
-	else
-	{
+	} else {
 		// inserting in the middle of the array
 		int nOldSize = m_nSize;
 		SetSize(m_nSize + nCount);  // grow it to new size
@@ -177,24 +147,17 @@ void CAGPtrArray::InsertAt(int nIndex, void* newElement, int nCount)
 		// re-init slots we copied from
 
 		memset(&m_pData[nIndex], 0, nCount * sizeof(void*));
-
 	}
 
 	// insert new value in the gap
 	dcassert(nIndex + nCount <= m_nSize);
 
-
-
 	// copy elements into the empty space
 	while (nCount--)
 		m_pData[nIndex++] = newElement;
-
 }
 
-
-
-void CAGPtrArray::RemoveAt(int nIndex, int nCount)
-{
+void CAGPtrArray::RemoveAt(int nIndex, int nCount) {
 	dcassert(nIndex >= 0);
 	dcassert(nCount >= 0);
 	dcassert(nIndex + nCount <= m_nSize);
@@ -208,13 +171,11 @@ void CAGPtrArray::RemoveAt(int nIndex, int nCount)
 	m_nSize -= nCount;
 }
 
-void CAGPtrArray::InsertAt(int nStartIndex, CAGPtrArray* pNewArray)
-{
+void CAGPtrArray::InsertAt(int nStartIndex, CAGPtrArray* pNewArray) {
 	dcassert(pNewArray != NULL);
 	dcassert(nStartIndex >= 0);
 
-	if (pNewArray->GetSize() > 0)
-	{
+	if (pNewArray->GetSize() > 0) {
 		InsertAt(nStartIndex, pNewArray->GetAt(0), pNewArray->GetSize());
 		for (int i = 0; i < pNewArray->GetSize(); i++)
 			SetAt(nStartIndex + i, pNewArray->GetAt(i));
@@ -223,31 +184,41 @@ void CAGPtrArray::InsertAt(int nStartIndex, CAGPtrArray* pNewArray)
 
 int CAGPtrArray::GetSize() const
 	{ return m_nSize; }
+
 int CAGPtrArray::GetUpperBound() const
 	{ return m_nSize-1; }
+
 void CAGPtrArray::RemoveAll()
 	{ SetSize(0); }
-void* CAGPtrArray::GetAt(int nIndex) const
-	{ dcassert(nIndex >= 0 && nIndex < m_nSize);
-		return m_pData[nIndex]; }
-void CAGPtrArray::SetAt(int nIndex, void* newElement)
-	{ dcassert(nIndex >= 0 && nIndex < m_nSize);
-		m_pData[nIndex] = newElement; }
 
-void*& CAGPtrArray::ElementAt(int nIndex)
-	{ dcassert(nIndex >= 0 && nIndex < m_nSize);
-		return m_pData[nIndex]; }
+void* CAGPtrArray::GetAt(int nIndex) const {
+	dcassert(nIndex >= 0 && nIndex < m_nSize);
+	return m_pData[nIndex];
+}
+
+void CAGPtrArray::SetAt(int nIndex, void* newElement) {
+	dcassert(nIndex >= 0 && nIndex < m_nSize);
+	m_pData[nIndex] = newElement;
+}
+
+void*& CAGPtrArray::ElementAt(int nIndex) {
+	dcassert(nIndex >= 0 && nIndex < m_nSize);
+	return m_pData[nIndex];
+}
+
 const void** CAGPtrArray::GetData() const
 	{ return (const void**)m_pData; }
+
 void** CAGPtrArray::GetData()
 	{ return (void**)m_pData; }
-int CAGPtrArray::Add(void* newElement)
-	{ int nIndex = m_nSize;
-		SetAtGrow(nIndex, newElement);
-		return nIndex; }
 
-int CAGPtrArray::AddSpeedy(void* newElement)
-{
+int CAGPtrArray::Add(void* newElement) {
+	int nIndex = m_nSize;
+		SetAtGrow(nIndex, newElement);
+	return nIndex;
+}
+
+int CAGPtrArray::AddSpeedy(void* newElement) {
 	int nIndex = m_nSize;
 	dcassert(nIndex >= 0);
 
@@ -267,6 +238,6 @@ int CAGPtrArray::AddSpeedy(void* newElement)
 	
 void* CAGPtrArray::operator[](int nIndex) const
 	{ return GetAt(nIndex); }
+
 void*& CAGPtrArray::operator[](int nIndex)
 	{ return ElementAt(nIndex); }
-

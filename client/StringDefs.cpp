@@ -700,7 +700,9 @@ string ResourceManager::strings[] = {
 "Report auto search for alternates in status bar", 
 "Searching TTH alternates for: ",
 "Collapse All",
-"Expand All"
+"Expand All",
+"PB", 
+"EB",
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1401,5 +1403,7 @@ string ResourceManager::names[] = {
 "ReportAlternates", 
 "AlternatesSend",
 "CollapseAll",
-"ExpandAll"
+"ExpandAll",
+"Pb", 
+"Eb",
 };

@@ -61,7 +61,6 @@ MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
 u_int32_t MainFrame::iCurrentShutdownTime = 0;
 string ShutDownText = "";
-
 CAGEmotionSetup* g_pEmotionsSetup;
 
 MainFrame::~MainFrame() {
@@ -412,7 +411,6 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				if(i != 8) statusSizes[i] = w;
 				u = true;	
 				}
-
 				ctrlStatus.SetText(i+1, str[i].c_str());
 				if(i==8)
 					{ if(str[8] == "")
@@ -428,7 +426,6 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					}
 				else
 				{	
-					//statusSizes[i] = w;				
 					ctrlStatus.SetText(i+1, str[i].c_str());
 				}
 			}
@@ -566,13 +563,12 @@ LRESULT MainFrame::onFileADLSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
-// CDM EXTENSION BEGINS
 LRESULT MainFrame::onCDMDebugWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) 
 {
 	CDMDebugFrame::openWindow();
 	return 0;
 }
-// CDM EXTENSION ENDS
+
 LRESULT MainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	CAboutDlg dlg;
 	dlg.DoModal(m_hWnd);
@@ -598,14 +594,14 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		ClientManager::getInstance()->infoUpdated(false);
 		createToolbar();
 
-	if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
-	else ctrlToolbar.CheckButton(IDC_LIMITER, false);
+		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
+		else ctrlToolbar.CheckButton(IDC_LIMITER, false);
 
-	if(Util::getAway()) ctrlToolbar.CheckButton(IDC_AWAY, true);
-	else ctrlToolbar.CheckButton(IDC_AWAY, false);
+		if(Util::getAway()) ctrlToolbar.CheckButton(IDC_AWAY, true);
+		else ctrlToolbar.CheckButton(IDC_AWAY, false);
 
-	if(getShutDown()) ctrlToolbar.CheckButton(IDC_SHUTDOWN, true);
-	else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
+		if(getShutDown()) ctrlToolbar.CheckButton(IDC_SHUTDOWN, true);
+		else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
 
 	}
 	return 0;
@@ -633,12 +629,8 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 							MessageBox(msg.c_str(), title.c_str(), MB_OK);
 						} else {
 							string msg = xml.getChildData() + "\r\n" + STRING(OPEN_DOWNLOAD_PAGE);
-//							if(MessageBox(msg.c_str(), title.c_str(), MB_YESNO) == IDYES) {
-//								WinUtil::openLink(url);
-			UpdateDlg dlg;
-			dlg.DoModal();
-
-						//	}
+							UpdateDlg dlg;
+							dlg.DoModal();
 						}
 					}
 				}
@@ -716,14 +708,11 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
  			if(!entry->getNick().empty() || !SETTING(NICK).empty())
 			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
 				entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
-			// CDM EXTENSION BEGINS FAVS
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
 			, entry->getRawFour()
-			, entry->getRawFive()
-//			, entry->getUserIp()
-			// CDM EXTENSION ENDS				
+			, entry->getRawFive()		
 				);
  			else
  				missedAutoConnect = true;
@@ -761,12 +750,10 @@ void MainFrame::updateTray(bool add /* = true */) {
 	}
 }
 
-/**
- * @todo Fix so that the away mode is not reset if it was set manually...
- */
 LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(wParam == SIZE_MINIMIZED) {
+		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 		if(BOOLSETTING(AUTO_AWAY)) {
 			if(!WinUtil::isMinimized)
 			if(Util::getAway() == true) {
@@ -928,7 +915,6 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	string file = Util::getAppPath() + "*.*";
  	if(WinUtil::browseFile(file, m_hWnd, false) == IDOK) {
 		string hash = HashManager::getInstance()->hasher.getTTfromFile(file).getRoot().toBase32();
-//		MessageBox(hash.c_str(),"Tiger Tree Hash",MB_OK);
 	
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;
@@ -1001,14 +987,14 @@ LRESULT MainFrame::onRefreshFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	return 0;
 }
 
-LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
-{
+LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	if (lParam == WM_LBUTTONUP) {
 		if (WinUtil::isMinimized) {
 			ShowWindow(SW_SHOW);
 			ShowWindow(maximized ? SW_MAXIMIZE : SW_RESTORE);
-		} else
-			SetForegroundWindow( m_hWnd );
+		} else {
+			SetForegroundWindow(m_hWnd);
+		}
 	} else if(lParam == WM_MOUSEMOVE && ((lastMove + 1000) < GET_TICK()) ) {
 		NOTIFYICONDATA nid;
 		nid.cbSize = sizeof(NOTIFYICONDATA);
@@ -1025,8 +1011,7 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		::Shell_NotifyIcon(NIM_MODIFY, &nid);
 		lastMove = GET_TICK();
 	} else if (lParam == WM_RBUTTONUP) {
-		CPoint pt(GetMessagePos());
-		
+		CPoint pt(GetMessagePos());		
 		SetForegroundWindow(m_hWnd);
 		trayMenu.TrackPopupMenu(TPM_RIGHTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);		
 		PostMessage(WM_NULL, 0, 0);
@@ -1056,10 +1041,6 @@ LRESULT MainFrame::onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 }
 
 LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
-
-//	if (!ctrlToolbar.IsButtonChecked(IDC_AWAY)) { ctrlToolbar.CheckButton(IDC_AWAY, true);} else { ctrlToolbar.CheckButton(IDC_AWAY, false);}
-
-
 	if(Util::getAway()) { 
 		setAwayButton(false);
 		Util::setAway(false);
@@ -1106,8 +1087,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * UploadManager::getInstance()->getSlots()) + 3) ) {
 				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * UploadManager::getInstance()->getSlots()) + 3) );
 			}
-			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 6)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*6) );
+			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
+				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
 			}
 		}
 
@@ -1115,8 +1096,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((2 * UploadManager::getInstance()->getSlots()) + 3) ) {
 				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((2 * UploadManager::getInstance()->getSlots()) + 3) );
 			}
-			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 6)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*6) );
+			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
+				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
 			}
 		}
 
@@ -1161,9 +1142,11 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
 }
+
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
+
 void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 	versionInfo += string((const char*)buf, len);
 }
@@ -1183,8 +1166,6 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 				PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new string(qi->getTarget()));
 			}
 			} else if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
-				// This is a file listing, show it...
-
 				DirectoryListInfo* i = new DirectoryListInfo();
 				i->file = qi->getListName();
 				i->user = qi->getCurrents()[0]->getUser(); 
@@ -1258,8 +1239,6 @@ void MainFrame::updateShutdown(u_int32_t aTick) {
 	}
 }
 
-
-
 void MainFrame::checkFileList(string file, User::Ptr u)
 {
 	HubFrame* hubFrame = HubFrame::getHub(u->getClient());
@@ -1315,4 +1294,3 @@ LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
  * @file
  * $Id$
  */
-

@@ -92,7 +92,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	bool leaves = false;
 
 	string file;
-
 	try {
 		file = ShareManager::getInstance()->translateFileName(aFile, adc, utf8);
 	} catch(const ShareException&) {
@@ -101,20 +100,19 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 
 	if(aType == "file") {
-		userlist = ((Util::stricmp(aFile.c_str(), "MyList.DcLst") == 0) ||
-			(Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0));
+		userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
 
 		File* f;
 		try {
 			f = new File(file, File::READ, File::OPEN);
-		} catch(const FileException&) {
+		} catch(const Exception&) {
 			aSource->fileNotAvail();
 			return false;
 		}
 
 			size = f->getSize();
 
-			free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024) );
+			free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
 
 			if(aBytes == -1) {
 				aBytes = size - aStartPos;
@@ -133,7 +131,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if((aStartPos + aBytes) < size) {
 				is = new LimitedInputStream<true>(is, aBytes);
 			}
-
 	} else if(aType == "tthl") {
 		// TTH Leaves...
 		TigerTree tree;
@@ -160,7 +157,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		bool hasReserved = (reservedSlots.find(aSource->getUser()) != reservedSlots.end());
 		bool isFavorite = false;
-		if ( aSource->getUser()->isFavoriteUser() )
+		if (aSource->getUser()->isFavoriteUser())
 			isFavorite = aSource->getUser()->getAutoExtraSlot();
 
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
@@ -170,9 +167,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				extraSlot = true;
 		} else {
 			delete is;
-
 			aSource->maxedOut();
-			addFailedUpload(aSource, aFile, aStartPos, File::getSize(file));
+			addFailedUpload(aSource, file, aStartPos, File::getSize(file));
 			aSource->disconnect();
 			return false;
 		}
@@ -182,6 +178,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 
 	clearUserFiles(aSource->getUser());
+
 	Upload* u = new Upload();
 	u->setUserConnection(aSource);
 	u->setFile(is);
@@ -297,7 +294,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 
 	if(BOOLSETTING(LOG_UPLOADS)  && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST))) {
 		StringMap params;
-		params["source"] = u->getFileName();
+		params["source"] = u->getLocalFileName();
 		params["user"] = aSource->getUser()->getNick();
 		params["hub"] = aSource->getUser()->getLastHubName();
 		params["hubip"] = aSource->getUser()->getLastHubAddress();
@@ -368,10 +365,6 @@ void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
 	conn->listLen(ShareManager::getInstance()->getListLenString()); 
 }
-
-//void UploadManager::on(Command::STA, UserConnection* conn, const Command& c) throw() {
-
-//}
 
 void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) throw() {
 	int64_t aBytes = Util::toInt64(c.getParam(3));

@@ -144,13 +144,6 @@ public:
  		}
  	}
 
-/*	void setIPNick(const string& IP, const string& Nick) {
-		//ipList[IP].nick = Nick;
-		User::Ptr user = getUser(Nick);
-		user->setIp(IP);
-		User::updated(user);
-	}*/
-
 private:
 	typedef HASH_MULTIMAP<string, User::Ptr> UserMap;
 	typedef UserMap::iterator UserIter;
@@ -200,4 +193,3 @@ private:
  * @file
  * $Id$
  */
-

@@ -109,7 +109,7 @@ public:
 private:
 	class UserInfo;
 public:
-	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; }
+	TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; }
 private:
 	enum {
 		COLUMN_FIRST,
@@ -158,7 +158,7 @@ private:
 	CStatusBarCtrl ctrlStatus;
 	OMenu usersMenu;
 	
-	TypedListViewCtrl<UserInfo, IDC_USERS> ctrlUsers;
+	TypedListViewCtrlCleanup<UserInfo, IDC_USERS> ctrlUsers;
 	
 	bool closed;
 	

@@ -1,5 +1,3 @@
-// No license, No copyright... use it if you want ;-)
-
 #include "stdafx.h"
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
@@ -258,6 +256,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 		afterAppendText = (char *) realloc(afterAppendText, len+1);
 		AppendTextlen = len;
 	}
+
 	AppendTextOnly(sMyNick, sTime, msg.c_str(), cf, sAuthor, false); // maybe ugly but no emoticon in author nick ;-)
 	// cachry machry a maj s toho vylizt smajlove
 	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS)) {
@@ -459,7 +458,6 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 
 		SetSel( lSelBeginSaved, lSelEndSaved );
 		SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
-		//SendMessage( EM_SCROLLCARET, 0, 0 );
 
 	if (bRedrawControlAtEnd){
 		EndRedrawAppendTextOnly();
@@ -474,7 +472,6 @@ void ChatCtrl::EndRedrawAppendTextOnly() {
 }
 
 void ChatCtrl::AppendBitmap(HBITMAP hbm) {
-
 	POINT cr;
 	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
 	GetSel( lSelBeginSaved, lSelEndSaved );
@@ -728,3 +725,4 @@ LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	}
 	return 1;
 }
+

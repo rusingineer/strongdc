@@ -146,7 +146,6 @@ public:
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(Download*, oldDownload, OldDownload);
 	GETSET(TTHValue*, tth, TTH);
-
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;
@@ -190,7 +189,7 @@ public:
 
 	void abortDownload(const string& aTarget);
 	void abortDownload(const string& aTarget, User::Ptr& aUser);
-	
+
 	int getAverageSpeed() {
 		Lock l(cs);
 		int avg = 0;

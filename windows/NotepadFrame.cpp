@@ -56,11 +56,6 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		closed = true;
-		CZDCLib::setButtonPressed(IDC_NOTEPAD, false);
-		PostMessage(WM_CLOSE);
-		return 0;
-	} else {
 	if(dirty || ctrlPad.GetModify()) {
 		AutoArray<char> buf(ctrlPad.GetWindowTextLength() + 1);
 		ctrlPad.GetWindowText(buf, ctrlPad.GetWindowTextLength() + 1);
@@ -71,10 +66,15 @@ LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		}
 	}
 	
+		closed = true;
+		CZDCLib::setButtonPressed(IDC_NOTEPAD, false);
+		PostMessage(WM_CLOSE);
+		return 0;
+	} else {
+
 		MDIDestroy(m_hWnd);
 		return 0;
 	}
-
 }
 
 void NotepadFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
@@ -95,5 +95,3 @@ void NotepadFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
  * @file
  * $Id$
  */
-
-

@@ -84,8 +84,7 @@ public:
 	
 };
 
-class KickDlg : public CDialogImpl<KickDlg>
-{
+class KickDlg : public CDialogImpl<KickDlg> {
 	CComboBox ctrlLine;
 	CStatic ctrlDescription;
 public:

@@ -119,4 +119,3 @@ public: TypeTraits<type>::ParameterType get##name2() const { return name; }; \
  * @file
  * $Id$
  */
-

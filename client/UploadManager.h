@@ -109,7 +109,7 @@ public:
 			return false;
 		return (SETTING(MIN_UPLOAD_SPEED)*1024) < UploadManager::getInstance()->getAverageSpeed();
 	}
-	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
+	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
 		
 	void reserveSlot(const User::Ptr& aUser) {
 		Lock l(cs);
@@ -214,7 +214,6 @@ private:
 	virtual void on(TransmitDone, UserConnection*) throw();
 
 	virtual void on(Command::GET, UserConnection*, const Command&) throw();
-	//virtual void on(Command::STA, UserConnection*, const Command&) throw();
 
 	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
 	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool adc, bool utf8);

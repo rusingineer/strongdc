@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
 
@@ -41,7 +42,7 @@ public:
 		delete[] title;
 	};
 
-	BEGIN_MSG_MAP(UCPage)
+	BEGIN_MSG_MAP_EX(UCPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_ADD_MENU, onAddMenu)
 		COMMAND_ID_HANDLER(IDC_REMOVE_MENU, onRemoveMenu)
@@ -51,7 +52,7 @@ public:
 		NOTIFY_HANDLER(IDC_MENU_ITEMS, BN_DOUBLECLICKED, onDblClick)
 	END_MSG_MAP()
 
-	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	LRESULT onAddMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
