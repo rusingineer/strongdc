@@ -48,10 +48,11 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidány vlajky státù (CZDC++)
 * aktivní/pasivní režim lze zvolit pro každý oblíbený hub
 * pøidána položka Otevøít vlastní seznam souborù do hlavního menu (fulDC)
-* vylepšeno odpojování pomalých stahování (sekundy; pouze pøi segm. stahování)
+* vylepšeno odpojování pomalých stahování (sekundy!!!; pouze pøi segm. stahování; opraven "Žádný volný blok")
 * opraveno pøesouvání podsložek ve frontì
 * pøidána podpora protokolu file:// do chatu
-* opraven Žádný volný blok, když se objevila chyba bìhem dekomprese
+* opraven "Žádný volný blok", když se objevila chyba bìhem dekomprese
+* pøidána EXPERIMENTÁLNÍ volba pro automatické pøepnutí na rychlejšího uživatele na konci souboru
 
 
 	-- StrongDC++ 1.00 RC8 --

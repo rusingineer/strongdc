@@ -130,8 +130,8 @@ public:
 	QueueItem(const string& aTarget, int64_t aSize,
 		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), 
-	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
+	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0), noFreeBlocks(false)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		HashManager::getInstance()->getTree(aTarget, tth, tiger);
@@ -139,8 +139,9 @@ public:
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), added(rhs.added),
-		tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL)
+		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), speedUsers(rhs.speedUsers),
+		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL), noFreeBlocks(rhs.noFreeBlocks),
+		fastUser(rhs.fastUser)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -255,6 +256,7 @@ public:
 	}
 
 	string getSearchString() const;
+	Source::List speedUsers;
 
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
@@ -269,6 +271,8 @@ public:
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
+	GETSET(bool, noFreeBlocks, NoFreeBlocks);
+	GETSET(bool, fastUser, FastUser);
 	GETSET(int64_t, speed, Speed);
 	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 

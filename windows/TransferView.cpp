@@ -486,7 +486,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
 			InsertItem(i); 
 		} else {
-			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(),i, IMAGE_UPLOAD);
+			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), i, IMAGE_UPLOAD);
 		}
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
@@ -494,13 +494,11 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		dcassert(i != NULL);
 		i->update();
 		if((i->upper != NULL) && (i->type == ItemInfo::TYPE_DOWNLOAD))
 			ctrlTransfers.updateItem(i->upper);
 		ctrlTransfers.updateItem(i);
-		//if(ctrlTransfers.getSortColumn() != COLUMN_USER)
-			ctrlTransfers.resort();
+		ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
@@ -538,6 +536,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 					position = i->qi->getActiveSegments().size();
 				}
 				insertSubItem(i,r + position + 1);
+				if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+					ctrlTransfers.resort();
 			}
 
 			if(i->upper->pocetUseru > 1) {
@@ -554,14 +554,15 @@ bool TransferView::ItemInfo::canDisplayUpper() {
 		(statusString == TSTRING(UPLOAD_FINISHED_IDLE)) ||
    		(statusString.substr(1,10) == TSTRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
    		(statusString == TSTRING(TTH_INCONSISTENCY)) ||
-   		(statusString == TSTRING(CHECKING_TTH)) ||
+   		(statusString.substr(1, TSTRING(CHECKING_TTH).size()) == TSTRING(CHECKING_TTH)) ||
    		(statusString == TSTRING(DISCONNECTED)) ||
    		(statusString == TSTRING(SFV_INCONSISTENCY)))
 			return true;
 
 	if(qi) {
 		if((qi->isSet(QueueItem::FLAG_USER_LIST)) ||
-		(qi->isSet(QueueItem::FLAG_TESTSUR))) return true;
+			(qi->isSet(QueueItem::FLAG_TESTSUR)))
+			return true;
  	}
   	return false;
 }
@@ -597,18 +598,16 @@ void TransferView::ItemInfo::update() {
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
 		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-			if(!upper->finished) {
-				if((statusString != TSTRING(ALL_SEGMENTS_TAKEN)) && (statusString != TSTRING(NO_FREE_BLOCK)))
+			if(!upper->finished) {				
+				if((statusString != TSTRING(ALL_SEGMENTS_TAKEN)) && (statusString != TSTRING(NO_FREE_BLOCK)) && !((status != STATUS_RUNNING) && (statusString.substr(1,10) == TSTRING(DOWNLOADED_BYTES).substr(1,10)))) {
 					upper->columns[COLUMN_STATUS] = upper->statusString;
+				}
 			} else if(canDisplayUpper()) {
 				upper->columns[COLUMN_STATUS] = upper->statusString;
 			}
 		}
 	}
 	if (status == STATUS_RUNNING) {
-		if(type == TYPE_DOWNLOAD) {
-			if(upper != NULL) upper->status = ItemInfo::STATUS_RUNNING;
-		}
 		if(colMask & MASK_TIMELEFT) {
 			columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
@@ -620,9 +619,6 @@ void TransferView::ItemInfo::update() {
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
 				upper->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(celkovaRychlost) + "/s");
 				upper->speed = celkovaRychlost;
-				if(qi != NULL) {
-					qi->setSpeed(celkovaRychlost);
-				}
 			}
 		}
 		if(colMask & MASK_RATIO) {
@@ -711,7 +707,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		if(i->statusString == TSTRING(CONNECTING)) {
 			i->status = ItemInfo::STATUS_WAITING;
 		} else {
-			i->status = ItemInfo::STATUS_RUNNING;
+			i->status = ItemInfo::STATUS_RUNNING;			
 		}
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
@@ -747,6 +743,8 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				i->upper->Target = i->Target;
 				i->upper->tth = i->tth;
 				i->upper->downloadTarget = i->downloadTarget;
+				if(i->status == ItemInfo::STATUS_RUNNING)
+					i->upper->status = ItemInfo::STATUS_RUNNING;
 			}
 		}
 	}
@@ -771,12 +769,12 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 		if((isDownload) && (h != NULL)) {
 			h->pocetUseru -= 1;
 
-			if(h->pocetUseru <= 0) {
+			ItemInfo* lastUserItem = findLastUserItem(h->Target);
+			if(lastUserItem == NULL) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
 				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			} else {
-				if(h->pocetUseru == 1) {
-					ItemInfo* lastUserItem = findLastUserItem(h->Target);
+				if(h->pocetUseru == 1) {					
 					h->user = lastUserItem->user;
 					if(!h->collapsed) {
 						h->collapsed = true;
@@ -932,6 +930,9 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->timeLeft = (tmp > 0) ? ((d->getSize() - total) / tmp) : 0;
 
 			i->celkovaRychlost = tmp;
+			if(qi != NULL) {
+				qi->setSpeed(tmp);
+			}
 
 			if(i->upper != NULL) {
 				if(i->qi) i->upper->qi = qi;
@@ -1133,7 +1134,6 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
-				//i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 				i->upper->finished = true;
 			}
 
@@ -1352,6 +1352,7 @@ void TransferView::Expand(ItemInfo* i, int a) {
 	} else {
 		i->collapsed = false;
 		ctrlTransfers.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+		ctrlTransfers.resort();
 	}
 }
 

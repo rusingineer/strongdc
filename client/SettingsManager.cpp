@@ -108,6 +108,7 @@ const string SettingsManager::settingTags[] =
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
+	"SpeedUsers",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -467,6 +468,7 @@ SettingsManager::SettingsManager()
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
+	setDefault(SPEED_USERS, true);
 
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);

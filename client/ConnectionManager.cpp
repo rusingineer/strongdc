@@ -116,7 +116,7 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			dcassert(find(active.begin(), active.end(), aSource->getCQI()) != active.end());
 			active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 
-			cqi->setLastAttempt(reconnect ? 0: GET_TICK());
+			cqi->setLastAttempt(reconnect ? 0 : GET_TICK());
 			pendingDown.push_back(cqi);
 		} else {
 			{
