@@ -380,7 +380,7 @@ void SearchFrame::onEnter() {
 	StringList clients;
 	
 	if(!(ctrlSearch.GetWindowTextLength() > 0 && lastSearch + 10000 < TimerManager::getInstance()->getTick()))
-			return;
+		return;
 
 	int n = ctrlHubs.GetItemCount();
 	for(int i = 0; i < n; i++) {
@@ -436,9 +436,8 @@ void SearchFrame::onEnter() {
 	//strip out terms beginning with -
 	s.clear();
 	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
-		if ((*si)[0] != _T('-') && si->size() != 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
+		if ((*si)[0] != _T('-') || si->size() != 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
 	s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
-
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
 		mode = SearchManager::SIZE_DONTCARE;
@@ -1115,11 +1114,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 									insertSubItem(si, pos + 1);
 								}
 							}
-							int pocet = si2->subItems.size() + 1;
-							si2->setHits(Text::toT(Util::toString(pocet))+_T(" ")+TSTRING(HUB_USERS));
-							ctrlResults.updateItem(si2);
-							if(ctrlResults.getSortColumn() == COLUMN_HITS)
-								ctrlResults.resort();
+							si2->setHits(Text::toT(Util::toString((u_int32_t)si2->subItems.size() + 1) + " "  + CSTRING(USERS)));
+							if(pos != -1)
+								ctrlResults.updateItem(pos);
 							return 0;
                 	    }
 
@@ -1474,36 +1471,23 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 	case CDDS_PREPAINT:
 		return CDRF_NOTIFYITEMDRAW;
 
-	case CDDS_ITEMPREPAINT:
-		{
-			SearchInfo* ii = (SearchInfo*)cd->nmcd.lItemlParam;
-			SearchResult *sr = ii->sr;
-			if(sr!=NULL){
-				targets.clear();
-				COLORREF barva = WinUtil::textColor;
-				if(sr->getTTH()) {
-					QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(sr->getTTH()->toBase32()));
-					if(sr->getType() == SearchResult::TYPE_FILE && targets.size()>0){		
-						barva = SETTING(SEARCH_ALTERNATE_COLOUR);				
-					}
-				}
-
-				if(!ii->mainitem) {
-					cd->clrText = OperaColors::blendColors(WinUtil::bgColor, barva, 0.4);
-					return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-				}
-				
-				if(barva != WinUtil::textColor) {
-					cd->clrText = barva;
-					return CDRF_NEWFONT;
+	case CDDS_ITEMPREPAINT: {
+		SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
+		if(si->sr != NULL) {
+			targets.clear();
+			if(si->sr->getTTH()) {
+				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(si->sr->getTTH()->toBase32()));
+				if(si->sr->getType() == SearchResult::TYPE_FILE && targets.size() > 0) {		
+					cd->clrText = SETTING(SEARCH_ALTERNATE_COLOUR);	
 				}
 			}
 		}
-		return CDRF_NOTIFYSUBITEMDRAW;
-
+		return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+	}
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
+		SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
+
 		if (cd->iSubItem == COLUMN_IP) {
-			SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
 			if(si->sr->getIP() != "" && BOOLSETTING(GET_USER_COUNTRY)) {
 				if(ctrlResults.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 					if(ctrlResults.m_hWnd == ::GetFocus()) {
@@ -1517,7 +1501,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 				} else {
 					barva = WinUtil::bgColor;
 					SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-					SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+					SetTextColor(cd->nmcd.hdc, /*WinUtil::textColor*/ cd->clrText);
 				}
 
 				ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
@@ -1544,10 +1528,10 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 					top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
 
 					::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
-					return CDRF_NEWFONT | CDRF_SKIPDEFAULT;	
+					return CDRF_SKIPDEFAULT;
 				}
 			}
-		}
+		}		
 	}
 	default:
 		return CDRF_DODEFAULT;
@@ -1556,7 +1540,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 
 void SearchFrame::insertItem(int pos, SearchInfo* item) {
 	PME reg(filter,"i");
-	bool match;
+	bool match = true;
 	int sel = ctrlFilterSel.GetCurSel();
 
 	if(!reg.IsValid() || filter.empty()) {

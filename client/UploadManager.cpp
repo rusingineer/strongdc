@@ -178,7 +178,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		} else {
 			delete is;
 			aSource->maxedOut();
-				addFailedUpload(aSource->getUser(), file, aStartPos, File::getSize(file));
+			addFailedUpload(aSource->getUser(), file, aStartPos, File::getSize(file));
 			aSource->disconnect();
 			return false;
 		}

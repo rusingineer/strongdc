@@ -127,21 +127,22 @@ public:
 		User::Ptr user;
 	};
 
-	QueueItem(const string& aTarget, int64_t aSize,
+	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0),
-	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0), noFreeBlocks(false)
+	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
-		HashManager::getInstance()->getTree(aTarget, tth, tiger);
+		if(tth != NULL)
+			HashManager::getInstance()->getTree(aTarget, tth, tiger);
 	};
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), speedUsers(rhs.speedUsers),
-		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL), noFreeBlocks(rhs.noFreeBlocks),
-		fastUser(rhs.fastUser), start(rhs.start)
+		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
+		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL),
+		start(rhs.start)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -161,18 +162,19 @@ public:
 
 	int countOnlineUsers() const {
 		int n = 0;
-			Source::List::const_iterator i = sources.begin();
-			for(; i != sources.end(); ++i) {
-				if((*i)->getUser()->isOnline())
-					n++;
+		Source::List::const_iterator i = sources.begin();
+		for(; i != sources.end(); ++i) {
+			if((*i)->getUser()->isOnline())
+				n++;
 		}
 		return n;
 	}
 	bool hasOnlineUsers() const { return countOnlineUsers() > 0; };
 
 	const string& getSourcePath(const User::Ptr& aUser) { 
-		//dcassert(isSource(aUser)); 
-		if(!isSource(aUser)) return Util::emptyString;
+		if(!isSource(aUser))
+			return Util::emptyString;
+
 		return (*getSource(aUser, sources))->getPath();
 	}
 
@@ -211,7 +213,7 @@ public:
 		dcassert(isSource(aUser));
 		currents.push_back(*getSource(aUser));
 	}
-
+	
 	bool isCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		return find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end();
@@ -234,13 +236,9 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(!isSet(FLAG_USER_LIST) && !isSet(FLAG_MP3_INFO) && !isSet(FLAG_TESTSUR)){
-			if(fileChunksInfo) {
-				return fileChunksInfo->GetDownloadedSize();
-			} else {
-				FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
-				if(filedatainfo)
-					return filedatainfo->GetDownloadedSize();
-			}
+			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
+			if(filedatainfo)
+				return filedatainfo->GetDownloadedSize();
 		}
 
 		return 0;
@@ -256,7 +254,6 @@ public:
 	}
 
 	string getSearchString() const;
-	Source::List speedUsers;
 
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
@@ -271,8 +268,6 @@ public:
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
-	GETSET(bool, noFreeBlocks, NoFreeBlocks);
-	GETSET(bool, fastUser, FastUser);
 	GETSET(int64_t, speed, Speed);
 	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 	GETSET(u_int32_t, start, Start);

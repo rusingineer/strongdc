@@ -225,93 +225,81 @@ string SearchManager::clean(const string& aSearchString) {
 
 void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& address) {
 	string x((char*)buf, aLen);
-		string::size_type i, j;
-		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-		i = 4;
+	string::size_type i, j;
+	// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
+	// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
+	i = 4;
 		if( (j = x.find(' ', i)) == string::npos) {
-			return;
-		}
+		return;
+	}
 		string nick = Text::acpToUtf8(x.substr(i, j-i));
-		i = j + 1;
+	i = j + 1;
 
-		if (!address.empty()) {
-			ClientManager::getInstance()->setIPNick(address, nick);
-		}
+	if (!address.empty()) {
+		ClientManager::getInstance()->setIPNick(address, nick);
+	}
 
-		// A file has 2 0x05, a directory only one
-		size_t cnt = count(x.begin() + j, x.end(), 0x05);
-	
-		SearchResult::Types type = SearchResult::TYPE_FILE;
-		string file;
-		int64_t size = 0;
+	// A file has 2 0x05, a directory only one
+	size_t cnt = count(x.begin() + j, x.end(), 0x05);
 
-		if(cnt == 1) {
-			// We have a directory...find the first space beyond the first 0x05 from the back 
-			// (dirs might contain spaces as well...clever protocol, eh?)
-			type = SearchResult::TYPE_DIRECTORY;
-			// Get past the hubname that might contain spaces
-			if((j = x.rfind(0x05)) == string::npos) {
-				return;
-			}
-			// Find the end of the directory info
-			if((j = x.rfind(' ', j-1)) == string::npos) {
-				return;
-			}
-			if(j < i + 1) {
-				return;
-			}
-			file = x.substr(i, j-i) + '\\';
-		} else if(cnt == 2) {
-			if( (j = x.find((char)5, i)) == string::npos) {
-				return;
-			}
-			file = x.substr(i, j-i);
-			i = j + 1;
-			if( (j = x.find(' ', i)) == string::npos) {
-				return;
-			}
-			size = Util::toInt64(x.substr(i, j-i));
-		}
-		i = j + 1;
-		
-		if( (j = x.find('/', i)) == string::npos) {
+	SearchResult::Types type = SearchResult::TYPE_FILE;
+	string file;
+	int64_t size = 0;
+
+	if(cnt == 1) {
+		// We have a directory...find the first space beyond the first 0x05 from the back 
+		// (dirs might contain spaces as well...clever protocol, eh?)
+		type = SearchResult::TYPE_DIRECTORY;
+		// Get past the hubname that might contain spaces
+		if((j = x.rfind(0x05)) == string::npos) {
 			return;
 		}
-		int freeSlots = Util::toInt(x.substr(i, j-i));
-		i = j + 1;
+		// Find the end of the directory info
+		if((j = x.rfind(' ', j-1)) == string::npos) {
+			return;
+		}
+		if(j < i + 1) {
+			return;
+		}
+		file = x.substr(i, j-i) + '\\';
+	} else if(cnt == 2) {
 		if( (j = x.find((char)5, i)) == string::npos) {
 			return;
 		}
-		int slots = Util::toInt(x.substr(i, j-i));
+		file = x.substr(i, j-i);
 		i = j + 1;
-		if( (j = x.rfind(" (")) == string::npos) {
+		if( (j = x.find(' ', i)) == string::npos) {
 			return;
 		}
-		// the hub's name will get replaced later (with a UTF-8 version) if there's a TTH in the result
-		string hubName = Text::acpToUtf8(x.substr(i, j-i));
-		i = j + 2;
-		if( (j = x.rfind(')')) == string::npos) {
-			return;
-		}
-		string hubIpPort = x.substr(i, j-i);
-		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
-
-	if(!address.empty()) {
-		if(user->isOnline()) {
-			if(user->getClient()->getOp()) {
-				if(user->getIp() != address) {
-					user->setIp(address);
-					user->setHost(socket->getRemoteHost(address));
-					User::updated(user);
-				}
-			}
-		}
+		size = Util::toInt64(x.substr(i, j-i));
 	}
+	i = j + 1;
+
+	if( (j = x.find('/', i)) == string::npos) {
+		return;
+	}
+	int freeSlots = Util::toInt(x.substr(i, j-i));
+	i = j + 1;
+	if( (j = x.find((char)5, i)) == string::npos) {
+		return;
+	}
+	int slots = Util::toInt(x.substr(i, j-i));
+	i = j + 1;
+	if( (j = x.rfind(" (")) == string::npos) {
+		return;
+	}
+	// the hub's name will get replaced later (with a UTF-8 version) if there's a TTH in the result
+	string hubName = Text::acpToUtf8(x.substr(i, j-i));
+	i = j + 2;
+	if( (j = x.rfind(')')) == string::npos) {
+		return;
+	}
+	string hubIpPort = x.substr(i, j-i);
+	User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
 	file = Util::replace(file, "\\\\", "\\");
 
-	if((user->getVersion() == "0.403") && (user->getClientType() != "rmDC++ 0.403D[1]")) {
+/*	if((user->getVersion() == "0.403") && (user->getClientType() != "rmDC++ 0.403D[1]")) {
 		string path(file);
 		path = path.substr(0, path.find("\\"));
 		PME reg("([A-Z])");
@@ -320,12 +308,23 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 			user->setClientType("rmDC++ 0.403D[1]");
 			user->setBadClient(true);
 		}
-	}
-
+	}*/
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 		file, hubName, hubIpPort, address, false);
-	fire(SearchManagerListener::SR(), sr);
-		sr->decRef();
+	//fire(SearchManagerListener::SR(), sr);
+	Lock l(cs);
+	seznam.push_back(sr);
+	
+}
+
+void SearchManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
+	Lock l(cs);
+	for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
+		Thread::sleep(0);
+		fire(SearchManagerListener::SR(), *i);
+		(*i)->decRef();
+	}
+	seznam.clear();
 }
 /**
  * @file

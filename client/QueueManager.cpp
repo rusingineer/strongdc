@@ -926,7 +926,6 @@ again:
 
 		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
-			q->setNoFreeBlocks(true);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			if(q == NULL) reuse = true;
 			goto again;

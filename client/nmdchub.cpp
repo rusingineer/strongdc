@@ -827,12 +827,10 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 	if((getMode() == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = _snprintf(buf, x.length() + aString.length() + 63, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(UDP_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
-		buf[x.length() + aString.length() + 63] = 0;
+		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(UDP_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
 	} else {
 		buf = new char[getNick().length() + aString.length() + 64];
-		chars = _snprintf(buf, toNmdc(getNick()).length() + aString.length() + 63, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
-		buf[getNick().length() + aString.length() + 63] = 0;
+		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", toNmdc(getNick()).c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
 }

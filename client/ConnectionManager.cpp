@@ -65,7 +65,7 @@ void ConnectionManager::getDownloadConnection(const User::Ptr& aUser) {
 		
 		// See if we're already trying to connect
 		if(find(pendingDown.begin(), pendingDown.end(), aUser) != pendingDown.end())
-				return;
+			return;
 
 		// Check if we have an active download connection already
 		for(ConnectionQueueItem::Iter j = active.begin(); j != active.end(); ++j) {
@@ -309,7 +309,7 @@ void ConnectionManager::on(ServerSocketListener::IncomingConnection) throw() {
 				floodCounter += FLOOD_ADD;
 		}
 	}
-
+	
 	try { 
 		uc = getConnection(false);
 		uc->setFlag(UserConnection::FLAG_INCOMING);
@@ -735,14 +735,14 @@ void ConnectionManager::addSuspectIpPort(const string& aIp, short aPort) throw()
 }
 
 void ConnectionManager::removeConnection(const User::Ptr& aUser, int isDownload) {
-		Lock l(cs);
-		for(UserConnection::Iter i = userConnections.begin(); i != userConnections.end(); ++i) {
-			UserConnection* uc = *i;
-			if(uc->getUser() == aUser && uc->isSet(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD)) {
-				uc->disconnect();
-				break;
-			}
+	Lock l(cs);
+	for(UserConnection::Iter i = userConnections.begin(); i != userConnections.end(); ++i) {
+		UserConnection* uc = *i;
+		if(uc->getUser() == aUser && uc->isSet(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD)) {
+			uc->disconnect();
+			break;
 		}
+	}
 }
 
 void ConnectionManager::shutdown() {

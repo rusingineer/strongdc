@@ -865,7 +865,6 @@ enum Strings { // @DontAdd
 	PROGRESS_SEGMENT, // "Transfer progressbar - actual segment"
 	SETTINGS_SB_MAX_SOURCES, // "Max sources for match queue"
 	DEFAULT, // "Default"
-	SPEED_USERS, // "EXPERIMENTAL: Try to switch to faster user when no free block"
 	SETTINGS_USE_VERTICAL_VIEW, // "Use vertical view by default"	
 	LAST // @DontAdd
 };

@@ -34,6 +34,7 @@
 #include "MerkleTree.h"
 
 #include "SearchManagerListener.h"
+#include "TimerManager.h"
 
 class SearchManager;
 
@@ -116,7 +117,7 @@ private:
 	}
 };
 
-class SearchManager : public Speaker<SearchManagerListener>, public Singleton<SearchManager>, public Thread
+class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
 public:
 	enum SizeModes {
@@ -166,12 +167,17 @@ private:
 	short port;
 	bool stop;
 	friend class Singleton<SearchManager>;
+	SearchResult::List seznam;
+	CriticalSection cs;
 
-	SearchManager() : socket(NULL), port(0), stop(false) {  };
+	SearchManager() : socket(NULL), port(0), stop(false) {
+		TimerManager::getInstance()->addListener(this);
+	};
 
 	virtual int run();
 
-	virtual ~SearchManager() { 
+	virtual ~SearchManager() {
+		TimerManager::getInstance()->removeListener(this);
 		if(socket) {
 			stop = true;
 			socket->disconnect();
@@ -184,6 +190,7 @@ private:
 
 	void onData(const u_int8_t* buf, size_t aLen, const string& address);
 	void onNMDCData(const u_int8_t* buf, size_t aLen, const string& address);
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)
