@@ -51,14 +51,23 @@
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
 const string QueueManager::TEMP_EXTENSION = ".dctmp";
 
-QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, const string& aSearchString, 
+namespace {
+	const char* badChars = "$|.[]()-_+";
+}
+string QueueItem::getSearchString() const {
+	return SearchManager::clean(getTargetFileName());
+}
+
+
+
+QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
 						  int64_t aDownloadedBytes, u_int32_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
 {
 	if(p == QueueItem::DEFAULT)
 		p = (aSize <= 64*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
 
-	QueueItem* qi = new QueueItem(aTarget, aSize, aSearchString, p, aFlags, aDownloadedBytes, aAdded, root);
+	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aDownloadedBytes, aAdded, root);
 
 	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
 		qi->setAutoPriority(true);
@@ -464,7 +473,7 @@ string QueueManager::getTempName(const string& aFileName, const TTHValue* aRoot)
 }
 
 void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, const string& aTarget, 
-					   const TTHValue* root, const string& aSearchString /* = Util::emptyString */,
+					   const TTHValue* root,
 					   int aFlags /* = QueueItem::FLAG_RESUME */, QueueItem::Priority p /* = QueueItem::DEFAULT */,
 					   const string& aTempTarget /* = Util::emptyString */, bool addBad /* = true */) throw(QueueException, FileException) 
 {
@@ -496,7 +505,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 
 		QueueItem* q = fileQueue.find(target);
 		if(q == NULL) {
-			q = fileQueue.add(target, aSize, aSearchString, aFlags, p, aTempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
+			q = fileQueue.add(target, aSize, aFlags, p, aTempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
 			newItem = true;
@@ -1355,10 +1364,10 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 
 			if(qi == NULL) {
 				if(tthRoot.empty())	
-					qi = qm->fileQueue.add(target, size, Util::emptyString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, NULL);
+					qi = qm->fileQueue.add(target, size, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, NULL);
 				else {
 					TTHValue root(tthRoot);
-					qi = qm->fileQueue.add(target, size, Util::emptyString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, &root);
+					qi = qm->fileQueue.add(target, size, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, &root);
 				}
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
 				qi->setAutoPriority(ap);
@@ -1422,20 +1431,12 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		Lock l(cs);
 		QueueItem::List matches;
 
-		fileQueue.find(matches, sr->getSize(), Util::getFileExt(sr->getFile()));
-
-		if(sr->getTTH() != NULL) {
-			fileQueue.find(matches, sr->getTTH());
-		}
+		fileQueue.find(matches, sr->getTTH());
 
 		for(QueueItem::Iter i = matches.begin(); i != matches.end(); ++i) {
 			QueueItem* qi = *i;
 			bool found = false;
-			if(qi->getTTH()) {
-				found = sr->getTTH() && (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize());
-			} else {
-				found = (Util::stricmp(qi->getTargetFileName(), sr->getFileName()) == 0);
-			}
+			found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize());
 		
 			found = (qi->getSources().size() < SETTING(MAX_SOURCES));
 
@@ -1533,7 +1534,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 			}
 		}
 
-		QueueItem* q = fileQueue.add(target, aSize, "", flag, QueueItem::DEFAULT, tempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, &root);
+		QueueItem* q = fileQueue.add(target, aSize, flag, QueueItem::DEFAULT, tempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, &root);
 
 		fire(QueueManagerListener::Added(), q);
 		newItem = true;

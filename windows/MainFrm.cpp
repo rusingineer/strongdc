@@ -432,7 +432,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 	if(wParam == DOWNLOAD_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
 		checkFileList(i->file, i->user);
-		DirectoryListingFrame::openWindow(i->file, i->user, i->start);
+		DirectoryListingFrame::openWindow(i->file, i->user);
 		delete i;
 	} else if(wParam == CHECK_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
@@ -1255,7 +1255,6 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 			DirectoryListInfo* i = new DirectoryListInfo();
 			i->file = qi->getListName();
 			i->user = qi->getCurrents()[0]->getUser(); 
-			i->start = qi->getSearchString();
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
@@ -1265,7 +1264,6 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		DirectoryListInfo* i = new DirectoryListInfo();
 		i->file = qi->getListName();
 		i->user = qi->getCurrents()[0]->getUser(); 
-		i->start = qi->getSearchString();
 		PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
 	}	
 }

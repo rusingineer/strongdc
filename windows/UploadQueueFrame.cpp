@@ -352,7 +352,10 @@ void UploadQueueFrame::LoadAll() {
 	ctrlQueued.Invalidate(); 
 	updateStatus();
 }
-void UploadQueueFrame::on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) {
+
+//void UploadQueueFrame::on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) {
+
+void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
 
 	for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
@@ -480,6 +483,10 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	if(wParam == REMOVE_ITEM) {
 		UploadQueueItem* i = (UploadQueueItem*)lParam;
 		ctrlList.deleteItem(i);
+	} else if(wParam == REMOVE) {
+		UploadQueueItem* i = (UploadQueueItem*)lParam;
+		RemoveUser(i->User);
+		delete i;
 	} else if(wParam == ADD_ITEM) {
 		UploadQueueItem* i = (UploadQueueItem*)lParam;
 		AddFile(i);

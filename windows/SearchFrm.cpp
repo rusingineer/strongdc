@@ -519,7 +519,7 @@ void SearchFrame::SearchInfo::view() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(sr->getFile(), sr->getSize(), sr->getUser(), 
-				Util::getTempPath() + fileName, sr->getTTH(), Util::emptyString,
+				Util::getTempPath() + fileName, sr->getTTH(),
 				(QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_TEXT));
 		}
 	} catch(const Exception&) {
@@ -530,7 +530,7 @@ void SearchFrame::SearchInfo::GetMP3Info() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(sr->getFile(), 2100, sr->getUser(), 
-				Util::getTempPath() + fileName, NULL, Util::emptyString,
+				Util::getTempPath() + fileName, NULL,
 				QueueItem::FLAG_MP3_INFO);
 		}
 	} catch(const Exception&) {
@@ -542,13 +542,13 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string cil = tgt + si->fileName;
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				cil, si->sr->getTTH());
+				cil, si->sr->getTTH(), QueueItem::FLAG_RESUME);
 			if(si->subItems.size()>0) {
 				int q = 0;
 				while(q<si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
 					QueueManager::getInstance()->add(j->sr->getFile(), j->sr->getSize(), j->sr->getUser(), 
-						cil, j->sr->getTTH());
+						cil, j->sr->getTTH(), QueueItem::FLAG_RESUME);
 					q++;
 				}
 			}
@@ -574,7 +574,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 		try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-			tgt, si->sr->getTTH());
+			tgt, si->sr->getTTH(), QueueItem::FLAG_RESUME);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt);
 		}
@@ -584,7 +584,8 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 
 void SearchFrame::SearchInfo::getList() {
 	try {
-		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW, getPath());
+		WinUtil::addInitalDir(sr->getUser(), getPath());
+		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 	} catch(const Exception&) {
 		// Ignore for now...
 	}

@@ -32,6 +32,7 @@ public:
 
 	enum {
 		ADD_ITEM,
+		REMOVE,
 		REMOVE_ITEM
 	};
 
@@ -210,7 +211,10 @@ private:
 	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() {
 		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
-	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw();
+	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
+		UploadQueueItem* aUQI = new UploadQueueItem(aUser, "", "", "", 0, 0, 0);
+		PostMessage(WM_SPEAKER, REMOVE, (LPARAM)aUQI);
+	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}

@@ -54,7 +54,7 @@ const string SettingsManager::settingTags[] =
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
 	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray", 
-	"OpenPublic", "OpenQueue", "AutoSearch", "AutoAutoSearchString", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline", 
+	"OpenPublic", "OpenQueue", "AutoSearch", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline", 
 	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat", 
 	"LogDownloads", "LogUploads", "StatusInChat", "ShowJoins", "PrivateMessageBeep", "PrivateMessageBeepOpen", 
 	"UseSystemIcons", "PopupPMs", "MinUploadSpeed", "GetUserInfo", "UrlHandler", "MainWindowState", 
@@ -154,7 +154,6 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_PUBLIC, false);
 	setDefault(OPEN_QUEUE, false);
 	setDefault(AUTO_SEARCH, true);
-	setDefault(AUTO_SEARCH_AUTO_STRING, false);
 	setDefault(TIME_STAMPS, false);
 	setDefault(CONFIRM_EXIT, false);
 	setDefault(IGNORE_OFFLINE, false);
