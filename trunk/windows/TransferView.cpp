@@ -585,10 +585,14 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		i->update();
-		if(i->upper != NULL)
+		bool nickUpdate = false;
+		if(i->upper != NULL) {
+			nickUpdate = (i->upper->updateMask & ItemInfo::MASK_USER);
 			ctrlTransfers.updateItem(i->upper);
+		}
 		ctrlTransfers.updateItem(i);
-		ctrlTransfers.resort();
+		if(nickUpdate || (ctrlTransfers.getSortColumn() != COLUMN_USER))
+			ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
@@ -672,8 +676,12 @@ void TransferView::ItemInfo::update() {
 	if(colMask & MASK_HUB) {
 		if(!mainItem || (pocetUseru == 1) || (type == TYPE_UPLOAD))
 			columns[COLUMN_HUB] = Text::toT(user->getClientName());
-		else
-			columns[COLUMN_HUB] = Text::toT(Util::toString((int)(qi ? qi->getActiveSegments().size() : 0))+"/"+Util::toString((int)(qi ? qi->getCurrents().size() : 0))+" "+STRING(NUMBER_OF_SEGMENTS));		
+		else {
+			TCHAR buf[256];
+			_sntprintf(buf, 255, _T("%d %s"), qi ? qi->getActiveSegments().size() : 0, TSTRING(NUMBER_OF_SEGMENTS));
+			buf[255] = NULL;
+			columns[COLUMN_HUB] = buf;
+		}
 	}
 	if(colMask & MASK_STATUS) {
 		if(!mainItem || !finished || (finished && canDisplayUpper()))

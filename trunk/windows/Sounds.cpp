@@ -51,7 +51,8 @@ Sounds::snds Sounds::sounds[] = {
 	{ ResourceManager::SOUND_EXCEPTION,	SettingsManager::SOUND_EXC, ""},
 	{ ResourceManager::HUB_CONNECTED,	SettingsManager::SOUND_HUBCON, ""},
 	{ ResourceManager::HUB_DISCONNECTED,	SettingsManager::SOUND_HUBDISCON, ""},
-	{ ResourceManager::FAVUSER_ONLINE,	SettingsManager::SOUND_FAVUSER, ""}
+	{ ResourceManager::FAVUSER_ONLINE,	SettingsManager::SOUND_FAVUSER, ""},
+	{ ResourceManager::SOUND_TYPING_NOTIFY,	SettingsManager::SOUND_TYPING_NOTIFY, ""}
 };
 
 LRESULT Sounds::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)

@@ -65,7 +65,8 @@ public:
 	void handle(AdcCommand::CTM, AdcCommand& c) throw();
 	void handle(AdcCommand::RCM, AdcCommand& c) throw();
 
-	virtual string escape(string const& str) const { return AdcCommand::escape(str); };
+	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
+	void refreshUserList(bool unknownOnly /* = false */) { }
 
 private:
 	friend class ClientManager;

@@ -123,7 +123,18 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		Download* d = *i;
 		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
-		
+		d->setItem(q);
+
+		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 40) // check every 40 sec
+        {
+            if(d->getRunningAverage() < 1230){
+				if(q && (q->getActiveSegments().size() >= 2)) {
+					d->getUserConnection()->disconnect();
+					continue;
+				}
+            }
+        }
+        		
 		if(q && SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
 			int TryToSwitchToUser = -1;
 			if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
@@ -151,7 +162,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 						if(((GET_TICK() - d->quickTick)/1000) > iTime) {
 							if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-								//QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser());
 								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
 							}
 							d->getUserConnection()->disconnect();
@@ -1430,7 +1440,6 @@ size_t DownloadManager::throttleCycleTime() {
 }
 
 void DownloadManager::throttleZeroCounters() {
-	//Lock l(cs); // we don't want to re-enter already owned critical section
 	mBytesSpokenFor = 0;
 	mBytesSent = 0;
 }
@@ -1444,7 +1453,6 @@ void DownloadManager::throttleSetup() {
 // called once a second, plus when a download starts
 // from the constructor to BufferedSocket
 // with 64k, a few people get winsock error 0x2747
-	// Lock l(cs); // we don't want to re-enter already owned critical section
 	unsigned int num_transfers = downloads.size();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);

@@ -22,6 +22,7 @@
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 #include "DebugManager.h"
+#include "ConnectionManager.h"
 
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
@@ -100,6 +101,7 @@ again:
 			strstr(aLine, " no more exists") != 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
+			ConnectionManager::getInstance()->cs.enter();
 			fire(UserConnectionListener::Failed(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
@@ -144,7 +146,7 @@ again:
 		if(aLine == NULL) return;
 
 		if((temp = strchr(aLine, ' ')) != NULL) {
-			temp[0] = NULL; temp += 1;
+			temp[0] = NULL; temp += 4;
 			if(aLine == NULL || temp == NULL) return; 
 
 			fire(UserConnectionListener::CLock(), this, aLine, temp);
@@ -181,6 +183,7 @@ again:
 
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
+	Lock l(ConnectionManager::getInstance()->cs);
 	fire(UserConnectionListener::Failed(), this, aLine);
 }
 

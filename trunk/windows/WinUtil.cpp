@@ -1016,6 +1016,12 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else
 			WinUtil::openLink(_T("http://www.tvtome.com/tvtome/servlet/Search?searchType=all&searchString=") + Text::toT(Util::encodeURI(Text::fromT(param))));
+	} else if(Util::stricmp(cmd.c_str(), _T("csfd")) == 0) {
+		if(param.empty()) {
+			status = TSTRING(SPECIFY_SEARCH_STRING);
+		} else {
+			WinUtil::openLink(_T("http://www.csfd.cz/index.php?action=hledat&hledej=") + Text::toT(Util::encodeURI(Text::fromT(param))));
+		}
 	} else {
 		return false;
 	}

@@ -469,9 +469,8 @@ LRESULT DirectoryListingFrame::onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ItemInfo* ii = ctrlList.getSelectedItem();
-	if(ii != NULL) {
-		TTHValue tmp(Text::fromT(ii->getText(COLUMN_TTH)));
-		WinUtil::searchHash(&tmp);
+	if(ii != NULL && ii->type == ItemInfo::FILE && ii->file->getTTH() != NULL) {
+		WinUtil::searchHash(ii->file->getTTH());
 	} 
 	return 0;
 }

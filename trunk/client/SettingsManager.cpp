@@ -49,7 +49,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
-	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
+	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline", "SoundTypingNotify",
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
@@ -438,6 +438,7 @@ SettingsManager::SettingsManager()
 	setDefault(SOUND_HUBCON, "");
 	setDefault(SOUND_HUBDISCON, "");
 	setDefault(SOUND_FAVUSER, "");
+	setDefault(SOUND_TYPING_NOTIFY, "");
 
 	setDefault(POPUP_HUB_CONNECTED, false);
 	setDefault(POPUP_HUB_DISCONNECTED, false);

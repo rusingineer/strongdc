@@ -289,6 +289,16 @@ public:
 				high = mid - 1;
 			} else if(comp > 0) {
 					low = mid + 1;
+			} else if(comp == 2){
+				if(sortAscending)
+					low = mid + 1;
+				else
+					high = mid -1;
+			} else if(comp == -2){
+				if(!sortAscending)
+					low = mid + 1;
+				else
+					high = mid -1;
 			}
 		}
 
@@ -318,6 +328,8 @@ public:
 	}
 
 	int insertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
+		if(nWidth == 0)
+			nWidth = 80;
 		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
 		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
 	}
@@ -586,6 +598,12 @@ private:
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
 		int result = T::compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
+
+		if(result == 2)
+			result = (t->sortAscending ? 1 : -1);
+		else if(result == -2)
+			result = (t->sortAscending ? -1 : 1);
+
 		return (t->sortAscending ? result : -result);
 	}
 

@@ -31,7 +31,10 @@
 * pøidána zkratka Ctrl+A pro vybrání všech položek v seznamu
 * opraveno zdvojování položek v nastavení barev
 * pøíkaz na odesílání bordelu zmìnìn na formát protokolu NMDC, už by to nemìlo timeoutovat
-* odstranìna položka Obnovit seznam uživatelù
+* opraveno nastavení maxima alternativních zdrojù
+* pøidán do chatu pøíkaz /csfd (THX Atom)
+* pøidána zvuková událost pøi psaní do chatu
+* znovu pøidáno automatické odpojování zdrojù pod 1.2 kB/s, aby se pøedešlo zneužívání segmentového stahování
 
 
 	-- StrongDC++ 1.00 RC9 --

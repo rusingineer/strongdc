@@ -213,12 +213,7 @@ LRESULT PublicHubsFrame::onEnter(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHa
 }
 
 LRESULT PublicHubsFrame::onClickedRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ctrlHubs.DeleteAllItems();
-	users = 0;
-	visibleHubs = 0;
-	ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
-	HubManager::getInstance()->refresh();
-
+	Refresh();
 	return 0;
 }
 
@@ -238,6 +233,20 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		TCHAR buf[256];
 		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
+
+		RecentHubEntry r;
+		ctrlHubs.GetItemText(i, COLUMN_NAME, buf, 256);
+		r.setName(Text::fromT(buf));
+		ctrlHubs.GetItemText(i, COLUMN_DESCRIPTION, buf, 256);
+		r.setDescription(Text::fromT(buf));
+		ctrlHubs.GetItemText(i, COLUMN_USERS, buf, 256);
+		r.setUsers(Text::fromT(buf));
+		ctrlHubs.GetItemText(i, COLUMN_SHARED, buf, 256);
+		r.setShared(Text::fromT(buf));
+		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
+		r.setServer(Text::fromT(buf));
+		HubManager::getInstance()->addRecent(r);
+				
 		HubFrame::openWindow(buf);
 	}
 
@@ -484,6 +493,11 @@ void PublicHubsFrame::updateDropDown() {
 		ctrlPubLists.AddString(Text::toT(*idx).c_str());
 	}
 	ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
+	if(HubManager::getInstance()->getSelectedHubList() < lists.size()) {
+		ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
+	} else {
+		ctrlPubLists.SetCurSel(lists.size()-1);
+	}
 }
 
 void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
@@ -501,6 +515,15 @@ void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) thro
 		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 	}
 	updateDropDown();
+}
+
+void PublicHubsFrame::Refresh() throw() {
+	ctrlHubs.DeleteAllItems();
+	users = 0;
+	visibleHubs = 0;
+	ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
+	HubManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
+	HubManager::getInstance()->refresh();
 }
 
 /**
