@@ -667,5 +667,7 @@ enum Strings { // @DontAdd
 	SETCZDC_MAGNET_URI_HANDLER, // "Install Magnet URI handler on startup"
 	COPY_MAGNET_LINK, // "Copy magnet link to clipboard"
 	SECONDS,
+	SETTINGS_DEBUG_COMMANDS, // "Debug commands"
+	SETTINGS_SAVEQUEUE,
 	LAST // @DontAdd
 };

@@ -154,7 +154,8 @@ public:
 		~FileQueue() {
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
 			{
-				delete FileDataInfo::GetFileDataInfo(i->second->getTempTarget());
+				if(!i->second->isSet(QueueItem::FLAG_USER_LIST ))
+					delete FileDataInfo::GetFileDataInfo(i->second->getTempTarget());
 				delete i->second;
 			}
 		}
@@ -172,7 +173,7 @@ public:
 			if(lastInsert != queue.end() && lastInsert->first == qi->getTarget())
 				lastInsert = queue.end();
 			queue.erase(qi->getTarget());
-	if(!qi->isSet(QueueItem::FLAG_USER_LIST ))
+			if(!qi->isSet(QueueItem::FLAG_USER_LIST ))
 				delete FileDataInfo::GetFileDataInfo(qi->getTempTarget());
 
 			delete qi;
@@ -211,7 +212,6 @@ public:
 
 	friend class QueueLoader;
 	friend class Singleton<QueueManager>;
-	friend void __cdecl FindFileResultHandler(const unsigned char* filehash, int ip, unsigned short port);
 	
 	QueueManager();
 	virtual ~QueueManager();

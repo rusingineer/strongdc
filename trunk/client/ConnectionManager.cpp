@@ -438,7 +438,7 @@ void ConnectionManager::onLock(UserConnection* aSource, const string& aLock, con
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
-			defFeatures.push_back("GetTestZBlock");
+			//defFeatures.push_back("GetTestZBlock");
 			defFeatures.push_back("GetZBlock");
 		}
 

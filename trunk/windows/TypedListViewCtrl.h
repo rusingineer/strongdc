@@ -424,7 +424,12 @@ public:
 	}
 
 	int insertItem(int i, T* item, int image) {
-		int nDataPos = ArrayInsertItem(item);
+		int nFound = ArrayFindItemIdx(item);
+		int nDataPos = -1;
+		if (nFound > -1) {
+			nDataPos = nFound;
+		} else nDataPos = ArrayInsertItem(item);
+
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)nDataPos);
 	}
@@ -502,15 +507,15 @@ public:
 			SetItemText(i, j, LPSTR_TEXTCALLBACK);
 	}
 	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); };
-	void deleteItem(T* item) 
+	void deleteItem(T* item, bool memFree = true) 
 	{ 
 		int i = findItem(item); 
-		if(i != -1) DeleteItem(i); 
+		if(i != -1) DeleteItem(i, memFree); 
 	}
 
-	void deleteItem(int nListPos) 
+	void deleteItem(int nListPos, bool memFree = true) 
 	{ 
-		DeleteItem(nListPos); 
+		DeleteItem(nListPos, memFree); 
 	}
 
 	void DeleteAll()
@@ -567,11 +572,11 @@ public:
 
 protected:
 	// Zakazeme pouzivani techto metod zvenku
-	BOOL DeleteItem(int nItem)
+	BOOL DeleteItem(int nItem, bool memFree)
 	{
 		int nDataPos = GetItemData(nItem); 
 		BOOL bRet = baseClass::DeleteItem(nItem);
-		ArrayDeleteItemAt(nDataPos);
+		if(memFree) ArrayDeleteItemAt(nDataPos);
 		return bRet;
 	}
 
@@ -598,7 +603,7 @@ protected:
 		int nFound = ArrayFindItemIdx(item);
 		if (nFound > -1) {
 			// Vicenasobne pouziti jedne instance ? Na tohle nejsme zarizeni !
-			dcassert(FALSE);
+//			dcassert(FALSE);
 			return -1;
 		}
 #endif

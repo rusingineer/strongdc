@@ -25,12 +25,12 @@
 
 #include "DCPlusPlus.h"
 #include "Singleton.h"
-#include "User.h"
-#include "DownloadManager.h"
-#include "Socket.h"
-#include "ClientManager.h"
+//#include "User.h"
+//#include "DownloadManager.h"
+//#include "Socket.h"
+//#include "ClientManager.h"
 #include "TimerManager.h"
-#include "SearchManager.h"
+//#include "SearchManager.h"
 
 
 class DebugManagerListener {

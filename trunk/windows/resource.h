@@ -73,6 +73,7 @@
 #define IDB_SPEEDS                      266
 #define IDI_ICON1                       269
 #define IDR_FINISHED_MP3                269
+#define IDR_CDM                         270
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -197,10 +198,10 @@
 #define IDC_SHUTDOWNTIMEOUT             1104
 #define IDC_COMMAND_DESCRIPTION         1105
 #define IDC_SETTINGS_ODC_MENUBAR_RIGHT  1105
-#define IDC_SHUTDOWNTIMEOUT2            1105
 #define IDC_MAX_EMOTICONS               1105
 #define IDC_APPEARANCE_BOOLEANS         1106
 #define IDC_SETTINGS_ODC_MENUBAR_LEFT   1106
+#define IDC_SAVEQUEUE                   1106
 #define IDC_DEFAULT_AWAY_MESSAGE        1107
 #define IDC_MAX_TAB_ROWS                1107
 #define IDC_CLOSE_DISCONNECTED          1108
@@ -395,6 +396,7 @@
 #define IDC_KB                          1254
 #define IDC_MAX_EMOTICONSSPIN           1254
 #define IDC_SEG_NUMBER                  1255
+#define IDC_SAVEQUEUE_SPIN              1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define BAA                             1257
 #define CAA                             1258
@@ -572,6 +574,8 @@
 #define IDC_SETCZDC_MAX_EMOTICONS       10116
 #define IDC_CZDC_PROGRESS_TEXT          10117
 #define IDC_ZDC_PROGRESS_TEXT           10117
+#define IDC_SETCZDC_MAX_EMOTICONS2      10117
+#define IDC_SAVEQUEUE_TEXT              10117
 #define IDC_CZDC_WINAMP                 10120
 #define IDC_CZDC_AVAILABLE_STYLES       10122
 #define IDC_CZDC_PREVIEW                10123
@@ -624,7 +628,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        270
+#define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1273
 #define _APS_NEXT_SYMED_VALUE           104

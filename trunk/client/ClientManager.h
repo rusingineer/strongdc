@@ -160,6 +160,8 @@ private:
 	UserMap users;
 	Socket s;
 
+	static int64_t quickTick;
+
 	friend class Singleton<ClientManager>;
 	ClientManager() { 
 		TimerManager::getInstance()->addListener(this); 
@@ -168,6 +170,8 @@ private:
 		features.push_back("NoGetINFO");
 		features.push_back("NoHello");
 		features.push_back("UserIP2");
+		features.push_back("TTHSearch"); 
+		features.push_back("QuickList");
 	};
 
 	virtual ~ClientManager() { TimerManager::getInstance()->removeListener(this); };

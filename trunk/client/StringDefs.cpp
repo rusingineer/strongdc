@@ -663,7 +663,9 @@ string ResourceManager::strings[] = {
 "Remove diacritic marks from Czech chars",
 "Install Magnet URI handler on startup", 
 "Copy magnet link to clipboard",
-"Seconds"
+"Seconds",
+"Debug commands",
+"Autosave queue every"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1327,5 +1329,7 @@ string ResourceManager::names[] = {
 "SetczdcCzcharsDisable",
 "SetczdcMagnetUriHandler", 
 "CopyMagnetLink",
-"Seconds"
+"Seconds",
+"SettingsDebugCommands",
+"AutoSaveQueue"
 };
