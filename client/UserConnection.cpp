@@ -24,7 +24,6 @@
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 
-const string UserConnection::FEATURE_BZLIST = "BZList";
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
 const string UserConnection::FEATURE_XML_BZLIST = "XmlBZList";
@@ -60,14 +59,18 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
-	if (BOOLSETTING(DEBUG_COMMANDS))
-		DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + aLine + "|");
+
+	if(aLine.length() == 0)
+		return;
 
 	string cmd;
 	string param;
 
 	string::size_type x;
 	
+	if (BOOLSETTING(DEBUG_COMMANDS))
+		DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + aLine + "|");
+
 	if( (x = aLine.find(' ')) == string::npos) {
 		cmd = aLine;
 	} else {

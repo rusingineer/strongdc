@@ -49,6 +49,7 @@ NmdcHub::~NmdcHub() throw() {
 	Speaker<NmdcHubListener>::removeListeners();
 	socket->removeListener(this);
 
+	Lock l(cs);
 	clearUsers();
 	delete[] dscrptn;
 };
@@ -98,9 +99,6 @@ void NmdcHub::clearUsers() {
 void NmdcHub::onLine(const char *aLine) throw() {
 	lastActivity = GET_TICK();
 	
-//	logovani vsech prichozich dat... posila se do chatu :-)
-//	Speaker<NmdcHubListener>::fire(NmdcHubListener::Message(), this, aLine);
-
 	if(aLine[0] != '$') {
 		// Check if we're being banned...
 		if(state != STATE_CONNECTED) {
@@ -516,13 +514,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			state = STATE_CONNECTED;
 			updateCounts(false);
 
-		string Verze = "";		
-		if ((!getStealth()) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
-			Verze = DCVERSIONSTRING;
-		} else { Verze = "1,0091"; }
-
-
-			version(Verze);
+			version();
 			myInfo();
 			getNickList();
 		}
@@ -660,6 +652,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 	}
 }
 
+bool nlfound;
+
+BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
+	char buf[256];
+	GetWindowText(handle,buf,256);
+	if(strstr(buf,"NetLimiter") != 0) nlfound = true;
+	return true;
+}
+
 void NmdcHub::myInfo() {
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
@@ -733,11 +734,46 @@ void NmdcHub::myInfo() {
 	}
 
 	extendedtag += ">";
-	
-	string nldetect =
-	(FindWindow(NULL, "NetLimiter v1.30") || FindWindow(NULL, "NetLimiter v1.29") || FindWindow(NULL, "NetLimiter v1.25") || FindWindow(NULL, "NetLimiter v1.22"))
-	? "NetLimiter " : Util::emptyString;
 
+	nlfound = false;
+	string nldetect = "";
+	EnumWindows(GetWOkna,NULL);
+
+	if(nlfound) {
+		char promenna[255];
+		GetEnvironmentVariable("APPDATA",promenna,255);
+		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
+
+		int NetLimiter_UploadLimit = 0;
+		int NetLimiter_UploadOn = 0;
+		const size_t BUF_SIZE = 800;
+		string cesta = Util::getAppName();
+		char buf[BUF_SIZE];
+		u_int32_t len;
+
+		for(;;) {
+			size_t n = BUF_SIZE;
+			len = f.read(buf, n);
+			string txt = "";
+			for(int i = 0; i<len; ++i) {
+				if (buf[i]== 0) 
+				txt += "/"; else
+				txt += buf[i];
+			}
+			if(strstr(strupr(strdup(txt.c_str())),strupr(strdup(cesta.c_str()))) != NULL) {
+				NetLimiter_UploadLimit = u_int8_t(txt[5]) / 4;
+				NetLimiter_UploadOn = u_int8_t(txt[16]);
+				buf[255] = 0;
+
+				if(NetLimiter_UploadOn == 1) {
+					nldetect = nlfound ? "NL @ "+Util::toString(NetLimiter_UploadLimit)+"kB/s " : Util::emptyString;
+				}
+			}
+			if(len < BUF_SIZE)
+			break;
+		}
+		f.close();
+	}
 	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
 		newmyinfo += extendedtag;
