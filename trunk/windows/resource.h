@@ -504,7 +504,6 @@
 #define IDC_LIST_ADD                    1256
 #define BAA                             1257
 #define IDC_SEARCH_EDIT                 1257
-#define IDC_LIST_EDIT                   1257
 #define IDC_MATCH_SPIN                  1257
 #define IDC_LIST_EDIT_BOX               1257
 #define CAA                             1258
@@ -525,7 +524,7 @@
 #define IDC_EMULATION                   1264
 #define IDC_UPDATE_URL                  1264
 #define IDC_REGEXP_TESTER_TEXT          1264
-#define IDC_LIST_EDIT2                  1264
+#define IDC_LIST_EDIT                   1264
 #define IDC_CLIENT_EMU                  1265
 #define IDC_GETIP                       1266
 #define IDC_CHANGE_COLOR                1266
@@ -733,6 +732,8 @@
 #define IDC_WINAMP                      10095
 #define IDC_THROTTLE_ENABLE3            10095
 #define IDC_REMOVE_SLOW_USER            10095
+#define IDC_DISCONNECTING_ENABLE2       10095
+#define IDC_SEGMENTED_ONLY              10095
 #define IDC_READD_ALL_SOURCES           10100
 #define IDC_PROGRESS_TEXT_COLOR_DOWN    10102
 #define IDC_PROGRESS_TEXT_COLOR_UP      10103

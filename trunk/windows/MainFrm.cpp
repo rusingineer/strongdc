@@ -42,7 +42,7 @@
 #include "StatsFrame.h"
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
-#include "UPnP.h"
+//#include "UPnP.h"
 #include "UploadQueueFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
@@ -321,8 +321,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		 if ( ( Util::getOsMajor() >= 5 && Util::getOsMinor() >= 1 )//WinXP & WinSvr2003
 			  || Util::getOsMajor() >= 6 )  //Longhorn
 		 {
-			UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", "DC++ TCP Port Mapping", SearchManager::getInstance()->getPort() );
-			UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", "DC++ UDP Port Mapping", SearchManager::getInstance()->getPort() );
+			UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", APPNAME " Download Port (" + Util::toString(SearchManager::getInstance()->getPort()) + " TCP)", ConnectionManager::getInstance()->getPort() );
+			UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(SearchManager::getInstance()->getPort()) + " UDP)", SearchManager::getInstance()->getPort() );
 		
 			if ( UPnP_UDPConnection->OpenPorts() || UPnP_TCPConnection->OpenPorts() )
 			{
@@ -336,15 +336,12 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			if ( ExternalIP.size() > 0 )
 			{
 				// woohoo, we got the external IP from the UPnP framework
-				// lets populate the  Active IP dialog textbox with the discovered IP and disable it
 				SettingsManager::getInstance()->set(SettingsManager::SERVER, ExternalIP );
 				SettingsManager::getInstance()->set(SettingsManager::CONNECTION_TYPE, SettingsManager::CONNECTION_ACTIVE );
-				::EnableWindow(GetDlgItem(IDC_SERVER), FALSE);
 			}
 			else
 			{
 				//:-(  Looks like we have to rely on the user setting the external IP manually
-				// so lets log something to the log, and ungrey the Active IP dialog textbox
 			}
 		}
 		 else
@@ -1066,10 +1063,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	tstring file;
 	
 	if(wID == IDC_OPEN_MY_LIST){
-		ShareManager::getInstance()->generateXmlList( true );
-		file = Text::toT(ShareManager::getInstance()->getBZXmlFile());
-		DirectoryListingFrame::openWindow(file, ClientManager::getInstance()->getUser("My List"));
-				
+		DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getUser(SETTING(NICK)));
 		return 0;
 	}
 

@@ -459,7 +459,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	}
 
 	if(!searchString.empty()){
-		SearchManager::getInstance()->search("TTH:" + searchString, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE, true);
+		SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE, true);
 		nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 		if(BOOLSETTING(REPORT_ALTERNATES))
 			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
@@ -556,7 +556,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 
 	// auto search, prevent DEADLOCK
 	if(newItem && root){
-		SearchManager::getInstance()->search("TTH:" + TTHValue(*root).toBase32(), 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
+		SearchManager::getInstance()->search(TTHValue(*root).toBase32(), 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE);
 	}
 	
 }
@@ -895,7 +895,8 @@ again:
 		}
 
 		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
-			if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
+			int64_t speed = SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024;
+			if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget(), speed) > speed) {
 				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);		
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				goto again;
@@ -1169,7 +1170,7 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 		QueueItem* q = fileQueue.find(aTarget);
 		if( (q != NULL) && (q->getPriority() != p) ) {
 			if( q->getStatus() != QueueItem::STATUS_RUNNING ) {
-				if(q->getPriority() == QueueItem::PAUSED) {
+				if(q->getPriority() == QueueItem::PAUSED || p == QueueItem::HIGHEST) {
 					// Problem, we have to request connections to all these users...
 					q->getOnlineUsers(ul);
 				}
@@ -1580,34 +1581,10 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	}
 
 	if(newItem){
-		SearchManager::getInstance()->search("TTH:" + tth, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
+		SearchManager::getInstance()->search(tth, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE);
 		return true;
 	}
 	return false;
-}
-
-void QueueManager::autoDropSource(User::Ptr& aUser)
-{
-    Lock l(cs);
-
-    QueueItem* q = userQueue.getRunning(aUser);
-
-    if(!q) return;
-
-    dcassert(q->isSource(aUser));
-
-    // Don't drop only downloading source
-    if(q->currents.size() < 2) return;
-
-    userQueue.setWaiting(q, aUser);
-    userQueue.remove(q, aUser);
-
-    q->removeSource(aUser, QueueItem::Source::FLAG_REMOVED);
-
-	fire(QueueManagerListener::StatusUpdated(), q);
-    setDirty();
-
-    DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
 }
 
 /**

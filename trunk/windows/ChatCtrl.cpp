@@ -30,7 +30,7 @@
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
-	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://") };
+_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("file://") };
 
 ChatCtrl::ChatCtrl() {
 	m_boAutoScroll = true;

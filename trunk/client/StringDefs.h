@@ -209,6 +209,7 @@ enum Strings { // @DontAdd
 	MENU_NETWORK_STATISTICS, // "Network Statistics"
 	MENU_NOTEPAD, // "&Notepad\tCtrl+N"
 	MENU_OPEN_FILE_LIST, // "Open file list...\tCtrl+L"
+	MENU_OPEN_OWN_LIST, // "Open own list"
 	MENU_PUBLIC_HUBS, // "&Public Hubs\tCtrl+P"
 	MENU_QUICK_CONNECT, // "&Quick Connect ...\tCtrl+Q"
 	MENU_RECONNECT, // "&Reconnect\tCtrl+R"
@@ -321,7 +322,7 @@ enum Strings { // @DontAdd
 	SETTINGS_ANTI_FRAG, // "Use antifragmentation method for downloads"
 	SETTINGS_APPEARANCE, // "Appearance"
 	SETTINGS_AUTO_AWAY, // "Auto-away on minimize (and back on restore)"
-	SETTINGS_AUTO_DROP_SOURCE, // "Automatically drop source with speed below 1.2kB/s"
+	SETTINGS_AUTO_DROP_SEGMENTED_SOURCE, // "When segmented downloading only (more than 2 active sources)"
 	SETTINGS_AUTO_FOLLOW, // "Automatically follow redirects"
 	SETTINGS_AUTO_KICK, // "Automatically disconnect users who leave the hub (does not disconnect when hub goes down / you leave it)"
 	SETTINGS_AUTO_SEARCH, // "Automatically search for alternative TTH source every"
@@ -436,6 +437,7 @@ enum Strings { // @DontAdd
 	SIZE, // "Size"
 	SIZE_MAX, // "Max Size"
 	SIZE_MIN, // "Min Size"
+	SKIP_RENAME, // "New virtual name matches old name, skipping..."
 	SLOT_GRANTED, // "Slot granted"
 	SLOTS, // "Slots"
 	SLOTS_SET, // "Slots set"
@@ -859,6 +861,5 @@ enum Strings { // @DontAdd
 	PROGRESS_SEGMENT, // "Transfer progressbar - actual segment"
 	SETTINGS_SB_MAX_SOURCES, // "Max sources for match queue"
 	DEFAULT, // "Default"
-	MENU_OPEN_MY_LIST, // "Open my file list"
 	LAST // @DontAdd
 };

@@ -104,19 +104,11 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	Download::List tickList;
 	iSpeed = SETTING(I_DOWN_SPEED);
 	iHighSpeed = SETTING(H_DOWN_SPEED);
-	iTime = SETTING(DOWN_TIME) * 60;
+	iTime = SETTING(DOWN_TIME)/* * 60*/;
 	throttleSetup();
 	throttleZeroCounters();
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20 && BOOLSETTING(AUTO_DROP_SOURCE) ) // check every 20 sec
-        {
-            if((*i)->getRunningAverage() < 1230){
-                QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
-                continue;
-            }
-        }
-
 		if(((*i)->getTotal() > 0) && (!(*i)->finished)) {
 			tickList.push_back(*i);
 		}
@@ -124,6 +116,9 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		Download* d = *i;
 		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
 		if(q && q->getSlowDisconnect()) {
+			if(SETTING(AUTO_DROP_SOURCE) && (q->getActiveSegments().size() < 2)) {
+				continue;
+			}
 			if(getWholeFileSpeed(d->getTarget()) > (iHighSpeed*1024)) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
@@ -930,8 +925,9 @@ noCRC:
 				int64_t size = d->getSize();
 				string tempTarget = d->getTempTarget();
 				
-				removeDownload(d, true);
 				FileChunksInfo::Free(d->getTempTarget());
+				removeDownload(d, true);
+
 				new FileChunksInfo(tempTarget, size, &v);
 
 				checkDownloads(aSource, reconn);

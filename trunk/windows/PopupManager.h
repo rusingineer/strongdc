@@ -19,7 +19,7 @@
 class PopupManager : public Singleton< PopupManager >, private TimerManagerListener
 {
 public:
-	PopupManager() : height(90), width(200), offset(0), activated(true), minimized(false) {
+	PopupManager() : height(90), width(200), offset(0), activated(true) {
 		TimerManager::getInstance()->addListener(this);
 
 	}
@@ -37,9 +37,6 @@ public:
 		activated = !mute;
 	}
 
-	void Minimized(bool mini){
-		minimized = mini;
-	}
 
 private:
 		
@@ -60,9 +57,7 @@ private:
 	//turn on/off popups completely
 	bool activated;
 
-	//keep track of window state
-	bool minimized;
-  	
+ 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t tick) throw();
 

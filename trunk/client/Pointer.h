@@ -30,13 +30,13 @@ class PointerBase
 public:
 	void inc() throw() {
 		dcassert(ref>=0);
-		Thread::safeInc(&ref);
+		Thread::safeInc(ref);
 	}
 
 	void dec() throw() {
 		dcassert(ref>0);
 		
-		if ( (Thread::safeDec(&ref)) == 0 ) {
+		if ( (Thread::safeDec(ref)) == 0 ) {
 			//dcdebug("Smart Object at 0x%08x deleted\n", this);
 			delete this;
 		}
@@ -53,7 +53,7 @@ protected:
 	}
 
 private:
-	long ref;
+	volatile long ref;
 };
 
 /**
