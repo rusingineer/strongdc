@@ -146,9 +146,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	// Set window name
 #ifdef isCVS
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(CVSVERSION));
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(CVSVERSION));
 #else
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING));
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING));
 #endif
 
 	// Load images
@@ -291,8 +291,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	// so if we are using UPnP lets open the ports.
 	if( BOOLSETTING( SETTINGS_USE_UPNP ) )
 	{
-		 if ( ( Util::getOsMajor() >= 5 && Util::getOsMinor() >= 1 )//WinXP & WinSvr2003
-			  || Util::getOsMajor() >= 6 )  //Longhorn
+		 if ( ( WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 )//WinXP & WinSvr2003
+			  || WinUtil::getOsMajor() >= 6 )  //Longhorn
 		 {
 			UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", APPNAME " Download Port (" + Util::toString(ConnectionManager::getInstance()->getPort()) + " TCP)", ConnectionManager::getInstance()->getPort() );
 			UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(SearchManager::getInstance()->getPort()) + " UDP)", SearchManager::getInstance()->getPort() );
@@ -957,8 +957,8 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 			if( BOOLSETTING( SETTINGS_USE_UPNP ) )
 			{
-			 if ( ( Util::getOsMajor() >= 5 && Util::getOsMinor() >= 1 )//WinXP & WinSvr2003
-				  || Util::getOsMajor() >= 6 )  //Longhorn
+			 if ( ( WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 )//WinXP & WinSvr2003
+				  || WinUtil::getOsMajor() >= 6 )  //Longhorn
 				{
 					if (UPnP_UDPConnection && UPnP_TCPConnection )
 					{
@@ -1013,18 +1013,34 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 }
 
 int MainFrame::run() {
+	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_GRAYED);
 	tstring file = Text::toT(Util::getAppPath()) + _T("*.*");
 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		lastTTHdir = Util::getFilePath(file);
-		string hash = HashManager::getInstance()->hasher.getTTfromFile(Text::fromT(file), false).getRoot().toBase32();
+
+		char TTH[192*8/(5*8)+2];
+
+		char buf[512*1024];
+
+		File f(Text::fromT(file), File::READ, File::OPEN);
+		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
+
+		size_t n = 0;
+		size_t n2 = 512*1024;
+		while( (n = f.read(buf, n2)) > 0) {
+			tth.update(buf, n);
+			n2 = 512*1024;
+		}
+		tth.finalize();
+		strcpy(TTH, tth.getRoot().toBase32().c_str());
+
 		CInputBox ibox(m_hWnd);
-		WIN32_FIND_DATA data;
-		FindFirstFile(file.c_str(), &data);
-		int64_t size = (int64_t)data.nFileSizeLow | ((int64_t)data.nFileSizeHigh)<<32;
-		string magnetlink = "magnet:?xt=urn:tree:tiger:"+hash+"&xl="+Util::toString(size)+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
-		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(hash).c_str(), Text::toT(magnetlink).c_str());
-	   } 
-   return 0;
+
+		string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
+		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
+	}
+	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);
+	return 0;
 }
 
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -1390,7 +1406,7 @@ void MainFrame::checkFileList(string file, User::Ptr u) {
 			}
 			DirectoryListing* dl = new DirectoryListing(u);
 			try {
-				dl->loadFile(file, true);
+				dl->loadFile(file);
 			} catch(...) {
 				delete dl;
 				return;

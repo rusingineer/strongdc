@@ -63,11 +63,12 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 }
 
 void UserInfo::update() {
+	tstring uploadSpeed = Util::emptyStringT;
+
 	if(user->getDownloadSpeed()<1) {
 		const string& tmp = user->getConnection();
 		int status = user->getStatus();
 		string Omezeni = user->getUpload();
-
 		if (!Omezeni.empty()) {
 			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
 		} else

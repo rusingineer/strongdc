@@ -51,7 +51,10 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlList.SetBkColor(WinUtil::bgColor);
 	ctrlList.SetTextBkColor(WinUtil::bgColor);
 	ctrlList.SetTextColor(WinUtil::textColor);
-	
+
+	stateImages.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	ctrlList.SetImageList(stateImages, LVSIL_STATE);
+
 	// Create listview columns
 	WinUtil::splitTokens(columnIndexes, SETTING(FINISHED_UL_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(FINISHED_UL_WIDTHS), COLUMN_LAST);
@@ -174,7 +177,30 @@ LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == SPEAK_ADD_LINE) {
 		FinishedItem* entry = (FinishedItem*)lParam;
+
+		for(int i = 0, j = ctrlList.GetItemCount(); i < j; ++i) {
+			FinishedItem* fi = (FinishedItem*)ctrlList.GetItemData(i);
+
+			if(!fi->mainitem) continue;
+
+			if((fi->getUser() == entry->getUser()) && (fi->getTarget() == entry->getTarget())) {
+				fi->subItems.push_back(entry);
+				entry->main = fi;
+				entry->mainitem = false;
+
+				if(fi->subItems.size() == 1){
+					ctrlList.SetItemState(i, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+				}else if(!fi->collapsed){
+					addEntry(entry, i + 1);
+				}
+				return 0;
+			}
+		}
+		entry->mainitem = true;
+		entry->collapsed = true;
+
 		addEntry(entry);
+
 		if(BOOLSETTING(FINISHED_DIRTY))
 			setDirty();
 		updateStatus();
@@ -187,7 +213,7 @@ LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	return 0;
 }
 
-void FinishedULFrame::addEntry(FinishedItem* entry) {
+void FinishedULFrame::addEntry(FinishedItem* entry, int pos) {
 	TStringList l;
 	l.push_back(Text::toT(Util::getFileName(entry->getTarget())));
 	l.push_back(Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
@@ -200,7 +226,27 @@ void FinishedULFrame::addEntry(FinishedItem* entry) {
 	totalTime += entry->getMilliSeconds();
 
 	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
-	int loc = ctrlList.insert(l, image, (LPARAM)entry);
+	int loc = -1;
+	if(pos == -1) {
+		loc = ctrlList.insert(l, image, (LPARAM)entry);
+	} else {
+		LV_ITEM lvi;
+		lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
+		lvi.iItem = pos;
+		lvi.iSubItem = 0;
+		lvi.iIndent = 1;
+		lvi.pszText = const_cast<TCHAR*>(ctrlList.getSortColumn() == -1 ? l[0].c_str() : l[ctrlList.getSortColumn()].c_str());
+		lvi.cchTextMax = ctrlList.getSortColumn() == -1 ? l[0].size() : l[ctrlList.getSortColumn()].size();
+		lvi.iImage = image;
+		lvi.lParam = (LPARAM)entry;
+		lvi.state = 0;
+		lvi.stateMask = 0;
+		loc = ctrlList.InsertItem(&lvi);
+		int k = 0;
+		for(TStringIter j = l.begin(); j != l.end(); ++j, k++) {
+			ctrlList.SetItemText(loc, k, j->c_str());
+		}
+	}
 	ctrlList.EnsureVisible(loc, FALSE);
 }
 
@@ -235,6 +281,50 @@ void FinishedULFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) thro
 	if(refresh == true) {
 		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 	}
+}
+
+LRESULT FinishedULFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	bHandled = false;
+	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
+	
+	if (item->iItem != -1) {
+		CRect rect;
+		ctrlList.GetItemRect(item->iItem, rect, LVIR_ICON);
+
+		if (item->ptAction.x < rect.left)
+		{
+			FinishedItem* i = (FinishedItem*)ctrlList.GetItemData(item->iItem);
+			if(i->subItems.size() > 0)
+				if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
+		}
+	}
+	return 0;
+} 
+
+void FinishedULFrame::Collapse(FinishedItem* i, int a) {
+	size_t q = 0;
+	while(q<i->subItems.size()) {
+		FinishedItem* j = i->subItems[q];
+		int h = ctrlList.find((LPARAM)j);
+		if(h != -1)
+			ctrlList.DeleteItem(h);
+		q++;
+	}
+
+	i->collapsed = true;
+	ctrlList.SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+}
+
+void FinishedULFrame::Expand(FinishedItem* i, int a) {
+	size_t q = 0;
+	while(q < i->subItems.size()) {
+		addEntry(i->subItems[q], a + 1);
+		q++;
+	}
+
+	i->collapsed = false;
+	ctrlList.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+	//ctrlResults.resort();
 }
 
 /**

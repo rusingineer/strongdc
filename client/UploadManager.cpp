@@ -32,33 +32,17 @@
 #include "HashManager.h"
 #include "AdcCommand.h"
 
-#define FIREBALL_LIMIT 100*1024
-
-#define FILESERVER_ONLINE_TIME 7200
-#define FILESERVER_SHARE_SIZE 2*1024*1024*1024
-#define FILESERVER_UPLOAD 200*1024*1024
-
-// Main fireball flag
+#define INBUFSIZE 64*1024
 bool UploadManager::m_boFireball = false;
-bool UploadManager::m_boFireballLast = false;
-
-// Variables for Fireball detecting
-bool m_boLastTickHighSpeed = false;
-u_int32_t m_iHighSpeedStartTick = 0;
-bool boFireballSent = false;
-
-// Main fileserver flag
 bool UploadManager::m_boFileServer = false;
-bool UploadManager::m_boFileServerLast = false;
-bool boFileServerSent = false;
 
 static const string UPLOAD_AREA = "Uploads";
 
-UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0) { 
+UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
+	mBytesSent(0), mBytesSpokenFor(0), mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
+	m_boLastTickHighSpeed(false), m_iHighSpeedStartTick(0), boFireballSent(false), boFileServerSent(false) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
-	mUploadLimit = 0;
 	throttleZeroCounters();
 };
 
@@ -82,7 +66,7 @@ UploadManager::~UploadManager() throw() {
 	}
 }
 
-bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t aBytes) {
+bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t aBytes, bool listRecursive) {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM:prepFile Wrong state, ignoring\n");
 		return false;
@@ -106,50 +90,49 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 			try {
 				File* f = new File(file, File::READ, File::OPEN);
+				size = f->getSize();
 
-			size = f->getSize();
+				free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
+	
+				if(aBytes == -1) {
+					aBytes = size - aStartPos;
+				}
 
-			free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
-
-			if(aBytes == -1) {
-				aBytes = size - aStartPos;
-			}
-
-			if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
+				if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
 					aSource->fileNotAvail();
-				delete f;
-				return false;
-		}
+					delete f;
+					return false;
+				}
 
-	f->setPos(aStartPos);
+				f->setPos(aStartPos);
 			
-	is = f;
+				is = f;
 
-			if((aStartPos + aBytes) < size) {
-				is = new LimitedInputStream<true>(is, aBytes);
-			}	
+				if((aStartPos + aBytes) < size) {
+					is = new LimitedInputStream<true>(is, aBytes);
+				}	
 
 			} catch(const Exception&) {
 				aSource->fileNotAvail();
 				return false;
 			}
 
-	} else if(aType == "tthl") {
-		// TTH Leaves...
-		MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
-		if(mis == NULL) {
-			aSource->fileNotAvail();
-			return false;
-		}
+		} else if(aType == "tthl") {
+			// TTH Leaves...
+			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
+			if(mis == NULL) {
+				aSource->fileNotAvail();
+				return false;
+			}
 
-		size = mis->getSize();
-		aStartPos = 0;
-		is = mis;
-		leaves = true;		
-		free = true;
+			size = mis->getSize();
+			aStartPos = 0;
+			is = mis;
+			leaves = true;		
+			free = true;
 		} else if(aType == "list") {
 			// Partial file list
-			MemoryInputStream* mis = ShareManager::getInstance()->generatePartialList(aFile);
+			MemoryInputStream* mis = ShareManager::getInstance()->generatePartialList(aFile, listRecursive);
 			if(mis == NULL) {
 				aSource->fileNotAvail();
 				return false;
@@ -182,8 +165,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
 			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->getUser()->isSet(User::OP) || getFreeExtraSlots() > 0;
-			if((free && supportsFree && allowedFree) ||
-				(strcmp(aFile.c_str(), "MyList.DcLst") == 0 && aSource->getUser()->isSet(User::OP))) {
+			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
 			} else {
 				delete is;
@@ -237,8 +219,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	return true;
 }
 
-void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
-	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, -1)) {
+void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume, int64_t bytes) throw() {
+	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, bytes)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
 	}
@@ -303,7 +285,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 		removeUpload(u);
 	}
 
-	removeConnection(aSource);
+	removeConnection(aSource, false);
 }
 
 void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) throw() {
@@ -319,6 +301,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 		StringMap params;
 		params["source"] = u->getFileName();
 		params["user"] = aSource->getUser()->getNick();
+		params["userip"] = aSource->getRemoteIp();
 		params["hub"] = aSource->getUser()->getLastHubName();
 		params["hubip"] = aSource->getUser()->getLastHubAddress();
 		params["size"] = Util::toString(u->getSize());
@@ -384,7 +367,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	}
 }
 
-void UploadManager::removeConnection(UserConnection::Ptr aConn) {
+void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 	dcassert(aConn->getUpload() == NULL);
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
@@ -395,7 +378,7 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn) {
 		extra--;
 		aConn->unsetFlag(UserConnection::FLAG_HASEXTRASLOT);
 	}
-	ConnectionManager::getInstance()->putUploadConnection(aConn);
+	ConnectionManager::getInstance()->putUploadConnection(aConn, ntd);
 }
 
 void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
@@ -413,14 +396,18 @@ void UploadManager::on(GetListLength, UserConnection* conn) throw() {
 	conn->listLen(ShareManager::getInstance()->getListLenString()); 
 }
 
-void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) throw() {
+void UploadManager::on(AdcCommand::NTD, UserConnection* aConn, const AdcCommand&) throw() {
+	removeConnection(aConn, true);
+}
+
+void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) throw() {
 	int64_t aBytes = Util::toInt64(c.getParam(3));
 	int64_t aStartPos = Util::toInt64(c.getParam(2));
 	const string& fname = c.getParam(1);
 	const string& type = c.getParam(0);
 	string tmp;
 
-	if(prepareFile(aSource, type, fname, aStartPos, aBytes)) {
+	if(prepareFile(aSource, type, fname, aStartPos, aBytes, c.hasFlag("RE", 4))) {
 		Upload* u = aSource->getUpload();
 		dcassert(u != NULL);
 		if(aBytes == -1)
@@ -430,7 +417,7 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 
 		u->setStart(GET_TICK());
 
-		Command cmd = Command(Command::SND());
+		AdcCommand cmd(AdcCommand::CMD_SND);
 		cmd.addParam(c.getParam(0));
 		cmd.addParam(c.getParam(1));
 		cmd.addParam(c.getParam(2));
@@ -449,77 +436,72 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 	}
 }
 
+/** @todo fixme */
+void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
+
+}
+
 // TimerManagerListener
 void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
-			Lock l(cs);
-			Upload::List ticks;
+	Lock l(cs);
+	Upload::List ticks;
 
-			throttleSetup();
-			throttleZeroCounters();
-
-			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-				ticks.push_back(*i);
-			}
+	throttleSetup();
+	throttleZeroCounters();
+	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+		ticks.push_back(*i);
+	}
 			
-			if(ticks.size() > 0)
-				fire(UploadManagerListener::Tick(), ticks);
+	if(ticks.size() > 0)
+		fire(UploadManagerListener::Tick(), ticks);
 
-			fire(UploadManagerListener::QueueUpdate());
-			int iAvgSpeed = getAverageSpeed();
+	fire(UploadManagerListener::QueueUpdate());
+	int iAvgSpeed = getAverageSpeed();
 
-			if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
+	if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
 
-			if ( !m_boFireball ) {
-			// Musim orezat narazove falesne velke rychlosti
-			// - cekat, zda bude nad limit nejaky souvisly cas, treba 10 vterin
-			// - pak teprve nahodit bit FireBall
-				if ( iAvgSpeed >= FIREBALL_LIMIT ) {
-					u_int32_t iActTicks = TimerManager::getTick();
-					if ( m_boLastTickHighSpeed ) {
-			// Vysoka rychlost uz trva od driv => spocitat, jak dlouho uz trva
-						u_int32_t iHighSpeedTicks = 0;
-						if ( iActTicks >= m_iHighSpeedStartTick ) 
-						iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
-					else
-						iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
-						if ( iHighSpeedTicks > 60*1000 ) {
-			// Dele nez 60 vterin
-							m_boFireball = true;
-						}
-					} else {
-			// Prvni tick s vysokou rychlosti
-			// Odpamatujeme si tick a nahodime flag pocitani casu
-						m_iHighSpeedStartTick = TimerManager::getTick();
-						m_boLastTickHighSpeed = true;
+#define FILESERVER_UPLOAD 200*1024*1024
+
+	if(m_boFireball == false) {
+		if(iAvgSpeed >= 102400) {
+			u_int32_t iActTicks = TimerManager::getTick();
+			if ( m_boLastTickHighSpeed ) {
+				u_int32_t iHighSpeedTicks = 0;
+				if ( iActTicks >= m_iHighSpeedStartTick ) 
+				iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
+			else
+				iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
+
+			if ( iHighSpeedTicks > 60*1000 ) {
+				m_boFireball = true;
+					if(boFireballSent == false) {
+						ClientManager::getInstance()->infoUpdated(true);
+						boFireballSent = true;
 					}
-				} else {
-			// Shodim priznak pro pocitani casu
-					m_boLastTickHighSpeed = false;
 				}
+			} else {
+				m_iHighSpeedStartTick = TimerManager::getTick();
+				m_boLastTickHighSpeed = true;
 			}
+		} else {
+			m_boLastTickHighSpeed = false;
+		}
 
-			if ( !m_boFileServer ) {
-				int64_t iUpload = Socket::getTotalUp(); // Celkovy upload od spusteni
-				int64_t iUpTime = Util::getUptime();
-				int64_t iShareSize = ShareManager::getInstance()->getShareSize();
-				if ( ( iUpTime > FILESERVER_ONLINE_TIME ) 
-				 && ( iShareSize > (int64_t) FILESERVER_SHARE_SIZE ) 
-				 && ( iUpload > (int64_t) FILESERVER_UPLOAD ) ) {
+		if(m_boFileServer == false) {
+			int64_t iUpload = Socket::getTotalUp();
+			int64_t iUpTime = Util::getUptime();
+			int64_t iShareSize = ShareManager::getInstance()->getShareSize();
+			if((iUpTime > 7200) && 
+				(iShareSize > 2147483648) && 
+				(iUpload > 209715200)) {
 					m_boFileServer = true;
+				if(boFireballSent == false && boFileServerSent == false) {
+					ClientManager::getInstance()->infoUpdated(true);
+					boFileServerSent = true;
 				}
 			}
-
-			// Pokud vznikne priznak Fireball nebo FileServer, posleme ho jednorazove vsem hubum
-			// Nove pripojenym hubum se posle v ramci pripojovani
-			if ( m_boFireball && !boFireballSent ) {
-				ClientManager::getInstance()->infoUpdated(true);
-				boFireballSent = true;
-				boFileServerSent = true; // Zamezime odeslani MyInfo, kdyz FileServer vznikne po FireBall
-			}
-			else if ( m_boFileServer && !boFileServerSent ) {
-				ClientManager::getInstance()->infoUpdated(true);
-				boFileServerSent = true;
-			}
+		}
+	}
 }
 
 void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
@@ -585,7 +567,6 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
-#define INBUFSIZE 64*1024
 	Lock l(cs);
 	unsigned int num_transfers = getUploadCount();
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);

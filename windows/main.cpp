@@ -103,10 +103,10 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 #ifdef isCVS
 	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING CVSVERSION);
+		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING CVSVERSION);
 #else
 	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING);
+		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING);
 #endif
 
 	buf[8191] = 0;
@@ -320,7 +320,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	rc.right = GetSystemMetrics(SM_CXFULLSCREEN);
 	rc.left = rc.right / 2 - 85;
 	
-	dummy.Create(NULL, rc, _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("[") _T(CZDCVERSIONSTRING) _T("]"), WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+	dummy.Create(NULL, rc, _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("[") _T(STRONGDCVERSIONSTRING) _T("]"), WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_CENTER | ES_READONLY, WS_EX_STATICEDGE);
 	splash.Create(_T("Static"), GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM | WS_EX_TOOLWINDOW);
 	splash.SetFont((HFONT)GetStockObject(DEFAULT_GUI_FONT));
@@ -333,7 +333,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.SetWindowPos(NULL, &rc, SWP_SHOWWINDOW);
 	splash.SetWindowLong(GWL_WNDPROC, (LONG)&splashCallback);
 	splash.CenterWindow();
-	sTitle = VERSIONSTRING "" CZDCVERSIONSTRING;
+	sTitle = VERSIONSTRING "" STRONGDCVERSIONSTRING;
 	splash.SetFocus();
 	splash.RedrawWindow();
 
@@ -390,7 +390,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 				bool multiple = false;
 		if(_tcslen(lpstrCmdLine) == 0) {
 		if (::MessageBox(NULL, _T("There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
+			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
 					multiple = true;
 				}
 		}

@@ -151,14 +151,14 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 	iLeft += m_iWidth;
 	while ((pos != NULL) && (rectSpan.right < iLeft)) {
 		int64_t uSpan = m_Spans.GetKeyAt(pos) - start;
-		int iPixels = static_cast<int>(uSpan * m_dblPixelsPerByte + 0.5);
+		int64_t iPixels = static_cast<int64_t>(uSpan * m_dblPixelsPerByte + 0.5);
 
 		if(iPixels > 0) {
 			rectSpan.left = rectSpan.right;
 			rectSpan.right += iPixels;
 			FillRect(dc, &rectSpan, crLastColor = crColor);
 
-			start += static_cast<int>(iPixels * m_dblBytesPerPixel + 0.5);
+			start += static_cast<int64_t>(iPixels * m_dblBytesPerPixel + 0.5);
 		} else {
 			double dRed = 0, dGreen = 0, dBlue = 0;
 			int64_t dwRed, dwGreen, dwBlue, dwLast = start, dwEnd = start + iBytesInOnePixel;

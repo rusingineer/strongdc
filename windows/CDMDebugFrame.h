@@ -6,8 +6,9 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#define COMMAND_MESSAGE_MAP 14
 #define DETECTION_MESSAGE_MAP 15
-#define COMMAND_MESSAGE_MAP 16
+#define HUB_COMMAND_MESSAGE_MAP 16
 #define DEBUG_FILTER_MESSAGE_MAP 17
 #define DEBUG_FILTER_TEXT_MESSAGE_MAP 18
 #define CLEAR_MESSAGE_MAP 19
@@ -22,8 +23,9 @@ class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("CDMDebugFrame"), IDR_CDM, 0, COLOR_3DFACE);
 
-	CDMDebugFrame() : closed(false), showCommands(true), showDetection(false), bFilterIp(false),
+	CDMDebugFrame() : closed(false), showCommands(true), showHubCommands(false), showDetection(false), bFilterIp(false),
 		detectionContainer(WC_BUTTON, this, DETECTION_MESSAGE_MAP),
+		HubCommandContainer(WC_BUTTON, this, HUB_COMMAND_MESSAGE_MAP),
 		commandContainer(WC_BUTTON, this, COMMAND_MESSAGE_MAP),
 		cFilterContainer(WC_BUTTON, this, DEBUG_FILTER_MESSAGE_MAP),
 		eFilterContainer(WC_EDIT, this, DEBUG_FILTER_TEXT_MESSAGE_MAP),
@@ -51,6 +53,8 @@ public:
 		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckDetection)
 	ALT_MSG_MAP(COMMAND_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckCommand)
+	ALT_MSG_MAP(HUB_COMMAND_MESSAGE_MAP)
+		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckHubCommand)
 	ALT_MSG_MAP(DEBUG_FILTER_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckFilter)
 	ALT_MSG_MAP(DEBUG_FILTER_TEXT_MESSAGE_MAP)
@@ -88,6 +92,11 @@ public:
 		bHandled = FALSE;
 		return 0;
 	}
+	LRESULT onSetCheckHubCommand(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+		showHubCommands = wParam == BST_CHECKED;
+		bHandled = FALSE;
+		return 0;
+	}
 	LRESULT onSetCheckFilter(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bFilterIp = wParam == BST_CHECKED;
 		UpdateLayout();
@@ -107,10 +116,10 @@ public:
 private:
 	CEdit ctrlPad, ctrlFilterText;
 	CStatusBarCtrl ctrlStatus;
-	CButton ctrlClear, ctrlCommands, ctrlDetection, ctrlFilterIp;
-	CContainedWindow clearContainer, statusContainer, detectionContainer, commandContainer, cFilterContainer, eFilterContainer;
+	CButton ctrlClear, ctrlCommands, ctrlHubCommands, ctrlDetection, ctrlFilterIp;
+	CContainedWindow clearContainer, statusContainer, detectionContainer, commandContainer, HubCommandContainer, cFilterContainer, eFilterContainer;
 
-	bool showCommands, showDetection, bFilterIp;
+	bool showCommands, showHubCommands, showDetection, bFilterIp;
 	tstring sFilterIp;
 
 	CriticalSection cs;
@@ -122,25 +131,31 @@ private:
 		addLine(aLine);
 	}
 	void on(DebugManagerListener::DebugCommand, const string& aLine, int typeDir, const string& ip) throw() {
-		if(!showCommands)
-			return;
 			switch(typeDir) {
 				case DebugManager::HUB_IN:
+					if(!showHubCommands)
+						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
 						addLine("Hub:\t[" + ip + "]\t <<  \t" + aLine);
 					}
 					break;
 				case DebugManager::HUB_OUT:
+					if(!showHubCommands)
+						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
 						addLine("Hub:\t[" + ip + "]\t   >>\t" + aLine);
 					}
 					break;
 				case DebugManager::CLIENT_IN:
+					if(!showCommands)
+						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
 						addLine("Client:\t[" + ip + "]\t <<  \t" + aLine);
 					}
 					break;
 				case DebugManager::CLIENT_OUT:
+					if(!showCommands)
+						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
 						addLine("Client:\t[" + ip + "]\t   >>\t" + aLine);
 					}

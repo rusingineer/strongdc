@@ -24,12 +24,12 @@
 #endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
+
 #include "UserConnection.h"
 #include "Singleton.h"
 #include "FilteredFile.h"
 #include "ZUtils.h"
 #include "MerkleTree.h"
-
 #include "LogManager.h"
 
 class QueueItem;
@@ -62,6 +62,7 @@ public:
 		FLAG_TTH_OK = 0x800,
 		FLAG_MP3_INFO = 0x1000,
 		FLAG_CHECK_FILE_LIST = 0x2000,
+		FLAG_MULTI_CHUNK = 0x4000
 	};
 
 	Download() throw();
@@ -96,7 +97,7 @@ public:
 	}
 
 	/** @internal */
-	Command getCommand(bool zlib, bool tthf);
+	AdcCommand getCommand(bool zlib, bool tthf);
 
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
 	GETSET(string, source, Source);
@@ -104,11 +105,10 @@ public:
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
 	GETSET(CrcOS*, crcCalc, CrcCalc);
-	GETSET(bool, treeValid, TreeValid);
-	GETSET(Download*, oldDownload, OldDownload);
 	GETSET(TTHValue*, tth, TTH);
+	GETSET(bool, treeValid, TreeValid);
 	GETSET(int64_t, segmentSize, SegmentSize);
-	int64_t bytesLeft;
+	GETSET(QueueItem*, item, Item);
 	int64_t quickTick;
 	bool finished;
 	
@@ -142,12 +142,14 @@ public:
 	typedef X<1> Failed;
 	typedef X<2> Starting;
 	typedef X<3> Tick;
+	typedef X<4> Status;
+	typedef X<5> Verifying;
 
 	/** 
 	 * This is the first message sent before a download starts. 
 	 * No other messages will be sent before.
 	 */
-	virtual void on(Starting, Download*) throw() { };
+	virtual void on(Starting, Download*, bool) throw() { };
 
 	/**
 	 * Sent once a second if something has actually been downloaded.
@@ -158,7 +160,7 @@ public:
 	 * This is the last message sent before a download is deleted. 
 	 * No more messages will be sent after it.
 	 */
-	virtual void on(Complete, Download*) throw() { };
+	virtual void on(Complete, Download*, bool) throw() { };
 
 	/** 
 	 * This indicates some sort of failure with a particular download.
@@ -168,6 +170,8 @@ public:
 	 * display an error string.
 	 */
 	virtual void on(Failed, Download*, const string&) throw() { };
+	virtual void on(Status, ConnectionQueueItem*, const string&) throw() { };
+	virtual void on(Verifying, const string&, int64_t) throw() { };
 };
 
 
@@ -264,18 +268,26 @@ private:
 	Download::List downloads;
 	
 	bool checkRollback(Download* aDownload, const u_int8_t* aBuf, int aLen) throw(FileException);
-	void removeConnection(UserConnection::Ptr aConn, bool reuse = false, bool reconn = false);
-	void removeDownload(Download* aDown, bool full, bool finished = false);
+	void removeConnection(UserConnection::Ptr aConn, bool reuse = false, bool ntd = false, bool reconn = false);
+	void removeDownload(Download* aDown, bool removeSegment = true);
+	void fileNotAvailable(UserConnection* aSource);
+	void noSlots(UserConnection* aSource);
 	
+	void moveFile(const string& source, const string&target);
+	void logDownload(UserConnection* aSource, Download* d);
+	u_int32_t calcCrc32(const string& file) throw(FileException);
+	bool checkSfv(UserConnection* aSource, Download* d, u_int32_t crc);
+	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
+
 	friend class Singleton<DownloadManager>;
 	DownloadManager() { 
 		TimerManager::getInstance()->addListener(this);
-		mDownloadLimit = 0;
+		mDownloadLimit = 0; mBytesSent = 0; mBytesSpokenFor = 0; mCycleTime = 0; mByteSlice = 0;
 		mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
 		throttleZeroCounters();
 	};
 
-	virtual ~DownloadManager() {
+	virtual ~DownloadManager() throw() {
 		TimerManager::getInstance()->removeListener(this);
 		while(true) {
 			{
@@ -287,9 +299,10 @@ private:
 		}
 	};
 	
-	void checkDownloads(UserConnection* aConn, bool reconn = false);
+	void checkDownloads(UserConnection* aConn, bool reconn = false, QueueItem* q = NULL);
 	void handleEndData(UserConnection* aSource);
-	
+	void userSpeed(UserConnection* aSource);
+
 	// UserConnectionListener
 	virtual void on(Data, UserConnection*, const u_int8_t*, size_t) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();
@@ -297,14 +310,14 @@ private:
 	virtual void on(FileLength, UserConnection*, int64_t) throw();
 	virtual void on(MaxedOut, UserConnection*) throw();
 	virtual	void on(FileNotAvailable, UserConnection*) throw();
-
-	virtual void on(Command::SND, UserConnection*, const Command&) throw();
 	void on(ListLength, UserConnection* aSource, const string& aListLength);
 	
-	bool prepareFile(UserConnection* aSource, int64_t newSize = -1);
+	virtual void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
+
+	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
-	int iSpeed, iHighSpeed, iTime;
 };
 
 #endif // !defined(AFX_DOWNLOADMANAGER_H__D6409156_58C2_44E9_B63C_B58C884E36A3__INCLUDED_)

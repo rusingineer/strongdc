@@ -253,12 +253,13 @@ public:
 		return x;
 	}
 
-	virtual size_t flush() throw(Exception) 
+	virtual size_t flush(bool finished = true) throw(Exception) 
 	{
 		Lock l(*shared_handle_ptr);
 
-		if(!FlushFileBuffers(shared_handle_ptr->handle))
-			throw FileException(Util::translateError(GetLastError()));
+		if(finished)
+			if(!FlushFileBuffers(shared_handle_ptr->handle))
+				throw FileException(Util::translateError(GetLastError()));
 		return 0;
 	}
 
@@ -332,9 +333,9 @@ public:
         return size;
     }
 
-	virtual size_t flush() throw(Exception) 
+	virtual size_t flush(bool finished = true) throw(Exception) 
 	{
-		return os->flush();
+		return os->flush(finished);
 	}
 
 	int64_t getPos(){return pos;}

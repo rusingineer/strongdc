@@ -69,9 +69,8 @@ public:
 		return false;
 	}
 	
-	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
+	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString);
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString);
-	u_int32_t getMinimumSearchInterval(StringList& who, const string& aString, u_int32_t& casNavic);
 
 	void infoUpdated(bool antispam);
 
@@ -152,13 +151,11 @@ private:
 	friend class Singleton<ClientManager>;
 	ClientManager() { 
 		TimerManager::getInstance()->addListener(this); 
-		if(SETTING(CLIENT_ID).empty())
-			SettingsManager::getInstance()->set(SettingsManager::CLIENT_ID, CID::generate().toBase32());
 		quickTick = GET_TICK();
 		infoTick = 0;
 	};
 
-	virtual ~ClientManager() { TimerManager::getInstance()->removeListener(this); };
+	virtual ~ClientManager() throw() { TimerManager::getInstance()->removeListener(this); };
 
 	// ClientListener
 	virtual void on(Connected, Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }

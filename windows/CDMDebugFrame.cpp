@@ -24,7 +24,13 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctrlClear.SetFont(WinUtil::systemFont);
 	clearContainer.SubclassWindow(ctrlClear.m_hWnd);
 
-	ctrlCommands.Create(ctrlStatus.m_hWnd, rcDefault, _T("Commands"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
+	ctrlHubCommands.Create(ctrlStatus.m_hWnd, rcDefault, _T("Hub Commands"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
+	ctrlHubCommands.SetButtonStyle(BS_AUTOCHECKBOX, false);
+	ctrlHubCommands.SetFont(WinUtil::systemFont);
+	ctrlHubCommands.SetCheck(showHubCommands ? BST_CHECKED : BST_UNCHECKED);
+	HubCommandContainer.SubclassWindow(ctrlHubCommands.m_hWnd);
+
+	ctrlCommands.Create(ctrlStatus.m_hWnd, rcDefault, _T("Client Commands"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
 	ctrlCommands.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlCommands.SetFont(WinUtil::systemFont);
 	ctrlCommands.SetCheck(showCommands ? BST_CHECKED : BST_UNCHECKED);
@@ -80,32 +86,35 @@ void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[6];
+		int w[7];
 		ctrlStatus.GetClientRect(sr);
 
 		//int clearButtonWidth = 50;
-		int tmp = ((sr.Width() - 50) / 5) - 4;
+		int tmp = ((sr.Width() - 50) / 6) - 4;
 		w[0] = 50;
 		w[1] = w[0] + tmp;
 		w[2] = w[1] + tmp;
 		w[3] = w[2] + tmp;
 		w[4] = w[3] + tmp;
 		w[5] = w[4] + tmp;
+		w[6] = w[5] + tmp;
 		
-		ctrlStatus.SetParts(6, w);
+		ctrlStatus.SetParts(7, w);
 
 		ctrlStatus.GetRect(0, sr);
 		ctrlClear.MoveWindow(sr);
 		ctrlStatus.GetRect(1, sr);
 		ctrlCommands.MoveWindow(sr);
 		ctrlStatus.GetRect(2, sr);
-		ctrlDetection.MoveWindow(sr);
+		ctrlHubCommands.MoveWindow(sr);
 		ctrlStatus.GetRect(3, sr);
-		ctrlFilterIp.MoveWindow(sr);
+		ctrlDetection.MoveWindow(sr);
 		ctrlStatus.GetRect(4, sr);
+		ctrlFilterIp.MoveWindow(sr);
+		ctrlStatus.GetRect(5, sr);
 		ctrlFilterText.MoveWindow(sr);
 		tstring msg = bFilterIp ? _T("Watching IP: ") + sFilterIp : _T("Watching all IPs");
-		ctrlStatus.SetText(5, msg.c_str());
+		ctrlStatus.SetText(6, msg.c_str());
 	}
 	
 	// resize client window

@@ -61,8 +61,7 @@ public:
 	typedef X<20> ADCGet;
 	typedef X<21> ADCSnd;
 	typedef X<22> ADCSta;
-	typedef X<23> Unknown; 
-	typedef X<24> ListLength; 
+	typedef X<23> ListLength; 
 
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw() { }
 	virtual void on(Connected, UserConnection*) throw() { }
@@ -71,7 +70,7 @@ public:
 	virtual void on(CLock, UserConnection*, const string&, const string&) throw() { }
 	virtual void on(Key, UserConnection*, const string&) throw() { }
 	virtual void on(Direction, UserConnection*, const string&, const string&) throw() { }
-	virtual void on(Get, UserConnection*, const string&, int64_t) throw() { }
+	virtual void on(Get, UserConnection*, const string&, int64_t, int64_t) throw() { }
 	virtual void on(GetBlock, UserConnection*, const string&, int64_t, int64_t) throw() { }
 	virtual void on(GetZBlock, UserConnection*, const string&, int64_t, int64_t) throw() { }
 	virtual void on(Sending, UserConnection*, int64_t) throw() { }
@@ -84,15 +83,16 @@ public:
 	virtual void on(TransmitDone, UserConnection*) throw() { }
 	virtual void on(Supports, UserConnection*, const StringList&) throw() { }
 	virtual void on(FileNotAvailable, UserConnection*) throw() { }
-
-	virtual void on(Command::SUP, UserConnection*, const Command&) throw() { }
-	virtual void on(Command::INF, UserConnection*, const Command&) throw() { }
-	virtual void on(Command::NTD, UserConnection*, const Command&) throw() { }
-	virtual void on(Command::GET, UserConnection*, const Command&) throw() { }
-	virtual void on(Command::SND, UserConnection*, const Command&) throw() { }
-	virtual void on(Command::STA, UserConnection*, const Command&) throw() { }
-	virtual void on(Unknown, UserConnection*, const string&) throw() { }
 	virtual void on(ListLength, UserConnection*, const string&) throw() { }
+
+	virtual void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::INF, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::NTD, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::GET, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::RES, UserConnection*, const AdcCommand&) throw() { }
+	virtual void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) throw() { }
 };
 
 class ConnectionQueueItem;
@@ -176,6 +176,9 @@ public:
 	static const string FEATURE_ZLIB_GET;
 	static const string FEATURE_TTHL;
 	static const string FEATURE_TTHF;
+	static const string FEATURE_CHUNK;
+	
+	static const string FILE_NOT_AVAILABLE;
 	
 	enum Modes {	
 		MODE_COMMAND = BufferedSocket::MODE_LINE,
@@ -210,7 +213,6 @@ public:
 		STATE_LOCK,
 		STATE_DIRECTION,
 		STATE_KEY,
-
 		// UploadManager
 		STATE_GET,
 		STATE_SEND,
@@ -218,7 +220,6 @@ public:
 		// DownloadManager
 		STATE_FILELENGTH,
 		STATE_TREE,
-
 	};
 
 	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
@@ -229,45 +230,45 @@ public:
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
 	void get(const string& aFile, int64_t aResume) { send("$Get " + Text::utf8ToAcp(aFile) + "$" + Util::toString(aResume + 1) + '|'); };
-	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((isSet(FLAG_SUPPORTS_GETZBLOCK) ? (utf8 ? "$UGetZBlock " : "$GetZBlock ") : "$GetTestZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); };
-	void getBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetBlock " : "$GetBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); }
+	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); };
+	void uGetBlock(const string& aFile, int64_t aResume, int64_t aBytes) { send("$UGetBlock " + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
 	void fileLength(const string& aLength) { send("$FileLength " + aLength + '|'); }
 	void startSend() { send("$Send|"); }
 	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); };
 	void error(const string& aError) { send("$Error " + aError + '|'); };
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); };
-	void maxedOut() { send("$MaxedOut|");	};
-	void fileNotAvail() { send("$Error File Not Available|"); }
+	void maxedOut() { isSet(FLAG_NMDC) ? send("$MaxedOut|") : sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full"); };
+	void fileNotAvail() { isSet(FLAG_NMDC) ? send("$Error " + FILE_NOT_AVAILABLE + "|") : sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_FILE_NOT_AVAILABLE, FILE_NOT_AVAILABLE); }
 	void getListLen() { send("$GetListLen|"); };
 
 	// ADC Stuff
 	void sup(const StringList& features) { 
-		Command c = Command(Command::SUP());
+		AdcCommand c(AdcCommand::CMD_SUP);
 		for(StringIterC i = features.begin(); i != features.end(); ++i)
 			c.addParam(*i);
 		send(c);
 	}
 	void inf(bool withToken) { 
-		Command c = Command(Command::INF());
-		c.addParam("CI", getCID().toBase32());
+		AdcCommand c(AdcCommand::CMD_INF);
+		c.addParam("CI", SETTING(CLIENT_ID));
 		if(withToken) {
 			c.addParam("TO", getToken());
 		}
 		send(c);
 	}
-	void get(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(Command(Command::GET()).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
-	void snd(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(Command(Command::SND()).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
-	void ntd() { send(Command(Command::NTD())); }
-	void sta(Command::Severity sev, Command::Error err, const string& desc) { send(Command(Command::STA()).addParam(Util::toString(100 * sev + err)).addParam(desc)); }
+	void get(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_GET).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
+	void snd(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_SND).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
+	void ntd() { send(AdcCommand(AdcCommand::CMD_NTD)); }
+	void sta(AdcCommand::Severity sev, AdcCommand::Error err, const string& desc) { send(AdcCommand(AdcCommand::CMD_STA).addParam(Util::toString(100 * sev + err)).addParam(desc)); }
 
-	void send(const Command& c) { send(c.toString(isSet(FLAG_NMDC))); }
+	void send(const AdcCommand& c) { send(c.toString(isSet(FLAG_NMDC))); }
 
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
-			x+= *i + ' ';
+			x+= ' ' + *i;
 		}
-		send("$Supports " + x + '|');
+		send("$Supports" + x + " |");
 	}
 	void setDataMode(int64_t aBytes = -1) { dcassert(socket); socket->setDataMode(aBytes); }
 	void setLineMode() { dcassert(socket); socket->setLineMode(); };
@@ -306,38 +307,43 @@ public:
 		user->connect();
 	}
 	
-	void handle(Command::SUP t, const Command& c) {
+	void handle(AdcCommand::SUP t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
-	void handle(Command::INF t, const Command& c) {
+	void handle(AdcCommand::INF t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
-	void handle(Command::GET t, const Command& c) {
+	void handle(AdcCommand::GET t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
-	void handle(Command::SND t, const Command& c) {
+	void handle(AdcCommand::SND t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
-	void handle(Command::STA t, const Command& c) {
+	void handle(AdcCommand::STA t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
-	void handle(Command::NTD t, const Command& c) {
+	void handle(AdcCommand::NTD t, const AdcCommand& c) {
+		fire(t, this, c);
+	}
+	void handle(AdcCommand::RES t, const AdcCommand& c) {
+		fire(t, this, c);
+	}
+	void handle(AdcCommand::GFI t, const AdcCommand& c) {
 		fire(t, this, c);
 	}
 
 	// Ignore any other ADC commands for now
 	template<typename T>
-	void handle(T , const Command& ) {
+	void handle(T , const AdcCommand& ) {
 	}
 
 	GETSET(string, nick, Nick);
 	GETSET(string, token, Token);
-	GETSET(CID, cid, CID);
 	GETSET(ConnectionQueueItem*, cqi, CQI);
 	GETSET(States, state, State);
 	GETSET(u_int32_t, lastActivity, LastActivity);
 	GETSET(Download*, tempDownload, TempDownload);
-	GETSET(string, isRunningFile, IsRunningFile);	
+	GETSET(bool, sChunks, SChunks);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	string getRemoteIp() const { return socket->getIp(); }
@@ -364,12 +370,12 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection() throw(SocketException) : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(BufferedSocket::getSocket('|')), download(NULL), isRunningFile(Util::emptyString) { 
+		socket(BufferedSocket::getSocket(0)), download(NULL), sChunks(false) { 
 		
 		socket->addListener(this);
 	};
 
-	virtual ~UserConnection() {
+	virtual ~UserConnection() throw() {
 			socket->removeListener(this);
 		removeListeners();
 			BufferedSocket::putSocket(socket);

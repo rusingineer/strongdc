@@ -41,7 +41,8 @@ public:
 		virtual void startTag(const string& name, StringPairList& attribs, bool simple) = 0;
 		virtual void endTag(const string& name, const string& data) = 0;
 
-		const string& getAttrib(StringPairList& attribs, const string& name, size_t hint) {
+	protected:
+		static const string& getAttrib(StringPairList& attribs, const string& name, size_t hint) {
 			hint = min(hint, attribs.size());
 
 			StringPairIter i = find_if(attribs.begin() + hint, attribs.end(), CompareFirst<string, string>(name));

@@ -37,8 +37,8 @@
 
 CriticalSection PrivateFrame::cs;
 PrivateFrame::FrameMap PrivateFrame::frames;
-tstring pSelectedLine = _T("");
-tstring pSelectedURL = _T("");
+tstring pSelectedLine = Util::emptyStringT;
+tstring pSelectedURL = Util::emptyStringT;
 
 LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -281,13 +281,14 @@ void PrivateFrame::onEnter()
 		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
 		tstring s(msg, ctrlMessage.GetWindowTextLength());
 
+		s = Text::toT(Util::validateChatMessage(Text::fromT(s)));
 		// save command in history, reset current buffer pointer to the newest command
 		curCommandPosition = prevCommands.size();		//this places it one position beyond a legal subscript
 		if (!curCommandPosition || curCommandPosition > 0 && prevCommands[curCommandPosition - 1] != s) {
 			++curCommandPosition;
 			prevCommands.push_back(s);
 		}
-		currentCommand = _T("");
+		currentCommand = Util::emptyStringT;
 
 		// Process special commands
 		if(s[0] == '/') {
@@ -324,11 +325,13 @@ void PrivateFrame::onEnter()
 				params["cid"] = user->getCID().toBase32(); 
 				params["hubaddr"] = user->getClientAddressPort();
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
+			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
+				sendMessage(Text::toT(WinUtil::generateStats()));
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
 				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(user->isOnline()) {
-					sendMessage(m);
+					sendMessage(tstring(m));
 				} else {
 					ctrlStatus.SetText(0, CTSTRING(USER_WENT_OFFLINE));
 					resetText = false;
@@ -470,7 +473,6 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	if(user->isOnline()) {
 		user->getParams(ucParams);
 		user->clientEscapeParams(ucParams);
-
 		user->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams));
 	}
 	return;
@@ -689,7 +691,7 @@ void PrivateFrame::readLog() {
 	params["mycid"] = user->getClientCID().toBase32();	
 	params["cid"] = user->getCID().toBase32();	
 	params["hubaddr"] = user->getClientAddressPort();	
-	string path = SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params);
+	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 		
 	try {
 		if (SETTING(SHOW_LAST_LINES_LOG) > 0) {
@@ -708,8 +710,8 @@ void PrivateFrame::readLog() {
 			int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG) + 1) : 0;
 
 			for(; i < (linesCount - 1); ++i){
-				//addLine(_T("- ") + Text::acpToWide(lines[i]));
-				ctrlClient.AppendText(_T("- "), _T(""), (Text::acpToWide(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
+				//addLine(_T("- ") + Text::toT(lines[i]));
+				ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
 			}
 
 			f.close();

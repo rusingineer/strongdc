@@ -67,7 +67,6 @@ public:
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
-		COMMAND_ID_HANDLER(IDC_READD_ALL_SOURCES,onReaddAll)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnet)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_OFFLINE, onRemoveOffline)
@@ -77,10 +76,9 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_SEGMENTONE, IDC_SEGMENTTEN, onSegments)
 		COMMAND_RANGE_HANDLER(IDC_BROWSELIST, IDC_BROWSELIST + menuItems, onBrowseList)
 		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCE, IDC_REMOVE_SOURCE + menuItems, onRemoveSource)
-		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCE_ALL, IDC_REMOVE_SOURCE_ALL, onRemoveSourceAll)
-		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCES, IDC_REMOVE_SOURCES + menuItems, onRemoveSources)
+		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCES, IDC_REMOVE_SOURCES + 1 + menuItems, onRemoveSources)
 		COMMAND_RANGE_HANDLER(IDC_PM, IDC_PM + menuItems, onPM)
-		COMMAND_RANGE_HANDLER(IDC_READD, IDC_READD + readdItems, onReadd)
+		COMMAND_RANGE_HANDLER(IDC_READD, IDC_READD + 1 + readdItems, onReadd)
 		COMMAND_ID_HANDLER(IDC_AUTOPRIORITY, onAutoPriority)
 		COMMAND_RANGE_HANDLER(IDC_PREVIEW_APP, IDC_PREVIEW_APP + PreviewAppsSize, onPreviewCommand)
 		NOTIFY_HANDLER(IDC_QUEUE, NM_CUSTOMDRAW, onCustomDraw)
@@ -94,11 +92,9 @@ public:
 	LRESULT onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemoveSource(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onRemoveSourceAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemoveSources(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onReadd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onReaddAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
@@ -133,7 +129,7 @@ public:
 	}
 
 	LRESULT onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			usingDirMenu ? removeSelectedDir() : removeSelected();
 		return 0;
 	}
@@ -146,7 +142,7 @@ public:
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			removeSelected();
 		} else if(kd->wVKey == VK_ADD){
 			// Increase Item priority
@@ -163,7 +159,7 @@ public:
 	LRESULT onKeyDownDirs(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			removeSelectedDir();
 		} else if(kd->wVKey == VK_TAB) {
 			onTab();
@@ -259,8 +255,6 @@ private:
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
 			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority())
 		{ 
-			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : Text::toT(aQI->getTempTarget()));
-
 			FDI = aQI->getFileChunksInfo();			
 			if(FDI)
 				setDownloadedBytes(FDI->GetDownloadedSize());
@@ -334,7 +328,6 @@ private:
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
 		GETSET(TTHValue*, tth, TTH);
-		GETSET(tstring, downloadTarget, DownloadTarget);
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
 		QueueItem* qi;

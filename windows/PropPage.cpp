@@ -57,19 +57,13 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 				Text::toT(settings->get((SettingsManager::StrSetting)i->setting, useDef)).c_str());
 			break;
 		case T_INT:
-//			if (((SettingsManager::IntSetting)i->setting) != SettingsManager::IN_PORT) {
+
 				if (GetDlgItem(page, i->itemID) == NULL) {
 					// Control not exist ? Why ??
 					throw;
 				}
 				::SetDlgItemInt(page, i->itemID,
 					settings->get((SettingsManager::IntSetting)i->setting, useDef), FALSE);
-//			} else {
-//				if(!SettingsManager::getInstance()->isDefault(i->setting)) {
-//					::SetDlgItemInt(page, i->itemID,
-//						settings->get((SettingsManager::IntSetting)i->setting, useDef), FALSE);
-//				}
-//			}
 			break;
 		case T_INT64:
 			if(!SettingsManager::getInstance()->isDefault(i->setting)) {
@@ -145,8 +139,9 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					// Control not exist ? Why ??
 					throw;
 				}
+
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::IntSetting)i->setting, Text::fromT(tstring(buf)));
+				settings->set((SettingsManager::IntSetting)i->setting, Util::toInt(Text::fromT(tstring(buf))));
 				break;
 			}
 		case T_INT64:

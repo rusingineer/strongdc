@@ -16,18 +16,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <dirent.h>
-#include <fnmatch.h>
-#endif
-
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
 #include "SFVReader.h"
 
 #include "StringTokenizer.h"
+
+#ifndef _WIN32
+#include <sys/types.h>
+#include <dirent.h>
+#include <fnmatch.h>
+#endif
 
 bool SFVReader::tryFile(const string& sfvFile, const string& fileName) throw(FileException) {
 

@@ -25,7 +25,6 @@
 #include "SearchManager.h"
 
 #include "StringTokenizer.h"
-#include "ADLSearch.h"
 #include "SimpleXML.h"
 #include "FilteredFile.h"
 #include "BZUtils.h"
@@ -38,19 +37,19 @@
 #undef ff
 #endif
 
-void DirectoryListing::loadFile(const string& name, bool doAdl) {
+void DirectoryListing::loadFile(const string& name) {
 	string txt;
 
 	// For now, we detect type by ending...
 	string ext = Util::getFileExt(name);
 	if(Util::stricmp(ext, ".DcLst") == 0) {
 		size_t len = (size_t)::File::getSize(name);
-		if(len == -1)
+		if(len == (size_t)-1)
 			return;
 		AutoArray<u_int8_t> buf(len);
 		::File(name, ::File::READ, ::File::OPEN).read(buf, len);
 		CryptoManager::getInstance()->decodeHuffman(buf, txt, len);
-		load(txt, doAdl);
+		load(txt);
 	} else if(Util::stricmp(ext, ".bz2") == 0) {
 		::File ff(name, ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
@@ -65,28 +64,15 @@ void DirectoryListing::loadFile(const string& name, bool doAdl) {
 				break;
 		}
 
-			loadXML(txt, doAdl);
+			loadXML(txt);
 	}
 }
 
-void DirectoryListing::load(const string& in, bool doAdl) {
+void DirectoryListing::load(const string& in) {
 	StringTokenizer<string> t(in, '\n');
 
 	StringList& tokens = t.getTokens();
 	string::size_type indent = 0;
-
-	// Prepare ADLSearch manager
-	ADLSearchManager* pADLSearch = ADLSearchManager::getInstance();
-	ADLSearchManager::DestDirList destDirs;
-
-	StringMap params;
-	if(doAdl) {
-	params["nick"] = getUser()->getNick();
-	pADLSearch->setUser(getUser());
-
-	pADLSearch->PrepareDestinationDirectories(destDirs, root, params);
-	pADLSearch->setBreakOnFirst(BOOLSETTING(ADLS_BREAK_ON_FIRST));
-	}
 
 	Directory* cur = root;
 	string fullPath;
@@ -108,18 +94,12 @@ void DirectoryListing::load(const string& in, bool doAdl) {
 			if(l != string::npos) {
 				fullPath.erase(fullPath.begin() + l, fullPath.end());
 			}
-			if(doAdl)
-			pADLSearch->StepUpDirectory(destDirs);
 		}
 
 		string::size_type k = tok.find('|', j);
 		if(k != string::npos) {
 			// this must be a file...
 			cur->files.push_back(new File(cur, tok.substr(j, k-j), Util::toInt64(tok.substr(k+1))));
-
-			// ADLSearch
-			if(doAdl)
-			pADLSearch->MatchesFile(destDirs, cur->files.back(), fullPath);
 		} else {
 			// A directory
 			string name = tok.substr(j, tok.length()-j-1);
@@ -134,28 +114,14 @@ void DirectoryListing::load(const string& in, bool doAdl) {
 				cur->directories.push_back(d);
 			cur = d;
 			}
-			if(doAdl)
-			pADLSearch->MatchesDirectory(destDirs, cur, fullPath);
 			indent++;
 		}
 	}
-
-	// Finalize ADLSearch manager
-			if(doAdl)
-	pADLSearch->FinalizeDestinationDirectories(destDirs, root);
 }
 
 class ListLoader : public SimpleXMLReader::CallBack {
 public:
-	ListLoader(DirectoryListing::Directory* root, const User::Ptr& user, bool aDoAdl) : cur(root), inListing(false), doAdl(aDoAdl), uziv(user) { 
-		if(doAdl) {
-		params["nick"] = user->getNick();
-		ADLSearchManager::getInstance()->setUser(user);
-
-		ADLSearchManager::getInstance()->PrepareDestinationDirectories(destDirs, root, params);
-		ADLSearchManager::getInstance()->setBreakOnFirst(BOOLSETTING(ADLS_BREAK_ON_FIRST));
-		}
-
+	ListLoader(DirectoryListing::Directory* root, const User::Ptr& user) : cur(root), inListing(false), uziv(user) { 
 		lastFileIter = cur->files.begin();
 	};
 
@@ -166,26 +132,26 @@ public:
 private:
 	string fullPath;
 
-	ADLSearchManager::DestDirList destDirs;
 	DirectoryListing::Directory* cur;
 	DirectoryListing::File::Iter lastFileIter;
 	User::Ptr uziv;
 
 	StringMap params;
 	bool inListing;
-	bool doAdl;
 };
 
-void DirectoryListing::loadXML(const string& xml, bool doAdl) {
+void DirectoryListing::loadXML(const string& xml) {
 	setUtf8(true);
 
-	ListLoader ll(getRoot(), getUser(), doAdl);
+	ListLoader ll(getRoot(), getUser());
 	SimpleXMLReader(&ll).fromXML(xml);
 }
 
 static const string sFileListing = "FileListing";
+static const string sBase = "Base";
 static const string sGenerator = "Generator";
 static const string sDirectory = "Directory";
+static const string sIncomplete = "Incomplete";
 static const string sFile = "File";
 static const string sName = "Name";
 static const string sSize = "Size";
@@ -203,22 +169,17 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 			const string& h = getAttrib(attribs, sTTH, 2);
 			DirectoryListing::File* f = h.empty() ? new DirectoryListing::File(cur, n, Util::toInt64(s)) : new DirectoryListing::File(cur, n, Util::toInt64(s), h);
 			cur->files.push_back(f);
-			if(doAdl)
-			ADLSearchManager::getInstance()->MatchesFile(destDirs, f, fullPath);
 		} else if(name == sDirectory) {
 			const string& n = getAttrib(attribs, sName, 0);
 			if(n.empty()) {
 				throw SimpleXMLException("Directory missing name attribute");
 			}
-			DirectoryListing::Directory* d = new DirectoryListing::Directory(cur, n);
+			bool incomp = getAttrib(attribs, sIncomplete, 1) == "1";
+			DirectoryListing::Directory* d = new DirectoryListing::Directory(cur, n, false, incomp);
 			cur->directories.push_back(d);
 			cur = d;
 			fullPath += '\\';
 			fullPath += d->getName();
-
-			// ADLSearch
-			if(doAdl)
-			ADLSearchManager::getInstance()->MatchesDirectory(destDirs, d, fullPath);
 
 			if(simple) {
 				// To handle <Directory Name="..." />
@@ -226,6 +187,17 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 			}
 		}
 	} else if(name == sFileListing) {
+		const string& base = getAttrib(attribs, sBase, 2);
+		if(base.size() > 1 && base[0] == '/' && base[base.size()-1] == '/') {
+			StringList sl = StringTokenizer<string>(base.substr(1), '/').getTokens();
+			for(StringIter i = sl.begin(); i != sl.end(); ++i) {
+				DirectoryListing::Directory* d = new DirectoryListing::Directory(cur, *i);
+				cur->directories.push_back(d);
+				cur = d;
+				fullPath += '\\';
+				fullPath += d->getName();
+			}
+		}
 		const string& generator = getAttrib(attribs, sGenerator, 2);
 		if(uziv->isOnline()) {
 			PME reg("^<StrgDC\\+\\+ V:1.00 RC([89]){1}");
@@ -249,13 +221,9 @@ void ListLoader::endTag(const string& name, const string&) {
 			cur = cur->getParent();
 			dcassert(fullPath.find('\\') != string::npos);
 			fullPath.erase(fullPath.rfind('\\'));
-			if(doAdl)
-			ADLSearchManager::getInstance()->StepUpDirectory(destDirs);
 			lastFileIter = cur->files.begin();
 		} else if(name == sFileListing) {
 			// cur should be root now...
-			if(doAdl)
-			ADLSearchManager::getInstance()->FinalizeDestinationDirectories(destDirs, cur);
 			inListing = false;
 		}
 	}
@@ -279,14 +247,14 @@ static inline const string& escaper(const string& n, string& tmp, bool utf8) {
 	return utf8 ? n : (tmp.clear(), Text::acpToUtf8(n, tmp));
 }
 
-void DirectoryListing::download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
+void DirectoryListing::download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio, bool multiSource) {
 	string tmp;
 	string target = (aDir == getRoot()) ? aTarget : aTarget + escaper(aDir->getName(), tmp, getUtf8()) + '\\';
 	// First, recurse over the directories
 	Directory::List& lst = aDir->directories;
 	sort(lst.begin(), lst.end(), Directory::DirSort());
 	for(Directory::Iter j = lst.begin(); j != lst.end(); ++j) {
-		download(*j, target, highPrio, prio);
+		download(*j, target, highPrio, prio, multiSource);
 	}
 	// Then add the files
 	File::List& l = aDir->files;
@@ -294,7 +262,7 @@ void DirectoryListing::download(Directory* aDir, const string& aTarget, bool hig
 	for(File::Iter i = aDir->files.begin(); i != aDir->files.end(); ++i) {
 		File* file = *i;
 		try {
-			download(file, target + escaper(file->getName(), tmp, getUtf8()), false, highPrio, prio);
+			download(file, target + escaper(file->getName(), tmp, getUtf8()), false, highPrio, prio, multiSource);
 		} catch(const QueueException&) {
 			// Catch it here to allow parts of directories to be added...
 		} catch(const FileException&) {
@@ -303,37 +271,28 @@ void DirectoryListing::download(Directory* aDir, const string& aTarget, bool hig
 	}
 }
 
-void DirectoryListing::download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
+void DirectoryListing::download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio, bool multiSource) {
 	dcassert(aDir.size() > 2);
 	dcassert(aDir[aDir.size() - 1] == '\\');
 	Directory* d = find(aDir, getRoot());
 	if(d != NULL)
-		download(d, aTarget, highPrio, prio);
+		download(d, aTarget, highPrio, prio, multiSource);
 }
 
-void DirectoryListing::download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio) {
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
+void DirectoryListing::download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio, bool multiSource) {
+
+	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0) |
 		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 
-	if(getUtf8()) {
-		QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
-			aFile->getTTH(), flags, highPrio || view ? QueueItem::HIGHEST : prio);
-	} else {
-		QueueManager::getInstance()->add(Text::acpToUtf8(getPath(aFile) + aFile->getName()), aFile->getSize(), user, aTarget, 
-			aFile->getTTH(), flags, highPrio || view ? QueueItem::HIGHEST : prio);
-	}
+	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
+		aFile->getTTH(), flags, highPrio || view ? QueueItem::HIGHEST : prio);
 }
 
 void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
 	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
 
-	if(getUtf8()) {
-		QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
-			NULL, flags, QueueItem::Priority::HIGHEST);
-	} else {
-		QueueManager::getInstance()->add(Text::acpToUtf8(getPath(aFile) + aFile->getName()), 2100, user, aTarget, 
-			NULL, flags, QueueItem::Priority::HIGHEST);
-	}
+	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
+		NULL, flags, QueueItem::Priority::HIGHEST);
 }
 
 DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directory* current) {
@@ -347,10 +306,6 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 			return *i;
 		else
 			return find(aName.substr(end + 1), *i);
-	} else {
-		for(Directory::Iter i = current->directories.begin(); i < current->directories.end(); i++) {
-			MessageBox(0,Text::toT((*i)->getName()).c_str(),_T(""),MB_OK);
-		}
 	}
 	return NULL;
 }
@@ -365,9 +320,8 @@ int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
 
 	int64_t x = getSize();
 	for(Iter i = directories.begin(); i != directories.end(); ++i) {
-		if(!(adl && (*i)->getAdls())) {	
+		if(!(adl && (*i)->getAdls()))
 			x += (*i)->getTotalSize(adls);
-		}
 	}
 	return x;
 }

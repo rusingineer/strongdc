@@ -35,7 +35,9 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("NotepadFrame"), IDR_NOTEPAD, 0, COLOR_3DFACE);
 
 	NotepadFrame() : dirty(false), closed(false), 
-		ctrlClientContainer(_T("edit"), this, NOTEPAD_MESSAGE_MAP) { }
+		ctrlClientContainer(_T("edit"), this, NOTEPAD_MESSAGE_MAP) {
+		SettingsManager::getInstance()->addListener(this);
+	}
 	~NotepadFrame() { };
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {

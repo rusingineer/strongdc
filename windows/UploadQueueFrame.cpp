@@ -90,7 +90,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	grantMenu.AppendMenu(MF_SEPARATOR);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
 
 	contextMenu.CreatePopupMenu();
@@ -98,7 +98,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	contextMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 	contextMenu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
 	contextMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
-	contextMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	contextMenu.AppendMenu(MF_SEPARATOR);
 	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
     memset(statusSizes, 0, sizeof(statusSizes));
@@ -203,6 +203,7 @@ LRESULT UploadQueueFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 			UploadManager::getInstance()->clearUserFiles(*i);
 		}
 	}
+	updateStatus();
 	return 0;
 }
 
@@ -382,7 +383,7 @@ void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 		}
 		nickNode = ctrlQueued.GetNextSiblingItem(nickNode);
 	}
-
+	updateStatus();
 }
 
 LRESULT UploadQueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHandled*/) {
@@ -456,7 +457,11 @@ void UploadQueueFrame::updateStatus() {
 		int users = ctrlQueued.GetCount();	
 
 		string tmp[2];
-		tmp[0] = STRING(USERS) + ": " + Util::toString(users);
+		if(showTree) {
+			tmp[0] = STRING(USERS) + ": " + Util::toString(users);
+		} else {
+			tmp[0] = "";
+		}    		  
 		tmp[1] = STRING(ITEMS) + ": " + Util::toString(cnt);
 		bool u = false;
 
@@ -492,6 +497,7 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	ctrlList.SetRedraw(FALSE);
 	if(wParam == REMOVE_ITEM) {
 		ctrlList.deleteItem((UploadQueueItem*)lParam);
+		updateStatus();
 	} else if(wParam == REMOVE) {
 		RemoveUser(((UserInfoBase*)lParam)->user);
 		delete (UserInfoBase*)lParam;

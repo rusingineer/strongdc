@@ -136,10 +136,10 @@ public:
 		TYPE_UDP
 	};
 
-	Socket::Socket() throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false) { }
-	Socket::Socket(const string& aIp, const string& aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false) { connect(aIp, aPort); };
-	Socket::Socket(const string& aIp, short aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false) { connect(aIp, aPort); };
-	virtual ~Socket() { Socket::disconnect(); };
+	Socket::Socket() throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(Util::emptyString) { }
+	Socket::Socket(const string& aIp, const string& aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp) { connect(aIp, aPort); };
+	Socket::Socket(const string& aIp, short aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp) { connect(aIp, aPort); };
+	virtual ~Socket() throw() { Socket::disconnect(); };
 
 	virtual void create(int aType = TYPE_TCP) throw(SocketException);
 	virtual void bind(short aPort) throw(SocketException);
@@ -202,6 +202,7 @@ public:
 
 	GETSET(string, ip, Ip);
 	GETSET(short, port, Port);
+
 	GETSET(bool, noproxy, Noproxy);
 
 	string getRemoteHost(const string& aIp) const;

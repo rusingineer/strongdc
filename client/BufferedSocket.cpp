@@ -24,7 +24,7 @@
 #include "TimerManager.h"
 #include "CryptoManager.h"
 
-#include "File.h"
+#include "Streams.h"
 
 #include "UploadManager.h"
 #include "DownloadManager.h"
@@ -34,8 +34,8 @@
 #define POLL_TIMEOUT 250
 
 BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) : 
-separator(aSeparator), usesEscapes(aUsesEscapes), escaped(false), port(0), mode(MODE_LINE), 
-dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
+separator(aSeparator), usesEscapes(aUsesEscapes), port(0), mode(MODE_LINE), 
+dataBytes(0), escaped(false), inbufSize(64*1024), curBuf(0), file(NULL) {
 
 	inbuf = new u_int8_t[inbufSize];
 
@@ -56,7 +56,7 @@ dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
 	}
 }
 
-BufferedSocket::~BufferedSocket() {
+BufferedSocket::~BufferedSocket() throw() {
 	delete[] inbuf;
 	for(int i = 0; i < BUFFERS; i++) {
 		delete[] outbuf[i];
@@ -337,6 +337,16 @@ void BufferedSocket::threadRead() {
 		int bufpos = 0;
 		string l;
 		while(i > 0) {
+			// Special to autodetect nmdc connections...
+			if(separator == 0) {
+				if(inbuf[0] == '$') {
+					separator = '|';
+					usesEscapes = false;
+				} else {
+					separator = '\n';
+					usesEscapes = true;
+				}
+			}
 			if(mode == MODE_LINE) {
 				string::size_type pos = 0;
 
@@ -421,7 +431,7 @@ void BufferedSocket::write(const char* aBuf, size_t aLen) throw() {
 		
 		if(newSize > outbufSize[curBuf]) {
 			// Need to grow...
-			dcdebug("Growing outbuf[%d] to %d bytes\n", curBuf, newSize);
+			dcdebug("Growing outbuf[%d] to %lu bytes\n", curBuf, newSize);
 			u_int8_t* newbuf = new u_int8_t[newSize];
 			memcpy(newbuf, outbuf[curBuf], outbufPos[curBuf]);
 			delete[] outbuf[curBuf];

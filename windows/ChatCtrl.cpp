@@ -68,17 +68,8 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor) {
 	myMess = false;
 	tstring msg = sMsg;
-	int iAuthorlen = _tcslen(sAuthor);
-	CAtlString sText;
-	if(iAuthorlen > 0) {
-   		sText = sMsg+iAuthorlen+2;
-		msg = msg.substr(0, iAuthorlen+2);
-		// maybe ugly but no emoticon in author nick ;-)
-		AppendTextOnly(sMyNick, sTime, msg.c_str(), cf, sAuthor, false);
-	} else {
-		sText = sMsg;
-		AppendTextOnly(sMyNick, sTime, _T(""), cf, _T(""), false);
-	}
+	CAtlString sText = _tcschr(sMsg+_tcslen(sAuthor), ' ');
+	msg = msg.substr(0, (msg.length()-sText.GetLength()));
 
 	SetRedraw(FALSE);
 
@@ -113,6 +104,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 		AppendTextlen = len;
 	}
 
+	AppendTextOnly(sMyNick, sTime, msg.c_str(), cf, sAuthor, false); // maybe ugly but no emoticon in author nick ;-)
 	// cachry machry a maj s toho vylizt smajlove
 	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS)) {
 		bool bMyMessage = (sMyNick == sAuthor);

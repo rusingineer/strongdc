@@ -88,7 +88,8 @@ public:
 		/** MP3 Info */
 		FLAG_MP3_INFO = 0x400,
 		FLAG_TESTSUR = 0x800,
-		FLAG_CHECK_FILE_LIST = 0x1000
+		FLAG_CHECK_FILE_LIST = 0x1000,
+		FLAG_MULTI_SOURCE = 0x2000
 	};
 
 	class Source : public Flags, public FastAlloc<Source> {
@@ -108,10 +109,10 @@ public:
 			FLAG_UTF8 = 0x40,
 			FLAG_BAD_TREE = 0x80,
 			FLAG_SLOW = 0x100,
-			FLAG_TTH_INCONSISTENCY = 0x200,
+			FLAG_NO_TREE = 0x200,
 			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
-				| FLAG_SLOW | FLAG_TTH_INCONSISTENCY			
+				| FLAG_SLOW | FLAG_NO_TREE			
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -128,21 +129,30 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), target(aTarget), start(0),
-	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
+	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
+	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0), noFreeBlocks(false)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
+		
+		if(isSet(FLAG_USER_LIST) || isSet(FLAG_MP3_INFO) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
+			unsetFlag(FLAG_MULTI_SOURCE);
+		}
+
 		if(tth != NULL)
 			HashManager::getInstance()->getTree(*tth, tiger);
+
+		speedUsers.push_back(NULL);
+		speedUsers.push_back(NULL);
+		speedUsers.push_back(NULL);
 	};
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
+		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL),
-		start(rhs.start)
+		start(rhs.start), fastUser(rhs.fastUser), speedUsers(rhs.speedUsers), noFreeBlocks(rhs.noFreeBlocks), currentDownload(rhs.currentDownload)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -209,6 +219,12 @@ public:
 		activeSegments.push_back(*getSource(aUser));
 	}
 
+	void removeActiveSegment(const User::Ptr& aUser) {
+		if(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)) != activeSegments.end()) {
+			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)));
+		}
+	}
+
 	void addCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		currents.push_back(*getSource(aUser));
@@ -223,27 +239,25 @@ public:
 	// All setCurrent(NULL) should be replaced with this
 	void removeCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
-		//dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
+		dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
 
-		if(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end()) {
-			currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
-		}
-
-		if(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)) != activeSegments.end()) {
-			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)));
-		}
+		currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
 	}
 
 	int64_t getDownloadedBytes(){
-		if(!isSet(FLAG_USER_LIST) && !isSet(FLAG_MP3_INFO) && !isSet(FLAG_TESTSUR)){
+		if(isSet(FLAG_MULTI_SOURCE)){
 			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
 			if(filedatainfo)
 				return filedatainfo->GetDownloadedSize();
 		}
 
-		return 0;
+		return downloadedBytes;
 	}
 
+	void setDownloadedBytes(int64_t pos) {
+		downloadedBytes = pos;
+	}
+	
 	string getListName() {
 		dcassert(isSet(QueueItem::FLAG_USER_LIST));
 		if(isSet(QueueItem::FLAG_XML_BZLIST)) {
@@ -254,6 +268,7 @@ public:
 	}
 
 	string getSearchString() const;
+	Source::List speedUsers;
 
 	const string& getTempTarget();
 	void setTempTarget(const string& aTempTarget) {
@@ -261,17 +276,21 @@ public:
 	}
 	GETSET(string, target, Target);
 	string tempTarget;
+	int64_t downloadedBytes;
 	GETSET(int64_t, size, Size);
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
 	GETSET(Source::List, currents, Currents);
 	GETSET(Source::List, activeSegments, ActiveSegments);
+	GETSET(Download*, currentDownload, CurrentDownload);
 	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
+	GETSET(bool, noFreeBlocks, NoFreeBlocks);
+	GETSET(bool, fastUser, FastUser);
 	GETSET(int64_t, speed, Speed);
 	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 	GETSET(u_int32_t, start, Start);

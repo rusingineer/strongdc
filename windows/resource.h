@@ -344,7 +344,6 @@
 #define IDC_SETTINGS_RAW                1195
 #define IDC_SETTINGS_CHAT               1196
 #define IDC_SETTINGS_PM                 1197
-#define IDC_OFFCOMPRESS                 1198
 #define IDC_SETTINGS_HUB_MENU           1198
 #define IDC_SETTINGS_SEARCH_MENU        1200
 #define IDC_SETTINGS_CONTEXT            1201
@@ -560,7 +559,6 @@
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_SETTINGS_FILELIST_MENU      1278
-#define IDC_REMOVE_SOURCE_ALL           1279
 #define IDC_KBPS                        1280
 #define IDC_MINUTES                     1281
 #define IDC_PLAY                        1282
@@ -578,8 +576,10 @@
 #define IDC_DEFAULT                     1293
 #define IDC_CONN_BORDER                 1294
 #define IDC_CLIENT_PROFILE_RAW          1295
+#define IDC_MULTISOURCE                 1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
+#define IDC_MULTISOURCE_COMBO           1296
 #define IDC_PUB_LIST_CONFIG             1297
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
@@ -754,7 +754,6 @@
 #define IDC_THROTTLE_ENABLE3            10095
 #define IDC_REMOVE_SLOW_USER            10095
 #define IDC_SEGMENTED_ONLY              10095
-#define IDC_READD_ALL_SOURCES           10100
 #define IDC_PROGRESS_TEXT_COLOR_DOWN    10102
 #define IDC_PROGRESS_TEXT_COLOR_UP      10103
 #define IDC_CZDC_FEAT                   10106
@@ -812,6 +811,12 @@
 #define IDC_MAGNET_SIZE                 10164
 #define IDC_MAGNET_DISP_SIZE            10165
 #define IDC_TIMESTAMP_HELP              10167
+#define IDC_USERLIST_DBLCLICK           10190
+#define IDC_TRANSFERLIST_DBLCLICK       10191
+#define IDC_USERLISTDBLCLICKACTION      10192
+#define IDC_TRANSFERLISTDBLCLICKACTION  10193
+#define IDC_CHATDBLCLICKACTION          10194
+#define IDC_CHAT_DBLCLICK               10195
 #define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774
@@ -839,7 +844,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        292
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1295
+#define _APS_NEXT_CONTROL_VALUE         1297
 #define _APS_NEXT_SYMED_VALUE           131
 #endif
 #endif

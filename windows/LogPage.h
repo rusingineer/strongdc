@@ -30,7 +30,7 @@
 class LogPage : public CPropertyPage<IDD_LOGPAGE>, public PropPage
 {
 public:
-	LogPage(SettingsManager *s) : PropPage(s) { 
+	LogPage(SettingsManager *s) : PropPage(s), oldSelection(-1) { 
 		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_LOGS)).c_str());
 		SetTitle(title);
 	};
@@ -65,6 +65,8 @@ protected:
 	//if the user cancels the dialog.
 	//.first is filename and .second is format
 	TStringPairList options;
+
+	void getValues();
 };
 
 #endif //LOGPAGE_H

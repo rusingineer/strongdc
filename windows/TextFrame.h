@@ -33,7 +33,9 @@ public:
 	
 	DECLARE_FRAME_WND_CLASS_EX(_T("TextFrame"), IDR_NOTEPAD, 0, COLOR_3DFACE);
 
-	TextFrame(const tstring& fileName) : file(fileName) { }
+	TextFrame(const tstring& fileName) : file(fileName) {
+		SettingsManager::getInstance()->addListener(this);
+	}
 	~TextFrame() { };
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {

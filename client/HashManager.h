@@ -41,11 +41,9 @@ public:
 
 	typedef X<0> TTHDone;
 	typedef X<1> Finished;
-	typedef X<2> Verifying;
 
 	virtual void on(TTHDone, const string& /* fileName */, const TTHValue& /* root */) throw() = 0;
 	virtual void on(Finished) throw() = 0;
-	virtual void on(Verifying, const string& /* fileName */, int64_t /* remainingBytes */) throw() = 0;
 };
 
 class HashLoader;
@@ -54,10 +52,14 @@ class HashManager : public Singleton<HashManager>, public Speaker<HashManagerLis
 	private TimerManagerListener 
 {
 public:
+
+	/** We don't keep leaves for blocks smaller than this... */
+	static const int64_t MIN_BLOCK_SIZE = 64*1024;
+
 	HashManager() {
 		TimerManager::getInstance()->addListener(this);
 	}
-	virtual ~HashManager() {
+	virtual ~HashManager() throw() {
 		TimerManager::getInstance()->removeListener(this);
 		hasher.join();
 	}
@@ -81,8 +83,12 @@ public:
 
 	bool getTree(const TTHValue& root, TigerTree& tt);
 
-	void addTree(const string& aFileName, const TigerTree& tt) {
-		hashDone(aFileName, tt, -1);
+	void addTree(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tt) {
+		hashDone(aFileName, aTimeStamp, tt, -1);
+	}
+	void addTree(const TigerTree& tt) {
+		Lock l(cs);
+		store.addTree(tt);
 	}
 
 	void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft) {
@@ -108,10 +114,11 @@ public:
 		store.save();
 	}
 
+private:
+
 	class Hasher : public Thread {
 	public:
-		enum { MIN_BLOCK_SIZE = 64*1024 };
-		Hasher() : stop(false), running(false), total(0), rebuild(false) { }
+		Hasher() : stop(false), running(false), rebuild(false), total(0) { }
 
 		void hashFile(const string& fileName, int64_t size) {
 			Lock l(cs);
@@ -135,7 +142,7 @@ public:
 
 		virtual int run();
 #ifdef _WIN32
-		bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth, int64_t size, bool verify = false);
+		bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth, int64_t size);
 #endif
 		void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft) {
 			Lock l(cs);
@@ -157,7 +164,6 @@ public:
 			s.signal();
 		}
 
-		TigerTree getTTfromFile(const string& fname, bool verify = false);
 		size_t getFilesLeft() {
 			if(running)
 				return (w.size() + 1);
@@ -166,7 +172,7 @@ public:
 		}
 	private:
 		// Case-sensitive (faster), it is rather unlikely that case changes, and if it does it's harmless.
-		// set because it's sorted (to avoid random hash order that would create quite strange shares while hashing)
+		// map because it's sorted (to avoid random hash order that would create quite strange shares while hashing)
 		typedef map<string, int64_t> WorkMap;	
 		typedef WorkMap::iterator WorkIter;
 
@@ -186,7 +192,8 @@ public:
 	class HashStore {
 	public:
 		HashStore();
-		void addFile(const string& aFileName, const TigerTree& tth, bool aUsed);
+		void addFile(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, bool aUsed);
+		bool addTree(const TigerTree& tt);
 
 		void load();
 		void save();
@@ -261,7 +268,11 @@ public:
 
 	CriticalSection cs;
 
-	void hashDone(const string& aFileName, const TigerTree& tth, int64_t speed);
+	/** Single node tree where node = root, no storage in HashData.dat */
+	static const int64_t SMALL_TREE = -1;
+	static const int64_t STORE_FAILED = 0;
+
+	void hashDone(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, int64_t speed);
 	void doRebuild() {
 		Lock l(cs);
 		store.rebuild();

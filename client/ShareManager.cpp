@@ -159,8 +159,34 @@ string ShareManager::translateFileName(const string& aFile) throw(ShareException
 			throw ShareException("File Not Available");
 		}
 		
+#ifdef _WIN32
+		for(i = 0; i < file.length(); ++i) {
+			if(file[i] == '/')
+				file[i] = '\\';
+		}
+#endif
 		return j->second + file;
 	}
+}
+
+/** @todo Fix for file list */
+AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) {
+	if(aFile.compare(0, 4, "TTH/") != 0)
+		throw ShareException("File Not Available");
+
+	RLock<> l(cs);
+	TTHValue val(aFile.substr(4));
+	HashFileIter i = tthIndex.find(&val);
+	if(i == tthIndex.end()) {
+		throw ShareException("File Not Available");
+	}
+
+	Directory::File::Iter f = i->second;
+	AdcCommand cmd(AdcCommand::CMD_RES);
+	cmd.addParam("FN", f->getADCPath());
+	cmd.addParam("SI", Util::toString(f->getSize()));
+	cmd.addParam("TR", f->getTTH().toBase32());
+	return cmd;
 }
 
 StringPairIter ShareManager::findVirtual(const string& name) {
@@ -296,8 +322,8 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 	}
 
 private:
-	StringPairList& virts;
 	ShareManager::Directory::Map& dirs;
+	StringPairList& virts;
 
 	ShareManager::Directory* cur;
 	size_t depth;
@@ -496,6 +522,15 @@ int64_t ShareManager::getShareSize() throw() {
 	int64_t tmp = 0;
 	for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
 		tmp += i->second->getSize();
+	}
+	return tmp;
+}
+
+size_t ShareManager::getSharedFiles() throw() {
+	RLock<> l(cs);
+	size_t tmp = 0;
+	for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
+		tmp += i->second->countFiles();
 	}
 	return tmp;
 }
@@ -911,7 +946,7 @@ void ShareManager::generateNmdcList() {
 	}
 }
 
-MemoryInputStream* ShareManager::generatePartialList(const string& dir) {
+MemoryInputStream* ShareManager::generatePartialList(const string& dir, bool recurse) {
 	if(dir.length() < 3 || dir[0] != '/' || dir[dir.size()-1] != '/')
 		return NULL;
 
@@ -941,7 +976,7 @@ MemoryInputStream* ShareManager::generatePartialList(const string& dir) {
 	StringOutputStream sos;
 	string tmp;
 	string indent = "\t";
-	it->second->toXml(sos, indent, tmp, false);
+	it->second->toXml(sos, indent, tmp, recurse);
 	return new MemoryInputStream(sos.getString());
 }
 

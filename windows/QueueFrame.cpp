@@ -128,7 +128,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)pmMenu, CTSTRING(SEND_PRIVATE_MESSAGE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)readdMenu, CTSTRING(READD_SOURCE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
-	singleMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	singleMenu.AppendMenu(MF_SEPARATOR);
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeMenu, CTSTRING(REMOVE_SOURCE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeAllMenu, CTSTRING(REMOVE_FROM_ALL));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CTSTRING(REMOVE_OFFLINE));
@@ -137,7 +137,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CTSTRING(MAX_SEGMENTS_NUMBER));
 	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CTSTRING(SET_PRIORITY));
 	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CTSTRING(MOVE));
-	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	multiMenu.AppendMenu(MF_SEPARATOR);
 	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CTSTRING(REMOVE_OFFLINE));
 	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	
@@ -162,11 +162,14 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
  	dirMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CTSTRING(SET_PRIORITY));
 	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CTSTRING(MOVE));
-	dirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	dirMenu.AppendMenu(MF_SEPARATOR);
 	dirMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
+	removeMenu.AppendMenu(MF_STRING, IDC_REMOVE_SOURCE, CTSTRING(ALL));
 	removeMenu.AppendMenu(MF_SEPARATOR);
-	removeMenu.AppendMenu(MF_STRING, IDC_REMOVE_SOURCE_ALL, CTSTRING(REMOVE_ALL));
+
+	readdMenu.AppendMenu(MF_STRING, IDC_READD, CTSTRING(ALL));
+	readdMenu.AppendMenu(MF_SEPARATOR);
 
 	addQueueList(QueueManager::getInstance()->lockQueue());
 	QueueManager::getInstance()->unlockQueue();
@@ -619,6 +622,8 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 		ii->setStatus(aQI->getStatus());
 		if(ii->FDI)
 			ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
+		else
+			ii->setDownloadedBytes(aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
 		ii->qi = aQI;
@@ -701,6 +706,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			if (BOOLSETTING(QUEUE_DIRTY)) {
 				setDirty();
 			}
+			dirty = true;
 		} else if(ti->first == UPDATE_ITEM) {
 			QueueItemInfo* ii = (QueueItemInfo*)ti->second;
 			if(!showTree || isCurDir(ii->getPath())) {
@@ -765,20 +771,14 @@ void QueueFrame::moveSelectedDir() {
 	tstring name = curDir;
 	
 	if(WinUtil::browseDirectory(name, m_hWnd)) {
-		name = name + Util::getLastDir(curDir);
 		moveDir(ctrlDirs.GetSelectedItem(), name);
 	}
 }
 
 void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
-	tstring t(target);
-
-	if(t[t.length() - 1] != PATH_SEPARATOR)
-		t += PATH_SEPARATOR;
-
 	HTREEITEM next = ctrlDirs.GetChildItem(ht);
 	while(next != NULL) {
-		moveDir(next, t + Util::getLastDir(getDir(next)));
+		moveDir(next, target + Util::getLastDir(getDir(next)) + _T(PATH_SEPARATOR_STR));		
 		next = ctrlDirs.GetNextSiblingItem(next);
 	}
 	tstring* s = (tstring*)ctrlDirs.GetItemData(ht);
@@ -787,7 +787,7 @@ void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 	
 	for(DirectoryIter i = p.first; i != p.second; ++i) {
 		QueueItemInfo* qi = i->second;
-		QueueManager::getInstance()->move(Text::fromT(qi->getTarget()), Text::fromT(t + qi->getTargetFileName()));
+		QueueManager::getInstance()->move(Text::fromT(qi->getTarget()), Text::fromT(target + qi->getTargetFileName()));
 	}			
 }
 
@@ -798,9 +798,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
 	ctrlQueue.ScreenToClient(&pt); 
-	for(int i=0;i<11;i++) {
+	for(int i=0;i<10;i++) {
 		segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
-		segmentsMenu.EnableMenuItem(i + 109, MF_ENABLED);		
+		segmentsMenu.EnableMenuItem(i + 110, MF_ENABLED);		
 	}
 
 	for(int i=0;i<7;i++)
@@ -813,7 +813,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			browseMenu.RemoveMenu(0, MF_BYPOSITION);
 		}
 		while(removeMenu.GetMenuItemCount() > 2) {
-			removeMenu.RemoveMenu(0, MF_BYPOSITION);
+			removeMenu.RemoveMenu(2, MF_BYPOSITION);
 		}
 		while(removeAllMenu.GetMenuItemCount() > 0) {
 			removeAllMenu.RemoveMenu(0, MF_BYPOSITION);
@@ -821,8 +821,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		while(pmMenu.GetMenuItemCount() > 0) {
 			pmMenu.RemoveMenu(0, MF_BYPOSITION);
 		}
-		while(readdMenu.GetMenuItemCount() > 0) {
-			readdMenu.RemoveMenu(0, MF_BYPOSITION);
+		while(readdMenu.GetMenuItemCount() > 2) {
+			readdMenu.RemoveMenu(2, MF_BYPOSITION);
 		}
 		while(previewMenu.GetMenuItemCount() > 0) {
 			previewMenu.RemoveMenu(0, MF_BYPOSITION);
@@ -837,6 +837,14 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
 			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
+
+			if(ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+				segmentsMenu.EnableMenuItem(110, MF_GRAYED);
+			} else {
+				for(int i=1;i<10;i++) {
+					segmentsMenu.EnableMenuItem(i + 110, MF_GRAYED);		
+				}
+			}
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 				string ext = Util::getFileExt(Text::fromT(ii->getTargetFileName()));
 			if(ext.size()>1) ext = ext.substr(1);
@@ -860,8 +868,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				mi.dwItemData = (ULONG_PTR)&(*i);
 				mi.wID = IDC_BROWSELIST + menuItems;
 				browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
-				mi.wID = IDC_REMOVE_SOURCE + menuItems;
-				removeMenu.InsertMenuItem(menuItems, TRUE, &mi);
+				mi.wID = IDC_REMOVE_SOURCE + 1 + menuItems; // "All" is before sources
+				removeMenu.InsertMenuItem(menuItems + 2, TRUE, &mi); // "All" and separator come first
 				mi.wID = IDC_REMOVE_SOURCES + menuItems;
 				removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
 				if(i->getUser()->isOnline()) {
@@ -871,44 +879,42 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				}
 				menuItems++;
 			}
-			if(ii->getBadSources().size()) { //at least one bad source exists
-				readdItems = 2;	//first two items are fixed
-				readdMenu.AppendMenu(MF_STRING, IDC_READD_ALL_SOURCES, CTSTRING(READD_ALL_SOURCES));
-				readdMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-
+			readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
 					tstring nick = Text::toT(i->getUser()->getNick());
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
 					mi.dwItemData = (ULONG_PTR)&(*i);
-					mi.wID = IDC_READD + readdItems;
-					readdMenu.InsertMenuItem(readdItems, TRUE, &mi);
+				mi.wID = IDC_READD + 1 + readdItems;  // "All" is before sources
+				readdMenu.InsertMenuItem(readdItems + 2, TRUE, &mi);  // "All" and separator come first
 					readdItems++;
 				}
-				singleMenu.EnableMenuItem((UINT)(HMENU)readdMenu, MF_ENABLED);
-			}
-			else { //no bad sources for this item
-				singleMenu.EnableMenuItem((UINT)(HMENU)readdMenu, MF_GRAYED);
-			}
 
-			if(menuItems == 0) {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_GRAYED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_GRAYED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_GRAYED);
+				if(menuItems == 0) {
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_GRAYED);
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_GRAYED);
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_GRAYED);
+				}
+				else {
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_ENABLED);
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_ENABLED);
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_ENABLED);
+				}
+
+				if(pmItems == 0) {
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_GRAYED);
+				}
+				else {
+					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_ENABLED);
+				}
+
+			if(readdItems == 0) {
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MF_GRAYED);
 			}
 			else {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_ENABLED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_ENABLED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_ENABLED);
-			}
-
-			if(pmItems == 0) {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_GRAYED);
-			}
-			else {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_ENABLED);
-			}
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MF_ENABLED);
+ 			}
 
 			if(ii->getTTH() == NULL) {
 				singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
@@ -1037,10 +1043,6 @@ LRESULT QueueFrame::onBrowseList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 
 LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	
-	if(wID < IDC_READD+2) {
-		return 0;
-	}
-	
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
@@ -1049,12 +1051,19 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		mi.fMask = MIIM_DATA;
 		
 		readdMenu.GetMenuItemInfo(wID, FALSE, &mi);
-		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
-		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-		try {
-			QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
-		} catch(const Exception& e) {
-			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
+		if(wID == IDC_READD) {
+			// re-add all sources
+			for(QueueItemInfo::SourceIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); ) {
+				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
+			}
+		} else {
+			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
+			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
+			try {
+				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
+			} catch(const Exception& e) {
+				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
+			}
 		}
 	}
 	return 0;
@@ -1065,24 +1074,18 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-		CMenuItemInfo mi;
-		mi.fMask = MIIM_DATA;
+		if(wID == IDC_REMOVE_SOURCE) {
+			for(QueueItemInfo::SourceIter si = ii->getSources().begin(); si != ii->getSources().end(); ) {
+				QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), si->getUser(), QueueItem::Source::FLAG_REMOVED);
+			}
+		} else {
+			CMenuItemInfo mi;
+			mi.fMask = MIIM_DATA;
 		
-		removeMenu.GetMenuItemInfo(wID, FALSE, &mi);
-		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
-		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-		QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), s->getUser(), QueueItem::Source::FLAG_REMOVED);
-	}
-	return 0;
-}
-
-LRESULT QueueFrame::onRemoveSourceAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-		
-		QueueItemInfo::SourceIter i;
-		for(i = ii->getSources().begin(); i != ii->getSources().end(); ) {
-			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), i->getUser(), QueueItem::Source::FLAG_REMOVED);
+			removeMenu.GetMenuItemInfo(wID, FALSE, &mi);
+			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
+			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
+			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), s->getUser(), QueueItem::Source::FLAG_REMOVED);
 		}
 	}
 	return 0;
@@ -1095,27 +1098,6 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 	QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 	QueueManager::getInstance()->removeSources(s->getUser(), QueueItem::Source::FLAG_REMOVED);
-	return 0;
-}
-
-LRESULT QueueFrame::onReaddAll(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-
-		QueueItemInfo::SourceIter j;
-
-		for(j = ii->getBadSources().begin(); j != ii->getBadSources().end();) {
-			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*) j;
-		
-			try {
-				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
-			} catch(const Exception& e) {
-				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
-			}
-		}
-	}
 	return 0;
 }
 
@@ -1508,51 +1490,48 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			SetBkMode(dc, TRANSPARENT);
 		
 			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, RGB(0, 150, 0), qi->getSize());
-			//statusBar.SetFileSize(qi->getSize());
-			//statusBar.Fill(RGB(0, 150, 0));
 
 			FileChunksInfo::Ptr filedatainfo = qi->FDI;
-			for(int smycka = 0; smycka < 2; smycka++) {
-				try {
-					if(filedatainfo) {
-						vector<int64_t> v;
+
+			if(filedatainfo) {
+				for(int smycka = 0; smycka < 2; smycka++) {
+					vector<int64_t> v;
 	
-						if(smycka == 0) {
-							if(filedatainfo->vecFreeBlocks.size() != NULL)
-								copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
-							if(filedatainfo->vecRunBlocks.size() != NULL)
-								copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
-						} else {
-							for(map<int64_t, int64_t>::iterator i =filedatainfo->mapVerifiedBlocks.begin(); i != filedatainfo->mapVerifiedBlocks.end(); i++) {
-								v.push_back(i->first);
-								v.push_back(i->second);
-							}
-							if(v.empty())
-								continue;
+					if(smycka == 0) {
+						if(filedatainfo->vecFreeBlocks.size() != NULL)
+							copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
+						if(filedatainfo->vecRunBlocks.size() != NULL)
+							copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
+					} else {
+						for(map<int64_t, int64_t>::iterator i =filedatainfo->mapVerifiedBlocks.begin(); i != filedatainfo->mapVerifiedBlocks.end(); i++) {
+							v.push_back(i->first);
+							v.push_back(i->second);
 						}
+						if(v.empty())
+							continue;
+					}
 	
-						if(qi && (v.size() > 0)) {
-							int64_t size = qi->getSize();
+					if(qi && (v.size() > 0)) {
+						int64_t size = qi->getSize();
 
-							sort(v.begin(), v.end());
-			
-							if(smycka == 0) {
-								statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
-							}
+						sort(v.begin(), v.end());
+		
+						if(smycka == 0) {
+							statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
+						}
 
-							for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
-								if(((*i) < size) && ((*(i+1)) < size)) {
-									statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
-								}
+						for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
+							if(((*i) < size) && ((*(i+1)) < size)) {
+								statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
 							}
-
-							if(smycka == 0) {		
-								statusBar.FillRange((int64_t)v.back(), size, RGB(255, 255, 100));
-							}
+						}
+						if(smycka == 0) {		
+							statusBar.FillRange((int64_t)v.back(), size, RGB(255, 255, 100));
 						}
 					}
-				} catch(...) {
 				}
+			} else {
+				statusBar.FillRange(0, qi->getDownloadedBytes(), RGB(222, 160, 0));
 			}
 			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
@@ -1593,7 +1572,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
 
-			if(qi->qi->getTiger().getLeaves().size() == 0) {
+			if((qi->qi->getTiger().getLeaves().size() == 0) || (qi->qi->getTiger().getBlockSize() == qi->getSize())) {
 				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 			} else {
 				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
@@ -1619,7 +1598,9 @@ LRESULT QueueFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOO
 
 LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	if(ctrlQueue.GetSelectedCount() == 1) {
-		WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, Text::fromT(ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget()));
+		QueueItemInfo* i = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+		if(i->qi)
+			WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, i->qi->getTempTarget());
 	}
 	return 0;
 }

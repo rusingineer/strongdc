@@ -32,6 +32,9 @@ const string UserConnection::FEATURE_ADCGET = "ADCGet";
 const string UserConnection::FEATURE_ZLIB_GET = "ZLIG";
 const string UserConnection::FEATURE_TTHL = "TTHL";
 const string UserConnection::FEATURE_TTHF = "TTHF";
+const string UserConnection::FEATURE_CHUNK = "CHUNK";
+
+const string UserConnection::FILE_NOT_AVAILABLE = "File Not Available";
 
 const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
@@ -61,10 +64,6 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
-
-//	if(aLine.length() < 2)
-//		return;
-
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
 		return;
@@ -88,7 +87,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
 			return;
 
-		if(stricmp(temp, "File Not Available") == 0 || 
+		if(stricmp(temp, FILE_NOT_AVAILABLE.c_str()) == 0 || 
 			strstr(temp, /*path/file*/" no more exists") != 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
@@ -102,12 +101,26 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else if(strcmp(aLine+1, "GetListLen") == 0) {
 		fire(UserConnectionListener::GetListLength(), this);
 	} else if(strncmp(aLine+1, "Get ", 4) == 0) {
-		char *temp1 = strtok((char*)aLine+5, "$");
-		temp = strtok(NULL, "\0");
+		char *temp = strtok((char*)aLine+5, "\0");
+/*		temp = strtok(NULL, "\0");
 		if(temp != NULL && temp1 != NULL) {
-			int64_t size = _atoi64(temp);
-			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(temp1), size - (int64_t)1);
-		}
+			int64_t size = _atoi64(temp);*/
+		if((temp = strtok((char*)temp, "$")) == NULL)
+			return;
+
+		string name = temp;
+
+		if((temp = strtok(NULL, "$")) == NULL)
+			return;
+
+		int64_t start = _atoi64(temp);
+		int64_t bytes = -1;
+
+		if((temp = strtok(NULL, "\0")) != NULL)
+			bytes = _atoi64(temp);
+
+		fire(UserConnectionListener::Get(), this, Text::acpToUtf8(name), start - (int64_t)1, bytes);
+	//}
 	} else if(strncmp(aLine+1, "GetZBlock ", 10) == 0) {
 		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
 			processBlock(temp, 1);
@@ -127,8 +140,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
 		char *lock;
 		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
-			if((temp = strtok(NULL, "\0")) != NULL) {
-				fire(UserConnectionListener::CLock(), this, lock, temp+3);
+			if((temp = strtok(((char*)aLine+6+strlen(lock)+4), "\0")) != NULL) {
+				fire(UserConnectionListener::CLock(), this, lock, temp);
 			}
 		}
 	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
@@ -151,7 +164,6 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else if(strncmp(aLine+1, "ADC", 3) == 0) {
 		dispatch(aLine, true);
 	} else {
-		fire(UserConnectionListener::Unknown(), this, aLine);
 		dcdebug("Unknown NMDC command: %.50s\n", aLine);
 	}
 }

@@ -32,6 +32,7 @@
 #include "../client/CriticalSection.h"
 #include "../client/ClientManagerListener.h"
 #include "../client/HubManager.h"
+#include "../client/QueueManager.h"
 
 #include "UCHandler.h"
 
@@ -40,7 +41,7 @@
 #define FILTER_MESSAGE_MAP 8
 
 class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255), IDR_SEARCH>, 
-	private SearchManagerListener, private ClientManagerListener, 
+	private SearchManagerListener, private ClientManagerListener,
 	public UCHandler<SearchFrame>, public UserInfoBaseHandler<SearchFrame>,
 	private SettingsManagerListener, private TimerManagerListener
 {
@@ -129,14 +130,11 @@ public:
 		hubsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
-		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
+		initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0),
-		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(false)
+		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(false), searches(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
-		SettingsManager::getInstance()->addListener(this);
-		lastSearchTime = 0;
-		navic = 0;
 	}
 
 	virtual ~SearchFrame() {
@@ -215,7 +213,8 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		bool multiSource = QueueManager::getInstance()->useMultiSource();
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), multiSource));
 		return 0;
 	}
 
@@ -354,9 +353,10 @@ private:
 		void view();
 		void GetMP3Info();
 		struct Download {
-			Download(const tstring& aTarget) : tgt(aTarget) { };
+			Download(const tstring& aTarget, bool multiS) : tgt(aTarget), multiSource(multiS) { };
 			void operator()(SearchInfo* si);
 			const tstring& tgt;
+			bool multiSource;
 		};
 		struct DownloadWhole {
 			DownloadWhole(const tstring& aTarget) : tgt(aTarget) { };
@@ -364,9 +364,10 @@ private:
 			const tstring& tgt;
 		};
 		struct DownloadTarget {
-			DownloadTarget(const tstring& aTarget) : tgt(aTarget) { };
+			DownloadTarget(const tstring& aTarget, bool multiS) : tgt(aTarget), multiSource(multiS) { };
 			void operator()(SearchInfo* si);
 			const tstring& tgt;
+			bool multiSource;
 		};
 		struct CheckSize {
 			CheckSize() : size(-1), op(true), oneHub(true), hasTTH(false), firstTTH(true) { };
@@ -553,12 +554,12 @@ private:
 	// WM_SPEAKER
 	enum Speakers {
 		ADD_RESULT,
+		FILTER_RESULT,
 		HUB_ADDED,
 		HUB_CHANGED,
 		HUB_REMOVED,
-		FILTERED_TEXT,
-		STATS,
-		START_SEARCH
+		QUEUE_STATS,
+		SEARCH_START
 	};
 
 	tstring initialString;
@@ -621,10 +622,6 @@ private:
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
 
-	int32_t lastSearchTime;
-	u_int32_t navic;
-	tstring SearchString;
-
 	/** Parameter map for user commands */
 	StringMap ucParams;
 
@@ -640,12 +637,15 @@ private:
 
 	static TStringList lastSearches;
 	size_t droppedResults;
-	DWORD lastSearch;
+
 	bool closed;
+	int searches;
+
 	COLORREF barva;
 	
 	static int columnIndexes[];
 	static int columnSizes[];
+
 
 	void downloadSelected(const tstring& aDir, bool view = false); 
 	void downloadWholeSelected(const tstring& aDir);
@@ -655,14 +655,15 @@ private:
 	void download(SearchResult* aSR, const tstring& aDir, bool view);
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
+	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
+
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	// ClientManagerListener
 	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }
 	virtual void on(ClientUpdated, Client* c) throw() { speak(HUB_CHANGED, c); }
 	virtual void on(ClientDisconnected, Client* c) throw() { speak(HUB_REMOVED, c); }
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
-
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

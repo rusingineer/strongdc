@@ -38,15 +38,23 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
 
+	FinishedItem::List subItems;
+
 	FinishedItem(string const& aTarget, string const& aUser, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, u_int32_t aTime,
 		bool aCrc32 = false, bool aTTH = false) : 
 		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tthChecked(aTTH)
+		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tthChecked(aTTH),
+		collapsed(true), mainitem(false), needDelete(true), main(NULL)
 	{
 	}
 
 	int64_t getAvgSpeed() { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; };
+
+	bool collapsed;
+	bool mainitem;
+	bool needDelete;
+	FinishedItem* main;
 
 	GETSET(string, target, Target);
 	GETSET(string, user, User);
@@ -130,9 +138,9 @@ private:
 		DownloadManager::getInstance()->addListener(this);
 		UploadManager::getInstance()->addListener(this);
 	}
-	virtual ~FinishedManager();
+	virtual ~FinishedManager() throw();
 
-	virtual void on(DownloadManagerListener::Complete, Download* d) throw();
+	virtual void on(DownloadManagerListener::Complete, Download* d, bool) throw();
 	virtual void on(UploadManagerListener::Complete, Upload*) throw();
 
 	CriticalSection cs;

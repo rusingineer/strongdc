@@ -64,15 +64,11 @@ string SearchResult::toSR() const {
 	return tmp;
 }
 
-string SearchResult::toRES() const {
-	string tmp;
-	tmp.reserve(128);
-	tmp.append(user->getCID().toBase32());
-	tmp.append(" SI");
-	tmp.append(Util::toString(size));
-	tmp.append(" SL");
-	tmp.append(Util::toString(freeSlots));
-	tmp.append(" FN");
+AdcCommand SearchResult::toRES(char type) const {
+	AdcCommand cmd(AdcCommand::CMD_RES, type);
+	cmd.addParam("SI", Util::toString(size));
+	cmd.addParam("SL", Util::toString(freeSlots));
+
 	string fn = utf8 ? file : Text::acpToUtf8(file);
 	string::size_type i = 0;
 	while( (i = fn.find('\\', i)) != string::npos ) {
@@ -80,21 +76,65 @@ string SearchResult::toRES() const {
 	}
 	fn.insert(0, "/");
 
+	cmd.addParam("FN", fn);
 	if(getTTH() != NULL) {
-		tmp.append(" TR");
-		tmp.append(getTTH()->toBase32());
+		cmd.addParam("TR", getTTH()->toBase32());
+	}
+	return cmd;
+}
+
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch);
+	if(aWindow != NULL) {
+		bool added = false;
+		if(searchQueue.empty()) {
+			searchQueue.insert(searchQueue.begin(), sqi);
+			added = true;
+		} else {
+			// Insert before the automatic searches (manual search) 
+			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
+				if(qi->getWindow() == NULL) {
+					searchQueue.insert(qi, sqi);
+					added = true;
+				}
+			}
+		}
+		if (!added) {
+			searchQueue.push_back(sqi);
+		}
+	} else {
+		// Insert last (automatic search)
+		searchQueue.push_back(sqi);
 	}
 
-	tmp.append(1, '\n');
-	return tmp;
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, bool _auto) {
-	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, aName, _auto);
-}
-
-void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */) {
-	ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, aName);
+void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch);
+	if(aWindow != NULL) {
+		bool added = false;
+		if(searchQueue.empty()) {
+			searchQueue.push_front(sqi);
+			added = true;
+		} else {
+			// Insert before the automatic searches (manual search) 
+			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
+				if(qi->getWindow() == NULL) {
+					if(qi != NULL)
+						searchQueue.insert(qi, sqi);
+					else
+						searchQueue.push_front(sqi);
+					added = true;
+				}
+			}
+		}
+		if (!added) {
+			searchQueue.push_back(sqi);
+		}
+	} else {
+		// Insert last (automatic search)
+		searchQueue.push_back(sqi);
+	}
 }
 
 string SearchResult::getFileName() const { 
@@ -174,7 +214,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 	if(x.compare(0, 4, "$SR ") == 0) {
 		onNMDCData(buf, aLen, address);
 	} else if(x.compare(1, 4, "RES ") == 0) {
-		Command c(x);
+		AdcCommand c(x);
 		if(c.getParameters().empty())
 			return;
 
@@ -306,6 +346,19 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
+		SearchQueueItem sqi = searchQueue.front();
+		searchQueue.erase(searchQueue.begin());
+		if(sqi.getHubs().empty()) {
+			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
+			fire(SearchManagerListener::Searching(), &sqi);
+		} else {
+			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
+			fire(SearchManagerListener::Searching(), &sqi);
+		}
+		setLastSearch( GET_TICK() );
+	}
+
 	Lock l(cs);
 	for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
 		SearchResult* sr = *i;
@@ -328,6 +381,27 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	}
 	seznam.clear();
 }
+
+u_int32_t SearchManager::getLastSearch() {
+	return lastSearch; 
+}
+
+int SearchManager::getSearchQueueNumber(int* aWindow) {
+	if(!searchQueue.empty()){
+		int queueNumber = 0;
+		for(SearchQueueIter sqi = searchQueue.begin(); sqi != searchQueue.end(); ++sqi) {
+			if(sqi->getWindow() == aWindow) {
+				return queueNumber;
+			}
+		queueNumber++;
+		}
+	} else {
+		// should never get here but just in case...
+		return 0;
+	}
+	return 0;
+}
+
 /**
  * @file
  * $Id$

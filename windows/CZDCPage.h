@@ -47,6 +47,7 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	static ListItem listItems[];
+
 };
 
 #endif //CZDCPage_H

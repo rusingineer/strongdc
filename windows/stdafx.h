@@ -59,7 +59,6 @@ extern CAppModule _Module;
 
 #define _CMDBAR_EXTRA_TRACE
 #define _WTL_USE_MDI
-#define _WIN32_IE 0x0501
 #define WM_SPEAKER (WM_APP + 500)
 
 //{{AFX_INSERT_LOCATION}}

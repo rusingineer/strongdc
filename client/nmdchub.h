@@ -37,96 +37,6 @@
 
 class NmdcHub;
 
-struct Search
-{
-	int aSizeType;
-	int64_t aSize;
-	int aFileType;
-	string aString;
-	bool autoSearch;
-};
-
-class SearchQueue
-{
-public:
-	SearchQueue()
-	{
-		last_search_time = GET_TICK();
-	}
-
-	bool add(const Search& s, bool _auto)
-	{
-		Lock l(cs);
-		for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++)
-		{
-			if(i->aString == s.aString){
-/*				if(!_auto){
-					search_queue.erase(i);
-					search_queue.push_front(s);
-				}*/
-				return false;
-			}
-		}
-
-		if(_auto)
-			search_queue.push_back(s);
-		else{
-			bool added = false;
-			for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++) {
-				if(i->autoSearch) {
-					added = true;
-					search_queue.insert(i, s);
-					break;
-				}
-			}
-			if(!added)
-				search_queue.push_back(s);
-		}
-		return true;
-	}
-
-	bool getSearch(Search& s)
-	{
-		Lock l(cs);
-		if(search_queue.empty())
-			return false;
-
-		if(GET_TICK() - last_search_time < (SETTING(MINIMUM_SEARCH_INTERVAL)) * 1000)
-			return false;
-
-		s = search_queue.front();
-		search_queue.pop_front();
-		last_search_time = GET_TICK();
-
-		return true;
-	}
-
-	void clearAll()
-	{
-		Lock l(cs);
-		search_queue.clear();
-	}
-
-	int getQueueNumber(const string& s)
-	{
-		Lock l(cs);
-		int number = 0;
-		for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++)
-		{
-			if(i->aString == s) {
-				return number;
-			}
-			number++;
-		}
-		return 0;
-	}
-
-	u_int32_t last_search_time;
-private:
-	deque<Search> search_queue;
-	CriticalSection cs;
-};
-
 class NmdcHubListener  
 {
 public:
@@ -219,8 +129,7 @@ public:
 		send(toNmdc(aUserCmd));
 	}
 	virtual void redirect(const User* aUser, const string& aServer, const string& aMsg);
-	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
-	void doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString);
+	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString);
 	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
 	virtual void info(bool alwaysSend) { myInfo(alwaysSend); }
 	
@@ -291,11 +200,6 @@ public:
 		socket->write(aBuf, aLen);
 	}
 
-	virtual int getSearchQueueNumber(const string& aString) {
-		return searchQueue.getQueueNumber(aString);
-	}
-	u_int32_t last_search_time;
-
 	void kick(const User::Ptr& aUser, const string& aMsg);
 
 	GETSET(int, supportFlags, SupportFlags);
@@ -346,7 +250,6 @@ private:
 	u_int32_t lastUpdate;
 	string lastMyInfoA, lastMyInfoB;
 	bool validatenicksent;
-	SearchQueue searchQueue;	
 
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;

@@ -24,13 +24,16 @@
 #endif // _MSC_VER > 1000
 
 class SearchResult;
+class SearchQueueItem;
 
 class SearchManagerListener {
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> SR;
+	typedef X<1> Searching;
 	virtual void on(SR, SearchResult*) throw() = 0;
+	virtual void on(Searching, SearchQueueItem*) throw() { };
 };
 
 #endif

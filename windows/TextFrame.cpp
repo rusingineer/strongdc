@@ -55,7 +55,6 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	} catch(const FileException& e) {
 		SetWindowText(Text::toT(Util::getFileName(Text::fromT(file)) + ": " + e.getError()).c_str());
 	}
-	SettingsManager::getInstance()->addListener(this);
 	
 	bHandled = FALSE;
 	return 1;

@@ -6,6 +6,8 @@ LIBDCPP_AGE=0
 
 libdcppclient_la_LDFLAGS = -export-dynamic -version-info $(LIBDCPP_CURRENT):$(LIBDCPP_REVISION):$(LIBDCPP_AGE)
 
+libdcppclient_la_CXXFLAGS = -Wall
+
 libdcppclient_la_SOURCES= \
 AdcCommand.h \
 AdcCommand.cpp \
@@ -113,3 +115,11 @@ Util.h \
 version.h \
 ZUtils.cpp \
 ZUtils.h 
+
+pch: stdinc.h.gch
+
+stdinc.h.gch: stdinc.h
+	$(CXXCOMPILE) -fPIC -DPIC -c $< 
+
+.PHONY: pch
+	

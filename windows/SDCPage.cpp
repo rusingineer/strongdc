@@ -37,10 +37,10 @@ PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_SECOND, ResourceManager::SECONDS },
 	{ IDC_SECOND1, ResourceManager::SECONDS },
 	{ IDC_SECOND2, ResourceManager::SECONDS },
-	{ IDC_CLIENT_EMU, ResourceManager::CLIENT_EMU },
 	{ IDC_INTERVAL_TEXT, ResourceManager::MINIMUM_SEARCH_INTERVAL },
 	{ IDC_MATCH_QUEUE_TEXT, ResourceManager::SETTINGS_SB_MAX_SOURCES },
-
+	{ IDC_USERLISTDBLCLICKACTION, ResourceManager::USERLISTDBLCLICKACTION },
+	{ IDC_TRANSFERLISTDBLCLICKACTION, ResourceManager::TRANSFERLISTDBLCLICKACTION },	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -53,7 +53,6 @@ PropPage::Item SDCPage::items[] = {
 	{ IDC_MAX_SOURCES, SettingsManager::MAX_SOURCES, PropPage::T_INT },
 	{ IDC_MAX_EMOTICONS, SettingsManager::MAX_EMOTICONS, PropPage::T_INT },
 	{ IDC_SAVEQUEUE, SettingsManager::AUTOSAVE_QUEUE, PropPage::T_INT },
-	{ IDC_EMULATION, SettingsManager::CLIENT_EMULATION, PropPage::T_INT },
 	{ IDC_INTERVAL, SettingsManager::MINIMUM_SEARCH_INTERVAL, PropPage::T_INT },
 	{ IDC_MATCH, SettingsManager::MAX_AUTO_MATCH_SOURCES, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
@@ -97,14 +96,37 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlShutdownAction.SetCurSel(SETTING(SHUTDOWN_ACTION));
 	// Do specialized reading here
 
-	cClientEmu.Attach(GetDlgItem(IDC_EMULATION));
+	userlistaction.Attach(GetDlgItem(IDC_USERLIST_DBLCLICK));
+	transferlistaction.Attach(GetDlgItem(IDC_TRANSFERLIST_DBLCLICK));
+	chataction.Attach(GetDlgItem(IDC_CHAT_DBLCLICK));
+
+    userlistaction.AddString(CTSTRING(GET_FILE_LIST));
+    userlistaction.AddString(CTSTRING(SEND_PUBLIC_MESSAGE));
+    userlistaction.AddString(CTSTRING(SEND_PRIVATE_MESSAGE));
+    userlistaction.AddString(CTSTRING(MATCH_QUEUE));
+    userlistaction.AddString(CTSTRING(GRANT_EXTRA_SLOT));
+	userlistaction.AddString(CTSTRING(ADD_TO_FAVORITES));
+	transferlistaction.AddString(CTSTRING(SEND_PRIVATE_MESSAGE));
+	transferlistaction.AddString(CTSTRING(GET_FILE_LIST));
+	transferlistaction.AddString(CTSTRING(MATCH_QUEUE));
+	transferlistaction.AddString(CTSTRING(GRANT_EXTRA_SLOT));
+	transferlistaction.AddString(CTSTRING(ADD_TO_FAVORITES));
+	chataction.AddString(CTSTRING(SELECT_USER_LIST));
+    chataction.AddString(CTSTRING(SEND_PUBLIC_MESSAGE));
+    chataction.AddString(CTSTRING(SEND_PRIVATE_MESSAGE));
+    chataction.AddString(CTSTRING(GET_FILE_LIST));
+    chataction.AddString(CTSTRING(MATCH_QUEUE));
+    chataction.AddString(CTSTRING(GRANT_EXTRA_SLOT));
+	chataction.AddString(CTSTRING(ADD_TO_FAVORITES));
+
+	userlistaction.SetCurSel(SETTING(USERLIST_DBLCLICK));
+	transferlistaction.SetCurSel(SETTING(TRANSFERLIST_DBLCLICK));
+	chataction.SetCurSel(SETTING(CHAT_DBLCLICK));
+
+	userlistaction.Detach();
+	transferlistaction.Detach();
+	chataction.Detach();
 	
-	for(int i = 0; i < SettingsManager::CLIENT_EMULATION_LAST; i++)
-		cClientEmu.AddString(Text::toT(SettingsManager::clientEmulations[i]).c_str());
-	cClientEmu.SetCurSel(SETTING(CLIENT_EMULATION));
-
-	cClientEmu.Detach();
-
 	return TRUE;
 }
 
@@ -113,10 +135,15 @@ void SDCPage::write()
 	PropPage::write((HWND)*this, items);
 	SettingsManager::getInstance()->set(SettingsManager::SHUTDOWN_ACTION, ctrlShutdownAction.GetCurSel());
 
-	cClientEmu.Attach(GetDlgItem(IDC_EMULATION));
-	settings->set(SettingsManager::CLIENT_EMULATION, cClientEmu.GetCurSel());
-	cClientEmu.Detach();
-
+	userlistaction.Attach(GetDlgItem(IDC_USERLIST_DBLCLICK));
+	transferlistaction.Attach(GetDlgItem(IDC_TRANSFERLIST_DBLCLICK));
+	chataction.Attach(GetDlgItem(IDC_CHAT_DBLCLICK));
+	settings->set(SettingsManager::USERLIST_DBLCLICK, userlistaction.GetCurSel());
+	settings->set(SettingsManager::TRANSFERLIST_DBLCLICK, transferlistaction.GetCurSel());
+	settings->set(SettingsManager::CHAT_DBLCLICK, chataction.GetCurSel());
+	userlistaction.Detach();
+	transferlistaction.Detach(); 
+	chataction.Detach(); 
 	// Do specialized writing here
 	// settings->set(XX, YY);
 }

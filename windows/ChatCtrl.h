@@ -32,7 +32,7 @@
 #endif
 
 #ifndef _RICHEDIT_VER
-#define _RICHEDIT_VER 0x0300
+#define _RICHEDIT_VER 0x0200
 #endif
 
 class UserInfo;

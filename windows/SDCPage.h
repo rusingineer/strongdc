@@ -55,7 +55,8 @@ protected:
 	TCHAR* title;
 
 	CComboBox ctrlShutdownAction;
-	CComboBox cClientEmu;
+	CComboBox userlistaction, transferlistaction, chataction;
+
 };
 
 #endif //SDCPage_H

@@ -26,6 +26,7 @@
 
 PropPage::TextItem CZDCPage::texts[] = {
 	{ IDC_CZDC_WINAMP, ResourceManager::SETCZDC_WINAMP },
+
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
 
@@ -39,8 +40,8 @@ PropPage::Item CZDCPage::items[] = {
 CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::EMPTY_WORKING_SET, ResourceManager::SETTINGS_EMPTY_WORKING_SET },
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
-	{ SettingsManager::CHECK_TTH, ResourceManager::CHECK_TTH_AFTER_DOWNLOAD },
 	{ SettingsManager::SEARCH_TTH_ONLY, ResourceManager::SETTINGS_ONLY_TTH },
+	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
 	{ SettingsManager::DEBUG_COMMANDS, ResourceManager::SETTINGS_DEBUG_COMMANDS },
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
@@ -49,8 +50,9 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
 	{ SettingsManager::REALTIME_QUEUE_UPDATE, ResourceManager::QUEUE_UPDATING },
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
+	{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
-	{ SettingsManager::OLD_SEGMENTED_DWNLDING, ResourceManager::USE_OLD_SEGMENT },
+	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -59,6 +61,8 @@ LRESULT CZDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 {
 	PropPage::translate((HWND)(*this), texts);
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_ADVANCED_BOOLEANS));
+
+
 
 	// Do specialized reading here
 	
@@ -71,7 +75,6 @@ void CZDCPage::write()
 
 	// Do specialized writing here
 	// settings->set(XX, YY);
-
 }
 
 LRESULT CZDCPage::onClickedWinampHelp(WORD /* wNotifyCode */, WORD /*wID*/, HWND /* hWndCtl */, BOOL& /* bHandled */) {

@@ -71,7 +71,6 @@ public:
 	void update();
 
 	tstring columns[COLUMN_LAST];
-	GETSET(tstring, uploadSpeed, UploadSpeed);
 	GETSET(bool, op, Op);
 
 protected:

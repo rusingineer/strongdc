@@ -27,6 +27,7 @@
 #include "File.h"
 #include "HubManager.h"
 #include "version.h"
+#include "CID.h"
 
 const string SettingsManager::settingTags[] =
 {
@@ -48,7 +49,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
-	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
+	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", 
@@ -94,8 +95,8 @@ const string SettingsManager::settingTags[] =
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
 	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "MaxSources",
-	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
-	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry",
+	"ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
+	"AutoUpdateIP", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
@@ -109,9 +110,11 @@ const string SettingsManager::settingTags[] =
 	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers", "MaxAutoMatchSource",
     "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
+	"FireballColor", "ServerColor", "ActiveColor", "PasiveColor", "OpColor", 
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
-	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "OldSegmentedDwnlding",
+	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
+ 	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -121,12 +124,8 @@ const string SettingsManager::settingTags[] =
 const string SettingsManager::connectionSpeeds[] = { "Modem", "ISDN", 
 "Satellite", "Wireless", "Cable", "DSL", "LAN(T1)", "LAN(T3)" };
 
-const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC++" };
-
 const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
 "256K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
-
-const string SettingsManager::blockSizes[] = { "64K", "128K", "256K", "512K", "1024K" };
 
 SettingsManager::SettingsManager()
 {
@@ -146,12 +145,10 @@ SettingsManager::SettingsManager()
 	setDefault(SLOTS, 1);
 		//setDefault(SERVER, Util::getLocalIp());
 	setDefault(SEARCH_TTH_ONLY, false);
-	setDefault(CHECK_TTH, true);
 	setDefault(IN_PORT, Util::rand(1025, 32000));
-	setDefault(UDP_PORT, Util::rand(1025, 32000));
-	setDefault(ROLLBACK, 0);
-	setDefault(EMPTY_WORKING_SET, false);
-	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_64]);
+	setDefault(UDP_PORT, Util::rand(1025, 31999)+1);
+	setDefault(ROLLBACK, 4096);
+	setDefault(EMPTY_WORKING_SET, true);
 	setDefault(DONT_EXTENSIONS, "");
 	setDefault(NUMBER_OF_SEGMENTS, 4);
 	setDefault(SEGMENTS_TYPE, SEGMENT_ON_SIZE);
@@ -238,15 +235,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);
 	setDefault(UPDATE_URL, "http://www.fin-overclocking.net/");
-	setDefault(NORMAL_COLOUR, RGB(255,255,255));
-	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
-	setDefault(IGNORED_COLOR, RGB(192,192,192));	
-	setDefault(FAVORITE_COLOR, RGB(51,51,255));	
-	setDefault(CLIENT_CHECKED_COLOUR, RGB(160, 160, 160));
-	setDefault(FILELIST_CHECKED_COLOUR, RGB(0, 160, 255));
-	setDefault(FULL_CHECKED_COLOUR, RGB(0, 160, 0));
-	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
-	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
 	setDefault(SHOW_TRANSFERVIEW, true);
@@ -262,6 +250,7 @@ SettingsManager::SettingsManager()
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
+	setDefault(ADC_DEBUG, false);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
@@ -421,9 +410,9 @@ SettingsManager::SettingsManager()
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
 	setDefault(MAX_SOURCES, 80);
-	setDefault(CLIENT_EMULATION, CLIENT_STRONGDC);
 	setDefault(USE_EMOTICONS, true);
 	setDefault(MAX_EMOTICONS, 256);
+	setDefault(CZCHARS_DISABLE, false);
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(AUTOSAVE_QUEUE, 30);
@@ -483,8 +472,26 @@ SettingsManager::SettingsManager()
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
-	setDefault(OLD_SEGMENTED_DWNLDING, false);
-
+	setDefault(SPEED_USERS, true);	
+	setDefault(MULTI_CHUNK, 0);
+	setDefault(USERLIST_DBLCLICK, 0);
+	setDefault(TRANSFERLIST_DBLCLICK, 0);
+	setDefault(CHAT_DBLCLICK, 0);	
+	setDefault(SHOW_CHUNK_INFO, true);
+	setDefault(NORMAL_COLOUR, RGB(255,255,255));
+	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
+	setDefault(IGNORED_COLOR, RGB(192,192,192));	
+	setDefault(FAVORITE_COLOR, RGB(51,51,255));	
+	setDefault(FIREBALL_COLOR, RGB(255,100,0));
+ 	setDefault(SERVER_COLOR, RGB(128,128,255));
+	setDefault(ACTIVE_COLOR, RGB(255,255,255));
+	setDefault(PASIVE_COLOR, RGB(255,255,255));
+	setDefault(OP_COLOR, RGB(255,255,0));
+	setDefault(CLIENT_CHECKED_COLOUR, RGB(160, 160, 160));
+	setDefault(FILELIST_CHECKED_COLOUR, RGB(0, 160, 255));
+	setDefault(FULL_CHECKED_COLOUR, RGB(0, 160, 0));
+	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
+	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
@@ -571,6 +578,12 @@ void SettingsManager::load(string const& aFileName)
 			set(UDP_PORT, SETTING(IN_PORT));
 		}
 
+		if(CID(SETTING(CLIENT_ID)).isZero())
+			set(CLIENT_ID, CID::generate().toBase32());
+
+#ifdef _DEBUG
+		set(CLIENT_ID, CID::generate().toBase32());
+#endif
 		setDefault(UDP_PORT, SETTING(IN_PORT));
 
 		fire(SettingsManagerListener::Load(), &xml);
