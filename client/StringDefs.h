@@ -207,6 +207,7 @@ enum Strings { // @DontAdd
 	MENU_FAVORITE_USERS, // "Favorite &Users\tCtrl+U"
 	MENU_FOLLOW_REDIRECT, // "Follow last redirec&t\tCtrl+T"
 	MENU_HASH_PROGRESS, // "Indexing progress"
+	MENU_RESTORE_ALL, // "Restore All"
 	MENU_NETWORK_STATISTICS, // "Network Statistics"
 	MENU_NOTEPAD, // "&Notepad\tCtrl+N"
 	MENU_OPEN_FILE_LIST, // "Open file list...\tCtrl+L"
@@ -870,5 +871,6 @@ enum Strings { // @DontAdd
 	DEFAULT, // "Default"
 	SETTINGS_USE_VERTICAL_VIEW, // "Use vertical view by default"
 	IGNORE_TTH_SEARCHES, // "Ignore TTH searches"
+	USE_OLD_SEGMENT, // "Use old method for segmented downloading"
 	LAST // @DontAdd
 };

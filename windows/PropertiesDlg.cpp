@@ -27,7 +27,7 @@
 #include "UploadPage.h"
 #include "AppearancePage.h"
 #include "AdvancedPage.h"
-#include "Advanced2Page.h"
+#include "LogPage.h"
 #include "Sounds.h"
 #include "Segment.h"
 #include "UCPage.h"
@@ -51,7 +51,7 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SE
 	pages[2] = new DownloadPage(s);	
 	pages[3] = new AppearancePage(s);
 	pages[4] = new AdvancedPage(s);
-	pages[5] = new Advanced2Page(s);
+	pages[5] = new LogPage(s);
 	pages[6] = new UCPage(s);
 	pages[7] = new CZDCPage(s);
 	pages[8] = new SDCPage(s);

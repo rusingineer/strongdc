@@ -50,6 +50,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::REALTIME_QUEUE_UPDATE, ResourceManager::QUEUE_UPDATING },
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
+	{ SettingsManager::OLD_SEGMENTED_DWNLDING, ResourceManager::USE_OLD_SEGMENT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

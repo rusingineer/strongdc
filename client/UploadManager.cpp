@@ -333,7 +333,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 		if(u->getTTH() != NULL) {
 			params["tth"] = u->getTTH()->toBase32();
 		}
-		LOG(Util::formatTime(SETTING(LOG_FILE_UPLOAD), time(NULL)), Util::formatParams(SETTING(LOG_FORMAT_POST_UPLOAD), params));
+		LOG(LogManager::UPLOAD, params);
 	}
 
 	fire(UploadManagerListener::Complete(), u);
@@ -455,12 +455,15 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 
 			throttleSetup();
 			throttleZeroCounters();
+
 			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 				ticks.push_back(*i);
 			}
 			
 			if(ticks.size() > 0)
 				fire(UploadManagerListener::Tick(), ticks);
+
+			fire(UploadManagerListener::QueueUpdate());
 			int iAvgSpeed = getAverageSpeed();
 
 			if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
@@ -516,15 +519,14 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 				ClientManager::getInstance()->infoUpdated(true);
 				boFileServerSent = true;
 			}
-			fire(UploadManagerListener::QueueUpdate());
 }
 
 void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
+	Lock l(cs);
 	if( (!aUser->isOnline()) && 
 		(aUser->isSet(User::QUIT_HUB)) && 
 		(BOOLSETTING(AUTO_KICK)) ){
 
-		Lock l(cs);
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			Upload* u = *i;
 			if(u->getUser() == aUser) {
@@ -538,7 +540,6 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 		}
 	}
 	if(aUser->isOnline() == false) {
-		Lock l(cs);
 		clearUserFiles(aUser);
 	}
 }

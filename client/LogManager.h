@@ -39,10 +39,41 @@ public:
 class LogManager : public Singleton<LogManager>, public Speaker<LogManagerListener>
 {
 public:
+	enum LogArea { CHAT, PM, DOWNLOAD, UPLOAD, SYSTEM, STATUS, WEBSERVER, LAST };
+	enum {FILE, FORMAT};
+
+	void log(LogArea area, StringMap& params) throw() {
+		string path = SETTING(LOG_DIRECTORY);
+		string msg;
+	
+		path += Util::formatParams(getSetting(area, FILE), params);
+		msg = Util::formatParams(getSetting(area, FORMAT), params);
+
+		log(path, msg);
+	}
+
+	void message(const string& msg, bool logit) {
+		if(BOOLSETTING(LOG_SYSTEM)) {
+			StringMap params;
+			params["message"] = msg;
+			log(LogManager::SYSTEM, params);
+		}
+		fire(LogManagerListener::Message(), msg);
+	}
+
+	const string& getSetting(int area, int sel) {
+		return SettingsManager::getInstance()->get(static_cast<SettingsManager::StrSetting>(logOptions[area][sel]), true);
+	}
+
+	void saveSetting(int area, int sel, const string& setting) {
+		SettingsManager::getInstance()->set(static_cast<SettingsManager::StrSetting>(logOptions[area][sel]), setting);
+	}
+
+private:
 	void log(const string& area, const string& msg) throw() {
 		Lock l(cs);
 		try {
-			string aArea = Util::validateFileName(SETTING(LOG_DIRECTORY) + area);
+			string aArea = Util::validateFileName(area);
 			File::ensureDirectory(aArea);
 			File f(aArea, File::WRITE, File::OPEN | File::CREATE);
 			f.setEndPos(0);
@@ -52,51 +83,32 @@ public:
 		}
 	}
 
-	void logDateTime(const string& area, const string& msg) throw() {
-		log(area, Util::formatTime("%Y-%m-%d %H:%M:%S ", TimerManager::getInstance()->getTime()) + msg);
-	}
-
-	void message(const string& msg, bool logit) {
-		if (BOOLSETTING(LOG_SYSTEM) && logit) {
-			log("system", Util::formatTime("%Y-%m-%d %H:%M:%S: ", TimerManager::getInstance()->getTime()) + msg);
-		}
-		fire(LogManagerListener::Message(), msg);
-	}
-
-	string logTail(const string& area, const int lines) throw(){
-		try{
-			string file = File(Util::validateFileName(SETTING(LOG_DIRECTORY) + area), File::READ, File::OPEN).read();
-			string::size_type i = -1;
-			int c = 0;
-
-			while(c<=lines){
-				i = file.rfind('\n', i-1);
-				if(i == string::npos){
-					i=-1;
-					break;
-				}
-				c++;
-			}
-
-			return file.substr(i+1);
-		}catch (const FileException&) {
-			//...
-		}
-		return "";
-	}
-
-private:
 	friend class Singleton<LogManager>;
 	CriticalSection cs;
 	
-	LogManager() { };
+	int logOptions[LAST][2];
+
+	LogManager() {
+		logOptions[UPLOAD][FILE]		= SettingsManager::LOG_FILE_UPLOAD;
+		logOptions[UPLOAD][FORMAT]		= SettingsManager::LOG_FORMAT_POST_UPLOAD;
+        	logOptions[DOWNLOAD][FILE]		= SettingsManager::LOG_FILE_DOWNLOAD;
+		logOptions[DOWNLOAD][FORMAT]		= SettingsManager::LOG_FORMAT_POST_DOWNLOAD;
+		logOptions[CHAT][FILE]			= SettingsManager::LOG_FILE_MAIN_CHAT;
+		logOptions[CHAT][FORMAT]		= SettingsManager::LOG_FORMAT_MAIN_CHAT;
+		logOptions[PM][FILE]			= SettingsManager::LOG_FILE_PRIVATE_CHAT;
+		logOptions[PM][FORMAT]			= SettingsManager::LOG_FORMAT_PRIVATE_CHAT;
+		logOptions[SYSTEM][FILE]		= SettingsManager::LOG_FILE_SYSTEM;
+		logOptions[SYSTEM][FORMAT]		= SettingsManager::LOG_FORMAT_SYSTEM;
+		logOptions[STATUS][FILE]		= SettingsManager::LOG_FILE_STATUS;
+		logOptions[STATUS][FORMAT]		= SettingsManager::LOG_FORMAT_STATUS;
+		logOptions[WEBSERVER][FILE]		= SettingsManager::LOG_FILE_WEBSERVER;
+		logOptions[WEBSERVER][FORMAT]	= SettingsManager::WEBSERVER_FORMAT;
+	};
 	virtual ~LogManager() { };
 	
 };
 
 #define LOG(area, msg) LogManager::getInstance()->log(area, msg)
-#define LOGDT(area, msg) LogManager::getInstance()->logDateTime(area, msg)
-#define LOGTAIL(area, lines) LogManager::getInstance()->logTail(area, lines)
 
 #endif // !defined(AFX_LOGMANAGER_H__73C7E0F5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_)
 

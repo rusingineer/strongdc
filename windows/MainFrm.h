@@ -150,6 +150,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_OPEN_MY_LIST, onOpenFileList)
 		COMMAND_ID_HANDLER(IDC_TRAY_SHOW, onAppShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE_ALL, onWindowMinimizeAll)
+		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE_ALL, onWindowRestoreAll)
 		COMMAND_ID_HANDLER(IDC_FINISHED, onFinished)
 		COMMAND_ID_HANDLER(IDC_FINISHEDMP3, onFinishedMP3)
 		COMMAND_ID_HANDLER(IDC_FINISHED_UL, onFinishedUploads)
@@ -306,6 +307,15 @@ public:
 		}
 		return 0;
 	}
+	LRESULT onWindowRestoreAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		HWND tmpWnd = GetWindow(GW_CHILD); //getting client window
+		tmpWnd = ::GetWindow(tmpWnd, GW_CHILD); //getting first child window
+		while (tmpWnd!=NULL) {
+			::ShowWindow(tmpWnd, SW_RESTORE);
+			tmpWnd = ::GetWindow(tmpWnd, GW_HWNDNEXT);
+		}
+		return 0;
+	}	
 	LRESULT onShutDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		setShutDown(!getShutDown());
 		return S_OK;
@@ -343,6 +353,7 @@ public:
 
 	CImageList largeImages, largeImagesHot;
 	virtual int run();
+	
 private:
 	friend bool isMDIChildActive(HWND hWnd);
 	friend void handleMDIClick(int nID, HWND mdiWindow);

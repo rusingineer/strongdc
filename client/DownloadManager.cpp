@@ -51,7 +51,7 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), treeValid(false), oldDownload(false), tth(qi->getTTH()), 
-	quickTick(GET_TICK()), finished(false) { 
+	quickTick(GET_TICK()), finished(false), segmentSize(1024*1024) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -89,7 +89,16 @@ Command Download::getCommand(bool zlib, bool tthf) {
 		cmd.addParam(Util::toAdcFile(getSource()));
 	}
 	cmd.addParam(Util::toString(getPos()));
-	cmd.addParam(Util::toString(getSize() - getPos()));
+
+	if(!BOOLSETTING(OLD_SEGMENTED_DWNLDING) && !isSet(FLAG_TREE_DOWNLOAD)) {
+		FileChunksInfo::Ptr chunks = FileChunksInfo::Get(getTempTarget());
+		int64_t blockSize = chunks->GetBlockEnd(getStartPos()) - getStartPos();
+		int64_t needToDownload = min((int64_t)(1024*1024),(int64_t)(getSize() - getPos()));
+		setSegmentSize(min(blockSize, needToDownload));
+		cmd.addParam(Util::toString(getSegmentSize()));
+	} else {
+		cmd.addParam(Util::toString(getSize() - getPos()));
+	}
 
 	if(zlib && getSize() != -1 && BOOLSETTING(COMPRESS_TRANSFERS)) {
 		setFlag(FLAG_ZDOWNLOAD);
@@ -398,7 +407,7 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 			return;
 		}
 
-		if(prepareFile(aSource, (bytes == -1) ? -1 : aSource->getDownload()->getPos() + bytes)) {
+		if(prepareFile(aSource, (bytes == -1) ? -1 : (BOOLSETTING(OLD_SEGMENTED_DWNLDING) ? (aSource->getDownload()->getPos() + bytes) : aSource->getDownload()->getSize()))) {
 			aSource->setDataMode();
 		}
 	}
@@ -595,12 +604,16 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	}
 	dcassert(d->getPos() != -1);
 	d->setStart(GET_TICK());
-	if(q != NULL && q->getActiveSegments().size() == 1) {
-		q->setStart(GET_TICK());
-	}
+
 	aSource->setState(UserConnection::STATE_DONE);
 
-	fire(DownloadManagerListener::Starting(), d);
+	if(!aSource->getIsRunning()) {
+		if(q != NULL && q->getActiveSegments().size() == 1) {
+			q->setStart(GET_TICK());
+		}
+		fire(DownloadManagerListener::Starting(), d);
+	}
+	aSource->setIsRunning(false);
 	
 	return true;
 }	
@@ -613,6 +626,19 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		try{
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
+
+			if(!BOOLSETTING(OLD_SEGMENTED_DWNLDING)) {
+				int64_t position = d->getPos() - d->getStartPos();
+				if((aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) && (position >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
+					aSource->setIsRunning(true);
+					aSource->setDownload(NULL);
+					removeDownload(d, false);
+					aSource->setLineMode();
+					checkDownloads(aSource);
+					return;
+				}
+			}
+
 		} catch(const BlockDLException e) {
 			dcdebug("BlockDLException.....\n");
 			d->finished = true;
@@ -953,7 +979,7 @@ noCRC:
 		if(hash != NULL) {
 			params["tth"] = d->getTTH()->toBase32();
 		}
-		LOG(Util::formatTime(SETTING(LOG_FILE_DOWNLOAD), time(NULL)), Util::formatParams(SETTING(LOG_FORMAT_POST_DOWNLOAD), params));
+		LOG(LogManager::DOWNLOAD, params);
 	}
 	
 	// Check if we need to move the file

@@ -50,7 +50,8 @@ const string SettingsManager::settingTags[] =
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
 	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
-	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", 
+	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
+	"LogFormatStatus", "LogFileWebServer", 
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -110,7 +111,7 @@ const string SettingsManager::settingTags[] =
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
-	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort",
+	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "OldSegmentedDwnlding",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -190,11 +191,15 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FORMAT_POST_UPLOAD, "%Y-%m-%d %H:%M: %[source]" + STRING(UPLOADED_TO) + "%[user], %[size] (%[chunksize]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_MAIN_CHAT, "[%Y-%m-%d %H:%M] %[message]");
 	setDefault(LOG_FORMAT_PRIVATE_CHAT, "[%Y-%m-%d %H:%M] %[message]");
+	setDefault(LOG_FORMAT_STATUS, "[%Y-%m-%d %H:%M] %[message]");
+	setDefault(LOG_FORMAT_SYSTEM, "[%Y-%m-%d %H:%M] %[message]");
 	setDefault(LOG_FILE_MAIN_CHAT, "%[hubaddr].log");
 	setDefault(LOG_FILE_STATUS, "%[hubaddr]_status.log");
 	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[user].log");
 	setDefault(LOG_FILE_UPLOAD, "Uploads.log");
 	setDefault(LOG_FILE_DOWNLOAD, "Downloads.log");
+	setDefault(LOG_FILE_SYSTEM, "system.log");
+	setDefault(LOG_FILE_WEBSERVER, "Webserver.log");
 	setDefault(GET_USER_INFO, true);
 	setDefault(URL_HANDLER, false);
 	setDefault(AUTO_AWAY, false);
@@ -396,7 +401,7 @@ SettingsManager::SettingsManager()
 	setDefault(MIN_FILE_SIZE, 0);
 	setDefault(REMOVE_SLOW_USER, false);
 	setDefault(SHOW_PM_LOG, true);
-	setDefault(PM_LOG_LINES, 10);
+	setDefault(SHOW_LAST_LINES_LOG, 10);
     setDefault(FILE_SLOTS, 15);
 	setDefault(SET_AUTO_SEGMENT, true);
 	setDefault(SET_MIN2, 20);
@@ -478,6 +483,7 @@ SettingsManager::SettingsManager()
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
+	setDefault(OLD_SEGMENTED_DWNLDING, false);
 
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);

@@ -89,25 +89,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	SettingsManager::getInstance()->addListener(this);
 
 	if(BOOLSETTING(SHOW_PM_LOG)){
-		if(user->isOnline()) {
-			sMyNick = user->getClient()->getNick().c_str();
-		} else {
-			sMyNick = SETTING(NICK).c_str();
-		}
-		
-		StringMap params;
-		params["user"] = user->getNick();
-		params["hub"] = user->getClientName();
-		params["mynick"] = user->getClientNick(); 
-		params["mycid"] = user->getClientCID().toBase32(); 
-		params["cid"] = user->getCID().toBase32(); 
-		params["hubaddr"] = user->getClientAddressPort();
-		
-//		string lastsession = LOGTAIL("PM\\" + user->getNick(), SETTING(PM_LOG_LINES));
-		string lastsession = LOGTAIL(Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params), SETTING(PM_LOG_LINES));
-		lastsession = lastsession.substr(0,lastsession.size()-2);
-		if(lastsession.length() > 0)
-			ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), Text::toT(lastsession).c_str(), WinUtil::m_ChatTextLog, _T(""));
+		readLog();
 	}
 
 	bHandled = FALSE;
@@ -418,7 +400,7 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 		params["mynick"] = user->getClientNick(); 
 		params["mycid"] = user->getClientCID().toBase32(); 
 		params["cid"] = user->getCID().toBase32(); 
-		LOG(Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params), Util::formatParams(SETTING(LOG_FORMAT_PRIVATE_CHAT), params));
+		LOG(LogManager::PM, params);
 	}
 
 	if(user->isOnline()) {
@@ -697,6 +679,43 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 		return 0;
 	}
 	return 0;
+}
+
+void PrivateFrame::readLog() {
+	StringMap params;	
+	params["user"] = user->getNick();	
+	params["hub"] = user->getClientName();
+	params["mynick"] = user->getClientNick();	
+	params["mycid"] = user->getClientCID().toBase32();	
+	params["cid"] = user->getCID().toBase32();	
+	params["hubaddr"] = user->getClientAddressPort();	
+	string path = SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params);
+		
+	try {
+		if (SETTING(SHOW_LAST_LINES_LOG) > 0) {
+			File f(path, File::READ, File::OPEN);
+		
+			int64_t size = f.getSize();
+
+			if(size > 32*1024) {
+				f.setPos(size - 32*1024);
+			}
+
+			StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
+
+			int linesCount = lines.size();
+
+			int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG) + 1) : 0;
+
+			for(; i < (linesCount - 1); ++i){
+				//addLine(_T("- ") + Text::acpToWide(lines[i]));
+				ctrlClient.AppendText(_T("- "), _T(""), (Text::acpToWide(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
+			}
+
+			f.close();
+		}
+	} catch(FileException & /*e*/){
+	}
 }
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	

@@ -324,7 +324,7 @@ static const string sTimeStamp = "TimeStamp";
 static const string sRoot = "Root";
 
 void HashLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
-	if(name == sFile) {
+	if(name == sFile && !simple) {
 		file = getAttrib(attribs, sName, 0);
 		size = Util::toInt64(getAttrib(attribs, sSize, 1));
 		timeStamp = Util::toUInt32(getAttrib(attribs, sTimeStamp, 2));

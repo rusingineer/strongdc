@@ -204,6 +204,7 @@ string ResourceManager::strings[] = {
 "Favorite &Users\tCtrl+U", 
 "Follow last redirec&t\tCtrl+T", 
 "Indexing progress", 
+"Restore All", 
 "Network Statistics", 
 "&Notepad\tCtrl+N", 
 "Open file list...\tCtrl+L", 
@@ -867,6 +868,7 @@ string ResourceManager::strings[] = {
 "Default", 
 "Use vertical view by default", 
 "Ignore TTH searches", 
+"Use old method for segmented downloading", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1071,6 +1073,7 @@ string ResourceManager::names[] = {
 "MenuFavoriteUsers", 
 "MenuFollowRedirect", 
 "MenuHashProgress", 
+"MenuRestoreAll", 
 "MenuNetworkStatistics", 
 "MenuNotepad", 
 "MenuOpenFileList", 
@@ -1734,4 +1737,5 @@ string ResourceManager::names[] = {
 "Default", 
 "SettingsUseVerticalView", 
 "IgnoreTthSearches", 
+"UseOldSegment", 
 };

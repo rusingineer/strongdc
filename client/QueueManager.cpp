@@ -894,7 +894,6 @@ again:
 		return NULL;
 
 	int64_t freeBlock = 0;
-	DownloadManager::getInstance()->fire(DownloadManagerListener::SetFileInfo(), q, aUser);
 
 	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)) {
 		message = STRING(ALL_FILE_SLOTS_TAKEN);		
