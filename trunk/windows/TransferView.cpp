@@ -750,6 +750,10 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ItemInfo* i = (ItemInfo*)lParam;
 		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
 		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
+		ItemInfo* i = (ItemInfo*)lParam;
+		dcassert(i != NULL);
+		ctrlTransfers.deleteItem(i, false);
 	}
 
 	return 0;
@@ -784,7 +788,8 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 
 			dcdebug("3. cyklus\n");
-			ctrlTransfers.deleteItem(i, false);	
+			//ctrlTransfers.deleteItem(i, false);	
+			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 			dcdebug("4. cyklus\n");
 			InsertItem(i);
 
