@@ -30,12 +30,17 @@ class CriticalSection
 #ifdef _WIN32
 public:
 	void enter() throw() {
-		EnterCriticalSection(&cs);
-		dcdrun(counter++);	
+		if(cs.RecursionCount < 2) {
+			entered = true;
+			EnterCriticalSection(&cs);
+			dcdrun(counter++);	
+		} else entered = false;
 	}
 	void leave() throw() {
-		dcassert(--counter >= 0);
-		LeaveCriticalSection(&cs);
+		if(entered) {
+			dcassert(--counter >= 0);
+			LeaveCriticalSection(&cs);
+		}
 	}
 	CriticalSection() throw() {
 		dcdrun(counter = 0;);
@@ -45,9 +50,11 @@ public:
 		dcassert(counter==0);
 		DeleteCriticalSection(&cs);
 	}
-	CRITICAL_SECTION cs;
+	
 private:
+	CRITICAL_SECTION cs;
 	dcdrun(long counter;);
+	bool entered;
 
 #else
 public:
@@ -111,12 +118,11 @@ private:
 template<class T>
 class LockBase {
 public:
-	LockBase(T& aCs) throw() : cs(aCs), entered(true)  { if(cs.cs.RecursionCount < 2) cs.enter(); else entered = false; };
-	~LockBase() throw() { if(entered) cs.leave(); };
+	LockBase(T& aCs) throw() : cs(aCs) { cs.enter(); };
+	~LockBase() throw() { cs.leave(); };
 private:
 	LockBase& operator=(const LockBase&);
 	T& cs;
-	bool entered;
 };
 typedef LockBase<CriticalSection> Lock;
 typedef LockBase<FastCriticalSection> FastLock;

@@ -979,10 +979,19 @@ again:
 		}
 
 next:
-		TigerTree tree;
-		if(	!((q->getSize() != -1 && q->getTTH()) && !(HashManager::getInstance()->getTree(*q->getTTH(), tree)) &&
-			(supportsTrees && !(*(q->getSource(aUser)))->isSet(QueueItem::Source::FLAG_NO_TREE) && q->getSize() > HashManager::MIN_BLOCK_SIZE))) {
+		
+		bool useFileChunksInfo = true;
 
+		if(q->getSize() != -1 && q->getTTH()) {
+			TigerTree tree;
+			if(!HashManager::getInstance()->getTree(*q->getTTH(), tree) &&
+				supportsTrees && !(*(q->getSource(aUser)))->isSet(QueueItem::Source::FLAG_NO_TREE) && q->getSize() > HashManager::MIN_BLOCK_SIZE) {
+					useFileChunksInfo = false;
+			}
+		}
+
+
+		if(useFileChunksInfo) {
 			chunksInfo = FileChunksInfo::Get(q->getTempTarget());
 
 			dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
@@ -1260,7 +1269,7 @@ void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int rea
 				x = q->getTarget();
 			userQueue.setWaiting(q, aUser);
 			userQueue.remove(q, aUser);
-		} else if(q->getStatus() == QueueItem::STATUS_WAITING) {
+		} else /*if(q->getStatus() == QueueItem::STATUS_WAITING)*/ {
 			userQueue.remove(q, aUser);
 		}
 
