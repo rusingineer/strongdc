@@ -400,17 +400,17 @@ void SearchFrame::onEnter() {
 		if(si->subItems.size() > 0) {
 			while(q<si->subItems.size()) {
 				SearchInfo* j = si->subItems[q];
-				if((ctrlResults.findItem(j) == -1) && (j->needDelete))
-					delete j;
+				//int k = ctrlResults.findItem(j);
+				delete j;
 				q++;
 			}
 		}
-		if((ctrlResults.findItem(si) == -1) && (si->needDelete)) delete si;
+		delete si;
 	}
 
 	mainItems.clear();
 	dcassert(mainItems.size() == 0);
-	ctrlResults.DeleteAll();
+	ctrlResults.DeleteAllItems();
 
 	{
 		Lock l(cs);
@@ -686,22 +686,22 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-       for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	       SearchInfo* si =  mainItems[i];//ctrlResults.getItemData(i);
-		    int q = 0;
+
+		for(int i = 0, j = mainItems.size(); i < j; ++i) {
+			SearchInfo* si =  mainItems[i];
+			int q = 0;
 			if(si->subItems.size() > 0) {
 				while(q<si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
-					if((ctrlResults.findItem(j) == -1) && (j->needDelete))
-						delete j;
+					delete j;
 					q++;
 				}
 			}
-			if((ctrlResults.findItem(si) == -1) && (si->needDelete)) delete si;
+			delete si;
 		}
 
  		mainItems.clear();
-		ctrlResults.DeleteAll();
+		ctrlResults.DeleteAllItems();
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -999,8 +999,10 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 						if(!si2->collapsed && m != -1) {					
 							insertItem(m+1, si);
 							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-						} else ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-						ctrlResults.resort();
+						} else {
+							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+							ctrlResults.resort(); 
+						}
 						return 0;
                     }
 				}				
@@ -1265,7 +1267,8 @@ void SearchFrame::Collapse(SearchInfo* i, int a) {
 	int q = 0;
 	while(q<i->subItems.size()) {
 		SearchInfo* j = i->subItems[q];
-		ctrlResults.deleteItem(j, false);
+		int k = ctrlResults.findItem(j);
+		ctrlResults.DeleteItem(k);
 		q++;
 	}
 
@@ -1297,24 +1300,27 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 
 	case CDDS_ITEMPREPAINT:
 		{
-			SearchInfo* ii = ctrlResults.getStoredItemAt(cd->nmcd.lItemlParam); 
-			targets.clear();
-			COLORREF barva = WinUtil::textColor;
-			if(ii->sr->getTTH()) {
-				QueueManager::getInstance()->getTargetsByTTH(targets,ii->sr->getTTH());
-				if(ii->sr->getType() == SearchResult::TYPE_FILE && targets.size()>0){		
-					barva = SETTING(SEARCH_ALTERNATE_COLOUR);				
+			SearchInfo* ii = (SearchInfo*)cd->nmcd.lItemlParam;
+			SearchResult *sr = ii->sr;
+			if(sr!=NULL){
+				targets.clear();
+				COLORREF barva = WinUtil::textColor;
+				if(sr->getTTH()) {
+					QueueManager::getInstance()->getTargetsByTTH(targets,sr->getTTH());
+					if(sr->getType() == SearchResult::TYPE_FILE && targets.size()>0){		
+						barva = SETTING(SEARCH_ALTERNATE_COLOUR);				
+					}
 				}
-			}
 
-			if(!ii->mainitem) {
-				cd->clrText = OperaColors::blendColors(WinUtil::bgColor, barva, 0.4);
-				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-			}
-			
-			if(barva != WinUtil::textColor) {
-				cd->clrText = barva;
-				return CDRF_NEWFONT;
+				if(!ii->mainitem) {
+					cd->clrText = OperaColors::blendColors(WinUtil::bgColor, barva, 0.4);
+					return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+				}
+				
+				if(barva != WinUtil::textColor) {
+					cd->clrText = barva;
+					return CDRF_NEWFONT;
+				}
 			}
 		}
 		return CDRF_NOTIFYSUBITEMDRAW;
@@ -1327,9 +1333,12 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 
 void SearchFrame::insertItem(int pos, SearchInfo* item) {
 	PME reg(filter,"i");
+	bool match;
 	int sel = ctrlFilterSel.GetCurSel();
-	if(reg.match(item->getText(sel))) {
-		item->needDelete = false;
+	if(!reg.IsValid()) {
+		match = true;
+	} else match = reg.match(item->getText(sel));
+	if(match) {
 		int image = 0;
 		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(item->sr->getFile()) : WinUtil::getDirIconIndex();
@@ -1353,9 +1362,19 @@ void SearchFrame::insertItem(int pos, SearchInfo* item) {
 			if(item->sr->getType() == SearchResult::TYPE_FILE)
 				image+=4;
 		}
-		int k = ctrlResults.insertItem(pos, item, image);
-		if(item->subItems.size() > 0)
-			ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);						
+
+		int k = -1;
+		if(pos == 0) 
+			k = ctrlResults.insertItem(item, image);
+		else
+			k = ctrlResults.insertItem(pos, item, image);
+
+		if(item->subItems.size() > 0) {
+			if(item->collapsed)
+				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+			else
+				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
+ 	    } else ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
 	}
 	ctrlResults.resort();
 }
@@ -1382,7 +1401,7 @@ void SearchFrame::updateSearchList() {
 	}
 
 	while(ctrlResults.GetItemCount() > 0) {
-		ctrlResults.deleteItem(0, false);
+		ctrlResults.DeleteItem(0);
 	}
 
 	for(int i = 0, j = mainItems.size(); i < j; ++i) {

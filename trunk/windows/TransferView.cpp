@@ -393,7 +393,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				CRect rc2 = rc;
 				rc2.left += 6;
 				rc2.right -= 2; // and without messing with the border of the cell				
-				
+
 				if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 					rc2.left += 9;
 				
@@ -488,9 +488,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				rc2.right = rc.right + 1;
 				::SetTextColor(dc, OperaColors::TextFromBackground(clr));
                 ::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
-
-			
-				
+		
 				if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 					DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 
@@ -1174,7 +1172,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->speed = d->getRunningAverage();
 			i->stazenoCelkem = total;
 			QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
-			if(qi) i->qi = qi;
+			if(qi) i->qi = qi;			
 
 			int NS = 0;
 			int64_t tmp = 0;
@@ -1225,7 +1223,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			if(d->getRunningAverage() <= 0) {
 				d->getUserConnection()->reconnect();
 			}
-
 		}
 	}
 	delete[] buf;

@@ -519,7 +519,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 			return false;
 		}
 	q->addActiveSegment(aSource->getUser());
-	dcdebug(("Active segments : "+Util::toString((int)q->getActiveSegments().size())).c_str());
 	}
 
 	if(newSize != -1) {
@@ -594,7 +593,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
-	if((BOOLSETTING(ENABLE403FEATURES)) && (d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
+	if((d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
 			// We make a single node tree...
 			d->getTigerTree().setFileSize(d->getSize());
@@ -605,8 +604,14 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 			d->setTreeValid(true);
 		}
 		if(d->getTreeValid()) {
-		d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile()));
+			d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile()));
+		}
 	}
+
+	if(d->getTreeValid()) {
+		if(q->getTiger().getLeaves().size() == 0)  {
+			q->setTiger(d->getTigerTree());
+		}
 	}
 
 	if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
@@ -637,8 +642,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 					log += d->isSet(Download::FLAG_TREE_TRIED) ? "TT, " : "";
 					log += d->isSet(Download::FLAG_ZDOWNLOAD) ? "C, " : "";
 					log += d->isSet(Download::FLAG_UTF8) ? "U8, " : "";
-//					log += d->treeValid ? "TTHL, " : "";
-//					log += getTTH() ? "TTH leaf: "+getTigerTree().getLeaves()[1] : "TTH: None";
 				LogManager::getInstance()->log(d->getTargetFileName()+".segment",log);
 			}
 
@@ -647,6 +650,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			d->getFile()->flush();
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));			
 			d->finished = true;
+			aSource->getUser()->setDownloadSpeed(d->getRunningAverage());
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource, false, true);
@@ -771,8 +775,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	//dcassert(d->getPos() == d->getSize());
 	dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
-	//QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
-
 	// Check if we have some crc:s...
 	if(BOOLSETTING(SFV_CHECK)) {
 		SFVReader sfv(d->getTarget());
@@ -808,7 +810,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				fire(DownloadManagerListener::Failed(), d, STRING(SFV_INCONSISTENCY));
 				
 				string target = d->getTarget();
-				Download* old = d->getOldDownload();
 
 				aSource->setDownload(NULL);
 				delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
@@ -821,7 +822,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				removeDownload(d, true);				
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
 
-				aSource->setDownload(old);
 				checkDownloads(aSource, true);
 				return;
 			} 
@@ -835,28 +835,49 @@ noCRC:
 	// Check hash
 	if(d->getTTH() && BOOLSETTING(CHECK_TTH) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_MP3_INFO)) {
 		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));
-		TTHValue* hash1 = new TTHValue(HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget()).getRoot());
-		TTHValue* hash2 = d->getTTH();
-
+		TigerTree FileTigerTree = HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget());
+		TTHValue* FileTigerRoot = new TTHValue(FileTigerTree.getRoot());
+		
 		bool hashMatch = true;
 
-		if((hash1 != NULL) && (hash2 != NULL)) { 
-			if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
+		if(FileTigerRoot != NULL) { 
+			if (*FileTigerRoot == *d->getTTH()) hashMatch = true; else hashMatch = false;
 
 			if(!hashMatch) {		
 				if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 					PlaySound(SETTING(SOUND_TTH).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	
-				fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
-	
+				QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
+
+				vector<int64_t> v;
+				bool onlyLeaf = false;
+				int64_t redownload = 0;
+
+				if(q->getTiger().getLeaves().size() > 0) {
+					for(int i = 0; i < FileTigerTree.getLeaves().size(); ++i) {
+						if(!(q->getTiger().getLeaves()[i] == FileTigerTree.getLeaves()[i])) {							
+							onlyLeaf = true;
+							int64_t StartPos = FileTigerTree.getBlockSize() * i;
+							int64_t EndPos = StartPos + FileTigerTree.getBlockSize();
+							v.push_back(StartPos);
+							v.push_back(EndPos);
+							redownload += FileTigerTree.getBlockSize();
+						}
+					}
+				}
+
 				string target = d->getTarget();
-				Download* old = d->getOldDownload();			
+//				Download* old = d->getOldDownload();			
 
 				aSource->setDownload(NULL);
 
 				for(int i = 10; i>0; --i) {
-					char buf[64];
-					sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
+					char buf[128];
+					if(onlyLeaf) {
+						sprintf(buf, CSTRING(LEAF_CORRUPTED), Util::formatBytes(redownload).c_str(), i);
+					} else {
+						sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
+					}
 					fire(DownloadManagerListener::Failed(), d, buf);
 					Thread::sleep(1000);
 				}
@@ -864,21 +885,22 @@ noCRC:
 				delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
 
 				fire(DownloadManagerListener::Failed(), d, STRING(CONNECTING));
-				vector<int64_t> v;
-				v.push_back(0);
-				v.push_back(d->getSize());
-				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+				
+				if(!onlyLeaf) {
+					v.push_back(0);
+					v.push_back(d->getSize());
+				}
 
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);				
 				removeDownload(d, true);
-				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 
-				aSource->setDownload(old);
+				//aSource->setDownload(old);
 				checkDownloads(aSource, true);
 				return;
 			}
 		d->setFlag(Download::FLAG_TTH_OK);
 		}
-	delete hash1;
+	delete FileTigerRoot;
 	}
 
 	if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !d->isSet(Download::FLAG_USER_LIST))) {

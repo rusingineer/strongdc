@@ -296,6 +296,9 @@
 				RelativePath=".\res\transfer_segmented.ico">
 			</File>
 			<File
+				RelativePath=".\res\transfer_tree.ico">
+			</File>
+			<File
 				RelativePath=".\res\Update.ico">
 			</File>
 			<File

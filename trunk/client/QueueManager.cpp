@@ -891,8 +891,6 @@ again:
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
-
-
 	}
 
 	userQueue.setRunning(q, aUser);

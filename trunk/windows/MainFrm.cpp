@@ -745,7 +745,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 			updateTray(false);
 		}
 		maximized = IsZoomed() > 0;
-		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
+		//SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 	} else if( (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) ) {
 		if(BOOLSETTING(AUTO_AWAY)) {
 			if(awaybyminimize == true) {
@@ -757,7 +757,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 		}
 		setNormalTrayIcon();
 		WinUtil::isMinimized = false;
-		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+		//SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 	}
 
 	bHandled = FALSE;

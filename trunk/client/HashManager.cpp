@@ -516,8 +516,6 @@ int HashManager::Hasher::run() {
 		}
 		if (w.size() == 0) {
 			procenta = 0;
-			ShareManager::getInstance()->setDirty();
-			ShareManager::getInstance()->refresh(true);
 			LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);
 		}
 		if(buf != NULL && (last || stop)) {

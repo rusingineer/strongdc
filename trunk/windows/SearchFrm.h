@@ -166,17 +166,32 @@ public:
 				int q = 0;
 				while(q<s->subItems.size()) {
 					SearchInfo* j = s->subItems[q];
-					if((ctrlResults.findItem(j) == -1) && (j->needDelete))
-						delete j;
+					int k = ctrlResults.findItem(j);
+					delete j;
+					ctrlResults.DeleteItem(k);
 					q++;
 				}
+				s->subItems.clear();
 			}
 			
-			if(s->main != NULL)
-				s->main->subItems.erase(find(s->main->subItems.begin(), s->main->subItems.end(), s));
-			ctrlResults.deleteItem(i);
-			mainItems.erase(find(mainItems.begin(), mainItems.end(), s));
+			if(s->main != NULL) {
+				SearchInfo::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
+				if(n != s->main->subItems.end()) s->main->subItems.erase(n);
+				if(s->main->subItems.size() == 0) {
+					s->main->setHits("");
+					ctrlResults.SetItemState(ctrlResults.findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				} else {
+					s->main->setHits(Util::toString((int)s->main->subItems.size() + 1)+" "+STRING(HUB_USERS));
+				}
+			}
+
+			SearchInfo::List::iterator k = find(mainItems.begin(), mainItems.end(), s);
+			if(k != mainItems.end()) mainItems.erase(k);
+			int l = ctrlResults.findItem(s);
+			delete s;
+			ctrlResults.DeleteItem(l);
 		}
+		ctrlResults.resort();
 	}
 	
 	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -272,7 +287,7 @@ private:
 	bool searchInProgress;
 	class SearchInfo;
 public:
-	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
+	TypedListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 
 private:
 	enum {
@@ -310,7 +325,7 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL), hits(""), needDelete(true) { 
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL) { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
@@ -319,7 +334,6 @@ private:
 
 		bool collapsed;
 		bool mainitem;
-		bool needDelete;
 		SearchInfo* main;
 
 		void getList();
@@ -389,7 +403,7 @@ private:
 					else
 						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
 				case COLUMN_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_HITS: return compare(Util::toInt(a->getHits()) , Util::toInt(b->getHits()));
+				case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
 				case COLUMN_PATH: return Util::stricmp(a->path, b->path);
 				case COLUMN_SLOTS: 
 					if(a->sr->getFreeSlots() == b->sr->getFreeSlots())
@@ -524,7 +538,7 @@ private:
 
 	CImageList images;
 	CImageList states;
-	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS> ctrlResults;
+	TypedListViewCtrl<SearchInfo, IDC_RESULTS> ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
 	OMenu grantMenu;
