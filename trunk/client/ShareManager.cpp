@@ -116,10 +116,10 @@ ShareManager::Directory::~Directory() {
 
 string ShareManager::translateFileName(const string& aFile) throw(ShareException) {
 	RLock<> l(cs);
-	if(aFile == "/MyList.DcLst") {
+	if(aFile == "MyList.DcLst") {
 		generateNmdcList();
 		return getListFile();
-	} else if(aFile == "/files.xml.bz2") {
+	} else if(aFile == "files.xml.bz2") {
 		generateXmlList();
 		return getBZXmlFile();
 	} else {
@@ -712,7 +712,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 				int64_t size = i->getSize();
 				string fileName = aName + name;
 				try {
-					HashManager::getInstance()->checkTTH(fileName, size, i->getLastWriteTime());
+					if(HashManager::getInstance()->checkTTH(fileName, size, i->getLastWriteTime()))
 					lastFileIter = dir->files.insert(lastFileIter, Directory::File(name, size, dir, HashManager::getInstance()->getTTH(fileName, size)));
 				} catch(const HashException&) {
 				}			

@@ -107,6 +107,7 @@ public:
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(Download*, oldDownload, OldDownload);
 	GETSET(TTHValue*, tth, TTH);
+	GETSET(int64_t, segmentSize, SegmentSize);
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;
@@ -141,7 +142,6 @@ public:
 	typedef X<1> Failed;
 	typedef X<2> Starting;
 	typedef X<3> Tick;
-	typedef X<4> SetFileInfo;
 
 	/** 
 	 * This is the first message sent before a download starts. 
@@ -168,7 +168,6 @@ public:
 	 * display an error string.
 	 */
 	virtual void on(Failed, Download*, const string&) throw() { };
-	virtual void on(SetFileInfo, QueueItem*, User::Ptr) throw() { };
 };
 
 

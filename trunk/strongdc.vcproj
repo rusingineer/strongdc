@@ -343,9 +343,6 @@
 				RelativePath=".\windows\ADLSProperties.cpp">
 			</File>
 			<File
-				RelativePath=".\windows\Advanced2Page.cpp">
-			</File>
-			<File
 				RelativePath=".\windows\AdvancedPage.cpp">
 			</File>
 			<File
@@ -440,6 +437,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\LineDlg.cpp">
+			</File>
+			<File
+				RelativePath=".\windows\LogPage.cpp">
 			</File>
 			<File
 				RelativePath=".\windows\MagnetDlg.cpp">
@@ -573,9 +573,6 @@
 			</File>
 			<File
 				RelativePath=".\windows\ADLSProperties.h">
-			</File>
-			<File
-				RelativePath=".\windows\Advanced2Page.h">
 			</File>
 			<File
 				RelativePath=".\windows\AdvancedPage.h">
@@ -741,6 +738,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\ListViewArrows.h">
+			</File>
+			<File
+				RelativePath=".\windows\LogPage.h">
 			</File>
 			<File
 				RelativePath=".\windows\MagnetDlg.h">

@@ -23,11 +23,11 @@
 #include "LogManager.h"
 #include "ClientManager.h"
 #include "UploadManager.h"
-
+#include "StringTokenizer.h"
 
 WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
-static const string WEBSERVER_AREA = "WebServer";
+//static const string WEBSERVER_AREA = "WebServer";
 
 WebServerManager::WebServerManager(void) : started(false), page404(NULL) {
 	SettingsManager::getInstance()->addListener(this);
@@ -235,13 +235,46 @@ string WebServerManager::getPage(string file){
 string WebServerManager::getLogs(){
 	string ret = "";
 	ret = "	<h1>Webserver Logs</h1>";
-	ret += LOGTAIL(WEBSERVER_AREA, 10);
+	//ret += LOGTAIL(WEBSERVER_AREA, 10);
 
-	string::size_type i = 0;
+	StringMap params;	
+/*	params["user"] = user->getNick();	
+	params["hub"] = user->getClientName();
+	params["mynick"] = user->getClientNick();	
+	params["mycid"] = user->getClientCID().toBase32();	
+	params["cid"] = user->getCID().toBase32();	
+	params["hubaddr"] = user->getClientAddressPort();	*/
+
+	string path = SETTING(LOG_DIRECTORY) + SETTING(LOG_FILE_WEBSERVER);
+		
+	try {
+		File f(path, File::READ, File::OPEN);
+		
+		int64_t size = f.getSize();
+
+		if(size > 32*1024) {
+			f.setPos(size - 32*1024);
+		}
+
+		StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
+
+		int linesCount = lines.size();
+
+		int i = linesCount > 11 ? linesCount - 11 : 0;
+
+		for(; i < (linesCount - 1); ++i){
+			ret += "<br>" + lines[i];
+		}
+
+		f.close();
+	} catch(FileException & /*e*/){
+	}
+
+/*	string::size_type i = 0;
 	while( (i = ret.find('\n', i)) != string::npos) {
 		ret.replace(i, 1, "<br>");
 		i++;
-	}
+	}*/
 
 	return ret;
 }
@@ -249,14 +282,31 @@ string WebServerManager::getLogs(){
 string WebServerManager::getSysLogs(){
 	string ret = "";
 	ret += "<h1>System Logs</h1><br>";
-	ret += LOGTAIL("system", 50);
 
-	string::size_type i = 0;
-	while( (i = ret.find('\n', i)) != string::npos) {
-		ret.replace(i, 1, "<br>");
-		i++;
+	string path = SETTING(LOG_DIRECTORY) + SETTING(LOG_FILE_SYSTEM);
+		
+	try {
+		File f(path, File::READ, File::OPEN);
+		
+		int64_t size = f.getSize();
+
+		if(size > 32*1024) {
+			f.setPos(size - 32*1024);
+		}
+
+		StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
+
+		int linesCount = lines.size();
+
+		int i = linesCount > 11 ? linesCount - 11 : 0;
+
+		for(; i < (linesCount - 1); ++i){
+			ret += "<br>" + lines[i];
+		}
+
+		f.close();
+	} catch(FileException & /*e*/){
 	}
-
 	return ret;
 }
 
@@ -382,7 +432,7 @@ int WebServerSocket::run(){
 			StringMap params;
 			params["file"] = header.substr(start+4,end);
 			params["ip"] = IP;
-			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+			LOG(LogManager::WEBSERVER, params);
 		}
 		header = header.substr(start+4,end);
 

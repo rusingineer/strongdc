@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ADVANCED2PAGE_H
-#define ADVANCED2PAGE_H
+#ifndef LOGPAGE_H
+#define LOGPAGE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -25,34 +25,28 @@
 
 #include <atlcrack.h>
 #include "PropPage.h"
+#include "ExListViewCtrl.h"
 
-class Advanced2Page : public CPropertyPage<IDD_ADVANCED2PAGE>, public PropPage
+class LogPage : public CPropertyPage<IDD_LOGPAGE>, public PropPage
 {
 public:
-	Advanced2Page(SettingsManager *s) : PropPage(s) {
+	LogPage(SettingsManager *s) : PropPage(s) { 
 		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_LOGS)).c_str());
 		SetTitle(title);
 	};
 
-	virtual ~Advanced2Page() { free(title); };
+	virtual ~LogPage() { free(title); };
 
-	BEGIN_MSG_MAP_EX(Advanced2Page)
+	BEGIN_MSG_MAP_EX(LogPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_BROWSE_LOG, onClickedBrowseDir)
-		COMMAND_ID_HANDLER(IDC_LOG_MAIN_CHAT, onUpdateEdits)
-		COMMAND_ID_HANDLER(IDC_LOG_PRIVATE_CHAT, onUpdateEdits)
-		COMMAND_ID_HANDLER(IDC_LOG_DOWNLOADS, onUpdateEdits)
-		COMMAND_ID_HANDLER(IDC_LOG_UPLOADS, onUpdateEdits)
+		NOTIFY_HANDLER(IDC_LOG_OPTIONS, LVN_ITEMCHANGED, onItemChanged)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/); 
-	LRESULT onUpdateEdits(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		updateEdits();
-		return 0;
-	}
-	
-	void updateEdits();
+	LRESULT onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	virtual void write();
@@ -60,12 +54,23 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
+	static ListItem listItems[];
 	TCHAR* title;
+
+	ExListViewCtrl logOptions;
+	
+	int oldSelection;
+	
+	//store all log options here so we can discard them
+	//if the user cancels the dialog.
+	//.first is filename and .second is format
+	TStringPairList options;
 };
 
-#endif //ADVANCED2PAGE_H
+#endif //LOGPAGE_H
 
 /**
  * @file
  * $Id$
  */
+

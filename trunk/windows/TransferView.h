@@ -218,7 +218,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
-			pocetUseru(1), celkovaRychlost(0),
+			pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
 			compressRatio(1.0), finished(false), tth(NULL), flagImage(0) { update(); };
 
 		Types type;
@@ -242,6 +242,7 @@ private:
 		bool mainItem;
 		int pocetUseru;
 		double compressRatio;
+		tstring oldTarget;
 		tstring downloadTarget;
 		bool finished;
 		TTHValue* tth;		
@@ -363,7 +364,6 @@ private:
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
 	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
-	virtual void on(DownloadManagerListener::SetFileInfo, QueueItem* q, User::Ptr u) throw();
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();

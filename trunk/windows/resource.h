@@ -65,6 +65,7 @@
 #define IDD_FAVORITEHUB                 223
 #define IDR_USERS                       224
 #define IDD_ADVANCED2PAGE               224
+#define IDD_LOGPAGE                     224
 #define IDD_USER_COMMAND                230
 #define IDR_FINISHED_DL                 231
 #define IDR_FINISHED_UL                 232
@@ -353,6 +354,7 @@
 #define IDC_SETTINGS_HUB                1205
 #define IDC_SETTINGS_TO                 1206
 #define IDC_RESULT                      1207
+#define IDC_SETTINGS_FORMAT             1207
 #define IDC_PREVIEW_BROWSE              1208
 #define IDC_REFRESH_FILE_LIST           1210
 #define IDC_SEARCH_BY_TTH               1211
@@ -545,17 +547,22 @@
 #define IDC_MAIN_CHAT_FILE              1272
 #define IDC_UP_COMBO                    1273
 #define IDC_SETTINGS_FILE_NAME1         1273
+#define IDC_LOG_FORMAT                  1273
 #define IDC_DOWN_COMBO                  1274
 #define IDC_SETTINGS_FILE_NAME2         1274
+#define IDC_LOG_FILE                    1274
 #define IDC_SLASH                       1275
 #define IDC_SETTINGS_FILE_NAME3         1275
+#define IDC_LOG_OPTIONS                 1275
 #define IDC_BLOCK_COMBO                 1276
 #define IDC_SETTINGS_FILE_NAME4         1276
+#define IDC_SETTINGS_FILE_NAME          1276
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_SETTINGS_FILELIST_MENU      1278
-#define IDC_MINUTES                     1279
+#define IDC_REMOVE_SOURCE_ALL           1279
 #define IDC_KBPS                        1280
+#define IDC_MINUTES                     1281
 #define IDC_PLAY                        1282
 #define IDC_POPUPLIST                   1283
 #define IDC_COMBO1                      1284
@@ -822,6 +829,7 @@
 #define IDC_REPORT                      32790
 #define ID_ACCELERATOR32791             32791
 #define ID_WINDOW_MINIMIZE_ALL          57654
+#define ID_WINDOW_RESTORE_ALL           57655
 #define IDC_CHATCOLORS                  65535
 
 // Next default values for new objects

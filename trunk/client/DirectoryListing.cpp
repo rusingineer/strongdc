@@ -45,6 +45,8 @@ void DirectoryListing::loadFile(const string& name, bool doAdl) {
 	string ext = Util::getFileExt(name);
 	if(Util::stricmp(ext, ".DcLst") == 0) {
 		size_t len = (size_t)::File::getSize(name);
+		if(len == -1)
+			return;
 		AutoArray<u_int8_t> buf(len);
 		::File(name, ::File::READ, ::File::OPEN).read(buf, len);
 		CryptoManager::getInstance()->decodeHuffman(buf, txt, len);
