@@ -109,7 +109,7 @@ int SearchManager::run() {
 		string remoteAddr;
 		try {
 			while( (len = socket->read((u_int8_t*)buf, BUFSIZE, remoteAddr)) != 0) {
-				onData(buf, len, remoteAddr);
+				onData(buf, len, remoteAddr, true);
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());
@@ -132,13 +132,17 @@ int SearchManager::run() {
 	return 0;
 }
 
-void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address) {
+void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address, bool withSR) {
 	string x((char*)buf, aLen);
-	if(x.find("$SR") != string::npos) {
+//	if(x.find("$SR") != string::npos) {
 		string::size_type i, j;
 		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
 		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
+	if(withSR) // simply recognize if is with $SR (active from UDP) or without (pasive from client)
 		i = 4;
+	else
+		i = 0;
+
 		if( (j = safestring::SafeFind(x,' ', i)) == string::npos) {
 			return;
 		}
@@ -210,7 +214,6 @@ void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address)
 			file, hubName, hubIpPort, address);
 		fire(SearchManagerListener::SEARCH_RESULT, sr);
 		sr->decRef();
-	}
 }
 
 string SearchManager::clean(const string& aSearchString) {

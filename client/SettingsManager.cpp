@@ -89,8 +89,8 @@ const string SettingsManager::settingTags[] =
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed", "FloodCache", "AutoSearchExact",
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
-	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "SendUnknownCommands", "Disconnect",
-	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry",
+	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
+	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -101,7 +101,6 @@ const string SettingsManager::connectionSpeeds[] = { "Modem", "ISDN",
 "Satellite", "Wireless", "Cable", "DSL", "LAN(T1)", "LAN(T3)" };
 
 const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC++" };
-
 
 SettingsManager::SettingsManager()
 {
@@ -361,7 +360,8 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_SOURCES, 40);
 	setDefault(CLIENT_EMULATION, CLIENT_STRONGDC);
 	setDefault(USE_EMOTICONS, true);
-
+	setDefault(MAX_EMOTICONS, 256);
+	setDefault(CZCHARS_DISABLE, true);
 	setDefault(MAGNET_URI_HANDLER, true);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);

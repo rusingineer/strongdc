@@ -149,9 +149,9 @@ private:
 	static bool bCacheForbidden;
 };
 
-class Clipboard {
+/*class Clipboard {
 public:
 	static bool setText(const string& s);
-};
+};*/
 
 #endif // __CZDCLIB_H

@@ -662,6 +662,8 @@ enum Strings { // @DontAdd
 	SETTINGS_ONLY_TTH,
 	TTH_INCONSISTENCY,
 	CHECKING_TTH,
+	SETCZDC_MAX_EMOTICONS, // "Max Emoticons in one chat message"
+	SETCZDC_CZCHARS_DISABLE, // "Remove diacritic marks from Czech chars"
 	SETCZDC_MAGNET_URI_HANDLER, // "Install Magnet URI handler on startup"
 	COPY_MAGNET_LINK, // "Copy magnet link to clipboard"
 	SECONDS,

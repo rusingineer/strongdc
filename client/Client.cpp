@@ -37,11 +37,12 @@ Client::Client() : supportFlags(0), userInfo(true),
 	registered(false), firstHello(true), state(STATE_CONNECT), 
 	socket(BufferedSocket::getSocket('|')), lastActivity(GET_TICK()), 
 	countType(COUNT_UNCOUNTED), reconnect(true), lastUpdate(0)
-
 {
 	TimerManager::getInstance()->addListener(this);
 	socket->addListener(this);
-
+	dscrptn = (char *) calloc(96, sizeof(char));
+	dscrptn[0] = NULL;
+	dscrptnlen = 95;
 };
 
 Client::~Client() throw() {
@@ -54,6 +55,7 @@ Client::~Client() throw() {
 
 		BufferedSocket::putSocket(socket);
 		socket = NULL;
+		delete[] dscrptn;
 };
 
 void Client::updateCounts(bool aRemove) {
@@ -130,20 +132,13 @@ void Client::clearUsers() {
 	users.clear();
 }
 
-void Client::onLine(const string& aLine) throw() {
+void Client::onLine(const char *aLine) throw() {
 	lastActivity = GET_TICK();
-
-	char *temp;
-//	logovani vsech prichozich dat... posila se do chatu :-)
-//	fire(ClientListener::MESSAGE, this, aLine);
-
-	if(aLine.length() == 0)
-		return;
 	
 	if(aLine[0] != '$') {
 		// Check if we're being banned...
 		if(state != STATE_CONNECTED) {
-			if(Util::findSubString(aLine, "banned") != string::npos) {
+			if(strstr(aLine, "banned") != 0) {
 				reconnect = false;
 			}
 		}
@@ -151,29 +146,20 @@ void Client::onLine(const string& aLine) throw() {
 		return;
 	}
 
-	string cmd;
-	string param;
-	string::size_type x;
-	
-	if( (x = aLine.find(' ')) == string::npos) {
-		cmd = aLine;
+	if((temp = strtok((char*) aLine, " ")) == NULL) {
+		cmd = (char*) aLine;
 	} else {
-		cmd = aLine.substr(0, x);
-		param = aLine.substr(x+1);
+		cmd = temp;
+		param = strtok(NULL, "\0");
 	}
 
-	if(cmd == "$Search") {
-		char *prm = new char[param.length()+1]; 
-		strcpy(prm, param.c_str()); 
-		if(state != STATE_CONNECTED || prm == NULL) {
-			delete[] prm;
+	if(strcmp(cmd, "$Search") == 0) {
+		if(state != STATE_CONNECTED || param == NULL)
 			return;
-		}
-		if((temp = strtok(prm, " ")) == NULL) {
-			delete[] prm;
+
+		if((temp = strtok(param, " ")) == NULL)
 			return;
-		}
-		
+
 		char *seeker = temp;
 		{
 			Lock l(cs);
@@ -184,10 +170,8 @@ void Client::onLine(const string& aLine) throw() {
 			// First, check if it's a flooder
 			FloodIter fi;
 			for(fi = flooders.begin(); fi != flooders.end(); ++fi) {
-				if(fi->first == seeker) {
-					delete[] prm;
+				if(fi->first == seeker)
 					return;
-				}
 			}
 
 			int count = 0;
@@ -203,7 +187,6 @@ void Client::onLine(const string& aLine) throw() {
 					}
 
 					flooders.push_back(make_pair(seeker, tick));
-					delete[] prm;
 					return;
 				}
 			}
@@ -214,33 +197,25 @@ void Client::onLine(const string& aLine) throw() {
 
 		if(strnicmp(temp, "F", 1) == 0 ) {
 			a = SearchManager::SIZE_DONTCARE;
-			if((temp = strtok(NULL, "?")) == NULL) {
-				delete[] prm;				
+			if((temp = strtok(NULL, "?")) == NULL)
 				return;
-			}
 		} else {
-			if((temp = strtok(NULL, "?")) == NULL) {
-				delete[] prm;
+			if((temp = strtok(NULL, "?")) == NULL)
 				return;
-			}
 
 			if(strnicmp(temp, "F", 1) == 0 ) {
-			a = SearchManager::SIZE_ATLEAST;
-		} else {
-			a = SearchManager::SIZE_ATMOST;
-		}
+				a = SearchManager::SIZE_ATLEAST;
+			} else {
+				a = SearchManager::SIZE_ATMOST;
+			}
 		}
 
-		if((temp = strtok(NULL, "?")) == NULL) {
-			delete[] prm;
+		if((temp = strtok(NULL, "?")) == NULL)
 			return;
-		}
 
 		char *size = temp;
-		if((temp = strtok(NULL, "?")) == NULL) {
-			delete[] prm;
+		if((temp = strtok(NULL, "?")) == NULL)
 			return;
-		}
 
 		int type = Util::toInt(temp) - 1;
 		if((temp = strtok(NULL, "\0")) != NULL) {
@@ -260,142 +235,160 @@ void Client::onLine(const string& aLine) throw() {
 					updated(u);
 				}
 			}
-	delete[] prm;
 		}
-
-} else if(cmd == "$MyINFO") { 
-    char *description; 
-      char *prm = new char[param.length()+1]; 
-      strcpy(prm, param.c_str()); 
-      if((temp = strtok(prm+5, " ")) == NULL) { 
-         delete[] prm; 
-         return; 
-      } 
-      User::Ptr u; 
-      dcassert(strlen(temp) > 0); 
-
-      { 
-         Lock l(cs); 
-         User::NickIter ni = users.find(temp); 
-         if(ni == users.end()) { 
-            u = users[temp] = ClientManager::getInstance()->getUser(temp, this); 
-         } else { 
-            u  = ni->second; 
-         } 
-      } 
-      if((temp[strlen(temp)+1] != '$') && ((temp = strtok(NULL, "$")) != NULL)) { 
-         description = strdup(temp); 
-      } else { 
-         description = NULL; 
-      } 
-      if((temp = strtok(NULL, "$")) == NULL)
-      		return;
-      		
-      if(temp[strlen(temp)+1] != '$') {
-      	if((temp = strtok(NULL, "$")) == NULL)
+	} else if(strcmp(cmd, "$MyINFO") == 0) {
+		if(param == NULL)
 			return;
-		else {
-         char status = temp[strlen(temp)-1]; 
-         u->setStatus(status); 
-         temp[strlen(temp)-1] = '\0'; 
-         u->setConnection(temp); 
-      }
-    		} else {
-			u->setStatus(1);
-			u->setConnection(Util::emptyString);
+
+		if((temp = strtok(param+5, " ")) == NULL)
+			return;
+
+		User::Ptr u;
+		dcassert(strlen(temp) > 0);
+
+		{
+			Lock l(cs);
+			User::NickIter ni = users.find(temp);
+			if(ni == users.end()) {
+				u = users[temp] = ClientManager::getInstance()->getUser(temp, this);
+			} else {
+				u  = ni->second;
+			}
 		}
-  	   if(temp[strlen(temp)+2] != '$') {
-      	if((temp = strtok(NULL, "$")) == NULL)
-			return;
-		else
-          u->setEmail(Util::validateMessage(temp, true)); 
-		} else {
-			u->setEmail(Util::emptyString);
-      } 
-      if(temp[strlen(temp)+1] != '$') {
-      	if((temp = strtok(NULL, "$")) == NULL)
-			return;
-		else
-         u->setBytesShared(temp); 
-      }        
+		// New MyINFO received, delete all user variables... if is bad MyINFO is user problem not my ;-)
+		u->setBytesShared(0);
+		u->setDescription(Util::emptyString);
+		u->setStatus(1);
+		u->setConnection(Util::emptyString);
+		u->setEmail(Util::emptyString);
+		u->setTag(Util::emptyString);
+		u->setClientType(Util::emptyString);
+		u->setVersion(Util::emptyString);
+		u->setMode(Util::emptyString);
+		u->setHubs(Util::emptyString);
+		u->setSlots(Util::emptyString);
+		u->setUpload(Util::emptyString);
 
-      if(description) { 
-         if(strlen(description) > 0 && description[strlen(description)-1] == '>') { 
-            char *sTag; 
-            if((sTag = strrchr(description, '<')) != NULL) { 
-               u->TagParts(sTag); 
-               description[strlen(description)-strlen(sTag)] = '\0'; 
-            } 
-         } 
-         u->setDescription(description); 
-         free(description); 
-      } 
-
-      if (u->getNick() == getNick()) { 
-         if(state == STATE_MYINFO) { 
-            state = STATE_CONNECTED; 
-            updateCounts(false); 
-         }    
-
-         u->setFlag(User::DCPLUSPLUS); 
-         if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) 
-            u->setFlag(User::PASSIVE); 
-      } 
-      fire(ClientListener::MY_INFO, this, u); 
-      delete[] prm; 
-
-   } else if(cmd == "$Quit") {
-		if(!param.empty()) {
-			User::Ptr u;
-			{
-				Lock l(cs);
-				User::NickIter i = users.find(param);
-				if(i == users.end()) {
-					dcdebug("C::onLine Quitting user %s not found\n", param.c_str());
-					return;
+		if(temp[strlen(temp)+1] != '$') {
+			if((temp = strtok(NULL, "$")) != NULL) {
+				paramlen = strlen(temp);
+				if(paramlen > dscrptnlen) {
+					dscrptn = (char *) realloc(dscrptn, paramlen+1);
+					dscrptnlen = paramlen;
 				}
-				
-				u = i->second;
-				users.erase(i);
+				strcpy(dscrptn, temp);
+			}
+		}
+
+		if((temp = strtok(NULL, "$")) != NULL) {
+			if(temp[strlen(temp)+1] != '$') {
+				if((temp = strtok(NULL, "$")) != NULL) {
+					char status;
+					status = temp[strlen(temp)-1];
+					u->setStatus(status);
+					temp[strlen(temp)-1] = '\0';
+					u->setConnection(temp);
+				}
+			} else {
+				u->setStatus(1);
+				u->setConnection(Util::emptyString);
+			}
+		}
+
+		if(temp != NULL) {
+			if(temp[strlen(temp)+2] != '$') {
+				if((temp = strtok(NULL, "$")) != NULL)
+					u->setEmail(Util::validateMessage(temp, true));
+			} else {
+				u->setEmail(Util::emptyString);
+			}
+		}
+
+		if(temp != NULL) {
+			if(temp[strlen(temp)+1] != '$') {
+				if((temp = strtok(NULL, "$")) != NULL)
+					u->setBytesShared(temp);
+			}
+		}
+
+		if(dscrptn != NULL) {
+			if(strlen(dscrptn) > 0 && dscrptn[strlen(dscrptn)-1] == '>') {
+				char *sTag;
+				if((sTag = strrchr(dscrptn, '<')) != NULL) {
+					u->TagParts(sTag);
+					dscrptn[strlen(dscrptn)-strlen(sTag)] = '\0';
+				}
+			}
+			u->setDescription(dscrptn);
+			dscrptn[0] = NULL;
+		}
+
+		if (u->getNick() == getNick()) {
+			if(state == STATE_MYINFO) {
+				state = STATE_CONNECTED;
+				updateCounts(false);
+			}	
+
+			u->setFlag(User::DCPLUSPLUS);
+			if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+				u->setFlag(User::PASSIVE);
+		}
+		fire(ClientListener::MY_INFO, this, u);
+	} else if(strcmp(cmd, "$Quit") == 0) {
+		if(param == NULL)
+			return;
+
+		User::Ptr u;
+		{
+			Lock l(cs);
+			User::NickIter i = users.find(param);
+			if(i == users.end()) {
+				dcdebug("C::onLine Quitting user %s not found\n", param);
+				return;
 			}
 			
-			fire(ClientListener::QUIT, this, u);
-			ClientManager::getInstance()->putUserOffline(u, true);
+			u = i->second;
+			users.erase(i);
 		}
-	} else if(cmd == "$ConnectToMe") {
-		if(state != STATE_CONNECTED) {
+		
+		fire(ClientListener::QUIT, this, u);
+		ClientManager::getInstance()->putUserOffline(u, true);
+	} else if(strcmp(cmd, "$ConnectToMe") == 0) {
+		if(state != STATE_CONNECTED || param == NULL)
 			return;
-		}
-		string::size_type i = param.find(' ');
-		string::size_type j;
-		if( (i == string::npos) || ((i + 1) >= param.size()) ) {
-			return;
-		}
-		i++;
-		j = safestring::SafeFind(param, ':', i);
-		if(j == string::npos) {
-			return;
-		}
-		string server = param.substr(i, j-i);
-		if(j+1 >= param.size()) {
-			return;
-		}
-		fire(ClientListener::CONNECT_TO_ME, this, server, param.substr(j+1));
 
-	} else if(cmd == "$RevConnectToMe") {
-		if(state != STATE_CONNECTED) {
+		if((temp = strtok(param, " ")) == NULL)
 			return;
+
+		if(strcmp(temp, getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+			return;
+
+		if((temp = strtok(NULL, ":")) == NULL)
+			return;
+
+		char *server = temp;
+		if((temp = strtok(NULL, " ")) == NULL)
+			return;
+
+		fire(ClientListener::CONNECT_TO_ME, this, server, temp);
+	} else if(strcmp(cmd, "$RevConnectToMe") == 0) {
+		if(state != STATE_CONNECTED || param == NULL) {
+				return;
 		}
 		User::Ptr u;
 		bool up = false;
 		{
 			Lock l(cs);
-			string::size_type j = param.find(' ');
-			if(j == string::npos) {
+			if((temp = strtok(param, " ")) == NULL)
 				return;
-			}
 
-			User::NickIter i = users.find(param.substr(0, j));
+			User::NickIter i = users.find(temp);
+			if((temp = strtok(NULL, "\0")) == NULL)
+				return;
+
+			if(strcmp(temp, getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
+				return;
+
 			if(i == users.end()) {
 				return;
 			}
@@ -419,210 +412,224 @@ void Client::onLine(const string& aLine) throw() {
 			if(up)
 				updated(u);
 		}
-	} else if(cmd == "$SR") {
-		SearchManager::getInstance()->onSearchResult(aLine);
-	} else if(cmd == "$HubName") {
+	} else if(strcmp(cmd, "$SR") == 0) {
+		dcdebug(param);
+		if(param != NULL)
+			SearchManager::getInstance()->onSearchResult(param);
+	} else if(strcmp(cmd, "$HubName") == 0) {
+		if(param == NULL)
+			return;
+
 		name = param;
 		fire(ClientListener::HUB_NAME, this);
-	} else if(cmd == "$Supports") {
-		StringTokenizer st(param, ' ');
+	} else if(strcmp(cmd, "$Supports") == 0) {
+		if(param == NULL)
+			return;
+
 		bool QuickList = false;
-		StringList& sl = st.getTokens();
-		for(StringIter i = sl.begin(); i != sl.end(); ++i) {
-			if(*i == "UserCommand") {
+		StringList sl;
+		if((temp = strtok(param, " ")) == NULL)
+			return;
+
+		while(temp != NULL) {
+			sl.push_back(temp);
+			if((strcmp(temp, "UserCommand")) == 0) {
 				supportFlags |= SUPPORTS_USERCOMMAND;
-			} else if(*i == "NoGetINFO") {
+			} else if((strcmp(temp, "NoGetINFO")) == 0) {
 				supportFlags |= SUPPORTS_NOGETINFO;
-			} else if(*i == "UserIP2") {
+			} else if((strcmp(temp, "UserIP2")) == 0) {
 				supportFlags |= SUPPORTS_USERIP2;
-			} else if(*i == "QuickList") {
+			} else if((strcmp(temp, "QuickList")) == 0) {
 				if(state == STATE_HELLO) {
 					state = STATE_MYINFO;
+					updateCounts(false);
+					myInfo();
+					getNickList();
+					QuickList = true;
 				}
-				updateCounts(false);
-				myInfo();
-				getNickList();
-				QuickList = true;
 			}
+			temp = strtok(NULL, " ");
 		}
 		if (!QuickList) {
 			validateNick(getNick());
 		}
 		fire(ClientListener::SUPPORTS, this, sl);
-	} else if(cmd == "$UserCommand") {
-		string::size_type i = string::npos;
-		string::size_type j = param.find(' ');
-		if(j == string::npos)
+	} else if(strcmp(cmd, "$UserCommand") == 0) {
+		if(param == NULL)
 			return;
 
-		int type = Util::toInt(param.substr(0, j));
-		i = j+1;
+		if((temp = strtok(param, " ")) == NULL)
+			return;
+
+		int type = Util::toInt(temp);
+		if((temp = strtok(NULL, " ")) == NULL)
+			return;
+
 		if(type == UserCommand::TYPE_SEPARATOR) {
-			int ctx = Util::toInt(param.substr(i));
+			int ctx = Util::toInt(temp);
 			fire(ClientListener::USER_COMMAND, this, type, ctx, Util::emptyString, Util::emptyString);
 		} else if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
-			j = safestring::SafeFind(param, ' ', i);
-			if(j == string::npos)
+			int ctx = Util::toInt(temp);
+			if((temp = strtok(NULL, "$")) == NULL)
 				return;
-			int ctx = Util::toInt(param.substr(i));
-			i = j+1;
-			j = param.find('$');
-			if(j == string::npos)
+
+			char *name = temp;
+			if((temp = strtok(NULL, "\0")) == NULL)
 				return;
-			string name = param.substr(i, j-i);
-			i = j+1;
-			string command = param.substr(i, param.length() - i);
-			fire(ClientListener::USER_COMMAND, this, type, ctx, Util::validateMessage(name, true, false), Util::validateMessage(command, true, false));
+
+			fire(ClientListener::USER_COMMAND, this, type, ctx, Util::validateMessage(name, true, false), Util::validateMessage(temp, true, false));
 		}
-	} else if(cmd == "$Lock") {
-		if(state != STATE_LOCK) {
+	} else if(strcmp(cmd, "$Lock") == 0) {
+		if(state != STATE_LOCK || param == NULL)
 			return;
-		}
+
 		state = STATE_HELLO;
+		char *lock;
+		if((temp = strstr(param, " Pk=")) != NULL) { // simply the best ;-)
+			param[strlen(param)-strlen(temp)] = 0;
+			lock = param;
+		} else
+			lock = param; // Pk is not usefull, don't waste cpu time to get it ;o)
+		fire(ClientListener::C_LOCK, this, lock, Util::emptyString);
+	} else if(strcmp(cmd, "$Hello") == 0) {
+		if(param == NULL)
+			return;
 
-		if(!param.empty()) {
-			string::size_type j = param.find(" Pk=");
-			string lock, pk;
-			if( j != string::npos ) {
-				lock = param.substr(0, j);
-				pk = param.substr(j + 4);
-			} else {
-				// Workaround for faulty linux hubs...
-				j = param.find(" ");
-				if(j != string::npos)
-					lock = param.substr(0, j);
-				else
-					lock = param;
-			}
-			fire(ClientListener::C_LOCK, this, lock, pk);	
+		User::Ptr u = ClientManager::getInstance()->getUser(param, this);
+		{
+			Lock l(cs);
+			users[param] = u;
 		}
-	} else if(cmd == "$Hello") {
-		if(!param.empty()) {
-			User::Ptr u = ClientManager::getInstance()->getUser(param, this);
-			{
-				Lock l(cs);
-				users[param] = u;
-			}
-			
-			if(getNick() == param)
-				setMe(u);
-			
-			if(u == getMe()) {
-				if(state == STATE_HELLO) {
-					state = STATE_CONNECTED;
-					updateCounts(false);
+		
+		if(getNick() == param)
+			setMe(u);
+		
+		if(u == getMe()) {
+			if(state == STATE_HELLO) {
+				state = STATE_CONNECTED;
+				updateCounts(false);
 
-					u->setFlag(User::DCPLUSPLUS);
-					if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
-						u->setFlag(User::PASSIVE);
-				}
-				fire(ClientListener::HELLO, this, u);
-				setFirstHello(false);
-			} else {
-				fire(ClientListener::HELLO, this, u);
-			}			
+				u->setFlag(User::DCPLUSPLUS);
+				if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+					u->setFlag(User::PASSIVE);
+			}
+			fire(ClientListener::HELLO, this, u);
+			setFirstHello(false);
+		} else {
+			fire(ClientListener::HELLO, this, u);
 		}
-	} else if(cmd == "$ForceMove") {
+	} else if(strcmp(cmd, "$ForceMove") == 0) {
+		if(param == NULL)
+			return;
+
 		disconnect();
 		fire(ClientListener::FORCE_MOVE, this, param);
-	} else if(cmd == "$HubIsFull") {
+	} else if(strcmp(cmd, "$HubIsFull") == 0) {
 		fire(ClientListener::HUB_FULL, this);
-	} else if(cmd == "$ValidateDenide") {		// Mind the spelling...
+	} else if(strcmp(cmd, "$ValidateDenide") == 0) {
 		disconnect();
 		fire(ClientListener::VALIDATE_DENIED, this);
-	} else if(cmd == "$UserIP") {
-		if(!param.empty()) {
-			//User::List v;
-			StringTokenizer t(param, "$$");
-			StringList& l = t.getTokens();
-			/*for(StringIter it = l.begin(); it != l.end(); ++it) {
-				string::size_type j = 0;
-				if((j = it->find(' ')) == string::npos)
-					continue;
-				if((j+1) == it->length())
-					continue;
-				v.push_back(ClientManager::getInstance()->getUser(it->substr(0, j), this));
-				v.back()->setIp(it->substr(j+1));
-			}
-
-			fire(ClientListener::USER_IP, this, v);*/
-			fire(ClientListener::USER_IP, this, l); 
-		}
-	} else if(cmd == "$NickList") {
-		char *prm = new char[param.length()+1];
-		strcpy(prm, param.c_str());
-		if(prm != NULL) {
-			User::List v;
-			if((temp = strtok(prm, "$$")) == NULL)
+	} else if(strcmp(cmd, "$UserIP") == 0) {
+		if(param == NULL)
 			return;
 
-			while(temp != NULL) {
-				v.push_back(ClientManager::getInstance()->getUser(temp, this));
-				temp = strtok(NULL, "$$");
-			}
-
-			{
-				Lock l(cs);
-				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
-					users[(*it2)->getNick()] = *it2;
-				}
-			}
-			
-			fire(ClientListener::NICK_LIST, this, v);
-		}
-		delete[] prm;
-	} else if(cmd == "$OpList") {
-		char *prm = new char[param.length()+1];
-		strcpy(prm, param.c_str());
-		if(prm != NULL) {
-			User::List v;
-		if((temp = strtok(prm, "$$")) == NULL)
+		User::List v;
+		StringList l;
+		if((temp = strtok(param, "$$")) == NULL)
 			return;
 
-			while(temp != NULL) {
-				v.push_back(ClientManager::getInstance()->getUser(temp, this));
-				v.back()->setFlag(User::OP);
-				temp = strtok(NULL, "$$");
-			}
+		while(temp != NULL) {
+			l.push_back(temp);
+			temp = strtok(NULL, "$$");
+		}
+		for(StringIter it = l.begin(); it != l.end(); ++it) {
+			string::size_type j = 0;
+			if((j = it->find(' ')) == string::npos)
+				continue;
+			if((j+1) == it->length())
+				continue;
+			v.push_back(ClientManager::getInstance()->getUser(it->substr(0, j), this));
+			v.back()->setIp(it->substr(j+1));
+		}
+		fire(ClientListener::USER_IP, this, v);
+	} else if(strcmp(cmd, "$NickList") == 0) {
+		if(param == NULL)
+			return;
 
-			{
-				Lock l(cs);
-				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
-					users[(*it2)->getNick()] = *it2;
-				}
-			}
-			fire(ClientListener::OP_LIST, this, v);
-			updateCounts(false);
-			// Special...to avoid op's complaining that their count is not correctly
-			// updated when they log in (they'll be counted as registered first...)
-			if(lastCounts != counts) {
-				myInfo();
+		User::List v;
+		if((temp = strtok(param, "$$")) == NULL)
+			return;
+
+		while(temp != NULL) {
+			v.push_back(ClientManager::getInstance()->getUser(temp, this));
+			temp = strtok(NULL, "$$");
+		}
+
+		{
+			Lock l(cs);
+			for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+				users[(*it2)->getNick()] = *it2;
 			}
 		}
-		delete[] prm;
-	} else if(cmd == "$To:") {
-		string::size_type i = param.find("From:");
-		if(i != string::npos) {
-			i+=6;
-			string::size_type j = param.find("$");
-			if(j != string::npos) {
-				string from = param.substr(i, j - 1 - i);
-				if(from.size() > 0 && param.size() > (j + 1)) {
-					fire(ClientListener::PRIVATE_MESSAGE, this, ClientManager::getInstance()->getUser(from, this, false), Util::validateMessage(param.substr(j + 1), true));
-				}
+		
+		fire(ClientListener::NICK_LIST, this, v);
+	} else if(strcmp(cmd, "$OpList") == 0) {
+		if(param == NULL)
+			return;
+
+		User::List v;
+		if((temp = strtok(param, "$$")) == NULL)
+			return;
+
+		while(temp != NULL) {
+			v.push_back(ClientManager::getInstance()->getUser(temp, this));
+			v.back()->setFlag(User::OP);
+			temp = strtok(NULL, "$$");
+		}
+
+		{
+			Lock l(cs);
+			for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+				users[(*it2)->getNick()] = *it2;
 			}
 		}
-	} else if(cmd == "$GetPass") {
-		registered = true;
-		fire(ClientListener::GET_PASSWORD, this);
-	} else if(cmd == "$BadPass") {
-		fire(ClientListener::BAD_PASSWORD, this);
-	} else if(cmd == "$LogedIn") {
+		fire(ClientListener::OP_LIST, this, v);
+		updateCounts(false);
+		if(lastCounts != counts) {
+			myInfo();
+		}
+	} else if(strcmp(cmd, "$To:") == 0) {
+		if(param == NULL)
+			return;
+
+		char *temp1, *from;
+		if((temp1 = strstr(param, "From:")) != NULL) {
+
+			if((temp = strtok(temp1+6, "$")) == NULL)
+				return;
+
+			from = temp;
+			from[strlen(from)-1] = '\0';
+			if((temp = strtok(NULL, "\0")) == NULL)
+				return;
+
+			fire(ClientListener::PRIVATE_MESSAGE, this, ClientManager::getInstance()->getUser(from, this, false), Util::validateMessage(temp, true));
+		}
+	} else if(strcmp(cmd, "$GetPass") == 0) {
+			registered = true;
+			fire(ClientListener::GET_PASSWORD, this);
+	} else if(strcmp(cmd, "$BadPass") == 0) {
+			fire(ClientListener::BAD_PASSWORD, this);
+	} else if(strcmp(cmd, "$LogedIn") == 0) {
 		fire(ClientListener::LOGGED_IN, this);
 	} else {
 		dcassert(cmd[0] == '$');
-		dcdebug("Client::onLine Unknown command %s\n", aLine.c_str());
-	} 
+		if(param != NULL) {
+			strcat(cmd, " ");
+			strcat(cmd, param);
+		}
+		dcdebug("Client::onLine Unknown command %s\n", cmd);
+	}
 }
 
 void Client::myInfo() {
@@ -789,10 +796,7 @@ void Client::onAction(TimerManagerListener::Types type, u_int32_t aTick) throw()
 void Client::onAction(BufferedSocketListener::Types type, const string& aLine) throw() {
 	switch(type) {
 	case BufferedSocketListener::LINE:
-//		if (onClientMessage(this, Util::validateMessage(aLine, true)))
-//			break;
-
-		onLine(aLine); break;
+		onLine(aLine.c_str()); break;
 	case BufferedSocketListener::FAILED:
 		{
 			Lock l(cs);
@@ -818,7 +822,6 @@ void Client::onAction(BufferedSocketListener::Types type) throw() {
 		break;
 	}
 }
-
 
 /**
  * @file

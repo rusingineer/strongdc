@@ -18,6 +18,10 @@
 * pøi hashování dokonèeného stahování je zobrazena zpráva na progressbaru
 * podpora magnet-linkù (CZDC++)
 * pøi minimalizaci je nastavena nízká priorita (pouze Win2000/XP)
+* opraven pøíkaz /me v chatu
+* vylepšeno pøijímání pøíkazù od hubu (CZDC++)
+* pøidána volba pro nastavení max. poètu smajlíkù v jedné zprávì (CZDC++)
+* automatické odstraòování diakritiky ze zpráv (CZDC++)
 
 
 	-- StrongDC++ 1.00 RC5 --

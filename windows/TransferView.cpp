@@ -510,9 +510,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 	if(!mainItems.empty()) {
 
 		int q = 0;
-//		for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
 		while(q<mainItems.size()) {
-			//ItemInfo* m = *q;
 			ItemInfo* m = mainItems[q];
 			if(m->Target == i->Target)
 			{
@@ -548,10 +546,8 @@ void TransferView::InsertItem(ItemInfo* i) {
 			dcassert(r != -1);
 			int l =	ctrlTransfers.insertItem(r+1,i,IMAGE_DOWNLOAD);
 			dcassert(l >= 0);
-			//ctrlTransfers.SetItemState(l, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 		}
 		i->upper->pocetUseru += 1;
-		//i->upper->user = (User::Ptr)NULL;
 	}
 
 	if(i->upper != NULL)
@@ -562,7 +558,6 @@ void TransferView::InsertItem(ItemInfo* i) {
 			}
 			else {
 				i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
-				//i->upper->columns[COLUMN_HUB] = "";
 			}
 		}
 }
@@ -599,13 +594,9 @@ int TransferView::ItemInfo::compareItems(ItemInfo* a, ItemInfo* b, int col) {
 			case COLUMN_USER:
 				if(canBeSorted(a,b))
 					return Util::stricmp(a->columns[COLUMN_USER], b->columns[COLUMN_USER]);
-					//if((a->user != (User::Ptr)NULL) && (b->user != (User::Ptr)NULL))
-					//	return Util::stricmp(a->user->getNick(), b->user->getNick());
 			case COLUMN_HUB:
 				if(canBeSorted(a,b))
 					return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
-					//if((a->user != (User::Ptr)NULL) && (b->user != (User::Ptr)NULL))
-					//	return Util::stricmp(a->user->getClientName(), b->user->getClientName());
 			case COLUMN_STATUS:
 				if(canBeSorted(a,b)) 					
 					return compare(a->status, b->status);
@@ -637,7 +628,7 @@ int TransferView::ItemInfo::compareItems(ItemInfo* a, ItemInfo* b, int col) {
 
 void TransferView::CollapseAll() {
 	for(int q = ctrlTransfers.GetItemCount()-1; q != -1; --q) {
-	  ItemInfo* m = (ItemInfo*)ctrlTransfers.GetItemData(q);
+	  ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
 	  if((m->type == ItemInfo::TYPE_DOWNLOAD) && (!m->mainItem))
 		  {	ctrlTransfers.deleteItem(m);  }
 	if(m->mainItem) {
@@ -649,7 +640,7 @@ void TransferView::CollapseAll() {
 
 void TransferView::Collapse(ItemInfo* i, int a) {
 	for(int q = ctrlTransfers.GetItemCount()-1; q != -1; --q) {
-	  ItemInfo* m = (ItemInfo*)ctrlTransfers.GetItemData(q);
+	  ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
 	  if((m->type == ItemInfo::TYPE_DOWNLOAD) && (m->Target == i->Target) && (!m->mainItem))
 		  { ctrlTransfers.deleteItem(m); }
 	}
@@ -700,7 +691,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		dcassert(i != NULL);
 //		if(ctrlTransfers.findItem(i) != -1)
 			ctrlTransfers.deleteItem(i);
-		delete i;
+//		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
@@ -805,12 +796,10 @@ void TransferView::ItemInfo::update() {
 
 	if(colMask & MASK_USER) {
 		if(user != (User::Ptr)NULL) columns[COLUMN_USER] = user->getNick();
-		if(type == TYPE_DOWNLOAD) {
-			if(upper != NULL) {
-				if((upper->pocetUseru > 1)  || (upper->user == (User::Ptr)NULL)) {
-					upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
-				} else { upper->columns[COLUMN_USER] = user->getNick(); }
-			}
+		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
+			if((upper->pocetUseru > 1)  || (upper->user == (User::Ptr)NULL)) {
+				upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
+			} else { upper->columns[COLUMN_USER] = user->getNick(); }
 		}
 	}
 	if(colMask & MASK_HUB) {
@@ -818,29 +807,26 @@ void TransferView::ItemInfo::update() {
 	}
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
-		if((type == TYPE_DOWNLOAD) && (!mainItem))
-		{			
-			if(upper != NULL) upper->columns[COLUMN_STATUS] = upper->statusString;
-		}
+		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL))
+			upper->columns[COLUMN_STATUS] = upper->statusString;
 	}
 
 	if (status == STATUS_RUNNING) {
 		if(type == TYPE_DOWNLOAD) {
-			
-		if (pocetSegmentu>1) {
-			 int64_t ZbyvajiciCas;
-			 ZbyvajiciCas = (celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0;
-			 zc = Util::formatSeconds(ZbyvajiciCas);
-		}
+			if (pocetSegmentu>1) {
+				int64_t ZbyvajiciCas;
+				ZbyvajiciCas = (celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0;
+				zc = Util::formatSeconds(ZbyvajiciCas);
+			}
 
-		if(upper != NULL) {
-			upper->status = ItemInfo::STATUS_RUNNING;
-			if((upper->pocetUseru > 1) || (upper->user == (User::Ptr)NULL)) {
-				upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
-				if(pocetSegmentu>0) upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+			if(upper != NULL) {
+				upper->status = ItemInfo::STATUS_RUNNING;
+				if((upper->pocetUseru > 1) || (upper->user == (User::Ptr)NULL)) {
+					upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
+					if(pocetSegmentu>0) upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+				}
 			}
 		}
-	}
 
 		if(colMask & MASK_TIMELEFT) {
 			if (status == STATUS_RUNNING) {
@@ -879,15 +865,14 @@ void TransferView::ItemInfo::update() {
 			if((type == TYPE_DOWNLOAD) && (!mainItem)) 
 				if(upper != NULL) {	upper->columns[COLUMN_PATH] = path; }
 		}
-	if(colMask & MASK_IP) {
-		if (country == "") columns[COLUMN_IP] = IP;
-		else columns[COLUMN_IP] = IP + " (" + country + ")";
-	}
+		if(colMask & MASK_IP) {
+			if (country == "") columns[COLUMN_IP] = IP;
+			else columns[COLUMN_IP] = IP + " (" + country + ")";
+		}
 		if(colMask & MASK_RATIO) {
 			columns[COLUMN_RATIO] = Util::toString(getRatio());
-			if((type == TYPE_DOWNLOAD) && (!mainItem)) 
-				if(upper != NULL) {	upper->columns[COLUMN_RATIO] = Util::toString(upper->compressRatio); }
-		
+			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) 
+				upper->columns[COLUMN_RATIO] = Util::toString(upper->compressRatio);
 		}
 	} else {
 		columns[COLUMN_TIMELEFT] = "";
@@ -1107,7 +1092,6 @@ void TransferView::onDownloadTick(const Download::List& dl) {
 			i->timeLeft = d->getSecondsLeft();
 			i->speed = d->getRunningAverage();
 			i->stazenoCelkem = total;
-//			i->seznam = dl;
 
 			int NS = 0;
 			int64_t tmp = 0;

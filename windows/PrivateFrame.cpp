@@ -436,7 +436,7 @@ LRESULT PrivateFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 LRESULT PrivateFrame::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if ( pSelectedLine != "" ) {
-		Clipboard::setText(pSelectedLine);
+		WinUtil::setClipboard(pSelectedLine);
 	}
 	return 0;
 }

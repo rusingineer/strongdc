@@ -151,7 +151,7 @@ public:
 	void setPort(short aPort) throw(SocketException);
 	void disconnect() throw();
 	void onSearchResult(const string& aLine) {
-		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
+		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString, false);
 	}
 	
 private:
@@ -174,7 +174,7 @@ private:
 		}
 	};
 
-	void onData(const u_int8_t* buf, int aLen, const string& address);
+	void onData(const u_int8_t* buf, int aLen, const string& address, bool withSR);
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)

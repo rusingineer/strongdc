@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "../client/StringTokenizer.h"
@@ -81,7 +80,7 @@ int CZDCLib::getWinVerMajor() {
 	return iWinVerMajor;
 }
 
-bool Clipboard::setText(const string& s) { 
+/*bool Clipboard::setText(const string& s) { 
 	if(!::OpenClipboard(NULL)) {
 		return 0;
 	}
@@ -102,7 +101,7 @@ bool Clipboard::setText(const string& s) {
 	CloseClipboard();
 	return true;
 }
-
+*/
 bool isMDIChildActive(HWND hWnd) {
 	HWND wnd = MainFrame::anyMF->MDIGetActive();
 	dcassert(wnd != NULL);
@@ -365,20 +364,6 @@ void OperaColors::EnlightenFlood(const COLORREF& clr, COLORREF& a, COLORREF& b) 
 	else
 		buf += 38;
 	b = ::HLS2RGB(HLS(HLS_H(hls_b), buf, HLS_S(hls_b)));
-/*
-	HLSTRIPLE hls_a = RGB2HLS(clr);
-	HLSTRIPLE hls_b = RGB2HLS(clr);
-	if (hls_a.hlstLightness < 0.15)
-		hls_a.hlstLightness = 0;
-	else
-		hls_a.hlstLightness -= 0.15;
-	if (hls_b.hlstLightness > 0.84)
-		hls_b.hlstLightness = 0.99;
-	else
-		hls_b.hlstLightness += 0.15;
-	a = RGB2REF(HLS2RGB(hls_a));
-	b = RGB2REF(HLS2RGB(hls_b));
-*/
 }
 
 COLORREF OperaColors::TextFromBackground(COLORREF bg) {
@@ -425,20 +410,7 @@ int CZDCLib::setButtonPressed(int nID, bool bPressed /* = true */) {
 		return -1;
 	if (!MainFrame::anyMF->ctrlToolbar.IsWindow())
 		return -1;
-/*	TBBUTTONINFO bi;
-	bi.cbSize = sizeof(TBBUTTONINFO);
-	bi.dwMask = TBIF_STATE;
-	bi.idCommand = nID;
-	if (MainFrame::anyMF->ctrlToolbar.GetButtonInfo(nID, &bi) == FALSE)
-		return -1;
-	int iRet = (bPressed ? 1 : 0) ^ ((bi.fsState & TBSTATE_CHECKED) ? 1 : 0);
-	if (bPressed)
-		bi.fsState |= TBSTATE_CHECKED;
-	else
-		bi.fsState &= ~TBSTATE_CHECKED;
-	if (MainFrame::anyMF->ctrlToolbar.SetButtonInfo(nID, &bi) == FALSE)
-		return -1;
-*/
+
 	MainFrame::anyMF->ctrlToolbar.CheckButton(nID, bPressed);
 	return 0;
 }

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC++\StrongDC.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -197,6 +197,8 @@
 #define IDC_SHUTDOWNTIMEOUT             1104
 #define IDC_COMMAND_DESCRIPTION         1105
 #define IDC_SETTINGS_ODC_MENUBAR_RIGHT  1105
+#define IDC_SHUTDOWNTIMEOUT2            1105
+#define IDC_MAX_EMOTICONS               1105
 #define IDC_APPEARANCE_BOOLEANS         1106
 #define IDC_SETTINGS_ODC_MENUBAR_LEFT   1106
 #define IDC_DEFAULT_AWAY_MESSAGE        1107
@@ -391,6 +393,7 @@
 #define IDC_EXTENSION                   1253
 #define IDC_SHUTDOWN_SPIN               1253
 #define IDC_KB                          1254
+#define IDC_MAX_EMOTICONSSPIN           1254
 #define IDC_SEG_NUMBER                  1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define BAA                             1257
@@ -407,7 +410,7 @@
 #define IDC_USERLIST                    1268
 #define IDC_IMPORT                      1269
 #define IDC_EXPORT                      1270
-#define IDC_SETTINGS_GET_USER_COUNTRY	1271
+#define IDC_SETTINGS_GET_USER_COUNTRY   1271
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -566,6 +569,7 @@
 #define IDC_CZDC_DW_NOTE                10114
 #define IDC_CZDC_PROGRESS_COLOR         10115
 #define IDC_ZDC_PROGRESS_COLOR          10115
+#define IDC_SETCZDC_MAX_EMOTICONS       10116
 #define IDC_CZDC_PROGRESS_TEXT          10117
 #define IDC_ZDC_PROGRESS_TEXT           10117
 #define IDC_CZDC_WINAMP                 10120
@@ -597,8 +601,8 @@
 #define IDC_COPY_ISP                    10149
 #define IDC_CHECKLIST                   10150
 #define ID_GET_TTH                      10151
-#define IDC_COPY_LINK					10152
-#define IDC_BITZI_LOOKUP				20000
+#define IDC_COPY_LINK                   10152
+#define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774
 #define ID_FILE_RECONNECT               32775

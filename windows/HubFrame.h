@@ -74,7 +74,6 @@ public:
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
-
 		MESSAGE_HANDLER(FTM_CONTEXTMENU, onTabContextMenu)
 		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, OnFileReconnect)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
@@ -227,16 +226,18 @@ public:
 		getUserResponses();
 		return 0;
 	}
+
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		int i=-1;
 		if(client->isConnected()) {
 			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				doReport(((UserInfo*)ctrlUsers.GetItemData(i))->user);
+				doReport(((UserInfo*)ctrlUsers.getItemData(i))->user);
 			}
 		}
 		return 0;
 	}
+
 	void doReport(User::Ptr& u)
 	{
 		string param = u->getNick();
@@ -272,15 +273,10 @@ public:
 	}
 
 	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	//	HWND hWnd = (HWND)lParam;
 		HDC hDC = (HDC)wParam;
-	//	if(hWnd == ctrlClient.m_hWnd || hWnd == ctrlMessage.m_hWnd || hWnd == ctrlFilter.m_hWnd || hWnd == ctrlFilterBy.m_hWnd) {
 				::SetBkColor(hDC, WinUtil::bgColor);
 				::SetTextColor(hDC, WinUtil::textColor);
 			return (LRESULT)WinUtil::bgBrush;
-	//	} else {
-	//		return 0;
-	//	}
 	}
 
 	LRESULT onRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -313,7 +309,7 @@ public:
 				ignoreList.insert(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.insert((((UserInfo*)ctrlUsers.GetItemData(i))->user)->getNick());
+					ignoreList.insert((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick());
 				}
 			}
 		}
@@ -327,7 +323,7 @@ public:
 				ignoreList.erase(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase((((UserInfo*)ctrlUsers.GetItemData(i))->user)->getNick());
+					ignoreList.erase((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick());
 				}
 			}
 		}
@@ -335,9 +331,8 @@ public:
 	}
 
 	NOTIFYICONDATA pmicon;
-
 public:
-	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
+	TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
 
 //oDC
@@ -438,7 +433,6 @@ private:
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlFilterContainer;  //oDC
 	CContainedWindow ctrlFilterByContainer;  //oDC
-
 	CContainedWindow clientContainer;
 	CContainedWindow showUsersContainer;
 
@@ -450,11 +444,10 @@ private:
 	CButton ctrlShowUsers;
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;
-	typedef TypedListViewCtrl<UserInfo, IDC_USERS> CtrlUsers;
-	CtrlUsers ctrlUsers;
 	CEdit ctrlFilter;  //oDC
 	CComboBox ctrlFilterBy;  //oDC
-
+	typedef TypedListViewCtrlCleanup<UserInfo, IDC_USERS> CtrlUsers;
+	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
 
 	bool closed;
@@ -480,7 +473,8 @@ private:
 	
 	UserListColumns m_UserListColumns;
 	
-	bool updateUser(const User::Ptr& u);
+	int findUser(const User::Ptr& aUser);
+	bool updateUser(const User::Ptr& u, bool searchinlist = true);
 	
 	CHARFORMAT2 m_ChatTextGeneral;
 	CHARFORMAT2 m_ChatTextPrivate;
@@ -491,8 +485,7 @@ private:
 	int hubchatusersplit;
 
 	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick, OMenu *pMenu );
-
-	int findUser(const User::Ptr& aUser);
+	
 	void addAsFavorite();
 
 	void clearUserList() {
@@ -500,13 +493,8 @@ private:
 			Lock l(updateCS);
 			updateList.clear();
 		}
-
 		userMap.clear();
-		int j = ctrlUsers.GetItemCount();
-		for(int i = 0; i < j; i++) {
-			delete (UserInfo*) ctrlUsers.GetItemData(i);
-		}
-		ctrlUsers.DeleteAllItems();
+		ctrlUsers.DeleteAll();
 	}
 
 	int getImage(const User::Ptr& u) {

@@ -1,7 +1,3 @@
-/////////////////////////////////////////////////////////////////////////////
-// AGArrayTemplates.h
-
-
 #if !defined(AGARRAYTEMPLATES_H__)
 #define AGARRAYTEMPLATES_H__
 
@@ -9,19 +5,9 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-/* For users
-#ifndef AGARRAYTEMPLATES_H__
-	#include "AGArrayTemplates.h"
-#endif
-*/
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
 // CAGPtrArray
 
-class CAGPtrArray
-{
+class CAGPtrArray {
 public:
 
 // Construction
@@ -84,15 +70,10 @@ protected:
 	typedef void* BASE_ARG_TYPE;
 };
 
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
 // CAGTypedPtrArray
 
 template<class TYPE>
-class CAGTypedPtrArray : public CAGPtrArray
-{
+class CAGTypedPtrArray : public CAGPtrArray {
 public:
 	// Accessing elements
 	TYPE GetAt(int nIndex) const
@@ -105,18 +86,23 @@ public:
 	// Potentially growing the array
 	void SetAtGrow(int nIndex, TYPE newElement)
 	   { CAGPtrArray::SetAtGrow(nIndex, newElement); }
+
 	int Add(TYPE newElement)
 	   { return CAGPtrArray::Add(newElement); }
+
 	int AddSpeedy(TYPE newElement)
 	   { return CAGPtrArray::AddSpeedy(newElement); }
+
 	int Append(const CAGTypedPtrArray<TYPE>& src)
 	   { return CAGPtrArray::Append(src); }
+
 	void Copy(const CAGTypedPtrArray<TYPE>& src)
 		{ CAGPtrArray::Copy(src); }
 
 	// Operations that move elements around
 	void InsertAt(int nIndex, TYPE newElement, int nCount = 1)
 		{ CAGPtrArray::InsertAt(nIndex, newElement, nCount); }
+
 	void InsertAt(int nStartIndex, CAGTypedPtrArray<TYPE>* pNewArray)
 	   { CAGPtrArray::InsertAt(nStartIndex, pNewArray); }
 
@@ -127,35 +113,23 @@ public:
 		{ return (TYPE&)CAGPtrArray::operator[](nIndex); }
 };
 
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
 // CAGDestroyTypedPtrArray
 
 template <class Type>
-class CAGDestroyTypedPtrArray : public CAGTypedPtrArray<Type*>
-{
+class CAGDestroyTypedPtrArray : public CAGTypedPtrArray<Type*> {
 public:
-	//---------------------------------------------------------------------------
 	typedef CAGTypedPtrArray<Type*> TParentClass;
 
-	//----------------------------------------------------------------------
-	CAGDestroyTypedPtrArray()
-	{
+	CAGDestroyTypedPtrArray() {
 	}
 
-	//----------------------------------------------------------------------
-	virtual ~CAGDestroyTypedPtrArray()
-	{
+	virtual ~CAGDestroyTypedPtrArray() {
 	}
 
-	//----------------------------------------------------------------------
-	void RemoveAt(int nIndex, int nCount = 1, bool bDelete = true)
-	{
+	void RemoveAt(int nIndex, int nCount = 1, bool bDelete = true) {
 		if (bDelete) {
 			Type* pItem;
-			for (int cnt = nIndex; cnt < nIndex+nCount; cnt++){
+			for (int cnt = nIndex; cnt < nIndex+nCount; cnt++) {
 				pItem = GetAt(cnt);
 				if (pItem != NULL)
 					delete pItem;
@@ -164,12 +138,10 @@ public:
 		TParentClass::RemoveAt(nIndex, nCount);
 	}
 
-	//----------------------------------------------------------------------
-	void RemoveAll(bool bDelete = true)
-	{
+	void RemoveAll(bool bDelete = true) {
 		if (bDelete) {
 			Type* pItem;
-			for (int cnt = 0; cnt < GetSize(); cnt++){
+			for (int cnt = 0; cnt < GetSize(); cnt++) {
 				pItem = GetAt(cnt);
 				if (pItem != NULL)
 					delete pItem;
@@ -177,12 +149,11 @@ public:
 		}
 		TParentClass::RemoveAll();
 	}
-	//----------------------------------------------------------------------
-	void RemoveAllNoDestructSize(bool bDelete = true)
-	{
+
+	void RemoveAllNoDestructSize(bool bDelete = true) {
 		if (bDelete) {
 			Type* pItem;
-			for (int cnt = 0; cnt < GetSize(); cnt++){
+			for (int cnt = 0; cnt < GetSize(); cnt++) {
 				pItem = TParentClass::ElementAt(cnt);
 				if (pItem != NULL) {
 					delete pItem;

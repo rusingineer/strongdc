@@ -1,20 +1,9 @@
 #include "stdafx.h"
 #include "ImageDataObject.h"
-#include "..\client\exception.h"
 
-#ifdef _DEBUG
-#define new1 DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-
-//////////////////////////////////////////////////////////////////////
 // Static member functions
-//////////////////////////////////////////////////////////////////////
 
-void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
-{
+void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap) {
 	SCODE sc;
 
 	// Get the image data object
@@ -40,8 +29,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	
 	sc = ::StgCreateDocfileOnILockBytes(lpLockBytes,
 		STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &pStorage);
-	if (sc != S_OK)
-	{
+	if (sc != S_OK)	{
 		lpLockBytes = NULL;
 	}
 	dcassert(pStorage != NULL);
@@ -61,8 +49,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	
 	CLSID clsid;
 
-	if(pOleObject != NULL)
-	{
+	if(pOleObject != NULL) {
 	sc = pOleObject->GetUserClassID(&clsid);
 
 	reobject.clsid = clsid;
@@ -81,6 +68,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 
 	pOleObject->Release();
 	}
+
 	pOleClientSite->Release();
 	lpLockBytes->Release();
 	pStorage->Release();
@@ -89,8 +77,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	DeleteObject(hBitmap);
 }
 
-void CImageDataObject::SetBitmap(HBITMAP hBitmap)
-{
+void CImageDataObject::SetBitmap(HBITMAP hBitmap) {
 	dcassert(hBitmap);
 
 	STGMEDIUM stgm;
@@ -108,8 +95,7 @@ void CImageDataObject::SetBitmap(HBITMAP hBitmap)
 	this->SetData(&fm, &stgm, TRUE);		
 }
 
-IOleObject *CImageDataObject::GetOleObject(IOleClientSite *pOleClientSite, IStorage *pStorage)
-{
+IOleObject *CImageDataObject::GetOleObject(IOleClientSite *pOleClientSite, IStorage *pStorage) {
 	dcassert(m_stgmed.hBitmap);
 
 	SCODE sc;

@@ -8,13 +8,10 @@
 #include "../client/HubManager.h"
 
 #ifndef AGEMOTIONSETUP_H__
-	#include "AGEmotionSetup.h"
+#include "AGEmotionSetup.h"
 #endif
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
-
-#define MAXSTRING 30000
-char g_BufTemp[MAXSTRING];
 
 ChatCtrl::ChatCtrl() {
 	memset(&m_TextStyleGeneral, 0, sizeof(CHARFORMAT2));
@@ -26,9 +23,21 @@ ChatCtrl::ChatCtrl() {
 	ReadSettings();
 	m_boAutoScroll = true;
 	m_pUsers = NULL;
+	g_BufTemp = (char *) calloc(1024, sizeof(char)); 
+	g_BufTemplen = 1023;
+	beforeAppendText = (char *) calloc(1024, sizeof(char)); 
+	afterAppendText = (char *) calloc(1024, sizeof(char)); 
+	AppendTextlen = 1023;
 }
 
-void ChatCtrl::SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers ) {
+ChatCtrl::~ChatCtrl() {
+	m_pUsers = NULL;
+	delete[] g_BufTemp;
+	delete[] beforeAppendText;
+	delete[] afterAppendText;
+}
+
+void ChatCtrl::SetUsers( TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *pUsers ) {
 	m_pUsers = pUsers;
 }
 
@@ -115,25 +124,21 @@ void ChatCtrl::ReadSettings() {
 }
 
 void ChatCtrl::AdjustTextSize( LPCTSTR lpstrTextToAdd ) {
-	CAtlString sText = lpstrTextToAdd;
+	sText = lpstrTextToAdd;
 
 	if( ( GetTextLengthEx( GTL_PRECISE ) + sText.GetLength() ) > 25000 ) {
-		long lSelBeginSaved, lSelEndSaved;
 		GetSel( lSelBeginSaved, lSelEndSaved );
-		long lLine = LineFromChar( 2000 );
-		int iChar = LineIndex( lLine );
-		SetSel( 0, iChar );
+		line = LineFromChar( 2000 );
+		iFindBegin = LineIndex( line );
+		SetSel( 0, iFindBegin );
 		ReplaceSel("");
 	}
+	SendMessage( EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS );
 }
 
-char beforeAppendText[MAXSTRING];
-char afterAppendText[MAXSTRING];
-
-char *stristr(const char * str1, const char * str2, int * pnIdxFound = NULL)
-{
-	char *cp = (char *) str1;
+char *stristr(const char *str1, const char *str2, int *pnIdxFound = NULL) {
 	char *s1, *s2;
+	char *cp = (char *) str1;
 	if ( !*str2 )
 		return (char *) str1;
 	int nIdx = 0;
@@ -157,8 +162,7 @@ char *stristr(const char * str1, const char * str2, int * pnIdxFound = NULL)
 	return NULL;
 }
 
-void strstp(const char *in, char *before, const char *txt, char *after)
-{
+void strstp(const char *in, char *before, const char *txt, char *after) {
 	char *cmp = stristr(in, txt);
 	if (!cmp) return;
 	strncpy(before, in, cmp - in);
@@ -168,8 +172,7 @@ void strstp(const char *in, char *before, const char *txt, char *after)
 }
 
 
-int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew)
-{
+int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew) {
 	int nSourceLen;
 	if (!lpszOld) nSourceLen = 0;
 	else nSourceLen = strlen(lpszOld);
@@ -181,18 +184,15 @@ int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew)
 	char *lpszStart = lpszBuf;
 	char *lpszEnd = lpszBuf + strlen(lpszBuf);
 	char *lpszTarget;
-	while (lpszStart < lpszEnd)
-	{
-		while ((lpszTarget = strstr(lpszStart, lpszOld)) != NULL)
-		{
+	while (lpszStart < lpszEnd) {
+		while ((lpszTarget = strstr(lpszStart, lpszOld)) != NULL) {
 			nCount++;
 			lpszStart = lpszTarget + nSourceLen;
 		}
 		lpszStart += strlen(lpszStart) + 1;
 	}
 
-	if (nCount > 0)
-	{
+	if (nCount > 0) {
 		int nOldLength = strlen(lpszBuf); 
 
 		lpszStart = lpszBuf;
@@ -217,17 +217,19 @@ int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew)
 }
 
 void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor ) {
-	CAtlString sText = sMsg;
+	msg = sMsg;
+	sText = strchr(sMsg+_tcslen(sAuthor), ' ');
+	msg = msg.substr(0, (msg.length()-sText.GetLength()));
 
 	SetRedraw( FALSE );
 
-	long lMask = GetEventMask();
+	lMask = GetEventMask();
 	SetEventMask( lMask | ENM_LINK );
 	lMask = GetEventMask();
 
-	int iEnd1 = sText.GetLength();
-	int iBegin2 = 0;
-	int iEnd2 = 0;
+	iEnd1 = sText.GetLength();
+	iBegin = 0;
+	iEnd2 = 0;
 
 	// Cachry machry, aby tam byly vzdy stejne oddelovace radku, 
 	//   nejlip se osvedcil pouze "\n", jinak ujizdi obarveni nicku
@@ -235,12 +237,12 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 	sText.Replace( "\n\r", "\n" );
 	sText.Replace( "\r", "\n" );
 
-	int iCRLF = sText.Find( "\n", 0 );
-	int iCRLF_Len = 0;
+	iCRLF = sText.Find( "\n", 0 );
+	iCRLF_Len = 0;
 	if ( iCRLF >= 0 ) {
 		iCRLF_Len = 1;
 		iEnd1 = iCRLF;
-		iBegin2 = iCRLF + 1;
+		iBegin = iCRLF + 1;
 		iEnd2 = sText.GetLength();
 	}
 	if ( iCRLF < 0 ) {
@@ -249,61 +251,57 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 	}
 
 	sText += "\n";
+	len = sText.GetLength();
+	if(len > AppendTextlen) {
+		beforeAppendText = (char *) realloc(beforeAppendText, len+1);
+		afterAppendText = (char *) realloc(afterAppendText, len+1);
+		AppendTextlen = len;
+	}
+	AppendTextOnly(sMyNick, sTime, msg.c_str(), cf, sAuthor, false); // maybe ugly but no emoticon in author nick ;-)
+	// cachry machry a maj s toho vylizt smajlove
+	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS)) {
+		bMyMessage = (sMyNick == sAuthor );
 
-	// cachry machry a maj s toho vylizt smajlove ... mozna kdyz buh da ;-)
-	if (g_pEmotionsSetup->getUseEmoticons() && SETTING(USE_EMOTICONS)){
-		CAtlString sNick( sMyNick );
-		bool bMyMessage = (sNick == sAuthor );
-
-		bool bRedrawControl = false;
-		bool bIsSetAuthorAndTime = false;
+		bRedrawControl = false;
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
-		int smiles = 0;
+		smiles = 0;
+		maxsmiles = SETTING(MAX_EMOTICONS);
 		for (;;)
 		{
 			char Delimiter[1024] = { NULL };
 			char *rpl = NULL;
 			CAGEmotion::Ptr pFoundedEmotion = NULL;
-			int nLastIdxFound = sText.GetLength();
+			len = sText.GetLength();
 			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
-				int nIdxFound = -1;
+				nIdxFound = -1;
 				char *txt = stristr(sText, (*pEmotion)->GetEmotionText().c_str(), &nIdxFound);
 				if ((txt < rpl && txt) || !rpl && txt)
 				{
-					if (nLastIdxFound > nIdxFound) {
+					if (len > nIdxFound) {
 						rpl = txt;
-						// hbmNext = (*pEmotion)->GetEmotionBmp();
 						pFoundedEmotion = (*pEmotion);
 						strcpy(Delimiter, (*pEmotion)->GetEmotionText().c_str());
 
-						nLastIdxFound = nIdxFound;
+						len = nIdxFound;
 					}
 				}
 			}
 
-			if(rpl && smiles < 256)
-			{
+			if(rpl && (smiles < maxsmiles)) {
 				bRedrawControl = true;
 				strstp(sText, beforeAppendText, Delimiter, afterAppendText);
-				AppendTextOnly(sMyNick, (!bIsSetAuthorAndTime ? sTime: 0), beforeAppendText, cf, sAuthor, !bRedrawControl);
-				if (!bIsSetAuthorAndTime)
-					bIsSetAuthorAndTime = true;
+				AppendTextOnly(sMyNick, "", beforeAppendText, cf, sAuthor, !bRedrawControl);
 
 				COLORREF clrBkColor = m_TextStyleGeneral.crBackColor;
 				if (bMyMessage)
 					clrBkColor = m_ChatTextMyOwn.crBackColor;
 				HBITMAP hbmNext = pFoundedEmotion->GetEmotionBmp(clrBkColor);
-
 				AppendBitmap(hbmNext);
 				sText = afterAppendText;
 				smiles++;
-			}
-			else
-			{
+			} else {
 				if (strlen(sText) > 0) {
-					AppendTextOnly(sMyNick, (!bIsSetAuthorAndTime ? sTime: 0), sText, cf, sAuthor, !bRedrawControl);
-					if (!bIsSetAuthorAndTime)
-						bIsSetAuthorAndTime = true;
+					AppendTextOnly(sMyNick, "", sText, cf, sAuthor, !bRedrawControl);
 				}
 				break;
 			}
@@ -311,18 +309,14 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 		if (bRedrawControl) {
 			EndRedrawAppendTextOnly();
 		}
-	}
-	else
-	{
-		AppendTextOnly(sMyNick, sTime, sText, cf, sAuthor );
+	} else {
+		AppendTextOnly(sMyNick, "", sText, cf, sAuthor );
 	}
 }
 
 void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor , bool bRedrawControlAtEnd) {
-	long lSelBegin, lSelEnd;
-	long lSelBeginSaved, lSelEndSaved;
-	BOOL boOK = false, boAtTheEnd = false;
-	long lTextLength;
+	boOK = false;
+	boAtTheEnd = false;
 
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	lTextLength = GetTextLengthEx( GTL_PRECISE );
@@ -350,67 +344,55 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	ReplaceSel( sText, false );
 
 	// Set text format
-	long lMyNickStart = -1;
-	long lMyNickEnd = -1;
-	CAtlString sMsgLower( sText );
+	lMyNickStart = -1;
+	lMyNickEnd = -1;
+	sMsgLower = sText;
 	sMsgLower.MakeLower();
-	CAtlString sNick( sMyNick );
+	sNick = sMyNick;
 	if ( sNick == sAuthor ) {
 		// Moje vlastni zprava
 		lSelEnd = GetTextLengthEx( GTL_PRECISE );
 		SetSel( lSelBegin, lSelEnd );
 		boOK = SetSelectionCharFormat( m_ChatTextMyOwn );
+		myMess = true;
 	} else {
 		lSelEnd = GetTextLengthEx( GTL_PRECISE );
 		SetSel( lSelBegin, lSelEnd );
 		boOK = SetSelectionCharFormat( cf );
+		myMess = false;
 	}
 
-	// Zvyrazneni nicku autora zpravy
-	if(BOOLSETTING(BOLD_AUTHOR_MESS)) {
+	// Zvyrazneni nicku autora zpravy ci OPicaka ;o)
+	if(!myMess) { // don't waste cpu time, it's my mess and not need to set another author style :-P
 		if (_tcslen(sAuthor) > 0) {
-  			CAtlString sAuthorNick( sAuthor );
+			int i = -1;
+			if(m_pUsers != NULL) // fix for pm windows without userlist :-(
+				i = m_pUsers->findItem(sAuthor);
+			isOP = false;
+			if(i != -1) {
+				UserInfo* ui = m_pUsers->getItemData(i);
+				isOP = ui->getOp();
+			}
+			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP) {
+  				sAuthorNick = sAuthor;
   			sAuthorNick.MakeLower();
-			long lAuthorBegin = sMsgLower.Find( sAuthorNick, 0 );
+				lAuthorBegin = sMsgLower.Find( sAuthorNick, 0 );
     		if ( lAuthorBegin > 0 ) {
-				long lAuthorEnd = lAuthorBegin + sAuthorNick.GetLength();
+					lAuthorEnd = lAuthorBegin + sAuthorNick.GetLength();
 				SetSel( lSelBegin + lAuthorBegin, lSelBegin + lAuthorEnd );
+					if(isOP)
+						boOK = SetSelectionCharFormat( m_TextStyleOPUsers );
+					else
 				boOK = SetSelectionCharFormat( m_TextStyleBold );
 			}
 		}
 	}
-
+	}
 	
 	// Zvyrazneni vsech vyskytu vlastniho nicku
 	lSelEnd = GetTextLengthEx( GTL_PRECISE );
-	long lSearchFrom = 0;
-	sNick.MakeLower();
-	CAtlString sAuthorNick( sAuthor );
-  	sAuthorNick.MakeLower();
-
-if(m_pUsers != NULL)
-	{
-		lSelEnd = GetTextLengthEx( GTL_PRECISE );
-		int i = m_pUsers->findItem((string)sAuthor,-1,false);
-		if(i>=0) {
-			
-		UserInfo* ui = (UserInfo*)m_pUsers->getItemData(i);
-		if(ui->getOp())
-		{
 			lSearchFrom = 0;
-			while ( true ) {
-				lMyNickStart = sMsgLower.Find( sAuthorNick, lSearchFrom );
-				if ( lMyNickStart < 0 ) 
-					break;
-	
-				lMyNickEnd = lMyNickStart + sAuthorNick.GetLength();
-				SetSel( lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd );
-				boOK = SetSelectionCharFormat( m_TextStyleOPUsers );
-				lSearchFrom = lMyNickEnd;
-			}
-		}
-		}
-	}
+	sNick.MakeLower();
 
 	while ( true ) {
 		lMyNickStart = sMsgLower.Find( sNick, lSearchFrom );
@@ -421,12 +403,6 @@ if(m_pUsers != NULL)
 		SetSel( lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd );
 		boOK = SetSelectionCharFormat( m_TextStyleMyNick );
 		lSearchFrom = lMyNickEnd;
-
-		if ( sNick != sAuthorNick )
-		{
-			if (!SETTING(CHATNAMEFILE).empty())
-				PlaySound(SETTING(CHATNAMEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-		}
 	}
 
 	// Zvyrazneni vsech vyskytu nicku Favorite useru
@@ -452,14 +428,13 @@ if(m_pUsers != NULL)
 		}
 	}
 
-
 	// Uprava pozadi pro text s bitem CFE_LINK
 		lSelEnd = GetTextLengthEx( GTL_PRECISE );
 		CHARFORMAT2 cfSel;
 		memset(&cfSel, 0, sizeof(CHARFORMAT2));
 		cfSel.cbSize = sizeof( cfSel );
 
-		for ( long lPos = lSelBegin; lPos < lSelEnd; lPos++ ) {
+	for ( lPos = lSelBegin; lPos < lSelEnd; lPos++ ) {
 			SetSel( lPos, lPos + 1 );
 			GetSelectionCharFormat( cfSel );
 			if ( cfSel.dwEffects & CFE_LINK ) {
@@ -490,11 +465,10 @@ void ChatCtrl::EndRedrawAppendTextOnly() {
 }
 
 void ChatCtrl::AppendBitmap(HBITMAP hbm) {
-	long lSelBeginSaved, lSelEndSaved;
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	
 	// Insert text at the end
-	long lSelEnd = GetTextLengthEx( GTL_PRECISE );
+	lTextLength = GetTextLengthEx( GTL_PRECISE );
 	SetSel( lSelEnd, lSelEnd );
 	CImageDataObject::InsertBitmap(GetIRichEditOle(), hbm);
 
@@ -520,60 +494,63 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 		if ( !m_pUsers ) 
 			return FALSE;
 
-		int iCharPos = CharFromPos( p );
-		int line = LineFromChar( iCharPos );
-		int len = LineLength( iCharPos ) + 1;
+	iCharPos = CharFromPos( p );
+	line = LineFromChar( iCharPos );
+	len = LineLength( iCharPos ) + 1;
 		if ( len < 3 )
 			return 0;
 
 		// Metoda FindWordBreak nestaci, protoze v nicku mohou byt znaky povazovane za konec slova
-		int lPosBegin, lPosEnd;
-		int iFindBegin = LineIndex( line );
-		int iFindEnd = LineIndex( line ) + LineLength( iCharPos );
+	iFindBegin = LineIndex( line );
+	iEnd1 = LineIndex( line ) + LineLength( iCharPos );
 
-		for ( lPosBegin = iCharPos; lPosBegin >= iFindBegin; lPosBegin-- ) {
-			if ( FindWordBreak( WB_ISDELIMITER, lPosBegin ) )
+	for ( lSelBegin = iCharPos; lSelBegin >= iFindBegin; lSelBegin-- ) {
+		if ( FindWordBreak( WB_ISDELIMITER, lSelBegin ) )
 				break;
 		}
-		lPosBegin++;
-		for ( lPosEnd = iCharPos; lPosEnd < iFindEnd; lPosEnd++ ) {
-			if ( FindWordBreak( WB_ISDELIMITER, lPosEnd ) )
+	lSelBegin++;
+	for ( lSelEnd = iCharPos; lSelEnd < iEnd1; lSelEnd++ ) {
+		if ( FindWordBreak( WB_ISDELIMITER, lSelEnd ) )
 				break;
 		}
 
-		len = lPosEnd - lPosBegin;
+	len = lSelEnd - lSelBegin;
 		if ( len <= 0 )
 			return false;
 
-		int iRet = GetTextRange( lPosBegin, lPosEnd, g_BufTemp);
+	if(len > g_BufTemplen) {
+		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemplen = len;
+	}
+	iRet = GetTextRange( lSelBegin, lSelEnd, g_BufTemp);
 		UNREFERENCED_PARAMETER(iRet);
 		g_BufTemp[len] = 0;
-		CAtlString sText = g_BufTemp;
+	sText = g_BufTemp;
 
-		int iLeft = 0, iRight = 0;
-		int iLen = sText.GetLength();
+	iLeft = 0, iRight = 0;
+	iCRLF = sText.GetLength();
 
-		int iPos = sText.Find( '<' );
+	iPos = sText.Find( '<' );
 		if ( iPos >= 0 ) {
 			iLeft = iPos + 1;
 			iPos = sText.Find( '>', iLeft );
 			if ( iPos < 0 ) 
 				return false;
 			iRight = iPos - 1;
-			iLen = iRight - iLeft + 1;
+		iCRLF = iRight - iLeft + 1;
 		} else {
 			iLeft = 0;
 		}
 
-		CAtlString sN = sText.Mid( iLeft, iLen );
+	sN = sText.Mid( iLeft, iCRLF );
 		if ( sN.GetLength() == 0 )
 			return false;
 
 		if ( m_pUsers->findItem( (string) sN) >= 0 ) {
 			*sNick = sN;
 			if ( piBegin && piEnd ) {
-				*piBegin = lPosBegin + iLeft;
-				*piEnd = lPosBegin + iLeft + iLen;
+			*piBegin = lSelBegin + iLeft;
+			*piEnd = lSelBegin + iLeft + iCRLF;
 			}
 			return true;
 		}
@@ -582,33 +559,33 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 		// Nebo pro obecnost posledni znak 
 		// A taky prvni znak 
 		// A pak prvni i posledni :-)
-		if ( iLen > 1 ) {
-			sN = sText.Mid( iLeft, iLen - 1 );
+	if ( iCRLF > 1 ) {
+		sN = sText.Mid( iLeft, iCRLF - 1 );
 			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
 				*sNick = sN;
         			if ( piBegin && piEnd ) {
-        				*piBegin = lPosBegin + iLeft;
-        				*piEnd = lPosBegin + iLeft + iLen - 1;
+       				*piBegin = lSelBegin + iLeft;
+       				*piEnd = lSelBegin + iLeft + iCRLF - 1;
         			}
 				return true;
 			}
 
-			sN = sText.Mid( iLeft + 1, iLen - 1 );
+		sN = sText.Mid( iLeft + 1, iCRLF - 1 );
 			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
         			*sNick = sN;
         			if ( piBegin && piEnd ) {
-          				*piBegin = lPosBegin + iLeft + 1;
-          				*piEnd = lPosBegin + iLeft + iLen;
+					*piBegin = lSelBegin + iLeft + 1;
+					*piEnd = lSelBegin + iLeft + iCRLF;
         			}
 				return true;
 			}
 
-			sN = sText.Mid( iLeft + 1, iLen - 2 );
+		sN = sText.Mid( iLeft + 1, iCRLF - 2 );
 			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
 				*sNick = sN;
         			if ( piBegin && piEnd ) {
-        				*piBegin = lPosBegin + iLeft + 1;
-       					*piEnd = lPosBegin + iLeft + iLen - 1;
+       				*piBegin = lSelBegin + iLeft + 1;
+   					*piEnd = lSelBegin + iLeft + iCRLF - 1;
         			}
 				return true;
 			}
@@ -617,16 +594,19 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 }
 
 bool ChatCtrl::HitIP( POINT p, CAtlString *sIP, int *piBegin, int *piEnd ) {
-		int iCharPos = CharFromPos( p );
-		int len = LineLength( iCharPos ) + 1;
+	iCharPos = CharFromPos( p );
+	len = LineLength( iCharPos ) + 1;
 		if ( len < 3 )
 			return false;
 
 		DWORD lPosBegin = FindWordBreak( WB_LEFT, iCharPos );
 		DWORD lPosEnd = FindWordBreak( WB_RIGHTBREAK, iCharPos );
 		len = lPosEnd - lPosBegin;
-
-		int iRet = GetTextRange( lPosBegin, lPosEnd, g_BufTemp );
+	if(len > g_BufTemplen) {
+		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemplen = len;
+	}
+	iRet = GetTextRange( lPosBegin, lPosEnd, g_BufTemp );
 		UNREFERENCED_PARAMETER(iRet);
 		g_BufTemp[len] = 0;
 		for ( int i = 0; i < len; i++ ) {
@@ -634,28 +614,28 @@ bool ChatCtrl::HitIP( POINT p, CAtlString *sIP, int *piBegin, int *piEnd ) {
 				return false;
 			}
 		}
-		CAtlString sText = g_BufTemp;
+	sText = g_BufTemp;
 
 		sText.ReleaseBuffer();
 		sText.TrimLeft();
 		sText.TrimRight();
 		sText = sText + '.';
-		int iStart = 0;
-		int iPos = -1;
-		bool boOK = true;
-		int iVal = 0;
+	iFindBegin = 0;
+	iPos = -1;
+	boOK = true;
+	iEnd2 = 0;
 		for ( int i = 0; i < 4; i++ ) {
-			iPos = sText.Find( '.', iStart );
+		iPos = sText.Find( '.', iFindBegin );
 			if ( iPos < 0 ) {
 				boOK = false;
 				break;
 			}
-        			iVal = atoi( sText.Mid( iStart ) );
-        			if ( ( iVal < 0 ) || ( iVal > 255 ) ) {
+		iEnd2 = atoi( sText.Mid( iFindBegin ) );
+		if ( ( iEnd2 < 0 ) || ( iEnd2 > 255 ) ) {
         				boOK = false;
         				break;
 				}
-			iStart = iPos + 1;
+		iFindBegin = iPos + 1;
 		}
 
 		if ( boOK ) {
@@ -669,26 +649,29 @@ bool ChatCtrl::HitIP( POINT p, CAtlString *sIP, int *piBegin, int *piEnd ) {
 }
 
 bool ChatCtrl::HitURL(POINT p) {
-	long lBegin, lEnd;
-	GetSel( lBegin, lEnd );
-	bool boHit = false;
+	GetSel( lSelBegin, lSelEnd );
+	boOK = false;
 
 		CHARFORMAT2 cfSel;
 		cfSel.cbSize = sizeof( cfSel );
     
 		GetSelectionCharFormat( cfSel );
 		if ( cfSel.dwEffects & CFE_LINK ) {
-			boHit = true;
+		boOK = true;
 		}
-	return boHit;
+	return boOK;
 }
 
 string ChatCtrl::LineFromPos( POINT p ) {
-	int iCharPos = CharFromPos( p );
-	int line = LineFromChar( iCharPos );
-	int len = LineLength( iCharPos ) + 1;
+	iCharPos = CharFromPos( p );
+	line = LineFromChar( iCharPos );
+	len = LineLength( iCharPos ) + 1;
 	if ( len < 3 ) {
 		return _T("");
+	}
+	if(len > g_BufTemplen) {
+		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemplen = len;
 	}
 	GetLine( line, g_BufTemp, len );
 	string x(g_BufTemp, len-1);
@@ -708,27 +691,25 @@ bool ChatCtrl::GetAutoScroll() {
 void ChatCtrl::SetAutoScroll( bool boAutoScroll ) {
 	m_boAutoScroll = boAutoScroll;
 		GoToEnd();
-	}
+}
 
 LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
 	// Po kliku dovnitr oznaceneho textu nedelat nic
-	long lBegin, lEnd;
-	GetSel( lBegin, lEnd );
-	int iCharPos = CharFromPos( pt );
-	if ( ( lEnd > lBegin ) && ( iCharPos >= lBegin ) && ( iCharPos <= lEnd ) ) {
+	GetSel( lSelBegin, lSelEnd );
+	iCharPos = CharFromPos( pt );
+	if ( ( lSelEnd > lSelBegin ) && ( iCharPos >= lSelBegin ) && ( iCharPos <= lSelEnd ) ) {
 		return 1;
 	}
 
 	// Po kliku do IP oznacit IP
-	CAtlString sSel;
-	int iBegin = 0, iEnd = 0;
-	if ( HitIP( pt, &sSel, &iBegin, &iEnd ) ) {
-		SetSel( iBegin, iEnd );
+	iBegin = 0, iEnd1 = 0;
+	if ( HitIP( pt, &sSel, &iBegin, &iEnd1 ) ) {
+		SetSel( iBegin, iEnd1 );
 		InvalidateRect( NULL );
-	} else if ( HitNick( pt, &sSel, &iBegin, &iEnd ) ) {
-		SetSel( iBegin, iEnd );
+	} else if ( HitNick( pt, &sSel, &iBegin, &iEnd1 ) ) {
+		SetSel( iBegin, iEnd1 );
 		InvalidateRect( NULL );
 	}
 	return 1;
