@@ -549,19 +549,6 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 	
 }
 
-string QueueManager::getTopAutoSearchString()
-{
-	Lock l(cs);
-
-	QueueItem* q = fileQueue.findHighest();
-
-	if(q && q->getTTH()){
-		return "TTH:" + q->getTTH()->toBase32();
-	}else{
-		return "";
-	}
-}
-
 void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueException) {
 	bool wantConnection = false;
 	{
@@ -1602,6 +1589,20 @@ void QueueManager::autoDropSource(User::Ptr& aUser)
     setDirty();
 
     DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
+}
+
+void QueueManager::sendAutoSearch(Client* c)
+{
+    Lock l(cs);
+	QueueItem::StringMap& queue = fileQueue.getQueue();
+
+	for(QueueItem::StringMap::iterator i = queue.begin(); i != queue.end(); i++)
+	{
+		if(i->second->getTTH())
+		{
+			c->search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, "TTH:" + i->second->getTTH()->toBase32(), true);
+		}
+	}
 }
 
 /**

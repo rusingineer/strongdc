@@ -140,7 +140,7 @@ LRESULT OMenu::onInitMenuPopup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return S_OK;
 }
 
-LRESULT OMenu::onMeasureItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT OMenu::onMeasureItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 	if (wParam == NULL) {
 		MEASUREITEMSTRUCT* mis = (MEASUREITEMSTRUCT*)lParam;
@@ -151,7 +151,7 @@ LRESULT OMenu::onMeasureItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lPa
 				string& text = mi->text;
 
 				SIZE size;
-				CZDCLib::CalcTextSize(text, WinUtil::smallBoldFont, &size);
+				CZDCLib::CalcTextSize(text, WinUtil::boldFont, &size);
 				mis->itemWidth = size.cx + 4;
 				mis->itemHeight = size.cy + 4;
 
@@ -162,7 +162,7 @@ LRESULT OMenu::onMeasureItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lPa
 	return S_OK;
 }
 
-LRESULT OMenu::onDrawItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 	if (wParam == NULL) {
 		DRAWITEMSTRUCT dis = *(DRAWITEMSTRUCT*)lParam;
@@ -171,8 +171,9 @@ LRESULT OMenu::onDrawItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 			if (mi) {
 				bHandled = TRUE;
 				CRect rc(dis.rcItem);
-				rc.top += 2;
+				//rc.top += 2;
 				rc.bottom -= 2;
+
 				CDC dc;
 				dc.Attach(dis.hDC);
 
@@ -183,7 +184,7 @@ LRESULT OMenu::onDrawItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 
 				dc.SetBkMode(TRANSPARENT);
 				dc.SetTextColor(OperaColors::TextFromBackground(SETTING(MENUBAR_LEFT_COLOR)));
-				HFONT oldFont = dc.SelectFont(WinUtil::smallBoldFont);
+				HFONT oldFont = dc.SelectFont(WinUtil::boldFont);
 				dc.DrawText(mi->text.c_str(), mi->text.size(), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 				dc.SelectFont(oldFont);
 

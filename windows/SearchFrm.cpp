@@ -310,47 +310,16 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	return 1;
 }
 
-LRESULT SearchFrame::onMeasure(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+LRESULT SearchFrame::onMeasure(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
 	if(wParam == IDC_FILETYPES) return ListMeasure(hwnd, wParam, (MEASUREITEMSTRUCT *)lParam);
-		else return FALSE;
+		else return OMenu::onMeasureItem(hwnd, uMsg, wParam, lParam, bHandled);
 };
 
-LRESULT SearchFrame::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
-	bHandled = FALSE;
-	if (wParam == NULL) {
-		DRAWITEMSTRUCT dis = *(DRAWITEMSTRUCT*)lParam;
-		if (dis.CtlType == ODT_MENU) {
-			OMenuItem* mi = (OMenuItem*)dis.itemData;
-			if (mi) {
-				bHandled = TRUE;
-				CRect rc(dis.rcItem);
-				rc.top += 2;
-				rc.bottom -= 2;
-				CDC dc;
-				dc.Attach(dis.hDC);
-
-				if (BOOLSETTING(MENUBAR_TWO_COLORS))
-					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, SETTING(MENUBAR_LEFT_COLOR), SETTING(MENUBAR_RIGHT_COLOR), BOOLSETTING(MENUBAR_BUMPED));
-				else
-					dc.FillSolidRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SETTING(MENUBAR_LEFT_COLOR));
-
-				dc.SetBkMode(TRANSPARENT);
-				dc.SetTextColor(OperaColors::TextFromBackground(SETTING(MENUBAR_LEFT_COLOR)));
-				HFONT oldFont = dc.SelectFont(WinUtil::smallBoldFont);
-				dc.DrawText(mi->text.c_str(), mi->text.size(), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
-				dc.SelectFont(oldFont);
-
-				dc.Detach();
-				return TRUE;
-			}
-		}
-		return S_OK;
-	}
-	else
 	if(wParam == IDC_FILETYPES) return ListDraw(hwnd, wParam, (DRAWITEMSTRUCT*)lParam);
-		else return FALSE;
+		else return OMenu::onDrawItem(hwnd, uMsg, wParam, lParam, bHandled);
 };
 
 
@@ -1196,7 +1165,9 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 		}
 		resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+		resultsMenu.InsertSeparatorFirst(sr->getFileName());
 		resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		resultsMenu.RemoveFirstItem();
 		resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
 		resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
 		cleanMenu(resultsMenu);
