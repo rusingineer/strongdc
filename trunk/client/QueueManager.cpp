@@ -155,6 +155,15 @@ void QueueManager::FileQueue::find(StringList& sl, int64_t aSize, const string& 
 	}
 }
 
+void QueueManager::FileQueue::find(QueueItem::List& ql, TTHValue* tth) {
+	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
+		QueueItem* qi = i->second;
+		if(qi->getTTH() != NULL && *qi->getTTH() == *tth) {
+			ql.push_back(qi);
+		}
+	}
+}
+
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
 	QueueItem* cand = NULL;
 	for(QueueItem::StringIter i = start; i != end; ++i) {

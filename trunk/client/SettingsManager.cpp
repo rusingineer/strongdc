@@ -93,7 +93,7 @@ const string SettingsManager::settingTags[] =
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
-	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines",
+	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -222,6 +222,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,-1,13,-1,14,-1,15,-1,16,-1,17,19,-1,18");
+	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
 	setDefault(AUTO_PRIORITY_DEFAULT, false);
 	setDefault(TOOLBARIMAGE,"");
 	setDefault(TOOLBARHOTIMAGE,"");

@@ -31,6 +31,7 @@ public:
 		COMMAND_HANDLER(IDC_BLACK_AND_WHITE, BN_CLICKED, onBlackAndWhite)
 		COMMAND_HANDLER(IDC_SELWINCOLOR, BN_CLICKED, onEditBackground)
 		COMMAND_HANDLER(IDC_ERROR_COLOR, BN_CLICKED, onEditError)
+		COMMAND_HANDLER(IDC_ALTERNATE_COLOR, BN_CLICKED, onEditAlternate)
 		COMMAND_ID_HANDLER(IDC_SELTEXT, onClickedText)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 	END_MSG_MAP()
@@ -46,6 +47,7 @@ public:
 	LRESULT onClickedText(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onEditBackground(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onEditError(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onEditAlternate(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 
@@ -95,7 +97,7 @@ protected:
 	LOGFONT m_Font;
 	COLORREF m_BackColor;
 	COLORREF m_ForeColor;
-	COLORREF fg, bg, err;
+	COLORREF fg, bg, err, alt;
 //	CDialog wokno;
 
 	char* title;

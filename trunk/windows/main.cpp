@@ -43,6 +43,7 @@ CONTEXT CurrContext;
 string exceptioninfo;
 int iLastExceptionDlgResult;
 HINSTANCE hCurrInstance;
+MainFrame wndMain;
 
 void SetCurrInstance(HINSTANCE hInst)
 {
@@ -222,7 +223,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
     f.write(LIT("\r\n"));
 
 	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
-
+	f.write(LIT("\r\n"));
 	f.close();
 
 	//MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. If you plan on reporting this bug to the bug report forum, make sure you have downloaded the debug information (DCPlusPlus.pdb) for your version of DC++. A file named \"exceptioninfo.txt\" has been generated in the same directory as DC++. Please include this file in the report or it'll be removed / ignored. If the file contains a lot of lines that end with '?', it means that the debug information is not correctly installed or your Windows doesn't support the functionality needed, and therefore, again, your report will be ignored/removed.", "DC++ Has Crashed", MB_OK | MB_ICONERROR);
@@ -231,7 +232,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 
-	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), 0, ExceptionFilterFunctionDlgProc, 0);
+	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), wndMain, ExceptionFilterFunctionDlgProc, 0);
 	ExceptionFunction();
 
 #ifndef _DEBUG
@@ -433,9 +434,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	checkCommonControls();
 
 	CMessageLoop theLoop;
-	_Module.AddMessageLoop(&theLoop);
-	
-	MainFrame wndMain;
+	_Module.AddMessageLoop(&theLoop);	
 
 	CEdit dummy;
 	CWindow splash;

@@ -49,6 +49,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
+	states.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+
 	ctrlSearchBox.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL, 0);
 	for(StringIter i = lastSearches.begin(); i != lastSearches.end(); ++i) {
@@ -95,6 +97,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		images.CreateFromImage(IDB_SPEEDS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 		ctrlResults.SetImageList(images, LVSIL_SMALL);
 	}
+	ctrlResults.SetImageList(states, LVSIL_STATE); 
 
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_NOCOLUMNHEADER, WS_EX_CLIENTEDGE, IDC_HUB);
@@ -932,6 +935,32 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if(sr->getType() == SearchResult::TYPE_FILE)
 					image+=4;
 			}
+
+			if(sr->getTTH() != NULL) {
+              for(int i = 0, j = mainItems.size(); i < j; ++i) {
+                    SearchInfo* si2 = ctrlResults.getItemData(i);
+                    SearchResult* sr2 = si2->sr;
+                    if(sr2->getTTH() && (*sr->getTTH() == *sr2->getTTH())) {
+						si2->subItems.push_back(si);
+
+						int m = ctrlResults.findItem(si2);
+						int pocet = si2->subItems.size() + 1;
+						si2->setHits(Util::toString(pocet)+" "+STRING(HUB_USERS));
+						si->setHits(sr->getUser()->getNick());
+						ctrlResults.updateItem(si2);
+						si->main = si2;
+						if(!si2->collapsed) {
+							ctrlResults.insertItem(m+1, si, image);
+							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+						} else ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+						ctrlResults.resort();
+						return 0;
+                    }
+				}				
+			}
+			mainItems.push_back(si);
+			si->setHits(sr->getUser()->getNick());
+			si->mainitem = true;
 			ctrlResults.insertItem(si, image);
 			ctrlStatus.SetText(2, (Util::toString(ctrlResults.GetItemCount())+" "+STRING(FILES)).c_str());
 		}
@@ -1174,6 +1203,84 @@ LRESULT SearchFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	return 0;
 }
 
+LRESULT SearchFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	bHandled = false;
+	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
+
+	CRect rect;
+	ctrlResults.GetItemRect(item->iItem, rect, LVIR_ICON);
+
+	if (item->ptAction.x < rect.left)
+	{
+		SearchInfo* i = (SearchInfo*)ctrlResults.getItemData(item->iItem);
+			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
+	}
+	return 0;
+} 
+
+void SearchFrame::Collapse(SearchInfo* i, int a) {
+	int q = 0;
+	while(q<i->subItems.size()) {
+		SearchInfo* j = i->subItems[q];
+		ctrlResults.deleteItem(j, false);
+		q++;
+	}
+
+	i->collapsed = true;
+	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+}
+
+void SearchFrame::Expand(SearchInfo* i, int a) {
+	int q = 0;
+	while(q<i->subItems.size()) {
+		SearchInfo* j = i->subItems[q];
+		int image = j->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(j->sr->getFile()) : WinUtil::getDirIconIndex();
+		ctrlResults.insertItem(a+1,j, image);
+		q++;
+	}
+
+	i->collapsed = false;
+	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+}
+
+LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+
+	CRect rc;
+	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
+
+	case CDDS_ITEMPREPAINT:
+		{
+			SearchInfo* ii = ctrlResults.getStoredItemAt(cd->nmcd.lItemlParam); 
+			targets.clear();
+			COLORREF barva = WinUtil::textColor;
+			if(ii->sr->getTTH()) {
+				QueueManager::getInstance()->getTargetsByTTH(targets,ii->sr->getTTH());
+				if(ii->sr->getType() == SearchResult::TYPE_FILE && targets.size()>0){		
+					barva = SETTING(SEARCH_ALTERNATE_COLOUR);				
+				}
+			}
+
+			if(!ii->mainitem) {
+				cd->clrText = OperaColors::blendColors(WinUtil::bgColor, barva, 0.4);
+				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+			}
+			
+			if(barva != WinUtil::textColor) {
+				cd->clrText = barva;
+				return CDRF_NEWFONT;
+			}
+		}
+		return CDRF_NOTIFYSUBITEMDRAW;
+
+	default:
+		return CDRF_DODEFAULT;
+	}
+	
+}
 /**
  * @file
  * $Id$

@@ -125,6 +125,14 @@ public:
 	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
 		Lock l(cs);
 		fileQueue.find(sl, aSize, suffix);
+	}
+	void getTargetsByTTH(StringList& sl, TTHValue* tth) throw() {
+		Lock l(cs);
+		QueueItem::List ql;
+		fileQueue.find(ql, tth);
+		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
+			sl.push_back((*i)->getTarget());
+		}
 	};
 
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
@@ -160,12 +168,8 @@ public:
 		FileQueue() : lastInsert(queue.end()) { };
 		~FileQueue() {
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
-			{
-				if(!i->second->isSet(QueueItem::FLAG_USER_LIST ))
-					delete FileDataInfo::GetFileDataInfo(i->second->getTempTarget());
 				delete i->second;
 			}
-		}
 //		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, const string& aSearchString, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
@@ -173,6 +177,8 @@ public:
 		QueueItem* find(const string& target);
 		QueueItem* findByHash(const string& hash);
 		void find(StringList& sl, int64_t aSize, const string& ext);
+		void find(QueueItem::List& ql, TTHValue* tth);
+
 		QueueItem* findAutoSearch(StringList& recent);
 		QueueItem* findHighest();
 		size_t getSize() { return queue.size(); };

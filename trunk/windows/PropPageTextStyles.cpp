@@ -30,6 +30,7 @@ PropPage::TextItem PropPageTextStyles::texts[] = {
 	{ IDC_SELWINCOLOR, ResourceManager::SETTINGS_SELECT_WINDOW_COLOR },
 	{ IDC_SELTEXT, ResourceManager::SETTINGS_SELECT_TEXT_FACE },
 	{ IDC_ERROR_COLOR, ResourceManager::SETCZDC_ERROR_COLOR },
+	{ IDC_ALTERNATE_COLOR, ResourceManager::SETTINGS_COLOR_ALTERNATE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
 
@@ -54,6 +55,7 @@ LRESULT PropPageTextStyles::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 	fg = SETTING(TEXT_COLOR);
 	bg = SETTING(BACKGROUND_COLOR);
 	err = SETTING(ERROR_COLOR);
+	alt = SETTING(SEARCH_ALTERNATE_COLOUR);
 	TextStyles[ TS_GENERAL ].Init( 
 	this, settings, "General text", "ABCD EFGH | General chat text",
 	SettingsManager::TEXT_GENERAL_BACK_COLOR, SettingsManager::TEXT_GENERAL_FORE_COLOR, 
@@ -130,6 +132,7 @@ void PropPageTextStyles::write()
 	settings->set(SettingsManager::TEXT_COLOR, (int)fg);
 	settings->set(SettingsManager::BACKGROUND_COLOR, (int)bg);
 	settings->set(SettingsManager::ERROR_COLOR, (int)err);
+	settings->set(SettingsManager::SEARCH_ALTERNATE_COLOUR, (int)alt);
 
 	for ( int i = 0; i < TS_LAST; i++ ) {
 		TextStyles[ i ].SaveSettings();
@@ -416,6 +419,14 @@ LRESULT PropPageTextStyles::onEditError(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 	CColorDialog d( err, 0, *this );
 	if (d.DoModal() == IDOK) {
 		err = d.GetColor();
+	}
+	return TRUE;
+}
+
+LRESULT PropPageTextStyles::onEditAlternate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	CColorDialog d( alt, 0, *this );
+	if (d.DoModal() == IDOK) {
+		alt = d.GetColor();
 	}
 	return TRUE;
 }
