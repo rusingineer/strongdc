@@ -103,10 +103,10 @@ public:
 			FLAG_REMOVED = 0x08,
 			FLAG_CRC_FAILED = 0x10,
 			FLAG_CRC_WARN = 0x20,
-			FLAG_SLOW = 0x40,
-			FLAG_UTF8 = 0x80,
-			FLAG_TTH_INCONSISTENCY = 0x100,
-			FLAG_BAD_TREE = 0x200
+			FLAG_UTF8 = 0x40,
+			FLAG_BAD_TREE = 0x80,
+			FLAG_SLOW = 0x100,
+			FLAG_TTH_INCONSISTENCY = 0x200,
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -123,18 +123,16 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, const string& aSearchString, 
-		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), searchString(aSearchString), 
-	size(aSize), /*downloadedBytes(aDownloadedBytes),*/ status(STATUS_WAITING), 
-	priority(aPriority), /*current(NULL), currentDownload(NULL),*/ added(aAdded),
+	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false)
 	{ };
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget), searchString(rhs.searchString),
-		size(rhs.size), /*downloadedBytes(rhs.downloadedBytes), */status(rhs.status), priority(rhs.priority), 
-		currents(rhs.currents), /*currentDownload(rhs.currentDownload), */added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot))
-		,autoPriority(rhs.autoPriority)
+		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), added(rhs.added),
+		tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -188,13 +186,6 @@ public:
 	bool isSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, sources); };
 	bool isBadSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, badSources); };
 	
-/*
-	void setCurrent(const User::Ptr& aUser) {
-		dcassert(isSource(aUser));
-		current = *getSource(aUser, sources);
-	}
-*/
-
 	void addCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		currents.push_back(*getSource(aUser));
@@ -244,7 +235,6 @@ public:
 	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
-
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

@@ -65,6 +65,7 @@ HWND WinUtil::mdiClient = NULL;
 FlatTabCtrl* WinUtil::tabCtrl = NULL;
 HHOOK WinUtil::hook = NULL;
 string WinUtil::tth;
+string WinUtil::exceptioninfo;
 bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;
@@ -93,7 +94,8 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
 	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
 	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS},
-	{0, 0, false, ResourceManager::MENU_NOTEPAD}};
+	{0, 0, false, ResourceManager::MENU_NOTEPAD}
+};
 
 HLSCOLOR RGB2HLS (COLORREF rgb) {
 	unsigned char minval = min(GetRValue(rgb), min(GetGValue(rgb), GetBValue(rgb)));
@@ -616,16 +618,12 @@ char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :
 
 #define STRGMSGS 8
 
-#define LINE4 "-- http://czdcplusplus.no-ip.org  <CZDC++ " DCVERSIONSTRING "[A]>"
+#define LINE4 "-- http://czdcplusplus.no-ip.org  <CZDC++ " DCVERSIONSTRING "[X]>"
 char *czmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE4,
 "\r\n-- Nekdo ma a nekdo nema....ja mam :-D\r\n" LINE4,
-"\r\n-- Proc mit par osklivejch ikonek kdyz jich muze byt hafo peknejch ? :)\r\n" LINE4,
-"\r\n-- Je to sice porad slusnej buglist ale proti original dc++ ci neo-modusu je to zlaty :o)\r\n" LINE4,
-"\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE4,
+"\r\n-- Je to sice porad slusnej buglist ale proti original DC++ ci neo-modusu je to zlaty :o)\r\n" LINE4,
 "\r\n-- Jsem prilis sexy pro normalni dc klienty :)\r\n" LINE4,
-"\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE4,
-"\r\n-- I kdyz sem tele..tak to nemusi byt poznat :-D\r\n" LINE4,
-"\r\n-- My dick grows larger for every MB I download! Does yours?\r\n" LINE4,
+"\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n" LINE4,
 };
 
 #define CZMSGS 9
@@ -730,6 +728,9 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 			GetWindowText(hwndWinamp, titleBuffer, buffLength);
 			string title = titleBuffer;
 			params["rawtitle"] = title;
+			// fix the title if scrolling is on, so need to put the stairs to the end of it
+			string titletmp=title.substr(title.find("***")+2, title.size());
+			title = titletmp + title.substr(0, title.size()-titletmp.size());
 			title = title.substr(title.find(".")+2, title.size());
 			if (title.rfind("-") != string::npos) {
 				params["title"] = title.substr(0, title.rfind("-")-1);
@@ -766,6 +767,54 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		} else {
 			status = "Supported version of Winamp is not running";
 		}
+	} else if(Util::stricmp(cmd.c_str(), "uptime") == 0) {
+		char buf[128];
+		sprintf(buf, "CZDC++ %s[%s] Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
+		string uptime = (string)buf;
+		long n, rest, i;
+		rest = Util::getUptime();
+		i = 0;
+		n = rest / (24*3600*7);
+		rest %= (24*3600*7);
+		if(n) {
+			sprintf(buf, "%d weeks ", n); 
+			uptime += (string)buf;
+			i++;
+		}
+		n = rest / (24*3600);
+		rest %= (24*3600);
+		if(n) {
+			sprintf(buf, "%d days ", n); 
+			uptime += (string)buf;
+			i++;
+		}
+		n = rest / (3600);
+		rest %= (3600);
+		if(n) {
+			sprintf(buf, "%d hours ", n); 
+			uptime += (string)buf;
+			i++;
+		}
+		n = rest / (60);
+		rest %= (60);
+		if(n) {
+			sprintf(buf, "%d min ", n); 
+			uptime += (string)buf;
+			i++;
+		}
+		n = rest;
+		if(++i <= 3) {
+			sprintf(buf, "%d sec ", n); 
+			uptime += (string)buf;
+		}
+		uptime += "@ D: " + Util::formatBytes(Socket::getTotalDown()) + 
+			" " + "U: " + Util::formatBytes(Socket::getTotalUp());
+		message = uptime;
+	} else if(Util::stricmp(cmd.c_str(), "tvtome") == 0) {
+		if(param.empty()) {
+			status = STRING(SPECIFY_SEARCH_STRING);
+		} else
+			WinUtil::openLink("http://www.tvtome.com/tvtome/servlet/Search?searchType=all&searchString="+param);
 	} else {
 		return false;
 	}
@@ -872,7 +921,7 @@ int WinUtil::getIconIndex(const string& aFileName) {
 		return 2;
 	}
 }
-//PDC {
+
 void WinUtil::ClearPreviewMenu(CMenu &previewMenu){
 	while(previewMenu.GetMenuItemCount() > 0) {
 		previewMenu.RemoveMenu(0, MF_BYPOSITION);
@@ -907,6 +956,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 void WinUtil::RunPreviewCommand(int index, string target){
 	PreviewApplication::List lst = PluginManager::getInstance()->getPreviewApps();
 
+	if(index <= lst.size()) {
 	string application = lst[index]->getApplication();
 	string arguments = lst[index]->getArguments();
 	StringMap ucParams;				
@@ -915,7 +965,6 @@ void WinUtil::RunPreviewCommand(int index, string target){
 	ucParams["dir"] = "\"" + Util::getFilePath(target) + "\"";
 
 	::ShellExecute(NULL, NULL, application.c_str(), Util::formatParams(arguments, ucParams).c_str(), ucParams["dir"].c_str(), SW_SHOWNORMAL);
+	}
 }
-
-//PDC }
 

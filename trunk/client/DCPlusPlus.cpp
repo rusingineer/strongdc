@@ -150,7 +150,6 @@ void shutdown() {
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
-//	PluginManager::deleteInstance();
 	DebugManager::deleteInstance();
 }
 

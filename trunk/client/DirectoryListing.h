@@ -62,7 +62,6 @@ public:
 		}
 
 		bool isJunkFile();
-
 		GETSET(string, name, Name);
 		GETSET(int64_t, size, Size);
 		GETSET(Directory*, parent, Parent);
@@ -101,11 +100,9 @@ public:
 			int64_t x = 0;
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
 				x+=(*i)->getSize();				
-				if((*i)->isJunkFile())
-				{
+				if((*i)->isJunkFile()) {
 					junkSize += (*i)->getSize();
 				}
-
 			}
 			return x;
 		}

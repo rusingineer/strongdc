@@ -105,3 +105,4 @@ IOleObject *CImageDataObject::GetOleObject(IOleClientSite *pOleClientSite, IStor
 
 	return pOleObject;
 }
+

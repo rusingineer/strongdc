@@ -179,7 +179,6 @@ public:
 	LRESULT onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled);
 	LRESULT onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 
-
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const string& aLine);
 	void addClientLine(const string& aLine, bool inChat = true);
@@ -319,15 +318,15 @@ public:
 	}
 
 	NOTIFYICONDATA pmicon;
+
 public:
 	TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
 
-//oDC
-	friend class PrivateFrame;  //Per cmd PM
+	friend class PrivateFrame;
 	StringTokenizer stFilter;
 	int iFilterBySel;
-//oDC FINE
+	
 	enum Speakers { UPDATE_USER, UPDATE_USERS, REMOVE_USER, ADD_CHAT_LINE,
 		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
 		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
@@ -371,6 +370,7 @@ private:
 		client = ClientManager::getInstance()->getClient(aServer);
 		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : aNick, client, false)); 
 		client->setNick(aNick.empty() ? SETTING(NICK) : aNick);
+
 		if (!aDescription.empty())
 			client->setDescription(aDescription);
 		client->setPassword(aPassword);
@@ -584,4 +584,3 @@ private:
  * @file
  * $Id$
  */
-

@@ -87,7 +87,6 @@ public:
 		store.save();
 	}
 
-//private:
 
 	class Hasher : public Thread {
 	public:

@@ -55,7 +55,6 @@ public:
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
-			// CDM EXTENSION BEGINS
 			if(op) {
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CSTRING(GET_USER_RESPONSES));
@@ -65,7 +64,6 @@ public:
 			} else {
 				extraItems = 1;
 			}
-			// CDM EXTENSION ENDS
 			menu.AppendMenu(MF_SEPARATOR);
 			CMenuHandle cur = menu.m_hMenu;
 			for(UserCommand::Iter ui = userCommands.begin(); ui != userCommands.end(); ++ui) {

@@ -162,7 +162,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				p->addLine(aMessage);
 				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 					if (SETTING(BEEPFILE).empty())
-					MessageBeep(MB_OK);
+						MessageBeep(MB_OK);
 					else
 						PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 				}
@@ -181,7 +181,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 				if (SETTING(BEEPFILE).empty())
-				MessageBeep(MB_OK);
+					MessageBeep(MB_OK);
 				else
 					::PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 			}
@@ -189,7 +189,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 	} else {
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 			if (SETTING(BEEPFILE).empty())
-			MessageBeep(MB_OK);
+				MessageBeep(MB_OK);
 			else
 				::PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		}
@@ -668,7 +668,7 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		char sURLTemp[2 * MAX_PATH];
+		char sURLTemp[INTERNET_MAX_URL_LENGTH];
 		int iRet = ctrlClient.GetTextRange( lBegin, lEnd, sURLTemp );
 		UNREFERENCED_PARAMETER(iRet);
 		string sURL = sURLTemp;
@@ -711,5 +711,3 @@ LRESULT PrivateFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
  * @file
  * $Id$
  */
-
-

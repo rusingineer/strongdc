@@ -214,12 +214,9 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
 		}
 	} else if(name == sFileListing) {
 		const string& generator = getAttrib(attribs, sGenerator, 2);
-		if(uziv->isOnline())
-		{
+		if(uziv->isOnline()) {
 			uziv->setGenerator(generator);
 		}
-		
-
 		inListing = true;
 	}
 }
@@ -260,13 +257,12 @@ static inline const string& escaper(const string& n, string& tmp, bool utf8) {
 	return utf8 ? Util::toAcp(n, tmp) : n;
 }
 
-void DirectoryListing::download(Directory* aDir, const string& aTarget, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
+void DirectoryListing::download(Directory* aDir, const string& aTarget, QueueItem::Priority prio) {
 	string tmp;
 	string target = (aDir == getRoot()) ? aTarget : aTarget + escaper(aDir->getName(), tmp, getUtf8()) + '\\';
 	// First, recurse over the directories
 	Directory::List& lst = aDir->directories;
 	sort(lst.begin(), lst.end(), Directory::DirSort());
-
 	for(Directory::Iter j = lst.begin(); j != lst.end(); ++j) {
 		download(*j, target, prio);
 	}
@@ -285,7 +281,7 @@ void DirectoryListing::download(Directory* aDir, const string& aTarget, QueueIte
 	}
 }
 
-void DirectoryListing::download(const string& aDir, const string& aTarget, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
+void DirectoryListing::download(const string& aDir, const string& aTarget, QueueItem::Priority prio) {
 	dcassert(aDir.size() > 2);
 	dcassert(aDir[aDir.size() - 1] == '\\');
 	Directory* d = find(aDir, getRoot());
@@ -293,8 +289,7 @@ void DirectoryListing::download(const string& aDir, const string& aTarget, Queue
 		download(d, aTarget, prio);
 }
 
-bool DirectoryListing::File::isJunkFile()
-{
+bool DirectoryListing::File::isJunkFile() {
 	int64_t junkFileSize = SETTING(JUNK_FILE_SIZE);
 	int64_t junkBinFileSize = SETTING(JUNK_BIN_FILE_SIZE);
 	int64_t junkVobFileSize = SETTING(JUNK_VOB_FILE_SIZE);
@@ -327,8 +322,7 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
 	int64_t x = getSize();
 	for(Iter i = directories.begin(); i != directories.end(); ++i) {
-		if(!(adl && (*i)->getAdls()))
-		{	
+		if(!(adl && (*i)->getAdls())) {	
 			x += (*i)->getTotalSize(adls);
 			junkSize += (*i)->getJunkSize(); 
 		}
@@ -345,8 +339,7 @@ int DirectoryListing::Directory::getTotalFileCount(bool adl) {
 	return x;
 }
 
-
-void DirectoryListing::download(File* aFile, const string& aTarget, bool view /* = false */, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
+void DirectoryListing::download(File* aFile, const string& aTarget, bool view /* = false */, QueueItem::Priority prio) {
 	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
 		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 

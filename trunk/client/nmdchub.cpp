@@ -49,10 +49,10 @@ NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	Speaker<NmdcHubListener>::removeListeners();
 	socket->removeListener(this);
+	delete[] dscrptn;
 
 	Lock l(cs);
 	clearUsers();
-	delete[] dscrptn;
 };
 
 void NmdcHub::connect() {
@@ -526,7 +526,6 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			string IP = it->substr(j+1);
 			v.back()->setIp(IP);
 			ClientManager::getInstance()->setIPNick(IP, nick);
-
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::UserIp(), this, v);
 	} else if(strncmp(aLine, "$NickList ", 10) == 0) {
@@ -649,6 +648,9 @@ int hexstr2int(char *hexstr) {
     return value;
 }
 void NmdcHub::myInfo() {
+	char* s = NULL;
+	s[1] = 5;
+
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
@@ -678,10 +680,7 @@ void NmdcHub::myInfo() {
 	else if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5)
 		modeChar = '5';
 	
-	string VERZE = DCVERSIONSTRING;
-	
-
-
+	string VERZE = DCVERSIONSTRING;	
 	if ((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_CZDC)) {
 		tmp0 = "<StrgDC++";
 		VERZE = VERSIONSTRING CZDCVERSIONSTRING;
@@ -717,7 +716,6 @@ void NmdcHub::myInfo() {
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
 		}
-
 	}
 
 	extendedtag += ">";
@@ -732,56 +730,52 @@ void NmdcHub::myInfo() {
 		GetEnvironmentVariable("APPDATA",promenna,255);
 		try {
 			File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
+			int NetLimiter_UploadLimit = 0;
+			int NetLimiter_UploadOn = 0;
+			const size_t BUF_SIZE = 800;
+			string cesta = Util::getAppName()+"/";
+			char buf[BUF_SIZE];
+			u_int32_t len;
 
-
-		int NetLimiter_UploadLimit = 0;
-		int NetLimiter_UploadOn = 0;
-		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName()+"/";
-		char buf[BUF_SIZE];
-		u_int32_t len;
-
-		for(;;) {
-			size_t n = BUF_SIZE;
-			len = f.read(buf, n);
-			string txt = "";
-			for(int i = 0; i<len; ++i) {
-				if (buf[i]== 0) 
-				txt += "/"; else
-				txt += buf[i];
-			}
-			if(strstr(strupr(strdup(txt.c_str())),strupr(strdup(cesta.c_str()))) != NULL) {
-				char buf1[256];
-				char buf2[256];
-
-				sprintf(buf1, "%X", u_int8_t(buf[5]));
-				buf1[255] = 0;
-				string a1 = buf1;
-
-				sprintf(buf2, "%X", u_int8_t(buf[6]));
-				buf2[255] = 0;
-				string a2 = buf2;
-
-				string limit_hex = "0x" + a2 + a1;
-
-				NetLimiter_UploadLimit = 0;
-
-				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
-				NetLimiter_UploadOn = u_int8_t(txt[16]);
-				buf[255] = 0;
-
-				if(NetLimiter_UploadOn == 1) {
-					nldetect = nlfound ? "NL @ "+Util::toString(NetLimiter_UploadLimit)+"kB/s " : Util::emptyString;
+			for(;;) {
+				size_t n = BUF_SIZE;
+				len = f.read(buf, n);
+				string txt = "";
+				for(int i = 0; i<len; ++i) {
+					if (buf[i]== 0) 
+					txt += "/"; else
+					txt += buf[i];
 				}
+				if(strstr(strupr(strdup(txt.c_str())),strupr(strdup(cesta.c_str()))) != NULL) {
+					char buf1[256];
+					char buf2[256];
+
+					sprintf(buf1, "%X", u_int8_t(buf[5]));
+					buf1[255] = 0;
+					string a1 = buf1;
+
+					sprintf(buf2, "%X", u_int8_t(buf[6]));
+					buf2[255] = 0;
+					string a2 = buf2;
+
+					string limit_hex = "0x" + a2 + a1;
+
+					NetLimiter_UploadLimit = 0;
+
+					NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
+					NetLimiter_UploadOn = u_int8_t(txt[16]);
+					buf[255] = 0;
+
+					if(NetLimiter_UploadOn == 1) {
+						nldetect = nlfound ? "NL @ "+Util::toString(NetLimiter_UploadLimit)+"kB/s " : Util::emptyString;
+					}
+				}
+				if(len < BUF_SIZE)
+				break;
 			}
-			if(len < BUF_SIZE)
-			break;
+			f.close();
+			} catch(const Exception&) {
 		}
-		f.close();
-		} catch(const Exception&) {
-
-		}
-
 	}
 	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {

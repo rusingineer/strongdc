@@ -30,7 +30,6 @@ public:
 		COLUMN_MODE, 
 		COLUMN_HUBS, 
 		COLUMN_SLOTS, 
-		//COLUMN_LIMITER, 
 		COLUMN_ISP,
 		COLUMN_IP,
 		COLUMN_PK,
@@ -38,10 +37,11 @@ public:
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
-
+	friend struct CompareItems;
 
 public:
 	UserInfo(const User::Ptr& u, const UserListColumns* pListColumns);
+	UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) { update(); };
 
 	const string& getText(int col) const;
 
@@ -50,9 +50,9 @@ public:
 	void update();
 
 	GETSET(string, shared, Shared)
-	GETSET(string, exactshare, ExactShare)
 	GETSET(string, uuploadSpeed, UuploadSpeed);
 	GETSET(bool, op, Op);
+	GETSET(string, exactshare, ExactShare)
 
 protected:
 	const UserListColumns* m_pListColumns;

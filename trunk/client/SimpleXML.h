@@ -147,12 +147,10 @@ public:
 		return (*currentChild)->data;
 	}
 
-//PDC {
 	StringList getChildAttribs() {
 		checkChildSelected();
 		return (*currentChild)->getAttribs();
 	}
-//PDC }
 
 	const string& getChildAttrib(const string& aName, const string& aDefault = Util::emptyString) throw(SimpleXMLException) {
 		checkChildSelected();
@@ -234,7 +232,7 @@ private:
 			StringPairIter i = find_if(attribs.begin(), attribs.end(), CompareFirst<string,string>(aName));
 			return (i == attribs.end()) ? aDefault : i->second; 
 		}
-//PDC {
+
 		StringList getAttribs() {
 			StringList d;
 			for(StringPairList::iterator i = attribs.begin(); i != attribs.end(); ++i) {
@@ -242,7 +240,7 @@ private:
 			}
 			return d;
 		}
-//PDC }
+
 		void toXML(int indent, OutputStream* f);
 		
 		void appendAttribString(string& tmp);
@@ -302,4 +300,3 @@ private:
  * @file
  * $Id$
  */
-

@@ -37,6 +37,7 @@
 
 HubFrame::FrameMap HubFrame::frames;
 
+
 string sSelectedLine = "";
 string sSelectedIP = "";
 string sSelectedURL = "";
@@ -139,7 +140,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	splitChat.SetSplitterPos( 40 );
 
 	SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
-//	SetSplitterPanes(splitChat.m_hWnd, ctrlUsers.m_hWnd, false);
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	if(hubchatusersplit){ m_nProportionalPos = hubchatusersplit;
 	} else { m_nProportionalPos = 7500; }
@@ -374,7 +374,7 @@ void HubFrame::onEnter() {
 					ignorelist += " " + *i;
 				addClientLine(ignorelist, m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), "help") == 0) {
-addLine(WinUtil::commands + "------------------------------------------------------------------------------------------------------------------------------------------------------------\n/join <hub-ip> \t\t\t\t(pripojit k hubu...) \t\t\t\t\t\t\n/close \t\t\t\t\t(odpoji z hubu) \t\t\t\t\t\t\t\n/favorite \t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n/fav \t\t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/pm <user> [message] \t\t\t(odesle uzivateli privatni zpravu) \t\t\t\t\t\n/getlist <user> \t\t\t\t(stahne od uzivatele file list) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/showshared \t\t\t\t(zapne/vypne sloupec Shared v userlistu) \t\t\t\n/showexactshared \t\t\t(zapne/vypne sloupec Exact Shared v userlistu) \t\t\t\n/showdescription \t\t\t(zapne/vypne sloupec Description v userlistu) \t\t\t\n/showtag \t\t\t\t(zapne/vypne sloupec Tag v userlistu) \t\t\t\t\n/showconnection \t\t\t(zapne/vypne sloupec Connection v userlistu) \t\t\t\n/showemail \t\t\t\t(zapne/vypne sloupec E-mail v userlistu) \t\t\t\t\n/showclient \t\t\t\t(zapne/vypne sloupec Client v userlistu) \t\t\t\t\n/showversion \t\t\t\t(zapne/vypne sloupec Version v userlistu) \t\t\t\n/showmode \t\t\t\t(zapne/vypne sloupec Mode v userlistu) \t\t\t\t\n/showhubs \t\t\t\t(zapne/vypne sloupec Hubs v userlistu) \t\t\t\t\n/showslots \t\t\t\t(zapne/vypne sloupec Slots v userlistu) \t\t\t\t\n/showupload \t\t\t\t(zapne/vypne sloupec Upload v userlistu) \t\t\t\n/showisp \t\t\t\t(zapne/vypne sloupec ISP v userlistu) \t\t\t\t\n", m_ChatTextSystem);
+				addLine(WinUtil::commands + "------------------------------------------------------------------------------------------------------------------------------------------------------------\n/join <hub-ip> \t\t\t\t(pripojit k hubu...) \t\t\t\t\t\t\n/close \t\t\t\t\t(odpoji z hubu) \t\t\t\t\t\t\t\n/favorite \t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n/fav \t\t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/pm <user> [message] \t\t\t(odesle uzivateli privatni zpravu) \t\t\t\t\t\n/getlist <user> \t\t\t\t(stahne od uzivatele file list) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/showshared \t\t\t\t(zapne/vypne sloupec Shared v userlistu) \t\t\t\n/showexactshared \t\t\t(zapne/vypne sloupec Exact Shared v userlistu) \t\t\t\n/showdescription \t\t\t(zapne/vypne sloupec Description v userlistu) \t\t\t\n/showtag \t\t\t\t(zapne/vypne sloupec Tag v userlistu) \t\t\t\t\n/showconnection \t\t\t(zapne/vypne sloupec Connection v userlistu) \t\t\t\n/showemail \t\t\t\t(zapne/vypne sloupec E-mail v userlistu) \t\t\t\t\n/showclient \t\t\t\t(zapne/vypne sloupec Client v userlistu) \t\t\t\t\n/showversion \t\t\t\t(zapne/vypne sloupec Version v userlistu) \t\t\t\n/showmode \t\t\t\t(zapne/vypne sloupec Mode v userlistu) \t\t\t\t\n/showhubs \t\t\t\t(zapne/vypne sloupec Hubs v userlistu) \t\t\t\t\n/showslots \t\t\t\t(zapne/vypne sloupec Slots v userlistu) \t\t\t\t\n/showupload \t\t\t\t(zapne/vypne sloupec Upload v userlistu) \t\t\t\n/showisp \t\t\t\t(zapne/vypne sloupec ISP v userlistu) \t\t\t\t\n", m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), "pm") == 0) {
 				string::size_type j = param.find(' ');
 				if(j != string::npos) {
@@ -428,8 +428,9 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 	if(ctrlUsers.getSortColumn() == UserInfo::COLUMN_NICK) {
 		// Sort order of the other columns changes too late when the user's updated
 		UserInfo* ui = i->second;
-		//dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
+
 		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) return NULL;
+		dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
 		return ctrlUsers.getSortPos(ui);
 	}
 	return ctrlUsers.findItem(aUser->getNick());
@@ -597,7 +598,6 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 			ctrlUsers.deleteItem(i, false);
 			dcassert(userMap[u] == ui);
 			userMap.erase(u);			
-//			delete ui;
 		}
 		return false;
 	} else {
@@ -648,8 +648,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					int j = findUser(u);
 					if( j != -1 ) {
 						if(showJoins) {
-							if (!favShowJoins | u->isFavoriteUser())
+							if (!favShowJoins | u->isFavoriteUser()) {
 								addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
+						}
 						}
 
 						ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
@@ -806,12 +807,6 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	}
 	SetSplitterRect(rc);
 
-/*	if ( rc.Height() > ((2 * h) + 5) ) {
-		splitChat.SetSplitterPos( rc.Height() - ((2 * h) + 5) );
-	} else {
-		splitChat.SetSplitterPos( -1 );
-	}*/
-
 	rc = rect;
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
@@ -919,7 +914,6 @@ void HubFrame::findText(string const& needle) throw() {
 		currentNeedle="";
 	}
 }
-
 
 string HubFrame::findTextPopup() {
 	LineDlg *finddlg;
@@ -1032,7 +1026,7 @@ void HubFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 		string::size_type i = aLine.find(">");
 		if (i != string::npos) {
        		sAuthor = aLine.substr(1, i-1);
-			if ( strnicmp(" /me ", aLine.substr(i+1, 5).c_str(), 5) == 0 ) {
+			if ( strncmp(" /me ", aLine.substr(i+1, 5).c_str(), 5) == 0 ) {
 				sTmp = "* " + sAuthor + aLine.substr(i+5);
 			}
 		}
@@ -1292,10 +1286,6 @@ void HubFrame::onTab() {
 }
 
 LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-//	if (GetFocus() != ctrlMessage.m_hWnd) { // don't handle these keys unless the user is entering a message
-//		bHandled = FALSE;
-//		return 0;
-//	}
 	if(!complete.empty() && wParam != VK_TAB && uMsg == WM_KEYDOWN)
 		complete.clear();
 
@@ -1547,7 +1537,7 @@ void HubFrame::addClientLine(const string& aLine, bool inChat /* = true */) {
 	if(BOOLSETTING(STATUS_IN_CHAT) && inChat) {
 		addLine("*** " + aLine, m_ChatTextSystem);
 	}
-	if(BOOLSETTING(LOG_STATUS_MESSAGES) && inChat /*&& BOOLSETTING(FILTER_MESSAGES)*/) {
+	if(BOOLSETTING(LOG_STATUS_MESSAGES) && inChat) {
 		LOGDT(client->getAddressPort() + "_Status", aLine);
 	}
 }
@@ -1637,6 +1627,9 @@ void HubFrame::on(Message, Client*, const string& line) throw() {
 		} else {
 			speak(ADD_CHAT_LINE, line);
 		}
+	} else if((strstr(line.c_str(), "is kicking") != NULL) && (strstr(line.c_str(), "because:") != NULL) || 
+		(strstr(line.c_str(), "Hub-Security") != NULL) && (strstr(line.c_str(), "was kicked by") != NULL)) {
+		HubFrame::addLine(line, m_ChatTextServer);
 	} else {
 		speak(ADD_CHAT_LINE, line);
 	}
@@ -1708,9 +1701,7 @@ LRESULT HubFrame::onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return 1;
 }
 
-
 BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
-
 	int64_t statedSize = dl->getUser()->getBytesShared();
 	int64_t realSize = dl->getTotalSize();
 	int64_t junkSize = 0;
@@ -1896,7 +1887,6 @@ bool HubFrame::PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick,
 			pMenu->InsertSeparator(0, TRUE, sTmp);
 			if ( pCtrl == ( (CWindow*) &ctrlClient ) ) {
 				if(!BOOLSETTING(LOG_PRIVATE_CHAT)) {
-					//pMenu->AppendMenu(MF_STRING | MF_DISABLED, 0, sTmp.c_str());
 				} else {
 					pMenu->AppendMenu(MF_STRING, IDC_OPEN_USER_LOG, sTmp.c_str());
 					pMenu->AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -2023,7 +2013,7 @@ LRESULT HubFrame::onAutoScrollChat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 
 LRESULT HubFrame::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if ( sSelectedIP != "" ) {
-		string s = "!ban " + sSelectedIP;
+		string s = "!banip " + sSelectedIP;
 		client->hubMessage(s);
 	}
 	return 0;
@@ -2049,7 +2039,7 @@ LRESULT HubFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		char sURLTemp[2 * MAX_PATH];
+		char sURLTemp[INTERNET_MAX_URL_LENGTH];
 		int iRet = ctrlClient.GetTextRange( lBegin, lEnd, sURLTemp );
 		UNREFERENCED_PARAMETER(iRet);
 		string sURL = sURLTemp;
@@ -2057,7 +2047,7 @@ LRESULT HubFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 	} else if ( pEL->msg == WM_RBUTTONUP ) {
 		sSelectedURL = "";
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		char sURLTemp[2 * MAX_PATH];
+		char sURLTemp[INTERNET_MAX_URL_LENGTH];
 		int iRet = ctrlClient.GetTextRange( lBegin, lEnd, sURLTemp );
 		UNREFERENCED_PARAMETER(iRet);
 		sSelectedURL = sURLTemp;
@@ -2109,7 +2099,7 @@ LRESULT HubFrame::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
  	}
 	return 0;
 }
-// CDM EXTENSION BEGINS
+
 void HubFrame::getUserResponses() {
 	QueueManager* queueManager = QueueManager::getInstance();
 	if(client->isConnected())
@@ -2129,7 +2119,7 @@ void HubFrame::getUserResponses() {
 		}
 	}
 }
-// CDM EXTENSION ENDS
+
 LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	CRect rc;
@@ -2156,7 +2146,6 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	default:
 		return CDRF_DODEFAULT;
 	}
-	
 }
 
 /**

@@ -117,7 +117,7 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 
 			if(reconnect) cqi->setLastAttempt(0);
-			 else cqi->setLastAttempt(GET_TICK());
+				else cqi->setLastAttempt(GET_TICK());
 			pendingDown.push_back(cqi);
 		} else {
 			{
@@ -401,17 +401,10 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	}
 
 	// We don't want connections from people claiming to be us
-	if(aNick == aSource->getUser()->getClientNick()) {
+	if(aNick == aSource->getUser()->getClientNick() && aSource->getUser()->getClient()->getStealth() == false && SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) {
+		aSource->error("Fuck You !!!");
 		putConnection(aSource);
 		return;
-	}
- 
-	User::Ptr user = aSource->getUser();
-	if(user->isOnline()) {
-		user->setFakeSharing(false);
-		ClientManager::getInstance()->setIPNick(aSource->getRemoteIp(), aNick);
-		user->setHost(aSource->getRemoteHost());
-		User::updated(aSource->getUser());
 	}
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
@@ -420,6 +413,14 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	}
 
 	aSource->setState(UserConnection::STATE_LOCK);
+
+	User::Ptr user = aSource->getUser();
+	if(user->isOnline()) {
+		user->setFakeSharing(false);
+		ClientManager::getInstance()->setIPNick(aSource->getRemoteIp(), aNick);
+		user->setHost(aSource->getRemoteHost());
+		User::updated(user);
+	}
 }
 
 void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSource, const string& aLock, const string& aPk) throw() {

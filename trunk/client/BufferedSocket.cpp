@@ -26,10 +26,8 @@
 
 #include "File.h"
 
-#include "SettingsManager.h"
 #include "UploadManager.h"
 #include "DownloadManager.h"
-
 #define SMALL_BUFFER_SIZE 1024
 
 // Polling is used for tasks...should be fixed...

@@ -8,14 +8,12 @@
 
 
 UserInfo::UserInfo(const User::Ptr& u, const UserListColumns* pListColumns) 
-	: UserInfoBase(u), op(false)
-{ 
+	: UserInfoBase(u), op(false) { 
 	m_pListColumns = pListColumns;
 	update();
 };
 
-const string& UserInfo::getText(int col) const 
-{
+const string& UserInfo::getText(int col) const {
 	int nHardCol = col;
 	if (m_pListColumns)
 		nHardCol = m_pListColumns->RemapListColumnToDataColumn(col);
@@ -33,7 +31,6 @@ const string& UserInfo::getText(int col) const
 		case  COLUMN_MODE: return user->getMode();
 		case  COLUMN_HUBS: return user->getHubs();
 		case  COLUMN_SLOTS: return user->getSlots();
-//		case  COLUMN_LIMITER: return user->getUpload();
 		case  COLUMN_ISP: return user->getHost();		
 		case  COLUMN_IP: return user->getIp();
 		case  COLUMN_PK: return user->getPk();
@@ -44,8 +41,7 @@ const string& UserInfo::getText(int col) const
 	}
 }
 
-int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col) 
-{
+int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	int nHardCol = col;
 	if (a->m_pListColumns)
 		nHardCol = a->m_pListColumns->RemapListColumnToDataColumn(col);
@@ -78,8 +74,8 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)
 	}
 }
 
-void UserInfo::update()
-{	if(user->getDownloadSpeed()<1)
+void UserInfo::update() {
+	if(user->getDownloadSpeed()<1)
 		{
 			string s1=user->getDescription();
 			if((s1.find_last_of('@')==-1)){
@@ -100,18 +96,16 @@ void UserInfo::update()
 					}
 				else 
 			{
-				
 				s1.erase(0,s1.find_last_of('@')+1);
 			}
 			uuploadSpeed = s1;
 		} else uuploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
 
 	shared = Util::formatBytes(user->getBytesShared());
-	exactshare = Util::formatNumber(user->getBytesShared());
 	op = user->isSet(User::OP);
+	exactshare = Util::formatNumber(user->getBytesShared());
 	
 }
-
 
 static int def_columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 100, 175 };
 static int def_columnIndexes[] = { 
@@ -244,7 +238,9 @@ void UserListColumns::SetColumnVisibility(int nHardColumn, TypedListViewCtrlClea
 		int nListColumn = RemapDataColumnToListColumn(nHardColumn);
 		if (m_nColumnSizes[nHardColumn] == 0)
 			m_nColumnSizes[nHardColumn] = def_columnSizes[nHardColumn];
-		UserList.InsertColumn(nListColumn, CSTRING_I(def_columnNames[nHardColumn]), LVCFMT_LEFT, m_nColumnSizes[nHardColumn], nListColumn);
+		int fmt = ((nListColumn == UserInfo::COLUMN_SHARED) || (nListColumn == UserInfo::COLUMN_EXACT_SHARED) || (nListColumn == UserInfo::COLUMN_HUBS) ||
+			 (nListColumn == UserInfo::COLUMN_SLOTS) || (nListColumn == UserInfo::COLUMN_UPLOAD_SPEED)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		UserList.InsertColumn(nListColumn, CSTRING_I(def_columnNames[nHardColumn]), fmt, m_nColumnSizes[nHardColumn], nListColumn);
 	}
 	if (def_ColumnShowSettings[nHardColumn] != 0) { 
 		// Ma setup, tak sup s nastavenim do setupu

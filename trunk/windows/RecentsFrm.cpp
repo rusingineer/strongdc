@@ -7,8 +7,6 @@
 #include "LineDlg.h"
 
 #include "../client/ClientManager.h"
-#include "../client/StringTokenizer.h"
-#include "WinUtil.h"
 
 int RecentHubsFrame::columnIndexes[] = { COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_USERS, COLUMN_SHARED, COLUMN_SERVER };
 int RecentHubsFrame::columnSizes[] = { 200, 290, 50, 50, 100 };
@@ -140,7 +138,6 @@ LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		HubManager::getInstance()->removeListener(this);
 
 		closed = true;
-
 		CZDCLib::setButtonPressed(IDC_RECENTS, false);
 		PostMessage(WM_CLOSE);
 		return 0;

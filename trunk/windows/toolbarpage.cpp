@@ -170,5 +170,3 @@ LRESULT ToolbarPage::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	}
 	return 0;
 }
-
-

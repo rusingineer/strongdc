@@ -33,6 +33,7 @@
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 #include "resource.h"
+#include "SearchFrm.h"
 
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
@@ -62,7 +63,6 @@ public:
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SIZE, onSize)
-		//MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
 		COMMAND_ID_HANDLER(IDC_FORCE, onForce)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_OFFCOMPRESS, onOffCompress)
@@ -75,9 +75,7 @@ public:
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
-//PDC {
 		COMMAND_RANGE_HANDLER(IDC_PREVIEW_APP, IDC_PREVIEW_APP + PreviewAppsSize, onPreviewCommand)
-//PDC }		
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_COMMANDS(uibBase)
 		REFLECT_NOTIFICATIONS()
@@ -95,11 +93,10 @@ public:
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void runUserCommand(UserCommand& uc);
-//PDC {
-	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-//PDC }
 	void prepareClose();
 
 	LRESULT onCollapseAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -138,9 +135,7 @@ private:
 	/** Parameter map for user commands */
 	StringMap ucParams;
 	class ItemInfo;	
-//PDC {
 	int PreviewAppsSize;
-//PDC }
 public:
 	TypedListViewCtrlCleanup<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
 private:
@@ -200,8 +195,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
 			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0), pocetSegmentu(0),
-			compressRatio(1.0)
-			{ update(); };
+			compressRatio(1.0) { update(); };
 
 		Types type;
 		Status status;
@@ -228,10 +222,8 @@ private:
 		int pocetSegmentu;
 		string oldTarget;
 		double compressRatio;
-
-//PDC {
 		string downloadTarget;
-//PDC }
+
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,

@@ -160,11 +160,9 @@ public:
 	void TagParts( char *sTag );
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
-//	Client* getClient() { return client; };
 	string getReport();
 	string getVersion(const string& aExp, const string& aTag);
 	string splitVersion(const string& aExp, const string& aTag);
-//	void update();
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
 		pk = Util::emptyString;
@@ -182,7 +180,6 @@ public:
 		cheatingString = Util::emptyString;
 		badClient = false;
 	};
-	// CDM EXTENSION ENDS
 private:
 	void updated();
 	mutable RWLock cs;

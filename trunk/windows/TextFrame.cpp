@@ -77,5 +77,3 @@ void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
  * @file
  * $Id$
  */
-
-

@@ -1,5 +1,3 @@
-// No license, No copyright... use it if you want ;-)
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -41,7 +39,6 @@ PropPage::TextItem LimitPage::texts[] = {
 	{ IDC_DISCONNECTING_ENABLE, ResourceManager::SETCZDC_DISCONNECTING_ENABLE },
 	{ IDC_CZDC_MIN_FILE_SIZE, ResourceManager::SETCZDC_MIN_FILE_SIZE },
 	{ IDC_SETTINGS_MB, ResourceManager::MB },
-	//{ IDC_REMOVE_SLOW_USER, ResourceManager::SETCZDC_REMOVE_SLOW_USER },
 	{ IDC_REMOVE_IF, ResourceManager::NEW_DISCONNECT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
@@ -60,7 +57,6 @@ PropPage::Item LimitPage::items[] = {
 	{ IDC_H_DOWN_SPEED, SettingsManager::H_DOWN_SPEED, PropPage::T_INT },
 	{ IDC_DISCONNECTING_ENABLE, SettingsManager::DISCONNECTING_ENABLE, PropPage::T_BOOL },
 	{ IDC_MIN_FILE_SIZE, SettingsManager::MIN_FILE_SIZE, PropPage::T_INT },
-	//{ IDC_REMOVE_SLOW_USER, SettingsManager::REMOVE_SLOW_USER, PropPage::T_BOOL },
 	{ IDC_REMOVE_IF_BELOW, SettingsManager::DISCONNECT, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
@@ -138,8 +134,8 @@ void LimitPage::write()
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * SETTING(SLOTS)) + 3) ) {
 			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * SETTING(SLOTS)) + 3) );
 		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 6)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*6) );
+		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
+			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
 		}
 	}
 
@@ -147,8 +143,8 @@ void LimitPage::write()
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((2 * SETTING(SLOTS)) + 3) ) {
 			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((2 * SETTING(SLOTS)) + 3) );
 		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 6)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*6) );
+		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
+			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
 		}
 	}
 
@@ -166,21 +162,28 @@ void LimitPage::write()
 void LimitPage::fixControls() {
 	bool state = (IsDlgButtonChecked(IDC_THROTTLE_ENABLE) != 0);
 	::EnableWindow(GetDlgItem(IDC_MX_UP_SP_LMT_NORMAL), state);
+	::EnableWindow(GetDlgItem(IDC_UPLOADSPEEDSPIN), state);
 	::EnableWindow(GetDlgItem(IDC_MX_DW_SP_LMT_NORMAL), state);
+	::EnableWindow(GetDlgItem(IDC_DOWNLOADSPEEDSPIN), state);
 	::EnableWindow(GetDlgItem(IDC_TIME_LIMITING), state);
 
 	state = ((IsDlgButtonChecked(IDC_THROTTLE_ENABLE) != 0) && (IsDlgButtonChecked(IDC_TIME_LIMITING) != 0));
 	::EnableWindow(GetDlgItem(IDC_BW_START_TIME), state);
 	::EnableWindow(GetDlgItem(IDC_BW_END_TIME), state);
 	::EnableWindow(GetDlgItem(IDC_MX_UP_SP_LMT_TIME), state);
+	::EnableWindow(GetDlgItem(IDC_UPLOADSPEEDSPIN_TIME), state);
 	::EnableWindow(GetDlgItem(IDC_MX_DW_SP_LMT_TIME), state);
+	::EnableWindow(GetDlgItem(IDC_DOWNLOADSPEEDSPIN_TIME), state);
 
 	state = (IsDlgButtonChecked(IDC_DISCONNECTING_ENABLE) != 0);
 	::EnableWindow(GetDlgItem(IDC_I_DOWN_SPEED), state);
+	::EnableWindow(GetDlgItem(IDC_I_DOWN_SPEED_SPIN), state);
 	::EnableWindow(GetDlgItem(IDC_TIME_DOWN), state);
+	::EnableWindow(GetDlgItem(IDC_TIME_DOWN_SPIN), state);
 	::EnableWindow(GetDlgItem(IDC_H_DOWN_SPEED), state);
+	::EnableWindow(GetDlgItem(IDC_H_DOWN_SPEED_SPIN), state);
 	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE), state);
-//	::EnableWindow(GetDlgItem(IDC_REMOVE_SLOW_USER), state);
+	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE_SPIN), state);
 	::EnableWindow(GetDlgItem(IDC_REMOVE_IF_BELOW), state);
 }
 

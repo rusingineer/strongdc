@@ -286,6 +286,7 @@ public:
 	static string commands;
 	static HHOOK hook;
 	static string tth;	
+	static string exceptioninfo;
 	static bool isPM;
 	static bool isAppActive;
 	static bool isMinimized;
@@ -384,9 +385,6 @@ public:
 	static void saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
 		SettingsManager::StrSetting widths, int n, int* indexes, int* sizes) throw();
 
-	static void ClearPreviewMenu(CMenu &previewMenu);
-	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
-	static void RunPreviewCommand(int index, string target);
 	static void translate(HWND page, TextItem* textItems) 
 	{
 		if (textItems != NULL) {
@@ -404,6 +402,9 @@ public:
 	};
 	static tbIDImage ToolbarButtons[];
 
+	static void ClearPreviewMenu(CMenu &previewMenu);
+	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
+	static void RunPreviewCommand(int index, string target);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };

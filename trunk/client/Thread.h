@@ -32,12 +32,12 @@
 #include <Mmsystem.h>
 #endif
 
-#if defined (_MT)
-	#include <process.h>
-#endif
-
 #ifdef HAS_ATOMIC
 #include <asm/atomic.h>
+#endif
+
+#if defined (_MT)
+	#include <process.h>
 #endif
 
 typedef unsigned (__stdcall *PTHREAD_START) (void *);

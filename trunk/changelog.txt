@@ -5,7 +5,7 @@
 * pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
 * automatické hledání alternativ podle RevConnectu
 * odstranìno automatické odstraòování zdrojù pomalejších 1kB/s
-* zmìnìn vzhled dialogù pøi pádu programu
+* zmìnìn vzhled dialogu pøi pádu programu
 * zmìnìn styl nabídek na XP (zDC++)
 * vylepšena minimální velikost segmentu
 * pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
@@ -27,6 +27,7 @@
 * pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
 * pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
 * synchronizace s DC++ 0.403
+* opraven bug v DC++ emulaci (THX PPK)
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

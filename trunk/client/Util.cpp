@@ -41,7 +41,6 @@
 
 FastCriticalSection FastAllocBase::cs;
 
-
 int64_t Util::mUptimeSeconds = 0;
 string Util::emptyString;
 
@@ -78,7 +77,6 @@ void ConvertStringToAscii(string *s) {
 			(*s)[i] = Win1250toAscii[c + 128];
 	}
 }
-
 
 void Util::initialize() {
 	int i;
@@ -288,14 +286,13 @@ string Util::formatBytes(int64_t aBytes) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0), CSTRING(MB));
 	} else if(aBytes < (int64_t)1024*1024*1024*1024) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0), CSTRING(GB));
-	} else {//if(aBytes < (int64_t)1024*1024*1024*1024*1024) {
+	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0), CSTRING(TB));
-/*	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024*1024)  {
+	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024*1024)  {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(PB));
 	} else {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));*/
+		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));
 	}
-
 	return buf;
 }
 
@@ -530,8 +527,7 @@ string Util::formatParams(const string& msg, StringMap& params) {
 	return result;
 }
 
-u_int64_t Util::getDirSize(const string &sFullPath)
-{
+u_int64_t Util::getDirSize(const string &sFullPath) {
 	u_int64_t total = 0;
 
 	WIN32_FIND_DATA fData;
@@ -553,9 +549,7 @@ u_int64_t Util::getDirSize(const string &sFullPath)
 				if(Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) {
 					total += getDirSize(newName);
 				}
-			} 
-			else
-			{
+			} else {
 				// Not a directory, assume it's a file...make sure we're not sharing the settings file...
 				if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
 					(Util::stricmp(name.c_str(), "Favorites.xml") != 0)) {
@@ -571,24 +565,23 @@ u_int64_t Util::getDirSize(const string &sFullPath)
 	return total;
 }
 
-bool Util::validatePath(const string &sPath)
-{
+bool Util::validatePath(const string &sPath) {
 	if(sPath.empty())
 		return false;
 
-	if((sPath.substr(1, 2) == ":\\") || (sPath.substr(0, 2) == "\\\\"))
-	{
+	if((sPath.substr(1, 2) == ":\\") || (sPath.substr(0, 2) == "\\\\")) {
 		if(GetFileAttributes(sPath.c_str()) & FILE_ATTRIBUTE_DIRECTORY)
 			return true;
 	}
 
 	return false;
 }
-bool Util::fileExists(const string &aFile)
-{
+
+bool Util::fileExists(const string &aFile) {
 	DWORD attr = GetFileAttributes(aFile.c_str());
 	return (attr != 0xFFFFFFFF);
 }
+
 string Util::formatTime(const string &msg, const time_t t) {
 	if (!msg.empty()) {
 		size_t bufsize = msg.size() + 64;
@@ -743,6 +736,35 @@ string Util::getOsVersion() {
 #endif // _WIN32
 }
 
+/*	getIpCountry
+	This function returns the country(Abbreviation) of an ip
+	for exemple: it returns "PT", whitch standards for "Portugal"
+	more info: http://www.maxmind.com/app/csv
+*/
+string Util::getIpCountry (string IP) {
+	if (BOOLSETTING(GET_USER_COUNTRY)) {
+		dcassert(count(IP.begin(), IP.end(), '.') == 3);
+
+		//e.g IP 23.24.25.26 : w=23, x=24, y=25, z=26
+		string::size_type a = IP.find('.');
+		string::size_type b = IP.find('.', a+1);
+		string::size_type c = IP.find('.', b+2);
+
+		u_int32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
+			(Util::toUInt32(IP.c_str() + a + 1) << 16) | 
+			(Util::toUInt32(IP.c_str() + b + 1) << 8) | 
+			(Util::toUInt32(IP.c_str() + c + 1) );
+
+		CountryIter i = countries.lower_bound(ipnum);
+
+		if(i != countries.end()) {
+			return string((char*)&(i->second), 2);
+		}
+	}
+
+	return Util::emptyString; //if doesn't returned anything already, something is wrong...
+}
+
 bool safestring::_CorrectFindPos(const string &InStr, string::size_type &pos)
 {
 	if (pos < 0) {
@@ -784,7 +806,6 @@ string::size_type safestring::SafeFind(const string &InStr, const string& str, s
 	return InStr.find(str, pos);
 }
 
-
 #define TOBIN(x) (((x) >= '0' && (x) <= '9') ? ((x) - '0') : ((x) - 'A' + 0xA))
 #define ISRGBBIT(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'A' && (x) <= 'F'))
 bool Util::RGB2Binary(string sRGB, BYTE* pbData)
@@ -816,37 +837,7 @@ string Util::Binary2RGB(BYTE* pbBuf, DWORD dwSize)
 	return string(buf);
 }
 
-/*	getIpCountry
-	This function returns the country(Abbreviation) of an ip
-	for exemple: it returns "PT", whitch standards for "Portugal"
-	more info: http://www.maxmind.com/app/csv
-*/
-string Util::getIpCountry (string IP) {
-	if (BOOLSETTING(GET_USER_COUNTRY)) {
-
-		dcassert(count(IP.begin(), IP.end(), '.') == 3);
-
-		//e.g IP 23.24.25.26 : w=23, x=24, y=25, z=26
-		string::size_type a = IP.find('.');
-		string::size_type b = IP.find('.', a+1);
-		string::size_type c = IP.find('.', b+2);
-
-		u_int32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
-			(Util::toUInt32(IP.c_str() + a + 1) << 16) | 
-			(Util::toUInt32(IP.c_str() + b + 1) << 8) | 
-			(Util::toUInt32(IP.c_str() + c + 1) );
-
-		dcdebug(Util::toString(ipnum).c_str());
-		CountryIter i = countries.lower_bound(ipnum);
-		if(i != countries.end()) {
-			return string((char*)&(i->second), 2);
-		}
-	}
-
-	return Util::emptyString; //if doesn't returned anything already, something is wrong...
-}
 /**
  * @file
  * $Id$
  */
-

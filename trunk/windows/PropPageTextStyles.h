@@ -91,6 +91,7 @@ protected:
 		TS_GENERAL, TS_MYNICK, TS_MYMSG, TS_PRIVATE, TS_SYSTEM, TS_SERVER, TS_TIMESTAMP, TS_URL, TS_FAVORITE, TS_OP,
 	TS_LAST };
 
+	char* title;
 	TextStyleSettings TextStyles[ TS_LAST ];
 	CListBox m_lsbList;
 	ChatCtrl m_Preview;
@@ -98,10 +99,6 @@ protected:
 	COLORREF m_BackColor;
 	COLORREF m_ForeColor;
 	COLORREF fg, bg, err, alt;
-//	CDialog wokno;
-
-	char* title;
 };
 
 #endif // _PROP_PAGE_TEXT_STYLES_H_
-

@@ -20,7 +20,6 @@
 #include "DCPlusPlus.h"
 
 #include "ResourceManager.h"
-
 #include "SimpleXML.h"
 #include "File.h"
 

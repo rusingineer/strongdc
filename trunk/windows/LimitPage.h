@@ -3,6 +3,7 @@
 #ifndef LimitPAGE_H
 #define LimitPAGE_H
 
+#include <atlcrack.h>
 #include "PropPage.h"
 #include "../client/ConnectionManager.h"
 
@@ -13,16 +14,16 @@ public:
 		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_LIMIT)).c_str());
 		SetTitle(title);
 	};
-	virtual ~LimitPage() { delete[] title;};
+	virtual ~LimitPage() { delete[] title; };
 
-	BEGIN_MSG_MAP(LimitPage)
+	BEGIN_MSG_MAP_EX(LimitPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_TIME_LIMITING, onChangeCont)
 		COMMAND_ID_HANDLER(IDC_THROTTLE_ENABLE, onChangeCont)
 		COMMAND_ID_HANDLER(IDC_DISCONNECTING_ENABLE, onChangeCont)
 	END_MSG_MAP()
 
-	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/); 
 	LRESULT onChangeCont(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	// Common PropPage interface
@@ -33,8 +34,8 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	CComboBox timeCtrlBegin, timeCtrlEnd;
-	void fixControls();
 	char* title;
+	void fixControls();
 };
 
 #endif //LimitPAGE_H

@@ -31,7 +31,7 @@
 #include "UserCommand.h"
 #include "FavoriteUser.h"
 #include "Singleton.h"
-// CDM EXTENSION BEGINS (profiles)
+
 class ClientProfile {
 	public:
 	typedef vector<ClientProfile> List;
@@ -94,7 +94,6 @@ class ClientProfile {
 		GETSET(int, useExtraVersion, UseExtraVersion);
 		GETSET(int, checkMismatch, CheckMismatch);
 };
-// CDM EXTENSION ENDS
 
 class HubEntry {
 public:
@@ -108,7 +107,6 @@ public:
 	name(aName), server(aServer), description(aDescription), users(aUsers), 
 		shared(aShared), country(aCountry), status(aStatus), minshare(aMinshare), minslots(aMinslots), 
 		maxhubs(aMaxhubs), maxusers(aMaxusers), reliability(aReliability), rating(aRating), port(aPort) { };
-	//
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
 	name(aName), server(aServer), description(aDescription), users(aUsers) { };
 	HubEntry() throw() { };
@@ -132,7 +130,6 @@ public:
 	GETSET(string, reliability, Reliability);
 	GETSET(string, rating, Rating);
 	GETSET(string, port, Port);
-	//
 };
 
 class FavoriteHubEntry {
@@ -151,13 +148,11 @@ public:
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
 		userliststate(rhs.userliststate)
-	// CDM EXTENSION BEGINS FAVS
-	, rawOne(rhs.rawOne)
-	, rawTwo(rhs.rawOne)
-	, rawThree(rhs.rawThree)
-	, rawFour(rhs.rawFour)
-	, rawFive(rhs.rawFive)
-	// CDM EXTENSION ENDS
+		, rawOne(rhs.rawOne)
+		, rawTwo(rhs.rawOne)
+		, rawThree(rhs.rawThree)
+		, rawFour(rhs.rawFour)
+		, rawFive(rhs.rawFive)
 		 { };
 	~FavoriteHubEntry() throw() { };
 	
@@ -173,26 +168,23 @@ public:
 	GETSET(string, description, Description);
 	GETSET(string, password, Password);
 	GETSET(bool, connect, Connect);
-	GETSET(u_int16_t, windowposx, WindowPosX);
-	GETSET(u_int16_t, windowposy, WindowPosY);
-	GETSET(u_int16_t, windowsizex, WindowSizeX);
-	GETSET(u_int16_t, windowsizey, WindowSizeY);
+	GETSET(int, windowposx, WindowPosX);
+	GETSET(int, windowposy, WindowPosY);
+	GETSET(int, windowsizex, WindowSizeX);
+	GETSET(int, windowsizey, WindowSizeY);
 	GETSET(int, windowtype, WindowType);
-	GETSET(u_int16_t, chatusersplit, ChatUserSplit);
+	GETSET(int, chatusersplit, ChatUserSplit);
 	GETSET(bool, stealth, Stealth);
 	GETSET(bool, userliststate, UserListState);	
-	// CDM EXTENSION BEGINS FAVS
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
-	// CDM EXTENSION BEGINS
 private:
 	string nick;
 };
 
-// iDC++
 class RecentHubEntry {
 public:
 	typedef RecentHubEntry* Ptr;
@@ -205,11 +197,9 @@ public:
 	GETSET(string, server, Server);
 	GETSET(string, description, Description);
 	GETSET(string, users, Users);
-	GETSET(bool, connect, Connect);
-	GETSET(string, shared, Shared);
-	
+	GETSET(string, shared, Shared);	
 };
-// iDC++
+
 
 class HubManagerListener {
 public:
@@ -252,9 +242,7 @@ public:
 
 	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; };
 
-// iDC++
 	RecentHubEntry::List& getRecentHubs() { return recentHubs; };
-// iDC++
 
 	User::List& getFavoriteUsers() { return users; };
 	
@@ -288,12 +276,6 @@ public:
 		return NULL;
 	}
 
-	HubEntry::List getPublicHubs() {
-		Lock l(cs);
-		return publicHubs;
-	}
-
-	// CDM EXTENSION BEGINS (profiles)
 	ClientProfile::List& getClientProfiles() {
 		Lock l(cs);
 		return clientProfiles;
@@ -431,11 +413,15 @@ public:
 		loadClientProfiles();
 		return clientProfiles;
 	}
-	// CDM EXTENSION ENDS
 
 	void removeallRecent() {
 		recentHubs.clear();
 		recentsave();
+	}
+
+	HubEntry::List getPublicHubs() {
+		Lock l(cs);
+		return publicHubs;
 	}
 
 	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub) {
@@ -544,10 +530,8 @@ private:
 	RecentHubEntry::List recentHubs;
 	UserCommand::List userCommands;
 	User::List users;
-	// CDM EXTENSION BEGINS (profiles)
 	ClientProfile::List clientProfiles;
 	int lastProfile;
-	// CDM EXTENSION ENDS
 
 	RWLock rwcs;
 	CriticalSection cs;
@@ -625,4 +609,3 @@ private:
  * @file
  * $Id$
  */
-

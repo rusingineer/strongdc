@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #endif
 
-
 /** Evaluates op(pair<T1, T2>.first, compareTo) */
 template<class T1, class T2, class op = equal_to<T1> >
 class CompareFirst {
@@ -244,7 +243,6 @@ public:
 	
 	static void decodeUrl(const string& aUrl, string& aServer, short& aPort, string& aFile);
 	static string validateFileName(string aFile);
-	// CDM EXTENSION BEGINS
 	static string formatStatus(int iStatus) {
 		string tmp = emptyString;
 		switch(iStatus) {
@@ -263,7 +261,6 @@ public:
 		}
 		return tmp;
 	}
-	// CDM EXTENSION ENDS
 	
 	static string formatBytes(const string& aString) {
 		return formatBytes(toInt64(aString));
@@ -322,6 +319,7 @@ public:
 	static string formatBytes(int64_t aBytes);
 
 	static string formatExactSize(int64_t aBytes);
+
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
 		char buf[64];
 #ifdef _WIN32
@@ -595,11 +593,9 @@ public:
 
 	static string Binary2RGB(BYTE* pbData, DWORD dwSize);
 	static bool RGB2Binary(string sRGB, BYTE* pbData);
-//	static string toUtf8(string);
 	static u_int64_t getDirSize(const string &sFullPath);
 	static bool validatePath(const string &sPath);
 	static bool fileExists(const string &aFile);
-
 
 private:
 	static bool away;
@@ -609,12 +605,13 @@ private:
 	static char lower[];
 	static int8_t cmp[256][256];
 	static int8_t cmpi[256][256];
-	static int64_t mUptimeSeconds;
+
 	typedef map<u_int32_t, u_int16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
 
 	static CountryList countries;
 	
+	static int64_t mUptimeSeconds;
 };
 
 class safestring
@@ -665,7 +662,6 @@ struct noCaseStringLess {
 		return Util::stricmp(a.c_str(), b.c_str()) == -1;
 	}
 };
-
 
 #endif // !defined(AFX_UTIL_H__1758F242_8D16_4C50_B40D_E59B3DD63913__INCLUDED_)
 

@@ -34,14 +34,15 @@
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
 
-#include "atlctrlxp.h"
-#include "atlctrlxp2.h"
 
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
 #include "CZDCLib.h"
 #include "TransferView.h"
 #include "WinUtil.h"
+
+#include "atlctrlxp.h"
+#include "atlctrlxp2.h"
 
 #define SERVER_SOCKET_MESSAGE (WM_APP + 1235)
 
@@ -125,9 +126,7 @@ public:
 		COMMAND_ID_HANDLER(ID_WINDOW_TILE_HORZ, OnWindowTile)
 		COMMAND_ID_HANDLER(ID_WINDOW_TILE_VERT, OnWindowTileVert)
 		COMMAND_ID_HANDLER(ID_WINDOW_ARRANGE, OnWindowArrangeIcons)
-// iDC++
 		COMMAND_ID_HANDLER(IDC_RECENTS, onRecents)
-// iDC++
 		COMMAND_ID_HANDLER(IDC_FAVORITES, onFavorites)
 		COMMAND_ID_HANDLER(IDC_FAVUSERS, onFavoriteUsers)
 		COMMAND_ID_HANDLER(IDC_NOTEPAD, onNotepad)
@@ -137,9 +136,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH_SPY, onSearchSpy)
 		COMMAND_ID_HANDLER(IDC_FILE_ADL_SEARCH, onFileADLSearch)
 		COMMAND_ID_HANDLER(IDC_NET_STATS, onNetStats)
-		// CDM EXTENSION BEGINS
 		COMMAND_ID_HANDLER(IDC_CDMDEBUG_WINDOW, onCDMDebugWindow)
-		// CDM EXTENSION ENDS
 		COMMAND_ID_HANDLER(IDC_HELP_HOMEPAGE, onLink)
 		COMMAND_ID_HANDLER(IDC_HELP_DISCUSS, onLink)
 		COMMAND_ID_HANDLER(IDC_IMPORT_QUEUE, onImport)
@@ -182,7 +179,6 @@ public:
 	LRESULT onSearchSpy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onNetStats(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onFileADLSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
 	LRESULT onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnFileSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -402,8 +398,8 @@ private:
 	
 	HANDLE stopperThread;
 
-	bool missedAutoConnect;
 
+	bool missedAutoConnect;
 	HWND createToolbar();
 	void buildMenu();
 	void updateTray(bool add = true);
@@ -422,6 +418,8 @@ private:
 
 	MainFrame(const MainFrame&) { dcassert(0); };
 
+	void updateShutdown(u_int32_t aTick);
+
 	// LogManagerListener
 	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };
 
@@ -429,8 +427,6 @@ private:
 	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();
 	virtual void on(TimerManagerListener::Minute type, u_int32_t aTick) throw();
 	
-	void updateShutdown(u_int32_t aTick);
-
 	// HttpConnectionListener
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
 	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw();	

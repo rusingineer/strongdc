@@ -51,7 +51,7 @@ public:
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);
 		ctrlThanks.Detach();
-
+		SetDlgItemText(IDC_TTH, WinUtil::tth.c_str());
 		SetDlgItemText(IDC_LATEST, CSTRING(DOWNLOADING));
 		SetDlgItemText(IDC_TOTALS, ("Upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + ", Download: " + 
 			Util::formatBytes(SETTING(TOTAL_DOWNLOAD))).c_str());
@@ -112,6 +112,7 @@ private:
 	}
 
 	string downBuf;
+
 };
 
 #endif // !defined(AFX_ABOUTDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)
@@ -120,4 +121,3 @@ private:
  * @file
  * $Id$
  */
-

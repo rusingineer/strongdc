@@ -156,6 +156,7 @@ bool SimpleXML::findChild(const string& aName) throw() {
 string::size_type SimpleXMLReader::loadAttribs(const string& name, const string& tmp, string::size_type start) throw(SimpleXMLException) {
 	string::size_type i = start;
 	string::size_type j;
+
 	for(;;) {
 		if((j = safestring::SafeFind(tmp, '=', i)) == string::npos) {
 			throw SimpleXMLException("Missing '=' in " + name);
@@ -319,4 +320,3 @@ void SimpleXML::fromXML(const string& aXML) throw(SimpleXMLException) {
  * @file
  * $Id$
  */
-

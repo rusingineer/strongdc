@@ -25,12 +25,11 @@
 #endif
 
 // Basic sanity check
-#if (_WTL_VER < 0x710)
+#if (_WTL_VER < 0x750)
 #error WTL not correctly installed, read compile.txt
 #endif
 
 #if defined(HAS_STLPORT) && (_STLPORT_VERSION != 0x462)
 #error STLPort not correctly installed, read compile.txt
 #endif
-
 

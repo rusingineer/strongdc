@@ -57,7 +57,6 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	} else {
 	if(qi->isSet(QueueItem::FLAG_RESUME))
 		setFlag(Download::FLAG_RESUME);
-
 	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
 }
@@ -808,48 +807,42 @@ noCRC:
 
 		bool hashMatch = true;
 
-		if((hash1 != NULL) && (hash2 != NULL)) 
-		{ 
-		
-		if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
+		if((hash1 != NULL) && (hash2 != NULL)) { 
+			if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
 
-		if(!hashMatch) {		
-			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
-
-			string target = d->getTarget();
-			Download* old = d->getOldDownload();			
-
-			aSource->setDownload(NULL);
-
-			for(int i = 10; i>0; --i) {
-				char buf[64];
-				sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
-				fire(DownloadManagerListener::Failed(), d, buf);
-				Sleep(1000);
-			}
-
-			delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
-
-			fire(DownloadManagerListener::Failed(), d, STRING(CONNECTING));
-			vector<int64_t> v;
-			v.push_back(0);
-			v.push_back(d->getSize());
-			new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
-
-			removeDownload(d, true);
-			//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
-
-			aSource->setDownload(old);
-			checkDownloads(aSource, true);
-			return;
-		}
+			if(!hashMatch) {		
+				fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
 	
+				string target = d->getTarget();
+				Download* old = d->getOldDownload();			
+
+				aSource->setDownload(NULL);
+
+				for(int i = 10; i>0; --i) {
+					char buf[64];
+					sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
+					fire(DownloadManagerListener::Failed(), d, buf);
+					Sleep(1000);
+				}
+
+				delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
+
+				fire(DownloadManagerListener::Failed(), d, STRING(CONNECTING));
+				vector<int64_t> v;
+				v.push_back(0);
+				v.push_back(d->getSize());
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+
+				removeDownload(d, true);
+				//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+
+				aSource->setDownload(old);
+				checkDownloads(aSource, true);
+				return;
+			}
 		d->setFlag(Download::FLAG_TTH_OK);
-
 		}
-
-		delete hash1;
-
+	delete hash1;
 	}
 
 	// Check if we need to move the file
@@ -915,7 +908,6 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	}
 	
 	fire(DownloadManagerListener::Failed(), d, aError);
-	// CDM EXTENSION BEGINS
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR Error: %s\n", aError);
 		User::Ptr user = aSource->getUser();
@@ -927,7 +919,6 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 		removeConnection(aSource);
 		return;
 	}
-	// CDM EXTENSION ENDS
 
 	string target = d->getTarget();
 	aSource->setDownload(NULL);
@@ -957,7 +948,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 				d->unsetFlag(Download::FLAG_ANTI_FRAG);
 			} 
 		}
-
 		Download* old = d;
 		d = d->getOldDownload();
 		if(!full) {
@@ -988,7 +978,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		} 
 	}
 
-
 	{
 		Lock l(cs);
 		// Either I'm stupid or the msvc7 optimizer is doing something _very_ strange here...
@@ -1006,7 +995,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 			}
 		}
 	}
-
 	QueueManager::getInstance()->putDownload(d, finished);
 }
 
@@ -1058,7 +1046,6 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 	}
 
 	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
-	// CDM EXTENSION BEGINS
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR File not available\n");
 		User::Ptr user = aSource->getUser();
@@ -1070,7 +1057,6 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 		removeConnection(aSource);
 		return;
 	}
-	// CDM EXTENSION ENDS
 
 	aSource->setDownload(NULL);
 

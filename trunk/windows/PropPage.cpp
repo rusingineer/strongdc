@@ -40,31 +40,20 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 		{
 		case T_STR:
 #if DIM_EDIT_EXPERIMENT
-			// worry about subclassing combo boxes
-			// http://support.microsoft.com/default.aspx?scid=kb%3Ben-us%3B174667
-
 			tempCtrl = new CDimEdit;
-			//CWnd *foo = GetDlgItem(page, i->itemID);
-			if (/*foo->IsKindOf(CEdit) &&*/ tempCtrl) {
+			if (tempCtrl) {
 				tempCtrl->SubclassWindow(GetDlgItem(page, i->itemID));
 				tempCtrl->SetDimText(settings->get((SettingsManager::StrSetting)i->setting, true));
 				tempCtrl->SetDimColor(RGB(192, 192, 192));
 				ctrlMap[i->itemID] = tempCtrl;
 			}
 #endif
-	/*		if (((SettingsManager::IntSetting)i->setting) != SettingsManager::CLIENTVERSION) {
 				if (GetDlgItem(page, i->itemID) == NULL) {
 					// Control not exist ? Why ??
 					throw;
 				}
 				::SetDlgItemText(page, i->itemID,
 					settings->get((SettingsManager::StrSetting)i->setting, useDef).c_str());
-			} else*/ {
-				if(!SettingsManager::getInstance()->isDefault(i->setting)) {
-					::SetDlgItemText(page, i->itemID,
-						settings->get((SettingsManager::StrSetting)i->setting, useDef).c_str());
-				}
-			}
 			break;
 		case T_INT:
 			if (((SettingsManager::IntSetting)i->setting) != SettingsManager::IN_PORT) {
@@ -207,4 +196,3 @@ void PropPage::translate(HWND page, TextItem* textItems)
  * @file
  * $Id$
  */
-

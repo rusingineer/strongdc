@@ -173,8 +173,7 @@ void UsersFrame::removeUser(const User::Ptr& aUser) {
 	while((i = ctrlUsers.findItem(aUser->getNick(), i)) != -1) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
 		if(ui->user == aUser) {
-			ctrlUsers.DeleteItem(i);
-			delete ui;
+			ctrlUsers.deleteItem(i);
 			return;
 		}
 	}
@@ -193,9 +192,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		WinUtil::saveHeaderOrder(ctrlUsers, SettingsManager::USERSFRAME_ORDER, 
 			SettingsManager::USERSFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
-		for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
-			delete ctrlUsers.getItemData(i);
-		}
+		ctrlUsers.DeleteAll();
 
 		MDIDestroy(m_hWnd);
 	return 0;
