@@ -1025,8 +1025,8 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 					i->upper->statusString = i->statusString;
 				}
 			}
-			i->upper->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
-			i->upper->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
+			i->upper->columns[COLUMN_FILE] = Util::getFileName(i->qi->getTarget());
+			i->upper->columns[COLUMN_PATH] = Util::getFilePath(i->qi->getTarget());
 			i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
 			i->upper->file = Util::getFileName(i->qi->getTarget());
 			i->upper->path = Util::getFilePath(i->qi->getTarget());
@@ -1119,6 +1119,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		Lock l(cs);
 		if(i->user != (User::Ptr)NULL) 
 			if(i->upper != NULL) {	
+				if(i->qi) i->upper->qi = i->qi;
 				i->upper->status = ItemInfo::STATUS_RUNNING;
 				i->upper->size = aDownload->getSize();
 				string x = Util::getFileName(aDownload->getTarget());
@@ -1198,6 +1199,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->celkovaRychlost = tmp;
 
 			if(i->upper != NULL) {
+				if(i->qi) i->upper->qi = qi;
 				i->upper->compressRatio = pomerKomprese;
 				i->upper->celkovaRychlost = tmp;
 				i->upper->statusString = buf;
@@ -1246,20 +1248,26 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->path = Util::getFilePath(aDownload->getTarget());
 		i->Target = aDownload->getTarget();
 		i->downloadTarget = aDownload->getDownloadTarget();
+		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
+		if(qi) i->qi = qi;
 	}
 		dcdebug("OnDownloadFailed\n");
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
 	{
 		Lock l(cs);
-		if((i->qi) && (i->upper != NULL)) {
-			if(i->qi->getCurrents().size() <= 1) {
-				i->upper->downloadTarget = aDownload->getDownloadTarget();
-				i->upper->status = ItemInfo::STATUS_WAITING;
-				i->upper->statusString = aReason;
-				i->upper->file = Util::getFileName(aDownload->getTarget());
-				i->upper->path = Util::getFilePath(aDownload->getTarget());
-				i->upper->size = aDownload->getSize();
+		if(i->upper) {
+			i->upper->downloadTarget = aDownload->getDownloadTarget();
+			i->upper->file = Util::getFileName(aDownload->getTarget());
+			i->upper->path = Util::getFilePath(aDownload->getTarget());
+			i->upper->size = aDownload->getSize();
+
+			if(i->qi) {
+				i->upper->qi = i->qi;
+				if(i->qi->getCurrents().size() <= 1) {
+					i->upper->status = ItemInfo::STATUS_WAITING;
+					i->upper->statusString = aReason;
+				}
 			}
 		}
 

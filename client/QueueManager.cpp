@@ -50,6 +50,7 @@
 #endif
 
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
+static u_int32_t iLastSearch = 0;
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, const string& aSearchString, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
@@ -113,8 +114,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 	add(qi);
 
 // auto search
-	if(root){
+	if(root && ::GetTickCount() - iLastSearch > 500){
 		SearchManager::getInstance()->search("TTH:" + TTHValue(*root).toBase32(), 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
+		iLastSearch = ::GetTickCount();
 	}
 
 	return qi;
@@ -550,6 +552,19 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 	ConnectionManager::getInstance()->getDownloadConnection(aUser);
 }
 
+string QueueManager::getTopAutoSearchString()
+{
+	Lock l(cs);
+
+	QueueItem* q = fileQueue.findHighest();
+
+	if(q && q->getTTH()){
+		return "TTH:" + q->getTTH()->toBase32();
+	}else{
+		return "";
+	}
+}
+
 void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueException) {
 	bool wantConnection = false;
 	{
@@ -867,7 +882,7 @@ again:
 		goto again;
 	}
 
-	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) &&
 		BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
 		if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
 			message = STRING(ALL_SEGMENTS_TAKEN);		
@@ -878,7 +893,7 @@ again:
 
 	int64_t freeBlock = 0;
 
-	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)){
 		dcassert(!q->getTempTarget().empty());
 		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
 
@@ -1497,8 +1512,8 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 	//bool found = false;
 
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
-		Lock l(cs);
-		QueueItem::List matches;
+	/*	Lock l(cs);
+		QueueItem::List matches;*/
 
 			if(QueueItem* qi = fileQueue.findByHash(sr->getTTH()->toBase32())) {
 				// Wow! found a new source that seems to match...add it...

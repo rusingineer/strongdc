@@ -425,7 +425,8 @@ void SearchFrame::onEnter() {
 	if(llsize == 0)
 		mode = SearchManager::SIZE_DONTCARE;
 
-	exactSize = (mode == SearchManager::SIZE_EXACT);
+	exactSize1 = (mode == SearchManager::SIZE_EXACT);
+	exactSize2 = llsize;
 	int ftype = ctrlFiletype.GetCurSel();		
 
 	if(BOOLSETTING(CLEAR_SEARCH)){
@@ -496,11 +497,8 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	if(onlyTTH && aResult->getTTH() == NULL)
 		return;
 
-	if(exactSize) {			
-		string size(ctrlSize.GetWindowTextLength() + 1, '\0');
-		ctrlSize.GetWindowText(&size[0], size.size());
-		size.resize(size.size()-1);
-		if(aResult->getSize() != Util::toInt64(size))
+	if(exactSize1) {			
+		if(aResult->getSize() != exactSize2)
 			return;
 	}
 
