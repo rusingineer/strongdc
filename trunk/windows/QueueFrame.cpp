@@ -1498,6 +1498,8 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			FileChunksInfo::Ptr filedatainfo = qi->FDI;
 
 			if(filedatainfo) {
+				// lock critical section of current filedatainfo to avoid crashes, I hope there won't be deadlock or higher cpu usage
+				Lock l(filedatainfo->hMutex);
 				for(int smycka = 0; smycka < 2; smycka++) {
 					vector<int64_t> v;
 	

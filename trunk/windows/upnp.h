@@ -34,6 +34,7 @@ public:
 	HRESULT ClosePorts();
 	string GetExternalIP();
 private:
+	bool PortsAreOpen;
 	int PortNumber; // The Port number required to be opened
 	BSTR bstrInternalClient; // Local IP Address
 	BSTR bstrDescription;		// name shown in UPnP interface details

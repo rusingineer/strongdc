@@ -289,45 +289,55 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	startSocket();
 	// we should have decided what ports we are using by now
 	// so if we are using UPnP lets open the ports.
+	
+	// Initialize (no more need for all these elses)
+	UPnP_TCPConnection = UPnP_UDPConnection = NULL;
+	
 	if( BOOLSETTING( SETTINGS_USE_UPNP ) )
 	{
-		 if ( ( WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 )//WinXP & WinSvr2003
+		 if (
+			 ( WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 ) //WinXP & WinSvr2003
 			  || WinUtil::getOsMajor() >= 6 )  //Longhorn
 		 {
 			UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", APPNAME " Download Port (" + Util::toString(ConnectionManager::getInstance()->getPort()) + " TCP)", ConnectionManager::getInstance()->getPort() );
 			UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(SearchManager::getInstance()->getPort()) + " UDP)", SearchManager::getInstance()->getPort() );
 		
-			if ( UPnP_UDPConnection->OpenPorts() || UPnP_TCPConnection->OpenPorts() )
+			if ( FAILED(UPnP_UDPConnection->OpenPorts()) || FAILED(UPnP_TCPConnection->OpenPorts()) )
 			{
 				LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS), true);
-				UPnP_TCPConnection = NULL;
-				UPnP_UDPConnection = NULL;
-			}
+				MessageBox(CTSTRING(UPNP_FAILED_TO_CREATE_MAPPINGS), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
+				
+				// fall-back to passive mode
+				SettingsManager::getInstance()->set(SettingsManager::CONNECTION_TYPE, SettingsManager::CONNECTION_PASSIVE);
 
-			// now lets configure the external IP (connect to me) address
-			string ExternalIP = UPnP_TCPConnection->GetExternalIP();
-			if ( ExternalIP.size() > 0 )
-			{
-				// woohoo, we got the external IP from the UPnP framework
-				SettingsManager::getInstance()->set(SettingsManager::SERVER, ExternalIP );
-				SettingsManager::getInstance()->set(SettingsManager::CONNECTION_TYPE, SettingsManager::CONNECTION_ACTIVE );
+				// We failed! thus reset the objects
+				delete UPnP_TCPConnection;
+				delete UPnP_UDPConnection;
+				UPnP_TCPConnection = UPnP_UDPConnection = NULL;
 			}
 			else
 			{
-				//:-(  Looks like we have to rely on the user setting the external IP manually
+				// now lets configure the external IP (connect to me) address
+				string ExternalIP = UPnP_TCPConnection->GetExternalIP();
+				if ( ExternalIP.empty() == false )
+				{
+					// woohoo, we got the external IP from the UPnP framework
+					SettingsManager::getInstance()->set(SettingsManager::SERVER, ExternalIP );
+					SettingsManager::getInstance()->set(SettingsManager::CONNECTION_TYPE, SettingsManager::CONNECTION_ACTIVE );
+				}
+				else
+				{
+					//:-(  Looks like we have to rely on the user setting the external IP manually
+					// no need to do cleanup here because the mappings work
+					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), true);
+					MessageBox(CTSTRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
+				}
 			}
 		}
-		 else
-		 {
+		else
+		{
 			LogManager::getInstance()->message(STRING(OPERATING_SYSTEM_NOT_COMPATIBLE), true);
-			UPnP_TCPConnection = NULL;
-			UPnP_UDPConnection = NULL;
-		 }
-	}
-	else
-	{
-		UPnP_TCPConnection = NULL;
-		UPnP_UDPConnection = NULL;
+		}
 	}
 
 	if(BOOLSETTING(IPUPDATE)) SettingsManager::getInstance()->set(SettingsManager::SERVER, Util::getLocalIp());
@@ -345,8 +355,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
 	currentPic = SETTING(BACKGROUND_IMAGE);
 	m_PictureWindow.Load(Text::toT(currentPic).c_str());
-	// We want to pass this one on to the splitter...hope it get's there...
 
+	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;
 	return 0;
 }
@@ -949,26 +959,26 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
 
-			if( BOOLSETTING( SETTINGS_USE_UPNP ) )
+			// Just check if the port mapping objects are initialized (NOT NULL)
+			if ( UPnP_TCPConnection != NULL )
 			{
-			 if ( ( WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 )//WinXP & WinSvr2003
-				  || WinUtil::getOsMajor() >= 6 )  //Longhorn
-				{
-					if (UPnP_UDPConnection && UPnP_TCPConnection )
-					{
-						if ( UPnP_UDPConnection->ClosePorts() || UPnP_TCPConnection->ClosePorts() )
+				if (FAILED(UPnP_TCPConnection->ClosePorts()) )
 						{
 							LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS), true);
 						}
-						delete UPnP_UDPConnection;
 						delete UPnP_TCPConnection;
 					}
-				}
-				else
+			if ( UPnP_UDPConnection != NULL )
+			{
+				if (FAILED(UPnP_UDPConnection->ClosePorts()) )
 				{
-					LogManager::getInstance()->message(STRING(OPERATING_SYSTEM_NOT_COMPATIBLE), true);
+					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS), true);
 				}
+				delete UPnP_UDPConnection;
 			}
+			// Not sure this is required (i.e. Objects are checked later in execution)
+			// But its better being on the save side :P
+			UPnP_TCPConnection = UPnP_UDPConnection = NULL;
 
 			DWORD id;
 			stopperThread = CreateThread(NULL, 0, stopper, this, 0, &id);

@@ -22,6 +22,8 @@
 * opraveno unicode ve webserveru
 * opraveno krátké zamrznutí pøi kontrole seznamu souborù
 * seskupování výsledkù hledání je závislé na velikosti souboru
+* opraveny rekurzivní kritické sekce
+* opraven problém s automatickou prioritou
 
 
 	-- StrongDC++ 1.00 RC9 --

@@ -1093,11 +1093,13 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 
 			if(i->upper != NULL) {	
 				int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-				if(!isTree || (pocetSegmentu <= 1)) {
+				if(!isTree || (pocetSegmentu < 1)) {
 					i->upper->status = ItemInfo::STATUS_WAITING;
-					i->upper->qi = NULL;
 					i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
-					i->upper->finished = true;
+					if(!isTree) {
+						i->upper->qi = NULL;
+						i->upper->finished = true;
+					}
 				}
 			}
 

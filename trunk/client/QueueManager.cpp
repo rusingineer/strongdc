@@ -83,9 +83,9 @@ const string& QueueItem::getTempTarget() {
 #ifdef _WIN32
 			::StringMap sm;
 			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
-				sm["downloaddrive"] = target.substr(0, 3);
+				sm["targetdrive"] = target.substr(0, 3);
 			else
-				sm["downloaddrive"] = Util::getAppPath().substr(0, 3);
+				sm["targetdrive"] = Util::getAppPath().substr(0, 3);
 			setTempTarget(Util::formatParams(SETTING(TEMP_DOWNLOAD_DIRECTORY), sm) + getTempName(getTargetFileName(), getTTH()));
 #else //_WIN32
 			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
@@ -353,7 +353,7 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 	running.erase(aUser);
 	
 	// Set flag to waiting
-	qi->removeCurrent(aUser);
+	qi->removeCurrent(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ? aUser : qi->getCurrents()[0]->getUser());
 
 	if(removeSegment) {
 		qi->removeActiveSegment(aUser);
@@ -559,6 +559,9 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 					break;
 				}
 			}
+			if(q == NULL) {
+				q = fileQueue.find(target);
+			}
 		} else {
 			q = fileQueue.find(target);
 		}
@@ -606,7 +609,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 	}
 
 	if(wantConnection && aUser->isOnline())
-	ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser);
 
 	// auto search, prevent DEADLOCK
 	if(newItem && root){
@@ -1032,7 +1035,6 @@ next:
 			d->setPos(0);
 			d->setSize(-1);
 			d->unsetFlag(Download::FLAG_RESUME);
-
 		} else {
 			// Use the root as tree to get some sort of validation at least...
 			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
@@ -1075,18 +1077,24 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 
 	{
 		Lock l(cs);
+
+		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+			removeSegment = false;
+		}
 		QueueItem* q = fileQueue.find(aDownload->getTarget());
 
 		if(q != NULL) {
 			if(aDownload->isSet(Download::FLAG_USER_LIST)) {
 				if(aDownload->getSource() == "files.xml.bz2") {
 					q->setFlag(QueueItem::FLAG_XML_BZLIST);
-			} else {
-				q->unsetFlag(QueueItem::FLAG_XML_BZLIST);
+				} else {
+					q->unsetFlag(QueueItem::FLAG_XML_BZLIST);
 				}
 			}
 
+dcdebug("test 1");
 			if(finished) {
+dcdebug("test 2");
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
 				if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 					// Got a full tree, now add it to the HashManager
@@ -1114,6 +1122,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 					setDirty();
 				}
 			} else {
+dcdebug("test 3");
 				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					if(!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 						q->setDownloadedBytes(aDownload->getPos());
@@ -1128,7 +1137,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 							File::deleteFile(q->getListName());
 						}
 					}
-				}
+				} else if(q->getDownloadedBytes() > 0)
+					q->setFlag(QueueItem::FLAG_EXISTS);
 
 				if(q->getPriority() != QueueItem::PAUSED) {
 					for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
@@ -1141,9 +1151,10 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					q->setCurrentDownload(NULL);
 
+					// This might have been set to wait by removesource already...
 					if(q->getStatus() == QueueItem::STATUS_RUNNING) {
 						userQueue.setWaiting(q, aDownload->getUserConnection()->getUser(), removeSegment);
-						fire(QueueManagerListener::StatusUpdated(), q);
+						fire(QueueManagerListener::StatusUpdated(), q);						
 					}
 				} else {
 					userQueue.setWaiting(q, aDownload->getUserConnection()->getUser(), removeSegment);
@@ -1695,6 +1706,10 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		if(BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
 			for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
 				QueueItem* q = *j;
+
+				if(q->getAutoPriority()) {
+					q->setPriority(q->calculateAutoPriority());
+				}
 				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					if(q->getCurrentDownload() != NULL)
 						q->setDownloadedBytes(q->getCurrentDownload()->getPos());

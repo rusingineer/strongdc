@@ -137,6 +137,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				aSource->fileNotAvail();
 				return false;
 			}
+			// Some old dc++ clients err here...
+			aBytes = -1;
 			size = mis->getSize();
 			aStartPos = 0;
 			is = mis;
@@ -183,7 +185,11 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	Upload* u = new Upload();
 	u->setUserConnection(aSource);
 	u->setFile(is);
-	u->setSize(size);
+	if(aBytes == -1)
+		u->setSize(size);
+	else
+		u->setSize(aStartPos + aBytes);
+
 	u->setStartPos(aStartPos);
 	u->setFileName(file);
 	u->setLocalFileName(file);
