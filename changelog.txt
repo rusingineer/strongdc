@@ -29,6 +29,9 @@
 * komprese povolena pouze s klienty >= 0.307
 * zmìny podle poslední CVS DC++ 0.402
 * opraveno zobrazování nabídky v chatu pøi zavøeném userlistu
+* snad opraveno skrolování v chatu
+* profily klientù jsou nyní kompatibilní s DCDM++
+* jednoduchá detekce NetLimitera
 
 
 

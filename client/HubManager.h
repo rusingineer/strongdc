@@ -524,6 +524,7 @@ public:
 	void load();
 	void save();
 	void recentsave();
+	void saveClientProfiles();
 private:
 	
 	enum {
@@ -611,6 +612,7 @@ private:
 
 	void load(SimpleXML* aXml);
 	void recentload(SimpleXML* aXml);
+	void loadClientProfiles(SimpleXML* aXml);
 };
 
 #endif // !defined(AFX_HUBMANAGER_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)

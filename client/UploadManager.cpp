@@ -104,8 +104,13 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			(Util::stricmp(aFile.c_str(), "MyList.bz2") == 0) ||
 			(Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0));
 
+		File* f;
 		try {
-			File* f = new File(file, File::READ, File::OPEN);
+			f = new File(file, File::READ, File::OPEN);
+		} catch(const FileException&) {
+			aSource->fileNotAvail();
+			return false;
+		}
 
 			size = f->getSize();
 
@@ -127,11 +132,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 			if((aStartPos + aBytes) < size) {
 				is = new LimitedInputStream<true>(is, aBytes);
-			}
-
-		} catch(const Exception&) {
-			aSource->fileNotAvail();
-			return false;
 			}
 
 	} else if(aType == "tthl") {

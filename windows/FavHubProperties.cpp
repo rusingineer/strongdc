@@ -33,7 +33,7 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_HUBPASS, entry->getPassword().c_str());
 	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
 	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
-	::CheckDlgButton(*this, IDC_STEALTH, entry->getStealth() ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_STEALTH, entry->getStealth() ? BST_CHECKED : BST_UNCHECKED);
 	// CDM EXTENSION BEGINS FAVS
 	SetDlgItemText(IDC_RAW_ONE, entry->getRawOne().c_str());
 	SetDlgItemText(IDC_RAW_TWO, entry->getRawTwo().c_str());
@@ -77,8 +77,7 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setPassword(buf);
 		GetDlgItemText(IDC_HUBUSERDESCR, buf, 256);
 		entry->setUserDescription(buf);
-		CButton btn = ::GetDlgItem(m_hWnd, IDC_STEALTH);
-		entry->setStealth(btn.GetCheck());
+		entry->setStealth(IsDlgButtonChecked(IDC_STEALTH));
 		// CDM EXTENSION BEGINS
 		GetDlgItemText(IDC_RAW_ONE, buf, 512);
 		entry->setRawOne(buf);
@@ -108,7 +107,7 @@ LRESULT FavHubProperties::OnTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWn
 	char *b = buf, *f = buf, c;
 	while( (c = *b++) != 0 )
 	{
-		if(c != '$' && c != '|' && (wID == IDC_HUBUSERDESCR || c != ' '))
+		if(c != '$' && c != '|' && (wID == IDC_HUBUSERDESCR || c != ' ') && ( (wID != IDC_HUBNICK) || (c != '<' && c != '>')) )
 			*f++ = c;
 	}
 

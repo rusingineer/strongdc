@@ -1041,8 +1041,9 @@ size_t DownloadManager::throttleGetSlice() {
 			}
 		} else
 			return 0;
-	} else
-		return -1;
+	} else {
+		return (size_t)-1;
+	}
 }
 
 size_t DownloadManager::throttleCycleTime() {
