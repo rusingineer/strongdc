@@ -223,6 +223,7 @@ void HubManager::onHttpFinished() throw() {
 void HubManager::save() {
 	if(dontSave)
 		return;
+
 	Lock l(cs);
 	try {
 		SimpleXML xml;
@@ -620,6 +621,7 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
+
 	dontSave = false;
 }
 

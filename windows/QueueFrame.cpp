@@ -113,10 +113,8 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	segmentsMenu.CreatePopupMenu();
 	
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
-	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
-	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
@@ -131,7 +129,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
 	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
@@ -156,7 +153,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, ("10 "+STRING(SEGMENTS)).c_str());
 
  	dirMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	dirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	dirMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
@@ -803,7 +799,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
 	ctrlQueue.ScreenToClient(&pt);
-	for(int i=1;i<11;i++) {
+	for(int i=0;i<11;i++) {
 		segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 		segmentsMenu.EnableMenuItem(i + 109, MF_ENABLED);		
 	}
@@ -824,7 +820,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		singleMenu.InsertSeparatorFirst(STRING(FILE));
 		multiMenu.InsertSeparatorFirst(STRING(FILES));			
 
-		singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
+
 
 		ctrlQueue.ClientToScreen(&pt);
 		
@@ -888,10 +884,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				singleMenu.EnableMenuItem((UINT)(HMENU)readdMenu, MF_GRAYED);
 			}
 			if(ii->getTTH() != NULL) {
-                singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+                singleMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_ENABLED);
                 singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_ENABLED);
             } else {
-            	singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
+   				singleMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_GRAYED);	
 				singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
             }
 
@@ -914,9 +910,12 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
 			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
 			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
+			segmentsMenu.InsertSeparatorFirst(STRING(MAX_SEGMENTS_NUMBER));
 
 			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
+			segmentsMenu.RemoveFirstItem();
+			priorityMenu.RemoveFirstItem();
 			browseMenu.RemoveFirstItem();
 			removeMenu.RemoveFirstItem();
 			removeAllMenu.RemoveFirstItem();
@@ -964,32 +963,13 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		
-		string searchString = SearchManager::clean(ii->getTargetFileName());
-			
-		if(!searchString.empty()) {
-			bool bigFile = (ii->getSize() > 10*1024*1024);
-			if(bigFile) {
-				SearchFrame::openWindow(searchString, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
-			} else {
-				SearchFrame::openWindow(searchString, ii->getSize()+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
-			}
+		if(ii->getTTH() != NULL) {
+			SearchFrame::openWindow(ii->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
 		}
 	} 
 	
 	return 0;
 }
-
-LRESULT QueueFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-
-		if(ii->getTTH() != NULL) {
-			WinUtil::searchHash(ii->getTTH());
-		}
-	}
-	return 0;
-	} 
 
 LRESULT QueueFrame::onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
@@ -1565,7 +1545,7 @@ afterexception:
 			return CDRF_SKIPDEFAULT;
 		}
 		else if(cd->iSubItem == COLUMN_SEGMENTS) {
-			
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {
 					barva = GetSysColor(COLOR_HIGHLIGHT);
@@ -1578,10 +1558,13 @@ afterexception:
 			} else {
 				barva = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+				if(qi->getText(COLUMN_ERRORS) != (STRING(NO_ERRORS))) {
+					SetTextColor(cd->nmcd.hdc, SETTING(ERROR_COLOR));
+				} else {
+					SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+				}
 			}
-			
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+						
 			char buf[256];
 			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, buf, 255);
 			buf[255] = 0;

@@ -460,7 +460,7 @@ private:
 	StringList lastLinesList;
 	string lastLines;
 	CToolTipCtrl ctrlLastLines;
-	
+
 	UserListColumns m_UserListColumns;
 	
 	int findUser(const User::Ptr& aUser);

@@ -87,7 +87,7 @@ const string SettingsManager::settingTags[] =
 	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
 	"ProgressOverrideColors", "ProgressBumped", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
-	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser",
+	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
 	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
@@ -100,6 +100,8 @@ const string SettingsManager::settingTags[] =
 	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
 	"AddFinishedInstantly", "Away", "UseUPnP",
+	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
+	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -397,6 +399,7 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_NEW_USERS, false);
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
+	setDefault(UPLOADQUEUEFRAME_SHOW_TREE, true);	
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 200);
 
@@ -421,6 +424,17 @@ SettingsManager::SettingsManager()
 	setDefault(SOUND_HUBCON, "");
 	setDefault(SOUND_HUBDISCON, "");
 	setDefault(SOUND_FAVUSER, "");
+
+	setDefault(POPUP_HUB_CONNECTED, false);
+	setDefault(POPUP_HUB_DISCONNECTED, false);
+	setDefault(POPUP_FAVORITE_CONNECTED, true);
+	setDefault(POPUP_CHEATING_USER, true);
+	setDefault(POPUP_DOWNLOAD_START, true);
+	setDefault(POPUP_DOWNLOAD_FAILED, false);
+	setDefault(POPUP_DOWNLOAD_FINISHED, true);
+	setDefault(POPUP_UPLOAD_FINISHED, false);
+	setDefault(POPUP_PM, false);
+	setDefault(POPUP_NEW_PM, true);
 
 	setDefault(AWAY, false);
 
@@ -470,11 +484,10 @@ void SettingsManager::load(string const& aFileName)
 			xml.stepIn();
 			
 			int i;
-			string attr;
 			
 			for(i=STR_FIRST; i<STR_LAST; i++)
 			{
-				attr = settingTags[i];
+				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
 				
 				if(xml.findChild(attr))
@@ -483,7 +496,7 @@ void SettingsManager::load(string const& aFileName)
 			}
 			for(i=INT_FIRST; i<INT_LAST; i++)
 			{
-				attr = settingTags[i];
+				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
 				
 				if(xml.findChild(attr))
@@ -492,7 +505,7 @@ void SettingsManager::load(string const& aFileName)
 			}
 			for(i=INT64_FIRST; i<INT64_LAST; i++)
 			{
-				attr = settingTags[i];
+				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
 				
 				if(xml.findChild(attr))

@@ -551,7 +551,7 @@ int HashManager::Hasher::run() {
 }
 
 TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
-	setThreadPriority(Thread::LOW);
+	setThreadPriority(Thread::NORMAL);
 
 #ifdef _WIN32
 	u_int8_t* buf = NULL;
@@ -608,7 +608,6 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 #endif
 			f.close();
 			tth->finalize();
-
 			if(buf != NULL) {
 				if(virtualBuf) {
 #ifdef _WIN32

@@ -1407,9 +1407,13 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 			LineDlg virt;
 			virt.title = STRING(VIRTUAL_NAME);
 			virt.description = STRING(VIRTUAL_NAME_LONG);
-			virt.line = Util::getLastDir(pItem->m_sFQPath + PATH_SEPARATOR);
+
+			string path = pItem->m_sFQPath;
+			if( path[ path.length() -1 ] != '\\' )
+				path += '\\';
+			virt.line = Util::getLastDir(path);
 			if(virt.DoModal() == IDOK) {
-				ShareManager::getInstance()->addDirectory(pItem->m_sFQPath  + PATH_SEPARATOR, virt.line);
+				ShareManager::getInstance()->addDirectory(path, virt.line);
 			}
 			HashProgressDlg(true).DoModal();
 			UpdateParentItems(hItem);

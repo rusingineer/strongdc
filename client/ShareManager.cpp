@@ -389,7 +389,7 @@ string ShareManager::Directory::getADCPath() const throw() {
 string ShareManager::Directory::getFullName() const throw() {
 	if(parent == NULL)
 		return getName() + '\\';
-	return parent->getName() + getName() + '\\';
+	return parent->getName() + '\\' + getName() + '\\';
 }
 
 void ShareManager::Directory::addType(u_int32_t type) throw() {
@@ -659,7 +659,7 @@ void ShareManager::generateXmlList() {
 			{
 				FilteredOutputStream<BZFilter, true> newXmlFile(new File(newXmlName, File::WRITE, File::TRUNCATE | File::CREATE));
 				newXmlFile.write(SimpleXML::utf8Header);
-				newXmlFile.write("<FileListing Version=\"1\" Generator=\"" APPNAME " " VERSIONSTRING "\">\r\n");
+				newXmlFile.write("<FileListing Version=\"1\" Generator=\"DC++ " DCVERSIONSTRING "\">\r\n");
 				for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
 					i->second->toXml(newXmlFile, indent, tmp2);
 				}
@@ -825,17 +825,17 @@ static bool checkType(const string& aString, int aType) {
 			}
 			for(size_t i = 0; i < (sizeof(type2Audio) / sizeof(type2Audio[0])); i++) {
 				if(IS_TYPE2(type2Audio[i])) {
-				return true;
+					return true;
+				}
 			}
-		}
 		}
 		break;
 	case SearchManager::TYPE_COMPRESSED:
 		{
 			for(size_t i = 0; i < (sizeof(typeCompressed) / sizeof(typeCompressed[0])); i++) {
 				if(IS_TYPE(typeCompressed[i])) {
-			return true;
-		}
+					return true;
+				}
 			}
 			if( IS_TYPE2(type2Compressed[0]) ) {
 				return true;
@@ -844,10 +844,10 @@ static bool checkType(const string& aString, int aType) {
 		break;
 	case SearchManager::TYPE_DOCUMENT:
 			for(size_t i = 0; i < (sizeof(typeDocument) / sizeof(typeDocument[0])); i++) {
-			if(IS_TYPE(typeDocument[i])) {
-			return true;
-		}
-		}
+				if(IS_TYPE(typeDocument[i])) {
+					return true;
+				}
+			}
 		break;
 	case SearchManager::TYPE_EXECUTABLE:
 		if(IS_TYPE(typeExecutable[0]) || IS_TYPE(typeExecutable[1])) {
@@ -863,9 +863,9 @@ static bool checkType(const string& aString, int aType) {
 			}
 			for(size_t i = 0; i < (sizeof(type2Picture) / sizeof(type2Picture[0])); i++) {
 				if(IS_TYPE2(type2Picture[i])) {
-				return true;
+					return true;
+				}
 			}
-		}
 		}
 		break;
 	case SearchManager::TYPE_VIDEO:
@@ -877,9 +877,9 @@ static bool checkType(const string& aString, int aType) {
 			}
 			for(size_t i = 0; i < (sizeof(type2Video) / sizeof(type2Video[0])); i++) {
 				if(IS_TYPE2(type2Video[i])) {
-				return true;
+					return true;
+				}
 			}
-		}
 		}
 		break;
 	default:
@@ -1261,12 +1261,10 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, TTHValu
 		Directory* d = getDirectory(fname);
 		if(d != NULL) {
 			Directory::File::Iter i = find_if(d->files.begin(), d->files.end(), Directory::File::StringComp(Util::getFileName(fname)));
-
 			if(i != d->files.end()) {
-				if(i->getTTH() != NULL) { // TTH of file updated?
-					removeTTH(i->getTTH(), i);
+				if(i->getTTH() != NULL) { // TTH of file updated?				
 					dcassert(tthIndex.find(i->getTTH()) != tthIndex.end());
-					tthIndex.erase(i->getTTH());
+					removeTTH(i->getTTH(), i);
 				}
 				// Get rid of false constness...
 				Directory::File* f = const_cast<Directory::File*>(&(*i));

@@ -56,7 +56,6 @@ public:
 				if(!_auto){
 					search_queue.erase(i);
 					search_queue.push_front(s);
-					last_search_time -= 28000;
 				}
 				return false;
 			}
@@ -66,7 +65,6 @@ public:
 			search_queue.push_back(s);
 		else{
 			search_queue.push_front(s);
-			last_search_time -= 25000;
 		}
 		return true;
 	}
@@ -77,7 +75,7 @@ public:
 		if(search_queue.empty())
 			return false;
 
-		if(GET_TICK() - last_search_time < 30000) // 15 seconds
+		if(GET_TICK() - last_search_time < 30000) // 30 seconds
 			return false;
 
 		s = search_queue.front();

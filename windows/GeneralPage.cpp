@@ -183,6 +183,9 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	desc.Attach(GetDlgItem(IDC_DESCRIPTION));
 	desc.LimitText(50);
 	desc.Detach();
+	desc.Attach(GetDlgItem(IDC_SETTINGS_EMAIL));
+	desc.LimitText(64);
+	desc.Detach();
 	desc.Attach(GetDlgItem(IDC_SOCKS_SERVER));
 	desc.LimitText(250);
 	desc.Detach();
@@ -233,7 +236,7 @@ LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl,
 	char *b = buf, *f = buf, c;
 	while( (c = *b++) != 0 )
 	{
-		if(c != '$' && c != '|' && (wID == IDC_DESCRIPTION || c != ' ') && ( (wID != IDC_NICK && wID != IDC_DESCRIPTION) || (c != '<' && c != '>') ) )
+		if(c != '$' && c != '|' && (wID == IDC_DESCRIPTION || c != ' ') && ( (wID != IDC_NICK && wID != IDC_DESCRIPTION && wID != IDC_SETTINGS_EMAIL) || (c != '<' && c != '>') ) )
 			*f++ = c;
 	}
 
@@ -285,7 +288,6 @@ LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl *
 	string IPAdresa = getMyIP();
 
    if((IPAdresa.compare(0,3,"10.")==0) ||
-	  (IPAdresa.compare(0,10,"81.27.192.")==0) ||
 	  (IPAdresa.compare(0,8,"192.168.")==0) ||
 	  (IPAdresa.compare(0,8,"169.254.")==0) ||
 	  ((IPAdresa.compare(0,4,"172.")==0) && (Util::toInt(IPAdresa.substr(4,2))>=16 && Util::toInt(IPAdresa.substr(4,2))<=31))

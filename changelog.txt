@@ -31,6 +31,8 @@
 * opraveno nìkolik možných deadlockù
 * logy chatu/PM jsou øazeny do podsložek
 * pøidány ikonky do fronty, které znaèí, zda je k dispozici strom TTH
+* pøidány bublinové zprávy pro nìkolik událostí
+* opraveno nastavení úrovnì komprese
 
 
 	-- StrongDC++ 1.00 RC7 --

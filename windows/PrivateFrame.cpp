@@ -23,6 +23,7 @@
 #include "PrivateFrame.h"
 #include "SearchFrm.h"
 #include "CZDCLib.h"
+#include "MainFrm.h"
 
 #include "../client/Client.h"
 #include "../client/ClientManager.h"
@@ -103,13 +104,6 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
 
-	textMenu.CreatePopupMenu();
-	textMenu.AppendMenu(MF_STRING, ID_EDIT_COPY, CSTRING(COPY));
-	textMenu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CSTRING(COPY_LINE));
-	textMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	textMenu.AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CSTRING(SELECT_ALL));
-	textMenu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CSTRING(CLEAR));
-
 	tabMenu.CreatePopupMenu();	
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CSTRING(OPEN_USER_LOG));
@@ -160,6 +154,11 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				frames[aUser] = p;
 				p->setUser(aUser);
 				p->addLine(aMessage);
+
+				if(BOOLSETTING(POPUP_PM)) {
+					MainFrame::getMainFrame()->ShowBalloonTip(aUser->getFullNick().c_str(), CSTRING(PRIVATE_MESSAGE));
+				}
+
 				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 					if(SETTING(BEEPFILE).empty()) {
 						MessageBeep(MB_OK);
@@ -180,6 +179,10 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				p->sendMessage(Util::getAwayMessage());
 			}
 
+			if(BOOLSETTING(POPUP_NEW_PM)) {
+				MainFrame::getMainFrame()->ShowBalloonTip(aUser->getFullNick().c_str(), CSTRING(PRIVATE_MESSAGE));
+			}
+
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 				if (SETTING(BEEPFILE).empty()) {
 					MessageBeep(MB_OK);
@@ -189,6 +192,10 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 			}
 		}
 	} else {
+		if(BOOLSETTING(POPUP_PM)) {
+			MainFrame::getMainFrame()->ShowBalloonTip(aUser->getFullNick().c_str(), CSTRING(PRIVATE_MESSAGE));
+		}
+
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 			if (SETTING(BEEPFILE).empty()) {
 				MessageBeep(MB_OK);
@@ -641,11 +648,12 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam,
 		if(!user->isOnline()) {
 			return S_OK;
 		}
-		tabMenu.InsertSeparatorFirst(x);
+		
 		prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, user->getClientAddressPort(), user->isClientOp());
 		if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			tabMenu.AppendMenu(MF_SEPARATOR);
 		}
+		tabMenu.InsertSeparatorFirst(nick);
 		tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
 		tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpt.x, cpt.y, m_hWnd);
 		tabMenu.RemoveFirstItem();

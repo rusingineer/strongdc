@@ -79,7 +79,6 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::AUTO_UPDATE_LIST, ResourceManager::SETTINGS_AUTO_UPDATE_LIST },
 	{ SettingsManager::AUTO_SEARCH_AUTO_MATCH, ResourceManager::SETTINGS_AUTO_SEARCH_AUTO_MATCH },
 	{ SettingsManager::ADLS_BREAK_ON_FIRST, ResourceManager::SETTINGS_ADLS_BREAK_ON_FIRST },
-	{ SettingsManager::AUTO_SEARCH_AUTO_STRING, ResourceManager::SETTINGS_AUTO_SEARCH_AUTO_STRING }, 
 	{ SettingsManager::LIST_DUPES, ResourceManager::SETTINGS_LIST_DUPES },
 	{ SettingsManager::REMOVE_FORBIDDEN, ResourceManager::SETCZDC_REMOVE_FORBIDDEN },
 	{ SettingsManager::URL_HANDLER, ResourceManager::SETTINGS_URL_HANDLER },

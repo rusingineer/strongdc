@@ -34,6 +34,7 @@ int ConnectionManager::iConnToMeCount = 0;
 ConnectionManager::ConnectionManager() : floodCounter(0), shuttingDown(false) {
 	TimerManager::getInstance()->addListener(this);
 	socket.addListener(this);
+
 	features.push_back(UserConnection::FEATURE_MINISLOTS);
 	features.push_back(UserConnection::FEATURE_XML_BZLIST);
 	features.push_back(UserConnection::FEATURE_ADCGET);
@@ -116,7 +117,6 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 
 			cqi->setLastAttempt(reconnect ? 0: GET_TICK());
-
 			pendingDown.push_back(cqi);
 		} else {
 			{
@@ -641,7 +641,6 @@ void ConnectionManager::shutdown() {
 		Lock l(cs);
 		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
 			(*j)->disconnect();
-//			putConnection(*j);
 		}
 	}
 	// Wait until all connections have died out...

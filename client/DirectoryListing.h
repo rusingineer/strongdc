@@ -138,17 +138,16 @@ public:
 
 	void download(const string& aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void download(Directory* aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(File* aFile, const string& aTarget, bool view = false, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void downloadMP3(File* aFile, const string& aTarget);
 
 	string getPath(Directory* d);	
 	string getPath(File* f) { return getPath(f->getParent()); };
 
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
-	Directory* getRoot() { return root; };
-	
-	void download(File* aFile, const string& aTarget, bool view = false, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void downloadMP3(File* aFile, const string& aTarget);
 
+	Directory* getRoot() { return root; };
 	int64_t getJunkSize() { return root->getJunkSize(); };
 
 	GETSET(User::Ptr, user, User);

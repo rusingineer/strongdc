@@ -41,13 +41,7 @@ public:
 
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
 		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false), PreviewAppsSize(0),
-		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP)
-	{ 
-		searchFilter.push_back("the");
-		searchFilter.push_back("of");
-		searchFilter.push_back("divx");
-		searchFilter.push_back("frail");
-	}
+		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP) { }
 
 	virtual ~QueueFrame();
 	
@@ -72,7 +66,6 @@ public:
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
-		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)		
 		COMMAND_ID_HANDLER(IDC_READD_ALL_SOURCES,onReaddAll)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnet)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
@@ -103,7 +96,6 @@ public:
 	LRESULT onReadd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onReaddAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
@@ -379,8 +371,6 @@ private:
 	int readdItems;
 
 	HTREEITEM fileLists;
-
-	StringList searchFilter;
 
 	typedef hash_map<QueueItem*, QueueItemInfo*, PointerHash<QueueItem> > QueueMap;
 	typedef QueueMap::iterator QueueIter;

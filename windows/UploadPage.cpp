@@ -249,14 +249,18 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	return 0;
 }
 
-void UploadPage::addDirectory(string path){
+void UploadPage::addDirectory(string aPath){
+	string path = aPath;
+	if( path[ path.length() -1 ] != '\\' )
+		path += '\\';
+
 	try {
 		LineDlg virt;
 		virt.title = STRING(VIRTUAL_NAME);
 		virt.description = STRING(VIRTUAL_NAME_LONG);
 		virt.line = Util::getLastDir(path);
-		if(virt.DoModal() == IDOK) {
-			ShareManager::getInstance()->addDirectory(path, Util::getLastDir(virt.line));
+		if(virt.DoModal() == IDOK) {			
+			ShareManager::getInstance()->addDirectory(path, virt.line);
 			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), path);
 			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(path)).c_str());
 			ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());

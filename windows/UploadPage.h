@@ -70,7 +70,7 @@ protected:
 	ExListViewCtrl ctrlDirectories;
 	CStatic ctrlTotal;
 	char* title;
-	void addDirectory(string path);
+	void addDirectory(string aPath);
 	FolderTree ft;
 };
 

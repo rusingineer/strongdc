@@ -165,8 +165,6 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
 
-		// We prefer to search for things that are not running...	
-
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST))
 			continue;
@@ -175,15 +173,11 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		if(q->getPriority() == QueueItem::PAUSED)
 			continue;
 
-		// No files that already have more than 5 online sources
-
-		// Check that we have a search string
-
 		if(!q->getTTH())
 			continue;
 
 		// Did we search for it recently?
-        if(find(recent.begin(), recent.end(), /*q->getSearchString()*/ q->getTTH()->toBase32()) != recent.end())
+        if(find(recent.begin(), recent.end(), q->getTTH()->toBase32()) != recent.end())
 			continue;
 
 		cand = q;
@@ -435,8 +429,6 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 
 	{
 		Lock l(cs);
-
- 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
 			while((recent.size() > fileQueue.getSize()) || (recent.size() > 30)) {
@@ -459,7 +451,6 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 		if(BOOLSETTING(REPORT_ALTERNATES))
 			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
 	}
-
 }
 
 string QueueManager::getTempName(const string& aFileName, const TTHValue* aRoot) {
@@ -871,12 +862,17 @@ again:
 			}
 		}
 
-		if(q->getTempTarget().empty())
-			return NULL;
+		FileChunksInfo::Ptr fdi = FileChunksInfo::Get(q->getTempTarget());
 
-		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
+		if(!fdi) {
+			message = "No Chunks Info";
+			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			goto again;
+		}
 
-		if(freeBlock == -1){
+		freeBlock = fdi->GetUndlStart(q->getMaxSegments());
+
+		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
@@ -1180,18 +1176,6 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 	}
 }
 
-void QueueManager::setSearchString(const string& aTarget, const string& searchString) throw()
-{
-	Lock l(cs);
-
-	QueueItem* q = fileQueue.find(aTarget);
-	if( (q != NULL) && (q->getSearchString() != searchString) ) {
-		q->setSearchString(searchString);
-		setDirty();
-		fire(QueueManagerListener::SearchStringUpdated(), q);
-	}
-}
-
 void QueueManager::saveQueue() throw() {
 
 	Lock l(cs);
@@ -1229,10 +1213,6 @@ void QueueManager::saveQueue() throw() {
 					b32tmp.clear();
 					f.write(STRINGLEN("\" TTH=\""));
 					f.write(d->getTTH()->toBase32(b32tmp));
-				}
-				if(!d->getSearchString().empty()) {
-					f.write(STRINGLEN("\" SearchString=\""));
-					f.write(CHECKESCAPE(d->getSearchString()));
 				}
 				if(d->getDownloadedBytes() != 0) {
 					f.write(STRINGLEN("\" Downloaded=\""));
@@ -1329,7 +1309,6 @@ static const string sSource = "Source";
 static const string sNick = "Nick";
 static const string sPath = "Path";
 static const string sDirectory = "Directory";
-static const string sSearchString = "SearchString";
 static const string sAdded = "Added";
 static const string sUtf8 = "Utf8";
 static const string sTTH = "TTH";

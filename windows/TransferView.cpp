@@ -816,6 +816,13 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 	if(!aDownload->isSet(Download::FLAG_USER_LIST)) {
 		if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+	if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+		MainFrame::getMainFrame()->ShowBalloonTip((
+			STRING(FILE)+": "+i->file+"\n"+
+			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(DOWNLOAD_STARTING));
+	}
+
 	}
 	dcdebug(("****** TransferView: DownStarting "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -942,11 +949,19 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 					i->upper->status = ItemInfo::STATUS_WAITING;
 					i->upper->statusString = aReason;
 				}
+				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_TESTSUR)
+					&& (aReason != STRING(DOWNLOADING_TTHL))
+					) {
+					MainFrame::getMainFrame()->ShowBalloonTip((
+						STRING(FILE)+": "+i->file+"\n"+
+						STRING(USER)+": "+i->user->getNick()+"\n"+
+						STRING(REASON)+": "+aReason).c_str(), CSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
+				}
 			}
 		}
 
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
-		ItemInfo::MASK_PATH;
+		ItemInfo::MASK_PATH;	
 	}
 	dcdebug(("****** TransferView: DownFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1039,7 +1054,20 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 				i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 				i->upper->finished = true;
 			}
+
+			if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED)) {
+				MainFrame::getMainFrame()->ShowBalloonTip((
+			STRING(FILE)+": "+i->file+"\n"+
+			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(DOWNLOAD_FINISHED_IDLE));
+			}
+		} else {
+			if(BOOLSETTING(POPUP_UPLOAD_FINISHED)) {
+				MainFrame::getMainFrame()->ShowBalloonTip((
+			STRING(FILE)+": "+i->file+"\n"+
+			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(UPLOAD_FINISHED_IDLE));
+			}
 		}
+
 		i->status = ItemInfo::STATUS_WAITING;
 		i->pos = 0;
 

@@ -1,30 +1,23 @@
-#if !defined(__UPLOAD_QUEUE_FRAME_H__)
-#define __UPLOAD_QUEUE_FRAME_H__
+#if !defined(_UPLOAD_QUEUE_FRAME_H_)
+#define _UPLOAD_QUEUE_FRAME_H_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
 #include "FlatTabCtrl.h"
-#include "ExListViewCtrl.h"
+#include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 #include "../client/UploadManager.h"
 
-#include <atltime.h>
-
-#define UPLOADQUEUE_MESSAGE_MAP 666
 #define SHOWTREE_MESSAGE_MAP 12
 
-class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public UploadManagerListener, public StaticFrame<UploadQueueFrame, ResourceManager::UPLOAD_QUEUE, IDC_UPLOAD_QUEUE>,
-	public CSplitterImpl<UploadQueueFrame>
+class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<UploadQueueFrame, ResourceManager::UPLOAD_QUEUE, IDC_UPLOAD_QUEUE>,
+	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>
 {
 public:
+	DECLARE_FRAME_WND_CLASS_EX("UploadQueueFrame", IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
-	// Base class typedef
-	typedef MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
-	typedef CSplitterImpl<UploadQueueFrame> splitBase;
-
-	// Constructor/destructor
 	UploadQueueFrame() : showTree(true), closed(false), 
 		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP) {
 		UploadManager::getInstance()->addListener(this);
@@ -33,20 +26,22 @@ public:
 		UploadManager::getInstance()->removeListener(this);
 	}
 
+	virtual void OnFinalMessage(HWND /*hWnd*/) {
+		delete this;
+	}
+
 	enum {
 		ADD_ITEM,
 		REMOVE_ITEM
 	};
 
-	// Frame window declaration
-	DECLARE_FRAME_WND_CLASS_EX("UploadQueueFrame", IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
+	typedef MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
+	typedef CSplitterImpl<UploadQueueFrame> splitBase;
 
 	// Inline message map
 	BEGIN_MSG_MAP(UploadQueueFrame)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
-		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
-		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		COMMAND_HANDLER(IDC_GETLIST, BN_CLICKED, onGetList)
@@ -58,11 +53,16 @@ public:
 		COMMAND_HANDLER(IDC_UNGRANTSLOT, BN_CLICKED, onUnGrantSlot)
 		COMMAND_HANDLER(IDC_ADD_TO_FAVORITES, BN_CLICKED, onAddToFavorites)
 		COMMAND_HANDLER(IDC_PRIVATEMESSAGE, BN_CLICKED, onPrivateMessage)
+		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_GETDISPINFO, ctrlList.onGetDispInfo)
+		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_COLUMNCLICK, ctrlList.onColumnClick)
+//		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_ITEMCHANGED, onItemChangedQueue)
+		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_KEYDOWN, onKeyDown)
 		NOTIFY_HANDLER(IDC_DIRECTORIES, TVN_SELCHANGED, onItemChanged)
-		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE_LIST, LVN_COLUMNCLICK, onColumnClickList)
+		NOTIFY_HANDLER(IDC_DIRECTORIES, TVN_KEYDOWN, onKeyDownDirs)
 		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE_LIST, NM_CUSTOMDRAW, onCustomDraw)
-		CHAIN_MSG_MAP(baseClass)
+
 		CHAIN_MSG_MAP(splitBase)
+		CHAIN_MSG_MAP(baseClass)
 	ALT_MSG_MAP(SHOWTREE_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowTree)
 	END_MSG_MAP()
@@ -70,8 +70,8 @@ public:
 	// Message handlers
 	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	LRESULT onGetList(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -91,62 +91,10 @@ public:
 		return 0;
 	}
 	
-	// Update colors
-	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
-	{
-		HWND hWnd = (HWND)lParam;
-		HDC hDC   = (HDC)wParam;
-		if(hWnd == ctrlQueued.m_hWnd) 
-		{
-			::SetBkColor(hDC, WinUtil::bgColor);
-			::SetTextColor(hDC, WinUtil::textColor);
-			return (LRESULT)WinUtil::bgBrush;
-		}
-		bHandled = FALSE;
-		return FALSE;
-	};
-
-	// Final message
-	virtual void OnFinalMessage(HWND /*hWnd*/) 
-	{
-		delete this;
-	}
-
 	// Update control layouts
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 
-	LRESULT onColumnClickList(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-		NMLISTVIEW* l = (NMLISTVIEW*)pnmh;
-		if(l->iSubItem == ctrlList.getSortColumn()) {
-			if (!ctrlList.isAscending())
-				ctrlList.setSort(-1, ctrlList.getSortType());
-			else
-				ctrlList.setSortDirection(false);
-		} else {
-			if(l->iSubItem == 4 || l->iSubItem == 5) {
-				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
-			} else {
-				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
-			}
-		}
-		return 0;
-	}
-	
-	class UploadQueueItem {
-	public:
-		UploadQueueItem(string nick, string file, string Path, int64_t Pos, int64_t Size, int64_t Time) :
-			aNick(nick), filename(file), path(Path), pos(Pos), size(Size), time(Time)	{ }
-
-		string aNick;
-		string filename;
-		string path;
-		int64_t pos;
-		int64_t size;
-		int64_t time;
-	};
-
 private:
-
 	enum {
 		COLUMN_FIRST,
 		COLUMN_FILE = COLUMN_FIRST,
@@ -159,28 +107,72 @@ private:
 		COLUMN_WAITING,
 		COLUMN_LAST
 	};
-
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
 	static ResourceManager::Strings columnNames[COLUMN_LAST];
 	CriticalSection cs;
 	
-	string getSelectedNick() {
-		if(showTree) {
-			HTREEITEM selectedItem = GetParentItem();
-			if (!selectedItem) return Util::emptyString;
-			char nickBuf[256];
-			ctrlQueued.GetItemText(selectedItem, nickBuf, 255);
-			return string(nickBuf);
-		} else {
-			int i = -1;
-			while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				char nickBuf[256];
-				ctrlList.GetItemText(i, COLUMN_NICK, nickBuf, 255);
-				string nick = string(nickBuf);
-				return nick;
+	User::Ptr getSelectedUser() {
+		HTREEITEM selectedItem = GetParentItem();
+		if (!selectedItem) return NULL;
+		char nickBuf[512];
+		ctrlQueued.GetItemText(selectedItem, nickBuf, 511);
+		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
+			if(((*i)->getNick()+" ("+(*i)->getLastHubName()+")") == string(nickBuf)) {
+				return *i;
+				break;
+			}
+		}
+		return NULL;
+	}
+
+	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
+		if(kd->wVKey == VK_DELETE) {
+			removeSelected();
+		} else if(kd->wVKey == VK_TAB) {
+			onTab();
+		}
+		return 0;
+	}
+
+	LRESULT onKeyDownDirs(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
+		if(kd->wVKey == VK_DELETE) {
+			removeSelectedUser();
+		} else if(kd->wVKey == VK_TAB) {
+			onTab();
 			}
 			return 0;
+		}
+
+	void removeSelected() {
+		int i = -1;
+		User::List RemoveUsers;
+		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			// Ok let's cheat here, if you try to remove more users here is not working :(
+			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+		}
+		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
+			UploadManager::getInstance()->clearUserFiles(*i);
+		}
+	}
+	
+	void removeSelectedUser() {
+		User::Ptr User = getSelectedUser();
+		if(User) {
+			UploadManager::getInstance()->clearUserFiles(User);
+		}
+	}
+
+	void onTab() {
+		if(showTree) {
+			HWND focus = ::GetFocus();
+			if(focus == ctrlQueued.m_hWnd) {
+				ctrlList.SetFocus();
+			} else if(focus == ctrlQueued.m_hWnd) {
+				ctrlQueued.SetFocus();
+			}
 		}
 	}
 
@@ -197,7 +189,9 @@ private:
 	bool showTree;
 	bool closed;
 	
-	ExListViewCtrl ctrlList;
+	User::List UQFUsers;
+
+	TypedListViewCtrl<UploadQueueItem, IDC_UPLOAD_QUEUE> ctrlList;
 	CTreeViewCtrl ctrlQueued;
 	
 	CStatusBarCtrl ctrlStatus;
@@ -206,22 +200,19 @@ private:
 	OMenu grantMenu;
 	OMenu contextMenu;
 	
-	void onRemoveUser(const string&);
-	void onAddFile(const string&, const string&, const string&, const int64_t, const int64_t, const int64_t);
-	void onAddFile(const string& /*aNick*/, const string &/*aFile*/);
-
+	void AddFile(UploadQueueItem* aUQI);
+	void RemoveUser(const User::Ptr& aUser);
+	
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
 
 	// UploadManagerListener
-	virtual void on(UploadManagerListener::QueueAdd, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size, const int64_t time) throw() {
-		//onAddFile(aNick, filename, path, pos, size, time);
-		UploadQueueItem* i = new UploadQueueItem(aNick, filename, path, pos, size, time);
-		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)i);
+	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() {
+		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
-	virtual void on(UploadManagerListener::QueueRemove, const string& aNick) throw() {
-		//onRemoveUser(aNick);
-		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)new string(aNick));
+	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw();
+	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
+		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
 };
 
