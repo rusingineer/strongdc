@@ -259,7 +259,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 	vector<unsigned char> buf;
     buf.reserve(iBlockSize);
 
-	Lock l(hMutex);
+	//Lock l(hMutex);
 
     // This is only called when download finish
     // Because buffer is used during download, the disk data maybe incorrect

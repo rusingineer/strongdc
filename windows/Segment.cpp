@@ -40,7 +40,7 @@ PropPage::TextItem Segment::texts[] = {
 	{ IDC_KB, ResourceManager::KB },
 	{ IDC_KBPS, ResourceManager::KBPS },
 	{ IDC_DONTBEGIN, ResourceManager::DONT_ADD_SEGMENT_TEXT },
-
+	{ IDC_MULTISOURCE, ResourceManager::ENABLE_MULTI_SOURCE },
 	{ IDC_MINUTES, ResourceManager::MINUTES },
 	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }

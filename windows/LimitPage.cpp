@@ -126,7 +126,7 @@ void LimitPage::write()
 {
 	PropPage::write((HWND)*this, items);
 
-	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
+/*	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * SETTING(SLOTS)) + 3) ) {
 			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * SETTING(SLOTS)) + 3) );
 		}
@@ -142,7 +142,7 @@ void LimitPage::write()
 		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
 			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
 		}
-	}
+	}*/
 
 	// Do specialized writing here
 	// settings->set(XX, YY);

@@ -274,8 +274,11 @@ public:
 		} else {
 			// match the behavior of MainFrame::onSelected()
 			HWND hWnd = frame->m_hWnd;
-			if(frame->MDIGetActive() != hWnd) {
-				frame->MDIActivate(hWnd);
+			if(isMDIChildActive(hWnd)) {
+				::PostMessage(hWnd, WM_CLOSE, NULL, NULL);
+			} else if(frame->MDIGetActive() != hWnd) {
+				MainFrame::anyMF->MDIActivate(hWnd);
+				CZDCLib::setButtonPressed(ID, true);
 			} else if(BOOLSETTING(TOGGLE_ACTIVE_WINDOW)) {
 				::SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 				frame->MDINext(hWnd);
@@ -285,6 +288,11 @@ public:
 			if(::IsIconic(hWnd))
 				::ShowWindow(hWnd, SW_RESTORE);
 		}
+	}
+	static bool isMDIChildActive(HWND hWnd) {
+		HWND wnd = MainFrame::anyMF->MDIGetActive();
+		dcassert(wnd != NULL);
+		return (hWnd == wnd);
 	}
 };
 

@@ -25,6 +25,7 @@
 * opraveny rekurzivní kritické sekce
 * pøidána volba pro použití starého oDC stylu progressbarù
 * pøidána detekce ZoneAlarmu (Zion++)
+* zmìnìna politika omezovaèe uploadu na 5*(sloty+1), aby se respektovaly pravidla DC
 
 
 	-- StrongDC++ 1.00 RC9 --

@@ -1275,8 +1275,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 		// Limitery sem a tam, vsude kam se podivam :o)
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * UploadManager::getInstance()->getSlots()) + 3) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * UploadManager::getInstance()->getSlots()) + 3) );
+			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
+				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
 			}
 			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
 				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
@@ -1284,8 +1284,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		}
 
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((2 * UploadManager::getInstance()->getSlots()) + 3) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((2 * UploadManager::getInstance()->getSlots()) + 3) );
+			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
+				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
 			}
 			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
 				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );

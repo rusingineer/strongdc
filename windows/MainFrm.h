@@ -353,12 +353,10 @@ public:
 	CImageList largeImages, largeImagesHot;
 	virtual int run();
 	
-private:
-	friend bool isMDIChildActive(HWND hWnd);
-	friend void handleMDIClick(int nID, HWND mdiWindow);
-	friend int CZDCLib::setButtonPressed(int iPos, bool bPressed);
-	
 	static MainFrame* anyMF;
+private:
+	friend int CZDCLib::setButtonPressed(int iPos, bool bPressed);
+
 	NOTIFYICONDATA normalicon;
 	
 	class DirectoryListInfo {

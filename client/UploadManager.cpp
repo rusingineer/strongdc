@@ -445,26 +445,30 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 
 // TimerManagerListener
 void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
-	Lock l(cs);
-	Upload::List ticks;
-
-	throttleSetup();
-	throttleZeroCounters();
-	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-		ticks.push_back(*i);
-	}
-			
-	if(ticks.size() > 0)
-		fire(UploadManagerListener::Tick(), ticks);
-
-	fire(UploadManagerListener::QueueUpdate());
 	int iAvgSpeed = 0;
-	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-		Upload* u = *i;
-		iAvgSpeed += (int)u->getRunningAverage();
-	}
 
-	if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
+	{
+		Lock l(cs);
+		Upload::List ticks;
+
+		throttleSetup();
+		throttleZeroCounters();
+		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+			ticks.push_back(*i);
+		}
+			
+		if(ticks.size() > 0)
+			fire(UploadManagerListener::Tick(), ticks);
+
+		fire(UploadManagerListener::QueueUpdate());
+
+		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+			Upload* u = *i;
+			iAvgSpeed += (int)u->getRunningAverage();
+		}
+
+		if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
+	}
 
 	if(m_boFireball == false) {
 		if(iAvgSpeed >= 102400) {
