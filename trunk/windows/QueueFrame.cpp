@@ -287,7 +287,7 @@ void QueueFrame::QueueItemInfo::update() {
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
 						tmp += STRING(SLOW_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
-						tmp = "(" + STRING(DOWNLOAD_CORRUPTED);
+						tmp += STRING(TTH_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						tmp += STRING(INVALID_TREE);
 					}

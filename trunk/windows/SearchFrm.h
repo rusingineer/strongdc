@@ -372,9 +372,10 @@ private:
 			if (a->mainitem && b->mainitem)
 				if(a->collapsed && b->collapsed)
 					canBeSorted = true;
-			if (*a->sr->getTTH() == *b->sr->getTTH())
-				if((!a->mainitem) && (!b->mainitem))
-					canBeSorted = true;
+			if(a->sr->getTTH() && b->sr->getTTH())
+				if (*a->sr->getTTH() == *b->sr->getTTH())
+					if((!a->mainitem) && (!b->mainitem))
+						canBeSorted = true;
 
 			if(canBeSorted){
 			switch(col) {

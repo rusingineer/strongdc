@@ -731,17 +731,26 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			}
 
 			if(!crcMatch) {
-				File::deleteFile(tgt);
+				//File::deleteFile(tgt);
 				dcdebug("DownloadManager: CRC32 mismatch for %s\n", d->getTarget().c_str());
 				LogManager::getInstance()->message(STRING(SFV_INCONSISTENCY) + " (" + STRING(FILE) + ": " + d->getTarget() + ")", true);
 				fire(DownloadManagerListener::Failed(), d, STRING(SFV_INCONSISTENCY));
 				
 				string target = d->getTarget();
-				
+				Download* old = d->getOldDownload();
+
 				aSource->setDownload(NULL);
+				delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
+
+				vector<int64_t> v;
+				v.push_back(0);
+				v.push_back(d->getSize());
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+
 				removeDownload(d);				
-				
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
+
+				aSource->setDownload(old);
 				checkDownloads(aSource, true);
 				return;
 			} 
@@ -785,18 +794,13 @@ noCRC:
 		
 		if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
 
-		if(!hashMatch) {		
-		//	File::deleteFile(d->getDownloadTarget());
-		//	LogManager::getInstance()->message(STRING(DOWNLOAD_CORRUPTED) + " (" + d->getTarget() + ")", true);
-
+		if(hashMatch) {		
 			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
 
 			string target = d->getTarget();
 			Download* old = d->getOldDownload();			
 
 			aSource->setDownload(NULL);
-			
-			//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 
 			for(int i = 10; i>0; --i) {
 				char buf[64];
@@ -807,12 +811,15 @@ noCRC:
 
 			delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
 
+			fire(DownloadManagerListener::Failed(), d, STRING(CONNECTING));
 			vector<int64_t> v;
 			v.push_back(0);
 			v.push_back(d->getSize());
 			new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
 			removeDownload(d);
+			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+
 			aSource->setDownload(old);
 			checkDownloads(aSource, true);
 			return;
