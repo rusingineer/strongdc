@@ -58,15 +58,17 @@ Util::CountryList Util::countries;
 string Util::appPath;
 
 bool Util::nlfound = false;
-string Util::nlspeed;
+int Util::nlspeed;
 static void sgenrand(unsigned long seed);
 
 
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	TCHAR buf[256];
 	buf[0] = NULL;
-	if (!handle)
+	if (!handle) {
+		Util::nlfound = false;
 		return TRUE;// Not a window
+	}
 	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
 	buf[255] = NULL;
 
@@ -76,6 +78,8 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 			return false;
 		}
 	}
+
+	Util::nlfound = false;
 	return true;
 }
 

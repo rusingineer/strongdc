@@ -847,21 +847,21 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		}
 	case SettingsManager::SEGMENT_ON_CONNECTION : {
 		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) {
-			MaxSegments = 3;
+			MaxSegments = 2;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {
-			MaxSegments = 4;
+			MaxSegments = 3;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) {
-			MaxSegments = 5;
+			MaxSegments = 4;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) {
-			MaxSegments = 6;
+			MaxSegments = 5;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) {
-			MaxSegments = 8;
+			MaxSegments = 6;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) {
-			MaxSegments = 8;
+			MaxSegments = 6;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) {
-			MaxSegments = 10;
+			MaxSegments = 8;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) {
-			MaxSegments = 15;
+			MaxSegments = 10;
 		}
 			break;
 		}

@@ -140,6 +140,7 @@ public:
 	void setDescription(const string& aDesc) { description = aDesc; };
 
 	void scheduleDestruction() const { socket->shutdown(); }
+	BufferedSocket* getSocket() { return socket; }
 
 	string getRawCommand(const int aRawCommand) {
 		switch(aRawCommand) {

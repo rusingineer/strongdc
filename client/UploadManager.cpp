@@ -203,7 +203,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	u->setFile(is);
 	u->setSize(size);
 	u->setStartPos(aStartPos);
-	u->setFileName(aFile);
+	u->setFileName(file);
 	u->setLocalFileName(file);
 
 	if(userlist)

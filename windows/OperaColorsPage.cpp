@@ -123,7 +123,7 @@ LRESULT OperaColorsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 
 	CUpDownCtrl ctrlSpin;
 	ctrlSpin.Attach(GetDlgItem(IDC_FLAT_SPIN));
-	ctrlSpin.SetRange(0, 5);
+	ctrlSpin.SetRange(1, 5);
 	ctrlSpin.Detach();
 
 	updateProgress();

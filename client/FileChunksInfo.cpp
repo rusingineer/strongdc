@@ -56,7 +56,7 @@ void FileChunksInfo::Free(const string& name)
 		}
 	}
 
-	//_ASSERT(0);
+	dcassert(0);
 }
 
 FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
@@ -222,7 +222,7 @@ void FileChunksInfo::PutUndlStart(int64_t start)
 		}
 	}
 
-	//_ASSERT(0);
+	dcassert(0);
 }
 
 string FileChunksInfo::getFreeBlocksString()
@@ -252,7 +252,7 @@ string FileChunksInfo::getVerifiedBlocksString()
 
 bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 {
-  //  _ASSERT(iBlockSize == aTree.getBlockSize());
+	dcassert(iBlockSize == aTree.getBlockSize());
 
 	dcdebug("DoLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
 	dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
@@ -271,7 +271,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
     // This is only called when download finish
     // Because buffer is used during download, the disk data maybe incorrect
-    _ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());
+    dcassert(vecFreeBlocks.empty() && vecRunBlocks.empty());
 
 	// Convert to unverified blocks
     map<int64_t, int64_t> unVerifiedBlocks;
@@ -281,11 +281,11 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
                                         i++)
 	{
 		if(i->first > start){
-            _ASSERT((i->first - start) % iBlockSize == 0);
+            dcassert((i->first - start) % iBlockSize == 0);
 
             unVerifiedBlocks.insert(make_pair(start, i->first));
         }else{
-            _ASSERT(start == 0);
+            dcassert(start == 0);
         }
 
 		start = i->second;
@@ -313,13 +313,13 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			size_t len = iBlockSize;
 			file.read(&buf[0], len);
 
-//			_ASSERT(end - start == len);
+			dcassert(end - start == len);
 
 			TigerTree cur(iBlockSize);
             cur.update(&buf[0], len);
 			cur.finalize();
 
-			_ASSERT(cur.getLeaves().size() == 1);
+			dcassert(cur.getLeaves().size() == 1);
 
 			// Fail!
         	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / iBlockSize)]))
@@ -340,7 +340,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
 		}
 
-		_ASSERT(end == i->second);
+		dcassert(end == i->second);
     }
 
 	if(vecFreeBlocks.empty()){
@@ -352,7 +352,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			dcdebug("   %I64d, %I64d\n", i->first, i->second);
 		}
 
-		_ASSERT(mapVerifiedBlocks.size() == 1 && 
+		dcassert(mapVerifiedBlocks.size() == 1 && 
 			    mapVerifiedBlocks.begin()->first == 0 &&
 			    mapVerifiedBlocks.begin()->second == iFileSize);
 
@@ -368,7 +368,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 void FileChunksInfo::MarkVerifiedBlock(int64_t start, int64_t end)
 {
 
-    _ASSERT( ( end - start) % 1024 == 0 || end == iFileSize);
+    dcassert( ( end - start) % 1024 == 0 || end == iFileSize);
 
 	dcdebug("MarkVerifiedBlock %I64d, %I64d\n", start, end);
 	Lock l(hMutex);

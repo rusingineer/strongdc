@@ -218,7 +218,7 @@ public:
                 }
             }
 
-			_ASSERT(0);
+			dcassert(0);
         }
     }
 

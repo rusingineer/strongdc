@@ -192,7 +192,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		
 		ConnectionQueueItem::Iter i = pendingDown.begin();
 		while(i != pendingDown.end()) {
-		bool startDown = !tooMany && !tooFast;
+			bool startDown = !tooMany && !tooFast;
 
 			ConnectionQueueItem* cqi = *i;
 			dcassert(cqi->getUser());

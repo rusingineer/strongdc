@@ -116,10 +116,10 @@ ShareManager::Directory::~Directory() {
 
 string ShareManager::translateFileName(const string& aFile) throw(ShareException) {
 	RLock<> l(cs);
-	if(aFile == "MyList.DcLst") {
+	if(aFile == "/MyList.DcLst") {
 		generateNmdcList();
 		return getListFile();
-	} else if(aFile == "files.xml.bz2") {
+	} else if(aFile == "/files.xml.bz2") {
 		generateXmlList();
 		return getBZXmlFile();
 	} else {
