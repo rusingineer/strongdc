@@ -11,6 +11,9 @@
 * pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
 * vylepšeno pøijímání pøíkazù od klientù (CZDC++)
 * opraven problém se stejnými pøezdívkami na Toomaxxu
+* pøi hledání jsou položky se stejným TTH seskupovány pod jednu [+] položku
+* pøi hledání jsou zvýraznìny soubory, které jsou již ve frontì (PhantomDC++)
+* opraveno øazení uploadù
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

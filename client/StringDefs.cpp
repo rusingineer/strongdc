@@ -679,7 +679,8 @@ string ResourceManager::strings[] = {
 "Show speed", 
 "Down/Up:",
 "Load few last lines from log on new PM", 
-"Lines from log on new PM"
+"Lines from log on new PM",
+"Search Alternate"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1359,5 +1360,6 @@ string ResourceManager::names[] = {
 "ShowSpeed", 
 "Du",
 "SetczdcPmLog",
-"SetczdcPmLines"
+"SetczdcPmLines",
+"SettingsColorAlternate"
 };

@@ -596,6 +596,12 @@ bool TransferView::ItemInfo::canBeSorted(ItemInfo* a, ItemInfo* b) {
 	if((a->type == ItemInfo::TYPE_UPLOAD) && (b->type == ItemInfo::TYPE_UPLOAD))
 		return true;
 
+	if((a->type == ItemInfo::TYPE_UPLOAD) && (b->mainItem) && (b->collapsed))
+		return true;
+
+	if((b->type == ItemInfo::TYPE_UPLOAD) && (a->mainItem) && (a->collapsed))
+		return true;
+
 	if(a->mainItem && b->mainItem)
 		if(a->collapsed && b->collapsed)
 			return true;
@@ -604,13 +610,13 @@ bool TransferView::ItemInfo::canBeSorted(ItemInfo* a, ItemInfo* b) {
 }
 
 int TransferView::ItemInfo::compareItems(ItemInfo* a, ItemInfo* b, int col) {
-//			if(a->status == b->status) {
+			if(a->status == b->status) {
 				if(a->type != b->type) {
-					return (a->type == ItemInfo::TYPE_DOWNLOAD) ? -1 : 1;
+					if(canBeSorted(a,b)) return (a->type == ItemInfo::TYPE_DOWNLOAD) ? -1 : 1;					
 				}
-	//		} else {
+			} else {
 
-			if(a->status != b->status) {
+//			if(a->status != b->status) {
 				if(canBeSorted(a,b)) return (a->status == ItemInfo::STATUS_RUNNING) ? -1 : 1;
 
 			}

@@ -56,6 +56,8 @@ public:
 		NOTIFY_HANDLER(IDC_HUB, LVN_GETDISPINFO, ctrlHubs.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_RESULTS, NM_DBLCLK, onDoubleClickResults)
 		NOTIFY_HANDLER(IDC_RESULTS, LVN_KEYDOWN, onKeyDown)
+		NOTIFY_HANDLER(IDC_RESULTS, NM_CLICK, onLButton)
+		NOTIFY_HANDLER(IDC_RESULTS, NM_CUSTOMDRAW, onCustomDraw)
 		NOTIFY_HANDLER(IDC_HUB, LVN_ITEMCHANGED, onItemChangedHub)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_SETFOCUS, onFocus)
@@ -120,8 +122,9 @@ public:
 	}
 
 	virtual ~SearchFrame() {
-		images.Destroy();	
-		searchTypes.Destroy();			
+		images.Destroy();
+		searchTypes.Destroy();
+		states.Destroy();
 	}
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
 
@@ -145,13 +148,27 @@ public:
 	LRESULT onCopySize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-		
+	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
+	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
+
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void runUserCommand(UserCommand& uc);
 
 	void removeSelected() {
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+			SearchInfo* s = (SearchInfo*)ctrlResults.getItemData(i);
+			if(s->subItems.size() > 0) {
+				int q = 0;
+				while(q<s->subItems.size()) {
+					SearchInfo* j = s->subItems[q];
+					ctrlResults.deleteItem(j);
+					q++;
+				}
+			}
+			
+			if(s->main != NULL)
+				s->main->subItems.erase(find(s->main->subItems.begin(), s->main->subItems.end(), s));
 			ctrlResults.deleteItem(i);
 		}
 	}
@@ -286,12 +303,22 @@ private:
 	public:
 		SearchResult* sr;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR) { 
+		typedef SearchInfo* Ptr;
+		typedef vector<Ptr> List;
+		typedef List::iterator Iter;
+
+		SearchInfo::List subItems;
+
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL) { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
 			sr->decRef(); 
 		};
+
+		bool collapsed;
+		bool mainitem;
+		SearchInfo* main;
 
 		void getList();
 		void view();
@@ -323,7 +350,7 @@ private:
 
 		const string& getText(int col) const {
 			switch(col) {
-				case COLUMN_NICK: return sr->getUser()->getNick();
+				case COLUMN_NICK: return hits;
 				case COLUMN_FILENAME: return fileName;
 				case COLUMN_TYPE: return type;
 				case COLUMN_SIZE: return size;
@@ -340,9 +367,23 @@ private:
 		}
 
 		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
+			bool canBeSorted = false;
+			if (a->mainitem && b->mainitem)
+				if(a->collapsed && b->collapsed)
+					canBeSorted = true;
+			if (*a->sr->getTTH() == *b->sr->getTTH())
+				if((!a->mainitem) && (!b->mainitem))
+					canBeSorted = true;
 
+			if(canBeSorted){
 			switch(col) {
-				case COLUMN_NICK: return Util::stricmp(a->sr->getUser()->getNick(), b->sr->getUser()->getNick());
+				case COLUMN_NICK:
+					
+					if( (a->getHits() == Util::toString((int)a->subItems.size()+1)+" "+STRING(HUB_USERS)) &&
+						(b->getHits() == Util::toString((int)b->subItems.size()+1)+" "+STRING(HUB_USERS)))
+							return compare(a->subItems.size()+1, b->subItems.size()+1);
+					else
+						return Util::stricmp(a->getHits(), b->getHits());
 				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
@@ -364,6 +405,7 @@ private:
 				case COLUMN_TTH: return Util::stricmp(a->getTTH(), b->getTTH());
 				default: return 0;
 			}
+			} else return 0;
 		}
 
 		void update() { 
@@ -427,6 +469,7 @@ private:
 		GETSET(string, ip, IP);
 		GETSET(string, tth, TTH);
 		GETSET(string, uuploadSpeed, UuploadSpeed);
+		GETSET(string, hits, Hits);
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
@@ -488,6 +531,7 @@ private:
 	bool showUI;
 
 	CImageList images;
+	CImageList states;
 	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS> ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
@@ -500,6 +544,8 @@ private:
 	StringList search;
 	StringList targets;
 	StringList wholeTargets;
+
+	SearchInfo::List mainItems;
 
 	/** Parameter map for user commands */
 	StringMap ucParams;
@@ -536,6 +582,9 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
+
+	void Collapse(SearchInfo* i, int a);
+	void Expand(SearchInfo* i, int a);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	

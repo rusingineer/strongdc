@@ -78,6 +78,7 @@
 #define IDR_FINISHED_MP3                269
 #define IDR_CDM                         270
 #define IDI_ICON2                       273
+#define IDR_STOP                        273
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -427,6 +428,7 @@
 #define IDC_DOWN_COMBO                  1274
 #define IDC_SLASH                       1275
 #define IDC_BLOCK_COMBO                 1276
+#define IDC_ALTERNATE_COLOR             1277
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -650,7 +652,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        274
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1277
+#define _APS_NEXT_CONTROL_VALUE         1278
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
