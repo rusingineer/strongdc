@@ -51,6 +51,7 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	char* title;
+	CComboBox ctrlBlockSize;
 };
 
 #endif //Segment_H

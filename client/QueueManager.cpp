@@ -60,7 +60,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 		p = (aSize <= 16*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, aSearchString, p, aFlags, aDownloadedBytes, aAdded, root);
-	//qi->setFlag(QueueItem::FLAG_NOSEGMENTS);
+
 	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
 		qi->setAutoPriority(true);
 		qi->setPriority(qi->calculateAutoPriority());
@@ -134,10 +134,13 @@ QueueItem* QueueManager::FileQueue::find(const string& target) {
 }
 
 QueueItem* QueueManager::FileQueue::findByHash(const string& hash) {
-	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
+	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
+		if (i->second->getSources().size()>=SETTING(MAX_SOURCES))
+			continue;
+
 		if(i->second->getTTH() && i->second->getTTH()->toBase32() == hash)
 			return i->second;
-
+	}
 	return NULL;
 }
 
@@ -556,7 +559,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 				FileDataInfo* fi = FileDataInfo::GetFileDataInfo(q->getTempTarget());
 				if(fi){
 					fi->SetFileSize(aSize);
-				//	q->setSize(aSize);
+					q->setSize(aSize);
 				}
 			}
 
@@ -959,9 +962,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		QueueItem* q = fileQueue.find(aDownload->getTarget());
 
 		if(q != NULL) {
-
 			if(finished) {
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
+
 				userQueue.remove(q);
 				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
 					if(aDownload->getSource() == "files.xml.bz2") {
@@ -1527,40 +1530,6 @@ void QueueManager::importNMQueue(const string& aFile) throw(FileException) {
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
-/*
-		string fileName = Util::toLower(sr->getFileName());
-		StringTokenizer t(SearchManager::clean(fileName), ' ');
-		StringList& tok = t.getTokens();
-		StringList l;
-		getTargetsBySize(l, sr->getSize(), Util::getFileExt(sr->getFile()));
-		
-		for(StringIter i = l.begin(); i != l.end(); ++i) {
-			bool found = true;
-
-			string target = Util::toLower(Util::getFileName(*i));
-			if(BOOLSETTING(AUTO_SEARCH_EXACT)) {
-				found = (Util::stricmp(target, fileName) == 0);
-			} else {
-				if (target.size() >= fileName.size()) {
-					for(StringIter j = tok.begin(); j != tok.end(); ++j) {
-						if(Util::findSubStringCaseSensitive(target, *j) == string::npos) {
-							found = false;
-							break;
-						}
-					}
-				} else {
-					StringTokenizer t2(SearchManager::clean(target), ' ');
-					StringList& tok2 = t2.getTokens();
-
-					for(StringIter k = tok2.begin(); k != tok2.end(); ++k) {
-						if(Util::findSubStringCaseSensitive(fileName, *k) == string::npos) {
-							found = false;
-							break;
-						}
-					}
-				}
-			}
-*/
 
 			if(QueueItem* qi = fileQueue.findByHash(sr->getTTH()->toBase32())) {
 				// Wow! found a new source that seems to match...add it...

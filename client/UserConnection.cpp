@@ -58,112 +58,111 @@ void Transfer::updateRunningAverage() {
 	lastTick = tick;
 }
 
-void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
-
-	string cmd;
-	string param;
-
-	string::size_type x;
-	
-	if (BOOLSETTING(DEBUG_COMMANDS))
-		DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + aLine + "|");
-
-	if( (x = aLine.find(' ')) == string::npos) {
-		cmd = aLine;
-	} else {
-		cmd = aLine.substr(0, x);
-		param = aLine.substr(x+1);
-	}
-	
-	if(cmd == "$MyNick") { 
-		if(!param.empty())
-			fire(UserConnectionListener::MyNick(), this, param);
-	} else if(cmd == "$Direction") {
-		x = param.find(" ");
-		if(x != string::npos) {
-			fire(UserConnectionListener::Direction(), this, param.substr(0, x), param.substr(x+1));
+void UserConnection::onLine(const char* aLine) throw() {
+	if(strncmp(aLine, "$MyNick ", 8) == 0) {
+		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
+			fire(UserConnectionListener::MyNick(), this, temp);
+	} else if(strncmp(aLine, "$Direction ", 11) == 0) {
+		char *temp1 = strtok((char*)aLine+11, " ");
+		if(temp1 != NULL && (temp = strtok(NULL, "\0")) != NULL) {
+			fire(UserConnectionListener::Direction(), this, temp1, temp);
 		}
-	} else if(cmd == "$Error") {
-		if(Util::stricmp(param.c_str(), "File Not Available") == 0) {
+	} else if(strncmp(aLine, "$Error ", 7) == 0) {
+		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
+			return;
+
+		if(Util::stricmp(temp, "File Not Available") == 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
-			fire(UserConnectionListener::Failed(), this, param);
+			fire(UserConnectionListener::Failed(), this, temp);
 		}
-	} else if(cmd == "$FileLength") {
-		if(!param.empty())
-			fire(UserConnectionListener::FileLength(), this, Util::toInt64(param));
-	} else if(cmd == "$GetListLen") {
+	} else if(strncmp(aLine, "$FileLength ", 12) == 0) {
+		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
+			int64_t size = _atoi64(temp);
+			fire(UserConnectionListener::FileLength(), this, size);
+		}
+	} else if(strcmp(aLine, "$GetListLen") == 0) {
 		fire(UserConnectionListener::GetListLength(), this);
-	} else if(cmd == "$Get") {
-		x = param.find('$');
-		if(x != string::npos) {
-			fire(UserConnectionListener::Get(), this, param.substr(0, x), Util::toInt64(param.substr(x+1)) - (int64_t)1);
+	} else if(strncmp(aLine, "$Get ", 5) == 0) {
+		char *temp1 = strtok((char*)aLine+5, "$");
+		temp = strtok(NULL, "\0");
+		if(temp != NULL && temp1 != NULL) {
+			int64_t size = _atoi64(temp);
+			fire(UserConnectionListener::Get(), this, temp1, size - (int64_t)1);
 		}
-	} else if(cmd == "$GetZBlock" || cmd == "$UGetZBlock" || cmd == "$UGetBlock") {
-		string::size_type i = param.find(' ');
-		if(i == string::npos)
-			return;
-		int64_t start = Util::toInt64(param.substr(0, i));
-		if(start < 0) {
-			disconnect();
-			return;
+	} else if(strncmp(aLine, "$GetZBlock ", 11) == 0) {
+		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
+			processBlock(temp, 1);
 		}
-		i++;
-		string::size_type j = safestring::SafeFind(param, ' ', i);
-		if(j == string::npos)
-			return;
-		int64_t bytes = Util::toInt64(param.substr(i, j-i));
-		string name = param.substr(j+1);
-		if(cmd == "$UGetZBlock" || cmd == "$UGetBlock")
-			Util::toAcp(name);
-		if(cmd == "$UGetBlock") {
-			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
-		} else {
-			fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
+	} else if(strncmp(aLine, "$UGetZBlock ", 12) == 0) {
+		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
+			processBlock(temp, 2);
 		}
-	} else if(cmd == "$Key") {
-		if(!param.empty())
-			fire(UserConnectionListener::Key(), this, param);
-	} else if(cmd == "$Lock") {
-		if(!param.empty()) {
-			x = param.find(" Pk=");
-			if(x != string::npos) {
-				fire(UserConnectionListener::CLock(), this, param.substr(0, x), param.substr(x + 4));
-			} else {
-				// Workaround for faulty linux clients...
-				x = param.find(' ');
-				if(x != string::npos) {
-					setFlag(FLAG_INVALIDKEY);
-					fire(UserConnectionListener::CLock(), this, param.substr(0, x), Util::emptyString);
-				} else {
-					fire(UserConnectionListener::CLock(), this, param, Util::emptyString);
-				}
+	} else if(strncmp(aLine, "$UGetBlock ", 11) == 0) {
+		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
+			processBlock(temp, 3);
+		}
+	} else if(strncmp(aLine, "$Key ", 5) == 0) {
+		if((temp = strtok((char*)aLine+5, "\0")) != NULL) {
+			fire(UserConnectionListener::Key(), this, temp);
+		}
+	} else if(strncmp(aLine, "$Lock ", 6) == 0) {
+		char *lock;
+		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
+			if((temp = strtok(((char*)aLine+6+strlen(lock)+4), "\0")) != NULL) {
+				fire(UserConnectionListener::CLock(), this, lock, temp);
 			}
 		}
-	} else if(cmd == "$Send") {
-		fire(UserConnectionListener::Send(), this);
-	} else if(cmd == "$Sending") {
-		int64_t bytes = -1;
-		if(!param.empty())
-			bytes = Util::toInt64(param);
-		fire(UserConnectionListener::Sending(), this, bytes);
-	} else if(cmd == "$MaxedOut") {
-		fire(UserConnectionListener::MaxedOut(), this);
-	} else if(cmd == "$Supports") {
-		if(!param.empty()) {
-			fire(UserConnectionListener::Supports(), this, StringTokenizer(param, ' ').getTokens());
+	} else if(strncmp(aLine, "$Sending ", 9) == 0) {
+		if((temp = strtok((char*)aLine+9, " ")) != NULL) {
+			int64_t bytes = _atoi64(temp);
+			fire(UserConnectionListener::Sending(), this, bytes);
 		}
-	} else if(cmd.compare(0, 4, "$ADC") == 0) {
+	} else if(strcmp(aLine, "$Send") == 0) {
+		fire(UserConnectionListener::Send(), this);
+	} else if(strcmp(aLine, "$MaxedOut") == 0) {
+		fire(UserConnectionListener::MaxedOut(), this);
+	} else if(strncmp(aLine, "$Supports ", 10) == 0) {
+		if((temp = strtok((char*)aLine+10, "\0")) != NULL) {
+			fire(UserConnectionListener::Supports(), this, StringTokenizer(temp, ' ').getTokens());
+		}
+	} else if(strncmp(aLine, "$ADC", 4) == 0) {
 		dispatch(aLine, true);
 	} else {
 		fire(UserConnectionListener::Unknown(), this, aLine);
-		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
+		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 	}
 }
 
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 		setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
+}
+
+void UserConnection::processBlock(const char* param, int type) throw() {
+		if((temp = strtok((char*)param, " ")) == NULL)
+			return;
+
+		int64_t start = _atoi64(temp);
+		if(start < 0) {
+			disconnect();
+			return;
+		}
+		if((temp = strtok(NULL, " ")) == NULL)
+			return;
+
+		int64_t bytes = _atoi64(temp);
+		if((temp = strtok(NULL, "\0")) == NULL)
+			return;
+
+		string name = temp;
+		if(type == 2 || type == 3)
+			Util::toAcp(name);
+		if(type == 3) {
+			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
+		} else {
+			fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
+		}
 }
 
 /**

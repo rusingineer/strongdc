@@ -463,7 +463,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	if(onlyTTH && aResult->getTTH() == NULL)
 		return;
 
-	if(ctrlMode.GetCurSel() == SearchManager::SIZE_EXACT)
+	if(SendMessageTimeout(ctrlMode.m_hWnd, CB_GETCURSEL, 0, 0, SMTO_ABORTIFHUNG, 2000, NULL) == SearchManager::SIZE_EXACT)
 		{			
 			string size(ctrlSize.GetWindowTextLength() + 1, '\0');
 			ctrlSize.GetWindowText(&size[0], size.size());

@@ -192,19 +192,13 @@ public:
 		
 	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString, 
 		int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
-		// CDM EXTENSION BEGINS FAVS
 		, const string& rawOne = Util::emptyString
 		, const string& rawTwo = Util::emptyString
 		, const string& rawThree = Util::emptyString
 		, const string& rawFour = Util::emptyString
 		, const string& rawFive = Util::emptyString
-//		, bool userIp = false
-		// CDM EXTENSION ENDS
 		);		
-
 	static void closeDisconnected();
-
-	// CDM EXTENSION BEGINS
 
 	BOOL checkCheating(User::Ptr &user, DirectoryListing* dl);
 
@@ -241,16 +235,9 @@ public:
 	void doReport(User::Ptr& u)
 	{
 		string param = u->getNick();
-		/*if (toOpChat) {
-			client->send("$To: " + client->getClientOpChat() + " From: " + client->getNick() + " $<" + client->getNick() + "> " + 
-			"\r\n *** Info on " + param + " ***" + "\r\n" + u->getReport() + "|");
-		} else {*/
 			addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
-		//}
 	}
 	void getUserResponses();
-	// CDM EXTENSION ENDS
-
 	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
@@ -365,14 +352,11 @@ private:
 
 	HubFrame(const string& aServer, const string& aNick, const string& aPassword, const string& aDescription, 
 		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
-		// CDM EXTENSION BEGINS FAVS
 		, const string& aRawOne
 		, const string& aRawTwo
 		, const string& aRawThree
 		, const string& aRawFour
 		, const string& aRawFive
-//		, bool aUserIp
-		// CDM EXTENSION ENDS		
 		) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
@@ -389,14 +373,12 @@ private:
 		if (!aDescription.empty())
 			client->setDescription(aDescription);
 		client->setPassword(aPassword);
-		// CDM EXTENSION BEGINS FAVS
+
 		client->setRawOne(aRawOne);
 		client->setRawTwo(aRawTwo);
 		client->setRawThree(aRawThree);
 		client->setRawFour(aRawFour);
 		client->setRawFive(aRawFive);
-//		client->setSendUserIp(aUserIp);
-		// CDM EXTENSION ENDS
 		client->addListener(this);
 		TimerManager::getInstance()->addListener(this);
 		timeStamps = BOOLSETTING(TIME_STAMPS);

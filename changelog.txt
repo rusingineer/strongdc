@@ -1,10 +1,17 @@
 	-- StrongDC++ 1.00 RC7 ??? --
 
 * NetLimiter je detekován pouze pokud se omezuje StrongDC++
-* èásteènì odstranìna podpora BZ2 listù
+* odstranìna podpora BZ2 listù
 * pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
 * automatické hledání alternativ podle RevConnectu
 * odstranìno automatické odstraòování zdrojù pomalejších 1kB/s
+* zmìnìn vzhled dialogù pøi pádu programu
+* zmìnìn styl nabídek na XP (zDC++)
+* vylepšena minimální velikost segmentu
+* pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
+* vylepšeno pøijímání pøíkazù od klientù (CZDC++)
+* opraven problém se stejnými pøezdívkami na Toomaxxu
+
 
 	-- StrongDC++ 1.00 RC6 Pre-final --
 

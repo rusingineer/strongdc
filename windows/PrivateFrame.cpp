@@ -36,6 +36,7 @@
 CriticalSection PrivateFrame::cs;
 PrivateFrame::FrameMap PrivateFrame::frames;
 string pSelectedLine = "";
+string pSelectedURL = "";
 
 LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -81,6 +82,9 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	if ( SETTING(TEXT_SERVER_ITALIC) )
 		m_ChatTextServer.dwEffects      |= CFE_ITALIC;
 
+	m_ChatTextLog = m_ChatTextGeneral;
+	m_ChatTextLog.crTextColor = CZDCLib::blendColors(SETTING(TEXT_GENERAL_BACK_COLOR), SETTING(TEXT_GENERAL_FORE_COLOR), 0.4);
+
 	ctrlClient.SetBackgroundColor( SETTING(BACKGROUND_COLOR) ); 
 	ctrlClient.SetAutoURLDetect( true );
 	ctrlClient.SetEventMask( ctrlClient.GetEventMask() | ENM_LINK );
@@ -123,6 +127,17 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ClientManager::getInstance()->addListener(this);
 
+	if(BOOLSETTING(SHOW_PM_LOG)){
+		if(user->isOnline()) {
+			sMyNick = user->getClient()->getNick().c_str();
+		} else {
+			sMyNick = SETTING(NICK).c_str();
+		}
+		string lastsession = LOGTAIL(user->getNick(), SETTING(PM_LOG_LINES));
+		lastsession = lastsession.substr(0,lastsession.size()-2);
+		if(lastsession.length() > 0)
+			ctrlClient.AppendText(sMyNick, "", lastsession.c_str(), m_ChatTextLog, "");
+	}
 
 	bHandled = FALSE;
 	return 1;
@@ -390,7 +405,7 @@ void PrivateFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 		if (i != string::npos) {
      		sAuthor = aLine.substr(1, i-1);
 			if ( strncmp(" /me ", aLine.substr(i+1, 5).c_str(), 5) == 0 ) {
-				sTmp = " *" + sAuthor + aLine.substr(i+5);
+				sTmp = "* " + sAuthor + aLine.substr(i+5);
 			}
 		}
 	}
@@ -584,16 +599,19 @@ void PrivateFrame::updateTitle() {
 LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 
-/*	POINT p;
+	POINT p;
 	p.x = GET_X_LPARAM(lParam);
 	p.y = GET_Y_LPARAM(lParam);
-	::ScreenToClient(ctrlClient.m_hWnd, &p);*/
+	::ScreenToClient(ctrlClient.m_hWnd, &p);
 
 	POINT cpt;
-
 	GetCursorPos(&cpt);
 
-/*	pSelectedLine = "";
+	pSelectedLine = "";
+
+	bool bHitURL = ctrlClient.HitURL(p);
+	if (!bHitURL)
+		pSelectedURL = "";
 
 	int i = ctrlClient.CharFromPos(p);
 	int line = ctrlClient.LineFromChar(i);
@@ -606,13 +624,9 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam,
 	string x = string(buf, len-1);
 	delete buf;
 	string::size_type start = x.find_last_of(" <\t\r\n", c);
-//		UnderCursorType uct;
-//		string x = ctrlClient->textUnderCursor(lParam, uct);
-
-//	string::size_type start = 0;
 	if (start == string::npos) { start = 0; }
 	string nick = user->getNick();
-/*	if (x.substr(start, (nick.length() + 2) ) == ("<" + nick + ">")) {
+	if (x.substr(start, (nick.length() + 2) ) == ("<" + nick + ">")) {
 		if(!user->isOnline()) {
 			return S_OK;
 		}
@@ -628,10 +642,24 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam,
 		cleanMenu(tabMenu);
 		bHandled = TRUE;
 	} else {
-	    pSelectedLine = ctrlClient.LineFromPos( p );*/
+		if (textMenu.m_hMenu != NULL) {
+			textMenu.DestroyMenu();
+			textMenu.m_hMenu = NULL;
+		}
+
+		textMenu.CreatePopupMenu();
+		textMenu.AppendMenu(MF_STRING, ID_EDIT_COPY, CSTRING(COPY));
+		textMenu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CSTRING(COPY_LINE));
+		if(pSelectedURL != "")
+			textMenu.AppendMenu(MF_STRING, IDC_COPY_URL, CSTRING(COPY_URL));
+		textMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+		textMenu.AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CSTRING(SELECT_ALL));
+		textMenu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CSTRING(CLEAR));
+
+		pSelectedLine = ctrlClient.LineFromPos(p);
 		textMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpt.x, cpt.y, m_hWnd);
 		bHandled = TRUE;
-	//}
+	}
 	return S_OK;
 }
 
@@ -645,6 +673,17 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 		UNREFERENCED_PARAMETER(iRet);
 		string sURL = sURLTemp;
 		WinUtil::openLink(sURL);
+	} else if ( pEL->msg == WM_RBUTTONUP ) {
+		pSelectedURL = "";
+		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
+		char sURLTemp[INTERNET_MAX_URL_LENGTH];
+		int iRet = ctrlClient.GetTextRange( lBegin, lEnd, sURLTemp );
+		UNREFERENCED_PARAMETER(iRet);
+		pSelectedURL = sURLTemp;
+
+		ctrlClient.SetSel( lBegin, lEnd );
+		ctrlClient.InvalidateRect( NULL );
+		return 0;
 	}
 	return 0;
 }
@@ -658,6 +697,13 @@ LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		MessageBox(CSTRING(NO_LOG_FOR_USER),CSTRING(NO_LOG_FOR_USER), MB_OK );	  
 	}	
 
+	return 0;
+}
+
+LRESULT PrivateFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if (pSelectedURL != "") {
+		WinUtil::setClipboard(pSelectedURL);
+	}
 	return 0;
 }
 

@@ -58,6 +58,7 @@ void CDMDebugFrame::addLine(const string& s) {
 			frame->ctrlPad.SetWindowText(s.c_str());
 		}
 		frame->ctrlPad.SetRedraw(TRUE);
+		::SendMessage(frame->ctrlPad.m_hWnd, EM_SCROLL, SB_BOTTOM, 0);
 	}
 }
 void CDMDebugFrame::setPause(bool bPause) {

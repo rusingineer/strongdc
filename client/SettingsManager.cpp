@@ -48,6 +48,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID", "DownSpeed", "UpSpeed",
+	"MinBlockSize",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -87,12 +88,12 @@ const string SettingsManager::settingTags[] =
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
-	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed", "FloodCache", "AutoSearchExact",
-	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
+	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed", "FloodCache",
+	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
-	"FavShowJoins", "LogStatusMessages",
+	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -106,6 +107,8 @@ const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC
 
 const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
 "256K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
+
+const string SettingsManager::blockSizes[] = { "64K", "128K", "256K", "512K", "1024K", "Auto" };
 
 SettingsManager::SettingsManager()
 {
@@ -129,7 +132,7 @@ SettingsManager::SettingsManager()
 	setDefault(IN_PORT, Util::rand(1025, 32000));
 	setDefault(ROLLBACK, 1024);
 	setDefault(EMPTY_WORKING_SET, true);
-	setDefault(MIN_BLOCK_SIZE, 64);
+	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_AUTO]);
 	setDefault(DONT_EXTENSIONS, "(.iso)|(.bin)|(.img)|(.r(ar)|[0-9]+)");
 	setDefault(NUMBER_OF_SEGMENTS, 4);
 	setDefault(SEGMENTS_TYPE, SEGMENT_ON_SIZE);
@@ -199,7 +202,6 @@ SettingsManager::SettingsManager()
 	setDefault(HUB_USER_COMMANDS, true);
 	setDefault(AUTO_SEARCH_AUTO_MATCH, false);
 	setDefault(LOG_FILELIST_TRANSFERS, true);
-	setDefault(AUTO_SEARCH_EXACT, false);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
 	setDefault(DEBUG_COMMANDS, true);
@@ -343,6 +345,8 @@ SettingsManager::SettingsManager()
 	setDefault(DISCONNECTING_ENABLE, false);
 	setDefault(MIN_FILE_SIZE, 0);
 	setDefault(REMOVE_SLOW_USER, false);
+	setDefault(SHOW_PM_LOG, true);
+	setDefault(PM_LOG_LINES, 10);
     
 	setDefault(SET_AUTO_SEGMENT, true);
 	setDefault(SET_MIN2, 20);

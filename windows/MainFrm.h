@@ -33,6 +33,10 @@
 #include "../client/LogManager.h"
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
+
+#include "atlctrlxp.h"
+#include "atlctrlxp2.h"
+
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
 #include "CZDCLib.h"
@@ -57,7 +61,7 @@ public:
 	virtual ~MainFrame();
 	DECLARE_FRAME_WND_CLASS("StrongDC++", IDR_MAINFRAME)
 
-	CMDICommandBarCtrl m_CmdBar;
+	CMDICommandBarXPCtrl m_CmdBar;
 
 	enum {
 		DOWNLOAD_LISTING,

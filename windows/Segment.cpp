@@ -64,7 +64,7 @@ PropPage::Item Segment::items[] = {
 //	{ IDC_SEGMENT2_MIN, SettingsManager::SET_MIN2, PropPage::T_INT },
 
 	{ IDC_SEG_NUMBER, SettingsManager::NUMBER_OF_SEGMENTS, PropPage::T_INT },
-	{ IDC_BLOCK_SIZE, SettingsManager::MIN_BLOCK_SIZE, PropPage::T_INT },
+	{ IDC_BLOCK_COMBO, SettingsManager::MIN_BLOCK_SIZE, PropPage::T_STR },
 
 	{ IDC_EDIT1, SettingsManager::DONT_EXTENSIONS, PropPage::T_STR },
 
@@ -89,9 +89,15 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	spin.Attach(GetDlgItem(IDC_SEG_NUMBER_SPIN));
 	spin.SetRange32(1, 10);
 	spin.Detach();
-	spin.Attach(GetDlgItem(IDC_BLOCK_SIZE_SPIN));
-	spin.SetRange32(16, 1024);
-	spin.Detach();
+
+	ctrlBlockSize.Attach(GetDlgItem(IDC_BLOCK_COMBO));
+
+	for(int i = 0; i < SettingsManager::SIZE_LAST; i++) {
+		ctrlBlockSize.AddString(SettingsManager::blockSizes[i].c_str());
+	}
+
+	ctrlBlockSize.SetCurSel(ctrlBlockSize.FindString(0, SETTING(MIN_BLOCK_SIZE).c_str()));
+
 	// Do specialized reading here
 	
 	return TRUE;

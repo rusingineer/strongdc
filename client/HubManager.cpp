@@ -312,27 +312,27 @@ void HubManager::saveClientProfiles() {
 		xml.addTag("Profiles");
 		xml.stepIn();
 
-		xml.addTag("ClientProfiles");
+		xml.addTag("ClientProfilesV2");
 		xml.stepIn();
-		for(int l = 1; l <= getProfileListSize(); l++) {
+		for(ClientProfile::Iter l = clientProfiles.begin(); l != clientProfiles.end(); ++l) {
 			xml.addTag("ClientProfile");
-			ClientProfile cp;
-			HubManager::getInstance()->getClientProfileByPosition(l, cp);
-			xml.addChildAttrib("Name", cp.getName());
-			xml.addChildAttrib("Version", cp.getVersion());
-			xml.addChildAttrib("Tag", cp.getTag());
-			xml.addChildAttrib("ExtendedTag", cp.getExtendedTag());
-			xml.addChildAttrib("Lock", cp.getLock());
-			xml.addChildAttrib("Pk", cp.getPk());
-			xml.addChildAttrib("Supports", cp.getSupports());
-			xml.addChildAttrib("TestSUR", cp.getTestSUR());
-			xml.addChildAttrib("UserConCom", cp.getUserConCom());
-			xml.addChildAttrib("Status", cp.getStatus());
-			xml.addChildAttrib("CheatingDescription", cp.getCheatingDescription());
-			xml.addChildAttrib("RawToSend", Util::toString(cp.getRawToSend()));
-			xml.addChildAttrib("TagVersion", Util::toString(cp.getTagVersion()));
-			xml.addChildAttrib("UseExtraVersion", Util::toString(cp.getUseExtraVersion()));
-			xml.addChildAttrib("CheckMismatch", Util::toString(cp.getCheckMismatch()));
+			xml.stepIn();
+			xml.addTag("Name", l->getName());
+			xml.addTag("Version", l->getVersion());
+			xml.addTag("Tag", l->getTag());
+			xml.addTag("ExtendedTag", l->getExtendedTag());
+			xml.addTag("Lock", l->getLock());
+			xml.addTag("Pk", l->getPk());
+			xml.addTag("Supports", l->getSupports());
+			xml.addTag("TestSUR", l->getTestSUR());
+			xml.addTag("UserConCom", l->getUserConCom());
+			xml.addTag("Status", l->getStatus());
+			xml.addTag("CheatingDescription", l->getCheatingDescription());
+			xml.addTag("RawToSend", Util::toString(l->getRawToSend()));
+			xml.addTag("TagVersion", Util::toString(l->getTagVersion()));
+			xml.addTag("UseExtraVersion", Util::toString(l->getUseExtraVersion()));
+			xml.addTag("CheckMismatch", Util::toString(l->getCheckMismatch()));
+			xml.stepOut();
 		}
 		xml.stepOut();
 
@@ -388,8 +388,36 @@ void HubManager::recentsave() {
 	}
 }
 void HubManager::loadClientProfiles(SimpleXML* aXml) {
+	string n,v,t,e,l,p,s,te,u,st,c,r,ta,us,ch;
 	aXml->resetCurrentChild();
-	if(aXml->findChild("ClientProfiles")) {
+	if(aXml->findChild("ClientProfilesV2")) {
+		aXml->stepIn();
+		while(aXml->findChild("ClientProfile")) {
+			aXml->stepIn();
+			if(aXml->findChild("Name"))					{ n = aXml->getChildData(); }	else { n = Util::emptyString; }
+			if(aXml->findChild("Version"))				{ v = aXml->getChildData(); }	else { v = Util::emptyString; }
+			if(aXml->findChild("Tag"))					{ t = aXml->getChildData(); }	else { t = Util::emptyString; }
+			if(aXml->findChild("ExtendedTag"))			{ e = aXml->getChildData(); }	else { e = Util::emptyString; }
+			if(aXml->findChild("Lock"))					{ l = aXml->getChildData(); }	else { l = Util::emptyString; }
+			if(aXml->findChild("Pk"))					{ p = aXml->getChildData(); }	else { p = Util::emptyString; }
+			if(aXml->findChild("Supports"))				{ s = aXml->getChildData(); }	else { s = Util::emptyString; }
+			if(aXml->findChild("TestSUR"))				{ te = aXml->getChildData(); }	else { te = Util::emptyString; }
+			if(aXml->findChild("UserConCom"))			{ u = aXml->getChildData(); }	else { u = Util::emptyString; }
+			if(aXml->findChild("Status"))				{ st = aXml->getChildData(); }	else { st = Util::emptyString; }
+			if(aXml->findChild("CheatingDescription"))	{ c = aXml->getChildData(); }	else { c = Util::emptyString; }
+			if(aXml->findChild("RawToSend"))			{ r = aXml->getChildData(); }	else { r = Util::emptyString; }
+			if(aXml->findChild("TagVersion"))			{ ta = aXml->getChildData(); }	else { ta = Util::emptyString; }
+			if(aXml->findChild("UseExtraVersion"))		{ us = aXml->getChildData(); }	else { us = Util::emptyString; }
+			if(aXml->findChild("CheckMismatch"))		{ ch = aXml->getChildData(); }	else { ch = Util::emptyString; }
+			
+			addClientProfile(n,v,t,e,l,p,s,te,u,st,c, Util::toInt(r), Util::toInt(ta), Util::toInt(us), Util::toInt(ch));
+			aXml->stepOut();
+		}
+		aXml->stepOut();
+	} else {
+		aXml->resetCurrentChild();
+	}
+	if (aXml->findChild("ClientProfiles")) {
 		aXml->stepIn();
 		while(aXml->findChild("ClientProfile")) {
 			addClientProfile(

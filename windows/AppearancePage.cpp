@@ -37,6 +37,7 @@ PropPage::TextItem AppearancePage::texts[] = {
 	{ IDC_SETTINGS_DEFAULT_AWAY_MSG, ResourceManager::SETTINGS_DEFAULT_AWAY_MSG },
 	{ IDC_SETTINGS_LANGUAGE_FILE, ResourceManager::SETTINGS_LANGUAGE_FILE },
 	{ IDC_BROWSE, ResourceManager::BROWSE_ACCEL },
+	{ IDC_SETCZDC_PM_LINES, ResourceManager::SETCZDC_PM_LINES },
 	{ IDC_SETTINGS_REQUIRES_RESTART, ResourceManager::SETTINGS_REQUIRES_RESTART },
 	{ IDC_SETTINGS_GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY }, 
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
@@ -45,6 +46,7 @@ PropPage::TextItem AppearancePage::texts[] = {
 PropPage::Item AppearancePage::items[] = {
 	{ IDC_DEFAULT_AWAY_MESSAGE, SettingsManager::DEFAULT_AWAY_MESSAGE, PropPage::T_STR },
 	{ IDC_LANGUAGE, SettingsManager::LANGUAGE_FILE, PropPage::T_STR },
+	{ IDC_PM_LINES, SettingsManager::PM_LOG_LINES, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -80,6 +82,7 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_LOCK , ResourceManager::SHOW_LOCK },
 	{ SettingsManager::SHOW_SUPPORTS , ResourceManager::SHOW_SUPPORTS },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
+	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -90,6 +93,11 @@ LRESULT AppearancePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 	PropPage::translate((HWND)(*this), texts);
 
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_APPEARANCE_BOOLEANS));
+
+	CUpDownCtrl spin;
+	spin.Attach(GetDlgItem(IDC_PM_LINESSPIN));
+	spin.SetRange32(1, 999);
+	spin.Detach();
 
 	// Do specialized reading here
 	return TRUE;

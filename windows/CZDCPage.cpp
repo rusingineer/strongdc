@@ -42,8 +42,6 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::FLOOD_CACHE, ResourceManager::SETTINGS_ODC_FLOOD_CACHE },
 //	{ SettingsManager::MEMORY_MAPPED_FILE, ResourceManager::SETTINGS_MEMORY_MAPPED_FILE },
 	{ SettingsManager::EMPTY_WORKING_SET, ResourceManager::SETTINGS_EMPTY_WORKING_SET },
-	{ SettingsManager::AUTO_SEARCH_EXACT, ResourceManager::SETTINGS_AUTO_SEARCH_EXACT },
-//	{ SettingsManager::HASH_FILES, ResourceManager::SETTINGS_HASH_FILES },
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
 	{ SettingsManager::CHECK_TTH, ResourceManager::CHECK_TTH_AFTER_DOWNLOAD },
 	{ SettingsManager::SEARCH_TTH_ONLY, ResourceManager::SETTINGS_ONLY_TTH },

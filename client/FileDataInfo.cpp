@@ -142,8 +142,16 @@ __int64 FileDataInfo::GetUndlStart()
 	__int64 b = (*birr);
 	__int64 e = (* (birr+1));
 
-	//int64_t SMALLEST_BLOCK_SIZE = (SETTING(MIN_BLOCK_SIZE) *1024)-1;
-	int64_t SMALLEST_BLOCK_SIZE = iFileSize / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
+	int64_t SMALLEST_BLOCK_SIZE = 65535;
+
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) SMALLEST_BLOCK_SIZE = 65535;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) SMALLEST_BLOCK_SIZE = 131071;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 262143;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 524287;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
+	if((SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) || (SETTING(NUMBER_OF_SEGMENTS) == 1))
+		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = (iFileSize-iDownloadedSize) / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
+
 	if((e - b) < SMALLEST_BLOCK_SIZE){
 		ReleaseMutex(hMutex);
 		return -1;

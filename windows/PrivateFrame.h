@@ -81,6 +81,7 @@ public:
 		COMMAND_ID_HANDLER(ID_EDIT_CLEAR_ALL, onEditClearAll)
 		COMMAND_ID_HANDLER(IDC_COPY_ACTUAL_LINE, onCopyActualLine)
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
+		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
@@ -108,6 +109,7 @@ public:
 	LRESULT onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void addLine(const string& aLine);
 	void addLine(const string& aLine, CHARFORMAT2& cf);
@@ -202,6 +204,7 @@ private:
 	CHARFORMAT2 m_ChatTextGeneral;
 	CHARFORMAT2 m_ChatTextServer;
 	CHARFORMAT2 m_ChatTextSystem;
+	CHARFORMAT2 m_ChatTextLog;
 	
 	LPCTSTR sMyNick;
 
