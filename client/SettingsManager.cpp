@@ -49,6 +49,7 @@ const string SettingsManager::settingTags[] =
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
 	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
+	"BackgroundImage",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -439,6 +440,7 @@ SettingsManager::SettingsManager()
 	setDefault(POPUP_TYPE, 0);
 	setDefault(AWAY, false);
 
+	setDefault(BACKGROUND_IMAGE, "");
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

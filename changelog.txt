@@ -33,6 +33,8 @@
 * pøidány ikonky do fronty, které znaèí, zda je k dispozici strom TTH
 * pøidány bublinové zprávy pro nìkolik událostí
 * opraveno nastavení úrovnì komprese
+* pøidáno procentuální vyjádøení kontroly TTH
+* pøidán obrázek pozadí (DCDM++)
 
 
 	-- StrongDC++ 1.00 RC7 --

@@ -384,6 +384,7 @@
 #define IDC_TOOLBAR_POSSIBLE            1226
 #define IDC_CLIENT_USER_CON_COM         1226
 #define IDC_SETTINGS_MBS                1226
+#define IDC_IMAGEBROWSE2                1226
 #define IDC_SIZEBASED                   1227
 #define IDC_MOUSE_OVER                  1227
 #define IDC_CLIENT_STATUS               1227
@@ -485,7 +486,10 @@
 #define IDC_USERLIST_IMAGE              1267
 #define IDC_USERLIST                    1268
 #define IDC_IMPORT                      1269
+#define IDC_USERLIST_IMAGE2             1269
+#define IDC_BACKGROUND_IMAGE            1269
 #define IDC_EXPORT                      1270
+#define IDC_BACK_IMAGE                  1270
 #define IDC_SETTINGS_GET_USER_COUNTRY   1271
 #define IDC_UP_COMBO                    1273
 #define IDC_DOWN_COMBO                  1274

@@ -37,7 +37,7 @@ public:
 	// Strange, the vc7 optimizer won't take a deque here...
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
-	typedef map<string, Ptr, noCaseStringLess> StringMap;
+	typedef map<string*, Ptr, noCaseStringLess> StringMap;
 	//	typedef HASH_MAP<string, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
 	typedef StringMap::iterator StringIter;
 	typedef HASH_MAP_X(User::Ptr, Ptr, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;

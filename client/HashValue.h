@@ -43,6 +43,7 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 	HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); };
 	HashValue(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); }
 	HashValue& operator=(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); return *this; }
+	bool operator!=(const HashValue& rhs) const { return !(*this == rhs); }
 	bool operator==(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) == 0; }
 	bool operator<(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) < 0; }
 

@@ -337,8 +337,13 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(SETTING(NICK).empty()) {
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
 	}
-
+	m_PictureWindow.SubclassWindow(m_hWndMDIClient);
+	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
+	currentPic = SETTING(BACKGROUND_IMAGE);
+	m_PictureWindow.Load(currentPic.c_str());
 	// We want to pass this one on to the splitter...hope it get's there...
+	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
+
 	bHandled = FALSE;
 	return 0;
 }
@@ -965,7 +970,8 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	string file = Util::getAppPath() + "*.*";
  	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		lastTTHdir = Util::getFilePath(file);
-		string hash = HashManager::getInstance()->hasher.getTTfromFile(file).getRoot().toBase32();
+		HashProgressDlg(false).DoModal(m_hWnd);
+		string hash = HashManager::getInstance()->hasher.getTTfromFile(file, false).getRoot().toBase32();
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;
 		FindFirstFile(file.c_str(), &data);
@@ -1227,6 +1233,7 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
+		if(currentPic != SETTING(BACKGROUND_IMAGE)) { currentPic = SETTING(BACKGROUND_IMAGE); m_PictureWindow.Load(currentPic.c_str()); }
 
 		PostMessage(WM_SPEAKER, UPDATE_SHUTDOWN, (LPARAM)aTick);
 }

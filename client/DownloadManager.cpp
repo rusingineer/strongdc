@@ -234,7 +234,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	if(firstTry && !d->getTreeValid() && 
 		!d->isSet(Download::FLAG_USER_LIST) && d->getTTH() != NULL && !d->isSet(Download::FLAG_MP3_INFO))
 	{
-		if(HashManager::getInstance()->getTree(d->getTarget(), d->getTigerTree()) && d->getTigerTree().getRoot() == *(d->getTTH())) {
+		if(HashManager::getInstance()->getTree(d->getTarget(), d->getTTH(), d->getTigerTree()) && d->getTigerTree().getRoot() == *(d->getTTH())) {
 			dcdebug("Got tree from hash store\n");
 				d->setTreeValid(true);
 		} else if(!d->isSet(Download::FLAG_TREE_TRIED) && 
@@ -704,7 +704,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcdebug("FileDLException.....\n");
 
 			if(!d->getTreeValid() && d->getTTH() != NULL) {
-				if(HashManager::getInstance()->getTree(d->getTarget(), d->getTigerTree()) && d->getTigerTree().getRoot() == *(d->getTTH()))
+				if(HashManager::getInstance()->getTree(d->getTarget(), d->getTTH(), d->getTigerTree()) && d->getTigerTree().getRoot() == *(d->getTTH()))
 					d->setTreeValid(true);
 			}
 			if(d->getTreeValid()) {
@@ -727,14 +727,13 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			return;	
 		}
 
-		if((d->getPos() == d->getSize()) || d->isSet(Download::FLAG_MP3_INFO)) {
+		if(d->getPos() > d->getSize()) {
+			throw Exception(STRING(TOO_MUCH_DATA));
+		} else if((d->getPos() == d->getSize()) || d->isSet(Download::FLAG_MP3_INFO)) {
 			if(d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_TREE_DOWNLOAD) || d->isSet(Download::FLAG_MP3_INFO))
 				handleEndData(aSource);
 			aSource->setLineMode();
 		}
-		if(d->getPos() > d->getSize()) {
-			throw Exception(STRING(TOO_MUCH_DATA));
-		}	
 /*	} catch(const RollbackException& e) {
 		string target = d->getTarget();
 		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);
@@ -916,7 +915,7 @@ noCRC:
 	// Check hash
 	if(d->getTTH() && BOOLSETTING(CHECK_TTH) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_MP3_INFO)) {
 		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));
-		TigerTree FileTigerTree = HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget());
+		TigerTree FileTigerTree = HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget(), true);
 		TTHValue* FileTigerRoot = new TTHValue(FileTigerTree.getRoot());
 		
 		bool hashMatch = true;

@@ -41,7 +41,7 @@
 #include "TransferView.h"
 #include "./upnp.h"
 #include "WinUtil.h"
-
+#include "picturewindow.h"
 #include "atlctrlxp.h"
 #include "atlctrlxp2.h"
 
@@ -361,6 +361,8 @@ private:
 	string versionInfo;
 	CImageList images;
 	CToolBarCtrl ctrlToolbar;
+	CPictureWindow m_PictureWindow;
+	string currentPic;
 
 	bool tbarcreated;
 	bool awaybyminimize;

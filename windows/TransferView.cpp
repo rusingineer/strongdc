@@ -113,6 +113,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ConnectionManager::getInstance()->addListener(this);
 	DownloadManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
+	HashManager::getInstance()->addListener(this);
 #if 0
 	ItemInfo* ii = new ItemInfo(ClientManager::getInstance()->getUser("test"), 
 		ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_RUNNING, 75, 100, 25, 50);
@@ -128,7 +129,7 @@ void TransferView::prepareClose() {
 	ConnectionManager::getInstance()->removeListener(this);
 	DownloadManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
-
+	HashManager::getInstance()->addListener(this);
 }
 
 LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -949,8 +950,8 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 					i->upper->status = ItemInfo::STATUS_WAITING;
 					i->upper->statusString = aReason;
 				}
-				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_TESTSUR)
-					&& (aReason != STRING(DOWNLOADING_TTHL))
+				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)
+					&& (aReason != STRING(DOWNLOADING_TTHL) && (aReason != STRING(CHECKING_TTH)))
 					) {
 					MainFrame::getMainFrame()->ShowBalloonTip((
 						STRING(FILE)+": "+i->file+"\n"+
@@ -964,6 +965,31 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		ItemInfo::MASK_PATH;	
 	}
 	dcdebug(("****** TransferView: DownFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
+}
+
+void TransferView::on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) {
+	ItemInfo* i = NULL;
+
+	{
+		Lock l(cs);
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if((m->downloadTarget == fileName) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+				i = m;
+				break;
+			}
+		}
+		
+		if(i == NULL)
+			return;
+
+		int64_t hashedSize = i->size - remainingBytes;
+
+		i->statusString = STRING(CHECKING_TTH) + Util::toString(hashedSize * 100 / i->size) + "%";
+		i->upper->statusString = i->statusString;
+		i->updateMask |= ItemInfo::MASK_STATUS;
+	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
