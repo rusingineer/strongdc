@@ -48,7 +48,7 @@ LRESULT StatsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		return 0;
 	} else {
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 		return 0;
 	}	
 }

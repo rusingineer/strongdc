@@ -149,17 +149,15 @@ __int64 FileDataInfo::GetUndlStart(int maxSegments)
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = iFileSize / maxSegments;
 	if(maxSegments == 1) SMALLEST_BLOCK_SIZE = iFileSize;
-	__int64 n = 0;
 
 	if((e - b) < SMALLEST_BLOCK_SIZE){
 			ReleaseMutex(hMutex);
 			return -1;
 		}
 
-	n = b + (e - b) / 2;
+	__int64 n = b + (e - b) / 2;
 
 	if(maxSegments == 1) {
-		vecRunBlocks.clear();
 		n = b;
 	}
 

@@ -1262,7 +1262,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 	{
 		Lock l(cs);
 		if((i->qi) && (i->upper != NULL)) {
-			if(i->qi->getActiveSegments().size() < 1) {
+			if(i->qi->getCurrents().size() <= 1) {
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = aReason;
 				i->upper->file = Util::getFileName(aDownload->getTarget());

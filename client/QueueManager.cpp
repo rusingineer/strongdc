@@ -57,7 +57,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 						  int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* root, const string& freeBlocks/* = Util::emptyString*/) throw(QueueException, FileException) 
 {
 	if(p == QueueItem::DEFAULT)
-		p = (aSize <= 16*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
+		p = (aSize <= 64*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, aSearchString, p, aFlags, aDownloadedBytes, aAdded, root);
 

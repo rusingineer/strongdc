@@ -107,14 +107,18 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	
 	ctrlMessageContainer.SubclassWindow(ctrlMessage.m_hWnd);
 	ctrlMessage.SetFont(WinUtil::font);
-
 	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+
 	ctrlFilterContainer.SubclassWindow(ctrlFilter.m_hWnd);
+	ctrlFilter.SetFont(WinUtil::font);
 
-	ctrlFilterBy.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |/* WS_HSCROLL | WS_VSCROLL |*/ CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
-	ctrlFilterByContainer.SubclassWindow(ctrlFilterBy.m_hWnd);
+	ctrlFilterSel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_HSCROLL |
+		WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
 
+	ctrlFilterSelContainer.SubclassWindow(ctrlFilterSel.m_hWnd);
+	ctrlFilterSel.SetFont(WinUtil::font);
+	// CDM EXTENSION ENDS
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 	
@@ -123,29 +127,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		styles |= LVS_EX_INFOTIP;
 	ctrlUsers.SetExtendedListViewStyle(styles);
 
-	ctrlFilter.SetFont(WinUtil::font);
-	ctrlFilterBy.SetFont(WinUtil::font);
-	ctrlFilterBy.AddString(CSTRING(NICK));
-	ctrlFilterBy.AddString(CSTRING(SHARED));
-	ctrlFilterBy.AddString(CSTRING(DESCRIPTION));
-	ctrlFilterBy.AddString(CSTRING(TAG));
-	ctrlFilterBy.AddString(CSTRING(CONNECTION));
-	ctrlFilterBy.AddString(CSTRING(EMAIL));
-	ctrlFilterBy.AddString(CSTRING(CLIENTID));
-	ctrlFilterBy.AddString(CSTRING(SETTINGS_IP));
-
-	ctrlFilterBy.AddString(CSTRING(ISP));
-
-	ctrlFilterBy.AddString(CSTRING(LOCK));
-	ctrlFilterBy.AddString(CSTRING(PK));
-	ctrlFilterBy.AddString(CSTRING(SUPPORTS));
-
-	ctrlFilterBy.AddString(CSTRING(STATUS));
-	ctrlFilterBy.AddString(CSTRING(AVERAGE_UPLOAD));
-
-	ctrlFilterBy.AddString(CSTRING(ANY));
-	ctrlFilterBy.SetCurSel(0);
-	iFilterBySel = ctrlFilterBy.GetCurSel(); // Make sure we are were we are...
 	splitChat.Create( m_hWnd );
 	splitChat.SetSplitterPanes(ctrlClient.m_hWnd, ctrlMessage.m_hWnd, true);
 	splitChat.SetSplitterExtendedStyle(0);
@@ -196,6 +177,12 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
+	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
+		ctrlFilterSel.AddString(CSTRING_I(UserListColumns::def_columnNames[j]));
+	}
+
+	ctrlFilterSel.SetCurSel(0);
+
 
 	m_hMenu = WinUtil::mainMenu;
 
@@ -433,18 +420,28 @@ struct CompareItems {
 };
 
 int HubFrame::findUser(const User::Ptr& aUser) {
-	UserMapIter i = userMap.find(aUser);
-	if(i == userMap.end())
+	// CDM EXTENSION BEGINS (fulDC)
+	//UserMapIter i = userMap.find(aUser);
+	//if(i == userMap.end())
+	//	return -1;
+	for(UserMap::iterator i = usermap.begin(); i != usermap.end(); ++i){
+		if(Util::stricmp(aUser->getNick(), i->second->user->getNick()) == 0)
+			break;
+	}
+	
+	if(i == usermap.end())
 		return -1;
 
 	if(ctrlUsers.getSortColumn() == UserInfo::COLUMN_NICK) {
 		// Sort order of the other columns changes too late when the user's updated
 		UserInfo* ui = i->second;
-
-		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) return NULL;
+		dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
 		return ctrlUsers.getSortPos(ui);
 	}
-	return ctrlUsers.findItem(aUser->getNick());
+	// CDM EXTENSION BEGINS (fulDC)
+	//return ctrlUsers.findItem(aUser->getNick());
+	return ctrlUsers.findItem(i->second);
+	// CDM EXTENSION ENDS
 }
 
 void HubFrame::addAsFavorite() {
@@ -563,197 +560,55 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 }
 
 bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
+	// CDM EXTENSION BEGINS (fulDC)
+	//int i = findUser(u);
 	int i = -1;
-	if(searchinlist)
-	//	i = findUser(u);
-		i = ctrlUsers.findItem(u->getNick());
-	bool bHideUser = false;
-	if (!stFilter.getTokens().empty()) {
-		string filter_s;
-		int64_t filter_i = -1;
+	string nick = u->getNick();
 
-		switch (iFilterBySel) {
-			case 0: // Nick
-				filter_s = u->getNick();
-				break;
-			case 1: // Shared
-				filter_i = u->getBytesShared();
-				break;
-			case 2: // Description
-				filter_s = u->getDescription();
-				break;
-			case 3: // Tag
-				filter_s = u->getTag();
-				break;
-			case 4: // Connection
-				filter_s = u->getConnection();
-				break;
-			case 5: // E-Mail
-				filter_s = u->getEmail();
-				break;
-			case 6: // Client
-				filter_s = u->getClientType();
-				break;
-			case 7: // IP
-				filter_s = u->getIp();
-				break;
-			case 8: // Host
-				filter_s = u->getHost();
-				break;
-			case 9: // Lock
-				filter_s = u->getLock();
-				break;
-			case 10: // Pk
-				filter_s = u->getPk();
-				break;
-			case 11: // Supports
-				filter_s = u->getSupports();
-				break;
-			case 12: // Status
-				filter_i = u->getStatus();
-				break;
-			case 13: // Speed
-				filter_i = u->getDownloadSpeed();
-				break;
-			case 14: // Any
-				filter_s = u->getNick() + ' ' + u->getDescription() + ' ' + u->getTag() + ' ' + u->getConnection() + ' ' + u->getEmail()
-					 + ' ' + u->getClientType() + ' ' + u->getIp() + ' ' + u->getHost() + ' ' + u->getLock()
-					 + ' ' + u->getPk() + ' ' + u->getSupports();
-				break;
-			default: // We should NEVER be here...
-				dcassert(FALSE);
-				filter_s = "";
-				break;
+	while( ( i = ctrlUsers.findItem(nick, i) ) != -1 ) {
+		UserInfo* ui = (UserInfo*)ctrlUsers.GetItemData(i);
+		if( Util::stricmp(u->getNick(), ui->user->getNick()) == 0) {
+			bool resort = (ui->getOp() != u->isSet(User::OP));
+			ctrlUsers.getItemData(i)->update();
+			ctrlUsers.updateItem(i);
+			ctrlUsers.SetItem(i, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
+			if(resort)
+				ctrlUsers.resort();
+			return false;
 		}
-		if (filter_i == -1)
-			bHideUser = !stFilter.getTokens().empty() && !findListChild(stFilter.getTokens(), filter_s);
-		else
-			bHideUser = !stFilter.getTokens().empty() && !findListChild(stFilter.getTokens(), filter_i);
+	
 	}
-	if (bHideUser) {
-		if (i != -1) {
-			//UserInfo* ui = ctrlUsers.getItemData(i);
-			delete ctrlUsers.getItemData(i);
-			ctrlUsers.deleteItem(i, false);
-			//dcassert(userMap[u] == ui);
-			userMap.erase(u);			
+
+	UserMap::iterator j = usermap.begin();
+	for(; j != usermap.end(); ++j) {
+		if(Util::stricmp(u->getNick(), j->second->user->getNick()) == 0) {
+			j->second->update();
+			return false;
 		}
-		return false;
-	} else
-	if(i == -1) {
-		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
-		userMap.insert(make_pair(u, ui));
+
+	}
+	
+	UserInfo *ui = new UserInfo(u, &m_UserListColumns);
+	nick = Util::toLower(u->getNick());
+	usermap.insert( UserPair(nick, ui) );
+	bool add = false;
+	
+	if(filter.empty()){
+		add = true;
+	}else {
+		if((Util::findSubString(ui->getText(ctrlFilterSel.GetCurSel()), filter) != string::npos)) {
+			add = true;
+		}
+	}
+	
+	if( add ){
 		ctrlUsers.insertItem(ui, WinUtil::getImage(u));
-		return true;
-	} else {
-		UserInfo* ui = ctrlUsers.getItemData(i);
-		bool resort = (ui->getOp() != u->isSet(User::OP));
-		ctrlUsers.getItemData(i)->update();
-		ctrlUsers.updateItem(i);
-		ctrlUsers.SetItem(i, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
-		if(resort)
-			ctrlUsers.resort();		
-		return false;
 	}
-}
 
-// The next two were actually in the OperaLib class but i didnt need the rest of it..
-bool HubFrame::findListChild(const vector<string>& sl, const string& s) {
-	vector<string>::const_iterator i;
-	vector<string>::const_iterator j;
-	for (i = sl.begin(); i != sl.end(); ++i) {
-		if (*i == "")
-			continue;
-		StringTokenizer st(*i, ',');
-		bool b = false;
-		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
-			if (*j == "")
-				continue;
-			if (j->substr(0, 1) == "|")
-				b |= (Util::findSubString(s, j->substr(1)) == string::npos);
-			else
-				b |= (Util::findSubString(s, *j) != string::npos);
-		}
-		if (!b)
-			return false;
-	}
 	return true;
+	// CDM EXTENSION ENDS
 }
 
-bool HubFrame::findListChild(const vector<string>& sl, const int64_t& inr) {
-	vector<string>::const_iterator i;
-	vector<string>::const_iterator j;
-	for (i = sl.begin(); i != sl.end(); ++i) {
-		if (*i == "")
-			continue;
-		StringTokenizer st(*i, ',');
-		bool b = false;
-		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
-			if (*j == "")
-				continue;
-			if (j->substr(0, 1) == "|")
-				b |= (Util::toInt64(j->substr(1)) != inr);
-			else if (j->substr(0, 1) == "<")
-				b |= (Util::toInt64(j->substr(1)) > inr);
-			else if (j->substr(0, 1) == ">")
-				b |= (Util::toInt64(j->substr(1)) < inr);
-			else
-				b |= (Util::toInt64(*j) == inr);
-		}
-		if (!b)
-			return false;
-	}
-	return true;
-}
-
-LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	bHandled = (wParam == -1 && lParam == -1) ? TRUE : FALSE;
-	iFilterBySel = ctrlFilterBy.GetCurSel();
-	if (iFilterBySel == -1)
-		return S_OK;
-	// Get the text from the edit box
-	int len = ctrlFilter.GetWindowTextLength() + 1;
-	char *c = new char[len];
-	ctrlFilter.GetWindowText(c, len);
-	string s(c, len-1);
-	delete[] c;
-	// Tokenize the text
-	stFilter = StringTokenizer(s, ' ');
-	// Update E-v-e-r-y user in the list
-	updateEntireUserList();
-	return S_OK;
-}
-LRESULT HubFrame::onFilterCharDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	if (wParam != VK_TAB) {
-		bHandled = FALSE;
-		return S_OK;
-	}
-	bHandled = TRUE;
-	onTab();
-	return S_OK;
-}
-LRESULT HubFrame::onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
-	return onFilterChar(0, 0, 0, bHandled);
-}
-LRESULT HubFrame::onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	bHandled = FALSE;
-	::PostMessage(ctrlFilter.m_hWnd, WM_KEYUP, (WPARAM)-1, -1);
-	return S_OK;
-}
-
-void HubFrame::updateEntireUserList() {
-	Lock l(updateCS);
-	User::NickMap& um = client->lockUserList();
-//	updateList.clear();
-	updateList.reserve(um.size());
-	for(User::NickMap::const_iterator i = um.begin(); i != um.end(); ++i) {
-		updateList.push_back(make_pair(i->second, UPDATE_USERS));
-	}
-	client->unlockUserList();
-	if(!updateList.empty()) {
-		PostMessage(WM_SPEAKER, UPDATE_USERS);
-	}
-}
 LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == UPDATE_USERS) {
 		ctrlUsers.SetRedraw(FALSE);
@@ -773,32 +628,16 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						
 						if(client->getOp()) {
 							if(Util::toString(u->getBytesShared()).find("000000") != -1) {
-								string detectString = Util::formatBytes(u->getBytesShared())+" - the share size had too many zeroes in it";
+								string detectString = Util::formatNumber(u->getBytesShared())+" - the share size had too many zeroes in it";
 								u->setFakeSharing(true);
-								u->setCheatingString(Util::validateMessage(detectString, false));
-								if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-									PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
+								u->setCheat(Util::validateMessage(detectString, false), false);
 								this->updateUser(u);
-
-								CHARFORMAT2 cf;
-								memset(&cf, 0, sizeof(CHARFORMAT2));
-								cf.cbSize = sizeof(cf);
-								cf.dwReserved = 0;
-								cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-								cf.dwEffects = 0;
-								cf.crBackColor = SETTING(BACKGROUND_COLOR);
-								cf.crTextColor = SETTING(ERROR_COLOR);
-
-								addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
 							}
 						
 							if(BOOLSETTING(CHECK_NEW_USERS)) {
 								if((u->getMode() == "P" || u->getMode() == "5" || u->isSet(User::PASSIVE)) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE))
 								{} else {
-									getUserResponses(u);
-									try {
-										QueueManager::getInstance()->addList(u, 0);
-									} catch(const Exception&) {}
+									getUserResponses(u, true);
 								}
 							}
 						}
@@ -812,20 +651,21 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					
 					break;
 				case REMOVE_USER:
-					//int j = findUser(u);
+					/*//int j = findUser(u);
 					int j = ctrlUsers.findItem(u->getNick());
 					if( j != -1 ) {
 						if(showJoins) {
 							if (!favShowJoins | u->isFavoriteUser()) {
 								addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
-						}
+							}
 						}
 
 						ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
 						dcassert(userMap[u] ==(UserInfo*)ctrlUsers.getItemData(j));
 						userMap.erase(u);
 						ctrlUsers.deleteItem(j);
-					}
+					}*/
+					removeUser(u);
 					break;
 				}
 		}
@@ -979,9 +819,12 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
 	rc.left +=2;
-	rc.right -=(2 + (ShowUserList ? 200 : 0));  //oDC: si aggiunge il menu
+	// CDM EXTENSION BEGINS (fulDC)
+	//rc.right -=2;
+	rc.right -=202;
+	// CDM EXTENSION ENDS
 	ctrlMessage.MoveWindow(rc);
-	if (ShowUserList) {
+
 		rc.left = rc.right + 4;
 		rc.right = rc.left + 116;
 		ctrlFilter.MoveWindow(rc);
@@ -990,11 +833,10 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.right = rc.left + 76;
 		rc.top = rc.top + 0;
 		rc.bottom = rc.bottom + 120;
-		ctrlFilterBy.MoveWindow(rc);
-	}
+		ctrlFilterSel.MoveWindow(rc);
 }
 
-LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		RecentHubEntry* r = HubManager::getInstance()->getRecentHubEntry(server);
 		if(r) {
@@ -1010,13 +852,20 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		client->disconnect();
 	
 		closed = true;
+		// CDM EXTENSION BEGINS (fulDC)	
+		clearUserList();
+		// CDM EXTENSION ENDS
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
 		SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, ShowUserList);
 
-		userMap.clear();
-		ctrlUsers.DeleteAll();
+		int i = 0;
+		int j = ctrlUsers.GetItemCount();
+		while(i < j) {
+			delete ctrlUsers.getItemData(i);
+			i++;
+		}
 	
 		m_UserListColumns.WriteToSetup(ctrlUsers);
 
@@ -1044,7 +893,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		}
 		DestroyIcon(pmicon.hIcon);				
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 	return 0;
 	}
 }
@@ -1445,10 +1294,6 @@ void HubFrame::onTab() {
 		} else if(focus == ctrlMessage.m_hWnd) {
 			ctrlUsers.SetFocus();
 		} else if(focus == ctrlUsers.m_hWnd) {
-			ctrlFilter.SetFocus();
-		} else if(focus == ctrlFilter.m_hWnd) {
-			ctrlFilterBy.SetFocus();
-		} else if(focus == ctrlFilterBy.m_hWnd) {
 			ctrlClient.SetFocus();
 		} 
 	}
@@ -1581,7 +1426,15 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 	bHandled = FALSE;
 	if((wParam == BST_CHECKED)) {
 		ShowUserList = true;
-		updateEntireUserList();
+		User::NickMap& lst = client->lockUserList();
+		ctrlUsers.SetRedraw(FALSE);
+		for(User::NickIter i = lst.begin(); i != lst.end(); ++i) {
+			updateUser(i->second);
+		}
+		client->unlockUserList();
+		ctrlUsers.SetRedraw(TRUE);
+		ctrlUsers.resort();
+
 	} else {
 		ShowUserList = false;
 		clearUserList();
@@ -1872,11 +1725,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				}
 
 				detectString = user->insertUserData(detectString);
-				user->setCheatingString(Util::validateMessage(detectString, false));
-
-				if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-					PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
-
+				user->setCheat(Util::validateMessage(detectString, false), false);
 			}     
 
 			this->updateUser(user);
@@ -2211,11 +2060,11 @@ LRESULT HubFrame::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	return 0;
 }
 
-void HubFrame::getUserResponses(User::Ptr& u) {
+void HubFrame::getUserResponses(User::Ptr& u, bool checkList) {
 	if(client->isConnected()) {
 		if( (u->getNick() != client->getNick()) ) {
 				try {
-					QueueManager::getInstance()->addTestSUR(u);
+					QueueManager::getInstance()->addTestSUR(u, checkList);
 				} catch(const Exception&) {
 					//continue;
 				}
@@ -2234,7 +2083,9 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_ITEMPREPAINT:
 		{
-			UserInfo* ii = ctrlUsers.getStoredItemAt(cd->nmcd.lItemlParam); 
+			//UserInfo* ii = ctrlUsers.getStoredItemAt(cd->nmcd.lItemlParam); 
+			UserInfo* ii = (UserInfo*)cd->nmcd.lItemlParam;
+
 			if(ii->user->getFakeSharing()) {
 				cd->clrText = RGB(204,0,0);
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
@@ -2249,7 +2100,86 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_DODEFAULT;
 	}
 }
+// (fulDC)
+void HubFrame::removeUser(const User::Ptr& u) {
+	int j = -1;
+	string nick = u->getNick();
+	while( ( j = ctrlUsers.findItem(nick, j) ) != -1 ) {
+		UserInfo* ui = ctrlUsers.getItemData(j);
+		if(Util::stricmp(u->getNick(), ui->user->getNick()) == 0 ) {
+			ctrlUsers.DeleteItem(j);
+			break;
+		}
+	}
 
+	UserMap::iterator i = usermap.begin();
+	for(; i != usermap.end(); ++i) {
+		if(Util::stricmp(i->second->user->getNick(), u->getNick()) == 0){
+			delete i->second;
+			i->second = NULL;
+			usermap.erase(i);
+			
+			break;
+		}
+	}
+
+	if(showJoins) {
+		if (!favShowJoins || u->isFavoriteUser()) {
+			addLine("*** " + STRING(PARTS) + nick);
+		}
+	}
+}
+LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
+	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
+	filter = buf;
+	delete buf;
+	
+	updateUserList();
+
+	bHandled = false;
+
+	return 0;
+}
+
+LRESULT HubFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
+	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
+	filter = buf;
+	delete buf;
+	
+	updateUserList();
+	
+	bHandled = false;
+
+	return 0;
+}
+
+void HubFrame::updateUserList() {
+	Lock l(updateCS);
+
+	ctrlUsers.DeleteAllItems();
+
+	if(filter.empty()) {
+		UserMap::iterator i = usermap.begin();
+		for(; i != usermap.end(); ++i){
+			if(i->second != NULL)
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));	
+		}
+		return;
+	}
+	
+	int sel = ctrlFilterSel.GetCurSel();
+
+	UserMap::iterator i = usermap.begin();
+	for(; i != usermap.end(); ++i){
+		if( i->second != NULL ) {
+			if(Util::findSubString(i->second->getText(sel), filter) != string::npos)
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));	
+		}
+	}
+}
+// (fulDC) end
 /**
  * @file
  * $Id$

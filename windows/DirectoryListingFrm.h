@@ -148,10 +148,10 @@ public:
 			PostMessage(WM_CLOSE);
 			return 0;
 		} else {
+			bHandled = FALSE;
 			m_hMenu = NULL;
-			MDIDestroy(m_hWnd);
-		return 0;
-	}
+			return 0;
+		}
 	}
 	
 	void setWindowTitle() {

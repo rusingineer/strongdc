@@ -31,7 +31,6 @@
 #include "UserCommand.h"
 #include "FavoriteUser.h"
 #include "Singleton.h"
-
 class ClientProfile {
 	public:
 	typedef vector<ClientProfile> List;
@@ -42,16 +41,19 @@ class ClientProfile {
 	ClientProfile(int aId, const string& aName, const string& aVersion, const string& aTag, 
 		const string& aExtendedTag, const string& aLock, const string& aPk, const string& aSupports,
 		const string& aTestSUR, const string& aUserConCom, const string& aStatus, const string& aCheatingDescription, 
-		int aRawToSend, int aTagVersion, int aUseExtraVersion, int aCheckMismatch) 
+		int aRawToSend, int aTagVersion, int aUseExtraVersion, int aCheckMismatch,
+		const string& aConnection, const string& aComment) 
 		throw() : id(aId), name(aName), version(aVersion), tag(aTag), extendedTag(aExtendedTag), 
 		lock(aLock), pk(aPk), supports(aSupports), testSUR(aTestSUR), userConCom(aUserConCom),  status(aStatus),
 		cheatingDescription(aCheatingDescription), rawToSend(aRawToSend), tagVersion(aTagVersion),
-		useExtraVersion(aUseExtraVersion), checkMismatch(aCheckMismatch) { };
+		useExtraVersion(aUseExtraVersion), checkMismatch(aCheckMismatch), 
+		connection(aConnection), comment(aComment) { };
 
 	ClientProfile(const ClientProfile& rhs) : id(rhs.id), name(rhs.name), version(rhs.version), tag(rhs.tag), 
 		extendedTag(rhs.extendedTag), lock(rhs.lock), pk(rhs.pk), supports(rhs.supports), testSUR(rhs.testSUR), 
 		userConCom(rhs.userConCom), status(rhs.status), cheatingDescription(rhs.cheatingDescription), rawToSend(rhs.rawToSend),
-		tagVersion(rhs.tagVersion), useExtraVersion(rhs.useExtraVersion), checkMismatch(rhs.checkMismatch)
+		tagVersion(rhs.tagVersion), useExtraVersion(rhs.useExtraVersion), checkMismatch(rhs.checkMismatch),
+		connection(rhs.connection), comment(rhs.comment)
 	{
 
 	}
@@ -73,6 +75,8 @@ class ClientProfile {
 		tagVersion = rhs.tagVersion;
 		useExtraVersion = rhs.useExtraVersion;
 		checkMismatch = rhs.checkMismatch;
+		connection = rhs.connection;
+		comment = rhs.comment;
 		return *this;
 	}
 
@@ -88,6 +92,8 @@ class ClientProfile {
 		GETSET(string, userConCom, UserConCom);
 		GETSET(string, status, Status);
 		GETSET(string, cheatingDescription, CheatingDescription);
+		GETSET(string, connection, Connection);
+		GETSET(string, comment, Comment);
 		GETSET(int, priority, Priority);
 		GETSET(int, rawToSend, RawToSend);
 		GETSET(int, tagVersion, TagVersion);
@@ -296,7 +302,10 @@ public:
 		int rawToSend,
 		int tagVersion, 
 		int useExtraVersion, 
-		int checkMismatch ) 
+		int checkMismatch,
+		const string& connection,
+		const string& comment
+		) 
 	{
 		Lock l(cs);
 		clientProfiles.push_back(
@@ -316,7 +325,9 @@ public:
 			rawToSend, 
 			tagVersion, 
 			useExtraVersion, 
-			checkMismatch
+			checkMismatch,
+			connection,
+			comment
 			)
 		);
 		return clientProfiles.back();
@@ -342,6 +353,8 @@ public:
 			0, 
 			0, 
 			0
+			// FIXME
+			, "", ""
 			)
 		);
 		save();
@@ -411,6 +424,21 @@ public:
 		Lock l(cs);
 		clientProfiles.clear();
 		loadClientProfiles();
+		return clientProfiles;
+	}
+	ClientProfile::List& reloadClientProfilesFromHttp() { 
+		Lock l(cs);
+		ClientProfile::List oldProfiles = clientProfiles;
+		clientProfiles.clear();
+		loadClientProfiles();
+		for(ClientProfile::Iter j = clientProfiles.begin(); j != clientProfiles.end(); ++j) {
+			for(ClientProfile::Iter k = oldProfiles.begin(); k != oldProfiles.end(); ++k) {
+				if((*k).getName().compare((*j).getName()) == 0) {
+					(*j).setRawToSend((*k).getRawToSend());
+					(*j).setCheatingDescription((*k).getCheatingDescription());
+				}
+			}
+		}
 		return clientProfiles;
 	}
 

@@ -1244,20 +1244,13 @@ void MainFrame::checkFileList(string file, User::Ptr u)
 		return;
 	}
 	DirectoryListing* dl = new DirectoryListing(u);
-	dl->loadFile(file, true);
-	if (hubFrame->checkCheating(u, dl))
-	{
-		CHARFORMAT2 cf;
-		memset(&cf, 0, sizeof(CHARFORMAT2));
-		cf.cbSize = sizeof(cf);
-		cf.dwReserved = 0;
-		cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-		cf.dwEffects = 0;
-		cf.crBackColor = SETTING(BACKGROUND_COLOR);
-		cf.crTextColor = SETTING(ERROR_COLOR);
-
-		hubFrame->addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
+	try {
+		dl->loadFile(file, true);
+	} catch(const Exception&) {
+		delete dl;
+		return;
 	}
+	hubFrame->checkCheating(u, dl);
 	delete dl;
 }
 

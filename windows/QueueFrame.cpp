@@ -1426,7 +1426,7 @@ void QueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	SetSplitterRect(rc);
 }
 
-LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		QueueManager::getInstance()->removeListener(this);
 	
@@ -1455,7 +1455,7 @@ LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			SettingsManager::QUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 	return 0;
 	}
 }

@@ -62,11 +62,12 @@ class UserListColumns {
 public:
 	UserListColumns();
 	void ReadFromSetup();
-
-	void WriteToSetup(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
-	void SetToList(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
-	void SwitchColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
-	void SetColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn);
+	
+	static ResourceManager::Strings def_columnNames[];
+	void WriteToSetup(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
+	void SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
+	void SwitchColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
+	void SetColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn);
 
 	bool IsColumnUsed(int nHardColumn) const;
 	int RemapDataColumnToListColumn(int nDataCol) const;

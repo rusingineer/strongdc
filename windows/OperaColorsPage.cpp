@@ -175,8 +175,8 @@ void OperaColorsPage::write()
 LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if(PropertiesDlg::needUpdate)
 	{
-		PostMessage(WM_DESTROY,0,0);
-		PostMessage(WM_INITDIALOG,0,0);
+		SendMessage(WM_DESTROY,0,0);
+		SendMessage(WM_INITDIALOG,0,0);
 		PropertiesDlg::needUpdate = false;
 	}
 	bHandled = FALSE;

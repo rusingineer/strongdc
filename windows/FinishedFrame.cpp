@@ -154,7 +154,7 @@ LRESULT FinishedFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 	return 0;
 }
 
-LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	FinishedManager::getInstance()->removeListener(this);
 	
@@ -167,7 +167,7 @@ LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 			SettingsManager::FINISHED_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 	return 0;
 	}
 }

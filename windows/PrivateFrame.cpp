@@ -371,7 +371,7 @@ void PrivateFrame::onEnter()
 	} 
 }
 
-LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	ClientManager::getInstance()->removeListener(this);
 
@@ -383,7 +383,7 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	frames.erase(user);
 
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 		return 0;
 	}
 }

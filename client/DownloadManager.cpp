@@ -46,7 +46,7 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
 	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()), 
-	maxSegmentsInitial(qi->getMaxSegmentsInitial()) { 
+	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -55,6 +55,9 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 		setFlag(Download::FLAG_MP3_INFO);
 	if(qi->isSet(QueueItem::FLAG_TESTSUR)) {
 		setFlag(Download::FLAG_TESTSUR);
+		if(qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
+			setFlag(Download::FLAG_CHECK_FILE_LIST);
+
 	} else {
 	if(qi->isSet(QueueItem::FLAG_RESUME))
 		setFlag(Download::FLAG_RESUME);
@@ -246,7 +249,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		}
 
 		aConn->setState(UserConnection::STATE_FILELENGTH);
-	dcdebug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!2\n");		
 		/*QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
 		if(d->isSet(Download::FLAG_RESUME) && (q->getMaxSegmentsInitial() == 1)) {
 			dcassert(d->getSize() != -1);
@@ -423,7 +425,7 @@ public:
 			cur.update(buf, bufPos);
 		bufPos = 0;
 
-		//cur.finalize();
+		cur.finalize();
 		checkTrees();
 		return s->flush();
 	}
@@ -595,6 +597,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
 
+	d->setFlag(Download::FLAG_SEGMENT_STARTED);
 	fire(DownloadManagerListener::Starting(), d);
 	
 	return true;
@@ -606,17 +609,18 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	
 	try {
 		try{
-			d->addPos(d->getFile()->write(aData, aLen), aLen);
+			d->setCurrPos(d->getPos() + aLen);
+			d->addPos(d->getFile()->write(aData, aLen), aLen);			
 		} catch(const BlockDLException) {
+			d->setCurrPos(d->getPos() + aLen);
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			d->getFile()->flush();
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource, false, true);
-			aSource->getUser()->connect();
 			return;
 
-		} catch(const FileDLException) {
+		} catch(const FileDLException) {			
 			handleEndData(aSource);
 			return;	
 		}
@@ -923,7 +927,31 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	}
 	
 	fire(DownloadManagerListener::Failed(), d, aError);
-	if( d->isSet(Download::FLAG_TESTSUR) ) {
+
+	if ( d->isSet(Download::FLAG_USER_LIST) ) {
+		User::Ptr user = aSource->getUser();
+		if (user) {
+			if (aError.find("File Not Available") != string::npos || aError.find("File non disponibile") != string::npos ) {
+				//user->addLine("*** User " + user->getNick() + " filelist not available");
+				user->setCheat("filelist not available", false);
+				user->updated();
+				//user->sendRawCommand(SETTING(FILELIST_UNAVAILABLE));
+				aSource->setDownload(NULL);
+				removeDownload(d, true, true);
+				removeConnection(aSource);
+				return;
+			} else if(aError == STRING(DISCONNECTED)) {
+				//user->addLine("*** User " + user->getNick() + " filelist disconnected");
+				if(user->fileListDisconnected()) {
+					aSource->setDownload(NULL);
+					removeDownload(d, true, true);
+					removeConnection(aSource);
+					return;
+				}
+			}
+		} 
+	}
+	else if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR Error: %s\n", aError);
 		User::Ptr user = aSource->getUser();
 		user->setTestSUR(aError);
@@ -947,8 +975,9 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
-	bool isTestSUR = d->isSet(Download::FLAG_TESTSUR);
+	bool checkList = d->isSet(Download::FLAG_CHECK_FILE_LIST) && d->isSet(Download::FLAG_TESTSUR);
 	User::Ptr uzivatel = d->getUserConnection()->getUser();
+
 	if(d->getOldDownload() != NULL) {
 		if(d->getFile()) {
 			try {
@@ -1013,7 +1042,10 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		}
 	}
 	QueueManager::getInstance()->putDownload(d, finished);
-	if(isTestSUR && (QueueManager::getInstance()->lookupNext(uzivatel) != NULL)) {
+	if(checkList) {
+		try {
+			QueueManager::getInstance()->addList(uzivatel, QueueItem::FLAG_CHECK_FILE_LIST);
+		} catch(const Exception&) {}
 		uzivatel->connect();
 	}
 }

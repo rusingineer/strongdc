@@ -149,6 +149,10 @@ public:
 		return Util::emptyString;
 	}
 
+	void addLine(const string& line) {
+		fire(ClientListener::CheatMessage(), this, Util::validateMessage(line, true));
+	}
+
 	GETSET(string, nick, Nick);
 	GETSET(string, defpassword, Password);
 	GETSET(bool, registered, Registered);

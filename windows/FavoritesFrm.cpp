@@ -304,8 +304,7 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 
 LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	HubManager::getInstance()->removeListener(this);
-
+		HubManager::getInstance()->removeListener(this);
 		closed = true;		
 		CZDCLib::setButtonPressed(IDC_FAVORITES, false);
 		PostMessage(WM_CLOSE);
@@ -315,8 +314,8 @@ LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		SettingsManager::FAVORITESFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
-	return 0;
+		bHandled = FALSE;
+		return 0;
 	}	
 }
 

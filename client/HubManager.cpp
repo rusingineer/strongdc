@@ -326,6 +326,8 @@ void HubManager::saveClientProfiles() {
 			xml.addTag("TagVersion", Util::toString(l->getTagVersion()));
 			xml.addTag("UseExtraVersion", Util::toString(l->getUseExtraVersion()));
 			xml.addTag("CheckMismatch", Util::toString(l->getCheckMismatch()));
+			xml.addTag("Connection", l->getConnection());
+			xml.addTag("Comment", l->getComment());
 			xml.stepOut();
 		}
 		xml.stepOut();
@@ -383,7 +385,7 @@ void HubManager::recentsave() {
 }
 
 void HubManager::loadClientProfiles(SimpleXML* aXml) {
-	string n,v,t,e,l,p,s,te,u,st,c,r,ta,us,ch;
+	string n,v,t,e,l,p,s,te,u,st,c,r,ta,us,ch,co,com;
 	aXml->resetCurrentChild();
 	if(aXml->findChild("ClientProfilesV2")) {
 		aXml->stepIn();
@@ -405,7 +407,10 @@ void HubManager::loadClientProfiles(SimpleXML* aXml) {
 			if(aXml->findChild("UseExtraVersion"))		{ us = aXml->getChildData(); }	else { us = Util::emptyString; }
 			if(aXml->findChild("CheckMismatch"))		{ ch = aXml->getChildData(); }	else { ch = Util::emptyString; }
 			
-			addClientProfile(n,v,t,e,l,p,s,te,u,st,c, Util::toInt(r), Util::toInt(ta), Util::toInt(us), Util::toInt(ch));
+			if(aXml->findChild("Connection"))			{ co = aXml->getChildData(); }	else { co = Util::emptyString; }
+			if(aXml->findChild("Comment"))				{ com = aXml->getChildData(); }	else { com = Util::emptyString; }
+			
+			addClientProfile(n,v,t,e,l,p,s,te,u,st,c, Util::toInt(r), Util::toInt(ta), Util::toInt(us), Util::toInt(ch),co,com);
 			aXml->stepOut();
 		}
 		aXml->stepOut();
@@ -430,7 +435,7 @@ void HubManager::loadClientProfiles(SimpleXML* aXml) {
 				aXml->getIntChildAttrib("RawToSend"),
 				aXml->getIntChildAttrib("TagVersion"), 
 				aXml->getIntChildAttrib("UseExtraVersion"), 
-				aXml->getIntChildAttrib("CheckMismatch")
+				aXml->getIntChildAttrib("CheckMismatch"), "", ""
 				);
 		}
 		aXml->stepOut();

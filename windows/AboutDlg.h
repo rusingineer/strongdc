@@ -27,7 +27,7 @@
 #include "../client/SimpleXML.h"
 
 static const char thanks[] = 
-"Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Corvik, King Wenceslas, Liny, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)";
+"Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Cinique, Corvik, King Wenceslas, Liny, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)";
 
 class CAboutDlg : public CDialogImpl<CAboutDlg>, private HttpConnectionListener
 {

@@ -123,7 +123,7 @@ void User::setClient(Client* aClient) {
 	}
 };
 
-void User::getParams(StringMap& ucParams) {
+void User::getParams(StringMap& ucParams, bool myNick /* = false */) {
 	ucParams["nick"] = getNick();
 	ucParams["tag"] = getTag();
 	ucParams["description"] = getDescription();
@@ -131,6 +131,20 @@ void User::getParams(StringMap& ucParams) {
 	ucParams["share"] = Util::toString(getBytesShared());
 	ucParams["shareshort"] = Util::formatBytes(getBytesShared());
 	ucParams["ip"] = getIp();
+	ucParams["clienttype"] = getClientType();
+	ucParams["statedshare"] = Util::toString(getBytesShared());
+	ucParams["statedshareformat"] = Util::formatBytes(getBytesShared());
+	if(realBytesShared > -1) {
+		ucParams["realshare"] = Util::toString(realBytesShared);
+		ucParams["realshareformat"] = Util::formatBytes(realBytesShared);
+	}
+	ucParams["cheatingdescription"] = cheatingString;
+	ucParams["clientinfo"] = getReport();
+	ucParams["nl"] = "\r\n";
+	if(myNick && client) {
+		RLock l(cs);
+		ucParams["mynick"] = client->getNick();
+	}
 }
 
 // favorite user stuff
@@ -220,15 +234,14 @@ string User::getReport()
 		temp = "N/A";
 	}
 	report += "\r\nXML Generator:	" + temp;
-	report += "\r\nLock:		" + getLock();
-	report += "\r\nPk:		" + getPk();
-	report += "\r\nTag:		" + getTag();
-	report += "\r\nSupports:		" + getSupports();
-	report += "\r\nTestSUR:		" + getTestSUR();
-
-	report += "\r\nStatus:		" + Util::formatStatus(getStatus());
-	//report += "\r\nDisconnects:	" + Util::toString(getFileListDisconnected());
-	//report += "\r\nTimeouts:		" + Util::toString(getFileListTimeout());
+	report += "\r\nLock:		" + lock;
+	report += "\r\nPk:		" + pk;
+	report += "\r\nTag:		" + tag;
+	report += "\r\nSupports:		" + supports;
+	report += "\r\nStatus:		" + Util::formatStatus(status);
+	report += "\r\nTestSUR:		" + testSUR;
+	report += "\r\nDisconnects:	" + Util::toString(fileListDisconnects);
+	report += "\r\nTimeouts:		" + Util::toString(connectionTimeouts);
 	temp = Util::formatBytes(getDownloadSpeed());
 	if (temp == "0 B") {
 		temp = "N/A";
@@ -236,21 +249,21 @@ string User::getReport()
 		temp += "/s";
 	}
 	report += "\r\nDownspeed:	" + temp;
-	report += "\r\nIP:		" + getIp();
+	report += "\r\nIP:		" + ip;
 	/*if ( getConnectedHubs() == -1 ) {
 		report += "\r\nKnown hubs:	Failed";
 	} else {
 		report += "\r\nKnown hubs:	" + Util::toString(getConnectedHubs()) + "   " + getKnownHubsString();
 	}
 	report += "\r\nStated hubs:	" + getTotalHubs();*/
-	report += "\r\nHost:		" + getHost();
-	report += "\r\nDescription:	" + getDescription();
-	report += "\r\nEmail:		" + getEmail();
-	report += "\r\nConnection:	" + getConnection();
-	report += "\r\nCommands:	" + getUnknownCommand();
-	temp = (getFileListSize() != -1) ? Util::formatBytes(getFileListSize()) + "  (" + Util::toString(getFileListSize()) + " B)" : "N/A";
+	report += "\r\nHost:		" + host;
+	report += "\r\nDescription:	" + description;
+	report += "\r\nEmail:		" + email;
+	report += "\r\nConnection:	" + connection;
+	report += "\r\nCommands:	" + unknownCommand;
+	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::toString(fileListSize) + " B)" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
-	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Util::formatNumber(getBytesShared()) + " B)";
+	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatNumber(bytesShared) + " B)";
 	if ( getRealBytesShared() > -1 ) {
 		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatNumber(getRealBytesShared()) + " B)";
 	} else {
@@ -263,11 +276,10 @@ string User::getReport()
 		temp = "N/A";
 	}
 	report += "\r\nJunk Share:	" + temp;
-	temp = getCheatingString();
-	if (temp.empty()) {
-		temp = "N/A";
-	}
+	temp = cheatingString;
+	if (temp.empty()) {	temp = "N/A"; }
 	report += "\r\nCheat status:	" + temp;
+	report += "\r\nComment:		" + comment;
 	return report;
 }
 
@@ -296,6 +308,8 @@ void User::updateClientType() {
 		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
 		if (!matchProfile(unknownCommand, cp.getUserConCom())) { continue; }
 		if (!matchProfile(description, Util::formatParams(extTagExp, paramMap))) { continue; }
+		if (!matchProfile(connection, cp.getConnection()))							{ continue; }
+
 
 		if (tagExp.find("%[version]") != string::npos) { version = getVersion(tagExp, tag); }
 		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, description); }
@@ -311,16 +325,15 @@ void User::updateClientType() {
 		} else {
 			setClientType(cp.getName() + " " + version);
 		}
-		if (!(cp.getCheatingDescription().empty())) {
 			cheatingString = cp.getCheatingDescription();
-			badClient = true;
-		}
+		comment = cp.getComment();
+		badClient = !cheatingString.empty();
+
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
 			badClient = true;
 			updated();
-			setHasTestSURinQueue(false);
 			return;
 		}
 		updated();
@@ -331,6 +344,8 @@ void User::updateClientType() {
 		return;
 	}
 	setClientType("Unknown");
+	cheatingString = Util::emptyString;
+	badClient = false;
 	setHasTestSURinQueue(false);
 	updated();
 }
@@ -340,10 +355,8 @@ bool User::matchProfile(const string& aString, const string& aProfile) {
 		string temp = "String: " + aString + " to Profile: " + aProfile;
 		DebugManager::getInstance()->SendDebugMessage("Matching " + temp);
 	}
-
 	PME reg(aProfile);
-	if(reg.match(aString)) { return true; }
-	return false;
+	return reg.match(aString);
 }
 
 string User::getVersion(const string& aExp, const string& aTag) {
@@ -412,7 +425,12 @@ StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 	}
 	return fakeShareParams;
 }
-
+void User::addLine(const string& aLine) {
+	RLock l(cs);
+	if(client) {
+		client->addLine(aLine);
+	}
+}
 string User::insertUserData(const string& s, Client* aClient /* = NULL */)
 {
 	StringMap userParams = getPreparedFormatedStringMap(aClient);
@@ -454,6 +472,34 @@ void User::updated() {
 	if(client) {
 		User::Ptr user = this;
 		client->updated(user);
+	}
+}
+bool User::fileListDisconnected() {
+	fileListDisconnects++;
+	if(fileListDisconnects > 5) {
+		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
+		updated();
+		//sendRawCommand(SETTING(DISCONNECT_RAW));
+		return true;
+	}
+	return false;
+}
+bool User::connectionTimeout() {
+	connectionTimeouts++;
+	if(connectionTimeouts > 5) {
+		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
+		updated();
+		QueueManager::getInstance()->removeTestSUR(nick);
+//		sendRawCommand(SETTING(TIMEOUT_RAW));
+		return true;
+	}
+	return false;
+}
+void User::setPassive() {
+	setFlag(User::PASSIVE);
+	if(tag.find(",M:A") != string::npos) {
+		setCheat("Tag states active mode but is using passive commands", false);
+		updated();
 	}
 }
 // CDM EXTENSION ENDS

@@ -191,7 +191,7 @@ void UsersFrame::removeUser(const User::Ptr& aUser) {
 	}
 }
 
-LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	HubManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
@@ -206,7 +206,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	
 		ctrlUsers.DeleteAll();
 		m_hMenu = NULL;
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 	return 0;
 	}
 }

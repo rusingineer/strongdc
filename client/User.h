@@ -27,6 +27,7 @@
 #include "Pointer.h"
 #include "CriticalSection.h"
 #include "CID.h"
+#include "SettingsManager.h"
 
 class Client;
 class FavoriteUser;
@@ -112,8 +113,7 @@ public:
 
 	bool isOnline() const { return isSet(ONLINE); };
 	bool isClient(Client* aClient) const { return client == aClient; };
-	
-	void getParams(StringMap& ucParams);
+	void getParams(StringMap& ucParams, bool myNick = false);
 
 	// favorite user stuff
 	void setFavoriteUser(FavoriteUser* aUser);
@@ -163,8 +163,19 @@ public:
 	GETSET(bool, fakeSharing, FakeSharing); 
 	GETSET(bool, checked, Checked); 
 	GETSET(string, unknownCommand, UnknownCommand);
+	GETSET(string, comment, Comment);	
 	GETSET(bool, badClient, BadClient);	
-	
+	GETSET(int, fileListDisconnects, FileListDisconnects);
+	GETSET(int, connectionTimeouts, ConnectionTimeouts);
+
+	void setCheat(const string& aCheatDescription, bool aBadClient) {
+		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+			PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
+		addLine(nick+" - "+aCheatDescription);
+		cheatingString = aCheatDescription;
+		badClient = aBadClient;
+	}
+		
 	void TagParts( char *sTag );
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
@@ -188,9 +199,15 @@ public:
 		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
 		badClient = false;
+		fileListDisconnects = 0;
+		connectionTimeouts = 0;
 	};
-private:
+	void addLine(const string& aLine);
 	void updated();
+	bool fileListDisconnected();
+	bool connectionTimeout();
+	void setPassive();
+private:
 	mutable RWLock cs;
 	
 	User(const User&);
