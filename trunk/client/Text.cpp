@@ -20,6 +20,7 @@
 #include "DCPlusPlus.h"
 
 #include "Text.h"
+#include "Util.h"
 
 char Text::asciiLower[128];
 wchar_t Text::lower[65536];
@@ -96,6 +97,8 @@ string& Text::acpToUtf8(const string& str, string& tmp) throw() {
 }
 
 wstring& Text::acpToWide(const string& str, wstring& tmp) throw() {
+	if(str.length() == 0)
+		return Util::emptyStringW;
 #ifdef _WIN32
 	int n = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), (int)str.length(), NULL, 0);
 	if(n == 0) {
@@ -135,6 +138,8 @@ string& Text::wideToUtf8(const wstring& str, string& tgt) throw() {
 }
 
 string& Text::wideToAcp(const wstring& str, string& tmp) throw() {
+	if(str.length() == 0)
+		return Util::emptyString;
 #ifdef _WIN32
 	int n = WideCharToMultiByte(CP_ACP, 0, str.c_str(), (int)str.length(), NULL, 0, NULL, NULL);
 	if(n == 0) {

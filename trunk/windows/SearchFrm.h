@@ -459,6 +459,7 @@ private:
 			dcassert(0);
 			return 0;
 		}
+		int imageIndex[COLUMN_LAST];
 
 		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
@@ -549,6 +550,8 @@ private:
 		static int compareItems(HubInfo* a, HubInfo* b, int col) {
 			return (col == 0) ? Util::stricmp(a->name, b->name) : 0;
 		}
+		int imageIndex[1];
+
 		tstring ipPort;
 		tstring name;
 		bool op;

@@ -132,6 +132,8 @@ public:
 	GETSET(string, connection, Connection);
 	GETSET(int, ctype, cType);
 	GETSET(int, status, Status);
+	GETSET(int, fileListDisconnects, FileListDisconnects);
+	GETSET(int, connectionTimeouts, ConnectionTimeouts);
 	GETSET(string, nick, Nick);
 	GETSET(string, email, Email);
 	GETSET(string, description, Description);
@@ -151,23 +153,22 @@ public:
 	GETSET(string, pk, Pk);
 	GETSET(string, clientType, ClientType);
 	GETSET(string, generator, Generator);
-	GETSET(int64_t, downloadSpeed, DownloadSpeed);
-	GETSET(int64_t, fileListSize, FileListSize);
-	GETSET(int64_t, bytesShared, BytesShared);
-	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
 	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
+	GETSET(string, cheatingString, CheatingString);
+	GETSET(int64_t, downloadSpeed, DownloadSpeed);
+	GETSET(int64_t, fileListSize, FileListSize);
+	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(int64_t, realBytesShared, RealBytesShared);
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
-	GETSET(string, cheatingString, CheatingString);
 	GETSET(int64_t, listLength, ListLength);
+	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(bool, testSURComplete, TestSURComplete);
 	GETSET(bool, filelistComplete, FilelistComplete);
 	GETSET(bool, badClient, BadClient);	
-	GETSET(bool, badFilelist, BadFilelist);	
-	GETSET(int, fileListDisconnects, FileListDisconnects);
-	GETSET(int, connectionTimeouts, ConnectionTimeouts);
+	GETSET(bool, badFilelist, BadFilelist);
+	GETSET(bool, isInList, IsInList)
 	StringMap& clientEscapeParams(StringMap& sm) const;
 
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
@@ -208,7 +209,7 @@ public:
 		bytesShared = 0;
 		realBytesShared = -1;
 		fakeShareBytesShared = -1;
-
+		isInList = false;
 		testSURComplete = false;
 		filelistComplete = false;
 		pk = Util::emptyString;

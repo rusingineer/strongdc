@@ -563,7 +563,8 @@ void Socket::socksUpdated() {
 
 void Socket::disconnect() throw() {
 	if(sock != INVALID_SOCKET) {
-		::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
+		::WSAAsyncSelect(sock, NULL, 0, FD_CLOSE);
+		::shutdown(sock, SD_BOTH); // Make sure we send FIN (SD_SEND shutdown type...)
 		closesocket(sock);
 	}
 	connected = false;

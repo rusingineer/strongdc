@@ -151,7 +151,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 						if(((GET_TICK() - d->quickTick)/1000) > iTime) {
 							if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-								QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser());
+								//QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser());
+								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
 							}
 							d->getUserConnection()->disconnect();
 			                continue;
@@ -248,7 +249,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 	bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
 
-	if( slotsFull || speedFull ) {
+	if(!q && (slotsFull || speedFull) ) {
 		bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 		if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
 			removeConnection(aConn);
@@ -630,8 +631,15 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
-	QueueItem* q = d->getItem();
-	dcassert(q != NULL);
+	QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
+
+	if(q == NULL) {
+		aSource->setDownload(NULL);
+		removeDownload(d);
+		QueueManager::getInstance()->putDownload(d, false);
+		removeConnection(aSource);			
+		return false;
+	}
 
 	bool isActiveSegment = find(q->getActiveSegments().begin(), q->getActiveSegments().end(), *q->getSource(aSource->getUser())) != q->getActiveSegments().end();
 

@@ -202,6 +202,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	ConnectionQueueItem::List failPassive;
 	ConnectionQueueItem::List connecting;
 	ConnectionQueueItem::List removed;
+	UserConnection::List needRemoveListener;
 	User::List getDown;
 	{
 		Lock l(cs);
@@ -218,7 +219,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					active.push_back(cqi);
 					dcassert(cqi->getConnection());
 					dcassert(cqi->getConnection()->getCQI() == cqi);
-					cqi->getConnection()->removeListener(this);
+					//cqi->getConnection()->removeListener(this);
+					needRemoveListener.push_back(cqi->getConnection());
 					DownloadManager::getInstance()->addConnection(cqi->getConnection());
 				}
 			}
@@ -267,7 +269,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 				if(cqi->getState() == ConnectionQueueItem::WAITING) {
 					if(startDown) {
 						cqi->setState(ConnectionQueueItem::CONNECTING);
-						cqi->getUser()->connect();
+						if(cqi->getUser()->isOnline())
+							cqi->getUser()->connect();
 						fire(ConnectionManagerListener::StatusChanged(), cqi);
 						attempts++;
 					} else {
@@ -287,6 +290,10 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 			}
 			++i;
 		}
+	}
+
+	for(UserConnection::Iter u = needRemoveListener.begin(); u != needRemoveListener.end(); ++u) {
+		(*u)->removeListener(this);
 	}
 
 	ConnectionQueueItem::Iter m;
@@ -319,7 +326,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
-static const u_int32_t FLOOD_ADD = 1000;
+static const u_int32_t FLOOD_ADD = 500;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...
@@ -332,9 +339,6 @@ void ConnectionManager::on(ServerSocketListener::IncomingConnection) throw() {
 	if(iConnToMeCount > 0)
 		iConnToMeCount--;
 
-	if(iConnToMeCount > 500)
-		iConnToMeCount = 100;
-		
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
 	} else {
@@ -541,11 +545,6 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 			defFeatures.push_back(UserConnection::FEATURE_GET_ZBLOCK);
 			defFeatures.push_back(UserConnection::FEATURE_ZLIB_GET);
 		}
-
-		if(aSource->getUser()->getClient() && !aSource->getUser()->getClient()->getStealth()) {
-			defFeatures.push_back(UserConnection::FEATURE_CHUNK);
-		}
-
 		aSource->supports(defFeatures);
 	}
 

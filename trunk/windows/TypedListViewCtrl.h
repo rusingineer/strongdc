@@ -28,13 +28,14 @@
 #include "ListViewArrows.h"
 class ColumnInfo {
 public:
-	ColumnInfo(const tstring &aName, int aPos, int aFormat, int aWidth): name(aName), pos(aPos), width(aWidth), 
-		format(aFormat), visible(true){}
+	ColumnInfo(const tstring &aName, int aPos, int aFormat, int aWidth, int aOrig): name(aName), pos(aPos), width(aWidth), 
+		format(aFormat), visible(true), orig(aOrig) {}
 		tstring name;
 		bool visible;
 		int pos;
 		int width;
 		int format;
+		int orig;
 };
 
 template<class T, int ctrlId>
@@ -56,6 +57,7 @@ public:
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
 		MESSAGE_HANDLER(WM_MENUCOMMAND, onHeaderMenu)
+		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -200,6 +202,9 @@ public:
 		return insertItem(getSortPos(item), item, image);
 	}
 	int insertItem(int i, T* item, int image) {
+		//item->imageIndex.clear();
+		//item->imageIndex.push_back(image);
+		item->imageIndex[0] = image;
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)item);
 	}
@@ -317,7 +322,7 @@ public:
 	}
 
 	int insertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
-		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
+		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth, nCol));
 		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
 	}
 
@@ -396,12 +401,21 @@ public:
 		if(!ci->visible){
 			removeColumn(ci);
 		} else {
-			int pos = GetHeader().GetItemCount();
-			InsertColumn(pos, ci->name.c_str(), ci->format, ci->width, static_cast<int>(wParam));
+			CListViewCtrl::InsertColumn(ci->pos, ci->name.c_str(), ci->format, ci->width, static_cast<int>(wParam));
 			LVCOLUMN lvcl = { 0 };
 			lvcl.mask = LVCF_ORDER;
 			lvcl.iOrder = ci->pos;
-			SetColumn(pos, &lvcl);
+			SetColumn(ci->pos, &lvcl);
+			for(int i = 0; i < GetItemCount(); i++) {
+				LVITEM lvItem;
+				lvItem.iItem = i;
+				lvItem.iSubItem = 0;
+				lvItem.mask = LVIF_IMAGE | LVIF_PARAM;
+				GetItem(&lvItem);
+				lvItem.iImage = ((T*)lvItem.lParam)->imageIndex[ci->orig];
+				SetItem(&lvItem);
+				updateItem(i);
+			}
 		}
 
 		SetRedraw();
@@ -592,8 +606,30 @@ private:
 			hd.mask = HDI_ORDER;
 			GetHeader().GetItem(column, &hd);
 			ci->pos = hd.iOrder;
+
+			for(int i = 0; i < GetItemCount(); i++) {
+				LVITEM lvItem;
+				lvItem.iItem = i;
+				lvItem.iSubItem = 0;
+				lvItem.mask = LVIF_PARAM | LVIF_IMAGE;
+				GetItem(&lvItem);
+				if(lvItem.iImage > -1) {
+					((T*)lvItem.lParam)->imageIndex[ci->orig] = lvItem.iImage;
+				}
+			}
 			
 			DeleteColumn(column);
+
+			for(int i = 0; i < GetItemCount(); i++) {
+				LVITEM lvItem;
+				lvItem.iItem = i;
+				lvItem.iSubItem = 0;
+				lvItem.mask = LVIF_PARAM | LVIF_IMAGE;
+				GetItem(&lvItem);
+				lvItem.iImage = ((T*)lvItem.lParam)->imageIndex[ci->orig];
+				SetItem(&lvItem);
+			}
+
 			if(sortColumn == ci->pos)
 				sortColumn = 0;
 		}

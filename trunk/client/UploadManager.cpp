@@ -223,8 +223,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	return true;
 }
 
-void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume, int64_t bytes) throw() {
-	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, bytes)) {
+void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
+	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, -1)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
 	}
@@ -461,13 +461,13 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			fire(UploadManagerListener::Tick(), ticks);
 
 		fire(UploadManagerListener::QueueUpdate());
-
-		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-			Upload* u = *i;
-			iAvgSpeed += (int)u->getRunningAverage();
+		if(m_boFireball == false) {		
+			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+				Upload* u = *i;
+				iAvgSpeed += (int)u->getRunningAverage();
+			}
+			if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
 		}
-
-		if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
 	}
 
 	if(m_boFireball == false) {

@@ -71,12 +71,6 @@ namespace {
 		return tmp;
 	}
 }
-string QueueItem::getSearchString() const {
-	return SearchManager::clean(getTargetFileName());
-}
-
-namespace {
-}
 
 const string& QueueItem::getTempTarget() {
 	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
@@ -91,8 +85,6 @@ const string& QueueItem::getTempTarget() {
 #else //_WIN32
 			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
 #endif //_WIN32
-		} else {
-			setTempTarget(Util::getFilePath(getTarget()) + getTempName(getTargetFileName(), getTTH()));
 		}
 	}
 	return tempTarget;
@@ -317,9 +309,7 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) 
 	}
 
 	// Set the flag to running...
-	if(qi->getStatus() == QueueItem::STATUS_WAITING)
-		qi->setStatus(QueueItem::STATUS_RUNNING);
-	
+	qi->setStatus(QueueItem::STATUS_RUNNING);
     qi->addCurrent(aUser);
     
 	// Move the download to the running list...
@@ -403,15 +393,13 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 		if(qi->isSource(aUser)) {
 			QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 			QueueItem::UserListIter j = ulm.find(aUser);
-			if(j != ulm.end()) {
-				QueueItem::List& l = j->second;
-				QueueItem::Iter t = find(l.begin(), l.end(), qi);
-				if(t != l.end())
-					l.erase(t);
+			dcassert(j != ulm.end());
+			QueueItem::List& l = j->second;
+			dcassert(find(l.begin(), l.end(), qi) != l.end());
+			l.erase(find(l.begin(), l.end(), qi));
 
-				if(l.empty()) {
-					ulm.erase(j);
-				}
+			if(l.empty()) {
+				ulm.erase(j);
 			}
 		}
 	}
@@ -492,12 +480,16 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 			setDirty();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
-			// We keep 30 recent searches to avoid duplicate searches
-			while((recent.size() > fileQueue.getSize()) || (recent.size() > 30)) {
+			// We keep 32 recent searches to avoid duplicate searches
+			while((recent.size() >= fileQueue.getSize()) || (recent.size() > 32)) {
 				recent.erase(recent.begin());
 			}
 
 			QueueItem* qi = fileQueue.findAutoSearch(recent);
+			if(qi == NULL && (recent.size() > 0 && fileQueue.getSize() > 0)) {
+				recent.erase(recent.begin());
+				qi = fileQueue.findAutoSearch(recent);
+            }
 			if(qi != NULL && qi->getTTH()) {
 				searchString = qi->getTTH()->toBase32();
 				recent.push_back(qi->getTarget());
@@ -915,7 +907,11 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		}
 	}
 
+#ifdef _DEBUG
+	return 500;
+#else
 	return MaxSegments;
+#endif
 }
 
 void QueueManager::getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
@@ -940,26 +936,26 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	Lock l(cs);
 
 	bool useOld = false;
-	FileChunksInfo::Ptr chunksInfo = (FileChunksInfo::Ptr)NULL;
-	int64_t freeBlock = 0;
-	Download *d;
+	//FileChunksInfo::Ptr chunksInfo = (FileChunksInfo::Ptr)NULL;
+	//int64_t freeBlock = 0;
 	reuse = true;
 
 	if(q != NULL) {
 		useOld = true;
+		goto next;
 	} else {
 		q = userQueue.getNext(aUser);
 	}
 
 again:
-	chunksInfo = (FileChunksInfo::Ptr)NULL;
+	//chunksInfo = (FileChunksInfo::Ptr)NULL;
 
 	if(q == NULL)
 		return NULL;
 
 	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)
 		&& !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) && !q->isSet(QueueItem::FLAG_USER_LIST)) {
-		message = STRING(ALL_FILE_SLOTS_TAKEN);		
+		message = STRING(ALL_FILE_SLOTS_TAKEN);
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		if(q == NULL) reuse = false;
 		goto again;
@@ -968,7 +964,7 @@ again:
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 
 		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
-			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		
+			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			if(q == NULL) reuse = false;
 			goto again;
@@ -983,45 +979,10 @@ again:
 				goto again;
 			}
 		}
-
-		bool useFileChunksInfo = true;
-
-		if(q->getSize() != -1 && q->getTTH()) {
-			TigerTree tree;
-			if(!HashManager::getInstance()->getTree(*q->getTTH(), tree) &&
-				supportsTrees && !(*(q->getSource(aUser)))->isSet(QueueItem::Source::FLAG_NO_TREE) && q->getSize() > HashManager::MIN_BLOCK_SIZE) {
-					useFileChunksInfo = false;
-			}
-		}
-
-
-		if(useFileChunksInfo) {
-			chunksInfo = FileChunksInfo::Get(q->getTempTarget());
-
-			dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
-
-			freeBlock = chunksInfo->GetUndlStart();
-
-			if(freeBlock == -1) {
-				message = STRING(NO_FREE_BLOCK);
-				q->setNoFreeBlocks(true);
-				if(useOld) {
-					useOld = false;
-					q->removeActiveSegment(aUser);
-					q = userQueue.getNext(aUser);
-				} else
-					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-				if(q == NULL) reuse = true;
-				goto again;
-			}
-		}
 	}
 
-	userQueue.setRunning(q, aUser);
-
-	fire(QueueManagerListener::StatusUpdated(), q);
-
-	d = new Download(q, aUser);
+next:
+	Download* d = new Download(q, aUser);
 
 	if(d->getSize() != -1 && d->getTTH()) {
 		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
@@ -1042,9 +1003,40 @@ again:
 	}
 	
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
+		int64_t freeBlock = 0;
+
+		if(chunksInfo != (FileChunksInfo::Ptr)NULL) {
+			freeBlock = chunksInfo->GetUndlStart();
+
+			if(freeBlock == -1) {
+				delete d;
+
+				message = STRING(NO_FREE_BLOCK);
+				q->setNoFreeBlocks(true);
+				if(useOld) {
+					useOld = false;
+					q->removeActiveSegment(aUser);
+					q = userQueue.getNext(aUser);
+				} else
+					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+				if(q == NULL) reuse = true;
+				goto again;
+			}
+		} else {
+			delete d;
+			if(useOld) {
+				useOld = false;
+				q->removeActiveSegment(aUser);
+				q = userQueue.getNext(aUser);
+			} else
+				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			if(q == NULL) reuse = true;
+			goto again;
+		}
+
 		d->setStartPos(freeBlock);
 
-		dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
 		int64_t blockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
 
 		if(supportsChunks && aUser->getClient() && !aUser->getClient()->getStealth()) {
@@ -1055,14 +1047,15 @@ again:
 			d->setSegmentSize(blockSize);
 		}
 	} else {
-		dcassert(chunksInfo == (FileChunksInfo::Ptr)NULL);
-
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
 		}		
-
 		q->setCurrentDownload(d);
 	}
+
+	userQueue.setRunning(q, aUser);
+
+	fire(QueueManagerListener::StatusUpdated(), q);
 
 	return d;
 }

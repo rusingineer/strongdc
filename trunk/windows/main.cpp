@@ -103,7 +103,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 
 	sprintf(buf, "Code: %x\r\nVersion: %s%s\r\n", 
-		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING);
+		exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
 
 	f.write(buf, strlen(buf));
 

@@ -148,7 +148,6 @@ public:
 	LRESULT onLButton(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onEnterUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
-	LRESULT onRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
@@ -288,29 +287,26 @@ public:
 	}
 
 	NOTIFYICONDATA pmicon;
-
-public:
 	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
 	enum {
-		COLUMN_FIRST, 
+		COLUMN_FIRST,
 		COLUMN_NICK = COLUMN_FIRST, 
 		COLUMN_SHARED, 
 		COLUMN_EXACT_SHARED, 
 		COLUMN_DESCRIPTION, 
 		COLUMN_TAG,
-		COLUMN_CONNECTION,
-		COLUMN_UPLOAD_SPEED,
+		COLUMN_CONNECTION, 
 		COLUMN_EMAIL, 
 		COLUMN_CLIENTID, 
 		COLUMN_VERSION, 
 		COLUMN_MODE, 
 		COLUMN_HUBS, 
-		COLUMN_SLOTS, 
-		COLUMN_ISP,
-		COLUMN_IP,
-		COLUMN_PK,
-		COLUMN_LOCK,
+		COLUMN_SLOTS,
+		COLUMN_UPLOAD_SPEED, 
+		COLUMN_IP, COLUMN_ISP, 
+		COLUMN_PK, 
+		COLUMN_LOCK, 
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
@@ -450,15 +446,16 @@ private:
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];
 	int findUser(const User::Ptr& aUser);
-	bool updateUser(const User::Ptr& u, bool searchinlist = true);
+	bool updateUser(const User::Ptr& u);
 	void addAsFavorite();
 
 	LPCSTR sMyNick;
 	int hubchatusersplit;
 	tstring filter;
 	void updateUserList();
+	bool filterUser(UserInfo* ui);
 
-	bool PreparePopupMenu(CWindow *pCtrl, bool boCopyOnly, tstring& sNick, OMenu *pMenu);
+	bool PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu);
 	bool ShowUserList;
 	TCHAR * headerBuf;
 	string sColumsOrder;
@@ -470,11 +467,12 @@ private:
 			Lock l(updateCS);
 			updateList.clear();
 		}
-		userMap.clear();
-		int j = ctrlUsers.GetItemCount();
-		for(int i = 0; i < j; i++) {
-			delete (UserInfo*) ctrlUsers.GetItemData(i);
+		for(UserMap::iterator i = userMap.begin(); i != userMap.end(); ++i){
+			if(i->second != NULL) {
+				delete (UserInfo*)i->second;
+			}
 		}
+		userMap.clear();
 		ctrlUsers.DeleteAllItems();
 	}
 

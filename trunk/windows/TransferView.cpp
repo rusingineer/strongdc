@@ -260,13 +260,15 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		return CDRF_NOTIFYSUBITEMDRAW;
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
+		ItemInfo* ii = reinterpret_cast<ItemInfo*>(cd->nmcd.lItemlParam);
+
 		// Let's draw a box if needed...
 		LVCOLUMN lvc;
 		lvc.mask = LVCF_TEXT;
 		lvc.pszText = headerBuf;
 		lvc.cchTextMax = 128;
 		ctrlTransfers.GetColumn(cd->iSubItem, &lvc);
-		ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
+
 		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0 && ii->status == ItemInfo::STATUS_RUNNING) {
 			if(BOOLSETTING(SHOW_PROGRESS_BARS) == false) {
 				bHandled = FALSE;
@@ -274,18 +276,24 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			}
 
 			// Get the text to draw
-			TCHAR buf[256];
+			//TCHAR buf[256];
 			// Get the color of this bar
 			COLORREF clr = SETTING(PROGRESS_OVERRIDE_COLORS) ? 
 				((ii->type == ItemInfo::TYPE_DOWNLOAD) ? 
 					SETTING(DOWNLOAD_BAR_COLOR) : 
 					SETTING(UPLOAD_BAR_COLOR)) : 
 				GetSysColor(COLOR_HIGHLIGHT);
-			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, buf, 255);
-			buf[255] = 0;
+			//this is just severely broken, msdn says GetSubItemRect requires a one based index
+			//but it wont work and index 0 gives the rect of the whole item
+			if(cd->iSubItem == 0) {
+				//use LVIR_LABEL to exclude the icon area since we will be painting over that
+				//later
+				ctrlTransfers.GetItemRect((int)cd->nmcd.dwItemSpec, &rc, LVIR_LABEL);
+			} else {
+				ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, &rc);
+			}
 				
-			// Get the cell boundaries
-			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, LVIR_BOUNDS, rc);
+
 			// Actually we steal one upper pixel to not have 2 borders together
 
 			// Real rc, the original one.
@@ -356,7 +364,8 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			// Draw the text over the entire item
             COLORREF oldcol = ::SetTextColor(dc, hTextDefColor);
 			if(BOOLSETTING(PROGRESSBAR_ODC_STYLE))
-				::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				::DrawText(dc, ii->getText(COLUMN_STATUS).c_str(),
+					ii->getText(COLUMN_STATUS).length(), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 			// Draw the background and border of the bar
 			if(ii->size == 0)
@@ -407,7 +416,8 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			int right = rc2.right;
 			rc2.right = rc.right + 1;
 			::SetTextColor(dc, OperaColors::TextFromBackground(clr));
-            ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+            ::DrawText(dc,  ii->getText(COLUMN_STATUS).c_str(),
+					ii->getText(COLUMN_STATUS).length(), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 	
 			if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 				DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
@@ -423,7 +433,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE))
 				rc2.right = right;
 
-			::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+			::DrawText(dc, ii->getText(COLUMN_STATUS).c_str(), ii->getText(COLUMN_STATUS).length(), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 			SelectObject(dc, oldFont);
 			::SetTextColor(dc, oldcol);
@@ -432,6 +442,42 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
+			//bah crap, if we return CDRF_SKIPDEFAULT windows won't paint the icons
+			//so we have to do it
+			if(cd->iSubItem == 0){
+				LVITEM lvItem;
+				lvItem.iItem = cd->nmcd.dwItemSpec;
+				lvItem.iSubItem = 0;
+				lvItem.mask = LVIF_IMAGE | LVIF_STATE;
+				lvItem.stateMask = LVIS_SELECTED;
+				ctrlTransfers.GetItem(&lvItem);
+
+				HIMAGELIST imageList = (HIMAGELIST)::SendMessage(ctrlTransfers.m_hWnd, LVM_GETIMAGELIST, LVSIL_SMALL, 0);
+				if(imageList) {
+					//let's find out where to paint it
+					//and draw the background to avoid having 
+					//the selection color as background
+					CRect iconRect;
+					ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, 0, LVIR_ICON, iconRect);
+
+					//we don't need to paint the background if the item's not selected
+					//since it will already have the right color
+					/*if(lvItem.state & LVIS_SELECTED) {
+						HBRUSH brush = (HBRUSH)::SendMessage(::GetParent(ctrlTransfers.m_hWnd), WM_CTLCOLORLISTBOX, (WPARAM)cd->nmcd.hdc, (LPARAM)ctrlTransfers.m_hWnd);
+						if(brush) {
+							//remove 4 pixels to repaint the offset between the
+							//column border and the icon.
+							iconRect.left -= 4;
+							::FillRect(cd->nmcd.hdc, &iconRect, brush);
+
+							//have to add them back otherwise the icon will be painted
+							//in the wrong place
+							iconRect.left += 4;
+						}
+					}*/
+					ImageList_Draw(imageList, lvItem.iImage, cd->nmcd.hdc, iconRect.left, iconRect.top, ILD_TRANSPARENT);
+				}
+			}
 			return CDRF_SKIPDEFAULT;
 		} else if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0 && BOOLSETTING(GET_USER_COUNTRY)) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
@@ -920,11 +966,11 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				}
 	
 				if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
-				i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((d->getSegmentSize() - d->getTotal()) / i->speed) : 0) : i->timeLeft;
+				i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
 	
 				i->qi->setSpeed(tmp);
 	
-				if(i->upper != NULL) {
+				if(i->upper && !i->upper->finished) {
 					i->upper->qi = i->qi;
 					i->upper->status = ItemInfo::STATUS_RUNNING;
 					i->upper->compressRatio = pomerKomprese;
@@ -946,8 +992,9 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)).c_str(), 
-						(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)*100.0/(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getSegmentSize() : d->getSize()), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+						(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)*100.0/(double)(i->size), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
 				}
+				dcassert(d->getTotal() <= d->getSegmentSize());
 			}
 
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
@@ -991,7 +1038,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		setMainItem(i);
 
 		if(i->upper) {
-			if(i->qi) {
+			if(i->qi && !i->upper->finished) {
 				i->upper->qi = i->qi;
 				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
 					MainFrame::getMainFrame()->ShowBalloonTip((
@@ -1031,8 +1078,6 @@ void TransferView::on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi
 		i = transferItems[aCqi];		
 		i->status = ItemInfo::STATUS_WAITING;
 		i->statusString = Text::toT(aMessage);
-		QueueItem* q = QueueManager::getInstance()->fileQueue.find(Text::fromT(i->Target));
-		int pocetSegmentu = q ? q->getActiveSegments().size() : 0;
 		if(i->upper && (aMessage == STRING(ALL_FILE_SLOTS_TAKEN))) {	
 			i->upper->statusString = Text::toT(aMessage);
 			i->upper->status = ItemInfo::STATUS_WAITING;
@@ -1066,6 +1111,7 @@ void TransferView::on(DownloadManagerListener::Verifying, const string& fileName
 
 		i->pos = verified;
 		i->actual = verified;
+		i->compressRatio = 1.00;
 		i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(verified * 100 / i->size) + "%");
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}
@@ -1200,15 +1246,23 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 }
 
 void TransferView::on(QueueManagerListener::Removed, QueueItem* aQI) {
-	Lock l(cs);
+	ItemInfo* i = NULL;
+	{
+		Lock l(cs);
 
-	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
-		ItemInfo* m = j->second;
-		if((m->Target == Text::toT(aQI->getTarget())) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
-			m->qi = NULL;
-			m->upper->qi = NULL;
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if((m->qi == aQI) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+				m->qi = NULL;
+				m->upper->qi = NULL;
+				i = m->upper;
+				i->finished = true;
+			}
 		}
+		if(i == NULL)
+			return;
 	}
+	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
 void TransferView::ItemInfo::disconnect() {
@@ -1273,15 +1327,6 @@ void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
 	} else {
 		i->upper = mainItem;
 		i->upper->pocetUseru += 1;			
-
-		/*if(i->upper->pocetUseru == 1) {
-			i->upper->columns[COLUMN_USER] = Text::toT(i->user->getNick());
-			i->upper->columns[COLUMN_HUB] = Text::toT(i->user->getClientName());
-		} else {
-			i->upper->columns[COLUMN_USER] = Text::toT(Util::toString(mainItem->pocetUseru))+_T(" ")+TSTRING(HUB_USERS);
-			int pocetSegmentu = mainItem->qi ? mainItem->qi->getActiveSegments().size() : 0;
-			i->upper->columns[COLUMN_HUB] = Text::toT(Util::toString(pocetSegmentu))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
-		}*/
 		i->upper->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
 		i->upper->update();
 
