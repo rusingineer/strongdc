@@ -94,7 +94,14 @@ void UserInfo::update() {
 	columns[COLUMN_HUBS] = Text::toT(user->getHubs());
 	columns[COLUMN_SLOTS] = Text::toT(user->getSlots());
 	columns[COLUMN_ISP] = Text::toT(user->getHost());		
-	columns[COLUMN_IP]= Text::toT(user->getIp());
+
+	tstring IP;
+	if(user->isClientOp())
+		IP = Text::toT(user->getIp());
+	else 
+		IP = Util::emptyStringT;
+	
+	columns[COLUMN_IP] = IP;
 	columns[COLUMN_PK] = Text::toT(user->getPk());
 	columns[COLUMN_LOCK] = Text::toT(user->getLock());
 	columns[COLUMN_SUPPORTS] = Text::toT(user->getSupports());

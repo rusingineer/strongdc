@@ -32,6 +32,8 @@
 #include "CryptoManager.h"
 #include "User.h"
 
+#include "../pme-1.0.4/pme.h"
+
 #ifdef ff
 #undef ff
 #endif
@@ -318,21 +320,6 @@ void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
 	}
 }
 
-bool DirectoryListing::File::isJunkFile() {
-	int64_t junkFileSize = SETTING(JUNK_FILE_SIZE);
-	int64_t junkBinFileSize = SETTING(JUNK_BIN_FILE_SIZE);
-	int64_t junkVobFileSize = SETTING(JUNK_VOB_FILE_SIZE);
-
-	// large files are junk (more than 1.5 gigabyte)
-	bool junk = false;
-	
-	if(junkFileSize > 0) { junk = (size > junkFileSize); }
-	if(junkBinFileSize > 0) { if(getName().find(".bin") != -1) junk = (size > junkBinFileSize); }
-	if(junkVobFileSize > 0) { if(getName().find(".vob") != -1) junk = (size > junkVobFileSize); } 
-
-	return junk;
-}
-
 DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directory* current) {
 	string::size_type end = aName.find('\\');
 	dcassert(end != string::npos);
@@ -349,14 +336,20 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 }
 
 int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
+	if(parent != NULL && parent->parent == NULL) {
+		PME reg("([A-Z])");
+		if(reg.match(getName())) {
+			parent->rmDC403D1detected = true;
+		}
+	}
+
 	int64_t x = getSize();
 	for(Iter i = directories.begin(); i != directories.end(); ++i) {
 		if(!(adl && (*i)->getAdls())) {	
 			x += (*i)->getTotalSize(adls);
-			junkSize += (*i)->getJunkSize();
-			if(rmDCdetected != 2) {
-				if((*i)->getRMDCdetected() != 0)
-					rmDCdetected = (*i)->getRMDCdetected();
+			if(rmDC403B7detected != 2) {
+				if((*i)->getRMDC403B7detected() != 0)
+					rmDC403B7detected = (*i)->getRMDC403B7detected();
 			}
 		}
 	}

@@ -109,6 +109,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
+				tmpSize -= 65535;
+				if(tmpSize < 0)
+					tmpSize = 0;
 				vector<int64_t> v;
 				v.push_back(tmpSize);
 				v.push_back(qi->getSize());
@@ -901,7 +904,15 @@ again:
 			}
 		}
 
-		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
+
+		if(!chunksInfo) {
+			message = "No Chunks Info";
+			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			goto again;
+		}
+
+		freeBlock = chunksInfo->GetUndlStart(q->getMaxSegments());
 
 		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
@@ -1240,10 +1251,17 @@ void QueueManager::saveQueue() throw() {
 				f.write(Util::toString((int)d->getPriority()));
 				f.write(STRINGLEN("\" TempTarget=\""));
 				f.write(CHECKESCAPE(d->getTempTarget()));
+				FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(d->getTempTarget());
 				f.write(STRINGLEN("\" FreeBlocks=\""));
-				f.write(FileChunksInfo::Get(d->getTempTarget())->getFreeBlocksString());
-				f.write(STRINGLEN("\" VerifiedBlocks=\""));
-				f.write(FileChunksInfo::Get(d->getTempTarget())->getVerifiedBlocksString());
+				if(chunksInfo) {
+					f.write(chunksInfo->getFreeBlocksString());
+					f.write(STRINGLEN("\" VerifiedBlocks=\""));
+					f.write(chunksInfo->getVerifiedBlocksString());
+				} else {
+					f.write("");
+					f.write(STRINGLEN("\" VerifiedBlocks=\""));
+					f.write("");
+				}
 				f.write(STRINGLEN("\" Added=\""));
 				f.write(Util::toString(d->getAdded()));
 				if(d->getTTH() != NULL) {
@@ -1453,6 +1471,7 @@ void QueueLoader::endTag(const string& name, const string&) {
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 	bool added = false;
 	bool wantConnection = false;
+	int users = 0;
 
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
 		Lock l(cs);
@@ -1463,14 +1482,14 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		for(QueueItem::Iter i = matches.begin(); i != matches.end(); ++i) {
 			QueueItem* qi = *i;
 			bool found = false;
-			found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize());
-		
-			found = (qi->getSources().size() < SETTING(MAX_SOURCES));
+			found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize() && (qi->getSources().size() < SETTING(MAX_SOURCES)));
 
 			if(found) {
 				try {
 					wantConnection = addSource(qi, sr->getFile(), sr->getUser(), 0, sr->getUtf8());
 					added = true;
+					users = qi->countOnlineUsers();
+
 				} catch(const Exception&) {
 					// ...
 				}
@@ -1479,15 +1498,16 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		}
 	}
 
-	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH)) {
+	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (users < SETTING(MAX_AUTO_MATCH_SOURCES))) {
 		try {
 			addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
 		} catch(const Exception&) {
 			// ...
 		}
-	} else if(wantConnection && sr->getUser()->isOnline()) {
-		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser());
 	}
+
+	if(added && wantConnection && sr->getUser()->isOnline())
+		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser());
 }
 
 // ClientManagerListener

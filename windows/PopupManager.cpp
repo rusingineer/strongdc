@@ -22,6 +22,12 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		return;
 	}
 
+	string msg = aMsg;
+	if(int(aMsg.length()) > 256){
+		msg = aMsg.substr(0, 253);
+		msg += "...";
+	}
+
 	if(SETTING(POPUP_TYPE) == 0) {
 
 		NOTIFYICONDATA m_nid;
@@ -31,7 +37,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		m_nid.uFlags = NIF_INFO;
 		m_nid.uTimeout = 5000;
 		m_nid.dwInfoFlags = Icon;
-		_tcscpy(m_nid.szInfo, Text::toT(aMsg).c_str());
+		_tcscpy(m_nid.szInfo, Text::toT(msg).c_str());
 		_tcscpy(m_nid.szInfoTitle, Text::toT(aTitle).c_str());
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 		return;
@@ -58,7 +64,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	CRect rc(screenWidth - width , screenHeight - height - offset, screenWidth, screenHeight - offset);
 	
 	//Create a new popup
-	PopupWnd *p = new PopupWnd(aMsg, aTitle, rc);
+	PopupWnd *p = new PopupWnd(msg, aTitle, rc);
 			
 	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
 		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);

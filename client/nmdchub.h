@@ -198,7 +198,7 @@ public:
 	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
 	void doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString);
 	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
-	virtual void info() { myInfo(); }
+	virtual void info(bool alwaysSend) { myInfo(alwaysSend); }
 	
 	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
 	virtual int64_t getAvailable() const;
@@ -214,7 +214,7 @@ public:
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	void disconnect() throw();
-	void myInfo();
+	void myInfo(bool alwaysSend);
 	
 	void refreshUserList(bool unknownOnly = false);
 
@@ -234,7 +234,7 @@ public:
 	void getInfo(User::Ptr aUser) { checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
 	void getInfo(User* aUser) {  checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
 	void sendMeMessage(const string& aMessage) { checkstate(); send(Util::validateChatMessage(aMessage) + "|"); }
-	void sendRaw(const string& aRaw) { send(aRaw); }
+	void sendRaw(const string& aRaw) { send(toNmdc(aRaw)); }
 	
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
@@ -319,10 +319,10 @@ private:
 
 	bool reconnect;
 	u_int32_t lastUpdate;
-	string lastmyinfo;
-	SearchQueue searchQueue;	
+	string lastMyInfo;
+	int64_t lastSize;
 	bool validatenicksent;
-	int64_t lastbytesshared;
+	SearchQueue searchQueue;	
 	
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;

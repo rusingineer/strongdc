@@ -93,7 +93,7 @@ public:
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage) = 0;
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false) = 0;
 	virtual void password(const string& pwd) = 0;
-	virtual void info() = 0;
+	virtual void info(bool alwaysSend) = 0;
 	virtual void sendMeMessage(const string& aMessage) = 0;
 	virtual void sendRaw(const string& aRaw) = 0;
     

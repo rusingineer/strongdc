@@ -23,11 +23,6 @@ public:
 	END_MSG_MAP()
 
 	PopupWnd(const string& aMsg, const string& aTitle, CRect rc): visible(GET_TICK()) {
-		if(int(aMsg.length()) > 256){
-			msg = aMsg.substr(0, 253);
-			msg += "...";
-		}
-		else
 			msg = aMsg;
 			title = aTitle;
 

@@ -26,7 +26,6 @@
 #include "Util.h"
 #include "File.h"
 #include "HubManager.h"
-#include "StringTokenizer.h"
 
 const string SettingsManager::settingTags[] =
 {
@@ -64,7 +63,7 @@ const string SettingsManager::settingTags[] =
 	"MaxCompression", "FinishedDirty", "QueueDirty", "TabDirty", "AntiFrag", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", "OpenFavoriteHubs", "OpenFinishedDownloads", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
-	"LogFilelistTransfers", "EmptyWorkingSet", /*"SegmentColor", "ShowSegmentColor",*/
+	"LogFilelistTransfers", "EmptyWorkingSet",
 	"ShowStatusbar",
 	"ShowToolbar", "ShowTransferview", 
 	"GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
@@ -86,12 +85,12 @@ const string SettingsManager::settingTags[] =
 	"ExtensionDownTo", "ErrorColor", "ShowShared", "ShowExactShared", "ShowDescription", 
 	"ShowTag", "ShowConnection", "ShowEmail", "ShowClient", "ShowVersion", "ShowMode", 
 	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
-	"ProgressOverrideColors", /*"ProgressBumped",*/"Progress3DDepth", "ProgressOverrideColors2",
+	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
-	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
+	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
@@ -104,14 +103,14 @@ const string SettingsManager::settingTags[] =
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
 	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction", "MinimumSearchInterval",
-	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers",
+	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers", "MaxAutoMatchSource",
     "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
-	"ConfirmHubRemoval", "SuppressMainChat",
+	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"SENTRY",
 	// Int64
-	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
+	"TotalUpload", "TotalDownload",
 	"SENTRY"
 };
 
@@ -147,8 +146,8 @@ SettingsManager::SettingsManager()
 	setDefault(IN_PORT, Util::rand(1025, 32000));
 	setDefault(ROLLBACK, 0);
 	setDefault(EMPTY_WORKING_SET, false);
-	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_AUTO]);
-	setDefault(DONT_EXTENSIONS, "(.iso)|(.bin)|(.img)|(.r(ar)|[0-9]+)");
+	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_64]);
+	setDefault(DONT_EXTENSIONS, "");
 	setDefault(NUMBER_OF_SEGMENTS, 4);
 	setDefault(SEGMENTS_TYPE, SEGMENT_ON_SIZE);
 	setDefault(AUTO_FOLLOW, true);
@@ -165,7 +164,7 @@ SettingsManager::SettingsManager()
 	setDefault(POPUP_OFFLINE, false);
 	setDefault(LIST_DUPES, true);
 	setDefault(BUFFER_SIZE, 64);
-	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2");
+	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2;http://dc.selwerd.nl/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(HUB_SLOTS, 0);
@@ -404,9 +403,6 @@ SettingsManager::SettingsManager()
 	setDefault(MENUBAR_RIGHT_COLOR, RGB(194, 78, 7));
 	setDefault(MENUBAR_BUMPED, true);
 
-	setDefault(JUNK_FILE_SIZE, (int64_t)(1610612736));
-	setDefault(JUNK_BIN_FILE_SIZE, (int64_t)(1610612736));
-	setDefault(JUNK_VOB_FILE_SIZE, (int64_t)(1610612736));
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
 	setDefault(MAX_SOURCES, 80);
 	setDefault(CLIENT_EMULATION, CLIENT_STRONGDC);
@@ -416,7 +412,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(AUTOSAVE_QUEUE, 30);
-	//setDefault(SHOW_SEGMENT_COLOR, true);
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
@@ -471,6 +466,7 @@ SettingsManager::SettingsManager()
 
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
+	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
 
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
@@ -481,9 +477,9 @@ SettingsManager::SettingsManager()
 	setDefault(MDI_MAXIMIZED, true);
 	setDefault(UPLOAD_BAR_COLOR, RGB(150, 0, 0));
 	setDefault(DOWNLOAD_BAR_COLOR, RGB(0, 150, 0));
-	//setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
-	//setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
-	//setDefault(SEGMENT_BAR_COLOR, RGB(10, 74, 138));
+	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));
+	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
+	setDefault(PROGRESS_SEGMENT_COLOR, RGB(55, 170, 85));
 #endif
 }
 
@@ -551,30 +547,6 @@ void SettingsManager::load(string const& aFileName)
 			
 			xml.stepOut();
 		}
-
-		if(xml.findChild("DownloadDirectories")) {
-			xml.stepIn();
-
-			while(xml.findChild("Dir")) {
-				DownloadDirectory d = {xml.getChildData(), xml.getChildAttrib("ext"), xml.getChildAttrib("name")};				
-				DownloadDirectories.push_back(d);
-			}
-
-			xml.stepOut();
-		} 
-		xml.resetCurrentChild();	
-
-		if(xml.findChild("NeverDownload")) {
-			xml.stepIn();
-
-			while(xml.findChild("User")) {
-				NeverDownloadFrom(xml.getChildData());
-			}
-
-			xml.stepOut();
-		} 
-		xml.resetCurrentChild();
-
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
@@ -626,24 +598,6 @@ void SettingsManager::save(string const& aFileName) {
 	}
 	xml.stepOut();
 	
-	xml.addTag("DownloadDirectories");
-	xml.stepIn();
-
-	for(SettingsManager::DDList::iterator i = DownloadDirectories.begin(); i != DownloadDirectories.end(); ++i) {
-		xml.addTag("Dir", i->dir);
-		xml.addChildAttrib("ext", i->ext);
-		xml.addChildAttrib("name", i->name);
-	}
-	xml.stepOut();
-
-	xml.addTag("NeverDownload");
-	xml.stepIn();
-
-	for(vector<string>::iterator i = NeverDownload.begin(); i != NeverDownload.end(); ++i) {
-		xml.addTag("User", *i);
-	}
-	xml.stepOut();
-
 	fire(SettingsManagerListener::Save(), &xml);
 
 	try {
@@ -658,19 +612,6 @@ void SettingsManager::save(string const& aFileName) {
 	} catch(const FileException&) {
 		// ...
 	}
-}
-
-string SettingsManager::getDownloadDir(string ext){
-	if(ext.size() > 1) {
-		for(SettingsManager::DDList::iterator i = DownloadDirectories.begin(); i != DownloadDirectories.end(); ++i) {
-			StringList tok = StringTokenizer<string>(i->ext, ';').getTokens();
-			for(StringList::iterator j = tok.begin(); j != tok.end(); ++j) {
-				if(Util::stricmp(ext.substr(1), (*j)) == 0) 
-					return i->dir;			
-			}
-		}
-	}
-	return SETTING(DOWNLOAD_DIRECTORY);
 }
 
 /**

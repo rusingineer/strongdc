@@ -39,7 +39,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	adapter(this), state(STATE_CONNECT), 
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0)
+	reconnect(true), lastUpdate(0),lastSize(0)
 {
 	TimerManager::getInstance()->addListener(this);
 
@@ -59,8 +59,9 @@ void NmdcHub::connect() {
 	setReconnDelay(120 + Util::rand(0, 60));
 	reconnect = true;
 	supportFlags = 0;
-	lastmyinfo.clear();
-	lastbytesshared = 0;
+	lastMyInfo.clear();
+	lastSize = 0;
+	lastUpdate = 0;
 	validatenicksent = false;
 
 	if(socket->isConnected()) {
@@ -483,7 +484,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				if(state == STATE_HELLO) {
 					state = STATE_MYINFO;
 					updateCounts(false);
-					myInfo();
+					myInfo(true);
 					getNickList();
 					QuickList = true;
 				}
@@ -574,8 +575,8 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			updateCounts(false);
 
 			version();
-			myInfo();
 			getNickList();
+			myInfo(true);
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Hello(), this, u);
 
@@ -666,7 +667,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::OpList(), this, v);
 		updateCounts(false);
-		myInfo();
+		myInfo(true);
 	} else if(strncmp(aLine+1, "To: ", 4) == 0) {
 		char *temp1, *from;
 		if((temp1 = strstr(aLine+5, "From:")) != NULL) {
@@ -682,6 +683,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(from), this, false), Util::validateMessage(fromNmdc(temp), true));
 		}
 	} else if(strcmp(aLine+1, "GetPass") == 0) {
+
 		setRegistered(true);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::GetPassword(), this);
 	} else if(strcmp(aLine+1, "BadPass") == 0) {
@@ -741,8 +743,7 @@ int hexstr2int(char *hexstr) {
     return value;
 }
 
-void NmdcHub::myInfo() {
-
+void NmdcHub::myInfo(bool alwaysSend) {
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
@@ -886,17 +887,21 @@ void NmdcHub::myInfo() {
 		}
 	}
 
-	extendedtag += ">";
+	string minf = 
+		"$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
+		extendedtag +
+		">$ $" + SETTING(CONNECTION) + "\x01$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$' + 
+		/*ShareManager::getInstance()->getShareSizeString()*/ + "147453601454$|";
+	if(alwaysSend || minf != lastMyInfo) {
+		int64_t ssize = ShareManager::getInstance()->getShareSize();
 
-	string newmyinfo = ("$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)));
-	newmyinfo += extendedtag;
-
-	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
-	newmyinfo += ("$ $" + connection + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$');
-	if ( (newmyinfo != lastmyinfo) || ( (newbytesshared < (lastbytesshared - 1048576) ) || (newbytesshared > (lastbytesshared + 1048576) ) ) ){
-		send(newmyinfo + Util::toString(newbytesshared) + "$|");
-		lastmyinfo = newmyinfo;
-		lastbytesshared = newbytesshared;
+		if((!alwaysSend) && (lastSize != ssize && lastUpdate + 15*60*1000 > GET_TICK())) {
+			return;
+		}
+		send(minf);
+		lastMyInfo = minf;
+		lastSize = ssize;
+		lastUpdate = GET_TICK();		
 	}
 }
 

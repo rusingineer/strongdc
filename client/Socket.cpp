@@ -55,7 +55,8 @@ string Socket::getRemoteIp() const {
 		if(getpeername(sock, (sockaddr*)&sock_addr_rem, &len) == SOCKET_ERROR)
 			return Util::emptyString;
 	}
-	return string(inet_ntoa(sock_addr_rem.sin_addr));
+
+	return string(inet_ntoa(sock_addr_rem.sin_addr));	// + ":" + string(Util::toString((sock_addr_rem.sin_port >> 8) | (sock_addr_rem.sin_port << 8 & 0xffff)));
 }
 
 string Socket::getRemoteHost(const string& aIp) const {

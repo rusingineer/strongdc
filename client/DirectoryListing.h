@@ -62,15 +62,19 @@ public:
 			delete tthRoot;
 		}
 
-		bool getAdls() {
-			return getParent()->getAdls();
+		void setAdls(bool _adls) {
+			adls = _adls;
 		}
 
-		bool isJunkFile();
+		bool getAdls() {
+			return adls || getParent()->getAdls();
+		}
+
 		GETSET(string, name, Name);
 		GETSET(int64_t, size, Size);
 		GETSET(Directory*, parent, Parent);
 		GETSET(TTHValue*, tthRoot, TTH);
+		bool adls;
 	};
 
 	class Directory : public FastAlloc<Directory> {
@@ -88,7 +92,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false) 
-			: name(aName), parent(aParent), adls(_adls), rmDCdetected(0) { };
+			: name(aName), parent(aParent), adls(_adls), rmDC403B7detected(0), rmDC403D1detected(false) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction<Directory*>());
@@ -101,30 +105,25 @@ public:
 		size_t getFileCount() { return files.size(); };
 		
 		int64_t getSize() {
-			setJunkSize(0);
 			int64_t x = 0;
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
 				x+=(*i)->getSize();
 
 				if((*i)->getTTH() == NULL) {
 					if(((*i)->getSize() < (1024*1024)) || (Util::getFileExt((*i)->getName()) == ".mp3")) {
-						setRMDCdetected(1);
+						setRMDC403B7detected(1);
 					} else {
-						setRMDCdetected(2);
+						setRMDC403B7detected(2);
 					}
-				} else setRMDCdetected(0);
-
-				if((*i)->isJunkFile()) {
-					junkSize += (*i)->getSize();
-				}
+				} else setRMDC403B7detected(0);
 			}
 			return x;
 		}
 		
 		GETSET(string, name, Name);
-		GETSET(int64_t, junkSize, JunkSize);
 		GETSET(Directory*, parent, Parent);		
-		GETSET(int, rmDCdetected, RMDCdetected);
+		GETSET(int, rmDC403B7detected, RMDC403B7detected);
+		GETSET(bool, rmDC403D1detected, RMDC403D1detected);
 		GETSET(bool, adls, Adls);		
 
 	private:
@@ -162,9 +161,11 @@ public:
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
 	Directory* getRoot() { return root; };
-	int64_t getJunkSize() { return root->getJunkSize(); };
-	bool detectRMDC() {
-		return (root->getRMDCdetected() == 1);
+	bool detectRMDC403B7() {
+		return (root->getRMDC403B7detected() == 1);
+	}
+	bool detectRMDC403D1() {
+		return root->getRMDC403D1detected();
 	}
 
 	GETSET(User::Ptr, user, User);

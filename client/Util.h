@@ -59,13 +59,10 @@ private:
 
 template<class T>
 struct PointerHash {
-#if _MSC_VER < 1300 
-	enum {bucket_size = 4}; 
-	enum {min_buckets = 8}; 
-#else 
+#if _MSC_VER >= 1300 
 	static const size_t bucket_size = 4;
 	static const size_t min_buckets = 8;
-#endif // _MSC_VER < 1300
+#endif 
 	size_t operator()(const T* a) const { return ((size_t)a)/sizeof(T); };
 	bool operator()(const T* a, const T* b) { return a < b; };
 };
@@ -122,7 +119,14 @@ public:
 
 	static void initialize();
 
+	/**
+	 * Get the path to the application executable. 
+	 * This is mainly intended for use on Windows.
+	 *
+	 * @return Path to executable file.
+	 */
 	static string getAppPath() { return appPath; }
+
 	static string getAppName() {
 #ifdef _WIN32
 		TCHAR buf[MAX_PATH+1];
@@ -141,6 +145,18 @@ public:
 #endif // _WIN32
 	}	
 
+	/**
+	 * Get the path to where the applications settings.
+	 * 
+	 * @return Path to settings directory.
+	 */
+	static string getConfigPath();
+
+	/**
+	 * Get the directory for temporary files.
+	 *
+	 * @return Path to temp directory.
+	 */
 	static string getTempPath() {
 #ifdef _WIN32
 		TCHAR buf[MAX_PATH + 1];
@@ -151,13 +167,21 @@ public:
 #endif
 	}
 
+	/**
+	 * Get the directory to the application resources.
+	 *
+	 * @todo On non Windows system this still returns the path to the
+	 * configuration directory. Later this will be completed with a patch for
+	 * Mac OS X. And the Linux(?) implementation is also wrong right now.
+	 * @return Path to resource directory.
+	 */
 	static string getDataPath() {
 #ifdef _WIN32
 		return getAppPath();
 #else
 		char* home = getenv("HOME");
 		if (home) {
-			return string(home) + "/dc++/";
+			return string(home) + "/.dc++/";
 		}
 		return emptyString;
 #endif
@@ -368,55 +392,64 @@ public:
 
 	static string toString(short val) {
 		char buf[8];
-		sprintf(buf, "%d", (int)val);
+		_snprintf(buf, 7, "%d", (int)val);
+		buf[7] = 0;
 		return buf;
 	}
 	static string toString(unsigned short val) {
 		char buf[8];
-		sprintf(buf, "%u", (unsigned int)val);
+		_snprintf(buf, 7, "%u", (unsigned int)val);
+		buf[7] = 0;
 		return buf;
 	}
 	static string toString(int val) {
 		char buf[16];
-		sprintf(buf, "%d", val);
+		_snprintf(buf, 15, "%d", val);
+		buf[15] = 0;
 		return buf;
 	}
 	static string toString(unsigned int val) {
 		char buf[16];
-		sprintf(buf, "%u", val);
+		_snprintf(buf, 15, "%u", val);
+		buf[15] = 0;
 		return buf;
 	}
 	static string toString(long val) {
 		char buf[32];
-		sprintf(buf, "%ld", val);
+		_snprintf(buf, 31, "%ld", val);
+		buf[31] = 0;
 		return buf;
 	}
 	static string toString(unsigned long val) {
 		char buf[32];
-		sprintf(buf, "%lu", val);
+		_snprintf(buf, 31, "%lu", val);
+		buf[31] = 0;
 		return buf;
 	}
 	static string toString(long long val) {
 		char buf[32];
 #ifdef WIN32
-		sprintf(buf, "%I64d", val);
+		_snprintf(buf, 31, "%I64d", val);
 #else
-		sprintf(buf, "%lld", val);
+		_snprintf(buf, 31, "%lld", val);
 #endif
+		buf[31] = 0;
 		return buf;
 	}
 	static string toString(unsigned long long val) {
 		char buf[32];
 #ifdef WIN32
-		sprintf(buf, "%I64u", val);
+		_snprintf(buf, 31, "%I64u", val);
 #else
-		sprintf(buf, "%llu", val);
+		_snprintf(buf, 31, "%llu", val);
 #endif
+		buf[31] = 0;
 		return buf;
 	}
 	static string toString(double val) {
 		char buf[16];
-		sprintf(buf, "%0.2f", val);
+		_snprintf(buf, 15, "%0.2f", val);
+		buf[15] = 0;
 		return buf;
 	}
 	static string toHexEscape(char val) {

@@ -41,7 +41,9 @@
 
 #include "FastAlloc.h"
 
+#ifndef _DEBUG
 FastCriticalSection FastAllocBase::cs;
+#endif
 
 int64_t Util::mUptimeSeconds = 0;
 string Util::emptyString;
@@ -130,6 +132,22 @@ void Util::initialize() {
 	}
 
 	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
+}
+
+string Util::getConfigPath() {
+#ifdef _WIN32
+		return getAppPath();
+#else
+		char* home = getenv("HOME");
+		if (home) {
+#ifdef __APPLE__
+			return string(home) + "/Library/Application Support/Mac DC++/";
+#else
+			return string(home) + "/.dc++/";
+#endif // __APPLE__
+		}
+		return emptyString;
+#endif // _WIN32
 }
 
 string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {

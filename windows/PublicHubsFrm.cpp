@@ -23,8 +23,10 @@
 #include "PublicHubsFrm.h"
 #include "HubFrame.h"
 #include "WinUtil.h"
+#include "PublicHubsListDlg.h"
 
 #include "../client/Client.h"
+#include "../client/StringTokenizer.h"
 
 int PublicHubsFrame::columnIndexes[] = { 
 	COLUMN_NAME,
@@ -92,26 +94,26 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlHubs.setSort(COLUMN_USERS, ExListViewCtrl::SORT_INT, false);
 	ctrlHubs.SetFocus();
 
-	ctrlHub.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
-	ctrlHub.SetFont(WinUtil::systemFont);
-	
-	ctrlHubContainer.SubclassWindow(ctrlHub.m_hWnd);
-	
-	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		BS_PUSHBUTTON , 0, IDC_CONNECT);
-	ctrlConnect.SetWindowText(CTSTRING(CONNECT));
-	ctrlConnect.SetFont(WinUtil::systemFont);
+	ctrlConfigure.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+		BS_PUSHBUTTON , 0, IDC_PUB_LIST_CONFIG);
+	ctrlConfigure.SetWindowText(CTSTRING(CONFIGURE));
+	ctrlConfigure.SetFont(WinUtil::systemFont);
 
 	ctrlRefresh.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REFRESH);
 	ctrlRefresh.SetWindowText(CTSTRING(REFRESH));
 	ctrlRefresh.SetFont(WinUtil::systemFont);
 
-	ctrlAddress.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlLists.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_GROUPBOX, WS_EX_TRANSPARENT);
-	ctrlAddress.SetWindowText(CTSTRING(MANUAL_ADDRESS));
-	ctrlAddress.SetFont(WinUtil::systemFont);
+	ctrlLists.SetFont(WinUtil::systemFont);
+	ctrlLists.SetWindowText(CTSTRING(CONFIGURED_HUB_LISTS));
+
+	ctrlPubLists.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+		WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE, IDC_PUB_LIST_DROPDOWN);
+	ctrlPubLists.SetFont(WinUtil::systemFont, FALSE);
+	// populate with values from the settings
+	updateDropDown();
 	
 	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
@@ -125,12 +127,13 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	HubManager::getInstance()->addListener(this);
 
+	hubs = HubManager::getInstance()->getPublicHubs();
 	if(HubManager::getInstance()->isDownloading()) 
 		ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
-
-	hubs = HubManager::getInstance()->getPublicHubs();
-	if(hubs.empty())
-		HubManager::getInstance()->refresh();
+	else {
+		if(hubs.empty())
+			HubManager::getInstance()->refresh();
+	}
 
 	updateList();
 	
@@ -216,52 +219,11 @@ LRESULT PublicHubsFrame::onClickedRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	return 0;
 }
 
-LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!checkNick())
-		return 0;
-
-	if(ctrlHub.GetWindowTextLength() > 0) {
-		AutoArray<TCHAR> hub(ctrlHub.GetWindowTextLength()+1);		ctrlHub.GetWindowText(hub, ctrlHub.GetWindowTextLength()+1);
-		ctrlHub.SetWindowText(_T(""));
-		tstring tmp = hub;
-		string::size_type i;
-		while((i = tmp.find(' ')) != string::npos)
-			tmp.erase(i, 1);
-
-
-		RecentHubEntry r;
-		r.setName("***");
-		r.setDescription("***");
-		r.setUsers("*");
-		r.setShared("*");
-		r.setServer(Text::fromT(tmp));
-		HubManager::getInstance()->addRecent(r);
-
-		HubFrame::openWindow(tmp);
-			
-	} else {
-		if(ctrlHubs.GetSelectedCount() == 1) {
-			TCHAR buf[256];
-			int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
-				ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
-
-				RecentHubEntry r;
-				ctrlHubs.GetItemText(i, COLUMN_NAME, buf, 256);
-			r.setName(Text::fromT(buf));
-				ctrlHubs.GetItemText(i, COLUMN_DESCRIPTION, buf, 256);
-			r.setDescription(Text::fromT(buf));
-				ctrlHubs.GetItemText(i, COLUMN_USERS, buf, 256);
-			r.setUsers(Text::fromT(buf));
-				ctrlHubs.GetItemText(i, COLUMN_SHARED, buf, 256);
-			r.setShared(Text::fromT(buf));
-				ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
-			r.setServer(Text::fromT(buf));
-				HubManager::getInstance()->addRecent(r);
-	
-				HubFrame::openWindow(buf);
-			}
+LRESULT PublicHubsFrame::onClickedConfigure(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	CPublicHubListDlg dlg;
+	if(dlg.DoModal(m_hWnd) == IDOK) {
+		updateDropDown();
 		}
-
 	return 0;
 }
 
@@ -291,35 +253,6 @@ LRESULT PublicHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	return 0;
 }
 
-LRESULT PublicHubsFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	if(wParam == VK_RETURN && ctrlHub.GetWindowTextLength() > 0) {
-		if(!checkNick()) {
-			return 0;
-		}
-		
-		AutoArray<TCHAR> hub(ctrlHub.GetWindowTextLength()+1);
-		ctrlHub.GetWindowText(hub, ctrlHub.GetWindowTextLength()+1);
-		ctrlHub.SetWindowText(_T(""));
-		tstring tmp = hub;
-		tstring::size_type i;
-		while((i = tmp.find(' ')) != tstring::npos)
-			tmp.erase(i, 1);
-
-		RecentHubEntry r;
-		r.setName("***");
-		r.setDescription("***");
-		r.setUsers("*");
-		r.setShared("*");
-		r.setServer(Text::fromT(tmp));
-		HubManager::getInstance()->addRecent(r);
-		
-		HubFrame::openWindow(tmp);
-	} else {
-		bHandled = FALSE;
-	}
-	return 0;
-}
-
 LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		HubManager::getInstance()->removeListener(this);
@@ -335,6 +268,14 @@ LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	}
 }
 	
+LRESULT PublicHubsFrame::onListSelChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	HubManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
+	hubs = HubManager::getInstance()->getPublicHubs();
+	updateList();
+	bHandled = FALSE;
+	return 0;
+}
+
 void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	RECT rect;
 	GetClientRect(&rect);
@@ -354,11 +295,13 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		ctrlStatus.SetParts(3, w);
 	}
 	
+	// listview
 	CRect rc = rect;
 	rc.top += 2;
 	rc.bottom -=(56);
 	ctrlHubs.MoveWindow(rc);
 
+	// filter box
 	rc = rect;
 	rc.top = rc.bottom - 52;
 	rc.bottom = rc.top + 46;
@@ -366,34 +309,39 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.right -= ((rc.right - rc.left) / 2) + 1;
 	ctrlFilterDesc.MoveWindow(rc);
 
+	// filter edit
 	rc.top += 16;
 	rc.bottom -= 8;
 	rc.right -= 8;
 	rc.left += 8;
 	ctrlFilter.MoveWindow(rc);
 
+	// lists box
 	rc = rect;
 	rc.top = rc.bottom - 52;
 	rc.bottom = rc.top + 46;
 	rc.right -= 100;
 	rc.left += ((rc.right - rc.left) / 2) + 1;
-	ctrlAddress.MoveWindow(rc);
+	ctrlLists.MoveWindow(rc);
 	
+	// lists dropdown
 	rc.top += 16;
 	rc.bottom -= 8;
-	rc.right -= 8;
+	rc.right -= 8 + 100;
 	rc.left += 8;
-	ctrlHub.MoveWindow(rc);
+	ctrlPubLists.MoveWindow(rc);
 	
+	// configure button
+	rc.left = rc.right + 4;
+	rc.right += 100;
+	ctrlConfigure.MoveWindow(rc);
+
+	// refresh button
 	rc = rect;
-	rc.bottom -= 2;
+	rc.bottom -= 2 + 8 + 4;
 	rc.top = rc.bottom - 22;
 	rc.left = rc.right - 96;
 	rc.right -= 2;
-	ctrlConnect.MoveWindow(rc);
-
-	rc.top -= 24;
-	rc.bottom -= 24;
 	ctrlRefresh.MoveWindow(rc);
 }
 
@@ -469,7 +417,6 @@ LRESULT PublicHubsFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 }
 
 LRESULT PublicHubsFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	
 	if(wParam == VK_RETURN) {
 		AutoArray<TCHAR> str(ctrlFilter.GetWindowTextLength()+1);
 		ctrlFilter.GetWindowText(str, ctrlFilter.GetWindowTextLength()+1);
@@ -510,6 +457,15 @@ LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 		WinUtil::setClipboard(buf);
 	}
 	return 0;
+}
+
+void PublicHubsFrame::updateDropDown() {
+	ctrlPubLists.ResetContent();
+	StringList lists(HubManager::getInstance()->getHubLists());
+	for(StringList::iterator idx = lists.begin(); idx != lists.end(); ++idx) {
+		ctrlPubLists.AddString(Text::toT(*idx).c_str());
+	}
+	ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
 }
 
 /**

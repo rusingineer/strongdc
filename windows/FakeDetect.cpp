@@ -25,25 +25,17 @@
 #include "WinUtil.h"
 
 PropPage::TextItem FakeDetect::texts[] = {
-	{ INFORMACE, ResourceManager::TEXT_FAKEINFO },
-	{ AAA, ResourceManager::TEXT_JUNK },
-	{ BAA, ResourceManager::TEXT_BINJUNK },
-	{ CAA, ResourceManager::TEXT_VOBJUNK },
 	{ DAA, ResourceManager::TEXT_FAKEPERCENT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
 
 PropPage::Item FakeDetect::items[] = {
-	{ IDC_JUNK_FILE_SIZE, SettingsManager::JUNK_FILE_SIZE, PropPage::T_INT64 }, 
-	{ IDC_JUNK_BIN_FILE_SIZE, SettingsManager::JUNK_BIN_FILE_SIZE, PropPage::T_INT64 }, 
-	{ IDC_JUNK_VOB_FILE_SIZE, SettingsManager::JUNK_VOB_FILE_SIZE, PropPage::T_INT64 }, 
 	{ IDC_PERCENT_FAKE_SHARE_TOLERATED, SettingsManager::PERCENT_FAKE_SHARE_TOLERATED, PropPage::T_INT }, 
 	{ 0, 0, PropPage::T_END }
 };
 
 FakeDetect::ListItem FakeDetect::listItems[] = {
 	{ SettingsManager::CHECK_NEW_USERS, ResourceManager::CHECK_ON_CONNECT },
-	{ SettingsManager::IGNORE_JUNK_FILES, ResourceManager::TEXT_IGNORE_JUNK },
 	{ SettingsManager::DISPLAY_CHEATS_IN_MAIN_CHAT, ResourceManager::SETTINGS_DISPLAY_CHEATS_IN_MAIN_CHAT },
 	{ SettingsManager::SHOW_SHARE_CHECKED_USERS, ResourceManager::SETTINGS_ADVANCED_SHOW_SHARE_CHECKED_USERS },
 		{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
