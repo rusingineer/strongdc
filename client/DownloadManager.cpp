@@ -632,7 +632,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(!BOOLSETTING(OLD_SEGMENTED_DWNLDING)) {
 				int64_t position = d->getPos() - d->getStartPos();
 				if((aSource->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) && (position >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					aSource->setIsRunningFile(d->getTargetFileName());
+					aSource->setIsRunningFile(d->getTarget());
 					aSource->setDownload(NULL);
 					removeDownload(d, false);
 					aSource->setLineMode();
