@@ -1,41 +1,44 @@
-	-- StrongDC++ 1.00 RC8 ??? --
+	-- StrongDC++ 1.00 RC8 --
 
-* optimalizováno seskupování položek v Pøenosech
-* opraven náhodný pád pøi odstraòování TestSUR po odpojení
-* pøidáno jak dlouho èeká uživatel v upload queue a kdy byl poslední požadavek (CZDC++)
-* pøidána možnost vložit magnet link do fronty (CZDC++)
-* synchronizace s CVS DC++ 0.40325
+* away je ukládán pøi vypnutí
+* odpojování pomalých stahování lze nyní zapnout/vypnout pro jednotlivé soubory
 * pøidáno chybìjící tlaèítko Stažené informace o MP3 na lištu
-* aktualizováno na WTL 7.5.4196
-* opraven pád pøi stahování informací o MP3
-* po skonèení hashování je aktualizován seznam souborù (CZDC++)
+* pøidáno menu Kopírovat do menu záložky hubu
 * pøidáno nastavení pro pøepnutí do starého vzhledu sdílení
-* opraveno pøekreslování seznamù ve Win2000
+* pøidáno potvrzení pøi mazaní souboru z Pøenosù
+* pøidáno procentuální vyjádøení kontroly TTH
+* pøidáno tlaèítko pro náhled zvuku v nastavení
+* pøidány 2 položky do menu záložky seznamù souborù
+* pøidány bublinové zprávy pro nìkolik událostí
+* pøidány ikonky do fronty, které znaèí, zda je k dispozici strom TTH
+* vyhledávací špion nyní podporuje hledání podle TTH
+
+* nastavení je ukládáno do zvláštní složky (iDC++) - pøesuòte své .xml soubory do složky Settings
+* po skonèení hashování je aktualizován seznam souborù (CZDC++)
+* pøidán obrázek pozadí (DCDM++)
+* pøidán progressbar do fronty odesílání (iDC++)
+* pøidána možnost vložit magnet link do fronty (CZDC++)
+* pøidáno jak dlouho èeká uživatel v upload queue a kdy byl poslední požadavek (CZDC++)
+* synchronizace s CVS DC++ 0.40325
+
+* aktualizováno na WTL 7.5.4196
 * filtr hledání se aktivuje až po stisku Enter
 * fronta hledání má prodlevu 30 sekund
-* opraven memory leak pøi detekci NetLimiteru
-* opraveno zobrazení ikon v userlistu pøi kontrole uživatele
-* vyhledávací špion nyní podporuje hledání podle TTH
-* pøidán progressbar do fronty odesílání (iDC++)
-* vylepšeno nastavování barev
-* pøidány 2 položky do menu záložky seznamù souborù
-* pøidáno menu Kopírovat do menu záložky hubu
-* away je ukládán pøi vypnutí
-* pøidáno tlaèítko pro náhled zvuku v nastavení
-* pøidáno potvrzení pøi mazaní souboru z Pøenosù
-* v menu "Stáhnout do" jsou nabízeny pouze soubory se stejným TTH
-* odpojování pomalých stahování lze nyní zapnout/vypnout pro jednotlivé soubory
-* opraven filtr hledání pøi jiném seøazení sloupcù
 * kód Fronty odesílání pøesunut do hlavního threadu (x deadlock)
-* opraven memory leak pøi hashování staženého souboru (THX PPK)
-* opraveno nìkolik možných deadlockù
 * logy chatu/PM jsou øazeny do podsložek
-* pøidány ikonky do fronty, které znaèí, zda je k dispozici strom TTH
-* pøidány bublinové zprávy pro nìkolik událostí
+* optimalizováno seskupování položek v Pøenosech
+* v menu "Stáhnout do" jsou nabízeny pouze soubory se stejným TTH
+* vylepšeno nastavování barev
+
+* opraven filtr hledání pøi jiném seøazení sloupcù
+* opraven memory leak pøi detekci NetLimiteru
+* opraven memory leak pøi hashování staženého souboru (THX PPK)
+* opraven náhodný pád pøi odstraòování TestSUR po odpojení
+* opraven pád pøi stahování informací o MP3
 * opraveno nastavení úrovnì komprese
-* pøidáno procentuální vyjádøení kontroly TTH
-* pøidán obrázek pozadí (DCDM++)
-* nastavení je ukládáno do zvláštní složky (iDC++) - pøesuòte do ní své .xml soubory
+* opraveno nìkolik možných deadlockù
+* opraveno pøekreslování seznamù ve Win2000
+* opraveno zobrazení ikon v userlistu pøi kontrole uživatele
 
 
 	-- StrongDC++ 1.00 RC7 --
