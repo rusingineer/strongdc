@@ -684,7 +684,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 		} catch(const BlockDLException) {
-			dcdebug("BlockDLException.....");
+			dcdebug("BlockDLException.....\n");
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));			
 			d->finished = true;
 			aSource->getUser()->setDownloadSpeed(d->getRunningAverage());
@@ -1099,13 +1099,6 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
-	// if ChunksOutputStream has been created, let it handle it.
-	if(!d->getFile()) {
-		dcdebug("PutUndlStart....\n");
-		FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-		if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
-			lpFileDataInfo->PutUndlStart(d->getStartPos());
-	}
 
 	bool checkList = d->isSet(Download::FLAG_CHECK_FILE_LIST) && d->isSet(Download::FLAG_TESTSUR);
 	User::Ptr uzivatel = d->getUserConnection()->getUser();
@@ -1129,6 +1122,7 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 
 		Download* old = d;
 		d = d->getOldDownload();
+
 		if(!full) {
 		old->getUserConnection()->setDownload(d);
 		}
@@ -1155,6 +1149,10 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 			// Ok, set the pos to whereever it was last writing and hope for the best...
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
+	}else{
+		FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+		if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
+			lpFileDataInfo->PutUndlStart(d->getStartPos());
 	}
 
 	{

@@ -74,6 +74,7 @@ public:
 	/**
 	 * BufferedSocket factory
 	 * @param sep Line separator
+	 * @param esc A preceding backslash escapes any character, including the separator
 	 * @return An unconnected socket
 	 */
 	static BufferedSocket* getSocket(char sep, bool esc = false) throw(SocketException) { 

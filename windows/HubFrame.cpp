@@ -1232,7 +1232,7 @@ void HubFrame::onTab() {
 			UserInfo* ui = ctrlUsers.getItemData(i);
 			const string& nick = ui->user->getNick();
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
-			string::size_type x = string::npos;
+			string::size_type x = 0;
 			if(!found) {
 				// Check if there's one or more [ISP] tags to ignore...
 				string::size_type y = 0;

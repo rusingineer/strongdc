@@ -39,7 +39,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	state(STATE_CONNECT), adapter(this),
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0) , auto_search(true)
+	reconnect(true), lastUpdate(0)
 {
 	TimerManager::getInstance()->addListener(this);
 	dscrptn = (char *) calloc(96, sizeof(char));
@@ -609,13 +609,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			}
 		}
 
-		// send auto search
-		if(auto_search){
-			auto_search = false;
-			string search_string = QueueManager::getInstance()->getTopAutoSearchString();
-			search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, search_string);
-		}
-
+		QueueManager::getInstance()->sendAutoSearch(this);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
 	} else if(strncmp(aLine, "$OpList ", 8) == 0) {
 		User::List v;
@@ -856,9 +850,21 @@ void NmdcHub::disconnect() throw() {
 	}
 }
 
+void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto){
+	checkstate();
+	dcdebug("search %s\n", aString);
+	Search s;
+	s.aFileType = aFileType;
+	s.aSize = aSize;
+	s.aString = aString;
+	s.aSizeType = aSizeType;
+	searchQueue.add(s, _auto);
+}
 
-void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
+void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString){
 	checkstate(); 
+	dcdebug("doSearch %s\n", aString);
+
 	char* buf;
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
@@ -945,6 +951,16 @@ void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		
 		while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
 			flooders.pop_front();
+		}
+	}
+
+	if(state != STATE_CONNECTED){
+		searchQueue.clearAll();
+	}else{
+		Search s;
+		
+		if(searchQueue.getSearch(s)){
+			doSearch(s.aSizeType, s.aSize, s.aFileType , s.aString);
 		}
 	}
 }

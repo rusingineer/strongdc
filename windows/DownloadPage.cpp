@@ -97,7 +97,7 @@ void DownloadPage::write()
 LRESULT DownloadPage::onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	string dir = SETTING(DOWNLOAD_DIRECTORY);
-	if(WinUtil::browseDirectory(dir, (HWND) *this))
+	if(WinUtil::browseDirectory(dir, m_hWnd))
 	{
 		// Adjust path string
 		if(dir.size() > 0 && dir[dir.size() - 1] != '\\')
@@ -111,7 +111,7 @@ LRESULT DownloadPage::onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 LRESULT DownloadPage::onClickedBrowseTempDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	string dir = SETTING(TEMP_DOWNLOAD_DIRECTORY);
-	if(WinUtil::browseDirectory(dir, (HWND) *this))
+	if(WinUtil::browseDirectory(dir, m_hWnd))
 	{
 		// Adjust path string
 		if(dir.size() > 0 && dir[dir.size() - 1] != '\\')

@@ -124,7 +124,7 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, const string& aSearchString, 
-		Priority aPriority, int aFlag, int64_t, u_int32_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), searchString(aSearchString), 
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL)
@@ -187,14 +187,14 @@ public:
 	bool isSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, sources); };
 	bool isBadSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, badSources); };
 	
-	void addCurrent(const User::Ptr& aUser) {
-		dcassert(isSource(aUser));
-		currents.push_back(*getSource(aUser));
-	}
-
 	void addActiveSegment(const User::Ptr& aUser) {
 		if(!isSource(aUser)) return;
 		activeSegments.push_back(*getSource(aUser));
+	}
+
+	void addCurrent(const User::Ptr& aUser) {
+		dcassert(isSource(aUser));
+		currents.push_back(*getSource(aUser));
 	}
 
 	bool isCurrent(const User::Ptr& aUser) {

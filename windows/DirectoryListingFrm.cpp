@@ -657,13 +657,17 @@ LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, 
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
 
 		if(ii->type == ItemInfo::FILE) {
-			dcassert(newId < (int)targets.size());
-
+			if(newId < (int)targets.size()) {
 			try {
 				dl->download(ii->file, targets[newId]);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, e.getError().c_str());
 			} 
+		} else {
+				newId -= (int)targets.size();
+				dcassert(newId < (int)WinUtil::lastDirs.size());
+				downloadList(WinUtil::lastDirs[newId]);
+			}
 		} else {
 			dcassert(newId < (int)WinUtil::lastDirs.size());
 			downloadList(WinUtil::lastDirs[newId]);

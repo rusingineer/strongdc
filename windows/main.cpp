@@ -53,7 +53,7 @@ void ExceptionFunction() {
 #ifndef _DEBUG
 
 FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
-	MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old).", "Unhandled Exception", MB_OK | MB_ICONERROR);
+	MessageBox(WinUtil::mainWnd, "StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old).", "Unhandled Exception", MB_OK | MB_ICONERROR);
 	exit(-1);
 }
 
@@ -87,7 +87,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	if(File::getSize(Util::getAppPath() + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
-		::MessageBox(NULL, "StrongDC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution...", "StrongDC++ has crashed", MB_OK);
+		::MessageBox(WinUtil::mainWnd, "StrongDC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution...", "StrongDC++ has crashed", MB_OK);
 #ifndef _DEBUG
 		exit(1);
 #else
@@ -152,7 +152,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		PlaySound(SETTING(SOUND_EXC).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	CExceptionDlg dlg;
-	iLastExceptionDlgResult = dlg.DoModal(MainFrame::getMainFrame()->m_hWnd);
+	iLastExceptionDlgResult = dlg.DoModal(WinUtil::mainWnd);
 	ExceptionFunction();
 
 #ifndef _DEBUG

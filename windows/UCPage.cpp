@@ -116,7 +116,7 @@ LRESULT UCPage::onChangeMenu(WORD , WORD , HWND , BOOL& ) {
 LRESULT UCPage::onRemoveMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlCommands.GetSelectedCount() == 1) {
 		int i = ctrlCommands.GetNextItem(-1, LVNI_SELECTED);
-		HubManager::getInstance()->removeUserCommnad(ctrlCommands.GetItemData(i));
+		HubManager::getInstance()->removeUserCommand(ctrlCommands.GetItemData(i));
 		ctrlCommands.DeleteItem(i);
 	}
 	return 0;

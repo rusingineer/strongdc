@@ -598,6 +598,7 @@ private:
 
 	void Collapse(SearchInfo* i, int a);
 	void Expand(SearchInfo* i, int a);
+	void insertSubItem(SearchInfo* j, int idx);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	

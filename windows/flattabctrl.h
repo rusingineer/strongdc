@@ -882,7 +882,9 @@ public:
 
 	void setDirty() {
 		dcassert(getTab());
+		if (BOOLSETTING(TAB_DIRTY)) {
 			getTab()->setDirty(m_hWnd);
+		}
 	}
 	void setTabColor(COLORREF color) {
 		dcassert(getTab());

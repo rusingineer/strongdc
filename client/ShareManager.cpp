@@ -672,8 +672,9 @@ void ShareManager::Directory::toString(string& tmp, OutputStream* xmlFile, strin
 		if(dupe) {
 			size-=f->getSize();
 			if(!(BOOLSETTING(LIST_DUPES))) {
-			LogManager::getInstance()->message(STRING(DUPLICATE_FILE_NOT_SHARED) + f->getName() + " (" + STRING(SIZE) + ": " + Util::toString(f->getSize()) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + f->getParent()->getName() + "\")", true);
-		}
+				const Directory::File* d = &(*ShareManager::getInstance()->tthIndex[f->getTTH()]);
+				LogManager::getInstance()->message(STRING(DUPLICATE_FILE_NOT_SHARED) + f->getParent()->getFullName() + f->getName() + " (" + STRING(SIZE) + ": " + Util::toString(f->getSize()) + " " + STRING(B) + ") " + STRING(DUPLICATE_MATCH) + d->getParent()->getFullName() + d->getName(), true );
+			}
 		}
 
 		if(dupe && !(BOOLSETTING(LIST_DUPES))) {
