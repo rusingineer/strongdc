@@ -72,8 +72,6 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	updateList(FinishedManager::getInstance()->lockMP3List());
 	FinishedManager::getInstance()->unlockList();
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return TRUE;
 }

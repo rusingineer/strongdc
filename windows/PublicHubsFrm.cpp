@@ -123,8 +123,6 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	hubsMenu.AppendMenu(MF_STRING, IDC_COPY_HUB, CSTRING(COPY_HUB));
 	hubsMenu.SetMenuDefaultItem(IDC_CONNECT);
 
-	m_hMenu = WinUtil::mainMenu;
-	
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -146,6 +144,8 @@ LRESULT PublicHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 		r.setDescription(buf);
 		ctrlHubs.GetItemText(item->iItem, COLUMN_USERS, buf, 256);
 		r.setUsers(buf);
+		ctrlHubs.GetItemText(item->iItem, COLUMN_SHARED, buf, 256);
+		r.setShared(buf);
 		ctrlHubs.GetItemText(item->iItem, COLUMN_SERVER, buf, 256);
 		r.setServer(buf);
 		HubManager::getInstance()->addRecent(r);
@@ -201,6 +201,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		r.setName("***");
 		r.setDescription("***");
 		r.setUsers("*");
+		r.setShared("*");
 		r.setServer(tmp);
 		HubManager::getInstance()->addRecent(r);
 // iDC++
@@ -220,6 +221,8 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 			r.setDescription(buf);
 			ctrlHubs.GetItemText(i, COLUMN_USERS, buf, 256);
 			r.setUsers(buf);
+			ctrlHubs.GetItemText(i, COLUMN_SHARED, buf, 256);
+			r.setShared(buf);
 			ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 			r.setServer(buf);
 			HubManager::getInstance()->addRecent(r);
@@ -276,6 +279,7 @@ LRESULT PublicHubsFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/,
 		r.setName("***");
 		r.setDescription("***");
 		r.setUsers("*");
+		r.setShared("*");
 		r.setServer(tmp);
 		HubManager::getInstance()->addRecent(r);
 // iDC++		

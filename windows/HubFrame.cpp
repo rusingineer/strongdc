@@ -186,8 +186,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	client->connect();
 	return 1;
@@ -445,6 +443,7 @@ void HubFrame::addAsFavorite() {
 	aEntry.setDescription(buf);
 	aEntry.setConnect(TRUE);
 	aEntry.setNick(client->getNick());
+	aEntry.setConnect(false);
 	HubManager::getInstance()->addFavorite(aEntry);
 	addClientLine(STRING(FAVORITE_HUB_ADDED), m_ChatTextSystem );
 }
@@ -645,8 +644,6 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				case REMOVE_USER:
 					int j = findUser(u);
 					if( j != -1 ) {
-				//		UserInfo* ui = ctrlUsers.getItemData(j);
-				//		ctrlUsers.DeleteItem(j);		
 						if(showJoins) {
 							addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
 						}
@@ -839,7 +836,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			r->setName(buf);
 			r->setUsers(Util::toString(client->getUserCount()));
 			r->setShared(Util::toString(client->getAvailable()));
-			HubManager::getInstance()->recentsave();
+			HubManager::getInstance()->updateRecent(r);
 		}
 		TimerManager::getInstance()->removeListener(this);
 		client->removeListener(this);
@@ -975,6 +972,13 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 				tth = x.substr(start + 18, 39);
 				if(Encoder::isBase32(tth.c_str()))
 					SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			} else if( (start = x.find("xt=urn:bitprint:", i)) != string::npos) {
+				i = start + 16;
+				if( (start = x.find(".", i)) != string::npos) {
+					tth = x.substr(start + 1, 39);
+					if(Encoder::isBase32(tth.c_str()))
+						SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+				}
 			}
 		} else {
 			string::size_type end = x.find_first_of(" >\t", start+1);
@@ -1066,7 +1070,6 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 }
 
 LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
-	try {
 		RECT rc;                    // client area of window 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
 		POINT ptCl;
@@ -1155,11 +1158,6 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			}
 		}
 		return FALSE; 
-	}
-	catch( ... ) {
-		dcdebug( "HubFrame::onContextMenu Exception" );
-  		return FALSE; 
-	}
 }
 
 void HubFrame::runUserCommand(::UserCommand& uc) {
@@ -1572,7 +1570,7 @@ void HubFrame::on(BadPassword, Client*) throw() {
 	client->setPassword(Util::emptyString);
 }
 void HubFrame::on(UserUpdated, Client*, const User::Ptr& user) throw() { 
-	if(/*getUserInfo()*/ShowUserList && !user->isSet(User::HIDDEN)) 
+	if(getUserInfo() && !user->isSet(User::HIDDEN)) 
 		speak(UPDATE_USER, user);
 }
 void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
@@ -1588,7 +1586,7 @@ void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
 }
 
 void HubFrame::on(UserRemoved, Client*, const User::Ptr& user) throw() {
-	if(/*getUserInfo()*/ShowUserList) 
+	if(getUserInfo()) 
 		speak(REMOVE_USER, user);
 }
 
@@ -1974,9 +1972,6 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		sUsers = sSelectedUser.c_str();
 	} else {
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		//	UserInfo* ui = (UserInfo*)ctrlUsers.GetItemData(i);
-		//	User::Ptr pUser = ui->user;
-		//	string sNick = pUser->getNick();
 			if ( sUsers.GetLength() > 0 )
   				sUsers += ", ";
 			sUsers += ((UserInfo*)ctrlUsers.getItemData(i))->user->getNick().c_str();

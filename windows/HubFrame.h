@@ -500,7 +500,7 @@ private:
 	
 	void addAsFavorite();
 
-	bool getUserInfo() { return ctrlShowUsers.GetCheck() == BST_CHECKED; }
+	bool getUserInfo() { return ShowUserList;/*ctrlShowUsers.GetCheck() == BST_CHECKED;*/ }
 
 	void clearUserList() {
 		{

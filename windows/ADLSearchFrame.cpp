@@ -128,8 +128,6 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	// Load all searches
 	LoadAll();
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return TRUE;
 }

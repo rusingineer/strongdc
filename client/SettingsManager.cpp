@@ -32,7 +32,7 @@ const string SettingsManager::settingTags[] =
 {
 	// Strings
 	"Connection", "Description", "DownloadDirectory", "EMail", "Nick", "Server",
-	"ClientVersion", "Font", "MainFrameOrder", "MainFrameWidths", "HubFrameOrder", "HubFrameWidths", 
+	"Font", "MainFrameOrder", "MainFrameWidths", "HubFrameOrder", "HubFrameWidths", 
 	"RecentFrameOrder", "RecentFrameWidths", "FinishedMP3Order", "FinishedMP3Widths",
 	"LanguageFile", "SearchFrameOrder", "SearchFrameWidths", "FavoritesFrameOrder", "FavoritesFrameWidths", 
 	"HublistServers", "QueueFrameOrder", "QueueFrameWidths", "PublicHubsFrameOrder", "PublicHubsFrameWidths", 
@@ -124,7 +124,6 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_TTH, true);
 	setDefault(IN_PORT, Util::rand(1025, 32000));
 	setDefault(ROLLBACK, 1024);
-	setDefault(CLIENTVERSION, VERSIONSTRING);
 	setDefault(EMPTY_WORKING_SET, true);
 	setDefault(MIN_BLOCK_SIZE, 64);
 	setDefault(DONT_EXTENSIONS, "(.iso)|(.bin)|(.img)|(.r(ar)|[0-9]+)");

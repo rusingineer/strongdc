@@ -74,6 +74,8 @@ void ConnectionManager::getDownloadConnection(const User::Ptr& aUser) {
 			if((*j == aUser) && ((*j)->getConnection()->isSet(UserConnection::FLAG_DOWNLOAD)))			
 				return;
 		}
+
+		
 		
 		// Add it to the pending...
 		cqi = new ConnectionQueueItem(aUser);
@@ -660,8 +662,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ADCGET);
 		else if(*i == UserConnection::FEATURE_ZLIB_GET)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ZLIB_GET);
-	//	else if(*i == UserConnection::FEATURE_TTHL)
-	//		conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
+//		else if(*i == UserConnection::FEATURE_TTHL)
+//			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
 	}
 	conn->getUser()->setSupports(sup); 
 }

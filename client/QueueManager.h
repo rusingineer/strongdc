@@ -248,7 +248,7 @@ public:
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, bool addBad, bool utf8) throw(QueueException, FileException);
-	int getMaxSegments(QueueItem* q);
+	int getMaxSegments(string filename, int64_t filesize);
 	bool matchExtension(const string& aString, const string& aExt);
 
 	int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw();

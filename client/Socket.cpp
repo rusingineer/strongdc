@@ -214,7 +214,7 @@ int Socket::read(void* aBuffer, int aBufLen, string &aIP) throw(SocketException)
 	int len = 0;
 
 	sockaddr_in remote_addr = { 0 };
-	int addr_length = sizeof(remote_addr);
+	socklen_t addr_length = sizeof(remote_addr);
 
 	checkrecv(len=::recvfrom(sock, (char*)aBuffer, aBufLen, 0, (sockaddr*)&remote_addr, &addr_length)); //
 	aIP = string(inet_ntoa(remote_addr.sin_addr));

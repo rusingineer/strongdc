@@ -88,6 +88,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
+	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
@@ -112,7 +113,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 	}
 
 	if((temp = strtok((char*) aLine, " ")) == NULL) {
-		cmd = (char*) aLine;
+		cmd = (char*) aLine; param = NULL;
 	} else {
 		cmd = temp;
 		param = strtok(NULL, "\0");
@@ -517,8 +518,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		string Verze = "";		
 		if ((!getStealth()) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
-		if(SETTING(CLIENT_EMULATION) == SettingsManager::CLIENT_CZDC)
-			Verze = DCVERSIONSTRING; else Verze = SETTING(CLIENTVERSION);
+			Verze = DCVERSIONSTRING;
 		} else { Verze = "1,0091"; }
 
 

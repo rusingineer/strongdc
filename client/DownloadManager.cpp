@@ -76,17 +76,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	throttleZeroCounters();
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20 /*&& BOOLSETTING(AUTO_DROP_SOURCE)*/ ) // check every 20 sec
-        {
-            if((*i)->getRunningAverage() < 1024){
-                QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
-                continue;
-            }
-        }
-
-
-		 QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
-
 		if((*i)->getTotal() > 0) {
 			tickList.push_back(*i);
 		}
@@ -111,6 +100,15 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 				}
 			}
 		}
+
+        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20 /*&& BOOLSETTING(AUTO_DROP_SOURCE)*/ ) // check every 20 sec
+        {
+            if((*i)->getRunningAverage() < 1024){
+                QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
+                continue;
+            }
+        }
+		QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
 	}
 
 	if(tickList.size() > 0)
@@ -212,7 +210,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		d = QueueManager::getInstance()->getDownload(aConn->getUser());
 
 	if(d == NULL) {
-			removeConnection(aConn, true);
+			removeConnection(aConn, false);
 			return;
 		}
 
@@ -422,6 +420,10 @@ public:
 	virtual ~TigerCheckOutputStream() { if(managed) delete s; };
 
 	virtual size_t flush() throw(FileException) {
+		if (bufPos != 0)
+			cur.update(buf, bufPos);
+		bufPos = 0;
+
 		cur.finalize();
 		checkTrees();
 		return s->flush();
@@ -447,7 +449,7 @@ public:
 			dcassert(bufPos == 0);
 			size_t left = len - pos;
 			size_t part = left - (left %  TigerTree::BASE_BLOCK_SIZE);
-			if(part >= 0) {
+			if(part > 0) {
 				cur.update(xb + pos, part);
 				pos += part;
 			}
@@ -788,12 +790,12 @@ noCRC:
 			LogManager::getInstance()->message(STRING(DOWNLOAD_CORRUPTED) + " (" + d->getTarget() + ")", true);
 
 			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
-				
+
 			string target = d->getTarget();
-				
+			
 			aSource->setDownload(NULL);
-			d->setPos(0);
-			removeDownload(d);
+			removeDownload(d);				
+			
 			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 			checkDownloads(aSource, true);
 			return;

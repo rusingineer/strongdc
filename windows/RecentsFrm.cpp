@@ -4,6 +4,7 @@
 
 #include "RecentsFrm.h"
 #include "HubFrame.h"
+#include "LineDlg.h"
 
 #include "../client/ClientManager.h"
 #include "../client/StringTokenizer.h"
@@ -62,10 +63,10 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	hubsMenu.CreatePopupMenu();
 	hubsMenu.AppendMenu(MF_STRING, IDC_CONNECT, CSTRING(CONNECT));
 	hubsMenu.AppendMenu(MF_STRING, IDC_ADD, CSTRING(ADD_TO_FAVORITES));
+	hubsMenu.AppendMenu(MF_STRING, IDC_EDIT, CSTRING(PROPERTIES));
 	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE_ALL, CSTRING(REMOVE_ALL));
-
-	m_hMenu = WinUtil::mainMenu;
+	hubsMenu.SetMenuDefaultItem(IDC_CONNECT);
 
 	bHandled = FALSE;
 	return TRUE;
@@ -180,3 +181,26 @@ void RecentHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	rc.OffsetRect(bwidth+2, 0);
 	ctrlRemoveAll.MoveWindow(rc);
 }
+
+LRESULT RecentHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	int i = -1;
+	if((i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1)
+	{
+		RecentHubEntry* r = (RecentHubEntry*)ctrlHubs.GetItemData(i);
+		dcassert(r != NULL);
+		LineDlg dlg;
+		dlg.description = STRING(DESCRIPTION);
+		dlg.title = r->getName();
+		dlg.line = r->getDescription();
+		if(dlg.DoModal(m_hWnd) == IDOK) {
+			r->setDescription(dlg.line);
+			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, r->getDescription().c_str());
+			HubManager::getInstance()->recentsave();
+		}
+	}
+	return 0;
+}
+
+
+
+

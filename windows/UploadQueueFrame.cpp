@@ -88,8 +88,6 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	ctrlStatus.SetParts(4, statusSizes);
 	UpdateLayout();
 
-	m_hMenu = WinUtil::mainMenu;
-
 	// Load all searches
 	LoadAll();
 

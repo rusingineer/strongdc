@@ -34,9 +34,11 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD, onAdd)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_ALL, onRemoveAll)
-		NOTIFY_HANDLER(IDC_HUBLIST, LVN_COLUMNCLICK, onColumnClickHublist)
+		COMMAND_ID_HANDLER(IDC_EDIT, onEdit)
+		NOTIFY_HANDLER(IDC_RECENTS, LVN_COLUMNCLICK, onColumnClickHublist)
 		NOTIFY_HANDLER(IDC_RECENTS, NM_DBLCLK, onDoubleClickHublist)
 		NOTIFY_HANDLER(IDC_RECENTS, NM_RETURN, onEnter)
+		NOTIFY_HANDLER(IDC_RECENTS, LVN_KEYDOWN, onKeyDown)
 		CHAIN_MSG_MAP(baseClass)
 	END_MSG_MAP()
 		
@@ -48,6 +50,7 @@ public:
 	LRESULT onClickedConnect(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onRemoveAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onEdit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -84,7 +87,7 @@ public:
 			else
 				ctrlHubs.setSortDirection(false);
 		} else {
-			if(l->iSubItem == 2) {
+			if(l->iSubItem == 2 || l->iSubItem == 3) {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
 			} else {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
@@ -135,11 +138,33 @@ private:
 		ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
 	}
 	
+	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
+		if(kd->wVKey == VK_DELETE) {
+			int i = -1;
+			while( (i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+				HubManager::getInstance()->removeRecent((RecentHubEntry*)ctrlHubs.GetItemData(i));
+			}
+		}
+		return 0;
+	}
+
+	
 	virtual void on(RecentAdded, const RecentHubEntry* entry) throw() {
 		addEntry(entry, ctrlHubs.GetItemCount());
 	}
 	virtual void on(RecentRemoved, const RecentHubEntry* entry) throw() {
 		ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry));
+	}
+	virtual void on(RecentUpdated, const RecentHubEntry* entry) throw() {
+		int i = -1;
+		if((i = ctrlHubs.find((LPARAM)entry)) != -1) {
+			ctrlHubs.SetItemText(i, COLUMN_NAME, entry->getName().c_str());
+			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, entry->getDescription().c_str());
+			ctrlHubs.SetItemText(i, COLUMN_USERS, entry->getUsers().c_str());
+			ctrlHubs.SetItemText(i, COLUMN_SHARED, Util::formatBytes(entry->getShared()).c_str());
+			ctrlHubs.SetItemText(i, COLUMN_SERVER, entry->getServer().c_str());
+		}
 	}
 };
 

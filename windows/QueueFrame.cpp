@@ -170,8 +170,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlStatus.SetParts(6, statusSizes);
 	updateStatus();
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return 1;
 }
@@ -1461,6 +1459,11 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 }
 
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+		bHandled = FALSE;
+		return 0;
+	}
+
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 

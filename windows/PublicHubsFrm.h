@@ -133,7 +133,7 @@ public:
 			else
 				ctrlHubs.setSortDirection(false);
 		} else {
-			if((l->iSubItem == 2) || (l->iSubItem == 4) || (l->iSubItem == 7)  || (l->iSubItem == 8)  || (l->iSubItem == 9)  || (l->iSubItem == 10)  || (l->iSubItem == 13)) {
+			if((l->iSubItem == 2) || (l->iSubItem == 4) || (l->iSubItem == 7) || (l->iSubItem == 8) || (l->iSubItem == 9) || (l->iSubItem == 10) || (l->iSubItem == 11) || (l->iSubItem == 13)) {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
 			} else {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);

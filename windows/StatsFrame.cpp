@@ -31,14 +31,12 @@ LRESULT StatsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	SetFont(WinUtil::font);
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT StatsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-if(!closed) {
+	if(!closed) {
 		closed = true;		
 
 		CZDCLib::setButtonPressed(IDC_NET_STATS, false);
