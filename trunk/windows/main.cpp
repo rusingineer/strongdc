@@ -25,7 +25,7 @@
 #include "WinUtil.h"
 #include "SingleInstance.h"
 #include "ExceptionDlg.h"
-
+#include "../client/cvsversion.h"
 #include "../client/MerkleTree.h"
 
 #include <delayimp.h>
@@ -105,8 +105,13 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
+#ifdef isCVS
+	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
+		exceptionCode, VERSIONSTRING CVSVERSION);
+#else
 	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
 		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING);
+#endif
 
 	f.write(buf, strlen(buf));
 

@@ -109,45 +109,34 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* conn, strin
 			string sText;
 			try {
 				string s_latestVersion;
-				string latestVersion;
+				double latestVersion;
 				double oldVersion;
 				string versionURL;
 				string updateURL;
 				SimpleXML xml;
 				xml.fromXML(xmldata);
 				xml.stepIn();
-				if (xml.findChild("Version")) {
+				if (xml.findChild("DCVersion")) {
 					s_latestVersion = xml.getChildData();
-					latestVersion = s_latestVersion;
+					latestVersion = atof(s_latestVersion.c_str());
 					xml.resetCurrentChild();
 				} else
 					throw Exception();
+				if (xml.findChild("Version")) {
+					s_latestVersion = xml.getChildData();
+					xml.resetCurrentChild();
+				} else
+					throw Exception();
+
 				PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new string(s_latestVersion));
 				if (xml.findChild("VeryOldVersion")) {
 					oldVersion = atof(xml.getChildData().c_str());					
 				}
 				xml.resetCurrentChild();
-				/*else
-					throw Exception();*/
-		/*		if (xml.findChild("VersionURL")) {
-					versionURL = xml.getChildData();
-					xml.resetCurrentChild();
-				} else
-					throw Exception();
-				if (versionURL != SETTING(VERSION_URL))
-					SettingsManager::getInstance()->set(SettingsManager::VERSION_URL, versionURL);
-				if (xml.findChild("UpdateURL")) {
-					updateURL = xml.getChildData();
-					xml.resetCurrentChild();
-				} else
-					throw Exception();
-				if (updateURL != SETTING(UPDATE_URL))
-					SettingsManager::getInstance()->set(SettingsManager::UPDATE_URL, updateURL);*/
 				if (xml.findChild("URL")) {
 					downloadURL = xml.getChildData();
 					xml.resetCurrentChild();
-//					if (latestVersion > oVERSIONFLOAT)
-					if(latestVersion != (VERSIONSTRING CZDCVERSIONSTRING))
+					if (latestVersion > DCVERSIONFLOAT)
 						ctrlDownload.EnableWindow(TRUE);
 				} else
 					throw Exception();

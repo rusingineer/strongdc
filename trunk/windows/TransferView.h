@@ -27,6 +27,7 @@
 #include "../client/UploadManager.h"
 #include "../client/CriticalSection.h"
 #include "../client/ConnectionManagerListener.h"
+#include "../client/ConnectionManager.h"
 
 #include "OMenu.h"
 #include "UCHandler.h"
@@ -128,7 +129,18 @@ public:
 	}
 
 	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		ctrlTransfers.forEach(&ItemInfo::deleteSelf);
+		ItemInfo::Map::iterator i;
+		for(i = transferItems.begin(); i != transferItems.end(); ++i) {
+			delete i->second;
+		}
+
+		int q = 0;
+		while(q<mainItems.size()) {
+			ItemInfo* m = mainItems[q];
+			delete m;
+			q++;
+		}
+
 		return 0;
 	}
 private:
@@ -244,7 +256,7 @@ private:
 		void disconnect();
 		void removeAll();
 		void deleteSelf() { 
-			//delete this; // TODO: don't leak and don't crash
+			delete this;
 		}	
 
 		double getRatio() {

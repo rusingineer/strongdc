@@ -16,8 +16,6 @@ public:
 	static bool isXp();
 	static bool isNT();
 	static int getWinVerMajor();
-	static bool findListChild(const vector<string>& sl, const string& s);
-	static bool findListChild(const vector<string>& sl, const int64_t& i);
 
 	static inline BYTE getRValue(const COLORREF& cr) {
 		return (BYTE)(cr & 0xFF);

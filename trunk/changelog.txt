@@ -1,7 +1,6 @@
 	-- StrongDC++ 1.00 RC7 ??? --
 
 * NetLimiter je detekován pouze pokud se omezuje StrongDC++
-* odstranìna podpora BZ2 listù
 * pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
 * automatické hledání alternativ podle RevConnectu
 * odstranìno automatické odstraòování zdrojù pomalejších 1kB/s
@@ -22,12 +21,15 @@
 * pøidána položka pro odstranìní offline uživatelù z fronty
 * na lištu pøidáno tlaèítko pro zapnutí/vypnutí zvukù
 * opraven zvuk pøi zobrazení vlastního nicku
-* provizornì opraveno zaseknutí dotažených souborù na 100%
 * komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
 * pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
 * pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
 * synchronizace s DC++ 0.403
 * opraven bug v DC++ emulaci (THX PPK)
+* opravena nemožnost stahovat od klientù založených na DC++ 0.402 CVS a vyšších
+* spouštìcí logo není Vždy na vrchu
+* zmìna v userfiltru (DCDM++)
+* opraven memory leak v SearchFrame
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

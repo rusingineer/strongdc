@@ -48,7 +48,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID", "DownSpeed", "UpSpeed",
-	"MinBlockSize", "UpdateURL",
+	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",

@@ -177,10 +177,10 @@ HLSTRIPLE OperaColors::RGB2HLS(BYTE red, BYTE green, BYTE blue) {
 	hlst.hlstLightness = (m2 + m0) / 2;
 	d = (m2 - m0) / 2;
 	if (hlst.hlstLightness <= 0.5) {
-		//if(hlst.hlstLightness == 0) hlst.hlstLightness = 0.1;
+		if(hlst.hlstLightness == 0) hlst.hlstLightness = 0.1;
 		hlst.hlstSaturation = d / hlst.hlstLightness;
 	} else {
-		//if(hlst.hlstLightness == 1) hlst.hlstLightness = 0.99;
+		if(hlst.hlstLightness == 1) hlst.hlstLightness = 0.99;
 		hlst.hlstSaturation = d / (1 - hlst.hlstLightness);
 	}
 	if (hlst.hlstSaturation > 0 && hlst.hlstSaturation < 1)
@@ -394,52 +394,4 @@ int CZDCLib::setButtonPressed(int nID, bool bPressed /* = true */) {
 
 	MainFrame::anyMF->ctrlToolbar.CheckButton(nID, bPressed);
 	return 0;
-}
-
-bool CZDCLib::findListChild(const vector<string>& sl, const string& s) {
-	vector<string>::const_iterator i;
-	vector<string>::const_iterator j;
-	for (i = sl.begin(); i != sl.end(); ++i) {
-		if (*i == "")
-			continue;
-		StringTokenizer st(*i, ',');
-		bool b = false;
-		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
-			if (*j == "")
-				continue;
-			if (j->substr(0, 1) == "|")
-				b |= (Util::findSubString(s, j->substr(1)) == string::npos);
-			else
-				b |= (Util::findSubString(s, *j) != string::npos);
-		}
-		if (!b)
-			return false;
-	}
-	return true;
-}
-
-bool CZDCLib::findListChild(const vector<string>& sl, const int64_t& inr) {
-	vector<string>::const_iterator i;
-	vector<string>::const_iterator j;
-	for (i = sl.begin(); i != sl.end(); ++i) {
-		if (*i == "")
-			continue;
-		StringTokenizer st(*i, ',');
-		bool b = false;
-		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
-			if (*j == "")
-				continue;
-			if (j->substr(0, 1) == "|")
-				b |= (Util::toInt64(j->substr(1)) != inr);
-			else if (j->substr(0, 1) == "<")
-				b |= (Util::toInt64(j->substr(1)) > inr);
-			else if (j->substr(0, 1) == ">")
-				b |= (Util::toInt64(j->substr(1)) < inr);
-			else
-				b |= (Util::toInt64(*j) == inr);
-		}
-		if (!b)
-			return false;
-	}
-	return true;
 }

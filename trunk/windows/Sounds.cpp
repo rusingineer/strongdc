@@ -77,6 +77,11 @@ LRESULT Sounds::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	i = ctrlSounds.insert(6, STRING(MYNICK_IN_CHAT));
 	ctrlSounds.SetItemText(i, 1, SETTING(CHATNAMEFILE).c_str());
 
+	i = ctrlSounds.insert(6, STRING(SOUND_TTH_INVALID));
+	ctrlSounds.SetItemText(i, 1, SETTING(SOUND_TTH).c_str());
+
+	i = ctrlSounds.insert(6, STRING(SOUND_EXCEPTION));
+	ctrlSounds.SetItemText(i, 1, SETTING(SOUND_EXC).c_str());
 
 	// Do specialized reading here
 
@@ -110,6 +115,13 @@ void Sounds::write()
 
 	ctrlSounds.GetItemText(6, 1, buf, 256);
 	settings->set(SettingsManager::CHATNAMEFILE, string(buf));
+
+	ctrlSounds.GetItemText(7, 1, buf, 256);
+	settings->set(SettingsManager::SOUND_TTH, string(buf));
+
+	ctrlSounds.GetItemText(8, 1, buf, 256);
+	settings->set(SettingsManager::SOUND_EXC, string(buf));
+
 
 	// Do specialized writing here
 	// settings->set(XX, YY);

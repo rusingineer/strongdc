@@ -105,7 +105,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		File* f;
 		try {
 			f = new File(file, File::READ, File::OPEN);
-		} catch(const Exception&) {
+		} catch(const FileException&) {
 			aSource->fileNotAvail();
 			return false;
 		}

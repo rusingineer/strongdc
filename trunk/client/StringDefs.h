@@ -565,6 +565,8 @@ enum Strings { // @DontAdd
 	SOUND_SOURCE_ADDED, // "Alternate source added"
 	SOUND_UPLOAD_FINISHED, // "Upload finished"
 	SOUND_FAKER_FOUND, // "Faker found"
+	SOUND_TTH_INVALID, // "File is corrupted"
+	SOUND_EXCEPTION, // "Unhandled exception"
 	EXTRA_HUB_SLOTS, // "Open X extra slots for each hub (when hubs = 2 or more)"
 	SETTINGS_SEGMENT, // "Segment Downloading"
 	AUTO_SEGMENT_TEXT, // "Automatically do Accelerated (Segmented) downloading"
