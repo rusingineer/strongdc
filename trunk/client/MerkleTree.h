@@ -219,7 +219,7 @@ public:
 	virtual ~TreeInputStream() {
 	}
 
-	virtual size_t read(void* buf, size_t& len) {
+	virtual size_t read(void* buf, size_t& len) throw(Exception) {
 		size_t total = 0;
 		while(n < tree.getLeaves().size() && total < len) {
 			Value& v = tree.getLeaves()[n];

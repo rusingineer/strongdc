@@ -37,8 +37,10 @@
 * opraven pád pøi odpojování pomalých stahování
 * pøidáno nastavení progressbarù pro segmenty
 * pøidán sloupec Nick do vyhledávacího špiona (BCDC++)
-* stromová struktura pro výbìr adresáøù ke sdílení (PossumMod)
+* stromová struktura pro výbìr adresáøù ke sdílení, neexistující složky jsou automaticky odstranìny (PossumMod)
 * v transferviewu jsou zdroje vyhledávány podle TTH
+* minimální velikost segmentu je nastavena automaticky podle velikosti souboru
+* upgradováno na WTL 7.5
 
 
 	-- StrongDC++ 1.00 RC5 --

@@ -89,8 +89,6 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
 
-	m_hMenu = WinUtil::mainMenu; 
-
 	bHandled = FALSE;
 	return TRUE;
 }

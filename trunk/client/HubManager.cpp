@@ -89,7 +89,7 @@ void HubManager::addRecent(const RecentHubEntry& aEntry) {
 	recentsave();
 }
 
-void HubManager::removeRecent(RecentHubEntry* entry) {
+void HubManager::removeRecent(const RecentHubEntry* entry) {
 	RecentHubEntry::Iter i = find(recentHubs.begin(), recentHubs.end(), entry);
 	if(i == recentHubs.end()) {
 		return;
@@ -98,6 +98,16 @@ void HubManager::removeRecent(RecentHubEntry* entry) {
 	fire(HubManagerListener::RecentRemoved(), entry);
 	recentHubs.erase(i);
 	delete entry;
+	recentsave();
+}
+
+void HubManager::updateRecent(const RecentHubEntry* entry) {
+	RecentHubEntry::Iter i = find(recentHubs.begin(), recentHubs.end(), entry);
+	if(i == recentHubs.end()) {
+		return;
+	}
+		
+	fire(HubManagerListener::RecentUpdated(), entry);
 	recentsave();
 }
 
@@ -137,8 +147,8 @@ void HubManager::onHttpFinished() throw() {
 			const string& name = *k++;
 			const string& server = *k++;
 			const string& desc = *k++;
-			const string& users = *k++;
-			publicHubs.push_back(HubEntry(name, server, desc, users));
+			const string& usersOnline = *k++;
+			publicHubs.push_back(HubEntry(name, server, desc, usersOnline));
 		}
 	}
 	} else {
@@ -580,8 +590,10 @@ void HubManager::recentload(SimpleXML* aXml) {
 }
 
 void HubManager::refresh() {
-	StringList l = StringTokenizer(SETTING(HUBLIST_SERVERS), ';').getTokens();
-	const string& server = l[(lastServer) % l.size()];
+	StringList sl = StringTokenizer(SETTING(HUBLIST_SERVERS), ';').getTokens();
+	if(sl.empty())
+		return;
+	const string& server = sl[(lastServer) % sl.size()];
 	if(Util::strnicmp(server.c_str(), "http://", 7) != 0) {
 		lastServer++;
 		return;
@@ -623,13 +635,13 @@ void HubManager::on(Data, HttpConnection*, const u_int8_t* buf, size_t len) thro
 	downloadBuf.append((const char*)buf, len);
 }
 
-void HubManager::on(Failed, HttpConnection* c, const string& aLine) throw() { 
+void HubManager::on(Failed, HttpConnection*, const string& aLine) throw() { 
 		c->removeListener(this);
 	lastServer++;
 		running = false;
 	fire(HubManagerListener::DownloadFailed(), aLine);
 }
-void HubManager::on(Complete, HttpConnection* c, const string& aLine) throw() {
+void HubManager::on(Complete, HttpConnection*, const string& aLine) throw() {
 		c->removeListener(this);
 	onHttpFinished();
 		running = false;

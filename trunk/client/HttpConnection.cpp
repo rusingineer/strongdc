@@ -96,7 +96,7 @@ void HttpConnection::on(BufferedSocketListener::Connected) throw() {
 	socket->write("Cache-Control: no-cache\r\n\r\n"); 
 } 
 
-void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) {
+void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) throw() {
 	if(!ok) {
 		if(aLine.find("200") == string::npos) {
 			if(aLine.find("302") != string::npos){
@@ -146,7 +146,7 @@ void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) {
 	}
 }
 
-void HttpConnection::on(BufferedSocketListener::Failed, const string& aLine) {
+void HttpConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 		socket->removeListener(this);
 		BufferedSocket::putSocket(socket);
 		socket = NULL;

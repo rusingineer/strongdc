@@ -123,7 +123,6 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ClientManager::getInstance()->addListener(this);
 
-	m_hMenu = WinUtil::mainMenu;
 
 	bHandled = FALSE;
 	return 1;

@@ -76,8 +76,6 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	}
 	ctrlUsers.SetRedraw(TRUE);
 
-	m_hMenu = WinUtil::mainMenu;
-
 	startup = false;
 
 	bHandled = FALSE;

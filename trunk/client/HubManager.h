@@ -223,6 +223,7 @@ public:
 	typedef X<6> UserRemoved;
 	typedef X<7> RecentAdded;
 	typedef X<8> RecentRemoved;
+	typedef X<9> RecentUpdated;
 
 	virtual void on(DownloadStarting, const string&) throw() { }
 	virtual void on(DownloadFailed, const string&) throw() { }
@@ -233,6 +234,7 @@ public:
 	virtual void on(UserRemoved, const User::Ptr&) throw() { }
 	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
+	virtual void on(RecentUpdated, const RecentHubEntry*) throw() { }
 };
 
 class SimpleXML;
@@ -272,7 +274,8 @@ public:
 	}
 	
 	void addRecent(const RecentHubEntry& aEntry);
-	void removeRecent(RecentHubEntry* entry);
+	void removeRecent(const RecentHubEntry* entry);
+	void updateRecent(const RecentHubEntry* entry);
 
 	RecentHubEntry* getRecentHubEntry(const string& aServer) {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {

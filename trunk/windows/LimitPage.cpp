@@ -26,7 +26,7 @@ PropPage::TextItem LimitPage::texts[] = {
 	{ IDC_SETTINGS_KBPS5, ResourceManager::KBPS_DISABLE },
 	{ IDC_SETTINGS_KBPS6, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS7, ResourceManager::KBPS },
-	{ IDC_SETTINGS_MINUTES, ResourceManager::SECONDS },
+	{ IDC_SETTINGS_MINUTES, ResourceManager::MINUTES },
 	{ IDC_CZDC_DW_SPEEED, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
 	{ IDC_CZDC_DW_SPEEED1, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
 	{ IDC_TIME_LIMITING, ResourceManager::SETCZDC_ALTERNATE_LIMITING },

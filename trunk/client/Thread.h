@@ -36,6 +36,10 @@
 	#include <process.h>
 #endif
 
+#ifdef HAS_ATOMIC
+#include <asm/atomic.h>
+#endif
+
 typedef unsigned (__stdcall *PTHREAD_START) (void *);
 
 #define chBEGINTHREADEX(psa, cbStack, pfnStartAddr, \
@@ -121,7 +125,7 @@ public:
 	static void sleep(u_int32_t millis) { ::usleep(millis*1000); };
 	static void yield() { ::sched_yield(); };
 	static long safeInc(long* v) { 
-#if 0
+#ifdef HAS_ATOMIC
 		atomic_t t = ATOMIC_INIT(*v);
 		atomic_inc(&t);
 		return (*v=t.counter);
@@ -132,7 +136,7 @@ public:
 #endif
 	};
 	static long safeDec(long* v) { 
-#if 0
+#if HAS_ATOMIC
 		atomic_t t = ATOMIC_INIT(*v);
 		atomic_dec(&t);
 		return (*v=t.counter);

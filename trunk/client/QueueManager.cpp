@@ -784,10 +784,10 @@ bool QueueManager::matchExtension(const string& aString, const string& aExt) {
 	return false;
 }
 
-int QueueManager::getMaxSegments(QueueItem* q) {
+int QueueManager::getMaxSegments(string filename, int64_t filesize) {
 	int MaxSegments = 1;
 
-	string s1 = q->getTargetFileName();
+	string s1 = filename;
 	s1.erase(0,s1.find_last_of('.'));
 
 //	if(SETTING(DONT_EXTENSIONS).find(s1+";") != -1) {  MaxSegments = 1; }
@@ -797,15 +797,15 @@ int QueueManager::getMaxSegments(QueueItem* q) {
 
 	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_SIZE)
 		{
-		if( (q->getSize()>=(SETTING(SET_MIN2)*1024*1024)) && (q->getSize()<(SETTING(SET_MAX2)*1024*1024))) { MaxSegments = 2;}
+		if( (filesize>=(SETTING(SET_MIN2)*1024*1024)) && (filesize<(SETTING(SET_MAX2)*1024*1024))) { MaxSegments = 2;}
 		else
-			if( (q->getSize()>=(SETTING(SET_MIN3)*1024*1024)) && (q->getSize()<(SETTING(SET_MAX3)*1024*1024))) { MaxSegments = 3;}
+			if( (filesize>=(SETTING(SET_MIN3)*1024*1024)) && (filesize<(SETTING(SET_MAX3)*1024*1024))) { MaxSegments = 3;}
 		else
-			if( (q->getSize()>=(SETTING(SET_MIN4)*1024*1024)) && (q->getSize()<(SETTING(SET_MAX4)*1024*1024))) { MaxSegments = 4;}
+			if( (filesize>=(SETTING(SET_MIN4)*1024*1024)) && (filesize<(SETTING(SET_MAX4)*1024*1024))) { MaxSegments = 4;}
 		else
-			if( (q->getSize()>=(SETTING(SET_MIN6)*1024*1024)) && (q->getSize()<(SETTING(SET_MAX6)*1024*1024))) { MaxSegments = 6;}
+			if( (filesize>=(SETTING(SET_MIN6)*1024*1024)) && (filesize<(SETTING(SET_MAX6)*1024*1024))) { MaxSegments = 6;}
 		else
-			if(q->getSize()>=(SETTING(SET_MIN8)*1024*1024)) { MaxSegments = 8;}
+			if(filesize>=(SETTING(SET_MIN8)*1024*1024)) { MaxSegments = 8;}
 		} else
 	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_CONNECTION)
 		{ 
@@ -836,7 +836,7 @@ Download* QueueManager::getDownload(User::Ptr& aUser) throw() {
 
 	int k = q->getCurrents().size();
 
-	if(k<getMaxSegments(q))
+	if(k<getMaxSegments(q->getTargetFileName(),q->getSize()))
 	{
  
 	Download *d;
@@ -1270,7 +1270,7 @@ void QueueManager::saveQueue() throw() {
 class QueueLoader : public SimpleXMLReader::CallBack {
 public:
 	QueueLoader() : cur(NULL), inDownloads(false) { };
-
+	virtual ~QueueLoader() { }
 	virtual void startTag(const string& name, StringPairList& attribs, bool simple);
 	virtual void endTag(const string& name, const string& data);
 private:

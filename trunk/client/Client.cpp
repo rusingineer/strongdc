@@ -79,10 +79,10 @@ string Client::getLocalIp() const {
 
 	if(socket == NULL)
 		return Util::getLocalIp();
-	string tmp = socket->getLocalIp();
-	if(tmp.empty())
+	string lip = socket->getLocalIp();
+	if(lip.empty())
 		return Util::getLocalIp();
-	return tmp;
+	return lip;
 }
 
 /**

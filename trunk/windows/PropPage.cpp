@@ -52,14 +52,14 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 				ctrlMap[i->itemID] = tempCtrl;
 			}
 #endif
-			if (((SettingsManager::IntSetting)i->setting) != SettingsManager::CLIENTVERSION) {
+	/*		if (((SettingsManager::IntSetting)i->setting) != SettingsManager::CLIENTVERSION) {
 				if (GetDlgItem(page, i->itemID) == NULL) {
 					// Control not exist ? Why ??
 					throw;
 				}
 				::SetDlgItemText(page, i->itemID,
 					settings->get((SettingsManager::StrSetting)i->setting, useDef).c_str());
-			} else {
+			} else*/ {
 				if(!SettingsManager::getInstance()->isDefault(i->setting)) {
 					::SetDlgItemText(page, i->itemID,
 						settings->get((SettingsManager::StrSetting)i->setting, useDef).c_str());

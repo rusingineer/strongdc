@@ -105,8 +105,6 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 
 	nosave = false;
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -149,6 +147,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 		r.setName(entry->getName());
 		r.setDescription(entry->getDescription());
 		r.setUsers("*");
+		r.setShared("*");
 		r.setServer(entry->getServer());
 		HubManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 

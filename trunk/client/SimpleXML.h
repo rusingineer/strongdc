@@ -41,6 +41,7 @@ STANDARD_EXCEPTION(SimpleXMLException);
 class SimpleXMLReader {
 public:
 	struct CallBack {
+		virtual ~CallBack() { }
 		virtual void startTag(const string& name, StringPairList& attribs, bool simple) = 0;
 		virtual void endTag(const string& name, const string& data) = 0;
 

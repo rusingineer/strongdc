@@ -218,7 +218,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	return true;
 }
 
-void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) {
+void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
 	if(prepareFile(aSource, "file", aFile, aResume, -1)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
@@ -250,7 +250,7 @@ void UploadManager::onGetBlock(UserConnection* aSource, const string& aFile, int
 	}
 }
 
-void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) {
+void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) throw() {
 	if(aSource->getState() != UserConnection::STATE_SEND) {
 		dcdebug("UM::onSend Bad state, ignoring\n");
 		return;
@@ -265,7 +265,7 @@ void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) {
 	fire(UploadManagerListener::Starting(), u);
 }
 
-void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSource, size_t aBytes, size_t aActual) {
+void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSource, size_t aBytes, size_t aActual) throw() {
 	dcassert(aSource->getState() == UserConnection::STATE_DONE);
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);
@@ -273,7 +273,7 @@ void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSourc
 	throttleBytesTransferred(aActual);
 }
 
-void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) {
+void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
 	Upload* u = aSource->getUpload();
 
 	if(u) {
@@ -287,7 +287,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 	removeConnection(aSource);
 }
 
-void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) {
+void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) throw() {
 	dcassert(aSource->getState() == UserConnection::STATE_DONE);
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);

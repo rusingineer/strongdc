@@ -50,8 +50,6 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlPad.SetWindowText(tmp.c_str());
 	ctrlPad.EmptyUndoBuffer();
 	
-	m_hMenu = WinUtil::mainMenu;
-	
 	bHandled = FALSE;
 	return 1;
 }

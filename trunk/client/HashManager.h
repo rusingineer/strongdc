@@ -62,10 +62,10 @@ public:
 	 */
 	TTHValue* getTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp);
 
-	bool getTree(const string& aFileName, TigerTree& tmp);
+	bool getTree(const string& aFileName, TigerTree& tt);
 
-	void addTree(const string& aFileName, const TigerTree& tmp) {
-		hashDone(aFileName, tmp, -1);
+	void addTree(const string& aFileName, const TigerTree& tt) {
+		hashDone(aFileName, tt, -1);
 	}
 	/**
 	 * Rebuild hash data file
