@@ -125,13 +125,25 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	ctrlFilter.SetFont(WinUtil::font);
 	ctrlFilterBy.SetFont(WinUtil::font);
-	ctrlFilterBy.AddString(CSTRING(NICK_MENU));
-	ctrlFilterBy.AddString(CSTRING(DESCRIPTION_MENU));
-	ctrlFilterBy.AddString(CSTRING(TAG_MENU));
-	ctrlFilterBy.AddString(CSTRING(CLIENT_MENU));
-	ctrlFilterBy.AddString(CSTRING(CONNECTION_MENU));
-	ctrlFilterBy.AddString(CSTRING(EMAIL_MENU));
-	ctrlFilterBy.AddString(CSTRING(ANY_MENU));
+	ctrlFilterBy.AddString(CSTRING(NICK));
+	ctrlFilterBy.AddString(CSTRING(SHARED));
+	ctrlFilterBy.AddString(CSTRING(DESCRIPTION));
+	ctrlFilterBy.AddString(CSTRING(TAG));
+	ctrlFilterBy.AddString(CSTRING(CONNECTION));
+	ctrlFilterBy.AddString(CSTRING(EMAIL));
+	ctrlFilterBy.AddString(CSTRING(CLIENTID));
+	ctrlFilterBy.AddString(CSTRING(SETTINGS_IP));
+
+	ctrlFilterBy.AddString(CSTRING(ISP));
+
+	ctrlFilterBy.AddString(CSTRING(LOCK));
+	ctrlFilterBy.AddString(CSTRING(PK));
+	ctrlFilterBy.AddString(CSTRING(SUPPORTS));
+
+	ctrlFilterBy.AddString(CSTRING(STATUS));
+	ctrlFilterBy.AddString(CSTRING(AVERAGE_UPLOAD));
+
+	ctrlFilterBy.AddString(CSTRING(ANY));
 	ctrlFilterBy.SetCurSel(0);
 	iFilterBySel = ctrlFilterBy.GetCurSel(); // Make sure we are were we are...
 	splitChat.Create( m_hWnd );
@@ -554,24 +566,25 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	int i = -1;
 	if(searchinlist)
-		i = findUser(u);
-
+	//	i = findUser(u);
+		i = ctrlUsers.findItem(u->getNick());
 	bool bHideUser = false;
 	if (!stFilter.getTokens().empty()) {
 		string filter_s;
 		int64_t filter_i = -1;
+
 		switch (iFilterBySel) {
 			case 0: // Nick
 				filter_s = u->getNick();
 				break;
-			case 1: // Description
+			case 1: // Shared
+				filter_i = u->getBytesShared();
+				break;
+			case 2: // Description
 				filter_s = u->getDescription();
 				break;
-			case 2: // Tag
+			case 3: // Tag
 				filter_s = u->getTag();
-				break;
-			case 3: // Client
-				filter_s = u->getClientType();
 				break;
 			case 4: // Connection
 				filter_s = u->getConnection();
@@ -579,8 +592,34 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 			case 5: // E-Mail
 				filter_s = u->getEmail();
 				break;
-			case 6: // Any
-				filter_s = u->getNick() + ' ' + u->getTag() + ' ' + u->getClientType() + ' ' + u->getDescription() + ' ' + u->getConnection() + ' ' + u->getEmail();
+			case 6: // Client
+				filter_s = u->getClientType();
+				break;
+			case 7: // IP
+				filter_s = u->getIp();
+				break;
+			case 8: // Host
+				filter_s = u->getHost();
+				break;
+			case 9: // Lock
+				filter_s = u->getLock();
+				break;
+			case 10: // Pk
+				filter_s = u->getPk();
+				break;
+			case 11: // Supports
+				filter_s = u->getSupports();
+				break;
+			case 12: // Status
+				filter_i = u->getStatus();
+				break;
+			case 13: // Speed
+				filter_i = u->getDownloadSpeed();
+				break;
+			case 14: // Any
+				filter_s = u->getNick() + ' ' + u->getDescription() + ' ' + u->getTag() + ' ' + u->getConnection() + ' ' + u->getEmail()
+					 + ' ' + u->getClientType() + ' ' + u->getIp() + ' ' + u->getHost() + ' ' + u->getLock()
+					 + ' ' + u->getPk() + ' ' + u->getSupports();
 				break;
 			default: // We should NEVER be here...
 				dcassert(FALSE);
@@ -588,19 +627,20 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 				break;
 		}
 		if (filter_i == -1)
-			bHideUser = !stFilter.getTokens().empty() && !CZDCLib::findListChild(stFilter.getTokens(), filter_s);
+			bHideUser = !stFilter.getTokens().empty() && !findListChild(stFilter.getTokens(), filter_s);
 		else
-			bHideUser = !stFilter.getTokens().empty() && !CZDCLib::findListChild(stFilter.getTokens(), filter_i);
+			bHideUser = !stFilter.getTokens().empty() && !findListChild(stFilter.getTokens(), filter_i);
 	}
 	if (bHideUser) {
 		if (i != -1) {
-			UserInfo* ui = ctrlUsers.getItemData(i);
+			//UserInfo* ui = ctrlUsers.getItemData(i);
+			delete ctrlUsers.getItemData(i);
 			ctrlUsers.deleteItem(i, false);
-			dcassert(userMap[u] == ui);
-			userMap.erase(u);			
+			//dcassert(userMap[u] == ui);
+			//userMap.erase(u);			
 		}
 		return false;
-	} else {
+	} else
 	if(i == -1) {
 		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
 		userMap.insert(make_pair(u, ui));
@@ -617,8 +657,104 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 		return false;
 	}
 }
+
+// The next two were actually in the OperaLib class but i didnt need the rest of it..
+bool HubFrame::findListChild(const vector<string>& sl, const string& s) {
+	vector<string>::const_iterator i;
+	vector<string>::const_iterator j;
+	for (i = sl.begin(); i != sl.end(); ++i) {
+		if (*i == "")
+			continue;
+		StringTokenizer st(*i, ',');
+		bool b = false;
+		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
+			if (*j == "")
+				continue;
+			if (j->substr(0, 1) == "|")
+				b |= (Util::findSubString(s, j->substr(1)) == string::npos);
+			else
+				b |= (Util::findSubString(s, *j) != string::npos);
+		}
+		if (!b)
+			return false;
+	}
+	return true;
 }
 
+bool HubFrame::findListChild(const vector<string>& sl, const int64_t& inr) {
+	vector<string>::const_iterator i;
+	vector<string>::const_iterator j;
+	for (i = sl.begin(); i != sl.end(); ++i) {
+		if (*i == "")
+			continue;
+		StringTokenizer st(*i, ',');
+		bool b = false;
+		for (j = st.getTokens().begin(); j != st.getTokens().end(); ++j) {
+			if (*j == "")
+				continue;
+			if (j->substr(0, 1) == "|")
+				b |= (Util::toInt64(j->substr(1)) != inr);
+			else if (j->substr(0, 1) == "<")
+				b |= (Util::toInt64(j->substr(1)) > inr);
+			else if (j->substr(0, 1) == ">")
+				b |= (Util::toInt64(j->substr(1)) < inr);
+			else
+				b |= (Util::toInt64(*j) == inr);
+		}
+		if (!b)
+			return false;
+	}
+	return true;
+}
+
+LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	bHandled = (wParam == -1 && lParam == -1) ? TRUE : FALSE;
+	iFilterBySel = ctrlFilterBy.GetCurSel();
+	if (iFilterBySel == -1)
+		return S_OK;
+	// Get the text from the edit box
+	int len = ctrlFilter.GetWindowTextLength() + 1;
+	char *c = new char[len];
+	ctrlFilter.GetWindowText(c, len);
+	string s(c, len-1);
+	delete[] c;
+	// Tokenize the text
+	stFilter = StringTokenizer(s, ' ');
+	// Update E-v-e-r-y user in the list
+	updateEntireUserList();
+	return S_OK;
+}
+LRESULT HubFrame::onFilterCharDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	if (wParam != VK_TAB) {
+		bHandled = FALSE;
+		return S_OK;
+	}
+	bHandled = TRUE;
+	onTab();
+	return S_OK;
+}
+LRESULT HubFrame::onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	return onFilterChar(0, 0, 0, bHandled);
+}
+LRESULT HubFrame::onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	bHandled = FALSE;
+	::PostMessage(ctrlFilter.m_hWnd, WM_KEYUP, (WPARAM)-1, -1);
+	return S_OK;
+}
+
+void HubFrame::updateEntireUserList() {
+	Lock l(updateCS);
+	User::NickMap& um = client->lockUserList();
+//	updateList.clear();
+	updateList.reserve(um.size());
+	for(User::NickMap::const_iterator i = um.begin(); i != um.end(); ++i) {
+		updateList.push_back(make_pair(i->second, UPDATE_USERS));
+	}
+	client->unlockUserList();
+	if(!updateList.empty()) {
+		PostMessage(WM_SPEAKER, UPDATE_USERS);
+	}
+}
 LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == UPDATE_USERS) {
 		ctrlUsers.SetRedraw(FALSE);
@@ -645,7 +781,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					
 					break;
 				case REMOVE_USER:
-					int j = findUser(u);
+					//int j = findUser(u);
+					int j = ctrlUsers.findItem(u->getNick());
 					if( j != -1 ) {
 						if(showJoins) {
 							if (!favShowJoins | u->isFavoriteUser()) {
@@ -1408,41 +1545,6 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 	return 0;
 }
 
-LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	bHandled = (wParam == -1 && lParam == -1) ? TRUE : FALSE;
-	iFilterBySel = ctrlFilterBy.GetCurSel();
-	if (iFilterBySel == -1)
-		return S_OK;
-	// Get the text from the edit box
-	int len = ctrlFilter.GetWindowTextLength() + 1;
-	char *c = new char[len];
-	ctrlFilter.GetWindowText(c, len);
-	string s(c, len-1);
-	delete[] c;
-	// Tokenize the text
-	stFilter = StringTokenizer(s, ' ');
-	// Update E-v-e-r-y user in the list
-	updateEntireUserList();
-	return S_OK;
-}
-LRESULT HubFrame::onFilterCharDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	if (wParam != VK_TAB) {
-		bHandled = FALSE;
-		return S_OK;
-	}
-	bHandled = TRUE;
-	onTab();
-	return S_OK;
-}
-LRESULT HubFrame::onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
-	return onFilterChar(0, 0, 0, bHandled);
-}
-LRESULT HubFrame::onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	bHandled = FALSE;
-	::PostMessage(ctrlFilter.m_hWnd, WM_KEYUP, (WPARAM)-1, -1);
-	return S_OK;
-}
-
 LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	bHandled = FALSE;
 	if((wParam == BST_CHECKED)) {
@@ -1655,23 +1757,6 @@ void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
 				cf.crTextColor = SETTING(ERROR_COLOR);
 				HubFrame::addLine("*** "+STRING(USER)+" "+line, cf);
 }
-
-void HubFrame::updateEntireUserList() {
-		User::NickMap& lst = client->lockUserList();
-		ctrlUsers.SetRedraw(FALSE);
-		for(User::NickIter i = lst.begin(); i != lst.end(); ++i) {
-			updateUser(i->second);
-		}
-		client->unlockUserList();
-		ctrlUsers.SetRedraw(TRUE);
-		ctrlUsers.resort();
-	
-
-	if(!updateList.empty()) {
-		PostMessage(WM_SPEAKER, UPDATE_USERS);
-	}
-}
-
 
 void HubFrame::addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat /* = true */) {
 	string line = "[" + Util::getShortTimeString() + "] " + aLine;

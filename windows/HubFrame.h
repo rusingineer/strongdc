@@ -178,7 +178,8 @@ public:
 	LRESULT onFilterCharDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled);
 	LRESULT onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-
+	bool findListChild(const vector<string>& sl, const string& s);
+	bool findListChild(const vector<string>& sl, const int64_t& inr);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const string& aLine);
 	void addClientLine(const string& aLine, bool inChat = true);

@@ -34,6 +34,8 @@
 #include "DebugManager.h"
 #include "QueueManager.h"
 
+#include "cvsversion.h"
+
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	state(STATE_CONNECT), adapter(this),
 	lastActivity(GET_TICK()), 
@@ -680,8 +682,15 @@ void NmdcHub::myInfo() {
 	string VERZE = DCVERSIONSTRING;	
 	if ((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_CZDC)) {
 		tmp0 = "<StrgDC++";
-		VERZE = VERSIONSTRING CZDCVERSIONSTRING;
-	}
+
+#ifdef isCVS
+	VERZE = VERSIONSTRING CVSVERSION;
+		}
+#else
+	VERZE = VERSIONSTRING CZDCVERSIONSTRING;
+		}
+#endif
+
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
 	string connection = SETTING(CONNECTION);

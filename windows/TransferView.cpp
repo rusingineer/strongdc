@@ -22,7 +22,7 @@
 
 
 #include "../client/QueueManager.h"
-#include "../client/ConnectionManager.h"
+
 #include "../client/QueueItem.h"
 #include "../client/FileDataInfo.h"
 
@@ -357,7 +357,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_STATUS) {
-			//ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			ItemInfo* ii = ctrlTransfers.getStoredItemAt(cd->nmcd.lItemlParam); 
 			if(ii->status == ItemInfo::STATUS_RUNNING) {
 				// Get the color of this bar
@@ -376,7 +375,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				
 				ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, LVIR_BOUNDS, rc);
 					// Actually we steal one upper pixel to not have 2 borders together
-				//rc.top -= 1;
 
 				// Real rc, the original one.
 				CRect real_rc = rc;
@@ -497,13 +495,9 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::SetTextColor(dc, textcolor);
                 ::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
-							// Reset the colors to the system
-//                ::SetTextColor(cd->nmcd.hdc, oldcol);
-
 				SelectObject(dc, oldFont);
 				::SetTextColor(dc, oldcol);
 
-//				cdc.Detach();
 				// New way:
 				BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
 				DeleteObject(cdc.SelectBitmap(pOldBmp));
@@ -511,7 +505,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				return CDRF_SKIPDEFAULT;
 			}
 		} else if (cd->iSubItem == COLUMN_FILE || cd->iSubItem == COLUMN_SIZE || cd->iSubItem == COLUMN_PATH) {
-			//ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			ItemInfo* ii = ctrlTransfers.getStoredItemAt(cd->nmcd.lItemlParam); 
 			if (ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
 				cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.6);
@@ -568,14 +561,11 @@ void TransferView::InsertItem(ItemInfo* i) {
 		i->upper = h;
 		mainItems.push_back(h);
 		PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
-//		int m = ctrlTransfers.insertItem(0,h, IMAGE_DOWNLOAD);	
-//		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
 	} else { 
 		if(!i->upper->collapsed) {
 			int r = ctrlTransfers.findItem(i->upper);
 			dcassert(r != -1);
-			int l =	ctrlTransfers.insertItem(r+1,i,IMAGE_SEGMENT);
-			dcassert(l >= 0);
+			ctrlTransfers.insertItem(r+1,i,IMAGE_SEGMENT);
 		}
 		i->upper->pocetUseru += 1;
 	}
@@ -734,22 +724,17 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
-//		if(ctrlTransfers.findItem(i) != -1)
 		ctrlTransfers.deleteItem(i, true);
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
-		if( (i->type == ItemInfo::TYPE_DOWNLOAD) && (i->user != (User::Ptr)NULL))
-		{
+		if( (i->type == ItemInfo::TYPE_DOWNLOAD) && (i->user != (User::Ptr)NULL)) {
 			i->update();
 			if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
 		} else i->update();
-
-	//	if(ctrlTransfers.findItem(i) != -1) {
-			ctrlTransfers.updateItem(i);
-			if(ctrlTransfers.getSortColumn() != COLUMN_USER)
-				ctrlTransfers.resort();
-	//	}
+		ctrlTransfers.updateItem(i);
+		if(ctrlTransfers.getSortColumn() != COLUMN_USER)
+			ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
@@ -760,7 +745,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				i->update();
 				if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
 			} else 	i->update();
-			//if(ctrlTransfers.findItem(i) != -1)
 			  ctrlTransfers.updateItem(i);
 		}
 
@@ -802,7 +786,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 			}
 		}
 
-//		if((*h) != (*i->upper)) {
 		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
 
@@ -818,7 +801,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 
 			dcdebug("3. cyklus\n");
-			//ctrlTransfers.deleteItem(i, false);	
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 			dcdebug("4. cyklus\n");
 			InsertItem(i);
@@ -893,7 +875,7 @@ void TransferView::ItemInfo::update() {
 					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
 						upper->columns[COLUMN_STATUS] = upper->statusString;
 				} 
-			} else upper->columns[COLUMN_STATUS] = upper->statusString;
+			}// else upper->columns[COLUMN_STATUS] = upper->statusString;
 		}
 	}
 
@@ -1059,7 +1041,6 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 	ItemInfo* i;
 	ItemInfo* h; 
 	bool isDownload = true;
-//	bool existuje = false;
 	{
 		Lock l(cs);
 		dcdebug("onConnectionRemoved\n");
@@ -1071,16 +1052,6 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 		isDownload = (i->type == ItemInfo::TYPE_DOWNLOAD);
 		transferItems.erase(ii);
 
-/*		if(isDownload) {
-			for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
-				ItemInfo* q = j->second;
-				if(IsBadReadPtr(q, 4) == 0 && IsBadReadPtr(h, 4) == 0)			
-					if(q->Target == h->Target) {
-						existuje = true;
-						break;
-					}
-			}
-		}*/
 	}
 
 	if((isDownload) && (h != NULL))
@@ -1210,7 +1181,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				ItemInfo* ch = transferItems[cqi];
 				if (e->getTarget() == d->getTarget())
 				{	tmp = tmp+ e->getRunningAverage();
-					//a = (double)(i->start + e->getActual()) / (double)(i->start + e->getTotal());
 					a = ch->getRatio();
 					
 					if(a>0) {
@@ -1223,9 +1193,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
 			i->pocetSegmentu = NS;
 			i->celkovaRychlost = tmp;
-
-//			if(i->Target != i->oldTarget) setMainItem(i);
-//			i->oldTarget = i->Target;
 
 			if(i->upper != NULL) {
 				i->upper->compressRatio = pomerKomprese;
@@ -1469,7 +1436,7 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 			ItemInfo* m = j->second;
 			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				int h = ctrlTransfers.findItem(m);
-				//if(h != -1)
+				if(h != -1)
 					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(DISCONNECTED));
 				m->disconnect();
 			}

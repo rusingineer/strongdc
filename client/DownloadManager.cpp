@@ -99,15 +99,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			}
 		}
 
-/*        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20) 
-        {
-            if((*i)->getRunningAverage() < 1024){
-                QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
-                continue;
-            }
-        }*/
-		if(!(*i)->finished)
-			if((*i)->getQueueTotal() == (*i)->getSize()) handleEndData((*i)->getUserConnection());
+//		if(!(*i)->finished)
+//			if((*i)->getQueueTotal() == (*i)->getSize()) handleEndData((*i)->getUserConnection());
 	}
 
 	if(tickList.size() > 0)

@@ -377,10 +377,16 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
-/*	for(int i = 0; i != ctrlResults.GetItemCount(); i++) {
-		delete ctrlResults.getItemData(i);
-	}
-	ctrlResults.DeleteAllItems();*/
+    for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	    SearchInfo* si = ctrlResults.getItemData(i);
+		int q = 0;
+			while(q<si->subItems.size()) {
+				SearchInfo* j = si->subItems[q];
+				if(ctrlResults.findItem(j) == -1)
+					delete j;
+				q++;
+			}
+		}
 
 	mainItems.clear();
 	dcassert(mainItems.size() == 0);
@@ -509,8 +515,18 @@ void SearchFrame::SearchInfo::GetMP3Info() {
 void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
+			string cil = tgt + si->fileName;
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				tgt + si->fileName, si->sr->getTTH());
+				cil, si->sr->getTTH());
+			if(si->subItems.size()>0) {
+				int q = 0;
+				while(q<si->subItems.size()) {
+					SearchInfo* j = si->subItems[q];
+					QueueManager::getInstance()->add(j->sr->getFile(), j->sr->getSize(), j->sr->getUser(), 
+						cil, j->sr->getTTH());
+					q++;
+				}
+			}
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt);
 		}
@@ -654,8 +670,19 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
+        for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	       SearchInfo* si = ctrlResults.getItemData(i);
+		    int q = 0;
+			while(q<si->subItems.size()) {
+				SearchInfo* j = si->subItems[q];
+				if(ctrlResults.findItem(j) == -1)
+					delete j;
+				q++;
+			}
+		}
+ 		mainItems.clear();
 		ctrlResults.DeleteAll();
-		for(int i = 0; i < ctrlResults.GetItemCount(); i++) {
+		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
 		ctrlHubs.DeleteAllItems();

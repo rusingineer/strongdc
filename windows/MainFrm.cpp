@@ -612,13 +612,16 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 		SimpleXML xml;
 		xml.fromXML(versionInfo);
 		xml.stepIn();
-		if(xml.findChild("Version")) {
-			if(xml.getChildData() != (VERSIONSTRING CZDCVERSIONSTRING)) {
-				xml.resetCurrentChild();
+
 				string url;
 				if(xml.findChild("URL")) {
 					url = xml.getChildData();
 				}
+
+		xml.resetCurrentChild();
+		if(xml.findChild("DCVersion")) {
+			if(atof(xml.getChildData().c_str()) > DCVERSIONFLOAT) {
+				xml.resetCurrentChild();
 				xml.resetCurrentChild();
 				if(xml.findChild("Title")) {
 					const string& title = xml.getChildData();
