@@ -276,7 +276,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD_WHOLE_DIR));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_WHOLE_DIR_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
-	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CTSTRING(SEARCH_BY_TTH));
+	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 	resultsMenu.AppendMenu(MF_STRING, IDC_MP3, CTSTRING(GET_MP3INFO));
 	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	appendUserItems(resultsMenu);
@@ -584,7 +584,7 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				Text::fromT(tgt + si->fileName), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
+				Text::fromT(tgt + si->fileName), si->sr->getTTH(), QueueItem::FLAG_RESUME | (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
 				(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 			
 			if(si->subItems.size()>0) {
@@ -592,7 +592,7 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 				while(q<si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
 					QueueManager::getInstance()->add(j->sr->getFile(), j->sr->getSize(), j->sr->getUser(), 
-						Text::fromT(tgt + si->fileName), j->sr->getTTH(), QueueItem::FLAG_RESUME | (j->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
+						Text::fromT(tgt + si->fileName), j->sr->getTTH(), QueueItem::FLAG_RESUME | (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | (j->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
 						(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 					q++;
 				}
@@ -622,7 +622,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				Text::fromT(tgt), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
+				Text::fromT(tgt), si->sr->getTTH(), QueueItem::FLAG_RESUME | (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
 			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), Text::fromT(tgt),
@@ -680,7 +680,6 @@ void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
 }
 
 LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		dcassert(i != -1);
@@ -691,20 +690,20 @@ LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->getFileName();
 			if(WinUtil::browseFile(target, m_hWnd)) {
 				WinUtil::addLastDir(Util::getFilePath(target));
-				ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(target, multiSource));
+				ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(target));
 			}
 		} else {
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 			if(WinUtil::browseDirectory(target, m_hWnd)) {
 				WinUtil::addLastDir(target);
-				ctrlResults.forEachSelectedT(SearchInfo::Download(target, multiSource));
+				ctrlResults.forEachSelectedT(SearchInfo::Download(target));
 			}
 		}
 	} else {
 		tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 		if(WinUtil::browseDirectory(target, m_hWnd)) {
 			WinUtil::addLastDir(target);
-			ctrlResults.forEachSelectedT(SearchInfo::Download(target, multiSource));
+			ctrlResults.forEachSelectedT(SearchInfo::Download(target));
 		}
 	}
 	return 0;
@@ -723,12 +722,11 @@ LRESULT SearchFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 	dcassert(wID >= IDC_DOWNLOAD_TARGET);
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_TARGET;
 
-	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	if(newId < WinUtil::lastDirs.size()) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(WinUtil::lastDirs[newId], multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(WinUtil::lastDirs[newId]));
 	} else {
 		dcassert((newId - WinUtil::lastDirs.size()) < targets.size());
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - WinUtil::lastDirs.size()]), multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - WinUtil::lastDirs.size()])));
 	}
 	return 0;
 }
@@ -743,13 +741,12 @@ LRESULT SearchFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND
 	dcassert(wID >= IDC_DOWNLOAD_FAVORITE_DIRS);
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_FAVORITE_DIRS;
 
-	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
 	if(newId < spl.size()) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(spl[newId].first), multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(spl[newId].first)));
 	} else {
 		dcassert((newId - spl.size()) < targets.size());
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - spl.size()]), multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - spl.size()])));
 	}
 	return 0;
 }
@@ -772,8 +769,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 		if (item->ptAction.x < rect.left)
 			return 0;
 
-		bool multiSource = QueueManager::getInstance()->useMultiSource();
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 	}
 	return 0;
 }
@@ -1289,12 +1285,12 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 		SearchResult* sr = ctrlResults.getItemData(i)->sr;
 		if(sr) {
 			if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
-				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_ENABLED);
 				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_ENABLED);
 				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
 				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
 			} else {
-				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);
+				resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_GRAYED);
 				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_GRAYED);
 				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
 				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);

@@ -473,7 +473,7 @@ SettingsManager::SettingsManager()
 	setDefault(PROGRESS_3DDEPTH, 4);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
 	setDefault(SPEED_USERS, true);	
-	setDefault(MULTI_CHUNK, 0);
+	setDefault(MULTI_CHUNK, true);
 	setDefault(USERLIST_DBLCLICK, 0);
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	

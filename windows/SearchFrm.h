@@ -91,7 +91,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_TTHONLY, onTTHOnly)
 		COMMAND_ID_HANDLER(IDC_COLLAPSED, onCollapsed)		
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
-		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)
+		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchByTTH)
 		COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
@@ -213,8 +213,7 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		bool multiSource = QueueManager::getInstance()->useMultiSource();
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), multiSource));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 
@@ -353,10 +352,9 @@ private:
 		void view();
 		void GetMP3Info();
 		struct Download {
-			Download(const tstring& aTarget, bool multiS) : tgt(aTarget), multiSource(multiS) { };
+			Download(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
 			const tstring& tgt;
-			bool multiSource;
 		};
 		struct DownloadWhole {
 			DownloadWhole(const tstring& aTarget) : tgt(aTarget) { };
@@ -364,10 +362,9 @@ private:
 			const tstring& tgt;
 		};
 		struct DownloadTarget {
-			DownloadTarget(const tstring& aTarget, bool multiS) : tgt(aTarget), multiSource(multiS) { };
+			DownloadTarget(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
 			const tstring& tgt;
-			bool multiSource;
 		};
 		struct CheckSize {
 			CheckSize() : size(-1), op(true), oneHub(true), hasTTH(false), firstTTH(true) { };

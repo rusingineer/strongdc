@@ -263,7 +263,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		u->setConnection(Util::emptyString);
 		u->setEmail(Util::emptyString);
 		u->setTag(Util::emptyString);
-		u->setClientType(Util::emptyString);
 		u->setVersion(Util::emptyString);
 		u->setMode(Util::emptyString);
 		u->setHubs(Util::emptyString);
@@ -818,7 +817,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
-	string tmp = toNmdc((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : aString);
+	string tmp = Util::validateMessage(toNmdc((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : aString), false);
 	string::size_type i;
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';

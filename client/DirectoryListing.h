@@ -135,9 +135,9 @@ public:
 	void load(const string& i);
 	void loadXML(const string& xml);
 
-	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
-	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
-	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
+	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3(File* aFile, const string& aTarget);
 
 	string getPath(Directory* d);	

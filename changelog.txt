@@ -11,10 +11,14 @@
 * pøepsána fronta hledání (THX Naga)
 * vráceno odstraòování diakritiky v chatu (THX popKorn)
 * pøidáno seskupování dokonèených segmentù v Dokonèených uploadech
-* odstranìna globální emulace; je-li to nutné použijte lokální pro jednotlivé huby
+* odstranìna globální emulace; je-li to nutné použijte lokální pro jednotlivé huby; všechny funkce segmentového stahování lze použít pouze pøi vyplé emulaci
 * pøidána volba pro vypnutí segmentového stahování a použití standardního zpùsobu s rollbackem
 * pøidána volba pro zobrazení informací o segmentu na progressbarech
 * pøidáno více barev do seznamu uživatelù (CZDC++)
+* mùžete použít %[downloaddrive] v cestì Doèasného adresáøe (napø. "%[downloaddrive]\Temp\DCdownloads\") (BCDC++)
+* stahovací sloty neplatí pro seznamy souborù
+* opraveno øazení ve frontì èekatelù na slot
+
 
 	-- StrongDC++ 1.00 RC9 --
 

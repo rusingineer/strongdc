@@ -94,9 +94,8 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	spin.Detach();
 
 	ctrlMultiSource.Attach(GetDlgItem(IDC_MULTISOURCE_COMBO));
-	ctrlMultiSource.AddString(CTSTRING(ASK));
-	ctrlMultiSource.AddString(CTSTRING(AUTOMATIC));
 	ctrlMultiSource.AddString(CTSTRING(DISABLED));
+	ctrlMultiSource.AddString(CTSTRING(AUTOMATIC));
 	ctrlMultiSource.SetCurSel(SETTING(MULTI_CHUNK));
 
 	// Do specialized reading here

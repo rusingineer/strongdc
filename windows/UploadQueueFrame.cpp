@@ -503,6 +503,7 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		delete (UserInfoBase*)lParam;
 	} else if(wParam == ADD_ITEM) {
 		AddFile((UploadQueueItem*)lParam);
+		ctrlList.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		int j = ctrlList.GetItemCount();
 		int64_t itime = GET_TIME();

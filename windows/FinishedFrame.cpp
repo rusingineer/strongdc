@@ -28,10 +28,10 @@
 #include "../client/ClientManager.h"
 #include "../client/StringTokenizer.h"
 
-int FinishedFrame::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED, COLUMN_TTH, COLUMN_CRC32 };
-int FinishedFrame::columnSizes[] = { 100, 80, 290, 125, 80, 80, 80, 80, 125 };
+int FinishedFrame::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED, COLUMN_CRC32 };
+int FinishedFrame::columnSizes[] = { 100, 80, 290, 125, 80, 80, 80, 125 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
-ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED, ResourceManager::TTH_CHECKED, ResourceManager::CRC_CHECKED
+ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED, ResourceManager::CRC_CHECKED
 };
 
 LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -261,7 +261,6 @@ void FinishedFrame::addEntry(FinishedItem* entry) {
 	l.push_back(Text::toT(entry->getHub()));
 	l.push_back(Text::toT(Util::formatBytes(entry->getSize())));
 	l.push_back(Text::toT(Util::formatBytes(entry->getAvgSpeed()) + "/s"));
-	l.push_back(entry->gettthChecked() ? TSTRING(YES) : TSTRING(NO));
 	l.push_back(entry->getCrc32Checked() ? TSTRING(YES) : TSTRING(NO));
 	totalBytes += entry->getChunkSize();
 	totalTime += entry->getMilliSeconds();

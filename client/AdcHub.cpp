@@ -251,7 +251,7 @@ void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& a
 	AdcCommand c(AdcCommand::CMD_SCH, AdcCommand::TYPE_BROADCAST);
 
 	if(aFileType == SearchManager::TYPE_TTH) {
-		c.addParam("TR", aString);
+		c.addParam("TR", AdcCommand::escape(aString));
 	} else {
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {
 			c.addParam(">=", Util::toString(aSize));
@@ -260,7 +260,7 @@ void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& a
 	}
 		StringTokenizer<string> st(aString, ' ');
 	for(StringIter i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-			c.addParam("++", *i);
+			c.addParam("++", AdcCommand::escape(*i));
 		}
 	}
 	send(c);

@@ -42,9 +42,9 @@ public:
 
 	FinishedItem(string const& aTarget, string const& aUser, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, u_int32_t aTime,
-		bool aCrc32 = false, bool aTTH = false) : 
+		bool aCrc32 = false) : 
 		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tthChecked(aTTH),
+		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32),
 		collapsed(true), mainitem(false), needDelete(true), main(NULL)
 	{
 	}
@@ -64,7 +64,6 @@ public:
 	GETSET(int64_t, milliSeconds, MilliSeconds);
 	GETSET(u_int32_t, time, Time);
 	GETSET(bool, crc32Checked, Crc32Checked)
-	GETSET(bool, tthChecked, tthChecked)
 private:
 	friend class FinishedManager;
 

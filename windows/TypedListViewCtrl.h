@@ -100,7 +100,7 @@ public:
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
 		tstring InfoTip(_T(""));
-		TCHAR Buffer[500];
+		TCHAR Buffer[300];
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
 		int indexes[32];
@@ -116,8 +116,8 @@ public:
 				InfoTip += _T(": ");
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 500);
-			Buffer[499] = NULL;
+			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 300);
+			Buffer[299] = NULL;
 
 			InfoTip += Buffer;
 			InfoTip += _T("\r\n");
@@ -128,7 +128,9 @@ public:
 		
 		pInfoTip->cchTextMax = InfoTip.size();
 
-		_tcscpy(pInfoTip->pszText, InfoTip.c_str());
+ 		_tcsncpy(pInfoTip->pszText, InfoTip.c_str(), INFOTIPSIZE);
+		pInfoTip->pszText[INFOTIPSIZE - 1] = NULL;
+
 		return 0;
 	}
 

@@ -27,7 +27,7 @@
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"

@@ -64,6 +64,9 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
+
+again:
+
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
 		return;
@@ -72,8 +75,14 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else {
 		// We shouldn't be here?
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
-		return;
+		if(getUser())
+			getUser()->setUnknownCommand(aLine);
+		if((aLine = strstr(aLine, "$")) == NULL) {
+			return;
+		} else
+			goto again;
 	}
+
 	char *temp;
 	if(strncmp(aLine+1, "MyNick ", 7) == 0) {
 		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
@@ -164,6 +173,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else if(strncmp(aLine+1, "ADC", 3) == 0) {
 		dispatch(aLine, true);
 	} else {
+		if(getUser())
+			getUser()->setUnknownCommand(aLine);
 		dcdebug("Unknown NMDC command: %.50s\n", aLine);
 	}
 }
