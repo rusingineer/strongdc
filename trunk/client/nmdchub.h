@@ -151,9 +151,9 @@ public:
 
 	void disconnect() throw();
 	void myInfo(bool alwaysSend);
-	
-	void refreshUserList(bool unknownOnly = false);
 
+	void refreshUserList(bool unknownOnly = false);
+	
 	void validateNick(const string& aNick) {
 		if (validatenicksent != true) {
 			send("$ValidateNick " + toNmdc(aNick) + "|");

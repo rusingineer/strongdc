@@ -44,7 +44,6 @@
 #include "WinUtil.h"
 #include "picturewindow.h"
 #include "atlctrlxp.h"
-#include "atlctrlxp2.h"
 
 #define SERVER_SOCKET_MESSAGE (WM_APP + 1235)
 

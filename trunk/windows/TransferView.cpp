@@ -906,13 +906,14 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			i->file = _T("TTH: ") + Util::getFileName(i->Target);
-			if(i->qi->getActiveSegments().size() <= 1) {
+			if(i->upper && (i->qi->getActiveSegments().size() <= 1)) {
 				i->upper->file = _T("TTH: ") + Util::getFileName(i->Target);
 				i->upper->statusString = TSTRING(DOWNLOADING_TTHL);
 			}
 		} else {
 			i->file = Util::emptyStringT;
-			i->upper->file = Util::emptyStringT;
+			if(i->upper)
+				i->upper->file = Util::emptyStringT;
 		}
 	}
 
@@ -1064,7 +1065,8 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 		} else {
 			i->file = Util::emptyStringT;
-			i->upper->file = Util::emptyStringT;
+			if(i->upper)
+				i->upper->file = Util::emptyStringT;
 		}			
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);

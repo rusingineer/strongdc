@@ -33,7 +33,7 @@ public:
 
 	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; };
 
-	virtual size_t flush(bool finished = true) throw(FileException) {
+	virtual size_t flush() throw(FileException) {
 		if (bufPos != 0)
 			cur.update(buf, bufPos);
 		bufPos = 0;
@@ -45,7 +45,7 @@ public:
 		} else  {
 			checkTrees();
 		}
-		return s->flush(finished);
+		return s->flush();
 	}
 
 	virtual size_t write(const void* b, size_t len) throw(FileException) {

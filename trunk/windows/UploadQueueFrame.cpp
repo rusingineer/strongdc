@@ -446,7 +446,8 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 		}
 	}
 	aUQI->update();
-	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, WinUtil::getIconIndex(Text::toT(aUQI->FileName)));
+	aUQI->icon = WinUtil::getIconIndex(Text::toT(aUQI->FileName));
+	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->icon);
 }
 
 HTREEITEM UploadQueueFrame::GetParentItem() {

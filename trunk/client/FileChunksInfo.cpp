@@ -342,7 +342,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
-	if(vecFreeBlocks.empty()){
+	if(CorruptedBlocks.empty()){
 		dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
 
 

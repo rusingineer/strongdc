@@ -3,6 +3,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CCommandBarXPCtrl - Command Bar (XP look) and others
+// CToolBarXPCtrl
 //
 // Written by Bjarke Viksoe (bjarke@viksoe.dk)
 // Copyright (c) 2001-2002 Bjarke Viksoe.
@@ -1050,8 +1051,7 @@ public:
          HIMAGELIST hImageList = NULL;
          if( bHotlight ) hImageList = tb.GetHotImageList();
          if( bDisabled ) hImageList = tb.GetDisabledImageList();
-		 //DODATAK
-		 if( bChecked ) hImageList = tb.GetHotImageList();
+         if( bChecked ) hImageList = tb.GetHotImageList();
          if( hImageList == NULL ) hImageList = tb.GetImageList();
          // Draw icon
          if( hImageList != NULL ) {
@@ -1141,6 +1141,37 @@ public:
 // The _WTL_USE_MDI define takes care of this.
 typedef CCommandBarXPCtrl CMDICommandBarXPCtrl;
 
+/////////////////////////////////////////////////////////////////////////////
+// CToolBarXPCtrl - The ToolBar control
+
+class CToolBarXPCtrl : 
+   public CWindowImpl<CToolBarXPCtrl, CToolBarCtrl>,
+   public CCustomDraw<CToolBarXPCtrl>
+{
+public:
+   DECLARE_WND_SUPERCLASS(_T("WTL_ToolBarXP"), GetWndClassName())
+
+   BEGIN_MSG_MAP(CToolBarXPCtrl)
+      CHAIN_MSG_MAP_ALT(CCustomDraw<CToolBarXPCtrl>, 1)
+      DEFAULT_REFLECTION_HANDLER()
+   END_MSG_MAP()
+
+   DWORD OnPrePaint(int /*idCtrl*/, LPNMCUSTOMDRAW lpNMCustomDraw)
+   {
+      CDCHandle dc(lpNMCustomDraw->hdc);
+      dc.FillSolidRect(&lpNMCustomDraw->rc, CCommandBarXPCtrl::m_xpstyle.clrMenu);
+      return CDRF_NOTIFYITEMDRAW;   // We need per-item notifications
+   }
+   DWORD OnItemPrePaint(int /*idCtrl*/, LPNMCUSTOMDRAW lpNMCustomDraw)
+   {
+      CDCHandle dc(lpNMCustomDraw->hdc);
+      HFONT hOldFont = dc.SelectFont(GetFont());
+      CCommandBarXPCtrl::_DrawToolbarButton( (LPNMTBCUSTOMDRAW) lpNMCustomDraw );
+      dc.SelectFont(hOldFont);
+      return CDRF_SKIPDEFAULT;
+   }
+};
 
 #endif // __ATLCTRLWXP_H__
 
+/* Some parts Copyright (C) 2004-2005 Petr Kozelka, PPK at seznam dot cz */

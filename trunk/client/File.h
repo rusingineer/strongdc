@@ -172,7 +172,7 @@ public:
 		}
 	}
 
-	virtual size_t flush(bool finished = true) throw(Exception) {
+	virtual size_t flush() throw(Exception) {
 		if(isOpen() && !FlushFileBuffers(h))
 			throw FileException(Util::translateError(GetLastError()));
 		return 0;
@@ -336,7 +336,7 @@ public:
 		setPos(pos);		
 	}
 
-	virtual size_t flush(bool finished = true) throw(Exception) {
+	virtual size_t flush() throw(Exception) {
 		if(fsync(h) == -1)
 			throw FileException(Util::translateError(errno));
 		return 0;

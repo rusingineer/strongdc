@@ -289,7 +289,12 @@ private:
 				}
 			}
 		}
-		int imageIndex[COLUMN_LAST];
+		int imageIndex() {
+			if(type == DIRECTORY)
+				return WinUtil::getDirIconIndex();
+			else
+				return WinUtil::getIconIndex(getText(COLUMN_FILENAME));
+		}
 
 	private:
 		tstring columns[COLUMN_LAST];

@@ -908,7 +908,7 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	}
 
 #ifdef _DEBUG
-	return 500;
+	return 3;
 #else
 	return MaxSegments;
 #endif
@@ -936,8 +936,6 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	Lock l(cs);
 
 	bool useOld = false;
-	//FileChunksInfo::Ptr chunksInfo = (FileChunksInfo::Ptr)NULL;
-	//int64_t freeBlock = 0;
 	reuse = true;
 
 	if(q != NULL) {
@@ -948,7 +946,6 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	}
 
 again:
-	//chunksInfo = (FileChunksInfo::Ptr)NULL;
 
 	if(q == NULL)
 		return NULL;

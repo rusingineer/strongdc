@@ -33,8 +33,8 @@ public:
 	CalcOutputStream(OutputStream* aStream) : s(aStream) { }
 	virtual ~CalcOutputStream() throw() { if(managed) delete s; }
 
-	size_t flush(bool finished = true) throw(Exception) {
-		return s->flush(finished);
+	size_t flush() throw(Exception) {
+		return s->flush();
 	}
 
 	size_t write(const void* buf, size_t len) throw(Exception) {
@@ -75,7 +75,7 @@ public:
 	FilteredOutputStream(OutputStream* aFile) : f(aFile), flushed(false) { }
 	~FilteredOutputStream() throw() { if(manage) delete f; }
 
-	size_t flush(bool finished = false) throw(Exception) {
+	size_t flush() throw(Exception) {
 		if(flushed)
 			return 0;
 
@@ -92,7 +92,7 @@ public:
 			if(!more)
 				break;
 		}
-		return written + f->flush(finished);
+		return written + f->flush();
 	}
 
 	size_t write(const void* wbuf, size_t len) throw(Exception) {

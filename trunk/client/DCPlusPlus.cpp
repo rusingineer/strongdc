@@ -43,7 +43,6 @@ void startup(void (*f)(void*, const string&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
 	// Nev's great contribution to dc++
 	while(1) break;
-
 	Util::initialize();
 
 	ResourceManager::newInstance();

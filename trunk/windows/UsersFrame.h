@@ -122,7 +122,9 @@ private:
 		static int compareItems(UserInfo* a, UserInfo* b, int col) {
 			return Util::stricmp(a->columns[col], b->columns[col]);
 		}
-		int imageIndex[COLUMN_LAST];
+		int imageIndex() {
+			return 2;
+		}
 
 		void remove() { HubManager::getInstance()->removeFavoriteUser(user); }
 
