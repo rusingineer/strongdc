@@ -43,6 +43,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidána položka pro otevøení stavu hashování do hlavního menu (fulDC)
 * opraveno stažení souboru pokud existuje doèasný soubory stejné velikosti
 * aktualizováno na ZLIB 1.2.2
+* odstranìno odstraòování diakritiky
 
 
 	-- StrongDC++ 1.00 RC8 --

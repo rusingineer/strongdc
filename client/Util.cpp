@@ -59,29 +59,6 @@ string Util::appPath;
 
 static void sgenrand(unsigned long seed);
 
-char Win1250toAscii[128] = {
-// 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
-	'*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 'S', '*', 'S', 'T', 'Z', 'Z',   // 0x80
-	'*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 's', '*', 's', 't', 'z', 'z',   // 0x90
-	'*', '*', '*', 'L', '*', 'A', '*', '*', '*', '*', 'S', '*', '*', '*', '*', 'Z',   // 0xA0
-	'*', '*', '*', 'l', '*', '*', '*', '*', '*', 'a', 's', '*', 'L', '*', 'l', 'z',   // 0xB0
-	'R', 'A', 'A', 'A', 'A', 'L', 'C', 'C', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'D',   // 0xC0
-	'D', 'N', 'N', 'O', 'O', 'O', 'O', '*', 'R', 'U', 'U', 'U', 'U', 'Y', 'T', '*',   // 0xD0
-	'r', 'a', 'a', 'a', 'a', 'l', 'c', 'c', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'd',   // 0xE0
-	'd', 'n', 'n', 'o', 'o', 'o', 'o', '*', 'r', 'u', 'u', 'u', 'u', 'y', 't', '*',   // 0xF0
-};
-
-// Converts string from charset Windows1250 to plain (7-bit) Ascii
-void ConvertStringToAscii(string *s) {
-	char c;
-
-	for(int i = 0; i < s->length(); i++) {
-		c = (*s)[i];
-		if ( c < 0 )
-			(*s)[i] = Win1250toAscii[c + 128];
-	}
-}
-
 void Util::initialize() {
 	setlocale(LC_ALL, "");
 
@@ -193,9 +170,6 @@ string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
 
 string Util::validateChatMessage(string tmp) {
 	string::size_type i = 0;
-
-	if(BOOLSETTING(CZCHARS_DISABLE))
-		ConvertStringToAscii( &tmp );
 
 	i = 0;
 	while( (i = tmp.find('|', i)) != string::npos) {

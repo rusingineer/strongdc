@@ -41,7 +41,6 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
 	{ SettingsManager::CHECK_TTH, ResourceManager::CHECK_TTH_AFTER_DOWNLOAD },
 	{ SettingsManager::SEARCH_TTH_ONLY, ResourceManager::SETTINGS_ONLY_TTH },
-	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
 	{ SettingsManager::DEBUG_COMMANDS, ResourceManager::SETTINGS_DEBUG_COMMANDS },
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },

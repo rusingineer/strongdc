@@ -31,7 +31,7 @@ public:
 	enum { IDD = IDD_HASH_PROGRESS };
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
-	HashProgressDlg(bool aAutoClose = false) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) { 
+	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) { 
 		
 	};
 	virtual ~HashProgressDlg() { };

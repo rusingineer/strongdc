@@ -790,10 +790,10 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	string nldetect = SETTING(CONNECTION);
 
 	try {
-		char promenna[255];
-		GetEnvironmentVariableA("APPDATA",promenna,255);
+		TCHAR AppData[256];
+		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
 
-		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
+		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
 
 		int NetLimiter_UploadLimit = 0;
 		int NetLimiter_UploadOn = 0;
@@ -849,7 +849,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 			delete[] w1;
 
 			if(len < BUF_SIZE)
-			break;
+				break;
 		}
 	
 		f.close();
@@ -891,7 +891,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		"$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
 		extendedtag +
 		">$ $" + SETTING(CONNECTION) + "\x01$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$' + 
-		/*ShareManager::getInstance()->getShareSizeString()*/ + "147453601454$|";
+		ShareManager::getInstance()->getShareSizeString() + "$|";
 	if(alwaysSend || minf != lastMyInfo) {
 		int64_t ssize = ShareManager::getInstance()->getShareSize();
 
