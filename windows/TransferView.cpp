@@ -265,7 +265,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 	switch(cd->nmcd.dwDrawStage) {
 	case CDDS_PREERASE:
 		return CDRF_NOTIFYITEMDRAW;
-//		return CDRF_SKIPDEFAULT;
 
 	case CDDS_SUBITEM | CDDS_ITEMPREERASE:
 		if(cd->iSubItem == COLUMN_STATUS) {
@@ -273,7 +272,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			return CDRF_SKIPDEFAULT;
 		}
 		return CDRF_DODEFAULT;
-
 	case CDDS_PREPAINT:
 		return CDRF_NOTIFYITEMDRAW;
 
@@ -293,12 +291,11 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					GetSysColor(COLOR_HIGHLIGHT);
 
 				// Get the text to draw
-				// draw something nice...
 				char buf[256];
-
 				ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, buf, 255);
 				buf[255] = 0;
 				
+				// Get the cell boundaries
 				ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, LVIR_BOUNDS, rc);
 					// Actually we steal one upper pixel to not have 2 borders together
 
@@ -309,14 +306,12 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				// Text rect
 				CRect rc2 = rc;
-				rc2.left += 6;
+                rc2.left += 6; // indented with 6 pixels
 				rc2.right -= 2; // and without messing with the border of the cell				
 
 				if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 					rc2.left += 9;
 				
-								
-				// draw background
 				CDC cdc;
 				cdc.CreateCompatibleDC(cd->nmcd.hdc);
 				BITMAPINFOHEADER bih;
@@ -337,10 +332,9 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 
-				SetBkMode(dc, TRANSPARENT);
-	
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
-	
+				SetBkMode(dc, TRANSPARENT);
+		
 				// New style progressbar tweaks the current colors
 				HLSTRIPLE hls_bk = OperaColors::RGB2HLS(cd->clrTextBk);
 
@@ -372,6 +366,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
                 COLORREF oldcol = ::SetTextColor(dc, hTextDefColor);
 				::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
+				// Draw the background and border of the bar
 				if(ii->size == 0)
 					ii->size = 1;
 
@@ -410,7 +405,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 					DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 
-								// Get the color of this text bar
+				// Get the color of this text bar
 				int textcolor = SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
 					((ii->type == ItemInfo::TYPE_DOWNLOAD) ? 
 						SETTING(PROGRESS_TEXT_COLOR_DOWN) : 
@@ -423,6 +418,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::SetTextColor(dc, oldcol);
 
 				// New way:
+
 				BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
 				DeleteObject(cdc.SelectBitmap(pOldBmp));
 
@@ -984,8 +980,9 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 
 	if((isDownload) && (h != NULL))
 	{
-		h->pocetUseru -= 1;
-				
+		if(h->pocetUseru > 0) 
+			h->pocetUseru -= 1;
+
 		if(h->pocetUseru == 0) {
 			if(IsBadReadPtr(h,4) == 0) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));

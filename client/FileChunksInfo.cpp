@@ -149,15 +149,15 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
-/*	int64_t SMALLEST_BLOCK_SIZE = 64*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) SMALLEST_BLOCK_SIZE = 64*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) SMALLEST_BLOCK_SIZE = 128*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 256*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 512*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1024*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = (iFileSize / maxSegments) / 2;
-	if(maxSegments == 1) SMALLEST_BLOCK_SIZE = iFileSize;
-*/
+
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) iSmallestBlockSize = 128*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) iSmallestBlockSize = 256*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) iSmallestBlockSize = 512*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) iSmallestBlockSize = 1024*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) iSmallestBlockSize = (iFileSize / maxSegments) / 2;
+	if(maxSegments == 1) iSmallestBlockSize = iFileSize;
+
 	if((e - b) < iSmallestBlockSize){
 		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
 		return -1;

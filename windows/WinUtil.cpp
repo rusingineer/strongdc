@@ -42,6 +42,8 @@
 #include <Windows.h>
 
 #include "../client/cvsversion.h"
+#include "HubFrame.h"
+#include "MagnetDlg.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
 int WinUtil::fileImageCount;
@@ -385,6 +387,11 @@ void WinUtil::init(HWND hWnd) {
 	systemFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
 	monoFont = (HFONT)::GetStockObject(BOOLSETTING(USE_OEM_MONOFONT)?OEM_FIXED_FONT:ANSI_FIXED_FONT);
 
+	if(BOOLSETTING(URL_HANDLER)) {
+		registerDchubHandler();
+	}
+	registerMagnetHandler();
+
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
 	grantMenu.CreatePopupMenu();
@@ -404,6 +411,7 @@ void WinUtil::uninit() {
 	::DeleteObject(smallBoldFont);
 	::DeleteObject(tinyFont);
 	::DeleteObject(bgBrush);
+	::DeleteObject(monoFont);
 
 	mainMenu.DestroyMenu();
 	grantMenu.DestroyMenu();
@@ -451,7 +459,7 @@ bool WinUtil::browseDirectory(string& target, HWND owner /* = NULL */) {
 	bi.hwndOwner = owner;
 	bi.pszDisplayName = buf;
 	bi.lpszTitle = CSTRING(CHOOSE_FOLDER);
-	bi.ulFlags = BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 	bi.lParam = (LPARAM)target.c_str();
 	bi.lpfn = &browseCallbackProc;
 	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
@@ -891,12 +899,144 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	}
 }
 
+ void WinUtil::searchHash(TTHValue* aHash) {
+	 if(aHash != NULL) {
+		 SearchFrame::openWindow(aHash->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+	 }
+ }
+
+ void WinUtil::registerDchubHandler() {
+	HKEY hk;
+	char Buf[512];
+	string app = "\"" + Util::getAppName() + "\" %1";
+	Buf[0] = 0;
+
+	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
+		DWORD bufLen = sizeof(Buf);
+		DWORD type;
+		::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
+		::RegCloseKey(hk);
+	}
+
+	if(Util::stricmp(app.c_str(), Buf) != 0) {
+		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub", &hk);
+		char* tmp = "URL:Direct Connect Protocol";
+		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, strlen(tmp) + 1);
+		::RegSetValueEx(hk, "URL Protocol", 0, REG_SZ, (LPBYTE)"", 1);
+		::RegCloseKey(hk);
+
+		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", &hk);
+		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
+		::RegCloseKey(hk);
+
+		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\DefaultIcon", &hk);
+		app = Util::getAppName();
+		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
+		::RegCloseKey(hk);
+	}
+}
+
+ void WinUtil::registerMagnetHandler() {
+	// @ = DC++
+	// Description = Download files from the Direct Connect network
+	// DefaultIcon = \"getAppName()\"
+	// ShellExecute = \"getAppName()\" "%URL"
+	//  Type\urn:bitprint = DWORD:0000
+	//  Type\urn:tree:tiger = DWORD:0000
+	HKEY hk;
+	char buf[512];
+	string openCmd, magnetLoc, magnetExe;
+	buf[0] = 0;
+	bool haveMagnet = true;
+
+	// what command is set up to handle magnets right now?
+	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "magnet\\shell\\open\\command", 0, KEY_READ, &hk) == ERROR_SUCCESS) {
+		DWORD bufLen = sizeof(buf);
+		::RegQueryValueEx(hk, NULL, NULL, NULL, (LPBYTE)buf, &bufLen);
+		::RegCloseKey(hk);
+	}
+	openCmd = buf;
+	buf[0] = 0;
+	// read the location of magnet.exe
+	if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet", NULL, KEY_READ, &hk) == ERROR_SUCCESS) {
+		DWORD bufLen = sizeof(buf);
+		::RegQueryValueEx(hk, "Location", NULL, NULL, (LPBYTE)buf, &bufLen);
+		::RegCloseKey(hk);
+	}
+	magnetLoc = buf;
+	string::size_type i;
+	if (magnetLoc[0]=='"' && string::npos != (i = magnetLoc.find('"', 1))) {
+		magnetExe = magnetLoc.substr(1, i-1);
+	}
+	// check for the existence of magnet.exe
+	if(File::getSize(magnetExe) == -1) {
+		magnetExe = Util::getAppPath() + "magnet.exe";
+		if(File::getSize(magnetExe) == -1) {
+			// gracefully fall back to registering DC++ to handle magnets
+			LogManager::getInstance()->message(STRING(MAGNET_HANDLER_NOT_FOUND), true);
+			magnetExe = Util::getAppName();
+			haveMagnet = false;
+		} else {
+			// set Magnet\Location
+			::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet", &hk);
+			::RegSetValueEx(hk, "Location", NULL, REG_SZ, (LPBYTE)magnetExe.c_str(), magnetExe.length()+1);
+			::RegCloseKey(hk);
+		}
+		magnetLoc = '"' + magnetExe + '"';
+	}
+	// (re)register the handler if magnet.exe isn't the default, or if DC++ is handling it
+	if(BOOLSETTING(MAGNET_URI_HANDLER) && (Util::strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
+		SHDeleteKey(HKEY_CLASSES_ROOT, "magnet");
+		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet", &hk);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_SHELL_DESC), STRING(MAGNET_SHELL_DESC).length()+1);
+		::RegSetValueEx(hk, "URL Protocol", NULL, REG_SZ, NULL, NULL);
+		::RegCloseKey(hk);
+		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\DefaultIcon", &hk);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
+		::RegCloseKey(hk);
+		magnetLoc += " %1";
+		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\shell\\open\\command", &hk);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
+		::RegCloseKey(hk);
+	}
+	// magnet-handler specific code
+	// clean out the DC++ tree first
+	SHDeleteKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++");
+	// add DC++ to magnet-handler's list of applications
+	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++", &hk);
+	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_ROOT), STRING(MAGNET_HANDLER_ROOT).size()+1);
+	::RegSetValueEx(hk, "Description", NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_DESC), STRING(MAGNET_HANDLER_DESC).size()+1);
+	// set ShellExecute
+	string app = "\"" + Util::getAppName() + "\" %URL";
+	::RegSetValueEx(hk, "ShellExecute", NULL, REG_SZ, (LPBYTE)app.c_str(), app.length()+1);
+	// set DefaultIcon
+	app = '"' + Util::getAppName() + '"';
+	::RegSetValueEx(hk, "DefaultIcon", NULL, REG_SZ, (LPBYTE)app.c_str(), app.length()+1);
+	::RegCloseKey(hk);
+
+	// these two types contain a tth root, and are in common use.  Shareaza's source has a couple more
+	// but I have never actually seen them.  thus, they don't exist.  -GargoyleMT
+	DWORD nothing = 0;
+	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++\\Type", &hk);
+	::RegSetValueEx(hk, "urn:tree:tiger", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, "urn:bitprint", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegCloseKey(hk);
+}
 
 void WinUtil::openLink(const string& url) {
 	CRegKey key;
 	char regbuf[MAX_PATH];
 	ULONG len = MAX_PATH;
-	if(key.Open(HKEY_CLASSES_ROOT, "http\\shell\\open\\command", KEY_READ) == ERROR_SUCCESS) {
+	string x;
+
+	string::size_type i = url.find("://");
+	if(i != string::npos) {
+		x = url.substr(0, i);
+	} else {
+		x = "http";
+	}
+	x += "\\shell\\open\\command";
+	if(key.Open(HKEY_CLASSES_ROOT, x.c_str(), KEY_READ) == ERROR_SUCCESS) {
 		if(key.QueryStringValue(NULL, regbuf, &len) == ERROR_SUCCESS) {
 			/*
 			 * Various values:
@@ -943,6 +1083,84 @@ void WinUtil::openLink(const string& url) {
 	}
 
 	::ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+}
+
+void WinUtil::parseDchubUrl(const string& aUrl) {
+	string server, file;
+	short port = 411;
+	Util::decodeUrl(aUrl, server, port, file);
+	if(!server.empty()) {
+		HubFrame::openWindow(server + ":" + Util::toString(port));
+	}
+	if(!file.empty()) {
+		try {
+			QueueManager::getInstance()->addList(ClientManager::getInstance()->getUser(file), QueueItem::FLAG_CLIENT_VIEW);
+		} catch(const Exception&) {
+			// ...
+		}
+	}
+}
+
+void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
+	// official types that are of interest to us
+	//  xt = exact topic
+	//  xs = exact substitute
+	//  as = acceptable substitute
+	//  dn = display name
+	if (Util::strnicmp(aUrl.c_str(), "magnet:?", 8) == 0) {
+		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + aUrl, true);
+		StringTokenizer mag(aUrl.substr(8), '&');
+		typedef map<string, string> MagMap;
+		MagMap hashes;
+		string fname, fhash, type, param;
+		for(StringList::iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
+			// break into pairs
+			string::size_type pos = idx->find("=");
+			if(pos != string::npos) {
+				type = Util::toLower(Util::encodeURI(idx->substr(0, pos), true));
+				param = Util::encodeURI(idx->substr(pos+1), true);
+			} else {
+				type = Util::encodeURI(*idx, true);
+				param.clear();
+			}
+			// extract what is of value
+			if(param.length() == 85 && Util::strnicmp(param.c_str(), "urn:bitprint:", 13) == 0) {
+				hashes[type] = param.substr(46);
+			} else if(param.length() == 54 && Util::strnicmp(param.c_str(), "urn:tree:tiger:", 15) == 0) {
+				hashes[type] = param.substr(15);
+			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), "dn", 2) == 0) {
+				fname = param;
+			}
+		}
+		// pick the most authoritative hash out of all of them.
+		if(hashes.find("as") != hashes.end()) {
+			fhash = hashes["as"];
+		}
+		if(hashes.find("xs") != hashes.end()) {
+			fhash = hashes["xs"];
+		}
+		if(hashes.find("xt") != hashes.end()) {
+			fhash = hashes["xt"];
+		}
+		if(!fhash.empty()){
+			// ok, we have a hash, and maybe a filename.
+			//if(!BOOLSETTING(MAGNET_ASK)) {
+			//	switch(SETTING(MAGNET_ACTION)) {
+			//		case SettingsManager::MAGNET_AUTO_DOWNLOAD:
+			//			break;
+			//		case SettingsManager::MAGNET_AUTO_SEARCH:
+			//			SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			//			break;
+			//	};
+			//} else {
+			// use aOverride to force the display of the dialog.  used for auto-updating
+				CMagnetDlg dlg(fhash, fname);
+				dlg.DoModal(mainWnd);
+			//}
+		} else {
+			MessageBox(mainWnd, CSTRING(MAGNET_DLG_TEXT_BAD), CSTRING(MAGNET_DLG_TITLE), MB_OK | MB_ICONEXCLAMATION);
+		}
+	}
 }
 
 void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 

@@ -372,6 +372,13 @@ public:
 	// Hash related
 	static void bitziLink(TTHValue* /*aHash*/);
 	static void copyMagnet(TTHValue* /*aHash*/, const string& /*aFile*/, int64_t);
+	static void searchHash(TTHValue* /*aHash*/);
+
+	// URL related
+	static void registerDchubHandler();
+	static void registerMagnetHandler();
+	static void parseDchubUrl(const string& /*aUrl*/);
+	static void parseMagnetUri(const string& /*aUrl*/, bool aOverride = false);
 	
 	static void openLink(const string& url);
 	static void openFile(const string& file) {

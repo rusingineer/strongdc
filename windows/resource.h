@@ -100,6 +100,8 @@
 #define IDB_BITMAP2                     277
 #define IDB_FAVSTATES                   277
 #define IDB_SHUTDOWN                    278
+#define IDD_MAGNET                      281
+#define IDI_MAGNET                      283
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -382,7 +384,6 @@
 #define IDC_SEGMENT4_MAX                1229
 #define IDC_TOOLBAR_IMAGE_BOX           1229
 #define IDC_VERSION_MISMATCH            1229
-#define IDC_SETTINGS_LOG_SEGMENT        1229
 #define IDC_SEGMENT6_MIN                1230
 #define IDC_DOWNLOADDIR_DIR             1230
 #define IDC_USE_EXTRA_VERSION           1230
@@ -393,25 +394,34 @@
 #define IDC_DOWNLOADDIR_EXT             1232
 #define IDC_CLIENT_RAW_1                1232
 #define IDC_CLIENT_ITEMS                1232
+#define IDC_MAGNET_QUEUE                1232
 #define IDC_DIR_DESCRIPTION             1233
 #define IDC_CLIENT_RAW_2                1233
 #define IDC_ADD_CLIENT                  1233
+#define IDC_MAGNET_SEARCH               1233
 #define IDC_SEGMENT2                    1234
 #define IDC_CLIENT_RAW_3                1234
 #define IDC_CHANGE_CLIENT               1234
+#define IDC_MAGNET_REMEMBER             1234
 #define IDC_SEGMENT3                    1235
 #define IDC_CLIENT_RAW_4                1235
 #define IDC_MOVE_CLIENT_UP              1235
+#define IDC_MAGNET_HASH                 1235
 #define IDC_SEGMENT4                    1236
 #define IDC_CLIENT_RAW_5                1236
 #define IDC_MOVE_CLIENT_DOWN            1236
 #define IDC_CLIENT_CONNECTION           1236
+#define IDC_MAGNET_NAME                 1236
 #define IDC_SEGMENT6                    1237
 #define IDC_REMOVE_CLIENT               1237
+#define IDC_MAGNET_NOTHING              1237
 #define IDC_SEGMENT8                    1238
 #define IDC_ADD_LINE                    1238
+#define IDC_MAGNET_DISP_NAME            1238
 #define IDC_USERIP                      1239
+#define IDC_MAGNET_DISP_HASH            1239
 #define IDC_SEGMENTWARN                 1240
+#define IDC_MAGNET_TEXT                 1240
 #define IDC_DONTSEGMENT                 1241
 #define IDC_MAX_SEGMENT_SPEED           1242
 #define IDC_CLIENT_CHEATING_DESCRIPTION 1243
@@ -706,7 +716,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        281
+#define _APS_NEXT_RESOURCE_VALUE        284
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1282
 #define _APS_NEXT_SYMED_VALUE           120

@@ -403,7 +403,7 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 }
 
 
-template<bool managed>
+/*template<bool managed>
 class RollbackOutputStream : public OutputStream {
 public:
 	RollbackOutputStream(File* f, OutputStream* aStream, size_t bytes) : s(aStream), pos(0), bufSize(bytes), buf(new u_int8_t[bytes]) {
@@ -423,7 +423,7 @@ public:
 			size_t n = len < (bufSize - pos) ? len : bufSize - pos;
 
 			if(memcmp(buf + pos, wb, n) != 0) {
-				throw FileException(STRING(ROLLBACK_INCONSISTENCY));
+				throw FileException(STRING(ROLLBACK_INCONSISTENCY), ResourceManager::ROLLBACK_INCONSISTENCY);
 			}
 			pos += n;
 			if(pos == bufSize) {
@@ -440,7 +440,7 @@ private:
 	size_t bufSize;
 	u_int8_t* buf;
 };
-
+*/
 template<bool managed>
 class TigerCheckOutputStream : public OutputStream {
 public:
@@ -658,8 +658,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 
 	if(d->getTreeValid() && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile(), d->getStartPos(), d->getTempTarget()));
-		if(q->getTiger().getLeaves().size() == 0)  {
-			q->setTiger(d->getTigerTree());
+		if(q != NULL)
+			if(q->getTiger().getLeaves().size() == 0)  {
+				q->setTiger(d->getTigerTree());
 		}
 	}
 	
@@ -732,6 +733,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
+/*		if(e.getErrorId() == ResourceManager::ROLLBACK_INCONSISTENCY) {
+			string target = d->getTarget();
+			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);
+		}*/
 
 		d->resetPos();
 		aSource->setDownload(NULL);

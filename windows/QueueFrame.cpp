@@ -1159,27 +1159,6 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	return 0;
 }
 
-LRESULT QueueFrame::onReaddAll(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-
-		QueueItemInfo::SourceIter j;
-
-		for(j = ii->getBadSources().begin(); j != ii->getBadSources().end();) {
-			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*) j;
-		
-			try {
-				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
-			} catch(const Exception& e) {
-				ctrlStatus.SetText(0, e.getError().c_str());
-			}
-		}
-	}
-	return 0;
-}
-
 LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	
 	if(ctrlQueue.GetSelectedCount() == 1) {
@@ -1203,6 +1182,27 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 	QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 	QueueManager::getInstance()->removeSources(s->getUser(), QueueItem::Source::FLAG_REMOVED);
+	return 0;
+}
+
+LRESULT QueueFrame::onReaddAll(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	
+	if(ctrlQueue.GetSelectedCount() == 1) {
+		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
+		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+
+		QueueItemInfo::SourceIter j;
+
+		for(j = ii->getBadSources().begin(); j != ii->getBadSources().end();) {
+			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*) j;
+		
+			try {
+				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
+			} catch(const Exception& e) {
+				ctrlStatus.SetText(0, e.getError().c_str());
+			}
+		}
+	}
 	return 0;
 }
 

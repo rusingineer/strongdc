@@ -108,7 +108,7 @@ void AdcHub::handle(Command::INF, Command& c) throw() {
 			continue;
 
 		if(i->compare(0, 2, "NI") == 0) {
-			u->setNick(i->substr(2));
+			u->setNick(Util::toAcp(i->substr(2)));
 		} else if(i->compare(0, 2, "HU") == 0) {
 			hub = u;
 		} else if(i->compare(0, 2, "DE") == 0) {
