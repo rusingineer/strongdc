@@ -133,7 +133,7 @@ int FileChunksInfo::ValidBlock(int64_t start, size_t& len)
 	return WRONG_POS;
 }
 
-int64_t FileChunksInfo::GetUndlStart(int maxSegments)
+int64_t FileChunksInfo::GetUndlStart()
 {
 	dcdebug("GetUndlStart running = %d free = %d\n", vecRunBlocks.size(), vecFreeBlocks.size());
 	Lock l(hMutex);
@@ -175,17 +175,6 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
-
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) {
-		iSmallestBlockSize = (iFileSize / maxSegments) / 2;
-		if(iSmallestBlockSize < SMALLEST_BLOCK_SIZE) {
-			iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
-		}
-	}
-
-	if(maxSegments == 1) {
-		iSmallestBlockSize = iFileSize;
-	}
 
 	if((e - b) < iSmallestBlockSize){
 		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
@@ -333,7 +322,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			_ASSERT(cur.getLeaves().size() == 1);
 
 			// Fail!
-        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(int64_t)(start / iBlockSize)]))
+        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / iBlockSize)]))
         	{
 	       		if(!vecFreeBlocks.empty() && *(vecFreeBlocks.rbegin()) == start)
 	        	{

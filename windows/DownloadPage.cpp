@@ -117,7 +117,7 @@ LRESULT DownloadPage::onClickedBrowseTempDir(WORD /*wNotifyCode*/, WORD /*wID*/,
 }
 
 LRESULT DownloadPage::onClickedListConfigure(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	CPublicHubListDlg dlg;
+	PublicHubListDlg dlg;
 	dlg.DoModal(m_hWnd);
 	return 0;
 }

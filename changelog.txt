@@ -46,6 +46,8 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * odstranìno odstraòování diakritiky
 * zmìna barev se projeví ihned (CZDC++)
 * pøidány vlajky státù (CZDC++)
+* aktivní/pasivní režim lze zvolit pro každý oblíbený hub
+* pøidána položka Otevøít vlastní seznam souborù do hlavního menu (fulDC)
 
 
 	-- StrongDC++ 1.00 RC8 --

@@ -598,18 +598,17 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				switch(i->second) {
 				case UPDATE_USER:
 					if(updateUser(u)) {
-						if(showJoins) {
-							if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-								PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+						if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+							PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
-							if(u->isFavoriteUser() && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
-								MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u->getFullNick()).c_str(), CTSTRING(FAVUSER_ONLINE));
-							}
-
-							if (!favShowJoins | u->isFavoriteUser()) {
-							 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u->getNick()), WinUtil::m_ChatTextSystem);
-							}	
+						if(u->isFavoriteUser() && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
+							MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u->getFullNick()).c_str(), CTSTRING(FAVUSER_ONLINE));
 						}
+
+						if (showJoins || (favShowJoins && u->isFavoriteUser())) {
+						 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u->getNick()), WinUtil::m_ChatTextSystem);
+						}	
+
 						if(client->getOp() && !u->isSet(User::OP)) {
 							if(Util::toString(u->getBytesShared()).find("000000") != -1) {
 								string detectString = Util::formatExactSize(u->getBytesShared())+" - the share size had too many zeroes in it";
@@ -620,7 +619,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							}
 						
 							if(BOOLSETTING(CHECK_NEW_USERS)) {
-								if(u->getMode() == "A" || !u->isSet(User::PASSIVE) || SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+								if(u->getMode() == "A" || !u->isSet(User::PASSIVE) || client->getMode() == SettingsManager::CONNECTION_ACTIVE) {
 									try {
 										QueueManager::getInstance()->addTestSUR(u, true);
 									} catch(const Exception&) {
@@ -649,10 +648,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						if(i != userMap.end())
 							delete i->second;
 					}
-					if(showJoins) {
-						if (!favShowJoins | u->isFavoriteUser()) {
-							addLine(Text::toT("*** " + STRING(PARTS) + u->getNick()), WinUtil::m_ChatTextSystem);
-						}
+					if (showJoins || (favShowJoins && u->isFavoriteUser())) {
+						addLine(Text::toT("*** " + STRING(PARTS) + u->getNick()), WinUtil::m_ChatTextSystem);
 					}
 					userMap.erase(u);
 					break;
@@ -1364,7 +1361,7 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 					}
 			break;
 		case VK_UP:
-			if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+			if ( (GetKeyState(VK_MENU) & 0x8000) ||	( ((GetKeyState(VK_CONTROL) & 0x8000) == 0) ^ (BOOLSETTING( SETTINGS_USE_CTRL_FOR_LINE_HISTORY ) == true) ) ) {
 				//scroll up in chat command history
 				//currently beyond the last command?
 				if (curCommandPosition > 0) {
@@ -1384,7 +1381,7 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 
 			break;
 		case VK_DOWN:
-			if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+			if ( (GetKeyState(VK_MENU) & 0x8000) ||	( ((GetKeyState(VK_CONTROL) & 0x8000) == 0) ^ (BOOLSETTING( SETTINGS_USE_CTRL_FOR_LINE_HISTORY ) == true) ) ) {
 				//scroll down in chat command history
 
 				//currently beyond the last command?

@@ -117,8 +117,6 @@ LRESULT OperaColorsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	crProgressTextDown = SETTING(PROGRESS_TEXT_COLOR_DOWN);
 	crProgressTextUp = SETTING(PROGRESS_TEXT_COLOR_UP);
 
-/*	ctrlProgressOverride1.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE));
-	ctrlProgressOverride2.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE2));*/
 	ctrlProgressDownDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_DOWN_SHOW));
 	ctrlProgressUpDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_UP_SHOW));
 	ctrlProgressSegmentDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_SEGMENT_SHOW));
@@ -153,7 +151,6 @@ void OperaColorsPage::write()
 	
 	// Do specialized writing here
 	// settings->set(XX, YY);
-//	if(!PropertiesDlg::needUpdate) {
 	SettingsManager::getInstance()->set(SettingsManager::MENUBAR_LEFT_COLOR, (int)crMenubarLeft);
 	SettingsManager::getInstance()->set(SettingsManager::MENUBAR_RIGHT_COLOR, (int)crMenubarRight);
 	SettingsManager::getInstance()->set(SettingsManager::MENUBAR_BUMPED, getCheckbox(IDC_SETTINGS_ODC_MENUBAR_BUMPED));
@@ -163,8 +160,6 @@ void OperaColorsPage::write()
 	SettingsManager::getInstance()->set(SettingsManager::UPLOAD_BAR_COLOR, (int)crProgressUp);
 	SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_DOWN, (int)crProgressTextDown);
 	SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_UP, (int)crProgressTextUp);
-//	}
-//	PropertiesDlg::needUpdate = false;
 }
 
 LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {

@@ -286,7 +286,7 @@ string GeneralPage::getMyIP()
 }
 
 LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
-	string IPAdresa = getMyIP();
+	string IPAdresa = /*getMyIP();*/ Util::getLocalIp();
 
    if((IPAdresa.compare(0,3,"10.")==0) ||
 	  (IPAdresa.compare(0,8,"192.168.")==0) ||

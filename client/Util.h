@@ -547,6 +547,8 @@ public:
 		buf[63] = 0;
 		return buf;
 	}
+	static bool nlfound;
+	static string nlspeed;
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 private:
 	static string appPath;

@@ -47,12 +47,30 @@ Client::~Client() {
 void Client::reloadSettings() {
 	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
 	if(hub) {
-		setNick(hub->getNick(true));
+		setNick(checkNick(hub->getNick(true)));
 		setDescription(hub->getUserDescription());
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
+		setMode(SETTING(CONNECTION_TYPE));
+		setIP(SETTING(SERVER));
+		switch(hub->getMode()) {
+			case 1 :
+			{
+				setMode(SettingsManager::CONNECTION_ACTIVE);
+				setIP(hub->getIP());
+				break;
+			}
+			case 2 :
+			{
+				setMode(SettingsManager::CONNECTION_PASSIVE);
+				setIP(hub->getIP());
+				break;
+			}
+		}
 	} else {
-		setNick(SETTING(NICK));
+		setNick(checkNick(SETTING(NICK)));
+		setMode(SETTING(CONNECTION_TYPE));
+		setIP(SETTING(SERVER));
 	}
 }
 
@@ -87,8 +105,8 @@ void Client::updateCounts(bool aRemove) {
 }
 
 string Client::getLocalIp() const { 
-	if(!SETTING(SERVER).empty()) {
-		return Socket::resolve(SETTING(SERVER));
+	if(!getIP().empty()) {
+		return Socket::resolve(getIP());
 	}
 	if(getMe() && !getMe()->getIp().empty())
 		return getMe()->getIp();

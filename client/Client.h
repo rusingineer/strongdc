@@ -105,8 +105,6 @@ public:
 	virtual User::NickMap& lockUserList() = 0;
 	virtual void unlockUserList() = 0;
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
-	virtual string checkNick(const string& nick) = 0;
-	virtual string getHubURL() = 0;
 
 	const string& getAddress() const { return address; }
 	const string& getAddressPort() const { return addressPort; }
@@ -188,6 +186,9 @@ protected:
 	// reload nick from settings, other details from hubmanager
 	void reloadSettings();
 
+	virtual string checkNick(const string& nick) = 0;
+	virtual string getHubURL() = 0;
+
 	GETSET(string, nick, Nick);
 	GETSET(string, defpassword, Password);
 	GETSET(bool, registered, Registered);
@@ -199,6 +200,8 @@ protected:
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
+	GETSET(int, mode, Mode);
+	GETSET(string, ip, IP);
 
 private:
 

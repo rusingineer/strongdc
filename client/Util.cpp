@@ -57,7 +57,44 @@ time_t Util::awayTime;
 Util::CountryList Util::countries;
 string Util::appPath;
 
+bool Util::nlfound = false;
+string Util::nlspeed;
 static void sgenrand(unsigned long seed);
+
+
+BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
+	TCHAR buf[256];
+	buf[0] = NULL;
+	if (!handle)
+		return TRUE;// Not a window
+	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
+	buf[255] = NULL;
+
+	if(buf[0] != NULL) {
+		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
+			Util::nlfound = true;
+			return false;
+		}
+	}
+	return true;
+}
+
+unsigned char HEX_2_INT_TABLE[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
+            6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int hexstr2int(char *hexstr) {
+    register unsigned int length, i, value, shift;
+    for (length = 0; length < 9; length++) if (!hexstr[length]) break;
+    shift = (length - 1) * 4;
+    for (i = value = 0; i < length; i++, shift -= 4)
+        value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
+    return value;
+}
 
 void Util::initialize() {
 	setlocale(LC_ALL, "");
@@ -106,6 +143,74 @@ void Util::initialize() {
 			k = j + 1;
 		}
 	} catch(const FileException&) {
+		// ...
+	}
+
+	try {
+		TCHAR AppData[256];
+		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
+
+		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
+
+		int NetLimiter_UploadLimit = 0;
+		int NetLimiter_UploadOn = 0;
+		const size_t BUF_SIZE = 800;
+		string cesta = Util::getAppName()+"/";
+		char buf[BUF_SIZE];
+		u_int32_t len;
+		char* w2 = strdup(cesta.c_str());
+
+		for(;;) {
+			size_t n = BUF_SIZE;
+			len = f.read(buf, n);
+			string txt = "";
+			for(int i = 0; i<len; ++i) {
+				if (buf[i]== 0) 
+				txt += "/"; else
+				txt += buf[i];
+			}
+			char* w1 = strdup(txt.c_str());
+
+			if(::strstr(strupr(w1),strupr(w2)) != NULL) {
+				char buf1[256];
+				char buf2[256];
+
+				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
+				buf1[255] = 0;
+				string a1 = buf1;
+
+				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
+				buf2[255] = 0;
+				string a2 = buf2;
+
+				string limit_hex = "0x" + a2 + a1;
+
+				NetLimiter_UploadLimit = 0;
+
+				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
+				NetLimiter_UploadOn = u_int8_t(txt[16]);
+				buf[255] = 0;
+
+				if(NetLimiter_UploadOn == 1) {
+					EnumWindows(GetWOkna,NULL);
+					if(nlfound) {
+						nlspeed = NetLimiter_UploadLimit;
+					}
+				}
+
+				delete[] w1;
+				break;
+			}
+
+			delete[] w1;
+
+			if(len < BUF_SIZE)
+				break;
+		}
+	
+		f.close();
+		delete[] w2;
+	} catch(...) {
 	}
 
 	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);

@@ -483,7 +483,11 @@ private:
 			}
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
-			flagimage = WinUtil::getFlagImage(Util::getIpCountry(sr->getIP().c_str()).c_str());
+			
+			if(sr->getIP() != "")
+				flagimage = WinUtil::getFlagImage(Util::getIpCountry(sr->getIP().c_str()).c_str());
+			else 
+				flagimage = 0;
 
 			if(user->getDownloadSpeed()<1) {
 				const string& tmp = sr->getUser()->getConnection();
@@ -540,6 +544,7 @@ private:
 		HUB_ADDED,
 		HUB_CHANGED,
 		HUB_REMOVED,
+		FILTERED_TEXT
 	};
 
 	tstring initialString;

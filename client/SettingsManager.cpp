@@ -99,7 +99,7 @@ const string SettingsManager::settingTags[] =
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
-	"AddFinishedInstantly", "Away", "UseUPnP",
+	"AddFinishedInstantly", "Away", "UseUPnP", "UseCTRLForLineHistory",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
 	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction", "MinimumSearchInterval",
@@ -122,7 +122,7 @@ const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC
 const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
 "256K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
 
-const string SettingsManager::blockSizes[] = { "64K", "128K", "256K", "512K", "1024K", "Auto" };
+const string SettingsManager::blockSizes[] = { "64K", "128K", "256K", "512K", "1024K" };
 
 SettingsManager::SettingsManager()
 {
@@ -246,6 +246,7 @@ SettingsManager::SettingsManager()
 	setDefault(SETTINGS_USE_UPNP, false);
 	setDefault(DONT_DL_ALREADY_SHARED, false);
 	setDefault(CONFIRM_HUB_REMOVAL, false);
+	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
 	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
@@ -256,7 +257,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, 0);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
-	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,10,-1,11,12,13,-1,-1,14,-1,15,-1,16,-1,17,19,-1,18,19,20,21,22");
+	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,10,-1,11,12,13,-1,14,-1,15,-1,16,-1,17,-1,18,19,20,21,22");
 	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
 	setDefault(WEBSERVER, false);
 	setDefault(WEBSERVER_PORT, 80);

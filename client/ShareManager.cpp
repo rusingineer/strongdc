@@ -406,8 +406,6 @@ void ShareManager::renameDirectory(const string& oName, const string& nName) thr
 	} else {
 		// Valid newName, lets rename
 		i->first = nName;
-		setDirty();
-		refresh(true, true, false);
 	}
 }
 
@@ -769,9 +767,9 @@ int ShareManager::run() {
 	return 0;
 }
 		
-void ShareManager::generateXmlList() {
+void ShareManager::generateXmlList(bool force /* = false */ ) {
 	Lock l(listGenLock);
-	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate)) {
+	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate || force ) ) {
 		listN++;
 
 		try {

@@ -38,6 +38,10 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_FH_NICK, CTSTRING(NICK));
 	SetDlgItemText(IDC_FH_PASSWORD, CTSTRING(PASSWORD));
 	SetDlgItemText(IDC_FH_USER_DESC, CTSTRING(DESCRIPTION));
+	SetDlgItemText(IDC_DEFAULT, CTSTRING(DEFAULT));
+	SetDlgItemText(IDC_ACTIVE, CTSTRING(ACTIVE));
+	SetDlgItemText(IDC_PASSIVE, CTSTRING(SETTINGS_PASSIVE));
+	SetDlgItemText(IDC_CONN_BORDER, CTSTRING(SETTINGS_CONNECTION_SETTINGS));
 
 	// Fill in values
 	SetDlgItemText(IDC_HUBNAME, Text::toT(entry->getName()).c_str());
@@ -52,6 +56,14 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_RAW_THREE, Text::toT(entry->getRawThree()).c_str());
 	SetDlgItemText(IDC_RAW_FOUR, Text::toT(entry->getRawFour()).c_str());
 	SetDlgItemText(IDC_RAW_FIVE, Text::toT(entry->getRawFive()).c_str());
+	SetDlgItemText(IDC_SERVER, Text::toT(entry->getIP()).c_str());
+
+	if(entry->getMode() == 0)
+		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_DEFAULT);
+	else if(entry->getMode() == 1)
+		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_ACTIVE);
+	else if(entry->getMode() == 2)
+		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_PASSIVE);
 
 	CEdit tmp;
 	tmp.Attach(GetDlgItem(IDC_HUBNAME));
@@ -99,6 +111,19 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setRawFour(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_FIVE, buf, 512);
 		entry->setRawFive(Text::fromT(buf));
+		GetDlgItemText(IDC_SERVER, buf, 512);
+		entry->setIP(Text::fromT(buf));
+
+		int	ct = -1;
+		if(IsDlgButtonChecked(IDC_DEFAULT))
+			ct = 0;
+		else if(IsDlgButtonChecked(IDC_ACTIVE))
+			ct = 1;
+		else if(IsDlgButtonChecked(IDC_PASSIVE))
+			ct = 2;
+
+		entry->setMode(ct);
+
 		HubManager::getInstance()->save();
 	}
 	EndDialog(wID);

@@ -132,7 +132,6 @@ LRESULT UploadPage::onDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/,
 	return 0;
 }
 
-
 void UploadPage::write()
 {
 	PropPage::write((HWND)*this, items);
@@ -227,7 +226,7 @@ LRESULT UploadPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	item.pszText = buf;
 
 	int i = -1;
-	while((i = ctrlDirectories.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+	while((i = ctrlDirectories.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		item.iItem = i;
 		item.iSubItem = 0;
 		ctrlDirectories.GetItem(&item);
@@ -238,11 +237,13 @@ LRESULT UploadPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 			virt.description = TSTRING(VIRTUAL_NAME_LONG);
 			virt.line = tstring(buf);
 			if(virt.DoModal(m_hWnd) == IDOK) {
-				if (Util::stricmp(buf, virt.line) == 0)
-					return 0; //Same name as before (no change)
-				ShareManager::getInstance()->renameDirectory(Text::fromT(buf), Text::fromT(virt.line));
-				ctrlDirectories.SetItemText(i, 0, virt.line.c_str());
-				return 0;
+				if (Util::stricmp(buf, virt.line) != 0) {
+					ShareManager::getInstance()->renameDirectory(Text::fromT(buf), Text::fromT(virt.line));
+					// Refresh the share. This is a blocking refresh. Might cause problems?
+					ShareManager::getInstance()->refresh(true, false, true);
+					ShareManager::getInstance()->setDirty();
+					ctrlDirectories.SetItemText(i, 0, virt.line.c_str());
+				}
 			}
 		} catch(const ShareException& e) {
 			MessageBox(Text::toT(e.getError()).c_str(), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);

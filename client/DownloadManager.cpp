@@ -50,7 +50,7 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), treeValid(false), oldDownload(false), tth(qi->getTTH()), 
-	quickTick(GET_TICK()), maxSegmentsInitial(qi->getMaxSegmentsInitial()), finished(false) { 
+	quickTick(GET_TICK()), finished(false) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -633,8 +633,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
 				removeDownload(d, false);	
-				checkDownloads(aSource);
 				aSource->setLineMode();
+				checkDownloads(aSource);
 			}else{
 				aSource->setDownload(NULL);
 				removeDownload(d, false); // true -> false
@@ -670,10 +670,9 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 
 			d->setPos(e.pos);
-			bool reconn = (d->getPos() != d->getSize());				
-			handleEndData(aSource);
-			if(!reconn)
+			if(d->getPos() == d->getSize())
 				aSource->setLineMode();
+			handleEndData(aSource);
 			return;	
 		}
 
@@ -931,9 +930,8 @@ noCRC:
 				int64_t size = d->getSize();
 				string tempTarget = d->getTempTarget();
 				
-				FileChunksInfo::Free(d->getTempTarget());
 				removeDownload(d, true);
-
+				FileChunksInfo::Free(d->getTempTarget());
 				new FileChunksInfo(tempTarget, size, &v);
 
 				checkDownloads(aSource, reconn);

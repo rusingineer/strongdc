@@ -29,16 +29,16 @@
 static const TCHAR thanks[] = 
 _T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, King Wenceslas, Liny, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
 
-class CAboutDlg : public CDialogImpl<CAboutDlg>, private HttpConnectionListener
+class AboutDlg : public CDialogImpl<AboutDlg>, private HttpConnectionListener
 {
 public:
 	enum { IDD = IDD_ABOUTBOX };
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
-	CAboutDlg() { };
-	virtual ~CAboutDlg() { };
+	AboutDlg() { };
+	virtual ~AboutDlg() { };
 
-	BEGIN_MSG_MAP(CAboutDlg)
+	BEGIN_MSG_MAP(AboutDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MESSAGE_HANDLER(WM_VERSIONDATA, onVersionData)
 		COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
@@ -85,7 +85,7 @@ public:
 private:
 	HttpConnection c;
 
-	CAboutDlg(const CAboutDlg&) { dcassert(0); };
+	AboutDlg(const AboutDlg&) { dcassert(0); };
 	
 	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);

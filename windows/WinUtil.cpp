@@ -343,6 +343,7 @@ void WinUtil::init(HWND hWnd) {
 	file.CreatePopupMenu();
 
 	file.AppendMenu(MF_STRING, IDC_OPEN_FILE_LIST, CTSTRING(MENU_OPEN_FILE_LIST));
+	file.AppendMenu(MF_STRING, IDC_OPEN_MY_LIST, CTSTRING(MENU_OPEN_MY_LIST));
 	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
 	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -1137,7 +1138,7 @@ void WinUtil::registerMagnetHandler() {
 	// add DC++ to magnet-handler's list of applications
 	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++"), &hk);
 	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_ROOT), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_ROOT).size()+1));
-	::RegSetValueEx(hk, _T("Description"), NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_DESC), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_DESC).size()+1));
+	::RegSetValueEx(hk, _T("Description"), NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_DESC), sizeof(TCHAR) * (STRING(MAGNET_HANDLER_DESC).size()+1));
 	// set ShellExecute
 	tstring app = Text::toT("\"" + Util::getAppName() + "\" %URL");
 	::RegSetValueEx(hk, _T("ShellExecute"), NULL, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length()+1));
@@ -1172,6 +1173,7 @@ void WinUtil::openLink(const tstring& url) {
 		return;
 	}
 	tstring x;
+
 	tstring::size_type i = url.find(_T("://"));
 	if(i != string::npos) {
 		x = url.substr(0, i);
@@ -1306,7 +1308,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 				};
 			} else {
 			// use aOverride to force the display of the dialog.  used for auto-updating
-				CMagnetDlg dlg(fhash, fname, fsize);
+				MagnetDlg dlg(fhash, fname, fsize);
 				dlg.DoModal(mainWnd);
 			}
 		} else {

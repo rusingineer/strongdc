@@ -182,7 +182,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 	// Add to any substructure being stored
 	for(DestDirList::iterator id = destDirVector.begin(); id != destDirVector.end(); ++id) {
 		if(id->subdir != NULL) {
-			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile);
+			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
 			dcassert(id->subdir->getAdls());
 			
 			id->subdir->files.push_back(copyFile);
@@ -202,7 +202,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 			continue;
 		}
 		if(is->MatchesFile(currentFile->getName(), filePath, currentFile->getSize())) {
-			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile);
+			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
 			copyFile->setAdls(true);
 			destDirVector[is->ddIndex].dir->files.push_back(copyFile);
 			destDirVector[is->ddIndex].fileAdded = true;

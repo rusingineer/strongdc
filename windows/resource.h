@@ -40,6 +40,7 @@
 #define IDR_HUB                         129
 #define IDC_PUB_LIST_DROPDOWN           130
 #define IDC_HUBLIST                     131
+#define IDC_OPEN_MY_LIST                132
 #define IDC_SERVER                      133
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
@@ -121,7 +122,6 @@
 #define IDD_USERLIST_COLOURS            289
 #define IDD_DIALOG3                     290
 #define IDD_HUB_LIST                    290
-#define IDB_BITMAP4                     291
 #define IDB_FLAGS                       291
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
@@ -506,6 +506,7 @@
 #define IDC_SEARCH_EDIT                 1257
 #define IDC_LIST_EDIT                   1257
 #define IDC_MATCH_SPIN                  1257
+#define IDC_LIST_EDIT_BOX               1257
 #define CAA                             1258
 #define IDC_SEARCH_SPIN                 1258
 #define IDC_LIST_UP                     1258
@@ -524,6 +525,7 @@
 #define IDC_EMULATION                   1264
 #define IDC_UPDATE_URL                  1264
 #define IDC_REGEXP_TESTER_TEXT          1264
+#define IDC_LIST_EDIT2                  1264
 #define IDC_CLIENT_EMU                  1265
 #define IDC_GETIP                       1266
 #define IDC_CHANGE_COLOR                1266
@@ -554,6 +556,8 @@
 #define IDC_SECOND2                     1290
 #define IDC_FLAT                        1291
 #define IDC_FLAT_SPIN                   1292
+#define IDC_DEFAULT                     1293
+#define IDC_CONN_BORDER                 1294
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
@@ -813,7 +817,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        292
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1293
+#define _APS_NEXT_CONTROL_VALUE         1295
 #define _APS_NEXT_SYMED_VALUE           130
 #endif
 #endif
