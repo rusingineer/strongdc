@@ -85,7 +85,7 @@ public:
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			ctype(10), status(1), ip(Util::emptyString) { unCacheClientInfo(); };
+			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1) { unCacheClientInfo(); };
 
 	virtual ~User() throw();
 
@@ -156,6 +156,7 @@ public:
 	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
+	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
 	GETSET(int64_t, realBytesShared, RealBytesShared);
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
@@ -204,7 +205,7 @@ public:
 		upload = Util::emptyString;
 		ip = Util::emptyString;
 		supports = Util::emptyString;
-		bytesShared = -1;
+		bytesShared = 0;
 		realBytesShared = -1;
 		fakeShareBytesShared = -1;
 
@@ -217,6 +218,7 @@ public:
 		clientType = Util::emptyString;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;
+		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
 		comment = Util::emptyString;
 		fileListSize = -1;

@@ -276,6 +276,7 @@ string User::getReport()
 	report += "\r\nDescription:	" + description;
 	report += "\r\nEmail:		" + email;
 	report += "\r\nConnection:	" + connection;
+	report += "\r\nCommands:	" + unknownCommand;
 	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
 	if ( listLength != -1 ) {
@@ -345,6 +346,7 @@ void User::updateClientType() {
 		if (!matchProfile(supports, cp.getSupports())) { continue; }
 		if (!matchProfile(testSUR, cp.getTestSUR())) { continue; }
 		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
+		if (!matchProfile(unknownCommand, cp.getUserConCom()))			{ continue; }
 		if (!matchProfile(description, formattedExtTagExp))							{ continue; }
 		if (!matchProfile(connection, cp.getConnection()))							{ continue; }
 

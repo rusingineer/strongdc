@@ -115,7 +115,7 @@ public:
 #define checkstate() if(state != STATE_CONNECTED) return
 
 	virtual void connect(const User* aUser);
-	virtual void hubMessage(const string& aMessage) { checkstate(); send(toNmdc( "<" + getNick() + "> " + Util::validateMessage(aMessage, false) + "|" ) ); }
+	virtual void hubMessage(const string& aMessage) { checkstate(); send(toNmdc( "<" + getNick() + "> " + Util::validateChatMessage(aMessage) + "|" ) ); }
 	virtual void privateMessage(const User* aUser, const string& aMessage) { privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage); }
 	virtual void kick(const User* aUser, const string& aMsg);
 	virtual void ban(const User*, const string&, time_t) { /*Unimplemented...*/ }

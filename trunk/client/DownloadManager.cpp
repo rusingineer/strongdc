@@ -136,9 +136,11 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 				TryToSwitchToUser = 2;
 			}
 			if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
-                QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), true);
+                //QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), true);
+				d->getUserConnection()->disconnect();
 				q->setFastUser(true);
-				ConnectionManager::getInstance()->getDownloadConnection(q->speedUsers[TryToSwitchToUser]->getUser());
+				//ConnectionManager::getInstance()->getDownloadConnection(q->speedUsers[TryToSwitchToUser]->getUser());
+				q->speedUsers[TryToSwitchToUser]->getUser()->connect();
 				continue;
 			}
 		}
@@ -149,7 +151,10 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
 					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 						if(((GET_TICK() - d->quickTick)/1000) > iTime){
-			                QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), d->getRunningAverage() < (SETTING(DISCONNECT)*1024));
+							d->getUserConnection()->disconnect();
+							if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
+								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(),QueueItem::Source::FLAG_SLOW);
+							}
 			                continue;
 						}
 					} else {
@@ -1394,7 +1399,7 @@ size_t DownloadManager::throttleCycleTime() {
 }
 
 void DownloadManager::throttleZeroCounters() {
-	Lock l(cs);
+	//Lock l(cs); // we don't want to re-enter already owned critical section
 	mBytesSpokenFor = 0;
 	mBytesSent = 0;
 }
@@ -1408,8 +1413,8 @@ void DownloadManager::throttleSetup() {
 // called once a second, plus when a download starts
 // from the constructor to BufferedSocket
 // with 64k, a few people get winsock error 0x2747
-	Lock l(cs);
-	unsigned int num_transfers = getDownloadCount();
+	// Lock l(cs); // we don't want to re-enter already owned critical section
+	unsigned int num_transfers = downloads.size();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {

@@ -114,22 +114,6 @@ public:
 		return;
 	}
 
-	bool useMultiSource() {
-		bool multiChunk = false;
-		switch(SETTING(MULTI_CHUNK)) {
-			case 0:
-				multiChunk = (MessageBox(0, CTSTRING(ASK_MULTISOURCE), CTSTRING(ENABLE_MULTI_SOURCE), MB_YESNO | MB_ICONQUESTION) == IDYES);
-				break;
-			case 1:
-				multiChunk = true;
-				break;
-			case 2:
-				multiChunk = false;
-				break;
-		}
-		return multiChunk;
-	}
-
 	/** Readd a source that was removed */
 	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
 
@@ -199,7 +183,7 @@ public:
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
 		int getMaxSegments(string filename, int64_t filesize);
 		void find(StringList& sl, int64_t aSize, const string& ext);
-		void find(QueueItem::List& ql, const TTHValue* tth);
+		void find(QueueItem::List& ql, const TTHValue& tth);
 
 		QueueItem* findAutoSearch(StringList& recent);
 		QueueItem* findHighest();

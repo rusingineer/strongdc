@@ -100,10 +100,10 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 		}
 		static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
 			switch(col) {
-				case COLUMN_FILE: return compare(a->File, b->File);
-				case COLUMN_PATH: return compare(a->Path, b->Path);
-				case COLUMN_NICK: return compare(a->User->getNick(), b->User->getNick());
-				case COLUMN_HUB: return compare(a->User->getLastHubName(), b->User->getLastHubName());
+				case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
+				case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
+				case COLUMN_NICK: return Util::stricmp(a->User->getNick(), b->User->getNick());
+				case COLUMN_HUB: return Util::stricmp(a->User->getLastHubName(), b->User->getLastHubName());
 				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 				case COLUMN_SIZE: return compare(a->size, b->size);
 				case COLUMN_ADDED: return compare(a->iTime, b->iTime);

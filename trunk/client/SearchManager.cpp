@@ -346,20 +346,8 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
-		SearchQueueItem sqi = searchQueue.front();
-		searchQueue.erase(searchQueue.begin());
-		if(sqi.getHubs().empty()) {
-			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
-			fire(SearchManagerListener::Searching(), &sqi);
-		} else {
-			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
-			fire(SearchManagerListener::Searching(), &sqi);
-		}
-		setLastSearch( GET_TICK() );
-	}
-
 	Lock l(cs);
+
 	for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
 		SearchResult* sr = *i;
 		if (!sr->getIP().empty()) {
@@ -380,6 +368,19 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		sr->decRef();
 	}
 	seznam.clear();
+
+	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
+		SearchQueueItem sqi = searchQueue.front();
+		searchQueue.erase(searchQueue.begin());
+		if(sqi.getHubs().empty()) {
+			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
+			fire(SearchManagerListener::Searching(), &sqi);
+		} else {
+			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
+			fire(SearchManagerListener::Searching(), &sqi);
+		}
+		setLastSearch( GET_TICK() );
+	}
 }
 
 u_int32_t SearchManager::getLastSearch() {

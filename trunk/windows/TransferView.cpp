@@ -738,9 +738,9 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 		i = transferItems[aCqi];		
 		i->status = ItemInfo::STATUS_RUNNING;
 		i->pos = 0;
-		i->start = (aDownload->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO)) ? 0 : aDownload->getPos();
+		i->start = (aDownload->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) ? 0 : aDownload->getPos();
 		i->actual = i->start;
-		i->size = (aDownload->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO)) ? aDownload->getSegmentSize() : aDownload->getSize();
+		i->size = (aDownload->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) ? aDownload->getSegmentSize() : aDownload->getSize();
 		i->qi = aDownload->getItem();
 
 		i->Target = Text::toT(aDownload->getTarget());
@@ -786,7 +786,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-			i->file = _T("TTH: ") + i->file;
+			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 		} else {
 			i->file = Util::emptyStringT;
 		}
@@ -805,7 +805,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		Lock l(cs);
 		for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 			Download* d = *j;
-			int64_t total = d->isSet(Download::FLAG_MULTI_CHUNK) ? d->getQueueTotal() : d->getPos();
+			int64_t total = (d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? d->getQueueTotal() : d->getPos();
 
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
 			ItemInfo* i = transferItems[aCqi];
@@ -865,7 +865,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 			}
 
-			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
+			if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 				_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)).c_str(), 
 					(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)*100.0/(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getSegmentSize() : d->getSize()), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
 			}
@@ -936,7 +936,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		ItemInfo::MASK_PATH;
 		
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-			i->file = _T("TTH: ") + i->file;
+			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 		} else {
 			i->file = Util::emptyStringT;
 		}			
@@ -1022,7 +1022,7 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
 		if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
-			i->file = _T("TTH: ") + i->file;
+			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 		} else {
 			i->file = Util::emptyStringT;
 		}
@@ -1049,8 +1049,9 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 			i->pos = i->start + u->getTotal();
 			i->timeLeft = u->getSecondsLeft();
 			i->speed = u->getRunningAverage();
+			i->status = ItemInfo::STATUS_RUNNING;
 
-			if (u->getPos() >= 0) {
+			if (u->getPos() > 0) {
 				_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 
 				(double)u->getPos()*100.0/(double)u->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
             } else _stprintf(buf, CTSTRING(UPLOAD_STARTING));
@@ -1086,11 +1087,12 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 
 			i->qi = NULL;
 			if(i->upper != NULL) {	
-				i->upper->status = ItemInfo::STATUS_WAITING;
-				i->upper->qi = NULL;
-				i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
-				if(!isTree)
+				if(!isTree) {
+					i->upper->status = ItemInfo::STATUS_WAITING;
+					i->upper->qi = NULL;
+					i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
 					i->upper->finished = true;
+				}
 			}
 
 			if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED)) {

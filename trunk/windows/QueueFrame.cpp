@@ -1010,8 +1010,7 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 				}		
 			}
 		}
-	} 
-	
+	}	
 	return 0;
 }
 
@@ -1131,7 +1130,8 @@ LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	int i = -1;
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-		ii->qi->setMaxSegments(wID - 109);
+		if(ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
+			ii->qi->setMaxSegments(max(2, wID - 109));
 		ii->update();
 		ctrlQueue.updateItem(ii);
 	}

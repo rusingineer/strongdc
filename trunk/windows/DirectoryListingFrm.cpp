@@ -288,8 +288,7 @@ LRESULT DirectoryListingFrame::onDoubleClickFiles(int /*idCtrl*/, LPNMHDR pnmh, 
 
 		if(ii->type == ItemInfo::FILE) {
 			try {
-				bool multiSource = QueueManager::getInstance()->useMultiSource();
-				dl->download(ii->file, SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(ii->getText(COLUMN_FILENAME)), false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+				dl->download(ii->file, SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(ii->getText(COLUMN_FILENAME)), false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -312,8 +311,7 @@ LRESULT DirectoryListingFrame::onDownloadDir(WORD , WORD , HWND , BOOL& ) {
 	if(t != NULL) {
 		DirectoryListing::Directory* dir = (DirectoryListing::Directory*)ctrlTree.GetItemData(t);
 		try {
-			bool multiSource = QueueManager::getInstance()->useMultiSource();
-			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -338,8 +336,7 @@ LRESULT DirectoryListingFrame::onDownloadDirWithPrio(WORD /*wNotifyCode*/, WORD 
 		}
 
 		try {
-			bool multiSource = QueueManager::getInstance()->useMultiSource();
-			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), (GetKeyState(VK_SHIFT) & 0x8000) > 0, p, multiSource);
+			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), (GetKeyState(VK_SHIFT) & 0x8000) > 0, p);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -356,8 +353,7 @@ LRESULT DirectoryListingFrame::onDownloadDirTo(WORD , WORD , HWND , BOOL& ) {
 			WinUtil::addLastDir(target);
 			
 			try {
-				bool multiSource = QueueManager::getInstance()->useMultiSource();
-				dl->download(dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+				dl->download(dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -368,7 +364,6 @@ LRESULT DirectoryListingFrame::onDownloadDirTo(WORD , WORD , HWND , BOOL& ) {
 
 void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = false */, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
 	int i=-1;
-	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(i);
 		tstring target = aTarget.empty() ? Text::toT(SETTING(DOWNLOAD_DIRECTORY)) : aTarget;
@@ -378,9 +373,9 @@ void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = 
 				if(view) {
 					File::deleteFile(Text::fromT(target) + Util::validateFileName(ii->file->getName()));
 				}
-				dl->download(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)), view, (GetKeyState(VK_SHIFT) & 0x8000) > 0, prio, multiSource);
+				dl->download(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)), view, (GetKeyState(VK_SHIFT) & 0x8000) > 0, prio);
 			} else if(!view) {
-				dl->download(ii->dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, prio, multiSource);
+				dl->download(ii->dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, prio);
 			} 
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
@@ -432,19 +427,18 @@ LRESULT DirectoryListingFrame::onDownloadWithPrio(WORD /*wNotifyCode*/, WORD wID
 LRESULT DirectoryListingFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlList.GetSelectedCount() == 1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
-		bool multiSource = QueueManager::getInstance()->useMultiSource();
 		try {
 			if(ii->type == ItemInfo::FILE) {
 				tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + ii->getText(COLUMN_FILENAME);
 				if(WinUtil::browseFile(target, m_hWnd)) {
 					WinUtil::addLastDir(Util::getFilePath(target));
-					dl->download(ii->file, Text::fromT(target), false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+					dl->download(ii->file, Text::fromT(target), false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 				}
 			} else {
 				tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 				if(WinUtil::browseDirectory(target, m_hWnd)) {
 					WinUtil::addLastDir(target);
-					dl->download(ii->dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+					dl->download(ii->dir, Text::fromT(target), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 				}
 			} 
 		} catch(const Exception& e) {
@@ -462,6 +456,15 @@ LRESULT DirectoryListingFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 LRESULT DirectoryListingFrame::onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	downloadList(Text::toT(Util::getTempPath()), true);
+	return 0;
+}
+
+LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ItemInfo* ii = ctrlList.getSelectedItem();
+	if(ii != NULL) {
+		TTHValue tmp(Text::fromT(ii->getText(COLUMN_TTH)));
+		WinUtil::searchHash(&tmp);
+	} 
 	return 0;
 }
 
@@ -721,8 +724,7 @@ LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, 
 		if(ii->type == ItemInfo::FILE) {
 			if(newId < (int)targets.size()) {
 				try {
-					bool multiSource = QueueManager::getInstance()->useMultiSource();
-					dl->download(ii->file, targets[newId], false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+					dl->download(ii->file, targets[newId], false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 				} catch(const Exception& e) {
 					ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 				} 
@@ -752,8 +754,7 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 		string target = SETTING(DOWNLOAD_DIRECTORY);
 		try {
 			dcassert(newId < (int)WinUtil::lastDirs.size());
-			bool multiSource = QueueManager::getInstance()->useMultiSource();
-			dl->download(dir, Text::fromT(WinUtil::lastDirs[newId]), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+			dl->download(dir, Text::fromT(WinUtil::lastDirs[newId]), (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -771,8 +772,7 @@ LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD
 		if(ii->type == ItemInfo::FILE) {
 			if(newId < (int)targets.size()) {
 				try {
-					bool multiSource = QueueManager::getInstance()->useMultiSource();
-					dl->download(ii->file, targets[newId], false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+					dl->download(ii->file, targets[newId], false, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 				} catch(const Exception& e) {
 					ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 				}
@@ -803,8 +803,7 @@ LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/,
 		try {
 			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
 			dcassert(newId < (int)spl.size());
-			bool multiSource = QueueManager::getInstance()->useMultiSource();
-			dl->download(dir, spl[newId].first, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT, multiSource);
+			dl->download(dir, spl[newId].first, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -1028,7 +1027,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 		ucParams["tth"] = "NONE";
 		if(ii->type == ItemInfo::FILE) {
 			ucParams["type"] = "File";
-			ucParams["file"] = ii->file->getName();
+			ucParams["file"] = dl->getPath(ii->file) + ii->file->getName();
 			ucParams["filesize"] = Util::toString(ii->file->getSize());
 			ucParams["filesizeshort"] = Util::formatBytes(ii->file->getSize());
 			TTHValue *hash = ii->file->getTTH();
@@ -1039,7 +1038,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 		else
 		{
 			ucParams["type"] = "Directory";
-			ucParams["file"] = ii->dir->getName();
+			ucParams["file"] = dl->getPath(ii->dir) + ii->dir->getName();
 			ucParams["filesize"] = Util::toString(ii->dir->getTotalSize());
 			ucParams["filesizeshort"] = Util::formatBytes(ii->dir->getTotalSize());
 		}
@@ -1086,15 +1085,6 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 			WinUtil::setClipboard(Text::toT(sCopy));
 	}
 	return S_OK;
-}
-
-LRESULT DirectoryListingFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlList.GetSelectedCount() == 1) {
-		ItemInfo* ii = ctrlList.getSelectedItem();
-		if(ii->file->getTTH() != NULL)
-			WinUtil::searchHash(ii->file->getTTH());
-	} 
-	return 0;
 }
 
 LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {

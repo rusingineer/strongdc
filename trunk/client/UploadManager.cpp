@@ -84,8 +84,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 	string file;
 	try {
+		file = ShareManager::getInstance()->translateFileName(aFile);
 		if(aType == "file") {
-			file = ShareManager::getInstance()->translateFileName(aFile);
 			userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
 
 			try {
@@ -456,7 +456,11 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 		fire(UploadManagerListener::Tick(), ticks);
 
 	fire(UploadManagerListener::QueueUpdate());
-	int iAvgSpeed = getAverageSpeed();
+	int iAvgSpeed = 0;
+	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+		Upload* u = *i;
+		iAvgSpeed += (int)u->getRunningAverage();
+	}
 
 	if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
 
@@ -555,7 +559,7 @@ size_t UploadManager::throttleCycleTime() {
 
 void UploadManager::throttleZeroCounters()  {
 	if (mThrottleEnable) {
-		Lock l(cs);
+		//Lock l(cs);
 		mBytesSpokenFor = 0;
 		mBytesSent = 0;
 	}
@@ -567,8 +571,8 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
-	Lock l(cs);
-	unsigned int num_transfers = getUploadCount();
+	//Lock l(cs); // we don't want to re-enter already owned critical section
+	unsigned int num_transfers = uploads.size();
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {

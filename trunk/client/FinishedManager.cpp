@@ -158,192 +158,172 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 
 void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) throw()
 {
-		if(!d->isSet(Download::FLAG_USER_LIST))	
-		{	if((!SETTING(FINISHFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+	if(!d->isSet(Download::FLAG_USER_LIST) && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
 		PlaySound(Text::toT(SETTING(FINISHFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-		}
+	}
 		
-		if(d->isSet(Download::FLAG_MP3_INFO)) {
+	if(d->isSet(Download::FLAG_MP3_INFO)) {
 
-			m_nFrames = 0;
-			m_nLength = 0;
-			m_enMPEGVersion = MPEGVER_NA;
-			m_nMPEGLayer = 0;
-			m_nBitRate = 0;
-			m_nSampleRate = 0;
-			m_enChannelMode = MP3CM_STEREO;
+		m_nFrames = 0;
+		m_nLength = 0;
+		m_enMPEGVersion = MPEGVER_NA;
+		m_nMPEGLayer = 0;
+		m_nBitRate = 0;
+		m_nSampleRate = 0;
+		m_enChannelMode = MP3CM_STEREO;
 
-			string strFile = d->getTarget();
-			HANDLE hFile = NULL;
-			if ((hFile = CreateFile(Text::utf8ToWide(strFile).c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL))
-		!= INVALID_HANDLE_VALUE)
-	{
-		int nNextSearch = 0;
+		string strFile = d->getTarget();
+		HANDLE hFile = NULL;
+		if ((hFile = CreateFile(Text::utf8ToWide(strFile).c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL)) != INVALID_HANDLE_VALUE) {
+			int nNextSearch = 0;
 
-		MP3FRAMEHEADER sFrameHeader;
-		memset(&sFrameHeader,0,sizeof(sFrameHeader));
+			MP3FRAMEHEADER sFrameHeader;
+			memset(&sFrameHeader,0,sizeof(sFrameHeader));
 
-		int nFrameBR = 0;
-		double dLength = 0; // total length of file
-		ULONG nTotalBR = 0; // total frames bit rate (used to calc. average)
-		//DWORD dwNumBytesRead;
-		while (GetNextFrameHeader(hFile,&sFrameHeader,nNextSearch))
-		{
-			if (m_nFrames < 1)
-			{
-				// first read the MPEG version
-				switch (sFrameHeader.mpegver)
-				{
-					case 0: m_enMPEGVersion = MPEGVER_25; break;
-					case 1: m_enMPEGVersion = MPEGVER_NA; break;
-					case 2: m_enMPEGVersion = MPEGVER_2; break;
-					case 3: m_enMPEGVersion = MPEGVER_1; break;
+			int nFrameBR = 0;
+			double dLength = 0; // total length of file
+			ULONG nTotalBR = 0; // total frames bit rate (used to calc. average)
+
+			while (GetNextFrameHeader(hFile,&sFrameHeader,nNextSearch)) {
+				if (m_nFrames < 1) {
+					// first read the MPEG version
+					switch (sFrameHeader.mpegver) {
+						case 0: m_enMPEGVersion = MPEGVER_25; break;
+						case 1: m_enMPEGVersion = MPEGVER_NA; break;
+						case 2: m_enMPEGVersion = MPEGVER_2; break;
+						case 3: m_enMPEGVersion = MPEGVER_1; break;
+					}
+
+					// next, read the MPEG layer description
+					switch (sFrameHeader.mpeglayer) {
+						case 0: m_nMPEGLayer = 0; break;
+						case 1: m_nMPEGLayer = 3; break;
+						case 2: m_nMPEGLayer = 2; break;
+						case 3: m_nMPEGLayer = 1; break;
+					}
+
+					switch (m_enMPEGVersion) {
+						case MPEGVER_NA: MPEGVer = "N/A"; break;
+						case MPEGVER_25: MPEGVer = "MP3Pro2 - MPEG 2.5"; break;
+						case MPEGVER_2: MPEGVer = "MP3Pro - MPEG 2"; break;
+						case MPEGVER_1: MPEGVer = "MPEG 1"; break;
+					}
+					// read the bit for CRC or no CRC
+					m_bHasCRC = sFrameHeader.hascrc;
 				}
 
-				// next, read the MPEG layer description
-				switch (sFrameHeader.mpeglayer)
-				{
-					case 0: m_nMPEGLayer = 0; break;
-					case 1: m_nMPEGLayer = 3; break;
-					case 2: m_nMPEGLayer = 2; break;
-					case 3: m_nMPEGLayer = 1; break;
-				}
-
-		switch (m_enMPEGVersion)
-		{
-		case MPEGVER_NA: MPEGVer = "N/A"; break;
-		case MPEGVER_25: MPEGVer = "MP3Pro2 - MPEG 2.5"; break;
-		case MPEGVER_2: MPEGVer = "MP3Pro - MPEG 2"; break;
-		case MPEGVER_1: MPEGVer = "MPEG 1"; break;
-		}
-				// read the bit for CRC or no CRC
-				m_bHasCRC = sFrameHeader.hascrc;
-			}
-
-			// read the bitrate, based on the mpeg layer and version
-			if (m_nMPEGLayer > 0)
-			{
-				if (m_enMPEGVersion == MPEGVER_1)
-				{
-					switch (m_nMPEGLayer)
-					{
-						case 1: nFrameBR = g_nMP3BitRate[0][sFrameHeader.bitrate]; break;
-						case 2: nFrameBR = g_nMP3BitRate[1][sFrameHeader.bitrate]; break;
-						case 3: nFrameBR = g_nMP3BitRate[2][sFrameHeader.bitrate]; break;
+				// read the bitrate, based on the mpeg layer and version
+				if (m_nMPEGLayer > 0) {
+					if (m_enMPEGVersion == MPEGVER_1) {
+						switch (m_nMPEGLayer) {
+							case 1: nFrameBR = g_nMP3BitRate[0][sFrameHeader.bitrate]; break;
+							case 2: nFrameBR = g_nMP3BitRate[1][sFrameHeader.bitrate]; break;
+							case 3: nFrameBR = g_nMP3BitRate[2][sFrameHeader.bitrate]; break;
+						}
+					} else {
+						switch (m_nMPEGLayer) {
+							case 1: nFrameBR = g_nMP3BitRate[3][sFrameHeader.bitrate]; break;
+							case 2: nFrameBR = g_nMP3BitRate[4][sFrameHeader.bitrate]; break;
+							case 3: nFrameBR = g_nMP3BitRate[5][sFrameHeader.bitrate]; break;
+						}
 					}
 				}
-				else
-				{
-					switch (m_nMPEGLayer)
-					{
-						case 1: nFrameBR = g_nMP3BitRate[3][sFrameHeader.bitrate]; break;
-						case 2: nFrameBR = g_nMP3BitRate[4][sFrameHeader.bitrate]; break;
-						case 3: nFrameBR = g_nMP3BitRate[5][sFrameHeader.bitrate]; break;
-					}
-				}
-			}
 
-			// if nFrameBR is 0 or -1 then the bitrate is either free or bad
-			if (nFrameBR > 0)
-				nTotalBR += nFrameBR;
-
-			// read sample rate
-			if (m_enMPEGVersion == MPEGVER_1)
-				switch (sFrameHeader.samplerate)
-				{
-					case 0: m_nSampleRate = 44100; break;
-					case 1: m_nSampleRate = 48000; break;
-					case 2: m_nSampleRate = 32000; break;
-				}
-			else if (m_enMPEGVersion == MPEGVER_2)
-				switch (sFrameHeader.samplerate)
-				{
-					case 0: m_nSampleRate = 22050; break;
-					case 1: m_nSampleRate = 24000; break;
-					case 2: m_nSampleRate = 16000; break;
-				}
-			else if (m_enMPEGVersion == MPEGVER_25)
-				switch (sFrameHeader.samplerate)
-				{
-					case 0: m_nSampleRate = 11025; break;
-					case 1: m_nSampleRate = 12000; break;
-					case 2: m_nSampleRate = 8000; break;
-				}
-
-			if (!m_nSampleRate)
-				break;
-
-			// read channel mode
-			switch (sFrameHeader.chanmode)
-			{
-				case 0: m_enChannelMode = "Stereo"; break;
-				case 1: m_enChannelMode = "Joint Stereo"; break;
-				case 2: m_enChannelMode = "Dual Channel"; break;
-				case 3: m_enChannelMode = "Single Channel"; break;
-			}
-
-			if (m_nMPEGLayer == 1)
-				nNextSearch = (12000 * nFrameBR / m_nSampleRate + sFrameHeader.padding) * 4;
-			else
-				nNextSearch = 144000 * nFrameBR / m_nSampleRate + sFrameHeader.padding;
-
-			nNextSearch -= 4; // the frame header was already read
-
-			m_nFrames++;
-
-			// calculate the length in seconds of this frame and add it to total
-			if (nFrameBR)
-				dLength += (double)(nNextSearch + 4) * 8 / (nFrameBR * 1000);
-		}
-
-		// if at least one frame was read, the MP3 is considered valid
-		if (m_nFrames > 0)
-		{
-			m_nBitRate = nTotalBR / m_nFrames; // average the bitrate
-		}
-
-		
-
-			}
-			CloseHandle(hFile);
+				// if nFrameBR is 0 or -1 then the bitrate is either free or bad
+				if (nFrameBR > 0)
+					nTotalBR += nFrameBR;
 	
-			FinishedMP3Item *item = new FinishedMP3Item(
-					d->getTarget(), d->getUserConnection()->getUser()->getNick(),
-					d->getUserConnection()->getUser()->getLastHubName(),
-					d->getSize(),MPEGVer+" Verze "+Util::toString(m_nMPEGLayer), m_nSampleRate, m_nBitRate, m_enChannelMode,GET_TIME());
+				// read sample rate
+				if (m_enMPEGVersion == MPEGVER_1)
+					switch (sFrameHeader.samplerate) {
+						case 0: m_nSampleRate = 44100; break;
+						case 1: m_nSampleRate = 48000; break;
+						case 2: m_nSampleRate = 32000; break;
+					}
+				else if (m_enMPEGVersion == MPEGVER_2)
+					switch (sFrameHeader.samplerate) {
+						case 0: m_nSampleRate = 22050; break;
+						case 1: m_nSampleRate = 24000; break;
+						case 2: m_nSampleRate = 16000; break;
+					}
+				else if (m_enMPEGVersion == MPEGVER_25)
+					switch (sFrameHeader.samplerate) {
+						case 0: m_nSampleRate = 11025; break;
+						case 1: m_nSampleRate = 12000; break;
+						case 2: m_nSampleRate = 8000; break;
+					}
 
-			Lock l(cs);
-			MP3downloads.push_back(item);
+				if (!m_nSampleRate)
+					break;
 
-			fire(FinishedManagerListener::Added_MP3Dl(), item);
-			File::deleteFile(d->getTarget());
-
-		} else
-		
-			if((!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-				FinishedItem *item = new FinishedItem(
-					d->getTarget(), d->getUserConnection()->getUser()->getNick(),
-					d->getUserConnection()->getUser()->getLastHubName(),
-					d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->isSet(Download::FLAG_TTH_OK));
-
-					int64_t totalBytes = item->getSize();
-					int64_t totalTime = item->getMilliSeconds();
-					d->getUserConnection()->getUser()->setDownloadSpeed((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0 );
-					User::updated(d->getUserConnection()->getUser());
-
-				{
-					Lock l(cs);
-					downloads.push_back(item);
+				// read channel mode
+				switch (sFrameHeader.chanmode) {
+					case 0: m_enChannelMode = "Stereo"; break;
+					case 1: m_enChannelMode = "Joint Stereo"; break;
+					case 2: m_enChannelMode = "Dual Channel"; break;
+					case 3: m_enChannelMode = "Single Channel"; break;
 				}
-			
-				fire(FinishedManagerListener::AddedDl(), item);
+
+				if (m_nMPEGLayer == 1)
+					nNextSearch = (12000 * nFrameBR / m_nSampleRate + sFrameHeader.padding) * 4;
+				else
+					nNextSearch = 144000 * nFrameBR / m_nSampleRate + sFrameHeader.padding;
+
+				nNextSearch -= 4; // the frame header was already read
+
+				m_nFrames++;
+
+				// calculate the length in seconds of this frame and add it to total
+				if (nFrameBR)
+					dLength += (double)(nNextSearch + 4) * 8 / (nFrameBR * 1000);
 			}
-				char* buf = new char[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128];
-				_snprintf(buf, STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
-					d->getUserConnection()->getUser()->getNick().c_str());
-				buf[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127] = 0;
-				LogManager::getInstance()->message(buf, true);
-				delete[] buf;
+
+			// if at least one frame was read, the MP3 is considered valid
+			if (m_nFrames > 0) {
+				m_nBitRate = nTotalBR / m_nFrames; // average the bitrate
+			}
+
+		}
+		CloseHandle(hFile);
+	
+		FinishedMP3Item *item = new FinishedMP3Item(
+				d->getTarget(), d->getUserConnection()->getUser()->getNick(),
+				d->getUserConnection()->getUser()->getLastHubName(),
+				d->getSize(),MPEGVer+" Verze "+Util::toString(m_nMPEGLayer), m_nSampleRate, m_nBitRate, m_enChannelMode,GET_TIME());
+
+		Lock l(cs);
+		MP3downloads.push_back(item);
+
+		fire(FinishedManagerListener::Added_MP3Dl(), item);
+		File::deleteFile(d->getTarget());
+
+	} else {
+		
+		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
+			FinishedItem *item = new FinishedItem(
+				d->getTarget(), d->getUserConnection()->getUser()->getNick(),
+				d->getUserConnection()->getUser()->getLastHubName(),
+				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK));
+
+			int64_t totalBytes = item->getSize();
+			int64_t totalTime = item->getMilliSeconds();
+			d->getUserConnection()->getUser()->setDownloadSpeed((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0 );
+			User::updated(d->getUserConnection()->getUser());
+
+			{
+				Lock l(cs);
+				downloads.push_back(item);
+			}
+			
+			fire(FinishedManagerListener::AddedDl(), item);
+		}
+		char* buf = new char[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128];
+		_snprintf(buf, STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
+			d->getUserConnection()->getUser()->getNick().c_str());
+		buf[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127] = 0;
+		LogManager::getInstance()->message(buf, true);
+		delete[] buf;
+	}
 }
 
 void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
@@ -352,7 +332,7 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
-	if((!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && u->isSet(Upload::FLAG_TTH_LEAVES) == false) {
+	if(!u->isSet(Upload::FLAG_TTH_LEAVES) && (!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		FinishedItem *item = new FinishedItem(
 			u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
 			u->getUserConnection()->getUser()->getLastHubName(),

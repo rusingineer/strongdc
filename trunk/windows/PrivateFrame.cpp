@@ -281,7 +281,7 @@ void PrivateFrame::onEnter()
 		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
 		tstring s(msg, ctrlMessage.GetWindowTextLength());
 
-		s = Text::toT(Util::validateChatMessage(Text::fromT(s)));
+		s = Text::toT(Util::disableCzChars(Text::fromT(s)));
 		// save command in history, reset current buffer pointer to the newest command
 		curCommandPosition = prevCommands.size();		//this places it one position beyond a legal subscript
 		if (!curCommandPosition || curCommandPosition > 0 && prevCommands[curCommandPosition - 1] != s) {
