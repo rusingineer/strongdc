@@ -694,6 +694,9 @@ int hexstr2int(char *hexstr) {
     return value;
 }
 void NmdcHub::myInfo() {
+/*	char* s = NULL;
+	s[1] = 5;*/
+
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}

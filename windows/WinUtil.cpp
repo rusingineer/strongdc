@@ -865,6 +865,7 @@ void WinUtil::openLink(const string& url) {
 			 *  "C:\Program Files\Internet Explorer\iexplore.exe" -nohome
 			 *  "C:\Apps\Opera7\opera.exe"
 			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1"
+			 *  C:\PROGRA~1\NETSCAPE\NETSCAPE\NETSCP.EXE -url "%1"
 			 */
 			string cmd(regbuf); // otherwise you consistently get two trailing nulls
 			
@@ -934,17 +935,14 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const string& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset(&fi, 0, sizeof(SHFILEINFO));
-		string x = Util::getFileName(aFileName);
-		string::size_type i = x.rfind('.');
-		if(i != string::npos) {
-			x = x.substr(i);
+		string x = Util::toLower(Util::getFileExt(aFileName));
+		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);
 			if(j != fileIndexes.end())
 				return j->second;
 		}
-
-		::SHGetFileInfo(x.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+		string fn = Util::toLower(Util::getFileName(aFileName));
+		::SHGetFileInfo(fn.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		::DestroyIcon(fi.hIcon);
 
