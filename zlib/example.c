@@ -3,12 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-<<<<<<< example.c
-/* @(#) $Id$ */
-=======
-/* @(#) $Id$ */
->>>>>>> 1.2
-
 #include <stdio.h>
 #include "zlib.h"
 

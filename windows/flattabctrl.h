@@ -898,13 +898,6 @@ private:
 
 #endif // !defined(AFX_FLATTABCTRL_H__FFFCBD5C_891D_44FB_B9F3_1DF83DA3EA83__INCLUDED_)
 
-/**
- * @file
-<<<<<<< flattabctrl.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
+
 
 

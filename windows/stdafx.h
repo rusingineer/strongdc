@@ -67,12 +67,4 @@ extern CAppModule _Module;
 
 #endif // !defined(AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_)
 
-/**
- * @file
-<<<<<<< stdafx.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
 

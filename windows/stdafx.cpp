@@ -33,12 +33,4 @@
 #error STLPort not correctly installed, read compile.txt
 #endif
 
-/**
- * @file
-<<<<<<< stdafx.cpp
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
 
