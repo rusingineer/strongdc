@@ -29,7 +29,7 @@ class Download;
 #include "User.h"
 #include "FastAlloc.h"
 #include "MerkleTree.h"
-#include "FileDataInfo.h"
+#include "FileChunksInfo.h"
 
 class QueueItem : public Flags, public FastAlloc<QueueItem> {
 public:
@@ -216,7 +216,7 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(!isSet(FLAG_USER_LIST)){
-			FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(tempTarget);
+			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
 			if(filedatainfo)
 				return filedatainfo->GetDownloadedSize();
 		}

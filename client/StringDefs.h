@@ -716,7 +716,6 @@ enum Strings { // @DontAdd
 	SEARCH_FOR_ALTERNATES_TTH, // "By TTH"
 	SEARCH_FOR_ALTERNATES_NAME, // "By Name"
 	MENU_TRANSFERS, // "&Transfers"	
-	ENABLE_DC403_FEATURES, // "Enable TTH leaves verification"
 	ALL_SEGMENTS_TAKEN, // "All segments taken"
 	SEGMENTS, // "Segments"
 	SEGMENT, // "Segment"

@@ -612,6 +612,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 								string detectString = Util::formatNumber(u->getBytesShared())+" - the share size had too many zeroes in it";
 								u->setFakeSharing(true);
 								u->setCheat(Util::validateMessage(detectString, false), false);
+								u->sendRawCommand(SETTING(FAKESHARE_RAW));
 								this->updateUser(u);
 							}
 						

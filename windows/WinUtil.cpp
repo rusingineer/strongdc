@@ -876,6 +876,23 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 	return true;
 }
 
+void WinUtil::bitziLink(TTHValue* aHash) {
+	// to use this free service by bitzi, we must not hammer or request information from bitzi
+	// except when the user requests it (a mass lookup isn't acceptable), and (if we ever fetch
+	// this data within DC++, we must identify the client/mod in the user agent, so abuse can be 
+	// tracked down and the code can be fixed
+	if(aHash != NULL) {
+		openLink("http://bitzi.com/lookup/tree:tiger:" + aHash->toBase32());
+	}
+}
+
+ void WinUtil::copyMagnet(TTHValue* aHash, const string& aFile, int64_t aSize) {
+	if(aHash != NULL && !aFile.empty()) {
+		setClipboard("magnet:?xt=urn:tree:tiger:" + aHash->toBase32() + "&xl=" + Util::toString(aSize) + "&dn=" + Util::encodeURI(aFile));
+	}
+}
+
+
 void WinUtil::openLink(const string& url) {
 	CRegKey key;
 	char regbuf[MAX_PATH];

@@ -24,7 +24,7 @@
 #endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
-#include "FileDataInfo.h"
+#include "FileChunksInfo.h"
 #include "CryptoManager.h"
 #include "UserConnection.h"
 #include "Singleton.h"
@@ -37,8 +37,8 @@
 class QueueItem;
 class ConnectionQueueItem;
 
-STANDARD_EXCEPTION(BlockDLException);
-STANDARD_EXCEPTION(FileDLException);
+//STANDARD_EXCEPTION(BlockDLException);
+//STANDARD_EXCEPTION(FileDLException);
 
 class Download : public Transfer, public Flags {
 public:
@@ -68,12 +68,6 @@ public:
 	Download() throw();
 	Download(QueueItem* qi, User::Ptr& aUser) throw();
 
-	virtual ~Download() {
-		FileDataInfo* lpFileDataInfo = FileDataInfo::GetFileDataInfo(tempTarget);
-		if(lpFileDataInfo)
-			lpFileDataInfo->PutUndlStart(getPos());
-	}
-
 	string getTargetFileName() {
 		string::size_type i = getTarget().rfind('\\');
 		if(i != string::npos) {
@@ -83,26 +77,10 @@ public:
 		}
 	};
 
-	void addPos(int64_t aPos) {
-		FileDataInfo* lpFileDataInfo = FileDataInfo::GetFileDataInfo(tempTarget);
-		if(lpFileDataInfo){
-			int iRet = lpFileDataInfo->ValidBlock(getPos(), NULL, aPos);
-
-			if (iRet == FileDataInfo::BLOCK_OVER){
-				throw BlockDLException("Block Downloaded :" + Util::toString(getPos()) + "," + Util::toString(getPos() + aPos));
-			}else if(iRet == FileDataInfo::FILE_OVER){
-				throw FileDLException("File finished :" + Util::toString(getPos()) + "," + Util::toString(getPos() + aPos));
-			}else if(iRet == FileDataInfo::WRONG_POS){
-				throw FileException(string("Wrong Position:") + Util::toString(getPos()) + "," + Util::toString(getPos() + aPos));
-			}
-		}
-		Transfer::addPos(aPos);
-	};
-
 	int64_t getQueueTotal() {
-		FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(tempTarget);
-		if(filedatainfo)
-			return filedatainfo->GetDownloadedSize();
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
+		if(chunksInfo)
+			return chunksInfo->GetDownloadedSize();
 		return getTotal();
 	}
 	
@@ -188,7 +166,7 @@ public:
 
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
-		checkDownloads(conn, false);
+		checkDownloads(conn);
 	}
 
 	void abortDownload(const string& aTarget);
@@ -298,6 +276,7 @@ private:
 		}
 	};
 	
+
 	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 	

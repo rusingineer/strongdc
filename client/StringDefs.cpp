@@ -713,7 +713,6 @@ string ResourceManager::strings[] = {
 "By TTH", 
 "By Name", 
 "&Transfers", 
-"Enable TTH leaves verification", 
 "All segments taken", 
 "Segments", 
 "Segment", 
@@ -723,7 +722,7 @@ string ResourceManager::strings[] = {
 "No free block",
 "Log segmented downloading",
 "Display cheats in main chat",
-"Search in results:"
+"Search in results"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1437,7 +1436,6 @@ string ResourceManager::names[] = {
 "SearchForAlternatesTth", 
 "SearchForAlternatesName",
 "MenuTransfers", 
-"EnableDc403Features", 
 "AllSegmentsTaken", 
 "Segments", 
 "Segment", 

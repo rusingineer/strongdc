@@ -145,7 +145,11 @@ public:
 
 	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
 		Lock l(cs);
-		fileQueue.find(sl, aSize, suffix);
+		QueueItem::List ql;
+		fileQueue.find(ql, aSize, suffix);
+		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
+			sl.push_back((*i)->getTarget());
+		}
 	}
 
 	void getTargetsByTTH(StringList& sl, TTHValue* tth) throw() {
@@ -174,7 +178,8 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
-	string getTopAutoSearchString();	
+	void sendAutoSearch(Client*);
+	
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
@@ -197,11 +202,12 @@ public:
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			u_int32_t aAdded, const TTHValue* root, const string& freeBlocks = Util::emptyString) throw(QueueException, FileException);
 		QueueItem* find(const string& target);
-		QueueItem* findByHash(const string& hash);
+		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
 		int getMaxSegments(string filename, int64_t filesize);
 		bool matchExtension(const string& aString, const string& aExt);
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, TTHValue* tth);
+		QueueItem* findByHash(const string& hash);
 
 		QueueItem* findAutoSearch(StringList& recent);
 		QueueItem* findHighest();
@@ -212,10 +218,9 @@ public:
 			if(lastInsert != queue.end() && lastInsert->first == qi->getTarget())
 				lastInsert = queue.end();
 			queue.erase(qi->getTarget());
-			if(!qi->isSet(QueueItem::FLAG_USER_LIST ))
-				delete FileDataInfo::GetFileDataInfo(qi->getTempTarget());
+
 			delete qi;
-		}
+		};
 
 	private:
 	void add(QueueItem* qi);
@@ -276,6 +281,7 @@ public:
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, bool addBad, bool utf8) throw(QueueException, FileException);
+
 	int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw();
 	
 	void removeAll(QueueItem* q);
@@ -286,7 +292,7 @@ public:
 			dirty = true;
 			lastSave = GET_TICK();
 		}
-	}
+	};
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();

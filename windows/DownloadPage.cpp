@@ -72,7 +72,7 @@ LRESULT DownloadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	spin.SetRange32(0, 10000);
 	spin.Detach();
 	spin.Attach(GetDlgItem(IDC_EXTRASLOTSSPIN));
-	spin.SetRange32(1, 100);
+	spin.SetRange32(0, 100);
 	spin.Detach();
 	// Do specialized reading here
 	return TRUE;

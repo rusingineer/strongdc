@@ -925,12 +925,12 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
-			if(ii->qi->getMaxSegmentsInitial() == 1) {
+/*			if(ii->qi->getMaxSegmentsInitial() == 1) {
 				segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)+" ("+STRING(DISABLED)+")").c_str());
 				for(int i=2;i<11;i++) {
 					segmentsMenu.EnableMenuItem(i + 109, MF_GRAYED);		
 				}
-			} else segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)).c_str());
+			} else segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)).c_str());*/
 			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 			string ext = Util::getFileExt(ii->getTargetFileName());
@@ -1573,7 +1573,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
-			FileDataInfo* filedatainfo = qi->FDI;
+			FileChunksInfo::Ptr filedatainfo = qi->FDI;
 			
 	
 			try {
@@ -1644,7 +1644,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 						}
 					}
 				}
-			} catch(const Exception&) {}
+			} catch(...) {}
 afterexception:
 			// draw status text
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
@@ -1679,15 +1679,10 @@ LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 }
 
 LRESULT QueueFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlQueue.GetSelectedCount() == 1){
-		QueueItemInfo* ii = (QueueItemInfo*)ctrlQueue.GetItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-
-		if(ii && ii->getTTH()) {
-			string link = "magnet:?xt=urn:tree:tiger:" + ii->getTTH()->toBase32() +
-			"&xl=" + Util::toString(ii->getSize()) +
-			"&dn=" +  Util::getFileName(ii->getTarget());
-			WinUtil::setClipboard(link);
-		}
+	if(ctrlQueue.GetSelectedCount() == 1) {
+		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
+		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		WinUtil::copyMagnet(ii->getTTH(), ii->getTargetFileName(), ii->getSize());
 	}
 	return 0;
 }

@@ -29,7 +29,7 @@
 #include "../client/QueueManager.h"
 #include "../client/CriticalSection.h"
 #include "../client/FastAlloc.h"
-#include "../client/FileDataInfo.h"
+#include "../client/FileChunksInfo.h"
 
 #define SHOWTREE_MESSAGE_MAP 12
 
@@ -257,7 +257,7 @@ private:
 			searchString(aQI->getSearchString()), path(Util::getFilePath(aQI->getTarget())),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
-			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority()), FDI(FileDataInfo::GetFileDataInfo(aQI->getTempTarget()))
+			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority()), FDI(FileChunksInfo::Get(aQI->getTempTarget()))
 		{ 
 			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : aQI->getTempTarget());
 
@@ -331,7 +331,7 @@ private:
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
 		QueueItem* qi;
-		FileDataInfo* FDI;
+		FileChunksInfo::Ptr FDI;
 
 	private:
 

@@ -147,7 +147,7 @@ public:
 	Directory* getRoot() { return root; };
 	
 	void download(File* aFile, const string& aTarget, bool view = false, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void downloadMP3(File* aFile, const string& aTarget, bool view = true, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void downloadMP3(File* aFile, const string& aTarget);
 
 	int64_t getJunkSize() { return root->getJunkSize(); };
 

@@ -26,6 +26,7 @@
 #include "../client/Util.h"
 #include "../client/SettingsManager.h"
 #include "../client/User.h"
+#include "../client/MerkleTree.h"
 #include "../client/ResourceManager.h"
 
 #include "resource.h"
@@ -368,6 +369,10 @@ public:
 	static bool browseFile(string& target, HWND owner = NULL, bool save = true, const string& initialDir = Util::emptyString, const char* types = NULL, const char* defExt = NULL);
 	static bool browseDirectory(string& target, HWND owner = NULL);
 
+	// Hash related
+	static void bitziLink(TTHValue* /*aHash*/);
+	static void copyMagnet(TTHValue* /*aHash*/, const string& /*aFile*/, int64_t);
+	
 	static void openLink(const string& url);
 	static void openFile(const string& file) {
 		::ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
