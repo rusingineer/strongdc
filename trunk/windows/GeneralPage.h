@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+
 #include "PropPage.h"
 #include "atldlgs.h"
 
@@ -38,6 +39,7 @@ public:
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_ACTIVE, onClickedActive)
 		COMMAND_ID_HANDLER(IDC_PASSIVE, onClickedActive)
+		COMMAND_ID_HANDLER(IDC_SHOW_SPEED_CHECK, onClickedActive)
 		COMMAND_ID_HANDLER(IDC_SOCKS5, onClickedActive)
 		COMMAND_HANDLER(IDC_GETIP, BN_CLICKED, onGetIP)
 

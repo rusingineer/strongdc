@@ -53,6 +53,7 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_GETIP, ResourceManager::GET_IP },
 	{ IDC_UPDATEIP, ResourceManager::UPDATE_IP },
 	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
+	{ IDC_DU, ResourceManager::DU },	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -212,6 +213,13 @@ void GeneralPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_SOCKS_USER), checked);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_PASSWORD), checked);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_RESOLVE), checked);
+
+	checked = IsDlgButtonChecked(IDC_SHOW_SPEED_CHECK);
+	::EnableWindow(GetDlgItem(IDC_DOWN_COMBO), checked);
+	::EnableWindow(GetDlgItem(IDC_UP_COMBO), checked);
+	::EnableWindow(GetDlgItem(IDC_DU), checked);
+	::EnableWindow(GetDlgItem(IDC_SLASH), checked);
+	
 
 }
 

@@ -717,8 +717,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
 //		if(ctrlTransfers.findItem(i) != -1)
-			ctrlTransfers.deleteItem(i, true);
-//		delete i;
+		ctrlTransfers.deleteItem(i, true);
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);

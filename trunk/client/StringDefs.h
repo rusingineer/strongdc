@@ -678,5 +678,6 @@ enum Strings { // @DontAdd
 	SEGMENT_PART_COLOR,
 	STRING_NOT_FOUND, // "String not found: "
 	SHOW_SPEED,
+	DU, // "Down/Up:"
 	LAST // @DontAdd
 };

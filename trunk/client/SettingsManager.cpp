@@ -103,8 +103,8 @@ const string SettingsManager::connectionSpeeds[] = { "Modem", "ISDN",
 
 const string SettingsManager::clientEmulations[] = { "StrongDC++", "CZDC++", "DC++" };
 
-const string SettingsManager::speeds[] = { "33.3K","56K","64K","128K","150K","192K",
-"256K","350K","384K","512K","600K","768K","1024K","1536K","2048K","4096K","10M","100M" };
+const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
+"256K","350K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
 
 SettingsManager::SettingsManager()
 {

@@ -39,7 +39,7 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>
 {
 public:
-	TransferView() {
+	TransferView() : PreviewAppsSize(0) {
 		searchFilter.push_back("the");
 		searchFilter.push_back("of");
 		searchFilter.push_back("divx");

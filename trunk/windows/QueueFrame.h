@@ -40,7 +40,7 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX("QueueFrame", IDR_QUEUE, 0, COLOR_3DFACE);
 
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
-		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false),
+		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false), PreviewAppsSize(0),
 		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP)
 	{ 
 		searchFilter.push_back("the");
