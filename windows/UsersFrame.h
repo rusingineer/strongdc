@@ -32,7 +32,7 @@
 #include "../client/File.h"
 
 class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_USERS>, public StaticFrame<UsersFrame, ResourceManager::FAVORITE_USERS, IDC_FAVUSERS>,
-	private HubManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame> {
+	private HubManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame>, private SettingsManagerListener {
 public:
 	
 	UsersFrame() : closed(false), startup(true) { };
@@ -160,6 +160,7 @@ private:
 				PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM) new UserInfoBase(aUser));
 			}
 		}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void addUser(const User::Ptr& aUser);
 	void updateUser(const User::Ptr& aUser);

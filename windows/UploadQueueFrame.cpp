@@ -46,6 +46,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
+
 	ctrlList.SetExtendedListViewStyle(styles);
 
 	ctrlQueued.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
@@ -105,6 +106,9 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	ctrlStatus.SetParts(4, statusSizes);
 	UpdateLayout();
 
+	UploadManager::getInstance()->addListener(this);
+	TimerManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	// Load all searches
 	LoadAll();
 
@@ -116,6 +120,8 @@ LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	if(!closed) {
 		UploadManager::getInstance()->removeListener(this);
 		CZDCLib::setButtonPressed(IDC_UPLOAD_QUEUE, false);
+		TimerManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -156,15 +162,13 @@ void UploadQueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	if(showTree) {
 		if(GetSinglePaneMode() != SPLIT_PANE_NONE) {
 			SetSinglePaneMode(SPLIT_PANE_NONE);
-			LoadAll();
 		}
 	} else {
 		if(GetSinglePaneMode() != SPLIT_PANE_RIGHT) {
 			SetSinglePaneMode(SPLIT_PANE_RIGHT);
-			LoadAll();
 		}
 	}
-
+	LoadAll();
 	CRect rc = rect;
 	SetSplitterRect(rc);
 }
@@ -354,9 +358,6 @@ LRESULT UploadQueueFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, H
 void UploadQueueFrame::LoadAll() {
 	ctrlList.DeleteAllItems();
 	ctrlQueued.DeleteAllItems();
-/*	for(User::Iter i = UQFUsers.end(); i != UQFUsers.begin(); --i) {
-		UQFUsers.erase(i);
-	}*/
 	UQFUsers.clear();
 
 	// Load queue
@@ -431,6 +432,8 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
 	bool add = true;
 
+	HTREEITEM selNode = ctrlQueued.GetSelectedItem();
+
 	if(nickNode) {
 		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
 			if(*i == aUQI->User) {
@@ -443,6 +446,13 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 			UQFUsers.push_back(aUQI->User);
 			nickNode = ctrlQueued.InsertItem(Text::toT(aUQI->User->getNick()+" ("+aUQI->User->getLastHubName()+")").c_str(), TVI_ROOT, TVI_LAST);
 	}	
+	if(selNode) {
+		TCHAR selBuf[256];
+		ctrlQueued.GetItemText(selNode, selBuf, 255);
+		if(_tcscmp(selBuf, Text::toT(aUQI->User->getNick()+" ("+aUQI->User->getLastHubName()+")").c_str()) != 0) {
+			return;
+		}
+	}
 	aUQI->update();
 	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, WinUtil::getIconIndex(Text::toT(aUQI->FileName)));
 }
@@ -490,9 +500,11 @@ void UploadQueueItem::update() {
 	columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
 	columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime));
 	columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(GET_TIME() - iTime));
+
 }
 
 LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	ctrlList.SetRedraw(FALSE);
 	if(wParam == REMOVE_ITEM) {
 		ctrlList.deleteItem((UploadQueueItem*)lParam);
 	} else if(wParam == REMOVE) {
@@ -500,8 +512,35 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		delete (UserInfoBase*)lParam;
 	} else if(wParam == ADD_ITEM) {
 		AddFile((UploadQueueItem*)lParam);
+	} else if(wParam == UPDATE_ITEMS) {
+		int j = ctrlList.GetItemCount();
+		int64_t itime = GET_TIME();
+		for(int i = 0; i < j; i++) {
+			UploadQueueItem* UQI = ctrlList.getItemData(i); 
+			UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
+			ctrlList.updateItem(i);
 	}
+	}
+	ctrlList.SetRedraw(TRUE);
 	return 0;
+}
+
+void UploadQueueFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
+		ctrlList.SetBkColor(WinUtil::bgColor);
+		ctrlList.SetTextBkColor(WinUtil::bgColor);
+		ctrlQueued.SetBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlList.GetTextColor() != WinUtil::textColor) {
+		ctrlList.SetTextColor(WinUtil::textColor);
+		ctrlQueued.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {

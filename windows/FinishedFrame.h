@@ -31,7 +31,7 @@
 #define SERVER_MESSAGE_MAP 7
 
 class FinishedFrame : public MDITabChildWindowImpl<FinishedFrame, RGB(0, 0, 0), IDR_FINISHED_DL>, public StaticFrame<FinishedFrame, ResourceManager::FINISHED_DOWNLOADS, IDC_FINISHED>,
-	private FinishedManagerListener
+	private FinishedManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<FinishedFrame, RGB(0, 0, 0), IDR_FINISHED_DL> baseClass;
@@ -78,7 +78,6 @@ public:
 	LRESULT onColumnClickFinished(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
-
 	
 	LRESULT onSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /* bHandled */) {
 		ctrlList.SetFocus();
@@ -178,6 +177,7 @@ private:
 		totalBytes = 0;
 		totalTime = 0;
 	}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // FINISHEDFRAME_H

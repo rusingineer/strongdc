@@ -1,3 +1,4 @@
+
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -157,6 +158,7 @@ void PropPageTextStyles::write()
 	for ( int i = 0; i < TS_LAST; i++ ) {
 		TextStyles[ i ].SaveSettings();
 	}
+	WinUtil::initColors();
 }
 
 LRESULT PropPageTextStyles::onEditBackColor(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

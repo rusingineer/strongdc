@@ -54,7 +54,8 @@ public:
 	 */
 	void addDirectory(const string& aDirectory, const string & aName) throw(ShareException);
 	void removeDirectory(const string& aName, bool duringRefresh = false);	
-	void removeDirectory1(const string& aName);	
+	void removeDirectory1(const string& aName);
+	void renameDirectory(const string& oName, const string& nName) throw(ShareException);
 	string translateFileName(const string& aFile, bool adc) throw(ShareException);
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ShareException);
 	void setDirty() { xmlDirty = nmdcDirty = true; };

@@ -34,7 +34,7 @@
 #define SHOWTREE_MESSAGE_MAP 12
 
 class QueueFrame : public MDITabChildWindowImpl<QueueFrame, RGB(0, 0, 0), IDR_QUEUE>, public StaticFrame<QueueFrame, ResourceManager::DOWNLOAD_QUEUE, IDC_QUEUE>,
-	private QueueManagerListener, public CSplitterImpl<QueueFrame>
+	private QueueManagerListener, public CSplitterImpl<QueueFrame>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("QueueFrame"), IDR_QUEUE, 0, COLOR_3DFACE);
@@ -223,6 +223,7 @@ private:
 			SourceInfo& operator=(const QueueItem::Source& s) {
 				*((Flags*)this) = s;
 				user = s.getUser();
+				return *this;
 			}
 			User::Ptr& getUser() { return user; };
 
@@ -472,6 +473,7 @@ private:
 	virtual void on(QueueManagerListener::Removed, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::StatusUpdated, QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_QUEUEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

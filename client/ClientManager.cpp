@@ -28,8 +28,6 @@
 #include "HubManager.h"
 #include "QueueManager.h"
 
-int64_t ClientManager::quickTick = 0;
-
 #include "AdcHub.h"
 #include "NmdcHub.h"
 
@@ -72,7 +70,6 @@ void ClientManager::putClient(Client* aClient) {
 			}
 		}
 	}
-
 	aClient->scheduleDestruction();
 }
 
@@ -253,6 +250,7 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	fire(ClientManagerListener::UserUpdated(), aUser);
 }
 
+
 User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
 	Lock l(cs);
 	dcassert(!cid.isZero());
@@ -315,8 +313,12 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 		}
 	}
 
-	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-		(*j)->info(false);
+	infoTick++;
+	if(infoTick == 15) {
+		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
+			(*j)->info(false);
+		}
+		infoTick = 0;
 	}
 }
 

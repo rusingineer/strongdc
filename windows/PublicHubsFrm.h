@@ -34,7 +34,7 @@
 
 #define FILTER_MESSAGE_MAP 8
 class PublicHubsFrame : public MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 0), IDR_PUBLICHUBS>, public StaticFrame<PublicHubsFrame, ResourceManager::PUBLIC_HUBS, ID_FILE_CONNECT>, 
-	private HubManagerListener
+	private HubManagerListener, private SettingsManagerListener
 {
 public:
 	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(""),
@@ -94,7 +94,7 @@ public:
 	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 		HWND hWnd = (HWND)lParam;
 		HDC hDC = (HDC)wParam;
-		if(hWnd == ctrlPubLists.m_hWnd || hWnd == ctrlFilter.m_hWnd) {
+		if(hWnd == ctrlPubLists.m_hWnd || hWnd == ctrlFilter.m_hWnd || hWnd == ctrlPubLists.m_hWnd) {
 			::SetBkColor(hDC, WinUtil::bgColor);
 			::SetTextColor(hDC, WinUtil::textColor);
 			return (LRESULT)WinUtil::bgBrush;
@@ -157,6 +157,7 @@ private:
 	virtual void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
 	virtual void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
 	virtual void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void speak(int x, const string& l) {
 		PostMessage(WM_SPEAKER, x, (LPARAM)new tstring(Text::toT(l)));

@@ -67,6 +67,7 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	UpdateLayout();
 	
 	FinishedManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	updateList(FinishedManager::getInstance()->lockList(true));
 	FinishedManager::getInstance()->unlockList();
 	
@@ -155,8 +156,8 @@ LRESULT FinishedULFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 
 LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	FinishedManager::getInstance()->removeListener(this);
-	
+		FinishedManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -218,6 +219,22 @@ LRESULT FinishedULFrame::onUploadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 		MessageBox(CTSTRING(NO_UPLOAD_LOG), CTSTRING(NO_UPLOAD_LOG), MB_OK );	  
 	}
 	return 0;
+}
+
+void FinishedULFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
+		ctrlList.SetBkColor(WinUtil::bgColor);
+		ctrlList.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlList.GetTextColor() != WinUtil::textColor) {
+		ctrlList.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

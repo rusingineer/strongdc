@@ -126,6 +126,7 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlFilterDesc.SetFont(WinUtil::systemFont);
 
 	HubManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 
 	hubs = HubManager::getInstance()->getPublicHubs();
 	if(HubManager::getInstance()->isDownloading()) 
@@ -256,6 +257,7 @@ LRESULT PublicHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		HubManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(ID_FILE_CONNECT, false);
 		PostMessage(WM_CLOSE);
@@ -466,6 +468,23 @@ void PublicHubsFrame::updateDropDown() {
 		ctrlPubLists.AddString(Text::toT(*idx).c_str());
 	}
 	ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
+}
+
+void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
+		ctrlHubs.SetBkColor(WinUtil::bgColor);
+		ctrlHubs.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlHubs.GetTextColor() != WinUtil::textColor) {
+		ctrlHubs.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
+	updateDropDown();
 }
 
 /**

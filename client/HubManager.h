@@ -32,7 +32,6 @@
 #include "FavoriteUser.h"
 #include "Singleton.h"
 
-
 class HubEntry {
 public:
 	typedef vector<HubEntry> List;
@@ -208,11 +207,10 @@ public:
 	}
 	bool isDownloading() { return running; };
 
-	RecentHubEntry::List& getRecentHubs() { return recentHubs; };
-	PreviewApplication::List& getPreviewApps() { return previewApplications; };
-
 // Favorite Users
 	User::List& getFavoriteUsers() { return users; };
+	
+	PreviewApplication::List& getPreviewApps() { return previewApplications; };
 	
 	void addFavoriteUser(User::Ptr& aUser);
 	void removeFavoriteUser(User::Ptr& aUser);
@@ -228,6 +226,9 @@ public:
 	bool removeFavoriteDir(const string& aName);
 	bool renameFavoriteDir(const string& aName, const string& anotherName);
 	StringPairList getFavoriteDirs() { return favoriteDirs; }
+
+// Recent Hubs
+	RecentHubEntry::List& getRecentHubs() { return recentHubs; };
 
 	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
@@ -276,8 +277,6 @@ public:
 		return NULL;
 	}
 
-
-
 	void removeallRecent() {
 		recentHubs.clear();
 		recentsave();
@@ -299,6 +298,7 @@ public:
 	void save();
 	void recentsave();
 	
+private:
 	FavoriteHubEntry::List favoriteHubs;
 	StringPairList favoriteDirs;	
 	RecentHubEntry::List recentHubs;
@@ -331,7 +331,7 @@ public:
 	}
 
 	virtual ~HubManager() {
-		SettingsManager::getInstance()->addListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		if(c) {
 			c->removeListener(this);
 			delete c;

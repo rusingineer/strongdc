@@ -35,6 +35,7 @@ PropPage::TextItem UploadPage::texts[] = {
 	{ IDC_SHAREHIDDEN, ResourceManager::SETTINGS_SHARE_HIDDEN },
 	{ IDC_REMOVE, ResourceManager::REMOVE },
 	{ IDC_ADD, ResourceManager::SETTINGS_ADD_FOLDER },
+	{ IDC_RENAME, ResourceManager::SETTINGS_RENAME_FOLDER },
 	{ IDC_SETTINGS_UPLOADS_MIN_SPEED, ResourceManager::SETTINGS_UPLOADS_MIN_SPEED },
 	{ IDC_SETTINGS_KBPS, ResourceManager::KBPS }, 
 	{ IDC_SETTINGS_UPLOADS_SLOTS, ResourceManager::SETTINGS_UPLOADS_SLOTS },
@@ -179,6 +180,7 @@ LRESULT UploadPage::onItemchangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 {
 	NM_LISTVIEW* lv = (NM_LISTVIEW*) pnmh;
 	::EnableWindow(GetDlgItem(IDC_REMOVE), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_RENAME), (lv->uNewState & LVIS_FOCUSED));
 	return 0;		
 }
 
@@ -212,6 +214,40 @@ LRESULT UploadPage::onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		ctrlDirectories.DeleteItem(i);
 	}
 	
+	return 0;
+}
+
+LRESULT UploadPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	TCHAR buf[MAX_PATH];
+	LVITEM item;
+	::ZeroMemory(&item, sizeof(item));
+	item.mask = LVIF_TEXT;
+	item.cchTextMax = sizeof(buf);
+	item.pszText = buf;
+
+	int i = -1;
+	while((i = ctrlDirectories.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+		item.iItem = i;
+		item.iSubItem = 0;
+		ctrlDirectories.GetItem(&item);
+
+		try {
+			LineDlg virt;
+			virt.title = TSTRING(VIRTUAL_NAME);
+			virt.description = TSTRING(VIRTUAL_NAME_LONG);
+			virt.line = tstring(buf);
+			if(virt.DoModal(m_hWnd) == IDOK) {
+				if (Util::stricmp(buf, virt.line) == 0)
+					return 0; //Same name as before (no change)
+				ShareManager::getInstance()->renameDirectory(Text::fromT(buf), Text::fromT(virt.line));
+				ctrlDirectories.SetItemText(i, 0, virt.line.c_str());
+				return 0;
+			}
+		} catch(const ShareException& e) {
+			MessageBox(Text::toT(e.getError()).c_str(), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+		}
+	}
 	return 0;
 }
 
@@ -251,6 +287,7 @@ void UploadPage::addDirectory(const tstring& aPath){
 	tstring path = aPath;
 	if( path[ path.length() -1 ] != _T('\\') )
 		path += _T('\\');
+
 	try {
 		LineDlg virt;
 		virt.title = TSTRING(VIRTUAL_NAME);

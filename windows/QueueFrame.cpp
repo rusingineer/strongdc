@@ -168,6 +168,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	addQueueList(QueueManager::getInstance()->lockQueue());
 	QueueManager::getInstance()->unlockQueue();
 	QueueManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 
 	hIconTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_YES), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 	hIconNotTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_NO), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
@@ -503,7 +504,7 @@ HTREEITEM QueueFrame::addDirectory(const tstring& dir, bool isFileList /* = fals
 		}
 	}
 	
-	if(BOOLSETTING(EXPAND_QUEUE) && (firstParent != NULL))
+	if(BOOLSETTING(EXPAND_QUEUE) && firstParent != NULL)
 		ctrlDirs.Expand(firstParent);
 
 	return parent;
@@ -608,7 +609,8 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		if(ii->FDI) ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
+		if(ii->FDI)
+			ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
 		ii->qi = aQI;
@@ -1308,7 +1310,7 @@ void QueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		QueueManager::getInstance()->removeListener(this);
-	
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_QUEUE, false);
 		PostMessage(WM_CLOSE);
@@ -1586,6 +1588,25 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 		}
 	}
 	return 0;
+}
+
+void QueueFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlQueue.GetBkColor() != WinUtil::bgColor) {
+		ctrlQueue.SetBkColor(WinUtil::bgColor);
+		ctrlQueue.SetTextBkColor(WinUtil::bgColor);
+		ctrlQueue.setFlickerFree(WinUtil::bgBrush);
+		ctrlDirs.SetBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlQueue.GetTextColor() != WinUtil::textColor) {
+		ctrlQueue.SetTextColor(WinUtil::textColor);
+		ctrlDirs.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

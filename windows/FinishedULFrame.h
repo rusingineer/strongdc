@@ -31,7 +31,7 @@
 #define SERVER_MESSAGE_MAP 7
 
 class FinishedULFrame : public MDITabChildWindowImpl<FinishedULFrame, RGB(0, 0, 0), IDR_FINISHED_UL>, public StaticFrame<FinishedULFrame, ResourceManager::FINISHED_UPLOADS, IDC_FINISHED_UL >, 
-	private FinishedManagerListener
+	private FinishedManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<FinishedULFrame, RGB(0, 0, 0), IDR_FINISHED_UL> baseClass;
@@ -232,6 +232,7 @@ private:
 		totalBytes = 0;
 		totalTime = 0;
 	}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		PostMessage(WM_CLOSE);

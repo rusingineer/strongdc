@@ -61,6 +61,7 @@ CMenu WinUtil::mainMenu;
 CMenu WinUtil::grantMenu;
 CImageList WinUtil::fileImages;
 CImageList WinUtil::userImages;
+CImageList WinUtil::flagImages;
 int WinUtil::dirIconIndex = 0;
 TStringList WinUtil::lastDirs;
 HWND WinUtil::mainWnd = NULL;
@@ -74,6 +75,18 @@ bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;
 bool WinUtil::isMinimized = false;
+CHARFORMAT2 WinUtil::m_TextStyleTimestamp;
+CHARFORMAT2 WinUtil::m_ChatTextGeneral;
+CHARFORMAT2 WinUtil::m_TextStyleMyNick;
+CHARFORMAT2 WinUtil::m_ChatTextMyOwn;
+CHARFORMAT2 WinUtil::m_ChatTextServer;
+CHARFORMAT2 WinUtil::m_ChatTextSystem;
+CHARFORMAT2 WinUtil::m_TextStyleBold;
+CHARFORMAT2 WinUtil::m_TextStyleFavUsers;
+CHARFORMAT2 WinUtil::m_TextStyleOPs;
+CHARFORMAT2 WinUtil::m_TextStyleURL;
+CHARFORMAT2 WinUtil::m_ChatTextPrivate;
+CHARFORMAT2 WinUtil::m_ChatTextLog;
 
 WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
@@ -102,6 +115,55 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{0, 0, false, ResourceManager::MENU_NOTEPAD}
 };
 
+static const char* CountryNames[] = { "ANDORRA", "UNITED ARAB EMIRATES", "AFGHANISTAN", "ANTIGUA AND BARBUDA", 
+"ANGUILLA", "ALBANIA", "ARMENIA", "NETHERLANDS ANTILLES", "ANGOLA", "ANTARCTICA", "ARGENTINA", "AMERICAN SAMOA", 
+"AUSTRIA", "AUSTRALIA", "ARUBA", "ALAND", "AZERBAIJAN", "BOSNIA AND HERZEGOVINA", "BARBADOS", "BANGLADESH", 
+"BELGIUM", "BURKINA FASO", "BULGARIA", "BAHRAIN", "BURUNDI", "BENIN", "BERMUDA", "BRUNEI DARUSSALAM", "BOLIVIA", 
+"BRAZIL", "BAHAMAS", "BHUTAN", "BOUVET ISLAND", "BOTSWANA", "BELARUS", "BELIZE", "CANADA", "COCOS ISLANDS", 
+"THE DEMOCRATIC REPUBLIC OF THE CONGO", "CENTRAL AFRICAN REPUBLIC", "CONGO", "COTE D'IVOIRE", "COOK ISLANDS", 
+"CHILE", "CAMEROON", "CHINA", "COLOMBIA", "COSTA RICA", "SERBIA AND MONTENEGRO", "CUBA", "CAPE VERDE", 
+"CHRISTMAS ISLAND", "CYPRUS", "CZECH REPUBLIC", "GERMANY", "DJIBOUTI", "DENMARK", "DOMINICA", "DOMINICAN REPUBLIC", 
+"ALGERIA", "ECUADOR", "ESTONIA", "EGYPT", "WESTERN SAHARA", "ERITREA", "SPAIN", "ETHIOPIA", "FINLAND", "FIJI", 
+"FALKLAND ISLANDS", "MICRONESIA", "FAROE ISLANDS", "FRANCE", "GABON", "UNITED KINGDOM", "GRENADA", "GEORGIA", 
+"FRENCH GUIANA", "GHANA", "GIBRALTAR", "GREENLAND", "GAMBIA", "GUINEA", "GUADELOUPE", "EQUATORIAL GUINEA", 
+"GREECE", "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS", "GUATEMALA", "GUAM", "GUINEA-BISSAU", "GUYANA", 
+"HONG KONG", "HEARD ISLAND AND MCDONALD ISLANDS", "HONDURAS", "CROATIA", "HAITI", "HUNGARY", "SWITZERLAND", 
+"INDONESIA", "IRELAND", "ISRAEL", "INDIA", "BRITISH INDIAN OCEAN TERRITORY", "IRAQ", "IRAN", "ICELAND", 
+"ITALY", "JAMAICA", "JORDAN", "JAPAN", "KENYA", "KYRGYZSTAN", "CAMBODIA", "KIRIBATI", "COMOROS", 
+"SAINT KITTS AND NEVIS", "DEMOCRATIC PEOPLE'S REPUBLIC OF KOREA", "SOUTH KOREA", "KUWAIT", "CAYMAN ISLANDS", 
+"KAZAKHSTAN", "LAO PEOPLE'S DEMOCRATIC REPUBLIC", "LEBANON", "SAINT LUCIA", "LIECHTENSTEIN", "SRI LANKA", 
+"LIBERIA", "LESOTHO", "LITHUANIA", "LUXEMBOURG", "LATVIA", "LIBYAN ARAB JAMAHIRIYA", "MOROCCO", "MONACO", 
+"MOLDOVA", "MADAGASCAR", "MARSHALL ISLANDS", "MACEDONIA", "MALI", "MYANMAR", "MONGOLIA", "MACAO", 
+"NORTHERN MARIANA ISLANDS", "MARTINIQUE", "MAURITANIA", "MONTSERRAT", "MALTA", "MAURITIUS", "MALDIVES", 
+"MALAWI", "MEXICO", "MALAYSIA", "MOZAMBIQUE", "NAMIBIA", "NEW CALEDONIA", "NIGER", "NORFOLK ISLAND", 
+"NIGERIA", "NICARAGUA", "NETHERLANDS", "NORWAY", "NEPAL", "NAURU", "NIUE", "NEW ZEALAND", "OMAN", "PANAMA", 
+"PERU", "FRENCH POLYNESIA", "PAPUA NEW GUINEA", "PHILIPPINES", "PAKISTAN", "POLAND", "SAINT PIERRE AND MIQUELON", 
+"PITCAIRN", "PUERTO RICO", "PALESTINIAN TERRITORY", "PORTUGAL", "PALAU", "PARAGUAY", "QATAR", "REUNION", 
+"ROMANIA", "RUSSIAN FEDERATION", "RWANDA", "SAUDI ARABIA", "SOLOMON ISLANDS", "SEYCHELLES", "SUDAN", 
+"SWEDEN", "SINGAPORE", "SAINT HELENA", "SLOVENIA", "SVALBARD AND JAN MAYEN", "SLOVAKIA", "SIERRA LEONE", 
+"SAN MARINO", "SENEGAL", "SOMALIA", "SURINAME", "SAO TOME AND PRINCIPE", "EL SALVADOR", "SYRIAN ARAB REPUBLIC", 
+"SWAZILAND", "TURKS AND CAICOS ISLANDS", "CHAD", "FRENCH SOUTHERN TERRITORIES", "TOGO", "THAILAND", "TAJIKISTAN", 
+"TOKELAU", "TIMOR-LESTE", "TURKMENISTAN", "TUNISIA", "TONGA", "TURKEY", "TRINIDAD AND TOBAGO", "TUVALU", "TAIWAN", 
+"TANZANIA", "UKRAINE", "UGANDA", "UNITED STATES MINOR OUTLYING ISLANDS", "UNITED STATES", "URUGUAY", "UZBEKISTAN", 
+"VATICAN", "SAINT VINCENT AND THE GRENADINES", "VENEZUELA", "BRITISH VIRGIN ISLANDS", "U.S. VIRGIN ISLANDS", 
+"VIET NAM", "VANUATU", "WALLIS AND FUTUNA", "SAMOA", "YEMEN", "MAYOTTE", "YUGOSLAVIA", "SOUTH AFRICA", "ZAMBIA", 
+"ZIMBABWE", "EUROPEAN UNION" };
+
+static const char* CountryCodes[] = { "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AN", "AO", "AQ", "AR", "AS", 
+"AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BM", "BN", "BO", "BR", 
+"BS", "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CI", "CK", "CL", "CM", "CN", "CO", "CR", 
+"CS", "CU", "CV", "CX", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG", "EH", "ER", "ES", 
+"ET", "FI", "FJ", "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GE", "GF", "GH", "GI", "GL", "GM", "GN", "GP", 
+"GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "CH", "ID", "IE", "IL", "IN", 
+"IO", "IQ", "IR", "IS", "IT", "JM", "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", 
+"KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "MG", "MH", "MK", 
+"ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", 
+"NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PK", "PL", "PM", 
+"PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RU", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", 
+"SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "ST", "SV", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", 
+"TK", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", 
+"VE", "VG", "VI", "VN", "VU", "WF", "WS", "YE", "YT", "YU", "ZA", "ZM", "ZW", "EU" };
+	
 HLSCOLOR RGB2HLS (COLORREF rgb) {
 	unsigned char minval = min(GetRValue(rgb), min(GetGValue(rgb), GetBValue(rgb)));
 	unsigned char maxval = max(GetRValue(rgb), max(GetGValue(rgb), GetBValue(rgb)));
@@ -370,6 +432,8 @@ void WinUtil::init(HWND hWnd) {
 		dirIconIndex = 0;
 	}
 
+	flagImages.CreateFromImage(IDB_FLAGS, 25, 8, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	else 
@@ -416,11 +480,122 @@ void WinUtil::init(HWND hWnd) {
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
+
+	initColors();
+}
+
+void WinUtil::initColors() {
+	bgBrush = CreateSolidBrush(SETTING(BACKGROUND_COLOR));
+	textColor = SETTING(TEXT_COLOR);
+	bgColor = SETTING(BACKGROUND_COLOR);
+
+	CHARFORMAT2 cf;
+	memset(&cf, 0, sizeof(CHARFORMAT2));
+	cf.cbSize = sizeof(cf);
+	cf.dwReserved = 0;
+	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
+	cf.dwEffects = 0;
+	cf.crBackColor = SETTING(BACKGROUND_COLOR);
+	cf.crTextColor = SETTING(TEXT_COLOR);
+
+	memset(&m_TextStyleBold, 0, sizeof(CHARFORMAT2));
+	m_TextStyleBold.cbSize = sizeof(m_TextStyleBold);
+	m_TextStyleBold.dwMask = CFM_BOLD;
+	m_TextStyleBold.dwReserved = 0;
+	m_TextStyleBold.crBackColor = 0;
+	m_TextStyleBold.crTextColor = 0;
+	m_TextStyleBold.dwEffects = CFE_BOLD;
+
+	m_TextStyleTimestamp = cf;
+	m_TextStyleTimestamp.crBackColor = SETTING(TEXT_TIMESTAMP_BACK_COLOR);
+	m_TextStyleTimestamp.crTextColor = SETTING(TEXT_TIMESTAMP_FORE_COLOR);
+	if(SETTING(TEXT_TIMESTAMP_BOLD))
+		m_TextStyleTimestamp.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_TIMESTAMP_ITALIC))
+		m_TextStyleTimestamp.dwEffects |= CFE_ITALIC;
+
+	m_ChatTextGeneral = cf;
+	m_ChatTextGeneral.crBackColor = SETTING(TEXT_GENERAL_BACK_COLOR);
+	m_ChatTextGeneral.crTextColor = SETTING(TEXT_GENERAL_FORE_COLOR);
+	if(SETTING(TEXT_GENERAL_BOLD))
+		m_ChatTextGeneral.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_GENERAL_ITALIC))
+		m_ChatTextGeneral.dwEffects |= CFE_ITALIC;
+
+	m_TextStyleMyNick = cf;
+	m_TextStyleMyNick.crBackColor = SETTING(TEXT_MYNICK_BACK_COLOR);
+	m_TextStyleMyNick.crTextColor = SETTING(TEXT_MYNICK_FORE_COLOR);
+	if(SETTING(TEXT_MYNICK_BOLD))
+		m_TextStyleMyNick.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_MYNICK_ITALIC))
+		m_TextStyleMyNick.dwEffects |= CFE_ITALIC;
+
+	m_ChatTextMyOwn = cf;
+	m_ChatTextMyOwn.crBackColor = SETTING(TEXT_MYOWN_BACK_COLOR);
+	m_ChatTextMyOwn.crTextColor = SETTING(TEXT_MYOWN_FORE_COLOR);
+	if(SETTING(TEXT_MYOWN_BOLD))
+		m_ChatTextMyOwn.dwEffects       |= CFE_BOLD;
+	if(SETTING(TEXT_MYOWN_ITALIC))
+		m_ChatTextMyOwn.dwEffects       |= CFE_ITALIC;
+
+	m_ChatTextPrivate = cf;
+	m_ChatTextPrivate.crBackColor = SETTING(TEXT_PRIVATE_BACK_COLOR);
+	m_ChatTextPrivate.crTextColor = SETTING(TEXT_PRIVATE_FORE_COLOR);
+	if(SETTING(TEXT_PRIVATE_BOLD))
+		m_ChatTextPrivate.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_PRIVATE_ITALIC))
+		m_ChatTextPrivate.dwEffects |= CFE_ITALIC;
+
+	m_ChatTextSystem = cf;
+	m_ChatTextSystem.crBackColor = SETTING(TEXT_SYSTEM_BACK_COLOR);
+	m_ChatTextSystem.crTextColor = SETTING(TEXT_SYSTEM_FORE_COLOR);
+	if(SETTING(TEXT_SYSTEM_BOLD))
+		m_ChatTextSystem.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_SYSTEM_ITALIC))
+		m_ChatTextSystem.dwEffects |= CFE_ITALIC;
+
+	m_ChatTextServer = cf;
+	m_ChatTextServer.crBackColor = SETTING(TEXT_SERVER_BACK_COLOR);
+	m_ChatTextServer.crTextColor = SETTING(TEXT_SERVER_FORE_COLOR);
+	if(SETTING(TEXT_SERVER_BOLD))
+		m_ChatTextServer.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_SERVER_ITALIC))
+		m_ChatTextServer.dwEffects |= CFE_ITALIC;
+
+	m_ChatTextLog = m_ChatTextGeneral;
+	m_ChatTextLog.crTextColor = CZDCLib::blendColors(SETTING(TEXT_GENERAL_BACK_COLOR), SETTING(TEXT_GENERAL_FORE_COLOR), 0.4);
+
+	m_TextStyleFavUsers = cf;
+	m_TextStyleFavUsers.crBackColor = SETTING(TEXT_FAV_BACK_COLOR);
+	m_TextStyleFavUsers.crTextColor = SETTING(TEXT_FAV_FORE_COLOR);
+	if(SETTING(TEXT_FAV_BOLD))
+		m_TextStyleFavUsers.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_FAV_ITALIC))
+		m_TextStyleFavUsers.dwEffects |= CFE_ITALIC;
+
+	m_TextStyleOPs = cf;
+	m_TextStyleOPs.crBackColor = SETTING(TEXT_OP_BACK_COLOR);
+	m_TextStyleOPs.crTextColor = SETTING(TEXT_OP_FORE_COLOR);
+	if(SETTING(TEXT_OP_BOLD))
+		m_TextStyleOPs.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_OP_ITALIC))
+		m_TextStyleOPs.dwEffects |= CFE_ITALIC;
+
+	m_TextStyleURL = cf;
+	m_TextStyleURL.dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_BACKCOLOR | CFM_LINK | CFM_UNDERLINE;
+	m_TextStyleURL.crBackColor = SETTING(TEXT_URL_BACK_COLOR);
+	m_TextStyleURL.crTextColor = SETTING(TEXT_URL_FORE_COLOR);
+	m_TextStyleURL.dwEffects = CFE_LINK | CFE_UNDERLINE;
+	if(SETTING(TEXT_URL_BOLD))
+		m_TextStyleURL.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_URL_ITALIC))
+		m_TextStyleURL.dwEffects |= CFE_ITALIC;
 }
 
 void WinUtil::uninit() {
 	fileImages.Destroy();
 	userImages.Destroy();
+	flagImages.Destroy();
 	::DeleteObject(font);
 	::DeleteObject(boldFont);
 	::DeleteObject(smallBoldFont);
@@ -431,8 +606,7 @@ void WinUtil::uninit() {
 	mainMenu.DestroyMenu();
 	grantMenu.DestroyMenu();
 
-	UnhookWindowsHookEx(hook);
-	
+	UnhookWindowsHookEx(hook);	
 }
 
 void WinUtil::decodeFont(const tstring& setting, LOGFONT &dest) {
@@ -693,28 +867,6 @@ _T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani
 
 string WinUtil::commands = "\t\t\t\t\t HELP \t\t\t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/refresh \t\t\t\t(obnoveni share) \t\t\t\t\t\t\n/savequeue \t\t\t\t(ulozi Download Queue) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/search <string> \t\t\t(hledat neco...) \t\t\t\t\t\t\t\n/g <searchstring> \t\t\t(hledat Googlem) \t\t\t\t\t\t\n/imdb <imdbquery> \t\t\t(hledat film v IMDB databazi) \t\t\t\t\t\n/whois [IP] \t\t\t\t(hledat podrobnosti o IP) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/slots # \t\t\t\t(upload sloty) \t\t\t\t\t\t\t\n/extraslots # \t\t\t\t(extra sloty pro male soubory) \t\t\t\t\t\n/smallfilesize # \t\t\t\t(maximalni velikost malych souboru) \t\t\t\t\n/ts \t\t\t\t\t(zobrazi datum a cas u zprav v mainchatu) \t\t\t\n/connection \t\t\t\t(zobrazi IP a port prez ktery jste pripojen) \t\t\t\t\n/showjoins \t\t\t\t(zapne/vypne zobrazovani a odpojovani useru v mainchatu) \t\n/showblockedipports \t\t\t(zobrazi zablokovane porty-mozna:)) \t\t\t\t\n/shutdown \t\t\t\t(vypne pocitac po urcitem timeoutu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/dc++ \t\t\t\t\t(zobrazi verzi DC++ v mainchatu) \t\t\t\t\t\n/strongdc++ \t\t\t\t(zobrazi verzi StrongDC++ v mainchatu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/away <msg> \t\t\t\t(zapne/vypne away mod) \t\t\t\t\t\n/winamp \t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/w \t\t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/clear,/c \t\t\t\t(smazat obsah mainchatu) \t\t\t\t\t\n/ignorelist \t\t\t\t(zobrazi ignorelist v mainchatu) \t\t\t\t\t\n";
 
-/*float ProcSpeedCalc() {
-#define RdTSC __asm _emit 0x0f __asm _emit 0x31
-__int64 cyclesStart = 0, cyclesStop = 0;
-unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
-    if(!QueryPerformanceFrequency((LARGE_INTEGER *) &nFreq)) return 0;
-    QueryPerformanceCounter((LARGE_INTEGER *) &nCtrStop);
-    nCtrStop += nFreq;
-    _asm {
-		RdTSC
-        mov DWORD PTR cyclesStart, eax
-        mov DWORD PTR [cyclesStart + 4], edx
-    } do {
-		QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
-    } while (nCtr < nCtrStop);
-    _asm {
-		RdTSC
-        mov DWORD PTR cyclesStop, eax
-        mov DWORD PTR [cyclesStop + 4], edx
-    }
-	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
-}*/
-
 bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstring& status) {
 	string::size_type i = cmd.find(' ');
 	if(i != string::npos) {
@@ -858,32 +1010,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 		} else {
 			status = _T("Supported version of Winamp is not running");
 		}
-	} /*else if(Util::stricmp(cmd.c_str(), _T("stats")) == 0) {
-		char buf[128];
-		sprintf(buf, "\r\n-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
-		string uptime = (string)buf;
-		unsigned PPK_nHeaps;
-		HANDLE PPK_aHeaps[512];
-		long PPK_dwCurrentSize;
-		memset(PPK_aHeaps,0,sizeof(PPK_aHeaps));
-		PPK_nHeaps = GetProcessHeaps(sizeof(PPK_aHeaps)/sizeof(PPK_aHeaps[0]),PPK_aHeaps);
-		PROCESS_HEAP_ENTRY PPKEntry;
-		memset(&PPKEntry,0,sizeof(PROCESS_HEAP_ENTRY));
-		PPK_dwCurrentSize = 0;
-		for ( unsigned i=0; i < PPK_nHeaps; i++ ) {
-			PPKEntry.lpData = NULL;
-			while (HeapWalk(PPK_aHeaps[i], &PPKEntry )) {
-			if ((PROCESS_HEAP_ENTRY_BUSY & PPKEntry.wFlags) == PROCESS_HEAP_ENTRY_BUSY)
-				PPK_dwCurrentSize += PPKEntry.cbData;
-			}
-		}
-		uptime += formatTime(Util::getUptime()) + " ][ Memory usage: " + Util::toString(PPK_dwCurrentSize/1024) + 
-			" kB ]=-\r\n-=[ Downloaded: " + Util::formatBytes(Socket::getTotalDown()) + " ][ Uploaded: " + 
-			Util::formatBytes(Socket::getTotalUp()) + " ]=-\r\n-=[ Total download: " + Util::formatBytes(SETTING(TOTAL_DOWNLOAD)) + 
-			" ][ Total upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + " ]=-\r\n-=[ System Uptime: ";
-		message = uptime + formatTime(::GetTickCount() / 1000) + " ]=-\r\n";		
-		message += "-=[ CPU Clock: "+Util::toString(ProcSpeedCalc())+" MHz ]=-";
-	} */else if(Util::stricmp(cmd.c_str(), _T("tvtome")) == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("tvtome")) == 0) {
 		if(param.empty()) {
 			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else
@@ -1401,6 +1528,25 @@ int WinUtil::getImage(const User::Ptr& u) {
 	}
 	return image;	
 }
+
+int WinUtil::getFlagImage(const char* country, bool fullname) {
+	if(fullname) {
+		for(size_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
+			if(stricmp(country, CountryNames[i-1]) == 0) {
+				return i;
+			}
+		}
+	} else {
+		for(size_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
+			if(stricmp(country,CountryCodes[i-1]) == 0) {
+				return i;
+			}
+		}
+	}
+	return 0;
+}
+
+
 
 /**
  * @file

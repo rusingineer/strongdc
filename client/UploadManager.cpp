@@ -105,11 +105,16 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		return false;
 	}
 
+	File* f;
+	try {
+		f = new File(file, File::READ, File::OPEN);
+	} catch(const FileException&) {
+		aSource->fileNotAvail();
+		return false;
+	}
+
 	if(aType == "file") {
 		userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
-
-		try {
-			File* f = new File(file, File::READ, File::OPEN);
 
 			size = f->getSize();
 
@@ -132,13 +137,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if((aStartPos + aBytes) < size) {
 				is = new LimitedInputStream<true>(is, aBytes);
 			}	
-
-		} catch(const Exception&) {
-			aSource->fileNotAvail();
-			return false;
-		}
-
 	} else if(aType == "tthl") {
+		delete f;
 		// TTH Leaves...
 		TigerTree tree;
 		if(!HashManager::getInstance()->getTree(file, NULL, tree)) {
@@ -204,7 +204,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	dcassert(aSource->getUpload() == NULL);
 	aSource->setUpload(u);
 	uploads.push_back(u);
-
 	throttleSetup();
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
@@ -302,9 +301,10 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setUpload(NULL);
 	aSource->setState(UserConnection::STATE_GET);
 
-	if(BOOLSETTING(LOG_UPLOADS) && !u->isSet(Upload::FLAG_TTH_LEAVES) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST))) {
+	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
+		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
-		params["source"] = u->getFileName();
+		params["source"] = u->getLocalFileName();
 		params["user"] = aSource->getUser()->getNick();
 		params["hub"] = aSource->getUser()->getLastHubName();
 		params["hubip"] = aSource->getUser()->getLastHubAddress();
@@ -331,12 +331,9 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 }
 
 void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, int64_t size) {
-	//Lock l(cs);
 	string path = Util::getFilePath(file);
 	string filename = Util::getFileName(file);
-	int64_t itime;
-	time_t now;	
-	itime = time(&now);
+	int64_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
 	if(j != UploadQueueItems.end()) {
@@ -344,7 +341,6 @@ void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, in
 			if((*i)->File == file) {
 				(*i)->pos = pos;
 				found = true;
-				// TODO ... updateitem
 				break;
 			}
 		}
@@ -352,7 +348,6 @@ void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, in
 	if(found == false) {
 		UploadQueueItem* qi = new UploadQueueItem(User, file, path, filename, pos, size, itime);
 		{
-			//Lock l(cs);
 			UploadQueueItem::UserMapIter i = UploadQueueItems.find(User);
 			if(i == UploadQueueItems.end()) {
 				UploadQueueItem::List l;
@@ -367,7 +362,6 @@ void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, in
 }
 
 void UploadManager::clearUserFiles(const User::Ptr& source) {
-	//Lock l(cs);
 	UploadQueueItem::UserMapIter ii = UploadQueueItems.find(source);
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
@@ -451,7 +445,6 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 
 			throttleSetup();
 			throttleZeroCounters();
-
 			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 				ticks.push_back(*i);
 			}

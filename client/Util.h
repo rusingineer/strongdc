@@ -126,7 +126,6 @@ public:
 	 * @return Path to executable file.
 	 */
 	static string getAppPath() { return appPath; }
-
 	static string getAppName() {
 #ifdef _WIN32
 		TCHAR buf[MAX_PATH+1];
@@ -181,7 +180,7 @@ public:
 #else
 		char* home = getenv("HOME");
 		if (home) {
-			return string(home) + "/.dc++/";
+			return string(home) + "/.strongdc++/";
 		}
 		return emptyString;
 #endif
@@ -215,13 +214,11 @@ public:
 #endif // _WIN32
 	}
 
-	static int64_t getUptime()
-	{
+	static int64_t getUptime() {
 		return mUptimeSeconds;
 	}
 
-	static void increaseUptime()
-	{
+	static void increaseUptime() {
 		mUptimeSeconds++;
 	}
 
@@ -463,7 +460,6 @@ public:
 		sscanf(aString.c_str(), "%X", &res);
 		return static_cast<char>(res);
 	}
-
 	static string encodeURI(const string& /*aString*/, bool reverse = false);
 	static string getLocalIp();
 	static bool isPrivateIp(string const& ip);
@@ -480,6 +476,7 @@ public:
 	static int stricmp(const wchar_t* a, const wchar_t* b) {
 		while(*a && Text::toLower(*a) == Text::toLower(*b))
 			++a, ++b;
+
 		return ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
 	}
 	static int strnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
@@ -526,7 +523,7 @@ public:
 	static u_int32_t rand(u_int32_t high) { return rand() % high; };
 	static u_int32_t rand(u_int32_t low, u_int32_t high) { return rand(high-low) + low; };
 	static double randd() { return ((double)rand()) / ((double)0xffffffff); };
-	static bool isNumeric(char c) {
+	static bool isNumeric(wchar_t c) {
 		return (c >= '0' && c <= '9') ? true : false;
 	}
 
@@ -550,6 +547,7 @@ public:
 		buf[63] = 0;
 		return buf;
 	}
+	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 private:
 	static string appPath;
 	static string dataPath;

@@ -41,7 +41,8 @@
 
 class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255), IDR_SEARCH>, 
 	private SearchManagerListener, private ClientManagerListener, 
-	public UCHandler<SearchFrame>, public UserInfoBaseHandler<SearchFrame>
+	public UCHandler<SearchFrame>, public UserInfoBaseHandler<SearchFrame>,
+	private SettingsManagerListener
 {
 public:
 	static void openWindow(const tstring& str = Util::emptyStringW, LONGLONG size = 0, SearchManager::SizeModes mode = SearchManager::SIZE_ATLEAST, SearchManager::TypeModes type = SearchManager::TYPE_ANY);
@@ -133,6 +134,7 @@ public:
 		droppedResults(0), expandSR(false)
 	{	
 		SearchManager::getInstance()->addListener(this);
+		SettingsManager::getInstance()->addListener(this);
 	}
 
 	virtual ~SearchFrame() {
@@ -474,9 +476,14 @@ private:
 			connection = Text::toT(sr->getUser()->getConnection());
 			hubName = Text::toT(sr->getHubName());
 			slots = Text::toT(sr->getSlotString());
-			ip = Text::toT(sr->getIP());
+			if(sr->getUser()->isOnline()) {
+				if(sr->getUser()->getClient()->getOp()) {
+					ip = Text::toT(sr->getIP());
+				}
+			}
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
+			flagimage = WinUtil::getFlagImage(Util::getIpCountry(sr->getIP().c_str()).c_str());
 
 			if(user->getDownloadSpeed()<1) {
 				const string& tmp = sr->getUser()->getConnection();
@@ -507,6 +514,7 @@ private:
 		GETSET(tstring, exactSize, ExactSize);
 		GETSET(tstring, ip, IP);
 		GETSET(tstring, tth, TTH);
+		GETSET(int, flagimage, flagImage);
 		GETSET(tstring, uploadSpeed, UploadSpeed);
 		GETSET(tstring, hits, Hits);
 	};
@@ -607,10 +615,10 @@ private:
 
 	static TStringList lastSearches;
 	size_t droppedResults;
-
 	DWORD lastSearch;
 	bool closed;
-
+	COLORREF barva;
+	
 	static int columnIndexes[];
 	static int columnSizes[];
 
@@ -627,6 +635,7 @@ private:
 	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }
 	virtual void on(ClientUpdated, Client* c) throw() { speak(HUB_CHANGED, c); }
 	virtual void on(ClientDisconnected, Client* c) throw() { speak(HUB_REMOVED, c); }
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

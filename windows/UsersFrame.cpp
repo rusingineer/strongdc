@@ -71,6 +71,7 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	HubManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 
 	User::List ul = HubManager::getInstance()->getFavoriteUsers();
 	ctrlUsers.SetRedraw(FALSE);
@@ -96,7 +97,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	
 	if (ctrlUsers.GetSelectedCount() > 0 && PtInRect(&rc, pt)) 
 	{ 
-				string x;
+		string x;
 		if (CZDCLib::getFirstSelectedIndex(ctrlUsers) > -1) {
 			if (ctrlUsers.GetSelectedCount() == 1)
 				x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getNick();
@@ -219,7 +220,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(!closed) {
 	HubManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
-	
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FAVUSERS, false);
 		PostMessage(WM_CLOSE);
@@ -285,6 +286,22 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		}	
 	}
 	return 0;
+}
+
+void UsersFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
+		ctrlUsers.SetBkColor(WinUtil::bgColor);
+		ctrlUsers.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlUsers.GetTextColor() != WinUtil::textColor) {
+		ctrlUsers.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

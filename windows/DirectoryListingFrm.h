@@ -38,7 +38,8 @@
 
 #define STATUS_MESSAGE_MAP 9
 
-class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY>, public CSplitterImpl<DirectoryListingFrame>
+class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY>, public CSplitterImpl<DirectoryListingFrame>, 
+	private SettingsManagerListener
 {
 public:
 	static void openWindow(const tstring& aFile, const User::Ptr& aUser);
@@ -328,6 +329,7 @@ private:
 	int statusSizes[8];
 	
 	DirectoryListing* dl;
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)

@@ -32,13 +32,14 @@
 #include "ExListViewCtrl.h"
 
 class SpyFrame : public MDITabChildWindowImpl<SpyFrame, RGB(0, 0, 0), IDR_SPY>, public StaticFrame<SpyFrame, ResourceManager::SEARCH_SPY, IDC_SEARCH_SPY>,
-	private ClientManagerListener, private TimerManagerListener
+	private ClientManagerListener, private TimerManagerListener, private SettingsManagerListener
 {
 public:
 	SpyFrame() : total(0), cur(0), closed(false) {
 		ZeroMemory(perSecond, sizeof(perSecond));
 		ClientManager::getInstance()->addListener(this);
 		TimerManager::getInstance()->addListener(this);
+		SettingsManager::getInstance()->addListener(this);
 	}
 
 	virtual ~SpyFrame() {
@@ -133,6 +134,7 @@ private:
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_SPYFRAME_H__19A67830_B811_4672_BBC2_3D793E0342E8__INCLUDED_)

@@ -114,7 +114,6 @@ void HubManager::removeHubUserCommands(int ctx, const string& hub) {
 	}
 }
 
-
 void HubManager::addFavoriteUser(User::Ptr& aUser) { 
 	if(find(users.begin(), users.end(), aUser) == users.end()) {
 		users.push_back(aUser);
@@ -621,7 +620,6 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
-
 	dontSave = false;
 }
 
@@ -679,6 +677,7 @@ void HubManager::refresh() {
 		c->downloadFile(publicListServer);
 		running = true;
 	}
+
 }
 
 UserCommand::List HubManager::getUserCommands(int ctx, const string& hub, bool op) {

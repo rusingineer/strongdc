@@ -56,6 +56,7 @@ public:
 
 		File& operator=(const File& rhs) {
 			name = rhs.name; size = rhs.size; parent = rhs.parent; tthRoot = rhs.tthRoot ? new TTHValue(*rhs.tthRoot) : NULL; 
+			return *this;
 		}
 
 		~File() {

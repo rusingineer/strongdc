@@ -227,7 +227,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 		bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 		bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
-
 		if( slotsFull || speedFull ) {
 			bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 			if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
@@ -633,9 +632,9 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
-				removeDownload(d, false);
-				aSource->setLineMode();
+				removeDownload(d, false);	
 				checkDownloads(aSource);
+				aSource->setLineMode();
 			}else{
 				aSource->setDownload(NULL);
 				removeDownload(d, false); // true -> false
@@ -671,9 +670,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 
 			d->setPos(e.pos);
-			if(d->getPos() == d->getSize())
-				aSource->setLineMode();
+			bool reconn = (d->getPos() != d->getSize());				
 			handleEndData(aSource);
+			if(!reconn)
+				aSource->setLineMode();
 			return;	
 		}
 
@@ -861,7 +861,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				removeDownload(d, true);
 
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
-				checkDownloads(aSource, true);
+				checkDownloads(aSource, reconn);
 				return;
 			} 
 

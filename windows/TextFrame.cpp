@@ -55,16 +55,17 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	} catch(const FileException& e) {
 		SetWindowText(Text::toT(Util::getFileName(Text::fromT(file)) + ": " + e.getError()).c_str());
 	}
+	SettingsManager::getInstance()->addListener(this);
 	
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT TextFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	SettingsManager::getInstance()->removeListener(this);
 	bHandled = FALSE;
 	return 0;
 }
-
 void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 {
 	CRect rc;
@@ -76,6 +77,10 @@ void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 	rc.left +=1;
 	rc.right -=1;
 	ctrlPad.MoveWindow(rc);
+}
+
+void TextFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }
 
 /**

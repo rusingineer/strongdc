@@ -39,7 +39,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	adapter(this), state(STATE_CONNECT), 
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0),lastSize(0)
+	reconnect(true), lastUpdate(0),lastSize(0), validatenicksent(false)
 {
 	TimerManager::getInstance()->addListener(this);
 
@@ -218,7 +218,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		if((temp = strtok(NULL, "?")) == NULL)
 			return;
 
-		int64_t size = Util::toInt64(temp);
+		int64_t size = _atoi64(temp);
 		if((temp = strtok(NULL, "?")) == NULL)
 			return;
 
@@ -683,7 +683,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(from), this, false), Util::validateMessage(fromNmdc(temp), true));
 		}
 	} else if(strcmp(aLine+1, "GetPass") == 0) {
-
 		setRegistered(true);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::GetPassword(), this);
 	} else if(strcmp(aLine+1, "BadPass") == 0) {
