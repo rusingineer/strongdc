@@ -6,7 +6,7 @@
 * pøidána volba pro automatické pøepnutí na rychlejšího uživatele na konci stahování
 * opraven uplynulý èas stahování
 * opraveno zobrazení progressbarù pro soubory > 2GB
-* pøidána podpora segmentù pro GetZBlock
+* pøidána podpora segmentù pro GetZBlock a UGetBlock
 * opraven pád v kritické sekci QueueManageru
 * pøepsána fronta hledání (THX Naga)
 * vráceno odstraòování diakritiky v chatu (THX popKorn)
@@ -18,6 +18,8 @@
 * mùžete použít %[downloaddrive] v cestì Doèasného adresáøe (napø. "%[downloaddrive]\Temp\DCdownloads\") (BCDC++)
 * stahovací sloty neplatí pro seznamy souborù
 * opraveno øazení ve frontì èekatelù na slot
+* snad opraven problém s odstraòováním uživatelù z fronty
+* opraveno unicode ve webserveru
 
 
 	-- StrongDC++ 1.00 RC9 --

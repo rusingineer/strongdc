@@ -20,6 +20,7 @@
 #include "DCPlusPlus.h"
 #include "ServerSocket.h"
 #include "SettingsManager.h"
+#include "SearchManager.h"
 #include "Singleton.h"
 #include "Thread.h"
 #include "Speaker.h"
@@ -40,7 +41,7 @@ public:
 
 };
 
-class WebServerManager :  public Singleton<WebServerManager>, public ServerSocketListener, public Speaker<WebServerListener>, private SettingsManagerListener
+class WebServerManager :  public Singleton<WebServerManager>, public ServerSocketListener, public Speaker<WebServerListener>, private SettingsManagerListener, private SearchManagerListener
 {
 public:
 	ServerSocket& getServerSocket() {
@@ -59,6 +60,12 @@ public:
 			Stop();
 		}
 	}
+	// SearchManagerListener
+	virtual void on(SearchManagerListener::SR, SearchResult* sr) throw() {
+		onSearchResult(sr);
+	}
+		
+	void onSearchResult(SearchResult* aResult) throw();
 
 	void Restart(){		
 		Stop();
@@ -80,6 +87,7 @@ private:
 		DOWNLOAD_FINISHED,
 		UPLOAD_QUEUE,
 		UPLOAD_FINISHED,
+		SEARCH,
 		LOG,
 		SYSLOG,
 		PAGE_404
@@ -105,8 +113,12 @@ private:
 	string getDLQueue();
 	string getULQueue();
 	string getFinished(bool);
+	string getSearch();	
 	string getLogs();
 	string getSysLogs();
+	string results;
+	unsigned int results_size;
+	bool sended_search;
 
 	bool started;
 	CriticalSection cs;
@@ -116,12 +128,33 @@ private:
 	ServerSocket socket;
 	HWND m_hWnd;
 
-
 	map<string,time_t> loggedin;
-
+	int row;
 public:
 	void login(string ip){
 		loggedin[ip] = time(NULL);
+	}
+	void search(string search_str, int search_type) {
+		if(sended_search == false) {
+			int i = 0;
+			while( (i = search_str.find("+", i)) != string::npos) {
+				search_str.replace(i, 1, " ");
+				i++;
+			}
+			if((SearchManager::TypeModes)search_type == SearchManager::TYPE_TTH) {
+				search_str = "TTH:" + search_str;
+			}
+			SearchManager::getInstance()->addListener(this);
+			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE);
+			results = Util::emptyString;
+			row = 0;
+			sended_search = true;
+		}
+	}
+	
+	void reset() {
+		row = 0; /* Counter to permit FireFox correct item clicks */
+		SearchManager::getInstance()->removeListener(this);
 	}
 
 	bool isloggedin(string ip) {
@@ -139,6 +172,7 @@ public:
 		return false;
 	}
 
+	StringList sClients;
 };
 
 class WebServerSocket : public Thread {

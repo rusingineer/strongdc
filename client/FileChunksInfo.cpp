@@ -36,6 +36,7 @@ static SetFileValidDataFunc setFileValidData = NULL;
 FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 {
     Lock l(hMutexMapList);
+
 	for(vector<Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if((*i)->sFilename == name){
 			return (*i);
@@ -56,7 +57,7 @@ void FileChunksInfo::Free(const string& name)
 		}
 	}
 
-	dcassert(0);
+	_ASSERT(0);
 }
 
 FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
@@ -78,7 +79,6 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
         iDownloadedSize -= ((*(i+1)) - (*i));
 
 	iBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
-
 	iSmallestBlockSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
 	iSmallestBlockSize = iSmallestBlockSize - (iSmallestBlockSize % iBlockSize);
 
@@ -218,7 +218,7 @@ void FileChunksInfo::PutUndlStart(int64_t start)
 		}
 	}
 
-	dcassert(0);
+	_ASSERT(0);
 }
 
 string FileChunksInfo::getFreeBlocksString()
@@ -253,12 +253,6 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
 	dcdebug("DoLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
 	dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
-	/*for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-										i != mapVerifiedBlocks.end();
-										i++)
-	{
-		dcdebug("   %I64d, %I64d\n", i->first, i->second);
-	}*/
 
 	// for exception free
 	vector<unsigned char> buf;
@@ -274,28 +268,31 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
     map<int64_t, int64_t> unVerifiedBlocks;
 	int64_t start = 0;
 
-	unVerifiedBlocks.insert(make_pair(start, iFileSize));
-	mapVerifiedBlocks.clear();
+	if(!BOOLSETTING(CHECK_UNVERIFIED_ONLY)) {
+		unVerifiedBlocks.insert(make_pair(start, iFileSize));
+		mapVerifiedBlocks.clear();
+	} else {
+	    for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
+        									i != mapVerifiedBlocks.end();
+        	                                i++)
+		{
+			if(i->first > start){
+    	        dcassert((i->first - start) % iBlockSize == 0);
 
-/*    for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-        								i != mapVerifiedBlocks.end();
-                                        i++)
-	{
-		if(i->first > start){
-            dcassert((i->first - start) % iBlockSize == 0);
+	            unVerifiedBlocks.insert(make_pair(start, i->first));
+        	}else{
+    	        dcassert(start == 0);
+	        }
 
-            unVerifiedBlocks.insert(make_pair(start, i->first));
-        }else{
-            dcassert(start == 0);
-        }
-
-		start = i->second;
+			start = i->second;
 	
+		}
+
+		if(start < iFileSize)
+	        unVerifiedBlocks.insert(make_pair(start, iFileSize));
 	}
 
-	if(start < iFileSize)
-        unVerifiedBlocks.insert(make_pair(start, iFileSize));
-*/
+	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// Open file
 	SharedFileStream file(sFilename, 0, 0);
 
@@ -336,7 +333,29 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
 				iDownloadedSize -= (end - start);
         	}else{
-        		MarkVerifiedBlock(start, end);
+				map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
+
+				for(; i != mapVerifiedBlocks.end(); i++) {
+					if(i->second == start){
+						i->second = end;
+						break;
+					}
+				}
+
+				if(i == mapVerifiedBlocks.end())
+					i = mapVerifiedBlocks.insert(make_pair(start, end)).first;
+
+				for(map<int64_t, int64_t>::iterator j = mapVerifiedBlocks.begin();
+        											j != mapVerifiedBlocks.end();
+										            j++) {
+					if(j->first == end) {
+						i->second = j->second;
+						mapVerifiedBlocks.erase(j);
+						break;
+					}
+				}
+
+				iVerifiedSize += (end - start);
         	}
 			DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), sFilename, end);
 		}
@@ -344,14 +363,10 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 		dcassert(end == i->second);
     }
 
+	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 	if(vecFreeBlocks.empty()){
 		dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
-/*		for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-											i != mapVerifiedBlocks.end();
-											i++)
-		{
-			dcdebug("   %I64d, %I64d\n", i->first, i->second);
-		}*/
+
 
 		dcassert(mapVerifiedBlocks.size() == 1 && 
 			    mapVerifiedBlocks.begin()->first == 0 &&

@@ -96,6 +96,7 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 				if(qi->getWindow() == NULL) {
 					searchQueue.insert(qi, sqi);
 					added = true;
+					break;
 				}
 			}
 		}
@@ -125,6 +126,7 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 					else
 						searchQueue.push_front(sqi);
 					added = true;
+					break;
 				}
 			}
 		}
@@ -371,7 +373,8 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();
-		searchQueue.erase(searchQueue.begin());
+		//searchQueue.erase(searchQueue.begin());
+		searchQueue.pop_front();
 		if(sqi.getHubs().empty()) {
 			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget());
 			fire(SearchManagerListener::Searching(), &sqi);

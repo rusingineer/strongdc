@@ -132,7 +132,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0), noFreeBlocks(false)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0), noFreeBlocks(false)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		
@@ -140,8 +140,10 @@ public:
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
 
-		if(tth != NULL)
-			HashManager::getInstance()->getTree(*tth, tiger);
+		if(tth != NULL) {
+			TigerTree tree;
+			hasTree = HashManager::getInstance()->getTree(*tth, tree);
+		}
 
 		speedUsers.push_back(NULL);
 		speedUsers.push_back(NULL);
@@ -287,7 +289,7 @@ public:
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
-	GETSET(TigerTree, tiger, Tiger);
+	GETSET(bool, hasTree, HasTree);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
 	GETSET(bool, noFreeBlocks, NoFreeBlocks);
 	GETSET(bool, fastUser, FastUser);

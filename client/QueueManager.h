@@ -138,7 +138,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr& aUser, bool supportsTrees, string &message, bool &reuse, QueueItem* q = NULL) throw();
+	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q = NULL) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
@@ -150,7 +150,7 @@ public:
 	void saveQueue() throw();
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	void autoDropSource(User::Ptr& aUser, bool remove = true);
+	void autoDropSource(User::Ptr& aUser);
 
 	QueueItem::List getRunningFiles() throw() {
 		QueueItem::List ql;

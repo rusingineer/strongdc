@@ -31,6 +31,7 @@ WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
 WebServerManager::WebServerManager(void) : started(false), page404(NULL) {
 	SettingsManager::getInstance()->addListener(this);
+	sended_search = false;
 	if(BOOLSETTING(WEBSERVER))Start();
 }
 
@@ -57,7 +58,7 @@ void WebServerManager::Start(){
 	pages["/ulfinished.html"] = new WebPageInfo(UPLOAD_FINISHED, "Finished Uploads");
 	pages["/weblog.html"] = new WebPageInfo(LOG, "Logs");
 	pages["/syslog.html"] = new WebPageInfo(SYSLOG, "System Logs");
-
+	pages["/search.html"] = new WebPageInfo(SEARCH, "Search");
 
 #ifdef _DEBUG  
 	//AllocConsole();
@@ -157,8 +158,14 @@ string WebServerManager::getPage(string file){
     pagehtml += "		<a href='ulfinished.html'>Finished Uploads</a>";
     pagehtml += "		<a href='ulqueue.html'>Upload Queue  </a>";
     pagehtml += "		<a href='dlqueue.html'>Download Queue</a>";
-    pagehtml += "		<a href='dlfinished.html'>Finished Downloads </a>";
+    pagehtml += "		<a href='dlfinished.html'>Finished Downloads</a>";
+    pagehtml += "		<a href='search.html'>Search</a>";
     pagehtml += "	</div>";
+
+	if((page->id == SEARCH) && (sended_search == true)) {
+		//sended_search = false;
+		pagehtml += "<META HTTP-EQUIV='Refresh' CONTENT='10;URL=search.html?stop=true'>";
+	}
 
 	pagehtml += "	<div id='prava'>";
   
@@ -181,6 +188,10 @@ string WebServerManager::getPage(string file){
 
 		case UPLOAD_FINISHED:
 			pagehtml+=getFinished(true);
+			break;
+
+		case SEARCH:
+			pagehtml+=getSearch();
 			break;
 
 		case LOG:
@@ -310,6 +321,50 @@ string WebServerManager::getSysLogs(){
 	return ret;
 }
 
+string WebServerManager::getSearch(){
+	string ret = "<form method='GET' name='search' ACTION='search.html' enctype='multipart/form-data'>";
+
+	/*ClientManager* clientMgr = ClientManager::getInstance();
+	Client::List& clients = clientMgr->getClients();
+
+	Client::List::iterator it;
+	Client::List::iterator endIt = clients.end();
+	sClients.clear();
+	for(it = clients.begin(); it != endIt; ++it) {
+		Client* client = *it;
+		if (!client->isConnected())
+			continue;
+		
+		ret += "<br> >>> " + client->getName();
+		sClients.push_back(client->getIpPort());
+	}*/
+
+	if(sended_search == true) {
+		ret += "<br><br><table width='100%'><tr><td align='center'><b>Searching... Please wait.</b></td></tr>";
+		ret += "<tr><td align='center'><input type=\"submit\" name=\"stop\" value=\"cancel\"></td></tr></form></table>";
+		sended_search = false;
+	} else {
+		ret += "<br><table width='100%'><tr><td align='center'><b>Search for&nbsp;»</b>&nbsp;<input type=text name='search'>";
+		ret += "<input type='submit' value='Search'></td></tr>";
+		ret += "<tr><td align='center'>";
+		ret += "<select name='type'>";
+		ret += "<option value='0' selected>" + STRING(ANY);
+		ret += "<option value='1'>" + STRING(AUDIO);
+		ret += "<option value='2'>" + STRING(COMPRESSED);
+		ret += "<option value='3'>" + STRING(DOCUMENT);
+		ret += "<option value='4'>" + STRING(EXECUTABLE);
+		ret += "<option value='5'>" + STRING(PICTURE);
+		ret += "<option value='6'>" + STRING(VIDEO);
+		ret += "<option value='7'>" + STRING(DIRECTORY);
+		ret += "<option value='8'>TTH";
+		ret += "</td></tr></form></table><br>";	
+		ret += "<table width='100%' bgcolor='#EEEEEE'>" + results + "</table>";
+		results = Util::emptyString;
+	}
+
+	return ret;
+}
+
 string WebServerManager::getFinished(bool uploads){
 	string ret;
 
@@ -433,8 +488,9 @@ int WebServerSocket::run(){
 				params["ip"] = IP;
 				LOG(LogManager::WEBSERVER, params);
 			}
-			header = header.substr(start+4,end);
 
+			header = header.substr(start+4,end);
+			dcdebug(header.c_str());
 			if((start = header.find("?")) != string::npos) {
 				string arguments = header.substr(start+1);
 				header = header.substr(0, start);
@@ -442,6 +498,12 @@ int WebServerSocket::run(){
 
 				if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
 					WebServerManager::getInstance()->login(IP);
+				if((m["search"] != Util::emptyString)) {
+					WebServerManager::getInstance()->search(m["search"], Util::toInt(m["type"]));
+				}
+				if((m["stop"] != Util::emptyString)) {
+					WebServerManager::getInstance()->reset();
+				}
 			}
 
 			string toSend;
@@ -449,7 +511,7 @@ int WebServerSocket::run(){
 			if(!WebServerManager::getInstance()->isloggedin(IP)) {
 				toSend = WebServerManager::getInstance()->getLoginPage();
 			} else {
-				toSend = WebServerManager::getInstance()->getPage(header);
+				toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header));
 			}
 	
 			::send(sock, toSend.c_str(), toSend.size(), 0);
@@ -461,4 +523,26 @@ int WebServerSocket::run(){
 	return 0;
 
 } 
+
+void WebServerManager::onSearchResult(SearchResult* aResult) {
+	// Check that this is really a relevant search result...
+	{
+		Lock l(cs);
+		if(aResult->getType() == SearchResult::TYPE_FILE) {
+			string TTH = (aResult->getTTH() != NULL) ? aResult->getTTH()->toBase32() : Util::emptyString;
+			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
+			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";
+			//results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
+			//results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
+			results += "<input type='hidden' name='tth' value='" + TTH + "'>";
+			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
+			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";
+			results += "<td>" + aResult->getUser()->getNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + TTH + "</td></form></tr>";
+			row++;
+		}
+	}
+
+	//SearchInfo* i = new SearchInfo(aResult);
+	//PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
+}
 

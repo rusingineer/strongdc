@@ -140,7 +140,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 					TCHAR *out = cmp + _tcslen(Delimiter); 
 					_tcscpy(afterAppendText, out);
 				}
-				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, _T(""), !bRedrawControl);
+				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, sAuthor, !bRedrawControl);
 				COLORREF clrBkColor = WinUtil::m_ChatTextGeneral.crBackColor;
 				if(bMyMessage)
 					clrBkColor = WinUtil::m_ChatTextMyOwn.crBackColor;

@@ -245,7 +245,7 @@ void CBarShader::FillRect(CDC& dc, LPCRECT rectSpan, COLORREF crColor)
 			rect.bottom = iBot--;
 			rect.top = iBot;
 		//	Fast way to fill, background color is already set inside previous FillSolidRect
-			dc.ExtTextOut(0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+			dc.FillSolidRect(&rect, crColor);
 		}
 	}
 }

@@ -78,7 +78,7 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctxMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
 	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FILE, CTSTRING(OPEN));
 	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FOLDER, CTSTRING(OPEN_FOLDER));
-	ctxMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	ctxMenu.AppendMenu(MF_SEPARATOR);
 	ctxMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
@@ -87,10 +87,10 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	if(BOOLSETTING(LOG_UPLOADS)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_UPLOAD_LOG, CTSTRING(OPEN_UPLOAD_LOG));
-		tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+		tabMenu.AppendMenu(MF_SEPARATOR);
 	}
 	tabMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
-	tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	tabMenu.AppendMenu(MF_SEPARATOR);
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 
 	bHandled = FALSE;
