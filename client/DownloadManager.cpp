@@ -121,7 +121,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 
 		Download* d = *i;
-		QueueItem* q = d->getItem();
+		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
 		
 		if(q && SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
 			int TryToSwitchToUser = -1;

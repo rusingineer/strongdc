@@ -496,8 +496,10 @@ void UploadQueueItem::update() {
 LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	ctrlList.SetRedraw(FALSE);
 	if(wParam == REMOVE_ITEM) {
-		ctrlList.deleteItem((UploadQueueItem*)lParam);
+		UploadQueueItem* i = (UploadQueueItem*)lParam;
+		ctrlList.deleteItem(i);
 		updateStatus();
+		delete i;
 	} else if(wParam == REMOVE) {
 		RemoveUser(((UserInfoBase*)lParam)->user);
 		delete (UserInfoBase*)lParam;

@@ -198,7 +198,6 @@ public:
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 				FileChunksInfo::Free(qi->getTempTarget());
 			
-			qi = NULL;
 			delete qi;
 		}
 

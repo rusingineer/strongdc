@@ -111,17 +111,20 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	DownloadManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
+	QueueManager::getInstance()->addListener(this);
+
 	return 0;
 }
 
 void TransferView::prepareClose() {
 	WinUtil::saveHeaderOrder(ctrlTransfers, SettingsManager::MAINFRAME_ORDER, 
 		SettingsManager::MAINFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
-	
+
 	ConnectionManager::getInstance()->removeListener(this);
 	DownloadManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
 	SettingsManager::getInstance()->removeListener(this);
+	QueueManager::getInstance()->removeListener(this);
 }
 
 LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -1126,6 +1129,30 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
+}
+
+void TransferView::on(QueueManagerListener::Removed, QueueItem* aQI) {
+	Lock l(cs);
+
+	if(!mainItems.empty()) {
+		int q = 0;
+		while(q < mainItems.size()) {
+			ItemInfo* m = mainItems[q];
+			if(m->Target == Text::toT(aQI->getTarget())) {
+				m->qi = NULL;
+				m->updateMask |= ItemInfo::MASK_HUB;
+				break;
+			}
+			q++;
+		}
+	}
+		
+	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+		ItemInfo* m = j->second;
+		if((m->Target == Text::toT(aQI->getTarget())) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			m->qi = NULL;
+		}
+	}
 }
 
 void TransferView::ItemInfo::disconnect() {
