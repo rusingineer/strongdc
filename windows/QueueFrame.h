@@ -330,13 +330,13 @@ private:
 		GETSET(u_int32_t, added, Added);
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
+		GETSET(TTHValue*, tth, TTH);
 		GETSET(tstring, downloadTarget, DownloadTarget);
-		GETSET(TTHValue*, tth, TTH);		
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
 		QueueItem* qi;
 		FileChunksInfo::Ptr FDI;
-
+	
 	private:
 
 		Display* display;
@@ -403,7 +403,7 @@ private:
 	CTreeViewCtrl ctrlDirs;
 	HICON hIconTree, hIconNotTree;
 	COLORREF barva;
-
+	
 	CStatusBarCtrl ctrlStatus;
 	int statusSizes[6];
 	
@@ -443,7 +443,7 @@ private:
 	void moveSelected();	
 	void moveSelectedDir();
 	void moveDir(HTREEITEM ht, const tstring& target);
-	
+
 	void moveNode(HTREEITEM item, HTREEITEM parent);
 
 	void clearTree(HTREEITEM item) {

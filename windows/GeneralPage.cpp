@@ -39,7 +39,8 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_PASSIVE, ResourceManager::SETTINGS_PASSIVE },
 	{ IDC_SOCKS5, ResourceManager::SETTINGS_SOCKS5 }, 
 	{ IDC_SETTINGS_IP, ResourceManager::SETTINGS_IP },
-	{ IDC_SETTINGS_PORT, ResourceManager::SETTINGS_PORT },
+	{ IDC_SETTINGS_PORT, ResourceManager::SETTINGS_TCP_PORT },
+	{ IDC_SETTINGS_UDP_PORT, ResourceManager::SETTINGS_UDP_PORT },
 	{ IDC_SETTINGS_SOCKS5_IP, ResourceManager::SETTINGS_SOCKS5_IP },
 	{ IDC_SETTINGS_SOCKS5_PORT, ResourceManager::SETTINGS_SOCKS5_PORT },
 	{ IDC_SETTINGS_SOCKS5_USERNAME, ResourceManager::SETTINGS_SOCKS5_USERNAME },
@@ -56,12 +57,12 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_NICK,			SettingsManager::NICK,			PropPage::T_STR }, 
 	{ IDC_EMAIL,		SettingsManager::EMAIL,			PropPage::T_STR }, 
 	{ IDC_DESCRIPTION,	SettingsManager::DESCRIPTION,	PropPage::T_STR }, 
-//	{ IDC_CONNECTION,	SettingsManager::CONNECTION,	PropPage::T_STR }, 
 	{ IDC_DOWN_COMBO,	SettingsManager::DOWN_SPEED,	PropPage::T_STR },  
 	{ IDC_UP_COMBO,		SettingsManager::UP_SPEED,		PropPage::T_STR },  
 	{ IDC_SHOW_SPEED_CHECK, SettingsManager::SHOW_DESCRIPTION_SPEED, PropPage::T_BOOL },
 	{ IDC_SERVER,		SettingsManager::SERVER,		PropPage::T_STR }, 
 	{ IDC_PORT,			SettingsManager::IN_PORT,		PropPage::T_INT }, 
+	{ IDC_UDP_PORT,		SettingsManager::UDP_PORT,		PropPage::T_INT }, 
 	{ IDC_SOCKS_SERVER, SettingsManager::SOCKS_SERVER,	PropPage::T_STR },
 	{ IDC_SOCKS_PORT,	SettingsManager::SOCKS_PORT,	PropPage::T_INT },
 	{ IDC_SOCKS_USER,	SettingsManager::SOCKS_USER,	PropPage::T_STR },
@@ -113,9 +114,6 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 {
 	PropPage::translate((HWND)(*this), texts);
 	ctrlConnection.Attach(GetDlgItem(IDC_CONNECTION));
-	//CRect pos(0, 0, 0, 128);
-	//ctrlConnection.Create(m_hWnd, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-	//	WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST);
 	ConnTypes.CreateFromImage(IDB_USERS, 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
     ctrlConnection.SetImageList(ConnTypes);	
 
@@ -131,10 +129,6 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, Text::toT(SETTING(UP_SPEED)).c_str()));
 
 	int q = 1;
-//	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
-		//COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
-		//cbitem.pszText = const_cast<TCHAR*>(Text::toT(SettingsManager::connectionSpeeds[i]).c_str());
-		//cbitem.iItem = i;
 	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
 		tstring conn = Text::toT(SettingsManager::connectionSpeeds[i]); // oprava connections
@@ -206,6 +200,7 @@ void GeneralPage::fixControls() {
 	BOOL checked = IsDlgButtonChecked(IDC_ACTIVE);
 	::EnableWindow(GetDlgItem(IDC_SERVER), checked);
 	::EnableWindow(GetDlgItem(IDC_PORT), checked);
+	::EnableWindow(GetDlgItem(IDC_UDP_PORT), checked);
 
 	checked = IsDlgButtonChecked(IDC_SOCKS5);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), checked);
@@ -293,8 +288,11 @@ LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl *
 	  (IPAdresa.compare(0,8,"169.254.")==0) ||
 	  ((IPAdresa.compare(0,4,"172.")==0) && (Util::toInt(IPAdresa.substr(4,2))>=16 && Util::toInt(IPAdresa.substr(4,2))<=31))
 
-	  )
-	{ CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_PASSIVE); } else { CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_ACTIVE); }
+	  ) {
+		  CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_PASSIVE);
+	  } else {
+		  CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_ACTIVE);
+	  }
 	
 	fixControls();
 	SetDlgItemText(IDC_SERVER,Text::toT(IPAdresa).c_str());

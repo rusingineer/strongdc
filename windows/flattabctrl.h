@@ -82,15 +82,10 @@ public:
 		TabInfo* ti = *i;
 		if(active == ti)
 			active = NULL;
-		if(moving == ti)
-			moving = NULL;
 		delete ti;
 		tabs.erase(i);
-		WindowIter foundTab = find(viewOrder.begin(), viewOrder.end(), aWnd);
-		dcassert(foundTab != viewOrder.end());
-		if (foundTab != viewOrder.end())
-			viewOrder.erase(foundTab);
-
+		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
+		viewOrder.erase(find(viewOrder.begin(), viewOrder.end(), aWnd));
 		nextTab = viewOrder.end();
 		if(!viewOrder.empty())
 			--nextTab;
@@ -238,33 +233,33 @@ public:
 
 	LRESULT onLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 		if (moving) {
-		int xPos = GET_X_LPARAM(lParam); 
-		int yPos = GET_Y_LPARAM(lParam); 
-		int row = getRows() - ((yPos / getTabHeight()) + 1);
+			int xPos = GET_X_LPARAM(lParam); 
+			int yPos = GET_Y_LPARAM(lParam); 
+			int row = getRows() - ((yPos / getTabHeight()) + 1);
+			
+			bool moveLast = true;
 
-		bool moveLast = true;
-
-		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
-			TabInfo* t = *i;
-			if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth())) ) {
-				// Bingo, this was clicked
-				HWND hWnd = GetParent();
-				if(hWnd) {
-					if(t == moving) 
-						::SendMessage(hWnd, FTM_SELECTED, (WPARAM)t->hWnd, 0);
-					else {
-						//check if the pointer is on the left or right half of the tab
-						//to determine where to insert the tab
-						moveTabs(t, xPos > (t->xpos + (t->getWidth()/2)));
+			for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
+				TabInfo* t = *i;
+				if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth())) ) {
+					// Bingo, this was clicked
+					HWND hWnd = GetParent();
+					if(hWnd) {
+						if(t == moving) 
+							::SendMessage(hWnd, FTM_SELECTED, (WPARAM)t->hWnd, 0);
+						else {
+							//check if the pointer is on the left or right half of the tab
+							//to determine where to insert the tab
+							moveTabs(t, xPos > (t->xpos + (t->getWidth()/2)));
+						}
 					}
+					moveLast = false;
+					break;
 				}
-				moveLast = false;
-				break;
 			}
-		}		
-		if(moveLast)
-			moveTabs(tabs.back(), true);
-		moving = NULL;	
+			if(moveLast)
+				moveTabs(tabs.back(), true);
+			moving = NULL;
 		}
 		return 0;
 	}
@@ -616,7 +611,7 @@ private:
 
 		tabs.insert(i, moving);
 		moving = NULL;
-		
+
 		calcRows(false);
 		Invalidate();	
 	}
@@ -742,7 +737,7 @@ public:
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
 		CHAIN_MSG_MAP(baseClass)
 	END_MSG_MAP()
-		
+	
 	HWND Create(HWND hWndParent, ATL::_U_RECT rect = NULL, LPCTSTR szWindowName = NULL,
 	DWORD dwStyle = 0, DWORD dwExStyle = 0,
 	UINT nMenuID = 0, LPVOID lpCreateParam = NULL)
@@ -795,7 +790,7 @@ public:
 		{
 			::SetFocus(hWnd);
 		}
-		
+
 		return hWnd;
 	}
 
@@ -846,7 +841,7 @@ public:
 		bHandled = FALSE;
 		return 1; 
 	}
-	
+
 	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
 		dcassert(getTab());

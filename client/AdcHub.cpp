@@ -314,7 +314,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	ADDPARAM("VE", "++\\ " VERSIONSTRING);
 	ADDPARAM("I4", "0.0.0.0");
 	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		ADDPARAM("U4", Util::toString(SETTING(IN_PORT)));
+		ADDPARAM("U4", Util::toString(SETTING(UDP_PORT)));
 	} else {
 		ADDPARAM("U4", "");
 	}

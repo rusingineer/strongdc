@@ -63,6 +63,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD, onAdd)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onClickedRefresh)
 		COMMAND_ID_HANDLER(IDC_PUB_LIST_CONFIG, onClickedConfigure)
+		COMMAND_ID_HANDLER(IDC_CONNECT, onClickedConnect)
 		COMMAND_ID_HANDLER(IDC_COPY_HUB, onCopyHub);
 		NOTIFY_HANDLER(IDC_HUBLIST, LVN_COLUMNCLICK, onColumnClickHublist)
 		NOTIFY_HANDLER(IDC_HUBLIST, NM_RETURN, onEnter)
@@ -81,6 +82,7 @@ public:
 	LRESULT onAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onClickedRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onClickedConfigure(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onClickedConnect(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);	
 	LRESULT onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);

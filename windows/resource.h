@@ -193,7 +193,6 @@
 #define IDC_ADD_TO_FAVORITES            1061
 #define IDC_LOG_MAIN_CHAT               1061
 #define IDC_LOG_PRIVATE_CHAT            1062
-#define IDC_SLOTSSPIN2                  1062
 #define IDC_FILESPIN                    1062
 #define IDC_HELP_HOMEPAGE               1063
 #define IDC_LOG_DOWNLOADS               1063
@@ -531,7 +530,9 @@
 #define IDC_GETIP                       1266
 #define IDC_CHANGE_COLOR                1266
 #define IDC_USERLIST_IMAGE              1267
+#define IDC_SETTINGS_UDP_PORT           1267
 #define IDC_USERLIST                    1268
+#define IDC_UDP_PORT                    1268
 #define IDC_IMPORT                      1269
 #define IDC_BACKGROUND_IMAGE            1269
 #define IDC_EXPORT                      1270

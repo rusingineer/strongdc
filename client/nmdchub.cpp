@@ -154,7 +154,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 
 		// Filter own searches
 		if((getMode() == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
-			if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
+			if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(UDP_PORT))).c_str())) == 0) {
 				return;
 			}
 		} else {
@@ -827,7 +827,7 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 	if((getMode() == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = _snprintf(buf, x.length() + aString.length() + 63, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
+		chars = _snprintf(buf, x.length() + aString.length() + 63, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(UDP_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
 		buf[x.length() + aString.length() + 63] = 0;
 	} else {
 		buf = new char[getNick().length() + aString.length() + 64];
