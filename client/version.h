@@ -22,7 +22,7 @@
 #define VERSIONFLOAT 1.001
 #define DCVERSIONFLOAT 0.4032
 
-#define CZDCVERSIONSTRING " RC7"
+#define CZDCVERSIONSTRING " RC8"
 
 
 /* Update the .rc file as well... */

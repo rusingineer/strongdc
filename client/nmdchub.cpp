@@ -39,7 +39,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	state(STATE_CONNECT), adapter(this),
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0)
+	reconnect(true), lastUpdate(0), auto_search(true)
 {
 	TimerManager::getInstance()->addListener(this);
 	dscrptn = (char *) calloc(96, sizeof(char));
@@ -91,6 +91,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
+	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
@@ -296,8 +297,9 @@ void NmdcHub::onLine(const char *aLine) throw() {
 						u->setcType(6);
 					} else if(strcmp(temp, "LAN(T1)") == 0 || strcmp(temp, "LAN(T3)") == 0) {
 						u->setcType(7);
-					} else
+					} else {
 						u->setcType(10);
+					}
 				}
 			} else {
 				u->setcType(10);
@@ -609,7 +611,12 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			}
 		}
 
-		QueueManager::getInstance()->sendAutoSearch(this);
+		// send auto search
+		if(auto_search){
+			auto_search = false;
+			string search_string = QueueManager::getInstance()->getTopAutoSearchString();
+			search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, search_string);
+		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
 	} else if(strncmp(aLine, "$OpList ", 8) == 0) {
 		User::List v;
@@ -766,7 +773,11 @@ void NmdcHub::myInfo() {
 					txt += "/"; else
 					txt += buf[i];
 				}
-				if(strstr(strupr(strdup(txt.c_str())),strupr(strdup(cesta.c_str()))) != NULL) {
+
+				char* w1 = strdup(txt.c_str());
+				char* w2 = strdup(cesta.c_str());
+
+				if(strstr(strupr(w1),strupr(w2)) != NULL) {
 					char buf1[256];
 					char buf2[256];
 
@@ -790,6 +801,9 @@ void NmdcHub::myInfo() {
 						nldetect = "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+"kB/s]";
 					}
 				}
+
+				delete[] w1, w2;
+
 				if(len < BUF_SIZE)
 				break;
 			}
@@ -852,21 +866,8 @@ void NmdcHub::disconnect() throw() {
 	}
 }
 
-void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto){
-	checkstate();
-	dcdebug("search %s\n", aString);
-	Search s;
-	s.aFileType = aFileType;
-	s.aSize = aSize;
-	s.aString = aString;
-	s.aSizeType = aSizeType;
-	searchQueue.add(s, _auto);
-}
-
-void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString){
+void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
 	checkstate(); 
-	dcdebug("doSearch %s\n", aString);
-
 	char* buf;
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
@@ -953,16 +954,6 @@ void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		
 		while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
 			flooders.pop_front();
-		}
-	}
-
-	if(state != STATE_CONNECTED){
-		searchQueue.clearAll();
-	}else{
-		Search s;
-		
-		if(searchQueue.getSearch(s)){
-			doSearch(s.aSizeType, s.aSize, s.aFileType , s.aString);
 		}
 	}
 }

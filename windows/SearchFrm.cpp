@@ -92,10 +92,9 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+	if (CZDCLib::isXp()) {
 		ctrlResults.setLeftEraseBackgroundMargin(40);
 	} else {
-		//#define LVS_EX_DOUBLEBUFFER     0x00010000
 		styles |= 0x00010000;
 	}
 	ctrlResults.SetExtendedListViewStyle(styles);
@@ -231,6 +230,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlResults.SetTextBkColor(WinUtil::bgColor);
 	ctrlResults.SetTextColor(WinUtil::textColor);
 	ctrlResults.SetFont(WinUtil::systemFont, FALSE);	// use Util::font instead to obey Appearace settings
+	ctrlResults.setFlickerFree(WinUtil::bgBrush);
 	
 	ctrlHubs.InsertColumn(0, "Dummy", LVCFMT_LEFT, LVSCW_AUTOSIZE, 0);
 	ctrlHubs.SetBkColor(WinUtil::bgColor);
@@ -1424,13 +1424,15 @@ void SearchFrame::insertItem(int pos, SearchInfo* item) {
 	ctrlResults.resort();
 }
 
-LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
-	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
-	filter = buf;
-	delete buf;
+LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	if(wParam == VK_RETURN) {
+		char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
+		ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
+		filter = buf;
+		delete buf;
 	
-	updateSearchList();
+		updateSearchList();
+	}
 
 	bHandled = false;
 

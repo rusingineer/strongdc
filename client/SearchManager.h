@@ -136,9 +136,9 @@ public:
 		TYPE_HASH
 	};
 	
-	void search(const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool _auto = false);
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool _auto = false) {
-		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, _auto);
+	void search(const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST);
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST) {
+		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode);
 	}
 	
 	void search(StringList& who, const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST);

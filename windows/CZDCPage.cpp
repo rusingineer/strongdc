@@ -48,6 +48,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
 	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
 	{ SettingsManager::AUTO_DROP_SOURCE, ResourceManager::SETTINGS_AUTO_DROP_SOURCE },
+	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

@@ -61,6 +61,11 @@ void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_
 		fn.erase(0, i);
 		fn.insert(0, "...");
 	}
+	if(speed > 0) {
+		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn + " (" + Util::formatBytes(speed) + "/s)", true);
+	} else if(speed == 0) {
+		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn, true);
+	}
 }
 
 void HashManager::HashStore::addFile(const string& aFileName, const TigerTree& tth, bool aUsed) {
@@ -423,6 +428,7 @@ int HashManager::Hasher::run() {
 	string fname;
 	int64_t speed = 0;
 	bool last = false;
+	bool trycatch = false;
 	int procenta = 0;
 	int64_t pocetHashu = 0;
 
@@ -442,7 +448,7 @@ int HashManager::Hasher::run() {
 				string rychlost = "";
 				if(speed > 0)				
 					rychlost = ", "+Util::formatBytes(speed) + "/s ";
-				LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",false);
+				LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",true);
 				}
 				last = w.empty();
 			} else {
@@ -461,6 +467,7 @@ int HashManager::Hasher::run() {
 				virtualBuf = false;
 				buf = new u_int8_t[BUF_SIZE];
 			}
+			trycatch = false;
 			try {
 				File f(fname, File::READ, File::OPEN);
 				size_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), (size_t)MIN_BLOCK_SIZE);
@@ -512,11 +519,8 @@ int HashManager::Hasher::run() {
 				HashManager::getInstance()->hashDone(fname, *tth, speed);
 			} catch(const FileException&) {
 				// Ignore, it'll be readded on the next share refresh...
+				trycatch = true;
 			}
-		}
-		if (w.size() == 0) {
-			procenta = 0;
-			LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);
 		}
 		if(buf != NULL && (last || stop)) {
 			if(virtualBuf) {
@@ -527,6 +531,13 @@ int HashManager::Hasher::run() {
 				delete buf;
 			}
 			buf = NULL;
+			if(stop == false && trycatch == false && w.empty()) {
+				// Hashing done, refresh filelist == add new TTHs ;)
+				procenta = 0;
+				ShareManager::getInstance()->setDirty();
+				ShareManager::getInstance()->refresh(true);
+				LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);			
+			}
 		}
 	}
 	return 0;

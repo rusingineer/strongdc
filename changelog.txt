@@ -1,4 +1,4 @@
-	-- StrongDC++ 1.00 --
+	-- StrongDC++ 1.00 RC8 ??? --
 
 * optimalizováno seskupování položek v Pøenosech
 * opraven náhodný pád pøi odstraòování TestSUR po odpojení
@@ -8,6 +8,13 @@
 * pøidáno chybìjící tlaèítko Stažené informace o MP3 na lištu
 * aktualizováno na WTL 7.5.4196
 * opraven pád pøi stahování informací o MP3
+* po skonèení hashování je aktualizován seznam souborù (CZDC++)
+* pøidáno nastavení pro pøepnutí do starého vzhledu sdílení
+* opraveno pøekreslování seznamù ve Win2000
+* filtr hledání se aktivuje až po stisku Enter
+* odstranìna fronta hledání
+* opraven memory leak pøi detekci NetLimiteru
+* opraveno zobrazení ikon v userlistu pøi kontrole uživatele
 
 
 	-- StrongDC++ 1.00 RC7 --

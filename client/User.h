@@ -199,7 +199,7 @@ public:
 		clientType = Util::emptyString;
 		downloadSpeed = -1;
 		fileListSize = -1;
-		ctype = 10;
+		//ctype = 10;
 		status = 0;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;
