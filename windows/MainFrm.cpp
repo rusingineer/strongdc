@@ -40,6 +40,7 @@
 #include "TextFrame.h"
 #include "UpdateDlg.h"
 #include "StatsFrame.h"
+#include "LineDlg.h"
 #include "UploadQueueFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
@@ -986,6 +987,25 @@ LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
 	else SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,true);
  
 	ClientManager::getInstance()->infoUpdated(true);
+	return 0;
+}
+
+LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
+	LineDlg dlg;
+	dlg.description = STRING(HUB_ADDRESS);
+	dlg.title = STRING(QUICK_CONNECT);
+	if(dlg.DoModal(m_hWnd) == IDOK){
+		if(SETTING(NICK).empty())
+			return 0;
+
+		string tmp = dlg.line;
+		// Strip out all the spaces
+		string::size_type i;
+		while((i = tmp.find(' ')) != string::npos)
+			tmp.erase(i, 1);
+
+		HubFrame::openWindow(tmp);
+	}
 	return 0;
 }
 

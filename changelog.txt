@@ -43,6 +43,7 @@
 * fronta hledání proti searchspamu s prodlevou 15 sekund (RevConnect)
 * vylepšeno odchytávání magnetù (BCDC++)
 * odstranìna Flood cache pro progressbary
+* opraven bug v nastavení sdílení
 
 
 	-- StrongDC++ 1.00 RC6 --

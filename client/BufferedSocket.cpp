@@ -384,12 +384,12 @@ void BufferedSocket::threadRead() {
 					i = 0;
 				} else {
 					int high = (int)min(dataBytes, (int64_t)i);
-					dataBytes -= high;
 					fire(BufferedSocketListener::Data(), inbuf+bufpos, high);
 					bufpos += high;
 					i-=high;
 
-					if(dataBytes == 0 && mode == MODE_DATA) {
+					dataBytes -= high;
+					if(dataBytes == 0) {
 						mode = MODE_LINE;
 						fire(BufferedSocketListener::ModeChange());
 					}

@@ -125,10 +125,10 @@ LRESULT StatsFrame::onPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			dc.TextOut(1, 1, txt.c_str());
 		}
 
-		dc.SelectPen(red);
+		dc.SelectPen(upload);
 		drawLine(dc, up.begin(), up.end(), rc, clientRC);
 
-		dc.SelectPen(green);
+		dc.SelectPen(download);
 		drawLine(dc, down.begin(), down.end(), rc, clientRC);
 
 	}

@@ -365,7 +365,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	}
 
 	if(prepareFile(aSource, aFileLength)) {
-		aSource->setDataMode(aFileLength - aSource->getDownload()->getStartPos());
+		aSource->setDataMode();
 		aSource->startSend();
 	}
 }

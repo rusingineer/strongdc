@@ -97,7 +97,9 @@ public:
 		typedef Source* Ptr;
 		typedef vector<Ptr> List;
 		typedef List::iterator Iter;
+		typedef List::const_iterator ConstIter;
 		enum {
+			FLAG_NONE = 0x00,
 			FLAG_FILE_NOT_AVAILABLE = 0x01,
 			FLAG_ROLLBACK_INCONSISTENCY = 0x02,
 			FLAG_PASSIVE = 0x04,
@@ -108,6 +110,9 @@ public:
 			FLAG_BAD_TREE = 0x80,
 			FLAG_SLOW = 0x100,
 			FLAG_TTH_INCONSISTENCY = 0x200,
+			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
+				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
+				| FLAG_SLOW | FLAG_TTH_INCONSISTENCY			
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -186,6 +191,13 @@ public:
 
 	bool isSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, sources); };
 	bool isBadSource(const User::Ptr& aUser, const string& aFile) const { return isSource(aUser, aFile, badSources); };
+	bool isBadSourceExcept(const User::Ptr& aUser, const string& aFile, Flags::MaskType exceptions) const {
+		Source::ConstIter i = getSource(aUser, aFile, badSources);
+		if(i != badSources.end())
+			return (*i)->isAnySet(exceptions^Source::FLAG_MASK); 
+
+		return false;
+	};
 	
 	void addActiveSegment(const User::Ptr& aUser) {
 		if(!isSource(aUser)) return;
@@ -317,6 +329,16 @@ private:
 		for(Source::Iter i = lst.begin(); i != lst.end(); ++i)
 			if((*i)->getUser() == aUser)
 				return i;
+		return lst.end();
+	}
+	static Source::ConstIter getSource(const User::Ptr& aUser, const string& aFile, const Source::List& lst) { 
+		for(Source::ConstIter i = lst.begin(); i != lst.end(); ++i) {
+			const Source* s = *i;
+			if( (s->getUser() == aUser) ||
+				((s->getUser()->getNick() == aUser->getNick()) && (s->getPath() == aFile)) )
+				return i;
+		}
+
 		return lst.end();
 	}
 	static bool isSource(const User::Ptr& aUser, const string& aFile, const Source::List& lst) {

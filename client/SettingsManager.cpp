@@ -99,6 +99,7 @@ const string SettingsManager::settingTags[] =
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
+	"AddFinishedInstantly",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -225,6 +226,7 @@ SettingsManager::SettingsManager()
 	setDefault(POPUNDER_FILELIST, false);
 	setDefault(MAGNET_ASK, true);
 	setDefault(MAGNET_ACTION, MAGNET_AUTO_SEARCH);
+	setDefault(ADD_FINISHED_INSTANTLY, false);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);

@@ -70,7 +70,7 @@ void ClientManager::putClient(Client* aClient) {
 			}
 		}
 	}
-	delete aClient;
+	aClient->scheduleDestruction();
 }
 
 void ClientManager::infoUpdated(bool antispam) {

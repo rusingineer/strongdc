@@ -270,6 +270,7 @@ void WinUtil::init(HWND hWnd) {
 	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CSTRING(MENU_REFRESH_FILE_LIST));
 	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CSTRING(MENU_OPEN_DOWNLOADS_DIR));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	file.AppendMenu(MF_STRING, ID_FILE_QUICK_CONNECT, CSTRING(MENU_QUICK_CONNECT));
 	file.AppendMenu(MF_STRING, IDC_FOLLOW, CSTRING(MENU_FOLLOW_REDIRECT));
 	file.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CSTRING(MENU_RECONNECT));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -973,7 +974,7 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 		magnetExe = Util::getAppPath() + "magnet.exe";
 		if(File::getSize(magnetExe) == -1) {
 			// gracefully fall back to registering DC++ to handle magnets
-			LogManager::getInstance()->message(STRING(MAGNET_HANDLER_NOT_FOUND), true);
+		//	LogManager::getInstance()->message(STRING(MAGNET_HANDLER_NOT_FOUND), true);
 			magnetExe = Util::getAppName();
 			haveMagnet = false;
 		} else {

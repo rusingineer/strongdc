@@ -51,13 +51,13 @@ void startup(void (*f)(void*, const string&), void* p) {
 	LogManager::newInstance();
 	TimerManager::newInstance();
 	HashManager::newInstance();
-	ShareManager::newInstance();
 	CryptoManager::newInstance();
 	SearchManager::newInstance();
 	ClientManager::newInstance();
 	ConnectionManager::newInstance();
 	DownloadManager::newInstance();
 	UploadManager::newInstance();
+	ShareManager::newInstance();
 	HubManager::newInstance();
 	QueueManager::newInstance();
 	FinishedManager::newInstance();

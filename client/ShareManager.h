@@ -27,6 +27,7 @@
 #include "SearchManager.h"
 #include "SettingsManager.h"
 #include "HashManager.h"
+#include "DownloadManager.h"
 
 #include "Exception.h"
 #include "CriticalSection.h"
@@ -44,7 +45,7 @@ class File;
 class OutputStream;
 
 class ShareManager : public Singleton<ShareManager>, private SettingsManagerListener, private Thread, private TimerManagerListener,
-	private HashManagerListener
+	private HashManagerListener, private DownloadManagerListener
 {
 public:
 	StringList getDirectories();
@@ -301,9 +302,14 @@ private:
 	Directory* buildTree(const string& aName, Directory* aParent);
 	StringList notShared;
 
+	void addFinishedFile(Directory* aParent, const string& aName, int64_t aSize);
+
 	Directory* getDirectory(const string& fname);
 
 	virtual int run();
+
+	// DownloadManagerListener
+	virtual void on(DownloadManagerListener::Complete, Download* d) throw();
 
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw();

@@ -121,6 +121,7 @@ public:
 	void removeDir(HTREEITEM ht);
 	void setPriority(HTREEITEM ht, const QueueItem::Priority& p);
 	void setAutoPriority(HTREEITEM ht, const bool& ap);
+	void changePriority(bool inc);
 
 	LRESULT onItemChangedQueue(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLISTVIEW* lv = (NMLISTVIEW*)pnmh;
@@ -154,6 +155,12 @@ public:
 		if(kd->wVKey == VK_DELETE) {
 			if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox("Do you really want to remove this item?", APPNAME " " VERSIONSTRING CZDCVERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 				removeSelected();
+		} else if(kd->wVKey == VK_ADD){
+			// Increase Item priority
+			changePriority(true);
+		} else if(kd->wVKey == VK_SUBTRACT){
+			// Decrease item priority
+			changePriority(false);
 		} else if(kd->wVKey == VK_TAB) {
 			onTab();
 		}
