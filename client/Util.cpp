@@ -528,8 +528,6 @@ bool Util::isPrivateIp(string const& ip) {
 	return false;
 }
 
-
-
 typedef const u_int8_t* ccp;
 static wchar_t utf8ToLC(ccp& str) {
 	wchar_t c = 0;

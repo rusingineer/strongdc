@@ -128,9 +128,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
 		char *lock;
 		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
-			if((temp = strtok(((char*)aLine+6+strlen(lock)+4), "\0")) != NULL) {
-				fire(UserConnectionListener::CLock(), this, lock, temp);
-			}
+			if((temp = strtok(NULL, "\0")) != NULL) {
+				fire(UserConnectionListener::CLock(), this, lock, temp+3);
 		}
 	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
 		if((temp = strtok((char*)aLine+9, " ")) != NULL) {

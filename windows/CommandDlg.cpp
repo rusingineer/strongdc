@@ -45,6 +45,7 @@ LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	SetDlgItemText(IDC_SETTINGS_HUB_MENU, CTSTRING(USER_CMD_HUB_MENU));
 	SetDlgItemText(IDC_SETTINGS_USER_MENU, CTSTRING(USER_CMD_USER_MENU));
 	SetDlgItemText(IDC_SETTINGS_SEARCH_MENU, CTSTRING(USER_CMD_SEARCH_MENU));
+	SetDlgItemText(IDC_SETTINGS_FILELIST_MENU, CTSTRING(USER_CMD_FILELIST_MENU));
 	SetDlgItemText(IDC_SETTINGS_PARAMETERS, CTSTRING(USER_CMD_PARAMETERS));
 	SetDlgItemText(IDC_SETTINGS_NAME, CTSTRING(HUB_NAME));
 	SetDlgItemText(IDC_SETTINGS_COMMAND, CTSTRING(USER_CMD_COMMAND));
@@ -65,6 +66,7 @@ LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ATTACH(IDC_SETTINGS_HUB_MENU, ctrlHubMenu);
 	ATTACH(IDC_SETTINGS_USER_MENU, ctrlUserMenu);
 	ATTACH(IDC_SETTINGS_SEARCH_MENU, ctrlSearchMenu);
+	ATTACH(IDC_SETTINGS_FILELIST_MENU, ctrlFilelistMenu);
 	ATTACH(IDC_NICK, ctrlNick);
 	ATTACH(IDC_COMMAND, ctrlCommand);
 
@@ -140,6 +142,8 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 		ctrlUserMenu.SetCheck(BST_CHECKED);
 	if(ctx & UserCommand::CONTEXT_SEARCH)
 		ctrlSearchMenu.SetCheck(BST_CHECKED);
+	if(ctx & UserCommand::CONTEXT_FILELIST)
+		ctrlFilelistMenu.SetCheck(BST_CHECKED);
 	
 	updateControls();
 	updateCommand();
@@ -201,6 +205,8 @@ void CommandDlg::updateContext() {
 		ctx |= UserCommand::CONTEXT_CHAT;
 	if(ctrlSearchMenu.GetCheck() & BST_CHECKED)
 		ctx |= UserCommand::CONTEXT_SEARCH;
+	if(ctrlFilelistMenu.GetCheck() & BST_CHECKED)
+		ctx |= UserCommand::CONTEXT_FILELIST;
 }
 
 /**

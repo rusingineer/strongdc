@@ -63,6 +63,7 @@ void NmdcHub::connect() {
  	lastMyInfoB.clear();
 	lastUpdate = 0;
 	validatenicksent = false;
+	setLastSearchTime(GET_TICK());
 
 	if(socket->isConnected()) {
 		disconnect();
@@ -783,7 +784,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	string myInfoA = 
 		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
 		extendedtag +
-		">$ $" + SETTING(CONNECTION) + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
+		">$ $" + connection + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
 	string myInfoB = ShareManager::getInstance()->getShareSizeString() + "$|";
 
  	if(lastMyInfoA != myInfoA || alwaysSend || (lastMyInfoB != myInfoB && lastUpdate + 15*60*1000 < GET_TICK()) ){
@@ -811,6 +812,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	s.aSize = aSize;
 	s.aString = aString;
 	s.aSizeType = aSizeType;
+	s.autoSearch = _auto;
 	searchQueue.add(s, _auto);
 }
 
@@ -885,6 +887,8 @@ void NmdcHub::redirect(const User* aUser, const string& aServer, const string& a
 
 // TimerManagerListener
 void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+	setLastSearchTime(searchQueue.last_search_time);
+			
 	if(socket && (lastActivity + getReconnDelay() * 1000) < aTick) {
 		// Nothing's happened for ~120 seconds, check if we're connected, if not, try to connect...
 		lastActivity = aTick;

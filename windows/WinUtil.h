@@ -432,8 +432,10 @@ public:
 
 	// URL related
 	static void registerDchubHandler();
+	static void registerADChubHandler();
 	static void registerMagnetHandler();
 	static void parseDchubUrl(const tstring& /*aUrl*/);
+	static void parseADChubUrl(const tstring& /*aUrl*/);
 	static void parseMagnetUri(const tstring& /*aUrl*/, bool aOverride = false);
 	static bool parseDBLClick(const tstring& /*aString*/, string::size_type start, string::size_type end);
 	static int textUnderCursor(POINT p, CEdit& ctrl, tstring& x);

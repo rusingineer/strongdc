@@ -438,6 +438,7 @@ void SearchFrame::onEnter() {
 	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
 		if ((*si)[0] != _T('-') || si->size() == 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
 	s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
+
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
 		mode = SearchManager::SIZE_DONTCARE;
@@ -464,13 +465,8 @@ void SearchFrame::onEnter() {
 		lastSearches.push_back(s);
 	}
 		
-	ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + s + _T("...")).c_str());
-	ctrlStatus.SetText(2, _T(""));
-	ctrlStatus.SetText(3, _T(""));
 	droppedResults = 0;
 	isHash = (ftype == SearchManager::TYPE_TTH);
-
-	SetWindowText((TSTRING(SEARCH) + _T(" - ") + s).c_str());
 
 	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
 		delete *i;
@@ -480,8 +476,13 @@ void SearchFrame::onEnter() {
 	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
 	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 
+	SearchString = s;
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
 		(SearchManager::TypeModes)ftype, mode);
+
+	navic = 0;
+	lastSearchTime = ClientManager::getInstance()->getMinimumSearchInterval(clients, Text::fromT(s), navic);
+	TimerManager::getInstance()->addListener(this);
 }
 
 void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
@@ -501,8 +502,8 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 		} else {
 			// match all here
 			for(TStringIter j = search.begin(); j != search.end(); ++j) {
-				if((*j->begin() != _T('-') && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(*j)) == -1) ||
-					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(j->substr(1))) != -1)
+				if((*j->begin() != _T('-') && Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) ||
+					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
 					) 
 				{
 					droppedResults++;
@@ -753,7 +754,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-	SearchManager::getInstance()->removeListener(this);
+		SearchManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();
  		clientMgr->removeListener(this);
@@ -1152,6 +1153,26 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			tstring* t = (tstring*)(lParam);
 			ctrlStatus.SetText(3, (*t).c_str());
 			delete t;
+		}
+		break;
+	case STATS:
+		{
+		tstring* buf = (tstring*)(lParam);
+		ctrlStatus.SetText(1, (*buf).c_str());
+		ctrlStatus.SetText(2, _T(""));
+		ctrlStatus.SetText(3, _T(""));
+		SetWindowText((*buf).c_str());
+		delete buf;
+		}
+		break;
+	case START_SEARCH:
+		{
+			TimerManager::getInstance()->removeListener(this);
+			ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + SearchString + _T("...")).c_str());
+			ctrlStatus.SetText(2, _T(""));
+			ctrlStatus.SetText(3, _T(""));
+
+			SetWindowText((TSTRING(SEARCH) + _T(" - ") + SearchString).c_str());
 		}
 		break;
  	}
@@ -1665,6 +1686,20 @@ void SearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() 
 	}
 }
 
+void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+	if(lastSearchTime > 0) {
+		int32_t waitFor = SETTING(MINIMUM_SEARCH_INTERVAL) - ((GET_TICK() - lastSearchTime) / 1000) + (navic * SETTING(MINIMUM_SEARCH_INTERVAL));
+	//	MessageBoxA(0,(Util::toString(GET_TICK()) + "\n" +Util::toString(lastSearchTime)).c_str(),"",MB_OK);
+		TCHAR buf[64];
+		_stprintf(buf, _T("Waiting for %i seconds before searching..."), waitFor);
+		PostMessage(WM_SPEAKER, STATS, (LPARAM)new tstring(buf));
+
+		if(waitFor <= 0) {
+			lastSearchTime = 0;
+			PostMessage(WM_SPEAKER, START_SEARCH);
+		}
+	}
+}
 /**
  * @file
  * $Id$

@@ -35,6 +35,7 @@ WebServerManager::WebServerManager(void) : started(false), page404(NULL) {
 }
 
 WebServerManager::~WebServerManager(void){
+	SettingsManager::getInstance()->removeListener(this);
 	if(started) Stop();
 }
 

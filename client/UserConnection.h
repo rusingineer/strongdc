@@ -228,9 +228,9 @@ public:
 	void lock(const string& aLock, const string& aPk) { send ("$Lock " + aLock + " Pk=" + aPk + '|'); }
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
-	void get(const string& aFile, int64_t aResume) { send("$Get "   + aFile + "$" + Util::toString(aResume + 1) + '|'); };
-	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); };
-	void getBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetBlock " : "$GetBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
+	void get(const string& aFile, int64_t aResume) { send("$Get " + Text::utf8ToAcp(aFile) + "$" + Util::toString(aResume + 1) + '|'); };
+	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((isSet(FLAG_SUPPORTS_GETZBLOCK) ? (utf8 ? "$UGetZBlock " : "$GetZBlock ") : "$GetTestZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); };
+	void getBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetBlock " : "$GetBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); }
 	void fileLength(const string& aLength) { send("$FileLength " + aLength + '|'); }
 	void startSend() { send("$Send|"); }
 	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); };

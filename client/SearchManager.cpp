@@ -257,12 +257,12 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		if(j < i + 1) {
 			return;
 		}
-		file = x.substr(i, j-i) + '\\';
+		file = Text::acpToUtf8(x.substr(i, j-i) + '\\');
 	} else if(cnt == 2) {
 		if( (j = x.find((char)5, i)) == string::npos) {
 			return;
 		}
-		file = x.substr(i, j-i);
+		file = Text::acpToUtf8(x.substr(i, j-i));
 		i = j + 1;
 		if( (j = x.find(' ', i)) == string::npos) {
 			return;

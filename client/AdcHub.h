@@ -52,6 +52,7 @@ public:
 
 	virtual User::NickMap& lockUserList() { return nickMap; };
 	virtual void unlockUserList() { };
+	virtual int getSearchQueueNumber(const string& aString) { return 0; };
 
 	template<typename T> void handle(T, Command&) { 
 		//Speaker<AdcHubListener>::fire(t, this, c);

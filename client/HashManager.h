@@ -211,12 +211,9 @@ public:
 			};
 
 			FileInfo(const string& aFileName, const TTHValue& aRoot, int64_t aSize, int64_t aIndex, int64_t aBlockSize, u_int32_t aTimeStamp, bool aUsed) :
-			  root(aRoot), size(aSize), index(aIndex), blockSize(aBlockSize), timeStamp(aTimeStamp), used(aUsed), fileName(Text::toLower(Util::getFileName(aFileName))) { }
+			  root(aRoot), size(aSize), index(aIndex), blockSize(aBlockSize), timeStamp(aTimeStamp), used(aUsed), fileName(aFileName) { }
 
-			TTHValue& getRoot() { return root; }
-			void setRoot(const TTHValue& aRoot) { root = aRoot; }
-		private:
-			TTHValue root;
+			GETSET(TTHValue, root, Root);
 			GETSET(int64_t, size, Size)
 			GETSET(int64_t, index, Index);
 			GETSET(int64_t, blockSize, BlockSize);

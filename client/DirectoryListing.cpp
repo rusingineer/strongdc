@@ -345,6 +345,10 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 			return *i;
 		else
 			return find(aName.substr(end + 1), *i);
+	} else {
+		for(Directory::Iter i = current->directories.begin(); i < current->directories.end(); i++) {
+			MessageBox(0,Text::toT((*i)->getName()).c_str(),_T(""),MB_OK);
+		}
 	}
 	return NULL;
 }

@@ -567,6 +567,9 @@ void MainFrame::parseCommandLine(const tstring& cmdLine)
 	if( (j = cmdLine.find(_T("dchub://"), i)) != string::npos) {
 		WinUtil::parseDchubUrl(cmdLine.substr(j));
 		}
+	if( (j = cmdLine.find(_T("adc://"), i)) != string::npos) {
+		WinUtil::parseADChubUrl(cmdLine.substr(j));
+	}
 	if( (j = cmdLine.find(_T("magnet:?"), i)) != string::npos) {
 		WinUtil::parseMagnetUri(cmdLine.substr(j));
 	}
@@ -664,6 +667,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		ClientManager::getInstance()->infoUpdated(false);
 		if(BOOLSETTING(URL_HANDLER)) {
 			WinUtil::registerDchubHandler();
+			WinUtil::registerADChubHandler();
 		}
 		WinUtil::registerMagnetHandler();
 		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
@@ -921,6 +925,10 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			updateTray(false);
 
 			WebServerManager::getInstance()->removeListener(this);
+			TimerManager::getInstance()->removeListener(this);
+			QueueManager::getInstance()->removeListener(this);
+			LogManager::getInstance()->removeListener(this);
+
 			string tmp1;
 			string tmp2;
 

@@ -31,7 +31,7 @@
 #define SERVER_MESSAGE_MAP 7
 
 class FinishedMP3Frame : public MDITabChildWindowImpl<FinishedMP3Frame, RGB(0, 0, 0), IDR_FINISHED_MP3>, public StaticFrame<FinishedMP3Frame, ResourceManager::FINISHED_MP3_DOWNLOADS, IDC_FINISHEDMP3>,
-	private FinishedManagerListener
+	private FinishedManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<FinishedMP3Frame, RGB(0, 0, 0), IDR_FINISHED_MP3> baseClass;
@@ -173,6 +173,7 @@ private:
 	
 	virtual void on(FinishedManagerListener::Added_MP3Dl(), FinishedMP3Item* entry) throw();
 //	virtual void on(FinishedManagerListener::AddedDl(), FinishedItem* entry) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		PostMessage(WM_CLOSE);
