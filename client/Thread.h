@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_THREAD_H__3006956B_7C69_4DAD_9596_A49E1BD007D5__INCLUDED_)
-#define AFX_THREAD_H__3006956B_7C69_4DAD_9596_A49E1BD007D5__INCLUDED_
+#ifndef THREAD_H
+#define THREAD_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -61,9 +61,9 @@ public:
 #ifdef _WIN32
 	enum Priority {
 		IDLE = THREAD_PRIORITY_IDLE,
-		LOW = THREAD_PRIORITY_LOWEST,
+		LOW = THREAD_PRIORITY_BELOW_NORMAL,
 		NORMAL = THREAD_PRIORITY_NORMAL,
-		HIGH = THREAD_PRIORITY_HIGHEST
+		HIGH = THREAD_PRIORITY_ABOVE_NORMAL
 	};
 
 	Thread() throw() : threadHandle(NULL), threadId(0){ };
@@ -83,7 +83,7 @@ public:
 		threadHandle = NULL;
 	}
 
-	void setThreadPriority(Priority p) { ::SetThreadPriority(threadHandle, p); };
+	void setThreadPriority(Priority p) throw() { ::SetThreadPriority(threadHandle, p); };
 	
 	static void sleep(u_int32_t millis) {
 		if (millis % 10 != 0) { // default precision ~10ms - don't use mm timers if not needed
@@ -117,7 +117,7 @@ public:
 	void join() throw() { 
 		if (threadHandle) {
 			pthread_join(threadHandle, 0);
-		threadHandle = 0;
+			threadHandle = 0;
 		}
 	};
 
@@ -150,6 +150,8 @@ protected:
 	virtual int run() = 0;
 	
 private:
+	Thread(const Thread&);
+	Thread& operator=(const Thread&);
 
 #ifdef _WIN32
 	HANDLE threadHandle;

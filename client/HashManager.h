@@ -117,9 +117,9 @@ public:
 		void hashFile(const string& fileName, int64_t size) {
 			Lock l(cs);
 			if(w.insert(make_pair(fileName, size)).second) {
-			s.signal();
+				s.signal();
 				total += size;
-		}
+			}
 		}
 
 		void stopHashing(const string& baseDir) {
@@ -206,6 +206,8 @@ public:
 				const string& str;
 				StringComp(const string& aStr) : str(aStr) { }
 				bool operator()(FileInfo* a) { return a->getFileName() == str; }	
+			private:
+				StringComp& operator=(const StringComp&);
 			};
 
 			FileInfo(const string& aFileName, const TTHValue& aRoot, int64_t aSize, int64_t aIndex, int64_t aBlockSize, u_int32_t aTimeStamp, bool aUsed) :

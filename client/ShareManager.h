@@ -67,7 +67,7 @@ public:
 	void search(SearchResult::List& l, const string& aString, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults);
 	void search(SearchResult::List& l, const StringList& params, Client* aClient, StringList::size_type maxResults);
 
-	StringPairList getDirectories() const { RLock l(cs); return virtualMap; }
+	StringPairList getDirectories() const { RLock<> l(cs); return virtualMap; }
 
 	int64_t getShareSize() throw();
 	int64_t getShareSize(const string& aDir) throw();
@@ -111,6 +111,8 @@ private:
 				StringComp(const string& s) : a(s) { }
 				bool operator()(const File& b) const { return Util::stricmp(a, b.getName()) == 0; }
 				const string& a;
+			private:
+				StringComp& operator=(const StringComp&);
 			};
 			struct FileLess {
 				int operator()(const File& a, const File& b) const { return Util::stricmp(a.getName(), b.getName()); }
@@ -153,7 +155,7 @@ private:
 		File::Set files;
 
 		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
-			size(0), name(aName), parent(aParent), fileTypes(0) {
+			size(0), name(aName), parent(aParent), fileTypes(0) { 
 		};
 
 		~Directory();
@@ -253,7 +255,7 @@ private:
 	u_int32_t lastNmdcUpdate;
 	u_int32_t lastFullUpdate;
 
-	mutable RWLock cs;
+	mutable RWLock<> cs;
 	CriticalSection listGenLock;
 
 	// Map real name to directory structure

@@ -831,10 +831,14 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 	return true;
 }
 
-#define LINE2 _T("-- http://dcplusplus.sourceforge.net  <DC++ ") _T(DCVERSIONSTRING) _T(">")
-TCHAR *msgs[] = { _T("\r\n-- I'm a happy dc++ user. You could be happy too.\r\n") LINE2,
+#ifdef isCVS
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
+#else
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
+#endif
+TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- Neo-...what? Nope...never heard of it...\r\n") LINE2,
-_T("\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: NMDC --> DC++\r\n") LINE2,
+_T("\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: DC++ --> StrongDC++\r\n") LINE2,
 _T("\r\n-- I share, therefore I am.\r\n") LINE2,
 _T("\r\n-- I came, I searched, I found...\r\n") LINE2,
 _T("\r\n-- I came, I shared, I sent...\r\n") LINE2,
@@ -847,29 +851,19 @@ _T("\r\n-- My client doesn't spam the chat with useless debug messages, does you
 _T("\r\n-- I can add multiple users to the same download and have the client connect to another automatically when one goes offline, can you?\r\n") LINE2,
 _T("\r\n-- These addies are pretty annoying, aren't they? Get revenge by sending them yourself!\r\n") LINE2,
 _T("\r\n-- My client supports TTH hashes, does yours?\r\n") LINE2,
-_T("\r\n-- My client supports XML file lists, does yours?\r\n") LINE2
+_T("\r\n-- My client supports XML file lists, does yours?\r\n") LINE2,
+_T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE2,
+_T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
+_T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE2,
+_T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,
+_T("\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n") LINE2,
+_T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE2,
+_T("\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n") LINE2,
+_T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE2
 };
 
-#define MSGS 16
+#define MSGS 24
 
-#ifdef isCVS
-#define LINE3 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
-#else
-#define LINE3 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
-#endif
-
-TCHAR *strgmsgs[] = { _T("\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n") LINE3,
-_T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE3,
-_T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE3,
-_T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE3,
-_T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE3,
-_T("\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n") LINE3,
-_T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE3,
-_T("\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n") LINE3,
-_T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE3,
-};
-
-#define STRGMSGS 8
 
 string WinUtil::commands = "\t\t\t\t\t HELP \t\t\t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/refresh \t\t\t\t(obnoveni share) \t\t\t\t\t\t\n/savequeue \t\t\t\t(ulozi Download Queue) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/search <string> \t\t\t(hledat neco...) \t\t\t\t\t\t\t\n/g <searchstring> \t\t\t(hledat Googlem) \t\t\t\t\t\t\n/imdb <imdbquery> \t\t\t(hledat film v IMDB databazi) \t\t\t\t\t\n/whois [IP] \t\t\t\t(hledat podrobnosti o IP) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/slots # \t\t\t\t(upload sloty) \t\t\t\t\t\t\t\n/extraslots # \t\t\t\t(extra sloty pro male soubory) \t\t\t\t\t\n/smallfilesize # \t\t\t\t(maximalni velikost malych souboru) \t\t\t\t\n/ts \t\t\t\t\t(zobrazi datum a cas u zprav v mainchatu) \t\t\t\n/connection \t\t\t\t(zobrazi IP a port prez ktery jste pripojen) \t\t\t\t\n/showjoins \t\t\t\t(zapne/vypne zobrazovani a odpojovani useru v mainchatu) \t\n/showblockedipports \t\t\t(zobrazi zablokovane porty-mozna:)) \t\t\t\t\n/shutdown \t\t\t\t(vypne pocitac po urcitem timeoutu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/dc++ \t\t\t\t\t(zobrazi verzi DC++ v mainchatu) \t\t\t\t\t\n/strongdc++ \t\t\t\t(zobrazi verzi StrongDC++ v mainchatu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/away <msg> \t\t\t\t(zapne/vypne away mod) \t\t\t\t\t\n/winamp \t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/w \t\t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/clear,/c \t\t\t\t(smazat obsah mainchatu) \t\t\t\t\t\n/ignorelist \t\t\t\t(zobrazi ignorelist v mainchatu) \t\t\t\t\t\n";
 
@@ -914,10 +908,8 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 		} else {
 			status = TSTRING(SPECIFY_SEARCH_STRING);
 		}
-	} else if(Util::stricmp(cmd.c_str(), _T("dc++")) == 0) {
-		message = msgs[GET_TICK() % MSGS];
 	} else if(Util::stricmp(cmd.c_str(), _T("strongdc++")) == 0) {
-		message = strgmsgs[GET_TICK() % STRGMSGS];
+		message = msgs[GET_TICK() % MSGS];
 	} else if(Util::stricmp(cmd.c_str(), _T("away")) == 0) {
 		if(Util::getAway() && param.empty()) {
 			Util::setAway(false);

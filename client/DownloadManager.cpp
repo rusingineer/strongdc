@@ -1223,6 +1223,7 @@ void DownloadManager::abortDownload(const string& aTarget) {
 		if(d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
 			d->getUserConnection()->disconnect();
+			d->finished = true;
 		}
 	}
 }
@@ -1234,8 +1235,9 @@ void DownloadManager::abortDownload(const string& aTarget, User::Ptr& aUser) {
 		if(d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
 			if(d->getUserConnection()->getUser() == aUser){
-				d->getUserConnection()->disconnect();	
-						break;
+				d->getUserConnection()->disconnect();
+				d->finished = true;
+				break;
 			}	
 		}
 	}

@@ -19,6 +19,8 @@
 #if !defined(AGEMOTIONSETUP_H__)
 #define AGEMOTIONSETUP_H__
 
+#include "../client/Util.h"
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

@@ -197,7 +197,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 				*lpszParamSep = _T('\0');
 
 				_tcscat( lpszSymbol, lpszParsed );
-				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X,"), *((ULONG*)(stackAddress) + 2 + index) );
+				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08lX,"), *((ULONG*)(stackAddress) + 2 + index) );
 
 				lpszParsed = lpszParamSep + 1;
 			}
@@ -208,7 +208,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 				*lpszParamSep = _T('\0');
 
 				_tcscat( lpszSymbol, lpszParsed );
-				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X)"), *((ULONG*)(stackAddress) + 2 + index) );
+				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08lX)"), *((ULONG*)(stackAddress) + 2 + index) );
 
 				lpszParsed = lpszParamSep + 1;
 			}
@@ -243,7 +243,6 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 	if ( SymGetLineFromAddr( GetCurrentProcess(), address, &dwDisp, &lineInfo ) )
 	{
 	   // Got it. Let's use "sourcefile(linenumber)" format
-
 		PCSTR2LPTSTR( lineInfo.FileName, lpszFileName );
 		_stprintf( lpszSourceInfo, _T("%s(%d)"), lpszFileName, lineInfo.LineNumber );
 		ret = TRUE;
@@ -257,7 +256,7 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 		if ( lpModuleInfo[0] == _T('?') || lpModuleInfo[0] == _T('\0'))
 		   // There is no modulename information. :((
          // Let's use the "address" format
-			_stprintf( lpszSourceInfo, _T("0x%08X"), lpModuleInfo, address );
+			_stprintf( lpszSourceInfo, _T("0x%08X"), address );
 		else
 			_stprintf( lpszSourceInfo, _T("%s!0x%08X"), lpModuleInfo, address );
 
