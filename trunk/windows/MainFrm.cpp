@@ -1157,7 +1157,7 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
-void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const BYTE* buf, int len) throw() {
+void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
 	versionInfo += string((const char*)buf, len);
 }
 
