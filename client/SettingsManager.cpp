@@ -116,6 +116,7 @@ const string SettingsManager::settingTags[] =
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
+	"UrlMagnet",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -255,6 +256,7 @@ SettingsManager::SettingsManager()
 	setDefault(ADC_DEBUG, false);
 	setDefault(TOGGLE_ACTIVE_WINDOW, true);
 	setDefault(SEARCH_HISTORY, 10);
+	setDefault(URL_MAGNET, false);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);

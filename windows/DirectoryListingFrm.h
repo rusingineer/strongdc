@@ -45,6 +45,7 @@ class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame
 {
 public:
 	static void openWindow(const tstring& aFile, const User::Ptr& aUser);
+	static void openWindow(const User::Ptr& aUser, const string& txt);
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
 	typedef UCHandler<DirectoryListingFrame> ucBase;
@@ -58,10 +59,13 @@ public:
 		COLUMN_LAST
 	};
 	
-	DirectoryListingFrame(const tstring& aFile, const User::Ptr& aUser);
+	DirectoryListingFrame(const User::Ptr& aUser);
 	~DirectoryListingFrame() { 
+		dcassert(lists.find(dl->getUser()) != lists.end());
+		lists.erase(dl->getUser());
 		delete dl; 
 	}
+
 
 	DECLARE_FRAME_WND_CLASS(_T("DirectoryListingFrame"), IDR_DIRECTORY)
 
@@ -144,6 +148,12 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void findFile(bool findNext);
 	void runUserCommand(UserCommand& uc);
+	void loadFile(const tstring& name);
+	void loadXML(const string& txt);
+	void refreshTree(const tstring& root);
+
+	HTREEITEM findItem(HTREEITEM ht, const tstring& name);
+	void selectItem(const tstring& name);
 	
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
 		updateStatus();
@@ -219,7 +229,6 @@ private:
 	void changeDir(DirectoryListing::Directory* d, BOOL enableRedraw);
 	HTREEITEM findFile(const StringSearch& str, HTREEITEM root, int &foundFile, int &skipHits);
 	void updateStatus();
-	void GoToDirectory(HTREEITEM hItem, TStringList::iterator& iPath, const TStringList::iterator& iPathEnd);
 
 	class ItemInfo : public FastAlloc<ItemInfo> {
 	public:
@@ -328,8 +337,6 @@ private:
 	tstring error;
 	string size;
 
-	tstring start;
-
 	int skipHits;
 
 	size_t files;
@@ -342,6 +349,11 @@ private:
 	
 	DirectoryListing* dl;
 	
+	typedef HASH_MAP_X(User::Ptr, DirectoryListingFrame*, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
+	typedef UserMap::iterator UserIter;
+	
+	static UserMap lists;
+
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];
 	

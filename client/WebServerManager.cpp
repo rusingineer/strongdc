@@ -490,6 +490,7 @@ int WebServerSocket::run(){
 			}
 
 			header = header.substr(start+4,end);
+			bool check = false;
 			dcdebug(header.c_str());
 			if((start = header.find("?")) != string::npos) {
 				string arguments = header.substr(start+1);
@@ -502,16 +503,23 @@ int WebServerSocket::run(){
 					WebServerManager::getInstance()->search(m["search"], Util::toInt(m["type"]));
 				}
 				if((m["stop"] != Util::emptyString)) {
+					check = m["stop"] == "true";
 					WebServerManager::getInstance()->reset();
+				}
+				if(m["name"] != Util::emptyString) {
+					QueueManager::getInstance()->add(m["name"],Util::toInt64(m["size"]),m["tth"]);
 				}
 			}
 
-			string toSend;
+			string toSend = Util::emptyString;
 		
 			if(!WebServerManager::getInstance()->isloggedin(IP)) {
 				toSend = WebServerManager::getInstance()->getLoginPage();
 			} else {
-				toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header));
+				//if(!check || (WebServerManager::getInstance()->getResults() != Util::emptyString))
+					toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header));
+				/*else
+					break;*/
 			}
 	
 			::send(sock, toSend.c_str(), toSend.size(), 0);
@@ -532,8 +540,8 @@ void WebServerManager::onSearchResult(SearchResult* aResult) {
 			string TTH = (aResult->getTTH() != NULL) ? aResult->getTTH()->toBase32() : Util::emptyString;
 			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
 			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";
-			//results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
-			//results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
+			results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
+			results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
 			results += "<input type='hidden' name='tth' value='" + TTH + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";

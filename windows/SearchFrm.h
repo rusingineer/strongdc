@@ -91,6 +91,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_TTHONLY, onTTHOnly)
 		COMMAND_ID_HANDLER(IDC_COLLAPSED, onCollapsed)		
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
+		COMMAND_ID_HANDLER(IDC_BROWSELIST, onBrowseList)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchByTTH)
 		COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
@@ -171,6 +172,8 @@ public:
 	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void runUserCommand(UserCommand& uc);
@@ -226,8 +229,6 @@ public:
 		ctrlResults.forEachSelected(&SearchInfo::view);
 		return 0;
 	}
-
-	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT onDownloadWhole(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		ctrlResults.forEachSelectedT(SearchInfo::DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
@@ -355,6 +356,8 @@ private:
 		SearchInfo* main;
 
 		void getList();
+		void browseList();
+
 		void view();
 		void GetMP3Info();
 		struct Download {
@@ -489,10 +492,10 @@ private:
 		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
 				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-					fileName = Text::toT(sr->getFile());
+					fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 				} else {
-					fileName = Text::toT(Util::getFileName(sr->getFile()));
-					path = Text::toT(Util::getFilePath(sr->getFile()));
+					fileName = Text::toT(Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
+					path = Text::toT(Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
 				}
 
 				type = Text::toT(Util::getFileExt(Text::fromT(fileName)));
@@ -501,8 +504,8 @@ private:
 				size = Text::toT(Util::formatBytes(sr->getSize()));
 				exactSize = Text::toT(Util::formatExactSize(sr->getSize()));
 			} else {
-				fileName = Text::toT(sr->getFileName());
-				path = Text::toT(sr->getFile());
+				fileName = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
+				path = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 				type = TSTRING(DIRECTORY);
 			}
 			nick = Text::toT(sr->getUser()->getNick());
@@ -592,7 +595,8 @@ private:
 		HUB_CHANGED,
 		HUB_REMOVED,
 		QUEUE_STATS,
-		SEARCH_START
+		SEARCH_START,
+		RESORT
 	};
 
 	tstring initialString;
@@ -691,6 +695,7 @@ private:
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
+	virtual void on(SearchManagerListener::Resort) throw();
 
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 

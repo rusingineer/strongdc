@@ -57,12 +57,13 @@ public:
 		FLAG_ANTI_FRAG = 0x40,
 		FLAG_UTF8 = 0x80,
 		FLAG_TREE_DOWNLOAD = 0x100,
-		FLAG_TREE_TRIED = 0x200,		
-		FLAG_TESTSUR = 0x400,
-		FLAG_MP3_INFO = 0x800,
-		FLAG_CHECK_FILE_LIST = 0x1000,
-		FLAG_MULTI_CHUNK = 0x2000,
-		FLAG_CHUNK_TRANSFER = 0x4000
+		FLAG_TREE_TRIED = 0x200,
+		FLAG_PARTIAL_LIST = 0x400,
+		FLAG_TESTSUR = 0x800,
+		FLAG_MP3_INFO = 0x1000,
+		FLAG_CHECK_FILE_LIST = 0x2000,
+		FLAG_MULTI_CHUNK = 0x4000,
+		FLAG_CHUNK_TRANSFER = 0x8000
 	};
 
 	Download() throw();
@@ -81,7 +82,7 @@ public:
 		} else {
 			return getTarget();
 		}
-	};
+	}
 
 	int64_t getQueueTotal();
 	
@@ -92,10 +93,8 @@ public:
 	}
 
 	/** @internal */
-	TigerTree& getTigerTree() {
-		return tt;
-	}
-
+	TigerTree& getTigerTree() { return tt; }
+	string& getPFS() { return pfs; }
 	/** @internal */
 	AdcCommand getCommand(bool zlib, bool tthf);
 
@@ -118,6 +117,7 @@ private:
 	Download& operator=(const Download&);
 
 	TigerTree tt;
+	string pfs;
 };
 
 

@@ -111,6 +111,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			usersMenu.InsertSeparatorFirst(x);
 
 		ctrlUsers.ClientToScreen(&pt);
+		checkAdcItems(usersMenu);
 		usersMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 		if (!x.empty())

@@ -493,10 +493,15 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 	} else if(wParam == CHECK_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
 		if(Util::fileExists(Text::fromT(i->file))) {
-			checkFileList(Text::fromT(i->file), i->user);
+			checkFileList(i->file, i->user);
+			i->user->updated();
 		}
 		delete i;
-	} else if(wParam == VIEW_FILE_AND_DELETE) {
+	} else if(wParam == BROWSE_LISTING) {
+		DirectoryBrowseInfo* i = (DirectoryBrowseInfo*)lParam;
+		DirectoryListingFrame::openWindow(i->user, i->text);
+		delete i;
+	}  else if(wParam == VIEW_FILE_AND_DELETE) {
 		tstring* file = (tstring*)lParam;
 		TextFrame::openWindow(*file);
 		File::deleteFile(Text::fromT(*file));
@@ -719,7 +724,8 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			WinUtil::registerDchubHandler();
 			WinUtil::registerADChubHandler();
 		}
-		WinUtil::registerMagnetHandler();
+		if(BOOLSETTING(URL_MAGNET))
+			WinUtil::registerMagnetHandler();
 		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
 		else ctrlToolbar.CheckButton(IDC_LIMITER, false);
 
@@ -1378,6 +1384,10 @@ void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const
 	versionInfo += string((const char*)buf, len);
 }
 
+void MainFrame::on(PartialList, const User::Ptr& aUser, const string& text) throw() {
+	PostMessage(WM_SPEAKER, BROWSE_LISTING, (LPARAM)new DirectoryBrowseInfo(aUser, text));
+}
+
 void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -1429,7 +1439,7 @@ LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
 	return 0;
 }
 
-void MainFrame::checkFileList(string file, User::Ptr u) {
+void MainFrame::checkFileList(tstring file, User::Ptr u) {
 	if(u) {
 		Client* c = u->getClient();
 		if(c) {
@@ -1440,7 +1450,7 @@ void MainFrame::checkFileList(string file, User::Ptr u) {
 			}
 			DirectoryListing* dl = new DirectoryListing(u);
 			try {
-				dl->loadFile(file);
+				dl->loadFile(Text::fromT(file));
 			} catch(...) {
 				delete dl;
 				return;

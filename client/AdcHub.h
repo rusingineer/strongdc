@@ -18,6 +18,7 @@
 
 #include "Client.h"
 #include "AdcCommand.h"
+#include "User.h"
 
 class ClientManager;
 
@@ -30,15 +31,12 @@ public:
 	
 	virtual void hubMessage(const string& aMessage);
 	virtual void privateMessage(const User* user, const string& aMessage);
-	virtual void kick(const User* user, const string& aMessage);
-	virtual void ban(const User* user, const string& aMessage, time_t aSeconds);
 	virtual void sendRaw(const string& aRaw) { send(aRaw); }
 	virtual void send(const string& aMessage) { socket->write(aMessage); };
 	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
-	virtual void redirect(const User* user, const string& aHub, const string& aMessage);
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString);
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& pwd);
-	virtual void info(bool alwaysSend);
+	virtual void info();
 	virtual void sendMeMessage(const string& aMessage);
 
 	virtual void cheatMessage(const string&) { } 
@@ -56,6 +54,7 @@ public:
 	}
 
 	void send(const AdcCommand& cmd) { socket->write(cmd.toString(false)); };
+	void sendUDP(const AdcCommand& cmd);
 
 	void handle(AdcCommand::SUP, AdcCommand& c) throw();
 	void handle(AdcCommand::MSG, AdcCommand& c) throw();
@@ -64,6 +63,8 @@ public:
 	void handle(AdcCommand::QUI, AdcCommand& c) throw();
 	void handle(AdcCommand::CTM, AdcCommand& c) throw();
 	void handle(AdcCommand::RCM, AdcCommand& c) throw();
+	void handle(AdcCommand::STA, AdcCommand& c) throw();
+	void handle(AdcCommand::SCH, AdcCommand& c) throw();
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
 	void refreshUserList(bool unknownOnly /* = false */) { }
@@ -82,10 +83,12 @@ private:
 
 	AdcHub(const AdcHub&);
 	AdcHub& operator=(const AdcHub&);
-	virtual ~AdcHub() throw() { }
+	virtual ~AdcHub() throw();
 	User::NickMap nickMap;
+	User::CIDMap cidMap;
 	User::Ptr hub;
 	StringMap lastInfoMap;
+	CriticalSection cs;
 
 	string salt;
 
@@ -93,6 +96,8 @@ private:
 	 
 	virtual string checkNick(const string& nick);
 	virtual string getHubURL();
+
+	void clearUsers();
 
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
 	virtual void on(Connected) throw();

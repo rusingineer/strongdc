@@ -28,6 +28,7 @@ STANDARD_EXCEPTION(FileException);
  */
 class OutputStream {
 public:
+	OutputStream() { }
 	virtual ~OutputStream() throw() { }
 	
 	/**
@@ -46,11 +47,13 @@ public:
 
 	size_t write(const string& str) throw(Exception) { return write(str.c_str(), str.size()); };
 private:
+	OutputStream(const OutputStream&);
 	OutputStream& operator=(const OutputStream&);
 };
 
 class InputStream {
 public:
+	InputStream() { }
 	virtual ~InputStream() throw() { }
 	/**
 	 * Call this function until it returns 0 to get all bytes.
@@ -58,6 +61,9 @@ public:
 	 *		   actually read from the stream source in this call.
 	 */
 	virtual size_t read(void* buf, size_t& len) throw(Exception) = 0;
+private:
+	InputStream(const InputStream&);
+	InputStream& operator=(const InputStream&);
 };
 
 class MemoryInputStream : public InputStream {
@@ -167,6 +173,7 @@ private:
 
 class StringOutputStream : public OutputStream {
 public:
+	StringOutputStream(string& out) : str(out) { }
 	virtual ~StringOutputStream() throw() { }
 	using OutputStream::write;
 
@@ -175,9 +182,8 @@ public:
 		str.append((char*)buf, len);
 		return len;
 	}
-	const string& getString() { return str; }
 private:
-	string str;
+	string& str;
 };
 
 

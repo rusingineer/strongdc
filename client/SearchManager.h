@@ -52,6 +52,7 @@ public:
 	typedef List::iterator Iter;
 	
 	SearchResult(Client* aClient, Types aType, int64_t aSize, const string& name, const TTHValue* aTTH, bool aUtf8);
+	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue* aTTH);
 
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
@@ -83,10 +84,6 @@ public:
 	int getFreeSlots() const { return freeSlots; }
 	const string& getIP() const { return IP; }
 	TTHValue* getTTH() const { return tth; }
-	
-	//should always return false for nmdc results and true for adc results
-	//this has nothing to do with how the filename is encoded, filenames
-	//are always utf8
 	bool getUtf8() const { return utf8; }
 
 	void incRef() { Thread::safeInc(ref); }
@@ -125,13 +122,14 @@ private:
 class SearchQueueItem {
 public:
 	SearchQueueItem() { }
-	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch) : 
-	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch) { }
-	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch) : 
-	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch) { }
+	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch, const string& aToken) : 
+	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch), token(aToken) { }
+	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch, const string& aToken) : 
+	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch), token(aToken) { }
 
 	GETSET(string, target, Target);
 	GETSET(tstring, search, Search);
+	GETSET(string, token, Token);
 	GETSET(int64_t, size, Size);
 	GETSET(int, typeMode, TypeMode);
 	GETSET(int, sizeMode, SizeMode);
@@ -168,17 +166,18 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T(""));
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T("")) {
-		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aWindow, aSearch);
+	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T(""));
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T("")) {
+		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
 	}
 
-	void search(StringList& who, const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T(""));
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T("")) {
-		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aWindow, aSearch);
+	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T(""));
+	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T("")) {
+		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
  	}
-
 	static string clean(const string& aSearchString);
+
+	void respond(const AdcCommand& cmd);
 
 	short getPort()
 	{
@@ -225,7 +224,6 @@ private:
 
 	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
 	void onData(const u_int8_t* buf, size_t aLen, const string& address);
-	void onNMDCData(const u_int8_t* buf, size_t aLen, const string& address);
 	SearchQueueItemList searchQueue;
 	u_int32_t lastSearch;
 

@@ -60,31 +60,33 @@ string Util::appPath;
 
 static void sgenrand(unsigned long seed);
 
-int arrayutf[96] = {-61, -127, -60, -116, -60, -114, -61, -119, -60, -102, -61, -115, -60, -67, -59, -121, -61, -109, -59, -104, -59, -96, -59, -92, -61, -102, -59, -82, -61, -99, -59, -67, -61, -95, -60, -115, -60, -113, -61, -87, -60, -101, -61, -83, -60, -66, -59, -120, -61, -77, -59, -103, -59, -95, -59, -91, -61, -70, -59, -81, -61, -67, -59, -66, -61, -124, -61, -117, -61, -106, -61, -100, -61, -92, -61, -85, -61, -74, -61, -68, -61, -76, -61, -108, -60, -71, -60, -70, -60, -67, -60, -66, -59, -108, -59, -107}; 
-int arraywin[48] = {65, 67, 68, 69, 69, 73, 76, 78, 79, 82, 83, 84, 85, 85, 89, 90, 97, 99, 100, 101, 101, 105, 108, 110, 111, 114, 115, 116, 117, 117, 121, 122, 65, 69, 79, 85, 97, 101, 111, 117, 111, 111, 76, 108, 76, 108, 82, 114}; 
+int arrayutf[96] = {-61, -127, -60, -116, -60, -114, -61, -119, -60, -102, -61, -115, -60, -67, -59, -121, -61, -109, -59, -104, -59, -96, -59, -92, -61, -102, -59, -82, -61, -99, -59, -67, -61, -95, -60, -115, -60, -113, -61, -87, -60, -101, -61, -83, -60, -66, -59, -120, -61, -77, -59, -103, -59, -95, -59, -91, -61, -70, -59, -81, -61, -67, -59, -66, -61, -124, -61, -117, -61, -106, -61, -100, -61, -92, -61, -85, -61, -74, -61, -68, -61, -76, -61, -108, -60, -71, -60, -70, -60, -67, -60, -66, -59, -108, -59, -107};
+int arraywin[48] = {65, 67, 68, 69, 69, 73, 76, 78, 79, 82, 83, 84, 85, 85, 89, 90, 97, 99, 100, 101, 101, 105, 108, 110, 111, 114, 115, 116, 117, 117, 121, 122, 65, 69, 79, 85, 97, 101, 111, 117, 111, 111, 76, 108, 76, 108, 82, 114};
 
-string Util::disableCzChars(string message) { 
-   string s = ""; 
+string Util::disableCzChars(string message) {
+	string s = "";
 
-   for(int j = 0; j < message.length(); j++) { 
-      int zn = (int)message[j]; 
-      int zzz = -1; 
-      for(int l = 0; l < 96; l+=2) { 
-         int zn2 = (int)message[j+1]; 
-         if ((zn == arrayutf[l])&&(zn2 == arrayutf[l+1])) { 
-            zzz = (int)(l/2); 
-            break; 
-         } 
-      } 
-      if (zzz >= 0) { 
-         s += (char)(arraywin[zzz]); 
-      } else { 
-         s += message[j]; 
-      } 
-   } 
+	for(int j = 0; j < message.length(); j++) {
+		int zn = (int)message[j];
+		int zzz = -1;
+		for(int l = 0; l < 96; l+=2) {
+			int zn2 = (int)message[j+1];
+			if ((zn == arrayutf[l])&&(zn2 == arrayutf[l+1])) {
+				zzz = (int)(l/2);
+				break;
+			}
+		}
+		if (zzz >= 0) {
+			s += (char)(arraywin[zzz]);
+			j++;
+		} else {
+			s += message[j];
+		}
+	}
 
-   return s; 
+	return s;
 }
+
 
 bool nlfound = false;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
@@ -178,8 +180,10 @@ int Util::getNetLimiterLimit() {
 						NetLimiter_UploadLimit = -1;
 						NetLimiter_UploadOn = 0;
 					}
+				} else {
+					NetLimiter_UploadLimit = -1;
+					NetLimiter_UploadOn = 0;
 				}
-
 				delete[] w1;
 				break;
 			}

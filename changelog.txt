@@ -15,7 +15,7 @@
 * pøidána volba pro vypnutí segmentového stahování a použití standardního zpùsobu s rollbackem
 * pøidána volba pro zobrazení informací o segmentu na progressbarech
 * pøidáno více barev do seznamu uživatelù (CZDC++)
-* mùžete použít %[downloaddrive] v cestì Doèasného adresáøe (napø. "%[targetdrive]\Temp\DCdownloads\") (BCDC++)
+* mùžete použít %[targetdrive] v cestì Doèasného adresáøe (napø. "%[targetdrive]\Temp\DCdownloads\") (BCDC++)
 * stahovací sloty neplatí pro seznamy souborù
 * opraveno øazení ve frontì èekatelù na slot
 * snad opraven problém s odstraòováním uživatelù z fronty

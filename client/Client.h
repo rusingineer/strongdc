@@ -28,6 +28,7 @@
 #include "SettingsManager.h"
 
 class Client;
+class AdcCommand;
 
 class ClientListener  
 {
@@ -51,7 +52,8 @@ public:
 	typedef X<15> NickTaken;
 	typedef X<16> SearchFlood;
 	typedef X<17> NmdcSearch;
-	typedef X<18> CheatMessage;
+	typedef X<18> AdcSearch;
+	typedef X<19> CheatMessage;
 
 	virtual void on(Connecting, Client*) throw() { }
 	virtual void on(Connected, Client*) throw() { }
@@ -70,6 +72,7 @@ public:
 	virtual void on(NickTaken, Client*) throw() { }
 	virtual void on(SearchFlood, Client*, const string&) throw() { }
 	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&) throw() { }
+	virtual void on(AdcSearch, Client*, const AdcCommand&) throw() { }
 	virtual void on(CheatMessage, Client*, const string&) throw() { }
 };
 
@@ -86,14 +89,11 @@ public:
 	virtual void connect(const User* user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
 	virtual void privateMessage(const User* user, const string& aMessage) = 0;
-	virtual void kick(const User* user, const string& aMessage) = 0;
-	virtual void ban(const User* user, const string& aMessage, time_t seconds) = 0;
 	virtual void send(const string& aMessage) = 0;
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
-	virtual void redirect(const User* user, const string& aHub, const string& aMessage) = 0;
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) = 0;
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
 	virtual void password(const string& pwd) = 0;
-	virtual void info(bool alwaysSend) = 0;
+	virtual void info() = 0;
 	virtual void sendMeMessage(const string& aMessage) = 0;
 	virtual void sendRaw(const string& aRaw) = 0;
 	virtual void cheatMessage(const string& aLine) = 0;

@@ -145,7 +145,7 @@ public:
 		addTask(SEND_FILE);
 	}
 
-	GETSET(char, separator, Separator);
+	GETSET(char, separator, Separator)
 private:
 	BufferedSocket(char aSeparator = 0x0a) throw(SocketException);
 

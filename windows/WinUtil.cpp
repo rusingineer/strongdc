@@ -69,6 +69,7 @@ CImageList WinUtil::fileImages;
 CImageList WinUtil::userImages;
 CImageList WinUtil::flagImages;
 int WinUtil::dirIconIndex = 0;
+int WinUtil::dirMaskedIndex = 0;
 TStringList WinUtil::lastDirs;
 HWND WinUtil::mainWnd = NULL;
 HWND WinUtil::mdiClient = NULL;
@@ -266,6 +267,14 @@ void UserInfoBase::getList() {
 	} catch(const Exception&) {
 	}
 }
+void UserInfoBase::browseList() {
+	if(user->getCID().isZero())
+		return;
+	try {
+		QueueManager::getInstance()->addPfs(user, "");
+	} catch(const Exception&) {
+	}
+}
 void UserInfoBase::checkList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
@@ -422,18 +431,27 @@ void WinUtil::init(HWND hWnd) {
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)help, CTSTRING(MENU_HELP));
 
+/** @todo fix this so that the system icon is used for dirs as well (we need
+			  to mask it so that incomplete folders appear correct */
+#if 0	
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
 		memset(&fi, 0, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
 		::SHGetFileInfo(_T(""), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
+		fileImages.AddIcon(ic);
 		::DestroyIcon(fi.hIcon);
-		dirIconIndex = fileImageCount++;	
 	} else {
 		fileImages.CreateFromImage(IDB_FOLDERS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-		dirIconIndex = 0;
 	}
+#endif
+
+	fileImages.CreateFromImage(IDB_FOLDERS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	dirIconIndex = fileImageCount++;
+	dirMaskedIndex = fileImageCount++;
+
+	fileImageCount++;
 
 	flagImages.CreateFromImage(IDB_FLAGS, 25, 8, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 
@@ -473,7 +491,8 @@ void WinUtil::init(HWND hWnd) {
 		registerDchubHandler();
 		registerADChubHandler();
 	}
-	registerMagnetHandler();
+	if(BOOLSETTING(URL_MAGNET))
+		registerMagnetHandler();
 
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
@@ -1003,7 +1022,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 		if(param.empty()) {
 			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else {
-			WinUtil::openLink(_T("http://www.csfd.cz/index.php?action=hledat&hledej=") + Text::toT(Util::encodeURI(Text::fromT(param))));
+			WinUtil::openLink(_T("http://www.csfd.cz/search.php?search=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 		}
 	} else {
 		return false;
@@ -1154,9 +1173,9 @@ void WinUtil::registerMagnetHandler() {
 	}
 	// magnet-handler specific code
 	// clean out the DC++ tree first
-	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++"));
+	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\StrongDC++"));
 	// add DC++ to magnet-handler's list of applications
-	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++"), &hk);
+	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\StrongDC++"), &hk);
 	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_ROOT), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_ROOT).size()+1));
 	::RegSetValueEx(hk, _T("Description"), NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_DESC), sizeof(TCHAR) * (STRING(MAGNET_HANDLER_DESC).size()+1));
 	// set ShellExecute

@@ -72,6 +72,10 @@ public:
 		Start();
 	}
 
+	string getResults() {
+		return results;
+	}
+
 private:
 	friend Singleton<WebServerManager>;
 	WebServerManager(void);
@@ -145,7 +149,7 @@ public:
 				search_str = "TTH:" + search_str;
 			}
 			SearchManager::getInstance()->addListener(this);
-			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE);
+			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, "manual");
 			results = Util::emptyString;
 			row = 0;
 			sended_search = true;

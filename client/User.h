@@ -83,8 +83,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); };
 	};
 
-	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
-	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
+	User(const CID& aCID) : cid(aCID), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
+	User(const string& aNick) throw() : nick(aNick), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
 			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1), hasTestSURinQueue(false), cid(NULL) {
 		unCacheClientInfo();
 		unsetFlag(User::OP);
@@ -149,7 +149,6 @@ public:
 	GETSET(string, version, Version);
 	GETSET(string, mode, Mode);
 	GETSET(string, hubs, Hubs);
-	GETSET(string, slots, Slots);
 	GETSET(string, upload, Upload);
 	GETSET(string, lastHubAddress, LastHubAddress);
 	GETSET(string, lastHubName, LastHubName);
@@ -168,6 +167,8 @@ public:
 	GETSET(int64_t, downloadSpeed, DownloadSpeed);
 	GETSET(int64_t, fileListSize, FileListSize);
 	GETSET(int64_t, bytesShared, BytesShared);
+	GETSET(int, slots, Slots);
+	GETSET(short, udpPort, UDPPort);
 	GETSET(int64_t, realBytesShared, RealBytesShared);
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
 	GETSET(int64_t, listLength, ListLength);
@@ -211,7 +212,6 @@ public:
 		version = Util::emptyString;
 		mode = Util::emptyString;
 		hubs = Util::emptyString;
-		slots = Util::emptyString;
 		upload = Util::emptyString;
 		ip = Util::emptyString;
 		supports = Util::emptyString;

@@ -32,8 +32,10 @@ public:
 
 	typedef X<0> SR;
 	typedef X<1> Searching;
+	typedef X<2> Resort;
 	virtual void on(SR, SearchResult*) throw() = 0;
 	virtual void on(Searching, SearchQueueItem*) throw() { };
+	virtual void on(Resort) throw() { };
 };
 
 #endif

@@ -151,11 +151,11 @@ private:
 };
 
 template <class T>
-bool operator==(T* lhs, const Pointer<T>& rhs) { return rhs == lhs; };
+bool operator==(T* lhs, const Pointer<T>& rhs) { return rhs == lhs; }
 template <class T>
-bool operator<(T* lhs, const Pointer<T>& rhs) { return rhs > lhs; };
+bool operator<(T* lhs, const Pointer<T>& rhs) { return rhs > lhs; }
 template <class T>
-bool operator>(T* lhs, const Pointer<T>& rhs) { return rhs < lhs; };
+bool operator>(T* lhs, const Pointer<T>& rhs) { return rhs < lhs; }
 
 template <class T>
 struct DeleteFunction {
