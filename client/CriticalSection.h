@@ -51,8 +51,7 @@ private:
 #else
 public:
 	CriticalSection() throw() {
-		static pthread_mutex_t init = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-		mtx = init;
+		mtx = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 	};
 	~CriticalSection() throw() { pthread_mutex_destroy(&mtx); };
 	void enter() throw() { pthread_mutex_lock(&mtx); };

@@ -39,6 +39,7 @@ ConnectionManager::ConnectionManager() : floodCounter(0), shuttingDown(false) {
 	features.push_back(UserConnection::FEATURE_XML_BZLIST);
 	features.push_back(UserConnection::FEATURE_ADCGET);
 	features.push_back(UserConnection::FEATURE_TTHL);
+	features.push_back(UserConnection::FEATURE_TTHF);
 };
 
 /**
@@ -654,6 +655,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ZLIB_GET);
 		else if(*i == UserConnection::FEATURE_TTHL)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
+		else if(*i == UserConnection::FEATURE_TTHF)
+			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
 	}
 	conn->getUser()->setSupports(sup); 
 }

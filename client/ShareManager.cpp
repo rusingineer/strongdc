@@ -90,18 +90,53 @@ ShareManager::~ShareManager() {
 	}
 }
 
-string ShareManager::translateFileName(const string& aFile) throw(ShareException) {
+string ShareManager::translateFileName(const string& aFile, bool adc, bool utf8) throw(ShareException) {
 	RLock l(cs);
 	if(aFile == "MyList.DcLst") {
 		return getListFile();
 	} else if(aFile == "files.xml.bz2") {
 		return getBZXmlFile();
 	} else {
-		string::size_type i = aFile.find(PATH_SEPARATOR);
+		string file;
+
+		if(adc) {
+			// Check for tth root identifier
+			if(aFile.compare(0, 4, "TTH/") == 0) {
+				TTHValue v(aFile.substr(4));
+				HashFileIter i = tthIndex.find(&v);
+				if(i != tthIndex.end()) {
+					file = i->second->getADCPath();
+				} else {
+					throw ShareException("File Not Available");
+				}
+			} else if(aFile.compare(0, 1, "/") == 0) {
+				if(utf8) {
+					file = Util::toAcp(aFile, file);
+				}
+			} else {
+				throw ShareException("File Not Available");
+			}
+			// Remove initial '/'
+			file.erase(0, 1);
+
+			// Change to NMDC path separators
+			for(string::size_type i = 0; i < file.length(); ++i) {
+				if(file[i] == '/') {
+					file[i] = '\\';
+				}
+			}
+			// Ok, we now should have an adc equivalent name
+		} else if(utf8) {
+			file = Util::toAcp(aFile, file);
+		} else {
+			file = aFile;
+		}
+
+		string::size_type i = file.find('\\');
 		if(i == string::npos)
 			throw ShareException("File Not Available");
 		
-		string aDir = aFile.substr(0, i);
+		string aDir = file.substr(0, i);
 
 		RLock l(cs);
 		StringMapIter j = dirs.find(aDir);
@@ -109,11 +144,11 @@ string ShareManager::translateFileName(const string& aFile) throw(ShareException
 			throw ShareException("File Not Available");
 		}
 		
-		if(!checkFile(j->second, aFile.substr(i + 1))) {
+		if(!checkFile(j->second, file.substr(i + 1))) {
 			throw ShareException("File Not Available");
 		}
 		
-		return j->second + aFile.substr(i);
+		return j->second + file.substr(i);
 	}
 }
 
@@ -399,14 +434,13 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 	hFind = FindFirstFile((aName + "\\*").c_str(), &data);
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
-			string name = data.cFileName;
-			if( aName + PATH_SEPARATOR + name == "C:\\Documents and Settings\\Big Muscle\\Dokumenty\\Visual Studio Projects\\pokus")
-					MessageBox(0,(aName + PATH_SEPARATOR + name).c_str(),"",MB_OK);
-				
+			string name = data.cFileName;			
 			if(name == "." || name == "..")
 				continue;
-			if(name.find('$') != string::npos)
+			if(name.find('$') != string::npos) {
+				LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_FILE) + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
 				continue;
+			}
 			if(!BOOLSETTING(SHARE_HIDDEN) && ((data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (name[0] == '.')) )
 				continue;
 			if(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -448,8 +482,10 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 			if (name == "." || name == "..") {
 				continue;
 			}
-			if(name.find('$') != string::npos)
+			if(name.find('$') != string::npos) {
+				LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_DIRECTORY) + name + " (" + STRING(DIRECTORY) + ": \"" + aName + "\")");
 				continue;
+			}
 			if (name[0] == '.' && !BOOLSETTING(SHARE_HIDDEN)) {
 				continue;
 			}

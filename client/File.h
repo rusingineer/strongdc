@@ -285,6 +285,14 @@ public:
 			throw FileException("Could not open file");
 	}	
 
+	u_int32_t getLastModified() {
+		struct stat s;
+		if (::fstat(h, &s) == -1)
+			return 0;
+
+		return (u_int32_t)s.st_mtime;
+	}
+
 	bool isOpen() { return h != -1; };
 
 	virtual void close() throw(FileException) {

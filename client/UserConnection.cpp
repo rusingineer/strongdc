@@ -30,6 +30,7 @@ const string UserConnection::FEATURE_XML_BZLIST = "XmlBZList";
 const string UserConnection::FEATURE_ADCGET = "ADCGet";
 const string UserConnection::FEATURE_ZLIB_GET = "ZLIG";
 const string UserConnection::FEATURE_TTHL = "TTHL";
+const string UserConnection::FEATURE_TTHF = "TTHF";
 
 const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";

@@ -1309,8 +1309,8 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->speed = 0;
 		i->timeLeft = 0;
 
-		i->file = Util::getFileName(aUpload->getFileName());
-		i->path = Util::getFilePath(aUpload->getFileName());
+		i->file = Util::getFileName(aUpload->getLocalFileName());
+		i->path = Util::getFilePath(aUpload->getLocalFileName());
 		i->statusString = STRING(UPLOAD_STARTING);
 		i->IP = aUpload->getUserConnection()->getRemoteIp();
 		i->country = Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp());

@@ -1228,6 +1228,7 @@ LRESULT SearchFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	if (item->ptAction.x < rect.left)
 	{
 		SearchInfo* i = (SearchInfo*)ctrlResults.getItemData(item->iItem);
+		if(i->subItems.size() > 0)
 			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
 	}
 	return 0;

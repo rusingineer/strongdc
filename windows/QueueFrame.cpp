@@ -127,9 +127,9 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeMenu, CSTRING(REMOVE_SOURCE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeAllMenu, CSTRING(REMOVE_FROM_ALL));
-	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
-
+	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	
 	multiMenu.InsertSeparatorFirst(STRING(FILES));	
     multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 
@@ -238,7 +238,7 @@ void QueueFrame::QueueItemInfo::update() {
 		}
 		if(colMask & MASK_SIZE) {
 			display->columns[COLUMN_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatBytes(getSize());
-			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatNumber(getSize());
+			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatExactSize(getSize());
 			}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
@@ -1552,7 +1552,8 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					p  = (qi->getSize() > 0) ? (double)((double)(*(v.begin()))) / ((double)qi->getSize()) : 0;
 					Pright = rc.left + (w * p);
 					Pleft = rc.left;
-					::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+					if(Pright >= Pleft)
+						::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
 
 					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
 						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
@@ -1569,7 +1570,8 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 							Pleft = rc.left + (w * p);
 							p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
 							Pright = rc.left + (w * p);
-							::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+							if(Pright >= Pleft)
+								::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
 							if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
 								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
 	
@@ -1585,7 +1587,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					p  = (qi->getSize() > 0) ? (double)((double)(*(v.end()-1))) / ((double)qi->getSize()) : 0;
 					Pright = rc.left + w;
 					Pleft = rc.left + (w * p);
-					::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+
+					if(Pright >= Pleft)
+						::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
 
 					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
 						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));

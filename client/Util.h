@@ -321,6 +321,7 @@ public:
 	
 	static string formatBytes(int64_t aBytes);
 
+	static string formatExactSize(int64_t aBytes);
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
 		char buf[64];
 #ifdef _WIN32

@@ -34,6 +34,8 @@
 #include "TraceManager.h"
 #include "Client.h"
 
+#include <limits>
+
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
@@ -188,7 +190,10 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	Download* d = aConn->getDownload();
 
+	bool firstTry = false;
 	if(d == NULL) {
+		firstTry = true;
+
 	bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= SETTING(DOWNLOAD_SLOTS));
 	bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
 	if( slotsFull || speedFull ) {
@@ -221,7 +226,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		aConn->setDownload(d);
 		}
 
-	if(!d->getTreeValid() && 
+	if(firstTry && !d->getTreeValid() && 
 		!d->isSet(Download::FLAG_USER_LIST) && d->getTTH() != NULL)
 	{
 			if(HashManager::getInstance()->getTree(d->getTarget(), d->getTigerTree())) {
@@ -240,8 +245,10 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				aConn->setDownload(tthd);
 
 				aConn->setState(UserConnection::STATE_TREE);
-			aConn->send(tthd->getCommand(false));
-
+			// Hack to get by TTH if possible
+			tthd->setTTH(d->getTTH());
+			aConn->send(tthd->getCommand(false, aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF)));
+			tthd->setTTH(NULL);
 				return;
 			}
 		}
@@ -287,7 +294,10 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		}
 
 	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && d->isSet(Download::FLAG_UTF8)) {
-		aConn->send(d->getCommand(aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET)));
+		aConn->send(d->getCommand(
+			aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET),
+			aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF)
+			));
 	} else {
 		if(BOOLSETTING(COMPRESS_TRANSFERS) && aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) && d->getSize() != -1  && !aConn->getUser()->isSet(User::FORCEZOFF)) {
 			// This one, we'll download with a zblock download instead...
@@ -492,7 +502,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	if(d->getPos() >= d->getSize()) {
 		// Already finished?
 		aSource->setDownload(NULL);
-		removeDownload(d, true);
+		removeDownload(d, true, true);
 		removeConnection(aSource);
 		return false;
 	}
@@ -523,14 +533,14 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		delete file;
 		fire(DownloadManagerListener::Failed(), d, STRING(COULD_NOT_OPEN_TARGET_FILE) + e.getError());
 		aSource->setDownload(NULL);
-		removeDownload(d);
+		removeDownload(d, true);
 		removeConnection(aSource);
 		return false;
 	} catch(const Exception& e) {
 		delete file;
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 		aSource->setDownload(NULL);
-		removeDownload(d);
+		removeDownload(d, true);
 		removeConnection(aSource);
 		return false;
 	}
@@ -554,8 +564,19 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
-	if(d->getPos() == 0 && d->getTreeValid()) {
+	if(d->getPos() == 0) {
+		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
+			// We make a single node tree...
+			d->getTigerTree().setFileSize(d->getSize());
+			d->getTigerTree().setBlockSize((size_t)d->getSize());
+
+			d->getTigerTree().getLeaves().push_back(*d->getTTH());
+			d->getTigerTree().calcRoot();
+			d->setTreeValid(true);
+		}
+		if(d->getTreeValid()) {
 		d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile()));
+	}
 	}
 
 	if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
@@ -581,7 +602,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 //			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			d->getFile()->flush();
 			aSource->setDownload(NULL);
-			removeDownload(d);
+			removeDownload(d, true);
 			removeConnection(aSource, false, true);
 			return;
 
@@ -598,7 +619,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 		//d->resetPos();
 		aSource->setDownload(NULL);
-		removeDownload(d);
+		removeDownload(d, true);
 		removeConnection(aSource);
 		return;
 	} catch(const Exception& e) {
@@ -606,7 +627,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		// Nuke the bytes we have written, this is probably a compression error
 		//d->resetPos();
 		aSource->setDownload(NULL);
-		removeDownload(d);
+		removeDownload(d, true);
 		removeConnection(aSource);
 		return;
 	}
@@ -644,7 +665,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			string target = old->getTarget();
 
 			aSource->setDownload(NULL);
-			removeDownload(old);
+			removeDownload(old, true);
 
 			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_BAD_TREE, false);
 			checkDownloads(aSource, true);
@@ -692,7 +713,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 		
 		aSource->setDownload(NULL);
-		removeDownload(d);
+		removeDownload(d, true);
 		removeConnection(aSource, false);
 		return;
 	}
@@ -745,7 +766,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				v.push_back(d->getSize());
 				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
-				removeDownload(d);				
+				removeDownload(d, true);				
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
 
 				aSource->setDownload(old);
@@ -815,8 +836,8 @@ noCRC:
 			v.push_back(d->getSize());
 			new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
-			removeDownload(d);
-			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+			removeDownload(d, true);
+			//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 
 			aSource->setDownload(old);
 			checkDownloads(aSource, true);
@@ -848,7 +869,7 @@ noCRC:
 	fire(DownloadManagerListener::Complete(), d);
 
 	aSource->setDownload(NULL);
-	removeDownload(d, true);	
+	removeDownload(d, true, true);	
 	checkDownloads(aSource, true);
 }
 
@@ -871,7 +892,7 @@ void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSour
 				user->setHasTestSURinQueue(false);
 				user->updateClientType();
 				aSource->setDownload(NULL);
-				removeDownload(d, true);
+				removeDownload(d, true, true);
 				removeConnection(aSource);
 				user->setCheatingString(Util::validateMessage("No slots for TestSUR. User is using slotlocker.", false));
 				user->setFakeSharing(true);
@@ -881,7 +902,7 @@ void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSour
 			}
 
 	aSource->setDownload(NULL);
-	removeDownload(d);
+	removeDownload(d, true);
 	removeConnection(aSource);
 }
 
@@ -902,7 +923,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 		user->setHasTestSURinQueue(false);
 		user->updateClientType();
 		aSource->setDownload(NULL);
-		removeDownload(d, true);
+		removeDownload(d, true, true);
 		removeConnection(aSource);
 		return;
 	}
@@ -910,7 +931,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 
 	string target = d->getTarget();
 	aSource->setDownload(NULL);
-	removeDownload(d);
+	removeDownload(d, true);
 	
 	if(aError.find("File Not Available") != string::npos) {
 		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_FILE_NOT_AVAILABLE, false);
@@ -919,7 +940,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	removeConnection(aSource);
 }
 
-void DownloadManager::removeDownload(Download* d, bool finished /* = false */) {
+void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
 	if(d->getOldDownload() != NULL) {
 		if(d->getFile()) {
 			try {
@@ -939,11 +960,17 @@ void DownloadManager::removeDownload(Download* d, bool finished /* = false */) {
 
 		Download* old = d;
 		d = d->getOldDownload();
+		if(!full) {
 		old->getUserConnection()->setDownload(d);
+		}
+
 		old->setUserConnection(NULL);
 		delete old;
-	}
 
+		if(!full) {
+			return;
+		}
+	}
 
 	if(d->getFile()) {
 		try {
@@ -1039,7 +1066,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 		user->setHasTestSURinQueue(false);
 		user->updateClientType();
 		aSource->setDownload(NULL);
-		removeDownload(d, true);
+		removeDownload(d, false, true);
 		removeConnection(aSource);
 		return;
 	}
@@ -1048,7 +1075,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 	aSource->setDownload(NULL);
 
 	QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), QueueItem::Source::FLAG_FILE_NOT_AVAILABLE, false);
-	removeDownload(d, false);
+	removeDownload(d, false, false);
 	checkDownloads(aSource, false);
 }
 

@@ -76,7 +76,7 @@ UploadManager::~UploadManager() throw() {
 	}
 }
 
-bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t aBytes) {
+bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t aBytes, bool adc, bool utf8) {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM:prepFile Wrong state, ignoring\n");
 		return false;
@@ -94,7 +94,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	string file;
 
 	try {
-		file = ShareManager::getInstance()->translateFileName(aFile);
+		file = ShareManager::getInstance()->translateFileName(aFile, adc, utf8);
 	} catch(const ShareException&) {
 		aSource->fileNotAvail();
 		return false;
@@ -219,7 +219,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 }
 
 void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
-	if(prepareFile(aSource, "file", aFile, aResume, -1)) {
+	if(prepareFile(aSource, "file", aFile, aResume, -1, false, false)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
 	}
@@ -227,7 +227,7 @@ void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, con
 
 void UploadManager::onGetBlock(UserConnection* aSource, const string& aFile, int64_t aStartPos, int64_t aBytes, bool z) {
 	if(!z || BOOLSETTING(COMPRESS_TRANSFERS)) {
-		if(prepareFile(aSource, "file", aFile, aStartPos, aBytes)) {
+		if(prepareFile(aSource, "file", aFile, aStartPos, aBytes, false, false)) {
 			Upload* u = aSource->getUpload();
 			dcassert(u != NULL);
 			if(aBytes == -1)
@@ -380,7 +380,7 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 	const string& type = c.getParam(0);
 	string tmp;
 
-	if(prepareFile(aSource, type, Util::toNmdcFile(Util::toAcp(fname, tmp)), aStartPos, aBytes)) {
+	if(prepareFile(aSource, type, fname, aStartPos, aBytes, true, true)) {
 		Upload* u = aSource->getUpload();
 		dcassert(u != NULL);
 		if(aBytes == -1)

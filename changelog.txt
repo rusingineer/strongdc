@@ -26,6 +26,7 @@
 * komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
 * pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
 * pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
+* synchronizace s DC++ 0.403
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

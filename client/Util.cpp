@@ -299,6 +299,34 @@ string Util::formatBytes(int64_t aBytes) {
 	return buf;
 }
 
+string Util::formatExactSize(int64_t aBytes) {
+	char buf[64];
+#ifdef _WIN32
+		char number[64];
+		NUMBERFMT nf;
+		sprintf(number, "%I64d", aBytes);
+		char Dummy[16];
+    
+		/*No need to read these values from the system because they are not
+		used to format the exact size*/
+		nf.NumDigits = 0;
+		nf.LeadingZero = 0;
+		nf.NegativeOrder = 0;
+		nf.lpDecimalSep = ",";
+
+		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
+		nf.Grouping = atoi(Dummy);
+		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
+		nf.lpThousandSep = Dummy;
+
+		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
+#else
+		sprintf(buf, "%lld", aNumber);
+#endif
+		sprintf(buf, "%s %s", buf, CSTRING(B));
+		return buf;
+}
+
 string Util::getLocalIp() {
 	string tmp;
 	
@@ -327,20 +355,18 @@ string Util::getLocalIp() {
 }
 
 bool Util::isPrivateIp(string const& ip) {
-#ifdef _WIN32
-	unsigned long in = inet_addr(ip.c_str());
-	unsigned char* p = (unsigned char*)&in;
-	if( p[0] == 10 ||
-		p[0] == 127 ||
-		(p[0] == 172 && (p[1] >= 16 && p[1] < 32)) ||
-		(p[0] == 192 && p[1] == 168)
-	) {
-		return true;
+	struct in_addr addr;
+
+	addr.s_addr = inet_addr(ip.c_str());
+
+	if (addr.s_addr  != INADDR_NONE) {
+		unsigned long haddr = ntohl(addr.s_addr);
+		return ((haddr & 0xff000000) == 0x0a000000 || // 10.0.0.0/8
+				(haddr & 0xff000000) == 0x7f000000 || // 127.0.0.0/8
+				(haddr & 0xfff00000) == 0xac100000 || // 172.16.0.0/12
+				(haddr & 0xffff0000) == 0xc0a80000);  // 192.168.0.0/16
 	}
 	return false;
-#else
-#warning fixme
-#endif
 }
 
 static void cToUtf8(wchar_t c, string& str) {
@@ -412,7 +438,7 @@ string& Util::toUtf8(string& str) {
 		str.clear();
 		return str;
 	}
-	if(sz < wtmp.length())
+	if(sz < (int)wtmp.length())
 		sz--;
 #endif
 

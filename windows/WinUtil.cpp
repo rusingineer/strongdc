@@ -64,6 +64,7 @@ HWND WinUtil::mainWnd = NULL;
 HWND WinUtil::mdiClient = NULL;
 FlatTabCtrl* WinUtil::tabCtrl = NULL;
 HHOOK WinUtil::hook = NULL;
+string WinUtil::tth;
 bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;

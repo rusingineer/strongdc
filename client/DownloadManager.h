@@ -114,16 +114,21 @@ public:
 		return tt;
 	}
 
-	Command getCommand(bool zlib) {
+	Command getCommand(bool zlib, bool tthf) {
 		Command cmd = Command(Command::GET());
 		if(isSet(FLAG_TREE_DOWNLOAD)) {
 			cmd.addParam("tthl");
 		} else {
 			cmd.addParam("file");
 		}
+		if(tthf && getTTH() != NULL) {
+			cmd.addParam("TTH/" + getTTH()->toBase32());
+		} else {
 		cmd.addParam(Util::toAdcFile(getSource()));
+		}
 		cmd.addParam(Util::toString(getPos()));
-		cmd.addParam(Util::toString(getSize()-getPos()));
+		cmd.addParam(Util::toString(getSize() - getPos()));
+
 		if(zlib && getSize() != -1 && BOOLSETTING(COMPRESS_TRANSFERS)) {
 			setFlag(FLAG_ZDOWNLOAD);
 			cmd.addParam("ZL1");
@@ -258,7 +263,7 @@ private:
 	
 	bool checkRollback(Download* aDownload, const u_int8_t* aBuf, int aLen) throw(FileException);
 	void removeConnection(UserConnection::Ptr aConn, bool reuse = false, bool reconn = false);
-	void removeDownload(Download* aDown, bool finished = false);
+	void removeDownload(Download* aDown, bool full, bool finished = false);
 	
 	friend class Singleton<DownloadManager>;
 	DownloadManager() { 
