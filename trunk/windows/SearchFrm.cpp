@@ -140,6 +140,12 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		ctrlSlots.SetCheck(true);
 		onlyFree = true;
 	}
+
+	if(BOOLSETTING(SEARCH_TTH_ONLY)) {
+		ctrlTTH.SetCheck(true);
+		onlyTTH = true;
+	}
+
 	ctrlShowUI.Create(ctrlStatus.m_hWnd, rcDefault, "+/-", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowUI.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlShowUI.SetCheck(1);

@@ -510,7 +510,7 @@ public:
 	{ 
 		int i = findItem(item); 
 		if(i != -1) DeleteItem(i, memFree); else {
-			delete item;
+			if(memFree) delete item;
 		}
 	}
 
