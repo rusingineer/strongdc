@@ -86,39 +86,6 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 }
 
-LRESULT UsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ctrlUsers.forEachSelected(&UserInfo::remove);
-	return 0;
-}
-
-LRESULT UsersFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlUsers.GetSelectedCount() == 1) {
-		int i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED);
-		UserInfo* ui = ctrlUsers.getItemData(i);
-		dcassert(i != -1);
-	LineDlg dlg;
-		dlg.description = TSTRING(DESCRIPTION);
-		dlg.title = Text::toT(ui->user->getNick());
-		dlg.line = Text::toT(ui->user->getUserDescription());
-		if(dlg.DoModal(m_hWnd)) {
-			ui->user->setUserDescription(Text::fromT(dlg.line));
-			ui->update();
-			ctrlUsers.updateItem(i);
-				HubManager::getInstance()->save();
-			}	
-	}
-	return 0;
-}
-
-LRESULT UsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	NMITEMACTIVATE* l = (NMITEMACTIVATE*)pnmh;
-	if(!startup && l->iItem != -1 && ((l->uNewState & LVIS_STATEIMAGEMASK) != (l->uOldState & LVIS_STATEIMAGEMASK))) {
-		ctrlUsers.getItemData(l->iItem)->user->setAutoExtraSlot(ctrlUsers.GetCheckState(l->iItem) != FALSE);
-		HubManager::getInstance()->save();
- 	}
-  	return 0;
-}
-
 LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	RECT rc;                    // client area of window 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
@@ -154,6 +121,62 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	}
 	
 	return FALSE; 
+}
+	
+void UsersFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
+	RECT rect;
+	GetClientRect(&rect);
+	// position bars and offset their dimensions
+	UpdateBarsPosition(rect, bResizeBars);
+		
+	if(ctrlStatus.IsWindow()) {
+		CRect sr;
+		int w[3];
+		ctrlStatus.GetClientRect(sr);
+		int tmp = (sr.Width()) > 316 ? 216 : ((sr.Width() > 116) ? sr.Width()-100 : 16);
+			
+		w[0] = sr.right - tmp;
+		w[1] = w[0] + (tmp-16)/2;
+		w[2] = w[0] + (tmp-16);
+			
+		ctrlStatus.SetParts(3, w);
+	}
+		
+	CRect rc = rect;
+	ctrlUsers.MoveWindow(rc);
+}
+
+LRESULT UsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ctrlUsers.forEachSelected(&UserInfo::remove);
+	return 0;
+}
+
+LRESULT UsersFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlUsers.GetSelectedCount() == 1) {
+		int i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED);
+		UserInfo* ui = ctrlUsers.getItemData(i);
+		dcassert(i != -1);
+	LineDlg dlg;
+		dlg.description = TSTRING(DESCRIPTION);
+		dlg.title = Text::toT(ui->user->getNick());
+		dlg.line = Text::toT(ui->user->getUserDescription());
+		if(dlg.DoModal(m_hWnd)) {
+			ui->user->setUserDescription(Text::fromT(dlg.line));
+			ui->update();
+			ctrlUsers.updateItem(i);
+				HubManager::getInstance()->save();
+			}	
+	}
+	return 0;
+}
+
+LRESULT UsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	NMITEMACTIVATE* l = (NMITEMACTIVATE*)pnmh;
+	if(!startup && l->iItem != -1 && ((l->uNewState & LVIS_STATEIMAGEMASK) != (l->uOldState & LVIS_STATEIMAGEMASK))) {
+		ctrlUsers.getItemData(l->iItem)->user->setAutoExtraSlot(ctrlUsers.GetCheckState(l->iItem) != FALSE);
+		HubManager::getInstance()->save();
+ 	}
+  	return 0;
 }
 
 void UsersFrame::addUser(const User::Ptr& aUser) {

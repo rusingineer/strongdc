@@ -71,6 +71,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_OFFLINE, onRemoveOffline)
 		COMMAND_ID_HANDLER(IDC_MOVE, onMove)
+		COMMAND_RANGE_HANDLER(IDC_COPY, IDC_COPY + COLUMN_LAST-1, onCopy)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onPriority)
 		COMMAND_RANGE_HANDLER(IDC_SEGMENTONE, IDC_SEGMENTTEN, onSegments)
 		COMMAND_RANGE_HANDLER(IDC_BROWSELIST, IDC_BROWSELIST + menuItems, onBrowseList)
@@ -107,6 +108,8 @@ public:
 	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void removeDir(HTREEITEM ht);
@@ -191,6 +194,7 @@ private:
 		COLUMN_STATUS,
 		COLUMN_SEGMENTS,
 		COLUMN_SIZE,
+		COLUMN_PROGRESS,
 		COLUMN_DOWNLOADED,
 		COLUMN_PRIORITY,
 		COLUMN_USERS,
@@ -256,6 +260,11 @@ private:
 			FDI = aQI->getFileChunksInfo();			
 			if(FDI)
 				setDownloadedBytes(FDI->GetDownloadedSize());
+			else {
+				FDI = FileChunksInfo::Get(aQI->getTempTarget());
+				if(FDI)
+					setDownloadedBytes(FDI->GetDownloadedSize());
+			}
 
 			for(QueueItem::Source::Iter i = aQI->getSources().begin(); i != aQI->getSources().end(); ++i) {
 				sources.push_back(SourceInfo(*(*i)));
@@ -361,6 +370,8 @@ private:
 	OMenu dirMenu;
 	OMenu previewMenu;
 	OMenu segmentsMenu;
+	OMenu copyMenu;
+
 	int PreviewAppsSize;
 
 	CButton ctrlShowTree;

@@ -308,6 +308,8 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 	if(isoponhub) {
 		if (Country == "") Country = address; else Country = Country + " (" + address + ")";
 	}
+
+	file = Util::replace(file, "\\\\", "\\");
 	// utf8 = true is a lie, it's not really Unicode, but we have converted all the text from acp to utf8...
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 		file, hubName, hubIpPort, Country, true);

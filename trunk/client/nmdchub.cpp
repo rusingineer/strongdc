@@ -535,7 +535,9 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			feat.push_back("NoHello");
 			feat.push_back("UserIP2");
 			feat.push_back("TTHSearch");
-			feat.push_back("QuickList");
+
+			if ((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC))
+				feat.push_back("QuickList");
 
 			if(BOOLSETTING(COMPRESS_TRANSFERS))
 				feat.push_back("GetZBlock");

@@ -62,6 +62,7 @@ public:
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SIZE, onSize)
+		MESSAGE_HANDLER(WM_NOTIFYFORMAT, onNotifyFormat)
 		COMMAND_ID_HANDLER(IDC_FORCE, onForce)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_OFFCOMPRESS, onOffCompress)
@@ -142,6 +143,15 @@ public:
 
 		return 0;
 	}
+
+	LRESULT onNotifyFormat(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+#ifdef _UNICODE
+		return NFR_UNICODE;
+#else
+		return NFR_ANSI;
+#endif		
+	}
+
 private:
 	/** Parameter map for user commands */
 	StringMap ucParams;
@@ -237,7 +247,6 @@ private:
 		tstring downloadTarget;
 		bool finished;
 		TTHValue* tth;		
-
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -358,7 +367,7 @@ private:
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
 	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true); }
 
-	virtual void on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw() { }
+	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw() { }
 	virtual void on(HashManagerListener::Finished) throw() { }
 	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw();
 

@@ -29,14 +29,17 @@
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
 
+#include "BarShader.h"
+
 #define FILE_LIST_NAME _T("File Lists")
 
-int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
+int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_PROGRESS, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
 COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH };
 
-int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 110, 75, 200, 200, 75, 200, 100, 125 };
+int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 100, 120, 75, 200, 200, 75, 200, 100, 125 };
 
-static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, ResourceManager::DOWNLOADED,
+static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, 
+ResourceManager::DOWNLOADED_PARTS, ResourceManager::DOWNLOADED,
 ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS,
 ResourceManager::ADDED, ResourceManager::TTH_ROOT  };
 
@@ -111,7 +114,10 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	readdMenu.CreatePopupMenu();
 	previewMenu.CreatePopupMenu();
 	segmentsMenu.CreatePopupMenu();
-	
+	copyMenu.CreatePopupMenu();
+	for(int i = 0; i <COLUMN_LAST; ++i)
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY + i, CTSTRING_I(columnNames[i]));
+
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));	
@@ -121,6 +127,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)browseMenu, CTSTRING(GET_FILE_LIST));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)pmMenu, CTSTRING(SEND_PRIVATE_MESSAGE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)readdMenu, CTSTRING(READD_SOURCE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 	singleMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeMenu, CTSTRING(REMOVE_SOURCE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeAllMenu, CTSTRING(REMOVE_FROM_ALL));
@@ -287,8 +294,6 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += TSTRING(ROLLBACK_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_CRC_FAILED)) {
 						tmp += TSTRING(SFV_INCONSISTENCY);
-					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
-						tmp += TSTRING(TTH_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						tmp += TSTRING(INVALID_TREE);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
@@ -660,12 +665,12 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 				ctrlQueue.deleteItem(ii);
 			}
 			
-		if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
-			queueSize-=ii->getSize();
-			dcassert(queueSize >= 0);
-		}
-		queueItems--;
-		dcassert(queueItems >= 0);
+			if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
+				queueSize-=ii->getSize();
+				dcassert(queueSize >= 0);
+			}
+			queueItems--;
+			dcassert(queueItems >= 0);
 
 			pair<DirectoryIter, DirectoryIter> i = directories.equal_range(ii->getPath());
 			DirectoryIter j;
@@ -1411,56 +1416,54 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
-		if(cd->iSubItem == COLUMN_DOWNLOADED) {
+		if(cd->iSubItem == COLUMN_PROGRESS) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
-			TCHAR buf[256];
+			if(qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
+				bHandled = FALSE;
+				return 0;
+			}
+			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 
-			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_DOWNLOADED, buf, 255);
-			buf[255] = 0;
-
-			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_DOWNLOADED, LVIR_BOUNDS, rc);
+			CRect real_rc = rc;
+			rc.MoveToXY(0, 0);
+			
 			CRect rc2 = rc;
-			rc2.left += 6;
-				
-			// draw background
-			COLORREF bgBase = WinUtil::bgColor;
-			int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
-			COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
+            rc2.left += 6; // indented with 6 pixels
+			rc2.right -= 2; // and without messing with the border of the cell				
 
-			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,bgPal[0]));
-			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(bgPal[1]));
-			::Rectangle(cd->nmcd.hdc, rc.left, rc.top - 1, rc.right, rc.bottom);			
-			rc.DeflateRect(1, 0, 1, 1);
 
-			LONG left = rc.left;
-			int64_t w = rc.Width();
-			// draw start part
+			CDC cdc;
+			cdc.CreateCompatibleDC(cd->nmcd.hdc);
+			BITMAPINFOHEADER bih;
+			bih.biSize = sizeof(BITMAPINFOHEADER);
+			bih.biWidth = real_rc.Width();
+			bih.biHeight = -real_rc.Height(); // kanske minus
+			bih.biPlanes = 1;
+			bih.biBitCount = 32;
+			bih.biCompression = BI_RGB;
+			bih.biSizeImage = 0;
+			bih.biXPelsPerMeter = 0;
+			bih.biYPelsPerMeter = 0;
+			bih.biClrUsed = 32;
+			bih.biClrImportant = 0;
+			HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
 
+			HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
+			HDC& dc = cdc.m_hDC;
+
+			SetBkMode(dc, TRANSPARENT);
+		
+			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
+			statusBar.SetFileSize(qi->getSize());
+			statusBar.Fill(RGB(0, 150, 0));
 
 			for(int smycka = 0; smycka < 2; smycka++) {
 				
-				COLORREF barBase;
-				if(smycka == 0) {
-					barBase = SETTING(UPLOAD_BAR_COLOR);
-				} else {
-					barBase = SETTING(DOWNLOAD_BAR_COLOR);
-				}
-
-				COLORREF barPal[3] = { HLS_TRANSFORM(barBase, -40, 50), barBase, HLS_TRANSFORM(barBase, 40, -30) };
-
-				double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
-				rc.right = left + (int) (w * percent);
-				DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-			
 				FileChunksInfo::Ptr filedatainfo = qi->FDI;
 			
 				try {
 					if(filedatainfo) {
-						int Pleft, Pright;
-						double p;
-
 						vector<int64_t> v;
 	
 						if(smycka == 0) {
@@ -1476,90 +1479,36 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 							if(v.empty())
 								break;
 						}
-
+	
 						if(qi && (v.size() > 0)) {
 							int64_t size = qi->getSize();
 
 							sort(v.begin(), v.end());
 			
-							if(smycka == 0) {		
-								p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
-								Pright = rc.left + (w * p);
-								Pleft = rc.left;
-								if(Pright >= Pleft)
-									::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
-
-								if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-									::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-									::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-								}
+							if(smycka == 0) {
+								statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
 							}
 
 							for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
 
 								if(((*(i)) < size) && ((*(i+1))< size)) {
-									DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-
-									p  = (size > 0) ? (double)(((double)(*(i+1 - smycka))) / ((double)size)) : 0;
-									Pleft = rc.left + (w * p);
-									p  = (size > 0) ? (double)((double)(*(i+2 - smycka))) / ((double)size) : 0;
-									Pright = rc.left + (w * p);
-									if(Pright >= Pleft)
-										::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-									if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-										DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-			
-										::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-										::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-									}
+									statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
 								}
 							}
 
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-
 							if(smycka == 0) {		
-								p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
-								Pright = rc.left + w;
-								Pleft = rc.left + (w * p);
-
-								if(Pright >= Pleft)
-									::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-	
-								if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-									::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-									::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-								}
+								statusBar.FillRange((int64_t)v.back(), qi->getSize(), RGB(255, 255, 100));
 							}
 						}
 					}
 				} catch(...) {}
-
-				// draw status text
-				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
 			}
-
-			LONG right = rc2.right;
-			left = rc2.left;
-			rc2.right = rc.right;
-			LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
-			int textcolor = SETTING(PROGRESS_TEXT_COLOR_DOWN);
-			SetTextColor(cd->nmcd.hdc, textcolor);
-			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
-
-			rc2.left = rc2.right;
-			rc2.right = right;
-
-			SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
-			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
+			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
+			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		}
-		else if(cd->iSubItem == COLUMN_SEGMENTS) {
+		} else if(cd->iSubItem == COLUMN_SEGMENTS) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {
@@ -1607,6 +1556,15 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_DODEFAULT;
 	}
 }			
+
+LRESULT QueueFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	QueueItemInfo *ii = (QueueItemInfo*)ctrlQueue.GetItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+
+	int tmp = wID - IDC_COPY;
+	
+	WinUtil::setClipboard(ii->getText(tmp));	
+	return 0;
+}
 
 LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	if(ctrlQueue.GetSelectedCount() == 1) {

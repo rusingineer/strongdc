@@ -56,7 +56,7 @@ void FileChunksInfo::Free(const string& name)
 		}
 	}
 
-	_ASSERT(0);
+	//_ASSERT(0);
 }
 
 FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
@@ -77,7 +77,7 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
     for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i < vecFreeBlocks.end(); i++, i++)
         iDownloadedSize -= ((*(i+1)) - (*i));
 
-	iBlockSize = max(TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
+	iBlockSize = max(TigerTree::calcBlockSize(iFileSize, 10), (int64_t)SMALLEST_BLOCK_SIZE);
 	iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
 
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
@@ -333,7 +333,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			_ASSERT(cur.getLeaves().size() == 1);
 
 			// Fail!
-        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / iBlockSize)]))
+        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(int64_t)(start / iBlockSize)]))
         	{
 	       		if(!vecFreeBlocks.empty() && *(vecFreeBlocks.rbegin()) == start)
 	        	{

@@ -521,7 +521,7 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 		xml.resetCurrentChild();
 		if(xml.findChild("MenubarBumped")) { SettingsManager::getInstance()->set(SettingsManager::MENUBAR_BUMPED,xml.getChildData());}
 		xml.resetCurrentChild();
-		if(xml.findChild("ProgressBumped")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_BUMPED,xml.getChildData());}
+		if(xml.findChild("Progress3DDepth")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_3DDEPTH,xml.getChildData());}
 		xml.resetCurrentChild();
 		if(xml.findChild("ProgressOverrideColors2")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_OVERRIDE_COLORS2,xml.getChildData());}
 		xml.resetCurrentChild();
@@ -662,7 +662,7 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	xml.addChildAttrib(type, curType);
 	xml.addTag("MenubarBumped", SETTING(MENUBAR_BUMPED));
 	xml.addChildAttrib(type, curType);
-	xml.addTag("ProgressBumped", SETTING(PROGRESS_BUMPED));
+	xml.addTag("Progress3DDepth", SETTING(PROGRESS_3DDEPTH));
 	xml.addChildAttrib(type, curType);
 	xml.addTag("ProgressOverrideColors2", SETTING(PROGRESS_OVERRIDE_COLORS2));
 	xml.addChildAttrib(type, curType);

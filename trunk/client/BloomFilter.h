@@ -80,7 +80,12 @@ private:
 			}
 		} 
 	}
-	size_t getPos(const string& s, size_t i, size_t l) { return (HashFunc()(&s[i], l) % table.size()); }
+
+	/* Same functionality, but the old one did not want to compile for some reason. */
+	size_t getPos(const string& s, size_t i, size_t l) {
+		HashFunc hf;
+		return (hf(&s[i], l) % table.size());
+	}
 	
 	vector<bool> table;
 };

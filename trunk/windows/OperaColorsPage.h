@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "StdAfx.h"
 #include "PropPage.h"
 #include "PropPageTextStyles.h"
 
@@ -32,13 +33,14 @@ public:
 	OperaColorsPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_OPERACOLORS)).c_str());
 		SetTitle(title);
+		hloubka = SETTING(PROGRESS_3DDEPTH);
 	};
 
 	virtual ~OperaColorsPage() { free(title);};
 
 	BEGIN_MSG_MAP(OperaColorsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
-
+		COMMAND_HANDLER(IDC_FLAT, EN_UPDATE, On3DDepth)
 		COMMAND_HANDLER(IDC_PROGRESS_OVERRIDE, BN_CLICKED, onClickedProgressOverride)
 		COMMAND_HANDLER(IDC_PROGRESS_OVERRIDE2, BN_CLICKED, onClickedProgressOverride)
 		COMMAND_HANDLER(IDC_PROGRESS_SEGMENT_SHOW, BN_CLICKED, onClickedProgressOverride)
@@ -73,6 +75,14 @@ public:
 
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 
+	LRESULT On3DDepth(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		TCHAR buf[256];
+		GetDlgItemText(IDC_FLAT, buf, 255);
+		hloubka = Util::toInt(Text::fromT(buf));
+		updateProgress();
+		return 0;
+	}
+
 	void updateProgress() {
 		bool state = (IsDlgButtonChecked(IDC_PROGRESS_OVERRIDE) != 0);
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_PROGRESS_OVERRIDE2), state);
@@ -85,9 +95,9 @@ public:
 		ctrlProgressDownDrawer.Invalidate();
 		ctrlProgressUpDrawer.Invalidate();
 
-		state =(IsDlgButtonChecked(IDC_PROGRESS_SEGMENT_SHOW) != 0);
-		::EnableWindow(::GetDlgItem(m_hWnd, IDC_SETTINGS_SEGMENT_BAR_COLOR), state);
-		ctrlProgressSegmentDrawer.Invalidate();
+		//state =(IsDlgButtonChecked(IDC_PROGRESS_SEGMENT_SHOW) != 0);
+		//::EnableWindow(::GetDlgItem(m_hWnd, IDC_SETTINGS_SEGMENT_BAR_COLOR), state);
+		//ctrlProgressSegmentDrawer.Invalidate();
 	}
 
 	void updateScreen() {
@@ -138,6 +148,8 @@ private:
 	CCheckBox ctrlTwoColors;
 	CCheckBox ctrlBumped;
 	CStatic ctrlMenubarDrawer;
+
+	int hloubka;
 	TCHAR* title;
 };
 

@@ -591,7 +591,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 
 				COLORREF a, b;
 				OperaColors::EnlightenFlood(barBase, a, b);
-				OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, a, b, SETTING(PROGRESS_BUMPED));
+				OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, a, b, /*SETTING(PROGRESS_BUMPED)*/ true);
 				//OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, barPal[2], barPal[0], SETTING(PROGRESS_BUMPED));
 				rc.left = left;
 				

@@ -200,7 +200,7 @@ bool ShareManager::checkFile(const string& dir, const string& aFile) {
 
 	string::size_type i;
 	string::size_type j = 0;
-	while( (i = aFile.find(PATH_SEPARATOR, j)) != string::npos) {
+	while( (i = aFile.find('\\', j)) != string::npos) {
 		mi = d->directories.find(aFile.substr(j, i-j));
 		j = i + 1;
 		if(mi == d->directories.end())
@@ -221,6 +221,7 @@ string ShareManager::validateVirtual(const string& aVirt) {
 	while( (idx = tmp.find_first_of("$|")) != string::npos) {
 		tmp[idx] = '_';
 	}
+
 	return tmp;
 }
 
@@ -300,6 +301,11 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	if(d[d.length() - 1] != PATH_SEPARATOR)
 		d += PATH_SEPARATOR;
 
+	string tmp(aName);
+	if(tmp[tmp.length() - 1] == PATH_SEPARATOR) {
+		tmp.erase(tmp.length() -1, 1);
+	}
+
 	Directory* dp = NULL;
 	{
 		RLock l(cs);
@@ -316,20 +322,20 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 			}
 		}
 
-		if(lookupVirtual(aName) != virtualMap.end()) {
+		if(lookupVirtual(tmp) != virtualMap.end()) {
 			throw ShareException(STRING(VIRTUAL_NAME_EXISTS));
 		}
 	}
 		
 	dp = buildTree(d, NULL);
-	dp->setName(aName);
+	dp->setName(tmp);
 
 	{
 		WLock l(cs);
 		addTree(d, dp);
 		
 		directories[d] = dp;
-		virtualMap.push_back(make_pair(validateVirtual(aName), d));
+		virtualMap.push_back(make_pair(validateVirtual(tmp), d));
 		setDirty();
 	}
 }
@@ -414,8 +420,9 @@ string ShareManager::Directory::getADCPath() const throw() {
 	return parent->getADCPath() + name + '/';
 }
 string ShareManager::Directory::getFullName() const throw() {
-	if(parent == NULL)
+	if(parent == NULL) {
 		return getName() + '\\';
+	}
 	return parent->getFullName() + getName() + '\\';
 }
 
@@ -578,8 +585,10 @@ void ShareManager::addTree(const string& fullName, Directory* dir) {
 		// We're not changing anything cruical...
 		Directory::File& f = const_cast<Directory::File&>(f2);
 		string fileName = fullName + f.getName();
-
-		f.setTTH(HashManager::getInstance()->getTTH(fileName, f.getSize()));
+		try {
+			f.setTTH(new TTHValue(HashManager::getInstance()->getTTH(fileName, f.getSize())));
+		} catch(const HashException&) {
+		}
 
 		if(f.getTTH() != NULL) {
 			addFile(dir, i++);
@@ -1235,7 +1244,7 @@ void ShareManager::on(DownloadManagerListener::Complete, Download* d) throw() {
 	}
 }
 
-void ShareManager::on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw() {
+void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw() {
 		WLock l(cs);
 		Directory* d = getDirectory(fname);
 		if(d != NULL) {
@@ -1247,12 +1256,12 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, TTHValu
 				}
 				// Get rid of false constness...
 				Directory::File* f = const_cast<Directory::File*>(&(*i));
-				f->setTTH(root);
-				tthIndex.insert(make_pair(root, i));
+				f->setTTH(new TTHValue(root));
+				tthIndex.insert(make_pair(f->getTTH(), i));
 			} else {
 				string name = Util::getFileName(fname);
 				int64_t size = File::getSize(fname);
-				Directory::File::Iter it = d->files.insert(Directory::File(name, size, d, root)).first;
+				Directory::File::Iter it = d->files.insert(Directory::File(name, size, d, new TTHValue(root))).first;
 				addFile(d, it);
 			}
 			setDirty();

@@ -49,6 +49,10 @@
 #define FILELISTS_DIR "filelists/"
 #endif
 
+#ifdef ff
+#undef ff
+#endif
+
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
 const string QueueManager::TEMP_EXTENSION = ".dctmp";
 
@@ -113,7 +117,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 				new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 
 		}
-
+		
+		qi->setFileChunksInfo(pChunksInfo);
+		
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
 			vector<int64_t> v;
 			istringstream is(verifiedBlocks);
@@ -124,8 +130,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			for(vector<int64_t>::iterator i = v.begin(); i + 1< v.end(); i++, i++)
 				pChunksInfo->MarkVerifiedBlock(*i, *(i+1));
 		}
-
-		qi->setFileChunksInfo(pChunksInfo);
 	}
 
 	if((qi->getDownloadedBytes() > 0))
@@ -897,23 +901,13 @@ again:
 			}
 		}
 
-		FileChunksInfo::Ptr fdi = q->getFileChunksInfo();//FileChunksInfo::Get(q->getTempTarget());
-
-		if(!fdi) {
-			message = "No Chunks Info";
-			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			goto again;
-		}
-
-		freeBlock = fdi->GetUndlStart(q->getMaxSegments());
+		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
 
 		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
-
-
 	}
 
 	d = new Download(q, aUser);

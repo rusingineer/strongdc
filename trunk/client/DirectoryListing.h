@@ -53,9 +53,14 @@ public:
 			name(aName), size(aSize), parent(aDir), tthRoot(NULL) { };
 
 		File(const File& rhs) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)) { }
-			~File() {
-				delete tthRoot;
-			}
+
+		File& operator=(const File& rhs) {
+			name = rhs.name; size = rhs.size; parent = rhs.parent; tthRoot = rhs.tthRoot ? new TTHValue(*rhs.tthRoot) : NULL; 
+		}
+
+		~File() {
+			delete tthRoot;
+		}
 
 		bool getAdls() {
 			return getParent()->getAdls();
@@ -83,7 +88,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false) 
-			: name(aName), parent(aParent), adls(_adls), rmDCdetected(false) { };
+			: name(aName), parent(aParent), adls(_adls), rmDCdetected(0) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction<Directory*>());
@@ -101,9 +106,13 @@ public:
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
 				x+=(*i)->getSize();
 
-				if(((*i)->getSize() < (1024*1024)) || (Util::getFileExt((*i)->getName()) == "mp3")) {
-					setRMDCdetected((*i)->getTTH() == NULL);
-				}
+				if((*i)->getTTH() == NULL) {
+					if(((*i)->getSize() < (1024*1024)) || (Util::getFileExt((*i)->getName()) == ".mp3")) {
+						setRMDCdetected(1);
+					} else {
+						setRMDCdetected(2);
+					}
+				} else setRMDCdetected(0);
 
 				if((*i)->isJunkFile()) {
 					junkSize += (*i)->getSize();
@@ -115,7 +124,7 @@ public:
 		GETSET(string, name, Name);
 		GETSET(int64_t, junkSize, JunkSize);
 		GETSET(Directory*, parent, Parent);		
-		GETSET(bool, rmDCdetected, RMDCdetected);
+		GETSET(int, rmDCdetected, RMDCdetected);
 		GETSET(bool, adls, Adls);		
 
 	private:
@@ -155,7 +164,7 @@ public:
 	Directory* getRoot() { return root; };
 	int64_t getJunkSize() { return root->getJunkSize(); };
 	bool detectRMDC() {
-		return root->getRMDCdetected();
+		return (root->getRMDCdetected() == 1);
 	}
 
 	GETSET(User::Ptr, user, User);

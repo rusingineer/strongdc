@@ -852,6 +852,7 @@ string ResourceManager::strings[] = {
 "Expand search results", 
 "Enable queue updating in real time (use more CPU on large queue!!!)", 
 "Suppress main chat", 
+"Downloaded parts", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1704,4 +1705,5 @@ string ResourceManager::names[] = {
 "ExpandedResults", 
 "QueueUpdating", 
 "SettingsAdvancedSuppressMainChat", 
+"DownloadedParts", 
 };

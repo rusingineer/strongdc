@@ -64,7 +64,7 @@ const string SettingsManager::settingTags[] =
 	"MaxCompression", "FinishedDirty", "QueueDirty", "TabDirty", "AntiFrag", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", "OpenFavoriteHubs", "OpenFinishedDownloads", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
-	"LogFilelistTransfers", "EmptyWorkingSet", "SegmentColor", "ShowSegmentColor",
+	"LogFilelistTransfers", "EmptyWorkingSet", /*"SegmentColor", "ShowSegmentColor",*/
 	"ShowStatusbar",
 	"ShowToolbar", "ShowTransferview", 
 	"GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
@@ -86,7 +86,7 @@ const string SettingsManager::settingTags[] =
 	"ExtensionDownTo", "ErrorColor", "ShowShared", "ShowExactShared", "ShowDescription", 
 	"ShowTag", "ShowConnection", "ShowEmail", "ShowClient", "ShowVersion", "ShowMode", 
 	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
-	"ProgressOverrideColors", "ProgressBumped", "ProgressOverrideColors2",
+	"ProgressOverrideColors", /*"ProgressBumped",*/"Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
@@ -139,7 +139,7 @@ SettingsManager::SettingsManager()
 		int64Settings[k] = 0;
 	}
 	
-	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads\\");
+	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
 		//setDefault(SERVER, Util::getLocalIp());
 	setDefault(SEARCH_TTH_ONLY, false);
@@ -169,7 +169,7 @@ SettingsManager::SettingsManager()
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(HUB_SLOTS, 0);
-	setDefault(LOG_DIRECTORY, Util::getAppPath() + "Logs\\");
+	setDefault(LOG_DIRECTORY, Util::getAppPath() + "Logs" PATH_SEPARATOR_STR);
 	setDefault(LOG_UPLOADS, false);
 	setDefault(LOG_DOWNLOADS, false);
 	setDefault(LOG_PRIVATE_CHAT, false);
@@ -416,7 +416,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(AUTOSAVE_QUEUE, 30);
-	setDefault(SHOW_SEGMENT_COLOR, true);
+	//setDefault(SHOW_SEGMENT_COLOR, true);
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
@@ -470,6 +470,8 @@ SettingsManager::SettingsManager()
 	setDefault(MINIMUM_SEARCH_INTERVAL, 30);
 
 	setDefault(BACKGROUND_IMAGE, "");
+	setDefault(PROGRESS_3DDEPTH, 4);
+
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
@@ -477,9 +479,11 @@ SettingsManager::SettingsManager()
 	setDefault(MAIN_WINDOW_POS_X, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_Y, CW_USEDEFAULT);
 	setDefault(MDI_MAXIMIZED, true);
-	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
-	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
-	setDefault(SEGMENT_BAR_COLOR, RGB(10, 74, 138));
+	setDefault(UPLOAD_BAR_COLOR, RGB(150, 0, 0));
+	setDefault(DOWNLOAD_BAR_COLOR, RGB(0, 150, 0));
+	//setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
+	//setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
+	//setDefault(SEGMENT_BAR_COLOR, RGB(10, 74, 138));
 #endif
 }
 
@@ -643,12 +647,12 @@ void SettingsManager::save(string const& aFileName) {
 	fire(SettingsManagerListener::Save(), &xml);
 
 	try {
-		File ff(aFileName + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		BufferedOutputStream<false> f(&ff);
+		File out(aFileName + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
+		BufferedOutputStream<false> f(&out);
 		f.write(SimpleXML::utf8Header);
 		xml.toXML(&f);
 		f.flush();
-		ff.close();
+		out.close();
 		File::deleteFile(aFileName);
 		File::renameFile(aFileName + ".tmp", aFileName);
 	} catch(const FileException&) {

@@ -100,7 +100,7 @@ public:
 
 	static char asciiToLower(char c) { dcassert((((u_int8_t)c) & 0x80) == 0); return asciiLower[(u_int8_t)c]; }
 
-	static wchar_t toLower(wchar_t c) { return lower[(unsigned short)c]; }
+	static wchar_t toLower(wchar_t c) { return lower[(u_int16_t)c]; }
 	static wstring toLower(const wstring& str) throw() {
 		wstring tmp;
 		return toLower(str, tmp);
