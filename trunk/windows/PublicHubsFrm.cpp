@@ -455,24 +455,18 @@ LRESULT PublicHubsFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lPa
 	return 0;
 }
 
-LRESULT PublicHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	
-	// Get the bounding rectangle of the client area. 
-	if(ctrlHubs.GetSelectedCount() == 1) {
-		ctrlHubs.GetClientRect(&rc);
-		ctrlHubs.ScreenToClient(&pt); 
-
-		if (PtInRect(&rc, pt)) 
-		{ 
+LRESULT PublicHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if((HWND)wParam == ctrlHubs && ctrlHubs.GetSelectedCount() == 1) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
 			ctrlHubs.ClientToScreen(&pt);
-			hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-
-			return TRUE; 
 		}
+		hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		return TRUE; 
 	}
-	
+
+	bHandled = FALSE;
 	return FALSE; 
 }
 

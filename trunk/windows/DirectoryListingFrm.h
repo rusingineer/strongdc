@@ -229,6 +229,7 @@ private:
 	void changeDir(DirectoryListing::Directory* d, BOOL enableRedraw);
 	HTREEITEM findFile(const StringSearch& str, HTREEITEM root, int &foundFile, int &skipHits);
 	void updateStatus();
+	void initStatus();
 
 	class ItemInfo : public FastAlloc<ItemInfo> {
 	public:

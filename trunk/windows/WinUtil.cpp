@@ -77,6 +77,8 @@ FlatTabCtrl* WinUtil::tabCtrl = NULL;
 HHOOK WinUtil::hook = NULL;
 tstring WinUtil::tth;
 StringPairList WinUtil::initialDirs;
+bool WinUtil::urlDcADCRegistered = false;
+bool WinUtil::urlMagnetRegistered = false;
 tstring WinUtil::exceptioninfo;
 bool WinUtil::isAppActive = false;
 CHARFORMAT2 WinUtil::m_TextStyleTimestamp;
@@ -490,9 +492,12 @@ void WinUtil::init(HWND hWnd) {
 	if(BOOLSETTING(URL_HANDLER)) {
 		registerDchubHandler();
 		registerADChubHandler();
+		urlDcADCRegistered = true;
 	}
-	if(BOOLSETTING(URL_MAGNET))
+	if(BOOLSETTING(MAGNET_REGISTER)) {
 		registerMagnetHandler();
+		urlMagnetRegistered = true; 
+	}
 
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
@@ -1084,6 +1089,10 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 	}
 }
 
+ void WinUtil::unRegisterDchubHandler() {
+	SHDeleteKey(HKEY_CLASSES_ROOT, _T("dchub"));
+ }
+
  void WinUtil::registerADChubHandler() {
 	 HKEY hk;
 	 TCHAR Buf[512];
@@ -1113,6 +1122,10 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 		 ::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		 ::RegCloseKey(hk);
 	 }
+ }
+
+ void WinUtil::unRegisterADChubHandler() {
+	SHDeleteKey(HKEY_CLASSES_ROOT, _T("adc"));
  }
 
 void WinUtil::registerMagnetHandler() {
@@ -1157,7 +1170,7 @@ void WinUtil::registerMagnetHandler() {
 		magnetLoc = _T('"') + magnetExe + _T('"');
 	}
 	// (re)register the handler if magnet.exe isn't the default, or if DC++ is handling it
-	if(BOOLSETTING(MAGNET_URI_HANDLER) && (Util::strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
+	if(BOOLSETTING(MAGNET_REGISTER) && (Util::strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
 		SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
 		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet"), &hk);
 		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_SHELL_DESC), sizeof(TCHAR)*(TSTRING(MAGNET_SHELL_DESC).length()+1));
@@ -1197,6 +1210,11 @@ void WinUtil::registerMagnetHandler() {
 	::RegSetValueEx(hk, _T("urn:tree:tiger/"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegSetValueEx(hk, _T("urn:tree:tiger/1024"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegCloseKey(hk);
+}
+
+void WinUtil::unRegisterMagnetHandler() {
+	SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
+	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("magnet"));
 }
 
 void WinUtil::openLink(const tstring& url) {

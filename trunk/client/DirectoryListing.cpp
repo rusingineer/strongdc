@@ -204,23 +204,23 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 		const string& b = getAttrib(attribs, sBase, 2);
 		if(b.size() >= 1 && b[0] == '/' && b[b.size()-1] == '/') {
 			base = b;
-			StringList sl = StringTokenizer<string>(base.substr(1), '/').getTokens();
-			for(StringIter i = sl.begin(); i != sl.end(); ++i) {
-				DirectoryListing::Directory* d = NULL;
-				for(DirectoryListing::Directory::Iter j = cur->directories.begin(); j != cur->directories.end(); ++j) {
-					if((*j)->getName() == *i) {
-						d = *j;
-						break;
-					}
-				}
-				if(d == NULL) {
-					d = new DirectoryListing::Directory(cur, *i, false, false);
-					cur->directories.push_back(d);
-				}
-				cur = d;
-			}
-			cur->setComplete(true);
 		}
+		StringList sl = StringTokenizer<string>(base.substr(1), '/').getTokens();
+		for(StringIter i = sl.begin(); i != sl.end(); ++i) {
+			DirectoryListing::Directory* d = NULL;
+			for(DirectoryListing::Directory::Iter j = cur->directories.begin(); j != cur->directories.end(); ++j) {
+				if((*j)->getName() == *i) {
+					d = *j;
+					break;
+				}
+			}
+			if(d == NULL) {
+				d = new DirectoryListing::Directory(cur, *i, false, false);
+				cur->directories.push_back(d);
+			}
+			cur = d;
+		}
+		cur->setComplete(true);
 		const string& generator = getAttrib(attribs, sGenerator, 2);
 		if(uziv->isOnline()) {
 			PME reg("^<StrgDC\\+\\+ V:1.00 RC([89]){1}");

@@ -280,7 +280,6 @@ COLORREF OperaColors::TextFromBackground(COLORREF bg) {
 
 int CZDCLib::getFirstSelectedIndex(CListViewCtrl& list) {
 	int items = list.GetItemCount();
-	list.SetRedraw(FALSE);
 	for(int i = 0; i < items; ++i) {
 		if (list.GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
 			return i;

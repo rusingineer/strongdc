@@ -229,22 +229,21 @@ LRESULT ADLSearchFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, 
 	return 0;
 }
 	
-LRESULT ADLSearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) 
+LRESULT ADLSearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
 {
-	// Get the bounding rectangle of the client area. 
-	RECT rc;
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-	ctrlList.GetClientRect(&rc);
-	ctrlList.ScreenToClient(&pt); 
-	
-	// Hit-test
-	if(PtInRect(&rc, pt)) 
-	{ 
-		ctrlList.ClientToScreen(&pt);
+	if((HWND)wParam == ctrlList) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlList.ClientToScreen(&pt);
+		}
+		int status = ctrlList.GetSelectedCount() > 0 ? MFS_ENABLED : MFS_DISABLED;
+		contextMenu.EnableMenuItem(IDC_EDIT, status);
+		contextMenu.EnableMenuItem(IDC_REMOVE, status);
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE; 
 	}
-	
+	bHandled = FALSE;
 	return FALSE; 
 }
 

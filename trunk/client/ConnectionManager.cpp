@@ -270,9 +270,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 			putCQI(*m);
 		}
 
-		for(UserConnection::Iter j = pendingDelete.begin(); j != pendingDelete.end(); ++j) {
-			penDel.push_back(*j);
-		}
+		penDel = pendingDelete;
 		pendingDelete.clear();
 	}
 	
@@ -297,7 +295,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 	}
 }
 
-static const u_int32_t FLOOD_TRIGGER = 10000;
+static const u_int32_t FLOOD_TRIGGER = 20000;
 static const u_int32_t FLOOD_ADD = 500;
 
 /**
@@ -717,12 +715,18 @@ void ConnectionManager::shutdown() {
 		}
 	}
 	// Wait until all connections have died out...
+
+	DWORD start = ::GetTickCount();
 	while(true) {
 		{
 			Lock l(cs);
 			if(userConnections.empty()) {
 				break;
 			}
+			// wait for 15 seconds then empty userConnections because there are any deadlocked
+			if(::GetTickCount() - start > 15000){
+				userConnections.clear();
+			} 
 		}
 		Thread::sleep(50);
 	}

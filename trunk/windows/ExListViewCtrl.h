@@ -46,8 +46,22 @@ public:
 	typedef ListViewArrows<ExListViewCtrl> arrowBase;
 
 	BEGIN_MSG_MAP(ExListViewCtrl)
+		MESSAGE_HANDLER(WM_CHAR, onChar)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP()
+
+	LRESULT onChar(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+		if((GetKeyState(VkKeyScan('A') & 0xFF) & 0xFF00) > 0 && (GetKeyState(VK_CONTROL) & 0xFF00) > 0){
+			int count = GetItemCount();
+			for(int i = 0; i < count; ++i)
+				ListView_SetItemState(m_hWnd, i, LVIS_SELECTED, LVIS_SELECTED);
+
+			return 0;
+		}
+
+		bHandled = FALSE;
+		return 1;
+	}
 
 	void setSort(int aColumn, int aType, bool aAscending = true, int (*aFun)(LPARAM, LPARAM) = NULL) {
 		bool doUpdateArrow = (aColumn != sortColumn || aAscending != ascending);

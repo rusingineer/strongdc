@@ -113,6 +113,7 @@
 #define IDD_USERLIST_COLOURS            289
 #define IDD_HUB_LIST                    290
 #define IDB_FLAGS                       291
+#define IDD_WINDOWSPAGE                 292
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -502,7 +503,9 @@
 #define IDC_COMBO1                      1284
 #define IDC_EDIT2                       1285
 #define IDC_EDIT3                       1286
+#define IDC_BIND_ADDRESS                1286
 #define IDC_STATIC1                     1287
+#define IDC_SETTINGS_BIND_ADDRESS       1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_SECOND                      1288
 #define IDC_SECOND1                     1289
@@ -518,6 +521,10 @@
 #define IDC_MULTISOURCE_COMBO           1296
 #define IDC_PUB_LIST_CONFIG             1297
 #define IDC_ODC_STYLE                   1297
+#define IDC_WINDOWS_STARTUP             1298
+#define IDC_SETTINGS_AUTO_OPEN          1299
+#define IDC_SETTINGS_WINDOWS_OPTIONS    1300
+#define IDC_WINDOWS_OPTIONS             1301
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445
@@ -531,7 +538,6 @@
 #define IDC_UPDATE                      1453
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TIMEOUTS_NO                 1505
-#define IDC_PERCENT_FAKE_SHARE_TOLERATED3 1506
 #define IDC_DISCONNECTS_NO              1506
 #define IDC_USERLIST_COLORS             1517
 #define IDC_TABCOLOR_LIST               1522
@@ -745,7 +751,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        292
+#define _APS_NEXT_RESOURCE_VALUE        293
 #define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1298
 #define _APS_NEXT_SYMED_VALUE           131

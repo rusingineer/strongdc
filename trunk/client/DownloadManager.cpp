@@ -48,7 +48,7 @@
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
-Download::Download() throw() : file(NULL),
+Download::Download() throw() : file(NULL), item(NULL),
 crcCalc(NULL), tth(NULL), treeValid(false) { 
 }
 
@@ -521,10 +521,10 @@ public:
 	}
 
 	virtual size_t write(const void* b, size_t len) throw(FileException) {
-		u_int8_t* wb = (u_int8_t*)b;
 		if(buf != NULL) {
-			size_t n = len < (bufSize - pos) ? len : bufSize - pos;
+			size_t n = min(len, bufSize - pos);
 
+			u_int8_t* wb = (u_int8_t*)b;
 			if(memcmp(buf + pos, wb, n) != 0) {
 				throw RollbackException(STRING(ROLLBACK_INCONSISTENCY));
 			}
@@ -534,7 +534,7 @@ public:
 				buf = NULL;
 			}
 		}
-		return s->write(wb, len);
+		return s->write(b, len);
 	}
 
 private:

@@ -112,12 +112,18 @@ public:
 		SUPPORTS_USERCOMMAND = 0x01,
 		SUPPORTS_NOGETINFO = 0x02,
 		SUPPORTS_USERIP2 = 0x04,
+		SUPPORTS_QUICKLIST = 0x08
 	};
 
 #define checkstate() if(state != STATE_CONNECTED) return
 
 	virtual void connect(const User* aUser);
-	virtual void hubMessage(const string& aMessage) { checkstate(); send(toNmdc( "<" + getNick() + "> " + Util::validateChatMessage(aMessage) + "|" ) ); }
+	virtual void hubMessage(const string& aMessage) {
+		checkstate();
+		char buf[256];
+		sprintf(buf, "<%s> ", getNick().c_str());
+		send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
+	}
 	virtual void privateMessage(const User* aUser, const string& aMessage) { privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage); }
 	virtual void send(const string& a) throw() {
 		lastActivity = GET_TICK();
@@ -164,24 +170,37 @@ public:
 			send("$GetNickList|");
 		}
 	};
-	void getInfo(User::Ptr aUser) { checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
-	void getInfo(User* aUser) {  checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
-	void sendMeMessage(const string& aMessage) { checkstate(); send(Util::validateChatMessage(aMessage) + "|"); }
+	void getInfo(User::Ptr aUser) {
+		 checkstate();
+		 char buf[256];
+		 sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
+		 send(buf);
+	};
+	void getInfo(User* aUser) {
+		checkstate();
+		char buf[256];
+		sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
+		send(buf);
+	};
 	void sendRaw(const string& aRaw) { send(toNmdc(aRaw)); }
 	
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-		send("$ConnectToMe " + toNmdc(aUser->getNick()) + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
+		char buf[256];
+		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
+		send(buf);
 		ConnectionManager::iConnToMeCount++;
 	}
 
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + Util::validateChatMessage(aMessage));
+		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
-		send("$To: " + toNmdc(aNick) + " From: " + toNmdc(getNick()) + " $" + toNmdc(Util::validateMessage(aMessage, false)) + "|");
+		char buf[512];
+		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getNick()).c_str());
+		send(string(buf)+toNmdc(Util::validateChatMessage(aMessage))+"|");
 	}
 	void supports(const StringList& feat) { 
 		string x;
@@ -193,7 +212,9 @@ public:
 	void revConnectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::revConnectToMe %s\n", aUser->getNick().c_str());
-		send("$RevConnectToMe " + toNmdc(getNick()) + " " + toNmdc(aUser->getNick()) + "|");
+		char buf[256];
+		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
+		send(buf);
 	}
 
 	void send(const char* aBuf, int aLen) throw() {
@@ -248,9 +269,10 @@ private:
 	User::NickMap users;
 
 	bool reconnect;
-	string lastmyinfo;
+	string lastmyinfo, lock;
 	bool validatenicksent, bFirstOpList;
 	int64_t lastbytesshared;
+	bool PtokaX, YnHub;
 
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;

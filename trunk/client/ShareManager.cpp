@@ -641,7 +641,7 @@ public:
 		return *this;
 	}
 	
-	// good enough to to say if it's null
+	// good enough to say if it's null
 	bool operator !=(const FileFindIter& rhs) const {
 		return dir != rhs.dir;
 	}

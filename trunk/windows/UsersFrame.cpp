@@ -87,41 +87,34 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 }
 
-LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	
-	// Get the bounding rectangle of the client area. 
-	ctrlUsers.GetClientRect(&rc);
-	ctrlUsers.ScreenToClient(&pt); 
-	
-	if (ctrlUsers.GetSelectedCount() > 0 && PtInRect(&rc, pt)) 
-	{ 
-		string x;
-		if (CZDCLib::getFirstSelectedIndex(ctrlUsers) > -1) {
-			if (ctrlUsers.GetSelectedCount() == 1)
-				x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getNick();
-			else
-				x = "";
-		} else {
-			ctrlUsers.SetRedraw(TRUE);
-			return FALSE;
+LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if ((HWND)wParam == ctrlUsers && ctrlUsers.GetSelectedCount() > 0 ) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlUsers.ClientToScreen(&pt);
 		}
+	
+		checkAdcItems(usersMenu);
+		
+		string x;
+		if (ctrlUsers.GetSelectedCount() == 1) {
+			x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getNick();
+		} else {
+			x = "";
+		}
+
 		if (!x.empty())
 			usersMenu.InsertSeparatorFirst(x);
-
-		ctrlUsers.ClientToScreen(&pt);
-		checkAdcItems(usersMenu);
+		
 		usersMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 		if (!x.empty())
 			usersMenu.RemoveFirstItem();
 
-		ctrlUsers.SetRedraw(TRUE);
-
 		return TRUE; 
 	}
-	
+	bHandled = FALSE;
 	return FALSE; 
 }
 	

@@ -98,7 +98,7 @@ public:
 			true);
 	}
 
-	void addPfs(const User::Ptr& aUser, const string& aDir) throw();
+	void addPfs(const User::Ptr aUser, const string& aDir) throw();
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
@@ -141,7 +141,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q = NULL) throw();
+	Download* getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q = NULL) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {

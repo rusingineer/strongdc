@@ -69,7 +69,10 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		ctrlList.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 		
-	ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+    ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
+		SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
+
 	ctrlList.setVisible(SETTING(UPLOADQUEUEFRAME_VISIBLE));
 	
 	// colors

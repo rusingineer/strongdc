@@ -97,18 +97,10 @@ DWORD WINAPI MainFrame::stopper(void* p) {
 	MainFrame* mf = (MainFrame*)p;
 	HWND wnd, wnd2 = NULL;
 
-	DWORD start = ::GetTickCount();
-
 	while( (wnd=::GetWindow(mf->m_hWndMDIClient, GW_CHILD)) != NULL) {
-		if(wnd == wnd2) {
-
-			// if after 30 seconds, it still in memory, it must deadlock, donno why
-			if(::GetTickCount() - start > 60000){
-				dcassert(0);
-				ExitProcess(1);
-			} 
+		if(wnd == wnd2)
 			Sleep(100);
-		} else { 
+		else { 
 			::PostMessage(wnd, WM_CLOSE, 0, 0);
 			wnd2 = wnd;
 		}
@@ -266,23 +258,18 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		}
 	}
 	
-	if(BOOLSETTING(OPEN_PUBLIC))
-		PostMessage(WM_COMMAND, ID_FILE_CONNECT);
-	if(BOOLSETTING(OPEN_QUEUE))
-		PostMessage(WM_COMMAND, IDC_QUEUE);
-	if(BOOLSETTING(OPEN_FAVORITE_HUBS))
-		PostMessage(WM_COMMAND, IDC_FAVORITES);
-	if(BOOLSETTING(OPEN_FINISHED_DOWNLOADS))
-		PostMessage(WM_COMMAND, IDC_FINISHED);
-	if(BOOLSETTING(OPEN_NETWORK_STATISTIC))
-		PostMessage(WM_COMMAND, IDC_NET_STATS);
+	if(BOOLSETTING(OPEN_PUBLIC)) PostMessage(WM_COMMAND, ID_FILE_CONNECT);
+	if(BOOLSETTING(OPEN_FAVORITE_HUBS)) PostMessage(WM_COMMAND, IDC_FAVORITES);
+	if(BOOLSETTING(OPEN_FAVORITE_USERS)) PostMessage(WM_COMMAND, IDC_FAVUSERS);
+	if(BOOLSETTING(OPEN_QUEUE)) PostMessage(WM_COMMAND, IDC_QUEUE);
+	if(BOOLSETTING(OPEN_FINISHED_DOWNLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED);
+	if(BOOLSETTING(OPEN_FINISHED_UPLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED_UL);
+	if(BOOLSETTING(OPEN_SEARCH_SPY)) PostMessage(WM_COMMAND, IDC_SEARCH_SPY);
+	if(BOOLSETTING(OPEN_NOTEPAD)) PostMessage(WM_COMMAND, IDC_NOTEPAD);
 
-	if(!BOOLSETTING(SHOW_STATUSBAR))
-		PostMessage(WM_COMMAND, ID_VIEW_STATUS_BAR);
-	if(!BOOLSETTING(SHOW_TOOLBAR))
-		PostMessage(WM_COMMAND, ID_VIEW_TOOLBAR);
-	if(!BOOLSETTING(SHOW_TRANSFERVIEW))
-		PostMessage(WM_COMMAND, ID_VIEW_TRANSFER_VIEW);
+	if(!BOOLSETTING(SHOW_STATUSBAR)) PostMessage(WM_COMMAND, ID_VIEW_STATUS_BAR);
+	if(!BOOLSETTING(SHOW_TOOLBAR)) PostMessage(WM_COMMAND, ID_VIEW_TOOLBAR);
+	if(!BOOLSETTING(SHOW_TRANSFERVIEW))	PostMessage(WM_COMMAND, ID_VIEW_TRANSFER_VIEW);
 
 	if(!(GetAsyncKeyState(VK_SHIFT) & 0x8000))
 		PostMessage(WM_SPEAKER, AUTO_CONNECT);
@@ -720,12 +707,24 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);
+
 		if(BOOLSETTING(URL_HANDLER)) {
 			WinUtil::registerDchubHandler();
 			WinUtil::registerADChubHandler();
+			WinUtil::urlDcADCRegistered = true;
+		} else if(WinUtil::urlDcADCRegistered) {
+			WinUtil::unRegisterDchubHandler();
+			WinUtil::unRegisterADChubHandler();
+			WinUtil::urlDcADCRegistered = false;
 		}
-		if(BOOLSETTING(URL_MAGNET))
+		if(BOOLSETTING(MAGNET_REGISTER)) {
 			WinUtil::registerMagnetHandler();
+			WinUtil::urlMagnetRegistered = true; 
+		} else if(WinUtil::urlMagnetRegistered) {
+			WinUtil::unRegisterMagnetHandler();
+			WinUtil::urlMagnetRegistered = false;
+		}
+
 		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
 		else ctrlToolbar.CheckButton(IDC_LIMITER, false);
 

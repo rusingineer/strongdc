@@ -50,7 +50,8 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_GETIP, ResourceManager::GET_IP },
 	{ IDC_UPDATEIP, ResourceManager::UPDATE_IP },
 	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
-	{ IDC_DU, ResourceManager::DU },	
+	{ IDC_DU, ResourceManager::DU },
+	{ IDC_SETTINGS_BIND_ADDRESS, ResourceManager::SETTINGS_BIND_ADDRESS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -70,6 +71,7 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_SOCKS_PASSWORD, SettingsManager::SOCKS_PASSWORD, PropPage::T_STR },
 	{ IDC_SOCKS_RESOLVE, SettingsManager::SOCKS_RESOLVE, PropPage::T_BOOL },
 	{ IDC_UPDATEIP, SettingsManager::IPUPDATE, PropPage::T_BOOL },
+	{ IDC_BIND_ADDRESS, SettingsManager::BIND_ADDRESS, PropPage::T_STR },
 	{ 0, 0, PropPage::T_END }
 };
 
