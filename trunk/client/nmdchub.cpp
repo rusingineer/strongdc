@@ -91,6 +91,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
+	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
@@ -252,6 +253,9 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		}
 
 		if((temp = strtok(NULL, "$")) != NULL) {
+			// Support for extended $MyINFO with mode instead space in dolars before connection....
+			if(temp[0] != ' ')
+				u->setMode(temp);
 			if(temp[strlen(temp)+1] != '$') {
 				if((temp = strtok(NULL, "$")) != NULL) {
 					char status = temp[strlen(temp)-1];
@@ -340,6 +344,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		if (u->getNick() == getNick()) {
 			if(state == STATE_MYINFO) {
+				setMe(u);
 				state = STATE_CONNECTED;
 				updateCounts(false);
 			}	
@@ -347,6 +352,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			u->setFlag(User::DCPLUSPLUS);
 			if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
 				u->setFlag(User::PASSIVE);
+			else
+				u->unsetFlag(User::PASSIVE);
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::MyInfo(), this, u);
 	} else if(strncmp(aLine, "$Quit ", 6) == 0) {
@@ -669,10 +676,10 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	buf[0] = NULL;
 	if (!handle)
 		return TRUE;// Not a window
-	SendMessageTimeout(handle, WM_GETTEXT, sizeof(buf), (LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
+	SendMessageTimeout(handle, WM_GETTEXT, sizeof(buf), (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
 
 	if(buf[0] != NULL) {
-		if(strnicmp(buf, "NetLimiter", 10) == 0 || strnicmp(buf, "DU Super Controler", 18) == 0) {
+		if(strnicmp(buf, "NetLimiter", 10) == 0/* || strnicmp(buf, "DU Super Controler", 18) == 0*/) {
 			nlfound = true;
 			return false;
 		}
@@ -749,62 +756,66 @@ void NmdcHub::myInfo() {
 
 		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
 
-		EnumWindows(GetWOkna,NULL);
+		int NetLimiter_UploadLimit = 0;
+		int NetLimiter_UploadOn = 0;
+		const size_t BUF_SIZE = 800;
+		string cesta = Util::getAppName()+"/";
+		char buf[BUF_SIZE];
+		u_int32_t len;
+		char* w2 = strdup(cesta.c_str());
 
-		if(nlfound) {
-			int NetLimiter_UploadLimit = 0;
-			int NetLimiter_UploadOn = 0;
-			const size_t BUF_SIZE = 800;
-			string cesta = Util::getAppName()+"/";
-			char buf[BUF_SIZE];
-			u_int32_t len;
+		for(;;) {
+			size_t n = BUF_SIZE;
+			len = f.read(buf, n);
+			string txt = "";
+			for(int i = 0; i<len; ++i) {
+				if (buf[i]== 0) 
+				txt += "/"; else
+				txt += buf[i];
+			}
 
-			for(;;) {
-				size_t n = BUF_SIZE;
-				len = f.read(buf, n);
-				string txt = "";
-				for(int i = 0; i<len; ++i) {
-					if (buf[i]== 0) 
-					txt += "/"; else
-					txt += buf[i];
-				}
+			char* w1 = strdup(txt.c_str());
 
-				char* w1 = strdup(txt.c_str());
-				char* w2 = strdup(cesta.c_str());
+			if(strstr(strupr(w1),strupr(w2)) != NULL) {
+				char buf1[256];
+				char buf2[256];
 
-				if(strstr(strupr(w1),strupr(w2)) != NULL) {
-					char buf1[256];
-					char buf2[256];
+				sprintf(buf1, "%X", u_int8_t(buf[5]));
+				buf1[255] = 0;
+				string a1 = buf1;
 
-					sprintf(buf1, "%X", u_int8_t(buf[5]));
-					buf1[255] = 0;
-					string a1 = buf1;
+				sprintf(buf2, "%X", u_int8_t(buf[6]));
+				buf2[255] = 0;
+				string a2 = buf2;
 
-					sprintf(buf2, "%X", u_int8_t(buf[6]));
-					buf2[255] = 0;
-					string a2 = buf2;
+				string limit_hex = "0x" + a2 + a1;
 
-					string limit_hex = "0x" + a2 + a1;
+				NetLimiter_UploadLimit = 0;
 
-					NetLimiter_UploadLimit = 0;
+				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
+				NetLimiter_UploadOn = u_int8_t(txt[16]);
+				buf[255] = 0;
 
-					NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
-					NetLimiter_UploadOn = u_int8_t(txt[16]);
-					buf[255] = 0;
-
-					if(nlfound && (NetLimiter_UploadOn == 1)) {
-						nldetect = "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+"kB/s]";
+				if(NetLimiter_UploadOn == 1) {
+					EnumWindows(GetWOkna,NULL);
+					if(nlfound) {
+						nldetect = "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+" kB/s]";
 					}
 				}
 
-				delete[] w1, w2;
-
-				if(len < BUF_SIZE)
+				delete[] w1;
 				break;
 			}
-			f.close();
+
+			delete[] w1;
+
+			if(len < BUF_SIZE)
+			break;
 		}
-	} catch(const Exception&) {
+	
+		f.close();
+		delete[] w2;
+	} catch(...) {
 	}
 
 	string connection = nlfound ? nldetect : SETTING(CONNECTION);
@@ -819,7 +830,6 @@ void NmdcHub::myInfo() {
 			tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
 			extendedtag += tmp5 + Util::toString(tag);
 		}
-
 		if (UploadManager::getFireballStatus()) {
 			StatusMode += 8;
 		} else if (UploadManager::getFileServerStatus()) {

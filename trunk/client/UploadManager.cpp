@@ -66,6 +66,10 @@ UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0) {
 UploadManager::~UploadManager() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
+	for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
+		for_each(ii->second.begin(), ii->second.end(), DeleteFunction<UploadQueueItem*>());
+		UploadQueueItems.erase(ii);
+	}
 	while(true) {
 		{
 			Lock l(cs);
@@ -171,7 +175,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		} else {
 			delete is;
 			aSource->maxedOut();
-			addFailedUpload(aSource, file, aStartPos, File::getSize(file));
+				addFailedUpload(aSource->getUser(), file, aStartPos, File::getSize(file));
 			aSource->disconnect();
 			return false;
 		}
@@ -179,6 +183,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	
 		setLastGrant(GET_TICK());
 	}
+	clearUserFiles(aSource->getUser());
 
 	Upload* u = new Upload();
 	u->setUserConnection(aSource);
@@ -196,7 +201,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	dcassert(aSource->getUpload() == NULL);
 	aSource->setUpload(u);
 	uploads.push_back(u);
-
 	throttleSetup();
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
@@ -211,15 +215,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		}
 			aSource->setFlag(UserConnection::FLAG_HASSLOT);
 			running++;
+		}
 	}
-	}
-	if(aSource->isSet(UserConnection::FLAG_HASSLOT)) {
-		// this user is using a full slot, nix them from the queue.
-		clearUserFiles(aSource->getUser());
-	} else {
-		waitingFiles[aSource->getUser()].erase(file);
-	}
-
 	
 	return true;
 }
@@ -323,31 +320,51 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	removeUpload(u);
 }
 
-void UploadManager::addFailedUpload(UserConnection::Ptr source, string filename, int64_t pos, int64_t size)
-{
-	SlotQueue::iterator userPos = find(waitingUsers.begin(), waitingUsers.end(), source->getUser());
-	if (userPos == waitingUsers.end()) waitingUsers.push_back(source->getUser());
-	string path = Util::getFilePath(filename);
-	filename = Util::getFileName(filename);
-
+void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, int64_t size) {
+	string path = Util::getFilePath(file);
+	string filename = Util::getFileName(file);
+	int64_t itime;
 	time_t now;	
-	int64_t itime = time(&now);
-	waitingFiles[source->getUser()].insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+Util::toString(itime));		//maintain list of files the user's asked for
-
-	fire(UploadManagerListener::QueueAdd(), source->getUser()->getNick(), filename, path, pos, size, itime);
+	itime = time(&now);
+	bool found = false;
+	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
+	if(j != UploadQueueItems.end()) {
+		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
+			if((*i)->File == file) {
+				(*i)->pos = pos;
+				found = true;
+				// TODO ... updateitem
+				break;
+			}
+		}
+	}
+	if(found == false) {
+		UploadQueueItem* qi = new UploadQueueItem(User, file, path, filename, pos, size, itime);
+		{
+			Lock l(cs);
+			UploadQueueItem::UserMapIter i = UploadQueueItems.find(User);
+			if(i == UploadQueueItems.end()) {
+				UploadQueueItem::List l;
+				l.push_back(qi);
+				UploadQueueItems.insert(make_pair(User, l));
+			} else {
+				i->second.push_back(qi);
+			}
+		}
+		fire(UploadManagerListener::QueueAdd(), qi);
+	}
 }
 
-void UploadManager::clearUserFiles(const User::Ptr& source)
-{
-	//run this when a user's got a slot. It clears the list of files he attempted unsuccessfully download, as well as the user himself from the queue
-
-	SlotQueue::iterator sit = find(waitingUsers.begin(), waitingUsers.end(), source);
-	if (sit != waitingUsers.end()) waitingUsers.erase(sit);
-
-	FilesMap::iterator fit = waitingFiles.find(source);
-	if (fit != waitingFiles.end()) waitingFiles.erase(source);
-
-	fire(UploadManagerListener::QueueRemove(), source->getNick());
+void UploadManager::clearUserFiles(const User::Ptr& source) {
+	UploadQueueItem::UserMapIter ii = UploadQueueItems.find(source);
+	if(ii != UploadQueueItems.end()) {
+		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
+			fire(UploadManagerListener::QueueItemRemove(), (*i));
+			delete *i;
+		}
+		UploadQueueItems.erase(ii);
+		fire(UploadManagerListener::QueueRemove(), source);
+	}
 }
 
 void UploadManager::removeConnection(UserConnection::Ptr aConn) {
@@ -505,7 +522,8 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}
-		//They shouldn't wait on the upload queue either anymore.
+	}
+	if(aUser->isOnline() == false) {
 		clearUserFiles(aUser);
 	}
 }
@@ -527,7 +545,7 @@ size_t UploadManager::throttleGetSlice() {
 	}
 	} else {
 		return (size_t)-1;
-}
+	}
 }
 
 size_t UploadManager::throttleCycleTime() {
@@ -568,22 +586,8 @@ void UploadManager::throttleSetup() {
 		}
 }
 
-string UploadManager::getQueue() const {
-	string queue;
-	char buf[256];
-	for (SlotQueue::const_iterator sit = waitingUsers.begin(); sit != waitingUsers.end(); ++sit) {
-		sprintf(buf, "%s ", (*sit)->getNick().c_str());
-		queue += string(buf);
-	}
-	return queue;
-}
-
-const UploadManager::SlotQueue& UploadManager::getQueueVec() const {
-	return waitingUsers;
-}
-
-const UploadManager::FileSet& UploadManager::getQueuedUserFiles(const User::Ptr &u) const {
-	return waitingFiles.find(u)->second;
+UploadQueueItem::UserMap UploadManager::getQueue() const {
+	return UploadQueueItems;
 }
 
 /**

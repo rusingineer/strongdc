@@ -140,8 +140,6 @@ public:
 	void removeSources(User::Ptr& aUser, int reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
-	
-	void setSearchString(const string& aTarget, const string& searchString) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
 
 	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {

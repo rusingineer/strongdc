@@ -40,6 +40,7 @@
 #include "ClientsPage.h"
 #include "ToolbarPage.h"
 #include "DownloadDirsPage.h"
+#include "Popups.h"
 
 bool PropertiesDlg::needUpdate = false;
 PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SETTINGS)) {
@@ -52,15 +53,16 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CSTRING(SET
 	pages[6] = new UCPage(s);
 	pages[7] = new CZDCPage(s);
 	pages[8] = new DownloadDirsPage(s);
-	pages[9] = new PropPageTextStyles(s);
-	pages[10] = new OperaColorsPage(s);
-	pages[11] = new FakeDetect(s);	
-	pages[12] = new LimitPage(s);
-	pages[13] = new AVIPreview(s);	
-	pages[14] = new Segment(s);
-	pages[15] = new Sounds(s);
-	pages[16] = new ToolbarPage(s);
-	pages[17] = new ClientsPage(s);	
+	pages[9] = new Popups(s);
+	pages[10] = new PropPageTextStyles(s);
+	pages[11] = new OperaColorsPage(s);
+	pages[12] = new FakeDetect(s);	
+	pages[13] = new LimitPage(s);
+	pages[14] = new AVIPreview(s);	
+	pages[15] = new Segment(s);
+	pages[16] = new Sounds(s);
+	pages[17] = new ToolbarPage(s);
+	pages[18] = new ClientsPage(s);	
 
 	for(int i=0; i<numPages; i++) {
 		AddPage(pages[i]->getPSP());

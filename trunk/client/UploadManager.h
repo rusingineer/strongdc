@@ -29,6 +29,7 @@
 #include "Client.h"
 #include "ClientManagerListener.h"
 #include "File.h"
+#include "FastAlloc.h"
 
 class Upload : public Transfer, public Flags {
 public:
@@ -55,6 +56,7 @@ public:
 };
 
 class UploadManagerListener {
+	friend class UploadQueueItem; 
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
 
@@ -64,14 +66,68 @@ public:
 	typedef X<3> Tick;
 	typedef X<4> QueueAdd;
 	typedef X<5> QueueRemove;
+	typedef X<6> QueueItemRemove;
 
 	virtual void on(Starting, Upload*) throw() { };
 	virtual void on(Tick, const Upload::List&) throw() { };
 	virtual void on(Complete, Upload*) throw() { };
 	virtual void on(Failed, Upload*, const string&) throw() { };
-	virtual void on(QueueAdd, const string&, const string &, const string &, const int64_t, const int64_t, const int64_t) throw() { };
-	virtual void on(QueueRemove, const string&) throw() { };
+	virtual void on(QueueAdd, UploadQueueItem*) throw() { };
+	virtual void on(QueueRemove, const User::Ptr&) throw() { };
+	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { };
 
+};
+
+class UploadQueueItem : public FastAlloc<UploadQueueItem> {
+	public:
+		UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, int64_t itime) :
+			User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime) { };
+		virtual ~UploadQueueItem() throw() { };
+		typedef UploadQueueItem* Ptr;
+		typedef vector<Ptr> List;
+		typedef List::iterator Iter;
+		typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
+		typedef UserMap::iterator UserMapIter;
+
+		const string& getText(int col) const {
+			return columns[col];
+		}
+		static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
+			switch(col) {
+				case COLUMN_FILE: return compare(a->File, b->File);
+				case COLUMN_PATH: return compare(a->Path, b->Path);
+				case COLUMN_NICK: return compare(a->User->getNick(), b->User->getNick());
+				case COLUMN_HUB: return compare(a->User->getLastHubName(), b->User->getLastHubName());
+				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
+				case COLUMN_SIZE: return compare(a->size, b->size);
+				case COLUMN_ADDED: return compare(a->iTime, b->iTime);
+				case COLUMN_WAITING: return compare(a->iTime, b->iTime);
+			}
+			return 0;
+		}
+		enum {
+			COLUMN_FIRST,
+			COLUMN_FILE = COLUMN_FIRST,
+			COLUMN_PATH,
+			COLUMN_NICK,
+			COLUMN_HUB,
+			COLUMN_TRANSFERRED,
+			COLUMN_SIZE,
+			COLUMN_ADDED,
+			COLUMN_WAITING,
+			COLUMN_LAST
+		};
+
+		void update();
+
+		User::Ptr User;
+		string File;
+		string Path;
+		string FileName;
+		int64_t pos;
+		int64_t size;
+		int64_t iTime;
+		string columns[COLUMN_LAST];
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
@@ -107,7 +163,7 @@ public:
 	}
 
 	int getRunning() { return running; };
-	int getFreeSlots() {return max((getSlots() - running), 0); }
+	int getFreeSlots() { return max((getSlots() - running), 0); }
 	bool getAutoSlot() {
 		if(SETTING(MIN_UPLOAD_SPEED) == 0)
 			return false;
@@ -143,20 +199,11 @@ public:
 			reservedSlots.erase(uis);
 	}
 
-	typedef deque<User::Ptr> SlotQueue;
-	typedef set<string> FileSet;
-	typedef hash_map<User::Ptr, FileSet, User::HashFunction> FilesMap;
-	string getQueue() const;
-	void clearUserFiles(const User::Ptr&);
-	const SlotQueue& getQueueVec() const;
-	const FileSet& getQueuedUserFiles(const User::Ptr &) const;
-
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
 		conn->setState(UserConnection::STATE_GET);
 	}
 
-	void clearQueue() { waitingUsers.clear(); waitingFiles.clear(); }
 	void setRunning(int _running) { running = _running; }
 	GETSET(int, extra, Extra);
 	GETSET(u_int32_t, lastGrant, LastGrant);
@@ -164,6 +211,10 @@ public:
 	// Upload throttling
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
+
+	UploadQueueItem::UserMap getQueue() const;
+	void clearUserFiles(const User::Ptr&);
+	UploadQueueItem::UserMap UploadQueueItems;
 private:
 	int running;
 	void throttleZeroCounters();
@@ -183,10 +234,7 @@ private:
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
-	//functions for manipulating waitingFiles and waitingUsers
-	SlotQueue waitingUsers;		//this one merely lists the users waiting for slots
-	FilesMap waitingFiles;		//set of files which this user has asked for
-	void addFailedUpload(UserConnection::Ptr source, string filename, int64_t pos, int64_t size);
+	void addFailedUpload(User::Ptr User, string file, int64_t pos, int64_t size);
 	
 	friend class Singleton<UploadManager>;
 	UploadManager() throw();

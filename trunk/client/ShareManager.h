@@ -75,7 +75,11 @@ public:
 	string getShareSizeString() { return Util::toString(getShareSize()); };
 	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); };
 	
-	int64_t getListLen() { return listLen; };
+	int64_t getListLen() {
+		generateXmlList();
+		generateNmdcList();
+		return listLen;
+	};
 	string getListLenString() { return Util::toString(getListLen()); };
 	
 	SearchManager::TypeModes getType(const string& fileName);
@@ -130,7 +134,7 @@ private:
 		File::Set files;
 
 		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
-			size(0), name(aName), parent(aParent), fileTypes(0), searchTypes(0) { 
+			size(0), name(aName), parent(aParent), fileTypes(0), searchTypes(0) {
 		};
 
 		~Directory();

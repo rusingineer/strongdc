@@ -85,7 +85,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_DOWNLOADTO, onDownloadTo)
 		COMMAND_ID_HANDLER(IDC_GO_TO_DIRECTORY, onGoToDirectory)
 		COMMAND_ID_HANDLER(IDC_VIEW_AS_TEXT, onViewAsText)
-		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
@@ -290,7 +289,6 @@ private:
 	CMenu priorityMenu;
 	CMenu priorityDirMenu;
 	CMenu copyMenu;
-	CMenu searchMenu;
 	OMenu tabMenu;
 
 	CContainedWindow statusContainer;
@@ -322,7 +320,6 @@ private:
 	int statusSizes[8];
 	
 	DirectoryListing* dl;
-	StringList searchFilter;
 };
 
 #endif // !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)

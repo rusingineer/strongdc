@@ -240,9 +240,7 @@ public:
 		int xPos = GET_X_LPARAM(lParam); 
 		int yPos = GET_Y_LPARAM(lParam); 
 		int row = getRows() - ((yPos / getTabHeight()) + 1);
-
 		bool moveLast = true;
-
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* t = *i;
 			if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth())) ) {
@@ -909,4 +907,7 @@ private:
 
 #endif // !defined(AFX_FLATTABCTRL_H__FFFCBD5C_891D_44FB_B9F3_1DF83DA3EA83__INCLUDED_)
 
-
+/**
+ * @file
+ * $Id$
+ */

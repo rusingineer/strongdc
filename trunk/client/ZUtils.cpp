@@ -22,11 +22,12 @@
 #include "ZUtils.h"
 #include "Exception.h"
 #include "ResourceManager.h"
+#include "SettingsManager.h"
 
 ZFilter::ZFilter() {
 	memset(&zs, 0, sizeof(zs));
 
-	if(deflateInit(&zs, Z_DEFAULT_COMPRESSION) != Z_OK) {
+	if(deflateInit(&zs, /*Z_DEFAULT_COMPRESSION*/ SETTING(MAX_COMPRESSION)) != Z_OK) {
 		throw Exception(STRING(COMPRESSION_ERROR));
 	}
 }

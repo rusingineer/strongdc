@@ -157,6 +157,85 @@
 			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
+		<Configuration
+			Name="Optimized|Win32"
+			OutputDirectory=".\vc7\$(ConfigurationName)\windows"
+			IntermediateDirectory=".\vc7\$(ConfigurationName)\windows"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			UseOfATL="1"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			WholeProgramOptimization="TRUE">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="4"
+				GlobalOptimizations="TRUE"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="2"
+				OmitFramePointers="TRUE"
+				OptimizeForProcessor="3"
+				OptimizeForWindowsApplication="TRUE"
+				StringPooling="TRUE"
+				MinimalRebuild="TRUE"
+				ExceptionHandling="TRUE"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="TRUE"
+				EnableFunctionLevelLinking="TRUE"
+				UsePrecompiledHeader="3"
+				PrecompiledHeaderThrough="stdafx.h"
+				AssemblerOutput="4"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+				CallingConvention="1"
+				CompileAs="0"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
+				AdditionalDependencies="comctl32.lib Ws2_32.lib shlwapi.lib delayimp.lib winmm.lib"
+				OutputFile="./Compiled/StrongDC.exe"
+				Version=""
+				LinkIncremental="1"
+				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="LIBCMTD.lib"
+				DelayLoadDLLs="comdlg32.dll;dbghelp.dll"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="./Compiled/StrongDC.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=""
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				SetChecksum="TRUE"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"
+				MkTypLibCompatible="TRUE"
+				SuppressStartupBanner="TRUE"
+				TargetEnvironment="1"
+				TypeLibraryName=".\Compiled/StrongDC.tlb"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				Culture="1033"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -448,6 +527,9 @@
 				RelativePath=".\windows\OperaColorsPage.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\Popups.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\PreviewDlg.cpp">
 			</File>
 			<File
@@ -496,6 +578,12 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Optimized|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>
@@ -729,6 +817,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\OperaColorsPage.h">
+			</File>
+			<File
+				RelativePath=".\windows\Popups.h">
 			</File>
 			<File
 				RelativePath=".\windows\PreviewDlg.h">

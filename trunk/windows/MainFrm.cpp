@@ -202,7 +202,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
-	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS_EX_TOPMOST);
+	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
 	ctrlLastLines.AddTool(&ti);
 
 	CreateMDIClient();
@@ -633,7 +633,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 		if(getShutDown()) ctrlToolbar.CheckButton(IDC_SHUTDOWN, true);
 		else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
-
+	
 		updateTray(BOOLSETTING(MINIMIZE_TRAY));
 	}
 	return 0;
@@ -730,6 +730,7 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		if(lastLines.size() > 2) {
 			lastLines.erase(lastLines.size() - 2);
 		}
+		MessageBox(lastLines.c_str());
 		pDispInfo->lpszText = const_cast<char*>(lastLines.c_str());
 	}
 	return 0;
@@ -1056,7 +1057,22 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		trayMenu.TrackPopupMenu(TPM_RIGHTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);		
 		PostMessage(WM_NULL, 0, 0);
 	}
+
 	return 0;
+}
+
+BOOL MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags)
+{
+  NOTIFYICONDATA m_nid;
+  m_nid.cbSize=sizeof(NOTIFYICONDATA);
+  m_nid.hWnd = m_hWnd;
+  m_nid.uID = 0;
+  m_nid.uFlags = NIF_INFO;
+  m_nid.uTimeout = 5000;
+  m_nid.dwInfoFlags = dwInfoFlags;
+  strcpy(m_nid.szInfo,szMsg ? szMsg : _T(""));
+  strcpy(m_nid.szInfoTitle,szTitle ? szTitle : _T(""));
+  return Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 }
 
 LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

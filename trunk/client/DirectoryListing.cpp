@@ -32,7 +32,7 @@
 #include "CryptoManager.h"
 #include "User.h"
 
-void DirectoryListing::loadFile(const string& name, bool doAdl) throw(){
+void DirectoryListing::loadFile(const string& name, bool doAdl) {
 	string txt;
 
 	// For now, we detect type by ending...
@@ -62,7 +62,7 @@ void DirectoryListing::loadFile(const string& name, bool doAdl) throw(){
 }
 
 void DirectoryListing::load(const string& in, bool doAdl) {
-	StringTokenizer t(in);
+	StringTokenizer t(in, '\n');
 
 	StringList& tokens = t.getTokens();
 	string::size_type indent = 0;
@@ -254,7 +254,7 @@ string DirectoryListing::getPath(Directory* d) {
 }
 
 static inline const string& escaper(const string& n, string& tmp, bool utf8) {
-	return utf8 ? Util::toAcp(n, tmp) : n;
+	return utf8 ? (tmp.clear(), Util::toAcp(n, tmp)) : n;
 }
 
 void DirectoryListing::download(Directory* aDir, const string& aTarget, QueueItem::Priority prio) {

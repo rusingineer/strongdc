@@ -961,6 +961,7 @@ int Util::getOsMinor()
 	return ver.dwMinorVersion;
 #endif //_WIN32
 }
+
 /**
  * @file
  * $Id$

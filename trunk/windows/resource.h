@@ -108,8 +108,8 @@
 #define IDD_DIALOG1                     284
 #define IDD_HASH_PROGRESS               284
 #define IDR_TREE_YES                    285
-#define IDI_TREE_NO                     286
 #define IDR_TREE_NO                     286
+#define IDD_POPUPS                      287
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -495,6 +495,7 @@
 #define IDC_MINUTES                     1279
 #define IDC_KBPS                        1280
 #define IDC_PLAY                        1282
+#define IDC_POPUPLIST                   1283
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
@@ -746,9 +747,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        287
+#define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1283
+#define _APS_NEXT_CONTROL_VALUE         1284
 #define _APS_NEXT_SYMED_VALUE           123
 #endif
 #endif

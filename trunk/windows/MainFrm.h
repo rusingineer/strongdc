@@ -319,6 +319,9 @@ public:
 	}
 
 	void SendCheatMessage(Client* client, User::Ptr u);
+	
+	BOOL ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
+
 	CImageList largeImages, largeImagesHot;
 private:
 	friend bool isMDIChildActive(HWND hWnd);

@@ -162,7 +162,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 	
-	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS_EX_TOPMOST);
+	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
 	ctrlLastLines.AddTool(&ti);
 
 	copyHubMenu.CreatePopupMenu();
@@ -631,6 +631,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					if(updateUser(u)) {
 						if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 							PlaySound(SETTING(SOUND_FAVUSER).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+						if(u->isFavoriteUser() && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
+							MainFrame::getMainFrame()->ShowBalloonTip(u->getFullNick().c_str(), CSTRING(FAVUSER_ONLINE));
+						}
+
 						if(showJoins) {
 							if (!favShowJoins || u->isFavoriteUser()) {
 								addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
@@ -695,7 +700,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		cf.crBackColor = SETTING(BACKGROUND_COLOR);
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
-		addLine(*x,cf);
+		if(BOOLSETTING(POPUP_CHEATING_USER)) {
+			MainFrame::getMainFrame()->ShowBalloonTip((*x).c_str(), CSTRING(CHEATING_USER));
+		}
+
+		addLine("*** "+(*x),cf);
 		delete x;
 	} else if(wParam == DISCONNECTED) {
 		clearUserList();
@@ -703,10 +712,20 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		setIconState();
 		if ((!SETTING(SOUND_HUBDISCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(SOUND_HUBDISCON).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+		if(BOOLSETTING(POPUP_HUB_DISCONNECTED)) {
+			MainFrame::getMainFrame()->ShowBalloonTip(client->getAddress().c_str(), CSTRING(DISCONNECTED));
+		}
+
 	} else if(wParam == CONNECTED) {
 		addClientLine(STRING(CONNECTED), m_ChatTextServer);
 		setTabColor(RGB(0, 255, 0));
 		unsetIconState();
+
+		if(BOOLSETTING(POPUP_HUB_CONNECTED)) {
+			MainFrame::getMainFrame()->ShowBalloonTip(client->getAddress().c_str(), CSTRING(CONNECTED));
+		}
+
 		if ((!SETTING(SOUND_HUBCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(SOUND_HUBCON).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	} else if(wParam == ADD_CHAT_LINE) {
@@ -1500,7 +1519,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	return 0;
 }
 
-LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+LRESULT HubFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	NMTTDISPINFO* nm = (NMTTDISPINFO*)pnmh;
 	lastLines.clear();
 	for(StringIter i = lastLinesList.begin(); i != lastLinesList.end(); ++i) {
@@ -1511,6 +1530,7 @@ LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 		lastLines.erase(lastLines.size() - 2);
 	}
 	nm->lpszText = const_cast<char*>(lastLines.c_str());
+
 	return 0;
 }
 
@@ -1637,7 +1657,7 @@ void HubFrame::on(SearchFlood, Client*, const string& line) throw() {
 	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line);
 }
 void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
-	speak(CHEATING_USER, "*** "+STRING(USER)+" "+line);
+	speak(CHEATING_USER, STRING(USER)+" "+line);
 }
 
 void HubFrame::addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat /* = true */) {

@@ -32,7 +32,6 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_HUBNICK, entry->getNick(false).c_str());
 	SetDlgItemText(IDC_HUBPASS, entry->getPassword().c_str());
 	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
-	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
 	CheckDlgButton(IDC_STEALTH, entry->getStealth() ? BST_CHECKED : BST_UNCHECKED);
 	SetDlgItemText(IDC_RAW_ONE, entry->getRawOne().c_str());
 	SetDlgItemText(IDC_RAW_TWO, entry->getRawTwo().c_str());
