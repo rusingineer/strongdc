@@ -478,21 +478,16 @@ private:
 			slots = Text::toT(sr->getSlotString());
 	
 			if(sr->getIP() != "") {
-				if(sr->getUser()->isOnline() && sr->getUser()->isClientOp())
-					ip = Text::toT(sr->getIP());
-				else 
-					ip = Util::emptyStringT;
-			
 				tstring country = Text::toT(Util::getIpCountry(sr->getIP().c_str()));
-			
-				if (country == _T(""))
-					country = ip;
-				else if (ip == _T(""))
-					country = country;
-				else
-					country = country + _T(" (") + ip + _T(")");
 
-				ip = country;
+				if(sr->getUser()->isOnline() && sr->getUser()->isClientOp()) {
+					ip = Text::toT(sr->getIP());
+					if(country != _T("")) {
+						ip =  country + _T(" (") + ip + _T(")");
+					}
+				} else {
+					ip = country;
+				}
 			}
 
 			if(sr->getTTH() != NULL)

@@ -27,6 +27,7 @@
 
 #include "../client/Client.h"
 #include "../client/StringTokenizer.h"
+#include "../client/version.h"
 
 int PublicHubsFrame::columnIndexes[] = { 
 	COLUMN_NAME,

@@ -29,6 +29,7 @@
 #include "Exception.h"
 #include "Singleton.h"
 #include "FastAlloc.h"
+#include "version.h"
 
 STANDARD_EXCEPTION(CryptoException);
 

@@ -189,7 +189,7 @@ static const string sName = "Name";
 static const string sSize = "Size";
 static const string sTTH = "TTH";
 
-void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
+void ListLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
 	if(inListing) {
 		if(name == sFile) {
 			const string& n = getAttrib(attribs, sName, 0);
@@ -217,6 +217,11 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
 			// ADLSearch
 			if(doAdl)
 			ADLSearchManager::getInstance()->MatchesDirectory(destDirs, d, fullPath);
+
+			if(simple) {
+				// To handle <Directory Name="..." />
+				endTag(name, Util::emptyString);
+			}
 		}
 	} else if(name == sFileListing) {
 		const string& generator = getAttrib(attribs, sGenerator, 2);

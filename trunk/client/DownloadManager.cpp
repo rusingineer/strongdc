@@ -36,6 +36,7 @@
 
 #include <limits>
 
+// some strange mac definition
 #ifdef ff
 #undef ff
 #endif
@@ -64,7 +65,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	if(qi->isSet(QueueItem::FLAG_RESUME))
 		setFlag(Download::FLAG_RESUME);
 
-	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
+	if(!qi->isSource(aUser) || (*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
 };
 

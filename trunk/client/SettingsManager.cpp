@@ -26,6 +26,7 @@
 #include "Util.h"
 #include "File.h"
 #include "HubManager.h"
+#include "version.h"
 
 const string SettingsManager::settingTags[] =
 {
@@ -519,7 +520,7 @@ void SettingsManager::load(string const& aFileName)
 		if(xml.findChild("Settings"))
 		{
 			xml.stepIn();
-			
+
 			int i;
 			
 			for(i=STR_FIRST; i<STR_LAST; i++)
@@ -552,6 +553,15 @@ void SettingsManager::load(string const& aFileName)
 			
 			xml.stepOut();
 		}
+
+		double v = Util::toDouble(SETTING(CONFIG_VERSION));
+		// if(v < 0.x) { // Fix old settings here }
+		if(v < 0.668 && isSet[IN_PORT]) {
+			set(UDP_PORT, SETTING(IN_PORT));
+		}
+
+		setDefault(UDP_PORT, SETTING(IN_PORT));
+
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();

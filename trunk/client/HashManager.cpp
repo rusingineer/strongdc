@@ -601,7 +601,7 @@ int HashManager::Hasher::run() {
 				}
 #endif
 				f.close();
-				tth->finalize();			
+				tth->finalize();
 #ifdef _WIN32
 				u_int32_t end = GET_TICK();
 				speed = 0;
@@ -628,7 +628,6 @@ int HashManager::Hasher::run() {
 				delete buf;
 			}
 			buf = NULL;
-			total = 0;
 			if(stop == false && w.empty()) {
 				procenta = 0;
 			}
@@ -714,7 +713,6 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname, bool verify) {
 					delete buf;
 				}
 				buf = NULL;
-				total = 0;
 			}
 		}
 	}

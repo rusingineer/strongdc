@@ -25,6 +25,7 @@
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 #include "ConnectionManager.h"
+#include "version.h"
 
 const string AdcHub::CLIENT_PROTOCOL("ADC/0.8");
 
@@ -176,7 +177,9 @@ void AdcHub::handle(Command::CTM, Command& c) throw() {
 		send(cc);
 		return;
 	}
-	ConnectionManager::getInstance()->connect(p->getIp(), (short)Util::toInt(c.getParameters()[2]), getMe()->getCID(), Util::toUInt32(c.getParameters()[0]));
+	string token;
+	c.getParam("TO", 2, token);
+	ConnectionManager::getInstance()->connect(p->getIp(), (short)Util::toInt(c.getParameters()[1]), getMe()->getCID(), token);
 }
 
 void AdcHub::handle(Command::RCM, Command& c) throw() {

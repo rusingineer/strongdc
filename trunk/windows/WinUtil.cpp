@@ -37,6 +37,8 @@
 #include "../client/UploadManager.h"
 #include "../client/HashManager.h"
 #include "../client/LogManager.h"
+#include "../client/version.h"
+
 #include "HubFrame.h"
 #include "MagnetDlg.h"
 #include "winamp.h"

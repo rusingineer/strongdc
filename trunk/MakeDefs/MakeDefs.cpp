@@ -9,6 +9,7 @@
 #include "../client/File.h"
 #include "../client/StringTokenizer.h"
 #include "../client/ResourceManager.h"
+#include "../client/version.h"
 
 SettingsManager* Singleton<SettingsManager>::instance = 0;
 

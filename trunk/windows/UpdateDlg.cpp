@@ -18,6 +18,7 @@
 
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
+#include "../client/version.h"
 #include "Resource.h"
 
 #include "UpdateDlg.h"

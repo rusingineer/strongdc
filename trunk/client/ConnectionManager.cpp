@@ -40,6 +40,8 @@ ConnectionManager::ConnectionManager() : port(0), floodCounter(0), shuttingDown(
 	features.push_back(UserConnection::FEATURE_ADCGET);
 	features.push_back(UserConnection::FEATURE_TTHL);
 	features.push_back(UserConnection::FEATURE_TTHF);
+
+	adcFeatures.push_back("BASE");
 };
 
 /**
@@ -277,7 +279,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
-static const u_int32_t FLOOD_ADD = 1000;
+static const u_int32_t FLOOD_ADD = 2000;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...
@@ -355,7 +357,7 @@ void ConnectionManager::connect(const string& aServer, short aPort, const string
 	}
 }
 
-void ConnectionManager::connect(const string& aServer, short aPort, const CID& aCID, u_int32_t aToken) {
+void ConnectionManager::connect(const string& aServer, short aPort, const CID& aCID, const string& aToken) {
 	if(shuttingDown)
 		return;
 
@@ -380,7 +382,7 @@ void ConnectionManager::on(Command::SUP, UserConnection* aSource, const Command&
 	}
 
 	if(aSource->isSet(UserConnection::FLAG_INCOMING)) {
-		aSource->sup();
+		aSource->sup(adcFeatures);
 		aSource->inf(false);
 	} else {
 		aSource->inf(true);
@@ -388,12 +390,12 @@ void ConnectionManager::on(Command::SUP, UserConnection* aSource, const Command&
 	aSource->setState(UserConnection::STATE_INF);
 }
 
-void ConnectionManager::on(Command::NTD, UserConnection* aSource, const Command&) throw() {
-	
+void ConnectionManager::on(Command::NTD, UserConnection*, const Command&) throw() {
+
 }
 
 void ConnectionManager::on(Command::STA, UserConnection*, const Command&) throw() {
-
+	
 }
 
 void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aSource) throw() {
@@ -403,7 +405,7 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 		aSource->myNick(aSource->getNick());
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	} else {
-		aSource->sup();
+		aSource->sup(adcFeatures);
 	}
 	aSource->setState(UserConnection::STATE_SUPNICK);
 }
@@ -467,7 +469,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 					host = e.getError();
 				} catch (...) {
 				}
-				ClientManager::getInstance()->setIPNick(ip, aNick);
+				ClientManager::getInstance()->setIPNick(ip, aSource->getUser());
 				aSource->getUser()->setHost(host);
 				User::updated(aSource->getUser());
 			}

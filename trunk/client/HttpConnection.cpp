@@ -22,6 +22,7 @@
 #include "HttpConnection.h"
 
 #include "SettingsManager.h"
+#include "version.h"
 
 /**
  * Downloads a file and returns it as a string
