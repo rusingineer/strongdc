@@ -117,8 +117,8 @@ LRESULT OperaColorsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	crProgressTextDown = SETTING(PROGRESS_TEXT_COLOR_DOWN);
 	crProgressTextUp = SETTING(PROGRESS_TEXT_COLOR_UP);
 
-	ctrlProgressOverride1.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE));
-	ctrlProgressOverride2.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE2));
+/*	ctrlProgressOverride1.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE));
+	ctrlProgressOverride2.Attach(GetDlgItem(IDC_PROGRESS_OVERRIDE2));*/
 	ctrlProgressDownDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_DOWN_SHOW));
 	ctrlProgressUpDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_UP_SHOW));
 
@@ -164,7 +164,9 @@ void OperaColorsPage::write()
 
 LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if(PropertiesDlg::needUpdate)
-	{	PostMessage(WM_INITDIALOG,0,0);
+	{
+		PostMessage(WM_DESTROY,0,0);
+		PostMessage(WM_INITDIALOG,0,0);
 		PropertiesDlg::needUpdate = false;
 	}
 	bHandled = FALSE;
@@ -297,7 +299,24 @@ LRESULT OperaColorsPage::onImageBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	return 0;
 }
 
-
+LRESULT OperaColorsPage::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+{
+	if (ctrlProgressDownDrawer.m_hWnd != NULL)	
+		ctrlProgressDownDrawer.Detach();
+	if (ctrlProgressUpDrawer.m_hWnd != NULL)
+		ctrlProgressUpDrawer.Detach();
+	if (ctrlLeftColor.m_hWnd != NULL)
+		ctrlLeftColor.Detach();
+	if (ctrlRightColor.m_hWnd != NULL)
+		ctrlRightColor.Detach();
+	if (ctrlTwoColors.m_hWnd != NULL)
+		ctrlTwoColors.Detach();
+	if (ctrlBumped.m_hWnd != NULL)
+		ctrlBumped.Detach();
+	if (ctrlMenubarDrawer.m_hWnd != NULL)
+		ctrlMenubarDrawer.Detach();
+	return 1;
+}
 /**
  * @file
  * $Id$
