@@ -55,11 +55,12 @@ public:
 		FLAG_CRC32_OK = 0x20,
 		FLAG_ANTI_FRAG = 0x40,
 		FLAG_UTF8 = 0x80,
-		FLAG_TREE_DOWNLOAD=0x100,		
-		FLAG_TESTSUR = 0x200,
-		FLAG_TTH_OK = 0x400,
-		FLAG_MP3_INFO = 0x800,
-		FLAG_NOSEGMENTS = 0x1000
+		FLAG_TREE_DOWNLOAD = 0x100,
+		FLAG_TREE_TRIED = 0x200,		
+		FLAG_TESTSUR = 0x400,
+		FLAG_TTH_OK = 0x800,
+		FLAG_MP3_INFO = 0x1000,
+		FLAG_NOSEGMENTS = 0x2000
 	};
 
 	Download() throw();
@@ -113,6 +114,25 @@ public:
 		return tt;
 	}
 
+	Command getCommand(bool zlib) {
+		Command cmd = Command(Command::GET());
+		if(isSet(FLAG_TREE_DOWNLOAD)) {
+			cmd.addParam("tthl");
+		} else {
+			cmd.addParam("file");
+		}
+		cmd.addParam(Util::toAdcFile(getSource()));
+		cmd.addParam(Util::toString(getPos()));
+		cmd.addParam(Util::toString(getSize()));
+
+		if(zlib && getSize() != -1 && BOOLSETTING(COMPRESS_TRANSFERS)) {
+			setFlag(FLAG_ZDOWNLOAD);
+			cmd.addParam("ZL1");
+		}
+
+		return cmd;
+	}
+
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
@@ -121,6 +141,8 @@ public:
 	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(Download*, oldDownload, OldDownload);
+	GETSET(TTHValue*, tth, TTH);
+
 	int64_t bytesLeft;
 	int64_t quickTick;
 private:
@@ -158,7 +180,7 @@ public:
 
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
-		checkDownloads(conn, false, false);
+		checkDownloads(conn, false);
 	}
 
 	void abortDownload(const string& aTarget);
@@ -257,7 +279,7 @@ private:
 		}
 	};
 	
-	void checkDownloads(UserConnection* aConn, bool reconn = false, bool afterTree = false);
+	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 	
 	// UserConnectionListener

@@ -40,14 +40,12 @@ dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
 
 	inbuf = new u_int8_t[inbufSize];
 
-	// MSVC: Non-standard scope for i
-	{
 		for(int i = 0; i < BUFFERS; i++) {
 			outbuf[i] = new u_int8_t[inbufSize];
 			outbufPos[i] = 0;
 			outbufSize[i] = inbufSize;
 		}
-	}
+
 	try {
 		start();
 	} catch(const ThreadException& e) {
@@ -99,10 +97,10 @@ bool BufferedSocket::threadSendFile() {
 			} else {
 				s = (BOOLSETTING(SMALL_SEND_BUFFER) ? SMALL_BUFFER_SIZE : inbufSize);
 			}
-			size_t valid = file->read(inbuf, s);
-			if(valid > 0) {
-				Socket::write((char*)inbuf, valid);
-				fire(BufferedSocketListener::BytesSent(), s, valid);
+			size_t actual = file->read(inbuf, s);
+			if(actual > 0) {
+				Socket::write((char*)inbuf, actual);
+				fire(BufferedSocketListener::BytesSent(), s, actual);
 				if (throttling) {
 					int32_t cycle_time = um->throttleCycleTime();
 					current = TimerManager::getTick();

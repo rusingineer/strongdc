@@ -128,6 +128,7 @@ public:
 	}
 
 	MerkleValue& getRoot() { return root; }
+	const MerkleValue& getRoot() const { return root; }
 	MerkleList& getLeaves() { return leaves; }
 	const MerkleList& getLeaves() const { return leaves; }
 

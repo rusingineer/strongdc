@@ -107,7 +107,8 @@ public:
 			FLAG_CRC_WARN = 0x20,
 			FLAG_SLOW = 0x40,
 			FLAG_UTF8 = 0x80,
-			FLAG_TTH_INCONSISTENCY = 0x100
+			FLAG_TTH_INCONSISTENCY = 0x100,
+			FLAG_BAD_TREE = 0x200
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };

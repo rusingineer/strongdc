@@ -1069,7 +1069,7 @@ void SearchFrame::onHubChanged(HubInfo* info) {
 
 	delete ctrlHubs.getItemData(nItem);
 	ctrlHubs.SetItemData(nItem, (DWORD_PTR)info);
-	ctrlHubs.updateItem(nItem);
+	ctrlHubs.updateItem(nItem);	
 
 	if (ctrlHubs.GetCheckState(0))
 		ctrlHubs.SetCheckState(nItem, info->op);

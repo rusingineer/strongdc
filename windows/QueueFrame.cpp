@@ -292,6 +292,8 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += STRING(SLOW_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
 						tmp = "(" + STRING(DOWNLOAD_CORRUPTED);
+					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
+						tmp += STRING(INVALID_TREE);
 					}
 					tmp += ')';
 				}
@@ -603,6 +605,9 @@ void QueueFrame::on(QueueManagerListener::Moved, QueueItem* aQI) {
 void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 	QueueItemInfo* ii = NULL;
 	{
+		if(queue.find(aQI) == queue.end())
+			return;
+		
 		Lock l(cs);
 		dcassert(queue.find(aQI) != queue.end());
 		ii = queue[aQI];

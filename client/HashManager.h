@@ -64,6 +64,9 @@ public:
 
 	bool getTree(const string& aFileName, TigerTree& tmp);
 
+	void addTree(const string& aFileName, const TigerTree& tmp) {
+		hashDone(aFileName, tmp, -1);
+	}
 	/**
 	 * Rebuild hash data file
 	 */
@@ -120,7 +123,7 @@ public:
 	class HashStore {
 	public:
 		HashStore();
-		void addFile(const string& aFileName, TigerTree& tth, bool aUsed);
+		void addFile(const string& aFileName, const TigerTree& tth, bool aUsed);
 
 		void load();
 		void save();
@@ -176,7 +179,7 @@ public:
 		bool dirty;
 
 		void createDataFile(const string& name);
-		int64_t addLeaves(TigerTree::MerkleList& leaves);
+		int64_t addLeaves(const TigerTree::MerkleList& leaves);
 	};
 
 	friend class HashLoader;
@@ -186,7 +189,7 @@ public:
 
 	CriticalSection cs;
 
-	void hashDone(const string& aFileName, TigerTree& tth, int64_t speed);
+	void hashDone(const string& aFileName, const TigerTree& tth, int64_t speed);
 
 	virtual void on(TimerManagerListener::Minute, u_int32_t) throw() {
 			Lock l(cs);
