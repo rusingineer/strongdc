@@ -133,6 +133,7 @@ private:
 		REMOVE_ITEM,
 		UPDATE_ITEM,
 		UPDATE_ITEMS,
+		SET_STATE
 	};
 
 	enum {

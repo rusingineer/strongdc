@@ -558,8 +558,9 @@ void TransferView::InsertItem(ItemInfo* i) {
 		h->qi = i->qi;
 		i->upper = h;
 		mainItems.push_back(h);
-		int m = ctrlTransfers.insertItem(0,h, IMAGE_DOWNLOAD);	
-		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+		PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
+//		int m = ctrlTransfers.insertItem(0,h, IMAGE_DOWNLOAD);	
+//		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
 	} else { 
 		if(!i->upper->collapsed) {
 			int r = ctrlTransfers.findItem(i->upper);
@@ -745,6 +746,10 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.SetRedraw(TRUE);
 				
 		delete v;
+	} else if(wParam == SET_STATE) {
+		ItemInfo* i = (ItemInfo*)lParam;
+		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
+		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
 	}
 
 	return 0;
