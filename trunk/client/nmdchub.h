@@ -137,8 +137,18 @@ public:
 		}
 	};
 	void password(const string& aPass) { send("$MyPass " + aPass + "|"); };
-	void getInfo(User::Ptr aUser) { checkstate(); send("$GetINFO " + aUser->getNick() + " " + getNick() + "|"); };
-	void getInfo(User* aUser) {  checkstate(); send("$GetINFO " + aUser->getNick() + " " + getNick() + "|"); };
+	void getInfo(User::Ptr aUser) {
+		 checkstate();
+		 char buf[256];
+		 sprintf(buf, "$GetINFO %s %s|", aUser->getNick().c_str(), getNick().c_str());
+		 send(buf);
+	};
+	void getInfo(User* aUser) {
+		checkstate();
+		char buf[256];
+		sprintf(buf, "$GetINFO %s %s|", aUser->getNick().c_str(), getNick().c_str());
+		send(buf);
+	};
 	void hubMessage(const string& aMessage) { checkstate(); send("<" + getNick() + "> " + Util::validateChatMessage(aMessage) + "|"); }
 	void sendMeMessage(const string& aMessage) { checkstate(); send(Util::validateChatMessage(aMessage) + "|"); }
 
@@ -149,18 +159,22 @@ public:
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-		send("$ConnectToMe " + aUser->getNick() + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
+		char buf[256];
+		sprintf(buf, "$ConnectToMe %s %s:%d|", aUser->getNick().c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
+		send(buf);
 		ConnectionManager::iConnToMeCount++;
 	}
 	void connect(const User* aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
+		char buf[256];
 		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-			send("$ConnectToMe " + aUser->getNick() + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
+			sprintf(buf, "$ConnectToMe %s %s:%d|", aUser->getNick().c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
 			ConnectionManager::iConnToMeCount++;
 		} else {
-			send("$RevConnectToMe " + getNick() + " " + aUser->getNick()  + "|");
+			sprintf(buf, "$RevConnectToMe %s %s|", getNick().c_str(), aUser->getNick().c_str());
 		}
+		send(buf);
 	}
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
 		privateMessage(aUser->getNick(), aMessage);
@@ -182,7 +196,9 @@ public:
 	void revConnectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::revConnectToMe %s\n", aUser->getNick().c_str());
-		send("$RevConnectToMe " + getNick() + " " + aUser->getNick()  + "|");
+		char buf[256];
+		sprintf(buf, "$RevConnectToMe %s %s|", getNick().c_str(), aUser->getNick().c_str());
+		send(buf);
 	}
 
 	void sendDebugMessage(const string& aLine);

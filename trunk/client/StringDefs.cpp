@@ -565,7 +565,7 @@ string ResourceManager::strings[] = {
 "Faker found", 
 "File is corrupted", 
 "Unhandled Exception", 
-"Open X extra slots for each hub (when hubs = 2 or more)", 
+"Slot ratio", 
 "Segment Downloading", 
 "Automatically do Accelerated (Segmented) downloading", 
 "2 segments if file size is between                 and                  MB", 
@@ -721,6 +721,8 @@ string ResourceManager::strings[] = {
 "Downloading TTH tree...",
 "No free block",
 "Log segmented downloading",
+"Display cheats in main chat",
+"Search in results:"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1442,4 +1444,6 @@ string ResourceManager::names[] = {
 "DownloadingTTHL",
 "NoFreeBlock",
 "LogSegment",
+"SettingsDisplayCheatsInMainChat",
+"SearchInResults",
 };

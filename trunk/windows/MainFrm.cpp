@@ -65,7 +65,7 @@ CAGEmotionSetup* g_pEmotionsSetup;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 	lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-	closing(false), awaybyminimize(false), missedAutoConnect(false)
+	closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyString)
 	{ 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
@@ -881,9 +881,9 @@ LRESULT MainFrame::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
  
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string file = Util::getAppPath() + "*.*";
- 	if(WinUtil::browseFile(file, m_hWnd, false) == IDOK) {
+ 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
+		lastTTHdir = Util::getFilePath(file);
 		string hash = HashManager::getInstance()->hasher.getTTfromFile(file).getRoot().toBase32();
-	
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;
 		FindFirstFile(file.c_str(), &data);
@@ -1237,26 +1237,30 @@ void MainFrame::updateShutdown(u_int32_t aTick) {
 	}
 }
 
-void MainFrame::checkFileList(string file, User::Ptr u)
-{
-	HubFrame* hubFrame = HubFrame::getHub(u->getClient());
-	if(hubFrame == NULL)
-	{
-		return;
+void MainFrame::checkFileList(string file, User::Ptr u) {
+	if(u) {
+		Client* c = u->getClient();
+		if(c) {
+			if(!c->getOp()) return;
+			HubFrame* hubFrame = HubFrame::getHub(c);
+			if(hubFrame == NULL) {
+				return;
+			}
+			DirectoryListing* dl = new DirectoryListing(u);
+			try {
+				dl->loadFile(file, true);
+			} catch(const Exception&) {
+				delete dl;
+				return;
+			}
+			hubFrame->checkCheating(u, dl);
+			delete dl;
+		}
 	}
-	DirectoryListing* dl = new DirectoryListing(u);
-	try {
-		dl->loadFile(file, true);
-	} catch(const Exception&) {
-		delete dl;
-		return;
-	}
-	hubFrame->checkCheating(u, dl);
-	delete dl;
 }
 
-void MainFrame::SendCheatMessage(Client* client, User::Ptr u)
-{
+void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
+	if(client) {
 		HubFrame* hubFrame = HubFrame::getHub(client);
 	
 		CHARFORMAT2 cf;
@@ -1269,6 +1273,7 @@ void MainFrame::SendCheatMessage(Client* client, User::Ptr u)
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
 		hubFrame->addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
+	}
 }
 
 LRESULT MainFrame::onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

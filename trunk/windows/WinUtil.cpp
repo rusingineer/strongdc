@@ -619,7 +619,7 @@ char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :
 "\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n" LINE3,
 "\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
 "\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n" LINE3,
-"\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesné soubory :-))\r\n" LINE3,
+"\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n" LINE3,
 "\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
 };
 

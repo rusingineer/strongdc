@@ -23,6 +23,7 @@
 #include "CryptoManager.h"
 #include "SimpleXML.h"
 #include "File.h"
+#include "ShareManager.h"
 
 #define HASH_FILE_VERSION_STRING "1"
 static const u_int32_t HASH_FILE_VERSION=1;
@@ -449,7 +450,6 @@ int HashManager::Hasher::run() {
 				fname.clear();
 			}
 		}
-
 		if(!fname.empty()) {
 #ifdef _WIN32
 			if(buf == NULL) {
@@ -514,8 +514,10 @@ int HashManager::Hasher::run() {
 				// Ignore, it'll be readded on the next share refresh...
 			}
 		}
-		if (w.size() == 0)
-		{	procenta = 0;			
+		if (w.size() == 0) {
+			procenta = 0;
+			ShareManager::getInstance()->setDirty();
+			ShareManager::getInstance()->refresh(true);
 			LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);
 		}
 		if(buf != NULL && (last || stop)) {
@@ -531,7 +533,6 @@ int HashManager::Hasher::run() {
 	}
 	return 0;
 }
-
 
 TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 	setThreadPriority(Thread::LOW);
@@ -558,10 +559,6 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 		try {
 			File f(fname, File::READ, File::OPEN);
 			size_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), (size_t)MIN_BLOCK_SIZE);
-/*#ifdef _WIN32
-			int64_t size = f.getSize();
-			u_int32_t start = GET_TICK();
-#endif*/
 
 			TigerTree slowTTH(bs, f.getLastModified());
 			TigerTree* tth = &slowTTH;
@@ -596,10 +593,12 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 			tth->finalize();			
 			return *tth;
 		} catch(const FileException&) {
+
 		}
 	}
 	return 0;
 }
+
 /**
  * @file
  * $Id$

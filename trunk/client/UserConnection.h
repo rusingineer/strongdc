@@ -62,6 +62,7 @@ public:
 	typedef X<21> ADCSnd;
 	typedef X<22> ADCSta;
 	typedef X<23> Unknown; 
+	typedef X<24> ListLength; 
 
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw() { }
 	virtual void on(Connected, UserConnection*) throw() { }
@@ -87,6 +88,7 @@ public:
 	virtual void on(Command::SND, UserConnection*, const Command&) throw() { }
 	virtual void on(Command::STA, UserConnection*, const Command&) throw() { }
 	virtual void on(Unknown, UserConnection*, const string&) throw() { }
+	virtual void on(ListLength, UserConnection*, const string&) throw() { }
 };
 
 class ConnectionQueueItem;
@@ -262,6 +264,7 @@ public:
 	User::Ptr& getUser() { return user; };
 
 	string getRemoteIp() const { return socket->getRemoteIp(); }
+	void getListLen() { send("$GetListLen|"); };
 	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	GETSET(string, unknownCommand, UnknownCommand);
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; };
@@ -292,7 +295,8 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	void garbageCommand() { send("AtUzDouVsechnyTyOmezovaceDoPrcicASNimaITyPodelanyKlientDetektoryAleAsiSemDamNahodnejString|"); }
+	void garbageCommand() { send("PosilamBordel|"); }
+
 private:
 	BufferedSocket* socket;
 	User::Ptr user;

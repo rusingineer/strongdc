@@ -255,7 +255,6 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	fire(ClientManagerListener::UserUpdated(), aUser);
 }
 
-
 User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
 	Lock l(cs);
 	dcassert(!cid.isZero());

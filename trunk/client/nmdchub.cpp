@@ -120,8 +120,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		char *seeker = temp;
 
+		bool bPassive = (strnicmp(seeker, "Hub:", 4) == 0);
+
+		// We don't wan't to answer passive searches if we're in passive mode...
+		if(bPassive == true && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
+			return;
+		}
+
 		// Filter own searches
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
 			if((strcmp(seeker, (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
 				return;
 			}
@@ -150,8 +157,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 					count++;
 
 				if(count > 7) {
-					if( strnicmp(seeker, "Hub:", 4) == 0 ) {
-						if(strlen(seeker) > 4)
+					if(bPassive == true && strlen(seeker) > 4) {
 							Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, strtok(seeker+4, "\0"));
 					} else {
 						Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
@@ -191,16 +197,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		int type = atoi(temp) - 1;
 		if((temp = strtok(NULL, "\0")) != NULL) {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, temp);
-			if(strnicmp(seeker, "Hub:", 4) == 0) {
+			if(bPassive == true && strlen(seeker) > 4) {
 				User::Ptr u;
-				if(strlen(seeker) > 4) {
-					Lock l(cs);
-						User::NickIter ni = users.find(strtok(seeker+4, "\0"));
-						if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
-							u = ni->second;
-							u->setPassive();
-							//u->setFlag(User::PASSIVE);
-					}
+				Lock l(cs);
+				User::NickIter ni = users.find(strtok(seeker+4, "\0"));
+				if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
+					u = ni->second;
+					u->setPassive();
 				}
 
 				if(u) {
@@ -406,7 +409,6 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 			u = i->second;
 			if(!u->isSet(User::PASSIVE)) {
-				//u->setFlag(User::PASSIVE);
 				u->setPassive();
 				up = true;
 			}
@@ -669,13 +671,16 @@ void NmdcHub::onLine(const char *aLine) throw() {
 bool nlfound;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	char buf[256];
+	buf[0] = NULL;
 	if (!handle)
 		return TRUE;// Not a window
 	SendMessageTimeout(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
 
-	if(strnicmp(buf, "NetLimiter", 10) == 0 || strnicmp(buf, "DU Super Controler", 18) == 0) {
-		nlfound = true;
-		return false;
+	if(buf[0] != NULL) {
+		if(strnicmp(buf, "NetLimiter", 10) == 0 || strnicmp(buf, "DU Super Controler", 18) == 0) {
+			nlfound = true;
+			return false;
+		}
 	}
 	return true;
 }

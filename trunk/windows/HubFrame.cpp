@@ -180,14 +180,19 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
-	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
-		ctrlFilterSel.AddString(CSTRING_I(UserListColumns::def_columnNames[j]));
+
+	char Buffer[500];
+	LV_COLUMN lvCol;
+	int indexes[32];
+	ctrlUsers.GetColumnOrderArray(ctrlUsers.GetHeader().GetItemCount(), indexes);
+	for (int i = 0; i < ctrlUsers.GetHeader().GetItemCount(); ++i) {
+		lvCol.mask = LVCF_TEXT;
+		lvCol.pszText = Buffer;
+		lvCol.cchTextMax = sizeof(Buffer);
+		ctrlUsers.GetColumn(indexes[i], &lvCol);
+		ctrlFilterSel.AddString(lvCol.pszText);
 	}
-
 	ctrlFilterSel.SetCurSel(0);
-
-
-
 
 	bHandled = FALSE;
 	client->connect();
@@ -806,6 +811,12 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.top = rc.top + 0;
 		rc.bottom = rc.bottom + 120;
 		ctrlFilterSel.MoveWindow(rc);
+}
+
+LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	bHandled = FALSE;
+	ctrlClient.GoToEnd();
+	return 0;
 }
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -1632,65 +1643,58 @@ LRESULT HubFrame::onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 }
 
 BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
-	int64_t statedSize = dl->getUser()->getBytesShared();
-	int64_t realSize = dl->getTotalSize();
-	int64_t junkSize = 0;
+	if(user->getClient()->getOp()) {
+		int64_t statedSize = dl->getUser()->getBytesShared();
+		int64_t realSize = dl->getTotalSize();
+		int64_t junkSize = 0;
 	
-	if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
-		junkSize = dl->getJunkSize();
-		realSize -= junkSize;
+		if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
+			junkSize = dl->getJunkSize();
+			realSize -= junkSize;
+		}	
+		user->setChecked(true);
+		double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
+		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
+		string detectString = "";
+		string inflationString = "";
+		user->setJunkBytesShared(junkSize);
+		user->setRealBytesShared(realSize);
+		bool isFakeSharing = false;
+
+		if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
+			isFakeSharing = true;
+		}
+
+		if(statedSize > sizeTolerated) {
+			isFakeSharing = true;
+		}
+
+		if(isFakeSharing) {
+			user->setFakeSharing(true);
+			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
+			if(realSize == 0) {
+				detectString += STRING(CHECK_0BYTE_SHARE);
+			} else {
+				double qwe = (double)((double)statedSize / (double)realSize);
+				string str = Util::toString(qwe);
+				char buf[128];
+				sprintf(buf, CSTRING(CHECK_INFLATED), str);
+				inflationString = buf;
+				detectString += inflationString;
+			}
+			detectString += STRING(CHECK_SHOW_REAL_SHARE);
+			if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
+				detectString = STRING(CHECK_JUNK_FILES);
+			}
+			detectString = user->insertUserData(detectString);
+			user->setCheat(Util::validateMessage(detectString, false), false);
+			user->sendRawCommand(SETTING(FAKESHARE_RAW));
+		}     
+		//this->updateUser(user);
+		user->updated();
+		if(isFakeSharing) return true;
 	}
-			
-			user->setChecked(true);
-			double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
-			int64_t sizeTolerated = (int64_t)(realSize*multiplier);
-			string detectString = "";
-			string inflationString = "";
-			user->setJunkBytesShared(junkSize);
-			user->setRealBytesShared(realSize);
-			bool isFakeSharing = false;
-
-			if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES)))
-			{
-				isFakeSharing = true;
-			}
-
-			if(statedSize > sizeTolerated)
-			{
-				isFakeSharing = true;
-			}
-
-			if(isFakeSharing)
-			{
-				user->setFakeSharing(true);
-				detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
-				if(realSize == 0)
-				{
-					detectString += STRING(CHECK_0BYTE_SHARE);
-				}
-				else
-				{
-					double qwe = (double)((double)statedSize / (double)realSize);
-					string str = Util::toString(qwe);
-					char buf[128];
-					sprintf(buf, CSTRING(CHECK_INFLATED), str);
-					inflationString = buf;
-					detectString += inflationString;
-				}
-				detectString += STRING(CHECK_SHOW_REAL_SHARE);
-
-				if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES)))
-				{
-					detectString = STRING(CHECK_JUNK_FILES);
-				}
-
-				detectString = user->insertUserData(detectString);
-				user->setCheat(Util::validateMessage(detectString, false), false);
-			}     
-
-			this->updateUser(user);
-			if(isFakeSharing) return true; else	return false;
-
+	return false;
 }
 
 LRESULT HubFrame::onRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
@@ -1848,10 +1852,6 @@ bool HubFrame::PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick,
 		pMenu->AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CSTRING(MATCH_QUEUE));
 		pMenu->AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CSTRING(ADD_TO_FAVORITES));
 		pMenu->SetMenuDefaultItem( IDC_GETLIST );
-//		pMenu->AppendMenu(MF_SEPARATOR);
-//		pMenu->AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CSTRING(GET_USER_RESPONSES));
-//		pMenu->AppendMenu(MF_STRING, IDC_REPORT, CSTRING(REPORT));
-//		pMenu->AppendMenu(MF_STRING, IDC_CHECKLIST, "Check File List");
 	}
 	return true;
 }

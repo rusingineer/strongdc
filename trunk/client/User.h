@@ -156,14 +156,15 @@ public:
 	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
 	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
-	GETSET(int64_t, realBytesShared, RealBytesShared);
-	GETSET(int64_t, junkBytesShared, JunkBytesShared);
-	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
-	GETSET(string, cheatingString, CheatingString);
 	GETSET(bool, fakeSharing, FakeSharing); 
 	GETSET(bool, checked, Checked); 
 	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
+	GETSET(int64_t, realBytesShared, RealBytesShared);
+	GETSET(int64_t, junkBytesShared, JunkBytesShared);
+	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
+	GETSET(string, cheatingString, CheatingString);
+	GETSET(int64_t, listLength, ListLength);
 	GETSET(bool, badClient, BadClient);	
 	GETSET(int, fileListDisconnects, FileListDisconnects);
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
@@ -186,8 +187,6 @@ public:
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
 	string getReport();
-	string getVersion(const string& aExp, const string& aTag);
-	string splitVersion(const string& aExp, const string& aTag);
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
 		pk = Util::emptyString;
@@ -204,6 +203,7 @@ public:
 		hasTestSURinQueue = false;
 		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
+		listLength = -1;
 		badClient = false;
 		fileListDisconnects = 0;
 		connectionTimeouts = 0;
@@ -222,6 +222,9 @@ private:
 	Client* client;
 	FavoriteUser* favoriteUser;
 	StringMap getPreparedFormatedStringMap(Client* aClient = NULL); 
+	string getVersion(const string& aExp, const string& aTag);
+	string splitVersion(const string& aExp, const string& aTag, const int part);
+
 };
 
 #endif // !defined(AFX_USER_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_)

@@ -466,10 +466,10 @@
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_MINUTES                     1279
 #define IDC_KBPS                        1280
-#define IDC_CLIPBOARD_TWO               1283
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
+#define IDC_LISTLEN                     1296
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -496,6 +496,11 @@
 #define IDC_SETTINGS_SEGMENTBAR         1618
 #define IDC_PROGRESS_COLOR_SEGMENT_SHOW 1619
 #define IDC_PREVIEW_APP                 1700
+#define IDC_DISCONNECT_RAW              2187
+#define IDC_TIMEOUT_RAW                 2188
+#define IDC_FAKE_RAW                    2189
+#define IDC_FILELIST_TOO_SMALL          2191
+#define IDC_FILELIST_UNAVAILABLE        2192
 #define IDC_TOOLBAR_ADD                 2200
 #define IDC_HOTBROWSE                   2201
 #define IDC_TOOLBAR_REMOVE              2202
@@ -701,9 +706,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        279
+#define _APS_NEXT_RESOURCE_VALUE        280
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1280
+#define _APS_NEXT_CONTROL_VALUE         1282
 #define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

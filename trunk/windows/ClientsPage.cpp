@@ -182,10 +182,6 @@ LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
-//LRESULT ClientsPage::onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-//	return 0;
-//}
-
 LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	int item = ctrlProfiles.GetHotItem();
 	if(item != -1) {
@@ -238,6 +234,38 @@ void ClientsPage::write() {
 	HubManager::getInstance()->saveClientProfiles();
 	PropPage::write((HWND)*this, items);
 }
+// iDC++
+LRESULT ClientsPage::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
+
+	case CDDS_ITEMPREPAINT:
+		{
+			try	{
+				ClientProfile cp;
+				HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), cp);
+				if (!cp.getCheatingDescription().empty()) {
+					cd->clrText = SETTING(ERROR_COLOR);
+				}
+				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+			}
+			catch(const Exception&)
+			{
+			}
+			catch(...) 
+			{
+			}
+		}
+		return CDRF_NOTIFYSUBITEMDRAW;
+
+	default:
+		return CDRF_DODEFAULT;
+	}
+}
+// iDC++
 /**
  * @file
  * $Id$

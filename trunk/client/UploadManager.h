@@ -96,8 +96,16 @@ public:
 	}
 	
 	int getSlots() {
-		return SETTING(SLOTS) + (max(SETTING(HUB_SLOTS),0) * (Client::getTotalCounts() - 1)) ;
+		//return SETTING(SLOTS) + (max(SETTING(HUB_SLOTS),0) * (Client::getTotalCounts() - 1)) ;
+		int slots = 0;
+		if (SETTING(HUB_SLOTS) * Client::getTotalCounts() <= SETTING(SLOTS)) {
+			slots = SETTING(SLOTS);
+		} else {
+			slots = max(SETTING(HUB_SLOTS),0) * (Client::getTotalCounts());
+		}
+		return slots;
 	}
+
 	int getRunning() { return running; };
 	int getFreeSlots() {return max((getSlots() - running), 0); }
 	bool getAutoSlot() {

@@ -39,6 +39,7 @@
 * pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
 * opraveno importování tématu
 * pøedìlán userfilter + regulérní pøíkazy
+* pøidán filtr do hledání (podporuje regilérní pøíkazy)
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

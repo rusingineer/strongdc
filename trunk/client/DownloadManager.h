@@ -311,6 +311,7 @@ private:
 	virtual	void on(FileNotAvailable, UserConnection*) throw();
 
 	virtual void on(Command::SND, UserConnection*, const Command&) throw();
+	void on(ListLength, UserConnection* aSource, const string& aListLength);
 	
 	bool prepareFile(UserConnection* aSource, int64_t newSize = -1);
 	// TimerManagerListener

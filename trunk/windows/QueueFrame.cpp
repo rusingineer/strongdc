@@ -1606,7 +1606,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 						}
 	
 						for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
-							if((v.size() < 1) || (IsBadReadPtr(i, 4) != 0)) break;
+							if((v.size() < 1) || (IsBadReadPtr(i, 4) != 0)) goto afterexception;
 		
 							if(((*(i+2))< size) && ((*(i+1))< size) && ((*(i))< size)) {
 								DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
@@ -1645,7 +1645,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					}
 				}
 			} catch(const Exception&) {}
-
+afterexception:
 			// draw status text
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
