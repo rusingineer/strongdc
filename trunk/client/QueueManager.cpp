@@ -919,8 +919,7 @@ znovu:
 		return NULL;
 
 	int k = q->getCurrents().size();
-	string jmeno = q->getTargetFileName();
-	if(!(k < getMaxSegments(jmeno, q->getSize()))) {
+	if(k >= getMaxSegments(q->getTargetFileName(), q->getSize())) {
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto znovu;
 	}
