@@ -73,10 +73,9 @@ public:
 	{
 		if(wID == IDOK) {
 			int len = ctrlLine.GetWindowTextLength() + 1;
-			TCHAR* buf = new TCHAR[len];
+			AutoArray<TCHAR> buf(len);
 			GetDlgItemText(IDC_LINE, buf, len);
 			line = buf;
-			delete[] buf;
 		}
 		EndDialog(wID);
 		return 0;

@@ -227,6 +227,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 		bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 		bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
+
 		if( slotsFull || speedFull ) {
 			bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 			if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
@@ -243,6 +244,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				removeConnection(aConn, false);
 			return;
 		}
+
 		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
 
 		if(d == NULL) {
@@ -896,7 +898,7 @@ noCRC:
 							onlyLeaf = true;
 							int64_t StartPos = FileTigerTree.getBlockSize() * i;
 							int64_t EndPos = StartPos + FileTigerTree.getBlockSize();
-							if(v.back() == StartPos) {
+							if(!v.empty() && (v.back() == StartPos)) {
 								v.pop_back();
 							} else {
 								v.push_back(StartPos);
@@ -909,17 +911,15 @@ noCRC:
 
 				aSource->setDownload(NULL);
 
-				for(int i = 5; i>0; --i) {
+				if(onlyLeaf) {
 					char buf[128];
-					if(onlyLeaf) {
-						_snprintf(buf, 127, CSTRING(LEAF_CORRUPTED), Util::formatBytes(redownload).c_str(), i);
-					} else {
-						_snprintf(buf, 127, CSTRING(DOWNLOAD_CORRUPTED), i);
-					}
+					_snprintf(buf, 127, CSTRING(LEAF_CORRUPTED), Util::formatBytes(redownload).c_str());
 					buf[127] = 0;
 					fire(DownloadManagerListener::Failed(), d, buf);
-					Thread::sleep(1000);
+				} else {
+					fire(DownloadManagerListener::Failed(), d, CSTRING(DOWNLOAD_CORRUPTED));
 				}
+				Thread::sleep(1000);
 
 				fire(DownloadManagerListener::Failed(), d, STRING(CONNECTING));
 				

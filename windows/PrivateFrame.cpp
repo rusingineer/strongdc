@@ -316,14 +316,12 @@ LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& 
 
 void PrivateFrame::onEnter()
 {
-	TCHAR* message;
 	bool resetText = true;
 
 	if(ctrlMessage.GetWindowTextLength() > 0) {
-		message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
-		ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
-		tstring s(message, ctrlMessage.GetWindowTextLength());
-		delete[] message;
+		AutoArray<TCHAR> msg(ctrlMessage.GetWindowTextLength()+1);
+		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
+		tstring s(msg, ctrlMessage.GetWindowTextLength());
 
 		// save command in history, reset current buffer pointer to the newest command
 		curCommandPosition = prevCommands.size();		//this places it one position beyond a legal subscript

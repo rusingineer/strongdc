@@ -40,6 +40,7 @@
 #include "CZDCLib.h"
 #include "TransferView.h"
 #include "upnp.h"
+#include "HashProgressDlg.h"
 #include "WinUtil.h"
 #include "picturewindow.h"
 #include "atlctrlxp.h"
@@ -382,6 +383,7 @@ private:
 	static bool isShutdownStatus;
 
 	CMenu trayMenu;
+	HashProgressDlg hashProgress;
 
 	UINT trayMessage;
 	/** Was the window maximized when minimizing it? */
