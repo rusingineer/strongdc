@@ -60,10 +60,9 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	} else {
 		if(qi->isSet(QueueItem::FLAG_RESUME))
 			setFlag(Download::FLAG_RESUME);
-
+	}
 		if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 			setFlag(Download::FLAG_UTF8);
-	}
 };
 
 void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
@@ -91,8 +90,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		}
 
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
-			if(getAverageSpeed() < (iHighSpeed*1024)) {
-				Download* d = *i;
+			Download* d = *i;
+			if(getWholeFileSpeed(d->getTarget()) > (iHighSpeed*1024)) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
 					QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
@@ -271,7 +270,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			dcassert(d->getSize() != -1);
 
 			const string& target = (d->getTempTarget().empty() ? d->getTarget() : d->getTempTarget());
-		int64_t start = File::getSize(target);
+			int64_t start = File::getSize(target);
 
 			// Only use antifrag if we don't have a previous non-antifrag part
 			if( BOOLSETTING(ANTI_FRAG) && (start == -1) && (d->getSize() != -1) ) {
@@ -935,7 +934,7 @@ noCRC:
 
 				aSource->setDownload(NULL);
 
-				for(int i = 10; i>0; --i) {
+				for(int i = 5; i>0; --i) {
 					char buf[128];
 					if(onlyLeaf) {
 						sprintf(buf, CSTRING(LEAF_CORRUPTED), Util::formatBytes(redownload).c_str(), i);

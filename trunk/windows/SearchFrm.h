@@ -123,7 +123,7 @@ public:
 		ctrlFilterContainer("edit", this, FILTER_MESSAGE_MAP),
 		ctrlFilterSelContainer("COMBOBOX", this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
-		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize(false)
+		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
 	}
@@ -562,7 +562,8 @@ private:
 	bool onlyFree;
 	bool onlyTTH;
 	bool isHash;
-	bool exactSize;
+	bool exactSize1;
+	int64_t exactSize2;
 
 	CriticalSection cs;
 

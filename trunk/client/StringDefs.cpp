@@ -539,7 +539,7 @@ string ResourceManager::strings[] = {
 "Disconnecting slow downloads", 
 "Disconnect download if speed is below", 
 "More than", 
-"And all downloads not exceeds", 
+"And whole file speed exceeds", 
 "kB/s (0 = disable)", 
 "ISP", 
 "Override system colors", 

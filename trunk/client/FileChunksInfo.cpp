@@ -31,7 +31,6 @@ void FileChunksInfo::Free(const string& name)
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if((*i)->sFilename == name ){
 			vecAllFileChunksInfo.erase(i);
-			delete i;
 			return;
 		}
 	}
