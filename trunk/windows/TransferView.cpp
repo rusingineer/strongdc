@@ -519,8 +519,6 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
     NMITEMACTIVATE* item = (NMITEMACTIVATE*)pnmh;
 	if (item->iItem != -1) {
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		string m  = i->Target+"\n"+i->qi->getTarget();
-		MessageBox(m.c_str());
 		if (!i->mainItem) i->pm();
 	}
 	return 0;
@@ -837,6 +835,7 @@ void TransferView::ItemInfo::update() {
 			columns[COLUMN_HUB] = user->getClientName();
 			if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
 				if(upper->pocetUseru == 1) upper->columns[COLUMN_HUB] = user->getClientName();
+					else upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
 			}
 		}
 	}
@@ -848,7 +847,7 @@ void TransferView::ItemInfo::update() {
 
 	if (status == STATUS_RUNNING) {
 		if(type == TYPE_DOWNLOAD) {
-			if (pocetSegmentu>1) {
+			if (pocetSegmentu>=1) {
 				int64_t ZbyvajiciCas;
 				ZbyvajiciCas = (celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0;
 				zc = Util::formatSeconds(ZbyvajiciCas);
@@ -859,7 +858,6 @@ void TransferView::ItemInfo::update() {
 				if((upper->pocetUseru > 1) || (upper->user == (User::Ptr)NULL)) {
 					upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
 					if(pocetSegmentu>0) upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
-					else upper->columns[COLUMN_HUB] = "";
 				} else {
 					upper->columns[COLUMN_USER] = user->getNick();
 					upper->columns[COLUMN_HUB] = user->getClientName();

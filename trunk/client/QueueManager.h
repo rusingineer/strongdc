@@ -146,6 +146,9 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
+	void updateSource(QueueItem* qi) {
+		fire(QueueManagerListener::StatusUpdated(), qi);
+	}
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 

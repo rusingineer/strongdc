@@ -84,6 +84,9 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
             }
         }
 
+
+		 QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
+
 		if((*i)->getTotal() > 0) {
 			tickList.push_back(*i);
 		}

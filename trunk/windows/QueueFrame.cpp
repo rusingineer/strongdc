@@ -28,6 +28,7 @@
 
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
+#include "../client/FileDataInfo.h"
 //pdc {
 #include "../client/PluginManager.h"
 //pdc }
@@ -608,7 +609,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		//ii->setDownloadedBytes(aQI->getDownloadedBytes());
+		ii->setDownloadedBytes(aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority()); 
 
@@ -1506,20 +1507,119 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			int64_t w = rc.Width();
 			// draw start part
 			double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
+
 			rc.right = left + (int) (w * percent);
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
-			::Rectangle(cd->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom);
-				
+
+	//		::Rectangle(cd->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom);
+
+			FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(qi->getDownloadTarget());
+			
+			if(filedatainfo) {
+			int Pleft, Pright;
+			double p;
+
+			if(filedatainfo->vecRunBlocks.size() != NULL) {
+				p  = (qi->getSize() > 0) ? (double)((double)(*(filedatainfo->vecRunBlocks.begin()))) / ((double)qi->getSize()) : 0;
+				Pright = rc.left + (w * p);
+				Pleft = rc.left;
+				::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+
+				if(rc.Width()>2) {
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+				}
+
+				for(vector<__int64>::iterator i = filedatainfo->vecRunBlocks.begin(); i < filedatainfo->vecRunBlocks.end(); i++, i++) {
+//					if((*(i+2))< qi->getSize()) {
+					if(((*(i+2))< qi->getSize()) && ((*(i+1))< qi->getSize()) && ((*(i))< qi->getSize())) {
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+						p  = (qi->getSize() > 0) ? (double)(((double)(*(i+1))) / ((double)qi->getSize())) : 0;
+						Pleft = rc.left + (w * p);
+						p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
+						Pright = rc.left + (w * p);
+						::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+
+							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						}
+					}
+				}
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+				p  = (qi->getSize() > 0) ? (double)((double)(*(filedatainfo->vecRunBlocks.end()-1))) / ((double)qi->getSize()) : 0;
+				Pright = rc.left + w;
+				Pleft = rc.left + (w * p);
+				::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+
+				if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+				}
+			} else
+			if(filedatainfo->vecFreeBlocks.size() != NULL) {
+				p  = (qi->getSize() > 0) ? (double)((double)(*(filedatainfo->vecFreeBlocks.begin()))) / ((double)qi->getSize()) : 0;
+				Pright = rc.left + (w * p);
+				Pleft = rc.left;
+				::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+
+				if(rc.Width()>2) {
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+				}
+
+				for(vector<__int64>::iterator i = filedatainfo->vecFreeBlocks.begin(); i < filedatainfo->vecFreeBlocks.end(); i++, i++) {
+					if(((*(i+2))< qi->getSize()) && ((*(i+1))< qi->getSize()) && ((*(i))< qi->getSize())) {
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+						p  = (qi->getSize() > 0) ? (double)(((double)(*(i+1))) / ((double)qi->getSize())) : 0;
+						Pleft = rc.left + (w * p);
+						p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
+						Pright = rc.left + (w * p);
+						::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+
+							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						}
+					}
+				}
+
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+				p  = (qi->getSize() > 0) ? (double)((double)(*(filedatainfo->vecFreeBlocks.end()-1))) / ((double)qi->getSize()) : 0;
+				Pright = rc.left + w;
+				Pleft = rc.left + (w * p);
+				::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+
+				if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+				}
+			}
+			}
 			// draw progressbar highlight
-			if(rc.Width()>2) {
+/*			if(rc.Width()>2) {
 				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
 
 				rc.top += 2;
 				::MoveToEx(cd->nmcd.hdc,rc.left+1,rc.top,(LPPOINT)NULL);
 				::LineTo(cd->nmcd.hdc,rc.right-2,rc.top);
-			};
+			};*/
 								
 			// draw status text
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
