@@ -345,8 +345,16 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) 
 
 void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, bool removeSegment /* = true */) {
 	// This might have been set to wait by removesource already...
-	if (running.find(aUser) == running.end()) return;
+	if (running.find(aUser) == running.end()) {
+		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
+		QueueItem::UserListIter j = ulm.find(aUser);
+		if((j == ulm.end()) && qi->isSource(aUser))
+			//MessageBox(0, _T("Please report it as bug."),_T(""),MB_OK);
+			add(qi, aUser);
+		return;
+	}
 
+	dcassert(running.find(aUser) != running.end());
 	dcassert(qi->getStatus() == QueueItem::STATUS_RUNNING);
 
 	// Remove the download from running
@@ -1092,9 +1100,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 				}
 			}
 
-dcdebug("test 1");
 			if(finished) {
-dcdebug("test 2");
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
 				if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 					// Got a full tree, now add it to the HashManager
@@ -1122,23 +1128,20 @@ dcdebug("test 2");
 					setDirty();
 				}
 			} else {
-dcdebug("test 3");
-				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-					if(!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+				if(!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+					if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE))
 						q->setDownloadedBytes(aDownload->getPos());
 
-						if(q->getDownloadedBytes() > 0) {
-							q->setFlag(QueueItem::FLAG_EXISTS);
-						} else {
-							q->setTempTarget(Util::emptyString);
-						}
-						if(q->isSet(QueueItem::FLAG_USER_LIST)) {
-							// Blah...no use keeping an unfinished file list...
-							File::deleteFile(q->getListName());
-						}
+					if(q->getDownloadedBytes() > 0) {
+						q->setFlag(QueueItem::FLAG_EXISTS);
+					} else if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+						q->setTempTarget(Util::emptyString);
 					}
-				} else if(q->getDownloadedBytes() > 0)
-					q->setFlag(QueueItem::FLAG_EXISTS);
+					if(q->isSet(QueueItem::FLAG_USER_LIST)) {
+						// Blah...no use keeping an unfinished file list...
+						File::deleteFile(q->getListName());
+					}
+				}
 
 				if(q->getPriority() != QueueItem::PAUSED) {
 					for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
@@ -1707,9 +1710,9 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
 				QueueItem* q = *j;
 
-				if(q->getAutoPriority()) {
-					q->setPriority(q->calculateAutoPriority());
-				}
+//				if(q->getAutoPriority()) {
+//					q->setPriority(q->calculateAutoPriority());
+//				}
 				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					if(q->getCurrentDownload() != NULL)
 						q->setDownloadedBytes(q->getCurrentDownload()->getPos());

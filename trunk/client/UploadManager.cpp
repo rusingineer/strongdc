@@ -365,8 +365,6 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
-			*i = NULL;
-			delete *i;
 		}
 		UploadQueueItems.erase(ii);
 		fire(UploadManagerListener::QueueRemove(), source);

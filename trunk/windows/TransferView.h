@@ -40,7 +40,7 @@
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>,
-	private SettingsManagerListener	
+	private SettingsManagerListener, private QueueManagerListener
 {
 public:
 	TransferView() : PreviewAppsSize(0) { };
@@ -364,6 +364,7 @@ private:
 	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(QueueManagerListener::Removed, QueueItem* aQI) throw();
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload, bool isTree);
 
