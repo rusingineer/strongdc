@@ -102,15 +102,15 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
 
-	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING);
+	sprintf(buf, "Code: %x\r\nVersion: %s%s\r\n", 
+		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING);
 
 	f.write(buf, strlen(buf));
 
 	WinUtil::exceptioninfo = Text::toT(buf);
 
 #if defined(isCVS)
-	sprintf(buf, "CVS: %f\r\n", 
+	sprintf(buf, "CVS: %s\r\n", 
 		CVSVERSION);	
 	f.write(buf, strlen(buf));
 	WinUtil::exceptioninfo = Text::toT(buf);

@@ -38,6 +38,7 @@ ResourceManager::TIME_LEFT, ResourceManager::SPEED, ResourceManager::FILENAME, R
 ResourceManager::IP_BARE, ResourceManager::RATIO};
 
 TransferView::~TransferView() {
+	delete[] headerBuf;
 	arrows.Destroy();
 	states.Destroy();
 }
@@ -60,10 +61,11 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_TIMELEFT || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlTransfers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlTransfers.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 
-	ctrlTransfers.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlTransfers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlTransfers.setVisible(SETTING(MAINFRAME_VISIBLE));
 
 	ctrlTransfers.SetBkColor(WinUtil::bgColor);
 	ctrlTransfers.SetTextBkColor(WinUtil::bgColor);
@@ -117,8 +119,8 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 }
 
 void TransferView::prepareClose() {
-	WinUtil::saveHeaderOrder(ctrlTransfers, SettingsManager::MAINFRAME_ORDER, 
-		SettingsManager::MAINFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+	ctrlTransfers.saveHeaderOrder(SettingsManager::MAINFRAME_ORDER, SettingsManager::MAINFRAME_WIDTHS,
+		SettingsManager::MAINFRAME_VISIBLE);
 
 	ConnectionManager::getInstance()->removeListener(this);
 	DownloadManager::getInstance()->removeListener(this);
@@ -136,12 +138,17 @@ LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 }
 
 LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
+	RECT rc, rc2;                    // client area of window 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 
 	// Get the bounding rectangle of the client area. 
-	ctrlTransfers.GetClientRect(&rc);
-	ctrlTransfers.ScreenToClient(&pt); 
+	ctrlTransfers.GetWindowRect(&rc);
+	ctrlTransfers.GetHeader().GetWindowRect(&rc2);
+	if(PtInRect(&rc2, pt)){
+		ctrlTransfers.showMenu(pt);
+		return TRUE;
+	}
+
 	if (PtInRect(&rc, pt) && ctrlTransfers.GetSelectedCount() > 0) 
 	{ 
 		int i = -1;
@@ -182,8 +189,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 		}
 
 		previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
-		ctrlTransfers.ClientToScreen(&pt);
-		
+				
 		if(ii->pocetUseru <= 1) {
 			transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
 			transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -255,8 +261,13 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
 		// Let's draw a box if needed...
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = headerBuf;
+		lvc.cchTextMax = 128;
+		ctrlTransfers.GetColumn(cd->iSubItem, &lvc);
 		ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
-		if(cd->iSubItem == COLUMN_STATUS && ii->status == ItemInfo::STATUS_RUNNING) {
+		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0 && ii->status == ItemInfo::STATUS_RUNNING) {
 			if(BOOLSETTING(SHOW_PROGRESS_BARS) == false) {
 				bHandled = FALSE;
 				return 0;
@@ -422,9 +433,9 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		} else if(cd->iSubItem == COLUMN_IP && BOOLSETTING(GET_USER_COUNTRY)) {
+		} else if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0 && BOOLSETTING(GET_USER_COUNTRY)) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
-			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
+			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;
 			if(ctrlTransfers.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlTransfers.m_hWnd == ::GetFocus()) {
@@ -450,7 +461,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
 
 			TCHAR buf[256];
-			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_IP, buf, 255);
+			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
 			buf[255] = 0;
 			if(_tcslen(buf) > 0) {
 				LONG top = rc2.top + (rc2.Height() - 15)/2;
@@ -463,8 +474,9 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
 			}
-		} else if((cd->iSubItem == COLUMN_FILE || cd->iSubItem == COLUMN_SIZE || cd->iSubItem == COLUMN_PATH) && 
-			ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
+		} else if((Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_FILE])) == 0 || Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SIZE])) == 0 || 
+			Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PATH])) == 0) && ii->type == ItemInfo::TYPE_DOWNLOAD && 
+			ii->status != ItemInfo::STATUS_RUNNING) {
 			cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.4);
 			return CDRF_NEWFONT;
 		} else if (ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
@@ -850,6 +862,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 			if(i->qi->getActiveSegments().size() <= 1) {
 				i->upper->file = _T("TTH: ") + Util::getFileName(i->Target);
+				i->upper->statusString = TSTRING(DOWNLOADING_TTHL);
 			}
 		} else {
 			i->file = Util::emptyStringT;
@@ -971,15 +984,13 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->pos = 0;
 
 		i->statusString = Text::toT(aReason);
-		i->size = aDownload->getSize();
-		i->Target = Text::toT(aDownload->getTarget());
 		i->qi = aDownload->getItem();
+		i->size = aDownload->getItem()->getSize();
+		i->Target = Text::toT(aDownload->getTarget());
 
 		setMainItem(i);
 
 		if(i->upper) {
-			i->upper->size = aDownload->getSize();
-
 			if(i->qi) {
 				i->upper->qi = i->qi;
 				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
@@ -1006,6 +1017,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 			i->file = _T("TTH: ") + Util::getFileName(i->Target);
 		} else {
 			i->file = Util::emptyStringT;
+			i->upper->file = Util::emptyStringT;
 		}			
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1021,9 +1033,7 @@ void TransferView::on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi
 		i->statusString = Text::toT(aMessage);
 		QueueItem* q = QueueManager::getInstance()->fileQueue.find(Text::fromT(i->Target));
 		int pocetSegmentu = q ? q->getActiveSegments().size() : 0;
-		if(i->upper &&
-			((aMessage == STRING(ALL_FILE_SLOTS_TAKEN)) || (aMessage == STRING(CHECKING_TTH)) || ((pocetSegmentu == 0) && (aMessage == STRING(DOWNLOADING_TTHL))))) {
-			
+		if(i->upper && (aMessage == STRING(ALL_FILE_SLOTS_TAKEN))) {	
 			i->upper->statusString = Text::toT(aMessage);
 			i->upper->status = ItemInfo::STATUS_WAITING;
 		}

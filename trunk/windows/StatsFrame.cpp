@@ -81,16 +81,16 @@ LRESULT StatsFrame::onPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		CRect rc(dc.m_ps.rcPaint);
 		dcdebug("Update: %d, %d, %d, %d\n", rc.left, rc.top, rc.right, rc.bottom);
 
-		dc.SelectBrush(black);
+		dc.SelectBrush(backgr);
 		dc.BitBlt(rc.left, rc.top, rc.Width(), rc.Height(), NULL, 0, 0, PATCOPY);
 
 		CRect clientRC;
 		GetClientRect(clientRC);
 		
-		dc.SetTextColor(RGB(255, 255, 255));
-		dc.SetBkColor(RGB(0, 0, 0));
+		dc.SetTextColor(WinUtil::textColor);
+		dc.SetBkColor(WinUtil::bgColor);
 	
-		dc.SelectPen(grey);
+		dc.SelectPen(foregr);
 		dc.SelectFont(WinUtil::font);
 		int lines = height / (WinUtil::fontHeight * LINE_HEIGHT);
 		int lheight = height / (lines+1);

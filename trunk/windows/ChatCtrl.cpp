@@ -22,15 +22,15 @@
 #include "ChatCtrl.h"
 #include "atlstr.h"
 #include "../client/HubManager.h"
-
-#ifndef AGEMOTIONSETUP_H__
 #include "AGEmotionSetup.h"
-#endif
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 _T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("file://") };
+tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
+tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
+tstring ChatCtrl::sTempSelectedUser = Util::emptyStringT;
 
 ChatCtrl::ChatCtrl() {
 	m_boAutoScroll = true;
@@ -551,13 +551,17 @@ LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	if((lSelEnd > lSelBegin) && (iCharPos >= lSelBegin) && (iCharPos <= lSelEnd)) {
 		return 1;
 	}
-
+	sSelectedLine = Text::toT(LineFromPos(pt));
+	sTempSelectedUser = _T("");
+	sSelectedIP = _T("");
 	// Po kliku do IP oznacit IP
 	CAtlString sSel;
 	if(HitIP(pt, &sSel, &iBegin, &iEnd1)) {
+		sSelectedIP = sSel;
 		SetSel(iBegin, iEnd1);
 		InvalidateRect(NULL);
 	} else if(HitNick(pt, &sSel, &iBegin, &iEnd1)) {
+		sTempSelectedUser = sSel;
 		SetSel(iBegin, iEnd1);
 		InvalidateRect(NULL);
 	}

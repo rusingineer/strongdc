@@ -156,7 +156,6 @@ public:
 	 * @return Path to executable file.
 	 */
 	static string getAppPath() { return appPath; }
-
 	static string getAppName() {
 #ifdef _WIN32
 		TCHAR buf[MAX_PATH+1];
@@ -502,6 +501,7 @@ public:
 	 * @return First position found or string::npos
 	 */
 	static string::size_type findSubString(const string& aString, const string& aSubString, string::size_type start = 0) throw();
+	static wstring::size_type findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type pos = 0) throw();
 
 	/* Utf-8 versions of strnicmp and stricmp, unicode char code order (!) */
 	static int stricmp(const char* a, const char* b);
@@ -549,7 +549,6 @@ public:
 	static u_int64_t getDirSize(const string &sFullPath);
 	static bool validatePath(const string &sPath);
 	static bool fileExists(const string &aFile);
-
 
 	static u_int32_t rand();
 	static u_int32_t rand(u_int32_t high) { return rand() % high; };

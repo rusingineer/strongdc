@@ -348,28 +348,30 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	Lock l(cs);
+	{
+		Lock l(cs);
 
-	for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
-		SearchResult* sr = *i;
-		if (!sr->getIP().empty()) {
-			ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
-		}
-
-		if((sr->user->getVersion() == "0.403") && (sr->user->getClientType() != "rmDC++ 0.403D[1]")) {
-			string path(sr->file);
-			path = path.substr(0, path.find("\\"));
-			PME reg("([A-Z])");
-			if(reg.match(path)) {
-				sr->user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
-				sr->user->setClientType("rmDC++ 0.403D[1]");
-				sr->user->setBadClient(true);
+		for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
+			SearchResult* sr = *i;
+			if (!sr->getIP().empty()) {
+				ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
 			}
+
+			if((sr->user->getVersion() == "0.403") && (sr->user->getClientType() != "rmDC++ 0.403D[1]")) {
+				string path(sr->file);
+				path = path.substr(0, path.find("\\"));
+				PME reg("([A-Z])");
+				if(reg.match(path)) {
+					sr->user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+					sr->user->setClientType("rmDC++ 0.403D[1]");
+					sr->user->setBadClient(true);
+				}
+			}
+			fire(SearchManagerListener::SR(), sr);
+			sr->decRef();
 		}
-		fire(SearchManagerListener::SR(), sr);
-		sr->decRef();
+		seznam.clear();
 	}
-	seznam.clear();
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();

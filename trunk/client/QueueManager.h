@@ -115,7 +115,7 @@ public:
 	}
 
 	/** Readd a source that was removed */
-	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
+	void readd(const string& target, User::Ptr aUser) throw(QueueException);
 
 	/** Add a directory to the queue (downloads filelist and matches the directory). */
 	void addDirectory(const string& aDir, const User::Ptr& aUser, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();
@@ -126,8 +126,8 @@ public:
 	void move(const string& aSource, const string& aTarget) throw();
 
 	void remove(const string& aTarget) throw();
-	void removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn = true) throw();
-	void removeSources(User::Ptr& aUser, int reason) throw();
+	void removeSource(const string& aTarget, User::Ptr aUser, int reason, bool removeConn = true) throw();
+	void removeSources(User::Ptr aUser, int reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
@@ -186,7 +186,6 @@ public:
 		void find(QueueItem::List& ql, const TTHValue& tth);
 
 		QueueItem* findAutoSearch(StringList& recent);
-		QueueItem* findHighest();
 		size_t getSize() { return queue.size(); };
 		QueueItem::StringMap& getQueue() { return queue; };
 		void move(QueueItem* qi, const string& aTarget);

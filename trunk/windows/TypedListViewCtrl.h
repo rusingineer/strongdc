@@ -23,7 +23,19 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "../Client/SettingsManager.h"
+#include "../client/HubManager.h"
 #include "ListViewArrows.h"
+class ColumnInfo {
+public:
+	ColumnInfo(const tstring &aName, int aPos, int aFormat, int aWidth): name(aName), pos(aPos), width(aWidth), 
+		format(aFormat), visible(true){}
+		tstring name;
+		bool visible;
+		int pos;
+		int width;
+		int format;
+};
 
 template<class T, int ctrlId>
 class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, CControlWinTraits>,
@@ -31,6 +43,11 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, C
 {
 public:
 	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { };
+	~TypedListViewCtrl() {
+		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
+			delete (*i);
+		}
+	}
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;
@@ -38,6 +55,7 @@ public:
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
+		MESSAGE_HANDLER(WM_MENUCOMMAND, onHeaderMenu)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -91,11 +109,34 @@ public:
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(di->item.iSubItem).c_str());
+			int pos = di->item.iSubItem;
+			bool insert = false;
+			int j = 0;
+			TCHAR *buf = new TCHAR[512];
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT;
+			lvc.pszText = buf;
+			lvc.cchTextMax = 512;
+			GetColumn(pos, &lvc);
+			if(columnList.size() > 0){
+				for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i, ++j){
+					if((Util::stricmp(buf, (*i)->name.c_str()) == 0)){
+						if((*i)->visible == true)
+							insert = true;
+						break;
+					}
+				}
+			} else {
+				insert = true;
+			}
+			if(insert == true)
+				di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(j).c_str());
+
+			delete[] buf;
 		}
 		return 0;
 	}
-
+	
 	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
@@ -264,6 +305,7 @@ public:
 		updateArrow();
 	}
 	int getSortColumn() { return sortColumn; }
+	int getRealSortColumn() { return findColumn(sortColumn); }
 	bool isAscending() { return sortAscending; }
 	void setAscending(bool s) {sortAscending = s;}
 
@@ -274,6 +316,29 @@ public:
 		leftMargin = _leftMargin;
 	}
 
+	int insertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
+		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
+		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
+	}
+
+	void showMenu(POINT &pt){
+		headerMenu.DestroyMenu();
+		headerMenu.CreatePopupMenu();
+		MENUINFO inf;
+		inf.cbSize = sizeof(MENUINFO);
+		inf.fMask = MIM_STYLE;
+		inf.dwStyle = MNS_NOTIFYBYPOS;
+		headerMenu.SetMenuInfo(&inf);
+
+		int j = 0;
+		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i, ++j) {
+			headerMenu.AppendMenu(MF_STRING, IDC_HEADER_MENU, (*i)->name.c_str());
+			if((*i)->visible)
+				headerMenu.CheckMenuItem(j, MF_BYPOSITION | MF_CHECKED);
+		}
+		headerMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+	}
+		
 	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
 		if(!leftMargin || !hBrBg) 
@@ -321,7 +386,184 @@ public:
 	void setFlickerFree(HBRUSH flickerBrush) {
 		hBrBg = flickerBrush;
 	}
+	
+	LRESULT onHeaderMenu(UINT /*msg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+		ColumnInfo * ci = columnList[wParam];
+		ci->visible = ! ci->visible;
+
+		SetRedraw(FALSE);
+
+		if(!ci->visible){
+			removeColumn(ci);
+		} else {
+			int pos = GetHeader().GetItemCount();
+			InsertColumn(pos, ci->name.c_str(), ci->format, ci->width, static_cast<int>(wParam));
+			LVCOLUMN lvcl = { 0 };
+			lvcl.mask = LVCF_ORDER;
+			lvcl.iOrder = ci->pos;
+			SetColumn(pos, &lvcl);
+		}
+
+		SetRedraw();
+		Invalidate();
+		UpdateWindow();
+
+		return 0;
+	}
+
+	void saveHeaderOrder(SettingsManager::StrSetting order, SettingsManager::StrSetting widths, 
+		SettingsManager::StrSetting visible) throw() {
+		string tmp, tmp2, tmp3;
+		TCHAR *buf = new TCHAR[128];
+		int size = GetHeader().GetItemCount();
+		for(int i = 0; i < size; ++i){
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
+			lvc.cchTextMax = 128;
+			lvc.pszText = buf;
+			GetColumn(i, &lvc);
+			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
+				if(Util::stricmp(buf, (*j)->name.c_str()) == 0){
+					(*j)->pos = lvc.iOrder;
+					(*j)->width = lvc.cx;
+				}
+			}
+		}
+
+		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
+			ColumnInfo* ci = *i;
+
+			if(ci->visible){
+				tmp3 += "1,";
+			} else {
+				ci->pos = size++;
+				tmp3 += "0,";
+			}
+
+			tmp += Util::toString(ci->pos);
+			tmp += ',';
+
+			tmp2 += Util::toString(ci->width);
+			tmp2 += ',';
+		}
+
+		tmp.erase(tmp.size()-1, 1);
+		tmp2.erase(tmp2.size()-1, 1);
+		tmp3.erase(tmp3.size()-1, 1);
+		SettingsManager::getInstance()->set(order, tmp);
+		SettingsManager::getInstance()->set(widths, tmp2);
+		SettingsManager::getInstance()->set(visible, tmp3);
+	}
+
+	void saveFavoriteHeaderOrder(FavoriteHubEntry* Entry) throw() {
+		string tmp, tmp2, tmp3;
+		TCHAR *buf = new TCHAR[128];
+		int size = GetHeader().GetItemCount();
+		for(int i = 0; i < size; ++i){
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
+			lvc.cchTextMax = 128;
+			lvc.pszText = buf;
+			GetColumn(i, &lvc);
+			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
+				if(Util::stricmp(buf, (*j)->name.c_str()) == 0){
+					(*j)->pos = lvc.iOrder;
+					(*j)->width = lvc.cx;
+				}
+			}
+		}
+
+		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
+			ColumnInfo* ci = *i;
+
+			if(ci->visible){
+				tmp3 += "1,";
+			} else {
+				ci->pos = size++;
+				tmp3 += "0,";
+			}
+
+			tmp += Util::toString(ci->pos);
+			tmp += ',';
+
+			tmp2 += Util::toString(ci->width);
+			tmp2 += ',';
+		}
+
+		tmp.erase(tmp.size()-1, 1);
+		tmp2.erase(tmp2.size()-1, 1);
+		tmp3.erase(tmp3.size()-1, 1);
+		Entry->setColumsOrder(tmp);
+		Entry->setColumsWidth(tmp2);
+		Entry->setColumsVisible(tmp3);
+		HubManager::getInstance()->save();
+	}
+	
+	void setVisible(string vis){
+		StringTokenizer<string> tok(vis, ',');
+		StringList l = tok.getTokens();
+
+		StringIter i = l.begin();
+		ColumnIter j = columnList.begin();
+		for(; j != columnList.end() && i != l.end(); ++i, ++j){
+
+			if(Util::toInt(*i) == 0){
+				(*j)->visible = false;
+				removeColumn(*j);
+			}
+		}
+	}
+
+	void setColumnOrderArray(int iCount, LPINT piArray ) {
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_ORDER;
+		for(int i = 0; i < iCount; ++i) {
+			lvc.iOrder = columnList[i]->pos = piArray[i];
+			SetColumn(i, &lvc);
+		}
+	}
+
+	LRESULT onChar(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+		if((GetKeyState(VkKeyScan('A') & 0xFF) & 0xFF00) > 0 && (GetKeyState(VK_CONTROL) & 0xFF00) > 0){
+			int count = GetItemCount();
+			for(int i = 0; i < count; ++i)
+				ListView_SetItemState(m_hWnd, i, LVIS_SELECTED, LVIS_SELECTED);
+
+			return 0;
+		}
+		
+		bHandled = FALSE;
+		return 1;
+	}
+
+	//find the current position for the column that was inserted at the specified pos
+	int findColumn(int col){
+		TCHAR *buf = new TCHAR[512];
+		LVCOLUMN lvcl;
+		lvcl.mask = LVCF_TEXT;
+		lvcl.pszText = buf;
+		lvcl.cchTextMax = 512;
+
+		GetColumn(col, &lvcl);
+
+		int result = -1;
+
+		int i = 0;
+		for(ColumnIter j = columnList.begin(); j != columnList.end(); ++i, ++j){
+			if(Util::stricmp((*j)->name.c_str(), buf) == 0){
+				result = i;
+				break;
+			}
+		}
+
+		delete[] buf;
+
+		return result;
+	}	
+	
 private:
+	CMenu headerMenu;
+
 
 	int sortColumn;
 	bool sortAscending;
@@ -330,14 +572,57 @@ private:
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
-		int result = T::compareItems((T*)lParam1, (T*)lParam2, t->sortColumn);
-
-		if(result == 2)
-			result = (t->sortAscending ? 1 : -1);
-		else if(result == -2)
-			result = (t->sortAscending ? -1 : 1);
-
+		int result = T::compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
 		return (t->sortAscending ? result : -result);
+	}
+
+	typedef vector< ColumnInfo* > ColumnList;
+	typedef ColumnList::iterator ColumnIter;
+
+	ColumnList columnList;
+
+	void removeColumn(ColumnInfo* ci){
+		
+		int column = findColumn(ci);
+
+		if(column > -1){
+			ci->width = GetColumnWidth(column);
+
+			HDITEM hd;
+			hd.mask = HDI_ORDER;
+			GetHeader().GetItem(column, &hd);
+			ci->pos = hd.iOrder;
+			
+			DeleteColumn(column);
+			if(sortColumn == ci->pos)
+				sortColumn = 0;
+		}
+		
+	}
+
+	int findColumn(ColumnInfo* ci){
+		TCHAR *buf = new TCHAR[512];
+		LVCOLUMN lvcl;
+		lvcl.mask = LVCF_TEXT;
+		lvcl.pszText = buf;
+		lvcl.cchTextMax = 512;
+
+		int columns = GetHeader().GetItemCount();
+
+		int result = -1;
+
+		for(int k = 0; k < columns; ++k){
+
+			GetColumn(k, &lvcl);
+			if(Util::stricmp(ci->name.c_str(), lvcl.pszText) == 0){
+				result = k;
+				break;
+			}
+		}
+
+		delete[] buf;
+
+		return result;
 	}
 };
 

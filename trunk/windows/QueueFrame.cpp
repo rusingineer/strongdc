@@ -34,23 +34,14 @@
 #define FILE_LIST_NAME _T("File Lists")
 
 int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_PROGRESS, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
-COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH };
+COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH, COLUMN_TYPE };
 
-int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 100, 120, 75, 200, 200, 75, 200, 100, 125 };
+int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 100, 120, 75, 200, 200, 75, 200, 100, 125, 75 };
 
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, 
 ResourceManager::DOWNLOADED_PARTS, ResourceManager::DOWNLOADED,
 ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS,
-ResourceManager::ADDED, ResourceManager::TTH_ROOT  };
-
-QueueFrame::~QueueFrame() {
-	// Clear up dynamicly allocated menu objects
-	browseMenu.ClearMenu();
-	removeMenu.ClearMenu();
-	removeAllMenu.ClearMenu();
-	pmMenu.ClearMenu();
-	readdMenu.ClearMenu();
-}
+ResourceManager::ADDED, ResourceManager::TTH_ROOT, ResourceManager::TYPE };
 
 LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -84,10 +75,10 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE|| j == COLUMN_SEGMENTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlQueue.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlQueue.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
-	ctrlQueue.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlQueue.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlQueue.setSortColumn(COLUMN_TARGET);
 	
 	ctrlQueue.SetBkColor(WinUtil::bgColor);
@@ -265,7 +256,7 @@ void QueueFrame::QueueItemInfo::update() {
 			}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
-				display->columns[COLUMN_DOWNLOADED] = Text::toT(Util::formatBytes(getDownloadedBytes()) + " (" + Util::toString((double)getDownloadedBytes()*100.0/(double)getSize()) + "%)");
+					display->columns[COLUMN_DOWNLOADED] = Text::toT(Util::formatBytes(getDownloadedBytes()) + " (" + Util::toString((double)getDownloadedBytes()*100.0/(double)getSize()) + "%)");
 				else
 					display->columns[COLUMN_DOWNLOADED].clear();
 		}
@@ -321,6 +312,11 @@ void QueueFrame::QueueItemInfo::update() {
 		}
 		if(colMask & MASK_TTH && getTTH() != NULL) {
 			display->columns[COLUMN_TTH] = Text::toT(getTTH()->toBase32());
+		}
+		if(colMask & MASK_TYPE) {
+			display->columns[COLUMN_TYPE] = Util::getFileExt(Util::getFileName(getTarget()));
+			if(display->columns[COLUMN_TYPE].size() > 0 && display->columns[COLUMN_TYPE][0] == '.')
+				display->columns[COLUMN_TYPE].erase(0, 1);
 		}
 	}
 }
@@ -795,6 +791,12 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	RECT rc;                    // client area of window 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	
+	ctrlQueue.GetHeader().GetWindowRect(&rc);
+	if(PtInRect(&rc, pt)){
+		ctrlQueue.showMenu(pt);
+		return TRUE;
+	}
+	
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
 	ctrlQueue.ScreenToClient(&pt); 
@@ -1033,8 +1035,7 @@ LRESULT QueueFrame::onBrowseList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 		try {
-			User::Ptr u = s->getUser();
-			QueueManager::getInstance()->addList(u, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(s->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception&) {
 		}
 	}
@@ -1060,8 +1061,7 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 			try {
-				User::Ptr u = s->getUser();
-				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), u);
+				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -1086,8 +1086,7 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 			removeMenu.GetMenuItemInfo(wID, FALSE, &mi);
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-			User::Ptr u = s->getUser();
-			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), u, QueueItem::Source::FLAG_REMOVED);
+			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), s->getUser(), QueueItem::Source::FLAG_REMOVED);
 		}
 	}
 	return 0;
@@ -1099,8 +1098,7 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	removeAllMenu.GetMenuItemInfo(wID, FALSE, &mi);
 	OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 	QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-	User::Ptr u = s->getUser();
-	QueueManager::getInstance()->removeSources(u, QueueItem::Source::FLAG_REMOVED);
+	QueueManager::getInstance()->removeSources(s->getUser(), QueueItem::Source::FLAG_REMOVED);
 	return 0;
 }
 
@@ -1370,8 +1368,8 @@ LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 	ctrlQueue.DeleteAllItems();
 
-	WinUtil::saveHeaderOrder(ctrlQueue, SettingsManager::QUEUEFRAME_ORDER, 
-		SettingsManager::QUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+		ctrlQueue.saveHeaderOrder(SettingsManager::QUEUEFRAME_ORDER, 
+			SettingsManager::QUEUEFRAME_WIDTHS, SettingsManager::QUEUEFRAME_VISIBLE);
 
 	bHandled = FALSE;
 	return 0;
@@ -1456,7 +1454,12 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
-		if(cd->iSubItem == COLUMN_PROGRESS) {
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = headerBuf;
+		lvc.cchTextMax = 128;
+		ctrlQueue.GetColumn(cd->iSubItem, &lvc);
+		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PROGRESS])) == 0) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
 			if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -1526,10 +1529,10 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 							statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
 						}
 
-						for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
-							if(((*i) < size) && ((*(i+1)) < size)) {
+						for(vector<int64_t>::iterator i = v.begin(); i+2-smycka < v.end(); i++, i++) {
+							//if((i != NULL) && ((*i) < size) && ((*(i+1)) < size)) {
 								statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
-							}
+							//}
 						}
 						if(smycka == 0) {		
 							statusBar.FillRange((int64_t)v.back(), size, RGB(255, 255, 100));
@@ -1544,7 +1547,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		} else if(cd->iSubItem == COLUMN_SEGMENTS) {
+		} else if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SEGMENTS])) == 0) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {

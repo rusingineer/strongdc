@@ -42,9 +42,19 @@ public:
 
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
 		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false), PreviewAppsSize(0),
-		showTreeContainer(WC_BUTTON, this, SHOWTREE_MESSAGE_MAP) { }
+		showTreeContainer(WC_BUTTON, this, SHOWTREE_MESSAGE_MAP) {
+		headerBuf = new TCHAR[128];
+	}
 
-	virtual ~QueueFrame();
+	virtual ~QueueFrame() {
+		// Clear up dynamicly allocated menu objects
+		browseMenu.ClearMenu();
+		removeMenu.ClearMenu();
+		removeAllMenu.ClearMenu();
+		pmMenu.ClearMenu();
+		readdMenu.ClearMenu();		
+		delete[] headerBuf;
+	}
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -199,6 +209,7 @@ private:
 		COLUMN_ERRORS,
 		COLUMN_ADDED,
 		COLUMN_TTH,
+		COLUMN_TYPE,
 		COLUMN_LAST
 	};
 	enum Tasks {
@@ -243,7 +254,8 @@ private:
 			MASK_PATH = 1 << COLUMN_PATH,
 			MASK_ERRORS = 1 << COLUMN_ERRORS,
 			MASK_ADDED = 1 << COLUMN_ADDED,
-			MASK_TTH = 1 << COLUMN_TTH
+			MASK_TTH = 1 << COLUMN_TTH,
+			MASK_TYPE = 1 << COLUMN_TYPE
 		};
 
 		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(Text::toT(aQI->getTarget())),
@@ -325,6 +337,7 @@ private:
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
 		GETSET(TTHValue*, tth, TTH);
+		GETSET(tstring, type, Type);
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
 		QueueItem* qi;
@@ -404,6 +417,7 @@ private:
 	int queueItems;
 
 	bool closed;
+	TCHAR * headerBuf;
 	
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];

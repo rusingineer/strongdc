@@ -231,12 +231,11 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_EXACT_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlResults.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlResults.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 
-	ctrlResults.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
-	ctrlResults.setSortColumn(COLUMN_HITS);
-	ctrlResults.setAscending(false);
+	ctrlResults.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlResults.setVisible(SETTING(SEARCHFRAME_VISIBLE));
 
 	ctrlResults.SetBkColor(WinUtil::bgColor);
 	ctrlResults.SetTextBkColor(WinUtil::bgColor);
@@ -305,16 +304,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), FALSE);
 	}
 
-	TCHAR Buffer[500];
-	LV_COLUMN lvCol;
-	int indexes[32];
-	ctrlResults.GetColumnOrderArray(ctrlResults.GetHeader().GetItemCount(), indexes);
-	for (int i = 0; i < ctrlResults.GetHeader().GetItemCount(); ++i) {
-		lvCol.mask = LVCF_TEXT;
-		lvCol.pszText = Buffer;
-		lvCol.cchTextMax = 255;
-		ctrlResults.GetColumn(indexes[i], &lvCol);
-		ctrlFilterSel.AddString(lvCol.pszText);
+	for(int j=0; j<COLUMN_LAST; j++) {
+		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.SetCurSel(0);
 
@@ -812,8 +803,8 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		}
 		ctrlHubs.DeleteAllItems();
 
-		WinUtil::saveHeaderOrder(ctrlResults, SettingsManager::SEARCHFRAME_ORDER,
-			SettingsManager::SEARCHFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+		ctrlResults.saveHeaderOrder(SettingsManager::SEARCHFRAME_ORDER, SettingsManager::SEARCHFRAME_WIDTHS, 
+			SettingsManager::SEARCHFRAME_VISIBLE);
 
 		bHandled = FALSE;
 	return 0;
@@ -968,6 +959,7 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		rc.SetRect(0,0,0,0);
 		ctrlSearchBox.MoveWindow(rc);
 		ctrlMode.MoveWindow(rc);
+		ctrlPurge.MoveWindow(rc);
 		ctrlSize.MoveWindow(rc);
 		ctrlSizeMode.MoveWindow(rc);
 		ctrlFiletype.MoveWindow(rc);
@@ -1211,6 +1203,12 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 	RECT rc;                    // client area of window 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	
+	ctrlResults.GetHeader().GetWindowRect(&rc);
+	if(PtInRect(&rc, pt)){
+		ctrlResults.showMenu(pt);
+		return TRUE;
+	}
+
 	// Get the bounding rectangle of the client area. 
 	ctrlResults.GetClientRect(&rc);
 	ctrlResults.ScreenToClient(&pt); 
@@ -1543,7 +1541,12 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 			return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 		}
 		case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-			if (cd->iSubItem == COLUMN_IP) {
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT;
+			lvc.pszText = headerBuf;
+			lvc.cchTextMax = 128;
+			ctrlResults.GetColumn(cd->iSubItem, &lvc);
+ 			if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {			
 				if(si->sr->getIP() != "" && BOOLSETTING(GET_USER_COUNTRY)) {
 					if(ctrlResults.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 						if(ctrlResults.m_hWnd == ::GetFocus()) {

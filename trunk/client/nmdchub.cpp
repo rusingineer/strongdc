@@ -113,11 +113,11 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	if(ClientManager::getInstance() != NULL) {
+//	if(ClientManager::getInstance() != NULL) {
 		for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 			ClientManager::getInstance()->putUserOffline(i->second);
 		}
-	}
+//	}
 	users.clear();
 }
 

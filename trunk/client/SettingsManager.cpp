@@ -53,6 +53,7 @@ const string SettingsManager::settingTags[] =
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
+	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -86,16 +87,14 @@ const string SettingsManager::settingTags[] =
 	"UploadLimitTime", "DownloadLimitTime", "TimeThrottle", "TimeLimitStart", "TimeLimitEnd",
 	"RemoveForbidden", "ProgressTextDown", "ProgressTextUp", "ShowInfoTips", "ExtraDownloadSlots",
 	"OpenNetworkStatistic", "MinimizeOnStratup", "ConfirmDelete", "DefaultSearchFreeSlots", 
-	"ExtensionDownTo", "ErrorColor", "ShowShared", "ShowExactShared", "ShowDescription", 
-	"ShowTag", "ShowConnection", "ShowEmail", "ShowClient", "ShowVersion", "ShowMode", 
-	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
+	"ExtensionDownTo", "ErrorColor", "ExpandQueue", "TransferSplitSize", "IDownSpeed", "HDownSpeed", "DownTime", 
 	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
 	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "MaxSources",
-	"ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
+	"UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
@@ -368,24 +367,6 @@ SettingsManager::SettingsManager()
 	setDefault(FREE_SLOTS_DEFAULT, false);
 	setDefault(USE_EXTENSION_DOWNTO, true);
 	setDefault(ERROR_COLOR, RGB(255, 0, 0));
-	setDefault(SHOW_SHARED, true);
-	setDefault(SHOW_EXACT_SHARED, false);
-	setDefault(SHOW_DESCRIPTION, true);
-	setDefault(SHOW_TAG, false);
-	setDefault(SHOW_CONNECTION, true);
-	setDefault(SHOW_EMAIL, true);
-	setDefault(SHOW_CLIENT, false);
-	setDefault(SHOW_VERSION, false);
-	setDefault(SHOW_MODE, false);
-	setDefault(SHOW_HUBS, false);
-	setDefault(SHOW_SLOTS, false);
-	setDefault(SHOW_UPLOAD, false);
-	setDefault(SHOW_IP, false);
-	setDefault(SHOW_ISP, false);
-	setDefault(SHOW_SUPPORTS, false);
-	setDefault(SHOW_PK, false);
-	setDefault(SHOW_LOCK, false);
-
 	setDefault(EXPAND_QUEUE, true);
 	setDefault(TRANSFER_SPLIT_SIZE, 8000);
 	setDefault(I_DOWN_SPEED, 0);
@@ -501,6 +482,7 @@ SettingsManager::SettingsManager()
 	setDefault(FULL_CHECKED_COLOUR, RGB(0, 160, 0));
 	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
 	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
+	setDefault(HUBFRAME_VISIBLE, "1,1,0,1,0,1,1,0,0,0,0,0,0,0");
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

@@ -137,12 +137,14 @@ public:
 		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(false), searches(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
+		headerBuf = new TCHAR[128];
 	}
 
 	virtual ~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
 		states.Destroy();
+		delete[] headerBuf;
 	}
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
 
@@ -301,6 +303,7 @@ public:
 	
 private:
 	class SearchInfo;
+	TCHAR * headerBuf;
 public:
 	TypedListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 

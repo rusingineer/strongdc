@@ -157,7 +157,7 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			pendingDown.push_back(cqi);
 		} else {
 			{
-				//Lock l(cs);
+				Lock l(cs);
 				dcassert(find(active.begin(), active.end(), aSource->getCQI()) != active.end());
 				active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 			}
@@ -319,7 +319,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
-static const u_int32_t FLOOD_ADD = 2000;
+static const u_int32_t FLOOD_ADD = 1000;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...
@@ -494,7 +494,6 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	if(aSource->getUser()->isOnline()) {
 		// We don't want connections from people claiming to be us
 		if(aNick == aSource->getUser()->getClientNick() && (aSource->getUser()->getClient()->getStealth() == false)) {
-			aSource->error("Fuck You !!!");
 			putConnection(aSource);
 			return;
 		}
@@ -712,7 +711,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
+void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
 	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
 		{
 			Lock l(cs);
@@ -720,7 +719,7 @@ void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSour
 			for(ConnectionQueueItem::Iter i = downPool.begin(); i != downPool.end(); ++i) {
 				dcassert((*i)->getConnection());
 				if((*i)->getConnection() == aSource) {
-					dcdebug("ConnectionManager::onError %s : Removing connection %p to %s from active pool\n", aError, aSource, aSource->getUser()->getNick().c_str());
+					dcdebug("ConnectionManager::onError Removing connection %p to %s from active pool\n", aSource, aSource->getUser()->getNick().c_str());
 					downPool.erase(i);
 					break;
 				}

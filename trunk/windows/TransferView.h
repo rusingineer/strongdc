@@ -43,7 +43,9 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 	private SettingsManagerListener, private QueueManagerListener
 {
 public:
-	TransferView() : PreviewAppsSize(0) { };
+	TransferView() : PreviewAppsSize(0) {
+		headerBuf = new TCHAR[128];
+	};
 	~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
@@ -153,6 +155,8 @@ public:
 private:
 	/** Parameter map for user commands */
 	StringMap ucParams;
+	TCHAR * headerBuf;
+
 	class ItemInfo;	
 	int PreviewAppsSize;
 public:

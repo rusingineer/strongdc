@@ -715,6 +715,7 @@
 #define IDC_TRANSFERLISTDBLCLICKACTION  10193
 #define IDC_CHATDBLCLICKACTION          10194
 #define IDC_CHAT_DBLCLICK               10195
+#define IDC_HEADER_MENU                 10196
 #define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774

@@ -301,9 +301,9 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setState(UserConnection::STATE_GET);
 
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
+		!u->isSet(Upload::FLAG_TTH_LEAVES) && u->getEndOnEndFile()) {
 		StringMap params;
-		params["source"] = u->getFileName();
+		params["source"] = u->getLocalFileName();
 		params["user"] = aSource->getUser()->getNick();
 		params["userip"] = aSource->getRemoteIp();
 		params["hub"] = aSource->getUser()->getLastHubName();

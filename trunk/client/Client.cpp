@@ -50,27 +50,44 @@ void Client::reloadSettings() {
 		setDescription(hub->getUserDescription());
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
-		setMode(SETTING(CONNECTION_TYPE));
+		switch(hub->getMode()) {
+			case 1 : setIP(hub->getIP()); break;
+			default: setIP(SETTING(SERVER));
+		}
+	} else {
+		setNick(checkNick(SETTING(NICK)));
+		setStealth(false);
 		setIP(SETTING(SERVER));
+	}
+}
+
+int Client::getMode() {
+	int mode = 0;
+	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	if(hub) {
 		switch(hub->getMode()) {
 			case 1 :
 			{
-				setMode(SettingsManager::CONNECTION_ACTIVE);
+				mode = SettingsManager::CONNECTION_ACTIVE;
 				setIP(hub->getIP());
 				break;
 			}
 			case 2 :
 			{
-				setMode(SettingsManager::CONNECTION_PASSIVE);
-				setIP(hub->getIP());
+				mode = SettingsManager::CONNECTION_PASSIVE;
 				break;
+			}
+			default:
+			{
+				mode = SETTING(CONNECTION_TYPE);
+				setIP(SETTING(SERVER));
 			}
 		}
 	} else {
-		setNick(checkNick(SETTING(NICK)));
-		setMode(SETTING(CONNECTION_TYPE));
+		mode = SETTING(CONNECTION_TYPE);
 		setIP(SETTING(SERVER));
 	}
+	return mode;
 }
 
 void Client::connect() {

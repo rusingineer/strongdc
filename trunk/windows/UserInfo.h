@@ -28,11 +28,9 @@
 
 #include "../client/FastAlloc.h"
 
-class UserListColumns;
 friend struct CompareItems;
 
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
-
 public:
 	enum {
 		COLUMN_FIRST, 
@@ -56,13 +54,7 @@ public:
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
-	friend struct CompareItems;
-
-public:
-	UserInfo(const User::Ptr& u, const UserListColumns* pListColumns);
-	UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) {
-		update();
-	};
+	UserInfo(const User::Ptr& u);
 
 	const tstring& getText(int col) const;
 
@@ -72,33 +64,6 @@ public:
 
 	tstring columns[COLUMN_LAST];
 	GETSET(bool, op, Op);
-
-protected:
-	const UserListColumns* m_pListColumns;
-};
-
-class UserListColumns {
-public:
-	UserListColumns();
-	void ReadFromSetup();
-	
-	static ResourceManager::Strings def_columnNames[];
-	void WriteToSetup(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
-	void SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
-	void SwitchColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
-	void SetColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn);
-
-	bool IsColumnUsed(int nHardColumn) const;
-	int RemapDataColumnToListColumn(int nDataCol) const;
-	int RemapListColumnToDataColumn(int nDataCol) const;
-	
-protected:
-	int m_nColumnSizes[UserInfo::COLUMN_LAST];
-	int m_nColumnIndexes[UserInfo::COLUMN_LAST];
-	bool m_bColumnUsing[UserInfo::COLUMN_LAST];
-	int m_nColumnIdxData[UserInfo::COLUMN_LAST];
-
-	void RecalcIdxData();
 };
 
 #endif //USERINFO_H
