@@ -37,6 +37,9 @@
 * pøidán dùvod do menu Znovu vložit zdroj ve frontì
 * emulace DC++ je zapnuta pøi pøipojování k hubu použitím Rychlého pøipojení
 * stahování je odpojeno, když je priorita zmìnìna do pauznutého stavu
+* zmìnìno ukládání fronty ze sekund na minuty, aby se pøedešlo poškození souboru pøi pádu
+* opraveno naèítání ikon ze souboru
+* pøidáno nastavení povolených timeoutù/odpojení
 
 
 	-- StrongDC++ 1.00 RC9 --

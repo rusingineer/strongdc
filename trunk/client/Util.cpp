@@ -174,7 +174,6 @@ void Util::initialize() {
 			k = j + 1;
 		}
 	} catch(const FileException&) {
-		// ...
 	}
 
 	try {
@@ -648,7 +647,7 @@ string::size_type Util::findSubString(const string& aString, const string& aSubS
 	const u_int8_t* tx = (const u_int8_t*)aString.c_str() + start;
 	const u_int8_t* px = (const u_int8_t*)aSubString.c_str();
 
-	const u_int8_t* end = tx + aString.length() - aSubString.length() + 1;
+	const u_int8_t* end = tx + aString.length() - start - aSubString.length() + 1;
 
 	wchar_t wp = utf8ToLC(px);
 

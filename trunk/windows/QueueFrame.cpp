@@ -1206,7 +1206,7 @@ void QueueFrame::changePriority(bool inc){
 		if ((inc && p == QueueItem::HIGHEST) || (!inc && p == QueueItem::PAUSED)){
 			// Trying to go higher than HIGHEST or lower than PAUSED
 			// so do nothing
-			return;
+			continue;
 		}
 
 		switch(p){

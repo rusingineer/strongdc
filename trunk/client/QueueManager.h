@@ -102,12 +102,13 @@ public:
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(fileName, -1, aUser, file, NULL, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR, QueueItem::HIGHEST);
-		//aUser->unCacheClientInfo();
+		aUser->setHasTestSURinQueue(true);
 	}
 
-	void removeTestSUR(const string& aNick) {
+	void removeTestSUR(User::Ptr aUser) {
 		try {
-			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
+			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aUser->getNick());
+			aUser->setHasTestSURinQueue(false);
 		} catch(...) {
 			// exception
 		}
@@ -150,7 +151,7 @@ public:
 	void saveQueue() throw();
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	void autoDropSource(User::Ptr& aUser);
+	void autoDropSource(User::Ptr& aUser, QueueItem* q);
 
 	QueueItem::List getRunningFiles() throw() {
 		QueueItem::List ql;

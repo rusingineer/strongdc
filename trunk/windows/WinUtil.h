@@ -74,7 +74,7 @@ template<class T>
 class UserInfoBaseHandler {
 public:
 	UserInfoBaseHandler() {
-		sSelectedUser = _T("");
+		sSelectedUser = Util::emptyStringT;
 	}
 
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
@@ -117,7 +117,7 @@ public:
 	}
 
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
+		if(sSelectedUser != Util::emptyStringT) {
 			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::doReport);
@@ -129,7 +129,7 @@ public:
 	}
 
 	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
+		if(sSelectedUser != Util::emptyStringT) {
 			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getUserResponses);
@@ -141,7 +141,7 @@ public:
 	}
 
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
+		if(sSelectedUser != Util::emptyStringT) {
 			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::checkList);
@@ -243,8 +243,6 @@ public:
 	}
 
 	void appendUserItems(CMenu& menu) {
-		sSelectedUser = _T("");
-
 		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
 		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
 		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
@@ -357,6 +355,7 @@ public:
 	static bool mutesounds;
 
 	static void reLoadImages(); // User Icon Begin / User Icon End
+	static void createImageList1(CImageList &imglst, string file, int size);
 
 	static void init(HWND hWnd);
 	static void uninit();

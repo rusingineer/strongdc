@@ -841,6 +841,8 @@ string ResourceManager::strings[] = {
 "Winamp Help", 
 "Yes", 
 "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many \"rollback inconsistency\" errors.  Please uninstall it and use an alternate product.  ", 
+"Accepted Timeouts", 
+"Accepted Disconnects", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1682,4 +1684,6 @@ string ResourceManager::names[] = {
 "WinampHelpDesc", 
 "Yes", 
 "ZonealarmWarning", 
+"AcceptedTimeouts", 
+"AcceptedDisconnects", 
 };

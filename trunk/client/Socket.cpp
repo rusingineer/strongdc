@@ -260,7 +260,7 @@ void Socket::write(const char* aBuffer, size_t aLen) throw(SocketException) {
 	bool blockAgain = false;
 
 	while(pos < aLen) {
-		if(ConnectionManager::getInstance()->shuttingDown && (wait(5000, WAIT_WRITE) == 0)) {
+		if(wait(ConnectionManager::getInstance()->shuttingDown ? 5000 : 60000, WAIT_WRITE) == 0) {
 			throw SocketException(STRING(CONNECTION_TIMEOUT));
 		}
 		int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);

@@ -463,8 +463,10 @@
 #define IDC_BEGIN_SPIN                  1260
 #define IDC_LIST_REMOVE                 1260
 #define IDC_LIST_DESC                   1261
+#define IDC_TIMEOUTS                    1261
 #define AAA                             1262
 #define IDC_LIST_LIST                   1262
+#define IDC_DISCONNECTS                 1262
 #define IDC_SOUNDLIST                   1263
 #define IDC_RENAME                      1263
 #define IDC_UPDATE_URL                  1264
@@ -528,6 +530,9 @@
 #define IDC_UPDATE_DOWNLOAD             1452
 #define IDC_UPDATE                      1453
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
+#define IDC_TIMEOUTS_NO                 1505
+#define IDC_PERCENT_FAKE_SHARE_TOLERATED3 1506
+#define IDC_DISCONNECTS_NO              1506
 #define IDC_USERLIST_COLORS             1517
 #define IDC_TABCOLOR_LIST               1522
 #define IDC_SELECT_TAB_COLOR            1523

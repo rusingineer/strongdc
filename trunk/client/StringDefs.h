@@ -844,5 +844,7 @@ enum Strings { // @DontAdd
 	WINAMP_HELP_DESC, // "Winamp Help"
 	YES, // "Yes"
 	ZONEALARM_WARNING, // "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many \"rollback inconsistency\" errors.  Please uninstall it and use an alternate product.  "
+	ACCEPTED_TIMEOUTS, // "Accepted Timeouts"
+	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
 	LAST // @DontAdd
 };
