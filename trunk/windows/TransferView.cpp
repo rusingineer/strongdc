@@ -115,6 +115,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ConnectionManager::getInstance()->addListener(this);
 	DownloadManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	HashManager::getInstance()->addListener(this);
 
 	return 0;
@@ -127,7 +128,8 @@ void TransferView::prepareClose() {
 	ConnectionManager::getInstance()->removeListener(this);
 	DownloadManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
-	HashManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->removeListener(this);
+	HashManager::getInstance()->removeListener(this);
 }
 
 LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -226,7 +228,6 @@ void TransferView::runUserCommand(UserCommand& uc) {
 	return;
 };
 
-
 LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
@@ -308,7 +309,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				
 				// Get the cell boundaries
 				ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, LVIR_BOUNDS, rc);
-					// Actually we steal one upper pixel to not have 2 borders together
+				// Actually we steal one upper pixel to not have 2 borders together
 
 				// Real rc, the original one.
 				CRect real_rc = rc;
@@ -405,14 +406,58 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				return CDRF_SKIPDEFAULT;
 			}
+		} else if(cd->iSubItem == COLUMN_IP && BOOLSETTING(GET_USER_COUNTRY)) {
+			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
+
+			if(ctrlTransfers.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
+				if(ctrlTransfers.m_hWnd == ::GetFocus()) {
+					barva = GetSysColor(COLOR_HIGHLIGHT);
+					SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
+					SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				} else {
+					barva = GetBkColor(cd->nmcd.hdc);
+					SetBkColor(cd->nmcd.hdc, barva);
+				}				
+			} else {
+				barva = WinUtil::bgColor;
+				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
+				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+			}
+
+			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
+			CRect rc2 = rc;
+			rc2.left += 2;
+			//FillRect(cd->nmcd.hdc, &rc, WinUtil::bgBrush);
+			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
+			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
+			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
+
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+			TCHAR buf[256];
+			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_IP, buf, 255);
+			buf[255] = 0;
+			if(_tcslen(buf) > 0) {
+				LONG top = rc2.top + (rc2.Height() - 15)/2;
+				if((top - rc2.top) < 2)
+					top = rc2.top + 1;
+
+				POINT p = { rc2.left, top };
+				WinUtil::flagImages.Draw(cd->nmcd.hdc, ii->flagImage, p, LVSIL_SMALL);
+				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+				//SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+				return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
+			}
 		} else if (cd->iSubItem == COLUMN_FILE || cd->iSubItem == COLUMN_SIZE || cd->iSubItem == COLUMN_PATH) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			if (ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
 				cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.6);
-				return CDRF_NEWFONT;
-			}
+			return CDRF_NEWFONT;
 		}
-		// Fall through
+	}
+	// Fall through
 	default:
 		return CDRF_DODEFAULT;
 	}
@@ -500,7 +545,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			}
 		}
 	}
-
 
 	return 0;
 }
@@ -625,10 +669,10 @@ void TransferView::ItemInfo::update() {
 			countryIP = country + _T(" (") + IP + _T(")");
 		columns[COLUMN_IP] = countryIP;
 		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL) && (upper->pocetUseru <= 1)) {
+			upper->flagImage = flagImage;
 			upper->columns[COLUMN_IP] = countryIP;
 		}
 	}
-
 }
 
 void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) {
@@ -743,7 +787,6 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 			}
 		}
 	}
-
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
 }
 
@@ -766,7 +809,6 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			
 		i->updateMask |= (ItemInfo::MASK_HUB | ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
 	}
-
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -817,7 +859,9 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 			i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
 		else 
 			i->IP = Util::emptyStringT;
-		i->country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
+		string country = Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp());
+		i->country = Text::toT(country);
+		i->flagImage = WinUtil::getFlagImage(country.c_str());
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
@@ -1018,12 +1062,13 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->file = Text::toT(Util::getFileName(aUpload->getLocalFileName()));
 		i->path = Text::toT(Util::getFilePath(aUpload->getLocalFileName()));
 		i->statusString = TSTRING(UPLOAD_STARTING);
-
 		if(i->user->isClientOp())
 			i->IP = Text::toT(aUpload->getUserConnection()->getRemoteIp());
 		else 
 			i->IP = Util::emptyStringT;
-		i->country = Text::toT(Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp()));
+		string country = Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp());
+		i->country = Text::toT(country);
+		i->flagImage = WinUtil::getFlagImage(country.c_str());
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 	}
@@ -1109,7 +1154,6 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 		i->statusString = isUpload ? TSTRING(UPLOAD_FINISHED_IDLE) : TSTRING(DOWNLOAD_FINISHED_IDLE);
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 	}
-
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);	
 }
 
@@ -1382,6 +1426,24 @@ TransferView::ItemInfo* TransferView::findLastUserItem(tstring Target) {
 	}
 	return NULL;
 }
+
+void TransferView::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlTransfers.GetBkColor() != WinUtil::bgColor) {
+		ctrlTransfers.SetBkColor(WinUtil::bgColor);
+		ctrlTransfers.SetTextBkColor(WinUtil::bgColor);
+		ctrlTransfers.setFlickerFree(WinUtil::bgBrush);
+		refresh = true;
+	}
+	if(ctrlTransfers.GetTextColor() != WinUtil::textColor) {
+		ctrlTransfers.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
+}
+
 /**
  * @file
  * $Id$

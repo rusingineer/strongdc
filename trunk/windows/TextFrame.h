@@ -26,7 +26,7 @@
 #include "FlatTabCtrl.h"
 #include "WinUtil.h"
 
-class TextFrame : public MDITabChildWindowImpl<TextFrame>
+class TextFrame : public MDITabChildWindowImpl<TextFrame>, private SettingsManagerListener
 {
 public:
 	static void openWindow(const tstring& aFileName);
@@ -76,6 +76,7 @@ private:
 	
 	tstring file;
 	CEdit ctrlPad;
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_TEXTFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

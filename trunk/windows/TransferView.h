@@ -40,7 +40,8 @@
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
 	private HashManagerListener,
-	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>
+	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>,
+	private SettingsManagerListener	
 {
 public:
 	TransferView() : PreviewAppsSize(0) { };
@@ -218,7 +219,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
 			dwnldStart(0), pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
-			compressRatio(1.0), finished(false), tth(NULL) { update(); };
+			compressRatio(1.0), finished(false), tth(NULL), flagImage(0) { update(); };
 
 		Types type;
 		Status status;
@@ -247,6 +248,8 @@ private:
 		tstring downloadTarget;
 		bool finished;
 		TTHValue* tth;		
+		int flagImage;
+		
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -348,6 +351,7 @@ private:
 	CImageList arrows;
 	CImageList states;
 	HICON hIconCompressed;
+	COLORREF barva;
 
 	HDC hDCDB; // Double buffer DC
 	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC
@@ -366,6 +370,8 @@ private:
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
 	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true); }
+
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw() { }
 	virtual void on(HashManagerListener::Finished) throw() { }

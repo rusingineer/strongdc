@@ -221,6 +221,15 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
 	} else if(name == sFileListing) {
 		const string& generator = getAttrib(attribs, sGenerator, 2);
 		if(uziv->isOnline()) {
+			PME reg("^<StrgDC\\+\\+ V:1.00 RC([89]){1}");
+			if((generator == "DC++ 0.403")) {
+				if(reg.match(uziv->getTag())) {
+					uziv->setCheat("rmDC++ with StrongDC++ emulation" , true);
+					uziv->setClientType("rmDC++ 0.403");
+					uziv->setBadClient(true);
+					uziv->setBadFilelist(true);
+				}
+			}
 			uziv->setGenerator(generator);
 		}
 		inListing = true;

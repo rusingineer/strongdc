@@ -72,6 +72,7 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlRemoveAll.SetFont(WinUtil::font);
 
 	HubManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	updateList(HubManager::getInstance()->getRecentHubs());
 	
 	hubsMenu.CreatePopupMenu();
@@ -87,7 +88,6 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 }
 
 LRESULT RecentHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	
 	NMITEMACTIVATE* item = (NMITEMACTIVATE*) pnmh;
 
 	if(item->iItem != -1) {
@@ -98,19 +98,17 @@ LRESULT RecentHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 }
 
 LRESULT RecentHubsFrame::onEnter(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHandled*/) {
-	
 	int item = ctrlHubs.GetNextItem(-1, LVNI_FOCUSED);
 
 	if(item != -1) {
 		RecentHubEntry* entry = (RecentHubEntry*)ctrlHubs.GetItemData(item);
-		HubFrame::openWindow(Text::toT(entry->getName()), Text::toT(entry->getServer()), Text::toT(entry->getDescription()), Text::toT(entry->getUsers()));
+		HubFrame::openWindow(Text::toT(entry->getServer()));
 	}
 
 	return 0;
 }
 
 LRESULT RecentHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	
 	int i = -1;
 	while( (i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		RecentHubEntry* entry = (RecentHubEntry*)ctrlHubs.GetItemData(i);
@@ -120,7 +118,6 @@ LRESULT RecentHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 }
 
 LRESULT RecentHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-
 	TCHAR buf[256];
 	
 	if(ctrlHubs.GetSelectedCount() == 1) {
@@ -154,7 +151,7 @@ LRESULT RecentHubsFrame::onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		HubManager::getInstance()->removeListener(this);
-
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_RECENTS, false);
 		PostMessage(WM_CLOSE);
@@ -168,8 +165,7 @@ LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	}	
 }
 
-void RecentHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
-{
+void RecentHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	RECT rect;
 	GetClientRect(&rect);
 	// position bars and offset their dimensions
@@ -214,4 +210,20 @@ LRESULT RecentHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		}
 	}
 	return 0;
+}
+
+void RecentHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
+		ctrlHubs.SetBkColor(WinUtil::bgColor);
+		ctrlHubs.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlHubs.GetTextColor() != WinUtil::textColor) {
+		ctrlHubs.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }

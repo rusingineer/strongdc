@@ -108,6 +108,7 @@ public:
 	 * Sets data mode for aBytes bytes long. Must be called within an action method...
 	 */
 	void setDataMode(int64_t aBytes = -1) {
+		dcdebug("setDataMode...\n");
 		mode = MODE_DATA;
 		dataBytes = aBytes;
 	}
@@ -115,6 +116,7 @@ public:
 	 * Should be called when data mode.
 	 */
 	void setLineMode() {
+		dcdebug("setLineMode...\n");
 		dcassert(mode == MODE_DATA);
 		dcassert(dataBytes == -1);
 		mode = MODE_LINE;

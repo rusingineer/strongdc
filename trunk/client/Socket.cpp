@@ -141,6 +141,10 @@ void Socket::accept(const ServerSocket& aSocket) throw(SocketException){
 	setBlocking(true);
 	connected = true;
 	
+	sockaddr_in sock_addr_rem = { 0 };
+	socklen_t len = sizeof(sock_addr_rem);
+	if(getpeername(sock, (sockaddr*)&sock_addr_rem, &len) != SOCKET_ERROR)
+		setIp(inet_ntoa(sock_addr_rem.sin_addr));
 }
 
 /**

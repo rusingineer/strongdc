@@ -75,7 +75,7 @@ void Util::initialize() {
 	char* home = getenv("HOME");
 	if (home) {
 		appPath = Text::fromT(home);
-		appPath += "/.StrongDC++/";
+		appPath += "/.strongdc++/";
 	}
 #endif // _WIN32
 
@@ -118,9 +118,9 @@ string Util::getConfigPath() {
 		char* home = getenv("HOME");
 		if (home) {
 #ifdef __APPLE__
-			return string(home) + "/Library/Application Support/Mac DC++/";
+			return string(home) + "/Library/Application Support/Mac StrongDC++/";
 #else
-			return string(home) + "/.dc++/";
+			return string(home) + "/.strongdc++/";
 #endif // __APPLE__
 		}
 		return emptyString;
@@ -179,11 +179,20 @@ string Util::validateChatMessage(string tmp) {
 	return tmp;
 }
 
+#ifdef _WIN32
 static const char badChars[] = { 
 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 		17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
 		31, '<', '>', '/', '"', '|', '?', '*', 0
 };
+#else
+
+static const char badChars[] = { 
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+	31, '<', '>', '\\', '"', '|', '?', '*', 0
+};
+#endif
 
 /**
  * Replaces all strange characters in a file with '_'
@@ -365,6 +374,7 @@ string Util::formatExactSize(int64_t aBytes) {
 		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
 #else
 		_snprintf(buf, 63, "%'lld", aBytes);
+		buf[63] = 0;		
 #endif
 		_snprintf(buf, 63, "%s %s", buf, CSTRING(B));
 		buf[63] = 0;
@@ -493,13 +503,7 @@ string::size_type Util::findSubString(const string& aString, const string& aSubS
 }
 
 int Util::stricmp(const char* a, const char* b) {
-	int v1, v2;
-	while(*a != 0 && *b != 0) {
-		v1 = 0; v2 = 0;
-		bool t1 = isNumeric(*a);
-		bool t2 = isNumeric(*b);
-		if(t1 != t2) return (t1) ? -1 : 1;
-		if(!t1) { //string
+	while(*a) {
 			wchar_t ca = 0, cb = 0;
 			int na = Text::utf8ToWc(a, ca);
 			int nb = Text::utf8ToWc(b, cb);
@@ -510,22 +514,6 @@ int Util::stricmp(const char* a, const char* b) {
 			}
 			a+= na < 0 ? 1 : na;
 			b+= nb < 0 ? 1 : nb;
-		} else { // number
-			while(isNumeric(*a)) {
-            	v1 *= 10;
-				v1 += *a - '0';
-				a++;
-			}
-
-			while(isNumeric(*b)) {
-				v2 *= 10;
-				v2 += *b - '0';
-				b++;
-			}
-
-			if(v1 != v2)
-				return (v1 < v2) ? -1 : 1;
-		}
 	}
 	wchar_t ca = 0, cb = 0;
 	Text::utf8ToWc(a, ca);
@@ -985,6 +973,31 @@ int Util::getOsMinor()
 	return ver.dwMinorVersion;
 #endif //_WIN32
 }
+
+TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
+	TCHAR *s1, *s2;
+	TCHAR *cp = (TCHAR *)str1;
+	if (!*str2)
+		return (TCHAR *)str1;
+	int nIdx = 0;
+	while (*cp) {
+		s1 = cp;
+		s2 = (TCHAR *) str2;
+                while(*s1 && *s2 && !(*s1-*s2))
+                        s1++, s2++;
+		if (!*s2) {
+			if (pnIdxFound != NULL)
+				*pnIdxFound = nIdx;
+			return cp;
+		}
+		cp++;
+		nIdx++;
+	}
+	if (pnIdxFound != NULL)
+		*pnIdxFound = -1;
+	return NULL;
+}
+
 /**
  * @file
  * $Id$

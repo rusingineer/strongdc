@@ -167,13 +167,16 @@ private:
 
 	Socket s;
 
-	static int64_t quickTick;
+	int64_t quickTick;
+	int infoTick;
 
 	friend class Singleton<ClientManager>;
 	ClientManager() { 
 		TimerManager::getInstance()->addListener(this); 
 		if(SETTING(CLIENT_ID).empty())
 			SettingsManager::getInstance()->set(SettingsManager::CLIENT_ID, CID::generate().toBase32());
+		quickTick = GET_TICK();
+		infoTick = 0;
 	};
 
 	virtual ~ClientManager() { TimerManager::getInstance()->removeListener(this); };

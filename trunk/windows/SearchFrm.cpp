@@ -498,7 +498,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
 					) {
 					droppedResults++;
-					ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
+//					ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
 					return;
 				}
 			}
@@ -737,6 +737,7 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 {
 	if(!closed) {
 	SearchManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();
  		clientMgr->removeListener(this);
 
@@ -1461,6 +1462,54 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 		}
 		return CDRF_NOTIFYSUBITEMDRAW;
 
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
+		if (cd->iSubItem == COLUMN_IP) {
+			SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
+			if(si->sr->getIP() != "" && BOOLSETTING(GET_USER_COUNTRY)) {
+				if(ctrlResults.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
+					if(ctrlResults.m_hWnd == ::GetFocus()) {
+						barva = GetSysColor(COLOR_HIGHLIGHT);
+						SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
+						SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+					} else {
+						barva = GetBkColor(cd->nmcd.hdc);
+						SetBkColor(cd->nmcd.hdc, barva);
+					}				
+				} else {
+					barva = WinUtil::bgColor;
+					SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
+					SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+				}
+
+				ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
+				CRect rc2 = rc;
+				rc2.left += 2;
+
+				HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
+				HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
+				Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
+
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+				TCHAR buf[256];
+				ctrlResults.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_IP, buf, 255);
+				buf[255] = 0;
+				if(_tcslen(buf) > 0) {
+					LONG top = rc2.top + (rc2.Height() - 15)/2;
+					if((top - rc2.top) < 2)
+						top = rc2.top + 1;
+
+					POINT p = { rc2.left, top };
+					WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getflagImage(), p, LVSIL_SMALL);
+					top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+
+					::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+					return CDRF_NEWFONT | CDRF_SKIPDEFAULT;	
+				}
+			}
+		}
+	}
 	default:
 		return CDRF_DODEFAULT;
 	}
@@ -1570,6 +1619,27 @@ LRESULT SearchFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 
 	return 0;
 }
+
+void SearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlResults.GetBkColor() != WinUtil::bgColor) {
+		ctrlResults.SetBkColor(WinUtil::bgColor);
+		ctrlResults.SetTextBkColor(WinUtil::bgColor);
+		ctrlResults.setFlickerFree(WinUtil::bgBrush);
+		ctrlHubs.SetBkColor(WinUtil::bgColor);
+		ctrlHubs.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlResults.GetTextColor() != WinUtil::textColor) {
+		ctrlResults.SetTextColor(WinUtil::textColor);
+		ctrlHubs.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
+}
+
 /**
  * @file
  * $Id$

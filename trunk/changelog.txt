@@ -44,6 +44,8 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraveno stažení souboru pokud existuje doèasný soubory stejné velikosti
 * aktualizováno na ZLIB 1.2.2
 * odstranìno odstraòování diakritiky
+* zmìna barev se projeví ihned (CZDC++)
+* pøidány vlajky státù (CZDC++)
 
 
 	-- StrongDC++ 1.00 RC8 --

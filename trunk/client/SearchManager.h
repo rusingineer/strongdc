@@ -175,7 +175,9 @@ private:
 		if(socket) {
 			stop = true;
 			socket->disconnect();
+#ifdef _WIN32
 			join();
+#endif
 			delete socket;
 		}
 	};

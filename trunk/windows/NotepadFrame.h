@@ -28,7 +28,8 @@
 
 #define NOTEPAD_MESSAGE_MAP 13
 
-class NotepadFrame : public MDITabChildWindowImpl<NotepadFrame, RGB(0, 0, 0), IDR_NOTEPAD>, public StaticFrame<NotepadFrame, ResourceManager::NOTEPAD, IDC_NOTEPAD>
+class NotepadFrame : public MDITabChildWindowImpl<NotepadFrame, RGB(0, 0, 0), IDR_NOTEPAD>, public StaticFrame<NotepadFrame, ResourceManager::NOTEPAD, IDC_NOTEPAD>, 
+	private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("NotepadFrame"), IDR_NOTEPAD, 0, COLOR_3DFACE);
@@ -82,6 +83,8 @@ private:
 	bool closed;
 	CEdit ctrlPad;
 	CContainedWindow ctrlClientContainer;
+
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_NOTEPADFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

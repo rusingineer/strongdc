@@ -277,7 +277,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
-static const u_int32_t FLOOD_ADD = 2000;
+static const u_int32_t FLOOD_ADD = 1000;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...

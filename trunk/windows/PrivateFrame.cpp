@@ -51,42 +51,6 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlClient.LimitText(0);
 	ctrlClient.SetFont(WinUtil::font);
 	
-	CHARFORMAT2 cf;
-	memset(&cf, 0, sizeof(CHARFORMAT2));
-	cf.cbSize = sizeof(cf);
-	cf.dwReserved = 0;
-	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
-	cf.dwEffects = 0;
-	cf.crBackColor = SETTING(BACKGROUND_COLOR);
-	cf.crTextColor = SETTING(TEXT_COLOR);
-
-	m_ChatTextGeneral = cf;
-	m_ChatTextGeneral.crBackColor     = SETTING(TEXT_GENERAL_BACK_COLOR);
-	m_ChatTextGeneral.crTextColor     = SETTING(TEXT_GENERAL_FORE_COLOR);
-	if ( SETTING(TEXT_GENERAL_BOLD) )
-		m_ChatTextGeneral.dwEffects       |= CFE_BOLD;
-	if ( SETTING(TEXT_GENERAL_ITALIC) )
-		m_ChatTextGeneral.dwEffects       |= CFE_ITALIC;
-
-	m_ChatTextSystem = cf;
-	m_ChatTextSystem.crBackColor    = SETTING(TEXT_SYSTEM_BACK_COLOR);
-	m_ChatTextSystem.crTextColor    = SETTING(TEXT_SYSTEM_FORE_COLOR);
-	if ( SETTING(TEXT_SYSTEM_BOLD) )
-		m_ChatTextSystem.dwEffects      |= CFE_BOLD;
-	if ( SETTING(TEXT_SYSTEM_ITALIC) )
-		m_ChatTextSystem.dwEffects      |= CFE_ITALIC;
-
-	m_ChatTextServer = cf;
-	m_ChatTextServer.crBackColor = SETTING(TEXT_SERVER_BACK_COLOR);
-	m_ChatTextServer.crTextColor = SETTING(TEXT_SERVER_FORE_COLOR);
-	if ( SETTING(TEXT_SERVER_BOLD) )
-		m_ChatTextServer.dwEffects      |= CFE_BOLD;
-	if ( SETTING(TEXT_SERVER_ITALIC) )
-		m_ChatTextServer.dwEffects      |= CFE_ITALIC;
-
-	m_ChatTextLog = m_ChatTextGeneral;
-	m_ChatTextLog.crTextColor = CZDCLib::blendColors(SETTING(TEXT_GENERAL_BACK_COLOR), SETTING(TEXT_GENERAL_FORE_COLOR), 0.4);
-
 	ctrlClient.SetBackgroundColor( SETTING(BACKGROUND_COLOR) ); 
 	ctrlClient.SetAutoURLDetect(false);
 	ctrlClient.SetEventMask( ctrlClient.GetEventMask() | ENM_LINK );
@@ -96,6 +60,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlMessageContainer.SubclassWindow(ctrlMessage.m_hWnd);
 
 	ctrlMessage.SetFont(WinUtil::font);
+	ctrlMessage.SetLimitText(9999);
 
 	grantMenu.CreatePopupMenu();
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
@@ -121,6 +86,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	created = true;
 
 	ClientManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 
 	if(BOOLSETTING(SHOW_PM_LOG)){
 		if(user->isOnline()) {
@@ -131,7 +97,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		string lastsession = LOGTAIL("PM\\" + user->getNick(), SETTING(PM_LOG_LINES));
 		lastsession = lastsession.substr(0,lastsession.size()-2);
 		if(lastsession.length() > 0)
-			ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), Text::toT(lastsession).c_str(), m_ChatTextLog, _T(""));
+			ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), Text::toT(lastsession).c_str(), WinUtil::m_ChatTextLog, _T(""));
 	}
 
 	bHandled = FALSE;
@@ -358,7 +324,7 @@ void PrivateFrame::onEnter()
 				BOOL bTmp;
 				onGetList(0,0,0,bTmp);
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), m_ChatTextSystem);
+				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(user->isOnline()) {
 					sendMessage(m);
@@ -383,7 +349,7 @@ void PrivateFrame::onEnter()
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	ClientManager::getInstance()->removeListener(this);
-
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -397,7 +363,7 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 }
 
 void PrivateFrame::addLine(const tstring& aLine) {
-	addLine( aLine, m_ChatTextGeneral );
+	addLine( aLine, WinUtil::m_ChatTextGeneral );
 }
 
 void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
@@ -497,7 +463,6 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	if(user->isOnline()) {
 		user->getParams(ucParams);
 		user->clientEscapeParams(ucParams);
-
 		user->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams));
 	}
 	return;
@@ -591,7 +556,7 @@ void PrivateFrame::updateTitle() {
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), m_ChatTextServer);
+				addLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), WinUtil::m_ChatTextServer);
 			} else {
 				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"));
 			}
@@ -606,7 +571,7 @@ void PrivateFrame::updateTitle() {
 		}
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), m_ChatTextServer);
+			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), WinUtil::m_ChatTextServer);
 		} else {
 			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"));
 		}
@@ -725,6 +690,11 @@ LRESULT PrivateFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		WinUtil::setClipboard(pSelectedURL);
 	}
 	return 0;
+}
+
+void PrivateFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	ctrlClient.SetBackgroundColor(WinUtil::bgColor);
+	RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }
 
 /**

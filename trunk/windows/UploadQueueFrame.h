@@ -26,22 +26,21 @@
 #include "FlatTabCtrl.h"
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
+#include "../client/TimerManager.h"
 #include "../client/UploadManager.h"
 
 #define SHOWTREE_MESSAGE_MAP 12
 
 class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<UploadQueueFrame, ResourceManager::UPLOAD_QUEUE, IDC_UPLOAD_QUEUE>,
-	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>
+	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>, private TimerManagerListener, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
 	UploadQueueFrame() : showTree(true), closed(false), 
 		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) {
-		UploadManager::getInstance()->addListener(this);
 	}
 	virtual ~UploadQueueFrame() {
-		UploadManager::getInstance()->removeListener(this);
 	}
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
@@ -51,7 +50,8 @@ public:
 	enum {
 		ADD_ITEM,
 		REMOVE,
-		REMOVE_ITEM
+		REMOVE_ITEM,
+		UPDATE_ITEMS
 	};
 
 	typedef MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
@@ -219,6 +219,11 @@ private:
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
+	// TimerManagerListener
+	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw() {
+		PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL);
+	}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif

@@ -225,6 +225,9 @@
 				RelativePath=".\res\FinishedUL.ico">
 			</File>
 			<File
+				RelativePath=".\res\flags.bmp">
+			</File>
+			<File
 				RelativePath=".\res\folders.bmp">
 			</File>
 			<File

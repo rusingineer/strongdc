@@ -81,7 +81,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 			return;
 
 		if(stricmp(temp, "File Not Available") == 0 || 
-			strstr(temp, /*path/file*/" no more exists") == 0) {
+			strstr(temp, /*path/file*/" no more exists") != 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
 			fire(UserConnectionListener::Failed(), this, temp);

@@ -48,7 +48,7 @@ struct CompareItems;
 
 class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF>, private ClientListener, 
 	public CSplitterImpl<HubFrame>, private TimerManagerListener, public UCHandler<HubFrame>, 
-	public UserInfoBaseHandler<HubFrame>
+	public UserInfoBaseHandler<HubFrame>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
@@ -66,6 +66,7 @@ public:
 		NOTIFY_HANDLER(IDC_USERS, NM_DBLCLK, onDoubleClickUsers)	
 		NOTIFY_HANDLER(IDC_USERS, LVN_KEYDOWN, onKeyDownUsers)
 		NOTIFY_HANDLER(IDC_USERS, NM_RETURN, onEnterUsers)
+		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
 		NOTIFY_CODE_HANDLER(TTN_GETDISPINFO, onGetToolTip)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
@@ -75,6 +76,8 @@ public:
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
 		MESSAGE_HANDLER(FTM_CONTEXTMENU, onTabContextMenu)
+		MESSAGE_HANDLER(WM_MOUSEMOVE, onStyleChange)
+		MESSAGE_HANDLER(WM_CAPTURECHANGED, onStyleChanged)
 		MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, onSizeMove)
 		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, OnFileReconnect)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
@@ -111,7 +114,6 @@ public:
 
 		COMMAND_ID_HANDLER(IDC_IGNORE, onIgnore)
 		COMMAND_ID_HANDLER(IDC_UNIGNORE, onUnignore)
-		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_COMMANDS(uibBase)
 		CHAIN_MSG_MAP(baseClass)
@@ -152,7 +154,7 @@ public:
 	LRESULT onRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+	LRESULT onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onClientRButtonDown(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -169,7 +171,9 @@ public:
 	LRESULT onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onSizeMove(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT onStyleChange(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onStyleChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onSizeMove(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled); 
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -339,7 +343,6 @@ private:
 		client->addListener(this);
 		timeStamps = BOOLSETTING(TIME_STAMPS);
 		hubchatusersplit = chatusersplit;
-		client->setStealth(stealth);
 		if(HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			ShowUserList = userliststate;
 		} else {
@@ -363,7 +366,6 @@ private:
 	
 	bool waitingForPW;
 	bool extraSort;
-	bool ShowUserList;
 
 	TStringList prevCommands;
 	tstring currentCommand;
@@ -386,7 +388,6 @@ private:
 	CContainedWindow showUsersContainer;
 	CContainedWindow ctrlFilterContainer;
 	CContainedWindow ctrlFilterSelContainer;
-	tstring filter;
 
 	OMenu copyMenu;
 	OMenu copyHubMenu;
@@ -427,19 +428,22 @@ private:
 	UserListColumns m_UserListColumns;
 	
 	int findUser(const User::Ptr& aUser);
-
 	bool updateUser(const User::Ptr& u, bool searchinlist = true);
-	void updateUserList();
 	void addAsFavorite();
 
-	bool getUserInfo() { return ShowUserList; }
+	LPCSTR sMyNick;
+	int hubchatusersplit;
+	tstring filter;
+	void updateUserList();
+
+	bool PreparePopupMenu(CWindow *pCtrl, bool boCopyOnly, tstring& sNick, OMenu *pMenu);
+	bool ShowUserList;
 
 	void clearUserList() {
 		{
 			Lock l(updateCS);
 			updateList.clear();
 		}
-
 		userMap.clear();
 		int j = ctrlUsers.GetItemCount();
 		for(int i = 0; i < j; i++) {
@@ -448,17 +452,6 @@ private:
 		ctrlUsers.DeleteAllItems();
 	}
 
-	
-	CHARFORMAT2 m_ChatTextGeneral;
-	CHARFORMAT2 m_ChatTextPrivate;
-	CHARFORMAT2 m_ChatTextServer;
-	CHARFORMAT2 m_ChatTextSystem;
-	
-	LPCSTR sMyNick;
-	int hubchatusersplit;
-
-	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, tstring& sNick, OMenu *pMenu );
-
 	void updateStatusBar() {
 		if(m_hWnd)
 			PostMessage(WM_SPEAKER, STATS);
@@ -466,6 +459,7 @@ private:
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, DWORD /*aTick*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	// ClientListener
 	virtual void on(Connecting, Client*) throw();

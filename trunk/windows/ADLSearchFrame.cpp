@@ -123,6 +123,7 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	contextMenu.AppendMenu(MF_STRING, IDC_EDIT,   CTSTRING(PROPERTIES));
 
+	SettingsManager::getInstance()->addListener(this);
 	// Load all searches
 	LoadAll();
 
@@ -135,7 +136,7 @@ LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 {	if(!closed) {
 		closed = true;		
 		ADLSearchManager::getInstance()->Save();
-
+		SettingsManager::getInstance()->removeListener(this);
 		CZDCLib::setButtonPressed(IDC_FILE_ADL_SEARCH, false);
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -591,6 +592,22 @@ void ADLSearchFrame::UpdateSearch(int index, BOOL doDelete)
 
 	// Update 'Active' check box
 	ctrlList.SetCheckState(index, search.isActive);
+}
+
+void ADLSearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
+		ctrlList.SetBkColor(WinUtil::bgColor);
+		ctrlList.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlList.GetTextColor() != WinUtil::textColor) {
+		ctrlList.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

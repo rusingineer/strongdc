@@ -89,6 +89,7 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlDown.SetFont(WinUtil::font);
 
 	HubManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	updateList(HubManager::getInstance()->getFavoriteHubs());
 	
 	hubsMenu.CreatePopupMenu();
@@ -325,6 +326,7 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		HubManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;		
 		CZDCLib::setButtonPressed(IDC_FAVORITES, false);
 		PostMessage(WM_CLOSE);
@@ -390,6 +392,22 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 		}
 	}
 	return 0;
+}
+
+void FavoriteHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
+		ctrlHubs.SetBkColor(WinUtil::bgColor);
+		ctrlHubs.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlHubs.GetTextColor() != WinUtil::textColor) {
+		ctrlHubs.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

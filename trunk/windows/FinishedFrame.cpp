@@ -67,6 +67,7 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	UpdateLayout();
 	
 	FinishedManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	updateList(FinishedManager::getInstance()->lockList());
 	FinishedManager::getInstance()->unlockList();
 	
@@ -158,7 +159,6 @@ void FinishedFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	ctrlList.MoveWindow(rc);
 }
 	
-
 LRESULT FinishedFrame::onDoubleClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	
 	NMITEMACTIVATE * const item = (NMITEMACTIVATE*) pnmh;
@@ -221,8 +221,8 @@ LRESULT FinishedFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 
 LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	FinishedManager::getInstance()->removeListener(this);
-	
+		FinishedManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FINISHED, false);
 		PostMessage(WM_CLOSE);
@@ -286,6 +286,22 @@ LRESULT FinishedFrame::onDownloadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 		MessageBox(CTSTRING(NO_DOWNLOAD_LOG), CTSTRING(NO_DOWNLOAD_LOG), MB_OK );	  
 	}
 	return 0;
+}
+
+void FinishedFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
+		ctrlList.SetBkColor(WinUtil::bgColor);
+		ctrlList.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlList.GetTextColor() != WinUtil::textColor) {
+		ctrlList.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

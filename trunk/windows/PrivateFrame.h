@@ -36,7 +36,7 @@
 #define PM_MESSAGE_MAP 8		// This could be any number, really...
 
 class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255), IDR_PRIVATE, IDR_PRIVATE_OFF>, 
-	private ClientManagerListener, public UCHandler<PrivateFrame>
+	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
 	static void gotMessage(const User::Ptr& aUser, const tstring& aMessage);
@@ -202,11 +202,6 @@ private:
 
 	void updateTitle();
 	
-	CHARFORMAT2 m_ChatTextGeneral;
-	CHARFORMAT2 m_ChatTextServer;
-	CHARFORMAT2 m_ChatTextSystem;
-	CHARFORMAT2 m_ChatTextLog;
-	
 	LPCSTR sMyNick;
 
 	TStringList prevCommands;
@@ -218,6 +213,7 @@ private:
 		if(aUser == user)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif // !defined(AFX_PRIVATEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

@@ -128,7 +128,9 @@ void SearchManager::disconnect() throw() {
 	if(socket != NULL) {
 		stop = true;
 		socket->disconnect();
+#ifdef _WIN32
 		join();
+#endif
 		stop = false;
 	}
 }
@@ -295,20 +297,16 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		string hubIpPort = x.substr(i, j-i);
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
-	bool isoponhub = false;
 	if(!address.empty()) {
 		if(user->isOnline()) {
 			if(user->getClient()->getOp()) {
-				isoponhub = true;
+				if(user->getIp() != address) {
+					user->setIp(address);
+					user->setHost(socket->getRemoteHost(address));
+					User::updated(user);
+				}
 			}
 		}
-	}
-
-	string Country;
-	if(address != "")
-		Country = Util::getIpCountry(address);
-	if(isoponhub) {
-		if (Country == "") Country = address; else Country = Country + " (" + address + ")";
 	}
 
 	file = Util::replace(file, "\\\\", "\\");
@@ -325,7 +323,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 	}
 	// utf8 = true is a lie, it's not really Unicode, but we have converted all the text from acp to utf8...
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-		file, hubName, hubIpPort, Country, true);
+		file, hubName, hubIpPort, address, true);
 	fire(SearchManagerListener::SR(), sr);
 		sr->decRef();
 }

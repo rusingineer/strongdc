@@ -50,6 +50,7 @@ void Client::reloadSettings() {
 		setNick(hub->getNick(true));
 		setDescription(hub->getUserDescription());
 		setPassword(hub->getPassword());
+		setStealth(hub->getStealth());
 	} else {
 		setNick(SETTING(NICK));
 	}

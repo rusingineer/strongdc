@@ -23,7 +23,7 @@ public:
 		free(title);
 	};
 
-	BEGIN_MSG_MAP(FavoriteDirsPage)
+	BEGIN_MSG_MAP_EX(FavoriteDirsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		MESSAGE_HANDLER(WM_DROPFILES, onDropFiles)
 		NOTIFY_HANDLER(IDC_FAVORITE_DIRECTORIES, LVN_ITEMCHANGED, onItemchangedDirectories)

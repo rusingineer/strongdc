@@ -40,7 +40,8 @@
 //	Class that represent an ADL search manager interface
 //
 ///////////////////////////////////////////////////////////////////////////////
-class ADLSearchFrame : public MDITabChildWindowImpl<ADLSearchFrame, RGB(0, 0, 0), IDR_ADLSEARCH>, public StaticFrame<ADLSearchFrame, ResourceManager::ADL_SEARCH, IDC_FILE_ADL_SEARCH>
+class ADLSearchFrame : public MDITabChildWindowImpl<ADLSearchFrame, RGB(0, 0, 0), IDR_ADLSEARCH>, public StaticFrame<ADLSearchFrame, ResourceManager::ADL_SEARCH, IDC_FILE_ADL_SEARCH>, 
+	private SettingsManagerListener
 {
 public:
 
@@ -130,6 +131,8 @@ private:
 	CMenu contextMenu;
 	CContainedWindow listContainer;
 
+	bool closed;
+
 	// Column order
 	enum 
 	{
@@ -145,7 +148,7 @@ private:
 	// Column parameters
 	static int columnIndexes[];
 	static int columnSizes[];
-	bool closed;
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif

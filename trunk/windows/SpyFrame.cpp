@@ -68,7 +68,7 @@ LRESULT SpyFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	if(!closed){
 		ClientManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this);
-
+		SettingsManager::getInstance()->removeListener(this);
 		bHandled = TRUE;
 		closed = true;
 		PostMessage(WM_CLOSE);
@@ -250,6 +250,22 @@ void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
 		
 		perSecond[++cur] = 0;
 		PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
+}
+
+void SpyFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlSearches.GetBkColor() != WinUtil::bgColor) {
+		ctrlSearches.SetBkColor(WinUtil::bgColor);
+		ctrlSearches.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlSearches.GetTextColor() != WinUtil::textColor) {
+		ctrlSearches.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**

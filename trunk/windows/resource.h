@@ -121,6 +121,8 @@
 #define IDD_USERLIST_COLOURS            289
 #define IDD_DIALOG3                     290
 #define IDD_HUB_LIST                    290
+#define IDB_BITMAP4                     291
+#define IDB_FLAGS                       291
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -256,7 +258,6 @@
 #define IDC_MAX_TAB_ROWS                1107
 #define IDC_INTERVAL                    1107
 #define IDC_CLOSE_DISCONNECTED          1108
-#define IDC_INTERVAL2                   1108
 #define IDC_MATCH                       1108
 #define IDC_OPEN_FOLDER                 1109
 #define IDC_OPEN_FILE                   1110
@@ -810,7 +811,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        291
+#define _APS_NEXT_RESOURCE_VALUE        292
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1293
 #define _APS_NEXT_SYMED_VALUE           130

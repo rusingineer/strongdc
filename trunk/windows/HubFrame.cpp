@@ -59,48 +59,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlClient.SetFont(WinUtil::font);
 	clientContainer.SubclassWindow(ctrlClient.m_hWnd);
 	
-	CHARFORMAT2 cf;
-	memset(&cf, 0, sizeof(CHARFORMAT2));
-	cf.cbSize = sizeof(cf);
-	cf.dwReserved = 0;
-	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
-	cf.dwEffects = 0;
-	cf.crBackColor = SETTING(BACKGROUND_COLOR);
-	cf.crTextColor = SETTING(TEXT_COLOR);
-
-	m_ChatTextGeneral = cf;
-	m_ChatTextGeneral.crBackColor     = SETTING(TEXT_GENERAL_BACK_COLOR);
-	m_ChatTextGeneral.crTextColor     = SETTING(TEXT_GENERAL_FORE_COLOR);
-	if ( SETTING(TEXT_GENERAL_BOLD) )
-		m_ChatTextGeneral.dwEffects       |= CFE_BOLD;
-	if ( SETTING(TEXT_GENERAL_ITALIC) )
-		m_ChatTextGeneral.dwEffects       |= CFE_ITALIC;
-
-	m_ChatTextPrivate = cf;
-	m_ChatTextPrivate.crBackColor   = SETTING(TEXT_PRIVATE_BACK_COLOR);
-	m_ChatTextPrivate.crTextColor   = SETTING(TEXT_PRIVATE_FORE_COLOR);
-	if ( SETTING(TEXT_PRIVATE_BOLD) )
-		m_ChatTextPrivate.dwEffects     |= CFE_BOLD;
-	if ( SETTING(TEXT_PRIVATE_ITALIC) )
-		m_ChatTextPrivate.dwEffects     |= CFE_ITALIC;
-
-	m_ChatTextSystem = cf;
-	m_ChatTextSystem.crBackColor    = SETTING(TEXT_SYSTEM_BACK_COLOR);
-	m_ChatTextSystem.crTextColor    = SETTING(TEXT_SYSTEM_FORE_COLOR);
-	if ( SETTING(TEXT_SYSTEM_BOLD) )
-		m_ChatTextSystem.dwEffects      |= CFE_BOLD;
-	if ( SETTING(TEXT_SYSTEM_ITALIC) )
-		m_ChatTextSystem.dwEffects      |= CFE_ITALIC;
-
-	m_ChatTextServer = cf;
-	m_ChatTextServer.crBackColor = SETTING(TEXT_SERVER_BACK_COLOR);
-	m_ChatTextServer.crTextColor = SETTING(TEXT_SERVER_FORE_COLOR);
-	if ( SETTING(TEXT_SERVER_BOLD) )
-		m_ChatTextServer.dwEffects      |= CFE_BOLD;
-	if ( SETTING(TEXT_SERVER_ITALIC) )
-		m_ChatTextServer.dwEffects      |= CFE_ITALIC;
-
-	ctrlClient.SetBackgroundColor( SETTING(BACKGROUND_COLOR) ); 
 	ctrlClient.SetAutoURLDetect(false);
 	ctrlClient.SetEventMask( ctrlClient.GetEventMask() | ENM_LINK );
 	ctrlClient.SetUsers( &ctrlUsers );
@@ -110,6 +68,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	
 	ctrlMessageContainer.SubclassWindow(ctrlMessage.m_hWnd);
 	ctrlMessage.SetFont(WinUtil::font);
+	ctrlMessage.SetLimitText(9999);
 
 	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
@@ -149,12 +108,12 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	m_UserListColumns.ReadFromSetup();
 	m_UserListColumns.SetToList(ctrlUsers);
-
 	
 	ctrlUsers.SetBkColor(WinUtil::bgColor);
 	ctrlUsers.SetTextBkColor(WinUtil::bgColor);
 	ctrlUsers.SetTextColor(WinUtil::textColor);
 	ctrlUsers.setFlickerFree(WinUtil::bgBrush);
+	ctrlClient.SetBackgroundColor(WinUtil::bgColor); 
 	
 	ctrlUsers.setSortColumn(UserInfo::COLUMN_NICK);
 				
@@ -206,6 +165,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	client->connect();
 
     TimerManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 
 	return 1;
 }
@@ -248,8 +208,7 @@ void HubFrame::openWindow(const tstring& aServer
 	}
 }
 
-void HubFrame::onEnter() {
-	
+void HubFrame::onEnter() {	
 	if(ctrlMessage.GetWindowTextLength() > 0) {
 		AutoArray<TCHAR> msg(ctrlMessage.GetWindowTextLength()+1);
 		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
@@ -275,7 +234,7 @@ void HubFrame::onEnter() {
 					client->hubMessage(Text::fromT(message));
 				}
 				if(!status.empty()) {
-					addClientLine(status, m_ChatTextSystem);
+					addClientLine(status, WinUtil::m_ChatTextSystem);
 				}
 			} else if(Util::stricmp(s.c_str(), _T("join"))==0) {
 				if(!param.empty()) {
@@ -283,16 +242,16 @@ void HubFrame::onEnter() {
 					BOOL whatever = FALSE;
 					onFollow(0, 0, 0, whatever);
 				} else {
-					addClientLine(TSTRING(SPECIFY_SERVER), m_ChatTextSystem);
+					addClientLine(TSTRING(SPECIFY_SERVER), WinUtil::m_ChatTextSystem);
 				}
 			} else if((Util::stricmp(s.c_str(), _T("clear")) == 0) || (Util::stricmp(s.c_str(), _T("cls")) == 0)) {
 				ctrlClient.SetWindowText(_T(""));
 			} else if(Util::stricmp(s.c_str(), _T("ts")) == 0) {
 				timeStamps = !timeStamps;
 				if(timeStamps) {
-					addClientLine(TSTRING(TIMESTAMPS_ENABLED), m_ChatTextSystem);
+					addClientLine(TSTRING(TIMESTAMPS_ENABLED), WinUtil::m_ChatTextSystem);
 				} else {
-					addClientLine(TSTRING(TIMESTAMPS_DISABLED), m_ChatTextSystem);
+					addClientLine(TSTRING(TIMESTAMPS_DISABLED), WinUtil::m_ChatTextSystem);
 				}
 			} else if( (Util::stricmp(s.c_str(), _T("password")) == 0) && waitingForPW ) {
 				client->setPassword(Text::fromT(param));
@@ -301,23 +260,23 @@ void HubFrame::onEnter() {
 			} else if( Util::stricmp(s.c_str(), _T("showjoins")) == 0 ) {
 				showJoins = !showJoins;
 				if(showJoins) {
-					addClientLine(TSTRING(JOIN_SHOWING_ON), m_ChatTextSystem);
+					addClientLine(TSTRING(JOIN_SHOWING_ON), WinUtil::m_ChatTextSystem);
 				} else {
-					addClientLine(TSTRING(JOIN_SHOWING_OFF), m_ChatTextSystem);
+					addClientLine(TSTRING(JOIN_SHOWING_OFF), WinUtil::m_ChatTextSystem);
 				}
 			} else if( Util::stricmp(s.c_str(), _T("favshowjoins")) == 0 ) {
 				favShowJoins = !favShowJoins;
 				if(favShowJoins) {
-					addClientLine(TSTRING(FAV_JOIN_SHOWING_ON), m_ChatTextSystem);
+					addClientLine(TSTRING(FAV_JOIN_SHOWING_ON), WinUtil::m_ChatTextSystem);
 				} else {
-					addClientLine(TSTRING(FAV_JOIN_SHOWING_OFF), m_ChatTextSystem);
+					addClientLine(TSTRING(FAV_JOIN_SHOWING_OFF), WinUtil::m_ChatTextSystem);
 				}
 			} else if(Util::stricmp(s.c_str(), _T("close")) == 0) {
 				PostMessage(WM_CLOSE);
 			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(ShowUserList ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
-				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT)))), m_ChatTextSystem);
+				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT)))), WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){
@@ -335,21 +294,21 @@ void HubFrame::onEnter() {
 				int j = Util::toInt(Text::fromT(param));
 				if(j > 0) {
 					SettingsManager::getInstance()->set(SettingsManager::EXTRA_SLOTS, j);
-					addClientLine(TSTRING(EXTRA_SLOTS_SET), m_ChatTextSystem );
+					addClientLine(TSTRING(EXTRA_SLOTS_SET), WinUtil::m_ChatTextSystem );
 				} else {
-					addClientLine(TSTRING(INVALID_NUMBER_OF_SLOTS), m_ChatTextSystem );
+					addClientLine(TSTRING(INVALID_NUMBER_OF_SLOTS), WinUtil::m_ChatTextSystem );
 				}
 			} else if(Util::stricmp(s.c_str(), _T("smallfilesize"))==0) {
 				int j = Util::toInt(Text::fromT(param));
 				if(j >= 64) {
 					SettingsManager::getInstance()->set(SettingsManager::SMALL_FILE_SIZE, j);
-					addClientLine(TSTRING(SMALL_FILE_SIZE_SET), m_ChatTextSystem );
+					addClientLine(TSTRING(SMALL_FILE_SIZE_SET), WinUtil::m_ChatTextSystem );
 				} else {
-					addClientLine(TSTRING(INVALID_SIZE), m_ChatTextSystem );
+					addClientLine(TSTRING(INVALID_SIZE), WinUtil::m_ChatTextSystem );
 				}
 			} else if(Util::stricmp(s.c_str(), _T("savequeue")) == 0) {
 				QueueManager::getInstance()->saveQueue();
-				addClientLine(_T("Queue saved."), m_ChatTextSystem );
+				addClientLine(_T("Queue saved."), WinUtil::m_ChatTextSystem );
 			} else if(Util::stricmp(s.c_str(), _T("whois")) == 0) {
 				WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 			} else if(Util::stricmp(s.c_str(), _T("showblockedipports")) == 0) {
@@ -388,9 +347,9 @@ void HubFrame::onEnter() {
 				tstring ignorelist = _T("Ignored users:");
 				for(TStringHash::iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
 					ignorelist += _T(" ") + *i;
-				addLine(ignorelist, m_ChatTextSystem);
+				addLine(ignorelist, WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /showshared, /showexactshared, /showdescription, /showtag, /showconnection, /showemail, /showclient, /showversion, /showmode, /showhubs, /showslots, /showupload, /ignorelist"), m_ChatTextSystem);
+				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /showshared, /showexactshared, /showdescription, /showtag, /showconnection, /showemail, /showclient, /showversion, /showmode, /showhubs, /showslots, /showupload, /ignorelist"), WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), _T("pm")) == 0) {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
@@ -449,7 +408,6 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 		if(ctrlUsers.getItemData(a) != ui) {
 			return ctrlUsers.findItem(Text::toT(aUser->getNick()));
 		}
-		//dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
 
 		return a;
 	}
@@ -465,9 +423,10 @@ void HubFrame::addAsFavorite() {
 	aEntry.setDescription(Text::fromT(buf));
 	aEntry.setConnect(TRUE);
 	aEntry.setNick(client->getNick());
+	aEntry.setPassword(client->getPassword());
 	aEntry.setConnect(false);
 	HubManager::getInstance()->addFavorite(aEntry);
-	addClientLine(TSTRING(FAVORITE_HUB_ADDED), m_ChatTextSystem );
+	addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );
 }
 
 LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -596,7 +555,6 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	int i = -1;
 	if(searchinlist)
 		i = findUser(u);
-
 	if(i == -1) {
 		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
 		userMap.insert(make_pair(u, ui));
@@ -640,17 +598,17 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				switch(i->second) {
 				case UPDATE_USER:
 					if(updateUser(u)) {
-						if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-							PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-						if(u->isFavoriteUser() && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
-							MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u->getFullNick()).c_str(), CTSTRING(FAVUSER_ONLINE));
-						}
-
 						if(showJoins) {
-							if (!favShowJoins | u->isFavoriteUser()) {
-							 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u->getNick()), m_ChatTextSystem);
+							if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+								PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+							if(u->isFavoriteUser() && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
+								MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u->getFullNick()).c_str(), CTSTRING(FAVUSER_ONLINE));
 							}
+
+							if (!favShowJoins | u->isFavoriteUser()) {
+							 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u->getNick()), WinUtil::m_ChatTextSystem);
+							}	
 						}
 						if(client->getOp() && !u->isSet(User::OP)) {
 							if(Util::toString(u->getBytesShared()).find("000000") != -1) {
@@ -691,10 +649,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						if(i != userMap.end())
 							delete i->second;
 					}
-
 					if(showJoins) {
 						if (!favShowJoins | u->isFavoriteUser()) {
-								addLine(Text::toT("*** " + STRING(PARTS) + u->getNick()), m_ChatTextSystem);
+							addLine(Text::toT("*** " + STRING(PARTS) + u->getNick()), WinUtil::m_ChatTextSystem);
 						}
 					}
 					userMap.erase(u);
@@ -736,7 +693,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 
 	} else if(wParam == CONNECTED) {
-		addClientLine(TSTRING(CONNECTED), m_ChatTextServer);
+		addClientLine(TSTRING(CONNECTED), WinUtil::m_ChatTextServer);
 		setTabColor(RGB(0, 255, 0));
 		unsetIconState();
 
@@ -756,15 +713,15 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		if ( i >= 0 ) {
 			UserInfo* ui = (UserInfo*)ctrlUsers.getItemData(i);
 			if (!ignoreList.count(nick) || (ui->user->isSet(User::OP) && !client->getOp()))
-				addLine(*x, m_ChatTextGeneral);
+				addLine(*x, WinUtil::m_ChatTextGeneral);
 		} else {
 			if (!ignoreList.count(nick))
-				addLine(*x, m_ChatTextGeneral);
+				addLine(*x, WinUtil::m_ChatTextGeneral);
 		}
 		delete x;
 	} else if(wParam == ADD_STATUS_LINE) {
 		tstring* x = (tstring*)lParam;
-		addClientLine(*x, m_ChatTextServer );
+		addClientLine(*x, WinUtil::m_ChatTextServer );
 		delete x;
 	} else if(wParam == ADD_SILENT_STATUS_LINE) {
 		tstring* x = (tstring*)lParam;
@@ -784,7 +741,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 	} else if(wParam == GET_PASSWORD) {
 		if(client->getPassword().size() > 0) {
 			client->password(client->getPassword());
-			addClientLine(TSTRING(STORED_PASSWORD_SENT), m_ChatTextSystem);
+			addClientLine(TSTRING(STORED_PASSWORD_SENT), WinUtil::m_ChatTextSystem);
 		} else {
 			ctrlMessage.SetWindowText(_T("/password "));
 			ctrlMessage.SetFocus();
@@ -798,7 +755,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(i->user)) {
 					PrivateFrame::gotMessage(i->user, i->msg);
 				} else {
-					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getNick()) + _T(": ") + i->msg, m_ChatTextPrivate);
+					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getNick()) + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 				}
 		HWND hMainWnd = GetTopLevelWindow();
 		if (BOOLSETTING(MINIMIZE_TRAY) && (!WinUtil::isAppActive || WinUtil::isMinimized) && !WinUtil::isPM) {
@@ -813,18 +770,18 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 			} else {
 				if(BOOLSETTING(IGNORE_OFFLINE)) {
-					addClientLine(TSTRING(IGNORED_MESSAGE) + i->msg, m_ChatTextPrivate, false);
+					addClientLine(TSTRING(IGNORED_MESSAGE) + i->msg, WinUtil::m_ChatTextPrivate, false);
 				} else if(BOOLSETTING(POPUP_OFFLINE)) {
 					PrivateFrame::gotMessage(i->user, i->msg);
 				} else {
-					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getNick()) + _T(": ") + i->msg, m_ChatTextPrivate);
+					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getNick()) + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 				}
 			}
 		}
 		delete i;
 	} else if(wParam == KICK_MSG) {
 		tstring* x = (tstring*)lParam;
-		addLine(*x, m_ChatTextServer);
+		addLine(*x, WinUtil::m_ChatTextServer);
 		delete x;
 	}
 
@@ -892,6 +849,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.bottom = rc.bottom + 120;
 		ctrlFilterSel.MoveWindow(rc);
 	}
+	ctrlClient.GoToEnd();
 }
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -906,6 +864,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			HubManager::getInstance()->updateRecent(r);
 		}
 		TimerManager::getInstance()->removeListener(this);
+			SettingsManager::getInstance()->removeListener(this);
 		client->removeListener(this);
 		client->disconnect();
 	
@@ -1046,7 +1005,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					try {
 						QueueManager::getInstance()->addList((ctrlUsers.getItemData(pos))->user, QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
-					addClientLine(Text::toT(e.getError()), m_ChatTextSystem);
+					addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
 				} else {
 					int items = ctrlUsers.GetItemCount();
@@ -1063,7 +1022,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 }
 
 void HubFrame::addLine(const tstring& aLine) {
-	addLine(aLine, m_ChatTextGeneral );
+	addLine(aLine, WinUtil::m_ChatTextGeneral );
 }
 
 void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
@@ -1261,7 +1220,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 };
 
 void HubFrame::onTab() {
-	if(	BOOLSETTING(TAB_COMPLETION) && 
+	if(BOOLSETTING(TAB_COMPLETION) && 
 		(GetFocus() == ctrlMessage.m_hWnd) && 
 		!(GetAsyncKeyState(VK_SHIFT) & 0x8000) ) 
 	{
@@ -1500,7 +1459,7 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		short p = 411;
 		Util::decodeUrl(Text::fromT(redirect), s, p, f);
 		if(ClientManager::getInstance()->isConnected(s, p)) {
-			addClientLine(TSTRING(REDIRECT_ALREADY_CONNECTED), m_ChatTextServer);
+			addClientLine(TSTRING(REDIRECT_ALREADY_CONNECTED), WinUtil::m_ChatTextServer);
 			return 0;
 		}
 		
@@ -1569,7 +1528,7 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	}
 	
 	if(BOOLSETTING(STATUS_IN_CHAT) && inChat) {
-		addLine(_T("*** ") + aLine, m_ChatTextSystem);
+		addLine(_T("*** ") + aLine, WinUtil::m_ChatTextSystem);
 	}
 	if(BOOLSETTING(LOG_STATUS_MESSAGES)) {
 		LOGDT("MainChat\\" + client->getAddressPort() + "_Status", Text::fromT(aLine));
@@ -1594,7 +1553,7 @@ void HubFrame::on(TimerManagerListener::Second, DWORD /*aTick*/) throw() {
 
 void HubFrame::on(Connecting, Client*) throw() { 
 	if(BOOLSETTING(SEARCH_PASSIVE) && (SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)) {
-		addLine(TSTRING(ANTI_PASSIVE_SEARCH), m_ChatTextSystem);
+		addLine(TSTRING(ANTI_PASSIVE_SEARCH), WinUtil::m_ChatTextSystem);
 	}
 	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + client->getAddressPort() + "...");
 	speak(SET_WINDOW_TITLE, client->getAddressPort());
@@ -1606,7 +1565,7 @@ void HubFrame::on(BadPassword, Client*) throw() {
 	client->setPassword(Util::emptyString);
 }
 void HubFrame::on(UserUpdated, Client*, const User::Ptr& user) throw() { 
-	if(getUserInfo() && !user->isSet(User::HIDDEN)) 
+	if(ShowUserList && !user->isSet(User::HIDDEN)) 
 		speak(UPDATE_USER, user);
 }
 void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
@@ -1622,7 +1581,7 @@ void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
 }
 
 void HubFrame::on(UserRemoved, Client*, const User::Ptr& user) throw() {
-	if(getUserInfo()) 
+	if(ShowUserList) 
 		speak(REMOVE_USER, user);
 }
 
@@ -1736,6 +1695,15 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
 				user->setClientType("rmDC++ 0.403D[1]");
 				user->setBadClient(true);
+				return true;
+			}
+
+			PME reg1("^<StrgDC\\+\\+ V:1.00 RC7");
+			if(reg1.match(user->getTag()) && dl->detectRMDC403D1()) {
+				user->setCheat("rmDC++ 0.403D[1] with StrongDC++ emulation" , true);
+				user->setClientType("rmDC++ 0.403D[1]");
+				user->setBadClient(true);
+				user->setBadFilelist(true);
 				return true;
 			}
 
@@ -2036,7 +2004,7 @@ LRESULT HubFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	return 0;
 }
 
-LRESULT HubFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
+LRESULT HubFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	ENLINK* pEL = (ENLINK*)pnmh;
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
@@ -2102,9 +2070,17 @@ LRESULT HubFrame::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	return 0;
 }
 
-LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+LRESULT HubFrame::onStyleChange(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	bHandled = FALSE;
-	ctrlClient.GoToEnd();
+	if((wParam & MK_LBUTTON) && ::GetCapture() == m_hWnd) {
+		UpdateLayout(FALSE);
+	}
+	return 0;
+}
+
+LRESULT HubFrame::onStyleChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	bHandled = FALSE;
+	UpdateLayout(FALSE);
 	return 0;
 }
 
@@ -2219,6 +2195,30 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	default:
 		return CDRF_DODEFAULT;
 	}
+}
+
+void HubFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
+		ctrlClient.SetBackgroundColor(WinUtil::bgColor);
+		ctrlUsers.SetBkColor(WinUtil::bgColor);
+		ctrlUsers.SetTextBkColor(WinUtil::bgColor);
+		ctrlUsers.setFlickerFree(WinUtil::bgBrush);
+		refresh = true;
+	}
+	if(ctrlUsers.GetTextColor() != WinUtil::textColor) {
+		ctrlUsers.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
+}
+
+LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	bHandled = FALSE;
+	ctrlClient.GoToEnd();
+	return 0;
 }
 
 /**

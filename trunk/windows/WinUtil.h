@@ -285,6 +285,7 @@ public:
 	static CImageList fileImages;
 	static int fileImageCount;
 	static CImageList userImages;
+	static CImageList flagImages;
 
 	typedef HASH_MAP<string, int> ImageMap;
 	typedef ImageMap::iterator ImageIter;
@@ -322,9 +323,24 @@ public:
 	static bool isAppActive;
 	static bool isMinimized;
 	static bool trayIcon;
+	static CHARFORMAT2 m_TextStyleTimestamp;
+	static CHARFORMAT2 m_ChatTextGeneral;
+	static CHARFORMAT2 m_TextStyleMyNick;
+	static CHARFORMAT2 m_ChatTextMyOwn;
+	static CHARFORMAT2 m_ChatTextServer;
+	static CHARFORMAT2 m_ChatTextSystem;
+	static CHARFORMAT2 m_TextStyleBold;
+	static CHARFORMAT2 m_TextStyleFavUsers;
+	static CHARFORMAT2 m_TextStyleOPs;
+	static CHARFORMAT2 m_TextStyleURL;
+	static CHARFORMAT2 m_ChatTextPrivate;
+	static CHARFORMAT2 m_ChatTextLog;
+	static bool mutesounds;
 
 	static void init(HWND hWnd);
 	static void uninit();
+
+	static void initColors();
 
 	static void decodeFont(const tstring& setting, LOGFONT &dest);
 
@@ -473,6 +489,7 @@ public:
 	static void RunPreviewCommand(int index, string target);
 	static string formatTime(long rest);
 	static int getImage(const User::Ptr& u);
+	static int getFlagImage(const char* country, bool fullname = false);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };

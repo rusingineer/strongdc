@@ -49,14 +49,13 @@ public:
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
 	END_MSG_MAP()
 
-	bool HitNick( POINT p, CAtlString *sNick, int *piBegin = NULL, int *piEnd = NULL );
-	bool HitIP( POINT p, CAtlString *sIP, int *piBegin = NULL, int *piEnd = NULL );
+	bool HitNick(POINT p, CAtlString *sNick, int *piBegin = NULL, int *piEnd = NULL);
+	bool HitIP(POINT p, CAtlString *sIP, int *piBegin = NULL, int *piEnd = NULL);
 	bool HitURL(POINT p);
 	bool GetAutoScroll();
 
-	string LineFromPos( POINT p );
+	string LineFromPos(POINT p);
 
-	void ReadSettings();
 	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
 	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
 	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), bool bRedrawControlAtEnd = true);
@@ -64,9 +63,9 @@ public:
 	void AppendBitmap(HBITMAP hbm);
 
 	void GoToEnd();
-	void SetAutoScroll( bool boAutoScroll );
-	void SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL );
-	void SetTextStyleMyNick( CHARFORMAT2 ts ) { m_TextStyleMyNick = ts; };
+	void SetAutoScroll(bool boAutoScroll);
+	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL);
+	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
 
 protected:
 	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -74,24 +73,11 @@ protected:
 
 	IRichEditOle* GetIRichEditOle() const;
 
-	CHARFORMAT2 m_TextStyleGeneral;
-	CHARFORMAT2 m_TextStyleTimestamp;
-	CHARFORMAT2 m_TextStyleMyNick;
-	CHARFORMAT2 m_ChatTextMyOwn;
-	CHARFORMAT2 m_TextStyleBold;
-	CHARFORMAT2 m_TextStyleFavUsers;
-	CHARFORMAT2 m_TextStyleOPs;
-	CHARFORMAT2 m_TextStyleURL;
-	
 	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
-	bool m_boAutoScroll, bMyMessage, boOK, boAtTheEnd, bRedrawControl, isOP, myMess;
+	bool m_boAutoScroll, myMess;
 	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
-	int g_BufTemplen, AppendTextlen, line, iFindBegin, iBegin, iEnd1, iEnd2, iCRLF, iCRLF_Len, len, smiles, maxsmiles, 
-		nIdxFound, iCharPos, iRet, iLeft, iRight, iPos;
-	long lSelBeginSaved, lSelEndSaved, lMask, lSelBegin, lSelEnd, lTextLength, lMyNickStart, lMyNickEnd, lAuthorBegin, 
-		lAuthorEnd, lSearchFrom, lPos;
-	CAtlString sText, sNick, sMsgLower, sSel, sAuthorNick, sN;
-	tstring msg;
+	int g_BufTemplen, AppendTextlen;
+	long lSelBeginSaved, lSelEndSaved;
 };
 
 

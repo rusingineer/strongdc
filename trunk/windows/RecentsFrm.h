@@ -28,7 +28,7 @@
 #include "../client/HubManager.h"
 
 class RecentHubsFrame : public MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS>, public StaticFrame<RecentHubsFrame, ResourceManager::RECENT_HUBS, IDC_RECENTS>, 
-	private HubManagerListener
+	private HubManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS> baseClass;
@@ -183,6 +183,7 @@ private:
 			ctrlHubs.SetItemText(i, COLUMN_SERVER, Text::toT(entry->getServer()).c_str());
 		}
 	}
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
 #endif

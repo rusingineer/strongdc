@@ -54,7 +54,7 @@ class HashManager : public Singleton<HashManager>, public Speaker<HashManagerLis
 	private TimerManagerListener 
 {
 public:
-	HashManager() : fileCount(0) {
+	HashManager() {
 		TimerManager::getInstance()->addListener(this);
 	}
 	virtual ~HashManager() {
@@ -159,6 +159,12 @@ public:
 		}
 
 		TigerTree getTTfromFile(const string& fname, bool verify = false);
+		size_t getFilesLeft() {
+			if(running)
+				return (w.size() + 1);
+			else
+				return w.size();
+		}
 	private:
 		// Case-sensitive (faster), it is rather unlikely that case changes, and if it does it's harmless.
 		// set because it's sorted (to avoid random hash order that would create quite strange shares while hashing)
@@ -242,8 +248,6 @@ public:
 	HashStore store;
 
 	CriticalSection cs;
-
-	int fileCount;
 
 	void hashDone(const string& aFileName, const TigerTree& tth, int64_t speed);
 
