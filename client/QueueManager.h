@@ -117,7 +117,11 @@ public:
 	}*/
 	void removeTestSUR(const string& aNick) {
 		Lock l(cs);
-		remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
+		try {
+			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
+		} catch(...) {
+			// exception
+		}
 		return;
 	}
 	/** Readd a source that was removed */

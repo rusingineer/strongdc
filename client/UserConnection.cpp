@@ -60,6 +60,10 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
+	if(aLine[0] != '$') {
+		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
+		return;
+	}
 	char *temp;
 	if(strncmp(aLine, "$MyNick ", 8) == 0) {
 		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
@@ -73,8 +77,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
 			return;
 
-		if(Util::stricmp(temp, "File Not Available") == 0 || 
-			strstr(temp,/*path/file*/" no more exists") != NULL) {
+		if(stricmp(temp, "File Not Available") == 0 || 
+			strstr(temp, /*path/file*/" no more exists") == 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
 			fire(UserConnectionListener::Failed(), this, temp);

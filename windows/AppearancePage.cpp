@@ -123,6 +123,11 @@ LRESULT AppearancePage::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	return 0;
 }
 
+LRESULT AppearancePage::onClickedHelp(WORD /* wNotifyCode */, WORD /*wID*/, HWND /* hWndCtl */, BOOL& /* bHandled */) {
+	MessageBox(CSTRING(TIMESTAMP_HELP), CSTRING(TIMESTAMP_HELP_DESC), MB_OK | MB_ICONINFORMATION);
+	return S_OK;
+}
+
 /**
  * @file
  * $Id$

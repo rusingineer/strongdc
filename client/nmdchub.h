@@ -184,7 +184,9 @@ public:
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
-		send("$To: " + aNick + " From: " + getNick() + " $" + Util::validateChatMessage(aMessage) + "|");
+		char buf[512];
+		sprintf(buf, "$To: %s From: %s $", aNick.c_str(), getNick().c_str());
+		send(string(buf)+Util::validateChatMessage(aMessage)+"|");
 	}
 	void supports(const StringList& feat) { 
 		string x;
@@ -218,9 +220,8 @@ public:
 	void kick(const User::Ptr& aUser, const string& aMsg);
 	void kick(const User* aUser, const string& aMsg);
 
-	virtual void ban(const User*, const string&, time_t) {
-		// Unimplemented...
-	}
+	virtual void ban(const User*, const string&, time_t) { /*Unimplemented...*/ }
+
 	void opForceMove(const User::Ptr& aUser, const string& aServer, const string& aMsg) {
 		checkstate(); 
 		dcdebug("NmdcHub::opForceMove\n");

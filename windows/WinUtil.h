@@ -292,10 +292,8 @@ public:
 	static bool isAppActive;
 	static bool isMinimized;
 	static bool trayIcon;
-	static bool initialized;
 
 	static void init(HWND hWnd);
-	static void initColors(HWND mainWnd);
 	static void uninit();
 
 	static void decodeFont(const string& setting, LOGFONT &dest);
@@ -420,28 +418,7 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(int index, string target);
 	static string formatTime(long rest);
-
-	static int getImage(const User::Ptr& u) {
-		int image = u->getcType();
-		if(u->isSet(User::OP)) {
-			image = 0;
-		} else if(u->isSet(User::FIREBALL)) {
-			image = 9;
-		} else if(u->isSet(User::SERVER)) {
-			image = 8;
-		}
-		if(u->isSet(User::AWAY)) {
-			image+=11;
-		}
-		if(u->isSet(User::DCPLUSPLUS)) {
-			image+=22;
-		}
-		if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5") ||
-			((u->getDescription().substr(0,1) == "P") && ((u->getDescription().substr(1,1) == "") || (u->getDescription().substr(1,1) == " ")))) {
-			image+=44;
-		}
-		return image;	
-	}
+	static int getImage(const User::Ptr& u);
 
 	template<class T> static HWND hiddenCreateEx(T& p) throw() {
 		HWND active = (HWND)::SendMessage(mdiClient, WM_MDIGETACTIVE, 0, 0);
@@ -458,7 +435,6 @@ public:
 
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
-
 };
 
 #endif // __WINUTIL_H

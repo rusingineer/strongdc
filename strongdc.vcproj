@@ -123,7 +123,7 @@
 				DelayLoadDLLs="comdlg32.dll;dbghelp.dll"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="./Compiled/StrongDC.pdb"
-				GenerateMapFile="FALSE"
+				GenerateMapFile="TRUE"
 				MapFileName=""
 				SubSystem="2"
 				OptimizeReferences="2"
