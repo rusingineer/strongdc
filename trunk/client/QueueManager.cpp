@@ -54,16 +54,36 @@
 #endif
 
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
-const string QueueManager::TEMP_EXTENSION = ".dctmp";
 
 namespace {
 	const char* badChars = "$|.[]()-_+";
+	const string TEMP_EXTENSION = ".dctmp";
+
+	string getTempName(const string& aFileName, const TTHValue* aRoot) {
+		string tmp(aFileName);
+		if(aRoot != NULL) {
+			TTHValue tmpRoot(*aRoot);
+			tmp += "." + tmpRoot.toBase32();
+		}
+		tmp += TEMP_EXTENSION;
+		return tmp;
+	}
 }
 string QueueItem::getSearchString() const {
 	return SearchManager::clean(getTargetFileName());
 }
 
+namespace {
+}
 
+const string& QueueItem::getTempTarget() {
+	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
+		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(getTarget()) == -1)) {
+			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
+		}
+	}
+	return tempTarget;
+}
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
@@ -77,18 +97,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	qi->setMaxSegments(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
 
 	if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
-		if(aTempTarget.empty()) {
-			if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty()) {
-				qi->setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(qi->getTargetFileName(), root));
-
-				// Rename target to temp, import DC++ unfinished download
-				// Added by RevConnect
-				if (File::getSize(qi->getTarget()) > 0 ) {
-					File::ensureDirectory(qi->getTempTarget());
-					File::renameFile(qi->getTarget(), qi->getTempTarget());
-				}
-			}
-		} else {
+		if(!aTempTarget.empty()) {
 			qi->setTempTarget(aTempTarget);
 		}
 	}
@@ -472,20 +481,10 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	}
 }
 
-string QueueManager::getTempName(const string& aFileName, const TTHValue* aRoot) {
-	string tmp(aFileName);
-	if(aRoot != NULL) {
-		TTHValue tmpRoot(*aRoot);
-		tmp += "." + tmpRoot.toBase32();
-	}
-	tmp += TEMP_EXTENSION;
-	return tmp;
-}
-
 void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, const string& aTarget, 
 					   const TTHValue* root,
 					   int aFlags /* = QueueItem::FLAG_RESUME */, QueueItem::Priority p /* = QueueItem::DEFAULT */,
-					   const string& aTempTarget /* = Util::emptyString */, bool addBad /* = true */) throw(QueueException, FileException) 
+					   bool addBad /* = true */) throw(QueueException, FileException) 
 {
 	bool wantConnection = true;
 	bool newItem = false;
@@ -523,7 +522,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 
 		QueueItem* q = fileQueue.find(target);
 		if(q == NULL) {
-			q = fileQueue.add(target, aSize, aFlags, p, aTempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
+			q = fileQueue.add(target, aSize, aFlags, p, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
 			newItem = true;
@@ -895,6 +894,7 @@ again:
 		return NULL;
 
 	int64_t freeBlock = 0;
+	DownloadManager::getInstance()->fire(DownloadManagerListener::SetFileInfo(), q, aUser);
 
 	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)) {
 		message = STRING(ALL_FILE_SLOTS_TAKEN);		
@@ -987,8 +987,11 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 				//if(!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD))
 				//	 q->setDownloadedBytes(aDownload->getPos());
 				//q->setCurrentDownload(NULL);
-				if(q->getDownloadedBytes() > 0)
+				if(q->getDownloadedBytes() > 0) {
 					q->setFlag(QueueItem::FLAG_EXISTS);
+				} else {
+					q->setTempTarget(Util::emptyString);
+				}
 
 				if(q->getPriority() != QueueItem::PAUSED) {
 					for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
@@ -1243,41 +1246,41 @@ void QueueManager::saveQueue() throw() {
 		string tmp;
 		string b32tmp;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
-			QueueItem* d = i->second;
-			if((!d->isSet(QueueItem::FLAG_USER_LIST)) && (!d->isSet(QueueItem::FLAG_TESTSUR)) && (!d->isSet(QueueItem::FLAG_MP3_INFO))) {
+			QueueItem* qi = i->second;
+			if((!qi->isSet(QueueItem::FLAG_USER_LIST)) && (!qi->isSet(QueueItem::FLAG_TESTSUR)) && (!qi->isSet(QueueItem::FLAG_MP3_INFO))) {
 				f.write(STRINGLEN("\t<Download Target=\""));
-				f.write(CHECKESCAPE(d->getTarget()));
+				f.write(CHECKESCAPE(qi->getTarget()));
 				f.write(STRINGLEN("\" Size=\""));
-				f.write(Util::toString(d->getSize()));
+				f.write(Util::toString(qi->getSize()));
 				f.write(STRINGLEN("\" Priority=\""));
-				f.write(Util::toString((int)d->getPriority()));
-				f.write(STRINGLEN("\" TempTarget=\""));
-				f.write(CHECKESCAPE(d->getTempTarget()));
+				f.write(Util::toString((int)qi->getPriority()));
 				f.write(STRINGLEN("\" FreeBlocks=\""));
-				FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(d->getTempTarget());
+				FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(qi->getTempTarget());
 				f.write(fileChunksInfo ? fileChunksInfo->getFreeBlocksString() : "");
 				f.write(STRINGLEN("\" VerifiedBlocks=\""));
 				f.write(fileChunksInfo ? fileChunksInfo->getVerifiedBlocksString() : "");
 				f.write(STRINGLEN("\" Added=\""));
-				f.write(Util::toString(d->getAdded()));
-				if(d->getTTH() != NULL) {
+				f.write(Util::toString(qi->getAdded()));
+				if(qi->getTTH() != NULL) {
 					b32tmp.clear();
 					f.write(STRINGLEN("\" TTH=\""));
-					f.write(d->getTTH()->toBase32(b32tmp));
+					f.write(qi->getTTH()->toBase32(b32tmp));
 				}
-				if(d->getDownloadedBytes() != 0) {
+				if(qi->getDownloadedBytes() > 0) {
+					f.write(STRINGLEN("\" TempTarget=\""));
+					f.write(CHECKESCAPE(qi->getTempTarget()));
 					f.write(STRINGLEN("\" Downloaded=\""));
-					f.write(Util::toString(d->getDownloadedBytes()));
+					f.write(Util::toString(qi->getDownloadedBytes()));
 				}
 				f.write(STRINGLEN("\" AutoPriority=\""));
-				f.write(Util::toString(d->getAutoPriority()));
+				f.write(Util::toString(qi->getAutoPriority()));
 
 				f.write(STRINGLEN("\" MaxSegments=\""));
-				f.write(Util::toString(d->getMaxSegments()));
+				f.write(Util::toString(qi->getMaxSegments()));
 
 				f.write(STRINGLEN("\">\r\n"));
 
-				for(QueueItem::Source::List::const_iterator j = d->sources.begin(); j != d->sources.end(); ++j) {
+				for(QueueItem::Source::List::const_iterator j = qi->sources.begin(); j != qi->sources.end(); ++j) {
 					QueueItem::Source* s = *j;
 					f.write(STRINGLEN("\t\t<Source Nick=\""));
 					f.write(CHECKESCAPE(s->getUser()->getNick()));
@@ -1387,11 +1390,11 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& verifiedBlocks = getAttrib(attribs, sVerifiedBlocks, 2);
 
 			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 3));
-			string tempTarget = getAttrib(attribs, sTempTarget, 4);
-			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 5));
-			const string& tthRoot = getAttrib(attribs, sTTH, 6);
-			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 6));
-			int maxsegments = Util::toInt(getAttrib(attribs, sMaxSegments, 6));
+			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 4));
+			const string& tthRoot = getAttrib(attribs, sTTH, 5);
+			string tempTarget = getAttrib(attribs, sTempTarget, 5);
+			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 5));
+			int maxsegments = Util::toInt(getAttrib(attribs, sMaxSegments, 5));
 			if (downloaded > size || downloaded < 0)
 				downloaded = 0;
 

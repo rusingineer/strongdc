@@ -288,6 +288,9 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	UpdateLayout();
 
+	lastSearchTime = -1;
+	TimerManager::getInstance()->addListener(this);
+
 	if(!initialString.empty()) {
 		lastSearches.push_back(initialString);
 		ctrlSearchBox.InsertString(0, initialString.c_str());
@@ -482,7 +485,6 @@ void SearchFrame::onEnter() {
 
 	navic = 0;
 	lastSearchTime = ClientManager::getInstance()->getMinimumSearchInterval(clients, Text::fromT(s), navic);
-	TimerManager::getInstance()->addListener(this);
 }
 
 void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
@@ -1153,15 +1155,15 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 		{
 		tstring* buf = (tstring*)(lParam);
 		ctrlStatus.SetText(1, (*buf).c_str());
-		ctrlStatus.SetText(2, _T(""));
-		ctrlStatus.SetText(3, _T(""));
+		//ctrlStatus.SetText(2, _T(""));
+		//ctrlStatus.SetText(3, _T(""));
 		SetWindowText((*buf).c_str());
 		delete buf;
 		}
 		break;
 	case START_SEARCH:
 		{
-			TimerManager::getInstance()->removeListener(this);
+//			TimerManager::getInstance()->removeListener(this);
 			ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + SearchString + _T("...")).c_str());
 			ctrlStatus.SetText(2, _T(""));
 			ctrlStatus.SetText(3, _T(""));
@@ -1681,18 +1683,18 @@ void SearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() 
 }
 
 void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	if(lastSearchTime > 0) {
+	if(lastSearchTime >= 0) {
 		int32_t waitFor = SETTING(MINIMUM_SEARCH_INTERVAL) - ((GET_TICK() - lastSearchTime) / 1000) + (navic * SETTING(MINIMUM_SEARCH_INTERVAL));
-	//	MessageBoxA(0,(Util::toString(GET_TICK()) + "\n" +Util::toString(lastSearchTime)).c_str(),"",MB_OK);
 		TCHAR buf[64];
 		_stprintf(buf, CTSTRING(SEARCHING_WAIT), waitFor);
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)new tstring(buf));
 
 		if(waitFor <= 0) {
-			lastSearchTime = 0;
+			lastSearchTime = -1;
 			PostMessage(WM_SPEAKER, START_SEARCH);
 		}
-	}
+	} else 
+		lastSearchTime = -1;
 }
 /**
  * @file

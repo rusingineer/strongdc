@@ -83,7 +83,7 @@ public:
 	void add(const string& aFile, int64_t aSize, User::Ptr aUser, 
 		const string& aTarget, const TTHValue* root, 
 		int aFlags = QueueItem::FLAG_RESUME, QueueItem::Priority p = QueueItem::DEFAULT, 
-		const string& aTempTarget = Util::emptyString, bool addBad = true) throw(QueueException, FileException);
+		bool addBad = true) throw(QueueException, FileException);
 	
 	/** Add a user's filelist to the queue. */
 	void addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
@@ -95,7 +95,7 @@ public:
 		// We use the searchString to store the start viewing directory for file lists
 		add(USER_LIST_NAME, -1, aUser, file, NULL,
 			QueueItem::FLAG_USER_LIST | aFlags,  QueueItem::DEFAULT, 
-			Util::emptyString, true);
+			true);
 	}
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
@@ -212,6 +212,7 @@ public:
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR))
 				FileChunksInfo::Free(qi->getTempTarget());
 			
+			qi = NULL;
 			delete qi;
 		}
 
@@ -269,8 +270,6 @@ private:
 	u_int32_t nextSearch;
 
 	static const string USER_LIST_NAME;
-	static const string TEMP_EXTENSION;
-	static string getTempName(const string& /*aFileName*/, const TTHValue* /*aRoot*/);
 	
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
