@@ -1282,12 +1282,12 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 			dcdebug("4. cyklus\n");
 
-			if(h->pocetUseru <= 0) {
+			ItemInfo* lastUserItem = findLastUserItem(h->Target);
+			if(lastUserItem == NULL) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
 				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			} else {
 				if(h->pocetUseru == 1) {
-					ItemInfo* lastUserItem = findLastUserItem(h->Target);
 					h->user = lastUserItem->user;
 					if(!h->collapsed) {
 						h->collapsed = true;
@@ -1299,6 +1299,8 @@ void TransferView::setMainItem(ItemInfo* i) {
 				PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 			}
 		}
+	} else {
+		i->upper = findMainItem(i->Target);
 	}
 	dcdebug("6. setMainItem finished\n");
 }

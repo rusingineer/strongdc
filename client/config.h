@@ -30,7 +30,7 @@
 // Change these values to use different versions...don't know what happens though...=)
 //#define WINVER		0x0501
 #define _WIN32_WINNT 0x0501
-#define _WIN32_IE	0x0500
+#define _WIN32_IE	0x0501
 //#define _RICHEDIT_VER	0x0200
 
 #ifdef _MSC_VER
