@@ -30,6 +30,12 @@
 #include <stdlib.h>
 #endif
 
+#ifdef _WIN32
+#define SETTINGS_DIR "Settings\\"
+#else
+#define SETTINGS_DIR "settings/"
+#endif
+
 /** Evaluates op(pair<T1, T2>.first, compareTo) */
 template<class T1, class T2, class op = equal_to<T1> >
 class CompareFirst {
@@ -378,7 +384,7 @@ public:
 		return (float)toDouble(aString.c_str());
 	}
 
-	static string toString(const int64_t& val) {
+	static string toString(int64_t val) {
 		char buf[32];
 #ifdef _WIN32
 		return _i64toa(val, buf, 10);
@@ -424,14 +430,20 @@ public:
 		// TODO A better conversion the day we hit 64 bits
 		return toString((u_int32_t)val);
 	}
-	static string toString(int val) {
+	static string toString(int32_t val) {
 		char buf[16];
 		sprintf(buf, "%d", val);
 		return buf;
 	}
-	static string toString(long val) {
+	static string toString(int16_t val) {
+		return toString((int32_t) val);
+	}
+	static string toString(u_int16_t val) {
+		return toString((u_int32_t)val);
+	}
+	static string toString(int val) {
 		char buf[16];
-		sprintf(buf, "%ld", val);
+		sprintf(buf, "%d", val);
 		return buf;
 	}
 	static string toString(double val) {
@@ -440,8 +452,8 @@ public:
 		return buf;
 	}
 	static string toHexEscape(char val) {
-		char buf[sizeof(int)*2+1];
-		sprintf(buf, "%%%X", val);
+		char buf[sizeof(int)*2+1+1];
+		sprintf(buf, "%%%X", val&0x0FF);
 		return buf;
 	}
 	static char fromHexEscape(const string aString) {
@@ -449,6 +461,7 @@ public:
 		sscanf(aString.c_str(), "%X", &res);
 		return static_cast<char>(res);
 	}
+
 	static string encodeURI(const string& /*aString*/, bool reverse = false);
 	static string getLocalIp();
 	static bool isPrivateIp(string const& ip);

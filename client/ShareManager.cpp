@@ -432,6 +432,7 @@ public:
 		}
 		return *this;
 	}
+	bool operator!=(const FileFindIter& rhs) const { return handle != rhs.handle; }
 
 	struct DirData : public WIN32_FIND_DATA {
 		string getFileName() {
@@ -455,28 +456,36 @@ public:
 		}
 	};
 
-	DirData& operator*() { return data; }
-	DirData* operator->() { return &data; }
 
-	bool operator!=(const FileFindIter& rhs) const { return handle != rhs.handle; }
 private:
-	DirData data;
 	HANDLE handle;
 #else
 public:
 	// TODO...
 	FileFindIter() { }
 	FileFindIter(const string&) { }
-	void operator++(int) { }
+	
+	FileFindIter& operator++() { }
+	bool operator !=(const FileFindIter& rhs) const { return true; }
+
 	struct DirData {
 		string getFileName() { return Util::emptyString; }
 		bool isDirectory() { return false; }
 		bool isHidden() { return false; }
 		int64_t getSize() { return 0; }
-		u_int32_t getLastWriteTime { return 0; }
+		u_int32_t getLastWriteTime() { return 0; }
 	};
-#warn FIXME
+#warning FIXME Implement this
 #endif
+
+public:
+
+	DirData& operator*() { return data; }
+	DirData* operator->() { return &data; }
+
+private:
+	DirData data;
+
 };
 
 ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory* aParent) {

@@ -32,7 +32,7 @@
 #include <Mmsystem.h>
 #endif
 
-#ifdef HAS_ATOMIC
+#ifdef HAVE_ASM_ATOMIC_H
 #include <asm/atomic.h>
 #endif
 
@@ -125,7 +125,7 @@ public:
 	static void sleep(u_int32_t millis) { ::usleep(millis*1000); };
 	static void yield() { ::sched_yield(); };
 	static long safeInc(long* v) { 
-#ifdef HAS_ATOMIC
+#ifdef HAVE_ASM_ATOMIC_H
 		atomic_t t = ATOMIC_INIT(*v);
 		atomic_inc(&t);
 		return (*v=t.counter);
@@ -136,7 +136,7 @@ public:
 #endif
 	};
 	static long safeDec(long* v) { 
-#if HAS_ATOMIC
+#ifdef HAVE_ASM_ATOMIC_H
 		atomic_t t = ATOMIC_INIT(*v);
 		atomic_dec(&t);
 		return (*v=t.counter);

@@ -91,12 +91,11 @@ Usage: Instead of $Get and $Send, use
 (yes, 0-based, not like get that's 1-based) starting index of the file 
 used, <numbytes> is the number of bytes to send and <filename> obviously 
 is the filename. The other client then responds 
-"$Sending|<compressed data>", if the sending is ok or 
+"$Sending <bytes>|<compressed data>", if the sending is ok or 
 "$Failed <errordescription>|" if it isn't. If everything's ok, the data is 
-sent until the whole uncompressed length has been sent. $Filelength or a 
-similar command is never sent because it's not possible to know 
-from the beginning how many bytes will be sent, instead, check how many 
-decompressed bytes you've received and act accordingly...$Sending is 
+sent until the whole uncompressed length has been sent. <bytes> specifies
+how many uncompressed bytes will be sent, not compressed, as the sending
+client doesn't know how well the file will compress. $Sending is 
 needed to be able to distinguish the failure command from file data. Only 
 one roundtrip is done for each block though, minimizing the need for 
 maintaining states.
@@ -116,6 +115,95 @@ file list. $Supports is needed because nmdc closes the file list browser
 when the connection is broken, which it becomes when the client on the
 other side tries to download its first file and fails because it has no
 real slot (there were lots of nmdc users bitching about this...).
+
+--------------------------------------------------------------------
+
+Feature: XmlBZList
+
+Usage: Supporing this means supporting utf-8 XML file lists with the 
+following general structure:
+
+<FileList Version="1" Generator="dc client name and version">
+ <Directory Name="xxx">
+  <Directory Name="yyy">
+   <File Name="zzz" Size="1"/>
+  </Directory>
+ </Directory>
+</FileList>
+
+In each directory, including the root, the name of the entity must be
+case-insensitive unique in that level of the hierarchy. 
+
+Other fields may be added as necessary. DC++ for instance adds the
+TTH attribute to each file it knows the TTH root of in base32 encoding.
+
+The file list is available as "files.xml.bz2" (vs MyList.DcLst), and is
+compressed using bzip2.
+
+Other than the file list, the client must also support one or two new
+commands, $UGetBlock and $UGetZBlock. The syntax and semantics of $UGetZBlock 
+are exactly the same as the $GetZBlock, but the filename must be given in 
+utf-8 encoding.
+
+$UGetZBlock must only be supported if $GetZBlock is supported, $UGetBlock 
+always.
+
+$UGetBlock follows $UGetZBlock semantics, but without compressing 
+the data. The <bytes> parameter of $Sending specifies how many bytes
+will be sent.
+
+Don't touch Version. Add your own, with a different name, if you feel 
+compelled.
+
+Don't trust Generator to determine features of the file list. It's there
+mainly for debugging and informative purposes.
+
+--------------------------------------------------------------------
+
+Feature: ADCGet
+
+Usage: 
+
+"$ADCGET <type> <filename> <startpos> <bytes> <flag0>...<flagN>"
+A complete replacement for all binary data transfers using an ADC-like syntax.
+See the ADC specs to see how GET behaves. (http://dcplusplus.sf.net/ADC.html)
+
+
+--------------------------------------------------------------------
+
+Feature: TTHL
+
+Usage:
+
+Supporting this means supporting the upload of tth leaf data. Instead
+of transfering the file itself, the TTH data of all leaves is transferred
+in binary. The size transferred back is the number of bytes of leaf data,
+from this and the file size the receiving client can calculate which
+level (tree depth) the sending client is offering. The receiver should
+obviosly check that the received leaf data is correct by rebuilding the
+tree and checking that it's recorded root matches.
+
+--------------------------------------------------------------------
+
+Feature: TTHF
+
+Usage:
+
+Supporting this means supporting file identification by TTH root. This
+means supporting downloads by TTH root instead of share directory and
+name. The advantage is that moved files can still be found by the
+downloader without requeuing the file.
+
+The extension adds a namespace "TTH" before the ADC file root. A TTHF
+filename has the following syntax:
+
+TTH/<TTH root in base32, 192 binary bits>
+
+i e the TTH namespace consists of TTH root values directly under the
+"TTH/" root.
+
+The naming scheme is valid in all types (i e also for getting TTH leaves)
+
 
 --------------------------------------------------------------------
 

@@ -29,8 +29,8 @@
 #include "SimpleXML.h"
 #include "UserCommand.h"
 
-#define FAVORITES_FILE "Favorites.xml"
-#define RECENTS_FILE "Recents.xml"
+#define FAVORITES_FILE SETTINGS_DIR + "Favorites.xml"
+#define RECENTS_FILE SETTINGS_DIR + "Recents.xml"
 
 void HubManager::addFavoriteUser(User::Ptr& aUser) { 
 	if(find(users.begin(), users.end(), aUser) == users.end()) {
@@ -335,7 +335,7 @@ void HubManager::saveClientProfiles() {
 
 		xml.stepOut();
 
-		string fname = Util::getAppPath() + "Profiles.xml";
+		string fname = Util::getAppPath() + SETTINGS_DIR + "Profiles.xml";
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		f.write(SimpleXML::w1252Header);
@@ -446,7 +446,7 @@ void HubManager::loadClientProfiles(SimpleXML* aXml) {
 void HubManager::loadClientProfiles() {
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + "Profiles.xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getAppPath() + SETTINGS_DIR + "Profiles.xml", File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Profiles")) {
 			xml.stepIn();

@@ -249,10 +249,10 @@ public:
 	bool isDefault(int aSet) { return !isSet[aSet]; };
 
 	void load() {
-		load(Util::getAppPath() + "DCPlusPlus.xml");
+		load(Util::getAppPath() + SETTINGS_DIR + "DCPlusPlus.xml");
 	}
 	void save() {
-		save(Util::getAppPath() + "DCPlusPlus.xml");
+		save(Util::getAppPath() + SETTINGS_DIR + "DCPlusPlus.xml");
 	}
 
 	void load(const string& aFileName);

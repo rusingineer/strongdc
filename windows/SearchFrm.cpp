@@ -542,18 +542,21 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string cil = tgt + si->fileName;
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				cil, si->sr->getTTH(), QueueItem::FLAG_RESUME);
+				cil, si->sr->getTTH(), QueueItem::FLAG_RESUME,
+				(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 			if(si->subItems.size()>0) {
 				int q = 0;
 				while(q<si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
 					QueueManager::getInstance()->add(j->sr->getFile(), j->sr->getSize(), j->sr->getUser(), 
-						cil, j->sr->getTTH(), QueueItem::FLAG_RESUME);
+						cil, j->sr->getTTH(), QueueItem::FLAG_RESUME,
+						(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 					q++;
 				}
 			}
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt);
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt,
+			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}
@@ -562,9 +565,11 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
 		try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
-			QueueManager::getInstance()->addDirectory(si->path, si->sr->getUser(), tgt);
+			QueueManager::getInstance()->addDirectory(si->path, si->sr->getUser(), tgt,
+			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt);
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt,
+			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}
@@ -574,9 +579,11 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 		try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-			tgt, si->sr->getTTH(), QueueItem::FLAG_RESUME);
+			tgt, si->sr->getTTH(), QueueItem::FLAG_RESUME,
+			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt);
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), tgt,
+			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}

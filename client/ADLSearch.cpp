@@ -30,7 +30,7 @@
 #include "File.h"
 #include "SimpleXML.h"
 
-#define ADLS_STORE_FILENAME "ADLSearch.xml"
+#define ADLS_STORE_FILENAME SETTINGS_DIR + "ADLSearch.xml"
 
 ///////////////////////////////////////////////////////////////////////////////
 //

@@ -35,6 +35,7 @@
 * opraveno nastavení úrovnì komprese
 * pøidáno procentuální vyjádøení kontroly TTH
 * pøidán obrázek pozadí (DCDM++)
+* nastavení je ukládáno do zvláštní složky (iDC++) - pøesuòte do ní své .xml soubory
 
 
 	-- StrongDC++ 1.00 RC7 --

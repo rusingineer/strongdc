@@ -301,8 +301,8 @@ void HashLoader::endTag(const string& name, const string&) {
 	}
 }
 
-HashManager::HashStore::HashStore() : indexFile(Util::getAppPath() + "HashIndex.xml"), 
-dataFile(Util::getAppPath() + "HashData.dat"), dirty(false) 
+HashManager::HashStore::HashStore() : indexFile(Util::getAppPath() + SETTINGS_DIR + "HashIndex.xml"), 
+dataFile(Util::getAppPath() + SETTINGS_DIR + "HashData.dat"), dirty(false) 
 { 
 	if(File::getSize(dataFile) <= 0) {
 		try {

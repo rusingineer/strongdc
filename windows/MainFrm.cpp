@@ -970,7 +970,6 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	string file = Util::getAppPath() + "*.*";
  	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		lastTTHdir = Util::getFilePath(file);
-		HashProgressDlg(false).DoModal(m_hWnd);
 		string hash = HashManager::getInstance()->hasher.getTTfromFile(file, false).getRoot().toBase32();
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;

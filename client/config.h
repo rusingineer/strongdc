@@ -50,7 +50,7 @@
 #define HAS_HASH 1
 
 // Remove this if you want to try using the msvc 7.x STL
-#define HAS_STLPORT 1
+//#define HAS_STLPORT 1
 
 // --- Shouldn't have to change anything under here...
 #if (defined(HAS_STLPORT))
@@ -74,8 +74,15 @@
 #define HASH_MULTIMAP hash_multimap
 
 #ifdef HAS_STLPORT
+
 #define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
 #define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
+
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
+
+#define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
+#define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
+
 #else // Assume the msvc 7.x stl
 #define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc >
 #define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc >

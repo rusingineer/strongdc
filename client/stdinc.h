@@ -65,11 +65,8 @@ using namespace _STL;
 #include <hash_map>
 #include <hash_set>
 
-#elif defined(__GLIBCPP__)  // Using GNU C++ library?
+#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
 #include <ext/hash_map>
-#define HAS_HASH 1
-#define HASH_MAP hash_map
-#define HASH_MULTIMAP hash_multimap
                                                                                 
 using namespace std;
 using namespace __gnu_cxx;
