@@ -37,7 +37,7 @@ class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
-	UploadQueueFrame() : showTree(true), closed(false), 
+	UploadQueueFrame() : showTree(true), closed(false), usingUserMenu(false), 
 		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) {
 	}
 	virtual ~UploadQueueFrame() {
@@ -191,6 +191,7 @@ private:
 	
 	bool showTree;
 	bool closed;
+	bool usingUserMenu;
 	
 	User::List UQFUsers;
 
@@ -209,19 +210,14 @@ private:
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
 
-	CriticalSection cs;
-
 	// UploadManagerListener
 	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() {
-		//Lock l(cs);
 		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
-		//Lock l(cs);
 		PostMessage(WM_SPEAKER, REMOVE, (LPARAM) new UserInfoBase(aUser));
 	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
-		//Lock l(cs);
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
 

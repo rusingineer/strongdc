@@ -78,7 +78,7 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
         iDownloadedSize -= ((*(i+1)) - (*i));
 
 	iBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
-	iSmallestBlockSize = 2*1024*1024;//SMALLEST_BLOCK_SIZE;
+	iSmallestBlockSize = max((int64_t)1048576, (int64_t)((iFileSize > 268435456) ? (iFileSize / 30) : (iFileSize / 20)));
 
 	if(BOOLSETTING(OLD_SEGMENTED_DWNLDING)) {
 		if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;

@@ -314,11 +314,9 @@ public:
 		
 		return S_OK;
 	}
-
 	void setFlickerFree(HBRUSH flickerBrush) {
 		hBrBg = flickerBrush;
 	}
-
 private:
 
 	int sortColumn;

@@ -924,12 +924,6 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	if(!closing) {
 		if( oldshutdown ||(!BOOLSETTING(CONFIRM_EXIT)) || (MessageBox(CTSTRING(REALLY_EXIT), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) ) {
 			updateTray(false);
-
-			WebServerManager::getInstance()->removeListener(this);
-			TimerManager::getInstance()->removeListener(this);
-			QueueManager::getInstance()->removeListener(this);
-			LogManager::getInstance()->removeListener(this);
-
 			string tmp1;
 			string tmp2;
 
@@ -954,6 +948,10 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			ShowWindow(SW_HIDE);
 			transferView.prepareClose();
 			
+			WebServerManager::getInstance()->removeListener(this);
+			TimerManager::getInstance()->removeListener(this);
+			QueueManager::getInstance()->removeListener(this);
+			LogManager::getInstance()->removeListener(this);
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
 
