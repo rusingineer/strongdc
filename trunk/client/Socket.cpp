@@ -58,10 +58,10 @@ string Socket::getRemoteIp() const {
 	return string(inet_ntoa(sock_addr_rem.sin_addr));
 }
 
-string Socket::getRemoteHost() const {
+string Socket::getRemoteHost(const string& aIp) const {
 	hostent *h = NULL;
 	unsigned int addr;
-	addr = inet_addr(getRemoteIp().c_str());
+	addr = inet_addr(aIp.c_str());
 
 	h = gethostbyaddr(reinterpret_cast<char *>(&addr), 4, AF_INET);
 	if (h == NULL) {

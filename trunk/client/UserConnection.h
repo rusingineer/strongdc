@@ -261,7 +261,7 @@ public:
 	User::Ptr& getUser() { return user; };
 
 	string getRemoteIp() const { return socket->getRemoteIp(); }
-	string getRemoteHost() const { return socket->getRemoteHost(); }
+	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	GETSET(string, unknownCommand, UnknownCommand);
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; };
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; };
