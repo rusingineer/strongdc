@@ -106,7 +106,7 @@
 				PrecompiledHeaderThrough="stdafx.h"
 				AssemblerOutput="4"
 				WarningLevel="4"
-				DebugInformationFormat="2"
+				DebugInformationFormat="3"
 				CallingConvention="1"
 				CompileAs="0"/>
 			<Tool

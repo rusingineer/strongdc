@@ -254,9 +254,7 @@ private:
 
 		void disconnect();
 		void removeAll();
-		void deleteSelf() { 
-			delete this;
-		}	
+		void deleteSelf() { delete this; }	
 
 		double getRatio() {
 			if(mainItem) return compressRatio;
@@ -267,8 +265,56 @@ private:
 			return columns[col];
 		}
 
-		static int compareItems(ItemInfo* a, ItemInfo* b, int col);
-		static bool canBeSorted(ItemInfo* a, ItemInfo* b);
+		static bool canBeSorted(ItemInfo* a, ItemInfo* b) {
+			if((a->Target == b->Target) && (!a->mainItem) && (!b->mainItem))
+				return true;
+
+			if((a->type == ItemInfo::TYPE_UPLOAD) && (b->type == ItemInfo::TYPE_UPLOAD))
+				return true;
+
+			if((a->type == ItemInfo::TYPE_UPLOAD) && (b->mainItem) && (b->collapsed))
+				return true;
+
+			if((b->type == ItemInfo::TYPE_UPLOAD) && (a->mainItem) && (a->collapsed))
+				return true;
+
+			if(a->mainItem && b->mainItem && a->collapsed && b->collapsed)
+				return true;
+
+			return false;
+		}
+
+		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
+			if(!canBeSorted(a,b)) 
+				return 0;
+
+			if(a->status == b->status) {
+				if(a->type != b->type) {
+					return (a->type == ItemInfo::TYPE_DOWNLOAD) ? -1 : 1;					
+				}
+			} else {
+				return (a->status == ItemInfo::STATUS_RUNNING) ? -1 : 1;
+			}
+
+			switch(col) {
+				case COLUMN_USER: 
+					if((a->pocetUseru == 1) || (b->pocetUseru == 1))
+						return Util::stricmp(a->columns[COLUMN_USER], b->columns[COLUMN_USER]);
+			
+					return compare(a->pocetUseru, b->pocetUseru);
+				case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
+				case COLUMN_STATUS: return 0;
+				case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
+				case COLUMN_SPEED: return compare(a->speed, b->speed);
+				case COLUMN_FILE: return Util::stricmp(a->columns[COLUMN_FILE], b->columns[COLUMN_FILE]);
+				case COLUMN_SIZE: return compare(a->size, b->size);
+				case COLUMN_PATH: return Util::stricmp(a->columns[COLUMN_PATH], b->columns[COLUMN_PATH]);
+				case COLUMN_IP: return Util::stricmp(a->columns[COLUMN_IP], b->columns[COLUMN_IP]);
+				case COLUMN_RATIO: return compare(a->getRatio(), b->getRatio());
+			}
+			return 0;
+		}
+
 		bool canDisplayUpper();
 	};
 
@@ -315,6 +361,8 @@ private:
 	void Expand(ItemInfo* i, int a);
 	void setMainItem(ItemInfo* i);
 	void insertSubItem(ItemInfo* j, int idx);
+
+	ItemInfo* findMainItem(string Target);
 
 };
 

@@ -102,7 +102,7 @@ public:
 		string fileName = "TestSUR"+aUser->getNick();
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(fileName, -1, aUser, file, NULL, Util::emptyString, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR, QueueItem::HIGHEST);
-		//aUser->unCacheClientInfo();
+		aUser->unCacheClientInfo();
 	}
 
 /*	void removeOfflineChecks() {
@@ -116,13 +116,7 @@ public:
 		}
 	}*/
 	void removeTestSUR(const string& aNick) {
-		Lock l(cs);
-		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
-			if( i->second->getTargetFileName().find("TestSUR" + aNick) != string::npos ) {
-				remove(i->second->getTarget());
-				return;
-			}
-		}
+		remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
 		return;
 	}
 	/** Readd a source that was removed */

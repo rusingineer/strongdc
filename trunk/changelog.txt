@@ -1,6 +1,12 @@
+	-- StrongDC++ 1.00 --
+
+* optimalizováno seskupování položek v Pøenosech
+* opraven náhodný pád pøi odstraòování TestSUR po odpojení
+
+
 	-- StrongDC++ 1.00 RC7 --
 
-* když je k dispozici Tiger Tree, jsou pøi poškozeném soubor staženy pouze chybné bloky
+* když je k dispozici Tiger Tree, jsou pøi poškozeném souboru staženy pouze chybné bloky
 * na lištu pøidáno tlaèítko pro zapnutí/vypnutí zvukù
 * pøi hledání jsou položky se stejným TTH seskupovány pod jednu [+] položku
 * pøidán filtr do hledání (podporuje regulérní pøíkazy)
