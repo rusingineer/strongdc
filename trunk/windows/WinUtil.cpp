@@ -90,6 +90,7 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_AWAY, 17, true, ResourceManager::AWAY},
 	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
 	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
+	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
 	{0, 0, false, ResourceManager::MENU_NOTEPAD}};
 
 HLSCOLOR RGB2HLS (COLORREF rgb) {
@@ -268,6 +269,7 @@ void WinUtil::init(HWND hWnd) {
 	file.AppendMenu(MF_STRING, IDC_IMPORT_QUEUE, CSTRING(MENU_IMPORT_QUEUE));
 	file.AppendMenu(MF_STRING, ID_FILE_SETTINGS, CSTRING(MENU_SETTINGS));
 	file.AppendMenu(MF_STRING, ID_GET_TTH, CSTRING(MENU_TTH));
+	file.AppendMenu(MF_STRING, IDC_UPDATE, CSTRING(UPDATE_CHECK));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	file.AppendMenu(MF_STRING, ID_APP_EXIT, CSTRING(MENU_EXIT));
 

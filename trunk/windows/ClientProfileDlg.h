@@ -129,36 +129,22 @@ private:
 	void updateAddLine() {
 		addLine = Util::emptyString;
 		char buf[BUF_LEN];
-		ctrlName.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlVersion.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlTag.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlExtendedTag.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlLock.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlPk.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlSupports.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlTestSUR.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlUserConCom.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
-		ctrlStatus.GetWindowText(buf, BUF_LEN-1);
-		addLine += buf;
-		addLine += ";";
+
+#define UPDATE(a,b) \
+	GetWindowText(a,b); \
+	addLine += a; \
+	addLine += ";";
+
+		ctrlName.UPDATE(buf, BUF_LEN-1);
+		ctrlVersion.UPDATE(buf, BUF_LEN-1);
+		ctrlTag.UPDATE(buf, BUF_LEN-1);
+		ctrlExtendedTag.UPDATE(buf, BUF_LEN-1);
+		ctrlLock.UPDATE(buf, BUF_LEN-1);
+		ctrlPk.UPDATE(buf, BUF_LEN-1);
+		ctrlSupports.UPDATE(buf, BUF_LEN-1);
+		ctrlTestSUR.UPDATE(buf, BUF_LEN-1);
+		ctrlUserConCom.UPDATE(buf, BUF_LEN-1);
+		ctrlStatus.UPDATE(buf, BUF_LEN-1);
 		ctrlCheatingDescription.GetWindowText(buf, BUF_LEN-1);
 		addLine += buf;
 

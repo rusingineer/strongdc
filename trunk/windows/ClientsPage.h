@@ -7,12 +7,16 @@
 
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
+#include "../client/HttpConnection.h"
+#include "../client/File.h"
 
 class ClientProfile;
 
-class ClientsPage : public CPropertyPage<IDD_CLIENTS_PAGE>, public PropPage
+class ClientsPage : public CPropertyPage<IDD_CLIENTS_PAGE>, public PropPage, private HttpConnectionListener
 {
 public:
+	enum { WM_PROFILE = WM_APP + 53 };
+
 	ClientsPage(SettingsManager *s) : PropPage(s) {
 		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_FAKEDETECT) + '\\' + STRING(SETTINGS_CLIENTS)).c_str());
 		SetTitle(title);
@@ -30,6 +34,9 @@ public:
 		COMMAND_ID_HANDLER(IDC_CHANGE_CLIENT, onChangeClient)
 		COMMAND_ID_HANDLER(IDC_MOVE_CLIENT_UP, onMoveClientUp)
 		COMMAND_ID_HANDLER(IDC_MOVE_CLIENT_DOWN, onMoveClientDown)
+		COMMAND_ID_HANDLER(IDC_RELOAD_CLIENTS, onReload)
+		COMMAND_ID_HANDLER(IDC_UPDATE, onUpdate)
+		MESSAGE_HANDLER(WM_PROFILE, onProfileData)
 		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, BN_DOUBLECLICKED, onDblClick)
 	END_MSG_MAP()
 
@@ -40,6 +47,9 @@ public:
 	LRESULT onRemoveClient(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onMoveClientUp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onMoveClientDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onReload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	LRESULT onDblClick(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& bHandled) {
 		return onChangeClient(0, 0, 0, bHandled);
@@ -56,9 +66,40 @@ protected:
 	static TextItem texts[];
 	char* title;
 	void addEntry(const ClientProfile& cp, int pos);
+private:
+	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
+		downBuf.append((char*)buf, len);
+	}
+
+	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
+		conn->removeListener(this);
+		if(!downBuf.empty()) {
+			string fname = Util::getAppPath() + "Profiles.xml";
+			File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
+			f.write(downBuf);
+			f.close();
+			File::deleteFile(fname);
+			File::renameFile(fname + ".tmp", fname);
+			reload();
+			MessageBox("Client profiles now updated.", "Updated", MB_OK);
+		}
+	}
+
+	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
+		conn->removeListener(this);
+		{
+			string msg = "Client profiles download failed.\r\n" + aLine;
+			MessageBox(msg.c_str(), "Failed", MB_OK);
+		}
+	}
+
+	void reload();
+
+	HttpConnection c;
+	string downBuf;
 };
 
-#endif //ADVANCEDPAGE_H
+#endif //CLIENTSPAGE_H
 
 /**
  * @file

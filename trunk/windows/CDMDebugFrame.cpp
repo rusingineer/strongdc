@@ -8,7 +8,7 @@
 
 bool CDMDebugFrame::pause = false;
 
-#define MAX_TEXT_LEN 32768
+#define MAX_TEXT_LEN 131072
 
 LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {

@@ -680,7 +680,15 @@ string ResourceManager::strings[] = {
 "Down/Up:",
 "Load few last lines from log on new PM", 
 "Lines from log on new PM",
-"Search Alternate"
+"Search Alternate",
+"Update check",
+"History",
+"Current version",
+"Latest version",
+"Connecting to server",
+"Retrieving data",
+"Connection error",
+"Data retrieved"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1361,5 +1369,13 @@ string ResourceManager::names[] = {
 "Du",
 "SetczdcPmLog",
 "SetczdcPmLines",
-"SettingsColorAlternate"
+"SettingsColorAlternate",
+"UpdateCheck",
+"History",
+"CurrentVersion",
+"LatestVersion",
+"ConnectingToServer",
+"RetrievingData",
+"ConnectionError",
+"DataRetrieved"
 };

@@ -43,7 +43,7 @@ CONTEXT CurrContext;
 string exceptioninfo;
 int iLastExceptionDlgResult;
 HINSTANCE hCurrInstance;
-MainFrame wndMain;
+HWND hlavni;
 
 void SetCurrInstance(HINSTANCE hInst)
 {
@@ -100,13 +100,12 @@ BOOL CALLBACK ExceptionFilterFunctionDlgProc(
 	{
 		case WM_INITDIALOG:
 			{
+		
 				CenterWindow(hwndDlg);
 				SetDlgItemText(hwndDlg, IDC_EXCEPTION_DETAILS, exceptioninfo.c_str());
 				SetFocus(GetDlgItem(hwndDlg, IDC_EXCEPTION_DETAILS));
-
 			}
 			break;
-	
 		case WM_COMMAND:
 			wNotifyCode = HIWORD(wParam); // notification code 
 			wID = LOWORD(wParam);         // item, control, or accelerator identifier 
@@ -149,6 +148,7 @@ FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
 
 LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 {
+	
 	Lock l(cs);
 
 	if(recursion++ > 30)
@@ -226,13 +226,15 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	f.write(LIT("\r\n"));
 	f.close();
 
-	//MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. If you plan on reporting this bug to the bug report forum, make sure you have downloaded the debug information (DCPlusPlus.pdb) for your version of DC++. A file named \"exceptioninfo.txt\" has been generated in the same directory as DC++. Please include this file in the report or it'll be removed / ignored. If the file contains a lot of lines that end with '?', it means that the debug information is not correctly installed or your Windows doesn't support the functionality needed, and therefore, again, your report will be ignored/removed.", "DC++ Has Crashed", MB_OK | MB_ICONERROR);
+//	MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. If you plan on reporting this bug to the bug report forum, make sure you have downloaded the debug information (DCPlusPlus.pdb) for your version of DC++. A file named \"exceptioninfo.txt\" has been generated in the same directory as DC++. Please include this file in the report or it'll be removed / ignored. If the file contains a lot of lines that end with '?', it means that the debug information is not correctly installed or your Windows doesn't support the functionality needed, and therefore, again, your report will be ignored/removed.", "DC++ Has Crashed", MB_OK | MB_ICONERROR);
 	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
 
 	exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+	
+	PlaySound("DeviceFail", NULL, SND_ASYNC);
 
-	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), wndMain, ExceptionFilterFunctionDlgProc, 0);
+	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), hlavni, ExceptionFilterFunctionDlgProc, 0);
 	ExceptionFunction();
 
 #ifndef _DEBUG
@@ -431,6 +433,8 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
+
+	MainFrame wndMain;
 	checkCommonControls();
 
 	CMessageLoop theLoop;
@@ -476,6 +480,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		installUriHandler();
 	}
 
+	hlavni = wndMain;
 	rc = wndMain.rcDefault;
 
 	if( (SETTING(MAIN_WINDOW_POS_X) != CW_USEDEFAULT) &&

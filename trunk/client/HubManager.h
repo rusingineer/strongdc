@@ -362,7 +362,6 @@ public:
 			0
 			)
 		);
-		sortPriorities();
 		save();
 	}
 
@@ -424,12 +423,13 @@ public:
 		return false;
 	}
 
-	void sortPriorities() {
+	void loadClientProfiles();
+
+	ClientProfile::List& reloadClientProfiles() { 
 		Lock l(cs);
-		int j = 1;
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			i->setPriority(j++);
-		}
+		clientProfiles.clear();
+		loadClientProfiles();
+		return clientProfiles;
 	}
 	// CDM EXTENSION ENDS
 

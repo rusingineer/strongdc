@@ -379,6 +379,9 @@ void SearchFrame::onEnter() {
 		delete ctrlResults.getItemData(i);
 	}
 	ctrlResults.DeleteAllItems();*/
+
+	mainItems.clear();
+	dcassert(mainItems.size() == 0);
 	ctrlResults.DeleteAll();
 
 	ctrlStatus.SetText(2, ("0 "+STRING(FILES)).c_str());

@@ -12,6 +12,7 @@
 #define IDC_EXCEPTION_DETAILS           109
 #define IDC_COPY_EXCEPTION              110
 #define IDR_MAINFRAME                   128
+#define IDR_MAINFRAMEICON               128
 #define IDR_HUB                         129
 #define IDC_HUBLIST                     131
 #define IDC_SERVER                      133
@@ -77,8 +78,10 @@
 #define IDI_ICON1                       269
 #define IDR_FINISHED_MP3                269
 #define IDR_CDM                         270
-#define IDI_ICON2                       273
 #define IDR_STOP                        273
+#define IDD_UPDATE                      274
+#define IDI_ICON3                       276
+#define IDR_UPDATE                      276
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -195,6 +198,7 @@
 #define IDC_REMOVE_MENU                 1098
 #define IDC_MENU_ITEMS                  1099
 #define IDC_CHANGE_MENU                 1100
+#define IDC_UPDATE_HISTORY_TEXT         1100
 #define IDC_NAME                        1101
 #define IDC_COMMAND                     1102
 #define IDC_PROGRESS_OVERRIDE           1102
@@ -396,6 +400,7 @@
 #define IDC_MAX_COMP_SPIN               1248
 #define IDC_RADIO1                      1249
 #define IDC_MAX_SOURCES                 1249
+#define IDC_RELOAD_CLIENTS              1249
 #define IDC_MAX_COMP_SPIN2              1250
 #define IDC_RADIO2                      1250
 #define IDC_MAX_SOURCES_SPIN            1250
@@ -417,6 +422,7 @@
 #define AAA                             1262
 #define IDC_SOUNDLIST                   1263
 #define IDC_EMULATION                   1264
+#define IDC_UPDATE_URL                  1264
 #define IDC_CLIENT_EMU                  1265
 #define IDC_GETIP                       1266
 #define IDC_USERLIST_IMAGE              1267
@@ -429,6 +435,15 @@
 #define IDC_SLASH                       1275
 #define IDC_BLOCK_COMBO                 1276
 #define IDC_ALTERNATE_COLOR             1277
+#define IDC_UPDATE_VERSION              1445
+#define IDC_UPDATE_VERSION_CURRENT_LBL  1446
+#define IDC_UPDATE_VERSION_LATEST_LBL   1447
+#define IDC_UPDATE_VERSION_CURRENT      1448
+#define IDC_UPDATE_VERSION_LATEST       1449
+#define IDC_UPDATE_HISTORY              1450
+#define IDC_HISTORY_STATUS              1451
+#define IDC_UPDATE_DOWNLOAD             1452
+#define IDC_UPDATE                      1453
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -650,7 +665,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        274
+#define _APS_NEXT_RESOURCE_VALUE        277
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1278
 #define _APS_NEXT_SYMED_VALUE           104

@@ -26,8 +26,8 @@
 #include "../client/HttpConnection.h"
 #include "../client/SimpleXML.h"
 
-static const char thanks[] = "StrongDC++ je upravená verze klienta CZDC++, který stvoøil PPK."
-"Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Logo vytvoøil Andyman. Betatest provedl Testament.";
+static const char thanks[] = 
+"Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Corvik, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)";
 
 class CAboutDlg : public CDialogImpl<CAboutDlg>, private HttpConnectionListener
 {
@@ -46,11 +46,12 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, "DC++ v" DCVERSIONSTRING "\n(c) Copyright 2001-2003 Jacek Sieka\nCodeveloper: Per Lindén\nGraphics: Martin Skogevall\nDC++ is licenced under GPL\nhttp://dcplusplus.sourceforge.net/\n\n\nStrongDC++ v" VERSIONSTRING "" CZDCVERSIONSTRING "\n\nBig Muscle\n\nhttp://snail.pc.cz/StrongDC");
-		CEdit ctrl(GetDlgItem(IDC_THANKS));
-		ctrl.FmtLines(TRUE);
-		ctrl.AppendText(thanks, TRUE);
-		ctrl.Detach();
+		SetDlgItemText(IDC_VERSION, "StrongDC++ v" VERSIONSTRING CZDCVERSIONSTRING " (c) Copyright 2004 Big Muscle\nBased on: DC++ " DCVERSIONSTRING " (c) Copyright 2001-2004 Jacek Sieka\n\nhttp://snail.pc.cz/StrongDC/");
+		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
+		ctrlThanks.FmtLines(TRUE);
+		ctrlThanks.AppendText(thanks, TRUE);
+		ctrlThanks.Detach();
+
 		SetDlgItemText(IDC_LATEST, CSTRING(DOWNLOADING));
 		SetDlgItemText(IDC_TOTALS, ("Upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + ", Download: " + 
 			Util::formatBytes(SETTING(TOTAL_DOWNLOAD))).c_str());
@@ -59,8 +60,8 @@ public:
 			char buf[64];
 			sprintf(buf, "Ratio (up/down): %.2f", ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
 			SetDlgItemText(IDC_RATIO, buf);
-			sprintf(buf, "Uptime: %s", Util::formatSeconds(Util::getUptime()).c_str());
-			SetDlgItemText(IDC_UPTIME, buf);
+		/*	sprintf(buf, "Uptime: %s", Util::formatSeconds(Util::getUptime()).c_str());
+			SetDlgItemText(IDC_UPTIME, buf);*/
 		}
 		CenterWindow(GetParent());
 		c.addListener(this);

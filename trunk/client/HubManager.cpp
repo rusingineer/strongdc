@@ -441,6 +441,21 @@ void HubManager::loadClientProfiles(SimpleXML* aXml) {
 		aXml->stepOut();
 	}
 }
+
+void HubManager::loadClientProfiles() {
+	try {
+		SimpleXML xml;
+		xml.fromXML(File(Util::getAppPath() + "Profiles.xml", File::READ, File::OPEN).read());
+		
+		if(xml.findChild("Profiles")) {
+			xml.stepIn();
+			loadClientProfiles(&xml);
+			xml.stepOut();
+		}
+	} catch(const Exception& e) {
+		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
+	}
+}
 // CDM EXTENSION ENDS
 void HubManager::load() {
 	
@@ -471,20 +486,7 @@ void HubManager::load() {
 		dcdebug("HubManager::load: %s\n", e.getError().c_str());
 	}
 	// CDM EXTENSION BEGINS (profiles)
-	try {
-		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + "Profiles.xml", File::READ, File::OPEN).read());
-
-		if(xml.findChild("Profiles")) {
-			xml.stepIn();
-			loadClientProfiles(&xml);
-			xml.stepOut();
-			HubManager::getInstance()->sortPriorities();
-	}
-
-	} catch(const Exception& e) {
-		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
-	}
+	loadClientProfiles();
 
 	try {
 		SimpleXML xml;

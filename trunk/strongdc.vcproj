@@ -291,6 +291,9 @@
 				RelativePath=".\res\transfer_segmented.ico">
 			</File>
 			<File
+				RelativePath=".\res\Update.ico">
+			</File>
+			<File
 				RelativePath=".\res\uqueue.ico">
 			</File>
 			<File
@@ -493,6 +496,9 @@
 				RelativePath=".\windows\UCPage.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\UpdateDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\UploadPage.cpp">
 			</File>
 			<File
@@ -549,6 +555,12 @@
 			</File>
 			<File
 				RelativePath="atlctrlx.h">
+			</File>
+			<File
+				RelativePath=".\windows\atlctrlxp.h">
+			</File>
+			<File
+				RelativePath=".\windows\atlctrlxp2.h">
 			</File>
 			<File
 				RelativePath="atlddx.h">
@@ -750,6 +762,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\UCPage.h">
+			</File>
+			<File
+				RelativePath=".\windows\UpdateDlg.h">
 			</File>
 			<File
 				RelativePath=".\windows\UploadPage.h">
