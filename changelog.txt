@@ -32,7 +32,7 @@
 * snad opraveno skrolování v chatu
 * profily klientù jsou nyní kompatibilní s DCDM++
 * jednoduchá detekce NetLimitera
-* pøidány progressbary do fronty (CZDC++)
+* pøidány progressbary do fronty, na kterých jsou vyznaèeny stažené segmenty (CZDC++)
 * automatické nastavování priorit stahovaných souborù (PhantomDC++)
 * opraven pád pøi odpojování pomalých stahování
 * pøidáno nastavení progressbarù pro segmenty
