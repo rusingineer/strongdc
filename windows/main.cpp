@@ -107,7 +107,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 #ifdef isCVS
 	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING CVSVERSION);
+		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING CVSVERSION);
 #else
 	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
 		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING);

@@ -771,6 +771,28 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 								addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
 							}
 						}
+						if(client->getOp() && Util::toString(u->getBytesShared()).find("000000") != -1)
+						{
+							string detectString = Util::formatBytes(u->getBytesShared())+" - the share size had too many zeroes in it";
+							u->setFakeSharing(true);
+							u->setCheatingString(Util::validateMessage(detectString, false));
+							if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+								PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
+							this->updateUser(u);
+
+							CHARFORMAT2 cf;
+							memset(&cf, 0, sizeof(CHARFORMAT2));
+							cf.cbSize = sizeof(cf);
+							cf.dwReserved = 0;
+							cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
+							cf.dwEffects = 0;
+							cf.crBackColor = SETTING(BACKGROUND_COLOR);
+							cf.crTextColor = SETTING(ERROR_COLOR);
+
+							addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
+
+						}
+
 					} else {
 						resort = true;
 		}
@@ -1812,12 +1834,6 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 
 			if(statedSize > sizeTolerated)
 			{
-				isFakeSharing = true;
-			}
-
-			if(Util::toString(statedSize).find("000000") != -1)
-			{
-				detectString = Util::formatBytes(statedSize)+" - the share size had too many zeroes in it";
 				isFakeSharing = true;
 			}
 

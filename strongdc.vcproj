@@ -204,6 +204,9 @@
 				RelativePath=".\res\Directory.ico">
 			</File>
 			<File
+				RelativePath=".\res\fav.bmp">
+			</File>
+			<File
 				RelativePath=".\res\Favorites.ico">
 			</File>
 			<File

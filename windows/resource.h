@@ -88,6 +88,8 @@
 #define IDD_UPDATE                      274
 #define IDI_ICON3                       276
 #define IDR_UPDATE                      276
+#define IDB_BITMAP2                     277
+#define IDB_FAVSTATES                   277
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -442,6 +444,7 @@
 #define IDC_SLASH                       1275
 #define IDC_BLOCK_COMBO                 1276
 #define IDC_ALTERNATE_COLOR             1277
+#define IDC_FAKE_BOOLEANS               1278
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -672,9 +675,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        277
+#define _APS_NEXT_RESOURCE_VALUE        278
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1278
+#define _APS_NEXT_CONTROL_VALUE         1279
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

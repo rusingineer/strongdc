@@ -311,6 +311,7 @@ enum Strings { // @DontAdd
 	SETTINGS_LOGS, // "Logs and Sound"
 	SETTINGS_MAX_HASH_SPEED, // "Max hash speed"
 	SETTINGS_MAX_TAB_ROWS, // "Max tab rows"
+	SETTINGS_MEMORY_MAPPED_FILE, // "Use memory mapped file"
 	SETTINGS_MINIMIZE_TRAY, // "Minimize to tray"
 	SETTINGS_NAME, // "Name"
 	SETTINGS_NO_AWAYMSG_TO_BOTS, // "Don't send the away message to bots"
@@ -704,9 +705,10 @@ enum Strings { // @DontAdd
 	DISCONNECT_ALL, // "Disconnect all users"
 	REPORT_ALTERNATES, // "Report auto search for alternates in status bar"
 	ALTERNATES_SEND, // "Send alternate search for: "
-	COLLAPSE_ALL,
-	EXPAND_ALL,
+	COLLAPSE_ALL, // "Collapse All"
+	EXPAND_ALL, // "Expand All"
 	PB, // "PB"
-	EB, // "EB"	
+	EB, // "EB"
+	CHECK_ON_CONNECT, // "Check user on join"
 	LAST // @DontAdd
 };

@@ -94,7 +94,7 @@ const string SettingsManager::settingTags[] =
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
-	"ReportFoundAlternates",
+	"ReportFoundAlternates", "MemoryMappedFile",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -205,6 +205,8 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FILELIST_TRANSFERS, true);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
+	setDefault(MEMORY_MAPPED_FILE, false);
+	
 	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);

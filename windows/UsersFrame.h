@@ -35,7 +35,7 @@ class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_US
 public:
 	
 	UsersFrame() : closed(false), startup(true) { };
-	virtual ~UsersFrame() { };
+	virtual ~UsersFrame() { images.Destroy(); };
 
 	DECLARE_FRAME_WND_CLASS_EX("UsersFrame", IDR_USERS, 0, COLOR_3DFACE);
 		
@@ -159,7 +159,8 @@ private:
 	OMenu usersMenu;
 	
 	TypedListViewCtrlCleanup<UserInfo, IDC_USERS> ctrlUsers;
-	
+	CImageList images;	
+
 	bool closed;
 	
 	bool startup;

@@ -50,6 +50,7 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	char* title;
+	static ListItem listItems[];
 };
 
 #endif //FakeDetect_H

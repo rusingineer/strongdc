@@ -49,11 +49,15 @@ PropPage::Item FakeDetect::items[] = {
 	{ 0, 0, PropPage::T_END }
 };
 
+FakeDetect::ListItem FakeDetect::listItems[] = {
+		{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
+};
+
 LRESULT FakeDetect::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	PropPage::translate((HWND)(*this), texts);
-
-	PropPage::read((HWND)*this, items);
+	//PropPage::read((HWND)*this, items);
+	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_FAKE_BOOLEANS));
 
 	// Do specialized reading here
 	
@@ -62,7 +66,7 @@ LRESULT FakeDetect::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 void FakeDetect::write()
 {
-	PropPage::write((HWND)*this, items);
+	PropPage::write((HWND)*this, items, listItems, GetDlgItem(IDC_FAKE_BOOLEANS));
 	
 	// Do specialized writing here
 	// settings->set(XX, YY);
