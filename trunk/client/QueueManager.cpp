@@ -1425,42 +1425,38 @@ void QueueManager::importNMQueue(const string& aFile) throw(FileException) {
 
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
+
 	if(BOOLSETTING(AUTO_SEARCH)) {
-		//Lock l(cs);
-		QueueItem::List matches;
-
-		fileQueue.find(matches, sr->getSize(), Util::getFileExt(sr->getFile()));
-
-		if(sr->getTTH() != NULL) {
-			fileQueue.find(matches, sr->getTTH());
-		}
-
 		string fileName = Util::toLower(sr->getFileName());
 		StringTokenizer t(SearchManager::clean(fileName), ' ');
 		StringList& tok = t.getTokens();
+		StringList l;
+		getTargetsBySize(l, sr->getSize(), Util::getFileExt(sr->getFile()));
 		
-		for(QueueItem::Iter i = matches.begin(); i != matches.end(); ++i) {
+		for(StringIter i = l.begin(); i != l.end(); ++i) {
 			bool found = true;
-			bool exact = false;
-			QueueItem* qi = *i;
 
-			if(qi->getTTH()) {
-				if(sr->getTTH() && *qi->getTTH() == *sr->getTTH()) {
-					found = true;
-					exact = true;
+			string target = Util::toLower(Util::getFileName(*i));
 
-			if (qi->getSources().size()>=SETTING(MAX_SOURCES))
+			QueueItem* QuI = fileQueue.find(*i);
+
+			if(QuI != NULL)
+			if (QuI->getSources().size()>=SETTING(MAX_SOURCES))
 			
 			{
 				found = false;
 				break;
 			}
-			} else {
+
+			if((sr->getTTH() == NULL) && BOOLSETTING(SEARCH_TTH_ONLY))
+				{
+					found = false;
+					break;
+				}
+
 			if(BOOLSETTING(AUTO_SEARCH_EXACT)) {
-					found = (Util::stricmp(qi->getTargetFileName(), fileName) == 0);
-					exact = true;
+				found = (Util::stricmp(target, fileName) == 0);
 			} else {
-					string target = Util::toLower(qi->getTargetFileName());
 			if (target.size() >= fileName.size()) {
 				for(StringIter j = tok.begin(); j != tok.end(); ++j) {
 					if(Util::findSubStringCaseSensitive(target, *j) == string::npos) {
@@ -1480,16 +1476,15 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 				}
 			}
 			}
-			}
 
 			if(found) {
+				// Wow! found a new source that seems to match...add it...
 				try {
-//					addSource(qi, sr->getFile(), sr->getUser(), false, false);
-					add(sr->getFile(), sr->getSize(), sr->getUser(), (*i)->getTarget(), sr->getTTH(), Util::emptyString, QueueItem::FLAG_RESUME, 
+					add(sr->getFile(), sr->getSize(), sr->getUser(), *i, sr->getTTH(), Util::emptyString, QueueItem::FLAG_RESUME, 
 						QueueItem::DEFAULT, Util::emptyString, false);
-
-
-					if(BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (exact || (Util::stricmp(qi->getTargetFileName(), fileName) == 0)) )
+					dcdebug("QueueManager::onAction New source %s for target %s found\n", sr->getUser()->getNick().c_str(), i->c_str());
+					// Only download list for exact matches
+					if(BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (Util::stricmp(target, fileName) == 0) )
 						addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
 				} catch(const Exception&) {
 					// ...
@@ -1497,7 +1492,6 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 			}
 		}
 	}
-}
 }
 
 // ClientManagerListener

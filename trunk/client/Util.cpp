@@ -736,6 +736,7 @@ string Util::Binary2RGB(BYTE* pbBuf, DWORD dwSize)
 */
 string Util::getIpCountry (string IP) {
 	if (BOOLSETTING(GET_USER_COUNTRY)) {
+
 		dcassert(count(IP.begin(), IP.end(), '.') == 3);
 
 		//e.g IP 23.24.25.26 : w=23, x=24, y=25, z=26
@@ -748,8 +749,8 @@ string Util::getIpCountry (string IP) {
 			(Util::toUInt32(IP.c_str() + b + 1) << 8) | 
 			(Util::toUInt32(IP.c_str() + c + 1) );
 
+		dcdebug(Util::toString(ipnum).c_str());
 		CountryIter i = countries.lower_bound(ipnum);
-
 		if(i != countries.end()) {
 			return string((char*)&(i->second), 2);
 		}

@@ -30,9 +30,7 @@
 #include "UserCommand.h"
 
 #define FAVORITES_FILE "Favorites.xml"
-// iDC++ //
 #define RECENTS_FILE "Recents.xml"
-// iDC++ //
 
 void HubManager::addFavoriteUser(User::Ptr& aUser) { 
 	if(find(users.begin(), users.end(), aUser) == users.end()) {
@@ -122,10 +120,8 @@ void HubManager::onHttpFinished() throw() {
 		x = &downloadBuf;
 		xmlstr = downloadBuf;
 	}
-	// end of XML addition
 
 	if((listType == TYPE_NORMAL) || (listType == TYPE_BZIP2)) {
-		//Normal hublist
 	{
 		Lock l(cs);
 		publicHubs.clear();
@@ -210,7 +206,6 @@ void HubManager::onHttpFinished() throw() {
 				// Shouldn't happen
 			}
 		}
-		// end of XML hublist
 	}
 	downloadBuf = Util::emptyString;
 }
@@ -292,46 +287,58 @@ void HubManager::save() {
 		File::deleteFile(fname);
 		File::renameFile(fname + ".tmp", fname);
 
+	} catch(const Exception& e) {
+		dcdebug("HubManager::save: %s\n", e.getError().c_str());
+	}
+	// CDM EXTENSION BEGINS (profiles)
+	saveClientProfiles();
 
-		// CDM EXTENSION BEGINS (profiles)
-		SimpleXML xml1;
+	// CDM EXTENSION ENDS
+}
+// CDM EXTENSION BEGINS (profiles)
+void HubManager::saveClientProfiles() {
+	try {
+		SimpleXML xml;
+		xml.addTag("Profiles");
+		xml.stepIn();
 
-		xml1.addTag("ClientProfiles");
-		xml1.stepIn();
+		xml.addTag("ClientProfiles");
+		xml.stepIn();
 		for(int l = 1; l <= getProfileListSize(); l++) {
-			xml1.addTag("ClientProfile");
+			xml.addTag("ClientProfile");
 			ClientProfile cp;
 			HubManager::getInstance()->getClientProfileByPosition(l, cp);
-			xml1.addChildAttrib("Name", cp.getName());
-			xml1.addChildAttrib("Version", cp.getVersion());
-			xml1.addChildAttrib("Tag", cp.getTag());
-			xml1.addChildAttrib("ExtendedTag", cp.getExtendedTag());
-			xml1.addChildAttrib("Lock", cp.getLock());
-			xml1.addChildAttrib("Pk", cp.getPk());
-			xml1.addChildAttrib("Supports", cp.getSupports());
-			xml1.addChildAttrib("TestSUR", cp.getTestSUR());
-			xml1.addChildAttrib("UserConCom", cp.getUserConCom());
-			xml1.addChildAttrib("Status", cp.getStatus());
-			xml1.addChildAttrib("CheatingDescription", cp.getCheatingDescription());
-			xml1.addChildAttrib("RawToSend", Util::toString(cp.getRawToSend()));
-			xml1.addChildAttrib("TagVersion", Util::toString(cp.getTagVersion()));
-			xml1.addChildAttrib("UseExtraVersion", Util::toString(cp.getUseExtraVersion()));
-			xml1.addChildAttrib("CheckMismatch", Util::toString(cp.getCheckMismatch()));
+			xml.addChildAttrib("Name", cp.getName());
+			xml.addChildAttrib("Version", cp.getVersion());
+			xml.addChildAttrib("Tag", cp.getTag());
+			xml.addChildAttrib("ExtendedTag", cp.getExtendedTag());
+			xml.addChildAttrib("Lock", cp.getLock());
+			xml.addChildAttrib("Pk", cp.getPk());
+			xml.addChildAttrib("Supports", cp.getSupports());
+			xml.addChildAttrib("TestSUR", cp.getTestSUR());
+			xml.addChildAttrib("UserConCom", cp.getUserConCom());
+			xml.addChildAttrib("Status", cp.getStatus());
+			xml.addChildAttrib("CheatingDescription", cp.getCheatingDescription());
+			xml.addChildAttrib("RawToSend", Util::toString(cp.getRawToSend()));
+			xml.addChildAttrib("TagVersion", Util::toString(cp.getTagVersion()));
+			xml.addChildAttrib("UseExtraVersion", Util::toString(cp.getUseExtraVersion()));
+			xml.addChildAttrib("CheckMismatch", Util::toString(cp.getCheckMismatch()));
 		}
-		xml1.stepOut();
-		// CDM EXTENSION ENDS
+		xml.stepOut();
 
-		fname = Util::getAppPath() + "ClientProfiles.xml";
+		xml.stepOut();
 
-		File g(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		g.write(SimpleXML::w1252Header);
-		g.write(xml1.toXML());
-		g.close();
+		string fname = Util::getAppPath() + "Profiles.xml";
+
+		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
+		f.write(SimpleXML::w1252Header);
+		f.write(xml.toXML());
+		f.close();
 		File::deleteFile(fname);
 		File::renameFile(fname + ".tmp", fname);
 
 	} catch(const Exception& e) {
-		dcdebug("HubManager::save: %s\n", e.getError().c_str());
+		dcdebug("HubManager::saveClientProfiles: %s\n", e.getError().c_str());
 	}
 }
 
@@ -370,7 +377,33 @@ void HubManager::recentsave() {
 		dcdebug("HubManager::recentsave: %s\n", e.getError().c_str());
 	}
 }
-
+void HubManager::loadClientProfiles(SimpleXML* aXml) {
+	aXml->resetCurrentChild();
+	if(aXml->findChild("ClientProfiles")) {
+		aXml->stepIn();
+		while(aXml->findChild("ClientProfile")) {
+			addClientProfile(
+				aXml->getChildAttrib("Name"), 
+				aXml->getChildAttrib("Version"),
+				aXml->getChildAttrib("Tag"), 
+				aXml->getChildAttrib("ExtendedTag"), 
+				aXml->getChildAttrib("Lock"),
+				aXml->getChildAttrib("Pk"), 
+				aXml->getChildAttrib("Supports"),
+				aXml->getChildAttrib("TestSUR"), 
+				aXml->getChildAttrib("UserConCom"), 
+				aXml->getChildAttrib("Status"), 
+				aXml->getChildAttrib("CheatingDescription"), 
+				aXml->getIntChildAttrib("RawToSend"),
+				aXml->getIntChildAttrib("TagVersion"), 
+				aXml->getIntChildAttrib("UseExtraVersion"), 
+				aXml->getIntChildAttrib("CheckMismatch")
+				);
+		}
+		aXml->stepOut();
+	}
+}
+// CDM EXTENSION ENDS
 void HubManager::load() {
 	
 	// Add standard op commands
@@ -396,40 +429,23 @@ void HubManager::load() {
 			load(&xml);
 			xml.stepOut();
 		}
-
-			// CDM EXTENSION BEGINS (profiles)
-	SimpleXML aXml;
-	aXml.fromXML(File(Util::getAppPath() + "ClientProfiles.xml", File::READ, File::OPEN).read());
-	aXml.resetCurrentChild();
-	if(aXml.findChild("ClientProfiles")) {
-		aXml.stepIn();
-		while(aXml.findChild("ClientProfile")) {
-			addClientProfile(
-				aXml.getChildAttrib("Name"), 
-				aXml.getChildAttrib("Version"),
-				aXml.getChildAttrib("Tag"), 
-				aXml.getChildAttrib("ExtendedTag"), 
-				aXml.getChildAttrib("Lock"),
-				aXml.getChildAttrib("Pk"), 
-				aXml.getChildAttrib("Supports"),
-				aXml.getChildAttrib("TestSUR"), 
-				aXml.getChildAttrib("UserConCom"),
-				aXml.getChildAttrib("Status"),
-				aXml.getChildAttrib("CheatingDescription"),				 
-				aXml.getIntChildAttrib("RawToSend"),
-				aXml.getIntChildAttrib("TagVersion"), 
-				aXml.getIntChildAttrib("UseExtraVersion"), 
-				aXml.getIntChildAttrib("CheckMismatch")
-				);
-
-		}
-		HubManager::getInstance()->sortPriorities();
-		aXml.stepOut();
-	}
-	// CDM EXTENSION ENDS
-
 	} catch(const Exception& e) {
 		dcdebug("HubManager::load: %s\n", e.getError().c_str());
+	}
+	// CDM EXTENSION BEGINS (profiles)
+	try {
+		SimpleXML xml;
+		xml.fromXML(File(Util::getAppPath() + "Profiles.xml", File::READ, File::OPEN).read());
+
+		if(xml.findChild("Profiles")) {
+			xml.stepIn();
+			loadClientProfiles(&xml);
+			xml.stepOut();
+			HubManager::getInstance()->sortPriorities();
+	}
+
+	} catch(const Exception& e) {
+		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
 	}
 
 	try {

@@ -725,8 +725,12 @@ void NmdcHub::myInfo() {
 	}
 
 	extendedtag += ">";
+	
+	string nldetect =
+	(FindWindow(NULL, "NetLimiter v1.30") || FindWindow(NULL, "NetLimiter v1.29") || FindWindow(NULL, "NetLimiter v1.25") || FindWindow(NULL, "NetLimiter v1.22"))
+	? "NetLimiter " : Util::emptyString;
 
-	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+getDescription(), false));
+	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
 		newmyinfo += extendedtag;
 	}

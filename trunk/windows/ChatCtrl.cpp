@@ -319,6 +319,9 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	boAtTheEnd = false;
 
 	GetSel( lSelBeginSaved, lSelEndSaved );
+	POINT cr;
+	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
+
 	lTextLength = GetTextLengthEx( GTL_PRECISE );
 
 	boAtTheEnd = ( lSelEndSaved >= ( lTextLength - 2 ) );
@@ -449,8 +452,8 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		}
 
 		SetSel( lSelBeginSaved, lSelEndSaved );
-
-		SendMessage( EM_SCROLLCARET, 0, 0 );
+		SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
+		//SendMessage( EM_SCROLLCARET, 0, 0 );
 
 	if (bRedrawControlAtEnd){
 		EndRedrawAppendTextOnly();
@@ -690,7 +693,7 @@ bool ChatCtrl::GetAutoScroll() {
 
 void ChatCtrl::SetAutoScroll( bool boAutoScroll ) {
 	m_boAutoScroll = boAutoScroll;
-		GoToEnd();
+	 if(boAutoScroll) GoToEnd();
 }
 
 LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {

@@ -31,6 +31,7 @@
 #include "TimerManager.h"
 #include "Util.h"
 #include "FastAlloc.h"
+#include "LogManager.h"
 
 class HashManagerListener {
 public:
@@ -133,6 +134,8 @@ public:
 					i->second->setUsed(true);
 					return &(i->second->getRoot());
 				} else {
+					LogManager::getInstance()->message("File changed: \"" + aFileName + "\" from " + Util::toString(i->second->getSize()) +
+						" to " + Util::toString(aSize) + " bytes", true);
 					delete i->second;
 					indexTTH.erase(i);
 					dirty = true;
