@@ -55,10 +55,10 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	WinUtil::splitTokens(columnSizes, SETTING(USERSFRAME_WIDTHS), COLUMN_LAST);
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
-		ctrlUsers.InsertColumn(j, CTSTRING_I(columnNames[j]), LVCFMT_LEFT, columnSizes[j], j);
+		ctrlUsers.insertColumn(j, CTSTRING_I(columnNames[j]), LVCFMT_LEFT, columnSizes[j], j);
 	}
 	
-	ctrlUsers.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlUsers.setSortColumn(COLUMN_NICK);
 
 	usersMenu.CreatePopupMenu();

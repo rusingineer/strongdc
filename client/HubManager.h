@@ -78,15 +78,17 @@ public:
 	typedef List::iterator Iter;
 
 	FavoriteHubEntry() throw() : connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0),
+       	columsOrder(Util::emptyString), columsWidth(Util::emptyString), columsVisible(Util::emptyString) { };
 	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), 
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0),
+	    columsOrder(Util::emptyString), columsWidth(Util::emptyString), columsVisible(Util::emptyString) { };
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
-		userliststate(rhs.userliststate), mode(0)
+		userliststate(rhs.userliststate), mode(0), columsOrder(rhs.columsOrder), columsWidth(rhs.columsWidth), columsVisible(rhs.columsVisible)
 		, rawOne(rhs.rawOne)
 		, rawTwo(rhs.rawTwo)
 		, rawThree(rhs.rawThree)
@@ -115,6 +117,9 @@ public:
 	GETSET(int, chatusersplit, ChatUserSplit);
 	GETSET(bool, stealth, Stealth);
 	GETSET(bool, userliststate, UserListState);	
+	GETSET(string, columsOrder, ColumsOrder);
+	GETSET(string, columsWidth, ColumsWidth);
+	GETSET(string, columsVisible, ColumsVisible);
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
 	GETSET(string, rawThree, RawThree);

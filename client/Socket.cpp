@@ -48,19 +48,6 @@ SocketException::SocketException(int aError) throw() {
 
 Socket::Stats Socket::stats = { 0, 0 };
 
-string Socket::getRemoteHost(const string& aIp) const {
-	hostent *h = NULL;
-	unsigned int addr;
-	addr = inet_addr(aIp.c_str());
-
-	h = gethostbyaddr(reinterpret_cast<char *>(&addr), 4, AF_INET);
-	if (h == NULL) {
-		return Util::emptyString;
-	} else {
-		return h->h_name;
-	}
-}
-
 string SocketException::errorToString(int aError) throw() {
 	switch(aError) {
 	case EWOULDBLOCK:
@@ -582,6 +569,19 @@ void Socket::disconnect() throw() {
 	connected = false;
 
 	sock = INVALID_SOCKET;
+}
+
+string Socket::getRemoteHost(const string& aIp) const {
+	hostent *h = NULL;
+	unsigned int addr;
+	addr = inet_addr(aIp.c_str());
+
+	h = gethostbyaddr(reinterpret_cast<char *>(&addr), 4, AF_INET);
+	if (h == NULL) {
+		return Util::emptyString;
+	} else {
+		return h->h_name;
+	}
 }
 
 /**

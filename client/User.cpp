@@ -131,8 +131,7 @@ void User::setClient(Client* aClient) {
 		if (isSet(ONLINE) && isFavoriteUser())
 			setFavoriteLastSeen();
 		unsetFlag(ONLINE);
-	}
-	else {
+	} else {
 		setLastHubAddress(aClient->getIpPort());
 		setLastHubName(aClient->getName());
 		setFlag(ONLINE);
@@ -218,7 +217,6 @@ void User::TagParts() {
 	char *temp;
 	if(strlen(sTag) > 2) {
 		if((temp = strtok(sTag+1, " ")) != NULL) {
-//		setClientID(temp);
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'V')) {
 					setVersion(temp+2);
 			}
@@ -226,14 +224,6 @@ void User::TagParts() {
 					setMode(temp+2);
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
-				/*if( strlen(temp+2) > 3 ) {
-            	    int a,b,c;
-						if(sscanf(temp+2, "%d/%d/%d", &a, &b, &c) == 3 ) {
-						setHubs(Util::toString(a+b+c));
-					}
-				} else {
-					setHubs(Util::toString(atoi(temp+2)));
-				}*/
 				setHubs(temp+2);
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
@@ -247,7 +237,6 @@ void User::TagParts() {
 	free(sTag);
 }
 
-// CDM EXTENSION BEGINS
 string User::getReport()
 {
 	string temp = getGenerator();

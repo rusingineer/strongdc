@@ -91,6 +91,8 @@ const string& QueueItem::getTempTarget() {
 #else //_WIN32
 			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
 #endif //_WIN32
+		} else {
+			setTempTarget(Util::getFilePath(getTarget()) + getTempName(getTargetFileName(), getTTH()));
 		}
 	}
 	return tempTarget;
@@ -241,31 +243,6 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
 	return cand;
 }
 
-QueueItem* QueueManager::FileQueue::findHighest(){
-	QueueItem* cand = NULL;
-	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
-		QueueItem* q = i->second;
-
-		if(!q->getTTH())
-			continue;
-
-		if(q->getPriority() == QueueItem::HIGHEST)
-			return q;
-
-		if(q->getPriority() == QueueItem::PAUSED)
-			continue;
-
-		if(!cand){
-			cand = q;
-			continue;
-	}
-
-		if(cand->getPriority() < q->getPriority())
-			cand = q;
-	}
-	return cand;
-}
-
 void QueueManager::FileQueue::move(QueueItem* qi, const string& aTarget) {
 	if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
 		lastInsert = queue.end();
@@ -357,14 +334,13 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 		QueueItem::UserListIter j = ulm.find(aUser);
 		if((j == ulm.end()) && qi->isSource(aUser))
-			//MessageBox(0, _T("Please report it as bug."),_T(""),MB_OK);
 			add(qi, aUser);
 		return;
 	}
 
-	dcassert(running.find(aUser) != running.end());
 	dcassert(qi->getStatus() == QueueItem::STATUS_RUNNING);
 
+	dcassert(running.find(aUser) != running.end());
 	// Remove the download from running
 	running.erase(aUser);
 	
@@ -499,7 +475,6 @@ QueueManager::~QueueManager() throw() {
 
 void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	string searchString;
-
 	{
 		Lock l(cs);
 		QueueItem::UserMap& um = userQueue.getRunning();
@@ -645,7 +620,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 	
 }
 
-void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueException) {
+void QueueManager::readd(const string& target, User::Ptr aUser) throw(QueueException) {
 	bool wantConnection = false;
 	{
 		Lock l(cs);
@@ -656,7 +631,7 @@ void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueExce
 		}
 	}
 	if(wantConnection && aUser->isOnline())
-	ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser);
 }
 
 string QueueManager::checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException) {
@@ -967,15 +942,14 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	bool useOld = false;
 	FileChunksInfo::Ptr chunksInfo = (FileChunksInfo::Ptr)NULL;
 	int64_t freeBlock = 0;
+	Download *d;
+	reuse = true;
 
 	if(q != NULL) {
 		useOld = true;
-		goto next;
+	} else {
+		q = userQueue.getNext(aUser);
 	}
-	
-	q = userQueue.getNext(aUser);
-	Download *d;
-	reuse = true;
 
 again:
 	chunksInfo = (FileChunksInfo::Ptr)NULL;
@@ -1010,8 +984,6 @@ again:
 			}
 		}
 
-next:
-		
 		bool useFileChunksInfo = true;
 
 		if(q->getSize() != -1 && q->getTTH()) {
@@ -1273,7 +1245,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 	}
 }
 
-void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn /* = true */) throw() {
+void QueueManager::removeSource(const string& aTarget, User::Ptr aUser, int reason, bool removeConn /* = true */) throw() {
 	Lock l(cs);
 	QueueItem* q = fileQueue.find(aTarget);
 	string x;
@@ -1305,7 +1277,7 @@ void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int rea
 				x = q->getTarget();
 			userQueue.setWaiting(q, aUser);
 			userQueue.remove(q, aUser);
-		} else /*if(q->getStatus() == QueueItem::STATUS_WAITING)*/ {
+		} else {
 			userQueue.remove(q, aUser);
 		}
 
@@ -1319,7 +1291,7 @@ void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int rea
 	}
 }
 
-void QueueManager::removeSources(User::Ptr& aUser, int reason) throw() {
+void QueueManager::removeSources(User::Ptr aUser, int reason) throw() {
 	string x;
 	
 	//this is so damn ugly i should probably shoot myself but
@@ -1729,6 +1701,10 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			QueueItem::List um = getRunningFiles();
 			for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
 				QueueItem* q = *j;
+				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+					dcassert(q->getCurrentDownload() != NULL);
+					q->setDownloadedBytes(q->getCurrentDownload()->getPos());
+				}
 				fire(QueueManagerListener::StatusUpdated(), q);
 			}
 		}
@@ -1781,7 +1757,6 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 		}
 
 		QueueItem* q = fileQueue.add(target, aSize, flag, QueueItem::DEFAULT, tempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, &root);
-
 		fire(QueueManagerListener::Added(), q);
 		newItem = true;
 	}

@@ -354,6 +354,9 @@ void HubManager::save() {
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
 			xml.addChildAttrib("UserListState", (*i)->getUserListState());
+			xml.addChildAttrib("ColumsOrder", (*i)->getColumsOrder());
+			xml.addChildAttrib("ColumsWidth", (*i)->getColumsWidth());
+			xml.addChildAttrib("ColumsVisible", (*i)->getColumsVisible());
 			xml.addChildAttrib("RawOne", (*i)->getRawOne());
 			xml.addChildAttrib("RawTwo", (*i)->getRawTwo());
 			xml.addChildAttrib("RawThree", (*i)->getRawThree());
@@ -434,7 +437,6 @@ void HubManager::recentsave() {
 		}
 
 		xml.stepOut();
-
 		xml.stepOut();
 		
 		string fname = Util::getAppPath() + RECENTS_FILE;
@@ -580,6 +582,9 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
 			e->setUserListState(aXml->getBoolChildAttrib("UserListState"));
+			e->setColumsOrder(aXml->getChildAttrib("ColumsOrder"));
+			e->setColumsWidth(aXml->getChildAttrib("ColumsWidth"));
+			e->setColumsVisible(aXml->getChildAttrib("ColumsVisible"));
 			e->setRawOne(aXml->getChildAttrib("RawOne"));
 			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
 			e->setRawThree(aXml->getChildAttrib("RawThree"));
@@ -684,7 +689,6 @@ void HubManager::refresh() {
 		c->downloadFile(publicListServer);
 		running = true;
 	}
-
 }
 
 UserCommand::List HubManager::getUserCommands(int ctx, const string& hub, bool op) {

@@ -190,8 +190,8 @@ public:
 		, const tstring& rawThree = Util::emptyStringT
 		, const tstring& rawFour = Util::emptyStringT
 		, const tstring& rawFive = Util::emptyStringT
-		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
-		);		
+		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true,
+		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void closeDisconnected();
 
 	BOOL checkCheating(User::Ptr &user, DirectoryListing* dl);
@@ -292,6 +292,28 @@ public:
 public:
 	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
+	enum {
+		COLUMN_FIRST, 
+		COLUMN_NICK = COLUMN_FIRST, 
+		COLUMN_SHARED, 
+		COLUMN_EXACT_SHARED, 
+		COLUMN_DESCRIPTION, 
+		COLUMN_TAG,
+		COLUMN_CONNECTION,
+		COLUMN_UPLOAD_SPEED,
+		COLUMN_EMAIL, 
+		COLUMN_CLIENTID, 
+		COLUMN_VERSION, 
+		COLUMN_MODE, 
+		COLUMN_HUBS, 
+		COLUMN_SLOTS, 
+		COLUMN_ISP,
+		COLUMN_IP,
+		COLUMN_PK,
+		COLUMN_LOCK,
+		COLUMN_SUPPORTS,
+		COLUMN_LAST
+	};
 
 	friend class PrivateFrame;
 	
@@ -320,15 +342,16 @@ private:
 		, const tstring& aRawThree
 		, const tstring& aRawFour
 		, const tstring& aRawFive
-		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
-		) : 
+		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate,
+        string scolumsorder, string scolumswidth, string scolumsvisible) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
 		clientContainer(WC_EDIT, this, EDIT_MESSAGE_MAP),
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
-		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP)
+		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
+		sColumsOrder(scolumsorder), sColumsWidth(scolumswidth), sColumsVisible(scolumsvisible)
 	{
 		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
 
@@ -345,10 +368,12 @@ private:
 		} else {
 			ShowUserList = BOOLSETTING(GET_USER_INFO);
 		}
+		headerBuf = new TCHAR[128];
 	}
 
 	~HubFrame() {
 		ClientManager::getInstance()->putClient(client);
+		delete[] headerBuf;
 	}
 
 	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
@@ -422,8 +447,8 @@ private:
 	tstring lastLines;
 	CToolTipCtrl ctrlLastLines;
 
-	UserListColumns m_UserListColumns;
-	
+	static int columnIndexes[COLUMN_LAST];
+	static int columnSizes[COLUMN_LAST];
 	int findUser(const User::Ptr& aUser);
 	bool updateUser(const User::Ptr& u, bool searchinlist = true);
 	void addAsFavorite();
@@ -435,6 +460,10 @@ private:
 
 	bool PreparePopupMenu(CWindow *pCtrl, bool boCopyOnly, tstring& sNick, OMenu *pMenu);
 	bool ShowUserList;
+	TCHAR * headerBuf;
+	string sColumsOrder;
+    string sColumsWidth;
+    string sColumsVisible;
 
 	void clearUserList() {
 		{

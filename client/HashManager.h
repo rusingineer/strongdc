@@ -165,10 +165,7 @@ private:
 		}
 
 		size_t getFilesLeft() {
-			if(running)
-				return (w.size() + 1);
-			else
-				return w.size();
+			return w.size();
 		}
 	private:
 		// Case-sensitive (faster), it is rather unlikely that case changes, and if it does it's harmless.

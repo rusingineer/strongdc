@@ -162,6 +162,8 @@ public:
 		return sm;
 	}
 
+	int getMode();
+
 protected:
 	struct Counts {
 		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
@@ -197,7 +199,6 @@ protected:
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
-	GETSET(int, mode, Mode);
 	GETSET(string, ip, IP);
 
 private:

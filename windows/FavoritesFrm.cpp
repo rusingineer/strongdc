@@ -37,7 +37,7 @@ ResourceManager::NICK, ResourceManager::PASSWORD, ResourceManager::SERVER, Resou
 
 LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER, WS_EX_CLIENTEDGE, IDC_HUBLIST);
+		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_HUBLIST);
 
 	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
@@ -133,7 +133,7 @@ void FavoriteHubsFrame::openSelected() {
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState(), entry->getColumsOrder(), entry->getColumsWidth(), entry->getColumsVisible());
 	}
 	return;
 }
@@ -154,6 +154,46 @@ void FavoriteHubsFrame::addEntry(const FavoriteHubEntry* entry, int pos) {
 	bool b = entry->getConnect();
 	int i = ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
 	ctrlHubs.SetCheckState(i, b);
+}
+
+LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+	RECT rc;                    // client area of window 
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+	
+	if(ctrlHubs.GetSelectedCount() > 0) {
+		// Get the bounding rectangle of the client area. 
+		ctrlHubs.GetClientRect(&rc);
+		ctrlHubs.ScreenToClient(&pt); 
+		
+		if (PtInRect(&rc, pt)) 
+		{ 
+			string x;
+			if (CZDCLib::getFirstSelectedIndex(ctrlHubs) > -1) {
+				if (ctrlHubs.GetSelectedCount() == 1) {
+					FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(CZDCLib::getFirstSelectedIndex(ctrlHubs));
+					x = f->getName();
+				} else
+					x = "";
+			} else {
+				ctrlHubs.SetRedraw(TRUE);
+				return FALSE;
+			}
+			if (!x.empty())
+				hubsMenu.InsertSeparatorFirst(x);
+
+			ctrlHubs.ClientToScreen(&pt);
+			hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			
+			if (!x.empty())
+				hubsMenu.RemoveFirstItem();
+
+			ctrlHubs.SetRedraw(TRUE);
+
+			return TRUE; 
+		}
+	}
+	
+	return FALSE; 
 }
 
 LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -178,7 +218,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())	
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState(), entry->getColumsOrder(), entry->getColumsWidth(), entry->getColumsVisible());
 	}
 
 	return 0;
@@ -283,46 +323,6 @@ LRESULT FavoriteHubsFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*b
 		HubManager::getInstance()->save();
 	}
 	return 0;
-}
-
-LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	
-	if(ctrlHubs.GetSelectedCount() > 0) {
-		// Get the bounding rectangle of the client area. 
-		ctrlHubs.GetClientRect(&rc);
-		ctrlHubs.ScreenToClient(&pt); 
-		
-		if (PtInRect(&rc, pt)) 
-		{ 
-			string x;
-			if (CZDCLib::getFirstSelectedIndex(ctrlHubs) > -1) {
-				if (ctrlHubs.GetSelectedCount() == 1) {
-					FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(CZDCLib::getFirstSelectedIndex(ctrlHubs));
-					x = f->getName();
-				} else
-					x = "";
-			} else {
-				ctrlHubs.SetRedraw(TRUE);
-				return FALSE;
-			}
-			if (!x.empty())
-				hubsMenu.InsertSeparatorFirst(x);
-
-			ctrlHubs.ClientToScreen(&pt);
-			hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-			
-			if (!x.empty())
-				hubsMenu.RemoveFirstItem();
-
-			ctrlHubs.SetRedraw(TRUE);
-
-			return TRUE; 
-		}
-	}
-	
-	return FALSE; 
 }
 
 LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {

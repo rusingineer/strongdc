@@ -40,6 +40,14 @@
 
 HubFrame::FrameMap HubFrame::frames;
 
+int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 100, 175 };
+int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARED, COLUMN_DESCRIPTION, COLUMN_TAG,
+	COLUMN_CONNECTION, COLUMN_EMAIL, COLUMN_CLIENTID, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS,
+	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_ISP, COLUMN_PK, COLUMN_LOCK, COLUMN_SUPPORTS };
+static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
+ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL, 
+ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
+ResourceManager::AVERAGE_UPLOAD, ResourceManager::SETTINGS_IP, ResourceManager::ISP, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
 
 tstring sSelectedLine = Util::emptyStringT;
 tstring sSelectedIP = Util::emptyStringT;
@@ -116,8 +124,27 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlShowUsers.SetCheck(ShowUserList ? BST_CHECKED : BST_UNCHECKED);
 	showUsersContainer.SubclassWindow(ctrlShowUsers.m_hWnd);
 
-	m_UserListColumns.ReadFromSetup();
-	m_UserListColumns.SetToList(ctrlUsers);
+    bool bColumsFromFavorite = false;
+    if(sColumsOrder != Util::emptyString && sColumsWidth != Util::emptyString && sColumsVisible != Util::emptyString) bColumsFromFavorite = true;
+    if(bColumsFromFavorite == false) {
+		WinUtil::splitTokens(columnIndexes, SETTING(HUBFRAME_ORDER), COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, SETTING(HUBFRAME_WIDTHS), COLUMN_LAST);                           
+    } else {
+		WinUtil::splitTokens(columnIndexes, sColumsOrder, COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, sColumsWidth, COLUMN_LAST);
+	}
+    	
+	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
+		int fmt = (j == COLUMN_SHARED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		ctrlUsers.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+	}
+	
+	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+    if(bColumsFromFavorite == true) {
+	    ctrlUsers.setVisible(sColumsVisible);
+    } else {
+	    ctrlUsers.setVisible(SETTING(HUBFRAME_VISIBLE));
+    }
 	
 	ctrlUsers.SetBkColor(WinUtil::bgColor);
 	ctrlUsers.SetTextBkColor(WinUtil::bgColor);
@@ -158,16 +185,8 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
-	TCHAR Buffer[256];
-	LV_COLUMN lvCol;
-	int indexes[32];
-	ctrlUsers.GetColumnOrderArray(ctrlUsers.GetHeader().GetItemCount(), indexes);
-	for (int i = 0; i < ctrlUsers.GetHeader().GetItemCount(); ++i) {
-		lvCol.mask = LVCF_TEXT;
-		lvCol.pszText = Buffer;
-		lvCol.cchTextMax = 255;
-		ctrlUsers.GetColumn(indexes[i], &lvCol);
-		ctrlFilterSel.AddString(lvCol.pszText);
+	for(int j=0; j<COLUMN_LAST; j++) {
+		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.SetCurSel(0);
 
@@ -186,7 +205,8 @@ void HubFrame::openWindow(const tstring& aServer
 							, const tstring& rawThree /*= Util::emptyString*/
 							, const tstring& rawFour /*= Util::emptyString*/
 							, const tstring& rawFive /*= Util::emptyString*/
-		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) {
+		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate,
+       string sColumsOrder, string sColumsWidth, string sColumsVisible) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
 		HubFrame* frm = new HubFrame(aServer
@@ -195,7 +215,8 @@ void HubFrame::openWindow(const tstring& aServer
 			, rawThree 
 			, rawFour 
 			, rawFive 
-			, windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate);
+			, windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate,
+            sColumsOrder, sColumsWidth, sColumsVisible);
 		frames[aServer] = frm;
 
 		int nCmdShow = SW_SHOWDEFAULT;
@@ -335,32 +356,6 @@ void HubFrame::onEnter() {
 				addClientLine(_T("Queue saved."), WinUtil::m_ChatTextSystem );
 			} else if(Util::stricmp(s.c_str(), _T("whois")) == 0) {
 				WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + Text::toT(Util::encodeURI(Text::fromT(param))));
-			} else if(Util::stricmp(s.c_str(), _T("showshared")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_SHARED, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showexactshared")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_EXACT_SHARED, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showdescription")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_DESCRIPTION, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showtag")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_TAG, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showconnection")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_CONNECTION, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showemail")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_EMAIL, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showclient")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_CLIENTID, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showversion")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_VERSION, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showmode")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_MODE, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showhubs")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_HUBS, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showslots")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_SLOTS, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showupload")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_UPLOAD_SPEED, ctrlUsers);
-			} else if(Util::stricmp(s.c_str(), _T("showip")) == 0) {
-				m_UserListColumns.SwitchColumnVisibility(UserInfo::COLUMN_IP, ctrlUsers);
 			} else if(Util::stricmp(s.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
 				for(TStringHash::iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
@@ -377,7 +372,7 @@ void HubFrame::onEnter() {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params))));
 				}
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /showshared, /showexactshared, /showdescription, /showtag, /showconnection, /showemail, /showclient, /showversion, /showmode, /showhubs, /showslots, /showupload, /ignorelist"), WinUtil::m_ChatTextSystem);
+				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist"), WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), _T("pm")) == 0) {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
@@ -649,7 +644,7 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	if(searchinlist)
 		i = findUser(u);
 	if(i == -1) {
-		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
+		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u, ui));
 
 		bool add = false;
@@ -973,8 +968,6 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			i++;
 		}
 	
-		m_UserListColumns.WriteToSetup(ctrlUsers);
-
 		FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
 		if(hub) {
 			WINDOWPLACEMENT wp;
@@ -995,7 +988,10 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 				hub->setWindowType((int)wp.showCmd);
 			hub->setChatUserSplit(m_nProportionalPos);
 			hub->setUserListState(ShowUserList);
-			HubManager::getInstance()->save();
+			ctrlUsers.saveFavoriteHeaderOrder(hub);
+		} else {
+			ctrlUsers.saveHeaderOrder(SettingsManager::HUBFRAME_ORDER, SettingsManager::HUBFRAME_WIDTHS,
+				SettingsManager::HUBFRAME_VISIBLE);
 		}
 		DestroyIcon(pmicon.hIcon);				
 		bHandled = FALSE;
@@ -1225,10 +1221,10 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 }
 
 LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
-		RECT rc;                    // client area of window 
-		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
-		POINT ptCl;
-		tabMenuShown = false;
+	RECT rc; CRect rc2;                 // client area of window 
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
+	POINT ptCl;
+	tabMenuShown = false;
 	OMenu Mnu;
 	tstring sU = _T("");
 	
@@ -1236,9 +1232,15 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	sSelectedLine = _T("");
 	sSelectedIP = _T("");
 
-		ctrlUsers.GetClientRect(&rc);
-		ptCl = pt;
-		ctrlUsers.ScreenToClient(&ptCl);
+	ctrlUsers.GetClientRect(&rc);
+	ptCl = pt;
+	ctrlUsers.ScreenToClient(&ptCl);
+	ctrlUsers.GetHeader().GetWindowRect(&rc2);
+		
+	if(PtInRect(&rc2, pt) && ShowUserList) {
+		ctrlUsers.showMenu(pt);
+		return TRUE;
+	}
 	
 		if (PtInRect(&rc, ptCl) && ShowUserList) { 
 			if ( ctrlUsers.GetSelectedCount() == 1 ) {

@@ -296,7 +296,6 @@ public:
 
 	User::Ptr& getUser() { return user; };
 
-	GETSET(string, unknownCommand, UnknownCommand);
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; };
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; };
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; };
@@ -344,9 +343,10 @@ public:
 	GETSET(States, state, State);
 	GETSET(u_int32_t, lastActivity, LastActivity);
 	GETSET(Download*, tempDownload, TempDownload);
+	GETSET(string, unknownCommand, UnknownCommand);
 
 	BufferedSocket const* getSocket() { return socket; } 
-	string getRemoteIp() const { return socket->getIp(); }
+	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
 	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	void garbageCommand() { 
 		string tmp;
@@ -370,15 +370,15 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection() throw(SocketException) : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(BufferedSocket::getSocket(0)), download(NULL) { 
+		socket(BufferedSocket::getSocket(0)), download(NULL), unknownCommand(Util::emptyString) { 
 		
 		socket->addListener(this);
 	};
 
 	virtual ~UserConnection() throw() {
-			socket->removeListener(this);
+		socket->removeListener(this);
 		removeListeners();
-			BufferedSocket::putSocket(socket);
+		BufferedSocket::putSocket(socket);
 	};
 	friend struct DeleteFunction<UserConnection*>;
 

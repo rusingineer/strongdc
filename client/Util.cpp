@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
@@ -599,6 +600,37 @@ static wchar_t utf8ToLC(ccp& str) {
 	}
 
 	return Text::toLower(c);
+}
+wstring::size_type Util::findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type pos) throw() {
+	if(aString.length() < pos)
+		return static_cast<wstring::size_type>(wstring::npos);
+
+	if(aString.length() - pos < aSubString.length())
+		return static_cast<wstring::size_type>(wstring::npos);
+
+	if(aSubString.empty())
+		return 0;
+	
+	wstring::size_type j = 0;
+	wstring::size_type end = aString.length() - aSubString.length() + 1;
+    
+	for(; pos < end; ++pos) {
+		if(CharUpper((LPWSTR)aString[pos]) == CharUpper((LPWSTR)aSubString[j])) {
+			wstring::size_type tmp = pos+1;
+			bool found = true;
+			for(++j; j < aSubString.length(); ++j, ++tmp) {
+				if(CharUpper((LPWSTR)aString[tmp]) != CharUpper((LPWSTR)aSubString[j])) {
+					j = 0;
+					found = false;
+					break;
+				}
+			}
+
+			if(found)
+				return pos;
+		}
+	}
+	return static_cast<wstring::size_type>(wstring::npos);
 }
 
 string::size_type Util::findSubString(const string& aString, const string& aSubString, string::size_type start) throw() {

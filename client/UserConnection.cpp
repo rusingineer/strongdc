@@ -18,9 +18,7 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
-
 #include "UserConnection.h"
-
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 #include "DebugManager.h"
@@ -64,9 +62,7 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
-
 again:
-
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
 		return;
@@ -82,7 +78,6 @@ again:
 		} else
 			goto again;
 	}
-
 	char *temp;
 	if(strncmp(aLine+1, "MyNick ", 7) == 0) {
 		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
@@ -111,9 +106,7 @@ again:
 		fire(UserConnectionListener::GetListLength(), this);
 	} else if(strncmp(aLine+1, "Get ", 4) == 0) {
 		char *temp = strtok((char*)aLine+5, "\0");
-/*		temp = strtok(NULL, "\0");
-		if(temp != NULL && temp1 != NULL) {
-			int64_t size = _atoi64(temp);*/
+
 		if((temp = strtok((char*)temp, "$")) == NULL)
 			return;
 

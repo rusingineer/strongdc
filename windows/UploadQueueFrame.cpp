@@ -66,10 +66,11 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	// column names, sizes
 	for (int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_TRANSFERRED || j == COLUMN_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 		
 	ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlList.setVisible(SETTING(UPLOADQUEUEFRAME_VISIBLE));
 	
 	// colors
 	ctrlList.SetBkColor(WinUtil::bgColor);
@@ -128,8 +129,8 @@ LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		ctrlQueued.DeleteAllItems();
 		UQFUsers.clear();
 		SettingsManager::getInstance()->set(SettingsManager::UPLOADQUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
-		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::UPLOADQUEUEFRAME_ORDER, 
-			SettingsManager::UPLOADQUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+	    ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
+			SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
 
 		bHandled = FALSE;
 		return 0;
@@ -208,8 +209,13 @@ LRESULT UploadQueueFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;
+	RECT rc, rc2;
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+	ctrlList.GetHeader().GetWindowRect(&rc2);
+	if(PtInRect(&rc2, pt)){
+		ctrlList.showMenu(pt);
+		return TRUE;
+	}
 		ctrlList.GetClientRect(&rc);
 		ctrlList.ScreenToClient(&pt); 
 	if(PtInRect(&rc, pt) && ctrlList.GetSelectedCount() > 0) {

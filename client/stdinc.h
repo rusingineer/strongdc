@@ -37,7 +37,6 @@
 #include <windows.h>
 #include <crtdbg.h>
 #include <tchar.h>
-
 #else
 #include <unistd.h>
 #endif
@@ -46,6 +45,7 @@
 #include <stdarg.h>
 #include <memory.h>
 #include <sys/types.h>
+
 #include <time.h>
 #include <locale.h>
 

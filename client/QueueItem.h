@@ -351,9 +351,7 @@ private:
 
 	void removeSource(const User::Ptr& aUser, int reason) {
 		Source::Iter i = getSource(aUser, sources);
-		//dcassert(i != sources.end());
-		if(i == sources.end()) return;
-
+		dcassert(i != sources.end());
 		(*i)->setFlag(reason);
 		badSources.push_back(*i);
 		sources.erase(i);

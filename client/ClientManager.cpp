@@ -73,12 +73,12 @@ void ClientManager::putClient(Client* aClient) {
 
 void ClientManager::infoUpdated(bool antispam) {
 	if(GET_TICK() > (quickTick + 10000) || antispam == false) {
-	Lock l(cs);
-	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-		if((*i)->isConnected()) {
-			(*i)->info(false);
+		Lock l(cs);
+		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+			if((*i)->isConnected()) {
+				(*i)->info(false);
+			}
 		}
-	}
 		quickTick = GET_TICK();
 	}
 }
@@ -91,7 +91,6 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	bool isPassive = (aSeeker.compare(0, 4, "Hub:") == 0);
 	SearchResult::List l;
 	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
-//		dcdebug("Found %d items (%s)\n", l.size(), aString.c_str());
 	if(l.size() > 0) {
 		if(isPassive) {
 			string name = aSeeker.substr(4);
@@ -263,8 +262,8 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 		aUser->unsetFlag(User::SERVER);
 		aUser->unsetFlag(User::FIREBALL);
 
-		QueueManager::getInstance()->removeTestSUR(aUser->getNick());
 		aUser->unCacheClientInfo();
+		QueueManager::getInstance()->removeTestSUR(aUser->getNick());
 
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);
