@@ -69,6 +69,10 @@ extern CAppModule _Module;
 
 /**
  * @file
+<<<<<<< stdafx.h
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */
 

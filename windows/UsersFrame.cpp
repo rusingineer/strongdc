@@ -208,6 +208,10 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 /**
  * @file
+<<<<<<< UsersFrame.cpp
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */
 

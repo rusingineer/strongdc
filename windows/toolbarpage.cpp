@@ -174,5 +174,9 @@ LRESULT ToolbarPage::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
 /**
  * @file Advanced3Page.cpp
+<<<<<<< toolbarpage.cpp
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */

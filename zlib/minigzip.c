@@ -13,7 +13,11 @@
  * or in pipe mode.
  */
 
+<<<<<<< minigzip.c
 /* @(#) $Id$ */
+=======
+/* @(#) $Id$ */
+>>>>>>> 1.2
 
 #include <stdio.h>
 #include "zlib.h"

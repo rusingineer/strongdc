@@ -906,5 +906,9 @@ void WinUtil::RunPreviewCommand(int index, string target){
 
 /**
  * @file
+<<<<<<< WinUtil.cpp
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */

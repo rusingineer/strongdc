@@ -433,5 +433,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 /**
  * @file
+<<<<<<< main.cpp
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */

@@ -900,7 +900,11 @@ private:
 
 /**
  * @file
+<<<<<<< flattabctrl.h
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */
 
 

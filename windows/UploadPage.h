@@ -73,6 +73,10 @@ protected:
 
 /**
  * @file
+<<<<<<< UploadPage.h
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */
 

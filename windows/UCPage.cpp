@@ -175,6 +175,10 @@ void UCPage::write() {
 
 /**
  * @file
+<<<<<<< UCPage.cpp
  * $Id$
+=======
+ * $Id$
+>>>>>>> 1.2
  */
 
