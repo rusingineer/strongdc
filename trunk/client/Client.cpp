@@ -33,6 +33,7 @@ Client::Client(const string& hubURL, char separator, bool usesEscapes) :
 	Util::decodeUrl(hubURL, address, port, file);
 	addressPort = hubURL;
 	socket->addListener(this);
+	closed = false;
 }
 
 Client::~Client() {

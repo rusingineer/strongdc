@@ -62,7 +62,9 @@ void ClientManager::putClient(Client* aClient) {
 		// STL-port -D_STL_DEBUG complains that .begin() and .end() don't have the same owner (!)
 		//		dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
 		//		clients.erase(find(clients.begin(), clients.end(), aClient));
-		
+	
+		aClient->setClosed(true);
+
 		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 			if(*i == aClient) {
 				clients.erase(i);
@@ -186,8 +188,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 	dcassert(aClient != NULL);
-	if(find(clients.begin(), clients.end(), aClient) == clients.end())
-		return NULL;
+	dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
 
 	UserPair p = users.equal_range(aNick);
 	UserIter i;

@@ -506,10 +506,15 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.deleteItem(i);
 	} else if(wParam == INSERT_SUBITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
+		dcassert(i->upper != NULL);
 		int r = ctrlTransfers.findItem(i->upper);
 
 		if(!i->upper->collapsed) {
-			insertSubItem(i,r+i->qi->getActiveSegments().size()+1);
+			int position = 0;
+			if(i->qi) {
+				position = i->qi->getActiveSegments().size();
+			}
+			insertSubItem(i,r + position + 1);
 		}
 
 		if(i->upper->pocetUseru > 1) {
@@ -700,13 +705,13 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 					i->upper->status = i->status;
 					i->upper->statusString = i->statusString;
 				}
-				/*i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
+				i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
 				i->upper->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(i->qi->getTarget()));
 				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
 				i->upper->file = Text::toT(Util::getFileName(i->qi->getTarget()));
 				i->upper->path = Text::toT(Util::getFilePath(i->qi->getTarget()));
 				i->upper->size = i->qi->getSize();				
-				i->upper->Target = i->Target;*/
+				i->upper->Target = i->Target;
 				i->upper->tth = i->tth;
 			}
 		}

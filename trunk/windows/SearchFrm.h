@@ -85,6 +85,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy)
 		COMMAND_ID_HANDLER(IDC_FREESLOTS, onFreeSlots)
 		COMMAND_ID_HANDLER(IDC_TTHONLY, onTTHOnly)
+		COMMAND_ID_HANDLER(IDC_COLLAPSED, onCollapsed)		
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)
 				COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
@@ -118,6 +119,7 @@ public:
 		showUIContainer(WC_COMBOBOX, this, SHOWUI_MESSAGE_MAP),
 		slotsContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
 		tthContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		collapsedContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
 		doSearchContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
 		resultsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		hubsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
@@ -125,7 +127,7 @@ public:
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0),
-		droppedResults(0)
+		droppedResults(0), expandSR(false)
 	{	
 		SearchManager::getInstance()->addListener(this);
 	}
@@ -236,6 +238,11 @@ public:
 
 	LRESULT onTTHOnly(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		onlyTTH = (ctrlTTH.GetCheck() == 1);
+		return 0;
+	}
+
+	LRESULT onCollapsed(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		expandSR = (ctrlCollapsed.GetCheck() == 1);
 		return 0;
 	}
 
@@ -553,6 +560,7 @@ private:
 	CContainedWindow fileTypeContainer;
 	CContainedWindow slotsContainer;
 	CContainedWindow tthContainer;
+	CContainedWindow collapsedContainer;
 	CContainedWindow showUIContainer;
 	CContainedWindow doSearchContainer;
 	CContainedWindow resultsContainer;
@@ -562,7 +570,7 @@ private:
 	string filter;
 	
 	CStatic searchLabel, sizeLabel, optionLabel, typeLabel, hubsLabel, srLabel;
-	CButton ctrlSlots, ctrlShowUI, ctrlTTH;
+	CButton ctrlSlots, ctrlShowUI, ctrlTTH, ctrlCollapsed;
 	bool showUI;
 
 	CImageList images;
@@ -590,6 +598,7 @@ private:
 
 	bool onlyFree;
 	bool onlyTTH;
+	bool expandSR;
 	bool isHash;
 	bool exactSize1;
 	int64_t exactSize2;

@@ -970,7 +970,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	tstring site;
 	bool isFile = false;
 	switch(wID) {
-	case IDC_HELP_HOMEPAGE: site = _T("http://snail.pc.cz/StrongDC/index.htm"); break;
+	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
 	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/index.php"); break;
 	default: dcassert(0);
 	}

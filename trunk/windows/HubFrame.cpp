@@ -813,8 +813,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 		delete i;
 	} else if(wParam == KICK_MSG) {
-		string* x = (string*)lParam;
-		addLine(Text::toT(*x), m_ChatTextServer);
+		tstring* x = (tstring*)lParam;
+		addLine(*x, m_ChatTextServer);
 		delete x;
 	}
 
