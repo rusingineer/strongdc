@@ -377,7 +377,7 @@ void DirectoryListingFrame::downloadList(const string& aTarget, bool view /* = f
 	}
 }
 
-void DirectoryListingFrame::downloadMP3List(const string& aTarget, bool view /* = false */, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
+void DirectoryListingFrame::downloadMP3List(const string& aTarget) {
 	int i=-1;
 	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(i);
@@ -386,13 +386,8 @@ void DirectoryListingFrame::downloadMP3List(const string& aTarget, bool view /* 
 
 		try {
 			if(ii->type == ItemInfo::FILE) {
-				if(view) {
-					File::deleteFile(target + Util::validateFileName(ii->file->getName()));
-				}
-				string tmp;
-				dl->downloadMP3(ii->file, target + ii->getText(COLUMN_FILENAME), view, prio);
-			} else if(!view) {
-				dl->download(ii->dir, target, prio);
+				File::deleteFile(target + Util::validateFileName(ii->file->getName()));
+				dl->downloadMP3(ii->file, target + ii->getText(COLUMN_FILENAME));
 			} 
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, e.getError().c_str());
@@ -460,7 +455,7 @@ LRESULT DirectoryListingFrame::onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, 
 }
 
 LRESULT DirectoryListingFrame::onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	downloadMP3List(Util::getTempPath(), true);
+	downloadMP3List(Util::getTempPath());
 	return 0;
 }
 
@@ -914,9 +909,8 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 				break;
 			case IDC_COPY_LINK:
 				if(ii->type == ItemInfo::FILE && ii->file->getTTH() && ii->file->getSize()) {
-					sCopy = "magnet:?xt=urn:tree:tiger:" + ii->file->getTTH()->toBase32() +
-				"&xl=" + Util::toString(ii->file->getSize()) +
-				"&dn=" +  ii->file->getName();
+					TTHValue tmp(ii->getText(COLUMN_TTH));
+					WinUtil::copyMagnet(&tmp, ii->getText(COLUMN_FILENAME), ii->file->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:

@@ -485,6 +485,39 @@ string& Util::toAcp(string& str) {
 	return str;
 }
 
+string Util::encodeURI(const string& aString, bool reverse) {
+	// reference: rfc2396
+	string tmp = aString;
+	if(reverse) {
+		string::size_type idx;
+		for(idx = 0; idx < tmp.length()-2; ++idx) { // valid escapes are not < 2 characters from eos
+			if(tmp[idx] == '%' && isxdigit(tmp[idx+1]) && isxdigit(tmp[idx+2])) {
+				tmp[idx] = fromHexEscape(tmp.substr(idx+1,2));
+				tmp.erase(idx+1, 2);
+			} else { // reference: rfc1630, magnet-uri draft
+				if(tmp[idx] == '+')
+					tmp[idx] = ' ';
+			}
+		}
+	} else {
+		const string disallowed = ";/?:@&=+$," // reserved
+			                      "<>#%\" "    // delimiters
+		                          "{}|\\^[]`"; // unwise
+		string::size_type idx, loc;
+		for(idx = 0; idx < tmp.length(); ++idx) {
+			if(tmp[idx] == ' ') {
+				tmp[idx] = '+';
+			} else {
+				if(tmp[idx] <= 0x1F || tmp[idx] >= 0x7f || (loc = disallowed.find_first_of(tmp[idx])) != string::npos) {
+					tmp.replace(idx, 1, toHexEscape(tmp[idx]));
+					idx+=2;
+				}
+			}
+		}
+	}
+	return tmp;
+}
+
 /**
  * This function takes a string and a set of parameters and transforms them according to
  * a simple formatting rule, similar to strftime. In the message, every parameter should be

@@ -395,12 +395,11 @@ void SearchFrame::onEnter() {
 	int64_t llsize = (int64_t)lsize;
 
 	for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	    SearchInfo* si = mainItems[i];//ctrlResults.getItemData(i);
+	    SearchInfo* si = mainItems[i];
 		int q = 0;
 		if(si->subItems.size() > 0) {
 			while(q<si->subItems.size()) {
 				SearchInfo* j = si->subItems[q];
-				//int k = ctrlResults.findItem(j);
 				delete j;
 				q++;
 			}
@@ -524,8 +523,8 @@ void SearchFrame::SearchInfo::GetMP3Info() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(sr->getFile(), 2100, sr->getUser(), 
-				Util::getTempPath() + fileName, sr->getTTH(), Util::emptyString,
-				(QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_MP3_INFO));
+				Util::getTempPath() + fileName, NULL, Util::emptyString,
+				QueueItem::FLAG_MP3_INFO);
 		}
 	} catch(const Exception&) {
 	}
@@ -717,11 +716,9 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlResults.GetSelectedCount() == 1) {
-		SearchInfo* si = ctrlResults.getSelectedItem();
-		if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH()) {
-			string url = "http://bitzi.com/lookup/tree:tiger:" + si->sr->getTTH()->toBase32();
-			WinUtil::openLink(url);
-		}
+		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+		WinUtil::bitziLink(sr->getTTH());
 	}
 	return 0;
 }
@@ -984,8 +981,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			}
 
 			if(sr->getTTH() != NULL) {
-              for(int i = 0, j = mainItems.size(); i < j; ++i) {
-                    SearchInfo* si2 = ctrlResults.getItemData(i);
+				for(int i = 0, j = mainItems.size(); i < j; ++i) {
+					//SearchInfo* si2 = ctrlResults.getItemData(i);
+					SearchInfo* si2 = mainItems[i];
                     SearchResult* sr2 = si2->sr;
                     if(sr2->getTTH() && (*sr->getTTH() == *sr2->getTTH())) {
 						si2->subItems.push_back(si);
@@ -1085,24 +1083,26 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 					}
 				}		
 
-		// magnet link
-		resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
-		resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);
-		resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_BYCOMMAND | MF_GRAYED);
-		resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_GRAYED);
-		if(ctrlResults.GetSelectedCount() == 1){
-			SearchInfo* si = ctrlResults.getSelectedItem();
-			if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH()) {
-				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_BYCOMMAND | MF_ENABLED);
+		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+		if(sr) {
+			if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
+				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_ENABLED);
+			} else {
+				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);
+				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_GRAYED);
+				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
 			}
-			if(si && ((Util::getFileExt(si->sr->getFileName()) == "mp3") || (Util::getFileExt(si->sr->getFileName()) == "MP3"))) {
+	
+			if(ctrlResults.GetSelectedCount() == 1 && ((Util::getFileExt(sr->getFileName()) == ".mp3") || (Util::getFileExt(sr->getFileName()) == ".MP3"))) {
 				resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_ENABLED);
+			} else {
+				resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_GRAYED);
 			}
 				
 		}
-
 		prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
 		if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -1226,9 +1226,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				break;
 			case IDC_COPY_LINK:
 				if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH() && si->sr->getSize()) {
-					sCopy = "magnet:?xt=urn:tree:tiger:" + si->sr->getTTH()->toBase32() +
-					"&xl=" + Util::toString(si->sr->getSize()) +
-					"&dn=" +  si->sr->getFileName();
+					WinUtil::copyMagnet(sr->getTTH(), sr->getFileName(), sr->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:

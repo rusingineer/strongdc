@@ -875,8 +875,7 @@ LRESULT MainFrame::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 			ctrlStatus.SetText(0, CSTRING(ERROR_OPENING_FILE));
  		}
  	} 
- 
- 	return 0;
+  	return 0;
 }
  
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -888,7 +887,7 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 		WIN32_FIND_DATA data;
 		FindFirstFile(file.c_str(), &data);
 		int64_t size = (int64_t)data.nFileSizeLow | ((int64_t)data.nFileSizeHigh)<<32;
-		string magnetlink = "magnet:?xt=urn:tree:tiger:"+hash+"&xl="+Util::toString(size)+"&dn="+Util::getFileName(file);
+		string magnetlink = "magnet:?xt=urn:tree:tiger:"+hash+"&xl="+Util::toString(size)+"&dn="+Util::encodeURI(Util::getFileName(file));
 		ibox.DoModal("Tiger Tree Hash", file.c_str(), hash.c_str(), magnetlink.c_str());
 	   } 
    return 0;
@@ -1249,7 +1248,7 @@ void MainFrame::checkFileList(string file, User::Ptr u) {
 			DirectoryListing* dl = new DirectoryListing(u);
 			try {
 				dl->loadFile(file, true);
-			} catch(const Exception&) {
+			} catch(...) {
 				delete dl;
 				return;
 			}
@@ -1288,5 +1287,5 @@ LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 /**
  * @file
- * $Id$
+ * $Id: MainFrm.cpp,v 1.20 2004/07/21 13:15:15 bigmuscle Exp
  */

@@ -346,11 +346,11 @@ void DirectoryListing::download(File* aFile, const string& aTarget, bool view /*
 		aFile->getTTH(), Util::emptyString, flags, prio);
 }
 
-void DirectoryListing::downloadMP3(File* aFile, const string& aTarget, bool view /* = false */, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
-		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
+void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
+	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
+
 	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
-		aFile->getTTH(), Util::emptyString, flags, prio);
+		NULL, Util::emptyString, flags, QueueItem::Priority::HIGHEST);
 }
 
 /**

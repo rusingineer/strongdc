@@ -95,7 +95,7 @@ const string SettingsManager::settingTags[] =
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
-	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
+	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", 
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
@@ -394,10 +394,9 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_NEW_USERS, false);
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
-	setDefault(ENABLE403FEATURES, true);
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 100);
-	setDefault(LOG_SEGMENT, true);
+	setDefault(LOG_SEGMENT, false);
 
 	setDefault(DISCONNECT_RAW, 0);
 	setDefault(TIMEOUT_RAW, 0);

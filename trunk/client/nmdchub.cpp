@@ -120,15 +120,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		char *seeker = temp;
 
-		bool bPassive = (strnicmp(seeker, "Hub:", 4) == 0);
-
-		// We don't wan't to answer passive searches if we're in passive mode...
-		if(bPassive == true && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
-			return;
-		}
-
 		// Filter own searches
-		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
+		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
 			if((strcmp(seeker, (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
 				return;
 			}
@@ -157,7 +150,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 					count++;
 
 				if(count > 7) {
-					if(bPassive == true && strlen(seeker) > 4) {
+					if( strnicmp(seeker, "Hub:", 4) == 0 ) {
+						if(strlen(seeker) > 4)
 							Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, strtok(seeker+4, "\0"));
 					} else {
 						Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
@@ -197,13 +191,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		int type = atoi(temp) - 1;
 		if((temp = strtok(NULL, "\0")) != NULL) {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, temp);
-			if(bPassive == true && strlen(seeker) > 4) {
+			if(strnicmp(seeker, "Hub:", 4) == 0) {
 				User::Ptr u;
-				Lock l(cs);
-				User::NickIter ni = users.find(strtok(seeker+4, "\0"));
-				if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
-					u = ni->second;
-					u->setPassive();
+				if(strlen(seeker) > 4) {
+					Lock l(cs);
+					User::NickIter ni = users.find(strtok(seeker+4, "\0"));
+					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
+						u = ni->second;
+						u->setPassive();
+					}
 				}
 
 				if(u) {
@@ -614,10 +610,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		}
 
 		// send auto search
-		if(auto_search){
+/*		if(auto_search){
 			auto_search = false;
 			string search_string = QueueManager::getInstance()->getTopAutoSearchString();
 			search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, search_string);
+		}*/
+
+		if(auto_search){
+			auto_search = false;
+			QueueManager::getInstance()->sendAutoSearch(this);
 		}
 
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
@@ -860,27 +861,33 @@ void NmdcHub::disconnect() throw() {
 	}
 }
 
+static u_int32_t iLastSearch = 0;
+
 void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
-	checkstate(); 
-	char* buf;
-	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
-	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
-	string tmp = aString;
-	string::size_type i;
-	while((i = tmp.find(' ')) != string::npos) {
-		tmp[i] = '$';
+	if(::GetTickCount() - iLastSearch > 500) {
+		checkstate(); 
+		char* buf;
+		char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
+		char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
+		string tmp = aString;
+		string::size_type i;
+		while((i = tmp.find(' ')) != string::npos) {
+			tmp[i] = '$';
+		}
+		int chars = 0;
+			if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
+			string x = getLocalIp();
+			buf = new char[x.length() + aString.length() + 64];
+			chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		} else {
+			buf = new char[getNick().length() + aString.length() + 64];
+			chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", getNick().c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		}
+		send(buf, chars);
+		delete[] buf;
+
+		iLastSearch = ::GetTickCount();
 	}
-	int chars = 0;
-		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
-		string x = getLocalIp();
-		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
-	} else {
-		buf = new char[getNick().length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", getNick().c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
-	}
-	send(buf, chars);
-	delete[] buf;
 }
 
 void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {
