@@ -33,12 +33,12 @@
 
 #define FILE_LIST_NAME "File Lists"
 
-int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SIZE, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
+int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
 COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_SEARCHSTRING, COLUMN_ADDED, COLUMN_TTH };
 
-int QueueFrame::columnSizes[] = { 200, 300, 75, 110, 75, 200, 200, 75, 200, 200, 100, 125 };
+int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 110, 75, 200, 200, 75, 200, 200, 100, 125 };
 
-static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SIZE, ResourceManager::DOWNLOADED,
+static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, ResourceManager::DOWNLOADED,
 ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS, ResourceManager::SEARCH_STRING,
 ResourceManager::ADDED, ResourceManager::TTH_ROOT  };
 
@@ -81,7 +81,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	WinUtil::splitTokens(columnSizes, SETTING(QUEUEFRAME_WIDTHS), COLUMN_LAST);
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
-		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE|| j == COLUMN_SEGMENTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlQueue.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
@@ -104,6 +104,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	multiMenu.CreatePopupMenu();
 	dirMenu.CreatePopupMenu();
 	priorityMenu.CreatePopupMenu();
+	segmentsMenu.CreatePopupMenu();
 
 	browseMenu.CreatePopupMenu();
 	removeMenu.CreatePopupMenu();
@@ -112,13 +113,13 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	readdMenu.CreatePopupMenu();
 	previewMenu.CreatePopupMenu();
 
-	singleMenu.InsertSeparatorFirst(STRING(FILE));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
@@ -129,16 +130,14 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	
-	multiMenu.InsertSeparatorFirst(STRING(FILES));	
     multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
-
+	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
 	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	
-	priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_PAUSED, CSTRING(PAUSED));
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOWEST, CSTRING(LOWEST));
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOW, CSTRING(LOW));
@@ -147,10 +146,19 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CSTRING(HIGHEST));
 	priorityMenu.AppendMenu(MF_STRING, IDC_AUTOPRIORITY, CSTRING(AUTO));
 
-	dirMenu.InsertSeparatorFirst(STRING(FOLDER));
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTONE, ("1 "+STRING(SEGMENT)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTWO, ("2 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTHREE, ("3 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFOUR, ("4 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFIVE, ("5 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSIX, ("6 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSEVEN, ("7 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTEIGHT, ("8 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTNINE, ("9 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, ("10 "+STRING(SEGMENTS)).c_str());
+
 	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
- 
-	dirMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
+ 	dirMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	dirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -175,6 +183,8 @@ void QueueFrame::QueueItemInfo::update() {
 	if(display != NULL) {
 		int colMask = updateMask;
 		updateMask = 0;
+
+		display->columns[COLUMN_SEGMENTS] = Util::toString((int)qi->getActiveSegments().size())+"/"+Util::toString(qi->getMaxSegments());
 
 		if(colMask & MASK_TARGET) {
 			display->columns[COLUMN_TARGET] = Util::getFileName(getTarget());
@@ -606,7 +616,8 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 		ii->setStatus(aQI->getStatus());
 		ii->setDownloadedBytes(aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
-		ii->setAutoPriority(aQI->getAutoPriority()); 
+		ii->setAutoPriority(aQI->getAutoPriority());
+		ii->qi = aQI;
 
 		{
 			for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); ) {
@@ -889,28 +900,20 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
 	ctrlQueue.ScreenToClient(&pt);
+	for(int i=1;i<11;i++) {
+		segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
+		segmentsMenu.EnableMenuItem(i + 109, MF_ENABLED);		
+	}
+
+	priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 	for(int i=1;i<8;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
 		usingDirMenu = false;
 		CMenuItemInfo mi;
-		
-		while(browseMenu.GetMenuItemCount() > 0) {
-			browseMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(removeMenu.GetMenuItemCount() > 0) {
-			removeMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(removeAllMenu.GetMenuItemCount() > 0) {
-			removeAllMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(pmMenu.GetMenuItemCount() > 0) {
-			pmMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(readdMenu.GetMenuItemCount() > 0) {
-			readdMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
 
-		WinUtil::ClearPreviewMenu(previewMenu);
+		singleMenu.InsertSeparatorFirst(STRING(FILE));
+		multiMenu.InsertSeparatorFirst(STRING(FILES));			
+
 		singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
 
 		ctrlQueue.ClientToScreen(&pt);
@@ -918,6 +921,13 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
+			if(ii->qi->getMaxSegmentsInitial() == 1) {
+				segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)+" ("+STRING(DISABLED)+")").c_str());
+				for(int i=2;i<11;i++) {
+					segmentsMenu.EnableMenuItem(i + 109, MF_GRAYED);		
+				}
+			} else segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)).c_str());
+			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 			string ext = Util::getFileExt(ii->getTargetFileName());
 			if(ext.size()>1) ext = ext.substr(1);
@@ -978,11 +988,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
             }
 
-			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
-			removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
-			removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
-			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
-			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
 		UINT pos = 0;
 		switch(ii->getPriority()) {
 			case QueueItem::PAUSED: pos = 0; break;
@@ -997,6 +1002,12 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		if(ii->getAutoPriority())
 			priorityMenu.CheckMenuItem(7, MF_BYPOSITION | MF_CHECKED);
 
+			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
+			removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
+			removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
+			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
+			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
+
 			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 			browseMenu.RemoveFirstItem();
@@ -1006,8 +1017,18 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			readdMenu.RemoveFirstItem();
 
 		} else {
-			multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
 		}		
+
+		singleMenu.RemoveFirstItem();
+		multiMenu.RemoveFirstItem();
+		priorityMenu.RemoveFirstItem();
+		WinUtil::ClearPreviewMenu(browseMenu);
+		WinUtil::ClearPreviewMenu(removeMenu);
+		WinUtil::ClearPreviewMenu(removeAllMenu);
+		WinUtil::ClearPreviewMenu(pmMenu);
+		WinUtil::ClearPreviewMenu(readdMenu);
+		WinUtil::ClearPreviewMenu(previewMenu);
 
 		return TRUE; 
 	}
@@ -1026,7 +1047,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			ctrlDirs.SelectItem(ht);
 		
 		ctrlDirs.ClientToScreen(&pt);
+		dirMenu.InsertSeparatorFirst(STRING(FOLDER));
 		dirMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		priorityMenu.RemoveFirstItem();
+		dirMenu.RemoveFirstItem();
 	
 		return TRUE;
 	}
@@ -1211,6 +1235,18 @@ LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(),!ctrlQueue.getItemData(i)->getAutoPriority());
 		}
 	}
+	return 0;
+}
+
+LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	int i = -1;
+	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		ii->qi->setMaxSegments(wID - 109);
+		ii->update();
+		ctrlQueue.updateItem(ii);
+	}
+
 	return 0;
 }
 

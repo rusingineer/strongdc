@@ -25,7 +25,7 @@ __int64 FileDataInfo::GetBlockEnd(__int64 begin)
 }
 
 
-FileDataInfo::FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks) : sFileName(name), iFileSize(size)
+FileDataInfo::FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks, int maxS) : sFileName(name), iFileSize(size), maxSegments(maxS)
 {
 	WaitForSingleObject(hMutexMapList, INFINITE);
 	vecAllFileDataInfo.push_back(this);
@@ -148,8 +148,8 @@ __int64 FileDataInfo::GetUndlStart()
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 262143;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 524287;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
-	if((SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) || (SETTING(NUMBER_OF_SEGMENTS) == 1))
-		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = (iFileSize) / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
+	if((SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) || (maxSegments == 1))
+		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = iFileSize / maxSegments;
 
 	if((e - b) < SMALLEST_BLOCK_SIZE){
 		ReleaseMutex(hMutex);

@@ -579,7 +579,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 			}
 			else {
 				i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
-				i->upper->columns[COLUMN_HUB] = Util::toString(i->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+				i->upper->columns[COLUMN_HUB] = Util::toString((int)i->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 			}
 		}
 }
@@ -795,7 +795,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 			if(h->pocetUseru > 1) {
 				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
-				h->columns[COLUMN_HUB] = Util::toString(h->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+				h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 			} else {
 				h->columns[COLUMN_USER] = h->user->getNick();
 				h->columns[COLUMN_HUB] = h->user->getClientName();
@@ -871,7 +871,7 @@ void TransferView::ItemInfo::update() {
 		if(user != (User::Ptr)NULL) columns[COLUMN_HUB] = user->getClientName();
 		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
 			if(upper->pocetUseru == 1) upper->columns[COLUMN_HUB] = user->getClientName();
-				else upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+				else upper->columns[COLUMN_HUB] = Util::toString((int)qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 		}
 	}
 	if(colMask & MASK_STATUS) {
@@ -882,7 +882,7 @@ void TransferView::ItemInfo::update() {
 				FileDataInfo* fdi = FileDataInfo::GetFileDataInfo(upper->downloadTarget);
 				if(fdi) {
 					if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
-						upper->columns[COLUMN_STATUS] = upper->statusString;
+						if((statusString != STRING(ALL_SEGMENTS_TAKEN)) && (statusString != "No free block")) upper->columns[COLUMN_STATUS] = upper->statusString;
 					} else if(canDisplayUpper()) {
 							upper->columns[COLUMN_STATUS] = upper->statusString;
 					}
@@ -895,17 +895,7 @@ void TransferView::ItemInfo::update() {
 	if (status == STATUS_RUNNING) {
 		if(type == TYPE_DOWNLOAD) {
 			zc = Util::formatSeconds((celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0);
-
-			if(upper != NULL) {
-				upper->status = ItemInfo::STATUS_RUNNING;
-				if((upper->pocetUseru > 1) || (upper->user == (User::Ptr)NULL)) {
-					upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
-					if(pocetSegmentu>0) upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
-				} else {
-					upper->columns[COLUMN_USER] = user->getNick();
-					upper->columns[COLUMN_HUB] = user->getClientName();
-				}
-			}
+			if(upper != NULL) upper->status = ItemInfo::STATUS_RUNNING;
 		}
 
 		if(colMask & MASK_TIMELEFT) {
@@ -1024,30 +1014,27 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 			}
 		}
 	}	
+		dcdebug("OnConnectionStatus\n");
 
-			dcdebug("OnConnectionStatus\n");
-
-			if(i->Target != i->oldTarget) setMainItem(i);
-			i->oldTarget = i->Target;
-	
-			if(i->upper != NULL) {
-				if(i->qi) {
-					if(i->qi->getCurrents().size() <= 1) {
-						if(IsBadStringPtr(i->upper->statusString.c_str(), 1) == 0) {
-							i->upper->statusString = i->statusString;
-						}
-					}
+		if(i->Target != i->oldTarget) setMainItem(i);
+		i->oldTarget = i->Target;
+	{	
+		Lock l(cs);
+		if(i->upper != NULL) {
+			if(i->qi) {
+				if(i->qi->getActiveSegments().size() < 1) {
+					i->upper->statusString = i->statusString;
 				}
-				i->upper->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
-				i->upper->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
-				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
-				i->upper->file = Util::getFileName(i->qi->getTarget());
-				i->upper->path = Util::getFilePath(i->qi->getTarget());
-				i->upper->size = i->qi->getSize();				
-
-				i->upper->Target = i->Target;
 			}
-	
+			i->upper->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
+			i->upper->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
+			i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
+			i->upper->file = Util::getFileName(i->qi->getTarget());
+			i->upper->path = Util::getFilePath(i->qi->getTarget());
+			i->upper->size = i->qi->getSize();				
+			i->upper->Target = i->Target;
+		}
+	}
 		
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
@@ -1080,7 +1067,7 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 			}
 		} else {
 			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
-			h->columns[COLUMN_HUB] = Util::toString(h->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+			h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 			i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 		}
@@ -1101,10 +1088,9 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		i->oldTarget = i->Target;
 	{
 		Lock l(cs);
-		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1)) {
+		if((i->upper != NULL) && (i->qi->getActiveSegments().size() < 1)) {
 			i->updateMask |= ItemInfo::MASK_HUB;
 			i->upper->statusString = aReason;
-			i->pocetSegmentu = 0;
 		}
 			
 		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
@@ -1145,7 +1131,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 				i->upper->Target = aDownload->getTarget();
 				i->upper->actual = aDownload->getQueueTotal();
 				i->upper->downloadTarget = aDownload->getDownloadTarget();
-				if(i->qi->getCurrents().size() <= 1)
+				if(i->qi->getActiveSegments().size() <= 1)
 					i->upper->statusString = STRING(DOWNLOAD_STARTING);
 		}
 				
@@ -1212,12 +1198,10 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			}
 
 			if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
-			i->pocetSegmentu = NS;
 			i->celkovaRychlost = tmp;
 
 			if(i->upper != NULL) {
 				i->upper->compressRatio = pomerKomprese;
-				i->upper->pocetSegmentu = NS;
 				i->upper->celkovaRychlost = tmp;
 				i->upper->statusString = buf;
 				i->upper->actual = total;
@@ -1272,14 +1256,13 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 	{
 		Lock l(cs);
 		if((i->qi) && (i->upper != NULL)) {
-			if(i->qi->getCurrents().size() <= 1) {
+			if(i->qi->getActiveSegments().size() < 1) {
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = aReason;
 				i->upper->file = Util::getFileName(aDownload->getTarget());
 				i->upper->path = Util::getFilePath(aDownload->getTarget());
 				i->upper->size = aDownload->getSize();
 				i->updateMask |= ItemInfo::MASK_HUB;
-				i->pocetSegmentu = 0;
 			}
 		}
 

@@ -17,6 +17,16 @@
 #define IDC_EXCEPTION_DETAILS           109
 #define IDC_EXPAND_ALL                  109
 #define IDC_COPY_EXCEPTION              110
+#define IDC_SEGMENTONE                  110
+#define IDC_SEGMENTTWO                  111
+#define IDC_SEGMENTTHREE                112
+#define IDC_SEGMENTFOUR                 113
+#define IDC_SEGMENTFIVE                 114
+#define IDC_SEGMENTSIX                  115
+#define IDC_SEGMENTSEVEN                116
+#define IDC_SEGMENTEIGHT                117
+#define IDC_SEGMENTNINE                 118
+#define IDC_SEGMENTTEN                  119
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
 #define IDR_HUB                         129
@@ -424,7 +434,6 @@
 #define IDC_SAVEQUEUE_SPIN              1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define BAA                             1257
-#define IDC_SEG_NUMBER2                 1257
 #define IDC_SEARCH_EDIT                 1257
 #define CAA                             1258
 #define IDC_SEARCH_SPIN                 1258
@@ -683,6 +692,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        279
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1280
-#define _APS_NEXT_SYMED_VALUE           110
+#define _APS_NEXT_SYMED_VALUE           120
 #endif
 #endif

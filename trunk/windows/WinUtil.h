@@ -30,6 +30,7 @@
 
 #include "resource.h"
 #include "CZDCLib.h"
+#include "OMenu.h"
 
 #include <wininet.h>
 
@@ -401,7 +402,7 @@ public:
 	};
 	static tbIDImage ToolbarButtons[];
 
-	static void ClearPreviewMenu(CMenu &previewMenu);
+	static void ClearPreviewMenu(OMenu &previewMenu);
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(int index, string target);
 	static string formatTime(long rest);

@@ -131,7 +131,7 @@ public:
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget), searchString(rhs.searchString),
-		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), added(rhs.added),
+		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), added(rhs.added),
 		tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority)
 	{
 		// Deep copy the source lists
@@ -190,7 +190,12 @@ public:
 		dcassert(isSource(aUser));
 		currents.push_back(*getSource(aUser));
 	}
-	
+
+	void addActiveSegment(const User::Ptr& aUser) {
+		dcassert(isSource(aUser));
+		activeSegments.push_back(*getSource(aUser));
+	}
+
 	bool isCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		return find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end();
@@ -202,6 +207,10 @@ public:
 		dcassert(isSource(aUser));
 		dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
 		currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
+
+		if(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)) != activeSegments.end()) {
+			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)));
+		}
 	}
 
 	int64_t getDownloadedBytes(){
@@ -232,9 +241,12 @@ public:
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
 	GETSET(Source::List, currents, Currents);
+	GETSET(Source::List, activeSegments, ActiveSegments);
 	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
+	GETSET(int, maxSegments, MaxSegments);
+	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

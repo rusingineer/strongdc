@@ -78,6 +78,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH_STRING, onSearchString)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnetLink)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onPriority)
+		COMMAND_RANGE_HANDLER(IDC_SEGMENTONE, IDC_SEGMENTTEN, onSegments)
 		COMMAND_RANGE_HANDLER(IDC_BROWSELIST, IDC_BROWSELIST + menuItems, onBrowseList)
 		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCE, IDC_REMOVE_SOURCE + menuItems, onRemoveSource)
 		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCES, IDC_REMOVE_SOURCES + menuItems, onRemoveSources)
@@ -93,6 +94,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT onPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemoveSource(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemoveSources(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -191,6 +193,7 @@ private:
 		COLUMN_FIRST,
 		COLUMN_TARGET = COLUMN_FIRST,
 		COLUMN_STATUS,
+		COLUMN_SEGMENTS,
 		COLUMN_SIZE,
 		COLUMN_DOWNLOADED,
 		COLUMN_PRIORITY,
@@ -236,6 +239,7 @@ private:
 		enum {
 			MASK_TARGET = 1 << COLUMN_TARGET,
 			MASK_STATUS = 1 << COLUMN_STATUS,
+			MASK_SEGMENTS = 1 << COLUMN_SEGMENTS,
 			MASK_SIZE = 1 << COLUMN_SIZE,
 			MASK_DOWNLOADED = 1 << COLUMN_DOWNLOADED,
 			MASK_PRIORITY = 1 << COLUMN_PRIORITY,
@@ -247,7 +251,7 @@ private:
 			MASK_TTH = 1 << COLUMN_TTH
 		};
 
-		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), target(aQI->getTarget()),
+		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(aQI->getTarget()),
 			searchString(aQI->getSearchString()), path(Util::getFilePath(aQI->getTarget())),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
@@ -324,6 +328,7 @@ private:
 		GETSET(TTHValue*, tth, TTH);		
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
+		QueueItem* qi;
 
 	private:
 
@@ -358,6 +363,7 @@ private:
 	OMenu readdMenu;
 	OMenu dirMenu;
 	OMenu previewMenu;
+	OMenu segmentsMenu;
 	int PreviewAppsSize;
 
 	CButton ctrlShowTree;

@@ -712,6 +712,11 @@ string ResourceManager::strings[] = {
 "By TTH", 
 "By Name", 
 "Enable TTH leaves verification",
+"All segments taken",
+"Segments",
+"Segment",
+"Max number of segments",
+"Disabled",
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1424,4 +1429,9 @@ string ResourceManager::names[] = {
 "SearchForAlternatesTth", 
 "SearchForAlternatesName",
 "Enable403Features",
+"AllSegmentsTaken",
+"Segments",
+"Segment",
+"MaxSegmentsNumber",
+"Disabled",
 };
