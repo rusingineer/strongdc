@@ -22,6 +22,7 @@
 #include "HubManager.h"
 
 #include "ClientManager.h"
+#include "ResourceManager.h"
 #include "CryptoManager.h"
 
 #include "HttpConnection.h"

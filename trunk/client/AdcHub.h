@@ -41,6 +41,8 @@ public:
 	virtual void info(bool alwaysSend);
 	virtual void sendMeMessage(const string& aMessage);
 
+	virtual void cheatMessage(const string&) { } 
+
 	virtual size_t getUserCount() const { return 0;};
 	virtual int64_t getAvailable() const { return 0; };
 	virtual const string& getName() const { return (hub ? hub->getNick() : getAddressPort()); };

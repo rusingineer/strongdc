@@ -101,27 +101,27 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
-#ifdef isCVS
-	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING CVSVERSION);
-#else
-	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
-		exceptionCode, VERSIONSTRING STRONGDCVERSIONSTRING);
-#endif
 
-	buf[8191] = 0;
+	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
+		exceptionCode, VERSIONSTRING);
 
 	f.write(buf, strlen(buf));
 
 	WinUtil::exceptioninfo = Text::toT(buf);
+
+#if defined(isCVS)
+	sprintf(buf, "CVS: %f\r\n", 
+		CVSVERSION);	
+	f.write(buf, strlen(buf));
+	WinUtil::exceptioninfo = Text::toT(buf);
+#endif	
+	
 	OSVERSIONINFOEX ver;
 	WinUtil::getVersionInfo(ver);
 
-	_snprintf(buf, 8191, "Major: %d\r\nMinor: %d\r\nBuild: %d\r\nSP: %d\r\nType: %d\r\n",
+	sprintf(buf, "Major: %d\r\nMinor: %d\r\nBuild: %d\r\nSP: %d\r\nType: %d\r\n",
 		(DWORD)ver.dwMajorVersion, (DWORD)ver.dwMinorVersion, (DWORD)ver.dwBuildNumber,
 		(DWORD)ver.wServicePackMajor, (DWORD)ver.wProductType);
-
-	buf[8191] = 0;
 
 	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
@@ -168,7 +168,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
 	CExceptionDlg dlg;
-	iLastExceptionDlgResult = dlg.DoModal();
+	iLastExceptionDlgResult = dlg.DoModal(WinUtil::mainWnd);
 	ExceptionFunction();
 
 #ifndef _DEBUG
@@ -241,7 +241,7 @@ static void checkCommonControls() {
 	}
 
 	if(dwVersion < PACKVERSION(5,80)) {
-		MessageBox(NULL, _T("Your version of windows common controls is too old for CZDC++ to run correctly, and you will most probably experience problems with the user interface. You should download version 5.80 or higher from the DC++ homepage or from Microsoft directly."), _T("User Interface Warning"), MB_OK);
+		MessageBox(NULL, _T("Your version of windows common controls is too old for StrongDC++ to run correctly, and you will most probably experience problems with the user interface. You should download version 5.80 or higher from the DC++ homepage or from Microsoft directly."), _T("User Interface Warning"), MB_OK);
 	}
 }
 

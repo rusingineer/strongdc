@@ -29,8 +29,8 @@
 #include "Client.h"
 #include "ClientManagerListener.h"
 #include "File.h"
-#include "FastAlloc.h"
 #include "MerkleTree.h"
+#include "FastAlloc.h"
 
 class Upload : public Transfer, public Flags {
 public:
@@ -170,12 +170,6 @@ public:
 		return slots;
 	}
 
-	/**
-	 * @remarks This is defined with GETSET below.
-	 * @return Number of running uploads.
-	 */
-//	int getRunning() { return running; };
-
 	/** @return Number of free slots. */
 	int getFreeSlots() { return max((getSlots() - running), 0); }
 
@@ -193,7 +187,6 @@ public:
 
 	/** @internal */
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
-	int hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.count(aUser); }
 		
 	/** @param aUser Reserve an upload slot for this user and connect. */
 	void reserveSlot(User::Ptr& aUser) {
@@ -205,6 +198,14 @@ public:
 			aUser->connect();	
 	}
 
+	/** @param aUser Reserve an upload slot for this user. */
+	void reserveSlot(const User::Ptr& aUser) {
+		{
+			Lock l(cs);
+			reservedSlots[aUser] = GET_TICK();
+		}
+	}
+	
 	void reserveSlotHour(User::Ptr& aUser) {
 		{
 			Lock l(cs);
@@ -257,7 +258,7 @@ public:
 	UploadQueueItem::UserMap UploadQueueItems;
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
-
+	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
@@ -288,7 +289,7 @@ private:
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
-	void addFailedUpload(User::Ptr User, string file, int64_t pos, int64_t size);
+	void addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size);
 	
 	friend class Singleton<UploadManager>;
 	UploadManager() throw();

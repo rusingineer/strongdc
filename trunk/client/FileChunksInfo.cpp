@@ -79,6 +79,7 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
         iDownloadedSize -= ((*(i+1)) - (*i));
 
 	iBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
+
 	iSmallestBlockSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
 	iSmallestBlockSize = iSmallestBlockSize - (iSmallestBlockSize % iBlockSize);
 

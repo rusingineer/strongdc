@@ -13,8 +13,6 @@
 
 bool CZDCLib::bIsXP = false;
 bool CZDCLib::bGotXP = false; 
-int CZDCLib::iWinVerMajor = -1;
-
 
 bool CZDCLib::isXp() {
 	if (!bGotXP) {
@@ -87,36 +85,6 @@ bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
 
 #define MAX(a,b)            (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
-
-
-int CZDCLib::getWinVerMajor() {
-	if (iWinVerMajor == -1) {
-		OSVERSIONINFO osvi;
-		osvi.dwOSVersionInfoSize = sizeof(osvi);
-		if (GetVersionEx(&osvi) != 0) {
-			iWinVerMajor = osvi.dwMajorVersion;
-		}
-	}
-	return iWinVerMajor;
-}
-
-bool isMDIChildActive(HWND hWnd) {
-	HWND wnd = MainFrame::anyMF->MDIGetActive();
-	dcassert(wnd != NULL);
-	return (hWnd == wnd);
-}
-
-void handleMDIClick(int nID, HWND mdiWindow) {
-	if (isMDIChildActive(mdiWindow)) {
-		::PostMessage(mdiWindow, WM_CLOSE, NULL, NULL);
-		// The following should be dealt with in the respective frame
-		// setButtonPressed(nID, false);
-	} else {
-		CZDCLib::setButtonPressed(nID, true); 
-		MainFrame::anyMF->MDIActivate(mdiWindow);
-	}
-}
-
 #define MIN3(a, b, c) (((a) < (b)) ? ((((a) < (c)) ? (a) : (c))) : ((((b) < (c)) ? (b) : (c))))
 #define MAX3(a, b, c) (((a) > (b)) ? ((((a) > (c)) ? (a) : (c))) : ((((b) > (c)) ? (b) : (c))))
 #define CENTER(a, b, c) ((((a) < (b)) && ((a) < (c))) ? (((b) < (c)) ? (b) : (c)) : ((((b) < (a)) && ((b) < (c))) ? (((a) < (c)) ? (a) : (c)) : (((a) < (b)) ? (a) : (b))))

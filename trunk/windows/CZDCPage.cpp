@@ -40,7 +40,6 @@ PropPage::Item CZDCPage::items[] = {
 CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::EMPTY_WORKING_SET, ResourceManager::SETTINGS_EMPTY_WORKING_SET },
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
-	{ SettingsManager::SEARCH_TTH_ONLY, ResourceManager::SETTINGS_ONLY_TTH },
 	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
 	{ SettingsManager::DEBUG_COMMANDS, ResourceManager::SETTINGS_DEBUG_COMMANDS },
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
@@ -54,6 +53,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
 	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
+	{ SettingsManager::DETECT_ZONEALARM, ResourceManager::SETTINGS_ZONE_ALARM },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

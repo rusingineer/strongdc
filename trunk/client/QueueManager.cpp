@@ -25,9 +25,10 @@
 #include "SearchManager.h"
 #include "ClientManager.h"
 #include "DownloadManager.h"
-#include "CryptoManager.h"
 #include "ShareManager.h"
 #include "LogManager.h"
+#include "ResourceManager.h"
+#include "version.h"
 
 #include "UserConnection.h"
 #include "SimpleXML.h"
@@ -218,6 +219,9 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
         if(find(recent.begin(), recent.end(), q->getTarget()) != recent.end())
 			continue;
 
+		if(q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
+			continue;
+
 		cand = q;
 	}
 	return cand;
@@ -289,18 +293,22 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
+	bool fNext = false;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
 		if(i != userQueue[p].end()) {
 			dcassert(!i->second.empty());
-			if(pNext == NULL){
+			if(pNext == NULL || fNext){
 				return i->second.front();
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
-				if(iQi != i->second.end() && (*iQi) != i->second.back()){
+                if(iQi != i->second.end()){
+                    fNext = true;   // found, next is target
+
 					iQi++;
+                    if(iQi != i->second.end())
 					return *iQi;
 				}
 			}
@@ -491,9 +499,22 @@ QueueManager::~QueueManager() throw() {
 
 void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	string searchString;
-	string fname;
+
 	{
 		Lock l(cs);
+		QueueItem::UserMap& um = userQueue.getRunning();
+
+		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
+			QueueItem* q = j->second;
+			if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+				dcassert(q->getCurrentDownload() != NULL);
+				q->setDownloadedBytes(q->getCurrentDownload()->getPos());
+			}
+			if(q->getAutoPriority())
+				setPriority(q->getTarget(), q->calculateAutoPriority());
+		}
+		if(!um.empty())
+			setDirty();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
@@ -504,19 +525,17 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 			QueueItem* qi = fileQueue.findAutoSearch(recent);
 			if(qi != NULL && qi->getTTH()) {
 				searchString = qi->getTTH()->toBase32();
-				fname = Util::getFileName(qi->getTargetFileName());
 				recent.push_back(qi->getTarget());
-			}else
+				nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
+				SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE);
+				if(BOOLSETTING(REPORT_ALTERNATES))
+					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()), true);		
+			} else {
 				recent.clear();
+			}
 		}
 	}
 
-	if(!searchString.empty()){
-		SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE);
-		nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
-		if(BOOLSETTING(REPORT_ALTERNATES))
-			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
-	}
 }
 
 void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, const string& aTarget, 
@@ -1677,8 +1696,9 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		}
 	}
 
-	if(added && wantConnection && sr->getUser()->isOnline())
+	if(added && sr->getUser()->isOnline() && wantConnection)
 		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser());
+
 }
 
 // ClientManagerListener
@@ -1704,26 +1724,16 @@ void QueueManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser
 void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	{
 		Lock l(cs);
-		QueueItem::List um = getRunningFiles();
 
 		if(BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
+			QueueItem::List um = getRunningFiles();
 			for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
 				QueueItem* q = *j;
-
-//				if(q->getAutoPriority()) {
-//					q->setPriority(q->calculateAutoPriority());
-//				}
-				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-					if(q->getCurrentDownload() != NULL)
-						q->setDownloadedBytes(q->getCurrentDownload()->getPos());
-				}
 				fire(QueueManagerListener::StatusUpdated(), q);
 			}
 		}
-		if(!um.empty())
-			setDirty();
 	}
-	if((lastSave + SETTING(AUTOSAVE_QUEUE)*1000 + 1000) < aTick) {
+	if(dirty && ((lastSave + SETTING(AUTOSAVE_QUEUE)*1000) < aTick)) {
 		saveQueue();
 	}
 }

@@ -96,7 +96,8 @@ public:
 	virtual void info(bool alwaysSend) = 0;
 	virtual void sendMeMessage(const string& aMessage) = 0;
 	virtual void sendRaw(const string& aRaw) = 0;
-    
+	virtual void cheatMessage(const string& aLine) = 0;
+
 	virtual size_t getUserCount() const = 0;
 	virtual int64_t getAvailable() const = 0;
 	virtual const string& getName() const = 0;
@@ -151,10 +152,6 @@ public:
 			case 5: return rawFive;
 		}
 		return Util::emptyString;
-	}
-
-	void addLine(const string& line) {
-		fire(ClientListener::CheatMessage(), this, line);
 	}
 
 	virtual string escape(string const& str) const { return str; };

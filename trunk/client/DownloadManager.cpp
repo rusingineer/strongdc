@@ -21,6 +21,7 @@
 
 #include "DownloadManager.h"
 
+#include "ResourceManager.h"
 #include "ConnectionManager.h"
 #include "QueueManager.h"
 #include "CryptoManager.h"

@@ -578,7 +578,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 		ctrlUsers.getItemData(item->iItem)->getList();
 		          break;
 		    case 1: {
-	              CAtlString sUser = ctrlUsers.getItemData(item->iItem)->user->getNick().c_str();
+	              CAtlString sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->user->getNick()).c_str();
 	              CAtlString sText = "";
 	              int iSelBegin, iSelEnd;
 	              ctrlMessage.GetSel(iSelBegin, iSelEnd);

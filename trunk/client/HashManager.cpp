@@ -20,7 +20,7 @@
 #include "DCPlusPlus.h"
 
 #include "HashManager.h"
-#include "CryptoManager.h"
+#include "ResourceManager.h"
 #include "SimpleXML.h"
 #include "LogManager.h"
 #include "File.h"
