@@ -123,11 +123,8 @@ BOOL GetNextFrameHeader(HANDLE hFile, MP3FRAMEHEADER* pHeader, int nPassBytes)
 	return (pHeader->framesync == 0x7FF);
 }
 
-void FinishedManager::onAction(DownloadManagerListener::Types type, Download* d) throw()
+void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 {
-	switch(type) {
-	case DownloadManagerListener::COMPLETE:
-		{
 		if(!d->isSet(Download::FLAG_USER_LIST))	
 		{	if (!SETTING(FINISHFILE).empty())
 					PlaySound(SETTING(FINISHFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -291,7 +288,7 @@ void FinishedManager::onAction(DownloadManagerListener::Types type, Download* d)
 			Lock l(cs);
 			MP3downloads.push_back(item);
 
-			fire(FinishedManagerListener::ADDED_MP3, item);
+			fire(FinishedManagerListener::Added_MP3Dl(), item);
 			File::deleteFile(d->getTarget());
 
 		} else
@@ -312,25 +309,17 @@ void FinishedManager::onAction(DownloadManagerListener::Types type, Download* d)
 					downloads.push_back(item);
 				}
 			
-				fire(FinishedManagerListener::ADDED_DL, item);
+				fire(FinishedManagerListener::AddedDl(), item);
 			}
 				char* buf = new char[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128];
 				sprintf(buf, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
 					d->getUserConnection()->getUser()->getNick().c_str());
-				LogManager::getInstance()->message(buf);
+				LogManager::getInstance()->message(buf, true);
 				delete[] buf;
-		}
-		break;		
-	default:
-		break;
-	}
 }
 
-void FinishedManager::onAction(UploadManagerListener::Types type, Upload* u) throw()
+void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 {
-	switch(type) {
-	case UploadManagerListener::COMPLETE:
-		{
 			if(!u->isSet(Download::FLAG_USER_LIST))	
 		{	if (!SETTING(UPLOADFILE).empty())
 					PlaySound(SETTING(UPLOADFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -345,12 +334,7 @@ void FinishedManager::onAction(UploadManagerListener::Types type, Upload* u) thr
 					uploads.push_back(item);
 				}
 
-				fire(FinishedManagerListener::ADDED_UL, item);
-			}
-		}
-		break;	
-	default:
-		break;
+		fire(FinishedManagerListener::AddedUl(), item);
 	}
 }
 

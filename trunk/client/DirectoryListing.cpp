@@ -30,6 +30,7 @@
 #include "FilteredFile.h"
 #include "BZUtils.h"
 #include "CryptoManager.h"
+#include "User.h"
 
 void DirectoryListing::loadFile(const string& name, bool doAdl) {
 	string txt;
@@ -220,7 +221,8 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
 		if(uziv->isOnline())
 		{
 			uziv->setGenerator(generator);
-			uziv->update();
+//			uziv->update();
+//			User::updated(uziv);
 		}
 		
 

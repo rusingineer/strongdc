@@ -261,20 +261,19 @@ private:
 	HDC hDCDB; // Double buffer DC
 	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC
 
-	void onConnectionAdded(ConnectionQueueItem* aCqi);
-	void onConnectionConnected(ConnectionQueueItem* /*aCqi*/) { };
-	void onConnectionFailed(ConnectionQueueItem* aCqi, const string& aReason);
-	void onConnectionRemoved(ConnectionQueueItem* aCqi);
-	void onConnectionStatus(ConnectionQueueItem* aCqi);
+	virtual void on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) throw();
+	virtual void on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) throw();
+	virtual void on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) throw();
+	virtual void on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) throw();
 
-	void onDownloadComplete(Download* aDownload);
-	void onDownloadFailed(Download* aDownload, const string& aReason);
-	void onDownloadStarting(Download* aDownload);
-	void onDownloadTick(const Download::List& aDownload);
+	virtual void on(DownloadManagerListener::Complete, Download* aDownload) throw() { onTransferComplete(aDownload, false);}
+	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
+	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
+	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
 
-	void onUploadStarting(Upload* aUpload);
-	void onUploadTick(const Upload::List& aUpload);
-	void onUploadComplete(Upload* aUpload);
+	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
+	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
+	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true); }
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload);
 
@@ -284,18 +283,6 @@ private:
 	void Expand(ItemInfo* i, int a);
 	void setMainItem(ItemInfo* i);
 
-	// ConnectionManagerListener
-	virtual void onAction(ConnectionManagerListener::Types type, ConnectionQueueItem* aCqi) throw();
-	virtual void onAction(ConnectionManagerListener::Types type, ConnectionQueueItem* aCqi, const string& aLine) throw();	
-
-	// DownloadManagerListener
-	virtual void onAction(DownloadManagerListener::Types type, Download* aDownload) throw();
-	virtual void onAction(DownloadManagerListener::Types type, const Download::List& dl) throw();
-	virtual void onAction(DownloadManagerListener::Types type, Download* aDownload, const string& aReason) throw();
-
-	// UploadManagerListener
-	virtual void onAction(UploadManagerListener::Types type, Upload* aUpload) throw();
-	virtual void onAction(UploadManagerListener::Types type, const Upload::List& ul) throw();
 };
 
 #endif // __TRANSFERVIEW_H

@@ -27,19 +27,19 @@ class ConnectionQueueItem;
 
 class ConnectionManagerListener {
 public:
-	typedef ConnectionManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	template<int I>	struct X { enum { TYPE = I };  };
 
-	enum Types {
-		ADDED,
-		CONNECTED,
-		REMOVED,
-		FAILED,
-		STATUS_CHANGED
-	};
-	virtual void onAction(Types, ConnectionQueueItem*) throw() { };
-	virtual void onAction(Types, ConnectionQueueItem*, const string&) throw() { };
+	typedef X<0> Added;
+	typedef X<1> Connected;
+	typedef X<2> Removed;
+	typedef X<3> Failed;
+	typedef X<4> StatusChanged;
+
+	virtual void on(Added, ConnectionQueueItem*) throw() { };
+	virtual void on(Connected, ConnectionQueueItem*) throw() { };
+	virtual void on(Removed, ConnectionQueueItem*) throw() { };
+	virtual void on(Failed, ConnectionQueueItem*, const string&) throw() { };
+	virtual void on(StatusChanged, ConnectionQueueItem*) throw() { };
 };
 
 #endif

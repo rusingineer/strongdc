@@ -154,6 +154,18 @@ void UploadQueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	SetSplitterRect(rc);
 }
 
+LRESULT UploadQueueFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	switch(wParam) 
+	{
+	case VK_DELETE:
+		onRemove(0, 0, 0, bHandled);
+		break;
+	default:
+		bHandled = FALSE;
+	}
+	return 0;
+}
+
 LRESULT UploadQueueFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string nick;
 	if (!(nick = getSelectedNick()).empty()) {
@@ -278,21 +290,6 @@ void UploadQueueFrame::LoadAll() {
 		}
 	}
 	updateStatus();
-}
-
-// UploadManagerListener
-void UploadQueueFrame::onAction(UploadManagerListener::Types type, const string& aNick) throw() {
-	switch(type) {
-		case UploadManagerListener::QUEUE_REMOVE_USER: onRemoveUser(aNick); break;
-		default: dcassert(0);
-	}
-}
-
-void UploadQueueFrame::onAction(UploadManagerListener::Types type, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size) throw() {
-	switch(type) {
-		case UploadManagerListener::QUEUE_ADD_FILE: onAddFile(aNick, filename, path, pos, size); break;
-		default: dcassert(0);
-	}
 }
 
 void UploadQueueFrame::onRemoveUser(const string& aNick) {

@@ -188,25 +188,6 @@ LRESULT FinishedFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BO
 	return 0;
 }
 
-void FinishedFrame::onAction(FinishedManagerListener::Types type, FinishedMP3Item* entry) throw() {
-}
-
-void FinishedFrame::onAction(FinishedManagerListener::Types type, FinishedItem* entry) throw() {
-	switch(type) {
-		case FinishedManagerListener::ADDED_DL: PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry); break;
-		case FinishedManagerListener::REMOVED_ALL_DL: 
-			PostMessage(WM_SPEAKER, SPEAK_REMOVE_ALL);
-			totalBytes = 0;
-			totalTime = 0;
-			break;
-		case FinishedManagerListener::REMOVED_DL:
-			totalBytes -= entry->getChunkSize();
-			totalTime -= entry->getMilliSeconds();
-			PostMessage(WM_SPEAKER, SPEAK_REMOVE);
-			break;
-	}
-};
-
 void FinishedFrame::addEntry(FinishedItem* entry) {
 	StringList l;
 	l.push_back(Util::getFileName(entry->getTarget()));

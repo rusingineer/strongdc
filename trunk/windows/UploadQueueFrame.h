@@ -27,7 +27,9 @@ public:
 		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP) {
 		UploadManager::getInstance()->addListener(this);
 	}
-	virtual ~UploadQueueFrame() { }
+	virtual ~UploadQueueFrame() {
+		UploadManager::getInstance()->removeListener(this);
+	}
 
 	// Frame window declaration
 	DECLARE_FRAME_WND_CLASS_EX("UploadQueueFrame", IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
@@ -54,6 +56,8 @@ public:
 		CHAIN_MSG_MAP(splitBase)
 	ALT_MSG_MAP(SHOWTREE_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowTree)
+	ALT_MSG_MAP(UPLOADQUEUE_MESSAGE_MAP)
+		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
 	END_MSG_MAP()
 
 	// Message handlers
@@ -63,6 +67,7 @@ public:
 	LRESULT onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
+	LRESULT onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -159,10 +164,6 @@ private:
 	void LoadAll();
 	void UpdateSearch(int index, BOOL doDelete = TRUE);
 
-	// UploadManagerListener
-	virtual void onAction(Types, const string&) throw();
-	virtual void onAction(Types, const string&, const string &, const string &, const int64_t, const int64_t) throw();
-
 	HTREEITEM GetParentItem();
 
 	// Contained controls
@@ -187,6 +188,14 @@ private:
 
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
+
+	// UploadManagerListener
+	virtual void on(UploadManagerListener::QueueAdd, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size) throw() {
+		onAddFile(aNick, filename, path, pos, size);
+	}
+	virtual void on(UploadManagerListener::QueueRemove, const string& aNick) throw() {
+		onRemoveUser(aNick);
+	}
 };
 
 #endif

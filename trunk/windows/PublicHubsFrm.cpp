@@ -22,6 +22,7 @@
 
 #include "PublicHubsFrm.h"
 #include "HubFrame.h"
+#include "WinUtil.h"
 
 #include "../client/Client.h"
 #include "../client/StringTokenizer.h"

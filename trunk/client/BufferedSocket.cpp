@@ -69,32 +69,26 @@ BufferedSocket::~BufferedSocket() {
 /**
  * Send a chunk of a file
  * @return True if file is finished, false if there's more data to send
- * Modified with throttling routines adapted from DC++k (vs. Alyandon's patches)
  */
 bool BufferedSocket::threadSendFile() {
 	dcassert(file != NULL);
-	// <!-- UPLOAD THROTTLE EXTENSION
 	dcassert(inbufSize >= SMALL_BUFFER_SIZE);
 
 	UploadManager *um = UploadManager::getInstance();
 	size_t s, sendMaximum, start = 0, current= 0;
 	bool throttling;
-	// UPLOAD THROTTLE EXTENSION -->
 	try {
 		for(;;) {
-			// <!-- UPLOAD THROTTLE EXTENSION
 			throttling = BOOLSETTING(THROTTLE_ENABLE);
 			if (throttling) { 
 				start = TimerManager::getTick();
 			}
-			// UPLOAD THROTTLE EXTENSION -->
-   {
+  {
     Lock l(cs);
     if(!tasks.empty())
      return false;
    }
 	
-			// <!-- UPLOAD THROTTLE EXTENSION				
 			if (throttling) {
 				sendMaximum = um->throttleGetSlice();
 				if (sendMaximum < 0) {
@@ -102,15 +96,13 @@ bool BufferedSocket::threadSendFile() {
 					sendMaximum = inbufSize;
 				}
 				s = (u_int32_t)min((int64_t)inbufSize, (int64_t)sendMaximum);
-			}
-			else
-				// UPLOAD THROTTLE EXTENSION -->
+			} else {
 				s = (BOOLSETTING(SMALL_SEND_BUFFER) ? SMALL_BUFFER_SIZE : inbufSize);
+			}
 			size_t valid = file->read(inbuf, s);
 			if(valid > 0) {
 				Socket::write((char*)inbuf, valid);
-				fire(BufferedSocketListener::BYTES_SENT, s, valid);
-				// <!-- UPLOAD THROTTLE EXTENSION
+				fire(BufferedSocketListener::BytesSent(), s, valid);
 				if (throttling) {
 					int32_t cycle_time = um->throttleCycleTime();
 					current = TimerManager::getTick();
@@ -119,9 +111,8 @@ bool BufferedSocket::threadSendFile() {
 						Thread::sleep(sleep_time);
 					}
 				}
-				// UPLOAD THROTTLE EXTENSION -->
    } else {
-    fire(BufferedSocketListener::TRANSMIT_DONE);
+    fire(BufferedSocketListener::TransmitDone());
     return true;
 			}
 		}
@@ -168,7 +159,7 @@ bool BufferedSocket::fillBuffer(char* buf, int bufLen, u_int32_t timeout /* = 0 
 void BufferedSocket::threadConnect() {
 	dcdebug("threadConnect()\n");
 
-	fire(BufferedSocketListener::CONNECTING);
+	fire(BufferedSocketListener::Connecting());
 
 	u_int32_t startTime = GET_TICK();
 	string s;
@@ -305,7 +296,7 @@ void BufferedSocket::threadConnect() {
 		line.clear();
 		setBlocking(true);
 
-		fire(BufferedSocketListener::CONNECTED);
+		fire(BufferedSocketListener::Connected());
 	} catch(const SocketException& e) {
 		if(!getNoproxy() && SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5) {
 			fail("Socks5: " + e.getError());
@@ -318,7 +309,6 @@ void BufferedSocket::threadConnect() {
 
 void BufferedSocket::threadRead() {
 	try {
-		// <!-- DOWNLOAD THROTTLE EXTENSION
 		DownloadManager *dm = DownloadManager::getInstance();
 		unsigned int readsize = inbufSize;
 		bool throttling = false;
@@ -329,10 +319,6 @@ void BufferedSocket::threadRead() {
 			if (throttling)
 			{
 				getMaximum = dm->throttleGetSlice();
-				if (getMaximum < 0) {
-					throttling = false;
-					getMaximum = inbufSize;
-				}
 				readsize = (u_int32_t)min((int64_t)inbufSize, (int64_t)getMaximum);
 				if (readsize <= 0  || readsize > inbufSize) { // FIX
 					sleep(dm->throttleCycleTime());
@@ -340,7 +326,6 @@ void BufferedSocket::threadRead() {
 				}
 			}
 		}
-		// DOWNLOAD THROTTLE EXTENSION -->
 		unsigned int i = read(inbuf, readsize);
 		if(i == -1) {
 			// EWOULDBLOCK, no data recived...
@@ -361,11 +346,11 @@ void BufferedSocket::threadRead() {
 
 				if( (pos = l.find(separator)) != string::npos) {
 					if(!line.empty()) {
-						fire(BufferedSocketListener::LINE, line + l.substr(0, pos));
+						fire(BufferedSocketListener::Line(), line + l.substr(0, pos));
 						line.clear();
 					} else {
 						if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
-						fire(BufferedSocketListener::LINE, l.substr(0, pos));
+						fire(BufferedSocketListener::Line(), l.substr(0, pos));
 					}
 					i-=(pos + sizeof(separator));
 					bufpos += (pos + sizeof(separator));
@@ -375,22 +360,21 @@ void BufferedSocket::threadRead() {
 				}
 			} else if(mode == MODE_DATA) {
 				if(dataBytes == -1) {
-					fire(BufferedSocketListener::DATA, inbuf+bufpos, i);
+					fire(BufferedSocketListener::Data(), inbuf+bufpos, i);
 					bufpos+=i;
 					i = 0;
 				} else {
 					int high = (int)min(dataBytes, (int64_t)i);
-					fire(BufferedSocketListener::DATA, inbuf+bufpos, high);
+					fire(BufferedSocketListener::Data(), inbuf+bufpos, high);
 					bufpos += high;
 					i-=high;
 
 					dataBytes -= high;
 					if(dataBytes == 0) {
 						mode = MODE_LINE;
-						fire(BufferedSocketListener::MODE_CHANGE, MODE_LINE);
+						fire(BufferedSocketListener::ModeChange());
 					}
 				}
-				// <!-- DOWNLOAD THROTTLE EXTENSION
 				if (throttling) {
 					if (i > 0 && i < readsize) {
 						dm->throttleReturnBytes(i - readsize);
@@ -398,7 +382,6 @@ void BufferedSocket::threadRead() {
 					u_int32_t sleep_interval =  dm->throttleCycleTime();
 					Thread::sleep(sleep_interval);
 				}
-				// DOWNLOAD THROTTLE EXTENSION -->
 			}
 		}
 	} catch(const SocketException& e) {

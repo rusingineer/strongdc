@@ -18,7 +18,7 @@
 
 #define APPNAME "StrongDC++"
 #define VERSIONSTRING "1.00"
-#define DCVERSIONSTRING "0.401"
+#define DCVERSIONSTRING "0.402"
 #define VERSIONFLOAT 1.00
 #define CZDCVERSIONSTRING " RC5.5 Debug"
 

@@ -665,7 +665,8 @@ string ResourceManager::strings[] = {
 "Copy magnet link to clipboard",
 "Seconds",
 "Debug commands",
-"Autosave queue every"
+"Autosave queue every",
+"Hub / Segments"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1331,5 +1332,6 @@ string ResourceManager::names[] = {
 "CopyMagnetLink",
 "Seconds",
 "SettingsDebugCommands",
-"AutoSaveQueue"
+"AutoSaveQueue",
+"HubAndSegments"
 };

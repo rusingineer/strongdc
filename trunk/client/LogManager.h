@@ -26,18 +26,14 @@
 #include "File.h"
 #include "CriticalSection.h"
 #include "Singleton.h"
+#include "TimerManager.h"
 
 class LogManagerListener {
 public:
-	typedef LogManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	template<int I>	struct X { enum { TYPE = I };  };
 
-	enum Types {
-		MESSAGE			// Short message to be shown in UI
-	};
-
-	virtual void onAction(Types, const string&) throw() { };
+	typedef X<0> Message;
+	virtual void on(Message, const string&) throw() { };
 };
 
 class LogManager : public Singleton<LogManager>, public Speaker<LogManagerListener>
@@ -55,14 +51,36 @@ public:
 	}
 
 	void logDateTime(const string& area, const string& msg) throw() {
-		char buf[22];
-		time_t now = time(NULL);
-		strftime(buf, 22, "%Y-%m-%d %H:%M:%S ", localtime(&now));
-		log(area, buf + msg);
+		log(area, Util::formatTime("%Y-%m-%d %H:%M:%S ", TimerManager::getInstance()->getTime()) + msg);
 	}
 
-	void message(const string& m) {
-		fire(LogManagerListener::MESSAGE, m);
+	void message(const string& msg, bool logit) {
+		if (BOOLSETTING(LOG_SYSTEM) && logit) {
+			log("system", Util::formatTime("%Y-%m-%d %H:%M:%S: ", TimerManager::getInstance()->getTime()) + msg);
+		}
+		fire(LogManagerListener::Message(), msg);
+	}
+
+	string logTail(const string& area, const int lines) throw(){
+		try{
+			string file = File(Util::validateFileName(SETTING(LOG_DIRECTORY) + area + ".log"), File::READ, File::OPEN).read();
+			string::size_type i = -1;
+			int c = 0;
+
+			while(c<=lines){
+				i = file.rfind('\n', i-1);
+				if(i == string::npos){
+					i=-1;
+					break;
+				}
+				c++;
+			}
+
+			return file.substr(i+1);
+		}catch (const FileException&) {
+			//...
+		}
+		return "";
 	}
 
 private:
@@ -76,6 +94,7 @@ private:
 
 #define LOG(area, msg) LogManager::getInstance()->log(area, msg)
 #define LOGDT(area, msg) LogManager::getInstance()->logDateTime(area, msg)
+#define LOGTAIL(area, lines) LogManager::getInstance()->logTail(area, lines)
 
 #endif // !defined(AFX_LOGMANAGER_H__73C7E0F5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_)
 

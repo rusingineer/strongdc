@@ -413,20 +413,20 @@ private:
 	//INT WINAPI getTTHFromFile();
 
 	// LogManagerListener
-	virtual void onAction(LogManagerListener::Types, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };
+	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };
 
 	// TimerManagerListener
-	virtual void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute type, u_int32_t aTick) throw();
 	
 	void updateShutdown(u_int32_t aTick);
 
 	// HttpConnectionListener
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* conn, string const& /*aLine*/) throw();
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const BYTE* buf, int len) throw();	
-	void onHttpComplete(HttpConnection* aConn);
+	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
+	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const BYTE* buf, int len) throw();	
 
 	// QueueManagerListener
-	virtual void onAction(QueueManagerListener::Types type, QueueItem* qi) throw();
+	virtual void on(QueueManagerListener::Finished, QueueItem* qi) throw();
 	void checkFileList(string file, User::Ptr u);
 };
 

@@ -1,20 +1,3 @@
-/* 
- * Copyright (C) 2001-2003 sickb0y, sickb0y@p2pitalia.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
 #if !defined(__RECENTS_FRAME_H__)
 #define __RECENTS_FRAME_H__
 
@@ -27,22 +10,21 @@
 #include "WinUtil.h"
 #include "../client/HubManager.h"
 
-#define SERVER_MESSAGE_MAP 7
-
-class RecentHubsFrame : public MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS>, public StaticFrame<RecentHubsFrame, ResourceManager::RECENT_HUBS, IDC_RECENTS>, private HubManagerListener
+class RecentHubsFrame : public MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS>, public StaticFrame<RecentHubsFrame, ResourceManager::RECENT_HUBS, IDC_RECENTS>, 
+	private HubManagerListener
 {
 public:
-	RecentHubsFrame() : nosave(true), closed(false) { };
+	typedef MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS> baseClass;
+		
+	RecentHubsFrame() : closed(false) { };
 	virtual ~RecentHubsFrame() { };
 
 	DECLARE_FRAME_WND_CLASS_EX("RecentHubsFrame", IDR_RECENTS, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		frame = NULL;
 		delete this;
 	}
 
-	typedef MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS> baseClass;
 	BEGIN_MSG_MAP(RecentHubsFrame)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
@@ -53,8 +35,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_ALL, onRemoveAll)
 		NOTIFY_HANDLER(IDC_HUBLIST, LVN_COLUMNCLICK, onColumnClickHublist)
-		NOTIFY_HANDLER(IDC_HUBLIST, NM_DBLCLK, onDoubleClickHublist)
-		NOTIFY_HANDLER(IDC_HUBLIST, NM_RETURN, onEnter)
+		NOTIFY_HANDLER(IDC_RECENTS, NM_DBLCLK, onDoubleClickHublist)
+		NOTIFY_HANDLER(IDC_RECENTS, NM_RETURN, onEnter)
 		CHAIN_MSG_MAP(baseClass)
 	END_MSG_MAP()
 		
@@ -110,15 +92,13 @@ public:
 		}
 		return 0;
 	}
-	
-	static RecentHubsFrame* frame;
-	
 private:
 	enum {
 		COLUMN_FIRST,
 		COLUMN_NAME = COLUMN_FIRST,
 		COLUMN_DESCRIPTION,
 		COLUMN_USERS,
+		COLUMN_SHARED,
 		COLUMN_SERVER,
 		COLUMN_LAST
 	};
@@ -126,12 +106,11 @@ private:
 	CButton ctrlConnect;
 	CButton ctrlRemove;
 	CButton ctrlRemoveAll;
-
 	CMenu hubsMenu;
 	
 	ExListViewCtrl ctrlHubs;
 
-	bool nosave;
+	bool closed;
 	
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
@@ -145,22 +124,23 @@ private:
 		ctrlHubs.Invalidate();
 	}
 
-	void addEntry(RecentHubEntry* entry, int pos) {
+	void addEntry(const RecentHubEntry* entry, int pos) {
 		StringList l;
 		l.push_back(entry->getName());
 		l.push_back(entry->getDescription());
 		l.push_back(entry->getUsers());
+		l.push_back(Util::formatBytes(entry->getShared()));
 		l.push_back(entry->getServer());
 
 		ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
 	}
-	bool closed;
-	virtual void onAction(HubManagerListener::Types type, RecentHubEntry* entry) throw();
+	
+	virtual void on(RecentAdded, const RecentHubEntry* entry) throw() {
+		addEntry(entry, ctrlHubs.GetItemCount());
+	}
+	virtual void on(RecentRemoved, const RecentHubEntry* entry) throw() {
+		ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry));
+	}
 };
 
 #endif
-
-/**
- * @file
- * $Id$
- */

@@ -49,6 +49,8 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
 	
+	SearchResult(Client* aClient, Types aType, int64_t aSize, const string& name, TTHValue* aTTH);
+
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
 		const string& aHubIpPort, const string& aIp) : 
@@ -65,6 +67,7 @@ public:
 
 	string getFileName() const;
 	string toSR() const;
+	string toRES() const;
 
 	User::Ptr& getUser() { return user; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
@@ -151,7 +154,10 @@ public:
 	void setPort(short aPort) throw(SocketException);
 	void disconnect() throw();
 	void onSearchResult(const string& aLine) {
-		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString, false);
+		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
+	}
+	void onNMDCSearchResult(const string& aLine) {
+		onNMDCData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString, false);
 	}
 	
 private:
@@ -159,6 +165,7 @@ private:
 	Socket* socket;
 	short port;
 	bool stop;
+	bool isoponhub;
 	friend class Singleton<SearchManager>;
 
 	SearchManager() : socket(NULL), port(0), stop(false) {  };
@@ -174,7 +181,8 @@ private:
 		}
 	};
 
-	void onData(const u_int8_t* buf, int aLen, const string& address, bool withSR);
+	void onData(const u_int8_t* buf, int aLen, const string& address);
+	void onNMDCData(const u_int8_t* buf, int aLen, const string& address, bool withSR);
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)

@@ -157,24 +157,16 @@ LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 	return 0;
 };
 
-void SpyFrame::onAction(ClientManagerListener::Types type, const string& s) throw() {
-	switch(type) {
-	case ClientManagerListener::INCOMING_SEARCH:
-		{
+void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& s) throw() {
 			string* x = new string(s);
 			string::size_type i = string::npos;
 			while( (i=x->find('$')) != string::npos) {
 				(*x)[i] = ' ';
 			}
 			PostMessage(WM_SPEAKER, SEARCH, (LPARAM)x);
-		}
-		break;
-	}
 }
 
-void SpyFrame::onAction(TimerManagerListener::Types type, u_int32_t) throw() {
-	switch(type) {
-	case TimerManagerListener::SECOND: 
+void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
 		float* f = new float(0.0);
 		for(int i = 0; i < AVG_TIME; ++i) {
 			(*f) += (float)perSecond[i];
@@ -183,7 +175,6 @@ void SpyFrame::onAction(TimerManagerListener::Types type, u_int32_t) throw() {
 		
 		perSecond[++cur] = 0;
 		PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
-	}
 }
 
 /**

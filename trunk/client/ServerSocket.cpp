@@ -38,18 +38,7 @@ void ServerSocket::waitForConnections(short aPort) throw(SocketException) {
 
 	tcpaddr.sin_family = AF_INET;
 	tcpaddr.sin_port = htons(aPort);
-#ifndef _DEBUG
 	tcpaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#else
-	char sBuf[32];
-	string iniFile = Util::getAppPath() + "debug.ini";
-	::GetPrivateProfileString("net", "IP", "0", sBuf, sizeof(sBuf), iniFile.c_str());
-	unsigned long addr = inet_addr(sBuf);
-	if(addr != INADDR_NONE)
-		tcpaddr.sin_addr.s_addr = addr;
-	else
-		tcpaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#endif
 	
 	if(bind(sock, (sockaddr *)&tcpaddr, sizeof(tcpaddr)) == SOCKET_ERROR) {
 		throw SocketException(errno);

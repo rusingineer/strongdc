@@ -5,6 +5,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
+
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -209,7 +210,10 @@ private:
 	StringList::size_type curCommandPosition;
 
 	// ClientManagerListener
-	virtual void onAction(ClientManagerListener::Types type, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
+		if(aUser == user)
+			PostMessage(WM_SPEAKER, USER_UPDATED);
+	}
 };
 
 #endif // !defined(AFX_PRIVATEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

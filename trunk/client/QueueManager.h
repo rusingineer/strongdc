@@ -121,8 +121,12 @@ public:
 
 	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
 		Lock l(cs);
-		fileQueue.find(sl, aSize, suffix);
-	};
+		QueueItem::List ql;
+		fileQueue.find(ql, aSize, suffix);
+		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
+			sl.push_back((*i)->getTarget());
+		}
+	}
 
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
@@ -164,7 +168,9 @@ public:
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			u_int32_t aAdded, const TTHValue* root, const string& freeBlocks = Util::emptyString) throw(QueueException, FileException);
 		QueueItem* find(const string& target);
-		void find(StringList& sl, int64_t aSize, const string& ext);
+		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
+		void find(QueueItem::List& ql, TTHValue* tth);
+
 		QueueItem* findAutoSearch(StringList& recent);
 		size_t getSize() { return queue.size(); };
 		QueueItem::StringMap& getQueue() { return queue; };
@@ -254,14 +260,14 @@ public:
 	};
 
 	// TimerManagerListener
-	virtual void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();
-	void onTimerMinute(u_int32_t aTick);
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 	
 	// SearchManagerListener
-	virtual void onAction(SearchManagerListener::Types, SearchResult*) throw();
+	virtual void on(SearchManagerListener::SR, SearchResult*) throw();
 
 	// ClientManagerListener
-	virtual void onAction(ClientManagerListener::Types type, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
 };
 
 #endif // !defined(AFX_QUEUEMANAGER_H__07D44A33_1277_482D_AFB4_05E3473B4379__INCLUDED_)

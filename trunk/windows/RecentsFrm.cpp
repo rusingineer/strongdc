@@ -1,21 +1,3 @@
-/* 
- * Copyright (C) 2001-2003 sickb0y, sickb0y@p2pitalia.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -26,26 +8,16 @@
 #include "../client/ClientManager.h"
 #include "../client/StringTokenizer.h"
 #include "WinUtil.h"
-//#include "OToolBar.h"
 
-RecentHubsFrame* RecentHubsFrame::frame = NULL;
-
-int RecentHubsFrame::columnIndexes[] = { COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_USERS, COLUMN_SERVER };
-
-int RecentHubsFrame::columnSizes[] = { 200, 290, 50, 100 };
-
+int RecentHubsFrame::columnIndexes[] = { COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_USERS, COLUMN_SHARED, COLUMN_SERVER };
+int RecentHubsFrame::columnSizes[] = { 200, 290, 50, 50, 100 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::HUB_NAME, ResourceManager::DESCRIPTION, 
-ResourceManager::USERS, ResourceManager::HUB_ADDRESS };
+ResourceManager::USERS, ResourceManager::SHARED, ResourceManager::HUB_ADDRESS
+};
 
 LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	// Only one of this window please...
-	dcassert(frame == NULL);
-	frame = this;
-	
-	SetWindowText(CSTRING(RECENT_HUBS));
-	
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, WS_EX_CLIENTEDGE, IDC_HUBLIST);
+		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_RECENTS);
 	
 	DWORD styles = LVS_EX_HEADERDRAGDROP;
 	if (BOOLSETTING(FULL_ROW_SELECT))
@@ -92,8 +64,6 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	hubsMenu.AppendMenu(MF_STRING, IDC_ADD, CSTRING(ADD_TO_FAVORITES));
 	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE_ALL, CSTRING(REMOVE_ALL));
-
-	nosave = false;
 
 	m_hMenu = WinUtil::mainMenu;
 
@@ -168,15 +138,14 @@ LRESULT RecentHubsFrame::onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		closed = true;		
 		HubManager::getInstance()->removeListener(this);
 
-		CZDCLib::setButtonPressed(IDC_RECENTS, false);
+		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
 		WinUtil::saveHeaderOrder(ctrlHubs, SettingsManager::RECENTFRAME_ORDER, 
-		SettingsManager::RECENTFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+			SettingsManager::RECENTFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
 		MDIDestroy(m_hWnd);
 		return 0;
@@ -211,15 +180,3 @@ void RecentHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	rc.OffsetRect(bwidth+2, 0);
 	ctrlRemoveAll.MoveWindow(rc);
 }
-
-void RecentHubsFrame::onAction(HubManagerListener::Types type, RecentHubEntry* entry) throw() {
-	switch(type) {
-		case HubManagerListener::RECENT_ADDED: addEntry(entry, ctrlHubs.GetItemCount()); break;
-		case HubManagerListener::RECENT_REMOVED: ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry)); break;
-	}
-};
-
-/**
- * @file
- * $Id$
- */

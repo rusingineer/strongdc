@@ -51,7 +51,7 @@ void HashManager::hashDone(const string& aFileName, TigerTree& tth, int64_t spee
 	}
 
 	if(root != NULL) {
-		fire(HashManagerListener::TTH_DONE, aFileName, root);
+		fire(HashManagerListener::TTHDone(), aFileName, root);
 	}
 
 	string fn = aFileName;
@@ -130,6 +130,8 @@ bool HashManager::HashStore::getTree(const string& aFileName, TigerTree& tth) {
 		AutoArray<u_int8_t> buf(datalen);
 		f.read((u_int8_t*)buf, datalen);
 		tth = TigerTree(fi->getSize(), fi->getTimeStamp(), fi->getBlockSize(), buf);
+		if(!(tth.getRoot() == fi->getRoot()))
+			return false;
 	} catch(const FileException& ) {
 		return false;
 	}
@@ -451,8 +453,8 @@ int HashManager::Hasher::run() {
 				procenta = ((pocetHashu-k)*100) / pocetHashu;
 				string rychlost = "";
 				if(speed > 0)				
-					rychlost = Util::formatBytes(speed) + "/s, ";
-				LogManager::getInstance()->message(STRING(CREATING_HASH)+" ("+Util::toString(procenta)+"%, "+rychlost+Util::toString(k)+")....");
+					rychlost = ", "+Util::formatBytes(speed) + "/s ";
+				LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",false);
 				}
 				last = w.empty();
 			} else {
@@ -514,7 +516,7 @@ int HashManager::Hasher::run() {
 		}
 		if (w.size() == 0)
 		{	procenta = 0;			
-			LogManager::getInstance()->message(STRING(HASHING_FINISHED));
+			LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);
 		}
 #ifdef _WIN32
 		if(buf != NULL && (last || stop)) {

@@ -217,8 +217,19 @@ private:
 
 	void addEntry(FinishedItem* entry);
 	
-	virtual void onAction(FinishedManagerListener::Types type, FinishedItem* entry) throw();
-	virtual void onAction(FinishedManagerListener::Types type, FinishedMP3Item* entry) throw();
+	virtual void on(AddedUl, FinishedItem* entry) throw() {
+		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
+	}
+	virtual void on(RemovedUl, FinishedItem* entry) throw() { 
+		totalBytes -= entry->getChunkSize();
+		totalTime -= entry->getMilliSeconds();
+		PostMessage(WM_SPEAKER, SPEAK_REMOVE);
+	}
+	virtual void on(RemovedAllUl) throw() { 
+		PostMessage(WM_SPEAKER, SPEAK_REMOVE_ALL);
+		totalBytes = 0;
+		totalTime = 0;
+	}
 
 	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		PostMessage(WM_CLOSE);

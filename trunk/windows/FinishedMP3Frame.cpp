@@ -111,13 +111,9 @@ LRESULT FinishedMP3Frame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	return 0;
 }
 
-void FinishedMP3Frame::onAction(FinishedManagerListener::Types type, FinishedItem* entry) throw() { }
-void FinishedMP3Frame::onAction(FinishedManagerListener::Types type, FinishedMP3Item* entry) throw() {
-	switch(type) {
-		case FinishedManagerListener::ADDED_MP3: PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
-			//openWindow();
-			break;
-	}
+//void FinishedMP3Frame::on(FinishedManagerListener::AddedDl, FinishedItem* entry) throw() { }
+void FinishedMP3Frame::on(FinishedManagerListener::Added_MP3Dl(), FinishedMP3Item* entry) throw() {
+	PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 };
 
 void FinishedMP3Frame::addEntry(FinishedMP3Item* entry) {

@@ -229,7 +229,6 @@ public:
 	GETSET(bool, noproxy, Noproxy);	
 protected:
 	socket_t sock;
-	struct sockaddr remote_addr_udp; 
 	bool connected;
 
 	static string udpServer;

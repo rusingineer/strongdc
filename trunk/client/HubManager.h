@@ -172,13 +172,14 @@ public:
 	GETSET(string, description, Description);
 	GETSET(string, password, Password);
 	GETSET(bool, connect, Connect);
-	GETSET(int, windowposx, WindowPosX);
-	GETSET(int, windowposy, WindowPosY);
-	GETSET(int, windowsizex, WindowSizeX);
-	GETSET(int, windowsizey, WindowSizeY);
+	GETSET(u_int16_t, windowposx, WindowPosX);
+	GETSET(u_int16_t, windowposy, WindowPosY);
+	GETSET(u_int16_t, windowsizex, WindowSizeX);
+	GETSET(u_int16_t, windowsizey, WindowSizeY);
 	GETSET(int, windowtype, WindowType);
-	GETSET(int, chatusersplit, ChatUserSplit);
+	GETSET(u_int16_t, chatusersplit, ChatUserSplit);
 	GETSET(bool, stealth, Stealth);
+	GETSET(bool, userliststate, UserListState);	
 	// CDM EXTENSION BEGINS FAVS
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
@@ -204,33 +205,34 @@ public:
 	GETSET(string, description, Description);
 	GETSET(string, users, Users);
 	GETSET(bool, connect, Connect);
+	GETSET(string, shared, Shared);
+	
 };
 // iDC++
 
 class HubManagerListener {
 public:
-	typedef HubManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
-	enum Types {
-		DOWNLOAD_STARTING,
-		DOWNLOAD_FAILED,
-		DOWNLOAD_FINISHED,
-// iDC++
-		RECENT_ADDED,
-		RECENT_REMOVED,
-// iDC++
-		FAVORITE_ADDED,
-		FAVORITE_REMOVED,
-		USER_ADDED,
-		USER_REMOVED
-	};
+	template<int I>	struct X { enum { TYPE = I };  };
 
-	virtual void onAction(Types, RecentHubEntry*) throw() { }; // iDC++
-	virtual void onAction(Types, FavoriteHubEntry*) throw() { };
-	virtual void onAction(Types, const string&) throw() { };
-	virtual void onAction(Types, const User::Ptr&) throw() { };
-	virtual void onAction(Types) throw() { };
+	typedef X<0> DownloadStarting;
+	typedef X<1> DownloadFailed;
+	typedef X<2> DownloadFinished;
+	typedef X<3> FavoriteAdded;
+	typedef X<4> FavoriteRemoved;
+	typedef X<5> UserAdded;
+	typedef X<6> UserRemoved;
+	typedef X<7> RecentAdded;
+	typedef X<8> RecentRemoved;
+
+	virtual void on(DownloadStarting, const string&) throw() { }
+	virtual void on(DownloadFailed, const string&) throw() { }
+	virtual void on(DownloadFinished, const string&) throw() { }
+	virtual void on(FavoriteAdded, const FavoriteHubEntry*) throw() { }
+	virtual void on(FavoriteRemoved, const FavoriteHubEntry*) throw() { }
+	virtual void on(UserAdded, const User::Ptr&) throw() { }
+	virtual void on(UserRemoved, const User::Ptr&) throw() { }
+	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
+	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
 };
 
 class SimpleXML;
@@ -253,49 +255,11 @@ public:
 
 	User::List& getFavoriteUsers() { return users; };
 	
-	void addFavoriteUser(User::Ptr& aUser) { 
-		if(find(users.begin(), users.end(), aUser) == users.end()) {
-			users.push_back(aUser);
-			aUser->setFavoriteUser(new FavoriteUser());
-			fire(HubManagerListener::USER_ADDED, aUser);
-			save();
-		}
-	}
+	void addFavoriteUser(User::Ptr& aUser);
+	void removeFavoriteUser(User::Ptr& aUser);
 
-	void removeFavoriteUser(User::Ptr& aUser) {
-		User::Iter i = find(users.begin(), users.end(), aUser);
-		if(i != users.end()) {
-			aUser->setFavoriteUser(NULL);
-			fire(HubManagerListener::USER_REMOVED, aUser);
-			users.erase(i);
-			save();
-		}
-	}
-
-	void addFavorite(const FavoriteHubEntry& aEntry) {
-		FavoriteHubEntry* f;
-
-		FavoriteHubEntry::Iter i = getFavoriteHub(aEntry.getServer());
-		if(i != favoriteHubs.end()) {
-			return;
-		}
-		f = new FavoriteHubEntry(aEntry);
-		favoriteHubs.push_back(f);
-		fire(HubManagerListener::FAVORITE_ADDED, f);
-		save();
-	}
-
-	void removeFavorite(FavoriteHubEntry* entry) {
-		FavoriteHubEntry::Iter i = find(favoriteHubs.begin(), favoriteHubs.end(), entry);
-		if(i == favoriteHubs.end()) {
-			return;
-		}
-		
-		fire(HubManagerListener::FAVORITE_REMOVED, entry);
-		favoriteHubs.erase(i);
-		delete entry;
-		save();
-	}
+	void addFavorite(const FavoriteHubEntry& aEntry);
+	void removeFavorite(FavoriteHubEntry* entry);
 
 	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
@@ -307,38 +271,19 @@ public:
 		return NULL;
 	}
 	
-// iDC++
-	void addRecent(const RecentHubEntry& aEntry) {
-		RecentHubEntry* f;
+	void addRecent(const RecentHubEntry& aEntry);
+	void removeRecent(RecentHubEntry* entry);
 
-		RecentHubEntry::Iter i = getRecentHub(aEntry.getServer());
-		if(i != recentHubs.end()) {
-			return;
+	RecentHubEntry* getRecentHubEntry(const string& aServer) {
+		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
+			RecentHubEntry* r = *i;
+			if(Util::stricmp(r->getServer(), aServer) == 0) {
+				return r;
+			}
 		}
-		f = new RecentHubEntry(aEntry);
-		recentHubs.push_back(f);
-		fire(HubManagerListener::RECENT_ADDED, f);
-		recentsave();
+		return NULL;
 	}
 
-	void removeRecent(RecentHubEntry* entry) {
-		RecentHubEntry::Iter i = find(recentHubs.begin(), recentHubs.end(), entry);
-		if(i == recentHubs.end()) {
-			return;
-		}
-		
-		fire(HubManagerListener::RECENT_REMOVED, entry);
-		recentHubs.erase(i);
-		delete entry;
-		recentsave();
-	}
-
-	void removeallRecent() {
-		recentHubs.clear();
-		recentsave();
-	}
-// iDC++
-	
 	HubEntry::List getPublicHubs() {
 		Lock l(cs);
 		return publicHubs;
@@ -484,6 +429,11 @@ public:
 	}
 	// CDM EXTENSION ENDS
 
+	void removeallRecent() {
+		recentHubs.clear();
+		recentsave();
+	}
+
 	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub) {
 		// No dupes, add it...
 		Lock l(cs);
@@ -555,16 +505,25 @@ public:
 		}
 	}
 
+	void removeHubUserCommands(int ctx, const string& hub) {
+		Lock l(cs);
+		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ) {
+			if(i->getHub() == hub && i->isSet(UserCommand::FLAG_NOSAVE) && i->getCtx() & ctx) {
+				i = userCommands.erase(i);
+			} else {
+				++i;
+			}
+		}
+	}
+
 	UserCommand::List getUserCommands() { Lock l(cs); return userCommands; };
 	UserCommand::List getUserCommands(int ctx, const string& hub, bool op);
 
 	bool isDownloading() { return running; };
 
-// iDC++	
-	void recentsave();
-// iDC++
 	void load();
 	void save();
+	void recentsave();
 private:
 	
 	enum {
@@ -573,12 +532,11 @@ private:
 		// XML addition
 		TYPE_XML,
 		TYPE_XMLBZIP2
-		//
 	} listType;
 
 	HubEntry::List publicHubs;
 	FavoriteHubEntry::List favoriteHubs;
-	RecentHubEntry::List recentHubs; // iDC++
+	RecentHubEntry::List recentHubs;
 	UserCommand::List userCommands;
 	User::List users;
 	// CDM EXTENSION BEGINS (profiles)
@@ -586,6 +544,7 @@ private:
 	int lastProfile;
 	// CDM EXTENSION ENDS
 
+	RWLock rwcs;
 	CriticalSection cs;
 	bool running;
 	HttpConnection* c;
@@ -611,22 +570,10 @@ private:
 		
 		for_each(favoriteHubs.begin(), favoriteHubs.end(), DeleteFunction<FavoriteHubEntry*>());
 		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction<RecentHubEntry*>());
-
 	}
 	
 	string downloadBuf;
 	
-// iDC++
-	RecentHubEntry::Iter getRecentHub(const string& aServer) {
-		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
-			if((*i)->getServer() == aServer) {
-				return i;
-			}
-		}
-		return recentHubs.end();
-	}
-// iDC++
-
 	FavoriteHubEntry::Iter getFavoriteHub(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
 			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
@@ -636,22 +583,34 @@ private:
 		return favoriteHubs.end();
 	}
 
+	RecentHubEntry::Iter getRecentHub(const string& aServer) {
+		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
+			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
+				return i;
+			}
+		}
+		return recentHubs.end();
+	}
 	// HttpConnectionListener
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw();
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const string& aLine) throw();
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/) throw();
+	virtual void on(Data, HttpConnection*, u_int8_t*, size_t) throw();
+	virtual void on(Failed, HttpConnection*, const string&) throw();
+	virtual void on(Complete, HttpConnection*, const string&) throw();
+	virtual void on(Redirected, HttpConnection*, const string&) throw();
+	virtual void on(TypeNormal, HttpConnection*) throw();
+	virtual void on(TypeBZ2, HttpConnection*) throw();
+	virtual void on(TypeXML, HttpConnection*) throw();
+	virtual void on(TypeXMLBZ2, HttpConnection*) throw();
 	
  	void onHttpFinished() throw();
 
 	// SettingsManagerListener
-	virtual void onAction(SettingsManagerListener::Types type, SimpleXML*) throw();
+	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() {
+		load(xml);
+		recentload(xml);
+	}
 
 	void load(SimpleXML* aXml);
-	
-// iDC++
 	void recentload(SimpleXML* aXml);
-	void recentload();
-// iDC++
 };
 
 #endif // !defined(AFX_HUBMANAGER_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)

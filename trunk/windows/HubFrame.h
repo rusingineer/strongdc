@@ -186,12 +186,12 @@ public:
 	void addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
 	void onTab();
-	void runUserCommand(UserCommand& uc);
+	void runUserCommand(::UserCommand& uc);
 
 	void updateEntireUserList();
 		
 	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString, 
-		int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false
+		int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
 		// CDM EXTENSION BEGINS FAVS
 		, const string& rawOne = Util::emptyString
 		, const string& rawTwo = Util::emptyString
@@ -286,11 +286,11 @@ public:
 		}
 		return 0;
 	}
-	
+
 	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		clearUserList();
 		client->addListener(this);
-		client->connect(server);
+		client->connect();
 		return 0;
 	}
 
@@ -364,7 +364,7 @@ private:
 	};
 
 	HubFrame(const string& aServer, const string& aNick, const string& aPassword, const string& aDescription, 
-		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth
+		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
 		// CDM EXTENSION BEGINS FAVS
 		, const string& aRawOne
 		, const string& aRawTwo
@@ -383,9 +383,8 @@ private:
 		clientContainer("edit", this, EDIT_MESSAGE_MAP)
 		, stFilter("")
 	{
-		client = ClientManager::getInstance()->getClient();
-		client->setMe(ClientManager::getInstance()->getUser(SETTING(NICK), client, false)); 
-		client->setUserInfo(BOOLSETTING(GET_USER_INFO));
+		client = ClientManager::getInstance()->getClient(aServer);
+		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : aNick, client, false)); 
 		client->setNick(aNick.empty() ? SETTING(NICK) : aNick);
 		if (!aDescription.empty())
 			client->setDescription(aDescription);
@@ -403,6 +402,11 @@ private:
 		timeStamps = BOOLSETTING(TIME_STAMPS);
 		hubchatusersplit = chatusersplit;
 		client->setStealth(stealth);
+		if(HubManager::getInstance()->getFavoriteHubEntry(server) != NULL) {
+			ShowUserList = userliststate;
+		} else {
+			ShowUserList = BOOLSETTING(GET_USER_INFO);
+		}
 	}
 
 	~HubFrame() {
@@ -485,8 +489,11 @@ private:
 	int hubchatusersplit;
 
 	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick, OMenu *pMenu );
+	bool ShowUserList;
 	
 	void addAsFavorite();
+
+	bool getUserInfo() { return ctrlShowUsers.GetCheck() == BST_CHECKED; }
 
 	void clearUserList() {
 		{
@@ -545,14 +552,24 @@ private:
 	}
 
 	// TimerManagerListener
-	virtual void onAction(TimerManagerListener::Types type, DWORD /*aTick*/) throw();
+	virtual void on(TimerManagerListener::Second, DWORD /*aTick*/) throw();
 
 	// ClientListener
-	virtual void onAction(ClientListener::Types type, Client* client) throw();
-	virtual void onAction(ClientListener::Types type, Client* /*client*/, const string& line) throw();
-	virtual void onAction(ClientListener::Types type, Client* /*client*/, const User::Ptr& user) throw();
-	virtual void onAction(ClientListener::Types type, Client* /*client*/, const User::List& aList) throw();
-	virtual void onAction(ClientListener::Types type, Client* /*client*/, const User::Ptr& user, const string&  line) throw();
+	virtual void on(Connecting, Client*) throw();
+	virtual void on(Connected, Client*) throw();
+	virtual void on(BadPassword, Client*) throw();
+	virtual void on(UserUpdated, Client*, const User::Ptr&) throw();
+	virtual void on(UsersUpdated, Client*, const User::List&) throw();
+	virtual void on(UserRemoved, Client*, const User::Ptr&) throw();
+	virtual void on(Redirect, Client*, const string&) throw();
+	virtual void on(Failed, Client*, const string&) throw();
+	virtual void on(GetPassword, Client*) throw();
+	virtual void on(HubUpdated, Client*) throw();
+	virtual void on(Message, Client*, const string&) throw();
+	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw() ;
+	virtual void on(NickTaken, Client*) throw() ;
+	virtual void on(SearchFlood, Client*, const string&) throw() ;
+	virtual void on(CheatMessage, Client*, const string&) throw() ;	
 
 	void speak(Speakers s) { PostMessage(WM_SPEAKER, (WPARAM)s); };
 	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new string(msg)); };

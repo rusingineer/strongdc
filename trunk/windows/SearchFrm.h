@@ -435,10 +435,10 @@ private:
 			name(aName), op(aOp) { };
 
 		const string& getText(int col) const {
-			return name;
+			return (col == 0) ? name : Util::emptyString;
 		}
 		static int compareItems(HubInfo* a, HubInfo* b, int col) {
-			return Util::stricmp(a->name, b->name);
+			return (col == 0) ? Util::stricmp(a->name, b->name) : 0;
 		}
 		string ipPort;
 		string name;
@@ -526,29 +526,12 @@ private:
 	
 	void download(SearchResult* aSR, const string& aDir, bool view);
 	
-	// SearchManagerListener
-	virtual void onAction(SearchManagerListener::Types type, SearchResult* sr) throw() {
-		switch(type) {
-		case SearchManagerListener::SEARCH_RESULT:
-			onSearchResult(sr); break;
-		}
-	}
-	
-	void onSearchResult(SearchResult* aResult);
+	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 
 	// ClientManagerListener
-	virtual void onAction(ClientManagerListener::Types type, Client* client) throw() {
-		switch(type) {
-			case ClientManagerListener::CLIENT_CONNECTED:
-				speak(HUB_ADDED, client); break;
-			case ClientManagerListener::CLIENT_DISCONNECTED:
-				speak(HUB_REMOVED, client); break;
-			case ClientManagerListener::CLIENT_UPDATED:
-				speak(HUB_CHANGED, client); break;
-			default:
-				break;
-		}
-	}
+	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }
+	virtual void on(ClientUpdated, Client* c) throw() { speak(HUB_CHANGED, c); }
+	virtual void on(ClientDisconnected, Client* c) throw() { speak(HUB_REMOVED, c); }
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

@@ -126,7 +126,7 @@ void FavoriteHubsFrame::openSelected() {
 		HubManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
 			entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth()
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
@@ -153,7 +153,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 		HubManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
 			entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth()
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
@@ -358,13 +358,6 @@ void FavoriteHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	ctrlConnect.MoveWindow(rc);
 
 }
-
-void FavoriteHubsFrame::onAction(HubManagerListener::Types type, FavoriteHubEntry* entry) throw() {
-	switch(type) {
-		case HubManagerListener::FAVORITE_ADDED: addEntry(entry, ctrlHubs.GetItemCount()); break;
-		case HubManagerListener::FAVORITE_REMOVED: ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry)); break;
-	}
-};
 
 /**
  * @file

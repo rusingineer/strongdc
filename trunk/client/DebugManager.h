@@ -35,15 +35,11 @@
 
 class DebugManagerListener {
 public:
-	typedef DebugManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
-	
-	enum Types {
-		DEBUG_MESSAGE,
-	};
+template<int I>	struct X { enum { TYPE = I };  };
 
-	virtual void onAction(Types, const string&) throw() = 0;
+	typedef X<0> DebugMessage;
+
+	virtual void on(DebugMessage, string) throw() { }
 };
 
 class DebugManager : public Singleton<DebugManager>, public Speaker<DebugManagerListener>

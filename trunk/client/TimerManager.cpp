@@ -34,9 +34,9 @@ int TimerManager::run() {
 	while(!s.wait(nextTick > x ? nextTick - x : 0)) {
 		u_int32_t z = getTick();
 		nextTick = z + 1000;
-		fire(TimerManagerListener::SECOND, z);
+		fire(TimerManagerListener::Second(), z);
 		if(nextMin++ >= 60) {
-			fire(TimerManagerListener::MINUTE, z);
+			fire(TimerManagerListener::Minute(), z);
 			nextMin = 0;
 		}
 		x = getTick();

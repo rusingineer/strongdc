@@ -171,8 +171,8 @@ private:
 
 	void addEntry(FinishedMP3Item* entry);
 	
-	virtual void onAction(FinishedManagerListener::Types type, FinishedMP3Item* entry) throw();
-	virtual void onAction(FinishedManagerListener::Types type, FinishedItem* entry) throw();
+	virtual void on(FinishedManagerListener::Added_MP3Dl(), FinishedMP3Item* entry) throw();
+//	virtual void on(FinishedManagerListener::AddedDl(), FinishedItem* entry) throw();
 
 	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		PostMessage(WM_CLOSE);

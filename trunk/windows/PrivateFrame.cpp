@@ -551,13 +551,6 @@ void PrivateFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	
 }
 
-// ClientManagerListener
-void PrivateFrame::onAction(ClientManagerListener::Types type, const User::Ptr& aUser) throw() {
-	if(type == ClientManagerListener::USER_UPDATED && aUser == user) {
-		PostMessage(WM_SPEAKER, USER_UPDATED);
-	}
-}
-
 void PrivateFrame::updateTitle() {
 	if(user->isOnline()) {
 		unsetIconState();

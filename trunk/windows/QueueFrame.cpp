@@ -84,7 +84,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	WinUtil::splitTokens(columnSizes, SETTING(QUEUEFRAME_WIDTHS), COLUMN_LAST);
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
-		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlQueue.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
@@ -242,7 +242,7 @@ void QueueFrame::QueueItemInfo::update() {
 		}
 		if(colMask & MASK_SIZE) {
 			display->columns[COLUMN_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatBytes(getSize());
-			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::toString(getSize());
+			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatNumber(getSize());
 			}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
@@ -305,7 +305,7 @@ void QueueFrame::QueueItemInfo::update() {
 	}
 }
 
-void QueueFrame::onQueueAdded(QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::Added, QueueItem* aQI) {
 	QueueItemInfo* ii = new QueueItemInfo(aQI);
 	{
 		Lock l(cs);
@@ -557,7 +557,7 @@ void QueueFrame::removeDirectories(HTREEITEM ht) {
 	ctrlDirs.DeleteItem(ht);
 }
 
-void QueueFrame::onQueueRemoved(QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
 	QueueItemInfo* qi = NULL;
 	{
 		Lock l(cs);
@@ -578,7 +578,7 @@ void QueueFrame::onQueueRemoved(QueueItem* aQI) {
 	speak(REMOVE_ITEM, qi);
 }
 
-void QueueFrame::onQueueMoved(QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::Moved, QueueItem* aQI) {
 	QueueItemInfo* qi = NULL;
 	QueueItemInfo* qi2 = new QueueItemInfo(aQI);
 	{
@@ -593,7 +593,7 @@ void QueueFrame::onQueueMoved(QueueItem* aQI) {
 	speak(ADD_ITEM,	qi2);
 }
 
-void QueueFrame::onQueueUpdated(QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 	QueueItemInfo* ii = NULL;
 	{
 		Lock l(cs);
@@ -639,7 +639,7 @@ void QueueFrame::onQueueUpdated(QueueItem* aQI) {
 	speak(UPDATE_ITEM, ii);
 }
 
-void QueueFrame::onQueueSearchStringUpdated(QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::SearchStringUpdated, QueueItem* aQI) {
 	QueueItemInfo* ii = NULL;
 	{
 		Lock l(cs);
@@ -1398,19 +1398,6 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 	}
 	ctrlDirs.DeleteItem(item);
 }
-
-void QueueFrame::onAction(QueueManagerListener::Types type, QueueItem* aQI) throw() { 
-	switch(type) {
-	case QueueManagerListener::ADDED: onQueueAdded(aQI); break;
-	case QueueManagerListener::QUEUE_ITEM: onQueueAdded(aQI); break;
-	case QueueManagerListener::REMOVED: onQueueRemoved(aQI); break;
-	case QueueManagerListener::MOVED: onQueueMoved(aQI); break;
-	case QueueManagerListener::SOURCES_UPDATED: onQueueUpdated(aQI); break;
-	case QueueManagerListener::STATUS_UPDATED: onQueueUpdated(aQI); break;
-	case QueueManagerListener::SEARCH_STRING_UPDATED: onQueueSearchStringUpdated(aQI); break;
-	default: break;
-	}
-};
 
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;

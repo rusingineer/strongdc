@@ -27,16 +27,13 @@ class SimpleXML;
 
 class SettingsManagerListener {
 public:
-	typedef SettingsManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	template<int I>	struct X { enum { TYPE = I };  };
 	
-	enum Types {
-		LOAD,
-		SAVE
-	};
-	
-	virtual void onAction(Types, SimpleXML*) throw() = 0;
+	typedef X<0> Load;
+	typedef X<1> Save;
+
+	virtual void on(Load, SimpleXML*) throw() { }
+	virtual void on(Save, SimpleXML*) throw() { }
 };
 
 class SettingsManager : public Singleton<SettingsManager>, public Speaker<SettingsManagerListener>
@@ -63,7 +60,7 @@ public:
 		KICK_MSG_RECENT_11, KICK_MSG_RECENT_12, KICK_MSG_RECENT_13, KICK_MSG_RECENT_14, KICK_MSG_RECENT_15, 
 		KICK_MSG_RECENT_16, KICK_MSG_RECENT_17, KICK_MSG_RECENT_18, KICK_MSG_RECENT_19, KICK_MSG_RECENT_20,
 		DONT_EXTENSIONS, TOOLBAR, TOOLBARIMAGE, TOOLBARHOTIMAGE, USERLIST_IMAGE,
-		UPLOADQUEUEFRAME_ORDER, UPLOADQUEUEFRAME_WIDTHS,
+		UPLOADQUEUEFRAME_ORDER, UPLOADQUEUEFRAME_WIDTHS, CLIENT_ID,
 		STR_LAST };
 
 	enum IntSetting { INT_FIRST = STR_LAST + 1,

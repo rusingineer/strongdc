@@ -28,6 +28,7 @@
 
 #include "CriticalSection.h"
 #include "Singleton.h"
+
 #include "LogManager.h"
 
 class FinishedItem
@@ -92,22 +93,24 @@ private:
 
 class FinishedManagerListener {
 public:
-	typedef FinishedManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	template<int I>	struct X { enum { TYPE = I };  };
 
-	enum Types {
-		ADDED_DL,
-		ADDED_UL,
-		REMOVED_DL,
-		REMOVED_UL,
-		REMOVED_ALL_DL,
-		REMOVED_ALL_UL,
-		ADDED_MP3
-	};
+	typedef X<0> AddedUl;
+	typedef X<1> AddedDl;
+	typedef X<2> RemovedUl;
+	typedef X<3> RemovedDl;
+	typedef X<4> RemovedAllUl;
+	typedef X<5> RemovedAllDl;
+	typedef X<6> Added_MP3Dl;
 
-	virtual void onAction(Types, FinishedItem*) throw() = 0;
-	virtual void onAction(Types, FinishedMP3Item*) throw() = 0;
+	virtual void on(AddedDl, FinishedItem*) throw() { }
+	virtual void on(Added_MP3Dl, FinishedMP3Item*) throw() { }
+	virtual void on(RemovedDl, FinishedItem*) throw() { }
+	virtual void on(RemovedAllDl) throw() { }
+	virtual void on(AddedUl, FinishedItem*) throw() { }
+	virtual void on(RemovedUl, FinishedItem*) throw() { }
+	virtual void on(RemovedAllUl) throw() { }
+
 }; 
 
 class FinishedManager : public Singleton<FinishedManager>,
@@ -131,9 +134,9 @@ public:
 				return;
 		}
 		if (!upload)
-			fire(FinishedManagerListener::REMOVED_DL, item);
+			fire(FinishedManagerListener::RemovedDl(), item);
 		else
-			fire(FinishedManagerListener::REMOVED_UL, item);
+			fire(FinishedManagerListener::RemovedUl(), item);
 		delete item;		
 	}
 
@@ -146,9 +149,9 @@ public:
 			listptr->clear();
 		}
 		if (!upload)
-			fire(FinishedManagerListener::REMOVED_ALL_DL, (FinishedItem *)0);
+			fire(FinishedManagerListener::RemovedAllDl());
 		else
-			fire(FinishedManagerListener::REMOVED_ALL_UL, (FinishedItem *)0);
+			fire(FinishedManagerListener::RemovedAllUl());
 	}
 
 private:
@@ -160,8 +163,8 @@ private:
 	}
 	virtual ~FinishedManager();
 
-	virtual void onAction(DownloadManagerListener::Types type, Download* d) throw();
-	virtual void onAction(UploadManagerListener::Types type, Upload* u) throw();
+	virtual void on(DownloadManagerListener::Complete, Download* d) throw();
+	virtual void on(UploadManagerListener::Complete, Upload*) throw();
 
 	CriticalSection cs;
 	FinishedMP3Item::List MP3downloads;

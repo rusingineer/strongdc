@@ -669,5 +669,6 @@ enum Strings { // @DontAdd
 	SECONDS,
 	SETTINGS_DEBUG_COMMANDS, // "Debug commands"
 	SETTINGS_SAVEQUEUE,
+	HUB_SEGMENTS,
 	LAST // @DontAdd
 };

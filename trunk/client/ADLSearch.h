@@ -235,7 +235,7 @@ public:
 		DirectoryListing::Directory* dir;
 		DirectoryListing::Directory* subdir;
 		bool fileAdded;
-		DestDir() : name(""), dir(NULL), subdir(NULL), fileAdded(false) {}
+		DestDir() : name(""), dir(NULL), subdir(NULL) {}
 	};
 	typedef vector<DestDir> DestDirList;
 
