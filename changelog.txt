@@ -27,6 +27,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * vylepšeny ladící pøíkazy (DCDM++)
 * opraven pád pøi zadání neplatného regulárního výrazu
 * volba pro rozbalení nových výsledkù hledání (BCDC++ SVN)
+* pøidìlení slotu se ihned pøipojí (BCDC++ SVN)
 
 
 	-- StrongDC++ 1.00 RC8 --

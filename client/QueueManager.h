@@ -38,6 +38,7 @@
 #include "SearchManagerListener.h"
 #include "ClientManagerListener.h"
 #include "LogManager.h"
+#include "DownloadManager.h"
 
 STANDARD_EXCEPTION(QueueException);
 
@@ -98,10 +99,10 @@ public:
 	}
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
-		string fileName = "TestSUR"+aUser->getNick();
+		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(fileName, -1, aUser, file, NULL, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR, QueueItem::HIGHEST);
-		aUser->unCacheClientInfo();
+		//aUser->unCacheClientInfo();
 	}
 
 	void removeTestSUR(const string& aNick) {
@@ -179,6 +180,7 @@ public:
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
 				delete i->second;
 			}
+		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
@@ -207,7 +209,6 @@ public:
 		}
 
 	private:
-		void add(QueueItem* qi);
 		QueueItem::StringMap queue;
 		/** A hint where to insert an item... */
 		QueueItem::StringIter lastInsert;

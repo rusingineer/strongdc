@@ -316,7 +316,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 		params["actualsizeshort"] = Util::formatBytes(u->getActual());
 		params["speed"] = Util::formatBytes(u->getAverageSpeed()) + "/s";
 		params["time"] = Util::formatSeconds((GET_TICK() - u->getStart()) / 1000);
-		TTHValue *hash = HashManager::getInstance()->getTTH(u->getFileName());
+		TTHValue *hash = HashManager::getInstance()->getTTH(u->getFileName(), u->getSize());
 		if(hash != NULL) {
 			params["tth"] = hash->toBase32();
 		}
@@ -525,7 +525,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				u->getUserConnection()->disconnect();
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(aUser);
+					reserveSlot(u->getUser());
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}

@@ -10,6 +10,7 @@
 #define COMMAND_MESSAGE_MAP 16
 #define DEBUG_FILTER_MESSAGE_MAP 17
 #define DEBUG_FILTER_TEXT_MESSAGE_MAP 18
+#define CLEAR_MESSAGE_MAP 19
 
 #include "FlatTabCtrl.h"
 #include "WinUtil.h"
@@ -25,7 +26,9 @@ public:
 		detectionContainer(WC_BUTTON, this, DETECTION_MESSAGE_MAP),
 		commandContainer(WC_BUTTON, this, COMMAND_MESSAGE_MAP),
 		cFilterContainer(WC_BUTTON, this, DEBUG_FILTER_MESSAGE_MAP),
-		eFilterContainer(WC_EDIT, this, DEBUG_FILTER_TEXT_MESSAGE_MAP)
+		eFilterContainer(WC_EDIT, this, DEBUG_FILTER_TEXT_MESSAGE_MAP),
+		clearContainer(WC_BUTTON, this, CLEAR_MESSAGE_MAP),
+		statusContainer(STATUSCLASSNAME, this, CLEAR_MESSAGE_MAP)
  { 
 		DebugManager::getInstance()->addListener(this);
 	}
@@ -52,10 +55,13 @@ public:
 		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckFilter)
 	ALT_MSG_MAP(DEBUG_FILTER_TEXT_MESSAGE_MAP)
 		COMMAND_HANDLER(IDC_DEBUG_FILTER_TEXT, EN_CHANGE, onChange)
+ 	ALT_MSG_MAP(CLEAR_MESSAGE_MAP)
+		COMMAND_ID_HANDLER(IDC_CLEAR, onClear)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 		HWND hWnd = (HWND)lParam;
@@ -101,8 +107,8 @@ public:
 private:
 	CEdit ctrlPad, ctrlFilterText;
 	CStatusBarCtrl ctrlStatus;
-	CButton ctrlCommands, ctrlDetection, ctrlFilterIp;
-	CContainedWindow detectionContainer, commandContainer, cFilterContainer, eFilterContainer;
+	CButton ctrlClear, ctrlCommands, ctrlDetection, ctrlFilterIp;
+	CContainedWindow clearContainer, statusContainer, detectionContainer, commandContainer, cFilterContainer, eFilterContainer;
 
 	bool showCommands, showDetection, bFilterIp;
 	tstring sFilterIp;

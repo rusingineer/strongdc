@@ -76,7 +76,7 @@ public:
 		if(search_queue.empty())
 			return false;
 
-		if(GET_TICK() - last_search_time < (SETTING(MINIMUM_SEARCH_INTERVAL)) * 1000) // 30 seconds
+		if(GET_TICK() - last_search_time < (SETTING(MINIMUM_SEARCH_INTERVAL)) * 1000)
 			return false;
 
 		s = search_queue.front();

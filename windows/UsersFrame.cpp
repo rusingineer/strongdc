@@ -185,7 +185,8 @@ void UsersFrame::removeUser(const User::Ptr& aUser) {
 	while((i = ctrlUsers.findItem(Text::toT(aUser->getNick()), i)) != -1) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
 		if(ui->user == aUser) {
-			ctrlUsers.deleteItem(i);
+			ctrlUsers.DeleteItem(i);
+			delete ui;
 			return;
 		}
 	}
@@ -204,7 +205,9 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		WinUtil::saveHeaderOrder(ctrlUsers, SettingsManager::USERSFRAME_ORDER, 
 			SettingsManager::USERSFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
-		ctrlUsers.DeleteAll();
+		for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
+			delete ctrlUsers.getItemData(i);
+		}
 
 		bHandled = FALSE;
 	return 0;
@@ -225,7 +228,7 @@ LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_STATUS) {
-			UserInfo *ui = ctrlUsers.getStoredItemAt(cd->nmcd.lItemlParam);
+			UserInfo *ui = (UserInfo*)cd->nmcd.lItemlParam;
 			if(ui->user->isOnline()) {
 				cd->clrText = RGB(0, 255, 0);
 			} else {
@@ -250,9 +253,9 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		string file = Util::emptyString;
 		string xNick = ui->user->getNick();
 		if (xNick != "") {
-			file = Util::validateFileName(SETTING(LOG_DIRECTORY) + xNick + ".log");
+			file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + xNick + ".log");
 		}
-		if(File::existsFile(file)) {
+		if(Util::fileExists(file)) {
 			ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else {
 			MessageBox(CTSTRING(NO_LOG_FOR_USER),CTSTRING(NO_LOG_FOR_USER), MB_OK );	  

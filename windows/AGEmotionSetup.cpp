@@ -157,7 +157,7 @@ bool CAGEmotionSetup::Create() {
 	}
 	m_nEmotionsCnt = 0;
 
-	if (!File::existsFile(Util::getAppPath() + AGEMOTIONSETUP_FILE))
+	if (!Util::fileExists(Util::getAppPath() + AGEMOTIONSETUP_FILE))
 		return true;
 
 	int nMaxSizeCX = 0;

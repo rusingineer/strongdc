@@ -27,6 +27,7 @@
 #include "ExceptionDlg.h"
 #include "../client/cvsversion.h"
 #include "../client/MerkleTree.h"
+#include "PopupManager.h"
 
 #include <delayimp.h>
 CAppModule _Module;
@@ -155,8 +156,19 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	if ((!SETTING(SOUND_EXC).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(SOUND_EXC)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
+	NOTIFYICONDATA m_nid;
+	m_nid.cbSize = sizeof(NOTIFYICONDATA);
+	m_nid.hWnd = MainFrame::getMainFrame()->m_hWnd;
+	m_nid.uID = 0;
+	m_nid.uFlags = NIF_INFO;
+	m_nid.uTimeout = 5000;
+	m_nid.dwInfoFlags = NIIF_WARNING;
+	_tcscpy(m_nid.szInfo, _T("exceptioninfo.txt was generated"));
+	_tcscpy(m_nid.szInfoTitle, _T("StrongDC++ has crashed"));
+	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+
 	CExceptionDlg dlg;
-	iLastExceptionDlgResult = dlg.DoModal(NULL);
+	iLastExceptionDlgResult = dlg.DoModal();
 	ExceptionFunction();
 
 #ifndef _DEBUG

@@ -211,7 +211,7 @@ LRESULT FinishedULFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPAR
 
 LRESULT FinishedULFrame::onUploadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring filename = Text::toT(SETTING(LOG_DIRECTORY)) + _T("Uploads.log");
-	if(File::existsFile(Text::fromT(filename))){
+	if(Util::fileExists(Text::fromT(filename))){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 	} else {

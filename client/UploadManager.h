@@ -174,25 +174,37 @@ public:
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
 	int hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.count(aUser); }
 		
-	void reserveSlot(const User::Ptr& aUser) {
-		Lock l(cs);
-		reservedSlots[aUser] = GET_TICK() + 600*1000;
+	void reserveSlot(User::Ptr& aUser) {
+		{
+			Lock l(cs);
+			reservedSlots[aUser] = GET_TICK() + 600*1000;
+		}
+		aUser->connect();	
 	}
 
-	void reserveSlotHour(const User::Ptr& aUser) {
-		Lock l(cs);
-		reservedSlots[aUser] = GET_TICK() + 3600*1000;
+	void reserveSlotHour(User::Ptr& aUser) {
+		{
+			Lock l(cs);
+			reservedSlots[aUser] = GET_TICK() + 3600*1000;
+		}
+		aUser->connect();				
 	}
 
-	void reserveSlotDay(const User::Ptr& aUser) {
-		Lock l(cs);
-		reservedSlots[aUser] = GET_TICK() + 24*3600*1000;
+	void reserveSlotDay(User::Ptr& aUser) {
+		{
+			Lock l(cs);
+			reservedSlots[aUser] = GET_TICK() + 24*3600*1000;
+		}
+		aUser->connect();	
 	}
 
-	void reserveSlotWeek(const User::Ptr& aUser) {
-		Lock l(cs);
-		reservedSlots[aUser] = GET_TICK() + 7*24*3600*1000;
-	}
+	void reserveSlotWeek(User::Ptr& aUser) {
+		{
+			Lock l(cs);
+			reservedSlots[aUser] = GET_TICK() + 7*24*3600*1000;
+		}
+		aUser->connect();	
+}
 
 	void unreserveSlot(const User::Ptr& aUser) {
 		SlotIter uis = reservedSlots.find(aUser);

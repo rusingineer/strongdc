@@ -70,11 +70,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aDownloadedBytes, aAdded, root);
 
-	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
-		qi->setAutoPriority(true);
-		qi->setPriority(qi->calculateAutoPriority());
-	}
-
 	qi->setMaxSegments(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
 	qi->setMaxSegmentsInitial(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
 
@@ -82,6 +77,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		if(aTempTarget.empty()) {
 			if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty()) {
 				qi->setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(qi->getTargetFileName(), root));
+
+				// Rename target to temp, import DC++ unfinished download
+				// Added by RevConnect
 				if (File::getSize(qi->getTarget()) > 0 ) {
 					File::ensureDirectory(qi->getTempTarget());
 					File::renameFile(qi->getTarget(), qi->getTempTarget());
@@ -131,6 +129,11 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	if((qi->getDownloadedBytes() > 0))
 		qi->setFlag(QueueItem::FLAG_EXISTS);
 
+	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
+		qi->setAutoPriority(true);
+		qi->setPriority(qi->calculateAutoPriority());
+	}
+
 	dcassert(find(aTarget) == NULL);
 	add(qi);
 	return qi;
@@ -168,6 +171,7 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue* tth) {
 	}
 }
 
+// Updated by RevConnect
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
 	QueueItem* cand = NULL;
 	for(QueueItem::StringIter i = start; i != end; ++i) {
@@ -176,20 +180,19 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST))
 			continue;
-
         // No paused downloads
 		if(q->getPriority() == QueueItem::PAUSED)
 			continue;
 
+		// Only item with tth autosearch
 		if(!q->getTTH())
 			continue;
 
 		// Did we search for it recently?
-        if(find(recent.begin(), recent.end(), q->getTTH()->toBase32()) != recent.end())
+        if(find(recent.begin(), recent.end(), q->getTarget()) != recent.end())
 			continue;
 
 		cand = q;
-
 	}
 	return cand;
 }
@@ -377,6 +380,7 @@ QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTI
 	ClientManager::getInstance()->addListener(this);
 
 	File::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
+	ensurePrivilege();
 };
 
 QueueManager::~QueueManager() { 
@@ -429,8 +433,6 @@ QueueManager::~QueueManager() {
 void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	string searchString;
 	string fname;
-
-
 	{
 		Lock l(cs);
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
@@ -443,14 +445,14 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 			if(qi != NULL && qi->getTTH()) {
 				searchString = qi->getTTH()->toBase32();
 				fname = Util::getFileName(qi->getTargetFileName());
-				recent.push_back(searchString);
-			} else
+				recent.push_back(qi->getTarget());
+			}else
 				recent.clear();
 		}
 	}
 
 	if(!searchString.empty()){
-		SearchManager::getInstance()->search("TTH:" + searchString, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
+		SearchManager::getInstance()->search("TTH:" + searchString, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE, true);
 		nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 		if(BOOLSETTING(REPORT_ALTERNATES))
 			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
@@ -1011,8 +1013,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 				File::deleteFile(aDownload->getTempTarget());
 			}
 		}
-		aDownload->setUserConnection(NULL);
 
+
+		aDownload->setUserConnection(NULL);
 		delete aDownload;
 	}
 
@@ -1398,9 +1401,9 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			QueueItem* qi = qm->fileQueue.find(target);
 
 			if(qi == NULL) {
-				if(tthRoot.empty())	
+				if(tthRoot.empty()) {
 					qi = qm->fileQueue.add(target, size, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, NULL);
-				else {
+				} else {
 					TTHValue root(tthRoot);
 					qi = qm->fileQueue.add(target, size, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, &root);
 				}

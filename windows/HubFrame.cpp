@@ -2063,9 +2063,9 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		}
 	}
 	if(xNick != _T("")) {
-		file = Text::toT(Util::validateFileName(Text::fromT(Text::toT(SETTING(LOG_DIRECTORY)) + xNick + _T(".log"))));
+		file = Text::toT(Util::validateFileName(Text::fromT(Text::toT(SETTING(LOG_DIRECTORY)) + _T("PM\\") + xNick + _T(".log"))));
 	}
-	if(File::existsFile(Text::fromT(file))) {
+	if(Util::fileExists(Text::fromT(file))) {
 		ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	} else {
 		MessageBox(CTSTRING(NO_LOG_FOR_USER),CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
@@ -2076,7 +2076,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 
 LRESULT HubFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring filename = Text::toT(Util::validateFileName(Text::fromT(Text::toT(SETTING(LOG_DIRECTORY)) + Text::toT(client->getAddressPort()) + _T(".log"))));
-	if(File::existsFile(Text::fromT(filename))){
+	if(Util::fileExists(Text::fromT(filename))){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 	} else {

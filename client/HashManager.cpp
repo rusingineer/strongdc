@@ -30,14 +30,17 @@ static const u_int32_t HASH_FILE_VERSION=1;
 
 void HashManager::checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
 	Lock l(cs);
-	if(!store.checkTTH(aFileName, aSize, aTimeStamp)) {
-		hasher.hashFile(aFileName, aSize);	
-	}
+	store.checkTTH(aFileName, aSize, aTimeStamp);
 }
 
-TTHValue* HashManager::getTTH(const string& aFileName) {
+TTHValue* HashManager::getTTH(const string& aFileName, int64_t aSize) {
 	Lock l(cs);
-	return store.getTTH(aFileName);
+	TTHValue* tth = store.getTTH(aFileName);
+	if(tth == NULL){
+		hasher.hashFile(aFileName, aSize);
+		fileCount++;
+	}
+	return tth;
 }
 
 bool HashManager::getTree(const string& aFileName, const TTHValue* root, TigerTree& tt) {

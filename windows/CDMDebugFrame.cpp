@@ -16,8 +16,14 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctrlPad.SetFont(WinUtil::font);
 	
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
-
 	ctrlStatus.Attach(m_hWndStatusBar);
+	statusContainer.SubclassWindow(ctrlStatus.m_hWnd);
+
+	ctrlClear.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_PUSHBUTTON, 0, IDC_CLEAR);
+	ctrlClear.SetWindowText(_T("Clear"));
+	ctrlClear.SetFont(WinUtil::systemFont);
+	clearContainer.SubclassWindow(ctrlClear.m_hWnd);
+
 	ctrlCommands.Create(ctrlStatus.m_hWnd, rcDefault, _T("Commands"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
 	ctrlCommands.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlCommands.SetFont(WinUtil::systemFont);
@@ -74,18 +80,22 @@ void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[5];
+		int w[6];
 		ctrlStatus.GetClientRect(sr);
 
-		int tmp = (sr.Width() / 5) - 4;
-		w[0] = tmp;
+		//int clearButtonWidth = 50;
+		int tmp = ((sr.Width() - 50) / 5) - 4;
+		w[0] = 50;
 		w[1] = w[0] + tmp;
 		w[2] = w[1] + tmp;
 		w[3] = w[2] + tmp;
 		w[4] = w[3] + tmp;
+		w[5] = w[4] + tmp;
 		
-		ctrlStatus.SetParts(5, w);
+		ctrlStatus.SetParts(6, w);
 
+		ctrlStatus.GetRect(0, sr);
+		ctrlClear.MoveWindow(sr);
 		ctrlStatus.GetRect(0, sr);
 		ctrlCommands.MoveWindow(sr);
 		ctrlStatus.GetRect(1, sr);
@@ -128,4 +138,10 @@ void CDMDebugFrame::addLine(const string& aLine) {
 		ctrlPad.SetRedraw(TRUE);
 	}
 	//setDirty();
+}
+
+LRESULT CDMDebugFrame::onClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ctrlPad.SetWindowText(_T(""));
+	ctrlPad.SetFocus();
+	return 0;
 }

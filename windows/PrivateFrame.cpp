@@ -711,7 +711,7 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	string file = Util::emptyString;
 	file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + user->getNick() + ".log");
-	if(File::existsFile(file)) {
+	if(Util::fileExists(file)) {
 		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);
 	} else {
 		MessageBox(CTSTRING(NO_LOG_FOR_USER), CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
