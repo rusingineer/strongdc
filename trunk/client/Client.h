@@ -96,7 +96,7 @@ public:
 	virtual void sendMeMessage(const string& aMessage) = 0;
 	virtual void sendRaw(const string& aRaw) = 0;
     
-	virtual int getUserCount() const = 0;
+	virtual size_t getUserCount() const = 0;
 	virtual int64_t getAvailable() const = 0;
 	virtual const string& getName() const = 0;
 	virtual bool getOp() const = 0;

@@ -66,7 +66,8 @@ private:
 class CRC32Filter {
 public:
 	CRC32Filter() : crc(crc32(0, NULL, 0)) { }
-	void operator()(const void* buf, size_t len) { crc = crc32(crc, (const Bytef*)buf, len); }
+	// TODO 64-bits?
+	void operator()(const void* buf, size_t len) { crc = crc32(crc, (const Bytef*)buf, (uInt)len); }
 	u_int32_t getValue() const { return crc; }
 private:
 	u_int32_t crc;

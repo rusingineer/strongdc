@@ -42,7 +42,7 @@ public:
 	virtual void info();
 	virtual void sendMeMessage(const string& aMessage);
 
-	virtual int getUserCount() const { return 0;};
+	virtual size_t getUserCount() const { return 0;};
 	virtual int64_t getAvailable() const { return 0; };
 	virtual const string& getName() const { return (hub ? hub->getNick() : getAddressPort()); };
 	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };

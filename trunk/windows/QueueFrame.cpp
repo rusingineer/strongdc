@@ -120,22 +120,22 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)readdMenu, CSTRING(READD_SOURCE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)readdMenu, CSTRING(READD_SOURCE));
 	singleMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeMenu, CSTRING(REMOVE_SOURCE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeAllMenu, CSTRING(REMOVE_FROM_ALL));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeMenu, CSTRING(REMOVE_SOURCE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeAllMenu, CSTRING(REMOVE_FROM_ALL));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	
-	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
-	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
+	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
+	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -160,7 +160,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTNINE, ("9 "+STRING(SEGMENTS)).c_str());
 	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, ("10 "+STRING(SEGMENTS)).c_str());
 
- 	dirMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
+ 	dirMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	dirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -853,17 +853,17 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 				mi.fType = MFT_STRING;
 				mi.dwTypeData = (LPSTR)i->getUser()->getNick().c_str();
-				mi.dwItemData = (DWORD)&(*i);
+				mi.dwItemData = (ULONG_PTR)&(*i);
 				mi.wID = IDC_BROWSELIST + menuItems;
 				browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
-				mi.dwItemData = (DWORD)&(*i);
+				mi.dwItemData = (ULONG_PTR)&(*i);
 				mi.wID = IDC_REMOVE_SOURCE + menuItems;
 				removeMenu.InsertMenuItem(menuItems, TRUE, &mi);
-				mi.dwItemData = (DWORD)&(*i);
+				mi.dwItemData = (ULONG_PTR)&(*i);
 				mi.wID = IDC_REMOVE_SOURCES + menuItems;
 				removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
 				if(i->getUser()->isOnline()) {
-					mi.dwItemData = (DWORD)&(*i);
+					mi.dwItemData = (ULONG_PTR)&(*i);
 					mi.wID = IDC_PM + menuItems;
 					pmMenu.InsertMenuItem(menuItems, TRUE, &mi);
 				}
@@ -878,7 +878,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPSTR)i->getUser()->getNick().c_str();
-					mi.dwItemData = (DWORD)&(*i);
+					mi.dwItemData = (ULONG_PTR)&(*i);
 					mi.wID = IDC_READD + readdItems;
 					readdMenu.InsertMenuItem(readdItems, TRUE, &mi);
 					readdItems++;

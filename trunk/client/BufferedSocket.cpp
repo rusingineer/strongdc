@@ -411,10 +411,10 @@ void BufferedSocket::threadRead() {
 	}
 }
 
-void BufferedSocket::write(const char* aBuf, int aLen) throw() {
+void BufferedSocket::write(const char* aBuf, size_t aLen) throw() {
 	{
 		Lock l(cs);
-		int newSize = outbufSize[curBuf];
+		size_t newSize = outbufSize[curBuf];
 		
 		while(newSize < (aLen + outbufPos[curBuf])) {
 			newSize *= 2;

@@ -120,9 +120,9 @@ int ExListViewCtrl::insert(StringList& aList, int iImage, LPARAM lParam) {
 			if(!ascending)
 				comp = -comp;
 
-			if(comp == -1) {
+			if(comp < 0) {
 				high = loc - 1;
-			} else if(comp == 1) {
+			} else if(comp > 0) {
 				low = loc + 1;
 			} else {
 				break;
@@ -146,7 +146,7 @@ int ExListViewCtrl::insert(StringList& aList, int iImage, LPARAM lParam) {
 		if(!ascending)
 			comp = -comp;
 		
-		if(comp == 1)
+		if(comp > 0)
 			loc++;
 	}
 	dcassert(loc >= 0 && loc <= GetItemCount());

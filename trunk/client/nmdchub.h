@@ -177,10 +177,10 @@ public:
 		send(buf);
 	}
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
+		privateMessage(aUser->getNick(), aMessage);
 	}
 	void privateMessage(const User* aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
+		privateMessage(aUser->getNick(), aMessage);
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
@@ -234,7 +234,7 @@ public:
 		send("$OpForceMove $Who:" + aUser->getNick() + "$Where:" + aServer + "$Msg:" + aMsg + "|");
 	}
 
-	int getUserCount() const {
+	size_t getUserCount() const {
 		Lock l(cs);
 		return users.size();
 	}

@@ -607,10 +607,32 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 			}
 #endif
 			f.close();
-			tth->finalize();			
+			tth->finalize();
+
+			if(buf != NULL) {
+				if(virtualBuf) {
+#ifdef _WIN32
+					VirtualFree(buf, 0, MEM_RELEASE);
+#endif
+				} else {
+					delete buf;
+				}
+				buf = NULL;
+				total = 0;
+			}
 			return *tth;
 		} catch(const FileException&) {
-
+			if(buf != NULL) {
+				if(virtualBuf) {
+#ifdef _WIN32
+					VirtualFree(buf, 0, MEM_RELEASE);
+#endif
+				} else {
+					delete buf;
+				}
+				buf = NULL;
+				total = 0;
+			}
 		}
 	}
 	return 0;

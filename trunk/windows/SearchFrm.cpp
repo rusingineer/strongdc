@@ -262,9 +262,9 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	grantMenu.InsertSeparator(0, TRUE, STRING(GRANT_SLOTS_MENU));
 	
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CSTRING(DOWNLOAD));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)targetMenu, CSTRING(DOWNLOAD_TO));
+	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CSTRING(DOWNLOAD_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CSTRING(DOWNLOAD_WHOLE_DIR));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)targetDirMenu, CSTRING(DOWNLOAD_WHOLE_DIR_TO));
+	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CSTRING(DOWNLOAD_WHOLE_DIR_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CSTRING(VIEW_AS_TEXT));
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	resultsMenu.AppendMenu(MF_STRING, IDC_MP3, CSTRING(GET_MP3INFO));
@@ -272,8 +272,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	appendUserItems(resultsMenu);
 	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-2, MF_BYPOSITION);
 	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CSTRING(COPY));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CSTRING(GRANT_SLOTS_MENU));
+	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CSTRING(COPY));
+	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)grantMenu, CSTRING(GRANT_SLOTS_MENU));
 	resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
 	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CSTRING(BITZI_LOOKUP));

@@ -198,7 +198,7 @@ public:
 		return downloads;
 	}
 
-	int getDownloads() {
+	size_t getDownloads() {
 		Lock l(cs);
 		return downloads.size();
 	}

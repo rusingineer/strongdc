@@ -80,7 +80,7 @@ private:
 			}
 		} 
 	}
-	size_t getPos(const string& s, int i, int l) { return (HashFunc()(&s[i], l) % table.size()); }
+	size_t getPos(const string& s, size_t i, size_t l) { return (HashFunc()(&s[i], l) % table.size()); }
 	
 	vector<bool> table;
 };

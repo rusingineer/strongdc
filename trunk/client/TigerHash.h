@@ -38,7 +38,7 @@ public:
 	}
 
 	/** Calculates the Tiger hash of the data. */
-	void update(const void* data, u_int32_t len);
+	void update(const void* data, size_t len);
 	/** Call once all data has been processed. */
 	u_int8_t* finalize();
 
