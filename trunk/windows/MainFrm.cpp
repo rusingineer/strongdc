@@ -513,29 +513,10 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		delete &str;
-	} else if(wParam == AUTO_CONNECT) {
-		autoConnect(HubManager::getInstance()->getFavoriteHubs());
-	} else if(wParam == PARSE_COMMAND_LINE) {
-		parseCommandLine(GetCommandLine());
-	} else if(wParam == STATUS_MESSAGE) {
-		tstring* msg = (tstring*)lParam;
-		if(ctrlStatus.IsWindow()) {
-			tstring line = Text::toT("[" + Util::getShortTimeString() + "] ") + *msg;
 
-			ctrlStatus.SetText(0, line.c_str());
-			while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
-				lastLinesList.erase(lastLinesList.begin());
-			if (line.find(_T('\r')) == string::npos) {
-				lastLinesList.push_back(line);
-			} else {
-				lastLinesList.push_back(line.substr(0, line.find(_T('\r'))));
-			}
-		}
-		delete msg;
-	} else if(wParam == UPDATE_SHUTDOWN) {
-		u_int32_t aTick = (u_int32_t)lParam;
-		u_int32_t iSec = (aTick / 1000);
 		if (bShutdown) {
+			u_int32_t aTick = (u_int32_t)GET_TICK();
+			u_int32_t iSec = (aTick / 1000);
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
@@ -570,6 +551,25 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				}
 			}
 		}
+	} else if(wParam == AUTO_CONNECT) {
+		autoConnect(HubManager::getInstance()->getFavoriteHubs());
+	} else if(wParam == PARSE_COMMAND_LINE) {
+		parseCommandLine(GetCommandLine());
+	} else if(wParam == STATUS_MESSAGE) {
+		tstring* msg = (tstring*)lParam;
+		if(ctrlStatus.IsWindow()) {
+			tstring line = Text::toT("[" + Util::getShortTimeString() + "] ") + *msg;
+
+			ctrlStatus.SetText(0, line.c_str());
+			while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
+				lastLinesList.erase(lastLinesList.begin());
+			if (line.find(_T('\r')) == string::npos) {
+				lastLinesList.push_back(line);
+			} else {
+				lastLinesList.push_back(line.substr(0, line.find(_T('\r'))));
+			}
+		}
+		delete msg;
 	} else if(wParam == SHOW_POPUP) {
 		Popup* msg = (Popup*)lParam;
 		PopupManager::getInstance()->Show(Text::fromT(msg->Message), Text::fromT(msg->Title), msg->Icon);
@@ -859,8 +859,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 					, Text::toT(entry->getRawThree())
 					, Text::toT(entry->getRawFour())
 					, Text::toT(entry->getRawFive())
-					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
-					, entry->getColumsOrder(), entry->getColumsWidth(), entry->getColumsVisible());
+					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
  			} else
  				missedAutoConnect = true;
  		}				
@@ -1312,30 +1311,29 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		int64_t updiff = Socket::getTotalUp() - lastUp;
 		int64_t downdiff = Socket::getTotalDown() - lastDown;
 
-		// Limitery sem a tam, vsude kam se podivam :o)
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
-			}
-			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
-			}
-		}
-
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
-			}
-			if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
-			}
-		}
-
-		time_t currentTime;
-		time(&currentTime);
-		int currentHour = localtime(&currentTime)->tm_hour;
-
 		if(BOOLSETTING(THROTTLE_ENABLE)) {
+			// Limitery sem a tam, vsude kam se podivam :o)
+			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
+				}
+				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
+				}
+			}
+
+			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
+				}
+				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
+				}
+			}
+
+			time_t currentTime;
+			time(&currentTime);
+			int currentHour = localtime(&currentTime)->tm_hour;
 			if (SETTING(TIME_DEPENDENT_THROTTLE) &&
 				((SETTING(BANDWIDTH_LIMIT_START) < SETTING(BANDWIDTH_LIMIT_END) &&
 					currentHour >= SETTING(BANDWIDTH_LIMIT_START) && currentHour < SETTING(BANDWIDTH_LIMIT_END)) ||
@@ -1356,7 +1354,7 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 		TStringList* str = new TStringList();
 		str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
-		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getShareSizeString())));
+		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getSharedSize())));
 		str->push_back(Text::toT("H: " + Client::getCounts()));
 		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
 		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
@@ -1369,9 +1367,10 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
-		if(currentPic != SETTING(BACKGROUND_IMAGE)) { currentPic = SETTING(BACKGROUND_IMAGE); m_PictureWindow.Load(Text::toT(currentPic).c_str()); }
-
-		PostMessage(WM_SPEAKER, UPDATE_SHUTDOWN, (LPARAM)aTick);
+		if(currentPic != SETTING(BACKGROUND_IMAGE)) {
+			currentPic = SETTING(BACKGROUND_IMAGE);
+			m_PictureWindow.Load(Text::toT(currentPic).c_str());
+		}
 }
 
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {

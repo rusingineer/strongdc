@@ -25,7 +25,7 @@
 #include "SettingsManager.h"
 
 ZFilter::ZFilter() : totalIn(0), totalOut(0) {
-	memset(&zs, 0, sizeof(zs));
+	memset(&zs, 0, sizeof(z_stream));
 
 	if(deflateInit(&zs, /*Z_DEFAULT_COMPRESSION*/ SETTING(MAX_COMPRESSION)) != Z_OK) {
 		throw Exception(STRING(COMPRESSION_ERROR));
@@ -70,7 +70,7 @@ bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outs
 }
 
 UnZFilter::UnZFilter() {
-	memset(&zs, 0, sizeof(zs));
+	memset(&zs, 0, sizeof(z_stream));
 
 	if(inflateInit(&zs) != Z_OK) 
 		throw Exception(STRING(DECOMPRESSION_ERROR));

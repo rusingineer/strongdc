@@ -205,7 +205,7 @@ public:
 
 	GETSET(bool, noproxy, Noproxy);
 
-	string getRemoteHost(const string& aIp) const;
+	static string getRemoteHost(const string& aIp);
 protected:
 	socket_t sock;
 	int type;

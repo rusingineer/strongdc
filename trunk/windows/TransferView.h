@@ -256,7 +256,7 @@ private:
 			MASK_SIZE = 1 << COLUMN_SIZE,
 			MASK_PATH = 1 << COLUMN_PATH,
 			MASK_IP = 1 << COLUMN_IP,
-			MASK_RATIO = 1 << COLUMN_RATIO,
+			MASK_RATIO = 1 << COLUMN_RATIO
 	};
 		tstring columns[COLUMN_LAST];
 		u_int32_t updateMask;

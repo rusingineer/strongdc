@@ -22,7 +22,7 @@
 #define VERSIONFLOAT 1.001
 #define DCVERSIONFLOAT 0.673
 
-#define STRONGDCVERSIONSTRING " RC9.5"
+#define STRONGDCVERSIONSTRING " RC10"
 
 
 /* Update the .rc file as well... */

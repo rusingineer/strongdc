@@ -40,6 +40,12 @@
 * zmìnìno ukládání fronty ze sekund na minuty, aby se pøedešlo poškození souboru pøi pádu
 * opraveno naèítání ikon ze souboru
 * pøidáno nastavení povolených timeoutù/odpojení
+* opraven memory leak v titulcích nabídek
+* opraven memory leak ve frontì èekatelù na slot
+* opraveno skrolování pøi pøepínání oken hubù
+* pøidán dialog se smajlíkama (THX Rm.)
+* opraven vzácný deadlock pøi nalezení fakera
+* pøidána podpora pro balíky emotikonù (uložte je do podsložky EmoPacks)
 
 
 	-- StrongDC++ 1.00 RC9 --

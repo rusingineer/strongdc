@@ -40,6 +40,7 @@ public:
 	const string& GetEmotionText();
 	HBITMAP GetEmotionBmp();
 	HBITMAP GetEmotionBmp(const COLORREF &clrBkColor);
+	const string& GetEmotionBmpPath();
 
 	const long&	GetidCommand();
 	void SetidCommand(const long& idCommand);

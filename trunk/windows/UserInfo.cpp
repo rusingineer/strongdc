@@ -53,23 +53,20 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 }
 
 void UserInfo::update() {
-	tstring uploadSpeed = Util::emptyStringT;
+	tstring uploadSpeed;
 
 	if(user->getDownloadSpeed()<1) {
-		const string& tmp = user->getConnection();
 		int status = user->getStatus();
 		string Omezeni = user->getUpload();
 		if (!Omezeni.empty()) {
 			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
-		} else
-		if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = Text::toT(">=100 kB/s"); }
-		else if(tmp == "28.8Kbps") { uploadSpeed = Text::toT("*max. 2.1 kB/s"); }
-		else if(tmp == "33.6Kbps") { uploadSpeed = Text::toT("*max. 3 kB/s"); }
-		else if(tmp == "56Kbps") { uploadSpeed = Text::toT("*max. 4.2 kB/s"); }
-		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = Text::toT("*max. 6 kB/s"); }
-		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = Text::toT("*max. 10 kB/s"); }
-		else { uploadSpeed = Text::toT("N/A"); }
-	} else uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
+		} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) {
+			uploadSpeed = Text::toT(">=100 kB/s");
+		} else {
+			uploadSpeed = Text::toT("N/A");
+		}
+	} else
+		uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
 
 	columns[COLUMN_NICK] = Text::toT(user->getNick());
 	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(user->getBytesShared()));
@@ -84,15 +81,7 @@ void UserInfo::update() {
 	columns[COLUMN_MODE] = Text::toT(user->getMode());
 	columns[COLUMN_HUBS] = Text::toT(user->getHubs());
 	columns[COLUMN_SLOTS] = Text::toT(Util::toString(user->getSlots()));
-	columns[COLUMN_ISP] = Text::toT(user->getHost());		
-
-	tstring IP;
-	if(user->isClientOp())
-		IP = Text::toT(user->getIp());
-	else 
-		IP = Util::emptyStringT;
-	
-	columns[COLUMN_IP] = IP;
+	columns[COLUMN_IP] = Text::toT(user->getIp());
 	columns[COLUMN_PK] = Text::toT(user->getPk());
 	columns[COLUMN_LOCK] = Text::toT(user->getLock());
 	columns[COLUMN_SUPPORTS] = Text::toT(user->getSupports());

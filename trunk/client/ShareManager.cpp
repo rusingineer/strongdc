@@ -45,7 +45,7 @@
 
 ShareManager::ShareManager() : hits(0), listLen(0), bzXmlListLen(0),
 	xmlDirty(true), nmdcDirty(false), refreshDirs(false), update(false), initial(true), listN(0), lFile(NULL), 
-	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20) 
+	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -856,6 +856,7 @@ int ShareManager::run() {
 		}
 	}
 
+	sharedSize = getShareSize();
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);

@@ -349,7 +349,10 @@ LRESULT ChatCtrl::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BO
 	if(m_boAutoScroll) {
 		InvalidateRect(NULL);
 		ScrollCaret();
-		this->CRichEditCtrl::SendMessage(EM_SCROLL, SB_BOTTOM, 0);
+		SetSel(0, 0);
+		this->CRichEditCtrl::SendMessage(EM_SCROLLCARET);
+		SetSel(-1, -1);
+		this->CRichEditCtrl::SendMessage(EM_SCROLLCARET);
 	}
 	return 1;
 }

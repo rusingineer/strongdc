@@ -547,7 +547,7 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 }
 
 void SearchFrame::on(SearchManagerListener::Resort) throw() {
-	if(ctrlResults.GetItemCount() > 1)
+	if(*this != NULL)
 		PostMessage(WM_SPEAKER, RESORT);
 }
 
@@ -1211,7 +1211,8 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 		}
 		break;
 	case RESORT:
-			ctrlResults.resort();
+			if(ctrlResults.GetItemCount() > 1)
+				ctrlResults.resort();
 		break;
 	}
 
@@ -1220,16 +1221,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if((HWND)wParam == ctrlResults) {
-		RECT rc;                    // client area of window 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 	
-		ctrlResults.GetHeader().GetWindowRect(&rc);
-		if(PtInRect(&rc, pt)){
-			ctrlResults.showMenu(pt);
-			return TRUE;
-		}
-
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlResults.ClientToScreen(&pt);
 		}

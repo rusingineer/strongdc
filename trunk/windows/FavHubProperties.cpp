@@ -87,7 +87,7 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 {
 	if(wID == IDOK)
 	{
-		TCHAR buf[256];
+		TCHAR buf[512];
 		GetDlgItemText(IDC_HUBNAME, buf, 256);
 		entry->setName(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBDESCR, buf, 256);

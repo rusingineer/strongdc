@@ -97,7 +97,7 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 LRESULT FinishedFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if ((HWND)wParam == ctrlList && ctrlList.GetSelectedCount() > 0) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 		ctrlList.ClientToScreen(&pt);
 	}

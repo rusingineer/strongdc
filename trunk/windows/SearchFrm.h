@@ -517,14 +517,9 @@ private:
 	
 			if(sr->getIP() != "") {
 				tstring country = Text::toT(Util::getIpCountry(sr->getIP().c_str()));
-
-				if(sr->getUser()->isOnline() && sr->getUser()->isClientOp()) {
-					ip = Text::toT(sr->getIP());
-					if(country != _T("")) {
-						ip =  country + _T(" (") + ip + _T(")");
-					}
-				} else {
-					ip = country;
+				ip = Text::toT(sr->getIP());
+				if(country != _T("")) {
+					ip =  country + _T(" (") + ip + _T(")");
 				}
 			}
 
@@ -537,21 +532,18 @@ private:
 				flagimage = 0;
 
 			if(user->getDownloadSpeed()<1) {
-				const string& tmp = sr->getUser()->getConnection();
-				int status = sr->getUser()->getStatus();
+				int status = user->getStatus();
 				string Omezeni = user->getUpload();
-
 				if (!Omezeni.empty()) {
 					uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
-				} else			
-				if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = Text::toT(">=100 kB/s"); }
-				else if(tmp == "28.8Kbps") { uploadSpeed = Text::toT("*max. 2.1 kB/s"); }
-				else if(tmp == "33.6Kbps") { uploadSpeed = Text::toT("*max. 3 kB/s"); }
-				else if(tmp == "56Kbps") { uploadSpeed = Text::toT("*max. 4.2 kB/s"); }
-				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = Text::toT("*max. 6 kB/s"); }
-				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = Text::toT("*max. 10 kB/s"); }
-				else { uploadSpeed = Text::toT("N/A"); }
-			} else uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
+				} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) {
+					uploadSpeed = Text::toT(">=100 kB/s");
+				} else {
+					uploadSpeed = Text::toT("N/A");
+				}
+			} else
+				uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
+
 		}
 
 		GETSET(tstring, nick, Nick);

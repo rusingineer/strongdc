@@ -25,6 +25,7 @@
 #include "SearchFrm.h"
 #include "PrivateFrame.h"
 #include "CZDCLib.h"
+#include "AGEmotionSetup.h"
 
 #include "../client/QueueManager.h"
 #include "../client/ShareManager.h"
@@ -40,18 +41,19 @@
 
 HubFrame::FrameMap HubFrame::frames;
 
-int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 100, 175 };
+int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 175 };
 int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARED, COLUMN_DESCRIPTION, COLUMN_TAG,
 	COLUMN_CONNECTION, COLUMN_EMAIL, COLUMN_CLIENTID, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS,
-	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_ISP, COLUMN_PK, COLUMN_LOCK, COLUMN_SUPPORTS };
+	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_PK, COLUMN_LOCK, COLUMN_SUPPORTS };
 static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
 ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL, 
 ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
-ResourceManager::AVERAGE_UPLOAD, ResourceManager::SETTINGS_IP, ResourceManager::ISP, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
+ResourceManager::AVERAGE_UPLOAD, ResourceManager::SETTINGS_IP, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
 
 tstring sSelectedURL = Util::emptyStringT;
 long lURLBegin = 0;
 long lURLEnd = 0;
+extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -75,6 +77,11 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlMessageContainer.SubclassWindow(ctrlMessage.m_hWnd);
 	ctrlMessage.SetFont(WinUtil::font);
 	ctrlMessage.SetLimitText(9999);
+
+	ctrlEmoticons.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER, 0, IDC_EMOT);
+	hEmoticonBmp = (HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED);
+
+	ctrlEmoticons.SetBitmap(hEmoticonBmp);
 
 	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
@@ -122,14 +129,14 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlShowUsers.SetCheck(ShowUserList ? BST_CHECKED : BST_UNCHECKED);
 	showUsersContainer.SubclassWindow(ctrlShowUsers.m_hWnd);
 
-    bool bColumsFromFavorite = false;
-    if(sColumsOrder != Util::emptyString && sColumsWidth != Util::emptyString && sColumsVisible != Util::emptyString) bColumsFromFavorite = true;
-    if(bColumsFromFavorite == false) {
+	FavoriteHubEntry *fhe = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
+
+	if(fhe) {
+		WinUtil::splitTokens(columnIndexes, fhe->getHeaderOrder(), COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, fhe->getHeaderWidths(), COLUMN_LAST);
+	} else {
 		WinUtil::splitTokens(columnIndexes, SETTING(HUBFRAME_ORDER), COLUMN_LAST);
 		WinUtil::splitTokens(columnSizes, SETTING(HUBFRAME_WIDTHS), COLUMN_LAST);                           
-    } else {
-		WinUtil::splitTokens(columnIndexes, sColumsOrder, COLUMN_LAST);
-		WinUtil::splitTokens(columnSizes, sColumsWidth, COLUMN_LAST);
 	}
     	
 	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
@@ -138,8 +145,9 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	}
 	
 	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
-    if(bColumsFromFavorite == true) {
-	    ctrlUsers.setVisible(sColumsVisible);
+
+	if(fhe) {
+		ctrlUsers.setVisible(fhe->getHeaderVisible());
     } else {
 	    ctrlUsers.setVisible(SETTING(HUBFRAME_VISIBLE));
     }
@@ -207,8 +215,7 @@ void HubFrame::openWindow(const tstring& aServer
 			, rawThree 
 			, rawFour 
 			, rawFive 
-			, windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate,
-            sColumsOrder, sColumsWidth, sColumsVisible);
+			, windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate);
 		frames[aServer] = frm;
 
 		int nCmdShow = SW_SHOWDEFAULT;
@@ -515,9 +522,6 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 					case IDC_COPY_IP:
 						sCopy += ui->user->getIp();
 						break;
-					case IDC_COPY_ISP:
-						sCopy += ui->user->getHost();
-						break;
 					case IDC_COPY_NICK_IP:
 						sCopy += "Info User:\r\n"
 							"\tNick: " + ui->user->getNick() + "\r\n" + 
@@ -536,12 +540,9 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 							"\tMode: " + ui->user->getMode() + "\r\n" +
 							"\tHubs: " + ui->user->getHubs() + "\r\n" +
 							"\tSlots: " + Util::toString(ui->user->getSlots()) + "\r\n" +
-							"\tUpLimit: " + ui->user->getUpload() + "\r\n";
-						if(ui->user->isClientOp()) {
-							sCopy += "\tIP: " + ui->user->getIp() + "\r\n"+
-								"\tISP: " + ui->user->getHost() + "\r\n";
-						}
-						sCopy += "\tPk String: " + ui->user->getPk() + "\r\n"+
+							"\tUpLimit: " + ui->user->getUpload() + "\r\n"+
+							"\tIP: " + ui->user->getIp() + "\r\n"+
+							"\tPk String: " + ui->user->getPk() + "\r\n"+
 							"\tLock: " + ui->user->getLock() + "\r\n"+
 							"\tSupports: " + ui->user->getSupports();
 						break;		
@@ -701,9 +702,27 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 								if(samenumbers) {
 									string detectString = Util::formatExactSize(u->getBytesShared())+" - the share size had too many same numbers in it";
 									u->setBadFilelist(true);
-									u->setCheat(Util::validateMessage(detectString, false), false);
+									u->setCheat(Util::validateMessage(detectString, false), false, false);
+									
+									CHARFORMAT2 cf;
+									memset(&cf, 0, sizeof(CHARFORMAT2));
+									cf.cbSize = sizeof(cf);
+									cf.dwReserved = 0;
+									cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
+									cf.dwEffects = 0;
+									cf.crBackColor = SETTING(BACKGROUND_COLOR);
+									cf.crTextColor = SETTING(ERROR_COLOR);
+
+									char buf[512];
+									sprintf(buf, "*** %s %s - %s", STRING(USER).c_str(), u->getNick().c_str(), detectString.c_str());
+
+									if(BOOLSETTING(POPUP_CHEATING_USER)) {
+										MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(buf).c_str(), CTSTRING(CHEATING_USER));
+									}
+
+									addLine(Text::toT(buf), cf);
+
 									u->sendRawCommand(SETTING(FAKESHARE_RAW));
-									this->updateUser(u);
 								}
 							}
 						
@@ -924,11 +943,15 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
 	rc.left +=2;
-	rc.right -= ShowUserList ? 202 : 2;
+	rc.right -= (ShowUserList ? 202 : 2) + 24;
 	ctrlMessage.MoveWindow(rc);
 
+	rc.left = rc.right + 2;
+	rc.right += 24;
+
+	ctrlEmoticons.MoveWindow(rc);
 	if(ShowUserList){
-		rc.left = rc.right + 4;
+		rc.left = rc.right + 2;
 		rc.right = rc.left + 116;
 		ctrlFilter.MoveWindow(rc);
 
@@ -951,6 +974,8 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			r->setShared(Util::toString(client->getAvailable()));
 			HubManager::getInstance()->updateRecent(r);
 		}
+		DeleteObject(hEmoticonBmp);
+
 		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		client->removeListener(this);
@@ -971,8 +996,11 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			i++;
 		}
 	
-		FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
-		if(hub) {
+		string tmp, tmp2, tmp3;
+		ctrlUsers.saveHeaderOrder(tmp, tmp2, tmp3);
+
+		FavoriteHubEntry *fhe = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
+		if(fhe != NULL){
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(wp);
 			GetWindowPlacement(&wp);
@@ -982,23 +1010,28 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			CRect rcmdiClient;
 			::GetWindowRect(WinUtil::mdiClient, &rcmdiClient);
 			if(wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWNORMAL) {
-				hub->setWindowPosX(rc.left - (rcmdiClient.left + 2));
-				hub->setWindowPosY(rc.top - (rcmdiClient.top + 2));
-				hub->setWindowSizeX(rc.Width());
-				hub->setWindowSizeY(rc.Height());
+				fhe->setWindowPosX(rc.left - (rcmdiClient.left + 2));
+				fhe->setWindowPosY(rc.top - (rcmdiClient.top + 2));
+				fhe->setWindowSizeX(rc.Width());
+				fhe->setWindowSizeY(rc.Height());
 			}
 			if(wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWMAXIMIZED || wp.showCmd == SW_MAXIMIZE)
-				hub->setWindowType((int)wp.showCmd);
-			hub->setChatUserSplit(m_nProportionalPos);
-			hub->setUserListState(ShowUserList);
-			ctrlUsers.saveFavoriteHeaderOrder(hub);
+				fhe->setWindowType((int)wp.showCmd);
+			fhe->setChatUserSplit(m_nProportionalPos);
+			fhe->setUserListState(ShowUserList);
+			fhe->setHeaderOrder(tmp);
+			fhe->setHeaderWidths(tmp2);
+			fhe->setHeaderVisible(tmp3);
+			
+			HubManager::getInstance()->save();
 		} else {
-			ctrlUsers.saveHeaderOrder(SettingsManager::HUBFRAME_ORDER, SettingsManager::HUBFRAME_WIDTHS,
-				SettingsManager::HUBFRAME_VISIBLE);
+			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_ORDER, tmp);
+			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_WIDTHS, tmp2);
+			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_VISIBLE, tmp3);
 		}
 
 		bHandled = FALSE;
-	return 0;
+		return 0;
 	}
 }
 
@@ -1187,6 +1220,7 @@ void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = t
 		params["mynick"] = client->getNick(); 
 		LOG(LogManager::CHAT, params);
 	}
+	
 	if(timeStamps) {
 		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe, bUseEmo);
 	} else {
@@ -1240,11 +1274,6 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	ctrlUsers.ScreenToClient(&ptCl);
 	ctrlUsers.GetHeader().GetWindowRect(&rc2);
 		
-	if(PtInRect(&rc2, pt) && ShowUserList) {
-		ctrlUsers.showMenu(pt);
-		return TRUE;
-	}
-	
 	if (PtInRect(&rc, ptCl) && ShowUserList) { 
 		if ( ctrlUsers.GetSelectedCount() == 1 ) {
 			int i = -1;
@@ -1269,6 +1298,37 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			return TRUE; 
 		}
 	}
+
+	ctrlEmoticons.GetClientRect(&rc);
+	ptCl = pt;
+	ctrlEmoticons.ScreenToClient(&ptCl);
+	if (PtInRect(&rc, ptCl)) {
+		if(emoMenu != NULL) emoMenu.DestroyMenu();
+		emoMenu.CreatePopupMenu();
+		menuItems = 0;
+		emoMenu.AppendMenu(MF_STRING, IDC_PM, _T("Disabled"));
+		if (SETTING(EMOTICONS_FILE)=="Disabled") emoMenu.CheckMenuItem( IDC_PM, MF_BYCOMMAND | MF_CHECKED );
+		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
+		WIN32_FIND_DATA data;
+		HANDLE hFind;
+		PME regex("(.+)\.xml", "i");
+		hFind = FindFirstFile(Text::toT(Util::getAppPath()+"EmoPacks\\*.xml").c_str(), &data);
+		if(hFind != INVALID_HANDLE_VALUE) {
+			do {
+				regex.match(Text::fromT(data.cFileName));
+				menuItems++;
+				emoMenu.AppendMenu(MF_STRING, IDC_PM + menuItems, Text::toT(regex[1]).c_str());
+				if(regex[1]==SETTING(EMOTICONS_FILE)) emoMenu.CheckMenuItem( IDC_PM + menuItems, MF_BYCOMMAND | MF_CHECKED );
+			} while(FindNextFile(hFind, &data));
+			FindClose(hFind);
+		}
+		emoMenu.InsertSeparatorFirst("Emoticons Pack");
+		if(menuItems>0) emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		emoMenu.RemoveFirstItem();
+		return TRUE;
+	}
+
+
 	sSelectedUser = ChatCtrl::sTempSelectedUser;
 	// Get the bounding rectangle of the client area. 
 	ctrlClient.GetClientRect(&rc);
@@ -1916,7 +1976,6 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 	if (client->getOp()) {
 		copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
 		copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_ISP, CTSTRING(COPY_ISP));
 	}
 
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
@@ -2392,6 +2451,23 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	default:
 		return CDRF_DODEFAULT;
 	}
+}
+
+LRESULT HubFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	TCHAR buf[256];
+	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
+	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
+		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
+		delete g_pEmotionsSetup;
+		g_pEmotionsSetup = NULL;
+		g_pEmotionsSetup = new CAGEmotionSetup;
+		if ((g_pEmotionsSetup == NULL)||
+			(!g_pEmotionsSetup->Create())){
+			dcassert(FALSE);
+			return -1;
+		}
+	}
+	return 0;
 }
 
 /**

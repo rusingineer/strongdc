@@ -510,7 +510,6 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		UploadQueueItem* i = (UploadQueueItem*)lParam;
 		ctrlList.deleteItem(i);
 		updateStatus();
-		delete i;
 	} else if(wParam == REMOVE) {
 		RemoveUser(((UserInfoBase*)lParam)->user);
 		delete (UserInfoBase*)lParam;
@@ -522,9 +521,10 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			if(UQI)
+			if(UploadManager::getInstance()->isInUploadQueue(UQI)) {
 				UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
-			ctrlList.updateItem(i);
+				ctrlList.updateItem(i);
+			}
 		}
 	}
 	ctrlList.SetRedraw(TRUE);
@@ -593,21 +593,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				// Set references
 				CDC cdc;
 				cdc.CreateCompatibleDC(cd->nmcd.hdc);
-
-				BITMAPINFOHEADER bih;
-				bih.biSize = sizeof(BITMAPINFOHEADER);
-				bih.biWidth = real_rc.Width();
-				bih.biHeight = -real_rc.Height(); // kanske minus
-				bih.biPlanes = 1;
-				bih.biBitCount = 32;
-				bih.biCompression = BI_RGB;
-				bih.biSizeImage = 0;
-				bih.biXPelsPerMeter = 0;
-				bih.biYPelsPerMeter = 0;
-				bih.biClrUsed = 32;
-				bih.biClrImportant = 0;
-				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-
+				HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 

@@ -99,7 +99,6 @@ enum Strings { // @DontAdd
 	COPY_EXACT_SHARE, // "Copy Exact Share"
 	COPY_HUB, // "Copy address to clipboard"
 	COPY_IP, // "Copy IP"
-	COPY_ISP, // "Copy ISP"
 	COPY_LINE, // "Copy actual line"
 	COPY_MAGNET_LINK, // "Copy magnet link to clipboard"
 	COPY_NICK, // "Copy nick"
@@ -259,7 +258,6 @@ enum Strings { // @DontAdd
 	INVALID_TREE, // "Downloaded tree does not match TTH root"
 	IP, // "Ip: "
 	IP_BARE, // "Ip"
-	ISP, // "ISP"
 	ITEMS, // "Items"
 	JOIN_SHOWING_OFF, // "Join/part showing off"
 	JOIN_SHOWING_ON, // "Join/part showing on"
@@ -847,5 +845,6 @@ enum Strings { // @DontAdd
 	ZONEALARM_WARNING, // "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many \"rollback inconsistency\" errors.  Please uninstall it and use an alternate product.  "
 	ACCEPTED_TIMEOUTS, // "Accepted Timeouts"
 	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
+	CHECKING_CLIENT, // "Checking client..."
 	LAST // @DontAdd
 };

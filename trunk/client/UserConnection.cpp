@@ -102,8 +102,6 @@ again:
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
 			fire(UserConnectionListener::Failed(), this, aLine);
-			Lock l(ConnectionManager::getInstance()->cs_deadlock_fix);
-			fire(UserConnectionListener::Failed_deadlock_fix(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
 		aLine += 12;
@@ -185,8 +183,6 @@ again:
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
-	Lock l(ConnectionManager::getInstance()->cs_deadlock_fix);
-	fire(UserConnectionListener::Failed_deadlock_fix(), this, aLine);
 }
 
 void UserConnection::processBlock(const char* param, int type) throw() {

@@ -255,12 +255,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 	dcdebug("DoLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
 	dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
 
-	// for exception free
-	vector<unsigned char> buf;
-    buf.reserve(iBlockSize);
-
 	// Convert to unverified blocks
-    map<int64_t, int64_t> unVerifiedBlocks;
 	vector<int64_t> CorruptedBlocks;
 	int64_t start = 0;
 
@@ -271,74 +266,41 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 		// Because buffer is used during download, the disk data maybe incorrect
   		_ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());
 
-		if(!BOOLSETTING(CHECK_UNVERIFIED_ONLY)) {
-			unVerifiedBlocks.insert(make_pair(start, iFileSize));
-			mapVerifiedBlocks.clear();
-		} else {
-		    for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-												i != mapVerifiedBlocks.end();
-        		                                i++)
-			{
-				if(i->first > start){
-    		        dcassert((i->first - start) % iBlockSize == 0);
-
-		            unVerifiedBlocks.insert(make_pair(start, i->first));
-				}
-
-				start = i->second;
-	
-			}
-
-			if(start < iFileSize)
-		        unVerifiedBlocks.insert(make_pair(start, iFileSize));
-		}
+		mapVerifiedBlocks.clear();
 	}
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// Open file
+	char buf[512*1024];
+
 	SharedFileStream file(sFilename, 0, 0);
+	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)iBlockSize));
 
-	for(map<int64_t, int64_t>::iterator i = unVerifiedBlocks.begin();
-        								i != unVerifiedBlocks.end();
-                                        i++)
-	{
-        int64_t end = i->first;
+	size_t n = 0;
+	size_t n2 = 512*1024;
+	while( (n = file.read(buf, n2)) > 0) {
+		tth.update(buf, n);
+		n2 = 512*1024;
+	}
+	tth.finalize();
 
-		while(end < i->second)
-        {
-            start = end;
-            end = min(start + iBlockSize, i->second);
-
-            file.setPos(start);
-			size_t len = iBlockSize;
-			file.read(&buf[0], len);
-
-			dcassert(end - start == len);
-
-			TigerTree cur(iBlockSize);
-            cur.update(&buf[0], len);
-			cur.finalize();
-
-			dcassert(cur.getLeaves().size() == 1);
-
-			// Fail!
-        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / iBlockSize)]))
-        	{
-	       		if(!CorruptedBlocks.empty() && *(CorruptedBlocks.rbegin()) == start)
-	        	{
-	                *(CorruptedBlocks.rbegin()) = end;
-	            } else {
-	        		CorruptedBlocks.push_back(start);
-	        		CorruptedBlocks.push_back(end);
-	            }
-
-				iDownloadedSize -= (end - start);
-        	}else{
-        		MarkVerifiedBlock(start, end);
-			}
-			DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), sFilename, end);
-    	}
-    }
+	int64_t end;
+	for(int i = 0; i < tth.getLeaves().size(); i++) {
+		end = min(start + tth.getBlockSize(), file.getSize());
+		if(!(tth.getLeaves()[i] == aTree.getLeaves()[i])) {
+       		if(!CorruptedBlocks.empty() && *(CorruptedBlocks.rbegin()) == start) {
+				*(CorruptedBlocks.rbegin()) = end;
+	        } else {
+				CorruptedBlocks.push_back(start);
+	        	CorruptedBlocks.push_back(end);
+	        }
+			iDownloadedSize -= (end - start);
+        } else {
+        	MarkVerifiedBlock(start, end);
+		}
+		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), sFilename, end);
+		start = end;
+	}
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 

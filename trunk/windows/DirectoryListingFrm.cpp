@@ -628,11 +628,16 @@ void DirectoryListingFrame::selectItem(const tstring& name) {
 }
 
 HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	RECT rc;
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
 	fileMenu.RemoveMenu(IDC_GO_TO_DIRECTORY, MF_BYCOMMAND);
 
+	// Get the bounding rectangle of the client area. 
+	ctrlList.GetClientRect(&rc);
+
 	if ((HWND)wParam == ctrlList && ctrlList.GetSelectedCount() > 0) {
-		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlList.ClientToScreen(&pt);
 		}
@@ -726,7 +731,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		return TRUE; 
 	} else if((HWND)wParam == ctrlTree && ctrlTree.GetSelectedItem() != NULL) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlTree.ClientToScreen(&pt);
 		} else {
@@ -775,7 +780,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 }
 
 LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_TARGET;
+	int newId = wID - IDC_DOWNLOAD_TARGET - 1;
 	dcassert(newId >= 0);
 	
 	if(ctrlList.GetSelectedCount() == 1) {
@@ -805,7 +810,7 @@ LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, 
 }
 
 LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_TARGET_DIR;
+	int newId = wID - IDC_DOWNLOAD_TARGET_DIR - 1;
 	dcassert(newId >= 0);
 	
 	HTREEITEM t = ctrlTree.GetSelectedItem();
