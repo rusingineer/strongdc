@@ -138,8 +138,7 @@ public:
 	}
 
 	void setTop(HWND aWnd) {
-		if(find(viewOrder.begin(), viewOrder.end(), aWnd) == viewOrder.end())
-			return;
+		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
 		viewOrder.erase(find(viewOrder.begin(), viewOrder.end(), aWnd));
 		viewOrder.push_back(aWnd);
 		nextTab = --viewOrder.end();

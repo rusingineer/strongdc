@@ -28,6 +28,7 @@
 #include "CriticalSection.h"
 #include "CID.h"
 #include "SettingsManager.h"
+#include "ResourceManager.h"
 
 class Client;
 class FavoriteUser;
@@ -184,7 +185,7 @@ public:
 		StringMap ucParams;
 		getParams(ucParams);
 		string cheat = Util::formatParams(aCheatDescription, ucParams);
-		addLine(nick+" - "+cheat);
+		addLine("*** "+STRING(USER)+" "+nick+" - "+cheat);
 		cheatingString = cheat;
 		badClient = aBadClient;
 	}

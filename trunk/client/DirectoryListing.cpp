@@ -361,10 +361,6 @@ int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
 	for(Iter i = directories.begin(); i != directories.end(); ++i) {
 		if(!(adl && (*i)->getAdls())) {	
 			x += (*i)->getTotalSize(adls);
-			if(rmDC403B7detected != 2) {
-				if((*i)->getRMDC403B7detected() != 0)
-					rmDC403B7detected = (*i)->getRMDC403B7detected();
-			}
 		}
 	}
 	return x;

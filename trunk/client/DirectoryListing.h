@@ -85,7 +85,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false) 
-			: name(aName), parent(aParent), adls(_adls), rmDC403B7detected(0), rmDC403D1detected(false) { };
+			: name(aName), parent(aParent), adls(_adls), rmDC403D1detected(false) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction<Directory*>());
@@ -102,20 +102,12 @@ public:
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
 				x+=(*i)->getSize();
 
-				if((*i)->getTTH() == NULL) {
-					if(((*i)->getSize() < (1024*1024)) || (Util::getFileExt((*i)->getName()) == ".mp3")) {
-						setRMDC403B7detected(1);
-					} else {
-						setRMDC403B7detected(2);
-					}
-				} else setRMDC403B7detected(0);
 			}
 			return x;
 		}
 		
 		GETSET(string, name, Name);
 		GETSET(Directory*, parent, Parent);		
-		GETSET(int, rmDC403B7detected, RMDC403B7detected);
 		GETSET(bool, rmDC403D1detected, RMDC403D1detected);
 		GETSET(bool, adls, Adls);		
 
@@ -154,9 +146,7 @@ public:
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
 	Directory* getRoot() { return root; };
-	bool detectRMDC403B7() {
-		return (root->getRMDC403B7detected() == 1);
-	}
+
 	bool detectRMDC403D1() {
 		return root->getRMDC403D1detected();
 	}

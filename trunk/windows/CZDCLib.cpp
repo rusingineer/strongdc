@@ -73,8 +73,10 @@ bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
 						LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
 						_d_LockWorkStation();
 					}
+					return true;
 				}
 	}
+
 	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
 //		throw ShutdownException("OperaLib::shutDown()::ExitWindowsEx() failed.\r\nGetLastError returned: " + Util::toString((int)GetLastError()));
 		return false;

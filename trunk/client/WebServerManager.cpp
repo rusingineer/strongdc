@@ -360,58 +360,57 @@ int WebServerSocket::run(){
 	ZeroMemory(&buff, sizeof(buff));
 	while(true) {
 
-	test++;
-	if(test >= 1000)
-		break;
+		test++;
+		if(test >= 1000)
+			break;
 
-	Thread::sleep(10);
-	int size = recv(sock,buff,sizeof(buff),0);
+		int size = recv(sock,buff,sizeof(buff),0);
 
-	string header = buff;
-	header = header.substr(0,size);
+		string header = buff;
+		header = header.substr(0,size);
 
-	int start = 0, end = 0;
+		int start = 0, end = 0;
 
-	string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
+		string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
 
-    printf("%s\n", header.c_str());	
+	    printf("%s\n", header.c_str());	
 
-	if(((start = header.find("GET ")) != string::npos) && (end = header.substr(start+4).find(" ")) != string::npos ){
-		if(BOOLSETTING(LOG_WEBSERVER)) {
-			StringMap params;
-			params["file"] = header.substr(start+4,end);
-			params["ip"] = IP;
-			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
-		}
-		header = header.substr(start+4,end);
+		if(((start = header.find("GET ")) != string::npos) && (end = header.substr(start+4).find(" ")) != string::npos ){
+			if(BOOLSETTING(LOG_WEBSERVER)) {
+				StringMap params;
+				params["file"] = header.substr(start+4,end);
+				params["ip"] = IP;
+				LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+			}
+			header = header.substr(start+4,end);
 
-		if((start = header.find("?")) != string::npos) {
-			string arguments = header.substr(start+1);
-			header = header.substr(0, start);
-			StringMap m = getArgs(arguments);
+			if((start = header.find("?")) != string::npos) {
+				string arguments = header.substr(start+1);
+				header = header.substr(0, start);
+				StringMap m = getArgs(arguments);
 
-			if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
-				WebServerManager::getInstance()->login(IP);
-		}
+				if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
+					WebServerManager::getInstance()->login(IP);
+			}
 
-		string toSend;
+			string toSend;
 		
-		if(!WebServerManager::getInstance()->isloggedin(IP)) {
-			toSend = WebServerManager::getInstance()->getLoginPage();
-		} else {
-			toSend = WebServerManager::getInstance()->getPage(header);
-		}
+			if(!WebServerManager::getInstance()->isloggedin(IP)) {
+				toSend = WebServerManager::getInstance()->getLoginPage();
+			} else {
+				toSend = WebServerManager::getInstance()->getPage(header);
+			}
 	
-		::send(sock, toSend.c_str(), toSend.size(), 0);
-		break;
-	}/* else {
-		if(BOOLSETTING(LOG_WEBSERVER)) {
-			StringMap params;
-			params["file"] = "Unknown request type";
-			params["ip"] = IP;
-			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
-		}
-	}*/
+			::send(sock, toSend.c_str(), toSend.size(), 0);
+			break;
+		}/* else {
+			if(BOOLSETTING(LOG_WEBSERVER)) {
+				StringMap params;
+				params["file"] = "Unknown request type";
+				params["ip"] = IP;
+				LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+			}
+		}*/
 	}
 	::closesocket(sock);
 	delete this;

@@ -1022,7 +1022,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 	}
 
 	for(User::Iter i = getConn.begin(); i != getConn.end(); ++i) {
-	ConnectionManager::getInstance()->getDownloadConnection(*i);
+		ConnectionManager::getInstance()->getDownloadConnection(*i);
 	}
 
 	if(!fname.empty()) {

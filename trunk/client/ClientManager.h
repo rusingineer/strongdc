@@ -89,12 +89,12 @@ public:
 		return false;
 	}
 
-	void setIPNick(const string& IP, const string& Nick) {
+	void setIPNick(const string& IP, User::Ptr user) {
 		if(IP == Util::emptyString)
 			return;
 
-		ipList[IP] = Nick;
-		getUser(Nick)->setIp(IP);
+		ipList[IP] = user->getNick();
+		user->setIp(IP);
 	}
 
 	const string& getIPNick(const string& IP) const {
