@@ -2,7 +2,9 @@
 
 * NetLimiter je detekován pouze pokud se omezuje StrongDC++
 * èásteènì odstranìna podpora BZ2 listù
-
+* pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
+* automatické hledání alternativ podle RevConnectu
+* odstranìno automatické odstraòování zdrojù pomalejších 1kB/s
 
 	-- StrongDC++ 1.00 RC6 Pre-final --
 

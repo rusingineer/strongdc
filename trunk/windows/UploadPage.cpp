@@ -71,10 +71,7 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 /* POSSUM_MOD_END */
 
 	ctrlDirectories.Attach(GetDlgItem(IDC_DIRECTORIES));
-
-	if(BOOLSETTING(FULL_ROW_SELECT)) {
 		ctrlDirectories.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-	}
 		
 	ctrlTotal.Attach(GetDlgItem(IDC_TOTAL));
 

@@ -24,6 +24,8 @@
 
 class CID {
 public:
+	enum { SIZE = sizeof(u_int64_t) };
+
 	struct Hash {
 		size_t operator()(const CID& c) const { return c.toHash(); }
 	};
@@ -41,7 +43,8 @@ public:
 	string toBase32() const { return Encoder::toBase32((u_int8_t*)&cid, sizeof(cid)); }
 	string& toBase32(string& tmp) const { return Encoder::toBase32((u_int8_t*)&cid, sizeof(cid), tmp); }
 
-	size_t toHash() const { size_t* p = (size_t*)&cid; return *p ^ *(p+1); };
+	size_t toHash() const { size_t* p = (size_t*)&cid; return *p ^ *(p+1); }
+	const u_int8_t* getData() const { return (u_int8_t*)&cid; }
 
 	bool isZero() const { return cid == 0; }
 
@@ -56,6 +59,7 @@ public:
 	static const u_int64_t zero = 0;
 private:
 	u_int64_t cid;
+
 };
 
 #endif

@@ -292,7 +292,7 @@ void WinUtil::init(HWND hWnd) {
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CSTRING(MENU_TOOLBAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CSTRING(MENU_STATUS_BAR));
-	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFERS, CSTRING(MENU_VIEW_TRANSFERS));
+	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFERS, CSTRING(MENU_TRANSFER_VIEW));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)view, CSTRING(MENU_VIEW));
 
@@ -308,7 +308,7 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CSTRING(MENU_NETWORK_STATISTICS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)transfers, CSTRING(MENU_TRANSFERS));
+	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)transfers, CSTRING(MENU_TRANSFER_VIEW));
 
 	CMenuHandle window;
 	window.CreatePopupMenu();

@@ -117,9 +117,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 	
-	DWORD styles = LVS_EX_HEADERDRAGDROP;
-	if (BOOLSETTING(FULL_ROW_SELECT))
-		styles |= LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 	ctrlUsers.SetExtendedListViewStyle(styles);
@@ -185,6 +183,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	}
 
 	showJoins = BOOLSETTING(SHOW_JOINS);
+	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
 	bHandled = FALSE;
 	client->connect();
@@ -293,7 +292,14 @@ void HubFrame::onEnter() {
 				} else {
 					addClientLine(STRING(JOIN_SHOWING_OFF), m_ChatTextSystem);
 				}
-			} else if(Util::stricmp(s.c_str(), "close") == 0) {
+			} else if( Util::stricmp(s.c_str(), "favshowjoins") == 0 ) {
+				favShowJoins = !favShowJoins;
+				if(favShowJoins) {
+					addClientLine(STRING(FAV_JOIN_SHOWING_ON), m_ChatTextSystem);
+				} else {
+					addClientLine(STRING(FAV_JOIN_SHOWING_OFF), m_ChatTextSystem);
+				}
+			}  else if(Util::stricmp(s.c_str(), "close") == 0) {
 				PostMessage(WM_CLOSE);
 			} else if(Util::stricmp(s.c_str(), "userlist") == 0) {
 				ctrlShowUsers.SetCheck(ShowUserList ? BST_UNCHECKED : BST_CHECKED);
@@ -630,8 +636,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				switch(i->second) {
 				case UPDATE_USER:
 					if(updateUser(u)) {
-						if(showJoins)
-							addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
+						if(showJoins) {
+							if (!favShowJoins | u->isFavoriteUser()) {
+								addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
+							}
+						}
 					} else {
 						resort = true;
 		}
@@ -645,7 +654,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					int j = findUser(u);
 					if( j != -1 ) {
 						if(showJoins) {
-							addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
+							if (!favShowJoins | u->isFavoriteUser())
+								addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
 						}
 
 						ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
@@ -1546,6 +1556,9 @@ void HubFrame::addClientLine(const string& aLine, bool inChat /* = true */) {
 	
 	if(BOOLSETTING(STATUS_IN_CHAT) && inChat) {
 		addLine("*** " + aLine, m_ChatTextSystem);
+	}
+	if(BOOLSETTING(LOG_STATUS_MESSAGES) && inChat /*&& BOOLSETTING(FILTER_MESSAGES)*/) {
+		LOGDT(client->getAddressPort() + "_Status", aLine);
 	}
 }
 

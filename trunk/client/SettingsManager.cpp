@@ -50,7 +50,7 @@ const string SettingsManager::settingTags[] =
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID", "DownSpeed", "UpSpeed",
 	"SENTRY", 
 	// Ints
-	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch", "FullRow", 
+	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
 	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray", 
 	"OpenPublic", "OpenQueue", "AutoSearch", "AutoAutoSearchString", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline", 
 	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat", 
@@ -92,6 +92,7 @@ const string SettingsManager::settingTags[] =
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
+	"FavShowJoins", "LogStatusMessages",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -134,7 +135,6 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_TYPE, SEGMENT_ON_SIZE);
 	setDefault(AUTO_FOLLOW, true);
 	setDefault(CLEAR_SEARCH, true);
-	setDefault(FULL_ROW_SELECT, true);
 	setDefault(SHARE_HIDDEN, false);
 	setDefault(FILTER_MESSAGES, true);
 	setDefault(MINIMIZE_TRAY, false);
@@ -204,7 +204,9 @@ SettingsManager::SettingsManager()
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
 	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
-	setDefault(GET_USER_COUNTRY, true);	
+	setDefault(GET_USER_COUNTRY, true);
+	setDefault(FAV_SHOW_JOINS, false);
+	setDefault(LOG_STATUS_MESSAGES, false);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SEND_EXTENDED_INFO, true);

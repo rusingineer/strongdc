@@ -40,6 +40,7 @@ public:
 			}
 		}
 		ReleaseMutex(hMutexMapList);		
+
 	}
 
 	static vector<FileDataInfo*> vecAllFileDataInfo;
@@ -67,6 +68,15 @@ public:
 	int ValidBlock(__int64, const void*, __int64);
 
 	__int64 GetBlockEnd(__int64);
+
+	void SetFileSize(__int64 size){
+		if(!iFileSize){
+			iFileSize = size;
+			vecFreeBlocks.clear();
+			vecFreeBlocks.push_back(0);
+			vecFreeBlocks.push_back(size);
+		}
+	}
 
 };
 

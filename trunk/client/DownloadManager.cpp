@@ -856,21 +856,14 @@ void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSour
 	dcassert(d != NULL);
 
 	fire(DownloadManagerListener::Failed(), d, STRING(NO_SLOTS_AVAILABLE));
-	// CDM EXTENSION BEGINS
+
 	User::Ptr user = aSource->getUser();
-	//if(user != NULL)
-	//{	
-		//Client::Ptr client = user->getClient();
-		//if(client != NULL)
-		//{
+
 			if( d->isSet(Download::FLAG_TESTSUR) && user->getConnection().size() > 0) {
 				dcdebug("No slots for TestSUR %s\n", user->getNick());
-				//user->unsetTSURFlags();
-				//user->setFlag(User::TSUR_NO_SLOTS_AVAILABLE);
 				user->setTestSUR("MaxedOut");
 				user->setHasTestSURinQueue(false);
 				user->updateClientType();
-				//user->setTestSURComplete(true);
 				aSource->setDownload(NULL);
 				removeDownload(d, true);
 				removeConnection(aSource);
@@ -880,23 +873,6 @@ void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSour
 				user->getClient()->fire(ClientListener::CheatMessage(), user->getClient(), user->getNick()+": "+user->getCheatingString());
 				return;
 			}
-			/*else if((d->isSet(Download::FLAG_USER_LIST)) && (client->getOp()) 
-				&& (user->isSet(User::DCPLUSPLUS)) && ( client->getClientFavNoSlotsDcpp() ))
-			{
-				user->setFileListNoFreeSlots(true);
-				user->setCheatingString(STRING(CHEATING_FILELIST_NO_FREE_SLOTS));
-				//user->sendFakeShareCommand();
-				string rawCommand = client->getClientKickNoSlotsForFilelistString();
-				user->sendRawCommand(rawCommand, client);
-				if(!BOOLSETTING(SUPPRESS_CHEATING_MESSAGES))
-				{
-					client->addLine("*** User " + user->getNick() + " " + user->getCheatingString());
-				}
-				client->updated(user);
-			}*/
-		//}
-	//}
-	// CDM EXTENSION ENDS
 
 	aSource->setDownload(NULL);
 	removeDownload(d);

@@ -300,9 +300,8 @@ void CryptoManager::buildLookup(vector<u_int8_t>* table, Node* aRoot) {
 }
 
 
-class greaterNode { 
-public:
-	bool operator() (Node*& a, Node*& b) const { 
+struct greaterNode { 
+	bool operator() (const Node* a, const Node* b) const { 
 		return *a < *b; 
 	}; 
 };

@@ -235,7 +235,9 @@ private:
 
 		void disconnect();
 		void removeAll();
-		void deleteSelf() { if(IsBadReadPtr(this, 4) == 0) delete this; }	
+		void deleteSelf() { 
+			//delete this; // TODO: don't leak and don't crash
+		}	
 
 		double getRatio() {
 			if(mainItem) return compressRatio;

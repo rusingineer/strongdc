@@ -49,8 +49,7 @@ LRESULT DownloadDirsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ctrlCommands.InsertColumn(1, CSTRING(DIRECTORY), LVCFMT_LEFT, rc.Width()*2 / 4, 1);	
 	ctrlCommands.InsertColumn(3, CSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 4, 2);
 
-	if(BOOLSETTING(FULL_ROW_SELECT))
-		ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
 	// Do specialized reading here
 	SettingsManager::DDList d = SettingsManager::getInstance()->getDownloadDirs();

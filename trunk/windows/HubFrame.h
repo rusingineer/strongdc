@@ -420,6 +420,7 @@ private:
 	string redirect;
 	bool timeStamps;
 	bool showJoins;
+	bool favShowJoins;
 	string complete;
 	
 	bool waitingForPW;
