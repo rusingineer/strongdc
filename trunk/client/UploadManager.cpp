@@ -185,14 +185,14 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if((free && supportsFree && allowedFree) ||
 				(strcmp(aFile.c_str(), "MyList.DcLst") == 0 && aSource->getUser()->isSet(User::OP))) {
 				extraSlot = true;
-		} else {
-			delete is;
-			aSource->maxedOut();
-			addFailedUpload(aSource->getUser(), file, aStartPos, File::getSize(file));
-			aSource->disconnect();
-			return false;
+			} else {
+				delete is;
+				aSource->maxedOut();
+				addFailedUpload(aSource->getUser(), file, aStartPos, File::getSize(file));
+				aSource->disconnect();
+				return false;
+			}
 		}
-	}
 	
 		setLastGrant(GET_TICK());
 	}
@@ -376,7 +376,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
-			i = NULL;
+			*i = NULL;
 			delete *i;
 		}
 		UploadQueueItems.erase(ii);
@@ -523,11 +523,11 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 }
 
 void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
+	Lock l(cs);
 	if( (!aUser->isOnline()) && 
 		(aUser->isSet(User::QUIT_HUB)) && 
 		(BOOLSETTING(AUTO_KICK)) ){
 
-		Lock l(cs);
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			Upload* u = *i;
 			if(u->getUser() == aUser) {
@@ -539,6 +539,8 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}
+	}
+	if(aUser->isOnline() == false) {
 		clearUserFiles(aUser);
 	}
 }

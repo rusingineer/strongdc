@@ -59,6 +59,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven bug se ztrátou výsledkù hledání
 * je zobrazen èas do dalšího hledání
 * pøidána volba pro zapnutí/vypnutí antifragmentaèní metody
+* segmenty mají pevnou velikost a není tøeba rekonektnutí po stažení bloku
 
 
 	-- StrongDC++ 1.00 RC8 --
