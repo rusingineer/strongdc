@@ -140,10 +140,9 @@ public:
 	/**
 	 * Send the file f over this socket.
 	 */
-	void transmitFile(InputStream* f, bool disablethrottling) throw() {
+	void transmitFile(InputStream* f) throw() {
 		Lock l(cs);
 		file = f;
-		disablethrottle = disablethrottling;
 		addTask(SEND_FILE);
 	}
 
@@ -211,7 +210,6 @@ private:
 		tasks.push_back(task);
 		taskSem.signal();
 	}
-	bool disablethrottle;
 };
 
 #endif // !defined(AFX_BUFFEREDSOCKET_H__0760BAF6_91F5_481F_BFF7_7CA192EE44CC__INCLUDED_)

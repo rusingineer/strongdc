@@ -75,7 +75,7 @@ public:
 	string getShareSizeString() { return Util::toString(getShareSize()); };
 	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); };
 	
-	int64_t getListLen() { return listLen; };
+	int64_t getListLen() { return generateNmdcList(), listLen; };
 	string getListLenString() { return Util::toString(getListLen()); };
 	
 	SearchManager::TypeModes getType(const string& fileName);

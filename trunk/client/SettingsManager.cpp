@@ -102,6 +102,7 @@ const string SettingsManager::settingTags[] =
 	"AddFinishedInstantly", "Away", "UseUPnP",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
+	"PopupType",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -435,7 +436,7 @@ SettingsManager::SettingsManager()
 	setDefault(POPUP_UPLOAD_FINISHED, false);
 	setDefault(POPUP_PM, false);
 	setDefault(POPUP_NEW_PM, true);
-
+	setDefault(POPUP_TYPE, 0);
 	setDefault(AWAY, false);
 
 #ifdef _WIN32

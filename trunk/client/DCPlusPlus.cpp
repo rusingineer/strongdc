@@ -18,7 +18,7 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
-
+#include "../windows/PopupManager.h"
 #include "ConnectionManager.h"
 #include "DownloadManager.h"
 #include "UploadManager.h"
@@ -33,9 +33,8 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
-
-
 #include "DebugManager.h"
+
 #include "StringTokenizer.h"
 
 void startup(void (*f)(void*, const string&), void* p) {
@@ -63,6 +62,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
 	DebugManager::newInstance();
+	PopupManager::newInstance();
 	SettingsManager::getInstance()->load();	
 
 	if(!SETTING(LANGUAGE_FILE).empty()) {
@@ -98,6 +98,7 @@ void shutdown() {
 	TimerManager::getInstance()->removeListeners();
 	SettingsManager::getInstance()->save();
 	
+	PopupManager::deleteInstance();
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();

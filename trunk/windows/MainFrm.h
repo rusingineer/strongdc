@@ -59,6 +59,13 @@ public:
 
 	CMDICommandBarXPCtrl m_CmdBar;
 
+	class Popup {
+	public:
+		string Title;
+		string Message;
+		int Icon;
+	};
+
 	enum {
 		DOWNLOAD_LISTING,
 		STATS,
@@ -68,7 +75,8 @@ public:
 		SET_STATUSTEXT,
 		STATUS_MESSAGE,
 		CHECK_LISTING,
-		UPDATE_SHUTDOWN
+		UPDATE_SHUTDOWN,
+		SHOW_POPUP
 	};
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -320,7 +328,7 @@ public:
 
 	void SendCheatMessage(Client* client, User::Ptr u);
 	
-	BOOL ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
+	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
 
 	CImageList largeImages, largeImagesHot;
 private:

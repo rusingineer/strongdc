@@ -36,7 +36,7 @@
 
 BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) :
 separator(aSeparator), usesEscapes(aUsesEscapes), escaped(false), port(0), mode(MODE_LINE), 
-dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL), disablethrottle(false) {
+dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
 
 	inbuf = new u_int8_t[inbufSize];
 
@@ -77,7 +77,7 @@ bool BufferedSocket::threadSendFile() {
 	bool throttling;
 	try {
 		for(;;) {
-			throttling = disablethrottle ? false : BOOLSETTING(THROTTLE_ENABLE);
+			throttling = BOOLSETTING(THROTTLE_ENABLE);
 			if (throttling) { 
 				start = TimerManager::getTick();
 			}
@@ -95,9 +95,9 @@ bool BufferedSocket::threadSendFile() {
 					sendMaximum = inbufSize;
 				}
 				s = (u_int32_t)min((int64_t)inbufSize, (int64_t)sendMaximum);
-			} else {
-				s = (BOOLSETTING(SMALL_SEND_BUFFER) ? SMALL_BUFFER_SIZE : inbufSize);
 			}
+		 else
+				s = (BOOLSETTING(SMALL_SEND_BUFFER) ? SMALL_BUFFER_SIZE : inbufSize);
 			size_t actual = file->read(inbuf, s);
 			if(actual > 0) {
 				Socket::write((char*)inbuf, actual);
@@ -371,7 +371,7 @@ void BufferedSocket::threadRead() {
 						if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
 						fire(BufferedSocketListener::Line(), l.substr(0, pos));
 					}
-					i-=(pos + sizeof(separator));
+					i -= (pos + sizeof(separator));
 					bufpos += (pos + sizeof(separator));
 				} else {
 					line += l;

@@ -421,6 +421,7 @@ string ResourceManager::strings[] = {
 "Time left", 
 "Timestamps disabled", 
 "Timestamps enabled", 
+"More data was sent than was expected", 
 "Total: ", 
 "TTH Root", 
 "Type", 
@@ -783,6 +784,7 @@ string ResourceManager::strings[] = {
 "Cheating user found", 
 "Reason", 
 "Private message arrived", 
+"Popup type", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1204,6 +1206,7 @@ string ResourceManager::names[] = {
 "TimeLeft", 
 "TimestampsDisabled", 
 "TimestampsEnabled", 
+"TooMuchData", 
 "Total", 
 "TthRoot", 
 "Type", 
@@ -1566,4 +1569,5 @@ string ResourceManager::names[] = {
 "CheatingUser", 
 "Reason", 
 "PrivateMessage", 
+"PopupType", 
 };

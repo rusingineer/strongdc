@@ -36,7 +36,7 @@ public:
 	};
 
 	~Popups() {
-		ctrlPopups.Detach();
+		ctrlPopupType.Detach();
 		delete[] title;
 	};
 
@@ -59,6 +59,7 @@ protected:
 	char* title;
 
 	ExListViewCtrl ctrlPopups;
+	CComboBox ctrlPopupType;
 };
 
 #endif //Popups_H
