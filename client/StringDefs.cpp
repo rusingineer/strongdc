@@ -674,7 +674,8 @@ string ResourceManager::strings[] = {
 "Show progressbar on inactive segment part",
 "Color of inactive part",
 "String not found: ",
-"Show speed"
+"Show speed",
+"Down/Up:"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1349,5 +1350,6 @@ string ResourceManager::names[] = {
 "ShowSegmentPart",
 "SegmentPartColor",
 "StringNotFound",
-"ShowSpeed"
+"ShowSpeed",
+"DownUp"
 };

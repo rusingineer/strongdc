@@ -429,7 +429,6 @@ public:
 		if (nFound > -1) {
 			nDataPos = nFound;
 		} else nDataPos = ArrayInsertItem(item);
-
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)nDataPos);
 	}
@@ -510,7 +509,9 @@ public:
 	void deleteItem(T* item, bool memFree = true) 
 	{ 
 		int i = findItem(item); 
-		if(i != -1) DeleteItem(i, memFree); 
+		if(i != -1) DeleteItem(i, memFree); else {
+			delete item;
+		}
 	}
 
 	void deleteItem(int nListPos, bool memFree = true) 
@@ -574,7 +575,7 @@ protected:
 	// Zakazeme pouzivani techto metod zvenku
 	BOOL DeleteItem(int nItem, bool memFree)
 	{
-		int nDataPos = GetItemData(nItem); 
+		int nDataPos = GetItemData(nItem);
 		BOOL bRet = baseClass::DeleteItem(nItem);
 		if(memFree) ArrayDeleteItemAt(nDataPos);
 		return bRet;

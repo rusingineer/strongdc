@@ -1288,10 +1288,10 @@ void HubFrame::onTab() {
 }
 
 LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	if (GetFocus() != ctrlMessage.m_hWnd) { // don't handle these keys unless the user is entering a message
-		bHandled = FALSE;
-		return 0;
-	}
+//	if (GetFocus() != ctrlMessage.m_hWnd) { // don't handle these keys unless the user is entering a message
+//		bHandled = FALSE;
+//		return 0;
+//	}
 	if(!complete.empty() && wParam != VK_TAB && uMsg == WM_KEYDOWN)
 		complete.clear();
 
@@ -1315,14 +1315,23 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 	if(wParam == VK_TAB) {
 		onTab();
 		return 0;
+	} else if ( wParam == VK_ESCAPE ){
+		// Clear find text and give the focus back to the message box
+		ctrlMessage.SetFocus();
+		ctrlClient.SetSel(-1, -1);
+		ctrlClient.SendMessage(EM_SCROLL, SB_BOTTOM, 0);
+		ctrlClient.InvalidateRect(NULL);
+		currentNeedle="";
 	} else if( wParam == VK_F3 && ( GetKeyState(VK_LSHIFT)&(0x80) )  ) {
 		currentNeedle=findTextPopup();
 		findText(currentNeedle);
 		return 0;
 	}else if(wParam == VK_F3) {
-		if (currentNeedle.empty())
-			currentNeedle=findTextPopup();
-		findText(currentNeedle);
+		string whattofind;
+		whattofind=currentNeedle;
+		if (whattofind.empty())
+			whattofind=findTextPopup();
+		findText(whattofind);
 		return 0;
 	}
 

@@ -323,6 +323,7 @@
 #define IDC_TOOLBAR_ACTUAL              1221
 #define IDC_CLIENT_EXTENDED_TAG         1221
 #define IDC_LOG_SYSTEM                  1221
+#define IDC_DU                          1221
 #define IDC_STATIC3                     1222
 #define IDC_SEGMENT3_MAX                1222
 #define IDC_CLIENT_LOCK                 1222
@@ -419,6 +420,7 @@
 #define IDC_SETTINGS_GET_USER_COUNTRY   1271
 #define IDC_UP_COMBO                    1273
 #define IDC_DOWN_COMBO                  1274
+#define IDC_SLASH                       1275
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -639,7 +641,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1274
+#define _APS_NEXT_CONTROL_VALUE         1276
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
