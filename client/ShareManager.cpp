@@ -77,6 +77,7 @@ ShareManager::~ShareManager() {
 	SettingsManager::getInstance()->removeListener(this);
 	TimerManager::getInstance()->removeListener(this);
 	DownloadManager::getInstance()->removeListener(this);
+	HashManager::getInstance()->removeListener(this);
 
 	join();
 
@@ -85,12 +86,41 @@ ShareManager::~ShareManager() {
 	delete xFile;
 	xFile = NULL;
 
-	for(int i = 0; i <= listN; ++i) {
-		File::deleteFile(Util::getAppPath() + "MyList" + Util::toString(i) + ".DcLst");
-		File::deleteFile(Util::getAppPath() + "files" + Util::toString(i) + ".xml.bz2");
+#ifdef _WIN32
+	WIN32_FIND_DATA data;
+	HANDLE hFind;
+
+	hFind = FindFirstFile((Util::getAppPath() + "files*.xml.bz2").c_str(), &data);
+	if(hFind != INVALID_HANDLE_VALUE) {
+		do {
+			if(strlen(data.cFileName) > 13) // length of "files.xml.bz2"
+				File::deleteFile(Util::getAppPath() + data.cFileName);			
+		} while(FindNextFile(hFind, &data));
+
+		FindClose(hFind);
 	}
 
-	File::deleteFile(Util::getAppPath() + "files.xml.bz2");
+	hFind = FindFirstFile((Util::getAppPath() + "MyList*.DcLst").c_str(), &data);
+	if(hFind != INVALID_HANDLE_VALUE) {
+		do {
+			File::deleteFile(Util::getAppPath() + data.cFileName);			
+		} while(FindNextFile(hFind, &data));
+
+		FindClose(hFind);
+	}
+
+#else
+	DIR* dir = opendir(Util::getAppName().c_str());
+	if (dir) {
+		while (struct dirent* ent = readdir(dir)) {
+			if (fnmatch("files*.xml.bz2", ent->d_name, 0) == 0 ||
+				fnmatch("MyList*.DcLst", ent->d_name, 0) == 0) {
+					File::deleteFile(Util::getAppPath() + ent->d_name);	
+				}
+		}
+		closedir(dir);
+	}		
+#endif
 
 	for(Directory::MapIter j = directories.begin(); j != directories.end(); ++j) {
 		delete j->second;
@@ -110,10 +140,10 @@ ShareManager::Directory::~Directory() {
 string ShareManager::translateFileName(const string& aFile, bool adc, bool utf8) throw(ShareException) {
 	RLock l(cs);
 	if(aFile == "MyList.DcLst") {
-		//generateNmdcList();
+		generateNmdcList();
 		return getListFile();
 	} else if(aFile == "files.xml.bz2") {
-		//generateXmlList();
+		generateXmlList();
 		return getBZXmlFile();
 	} else {
 		string file;
@@ -336,6 +366,9 @@ void ShareManager::removeDirectory(const string& aDirectory) {
 			break;
 		}
 	}
+
+	HashManager::getInstance()->stopHashing(d);
+
 	setDirty();
 }
 
@@ -358,6 +391,9 @@ void ShareManager::removeDirectory1(const string& aDirectory) {
 			break;
 		}
 	}
+
+	HashManager::getInstance()->stopHashing(d);
+	
 	setDirty();
 }
 
@@ -649,11 +685,6 @@ int ShareManager::run() {
 			}
 			refreshDirs = false;
 		}
-
-		listN++;
-		generateXmlList();
-		generateNmdcList();
-
 	}
 
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
@@ -664,8 +695,8 @@ int ShareManager::run() {
 }
 		
 void ShareManager::generateXmlList() {
-	if(xmlDirty/* && lastXmlUpdate + 15 * 60 * 1000 < GET_TICK()*/) {
-		//listN++;
+	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate)) {
+		listN++;
 
 		try {
 			string tmp2;
@@ -689,7 +720,8 @@ void ShareManager::generateXmlList() {
 				File::deleteFile(getBZXmlFile());
 			}
 			try {
-				File::copyFile(newXmlName, Util::getAppPath() + "files.xml.bz2");
+				File::renameFile(newXmlName, Util::getAppPath() + "files.xml.bz2");
+				newXmlName = Util::getAppPath() + "files.xml.bz2";
 			} catch(const FileException&) {
 				// Ignore, this is for caching only...
 			}
@@ -704,10 +736,9 @@ void ShareManager::generateXmlList() {
 		lastXmlUpdate = GET_TICK();
 	}
 }
-
 void ShareManager::generateNmdcList() {
-	if(nmdcDirty/* && lastNmdcUpdate + 15 * 60 * 1000 < GET_TICK()*/) {
-		//listN++;
+	if(nmdcDirty && (lastNmdcUpdate + 15 * 60 * 1000 < GET_TICK() || lastNmdcUpdate < lastFullUpdate)) {
+		listN++;
 
 		try {
 			string tmp;
@@ -728,6 +759,11 @@ void ShareManager::generateNmdcList() {
 				lFile = NULL;
 				File::deleteFile(getListFile());
 			}
+			try {
+				File::renameFile(newName, Util::getAppPath() + "MyList.DcLst");
+				newName = Util::getAppPath() + "MyList.DcLst";
+			} catch(const FileException&) {
+			}
 			lFile = new File(newName, File::READ, File::OPEN);
 			setListFile(newName);
 			listLen = File::getSize(newName);
@@ -741,11 +777,6 @@ void ShareManager::generateNmdcList() {
 }
 
 static const string& escaper(const string& n, string& tmp) {
-/*	if(SimpleXML::needsEscape(n, false, false)) {
-		tmp.clear();
-		tmp.append(n);
-		return SimpleXML::escape(tmp, false, false);
-	}*/
 	if(Util::needsUtf8(n) || SimpleXML::needsEscape(n, false, false)) {
 		tmp = n;
 		return SimpleXML::escape(Util::toUtf8(tmp), false, false);

@@ -119,16 +119,30 @@ void Util::initialize() {
 	sgenrand((unsigned long)time(NULL));
 
 	try {
-		string file = Util::getAppPath() + SETTINGS_DIR + "GeoIpCountryWhois.csv";
+		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
+		// Updates at http://www.maxmind.com/app/geoip_country
+		string file = Util::getAppPath() + "GeoIpCountryWhois.csv";
+		string data = File(file, File::READ, File::OPEN).read();
 
-		StringTokenizer st(File(file , File::READ, File::OPEN).read());
+		const char* start = data.c_str();
+		string::size_type i = 0;
+		string::size_type j = 0;
+		string::size_type k = 0;
 		CountryIter last = countries.end();
-		for(StringIter i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-			string::size_type j = i->find(',');
-			if(j != string::npos && j < i->length() - 2) {
-				u_int16_t* country = (u_int16_t*)(i->c_str() + j + 1);
-				last = countries.insert(last, make_pair(Util::toUInt32(i->c_str()), *country));
-			}
+
+		for(;;) {
+			i = data.find(',', k);
+			if(i == string::npos)
+				break;
+
+			j = data.find('\n', i);
+			if(j == string::npos)
+				break;
+
+			u_int16_t* country = (u_int16_t*)(start + i + 1);
+			last = countries.insert(last, make_pair(Util::toUInt32(start + k), *country));
+
+			k = j + 1;
 		}
 	} catch(const FileException&) {
 	}

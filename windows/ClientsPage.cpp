@@ -9,12 +9,6 @@
 #include "../client/SettingsManager.h"
 #include "../client/HubManager.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem ClientsPage::texts[] = {
 	{ IDC_MOVE_CLIENT_UP, ResourceManager::MOVE_UP },
 	{ IDC_MOVE_CLIENT_DOWN, ResourceManager::MOVE_DOWN },

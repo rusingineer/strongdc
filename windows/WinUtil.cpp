@@ -708,17 +708,16 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		if(param.empty()) {
 			status = STRING(SPECIFY_SEARCH_STRING);
 		} else {
-			WinUtil::openLink("http://www.google.com/search?q="+param);
+			WinUtil::openLink("http://www.google.com/search?q="+Util::encodeURI(param));
 		}
 	} else if(Util::stricmp(cmd.c_str(), "imdb") == 0) {
 		if(param.empty()) {
 			status = STRING(SPECIFY_SEARCH_STRING);
 		} else {
-			WinUtil::openLink("http://www.imdb.com/find?q="+param);
+			WinUtil::openLink("http://www.imdb.com/find?q="+Util::encodeURI(param));
 		}
 	 	} else if(Util::stricmp(cmd.c_str(), "rebuild") == 0) {
 		HashManager::getInstance()->rebuild();
-		status = STRING(HASH_REBUILT);
 	} else if(Util::stricmp(cmd.c_str(), "shutdown") == 0) {
 		MainFrame::setShutDown(!(MainFrame::getShutDown()));
 		if (MainFrame::getShutDown()) {

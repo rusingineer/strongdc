@@ -36,6 +36,7 @@
 #include "DebugManager.h"
 
 #include "StringTokenizer.h"
+#include "WebServerManager.h"
 
 void startup(void (*f)(void*, const string&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
@@ -70,6 +71,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	}
 
 	HubManager::getInstance()->load();
+	WebServerManager::newInstance();
 	int i;
 	for(i = 0; i < SettingsManager::SPEED_LAST; i++) {
 		if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[i])
@@ -112,6 +114,7 @@ void shutdown() {
 	HubManager::deleteInstance();
 	HashManager::deleteInstance();
 	LogManager::deleteInstance();
+	WebServerManager::deleteInstance();
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();

@@ -9,13 +9,6 @@
 #include "OperaColorsPage.h"
 #include "PropertiesDlg.h"
 
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem PropPageTextStyles::texts[] = {
 	{ IDC_AVAILABLE_STYLES, ResourceManager::SETCZDC_STYLES },
 	{ IDC_BACK_COLOR, ResourceManager::SETCZDC_BACK_COLOR },

@@ -33,7 +33,7 @@
 #include "../client/LogManager.h"
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
-
+#include "../client/WebServerManager.h"
 
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
@@ -50,7 +50,7 @@
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
 		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>,
 		private TimerManagerListener, private HttpConnectionListener, private QueueManagerListener,
-		private LogManagerListener
+		private LogManagerListener, private WebServerListener
 {
 public:
 	MainFrame();
@@ -118,6 +118,7 @@ public:
 		MESSAGE_HANDLER(WM_ACTIVATEAPP, onActivateApp)
 		MESSAGE_HANDLER(WM_APPCOMMAND, onAppCommand)
 		MESSAGE_HANDLER(IDC_REBUILD_TOOLBAR, OnCreateToolbar)
+		MESSAGE_HANDLER(WEBSERVER_SOCKET_MESSAGE, onWebServerSocket)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_FILE_CONNECT, OnFileConnect)
 		COMMAND_ID_HANDLER(ID_FILE_SETTINGS, OnFileSettings)
@@ -207,6 +208,7 @@ public:
 	LRESULT onRefreshFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);	
 	LRESULT onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onActivateApp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onWebServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onAway(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onLimiter(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -423,6 +425,9 @@ private:
 	// HttpConnectionListener
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
 	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw();	
+	// WebServerListener
+	virtual void on(WebServerListener::Setup);
+	virtual void on(WebServerListener::ShutdownPC, int);
 
 	// QueueManagerListener
 	virtual void on(QueueManagerListener::Finished, QueueItem* qi) throw();

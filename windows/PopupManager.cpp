@@ -63,7 +63,9 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 			
 	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
 		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
-		SetLayeredWindowAttributes(p->m_hWnd, 0, 200, LWA_ALPHA);
+		typedef bool (CALLBACK* LPFUNC)(HWND hwnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
+		LPFUNC _d_SetLayeredWindowAttributes = (LPFUNC)GetProcAddress(LoadLibrary("user32"), "SetLayeredWindowAttributes");
+		_d_SetLayeredWindowAttributes(p->m_hWnd, 0, 200, LWA_ALPHA);
 	}
 
 	//move the window to the top of the z-order and display it

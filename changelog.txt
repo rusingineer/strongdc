@@ -1,3 +1,12 @@
+	-- StrongDC++ 1.00 --
+
+* opraveno zobrazení progressbaru v uploadqueue
+* pøidána možnost odstranit offline uživatele pøi vybìru více položek
+* pøidán prùmìrný share na uživatele (THX Corvik)
+* pøidán webserver (PhantomDC++, THX Chmelic za rozhraní)
+* opraven pád pøi spuštìní na starých Windows (THX Prologic)
+
+
 	-- StrongDC++ 1.00 RC8 --
 
 * away je ukládán pøi vypnutí

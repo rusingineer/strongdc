@@ -416,7 +416,7 @@ public:
 		f->read(buf, n);
 		f->movePos(-((int64_t)bytes));
 	}
-	virtual ~RollbackOutputStream() { if(managed) delete s; };
+	virtual ~RollbackOutputStream() { delete[] buf; if(managed) delete s; };
 
 	virtual size_t flush() throw(FileException) {
 		return s->flush();

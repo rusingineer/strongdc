@@ -29,7 +29,6 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	static ListItem listItems[];
-	CComboBox cClientEmu; 
 };
 
 #endif //CZDCPage_H

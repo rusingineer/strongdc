@@ -204,6 +204,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	bHandled = FALSE;
 	client->connect();
+    TimerManager::getInstance()->addListener(this);
 	return 1;
 }
 
@@ -759,6 +760,10 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 	} else if(wParam == STATS) {
 		ctrlStatus.SetText(1, (Util::toString(client->getUserCount()) + " " + STRING(HUB_USERS)).c_str());
 		ctrlStatus.SetText(2, Util::formatBytes(client->getAvailable()).c_str());
+		if(client->getUserCount() > 0)
+			ctrlStatus.SetText(3, (Util::formatBytes(client->getAvailable() / client->getUserCount()) + "/" + CSTRING(USER)).c_str());
+		else
+			ctrlStatus.SetText(3, "");
 	} else if(wParam == GET_PASSWORD) {
 		if(client->getPassword().size() > 0) {
 			client->password(client->getPassword());
@@ -817,23 +822,24 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[4];
+		int w[5];
 		ctrlStatus.GetClientRect(sr);
 
 		int tmp = (sr.Width()) > 332 ? 232 : ((sr.Width() > 132) ? sr.Width()-100 : 32);
 		
-		w[0] = sr.right - tmp;
-		w[1] = w[0] + (tmp-32)/2;
-		w[2] = w[0] + (tmp-32);
-		w[3] = w[2] + 16;
+		w[0] = sr.right - tmp - 50;
+		w[1] = w[0] + (tmp-50)/2;
+		w[2] = w[0] + (tmp-80);
+		w[3] = w[2] + 96;
+		w[4] = w[3] + 16;
 		
-		ctrlStatus.SetParts(4, w);
+		ctrlStatus.SetParts(5, w);
 
 		ctrlLastLines.SetMaxTipWidth(w[0]);
 		ctrlLastLines.SetWindowPos(HWND_TOPMOST, sr.left, sr.top, sr.Width(), sr.Height(), SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
 		// Strange, can't get the correct width of the last field...
-		ctrlStatus.GetRect(2, sr);
+		ctrlStatus.GetRect(3, sr);
 		sr.left = sr.right + 2;
 		sr.right = sr.left + 16;
 		ctrlShowUsers.MoveWindow(sr);

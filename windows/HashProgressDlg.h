@@ -53,6 +53,8 @@ public:
 		progress.SetRange(0, 10000);
 		updateStats();
 		
+		HashManager::getInstance()->setPriority(Thread::NORMAL);
+		
 		SetTimer(1, 1000);
 		return TRUE;
 	}
@@ -62,6 +64,7 @@ public:
 		return 0;
 	}
 	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+		HashManager::getInstance()->setPriority(Thread::IDLE);
 		progress.Detach();
 		KillTimer(1);
 		return 0;

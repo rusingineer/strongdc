@@ -6,6 +6,10 @@
 #include "CZDCLib.h"
 
 #include <math.h>
+#undef WINAPI 
+#define WINAPI extern "C" __stdcall 
+#pragma warning(disable: 4502 4518) 
+#include <powrprof.h>
 
 bool CZDCLib::bIsXP = false;
 bool CZDCLib::bGotXP = false; 
@@ -30,7 +34,10 @@ bool CZDCLib::isXp() {
 	return bIsXP;
 }
 
-bool CZDCLib::shutDown() /* throw(ShutdownException) */ {
+int activated = false;
+bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
+	if(activated) return false;
+	activated = true;
 	// Prepare for shutdown
 	UINT iForceIfHung = 0;
 	OSVERSIONINFO osvi;
@@ -56,7 +63,16 @@ bool CZDCLib::shutDown() /* throw(ShutdownException) */ {
 		CloseHandle(hToken);
 	}
 	// Shutdown
-	if (ExitWindowsEx(EWX_POWEROFF | iForceIfHung, 0) == 0) {
+
+	switch(action) {
+		case 0: { action = EWX_POWEROFF; break; }
+		case 1: { action = EWX_LOGOFF; break; }
+		case 2: { action = EWX_REBOOT; break; }
+		case 3: { SetSuspendState(false, false, false); return true; }
+		case 4: { SetSuspendState(true, false, false); return true; }
+		case 5: { LockWorkStation(); return true; }
+	}
+	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
 //		throw ShutdownException("OperaLib::shutDown()::ExitWindowsEx() failed.\r\nGetLastError returned: " + Util::toString((int)GetLastError()));
 		return false;
 	} else {

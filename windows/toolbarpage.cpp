@@ -27,12 +27,6 @@
 #include "WinUtil.h"
 #include "MainFrm.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem ToolbarPage::texts[] = {
 	{ IDC_MOUSE_OVER, ResourceManager::SETTINGS_MOUSE_OVER },
 	{ IDC_IMAGEBROWSE, ResourceManager::BROWSE },

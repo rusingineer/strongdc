@@ -24,12 +24,6 @@
 #include "../client/SettingsManager.h"
 #include "WinUtil.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem Advanced2Page::texts[] = {
 	{ IDC_SETTINGS_LOGGING, ResourceManager::SETTINGS_LOGGING },
 	{ IDC_SETTINGS_LOG_DIR, ResourceManager::DIRECTORY},

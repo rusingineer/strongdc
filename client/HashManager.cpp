@@ -462,10 +462,17 @@ int HashManager::Hasher::run() {
 		s.wait();
 		if(stop)
 			break;
+		if(rebuild) {
+			Lock l(cs);
+			HashManager::getInstance()->store.rebuild();
+			rebuild = false;
+			LogManager::getInstance()->message(STRING(HASH_REBUILT), true);
+			continue;
+		}
 		{
 			Lock l(cs);
 			if(!w.empty()) {
-				file = fname = *w.begin();
+				file = fname = w.begin()->first;
 				w.erase(w.begin());
 				int k = w.size();
 				if(k>pocetHashu) pocetHashu = k;
@@ -516,7 +523,6 @@ int HashManager::Hasher::run() {
 #endif
 					do {
 						size_t bufSize = BUF_SIZE;
-#ifdef _WIN32
 						if(SETTING(MAX_HASH_SPEED) > 0) {
 							u_int32_t now = GET_TICK();
 							u_int32_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
@@ -524,9 +530,6 @@ int HashManager::Hasher::run() {
 								Thread::sleep(minTime - (now - lastRead));
 							}
 						}
-#else
-#warning FIXME - Add speed measurement and throttling for non WIN32 platforms
-#endif
 						n = f.read(buf, bufSize);
 						tth->update(buf, n);
 

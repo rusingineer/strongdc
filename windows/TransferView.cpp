@@ -589,6 +589,9 @@ void TransferView::ItemInfo::update() {
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
 				upper->columns[COLUMN_SPEED] = Util::formatBytes(celkovaRychlost) + "/s";
 				upper->speed = celkovaRychlost;
+				if(qi != NULL) {
+					qi->setSpeed(celkovaRychlost);
+				}
 			}
 		}
 		if(colMask & MASK_FILE) {

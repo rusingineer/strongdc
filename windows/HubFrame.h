@@ -373,7 +373,6 @@ private:
 		client->setRawFour(aRawFour);
 		client->setRawFive(aRawFive);
 		client->addListener(this);
-		TimerManager::getInstance()->addListener(this);
 		timeStamps = BOOLSETTING(TIME_STAMPS);
 		hubchatusersplit = chatusersplit;
 		client->setStealth(stealth);

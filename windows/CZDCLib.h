@@ -12,7 +12,7 @@ typedef struct tagHLSTRIPLE {
 class CZDCLib {
 
 public:
-	static bool shutDown();
+	static bool shutDown(int action);
 	static bool isXp();
 	static bool isNT();
 	static int getWinVerMajor();

@@ -74,8 +74,6 @@ public:
 		FLAG_DIRECTORY_DOWNLOAD = 0x04,
 		/** The file is downloaded to be viewed in the gui */
 		FLAG_CLIENT_VIEW = 0x08,
-		/** The file list downloaded was actually BZ compressed (MyList.bz2, only available in FINISHED message) */
-		FLAG_BZLIST = 0x10,
 		/** Flag to indicate that file should be viewed as a text file */
 		FLAG_TEXT = 0x20,
 		/** This file exists on the hard disk and should be prioritised */
@@ -132,7 +130,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), 
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 	};
@@ -241,8 +239,6 @@ public:
 		dcassert(isSet(QueueItem::FLAG_USER_LIST));
 		if(isSet(QueueItem::FLAG_XML_BZLIST)) {
 			return getTarget() + ".xml.bz2";
-		} else if(isSet(QueueItem::FLAG_BZLIST)) {
-			return getTarget() + ".bz2";
 		} else {
 			return getTarget() + ".DcLst";
 		}
@@ -264,6 +260,7 @@ public:
 	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
+	GETSET(int64_t, speed, Speed);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();
@@ -322,7 +319,10 @@ private:
 
 	void removeSource(const User::Ptr& aUser, int reason) {
 		Source::Iter i = getSource(aUser, sources);
+
 		dcassert(i != sources.end());
+		if(i == sources.end()) return;
+
 		(*i)->setFlag(reason);
 		badSources.push_back(*i);
 		sources.erase(i);
