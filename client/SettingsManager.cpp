@@ -115,7 +115,7 @@ const string SettingsManager::settingTags[] =
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
-	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume",
+	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -401,7 +401,7 @@ SettingsManager::SettingsManager()
 	setDefault(CZCHARS_DISABLE, false);
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(REPORT_ALTERNATES, true);	
-	setDefault(AUTOSAVE_QUEUE, 30);
+	setDefault(AUTOSAVE_QUEUE, 2);
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
@@ -484,6 +484,8 @@ SettingsManager::SettingsManager()
 	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
 	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 	setDefault(HUBFRAME_VISIBLE, "1,1,0,1,0,1,1,0,0,0,0,0,0,0");
+	setDefault(ACCEPTED_DISCONNECTS, 5);
+	setDefault(ACCEPTED_TIMEOUTS, 10);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

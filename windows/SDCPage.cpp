@@ -34,7 +34,7 @@ PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_MAXSOURCES, ResourceManager::SETTINGS_MAX_SOURCES },
 	{ IDC_SETCZDC_MAX_EMOTICONS, ResourceManager::SETCZDC_MAX_EMOTICONS },
 	{ IDC_SAVEQUEUE_TEXT, ResourceManager::SETTINGS_SAVEQUEUE },
-	{ IDC_SECOND, ResourceManager::SECONDS },
+	{ IDC_SECOND, ResourceManager::MINUTES },
 	{ IDC_SECOND1, ResourceManager::SECONDS },
 	{ IDC_SECOND2, ResourceManager::SECONDS },
 	{ IDC_INTERVAL_TEXT, ResourceManager::MINIMUM_SEARCH_INTERVAL },

@@ -435,9 +435,13 @@ HWND MainFrame::createToolbar() {
 	if(!tbarcreated) {
 	if(SETTING(TOOLBARIMAGE) == "")
 		largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	else
+		WinUtil::createImageList1(largeImages, SETTING(TOOLBARIMAGE), 20);
 
 	if(SETTING(TOOLBARHOTIMAGE) == "")
 		largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	else
+		WinUtil::createImageList1(largeImagesHot, SETTING(TOOLBARHOTIMAGE), 20);
 
 	ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
 	ctrlToolbar.SetImageList(largeImages);
@@ -1022,7 +1026,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	bool isFile = false;
 	switch(wID) {
 	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
-	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/index.php"); break;
+	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
 	default: dcassert(0);
 	}
 

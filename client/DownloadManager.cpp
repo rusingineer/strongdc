@@ -123,23 +123,17 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		Download* d = *i;
 
-		if(d->finished)
+		if(d->finished || (d->getUserConnection() == NULL))
 			continue;
 
 		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
+
+		if(q == NULL)
+			continue;
+
 		d->setItem(q);
 
-		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 40) // check every 40 sec
-        {
-            if(d->getRunningAverage() < 1230){
-				if(q && (q->getActiveSegments().size() > 2)) {
-					d->getUserConnection()->disconnect();
-					continue;
-				}
-            }
-        }
-        		
-		if(q && SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
+     	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
 			int TryToSwitchToUser = -1;
 			if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
 				(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
@@ -159,7 +153,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			}
 		}
 
-		if(q && q->getSlowDisconnect() && !(SETTING(AUTO_DROP_SOURCE) && (q->getActiveSegments().size() < 2))) {
+		if(q->getSlowDisconnect() && !(SETTING(AUTO_DROP_SOURCE) && (q->getActiveSegments().size() < 2))) {
 			if(q->getSpeed() > (iHighSpeed*1024)) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
@@ -177,7 +171,18 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 				}
 			}
 		}
-		if(((*i)->getTotal() > 0) && (!(*i)->finished)) {
+
+		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 40) // check every 40 sec
+        {
+            if(d->getRunningAverage() < 1230) {
+				if(q->getActiveSegments().size() > 2) {
+					d->getUserConnection()->disconnect();
+					continue;
+				}
+            }
+        }
+
+		if((*i)->getTotal() > 0) {
 			tickList.push_back(*i);
 		}
 	}

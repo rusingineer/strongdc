@@ -85,7 +85,7 @@ public:
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1) {
+			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1), hasTestSURinQueue(false) {
 		unCacheClientInfo();
 		unsetFlag(User::OP);
 		unsetFlag(User::PASSIVE);
@@ -176,7 +176,8 @@ public:
 	GETSET(bool, filelistComplete, FilelistComplete);
 	GETSET(bool, badClient, BadClient);	
 	GETSET(bool, badFilelist, BadFilelist);
-	GETSET(bool, isInList, IsInList)
+	GETSET(bool, isInList, IsInList);
+	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
 	StringMap& clientEscapeParams(StringMap& sm) const;
 
 	void setCheat(const string& aCheatDescription, bool aBadClient) {

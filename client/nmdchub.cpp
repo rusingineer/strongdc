@@ -327,6 +327,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					u->unsetFlag(User::SERVER);
 					u->unsetFlag(User::FIREBALL);
 				}
+				u->setStatus(status);
 				u->setConnection(fromNmdc(Connection));
 				if(strcmp(Connection, "28.8Kbps") == 0 || strcmp(Connection, "33.6Kbps") == 0 ||
 					strcmp(Connection, "56Kbps") == 0 || strcmp(Connection, "Modem") == 0) {

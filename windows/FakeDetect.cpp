@@ -26,11 +26,15 @@
 
 PropPage::TextItem FakeDetect::texts[] = {
 	{ DAA, ResourceManager::TEXT_FAKEPERCENT },
+	{ IDC_TIMEOUTS, ResourceManager::ACCEPTED_TIMEOUTS },
+	{ IDC_DISCONNECTS, ResourceManager::ACCEPTED_DISCONNECTS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
 
 PropPage::Item FakeDetect::items[] = {
 	{ IDC_PERCENT_FAKE_SHARE_TOLERATED, SettingsManager::PERCENT_FAKE_SHARE_TOLERATED, PropPage::T_INT }, 
+	{ IDC_TIMEOUTS_NO, SettingsManager::ACCEPTED_TIMEOUTS, PropPage::T_INT }, 
+	{ IDC_DISCONNECTS_NO, SettingsManager::ACCEPTED_DISCONNECTS, PropPage::T_INT }, 
 	{ 0, 0, PropPage::T_END }
 };
 

@@ -142,7 +142,7 @@ private:
 
 	// UserConnectionListener
 	virtual void on(Connected, UserConnection*) throw();
-	virtual void on(Failed, UserConnection*, const string&) throw();
+	virtual void on(Failed_deadlock_fix, UserConnection*, const string&) throw();
 	virtual void on(CLock, UserConnection*, const string&, const string&) throw();
 	virtual void on(Key, UserConnection*, const string&) throw();
 	virtual void on(Direction, UserConnection*, const string&, const string&) throw();

@@ -326,26 +326,17 @@ static LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 	return CallNextHookEx(WinUtil::hook, code, wParam, lParam);
 }
 
-void createImageList1(CImageList &imglst, string file) {
-	HBITMAP hBitmap = (HBITMAP)::LoadImage(
-		NULL, Text::toT(file).c_str(), IMAGE_BITMAP,
-		0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
-	
-	if( !hBitmap )
-		return;
-    CBitmap b;
-	b.Attach(hBitmap);
-	
-	imglst.Create(16, 16, ILC_MASK | ILC_COLOR32, 0, 0);
-	imglst.Add(b, RGB(255,0,255)); 
+void WinUtil::createImageList1(CImageList &imglst, string file, int size) {
+	imglst.CreateFromImage(Text::toT(file).c_str(), size, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 }
+
 void WinUtil::reLoadImages(){
 	userImages.Destroy();
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	else 
-		createImageList1(userImages, SETTING(USERLIST_IMAGE));
-}// User Icon End
+		createImageList1(userImages, SETTING(USERLIST_IMAGE), 16);
+}
 
 void WinUtil::init(HWND hWnd) {
 	mainWnd = hWnd;
@@ -452,7 +443,7 @@ void WinUtil::init(HWND hWnd) {
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	else 
-		createImageList1(userImages, SETTING(USERLIST_IMAGE));
+		createImageList1(userImages, SETTING(USERLIST_IMAGE), 16);
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
 	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, Text::fromT(encodeFont(lf)));

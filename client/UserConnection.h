@@ -62,6 +62,7 @@ public:
 	typedef X<21> ADCSnd;
 	typedef X<22> ADCSta;
 	typedef X<23> ListLength; 
+	typedef X<24> Failed_deadlock_fix;
 
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw() { }
 	virtual void on(Connected, UserConnection*) throw() { }
@@ -84,6 +85,7 @@ public:
 	virtual void on(Supports, UserConnection*, const StringList&) throw() { }
 	virtual void on(FileNotAvailable, UserConnection*) throw() { }
 	virtual void on(ListLength, UserConnection*, const string&) throw() { }
+	virtual void on(Failed_deadlock_fix, UserConnection*, const string&) throw() { }
 
 	virtual void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw() { }
 	virtual void on(AdcCommand::INF, UserConnection*, const AdcCommand&) throw() { }

@@ -307,18 +307,22 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 }
 
 void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
-	Lock l_deadlock_fix(cs_deadlock_fix);
-	Lock l(cs);
+	UserConnection::List penDel;
+
 	{
+		Lock l(cs);
 		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
 			if(((*j)->getLastActivity() + 180*1000) < aTick) {
 				(*j)->disconnect();
 			}
 		}
-	}
+		for(UserConnection::Iter j = pendingDelete.begin(); j != pendingDelete.end(); ++j) {
+			penDel.push_back(*j);
+		}
+		pendingDelete.clear();
 
-	for_each(pendingDelete.begin(), pendingDelete.end(), DeleteFunction<UserConnection*>());
-	pendingDelete.clear();
+	}
+	for_each(penDel.begin(), penDel.end(), DeleteFunction<UserConnection*>());
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
@@ -706,7 +710,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
+void ConnectionManager::on(UserConnectionListener::Failed_deadlock_fix, UserConnection* aSource, const string& /*aError*/) throw() {
 	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
 		{
 			Lock l(cs);

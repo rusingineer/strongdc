@@ -493,7 +493,11 @@ string User::insertUserData(const string& s, Client* aClient /* = NULL */)
 
 bool User::fileListDisconnected() {
 	fileListDisconnects++;
-	if(fileListDisconnects == 10) {
+
+	if(SETTING(ACCEPTED_DISCONNECTS) == 0)
+		return false;
+
+	if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
 		updated();
 		sendRawCommand(SETTING(DISCONNECT_RAW));
@@ -503,11 +507,15 @@ bool User::fileListDisconnected() {
 }
 bool User::connectionTimeout() {
 	connectionTimeouts++;
-	if(connectionTimeouts == 15) {
+
+	if(SETTING(ACCEPTED_TIMEOUTS) == 0)
+		return false;
+
+	if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 		updated();
 		try {
-			QueueManager::getInstance()->removeTestSUR(nick);
+			QueueManager::getInstance()->removeTestSUR(this);
 		} catch(...) {
 		}
 		sendRawCommand(SETTING(TIMEOUT_RAW));
@@ -520,7 +528,7 @@ void User::setPassive() {
 	if(tag.find(",M:A") != string::npos) {
 		setCheat("Tag states active mode but is using passive commands", false);
 		updated();
-		QueueManager::getInstance()->removeTestSUR(nick);
+		QueueManager::getInstance()->removeTestSUR(this);
 	}
 }
 // CDM EXTENSION ENDS

@@ -98,7 +98,7 @@ public:
 		parse(aLine, nmdc);
 	}
 
-	void parse(const string& aLine, bool nmdc = false);
+	void parse(const string& aLine, bool nmdc = false) throw(ParseException);
 
 	u_int32_t getCommand() const { return cmdInt; }
 	char getType() const { return type; }

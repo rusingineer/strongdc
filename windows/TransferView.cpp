@@ -1264,9 +1264,11 @@ void TransferView::on(QueueManagerListener::Removed, QueueItem* aQI) {
 			ItemInfo* m = j->second;
 			if((m->qi == aQI) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				m->qi = NULL;
-				m->upper->qi = NULL;
-				i = m->upper;
-				i->finished = true;
+				if(m->upper) {
+					m->upper->qi = NULL;
+					i = m->upper;
+					i->finished = true;
+				}
 			}
 		}
 		if(i == NULL)
