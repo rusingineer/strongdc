@@ -299,7 +299,7 @@ void WinUtil::init(HWND hWnd) {
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CSTRING(MENU_TOOLBAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CSTRING(MENU_STATUS_BAR));
-	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFERS, CSTRING(MENU_TRANSFER_VIEW));
+	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFER_VIEW, CSTRING(MENU_TRANSFER_VIEW));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)view, CSTRING(MENU_VIEW));
 
@@ -618,7 +618,7 @@ char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :
 "\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n" LINE3,
 "\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n" LINE3,
 "\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
-"\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE3,
+"\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n" LINE3,
 "\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
 };
 

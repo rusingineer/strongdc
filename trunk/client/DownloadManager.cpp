@@ -558,7 +558,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	}
 	
 	if(BOOLSETTING(ENABLE403FEATURES))
-	if(d->getPos() == 0) {
+	if((d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
 			// We make a single node tree...
 			d->getTigerTree().setFileSize(d->getSize());

@@ -565,8 +565,8 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	int i = -1;
 	if(searchinlist)
-		i = findUser(u);
-	//	i = ctrlUsers.findItem(u->getNick());
+	//	i = findUser(u);
+		i = ctrlUsers.findItem(u->getNick());
 	bool bHideUser = false;
 	if (!stFilter.getTokens().empty()) {
 		string filter_s;
@@ -636,7 +636,7 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 			delete ctrlUsers.getItemData(i);
 			ctrlUsers.deleteItem(i, false);
 			//dcassert(userMap[u] == ui);
-			//userMap.erase(u);			
+			userMap.erase(u);			
 		}
 		return false;
 	} else
@@ -812,8 +812,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					
 					break;
 				case REMOVE_USER:
-					int j = findUser(u);
-					//int j = ctrlUsers.findItem(u->getNick());
+					//int j = findUser(u);
+					int j = ctrlUsers.findItem(u->getNick());
 					if( j != -1 ) {
 						if(showJoins) {
 							if (!favShowJoins | u->isFavoriteUser()) {

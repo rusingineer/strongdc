@@ -261,6 +261,9 @@
 				RelativePath=".\res\settings_dlg.bmp">
 			</File>
 			<File
+				RelativePath=".\res\shutdown.ico">
+			</File>
+			<File
 				RelativePath=".\res\sounds.ico">
 			</File>
 			<File
@@ -688,9 +691,9 @@
 			<File
 				RelativePath=".\windows\LineDlg.h">
 			</File>
-			<File	
- 	                        RelativePath=".\windows\ListViewArrows.h">	
- 	                </File>
+			<File
+				RelativePath=".\windows\ListViewArrows.h">
+			</File>
 			<File
 				RelativePath=".\windows\MainFrm.h">
 			</File>

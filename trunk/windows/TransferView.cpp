@@ -711,7 +711,7 @@ LRESULT TransferView::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	if (item->ptAction.x < rect.left)
 	{
 		ItemInfo* i = (ItemInfo*)ctrlTransfers.getItemData(item->iItem);
-//		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem) && (!i->qi->isSet(QueueItem::FLAG_USER_LIST)))
+		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem) && (!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && (!i->qi->isSet(QueueItem::FLAG_TESTSUR)))
 			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
 	}
 	return 0;
@@ -745,7 +745,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			{
 				i->update();
 				if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
-			} else 	i->update();
+			} else i->update();
 			  ctrlTransfers.updateItem(i);
 		}
 
@@ -757,9 +757,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == SET_STATE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
-//		if((!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
+		if((!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
 			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-//		}
+		}
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
@@ -877,7 +877,8 @@ void TransferView::ItemInfo::update() {
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
 		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-			if(upper->downloadTarget == "") upper->columns[COLUMN_STATUS] = upper->statusString; else {
+			if(upper->downloadTarget == "") upper->columns[COLUMN_STATUS] = upper->statusString;
+			else {
 				FileDataInfo* fdi = FileDataInfo::GetFileDataInfo(upper->downloadTarget);
 				if(fdi) {
 					if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
@@ -1100,10 +1101,13 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		i->oldTarget = i->Target;
 	{
 		Lock l(cs);
-		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1))
+		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1)) {
+			i->updateMask |= ItemInfo::MASK_HUB;
 			i->upper->statusString = aReason;
+			i->pocetSegmentu = 0;
+		}
 			
-		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS);
+		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
@@ -1267,17 +1271,19 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->oldTarget = i->Target;
 	{
 		Lock l(cs);
-		if(i->upper != NULL) {
+		if((i->qi) && (i->upper != NULL)) {
 			if(i->qi->getCurrents().size() <= 1) {
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = aReason;
 				i->upper->file = Util::getFileName(aDownload->getTarget());
 				i->upper->path = Util::getFilePath(aDownload->getTarget());
 				i->upper->size = aDownload->getSize();
+				i->updateMask |= ItemInfo::MASK_HUB;
+				i->pocetSegmentu = 0;
 			}
 		}
 
-		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
+		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
 		ItemInfo::MASK_PATH;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);

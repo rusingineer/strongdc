@@ -70,7 +70,6 @@
 #define IDD_PREVIEW                     252
 #define IDB_STATE                       254
 #define IDB_BITMAP1                     255
-#define IDB_O_OTOOLS                    256
 #define IDB_SEARCH_ICONS                257
 #define IDB_SEARCH_TYPES                257
 #define IDD_TOOLBARPAGE                 259
@@ -90,6 +89,7 @@
 #define IDR_UPDATE                      276
 #define IDB_BITMAP2                     277
 #define IDB_FAVSTATES                   277
+#define IDB_SHUTDOWN                    278
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -424,7 +424,10 @@
 #define IDC_SAVEQUEUE_SPIN              1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define BAA                             1257
+#define IDC_SEG_NUMBER2                 1257
+#define IDC_SEARCH_EDIT                 1257
 #define CAA                             1258
+#define IDC_SEARCH_SPIN                 1258
 #define DAA                             1259
 #define FAKE_SET                        1260
 #define INFORMACE                       1261
@@ -445,6 +448,7 @@
 #define IDC_BLOCK_COMBO                 1276
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
+#define IDC_MINUTES                     1279
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -529,7 +533,7 @@
 #define IDC_COPY_PATH                   10028
 #define IDC_TIME_DOWN                   10029
 #define IDC_COPY_SIZE                   10030
-#define ID_VIEW_TRANSFERS               10031
+#define ID_VIEW_TRANSFER_VIEW           10031
 #define IDC_OPEN_HUB_LOG                10032
 #define IDC_OPEN_USER_LOG               10033
 #define IDC_H_DOWN_SPEED                10034
@@ -653,8 +657,8 @@
 #define IDC_CHECKLIST                   10150
 #define ID_GET_TTH                      10151
 #define IDC_COPY_LINK                   10152
-#define IDC_BITZI_LOOKUP                20000
 #define IDC_REBUILD_TOOLBAR             10162
+#define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774
 #define ID_FILE_RECONNECT               32775
@@ -676,9 +680,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        278
+#define _APS_NEXT_RESOURCE_VALUE        279
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1279
+#define _APS_NEXT_CONTROL_VALUE         1280
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

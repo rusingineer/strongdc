@@ -339,7 +339,7 @@ void BufferedSocket::threadRead() {
 		string l;
 		while(i > 0) {
 			if(mode == MODE_LINE) {
-				string::size_type pos;
+				string::size_type pos = 0;
 
 				l = string((char*)inbuf + bufpos, i);
 
@@ -370,6 +370,7 @@ void BufferedSocket::threadRead() {
 						fire(BufferedSocketListener::Line(), line + l.substr(0, pos));
 						line.clear();
 					} else {
+						if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
 						fire(BufferedSocketListener::Line(), l.substr(0, pos));
 					}
 					i-=(pos + sizeof(separator));

@@ -64,6 +64,8 @@ const string SettingsManager::settingTags[] =
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", "OpenFavoriteHubs", "OpenFinishedDownloads", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
 	"LogFilelistTransfers", "EmptyWorkingSet", "SegmentColor", "ShowSegmentColor",
+	"ShowStatusbar",
+	"ShowToolbar", "ShowTransferview", 
 	"OptionalInfo", "GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
 	"PopupFilelist", "CzertHiddenSettingA", "FilterSearchResults", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
@@ -82,8 +84,7 @@ const string SettingsManager::settingTags[] =
 	"OpenNetworkStatistic", "MinimizeOnStratup", "ConfirmDelete", "DefaultSearchFreeSlots", 
 	"ExtensionDownTo", "ErrorColor", "ShowShared", "ShowExactShared", "ShowDescription", 
 	"ShowTag", "ShowConnection", "ShowEmail", "ShowClient", "ShowVersion", "ShowMode", 
-	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "ShowTransfers", "ShowToolbar", 
-	"ShowStatusBar", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
+	"ShowHubs", "ShowSlots", "ShowUpload", "ExpandQueue", "TransferSplitSize", "ShowIP", "ShowISP", "IDownSpeed", "HDownSpeed", "DownTime", 
 	"ProgressOverrideColors", "ProgressBumped", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser",
@@ -95,6 +96,7 @@ const string SettingsManager::settingTags[] =
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
+	"SearchTime",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -213,8 +215,8 @@ SettingsManager::SettingsManager()
 	setDefault(UPDATE_URL, "http://www.fin-overclocking.net/");
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
-	setDefault(SHOW_TRANSFERS, true);
-	setDefault(SHOW_STATUS_BAR, true);
+	setDefault(SHOW_TRANSFERVIEW, true);
+	setDefault(SHOW_STATUSBAR, true);
 	setDefault(SHOW_TOOLBAR, true);
 
 	setDefault(EXTRA_SLOTS, 3);
@@ -390,6 +392,8 @@ SettingsManager::SettingsManager()
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
 	setDefault(ENABLE403FEATURES, true);	
+	
+	setDefault(SEARCH_TIME, 10);	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
