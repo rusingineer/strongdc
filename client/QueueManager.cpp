@@ -66,6 +66,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 		qi->setPriority(qi->calculateAutoPriority());
 	}
 
+	qi->setMaxSegments(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
+	qi->setMaxSegmentsInitial(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
+
 	if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
 		if(aTempTarget.empty()) {
 			if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty()) {
@@ -89,16 +92,16 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 			copy(istream_iterator<int64_t>(is),
 				istream_iterator<int64_t>(),
 				back_inserter(v)); 
-			new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v);
+			new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v, qi->getMaxSegments());
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
 				vector<int64_t> v;
 				v.push_back(tmpSize);
 				v.push_back(qi->getSize());
-				new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v);
+				new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v, qi->getMaxSegments());
 			}else
-				new FileDataInfo(qi->getTempTarget(), qi->getSize(), NULL);
+				new FileDataInfo(qi->getTempTarget(), qi->getSize(), NULL, qi->getMaxSegments());
 			
 		}
 	}
@@ -804,13 +807,13 @@ QueueItem* QueueManager::lookupNext(User::Ptr& aUser) throw() {
     return userQueue.getNext(aUser);
 }
 
-bool QueueManager::matchExtension(const string& aString, const string& aExt) {
+bool QueueManager::FileQueue::matchExtension(const string& aString, const string& aExt) {
 	PME reg(aExt,"i");
 	if(reg.match(aString)) { return true; }
 	return false;
 }
 
-int QueueManager::getMaxSegments(string filename, int64_t filesize) {
+int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	int MaxSegments = 1;
 
 	string s1 = filename;
@@ -847,17 +850,22 @@ int QueueManager::getMaxSegments(string filename, int64_t filesize) {
  return MaxSegments;
 }
 
-Download* QueueManager::getDownload(User::Ptr& aUser) throw() {
+Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) throw() {
 	Lock l(cs);
+
+	string message = STRING(DOWNLOAD_FINISHED_IDLE);
 
 	QueueItem* q = userQueue.getNext(aUser);
 
 znovu:
-	if(q == NULL)
+	if(q == NULL) {
+		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
 		return NULL;
+	}
 
-	int k = q->getCurrents().size();
-	if(k >= getMaxSegments(q->getTargetFileName(), q->getSize())) {
+	int k = q->getActiveSegments().size();
+	if(k >= q->getMaxSegments()) {
+		message = STRING(ALL_SEGMENTS_TAKEN);		
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto znovu;
 	}
@@ -866,8 +874,10 @@ znovu:
 
 again:
 
-	if(q == NULL)
+	if(q == NULL) {
+		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
 		return NULL;
+	}
 
 	int64_t freeBlock = 0;
 
@@ -876,6 +886,7 @@ again:
 		freeBlock = FileDataInfo::GetFileDataInfo(q->getTempTarget())->GetUndlStart();
 
 		if(freeBlock == -1){
+			message = "No free block";
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
@@ -1234,6 +1245,13 @@ void QueueManager::saveQueue() throw() {
 				}
 				f.write(STRINGLEN("\" AutoPriority=\""));
 				f.write(Util::toString(d->getAutoPriority()));
+
+				f.write(STRINGLEN("\" MaxSegments=\""));
+				f.write(Util::toString(d->getMaxSegments()));
+
+				f.write(STRINGLEN("\" MaxSegmentsInitial=\""));
+				f.write(Util::toString(d->getMaxSegmentsInitial()));
+
 				f.write(STRINGLEN("\">\r\n"));
 
 				for(QueueItem::Source::List::const_iterator j = d->sources.begin(); j != d->sources.end(); ++j) {
@@ -1321,6 +1339,8 @@ static const string sUtf8 = "Utf8";
 static const string sTTH = "TTH";
 static const string sFreeBlocks = "FreeBlocks";
 static const string sAutoPriority = "AutoPriority";
+static const string sMaxSegments = "MaxSegments";
+static const string sMaxSegmentsInitial = "MaxSegmentsInitial";
 
 void QueueLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
 	QueueManager* qm = QueueManager::getInstance();	
@@ -1346,6 +1366,8 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& tthRoot = getAttrib(attribs, sTTH, 6);
 			const string& searchString = getAttrib(attribs, sSearchString, 6);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 6));
+			int maxsegments = Util::toInt(getAttrib(attribs, sMaxSegments, 6));
+			int maxsegmentsinitial = Util::toInt(getAttrib(attribs, sMaxSegmentsInitial, 6));
 			if (downloaded > size || downloaded < 0)
 				downloaded = 0;
 
@@ -1363,6 +1385,11 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				}
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
 				qi->setAutoPriority(ap);
+
+				if(maxsegmentsinitial > 0) qi->setMaxSegmentsInitial(maxsegmentsinitial);
+				if(maxsegments > 1) qi->setMaxSegments(maxsegments);
+					else qi->setMaxSegments(1);
+				
 				qm->fire(QueueManagerListener::Added(), qi);
 			}
 			if(!simple)

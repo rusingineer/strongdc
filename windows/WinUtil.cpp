@@ -953,9 +953,11 @@ int WinUtil::getIconIndex(const string& aFileName) {
 	}
 }
 
-void WinUtil::ClearPreviewMenu(CMenu &previewMenu){
+void WinUtil::ClearPreviewMenu(OMenu &previewMenu){
 	while(previewMenu.GetMenuItemCount() > 0) {
-		previewMenu.RemoveMenu(0, MF_BYPOSITION);
+/*		previewMenu.CheckOwnerDrawn(0, MF_BYPOSITION);
+		previewMenu.RemoveMenu(0, MF_BYPOSITION);*/
+		previewMenu.RemoveFirstItem();
 	}
 }
 

@@ -715,5 +715,10 @@ enum Strings { // @DontAdd
 	SEARCH_FOR_ALTERNATES_TTH, // "By TTH"
 	SEARCH_FOR_ALTERNATES_NAME, // "By Name"
 	ENABLE_DC403_FEATURES, // "Enable DC++ 0.403 Speacial Features"
+	ALL_SEGMENTS_TAKEN, // "All segments taken"
+	SEGMENTS, // "Segments"
+	SEGMENT, // "Segment"
+	MAX_SEGMENTS_NUMBER, // "Max number of segments"
+	DISABLED, // "Disabled"
 	LAST // @DontAdd
 };

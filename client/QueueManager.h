@@ -141,7 +141,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr& aUser) throw();
+	Download* getDownload(User::Ptr& aUser, UserConnection* aConn) throw();
 	void putDownload(Download* aDownload, bool finished = false) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
@@ -177,6 +177,8 @@ public:
 			u_int32_t aAdded, const TTHValue* root, const string& freeBlocks = Util::emptyString) throw(QueueException, FileException);
 		QueueItem* find(const string& target);
 		QueueItem* findByHash(const string& hash);
+		int getMaxSegments(string filename, int64_t filesize);
+		bool matchExtension(const string& aString, const string& aExt);
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, TTHValue* tth);
 
@@ -253,9 +255,6 @@ public:
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, bool addBad, bool utf8) throw(QueueException, FileException);
-	int getMaxSegments(string filename, int64_t filesize);
-	bool matchExtension(const string& aString, const string& aExt);
-
 	int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw();
 	
 	void removeAll(QueueItem* q);

@@ -206,7 +206,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
-			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0), pocetSegmentu(0),
+			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0),
 			compressRatio(1.0) { update(); };
 
 		Types type;
@@ -231,7 +231,6 @@ private:
 		bool collapsed;
 		bool mainItem;
 		int pocetUseru;
-		int pocetSegmentu;
 		string oldTarget;
 		double compressRatio;
 		string downloadTarget;

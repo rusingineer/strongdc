@@ -28,8 +28,6 @@
 
 #include "WinUtil.h"
 #include "resource.h"
-
-#include "CZDCLib.h"
 #include "OMenu.h"
 
 enum {
@@ -55,7 +53,7 @@ public:
 	FlatTabCtrlImpl() : closing(NULL), rows(1), height(0), active(NULL), moving(NULL), inTab(false) { 
 		black.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
 	};
-	~FlatTabCtrlImpl() { };
+	~FlatTabCtrlImpl() { }
 
 	static LPCTSTR GetWndClassName()
 	{
@@ -237,7 +235,7 @@ public:
 		return 0;
 	}
 
-	LRESULT onLButtonUp(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	LRESULT onLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 		int xPos = GET_X_LPARAM(lParam); 
 		int yPos = GET_Y_LPARAM(lParam); 
 		int row = getRows() - ((yPos / getTabHeight()) + 1);
@@ -623,8 +621,8 @@ private:
 	int height;
 
 	TabInfo* active;
-	TabInfo::List tabs;
 	TabInfo* moving;
+	TabInfo::List tabs;
 	CPen black;
 
 	typedef list<HWND> WindowList;

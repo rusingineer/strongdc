@@ -77,6 +77,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			tickList.push_back(*i);
 			QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
 		}
+
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			if(getAverageSpeed() < (iHighSpeed*1024)) {
 				Download* d = *i;
@@ -199,7 +200,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		return;
 	}
 
-		d = QueueManager::getInstance()->getDownload(aConn->getUser());
+		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
 
 	if(d == NULL) {
 			removeConnection(aConn, false);
@@ -419,7 +420,7 @@ public:
 			cur.update(buf, bufPos);
 		bufPos = 0;
 
-		cur.finalize();
+		//cur.finalize();
 		checkTrees();
 		return s->flush();
 	}
@@ -557,7 +558,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
-	if(BOOLSETTING(ENABLE403FEATURES))
+//	if(BOOLSETTING(ENABLE403FEATURES))
 	if((d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
 			// We make a single node tree...
@@ -579,7 +580,10 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	dcassert(d->getPos() != -1);
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
-	
+
+	QueueItem* q = QueueManager::getInstance()->getRunning(aSource->getUser());
+	q->addActiveSegment(aSource->getUser());
+
 	fire(DownloadManagerListener::Starting(), d);
 	
 	return true;
@@ -716,6 +720,8 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	//dcassert(d->getPos() == d->getSize());
 	dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
+	QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
+
 	// Check if we have some crc:s...
 	if(BOOLSETTING(SFV_CHECK)) {
 		SFVReader sfv(d->getTarget());
@@ -759,7 +765,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				vector<int64_t> v;
 				v.push_back(0);
 				v.push_back(d->getSize());
-				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v, q->getMaxSegments());
 
 				removeDownload(d, true);				
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
@@ -796,8 +802,7 @@ noCRC:
 	// Check hash
 	if((BOOLSETTING(CHECK_TTH)) && (!d->isSet(Download::FLAG_USER_LIST)) && (!d->isSet(Download::FLAG_MP3_INFO)))
 	{
-		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));
-		QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
+		fire(DownloadManagerListener::Failed(), d, STRING(CHECKING_TTH));		
 		TTHValue* hash1 = new TTHValue(HashManager::getInstance()->hasher.getTTfromFile(d->getTempTarget()).getRoot());
 		TTHValue* hash2 = q->getTTH();
 
@@ -830,7 +835,7 @@ noCRC:
 				vector<int64_t> v;
 				v.push_back(0);
 				v.push_back(d->getSize());
-				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v, q->getMaxSegments());
 
 				removeDownload(d, true);
 				//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);

@@ -14,6 +14,7 @@ public:
 
 	string sFileName;
 	__int64 iFileSize;
+	int maxSegments;
 
 	HANDLE hMutex;
 
@@ -24,7 +25,7 @@ public:
         return iDownloadedSize;
     }
 
-	FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks = NULL);
+	FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks = NULL, int maxS = 1);
 
 	~FileDataInfo()
 	{
