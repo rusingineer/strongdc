@@ -229,7 +229,7 @@ public:
 	static void socksUpdated();
 	
 	string getRemoteIp() const; 
-	string getRemoteHost() const;
+	string getRemoteHost(const string& aIp) const;
 	GETSET(string, ip, Ip);
 	GETSET(short, port, Port);
 	
