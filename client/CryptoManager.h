@@ -24,7 +24,6 @@
 #endif // _MSC_VER > 1000
 
 #include "SettingsManager.h"
-#include "ResourceManager.h"
 
 #include "Exception.h"
 #include "Singleton.h"

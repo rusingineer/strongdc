@@ -491,7 +491,7 @@ StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 void User::addLine(const string& aLine) {
 	RLock<> l(cs);
 	if(client) {
-		client->addLine(aLine);
+		client->cheatMessage(aLine);
 	}
 }
 string User::insertUserData(const string& s, Client* aClient /* = NULL */)

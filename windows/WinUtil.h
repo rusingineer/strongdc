@@ -272,7 +272,18 @@ public:
 			frame->CreateEx(WinUtil::mdiClient, frame->rcDefault, CTSTRING_I(ResourceManager::Strings(title)));
 			CZDCLib::setButtonPressed(ID, true);
 		} else {
-			HANDLE_MDI_CLICK(ID, T);
+			// match the behavior of MainFrame::onSelected()
+			HWND hWnd = frame->m_hWnd;
+			if(frame->MDIGetActive() != hWnd) {
+				frame->MDIActivate(hWnd);
+			} else if(BOOLSETTING(TOGGLE_ACTIVE_WINDOW)) {
+				::SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+				frame->MDINext(hWnd);
+				hWnd = frame->MDIGetActive();
+				CZDCLib::setButtonPressed(ID, true);
+			}
+			if(::IsIconic(hWnd))
+				::ShowWindow(hWnd, SW_RESTORE);
 		}
 	}
 };

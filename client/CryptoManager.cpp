@@ -23,6 +23,7 @@
 
 #include "BitInputStream.h"
 #include "BitOutputStream.h"
+#include "ResourceManager.h"
 
 #ifdef _WIN32
 #include "../bzip2/bzlib.h"

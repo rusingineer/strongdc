@@ -84,10 +84,9 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 	string file;
 	try {
-		file = ShareManager::getInstance()->translateFileName(aFile);
 		if(aType == "file") {
+			file = ShareManager::getInstance()->translateFileName(aFile);
 			userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
-
 			try {
 				File* f = new File(file, File::READ, File::OPEN);
 				size = f->getSize();
@@ -111,15 +110,14 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				if((aStartPos + aBytes) < size) {
 					is = new LimitedInputStream<true>(is, aBytes);
 				}	
-
 			} catch(const Exception&) {
 				aSource->fileNotAvail();
 				return false;
 			}
-
 		} else if(aType == "tthl") {
 			// TTH Leaves...
 			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
+			file = ShareManager::getInstance()->translateFileName(aFile);
 			if(mis == NULL) {
 				aSource->fileNotAvail();
 				return false;
@@ -193,6 +191,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	u->setStartPos(aStartPos);
 	u->setFileName(file);
 	u->setLocalFileName(file);
+	u->setEndOnEndFile(u->getSize() == size);
 
 	if(userlist)
 		u->setFlag(Upload::FLAG_USER_LIST);
@@ -205,7 +204,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	aSource->setUpload(u);
 	uploads.push_back(u);
 	throttleSetup();
-	
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
 				if(!aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
@@ -329,7 +327,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	removeUpload(u);
 }
 
-void UploadManager::addFailedUpload(User::Ptr User, string file, int64_t pos, int64_t size) {
+void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
 	string path = Util::getFilePath(file);
 	string filename = Util::getFileName(file);
 	int64_t itime = GET_TIME();
@@ -424,8 +422,8 @@ void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcComman
 		AdcCommand cmd(AdcCommand::CMD_SND);
 		cmd.addParam(c.getParam(0));
 		cmd.addParam(c.getParam(1));
-		cmd.addParam(c.getParam(2));
-		cmd.addParam(Util::toString(aBytes));
+		cmd.addParam(Util::toString(u->getPos()));
+		cmd.addParam(Util::toString(u->getSize() - u->getPos()));
 
 		if(c.hasFlag("ZL", 4)) {
 			u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));
@@ -467,8 +465,6 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 	}
 
 	if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
-
-#define FILESERVER_UPLOAD 200*1024*1024
 
 	if(m_boFireball == false) {
 		if(iAvgSpeed >= 102400) {
@@ -525,7 +521,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				u->getUserConnection()->disconnect();
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(u->getUser());
+					reserveSlot(aUser);
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}
@@ -563,7 +559,6 @@ size_t UploadManager::throttleCycleTime() {
 
 void UploadManager::throttleZeroCounters()  {
 	if (mThrottleEnable) {
-		//Lock l(cs);
 		mBytesSpokenFor = 0;
 		mBytesSent = 0;
 	}
@@ -575,7 +570,6 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
-	//Lock l(cs); // we don't want to re-enter already owned critical section
 	unsigned int num_transfers = uploads.size();
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);

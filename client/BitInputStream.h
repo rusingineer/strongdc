@@ -24,6 +24,7 @@
 #endif // _MSC_VER > 1000
 
 #include "Exception.h"
+#include "ResourceManager.h"
 
 STANDARD_EXCEPTION(BitStreamException);
 

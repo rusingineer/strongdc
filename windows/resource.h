@@ -250,6 +250,7 @@
 #define IDC_HUBUSERDESCR                1116
 #define IDC_FINISHED_UL                 1117
 #define IDC_SEARCH_STRING               1118
+#define IDC_SEARCH_HISTORY              1118
 #define IDC_DEST_DIR                    1119
 #define IDC_IS_ACTIVE                   1120
 #define IDC_MIN_FILE_SIZE               1121
@@ -303,6 +304,7 @@
 #define IDC_SETTINGS_B                  1173
 #define IDC_SETTINGS_KBPS               1174
 #define IDC_ADD_AS_FAVORITE             1175
+#define IDC_SETTINGS_SEARCH_HISTORY     1178
 #define IDC_ADLSP_SEARCH                1184
 #define IDC_ADLSP_TYPE                  1185
 #define IDC_ADLSP_SIZE_MIN              1186
@@ -489,8 +491,10 @@
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_SETTINGS_FILELIST_MENU      1278
+#define IDC_PURGE                       1279
 #define IDC_KBPS                        1280
 #define IDC_MINUTES                     1281
+#define IDC_SEARCH_HISTORY_SPIN         1281
 #define IDC_PLAY                        1282
 #define IDC_POPUPLIST                   1283
 #define IDC_COMBO1                      1284
@@ -511,6 +515,7 @@
 #define IDC_LISTLEN                     1296
 #define IDC_MULTISOURCE_COMBO           1296
 #define IDC_PUB_LIST_CONFIG             1297
+#define IDC_ODC_STYLE                   1297
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445
@@ -729,7 +734,6 @@
 #define ID_WINDOW_RESTORE_ALL           57655
 #define IDC_CHATCOLORS                  65535
 
-
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
@@ -737,7 +741,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        292
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1297
+#define _APS_NEXT_CONTROL_VALUE         1298
 #define _APS_NEXT_SYMED_VALUE           131
 #endif
 #endif

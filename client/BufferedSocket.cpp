@@ -21,8 +21,9 @@
 
 #include "BufferedSocket.h"
 
+#include "ResourceManager.h"
 #include "TimerManager.h"
-#include "CryptoManager.h"
+#include "SettingsManager.h"
 
 #include "Streams.h"
 

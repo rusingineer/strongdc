@@ -68,7 +68,8 @@ public:
 	typedef X<24> Search;
 	typedef X<25> Unknown;
 	typedef X<26> ValidateDenied;
-	typedef X<26> Quit;
+	typedef X<27> Quit;
+	typedef X<28> CheatMessage;
 
 	virtual void on(Connecting, NmdcHub*) throw() { }
 	virtual void on(Connected, NmdcHub*) throw() { }
@@ -96,6 +97,7 @@ public:
 	virtual void on(UserIp, NmdcHub*, const User::List&) throw() { }
 	virtual void on(LoggedIn, NmdcHub*) throw() { }
 	virtual void on(Hello, NmdcHub*, const User::Ptr&) throw() { }
+	virtual void on(CheatMessage, NmdcHub*, const string&) throw() { }
 };
 
 class NmdcHub : public Client, public Speaker<NmdcHubListener>, private TimerManagerListener, private Flags
@@ -132,7 +134,11 @@ public:
 	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString);
 	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
 	virtual void info(bool alwaysSend) { myInfo(alwaysSend); }
-	
+
+	virtual void cheatMessage(const string& aLine) {
+		Speaker<NmdcHubListener>::fire(NmdcHubListener::CheatMessage(), this, Util::validateMessage(aLine, true));
+	}    
+
 	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
 	virtual int64_t getAvailable() const;
 	virtual const string& getName() const { return name; };
@@ -228,6 +234,7 @@ private:
 		virtual void on(ValidateDenied, NmdcHub*) throw() { c->fire(ClientListener::NickTaken(), c); }
 		virtual void on(Hello, NmdcHub*, const User::Ptr& u) throw() { c->fire(ClientListener::UserUpdated(), c, u); }
 		virtual void on(Search, NmdcHub*, const string& a, int b, int64_t d, int e, const string& f) throw() { c->fire(ClientListener::NmdcSearch(), c, a, b, d, e, f); }
+		virtual void on(CheatMessage, NmdcHub*, const string& aLine) throw() { c->fire(ClientListener::CheatMessage(), c, aLine); }
 	} adapter;
 
 	enum States {

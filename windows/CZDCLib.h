@@ -14,39 +14,9 @@ class CZDCLib {
 public:
 	static bool shutDown(int action);
 	static bool isXp();
-	static bool isNT();
-	static int getWinVerMajor();
-
-	static inline BYTE getRValue(const COLORREF& cr) {
-		return (BYTE)(cr & 0xFF);
-	}
-	static inline BYTE getGValue(const COLORREF& cr) {
-		return (BYTE)(((cr & 0xFF00) >> 8) & 0xFF);
-	}
-	static inline BYTE getBValue(const COLORREF& cr) {
-		return (BYTE)(((cr & 0xFF0000) >> 16) & 0xFF);
-	}
-	static COLORREF blendColors(const COLORREF& cr1, const COLORREF& cr2, double balance = 0.5) {
-		BYTE r1 = getRValue(cr1);
-		BYTE g1 = getGValue(cr1);
-		BYTE b1 = getBValue(cr1);
-		BYTE r2 = getRValue(cr2);
-		BYTE g2 = getGValue(cr2);
-		BYTE b2 = getBValue(cr2);
-		return RGB(
-			(r1*(balance*2) + (r2*((1-balance)*2))) / 2,
-			(g1*(balance*2) + (g2*((1-balance)*2))) / 2,
-			(b1*(balance*2) + (b2*((1-balance)*2))) / 2
-			);
-	}
 
 	static int getFirstSelectedIndex(CListViewCtrl& list);
-	bool isMDIChildActive(HWND hWnd);
-	void handleMDIClick(int nID, HWND mdiWindow);
 	static int setButtonPressed(int nID, bool bPressed = true);
-
-	#define HANDLE_MDI_CLICK(nID, cls) handleMDIClick(nID, cls::frame->m_hWnd)
-
 	static void CalcTextSize(const string& text, HFONT font, LPSIZE size);
 
 private:

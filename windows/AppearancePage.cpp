@@ -35,6 +35,7 @@ PropPage::TextItem AppearancePage::texts[] = {
 	{ IDC_SETCZDC_PM_LINES, ResourceManager::SETCZDC_PM_LINES },
 	{ IDC_SETTINGS_REQUIRES_RESTART, ResourceManager::SETTINGS_REQUIRES_RESTART },
 	{ IDC_SETTINGS_GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY }, 
+	{ IDC_SETTINGS_SEARCH_HISTORY, ResourceManager::SETTINGS_SEARCH_HISTORY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -43,6 +44,7 @@ PropPage::Item AppearancePage::items[] = {
 	{ IDC_TIME_STAMPS_FORMAT, SettingsManager::TIME_STAMPS_FORMAT, PropPage::T_STR },
 	{ IDC_LANGUAGE, SettingsManager::LANGUAGE_FILE, PropPage::T_STR },
 	{ IDC_PM_LINES, SettingsManager::SHOW_LAST_LINES_LOG, PropPage::T_INT },
+	{ IDC_SEARCH_HISTORY, SettingsManager::SEARCH_HISTORY, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -95,6 +97,11 @@ LRESULT AppearancePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 	CUpDownCtrl spin;
 	spin.Attach(GetDlgItem(IDC_PM_LINESSPIN));
 	spin.SetRange32(1, 999);
+	spin.Detach();
+
+	spin.Attach(GetDlgItem(IDC_SEARCH_HISTORY_SPIN));	
+ 	spin.SetRange32(0, 100);	
+ 	SetDlgItemText(IDC_SEARCH_HISTORY,Text::toT(Util::toString( SETTING(SEARCH_HISTORY))).c_str());
 	spin.Detach();
 
 	// Do specialized reading here

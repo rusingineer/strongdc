@@ -126,10 +126,15 @@ public:
 		if(cs.cs.OwningThread != (HANDLE) GetCurrentThreadId()) {
 			entered = true;
 			cs.enter();
-			dcassert(cs.cs.RecursionCount < 2);
-		} else entered = false;
+		} else {
+			entered = false;
+		}
 	};
-	~SafeLockBase() throw() { if(entered) cs.leave(); };
+	~SafeLockBase() throw() {
+		if(entered) {
+			cs.leave();
+		}
+	};
 private:
 	SafeLockBase& operator=(const SafeLockBase&);
 	T& cs;

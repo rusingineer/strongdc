@@ -28,6 +28,7 @@
 #include "BarShader.h"
 
 PropPage::TextItem OperaColorsPage::texts[] = {
+	{ IDC_ODC_STYLE, ResourceManager::PROGRESSBAR_ODC_STYLE },
 	{ IDC_PROGRESS_OVERRIDE, ResourceManager::SETTINGS_ZDC_PROGRESS_OVERRIDE },
 	{ IDC_PROGRESS_OVERRIDE2, ResourceManager::SETTINGS_ZDC_PROGRESS_OVERRIDE2 },
 	{ IDC_SETTINGS_DOWNLOAD_BAR_COLOR, ResourceManager::DOWNLOAD },
@@ -55,6 +56,7 @@ OperaColorsPage* current_page;
 LPCCHOOKPROC color_proc;
 
 PropPage::Item OperaColorsPage::items[] = {
+	{ IDC_ODC_STYLE, SettingsManager::PROGRESSBAR_ODC_STYLE, PropPage::T_BOOL },
 	{ IDC_PROGRESS_OVERRIDE, SettingsManager::PROGRESS_OVERRIDE_COLORS, PropPage::T_BOOL },
 	{ IDC_PROGRESS_OVERRIDE2, SettingsManager::PROGRESS_OVERRIDE_COLORS2, PropPage::T_BOOL },
 	{ IDC_FLAT, SettingsManager::PROGRESS_3DDEPTH, PropPage::T_INT },
@@ -86,10 +88,8 @@ UINT_PTR CALLBACK MenuBarCommDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				if (current_page->bDoLeft) {
 					current_page->crProgressDown = RGB(color_r, color_g, color_b);
 					current_page->ctrlProgressDownDrawer.Invalidate();
-					current_page->ctrlProgressSegmentDrawer.Invalidate();
 				} else if (current_page->bDoSegment) {
 					current_page->crProgressSegment = RGB(color_r, color_g, color_b);
-					current_page->ctrlProgressSegmentDrawer.Invalidate();
 				} else {
 					current_page->crProgressUp = RGB(color_r, color_g, color_b);
 					current_page->ctrlProgressUpDrawer.Invalidate();
@@ -119,7 +119,6 @@ LRESULT OperaColorsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 
 	ctrlProgressDownDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_DOWN_SHOW));
 	ctrlProgressUpDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_UP_SHOW));
-	ctrlProgressSegmentDrawer.Attach(GetDlgItem(IDC_PROGRESS_COLOR_SEGMENT_SHOW));
 
 	CUpDownCtrl ctrlSpin;
 	ctrlSpin.Attach(GetDlgItem(IDC_FLAT_SPIN));
@@ -185,10 +184,18 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				dc.SetTextColor(OperaColors::TextFromBackground(crMenubarLeft));
 			} else if (dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW || dis->CtlID == IDC_PROGRESS_COLOR_UP_SHOW) {
 				COLORREF clr = getCheckbox(IDC_PROGRESS_OVERRIDE) ? ((dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW) ? crProgressDown : crProgressUp) : GetSysColor(COLOR_HIGHLIGHT);
-				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
-				statusBar.SetFileSize(16);
-				statusBar.FillRange(0, 16, clr);
-				statusBar.Draw(dc, rc.top, rc.left, hloubka);
+				if(odcStyle) {
+					COLORREF a, b;
+					OperaColors::EnlightenFlood(clr, a, b);
+					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, a, b, true);
+					int textcolor = getCheckbox(IDC_PROGRESS_OVERRIDE2) ? ((dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW) ? crProgressTextDown : crProgressTextUp) : OperaColors::TextFromBackground(clr);
+					dc.SetTextColor(textcolor);
+				} else {
+					CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
+					statusBar.SetFileSize(16);
+					statusBar.FillRange(0, 16, clr);
+					statusBar.Draw(dc, rc.top, rc.left, hloubka);
+				}
 				int textcolor = getCheckbox(IDC_PROGRESS_OVERRIDE2) ? ((dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW) ? crProgressTextDown : crProgressTextUp) : OperaColors::TextFromBackground(clr);
 				dc.SetTextColor(textcolor);
 			}
@@ -235,6 +242,7 @@ LRESULT OperaColorsPage::onMenubarClicked(WORD wNotifyCode, WORD wID, HWND hWndC
 	return S_OK;
 }
 LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
+	odcStyle = IsDlgButtonChecked(IDC_ODC_STYLE);
 	if (wID == IDC_SETTINGS_DOWNLOAD_BAR_COLOR) {
 		CColorDialog d(crProgressDown, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;
@@ -249,7 +257,7 @@ LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWN
 		else
 			crProgressDown = backup;
 		ctrlProgressDownDrawer.Invalidate();
-		ctrlProgressSegmentDrawer.Invalidate();
+		//ctrlProgressSegmentDrawer.Invalidate();
 	} else if (wID == IDC_SETTINGS_UPLOAD_BAR_COLOR) {
 		CColorDialog d(crProgressUp, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;
@@ -263,6 +271,9 @@ LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWN
 			crProgressUp = d.GetColor();
 		else
 			crProgressUp = backup;
+		ctrlProgressUpDrawer.Invalidate();
+	} else {
+		ctrlProgressDownDrawer.Invalidate();
 		ctrlProgressUpDrawer.Invalidate();
 	}
 	return TRUE;

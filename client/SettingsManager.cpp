@@ -52,7 +52,7 @@ const string SettingsManager::settingTags[] =
 	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
-	"LogFormatStatus", "LogFileWebServer", 
+	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -115,7 +115,8 @@ const string SettingsManager::settingTags[] =
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
-	"CheckUnverifiedOnly", "ToggleActiveWindow", 
+	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
+	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -144,8 +145,7 @@ SettingsManager::SettingsManager()
 	
 	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
-		//setDefault(SERVER, Util::getLocalIp());
-	setDefault(SEARCH_TTH_ONLY, false);
+	//setDefault(SERVER, Util::getLocalIp());
 	setDefault(IN_PORT, Util::rand(1025, 32000));
 	setDefault(UDP_PORT, Util::rand(1025, 31999)+1);
 	setDefault(ROLLBACK, 4096);
@@ -251,8 +251,11 @@ SettingsManager::SettingsManager()
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
+	setDefault(SEARCH_ONLY_TTH, false);
+	setDefault(ADVANCED_RESUME, true);
 	setDefault(ADC_DEBUG, false);
 	setDefault(TOGGLE_ACTIVE_WINDOW, true);
+	setDefault(SEARCH_HISTORY, 10);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
@@ -428,6 +431,8 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 200);
 
+	setDefault(DETECT_ZONEALARM, true);
+	setDefault(ZONEALARM_DETECTIONS, 0);
 	setDefault(DISCONNECT_RAW, 0);
 	setDefault(TIMEOUT_RAW, 0);
 	setDefault(FAKESHARE_RAW, 0);
@@ -470,6 +475,7 @@ SettingsManager::SettingsManager()
 	setDefault(AWAY, false);
 	setDefault(SHUTDOWN_ACTION, 0);
 	setDefault(MINIMUM_SEARCH_INTERVAL, 30);
+	setDefault(PROGRESSBAR_ODC_STYLE, true);
 
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
@@ -502,11 +508,11 @@ SettingsManager::SettingsManager()
 	setDefault(MAIN_WINDOW_POS_X, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_Y, CW_USEDEFAULT);
 	setDefault(MDI_MAXIMIZED, true);
-	setDefault(UPLOAD_BAR_COLOR, RGB(150, 0, 0));
-	setDefault(DOWNLOAD_BAR_COLOR, RGB(0, 150, 0));
+	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
+	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
 	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));
 	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
-	setDefault(PROGRESS_SEGMENT_COLOR, RGB(55, 170, 85));
+	setDefault(PROGRESS_SEGMENT_COLOR, RGB(49, 106, 197));
 #endif
 }
 

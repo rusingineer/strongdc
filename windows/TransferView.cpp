@@ -312,11 +312,40 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 			SetBkMode(dc, TRANSPARENT);
 		
+			if(BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
+				// New style progressbar tweaks the current colors
+				HLSTRIPLE hls_bk = OperaColors::RGB2HLS(cd->clrTextBk);
+
+				// Create pen (ie outline border of the cell)
+				HPEN penBorder = ::CreatePen(PS_SOLID, 1, OperaColors::blendColors(cd->clrTextBk, clr, (hls_bk.hlstLightness > 0.75) ? 0.6 : 0.4));
+				HGDIOBJ pOldPen = ::SelectObject(dc, penBorder);
+
+				// Draw the outline (but NOT the background) using pen
+				HBRUSH hBrOldBg = CreateSolidBrush(cd->clrTextBk);
+				hBrOldBg = (HBRUSH)::SelectObject(dc, hBrOldBg);
+				::Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
+				DeleteObject(::SelectObject(dc, hBrOldBg));
+
+				// Set the background color, by slightly changing it
+				HBRUSH hBrDefBg = CreateSolidBrush(OperaColors::blendColors(cd->clrTextBk, clr, (hls_bk.hlstLightness > 0.75) ? 0.85 : 0.70));
+				HGDIOBJ oldBg = ::SelectObject(dc, hBrDefBg);
+
+				// Draw the outline AND the background using pen+brush
+				::Rectangle(dc, rc.left, rc.top, rc.left + (LONG)(rc.Width() * ii->getRatio() + 0.5), rc.bottom);
+
+				// Reset pen
+				DeleteObject(::SelectObject(dc, pOldPen));
+				// Reset bg (brush)
+				DeleteObject(::SelectObject(dc, oldBg));
+			}
+
 			// Set the text color
 			COLORREF hTextDefColor = cd->clrText; // Even tho we "change" background, we don't change it very much
 
 			// Draw the text over the entire item
             COLORREF oldcol = ::SetTextColor(dc, hTextDefColor);
+			if(BOOLSETTING(PROGRESSBAR_ODC_STYLE))
+				::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 			// Draw the background and border of the bar
 			if(ii->size == 0)
@@ -325,22 +354,43 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), ii->size);
 
 			if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
-				rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
-				if(ii->type == ItemInfo::TYPE_UPLOAD) {
-					statusBar.FillRange(0, ii->start, HLS_TRANSFORM(clr, -20, 30));
-					statusBar.FillRange(ii->start, ii->actual,  clr);
-				} else
-					statusBar.FillRange(0, ii->actual, clr);
-				if(ii->pos > ii->actual)
-					statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
+				if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
+					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
+					if(ii->type == ItemInfo::TYPE_UPLOAD) {
+						statusBar.FillRange(0, ii->start, HLS_TRANSFORM(clr, -20, 30));
+						statusBar.FillRange(ii->start, ii->actual,  clr);
+					} else
+						statusBar.FillRange(0, ii->actual, clr);
+					if(ii->pos > ii->actual)
+						statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
+				} else {
+					int w = (LONG)(rc.Width() * ii->getRatio() + 0.5);
+
+					rc.right = rc.left + (int) (((int64_t)w) * ii->actual / ii->size);
+                
+					COLORREF a, b;
+					OperaColors::EnlightenFlood(clr, a, b);
+					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, true);
+				}
 			} else {
-				rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
-				statusBar.FillRange(0, ii->start, clr);
-				statusBar.FillRange(ii->start, ii->actual, SETTING(PROGRESS_SEGMENT_COLOR));
-				if(ii->pos > ii->actual)
-					statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
+				if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
+					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
+					statusBar.FillRange(0, ii->start, clr);
+					statusBar.FillRange(ii->start, ii->actual, SETTING(PROGRESS_SEGMENT_COLOR));
+					if(ii->pos > ii->actual)
+						statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
+				} else {
+					int w = (LONG)(rc.Width() * ii->getRatio() + 0.5);
+
+					rc.right = rc.left + (int) (((int64_t)w) * ii->actual / ii->size);
+                
+					COLORREF a, b;
+					OperaColors::EnlightenFlood(SETTING(PROGRESS_SEGMENT_COLOR), a, b);
+					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, true);
+				}
 			}
-			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
+			if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE))
+				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 
 			// Draw the text only over the bar and with correct color
 			int right = rc2.right;
@@ -358,8 +408,11 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					SETTING(PROGRESS_TEXT_COLOR_UP)) : 
 				OperaColors::TextFromBackground(clr); //GetSysColor(COLOR_HIGHLIGHT);
 			::SetTextColor(dc, textcolor);
-			rc2.right = right;
-            ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+
+			if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE))
+				rc2.right = right;
+
+			::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 			SelectObject(dc, oldFont);
 			::SetTextColor(dc, oldcol);
@@ -412,7 +465,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			}
 		} else if((cd->iSubItem == COLUMN_FILE || cd->iSubItem == COLUMN_SIZE || cd->iSubItem == COLUMN_PATH) && 
 			ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
-			cd->clrText = CZDCLib::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.4);
+			cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.4);
 			return CDRF_NEWFONT;
 		} else if (ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
 			cd->clrText = WinUtil::textColor;
@@ -467,6 +520,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		ctrlTransfers.deleteItem(i);
+		/*if(i->mainItem) {
+			delete i->qi;
+		}*/
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
@@ -608,14 +664,16 @@ void TransferView::ItemInfo::update() {
 void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) {
 	ItemInfo::Types t = aCqi->getConnection() && aCqi->getConnection()->isSet(UserConnection::FLAG_UPLOAD) ? ItemInfo::TYPE_UPLOAD : ItemInfo::TYPE_DOWNLOAD;
 	ItemInfo* i = new ItemInfo(aCqi->getUser(), t, ItemInfo::STATUS_WAITING);
+	QueueItem* qi = NULL;
+	if(t == ItemInfo::TYPE_DOWNLOAD)
+		qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 
 	{
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) == transferItems.end());
 		transferItems.insert(make_pair(aCqi, i));
 		i->columns[COLUMN_STATUS] = i->statusString = TSTRING(CONNECTING);
-		if (t == ItemInfo::TYPE_DOWNLOAD) {
-			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
+		if (t == ItemInfo::TYPE_DOWNLOAD) {			
 			if (qi) {
 				i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(qi->getTarget()));
 				i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(qi->getTarget()));
@@ -644,11 +702,11 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		}
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
-			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
-			if (qi) {
-				i->size = qi->getSize();				
-				i->Target = Text::toT(qi->getTarget());
-				i->qi = qi;
+			//QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
+			if (i->qi) {
+				i->size = i->qi->getSize();				
+				i->Target = Text::toT(i->qi->getTarget());
+				//i->qi = qi;
 				i->updateMask |= (ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 			}
 
@@ -1134,23 +1192,11 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 void TransferView::on(QueueManagerListener::Removed, QueueItem* aQI) {
 	Lock l(cs);
 
-	if(!mainItems.empty()) {
-		int q = 0;
-		while(q < mainItems.size()) {
-			ItemInfo* m = mainItems[q];
-			if(m->Target == Text::toT(aQI->getTarget())) {
-				m->qi = NULL;
-				m->updateMask |= ItemInfo::MASK_HUB;
-				break;
-			}
-			q++;
-		}
-	}
-		
 	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 		ItemInfo* m = j->second;
 		if((m->Target == Text::toT(aQI->getTarget())) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 			m->qi = NULL;
+			m->upper->qi = NULL;
 		}
 	}
 }

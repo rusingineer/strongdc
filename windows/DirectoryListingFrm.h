@@ -335,6 +335,10 @@ private:
 	int statusSizes[8];
 	
 	DirectoryListing* dl;
+	
+	static int columnIndexes[COLUMN_LAST];
+	static int columnSizes[COLUMN_LAST];
+	
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 

@@ -20,6 +20,7 @@
 #include "DCPlusPlus.h"
 
 #include "ShareManager.h"
+#include "ResourceManager.h"
 
 #include "CryptoManager.h"
 #include "ClientManager.h"

@@ -50,6 +50,7 @@ public:
 		COMMAND_HANDLER(IDC_SETTINGS_SEGMENT_BAR_COLOR, BN_CLICKED, onClickedProgress)
 		COMMAND_HANDLER(IDC_PROGRESS_TEXT_COLOR_DOWN, BN_CLICKED, onClickedProgressTextDown)
 		COMMAND_HANDLER(IDC_PROGRESS_TEXT_COLOR_UP, BN_CLICKED, onClickedProgressTextUp)
+		COMMAND_HANDLER(IDC_ODC_STYLE, BN_CLICKED, onClickedProgress)
 		MESSAGE_HANDLER(WM_DRAWITEM, onDrawItem)
 
 		COMMAND_HANDLER(IDC_SETTINGS_ODC_MENUBAR_LEFT, BN_CLICKED, onMenubarClicked)
@@ -84,6 +85,8 @@ public:
 	}
 
 	void updateProgress() {
+		odcStyle = (IsDlgButtonChecked(IDC_ODC_STYLE) != 0);
+
 		bool state = (IsDlgButtonChecked(IDC_PROGRESS_OVERRIDE) != 0);
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_PROGRESS_OVERRIDE2), state);
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_SETTINGS_DOWNLOAD_BAR_COLOR), state);
@@ -113,6 +116,7 @@ private:
 	bool bDoProgress;
 	bool bDoLeft;
 	bool bDoSegment;
+	bool odcStyle;
 	
 	static Item items[];
 	static TextItem texts[];
@@ -128,7 +132,6 @@ private:
 	CCheckBox ctrlProgressOverride2;
 	CButton ctrlProgressDownDrawer;
 	CButton ctrlProgressUpDrawer;
-	CButton ctrlProgressSegmentDrawer;
 
 	void checkBox(int id, bool b) {
 		CheckDlgButton(id, b ? BST_CHECKED : BST_UNCHECKED);

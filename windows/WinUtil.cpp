@@ -579,7 +579,7 @@ void WinUtil::initColors() {
 		m_ChatTextServer.dwEffects |= CFE_ITALIC;
 
 	m_ChatTextLog = m_ChatTextGeneral;
-	m_ChatTextLog.crTextColor = CZDCLib::blendColors(SETTING(TEXT_GENERAL_BACK_COLOR), SETTING(TEXT_GENERAL_FORE_COLOR), 0.4);
+	m_ChatTextLog.crTextColor = OperaColors::blendColors(SETTING(TEXT_GENERAL_BACK_COLOR), SETTING(TEXT_GENERAL_FORE_COLOR), 0.4);
 
 	m_TextStyleFavUsers = cf;
 	m_TextStyleFavUsers.crBackColor = SETTING(TEXT_FAV_BACK_COLOR);
@@ -843,9 +843,9 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 }
 
 #ifdef isCVS
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #else
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #endif
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- rm-...what? Nope...never heard of it...\r\n") LINE2,
@@ -855,7 +855,7 @@ _T("\r\n-- I came, I searched, I found...\r\n") LINE2,
 _T("\r\n-- I came, I shared, I sent...\r\n") LINE2,
 _T("\r\n-- I can add multiple users to the same file and download from them simultaneously :)\r\n") LINE2,
 _T("\r\n-- My client supports TTH hashes, does yours?\r\n") LINE2,
-_T("\r\n-- I support segmented downloading and I can't lose precious slot between segments :-P?\r\n") LINE2,
+_T("\r\n-- I support segmented downloading and I can't lose precious slot between segments :-P\r\n") LINE2,
 _T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE2,
 _T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
 _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE2,
