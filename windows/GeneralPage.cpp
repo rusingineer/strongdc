@@ -25,6 +25,7 @@
 #include "../client/SettingsManager.h"
 #include "../client/Socket.h"
 #include "../client/BufferedSocket.h"
+#include "../client/Client.h"
 #include <winsock2.h>
 #include "WinUtil.h"
 
@@ -255,7 +256,7 @@ LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl,
 	return TRUE;
 }
 
-string GeneralPage::getMyIP()
+/*string GeneralPage::getMyIP()
 {
      WORD wVersionRequested;
      WSADATA wsaData;
@@ -278,7 +279,7 @@ string GeneralPage::getMyIP()
 	 delete[] hostnm;
      WSACleanup();
      return addr;
-}
+}*/
 
 LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
 	string IPAdresa = /*getMyIP();*/ Util::getLocalIp();

@@ -621,7 +621,7 @@ private:
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
 
-	u_int32_t lastSearchTime;
+	int32_t lastSearchTime;
 	u_int32_t navic;
 	tstring SearchString;
 

@@ -709,22 +709,13 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 			if (qi) {
-				i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(qi->getTarget()));
-				i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(qi->getTarget()));
-				i->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(qi->getSize()));
 				i->file = Text::toT(Util::getFileName(qi->getTarget()));
 				i->path = Text::toT(Util::getFilePath(qi->getTarget()));
-				i->size = qi->getSize();				
-				i->Target = Text::toT(qi->getTarget());
-				i->downloadTarget = Text::toT(qi->getTempTarget());
-				i->qi = qi;
+				i->size = qi->getSize();
 				i->updateMask |= (ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 				i->tth = qi->getTTH();				
 			}
 			i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
-			dcdebug("OnConnectionStatus\n");
-			if(i->Target != i->oldTarget) setMainItem(i);
-			i->oldTarget = i->Target;
 
 			if(i->upper != NULL) {
 				if(i->qi) {
@@ -732,13 +723,10 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 						i->upper->status = i->status;
 						i->upper->statusString = i->statusString;
 					}
-					i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
-					i->upper->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(i->qi->getTarget()));
 					i->upper->file = Text::toT(Util::getFileName(i->qi->getTarget()));
 					i->upper->path = Text::toT(Util::getFilePath(i->qi->getTarget()));
 					i->upper->size = i->qi->getSize();				
 				}
-				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
 				i->upper->Target = i->Target;
 				i->upper->tth = i->tth;
 				i->upper->downloadTarget = i->downloadTarget;
@@ -797,18 +785,11 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		i->status = ItemInfo::STATUS_WAITING;
 
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
-			if(i->Target != i->oldTarget) setMainItem(i);
-			i->oldTarget = i->Target;
-
-			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
-			if(qi) {
-				i->qi = qi;
-				int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-				if((i->upper != NULL) && (pocetSegmentu < 1)) {
-					i->upper->status = ItemInfo::STATUS_WAITING;
-					if(!i->upper->finished)
-						i->upper->statusString = Text::toT(aReason);
-				}
+			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
+			if((i->upper != NULL) && (pocetSegmentu < 1)) {
+				i->upper->status = ItemInfo::STATUS_WAITING;
+				if(!i->upper->finished)
+					i->upper->statusString = Text::toT(aReason);
 			}
 		}
 			
@@ -831,34 +812,25 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->size = aDownload->getSize();
 		i->file = Text::toT(Util::getFileName(aDownload->getTarget()));
 		i->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
+		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
+
 		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
-		if(qi) {
-			i->qi = qi;
-		}
-		i->Target = Text::toT(aDownload->getTarget());
 
-		if(i->Target != i->oldTarget) setMainItem(i);
-		i->oldTarget = i->Target;
-
-		if(i->user != (User::Ptr)NULL) 
-			if(i->upper != NULL) {	
-				if(i->qi) i->upper->qi = i->qi;
-				i->upper->status = ItemInfo::STATUS_RUNNING;
-				i->upper->size = aDownload->getSize();
-				string x = Util::getFileName(aDownload->getTarget());
-				i->upper->file = Text::toT(x);
-				i->upper->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
-				i->upper->Target = Text::toT(aDownload->getTarget());
-				i->upper->actual = aDownload->getQueueTotal();
-				i->upper->start = i->upper->actual;
-				i->upper->pos = i->upper->actual;
-				i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
-				i->upper->finished = false;
-				if(i->qi->getActiveSegments().size() <= 1)
-					i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
+		if(i->upper != NULL) {	
+			if(qi) i->upper->qi = qi;
+			i->upper->status = ItemInfo::STATUS_RUNNING;
+			i->upper->actual = aDownload->getQueueTotal();
+			i->upper->pos = i->upper->actual;
+			i->upper->start = i->upper->actual;
+			i->upper->size = aDownload->getSize();
+			i->upper->file = Text::toT(Util::getFileName(aDownload->getTarget()));
+			i->upper->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
+			i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
+			i->upper->finished = false;
+			if(i->qi->getActiveSegments().size() <= 1)
+				i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
 		}
 				
-		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 		i->statusString = TSTRING(DOWNLOAD_STARTING);
 		if(i->user->isClientOp())
 			i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
@@ -999,14 +971,6 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->size = aDownload->getSize();
 		i->file = Text::toT(Util::getFileName(aDownload->getTarget()));
 		i->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
-		i->Target = Text::toT(aDownload->getTarget());
-		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
-		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
-		if(qi) i->qi = qi;
-
-		dcdebug("OnDownloadFailed\n");
-		if(i->Target != i->oldTarget) setMainItem(i);
-		i->oldTarget = i->Target;
 
 		if(i->upper) {
 			i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
@@ -1059,7 +1023,6 @@ void TransferView::on(HashManagerListener::Verifying, const string& fileName, in
 
 		int64_t hashedSize = i->size - remainingBytes;
 
-		//i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->upper->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}
@@ -1148,8 +1111,6 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 		i = transferItems[aCqi];		
 
 		if(!isUpload) {
-			if(i->Target != i->oldTarget) setMainItem(i);
-			i->oldTarget = i->Target;
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
@@ -1470,6 +1431,38 @@ TransferView::ItemInfo* TransferView::findLastUserItem(tstring Target) {
 	}
 	return NULL;
 }
+
+void TransferView::on(DownloadManagerListener::SetFileInfo, QueueItem* q, User::Ptr u)  {
+	ItemInfo* i = NULL;
+	{
+		Lock l(cs);
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if((m->user == u) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+				i = m;
+				break;
+			}
+		}
+
+		dcassert(i != NULL);
+		dcassert(q != NULL);
+
+		i->file = Text::toT(Util::getFileName(q->getTarget()));
+		i->path = Text::toT(Util::getFilePath(q->getTarget()));
+		i->size = q->getSize();				
+		i->columns[COLUMN_FILE] = i->file;
+		i->columns[COLUMN_PATH] = i->path;
+		i->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(i->size));
+		i->Target = Text::toT(q->getTarget());
+		i->downloadTarget = Text::toT(q->getTempTarget());
+		i->qi = q;
+		i->updateMask |= (ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
+		i->tth = q->getTTH();
+
+		setMainItem(i);
+	}
+	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
+};
 
 void TransferView::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
 	bool refresh = false;

@@ -255,8 +255,12 @@ public:
 
 	string getSearchString() const;
 
+	const string& getTempTarget();
+	void setTempTarget(const string& aTempTarget) {
+		tempTarget = aTempTarget;
+	}
 	GETSET(string, target, Target);
-	GETSET(string, tempTarget, TempTarget);
+	string tempTarget;
 	GETSET(int64_t, size, Size);
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
