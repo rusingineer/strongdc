@@ -40,6 +40,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * zmìnìn vzhled progressbarù
 * opraven problém pøi sdílení celé koøenové složky
 * nástroj pro zjištìní TTH hashuje ve vlastním threadu (THX Prologic)
+* pøidána položka pro otevøení stavu hashování do hlavního menu (fulDC)
 
 
 	-- StrongDC++ 1.00 RC8 --

@@ -1432,7 +1432,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
             rc2.left += 6; // indented with 6 pixels
 			rc2.right -= 2; // and without messing with the border of the cell				
 
-
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
 			BITMAPINFOHEADER bih;

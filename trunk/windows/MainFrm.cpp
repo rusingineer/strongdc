@@ -73,7 +73,8 @@ CAGEmotionSetup* g_pEmotionsSetup;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT)
+closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT),
+hashProgress(false)
 { 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
@@ -379,10 +380,9 @@ void MainFrame::startSocket() {
 				if(SETTING(IN_PORT) == lastPort || (firstPort == newPort)) {
 					// Changing default didn't change port, a fixed port must be in use...(or we
 					// tried all ports
-					TCHAR* buf = new TCHAR[STRING(PORT_IS_BUSY).size() + 8];
+					AutoArray<TCHAR> buf(STRING(PORT_IS_BUSY).size() + 8);
 					_stprintf(buf, CTSTRING(PORT_IS_BUSY), SETTING(IN_PORT));
 					MessageBox(buf, _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
-					delete[] buf;
 					break;
 				}
 				lastPort = newPort;
@@ -573,7 +573,11 @@ LRESULT MainFrame::onFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 }
 
 LRESULT MainFrame::onHashProgress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	HashProgressDlg(false).DoModal(m_hWnd);
+	if( !hashProgress.IsWindow() ){
+		hashProgress.Create( m_hWnd );
+		hashProgress.ShowWindow( SW_SHOW );
+	}
+
 	return 0;
 }
 
@@ -901,6 +905,9 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			WebServerManager::getInstance()->removeListener(this);
 			string tmp1;
 			string tmp2;
+
+			if( hashProgress.IsWindow() )
+				hashProgress.DestroyWindow();
 
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(wp);

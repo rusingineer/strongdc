@@ -200,6 +200,10 @@ public:
 			value = 500;
 		}
 
+		if((key == SEARCH_TIME) && (value < 5)) {
+			value = 5;
+		}
+
 		if((key == MAX_UPLOAD_SPEED_LIMIT_NORMAL) && (value > 0)) {
 			if (value < ((2 * (slots)) + 3) ) {
 				value = ((2 * (slots)) + 3);

@@ -41,7 +41,6 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),
 	lastActivity(GET_TICK()), 
 	reconnect(true), lastUpdate(0)
 {
-	searchQueue.last_search_time = 0;
 	TimerManager::getInstance()->addListener(this);
 
 };
@@ -923,9 +922,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 
 void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString){
 	checkstate(); 
-	dcdebug("doSearch %s\n", aString);
-
-	char* buf;
+	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
 	string tmp = toNmdc(aString);
@@ -945,7 +942,6 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 		buf[getNick().length() + aString.length() + 63] = 0;
 	}
 	send(buf, chars);
-	delete[] buf;
 }
 
 void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {

@@ -312,6 +312,7 @@ void WinUtil::init(HWND hWnd) {
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	view.AppendMenu(MF_STRING, IDC_CDMDEBUG_WINDOW, CTSTRING(MENU_CDMDEBUG_MESSAGES));
 	view.AppendMenu(MF_STRING, IDC_NOTEPAD, CTSTRING(MENU_NOTEPAD));
+	view.AppendMenu(MF_STRING, IDC_HASH_PROGRESS, CTSTRING(MENU_HASH_PROGRESS));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CTSTRING(MENU_TOOLBAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CTSTRING(MENU_STATUS_BAR));
@@ -679,7 +680,7 @@ _T("\r\n-- My client supports XML file lists, does yours?\r\n") LINE2
 
 TCHAR *strgmsgs[] = { _T("\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n") LINE3,
 _T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE3,
-_T("\r\n-- Umim stahovat jeden soubor od vice lidi najednou, a proto dokazu vyuzit linku na maximum :-))\r\n") LINE3,
+_T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE3,
 _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE3,
 _T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE3,
 _T("\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n") LINE3,
@@ -1197,10 +1198,9 @@ int WinUtil::textUnderCursor(POINT p, CEdit& ctrl, tstring& x) {
 		return 0;
 	}
 
-	TCHAR* buf = new TCHAR[len];
+	AutoArray<TCHAR> buf(len);
 	ctrl.GetLine(line, buf, len);
 	x = tstring(buf, len-1);
-	delete[] buf;
 
 	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 	if(start == string::npos)

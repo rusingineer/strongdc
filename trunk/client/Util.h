@@ -100,7 +100,6 @@ class Flags {
 template<typename T>
 class AutoArray {
 	typedef T* TPtr;
-	typedef T& TRef;
 public:
 	explicit AutoArray(TPtr t) : p(t) { };
 	explicit AutoArray(size_t size) : p(new T[size]) { };
@@ -178,7 +177,7 @@ public:
 			0,
 			NULL 
 			);
-		string tmp = Text::wideToUtf8((LPCTSTR)lpMsgBuf);
+		string tmp = Text::fromT((LPCTSTR)lpMsgBuf);
 		// Free the buffer.
 		LocalFree( lpMsgBuf );
 		string::size_type i;
@@ -367,45 +366,57 @@ public:
 		return (float)toDouble(aString.c_str());
 	}
 
-	static string toString(int64_t val) {
-		char buf[32];
-#ifdef _WIN32
-		return _i64toa(val, buf, 10);
-#else
-		_snprintf(buf, 31, "%lld", val);
-		buf[31] = 0;
-		return buf;
-#endif
-	}
-
-	static string toString(u_int32_t val) {
-		char buf[32];
-		_snprintf(buf, 31, "%lu", (unsigned long)val);
-		buf[31] = 0; 
+	static string toString(short val) {
+		char buf[8];
+		sprintf(buf, "%d", (int)val);
 		return buf;
 	}
-	static string toString(size_t val) {
-		char buf[32];
-		_snprintf(buf, 31, "%lu", (unsigned long)val);
-		buf[31] = 0; 
+	static string toString(unsigned short val) {
+		char buf[8];
+		sprintf(buf, "%u", (unsigned int)val);
 		return buf;
 	}
 	static string toString(int val) {
 		char buf[16];
-		_snprintf(buf, 15, "%d", val);
-		buf[15] = 0; 
+		sprintf(buf, "%d", val);
 		return buf;
 	}
-	static string toString(int16_t val) {
-		return toString((int32_t) val);
+	static string toString(unsigned int val) {
+		char buf[16];
+		sprintf(buf, "%u", val);
+		return buf;
 	}
-	static string toString(u_int16_t val) {
-		return toString((u_int32_t)val);
+	static string toString(long val) {
+		char buf[32];
+		sprintf(buf, "%ld", val);
+		return buf;
+	}
+	static string toString(unsigned long val) {
+		char buf[32];
+		sprintf(buf, "%lu", val);
+		return buf;
+	}
+	static string toString(long long val) {
+		char buf[32];
+#ifdef WIN32
+		sprintf(buf, "%I64d", val);
+#else
+		sprintf(buf, "%lld", val);
+#endif
+		return buf;
+	}
+	static string toString(unsigned long long val) {
+		char buf[32];
+#ifdef WIN32
+		sprintf(buf, "%I64u", val);
+#else
+		sprintf(buf, "%llu", val);
+#endif
+		return buf;
 	}
 	static string toString(double val) {
 		char buf[16];
-		_snprintf(buf, 15, "%0.2f", val);
-		buf[15] = 0; 
+		sprintf(buf, "%0.2f", val);
 		return buf;
 	}
 	static string toHexEscape(char val) {
@@ -434,24 +445,19 @@ public:
 	static int strnicmp(const char* a, const char* b, size_t n);
 
 	static int stricmp(const wchar_t* a, const wchar_t* b) {
-#ifdef _WIN32
-		return ::_wcsicmp(a, b);
-#else
-		return wcscasecmp(a, b);
-#endif
-		// return ::stricmp(a, b);
-		
+		while(*a && Text::toLower(*a) == Text::toLower(*b))
+			++a, ++b;
+		return ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
 	}
 	static int strnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
-#ifdef _WIN32
-		return ::_wcsnicmp(a, b, n);
-#else
-		return ::wcsncasecmp(a, b, n);
-#endif
+		while(n && *a && Text::toLower(*a) == Text::toLower(*b))
+			--n, ++a, ++b;
+
+		return n == 0 ? 0 : ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
 	}
 
-	static int stricmp(const string& a, const string& b) { return stricmp(Text::utf8ToWide(a), Text::utf8ToWide(b)); };
-	static int strnicmp(const string& a, const string& b, size_t n) { return strnicmp(Text::utf8ToWide(a), Text::utf8ToWide(b), n); };
+	static int stricmp(const string& a, const string& b) { return stricmp(a.c_str(), b.c_str()); };
+	static int strnicmp(const string& a, const string& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); };
 	static int stricmp(const wstring& a, const wstring& b) { return stricmp(a.c_str(), b.c_str()); };
 	static int strnicmp(const wstring& a, const wstring& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); };
 

@@ -48,6 +48,11 @@ struct Search
 class SearchQueue
 {
 public:
+	SearchQueue()
+	{
+		last_search_time = 0;
+	}
+
 	bool add(const Search& s, bool _auto)
 	{
 		Lock l(cs);
@@ -92,10 +97,9 @@ public:
 		search_queue.clear();
 	}
 
-	int32_t last_search_time;
-
 private:
 	deque<Search> search_queue;
+	u_int32_t last_search_time;
 	CriticalSection cs;
 };
 

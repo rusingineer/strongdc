@@ -117,7 +117,7 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 {
 	dcassert(page != NULL);
 
-	TCHAR *buf = new TCHAR[SETTING_STR_MAXLEN];
+	AutoArray<TCHAR> buf(SETTING_STR_MAXLEN);
 	for(Item const* i = items; i->type != T_END; i++)
 	{
 		switch(i->type)
@@ -129,7 +129,7 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					throw;
 				}
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::StrSetting)i->setting, Text::fromT(buf));
+				settings->set((SettingsManager::StrSetting)i->setting, Text::fromT(tstring(buf)));
 #if DIM_EDIT_EXPERIMENT
 				if (ctrlMap[i->itemID]) {
 					ctrlMap[i->itemID]->UnsubclassWindow();
@@ -146,13 +146,13 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					throw;
 				}
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::IntSetting)i->setting, Text::fromT(buf));
+				settings->set((SettingsManager::IntSetting)i->setting, Text::fromT(tstring(buf)));
 				break;
 			}
 		case T_INT64:
 			{
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::Int64Setting)i->setting, Text::fromT(buf));
+				settings->set((SettingsManager::Int64Setting)i->setting, Text::fromT(tstring(buf)));
 				break;
 			}
 		case T_BOOL:
@@ -168,7 +168,6 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 			}
 		}
 	}
-	delete[] buf;
 
 	if(listItems != NULL) {
 		CListViewCtrl ctrl;

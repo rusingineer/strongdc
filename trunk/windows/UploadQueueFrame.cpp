@@ -26,6 +26,8 @@
 #include "UploadQueueFrame.h"
 #include "PrivateFrame.h"
 
+#include "BarShader.h"
+
 int UploadQueueFrame::columnSizes[] = { 250, 100, 75, 75, 75, 75, 100, 100 };
 int UploadQueueFrame::columnIndexes[] = { COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_TRANSFERRED, COLUMN_SIZE, COLUMN_ADDED, COLUMN_WAITING };
 ResourceManager::Strings UploadQueueFrame::columnNames[] = { ResourceManager::FILENAME, ResourceManager::PATH, ResourceManager::NICK, 
@@ -522,16 +524,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 		if(cd->iSubItem == COLUMN_TRANSFERRED) {
 			// draw something nice...
 				TCHAR buf[256];
-				COLORREF barBase;
-				if (SETTING(PROGRESS_OVERRIDE_COLORS)) {
-					barBase = SETTING(UPLOAD_BAR_COLOR);
-				} else {
-					barBase = GetSysColor(COLOR_HIGHLIGHT);
-				}
-				COLORREF bgBase = WinUtil::bgColor;
-				int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
-				//COLORREF barPal[4] = { HLS_TRANSFORM(barBase, -90, 80), HLS_TRANSFORM(barBase, -50, 40), barBase, HLS_TRANSFORM(barBase, 40, -30) };
-				COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
+				UploadQueueItem *ii = (UploadQueueItem*)cd->nmcd.lItemlParam;
 
 				ctrlList.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_TRANSFERRED, buf, 255);
 				buf[255] = 0;
@@ -564,60 +557,24 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				bih.biClrUsed = 32;
 				bih.biClrImportant = 0;
 				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-				if (hBmp == NULL)
-					MessageBox(Text::toT(Util::translateError(GetLastError())).c_str(), _T("ERROR"), MB_OK);
+
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 
-			// draw background
-				HGDIOBJ oldpen = ::SelectObject(dc, CreatePen(PS_SOLID,0,bgPal[0]));
-				HGDIOBJ oldbr = ::SelectObject(dc, CreateSolidBrush(bgPal[1]));
-				::Rectangle(dc, rc.left, rc.top - 1, rc.right, rc.bottom);			
-		        rc.DeflateRect(1, 0, 1, 1); 
+				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
+				statusBar.SetFileSize(ii->size);
+				statusBar.Fill(RGB(150, 0, 0));
+				statusBar.FillRange(0, ii->pos, RGB(222, 160, 0));
+				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 
-				LONG left = rc.left;
-				int64_t w = rc.Width();
-				// draw start part
-				tstring per = buf;
-				per = per.substr(per.find('(')+1, per.find('%')-(per.find('(')+2));
-				double percent = Util::toDouble(Text::fromT(per)) / 100;
-				//double percent = (ii->getSize() >0) ? (double)((double)ii->getPos()) / ((double)ii->getSize()) : 0;
-				percent = (percent < 0)? 0 : percent;
-				
-				rc.right = left + (int) (w * percent);
-
-				COLORREF a, b;
-				OperaColors::EnlightenFlood(barBase, a, b);
-				OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, a, b, /*SETTING(PROGRESS_BUMPED)*/ true);
-				//OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, barPal[2], barPal[0], SETTING(PROGRESS_BUMPED));
-				rc.left = left;
-				
-				// draw status text
-				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
-
-				LONG right = rc2.right;
-				left = rc2.left;
-				rc2.right = rc.right;
 				LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(dc) - 1)/2;
-				int textcolor;
-				if (SETTING(PROGRESS_OVERRIDE_COLORS)) {
-					textcolor = SETTING(PROGRESS_TEXT_COLOR_UP);
-				} else {
-					textcolor = OperaColors::TextFromBackground(barBase);
-				}
+				int textcolor = SETTING(PROGRESS_TEXT_COLOR_UP);
 			
 				SetTextColor(dc, textcolor);
-                ::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
-
-				rc2.left = rc2.right;
-				rc2.right = right;
-
-				SetTextColor(dc, WinUtil::textColor);
-				::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+                ::ExtTextOut(dc, rc2.left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 				SelectObject(dc, oldFont);
 				

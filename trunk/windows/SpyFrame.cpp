@@ -211,10 +211,9 @@ LRESULT SpyFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		CMenu mnu;
 		mnu.CreatePopupMenu();
 		mnu.AppendMenu(MF_STRING, IDC_SEARCH, CTSTRING(SEARCH));
-		TCHAR* buf = new TCHAR[256];
+		AutoArray<TCHAR> buf(256);
 		ctrlSearches.GetItemText(i, COLUMN_STRING, buf, 256);
 		searchString = buf;
-		delete[] buf;
 
 		ctrlSearches.ClientToScreen(&pt);
 		mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

@@ -481,10 +481,9 @@ LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 }
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int x = QueueManager::getInstance()->matchListing(dl);
-	TCHAR* buf = new TCHAR[STRING(MATCHED_FILES).length() + 32];
+	AutoArray<TCHAR> buf(STRING(MATCHED_FILES).length() + 32);
 	_stprintf(buf, CTSTRING(MATCHED_FILES), x);
 	ctrlStatus.SetText(0, buf);
-	delete[] buf;
 	return 0;
 }
 
