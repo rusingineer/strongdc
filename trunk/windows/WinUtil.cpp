@@ -1619,6 +1619,27 @@ int WinUtil::getFlagImage(const char* country, bool fullname) {
 	return 0;
 }
 
+float ProcSpeedCalc() {
+#define RdTSC __asm _emit 0x0f __asm _emit 0x31
+__int64 cyclesStart = 0, cyclesStop = 0;
+unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
+    if(!QueryPerformanceFrequency((LARGE_INTEGER *) &nFreq)) return 0;
+    QueryPerformanceCounter((LARGE_INTEGER *) &nCtrStop);
+    nCtrStop += nFreq;
+    _asm {
+		RdTSC
+        mov DWORD PTR cyclesStart, eax
+        mov DWORD PTR [cyclesStart + 4], edx
+    } do {
+		QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
+    } while (nCtr < nCtrStop);
+    _asm {
+		RdTSC
+        mov DWORD PTR cyclesStop, eax
+        mov DWORD PTR [cyclesStop + 4], edx
+    }
+	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
+}
 
 string WinUtil::generateStats() {
 	char buf[1024];
@@ -1629,13 +1650,13 @@ string WinUtil::generateStats() {
 	GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
 	int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 	int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
-	sprintf(buf, "\n-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: %s ][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s ]=-", 
+	sprintf(buf, "\n-=[ StrongDC++ %s%s ]=-\r\n-=[ Uptime: %s ][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s ]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
 		VERSIONSTRING, STRONGDCVERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
 		Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 		Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 		Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
 		Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
-		formatTime(::GetTickCount()/1000).c_str());
+		formatTime(::GetTickCount()/1000).c_str(), ProcSpeedCalc());
 	return buf;
 } 
 

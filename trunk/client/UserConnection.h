@@ -343,7 +343,6 @@ public:
 	GETSET(States, state, State);
 	GETSET(u_int32_t, lastActivity, LastActivity);
 	GETSET(Download*, tempDownload, TempDownload);
-	GETSET(bool, sChunks, SChunks);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	string getRemoteIp() const { return socket->getIp(); }
@@ -370,7 +369,7 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection() throw(SocketException) : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(BufferedSocket::getSocket(0)), download(NULL), sChunks(false) { 
+		socket(BufferedSocket::getSocket(0)), download(NULL) { 
 		
 		socket->addListener(this);
 	};

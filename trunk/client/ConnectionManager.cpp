@@ -156,7 +156,7 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			pendingDown.push_back(cqi);
 		} else {
 			{
-				Lock l(cs);
+				//Lock l(cs);
 				dcassert(find(active.begin(), active.end(), aSource->getCQI()) != active.end());
 				active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 			}
@@ -786,8 +786,6 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 	}
 	if(conn->getUser() != (User::Ptr)NULL) {
 		conn->getUser()->setSupports(sup);
-		if(conn->getUser()->getClient())
-			conn->setSChunks(!conn->getUser()->getClient()->getStealth() && (conn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || conn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK)));
 	}
 }
 

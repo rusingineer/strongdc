@@ -95,14 +95,14 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	
 	hubsMenu.CreatePopupMenu();
 	hubsMenu.AppendMenu(MF_STRING, IDC_OPEN_HUB_LOG, CTSTRING(OPEN_HUB_LOG));
-	hubsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	hubsMenu.AppendMenu(MF_SEPARATOR);
 	hubsMenu.AppendMenu(MF_STRING, IDC_CONNECT, CTSTRING(CONNECT));
 	hubsMenu.AppendMenu(MF_STRING, IDC_NEWFAV, CTSTRING(NEW));
 	hubsMenu.AppendMenu(MF_STRING, IDC_MOVE_UP, CTSTRING(MOVE_UP));
 	hubsMenu.AppendMenu(MF_STRING, IDC_MOVE_DOWN, CTSTRING(MOVE_DOWN));
-	hubsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	hubsMenu.AppendMenu(MF_SEPARATOR);
 	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
-	hubsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	hubsMenu.AppendMenu(MF_SEPARATOR);
 	hubsMenu.AppendMenu(MF_STRING, IDC_EDIT, CTSTRING(PROPERTIES));
 	hubsMenu.SetMenuDefaultItem(IDC_CONNECT);
 

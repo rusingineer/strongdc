@@ -53,6 +53,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
 	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
+	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

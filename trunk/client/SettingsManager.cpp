@@ -115,6 +115,7 @@ const string SettingsManager::settingTags[] =
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
+	"CheckUnverifiedOnly",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -478,6 +479,7 @@ SettingsManager::SettingsManager()
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	
 	setDefault(SHOW_CHUNK_INFO, true);
+	setDefault(CHECK_UNVERIFIED_ONLY, true);
 	setDefault(NORMAL_COLOUR, RGB(255,255,255));
 	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
 	setDefault(IGNORED_COLOR, RGB(192,192,192));	

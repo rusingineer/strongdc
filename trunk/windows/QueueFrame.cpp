@@ -653,8 +653,8 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 			for(QueueItem::Source::Iter j = aQI->getBadSources().begin(); j != aQI->getBadSources().end(); ++j) {
 				if(!ii->isBadSource((*j)->getUser())) {
 					ii->getBadSources().push_back(QueueItemInfo::SourceInfo(*(*j)));
+				}
 			}
-		}
 		}
 		ii->updateMask |= QueueItemInfo::MASK_PRIORITY | QueueItemInfo::MASK_USERS | QueueItemInfo::MASK_ERRORS | QueueItemInfo::MASK_STATUS | QueueItemInfo::MASK_DOWNLOADED | QueueItemInfo::MASK_TTH;
 	}
@@ -1033,7 +1033,8 @@ LRESULT QueueFrame::onBrowseList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 		try {
-			QueueManager::getInstance()->addList(s->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			User::Ptr u = s->getUser();
+			QueueManager::getInstance()->addList(u, QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception&) {
 		}
 	}
@@ -1059,7 +1060,8 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 			try {
-				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
+				User::Ptr u = s->getUser();
+				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), u);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -1084,7 +1086,8 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 			removeMenu.GetMenuItemInfo(wID, FALSE, &mi);
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), s->getUser(), QueueItem::Source::FLAG_REMOVED);
+			User::Ptr u = s->getUser();
+			QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), u, QueueItem::Source::FLAG_REMOVED);
 		}
 	}
 	return 0;
@@ -1096,7 +1099,8 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	removeAllMenu.GetMenuItemInfo(wID, FALSE, &mi);
 	OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 	QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-	QueueManager::getInstance()->removeSources(s->getUser(), QueueItem::Source::FLAG_REMOVED);
+	User::Ptr u = s->getUser();
+	QueueManager::getInstance()->removeSources(u, QueueItem::Source::FLAG_REMOVED);
 	return 0;
 }
 
@@ -1455,7 +1459,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		if(cd->iSubItem == COLUMN_PROGRESS) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
-			if(qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
+			if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
 				bHandled = FALSE;
 				return 0;
 			}
@@ -1572,7 +1576,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
 
-			if((qi->qi->getTiger().getLeaves().size() == 0) || (qi->qi->getTiger().getBlockSize() == qi->getSize())) {
+			if(!qi || !qi->qi || !qi->qi->getHasTree()) {
 				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 			} else {
 				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);

@@ -267,7 +267,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	grantMenu.AppendMenu(MF_SEPARATOR);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
 	grantMenu.InsertSeparator(0, TRUE, STRING(GRANT_SLOTS_MENU));
 	
@@ -278,14 +278,14 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 	resultsMenu.AppendMenu(MF_STRING, IDC_MP3, CTSTRING(GET_MP3INFO));
-	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	resultsMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(resultsMenu);
 	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-2, MF_BYPOSITION);
-	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	resultsMenu.AppendMenu(MF_SEPARATOR);
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 	resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
-	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	resultsMenu.AppendMenu(MF_SEPARATOR);
 	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CTSTRING(BITZI_LOOKUP));
 
 	UpdateLayout();
@@ -511,7 +511,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 }
 
 void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw() {
-	if(aSearch->getWindow() == (int*)this) {
+	if((searches >= 0) && (aSearch->getWindow() == (int*)this)) {
 		searches--;
 		dcassert(searches >= 0);
 
@@ -1306,7 +1306,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 
 		prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
 		if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-			resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			resultsMenu.AppendMenu(MF_SEPARATOR);
 		}
 		resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 		resultsMenu.InsertSeparatorFirst(sr->getFileName());

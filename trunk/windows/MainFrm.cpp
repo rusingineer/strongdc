@@ -244,9 +244,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	trayMenu.CreatePopupMenu();
 	trayMenu.AppendMenu(MF_STRING, IDC_TRAY_SHOW, CTSTRING(MENU_SHOW));
 	trayMenu.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
-	trayMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	trayMenu.AppendMenu(MF_SEPARATOR);
 	trayMenu.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
-	trayMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	trayMenu.AppendMenu(MF_SEPARATOR);
 	trayMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
 	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 

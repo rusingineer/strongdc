@@ -253,7 +253,7 @@ LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_STATUS) {
 			UserInfo *ui = (UserInfo*)cd->nmcd.lItemlParam;
-			if(ui->user->isOnline()) {
+			if(ui && (ui->user != (User::Ptr)NULL) && ui->user->isOnline()) {
 				cd->clrText = RGB(0, 255, 0);
 			} else {
 				cd->clrText = RGB(255, 0, 0);

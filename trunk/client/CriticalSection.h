@@ -45,9 +45,10 @@ public:
 		dcassert(counter==0);
 		DeleteCriticalSection(&cs);
 	}
+	CRITICAL_SECTION cs;
 private:
 	dcdrun(long counter;);
-	CRITICAL_SECTION cs;
+
 #else
 public:
 	CriticalSection() throw() {
@@ -110,11 +111,12 @@ private:
 template<class T>
 class LockBase {
 public:
-	LockBase(T& aCs) throw() : cs(aCs)  { cs.enter(); };
-	~LockBase() throw() { cs.leave(); };
+	LockBase(T& aCs) throw() : cs(aCs), entered(true)  { if(cs.cs.RecursionCount < 2) cs.enter(); else entered = false; };
+	~LockBase() throw() { if(entered) cs.leave(); };
 private:
 	LockBase& operator=(const LockBase&);
 	T& cs;
+	bool entered;
 };
 typedef LockBase<CriticalSection> Lock;
 typedef LockBase<FastCriticalSection> FastLock;

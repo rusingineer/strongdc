@@ -313,7 +313,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 
 void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) {
 
-	if(!qi->isSource(aUser)) return;
+	dcassert(qi->isSource(aUser));
 
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
@@ -549,7 +549,20 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 	{
 		Lock l(cs);
 
-		QueueItem* q = fileQueue.find(target);
+		QueueItem* q = NULL;
+		
+		if(root) {
+			for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
+				QueueItem* qi = i->second;
+				if(qi->getTTH() != NULL && *qi->getTTH() == *root) {
+					q = qi;
+					break;
+				}
+			}
+		} else {
+			q = fileQueue.find(target);
+		}
+
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, p, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
@@ -577,8 +590,8 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 				if(q->getTTH() == NULL) {
 					q->setTTH(new TTHValue(*root));
 				} else if(!(*root == *q->getTTH())) {
-				throw QueueException(STRING(FILE_WITH_DIFFERENT_TTH));
-			}
+					throw QueueException(STRING(FILE_WITH_DIFFERENT_TTH));
+				}
 			}
 
 			aFlags &= ~QueueItem::FLAG_MULTI_SOURCE;
@@ -918,11 +931,12 @@ void QueueManager::getTargetsByRoot(StringList& sl, const TTHValue& tth) {
 	}
 }
 
-Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, string &message, bool &reuse, QueueItem* q) throw() {
+Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q) throw() {
 	Lock l(cs);
 
 	bool useOld = false;
 	FileChunksInfo::Ptr chunksInfo = NULL;
+	int64_t freeBlock = 0;
 
 	if(q != NULL) {
 		useOld = true;
@@ -936,8 +950,6 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, string
 again:
 	if(q == NULL)
 		return NULL;
-
-	int64_t freeBlock = 0;
 
 	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)
 		&& !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) && !q->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -967,30 +979,28 @@ again:
 		}
 
 next:
-		chunksInfo = FileChunksInfo::Get(q->getTempTarget());
+		TigerTree tree;
+		if(	!((q->getSize() != -1 && q->getTTH()) && !(HashManager::getInstance()->getTree(*q->getTTH(), tree)) &&
+			(supportsTrees && !(*(q->getSource(aUser)))->isSet(QueueItem::Source::FLAG_NO_TREE) && q->getSize() > HashManager::MIN_BLOCK_SIZE))) {
 
-		dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
+			chunksInfo = FileChunksInfo::Get(q->getTempTarget());
 
-		freeBlock = chunksInfo->GetUndlStart();
+			dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
 
-		if(freeBlock == -1) {
-			if(useOld) {
-				useOld = false;
-				q->removeActiveSegment(aUser);
+			freeBlock = chunksInfo->GetUndlStart();
+
+			if(freeBlock == -1) {
+				if(useOld) {
+					useOld = false;
+					q->removeActiveSegment(aUser);
+				}
+				message = STRING(NO_FREE_BLOCK);
+				q->setNoFreeBlocks(true);
+				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+				if(q == NULL) reuse = true;
+				goto again;
 			}
-			message = STRING(NO_FREE_BLOCK);
-			q->setNoFreeBlocks(true);
-			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			if(q == NULL) reuse = true;
-			goto again;
 		}
-		/*} else {
-			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			if(q == NULL) reuse = true;
-			goto again;
-		}*/
-
-
 	}
 
 	userQueue.setRunning(q, aUser);
@@ -1002,7 +1012,8 @@ next:
 	if(d->getSize() != -1 && d->getTTH()) {
 		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
-		} else if(supportsTrees && !q->getCurrents()[0]->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
+			q->setHasTree(true);
+		} else if(supportsTrees && !(*(q->getSource(aUser)))->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			d->setFlag(Download::FLAG_TREE_DOWNLOAD);
 			d->getTigerTree().setFileSize(d->getSize());
@@ -1010,9 +1021,6 @@ next:
 			d->setSize(-1);
 			d->unsetFlag(Download::FLAG_RESUME);
 
-			if(chunksInfo != (FileChunksInfo::Ptr)NULL) {
-				chunksInfo->PutUndlStart(freeBlock);
-			}
 		} else {
 			// Use the root as tree to get some sort of validation at least...
 			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
@@ -1025,9 +1033,17 @@ next:
 
 		dcassert(chunksInfo != (FileChunksInfo::Ptr)NULL);
 		int64_t blockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
-		int64_t needToDownload = min((int64_t)chunksInfo->iSmallestBlockSize,(int64_t)(d->getSize() - d->getPos()));
-		d->setSegmentSize(min(blockSize, needToDownload));
+
+		if(supportsChunks && aUser->getClient() && !aUser->getClient()->getStealth()) {
+			int64_t needToDownload = min((int64_t)chunksInfo->iSmallestBlockSize,(int64_t)(d->getSize() - d->getPos()));
+			d->setSegmentSize(min(blockSize, needToDownload));
+			d->setFlag(Download::FLAG_CHUNK_TRANSFER);
+		} else {
+			d->setSegmentSize(blockSize);
+		}
 	} else {
+		dcassert(chunksInfo == (FileChunksInfo::Ptr)NULL);
+
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
 		}		
@@ -1110,12 +1126,18 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 					}
 				}
 
-				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE))
+				if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					q->setCurrentDownload(NULL);
 
-				if(q->getStatus() == QueueItem::STATUS_RUNNING) {
+					if(q->getStatus() == QueueItem::STATUS_RUNNING) {
+						userQueue.setWaiting(q, aDownload->getUserConnection()->getUser(), removeSegment);
+						fire(QueueManagerListener::StatusUpdated(), q);
+					}
+				} else {
 					userQueue.setWaiting(q, aDownload->getUserConnection()->getUser(), removeSegment);
-					fire(QueueManagerListener::StatusUpdated(), q);
+					if(q->getStatus() != QueueItem::STATUS_RUNNING) {
+						fire(QueueManagerListener::StatusUpdated(), q);
+					}
 				}
 			}
 		} else if(!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
@@ -1309,12 +1331,16 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 				q->setPriority(p);
 				userQueue.add(q);
 			} else {
-				for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
-					if(!q->isCurrent((*i)->getUser())) userQueue.remove(q, (*i)->getUser());
-				}
-				q->setPriority(p);
-				for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
-					if(!q->isCurrent((*i)->getUser())) userQueue.add(q, (*i)->getUser());
+				if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+					for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
+						if(!q->isCurrent((*i)->getUser())) userQueue.remove(q, (*i)->getUser());
+					}
+					q->setPriority(p);
+					for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
+						if(!q->isCurrent((*i)->getUser())) userQueue.add(q, (*i)->getUser());
+					}
+				} else {
+					q->setPriority(p);
 				}
 			}
 			setDirty();
@@ -1727,7 +1753,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
-void QueueManager::autoDropSource(User::Ptr& aUser, bool remove)
+void QueueManager::autoDropSource(User::Ptr& aUser)
 {
     Lock l(cs);
 
@@ -1738,13 +1764,10 @@ void QueueManager::autoDropSource(User::Ptr& aUser, bool remove)
     userQueue.setWaiting(q, aUser);
     userQueue.remove(q, aUser);
 
-	if(remove)
-		q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
+	q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
 
 	fire(QueueManagerListener::StatusUpdated(), q);
     setDirty();
-
-    DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
 }
 /**
  * @file
