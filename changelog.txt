@@ -7,6 +7,7 @@
 * synchronizace s CVS DC++ 0.4033
 * pøidáno chybìjící tlaèítko Stažené informace o MP3 na lištu
 * aktualizováno na WTL 7.5.4196
+* opraven pád pøi stahování informací o MP3
 
 
 	-- StrongDC++ 1.00 RC7 --

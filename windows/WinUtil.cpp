@@ -865,7 +865,6 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 				PPK_dwCurrentSize += PPKEntry.cbData;
 			}
 		}
-//		delete[] *PPK_aHeaps;
 		uptime += formatTime(Util::getUptime()) + " ][ Memory usage: " + Util::toString(PPK_dwCurrentSize/1024) + 
 			" kB ]=-\r\n-=[ Downloaded: " + Util::formatBytes(Socket::getTotalDown()) + " ][ Uploaded: " + 
 			Util::formatBytes(Socket::getTotalUp()) + " ]=-\r\n-=[ Total download: " + Util::formatBytes(SETTING(TOTAL_DOWNLOAD)) + 

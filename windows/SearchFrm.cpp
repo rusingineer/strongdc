@@ -264,6 +264,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CSTRING(DOWNLOAD_WHOLE_DIR));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)targetDirMenu, CSTRING(DOWNLOAD_WHOLE_DIR_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CSTRING(VIEW_AS_TEXT));
+	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	resultsMenu.AppendMenu(MF_STRING, IDC_MP3, CSTRING(GET_MP3INFO));
 	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	appendUserItems(resultsMenu);
@@ -488,9 +489,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 				return;
 		} else {
 			for(StringIter j = search.begin(); j != search.end(); ++j) {
-				if((*j->begin() != '-' && Util::findSubString(aResult->getFile(), *j) == -1) ||
-					(*j->begin() == '-' && Util::findSubString(aResult->getFile(), j->substr(1)) != -1)
-					) {
+				if(Util::findSubString(aResult->getFile(), *j) == -1) {
 					return;
 				}
 			}
@@ -973,6 +972,19 @@ void SearchFrame::onTab(bool shift) {
 	::SetFocus(wnds[(i + (shift ? -1 : 1)) % size]);
 }
 
+LRESULT SearchFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlResults.GetSelectedCount() == 1) {
+		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+
+		if(sr->getTTH() != NULL) {
+			SearchFrame::openWindow(sr->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+		}
+	} 
+
+	return 0;
+}
+
 LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
  	switch(wParam) {
 	case ADD_RESULT:
@@ -1108,11 +1120,13 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
 				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
 				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
 			} else {
 				resultsMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);
 				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_GRAYED);
-				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
+				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
+				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);
 			}
 	
 			if(ctrlResults.GetSelectedCount() == 1 && ((Util::getFileExt(sr->getFileName()) == ".mp3") || (Util::getFileExt(sr->getFileName()) == ".MP3"))) {
@@ -1228,8 +1242,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	dcassert(pos != -1);
 	string sCopy;
 	if ( pos >= 0 ) {
-		SearchInfo* si = ctrlResults.getItemData(pos);
-		SearchResult* sr = si->sr;
+		SearchResult* sr = ctrlResults.getItemData(pos)->sr;
 		switch (wID) {
 			case IDC_COPY_NICK:
 				sCopy = sr->getUser()->getNick();
@@ -1244,13 +1257,13 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				sCopy = Util::formatBytes(sr->getSize());
 				break;
 			case IDC_COPY_LINK:
-				if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH() && si->sr->getSize()) {
+				if(sr->getType() == SearchResult::TYPE_FILE) {
 					WinUtil::copyMagnet(sr->getTTH(), sr->getFileName(), sr->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:
-				if(si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH())
-					sCopy = si->sr->getTTH()->toBase32();
+				if(sr->getType() == SearchResult::TYPE_FILE && sr->getTTH())
+					sCopy = sr->getTTH()->toBase32();
 				break;
 			default:
 				dcdebug("SEARCHFRAME DON'T GO HERE\n");

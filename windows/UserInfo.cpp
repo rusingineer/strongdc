@@ -1,5 +1,3 @@
-// No license, No copyright... use it if you want ;-)
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -46,7 +44,6 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		dcdebug("UserInfo::compareItems: pointer == NULL\n");
 		return 0;
 	}
-
 	int nHardCol = col;
 	if (a->m_pListColumns)
 		nHardCol = a->m_pListColumns->RemapListColumnToDataColumn(col);
@@ -99,7 +96,7 @@ void UserInfo::update() {
 
 	shared = Util::formatBytes(user->getBytesShared());
 	op = user->isSet(User::OP);
-	exactshare = Util::formatNumber(user->getBytesShared());
+	exactshare = Util::formatExactSize(user->getBytesShared());
 	
 }
 
@@ -119,12 +116,11 @@ static int def_ColumnShowSettings[] = {
 	SettingsManager::SHOW_HUBS, SettingsManager::SHOW_SLOTS, SettingsManager::SHOW_ISP ,SettingsManager::SHOW_IP,
 	SettingsManager::SHOW_PK, SettingsManager::SHOW_LOCK, SettingsManager::SHOW_SUPPORTS};
 
-/*static */ResourceManager::Strings UserListColumns::def_columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
+ResourceManager::Strings UserListColumns::def_columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
 ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::AVERAGE_UPLOAD, ResourceManager::EMAIL, 
 ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS, ResourceManager::ISP,
 ResourceManager::SETTINGS_IP, ResourceManager::PK, ResourceManager::LOCK,  ResourceManager::SUPPORTS };
 
-//ResourceManager::Strings UserListColumns::columnNames[UserInfo::COLUMN_LAST];
 
 UserListColumns::UserListColumns() {
 	memcpy(m_nColumnSizes, def_columnSizes, sizeof(int)* UserInfo::COLUMN_LAST);
@@ -136,9 +132,6 @@ UserListColumns::UserListColumns() {
 }
 
 void UserListColumns::ReadFromSetup() {
-	/*for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
-		columnNames[j] = def_columnNames[j];
-	}*/
 	WinUtil::splitTokens(m_nColumnIndexes, SETTING(HUBFRAME_ORDER), UserInfo::COLUMN_LAST);
 	WinUtil::splitTokens(m_nColumnSizes, SETTING(HUBFRAME_WIDTHS), UserInfo::COLUMN_LAST);
 

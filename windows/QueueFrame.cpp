@@ -107,17 +107,16 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	singleMenu.CreatePopupMenu();
 	multiMenu.CreatePopupMenu();
-	dirMenu.CreatePopupMenu();
-	priorityMenu.CreatePopupMenu();
-	segmentsMenu.CreatePopupMenu();
-
 	browseMenu.CreatePopupMenu();
 	removeMenu.CreatePopupMenu();
 	removeAllMenu.CreatePopupMenu();
 	pmMenu.CreatePopupMenu();
+	priorityMenu.CreatePopupMenu();
+	dirMenu.CreatePopupMenu();	
 	readdMenu.CreatePopupMenu();
 	previewMenu.CreatePopupMenu();
-
+	segmentsMenu.CreatePopupMenu();
+	
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
@@ -135,7 +134,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	
-    multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
 	multiMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
@@ -162,7 +160,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTNINE, ("9 "+STRING(SEGMENTS)).c_str());
 	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, ("10 "+STRING(SEGMENTS)).c_str());
 
-	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
  	dirMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
@@ -617,7 +614,6 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		//ii->setDownloadedBytes(aQI->getDownloadedBytes());
 		if(ii->FDI) ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
@@ -932,12 +928,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
-/*			if(ii->qi->getMaxSegmentsInitial() == 1) {
-				segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)+" ("+STRING(DISABLED)+")").c_str());
-				for(int i=2;i<11;i++) {
-					segmentsMenu.EnableMenuItem(i + 109, MF_GRAYED);		
-				}
-			} else segmentsMenu.ModifyMenu(110, MF_BYCOMMAND, 110, ("1 "+STRING(SEGMENT)).c_str());*/
 			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 			string ext = Util::getFileExt(ii->getTargetFileName());
@@ -1110,10 +1100,19 @@ LRESULT QueueFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		if(ii->getTTH() != NULL) {
-			WinUtil::searchHash(ii->getTTH());
+			SearchFrame::openWindow(ii->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
 		}
+		}
+
+	return 0;
 	} 
 
+LRESULT QueueFrame::onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlQueue.GetSelectedCount() == 1) {
+		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
+		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		WinUtil::copyMagnet(ii->getTTH(), ii->getTargetFileName(), ii->getSize());
+	}
 	return 0;
 }
 
@@ -1201,20 +1200,6 @@ LRESULT QueueFrame::onReaddAll(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, e.getError().c_str());
 			}
-		}
-	}
-	return 0;
-}
-
-LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-
-		QueueItemInfo::SourceIter i;
-		for(i = ii->getSources().begin(); i != ii->getSources().end();) {
-			if(!i->getUser()->isOnline())
-				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
-			else ++i;
 		}
 	}
 	return 0;
@@ -1545,11 +1530,6 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 }
 
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
-		bHandled = FALSE;
-		return 0;
-	}
-
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 
@@ -1712,11 +1692,16 @@ LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 	return 0;
 }
 
-LRESULT QueueFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
-		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-		WinUtil::copyMagnet(ii->getTTH(), ii->getTargetFileName(), ii->getSize());
+		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+
+		for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end();) {
+			if(!i->getUser()->isOnline())
+				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
+			else
+				i++;
+		}
 	}
 	return 0;
 }

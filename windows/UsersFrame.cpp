@@ -60,8 +60,10 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	ctrlUsers.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlUsers.setSortColumn(COLUMN_NICK);
+
 	usersMenu.CreatePopupMenu();
 	usersMenu.AppendMenu(MF_STRING, IDC_EDIT, CSTRING(PROPERTIES));
+	usersMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG, CSTRING(OPEN_USER_LOG));
 	usersMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(usersMenu);
 	usersMenu.AppendMenu(MF_SEPARATOR);
@@ -203,6 +205,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			SettingsManager::USERSFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
 		ctrlUsers.DeleteAll();
+
 		bHandled = FALSE;
 	return 0;
 	}
@@ -237,6 +240,25 @@ LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	default:
 		return CDRF_DODEFAULT;
 	}
+}
+
+LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlUsers.GetSelectedCount() == 1) {
+		int i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED);
+		UserInfo* ui = ctrlUsers.getItemData(i);
+		dcassert(i != -1);
+		string file = Util::emptyString;
+		string xNick = ui->user->getNick();
+		if (xNick != "") {
+			file = Util::validateFileName(SETTING(LOG_DIRECTORY) + xNick + ".log");
+		}
+		if(File::existsFile(file)) {
+			ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
+		} else {
+			MessageBox(CSTRING(NO_LOG_FOR_USER),CSTRING(NO_LOG_FOR_USER), MB_OK );	  
+		}	
+	}
+	return 0;
 }
 
 /**

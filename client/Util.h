@@ -58,7 +58,7 @@ struct PointerHash {
 #else 
 	static const size_t bucket_size = 4;
 	static const size_t min_buckets = 8;
-#endif // _MSC_VER == 1200
+#endif // _MSC_VER < 1300
 	size_t operator()(const T* a) const { return ((size_t)a)/sizeof(T); };
 	bool operator()(const T* a, const T* b) { return a < b; };
 };
@@ -314,7 +314,7 @@ public:
 	static string formatBytes(int64_t aBytes);
 
 	static string formatExactSize(int64_t aBytes);
-
+	
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
 		char buf[64];
 #ifdef _WIN32
@@ -611,7 +611,7 @@ private:
 	static char lower[];
 	static int8_t cmp[256][256];
 	static int8_t cmpi[256][256];
-
+	
 	typedef map<u_int32_t, u_int16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
 
@@ -619,7 +619,7 @@ private:
 	
 	static int64_t mUptimeSeconds;
 };
-
+	
 class safestring
 {
 public:
@@ -639,7 +639,7 @@ struct noCaseStringHash {
 #else 
 	static const size_t bucket_size = 4;
 	static const size_t min_buckets = 8;
-#endif // _MSC_VER == 1200
+#endif // _MSC_VER < 1300
 
 	size_t operator()(const string& s) const {
 		size_t x = 0;

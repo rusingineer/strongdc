@@ -645,7 +645,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
-	if(false == d->isSet(Download::FLAG_USER_LIST) && d->isSet(Download::FLAG_TREE_DOWNLOAD) == false){
+	if(false == d->isSet(Download::FLAG_USER_LIST) && d->isSet(Download::FLAG_TREE_DOWNLOAD) == false && !d->isSet(Download::FLAG_MP3_INFO)){
 		d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
 	}
 
@@ -694,8 +694,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 		} catch(const BlockDLException) {
 			dcdebug("BlockDLException.....\n");
-			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));			
 			d->finished = true;
+			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));						
 			aSource->getUser()->setDownloadSpeed(d->getRunningAverage());
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
@@ -706,17 +706,14 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const FileDLException) {			
 			dcdebug("FileDLException.....\n");
 
-			if(!d->getTreeValid() && d->getTTH() != NULL)
-			{
+			if(!d->getTreeValid() && d->getTTH() != NULL) {
 				if(HashManager::getInstance()->getTree(d->getTarget(), d->getTigerTree()) && d->getTigerTree().getRoot() == *(d->getTTH()))
 					d->setTreeValid(true);
 			}
-
 			if(d->getTreeValid()) {
 
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
-				{
+				if(!(lpFileDataInfo == (FileChunksInfo*)NULL)) {
 					dcdebug("Do last verify.....\n");
 					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree())){
 						dcdebug("last verifiy failed .....\n");
@@ -733,9 +730,9 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			return;	
 		}
 
-		if(d->getPos() == d->getSize()) {
-			if(d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_TREE_DOWNLOAD))
-			handleEndData(aSource);
+		if((d->getPos() == d->getSize()) || d->isSet(Download::FLAG_MP3_INFO)) {
+			if(d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_TREE_DOWNLOAD) || d->isSet(Download::FLAG_MP3_INFO))
+				handleEndData(aSource);
 			aSource->setLineMode();
 		}
 /*	} catch(const RollbackException& e) {

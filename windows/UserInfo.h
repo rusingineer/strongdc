@@ -5,9 +5,10 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "..\client\FastAlloc.h"
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
+
+#include "../client/FastAlloc.h"
 
 class UserListColumns;
 friend struct CompareItems;

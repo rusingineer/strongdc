@@ -55,10 +55,10 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	reobject.clsid = clsid;
 	reobject.cp = REO_CP_SELECTION;
 	reobject.dvaspect = DVASPECT_CONTENT;
+	reobject.dwFlags = REO_BELOWBASELINE;
 	reobject.poleobj = pOleObject;
 	reobject.polesite = pOleClientSite;
 	reobject.pstg = pStorage;
-	reobject.dwFlags = REO_BELOWBASELINE;
 
 	// Insert the bitmap at the current location in the richedit control
 

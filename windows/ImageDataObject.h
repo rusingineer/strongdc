@@ -62,13 +62,13 @@ public:
 
 		return S_OK;
 	}
-	STDMETHOD(GetDataHere)(FORMATETC* pformatetc, STGMEDIUM*  pmedium ) {
+	STDMETHOD(GetDataHere)(FORMATETC* /*pformatetc*/, STGMEDIUM*  /*pmedium*/) {
 		return E_NOTIMPL;
 	}
-	STDMETHOD(QueryGetData)(FORMATETC*  pformatetc ) {
+	STDMETHOD(QueryGetData)(FORMATETC* /*pformatetc*/) {
 		return E_NOTIMPL;
 	}
-	STDMETHOD(GetCanonicalFormatEtc)(FORMATETC*  pformatectIn ,FORMATETC* pformatetcOut ) 	{
+	STDMETHOD(GetCanonicalFormatEtc)(FORMATETC* /*pformatectIn*/,FORMATETC* /*pformatetcOut*/) {
 		return E_NOTIMPL;
 	}
 	STDMETHOD(SetData)(FORMATETC* pformatetc , STGMEDIUM*  pmedium , BOOL  fRelease ) {
@@ -77,17 +77,17 @@ public:
 		m_bRelease = fRelease;
 		return S_OK;
 	}
-	STDMETHOD(EnumFormatEtc)(DWORD  dwDirection , IEnumFORMATETC**  ppenumFormatEtc ) {
+	STDMETHOD(EnumFormatEtc)(DWORD /*dwDirection*/, IEnumFORMATETC** /*ppenumFormatEtc*/) {
 		return E_NOTIMPL;
 	}
-	STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
-		DWORD *pdwConnection) {
+	STDMETHOD(DAdvise)(FORMATETC* /*pformatetc*/, DWORD /*advf*/, IAdviseSink* /*pAdvSink*/,
+		DWORD* /*pdwConnection*/) {
 		return E_NOTIMPL;
 	}
-	STDMETHOD(DUnadvise)(DWORD dwConnection) {
+	STDMETHOD(DUnadvise)(DWORD /*dwConnection*/) {
 		return E_NOTIMPL;
 	}
-	STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) {
+	STDMETHOD(EnumDAdvise)(IEnumSTATDATA ** /*ppenumAdvise*/) {
 		return E_NOTIMPL;
 	}
 
