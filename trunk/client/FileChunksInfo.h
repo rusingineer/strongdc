@@ -1,9 +1,30 @@
+/* 
+ * Copyright (C) 2003-2004 RevConnect, http://www.revconnect.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #pragma once
 
 #include "Pointer.h"
 #include "CriticalSection.h"
 #include "File.h"
 #include "MerkleTree.h"
+
+
+extern void ensurePrivilege();
 
 STANDARD_EXCEPTION(BlockDLException);
 STANDARD_EXCEPTION(FileDLException);
@@ -158,8 +179,6 @@ struct SharedFileHandle : CriticalSection
     }
 };
 
-typedef BOOL (__stdcall *SetFileValidDataFunc) (HANDLE hFile, LONGLONG ValidDataLength);
-
 class SharedFileStream : public IOStream
 {
 
@@ -167,33 +186,7 @@ public:
 
     typedef map<string, SharedFileHandle*> SharedFileHandleMap;
 
-    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0) 
-    	: pos(_pos)
-    {
-		Lock l(critical_section);
-
-		if(file_handle_pool.count(name) > 0){
-
-        	shared_handle_ptr = file_handle_pool[name];
-			shared_handle_ptr->ref_cnt++;
-
-        }else{
-
-            shared_handle_ptr = new SharedFileHandle(name);
-            shared_handle_ptr->ref_cnt = 1;
-			file_handle_pool[name] = shared_handle_ptr;
-
-			// only work for WinXP
-			SetFileValidDataFunc _SetFileValidData = NULL;
-			HMODULE hModule = GetModuleHandle(_T("kernel32"));
-			if(hModule)
-				_SetFileValidData = (SetFileValidDataFunc)GetProcAddress(hModule, "SetFileValidData");
-
-			if(size > 0 && _SetFileValidData != NULL)
-				_SetFileValidData(shared_handle_ptr->handle, size);
-
-        }
-    }
+    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0);
 
     virtual ~SharedFileStream()
     {
@@ -221,7 +214,7 @@ public:
 
 	virtual size_t write(const void* buf, size_t len) throw(Exception)
     {
-		Lock l(critical_section);
+		Lock l(*shared_handle_ptr);
 
 		DWORD x = (DWORD)(pos >> 32);
 		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
@@ -235,7 +228,7 @@ public:
     }
 
 	virtual size_t read(void* buf, size_t& len) throw(Exception) {
-		Lock l(critical_section);
+		Lock l(*shared_handle_ptr);
 
 		DWORD x = (DWORD)(pos >> 32);
 		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
@@ -252,7 +245,7 @@ public:
 
 	virtual size_t flush() throw(Exception) 
 	{
-		Lock l(critical_section);
+		Lock l(*shared_handle_ptr);
 
 		if(!FlushFileBuffers(shared_handle_ptr->handle))
 			throw FileException(Util::translateError(GetLastError()));
@@ -294,8 +287,6 @@ public:
 
 	virtual ~ChunkOutputStream()
     {
-		dcdebug("~ChunkOutputStream %d\n", pos);
-        // absolute ~Download()
         if(pos >=0)
 	        file_chunks_info_ptr->PutUndlStart(pos);
 
@@ -309,16 +300,17 @@ public:
     	int iRet = file_chunks_info_ptr->ValidBlock(pos, len);
 		size_t size = os->write(buf, len);
 
-        // absolute ~Download::addPos()
 		if (iRet == FileChunksInfo::BLOCK_OVER){
+			int64_t oldPos = pos;
             pos = -1;
 			os->flush();
-			throw BlockDLException(Util::toString(pos) + "," + Util::toString(pos + len));
+			throw BlockDLException(Util::toString(oldPos) + "," + Util::toString(oldPos + len));
 
 		}else if(iRet == FileChunksInfo::FILE_OVER){
+			int64_t oldPos = pos;
             pos = -1;
    			os->flush();
-			throw FileDLException(Util::toString(pos) + "," + Util::toString(pos + len));
+			throw FileDLException(Util::toString(oldPos) + "," + Util::toString(oldPos + len));
 
 		}else if(iRet == FileChunksInfo::WRONG_POS){
 			throw FileException(string("Error:") + Util::toString(pos) + "," + Util::toString(pos + len));
@@ -333,6 +325,8 @@ public:
 	{
 		return os->flush();
 	}
+
+	int64_t getPos(){return pos;}
 
 private:
 

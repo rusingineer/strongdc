@@ -24,7 +24,6 @@
 #endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
-#include "FileChunksInfo.h"
 #include "CryptoManager.h"
 #include "UserConnection.h"
 #include "Singleton.h"
@@ -74,12 +73,7 @@ public:
 		}
 	};
 
-	int64_t getQueueTotal() {
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
-		if(chunksInfo)
-			return chunksInfo->GetDownloadedSize();
-		return getTotal();
-	}
+	int64_t getQueueTotal();
 	
 	string getDownloadTarget() {
 		const string& tgt = (getTempTarget().empty() ? getTarget() : getTempTarget());
@@ -114,7 +108,6 @@ public:
 	}
 
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
-	GETSET(string, userNick, UserNick);
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
@@ -187,11 +180,6 @@ public:
 				whole += (int)d->getRunningAverage();
 		}
 		return whole;
-	}
-
-	Download::List getStahovani() {
-		Lock l(cs);
-		return downloads;
 	}
 
 	size_t getDownloads() {

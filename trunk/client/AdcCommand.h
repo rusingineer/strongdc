@@ -43,6 +43,7 @@ public:
 	CMD(SCH, 'S','C','H');
 	CMD(RES, 'R','E','S');
 	CMD(CTM, 'C','T','M');
+	CMD(RCM, 'R','C','M');
 	CMD(GPA, 'G','P','A');
 	CMD(PAS, 'P','A','S');
 	CMD(QUI, 'Q','U','I');
@@ -172,6 +173,7 @@ public:
 			CMD(SCH);
 			CMD(RES);
 			CMD(CTM);
+			CMD(RCM);
 			CMD(GPA);
 			CMD(PAS);
 			CMD(QUI);

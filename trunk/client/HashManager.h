@@ -75,7 +75,7 @@ public:
 	 * Retrieves TTH root or queue's file for hashing.
 	 * @return TTH root if available, otherwise NULL
 	 */
-	TTHValue* getTTH(const string& aFileName);
+	TTHValue* getTTH(const string& aFileName, int64_t aSize);
 
 	bool getTree(const string& aFileName, const TTHValue* root, TigerTree& tt);
 

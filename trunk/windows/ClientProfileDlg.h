@@ -21,20 +21,20 @@ class ClientProfileDlg : public CDialogImpl<ClientProfileDlg>
 
 public:
 	
-	string name;
-	string version;
-	string tag;
-	string extendedTag;
-	string lock;
-	string pk;
-	string supports;
-	string testSUR;
-	string userConCom;
-	string status;
-	string cheatingDescription;
+	tstring name;
+	tstring version;
+	tstring tag;
+	tstring extendedTag;
+	tstring lock;
+	tstring pk;
+	tstring supports;
+	tstring testSUR;
+	tstring userConCom;
+	tstring status;
+	tstring cheatingDescription;
 	tstring addLine;
-	string connection;
-	string comment;
+	tstring connection;
+	tstring comment;
 	int priority;
 	int rawToSend;
 //	bool tagVersion;
@@ -89,7 +89,7 @@ public:
 			if(adding) {
 				ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
 				for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
-					if((*j).getName().compare(name) == 0) {
+					if((*j).getName().compare(Text::fromT(name)) == 0) {
 						MessageBox(_T("A client profile with this name already exists"), _T("Error!"), MB_ICONSTOP);
 						return 0;
 					}

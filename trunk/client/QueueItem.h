@@ -273,7 +273,6 @@ public:
 		if(p == QueueItem::PAUSED) return p;
 		if(getAutoPriority()){			
 			int percent = getDownloadedBytes() * 10.0 / getSize();
-
 			switch(percent){
 					case 0:
 					case 1:

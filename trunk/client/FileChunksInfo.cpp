@@ -1,3 +1,22 @@
+/* 
+ * Copyright (C) 2003-2004 RevConnect, http://www.revconnect.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
@@ -7,9 +26,11 @@
 CriticalSection SharedFileStream::critical_section;
 SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
 
-
 vector<FileChunksInfo::Ptr> FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;
+
+typedef BOOL (__stdcall *SetFileValidDataFunc) (HANDLE, LONGLONG); 
+static SetFileValidDataFunc setFileValidData = NULL;
 
 FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 {
@@ -57,13 +78,13 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
         iDownloadedSize -= ((*(i+1)) - (*i));
 
 	iBlockSize = max(TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
+	iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
 
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) iSmallestBlockSize = 128*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) iSmallestBlockSize = 256*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) iSmallestBlockSize = 512*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) iSmallestBlockSize = 1024*1024;
-//	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) iSmallestBlockSize = (iFileSize / maxSegments) / 2;
 
 	iVerifiedSize = 0;
 }
@@ -155,11 +176,18 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) {
+		iSmallestBlockSize = (iFileSize / maxSegments) / 2;
+		if(iSmallestBlockSize < SMALLEST_BLOCK_SIZE) {
+			iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
+		}
+	}
+
 	if(maxSegments == 1) {
 		iSmallestBlockSize = iFileSize;
 	}
 
-	if((e - b) < iSmallestBlockSize) {
+	if((e - b) < iSmallestBlockSize){
 		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
 		return -1;
 	}
@@ -386,3 +414,114 @@ void FileChunksInfo::MarkVerifiedBlock(int64_t start, int64_t end)
 	iVerifiedSize += (end - start);
 }
 
+SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t size) 
+    : pos(_pos)
+{
+	{
+		Lock l(critical_section);
+
+		if(file_handle_pool.count(name) > 0){
+
+	        shared_handle_ptr = file_handle_pool[name];
+			shared_handle_ptr->ref_cnt++;
+
+			return;
+
+		}else{
+
+	        shared_handle_ptr = new SharedFileHandle(name);
+	        shared_handle_ptr->ref_cnt = 1;
+			file_handle_pool[name] = shared_handle_ptr;
+
+		}
+	}
+
+	if(size > 0){
+		Lock l(*shared_handle_ptr);
+
+		DWORD x = (DWORD)(size >> 32);
+		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(size & 0xffffffff), (PLONG)&x, FILE_BEGIN);
+		::SetEndOfFile(shared_handle_ptr->handle);
+
+		if(setFileValidData != NULL){
+			if(!setFileValidData(shared_handle_ptr->handle, size))
+				dcdebug("SetFileValidData error %d\n", GetLastError());
+		}
+    }
+
+}
+
+void ensurePrivilege()
+{
+	HANDLE			 hToken;
+	TOKEN_PRIVILEGES privilege;
+	LUID			 luid;
+	DWORD			 dwRet;
+	OSVERSIONINFO    osVersionInfo;
+
+	typedef BOOL (__stdcall *OpenProcessTokenFunc) (HANDLE, DWORD, PHANDLE);
+	typedef BOOL (__stdcall *LookupPrivilegeValueFunc) (LPCTSTR, LPCTSTR, PLUID);
+	typedef BOOL (__stdcall *AdjustTokenPrivilegesFunc) (HANDLE, BOOL, PTOKEN_PRIVILEGES, DWORD, PTOKEN_PRIVILEGES, PDWORD);
+
+	OpenProcessTokenFunc openProcessToken = NULL;
+	LookupPrivilegeValueFunc lookupPrivilegeValue = NULL;
+	AdjustTokenPrivilegesFunc adjustTokenPrivileges = NULL;
+
+	osVersionInfo.dwOSVersionInfoSize = sizeof(osVersionInfo);
+	dwRet = GetVersionEx(&osVersionInfo);
+
+	if(!dwRet){
+		dcdebug("GetVersionEx error : %d\n", GetLastError());
+		return;
+	}
+
+	if(osVersionInfo.dwMajorVersion < 5) return;
+	if(osVersionInfo.dwMajorVersion == 5 && osVersionInfo.dwMinorVersion < 1) return;
+
+	HMODULE hModule;
+
+	hModule = GetModuleHandle(_T("advapi32"));
+    if(hModule == NULL) return;
+
+    openProcessToken = (OpenProcessTokenFunc)GetProcAddress(hModule, "OpenProcessToken");
+    lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValue");
+    adjustTokenPrivileges = (AdjustTokenPrivilegesFunc)GetProcAddress(hModule, "AdjustTokenPrivileges");
+
+	if(openProcessToken == NULL || lookupPrivilegeValue == NULL || adjustTokenPrivileges == NULL)
+		return;
+
+	dcdebug("Os version %d.%d\n", osVersionInfo.dwMajorVersion, osVersionInfo.dwMinorVersion);
+
+	dwRet = openProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken);
+
+	if(!dwRet){
+		dcdebug("OpenProcessToken error : %d\n", GetLastError());
+		return;
+	}
+
+	dwRet = lookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &luid);
+	if(!dwRet){
+		dcdebug("LookupPrivilegeValue error : %d\n", GetLastError());
+		goto cleanup;
+	}
+
+	privilege.PrivilegeCount = 1;
+	privilege.Privileges[0].Luid = luid;
+	privilege.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+	dwRet = adjustTokenPrivileges(hToken, FALSE, &privilege, 0, NULL, NULL);
+
+	if(!dwRet){
+		dcdebug("AdjustTokenPrivileges error : %d\n", GetLastError());
+		goto cleanup;
+	}
+
+	hModule = GetModuleHandle(_T("kernel32"));
+    if(hModule)
+        setFileValidData = (SetFileValidDataFunc)GetProcAddress(hModule, "SetFileValidData");
+
+	dcdebug("ensurePrivilege done.\n");
+cleanup:
+	CloseHandle(hToken);
+
+}

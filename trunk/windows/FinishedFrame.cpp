@@ -213,7 +213,7 @@ LRESULT FinishedFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 
 LRESULT FinishedFrame::onDownloadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring filename = Text::toT(SETTING(LOG_DIRECTORY)) + _T("Downloads.log");
-	if(File::existsFile(Text::fromT(filename))){
+	if(Util::fileExists(Text::fromT(filename))){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 	} else {

@@ -33,6 +33,7 @@
 #define IDC_DEBUG_FILTER_TEXT           124
 #define IDC_COLLAPSED                   125
 #define IDC_USER_CMD_PREVIEW            126
+#define IDC_CLEAR                       127
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
 #define IDR_HUB                         129
@@ -787,6 +788,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1290
-#define _APS_NEXT_SYMED_VALUE           127
+#define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

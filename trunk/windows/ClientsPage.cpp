@@ -57,23 +57,23 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 
 	if(dlg.DoModal() == IDOK) {
 		addEntry(ClientProfileManager::getInstance()->addClientProfile(
-			dlg.name, 
-			dlg.version, 
-			dlg.tag, 
-			dlg.extendedTag, 
-			dlg.lock, 
-			dlg.pk, 
-			dlg.supports, 
-			dlg.testSUR, 
-			dlg.userConCom, 
-			dlg.status,
-			dlg.cheatingDescription,
+			Text::fromT(dlg.name), 
+			Text::fromT(dlg.version), 
+			Text::fromT(dlg.tag), 
+			Text::fromT(dlg.extendedTag), 
+			Text::fromT(dlg.lock), 
+			Text::fromT(dlg.pk), 
+			Text::fromT(dlg.supports), 
+			Text::fromT(dlg.testSUR), 
+			Text::fromT(dlg.userConCom), 
+			Text::fromT(dlg.status),
+			Text::fromT(dlg.cheatingDescription),
 			dlg.rawToSend, 
 //			dlg.tagVersion, 
 			dlg.useExtraVersion,
 			dlg.checkMismatch,
-			dlg.connection,
-			dlg.comment,
+			Text::fromT(dlg.connection),
+			Text::fromT(dlg.comment),
 			false,
 			false
 			), ctrlProfiles.GetItemCount());
@@ -91,25 +91,25 @@ LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 		dlg.currentProfileId = ctrlProfiles.GetItemData(sel);
 
 		if(dlg.DoModal() == IDOK) {
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, Text::toT(dlg.name).c_str());
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, Text::toT(dlg.version).c_str());
-			dlg.currentProfile.setName(dlg.name);
-			dlg.currentProfile.setVersion(dlg.version);
-			dlg.currentProfile.setTag(dlg.tag);
-			dlg.currentProfile.setExtendedTag(dlg.extendedTag);
-			dlg.currentProfile.setLock(dlg.lock);
-			dlg.currentProfile.setPk(dlg.pk);
-			dlg.currentProfile.setSupports(dlg.supports);
-			dlg.currentProfile.setTestSUR(dlg.testSUR);
-			dlg.currentProfile.setUserConCom(dlg.userConCom);
-			dlg.currentProfile.setStatus(dlg.status);
-			dlg.currentProfile.setCheatingDescription(dlg.cheatingDescription);
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, dlg.name.c_str());
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, dlg.version.c_str());
+			dlg.currentProfile.setName(Text::fromT(dlg.name));
+			dlg.currentProfile.setVersion(Text::fromT(dlg.version));
+			dlg.currentProfile.setTag(Text::fromT(dlg.tag));
+			dlg.currentProfile.setExtendedTag(Text::fromT(dlg.extendedTag));
+			dlg.currentProfile.setLock(Text::fromT(dlg.lock));
+			dlg.currentProfile.setPk(Text::fromT(dlg.pk));
+			dlg.currentProfile.setSupports(Text::fromT(dlg.supports));
+			dlg.currentProfile.setTestSUR(Text::fromT(dlg.testSUR));
+			dlg.currentProfile.setUserConCom(Text::fromT(dlg.userConCom));
+			dlg.currentProfile.setStatus(Text::fromT(dlg.status));
+			dlg.currentProfile.setCheatingDescription(Text::fromT(dlg.cheatingDescription));
 			dlg.currentProfile.setRawToSend(dlg.rawToSend);
 //			dlg.currentProfile.setTagVersion(dlg.tagVersion);
 			dlg.currentProfile.setUseExtraVersion(dlg.useExtraVersion);
 			dlg.currentProfile.setCheckMismatch(dlg.checkMismatch);
-			dlg.currentProfile.setConnection(dlg.connection);
-			dlg.currentProfile.setComment(dlg.comment);
+			dlg.currentProfile.setConnection(Text::fromT(dlg.connection));
+			dlg.currentProfile.setComment(Text::fromT(dlg.comment));
 //			dlg.currentProfile.setRecheck(dlg.recheck);
 //			dlg.currentProfile.setSkipExtended(dlg.skipExtended);
 			ClientProfileManager::getInstance()->updateClientProfile(dlg.currentProfile);
@@ -246,7 +246,7 @@ LRESULT ClientsPage::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 				ClientProfile cp;
 				ClientProfileManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), cp);
 				if (!cp.getCheatingDescription().empty()) {
-					cd->clrText = SETTING(ERROR_COLOR);
+					cd->clrText = SETTING(BAD_CLIENT_COLOUR);
 				}
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 			}

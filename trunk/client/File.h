@@ -115,7 +115,7 @@ public:
 			}
 		}
 
-		h = ::CreateFile(Text::utf8ToWide(aFileName).c_str(), access, FILE_SHARE_READ, NULL, m, 0/*FILE_FLAG_SEQUENTIAL_SCAN*/, NULL);
+		h = ::CreateFile(Text::utf8ToWide(aFileName).c_str(), access, FILE_SHARE_READ, NULL, m, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 		
 		if(h == INVALID_HANDLE_VALUE) {
 			throw FileException(Util::translateError(GetLastError()));
@@ -217,11 +217,6 @@ public:
 		if(!FlushFileBuffers(h))
 			throw FileException(Util::translateError(GetLastError()));
 		return 0;
-	}
-
-	static bool existsFile(const string& aFileName) { 
-		DWORD attr = GetFileAttributes(Text::toT(aFileName).c_str());
-		return (attr != 0xFFFFFFFF);
 	}
 
 	static void deleteFile(const string& aFileName) throw() { ::DeleteFile(Text::toT(aFileName).c_str()); }

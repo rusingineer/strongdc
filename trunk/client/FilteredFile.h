@@ -121,6 +121,9 @@ public:
 		return written;
 	}
 
+	OutputStream* getOutputStream(){return f;};
+	void setOutputStream(OutputStream* _f){f = _f;};
+
 private:
 	static const size_t BUF_SIZE = 64*1024;
 
@@ -183,3 +186,8 @@ private:
 };
 
 #endif // _FILTERED_FILE
+
+/**
+* @file
+* $Id$
+*/

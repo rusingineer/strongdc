@@ -321,7 +321,7 @@ void QueueFrame::on(QueueManagerListener::Added, QueueItem* aQI) {
 }
 
 void QueueFrame::addQueueItem(QueueItemInfo* ii, bool noSort) {
-	if(!ii->isSet(QueueItem::FLAG_USER_LIST)) {
+	if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
 		queueSize+=ii->getSize();
 	}
 	queueItems++;
@@ -660,7 +660,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 				ctrlQueue.deleteItem(ii);
 			}
 			
-		if(!ii->isSet(QueueItem::FLAG_USER_LIST)) {
+		if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
 			queueSize-=ii->getSize();
 			dcassert(queueSize >= 0);
 		}
@@ -1462,10 +1462,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
 						}
 	
-						for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
-							if((v.size() < 1) || (IsBadReadPtr(i, 4) != 0)) goto afterexception;
-		
-							if(((*(i+2))< size) && ((*(i+1))< size) && ((*(i))< size)) {
+						for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
+		/*(*(i+2))< size) && ((*(i+1))< size) && */
+							if(((*(i)) < size) && ((*(i+1))< size)) {
 								DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
@@ -1502,7 +1501,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					}
 				}
 			} catch(...) {}
-afterexception:
+
 			// draw status text
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));

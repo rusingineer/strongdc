@@ -120,41 +120,41 @@ void ClientProfileDlg::updateAddLine() {
 void ClientProfileDlg::getProfile() {
 	ClientProfileManager::getInstance()->getClientProfile(currentProfileId, currentProfile);
 
-	name = currentProfile.getName();
-	version = currentProfile.getVersion();
-	tag = currentProfile.getTag();
-	extendedTag = currentProfile.getExtendedTag();
-	lock = currentProfile.getLock();
-	pk = currentProfile.getPk();
-	supports = currentProfile.getSupports();
-	testSUR = currentProfile.getTestSUR();
-	userConCom = currentProfile.getUserConCom();
-	status = currentProfile.getStatus();
-	cheatingDescription = currentProfile.getCheatingDescription();
+	name = Text::toT(currentProfile.getName());
+	version = Text::toT(currentProfile.getVersion());
+	tag = Text::toT(currentProfile.getTag());
+	extendedTag = Text::toT(currentProfile.getExtendedTag());
+	lock = Text::toT(currentProfile.getLock());
+	pk = Text::toT(currentProfile.getPk());
+	supports = Text::toT(currentProfile.getSupports());
+	testSUR = Text::toT(currentProfile.getTestSUR());
+	userConCom = Text::toT(currentProfile.getUserConCom());
+	status = Text::toT(currentProfile.getStatus());
+	cheatingDescription = Text::toT(currentProfile.getCheatingDescription());
 	rawToSend = currentProfile.getRawToSend();
 //	tagVersion = currentProfile.getTagVersion();
 	useExtraVersion = currentProfile.getUseExtraVersion();
 	checkMismatch = currentProfile.getCheckMismatch();
-	connection = currentProfile.getConnection();
-	comment = currentProfile.getComment();
+	connection = Text::toT(currentProfile.getConnection());
+	comment = Text::toT(currentProfile.getComment());
 }
 
 void ClientProfileDlg::updateVars() {
 	TCHAR buf[1024];
 
-	GET_TEXT(IDC_CLIENT_NAME, Text::toT(name));
-	GET_TEXT(IDC_CLIENT_VERSION, Text::toT(version));
-	GET_TEXT(IDC_CLIENT_TAG, Text::toT(tag));
-	GET_TEXT(IDC_CLIENT_EXTENDED_TAG, Text::toT(extendedTag));
-	GET_TEXT(IDC_CLIENT_LOCK, Text::toT(lock));
-	GET_TEXT(IDC_CLIENT_PK, Text::toT(pk));
-	GET_TEXT(IDC_CLIENT_SUPPORTS, Text::toT(supports));
-	GET_TEXT(IDC_CLIENT_TESTSUR_RESPONSE, Text::toT(testSUR));
-	GET_TEXT(IDC_CLIENT_USER_CON_COM, Text::toT(userConCom));
-	GET_TEXT(IDC_CLIENT_STATUS, Text::toT(status));
-	GET_TEXT(IDC_CLIENT_CHEATING_DESCRIPTION, Text::toT(cheatingDescription));
-	GET_TEXT(IDC_CLIENT_CONNECTION, Text::toT(connection));
-	GET_TEXT(IDC_COMMENT, Text::toT(comment));
+	GET_TEXT(IDC_CLIENT_NAME, name);
+	GET_TEXT(IDC_CLIENT_VERSION, version);
+	GET_TEXT(IDC_CLIENT_TAG, tag);
+	GET_TEXT(IDC_CLIENT_EXTENDED_TAG, extendedTag);
+	GET_TEXT(IDC_CLIENT_LOCK, lock);
+	GET_TEXT(IDC_CLIENT_PK, pk);
+	GET_TEXT(IDC_CLIENT_SUPPORTS, supports);
+	GET_TEXT(IDC_CLIENT_TESTSUR_RESPONSE, testSUR);
+	GET_TEXT(IDC_CLIENT_USER_CON_COM, userConCom);
+	GET_TEXT(IDC_CLIENT_STATUS, status);
+	GET_TEXT(IDC_CLIENT_CHEATING_DESCRIPTION, cheatingDescription);
+	GET_TEXT(IDC_CLIENT_CONNECTION, connection);
+	GET_TEXT(IDC_COMMENT, comment);
 	//tagVersion = 0;//(ctrlTagVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
 	useExtraVersion = ctrlUseExtraVersion.GetCheck() == BST_CHECKED;
 	checkMismatch = ctrlCheckMismatch.GetCheck() == BST_CHECKED;
@@ -163,20 +163,20 @@ void ClientProfileDlg::updateVars() {
 }
 
 void ClientProfileDlg::updateControls() {
-	ctrlName.SetWindowText(Text::toT(name).c_str());
-	ctrlVersion.SetWindowText(Text::toT(version).c_str());
-	ctrlTag.SetWindowText(Text::toT(tag).c_str());
-	ctrlExtendedTag.SetWindowText(Text::toT(extendedTag).c_str());
-	ctrlLock.SetWindowText(Text::toT(lock).c_str());
-	ctrlPk.SetWindowText(Text::toT(pk).c_str());
-	ctrlSupports.SetWindowText(Text::toT(supports).c_str());
-	ctrlTestSUR.SetWindowText(Text::toT(testSUR).c_str());
-	ctrlUserConCom.SetWindowText(Text::toT(userConCom).c_str());
-	ctrlStatus.SetWindowText(Text::toT(status).c_str());
-	ctrlCheatingDescription.SetWindowText(Text::toT(cheatingDescription).c_str());
+	ctrlName.SetWindowText(name.c_str());
+	ctrlVersion.SetWindowText(version.c_str());
+	ctrlTag.SetWindowText(tag.c_str());
+	ctrlExtendedTag.SetWindowText(extendedTag.c_str());
+	ctrlLock.SetWindowText(lock.c_str());
+	ctrlPk.SetWindowText(pk.c_str());
+	ctrlSupports.SetWindowText(supports.c_str());
+	ctrlTestSUR.SetWindowText(testSUR.c_str());
+	ctrlUserConCom.SetWindowText(userConCom.c_str());
+	ctrlStatus.SetWindowText(status.c_str());
+	ctrlCheatingDescription.SetWindowText(cheatingDescription.c_str());
 	ctrlAddLine.SetWindowText(addLine.c_str());
-	ctrlConnection.SetWindowText(Text::toT(connection).c_str());
-	ctrlComment.SetWindowText(Text::toT(comment).c_str());
+	ctrlConnection.SetWindowText(connection.c_str());
+	ctrlComment.SetWindowText(comment.c_str());
 
 	//ctrlTagVersion.SetCheck((tagVersion) ? BST_CHECKED : BST_UNCHECKED);
 	ctrlUseExtraVersion.SetCheck(useExtraVersion ? BST_CHECKED : BST_UNCHECKED);
@@ -191,23 +191,23 @@ LRESULT ClientProfileDlg::onNext(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 
 	updateVars();
 
-	currentProfile.setName(name);
-	currentProfile.setVersion(version);
-	currentProfile.setTag(tag);
-	currentProfile.setExtendedTag(extendedTag);
-	currentProfile.setLock(lock);
-	currentProfile.setPk(pk);
-	currentProfile.setSupports(supports);
-	currentProfile.setTestSUR(testSUR);
-	currentProfile.setUserConCom(userConCom);
-	currentProfile.setStatus(status);
-	currentProfile.setCheatingDescription(cheatingDescription);
+	currentProfile.setName(Text::fromT(name));
+	currentProfile.setVersion(Text::fromT(version));
+	currentProfile.setTag(Text::fromT(tag));
+	currentProfile.setExtendedTag(Text::fromT(extendedTag));
+	currentProfile.setLock(Text::fromT(lock));
+	currentProfile.setPk(Text::fromT(pk));
+	currentProfile.setSupports(Text::fromT(supports));
+	currentProfile.setTestSUR(Text::fromT(testSUR));
+	currentProfile.setUserConCom(Text::fromT(userConCom));
+	currentProfile.setStatus(Text::fromT(status));
+	currentProfile.setCheatingDescription(Text::fromT(cheatingDescription));
 	currentProfile.setRawToSend(rawToSend);
 //	currentProfile.setTagVersion(tagVersion);
 	currentProfile.setUseExtraVersion(useExtraVersion);
 	currentProfile.setCheckMismatch(checkMismatch);
-	currentProfile.setConnection(connection);
-	currentProfile.setComment(comment);
+	currentProfile.setConnection(Text::fromT(connection));
+	currentProfile.setComment(Text::fromT(comment));
 	ClientProfileManager::getInstance()->updateClientProfile(currentProfile);
 
 	currentProfileId++;

@@ -24,12 +24,12 @@
 #include "ShareManager.h"
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
+#include "ConnectionManager.h"
 
 void Command::parse(const string& aLine, bool nmdc /* = false */) {
 	string::size_type i = 5;
 
 	if(nmdc) {
-
 		// "$ADCxxx ..."
 		if(aLine.length() < 7)
 			return;
@@ -108,6 +108,7 @@ void AdcHub::handle(Command::INF, Command& c) throw() {
 		if(i->length() < 2)
 			continue;
 
+		string tmp;
 		if(i->compare(0, 2, "NI") == 0) {
 			u->setNick(i->substr(2));
 		} else if(i->compare(0, 2, "HU") == 0) {
@@ -220,12 +221,43 @@ void AdcHub::handle(Command::QUI, Command& c) throw() {
 	fire(ClientListener::UserRemoved(), this, p);
 }
 
+void AdcHub::handle(Command::CTM, Command& c) throw() {
+	User::Ptr p = ClientManager::getInstance()->getUser(c.getFrom(), false);
+	if(!p || p == getMe())
+		return;
+	if(c.getParameters().size() != 3 || c.getParameters()[1] != "ADC/1.0")
+		return;
+	//ConnectionManager::getInstance()->connect(p->getIp(), (short)Util::toInt(c.getParameters()[2]), c.getParameters()[0], getMe()->getCID());
+}
+
+void AdcHub::handle(Command::RCM, Command& c) throw() {
+	if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+		return;
+	User::Ptr p = ClientManager::getInstance()->getUser(c.getFrom(), false);
+	if(!p || p == getMe())
+		return;
+	if(c.getParameters().size() != 2 || c.getParameters()[1] != "ADC/1.0")
+		return;
+    connect(&*p, c.getParameters()[0]);
+}
+
 void AdcHub::connect(const User* user) {
+	u_int32_t r = Util::rand();
+	connect(user, Encoder::toBase32((u_int8_t*)&r, sizeof(u_int32_t)));
+}
+
+void AdcHub::connect(const User* user, string const& token) {
 	if(state != STATE_NORMAL)
 		return;
-	string tmp = (SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) ? "DCTM " : "DRCM ";
-	tmp += user->getCID().toBase32();
-	tmp += " 0 NMDC/1.0\n";
+	string tmp;
+	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+		tmp = "DCTM " + user->getCID().toBase32() + " " +
+				getMe()->getCID().toBase32() + " " + token + " ADC/1.0 " +
+				Util::toString(SETTING(IN_PORT)) + "\n";
+	} else {
+		tmp = "DRCM " + user->getCID().toBase32() + " " +
+				getMe()->getCID().toBase32() + " " + token + " ADC/1.0\n";
+	}
 	send(tmp);
 }
 
@@ -337,11 +369,11 @@ void AdcHub::info() {
 	ADDPARAM(" HR", Util::toString(counts.registered));
 	ADDPARAM(" HO", Util::toString(counts.op));
 	ADDPARAM(" VE", "++\\ " VERSIONSTRING);
+	ADDPARAM(" I4", "0.0.0.0");
 	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		ADDPARAM(" I4", "0.0.0.0");
+
 		ADDPARAM(" U4", Util::toString(SETTING(IN_PORT)));
 	} else {
-		ADDPARAM(" I4", "");
 		ADDPARAM(" U4", "");
 	}
 

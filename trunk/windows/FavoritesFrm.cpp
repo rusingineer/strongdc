@@ -381,7 +381,7 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 		FavoriteHubEntry* entry = (FavoriteHubEntry*)ctrlHubs.GetItemData(i);
 		dcassert(i != -1);
 		tstring filename = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY)) + entry->getServer() + ".log");
-		if(File::existsFile(Text::fromT(filename))){
+		if(Util::fileExists(Text::fromT(filename))){
 			ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else {
 			MessageBox(CTSTRING(NO_LOG_FOR_HUB), CTSTRING(NO_LOG_FOR_HUB), MB_OK );	  

@@ -47,6 +47,7 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
+	socket->removeListener(this);		// Added by RevConnect
 	Speaker<NmdcHubListener>::removeListeners();
 
 	Lock l(cs);
@@ -1027,9 +1028,6 @@ void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	if(state == STATE_CONNECTED)
 		state = STATE_CONNECT;
 	Speaker<NmdcHubListener>::fire(NmdcHubListener::Failed(), this, aLine); 
-
-
-
 }
 
 /**
