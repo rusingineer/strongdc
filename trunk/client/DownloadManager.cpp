@@ -101,13 +101,13 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			}
 		}
 
-        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20 /*&& BOOLSETTING(AUTO_DROP_SOURCE)*/ ) // check every 20 sec
+/*        if((*i)->getStart() &&  0 == ((int)(GET_TICK() - (*i)->getStart()) / 1000 + 1) % 20) 
         {
             if((*i)->getRunningAverage() < 1024){
                 QueueManager::getInstance()->autoDropSource((*i)->getUserConnection()->getUser());
                 continue;
             }
-        }
+        }*/
 		QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
 	}
 
@@ -284,8 +284,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		if(d->isSet(Download::FLAG_USER_LIST)) {
 			if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
 				d->setSource("files.xml.bz2");
-			} else if(aConn->isSet(UserConnection::FLAG_SUPPORTS_BZLIST)) {
-				d->setSource("MyList.bz2");
 			}
 			d->setStartPos(0);
 		}
@@ -508,12 +506,11 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	if(d->isSet(Download::FLAG_USER_LIST)) {
 		if(aSource->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
 			target += ".xml.bz2";
-		} else if(aSource->isSet(UserConnection::FLAG_SUPPORTS_BZLIST)) {
-			target += ".bz2";
 		} else {
 			target += ".DcLst";
 		}
 	}
+
 	File* file = NULL;
 	try {
 		// Let's check if we can find this file in a any .SFV...

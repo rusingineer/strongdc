@@ -35,7 +35,6 @@ ConnectionManager::ConnectionManager() : floodCounter(0), shuttingDown(false) {
 	TimerManager::getInstance()->addListener(this);
 	socket.addListener(this);
 
-	features.push_back(UserConnection::FEATURE_BZLIST);
 	features.push_back(UserConnection::FEATURE_MINISLOTS);
 	features.push_back(UserConnection::FEATURE_XML_BZLIST);
 	features.push_back(UserConnection::FEATURE_ADCGET);
@@ -650,9 +649,7 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 	string sup = Util::emptyString;
 	for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
 		sup += (string)*i + " ";
-		if(*i == UserConnection::FEATURE_BZLIST)
-			conn->setFlag(UserConnection::FLAG_SUPPORTS_BZLIST);
-		else if(*i == UserConnection::FEATURE_GET_ZBLOCK)
+		if(*i == UserConnection::FEATURE_GET_ZBLOCK)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_GETZBLOCK);
 		else if(*i == UserConnection::FEATURE_MINISLOTS)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_MINISLOTS);

@@ -1,49 +1,57 @@
+	-- StrongDC++ 1.00 RC7 ??? --
+
+* NetLimiter je detekován pouze pokud se omezuje StrongDC++
+* èásteènì odstranìna podpora BZ2 listù
+
+
 	-- StrongDC++ 1.00 RC6 Pre-final --
 
-* záložky podle CZDC++
-* opraveno zobrazení náhledu v nastavení
-* automaticky jsou každých 20 sekund odstraòovány pouze zdroje pomalejší než 1kB/s
-* opraven pád pøi pøijímání $MyInfo od RoboCopa
-* zmìna v segmentovém stahování
-* opraveno ukládání a naèítání barvy OPù
-* hashování má Idle prioritu
-* položky segmentového stahování jsou seskupovány pod jednu [+] položku (experimentální)
-* pøidána volba pro hledání souborù pouze s TTH
-* opraveno zatuhnutí na Tukanovi
 * doplnìna chybìjící položka Kopírovat TTH pøi hledání
-* pøidána položka Prohledat Bitzi do hledání (RevConnect)
-* v nástroji pro zjištìní TTH lze øetìzec zkopírovat do schránky
+* jednoduchá detekce NetLimitera
 * nástroj pro zjištìní TTH zobrazí magnet-link
+* položky segmentového stahování jsou seskupovány pod jednu [+] položku (experimentální)
 * pøi hashování dokonèeného stahování je zobrazena zpráva na progressbaru
-* podpora magnet-linkù (CZDC++)
 * pøi minimalizaci je nastavena nízká priorita (pouze Win2000/XP)
-* pøesné hledání podle názvu je standardnì vypnuto
-* opraven pøíkaz /me v chatu
-* vylepšeno pøijímání pøíkazù od hubu (CZDC++)
-* pøidána volba pro nastavení max. poètu smajlíkù v jedné zprávì (CZDC++)
+* pøi poškozeném souboru je stažení opakováno za 10 sekund
+* pøi uložení fronty je vytvoøena záloha
+* pøidána volba pro hledání souborù pouze s TTH
+* pøidána volba pro zobrazování rychlosti v popisu
+* pøidáno nastavení progressbarù pro segmenty
+* v nástroji pro zjištìní TTH lze øetìzec zkopírovat do schránky
+* volba pro automatické ukládání fronty v urèitém èasovém intervalu
+
+* automatické nastavování priorit stahovaných souborù (PhantomDC++)
 * automatické odstraòování diakritiky ze zpráv (CZDC++)
 * ladící pøíkazy (DCDM++)
-* volba pro automatické ukládání fronty v urèitém èasovém intervalu
-* pøi uložení fronty je vytvoøena záloha
+* nìkolik zmìn podle CZDC++ 0.401[D]
+* podpora magnet-linkù (CZDC++, RevConnect)
+* pøidán sloupec Nick do vyhledávacího špiona (BCDC++)
+* pøidána položka Prohledat Bitzi do hledání (RevConnect)
+* pøidána volba pro nastavení max. poètu smajlíkù v jedné zprávì (CZDC++)
+* pøidány progressbary do fronty, na kterých jsou vyznaèeny stažené segmenty (CZDC++)
+* stromová struktura pro výbìr adresáøù ke sdílení, neexistující složky jsou automaticky odstranìny (PossumMod)
+* vylepšeno pøijímání pøíkazù od hubu (CZDC++)
+* záložky podle CZDC++
+* zdrojový kód podle poslední CVS DC++ 0.402
+
+* aktualizováno na STLPort 4.6.2
+* aktualizováno na WTL 7.5
+* automaticky jsou každých 20 sekund odstraòovány pouze zdroje pomalejší než 1kB/s
+* hashování má Idle prioritu
 * komprese povolena pouze s klienty >= 0.307
-* zmìny podle poslední CVS DC++ 0.402
+* minimální velikost segmentu je nastavena automaticky podle velikosti souboru
+* profily klientù jsou nyní kompatibilní s DCDM++
+* v transferviewu jsou zdroje vyhledávány podle TTH
+* zmìna v segmentovém stahování
+
+* opraven pád pøi odpojování pomalých stahování
+* opraven pád pøi pøijímání $MyInfo od RoboCopa
+* opraven pøíkaz /me v chatu
+* opraveno ukládání a naèítání barvy OPù
+* opraveno zatuhnutí na Tukanovi
+* opraveno zobrazení náhledu v nastavení
 * opraveno zobrazování nabídky v chatu pøi zavøeném userlistu
 * snad opraveno skrolování v chatu
-* profily klientù jsou nyní kompatibilní s DCDM++
-* jednoduchá detekce NetLimitera
-* pøidány progressbary do fronty, na kterých jsou vyznaèeny stažené segmenty (CZDC++)
-* automatické nastavování priorit stahovaných souborù (PhantomDC++)
-* opraven pád pøi odpojování pomalých stahování
-* pøidáno nastavení progressbarù pro segmenty
-* pøidán sloupec Nick do vyhledávacího špiona (BCDC++)
-* stromová struktura pro výbìr adresáøù ke sdílení, neexistující složky jsou automaticky odstranìny (PossumMod)
-* v transferviewu jsou zdroje vyhledávány podle TTH
-* minimální velikost segmentu je nastavena automaticky podle velikosti souboru
-* aktualizováno na WTL 7.5
-* pøidána volba pro zobrazování rychlosti v popisu
-* aktualizováno na STLPort 4.6.2
-* pøi poškozeném souboru je stažení opakováno za 10 sekund
-* nìkolik zmìn podle CZDC++ 0.401[D]
 
 
 	-- StrongDC++ 1.00 RC5 --

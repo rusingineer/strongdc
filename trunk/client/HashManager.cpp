@@ -314,7 +314,7 @@ void HashManager::HashStore::createDataFile(const string& name) {
 	}
 }
 
-#define BUF_SIZE (128*1024)
+#define BUF_SIZE (256*1024)
 
 #ifdef _WIN32
 static bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth) {
@@ -536,12 +536,10 @@ int HashManager::Hasher::run() {
 TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 	setThreadPriority(Thread::LOW);
 
-int64_t velikost = 1024*1024;
-
 #ifdef _WIN32
 	u_int8_t* buf = NULL;
 #else
-	u_int8_t buf[velikost];
+	u_int8_t buf[BUF_SIZE];
 #endif
 
 	bool virtualBuf = true;
@@ -549,11 +547,11 @@ int64_t velikost = 1024*1024;
 			if(!fname.empty()) {
 			if(buf == NULL) {
 				virtualBuf = true;
-				buf = (u_int8_t*)VirtualAlloc(NULL, 2*velikost, MEM_COMMIT, PAGE_READWRITE);
+				buf = (u_int8_t*)VirtualAlloc(NULL, 2*BUF_SIZE, MEM_COMMIT, PAGE_READWRITE);
 			}
 			if(buf == NULL) {
 				virtualBuf = false;
-				buf = new u_int8_t[velikost];
+				buf = new u_int8_t[BUF_SIZE];
 			}
 			try {
 				File f(fname, File::READ, File::OPEN);
@@ -569,7 +567,7 @@ int64_t velikost = 1024*1024;
 					tth = &slowTTH;
 #endif
 					do {
-						size_t bufSize = velikost;
+						size_t bufSize = BUF_SIZE;
 						n = f.read(buf, bufSize);
 						tth->update(buf, n);
 					} while (n > 0/* && !stop*/);

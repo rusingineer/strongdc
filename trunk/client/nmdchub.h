@@ -130,7 +130,7 @@ public:
 		}
 	};
 	void key(const string& aKey) { send("$Key " + aKey + "|"); };	
-	void version(const string& aVersion) { send("$Version " + aVersion + "|"); };
+	void version() { send("$Version 1,0091|"); };
 	void getNickList() {
 		if(state == STATE_CONNECTED || state == STATE_MYINFO) {
 			send("$GetNickList|");
