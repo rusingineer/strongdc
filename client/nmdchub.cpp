@@ -198,12 +198,12 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, temp);
 			if(bPassive == true && strlen(seeker) > 4) {
 				User::Ptr u;
-				Lock l(cs);
-				User::NickIter ni = users.find(strtok(seeker+4, "\0"));
-				if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
-					u = ni->second;
-					u->setPassive();
-				}
+					Lock l(cs);
+					User::NickIter ni = users.find(strtok(seeker+4, "\0"));
+					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
+						u = ni->second;
+						u->setPassive();
+					}
 
 				if(u) {
 					updated(u);
@@ -230,7 +230,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		u->setBytesShared(0);
 		u->setDescription(Util::emptyString);
 		u->setcType(10);
-		u->setStatus(1);
+		u->setStatus(1);		
 		u->setConnection(Util::emptyString);
 		u->setEmail(Util::emptyString);
 		u->setTag(Util::emptyString);

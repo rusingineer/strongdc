@@ -32,6 +32,7 @@
 #include "../client/StringTokenizer.h"
 #include "../client/HubManager.h"
 #include "../client/LogManager.h"
+#include "../client/AdcCommand.h"
 #include "../client/SettingsManager.h"
 #include "../client/ConnectionManager.h" 
 
@@ -687,7 +688,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			ctrlUsers.resort();
 		ctrlUsers.SetRedraw(TRUE);
 	} else if(wParam == CHEATING_USER) {
-		User* u = (User*)wParam;
+		string* x = (string*)lParam;
 
 		CHARFORMAT2 cf;
 		memset(&cf, 0, sizeof(CHARFORMAT2));
@@ -698,8 +699,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		cf.crBackColor = SETTING(BACKGROUND_COLOR);
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
-		addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
-		delete u;
+		addLine(*x,cf);
+		delete x;
 	} else if(wParam == DISCONNECTED) {
 		clearUserList();
 		setTabColor(RGB(255, 0, 0));
@@ -1177,8 +1178,10 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		return;
 
 	ucParams["mynick"] = client->getNick();
+	ucParams["mycid"] = client->getMe()->getCID().toBase32();
 
 	if(tabMenuShown) {
+		client->escapeParams(ucParams);
 		client->send(Util::formatParams(uc.getCommand(), ucParams));
 	} else {
 		int sel;
@@ -1188,8 +1191,10 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			if ( sel >= 0 ) { 
 				u = (UserInfo*)ctrlUsers.getItemData(sel);
 				if(u->user->isOnline()) {
-					u->user->getParams(ucParams);
-					client->send(Util::formatParams(uc.getCommand(), ucParams));
+					StringMap tmp = ucParams;
+					u->user->getParams(tmp);
+					client->escapeParams(tmp);
+					client->send(Util::formatParams(uc.getCommand(), tmp));
 				}
 			}
 		} else {
@@ -1197,8 +1202,10 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
 				u = (UserInfo*) ctrlUsers.getItemData(sel);
 				if(u->user->isOnline()) {
-					u->user->getParams(ucParams);
-					client->send(Util::formatParams(uc.getCommand(), ucParams));
+					StringMap tmp = ucParams;
+					u->user->getParams(tmp);
+					client->escapeParams(tmp);
+					client->send(Util::formatParams(uc.getCommand(), tmp));
 				}
 			}
 		}
@@ -1619,15 +1626,7 @@ void HubFrame::on(SearchFlood, Client*, const string& line) throw() {
 	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line);
 }
 void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
-				CHARFORMAT2 cf;
-				memset(&cf, 0, sizeof(CHARFORMAT2));
-				cf.cbSize = sizeof(cf);
-				cf.dwReserved = 0;
-				cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-				cf.dwEffects = 0;
-				cf.crBackColor = SETTING(BACKGROUND_COLOR);
-				cf.crTextColor = SETTING(ERROR_COLOR);
-				HubFrame::addLine("*** "+STRING(USER)+" "+line, cf);
+	speak(CHEATING_USER, "*** "+STRING(USER)+" "+line);
 }
 
 void HubFrame::addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat /* = true */) {

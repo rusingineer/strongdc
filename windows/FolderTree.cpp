@@ -14,6 +14,7 @@ Copyright (c) 1999 - 2003 by PJ Naughter.  (Web: www.naughter.com, Email: pjna@n
 #include "../client/Util.h"
 #include "../client/ShareManager.h"
 #include "Resource.h"
+#include "HashProgressDlg.h"
 
 #include "foldertree.h"
 
@@ -507,7 +508,8 @@ HTREEITEM FolderTree::InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo *pIte
 
 	HTREEITEM hItem = InsertItem(&tvis);
 
-	bool bChecked = ShareManager::getInstance()->shareFolder(pItem->m_sFQPath, true);
+	bool bChecked = ShareManager::getInstance()->shareFolder(pItem->m_sFQPath + PATH_SEPARATOR, true);
+	//MessageBox((pItem->m_sFQPath+"\n"+Util::toString(bChecked)).c_str());
 	SetChecked(hItem, bChecked);
 	if(!bChecked)
 		SetHasSharedChildren(hItem);
@@ -1401,7 +1403,8 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 	{
         // if no parent folder is checked then this is a new root dir
 		try {		
-			ShareManager::getInstance()->addDirectory(pItem->m_sFQPath);
+			ShareManager::getInstance()->addDirectory(pItem->m_sFQPath, Util::getLastDir(pItem->m_sFQPath));
+			HashProgressDlg(true).DoModal();
 			UpdateParentItems(hItem);
 		} catch(const ShareException& e) {
 			MessageBox(e.getError().c_str(), APPNAME " " VERSIONSTRING, MB_ICONSTOP | MB_OK);
@@ -1426,17 +1429,17 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
 		int64_t temp = ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath);
 		/* fun with math
 		futureShareSize = currentShareSize + currentOffsetSize - (sizeOfDirToBeRemoved - sizeOfSubDirsWhichWhereAlreadyExcluded) */
-		int64_t futureShareSize = ShareManager::getInstance()->getShareSize() + m_nShareSizeDiff - (Util::getDirSize(pItem->m_sFQPath) - temp); 
+		//int64_t futureShareSize = ShareManager::getInstance()->getShareSize();/* + m_nShareSizeDiff - (Util::getDirSize(pItem->m_sFQPath) - temp); */
 		ShareManager::getInstance()->removeDirectory(pItem->m_sFQPath);
 		/* more fun with math
 		theNewOffset = whatWeKnowTheCorrectNewSizeShouldBe - whatTheShareManagerThinksIsTheNewShareSize */
-		m_nShareSizeDiff = futureShareSize - ShareManager::getInstance()->getShareSize();
+		//m_nShareSizeDiff = futureShareSize - ShareManager::getInstance()->getShareSize();
 		UpdateParentItems(hItem);
 	}
 	else if(GetChecked(GetParentItem(hItem)))
 	{
 		// if the parent is checked add this folder to excludes
-		m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
+		//m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
 	}
 	
 	UpdateStaticCtrl();
@@ -1448,7 +1451,7 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
 
 bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 {
-	StringList Dirs = ShareManager::getInstance()->getDirectories();
+	StringPairList Dirs = ShareManager::getInstance()->getDirectories();
 	string searchStr;
 	int startPos = 0;
 
@@ -1471,16 +1474,16 @@ bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 	else
         return false;
 
-	for(StringIter i = Dirs.begin(); i != Dirs.end(); ++i)
+	for(StringPairIter i = Dirs.begin(); i != Dirs.end(); ++i)
 	{
-		if((*i).size() > (searchStr.size() + startPos))
+		if((i->second).size() > (searchStr.size() + startPos))
 		{
-			if(Util::stricmp((*i).substr(startPos, searchStr.size()), searchStr) == 0) {
+			if(Util::stricmp((i->second).substr(startPos, searchStr.size()), searchStr) == 0) {
 				if(searchStr.size() <= 3) {
-				return Util::fileExists(*i + PATH_SEPARATOR);
+				return Util::fileExists(i->second + PATH_SEPARATOR);
 				} else {
-					if((*i).substr(searchStr.size()).substr(0,1) == "\\")
-						return Util::fileExists(*i + PATH_SEPARATOR);
+					if((i->second).substr(searchStr.size()).substr(0,1) == "\\")
+						return Util::fileExists(i->second + PATH_SEPARATOR);
 					else
 						return false;
 				}
@@ -1583,7 +1586,7 @@ void FolderTree::UpdateStaticCtrl()
 	if(m_pStaticCtrl != NULL)
 	{
 		/* display theActualSizeOfTheShareAfterRefresh = WhatTheShareManagerThinksIsTheCorrectSize - theOffsetCreatedByPlayingAroundWithExcludeFolders */
-		m_pStaticCtrl->SetWindowText((Util::formatBytes(ShareManager::getInstance()->getShareSize() + m_nShareSizeDiff) + "*").c_str());
+		m_pStaticCtrl->SetWindowText((Util::formatBytes(ShareManager::getInstance()->getShareSize()) + "*").c_str());
 	}
 }
 

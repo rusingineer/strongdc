@@ -481,9 +481,12 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 		return;
 
 	ucParams["mynick"] = user->getClientNick();
+	ucParams["mycid"] = user->getClientCID().toBase32();
 
 	if(user->isOnline()) {
 		user->getParams(ucParams);
+		user->clientEscapeParams(ucParams);
+
 		user->send(Util::formatParams(uc.getCommand(), ucParams));
 	}
 	return;

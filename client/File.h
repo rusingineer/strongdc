@@ -232,7 +232,12 @@ public:
 			}
 			deleteFile(source);
 		}
-	};
+	}
+	static void copyFile(const string& src, const string& target) throw(FileException) {
+		if(!::CopyFile(src.c_str(), target.c_str(), FALSE)) {
+			throw FileException(Util::translateError(GetLastError()));
+		}
+	}
 
 	static int64_t getSize(const string& aFileName) throw() {
 		WIN32_FIND_DATA fd;

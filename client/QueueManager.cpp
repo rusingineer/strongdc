@@ -1380,7 +1380,6 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& tempTarget = getAttrib(attribs, sTempTarget, 4);
 			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 5));
 			const string& tthRoot = getAttrib(attribs, sTTH, 6);
-			const string& searchString = getAttrib(attribs, sSearchString, 6);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 6));
 			int maxsegments = Util::toInt(getAttrib(attribs, sMaxSegments, 6));
 			int maxsegmentsinitial = Util::toInt(getAttrib(attribs, sMaxSegmentsInitial, 6));
@@ -1394,10 +1393,10 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 
 			if(qi == NULL) {
 				if(tthRoot.empty())	
-					qi = qm->fileQueue.add(target, size, searchString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, NULL);
+					qi = qm->fileQueue.add(target, size, Util::emptyString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, NULL);
 				else {
 					TTHValue root(tthRoot);
-					qi = qm->fileQueue.add(target, size, searchString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, &root);
+					qi = qm->fileQueue.add(target, size, Util::emptyString, flags, p, tempTarget, downloaded, added, freeBlocks, verifiedBlocks, &root);
 				}
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
 				qi->setAutoPriority(ap);

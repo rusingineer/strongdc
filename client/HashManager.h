@@ -57,16 +57,26 @@ public:
 	}
 
 	/**
+	 * Check if the TTH tree associated with the filename is current.
+	 */
+	void checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp);
+
+	/**
 	 * Retrieves TTH root or queue's file for hashing.
 	 * @return TTH root if available, otherwise NULL
 	 */
-	TTHValue* getTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp);
+	TTHValue* getTTH(const string& aFileName);
 
 	bool getTree(const string& aFileName, TigerTree& tt);
 
 	void addTree(const string& aFileName, const TigerTree& tt) {
 		hashDone(aFileName, tt, -1);
 	}
+
+	void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft) {
+		hasher.getStats(curFile, bytesLeft, filesLeft);
+	}
+
 	/**
 	 * Rebuild hash data file
 	 */
@@ -91,15 +101,29 @@ public:
 	class Hasher : public Thread {
 	public:
 		enum { MIN_BLOCK_SIZE = 64*1024 };
-		Hasher() : stop(false) { }
+		Hasher() : stop(false), running(false), total(0) { }
 
 		TigerTree getTTfromFile(const string& fname);
-		void hashFile(const string& fileName) {
+		void hashFile(const string& fileName, int64_t size) {
 			Lock l(cs);
-			w.insert(fileName);
+			if(w.insert(fileName).second) {
 			s.signal();
+				total += size;
 		}
+		}
+
 		virtual int run();
+#ifdef _WIN32
+		bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth, int64_t size);
+#endif
+		void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft) {
+			Lock l(cs);
+			curFile = file;
+			filesLeft = w.size();
+			if(running)
+				filesLeft++;
+			bytesLeft = total;
+		}
 		void shutdown() {			
 			stop = true;
 			s.signal();
@@ -114,7 +138,9 @@ public:
 		Semaphore s;
 
 		bool stop;
-
+		bool running;
+		int64_t total;
+		string file;
 	};
 
 	friend class Hasher;
@@ -129,19 +155,25 @@ public:
 
 		void rebuild();
 
-		TTHValue* getTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
+		bool checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
 			TTHIter i = indexTTH.find(aFileName);
 			if(i != indexTTH.end()) {
-				if(i->second->getSize() == aSize && i->second->getTimeStamp() == aTimeStamp) {
-					i->second->setUsed(true);
-					return &(i->second->getRoot());
-				} else {
-					LogManager::getInstance()->message("File changed: \"" + aFileName + "\" from " + Util::toString(i->second->getSize()) +
-						" to " + Util::toString(aSize) + " bytes", true);
+				if(i->second->getSize() != aSize || i->second->getTimeStamp() != aTimeStamp) {
 					delete i->second;
 					indexTTH.erase(i);
 					dirty = true;
+					return false;
 				}
+				return true;
+			} 
+			return false;
+		}
+
+		TTHValue* getTTH(const string& aFileName) {
+			TTHIter i = indexTTH.find(aFileName);
+			if(i != indexTTH.end()) {
+				i->second->setUsed(true);
+				return &(i->second->getRoot());
 			}
 			return NULL;
 		}

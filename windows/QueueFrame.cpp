@@ -32,12 +32,12 @@
 #define FILE_LIST_NAME "File Lists"
 
 int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
-COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_SEARCHSTRING, COLUMN_ADDED, COLUMN_TTH };
+COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH };
 
-int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 110, 75, 200, 200, 75, 200, 200, 100, 125 };
+int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 110, 75, 200, 200, 75, 200, 100, 125 };
 
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, ResourceManager::DOWNLOADED,
-ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS, ResourceManager::SEARCH_STRING,
+ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS,
 ResourceManager::ADDED, ResourceManager::TTH_ROOT  };
 
 QueueFrame::~QueueFrame() {
@@ -305,10 +305,6 @@ void QueueFrame::QueueItemInfo::update() {
 			display->columns[COLUMN_ERRORS] = tmp.empty() ? STRING(NO_ERRORS) : tmp;
 		}
 	
-		if(colMask & MASK_SEARCHSTRING) {
-			display->columns[COLUMN_SEARCHSTRING] = getSearchString();
-		}
-
 		if(colMask & MASK_ADDED) {
 			display->columns[COLUMN_ADDED] = Util::formatTime("%Y-%m-%d %H:%M", getAdded());
 		}
@@ -653,20 +649,6 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 	speak(UPDATE_ITEM, ii);
 }
 
-void QueueFrame::on(QueueManagerListener::SearchStringUpdated, QueueItem* aQI) {
-	QueueItemInfo* ii = NULL;
-	{
-		Lock l(cs);
-		QueueIter i = queue.find(aQI);
-		dcassert(i != queue.end());
-		ii = i->second;
-		ii->setSearchString(aQI->getSearchString());
-		ii->updateMask |= QueueItemInfo::MASK_SEARCHSTRING;
-	}
-
-	speak(UPDATE_ITEM, ii);
-}
-
 LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	Lock l(cs);
 	spoken = false;
@@ -786,83 +768,6 @@ void QueueFrame::moveDir(HTREEITEM ht, const string& target) {
 		QueueItemInfo* qi = i->second;
 		QueueManager::getInstance()->move(qi->getTarget(), target + qi->getTargetFileName());
 	}			
-}
-
-void QueueFrame::setSearchStringForSelected() {
-	LineDlg dlg;
-	dlg.title = STRING(SEARCH_STRING);
-	dlg.description = STRING(ENTER_SEARCH_STRING);
-
-	int n = ctrlQueue.GetSelectedCount();
-	if(n == 1) {
-		// Single item, fill in the current search string
-		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-		dlg.line = ii->getSearchString();
-		if(dlg.line.empty() && BOOLSETTING(AUTO_SEARCH_AUTO_STRING))
-			dlg.line = SearchManager::getInstance()->clean(ii->getTargetFileName());
-		if(dlg.DoModal() == IDOK)
-			QueueManager::getInstance()->setSearchString(ii->getTarget(), dlg.line);
-	} else if(n > 1) {
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-			if(n > 10) {
-				if(MessageBox(CSTRING(SEARCH_STRING_INEFFICIENT), CSTRING(SEARCH_STRING), MB_YESNO|MB_ICONWARNING) != IDYES)
-					return;
-			}
-		} else {
-			if(n > 5) {
-				if(MessageBox(CSTRING(SEARCH_STRING_INEFFICIENT), CSTRING(SEARCH_STRING), MB_YESNO|MB_ICONWARNING) != IDYES)
-					return;
-			}
-		}
-
-		// Multiple items. TODO: Could check if all search strings are the same and fill in the search string
-		if(dlg.DoModal() == IDOK) {
-			int i = -1;
-			while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				QueueItemInfo* ii = ctrlQueue.getItemData(i);
-				QueueManager::getInstance()->setSearchString(ii->getTarget(), dlg.line);
-			}						
-		}
-	}
-}
-
-void QueueFrame::setSearchStringForSelectedDir() {
-	HTREEITEM ht = ctrlDirs.GetSelectedItem();
-	if(ht == NULL)
-		return;
-
-	unsigned int maxItemCount;
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)
-		maxItemCount = 10;
-	else
-		maxItemCount = 5;
-
-	if (isItemCountAtLeast(ht, maxItemCount + 1)) {
-		if(MessageBox(CSTRING(SEARCH_STRING_INEFFICIENT), CSTRING(SEARCH_STRING), MB_YESNO|MB_ICONWARNING) != IDYES)
-			return;
-	}
-
-	LineDlg dlg;
-	dlg.title = STRING(SEARCH_STRING);
-	dlg.description = STRING(ENTER_SEARCH_STRING);
-	if(dlg.DoModal() == IDOK)
-		setSearchStringForDir(ht, dlg.line);
-}
-
-void QueueFrame::setSearchStringForDir(HTREEITEM ht, const string& searchString) {
-	string* s = (string*)ctrlDirs.GetItemData(ht);
-	DirectoryPair p = directories.equal_range(*s);
-
-	for(DirectoryIter i = p.first; i != p.second; ++i) {
-		QueueItemInfo* ii = i->second;
-		QueueManager::getInstance()->setSearchString(ii->getTarget(), searchString);
-	}			
-
-	HTREEITEM next = ctrlDirs.GetChildItem(ht);
-	while(next != NULL) {
-		setSearchStringForDir(next, searchString);
-		next = ctrlDirs.GetNextSiblingItem(next);
-	}
 }
 
 bool QueueFrame::isItemCountAtLeast(HTREEITEM ht, unsigned int minItemCount) {
@@ -1063,25 +968,9 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		
-		string searchString = SearchManager::clean(ii->getSearchString());
-		if (searchString.size() < 1)
-			searchString = SearchManager::clean(ii->getTargetFileName());
-		StringList tok = StringTokenizer(searchString, ' ').getTokens();
-		
-		for(StringIter si = tok.begin(); si != tok.end(); ++si) {
-			bool found = false;
+		string searchString = SearchManager::clean(ii->getTargetFileName());
 			
-			for(StringIter j = searchFilter.begin(); j != searchFilter.end(); ++j) {
-				if(Util::stricmp(si->c_str(), j->c_str()) == 0) {
-					found = true;
-				}
-			}
-			
-			if(!found && !si->empty()) {
-				tmp += *si + ' ';
-			}
-		}
-		if(!tmp.empty()) {
+		if(!searchString.empty()) {
 			bool bigFile = (ii->getSize() > 10*1024*1024);
 			if(bigFile) {
 				SearchFrame::openWindow(tmp, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->getTargetFileName()));

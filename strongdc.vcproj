@@ -31,6 +31,7 @@
 				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				TreatWChar_tAsBuiltInType="FALSE"
 				ForceConformanceInForLoopScope="FALSE"
 				UsePrecompiledHeader="3"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -519,6 +520,9 @@
 				RelativePath=".\windows\UploadQueueFrame.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\upnp.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\UserInfo.cpp">
 			</File>
 			<File
@@ -685,6 +689,9 @@
 				RelativePath=".\windows\GeneralPage.h">
 			</File>
 			<File
+				RelativePath=".\windows\HashProgressDlg.h">
+			</File>
+			<File
 				RelativePath=".\windows\HubFrame.h">
 			</File>
 			<File
@@ -794,6 +801,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\UploadQueueFrame.h">
+			</File>
+			<File
+				RelativePath=".\windows\upnp.h">
 			</File>
 			<File
 				RelativePath=".\windows\UserInfo.h">

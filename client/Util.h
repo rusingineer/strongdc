@@ -574,6 +574,9 @@ public:
 
 	static string getIpCountry (string IP);
 
+	static int getOsMinor();
+	static int getOsMajor(); 
+
 	static bool getAway() { return away; };
 	static void setAway(bool aAway);
 	static string getAwayMessage();
@@ -661,7 +664,7 @@ struct noCaseStringEq {
 /** Case insensitive string ordering */
 struct noCaseStringLess {
 	bool operator()(const string& a, const string& b) const {
-		return Util::stricmp(a.c_str(), b.c_str()) == -1;
+		return Util::stricmp(a.c_str(), b.c_str()) < 0;
 	}
 };
 

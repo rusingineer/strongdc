@@ -78,7 +78,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_OFFLINE, onRemoveOffline)
 		COMMAND_ID_HANDLER(IDC_MOVE, onMove)
-		COMMAND_ID_HANDLER(IDC_SEARCH_STRING, onSearchString)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onPriority)
 		COMMAND_RANGE_HANDLER(IDC_SEGMENTONE, IDC_SEGMENTTEN, onSegments)
 		COMMAND_RANGE_HANDLER(IDC_BROWSELIST, IDC_BROWSELIST + menuItems, onBrowseList)
@@ -146,10 +145,6 @@ public:
 		return 0;
 	}
 
-	LRESULT onSearchString(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		usingDirMenu ? setSearchStringForSelectedDir() : setSearchStringForSelected();
-		return 0;
-	}
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
@@ -210,7 +205,6 @@ private:
 		COLUMN_PATH,
 		COLUMN_EXACT_SIZE,
 		COLUMN_ERRORS,
-		COLUMN_SEARCHSTRING,
 		COLUMN_ADDED,
 		COLUMN_TTH,
 		COLUMN_LAST
@@ -255,13 +249,12 @@ private:
 			MASK_USERS = 1 << COLUMN_USERS,
 			MASK_PATH = 1 << COLUMN_PATH,
 			MASK_ERRORS = 1 << COLUMN_ERRORS,
-			MASK_SEARCHSTRING = 1 << COLUMN_SEARCHSTRING,
 			MASK_ADDED = 1 << COLUMN_ADDED,
 			MASK_TTH = 1 << COLUMN_TTH
 		};
 
 		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(aQI->getTarget()),
-			searchString(aQI->getSearchString()), path(Util::getFilePath(aQI->getTarget())),
+			path(Util::getFilePath(aQI->getTarget())),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
 			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority()), FDI(FileChunksInfo::Get(aQI->getTempTarget()))
@@ -325,7 +318,6 @@ private:
 		}
 		
 		GETSET(string, target, Target);
-		GETSET(string, searchString, SearchString);
 		GETSET(string, path, Path);
 		GETSET(int64_t, size, Size);
 		GETSET(int64_t, downloadedBytes, DownloadedBytes);
@@ -468,9 +460,6 @@ private:
 	
 	const string& getDir(HTREEITEM ht) { dcassert(ht != NULL); return *((string*)ctrlDirs.GetItemData(ht)); };
 
-	void setSearchStringForSelected();
-	void setSearchStringForSelectedDir();
-	void setSearchStringForDir(HTREEITEM ht, const string& searchString);
 	bool isItemCountAtLeast(HTREEITEM ht, unsigned int minItemCount);
 	bool isItemCountAtLeastRecursive(HTREEITEM ht, unsigned int& minItemCount);
 
@@ -479,7 +468,6 @@ private:
 	virtual void on(QueueManagerListener::Removed, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::StatusUpdated, QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
-	virtual void on(QueueManagerListener::SearchStringUpdated, QueueItem* aQI) throw();
 };
 
 #endif // !defined(AFX_QUEUEFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

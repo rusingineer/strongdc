@@ -28,13 +28,16 @@
 #define HASH_FILE_VERSION_STRING "1"
 static const u_int32_t HASH_FILE_VERSION=1;
 
-TTHValue* HashManager::getTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
+void HashManager::checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTimeStamp) {
 	Lock l(cs);
-	TTHValue* root = store.getTTH(aFileName, aSize, aTimeStamp);
-	if(root == NULL) {
-		hasher.hashFile(aFileName);
+	if(!store.checkTTH(aFileName, aSize, aTimeStamp)) {
+		hasher.hashFile(aFileName, aSize);
 	}
-	return root;
+}
+
+TTHValue* HashManager::getTTH(const string& aFileName) {
+	Lock l(cs);
+	return store.getTTH(aFileName);
 }
 
 bool HashManager::getTree(const string& aFileName, TigerTree& tt) {
@@ -47,7 +50,7 @@ void HashManager::hashDone(const string& aFileName, const TigerTree& tth, int64_
 	{
 		Lock l(cs);
 		store.addFile(aFileName, tth, true);
-		root = store.getTTH(aFileName, tth.getFileSize(), tth.getTimeStamp());
+		root = store.getTTH(aFileName);
 	}
 
 	if(root != NULL) {
@@ -317,7 +320,7 @@ void HashManager::HashStore::createDataFile(const string& name) {
 #define BUF_SIZE (256*1024)
 
 #ifdef _WIN32
-static bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth) {
+bool HashManager::Hasher::fastHash(const string& fname, u_int8_t* buf, TigerTree& tth, int64_t size) {
 	HANDLE h = INVALID_HANDLE_VALUE;
 	DWORD x, y;
 	if(!GetDiskFreeSpace(Util::getFilePath(fname).c_str(), &y, &x, &y, &y)) {
@@ -359,10 +362,10 @@ static bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth) {
 	}
 
 	over.Offset = hn;
-
+	size -= hn;
 	BOOL res = TRUE;
 	for(;;) {
-		if(hn != 0) {
+		if(size > 0) {
 			// Start a new overlapped read
 			ResetEvent(over.hEvent);
 			if(SETTING(MAX_HASH_SPEED) > 0) {
@@ -377,36 +380,35 @@ static bool fastHash(const string& fname, u_int8_t* buf, TigerTree& tth) {
 				lastRead = GET_TICK();
 			}
 			res = ReadFile(h, rbuf, BUF_SIZE, &rn, &over);
+		} else {
+			rn = 0;
 		}
 
 		tth.update(hbuf, hn);
+		total -= hn;
 
-		if(hn == 0)
+		if(size == 0) {
+			ok = true;
 			break;
+		}
 
 		if (!res) { 
 			// deal with the error code 
 			switch (GetLastError()) { 
-			case ERROR_HANDLE_EOF: 
-				ok = true;
-				goto cleanup;
 			case ERROR_IO_PENDING: 
 				if(!GetOverlappedResult(h, &over, &rn, TRUE)) {
-					if(GetLastError() == ERROR_HANDLE_EOF) {
-						ok = true;
-						rn = 0;
-						goto cleanup;
-					} else {
+					dcdebug("Error 0x%x: %s\n", GetLastError(), Util::translateError(GetLastError()).c_str());
 						goto cleanup;
 					}
-				}
 				break;
 			default:
+				dcdebug("Error 0x%x: %s\n", GetLastError(), Util::translateError(GetLastError()).c_str());
 				goto cleanup;
 			}
 		}
 
 		*((u_int64_t*)&over.Offset) += rn;
+		size -= rn;
 
 		swap(rbuf, hbuf);
 		swap(rn, hn);
@@ -428,7 +430,6 @@ int HashManager::Hasher::run() {
 	string fname;
 	int64_t speed = 0;
 	bool last = false;
-	bool trycatch = false;
 	int procenta = 0;
 	int64_t pocetHashu = 0;
 
@@ -439,7 +440,7 @@ int HashManager::Hasher::run() {
 		{
 			Lock l(cs);
 			if(!w.empty()) {
-				fname = *w.begin();
+				file = fname = *w.begin();
 				w.erase(w.begin());
 				int k = w.size();
 				if(k>pocetHashu) pocetHashu = k;
@@ -456,7 +457,11 @@ int HashManager::Hasher::run() {
 				fname.clear();
 			}
 		}
+		running = true;
+
 		if(!fname.empty()) {
+			int64_t size = File::getSize(fname);
+			int64_t sizeLeft = size;
 #ifdef _WIN32
 			if(buf == NULL) {
 				virtualBuf = true;
@@ -467,12 +472,10 @@ int HashManager::Hasher::run() {
 				virtualBuf = false;
 				buf = new u_int8_t[BUF_SIZE];
 			}
-			trycatch = false;
 			try {
 				File f(fname, File::READ, File::OPEN);
 				size_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), (size_t)MIN_BLOCK_SIZE);
 #ifdef _WIN32
-				int64_t size = f.getSize();
 				u_int32_t start = GET_TICK();
 #endif
 
@@ -482,7 +485,7 @@ int HashManager::Hasher::run() {
 #ifdef _WIN32
 				TigerTree fastTTH(bs, f.getLastModified());
 				tth = &fastTTH;
-				if(!virtualBuf || !fastHash(fname, buf, fastTTH)) {
+				if(!virtualBuf || !fastHash(fname, buf, fastTTH, size)) {
 					tth = &slowTTH;
 					u_int32_t lastRead = GET_TICK();
 #endif
@@ -501,8 +504,13 @@ int HashManager::Hasher::run() {
 #endif
 						n = f.read(buf, bufSize);
 						tth->update(buf, n);
+
+						total -= n;
+						sizeLeft -= n;
 					} while (n > 0 && !stop);
 #ifdef _WIN32
+				} else {
+					sizeLeft = 0;
 				}
 #endif
 				f.close();
@@ -519,9 +527,11 @@ int HashManager::Hasher::run() {
 				HashManager::getInstance()->hashDone(fname, *tth, speed);
 			} catch(const FileException&) {
 				// Ignore, it'll be readded on the next share refresh...
-				trycatch = true;
 			}
+
+			total -= sizeLeft;
 		}
+		running = false;
 		if(buf != NULL && (last || stop)) {
 			if(virtualBuf) {
 #ifdef _WIN32
@@ -531,12 +541,9 @@ int HashManager::Hasher::run() {
 				delete buf;
 			}
 			buf = NULL;
-			if(stop == false && trycatch == false && w.empty()) {
-				// Hashing done, refresh filelist == add new TTHs ;)
+			total = 0;
+			if(stop == false && w.empty()) {
 				procenta = 0;
-				ShareManager::getInstance()->setDirty();
-				ShareManager::getInstance()->refresh(true);
-				LogManager::getInstance()->message(STRING(HASHING_FINISHED),true);			
 			}
 		}
 	}
@@ -555,6 +562,7 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 	bool virtualBuf = true;
 
 	if(!fname.empty()) {
+		int64_t size = File::getSize(fname);		
 #ifdef _WIN32
 		if(buf == NULL) {
 			virtualBuf = true;
@@ -575,7 +583,7 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname) {
 #ifdef _WIN32
 			TigerTree fastTTH(bs, f.getLastModified());
 			tth = &fastTTH;
-			if(!virtualBuf || !fastHash(fname, buf, fastTTH)) {
+			if(!virtualBuf || !fastHash(fname, buf, fastTTH, size)) {
 				tth = &slowTTH;
 				u_int32_t lastRead = GET_TICK();
 #endif
