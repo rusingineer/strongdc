@@ -25,6 +25,8 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidána volba pro nastavení minimálního intervalu hledání
 * pøidáno nastavení barev v seznamu uživatelù (iDC++)
 * vylepšeny ladící pøíkazy (DCDM++)
+* opraven pád pøi zadání neplatného regulárního výrazu
+* volba pro rozbalení nových výsledkù hledání (BCDC++ SVN)
 
 
 	-- StrongDC++ 1.00 RC8 --

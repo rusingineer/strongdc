@@ -623,6 +623,39 @@ string Util::formatParams(const string& msg, StringMap& params) {
 	return result;
 }
 
+/** Fix for wide formatting bug in wcsftime in the ms c lib for multibyte encodings of unicode in singlebyte locales */
+string fixedftime(const string& format, struct tm* t) {
+	string ret = format;
+	const char codes[] = "aAbBcdHIjmMpSUwWxXyYzZ%";
+
+	char tmp[4];
+	tmp[0] = '%';
+	tmp[1] = tmp[2] = tmp[3] = 0;
+
+	StringMap sm;
+	AutoArray<char> buf(1024);
+	for(int i = 0; i < sizeof(codes); ++i) {
+		tmp[1] = codes[i];
+		tmp[2] = 0;
+		strftime(buf, 1024-1, tmp, t);
+		sm[tmp] = buf; 
+
+		tmp[1] = '#';
+		tmp[2] = codes[i];
+		strftime(buf, 1024-1, tmp, t);
+		sm[tmp] = buf; 		
+	}
+
+	for(StringMapIter i = sm.begin(); i != sm.end(); ++i) {
+		for(string::size_type j = ret.find(i->first); j != string::npos; j = ret.find(i->first, j)) {
+			ret.replace(j, i->first.length(), i->second);
+			j += i->second.length() - i->first.length();
+		}
+	}
+
+	return ret;
+}
+
 string Util::formatRegExp(const string& msg, StringMap& params) {
 	string result = msg;
 	string::size_type i, j, k;
@@ -700,7 +733,7 @@ bool Util::fileExists(const string &aFile) {
 
 string Util::formatTime(const string &msg, const time_t t) {
 	if (!msg.empty()) {
-		size_t bufsize = msg.size() + 64;
+		size_t bufsize = msg.size() + 256;
 		struct tm* loc = localtime(&t);
 
 		if(!loc) {
@@ -709,9 +742,8 @@ string Util::formatTime(const string &msg, const time_t t) {
 #if _WIN32
 		AutoArray<TCHAR> buf(new TCHAR[bufsize]);
 
-		while(!_tcsftime(buf, bufsize-1, Text::toT(msg).c_str(), loc)) {
-			bufsize+=64;
-			buf = new TCHAR[bufsize];
+		if(!_tcsftime(buf, bufsize-1, Text::toT(msg).c_str(), loc)) {
+			return fixedftime(msg, loc);
 		}
 
 		return Text::fromT(tstring(buf));

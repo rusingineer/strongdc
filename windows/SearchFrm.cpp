@@ -157,6 +157,12 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlTTH.SetWindowText(CTSTRING(ONLY_TTH));
 	tthContainer.SubclassWindow(ctrlTTH.m_hWnd);
 
+	ctrlCollapsed.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, IDC_COLLAPSED);
+	ctrlCollapsed.SetButtonStyle(BS_AUTOCHECKBOX, FALSE);
+	ctrlCollapsed.SetFont(WinUtil::systemFont, FALSE);
+	ctrlCollapsed.SetWindowText(CTSTRING(EXPANDED_RESULTS));
+	collapsedContainer.SubclassWindow(ctrlCollapsed.m_hWnd);
+
 	if(BOOLSETTING(FREE_SLOTS_DEFAULT)) {
 		ctrlSlots.SetCheck(true);
 		onlyFree = true;
@@ -853,9 +859,15 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		rc.right = width - rMargin;
 		rc.top += spacing;
 		rc.bottom += spacing;
-		ctrlSlots.MoveWindow(rc);
 
 		optionLabel.MoveWindow(rc.left + lMargin, rc.top - labelH, width - rMargin, labelH-1);
+		ctrlSlots.MoveWindow(rc);
+
+		rc.top += 21;
+		rc.bottom += 21;
+		ctrlCollapsed.MoveWindow(rc);
+
+
 
 		rc.left = lMargin+4;
 		rc.right = width - rMargin;
@@ -944,7 +956,7 @@ LRESULT SearchFrame::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	HDC hDC = (HDC)wParam;
 
 	if(hWnd == searchLabel.m_hWnd || hWnd == sizeLabel.m_hWnd || hWnd == optionLabel.m_hWnd || hWnd == typeLabel.m_hWnd
-		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlTTH.m_hWnd || hWnd == srLabel.m_hWnd) {
+		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlTTH.m_hWnd || hWnd == ctrlCollapsed.m_hWnd || hWnd == srLabel.m_hWnd) {
 		::SetBkColor(hDC, ::GetSysColor(COLOR_3DFACE));
 		::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
 		return (LRESULT)::GetSysColorBrush(COLOR_3DFACE);
@@ -982,7 +994,7 @@ LRESULT SearchFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& b
 void SearchFrame::onTab(bool shift) {
 	HWND wnds[] = {
 		ctrlSearch.m_hWnd, ctrlMode.m_hWnd, ctrlSize.m_hWnd, ctrlSizeMode.m_hWnd, 
-			ctrlFiletype.m_hWnd, ctrlSlots.m_hWnd, ctrlTTH.m_hWnd, ctrlDoSearch.m_hWnd, ctrlSearch.m_hWnd, 
+			ctrlFiletype.m_hWnd, ctrlSlots.m_hWnd, ctrlTTH.m_hWnd, ctrlCollapsed.m_hWnd, ctrlDoSearch.m_hWnd, ctrlSearch.m_hWnd, 
 		ctrlResults.m_hWnd
 	};
 	
@@ -1046,7 +1058,13 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 						int pos = ctrlResults.findItem(si2);
 
 						if(si2->subItems.size() == 1){
-							ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+							if(expandSR){
+								ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+								si2->collapsed = false;
+								insertSubItem(si, pos+1);
+							} else {
+								ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+							}
 						}else if(!si2->collapsed){
 							insertSubItem(si, pos + 1);
 						}

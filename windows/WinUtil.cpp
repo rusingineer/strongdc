@@ -660,9 +660,9 @@ _T("\r\n-- My client supports XML file lists, does yours?\r\n") LINE2
 #define MSGS 16
 
 #ifdef isCVS
-#define LINE3 _T("-- http://snail.pc.cz/StrongDC  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
+#define LINE3 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
 #else
-#define LINE3 _T("-- http://snail.pc.cz/StrongDC  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
+#define LINE3 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
 #endif
 
 TCHAR *strgmsgs[] = { _T("\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n") LINE3,
@@ -680,7 +680,7 @@ _T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani
 
 string WinUtil::commands = "\t\t\t\t\t HELP \t\t\t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/refresh \t\t\t\t(obnoveni share) \t\t\t\t\t\t\n/savequeue \t\t\t\t(ulozi Download Queue) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/search <string> \t\t\t(hledat neco...) \t\t\t\t\t\t\t\n/g <searchstring> \t\t\t(hledat Googlem) \t\t\t\t\t\t\n/imdb <imdbquery> \t\t\t(hledat film v IMDB databazi) \t\t\t\t\t\n/whois [IP] \t\t\t\t(hledat podrobnosti o IP) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/slots # \t\t\t\t(upload sloty) \t\t\t\t\t\t\t\n/extraslots # \t\t\t\t(extra sloty pro male soubory) \t\t\t\t\t\n/smallfilesize # \t\t\t\t(maximalni velikost malych souboru) \t\t\t\t\n/ts \t\t\t\t\t(zobrazi datum a cas u zprav v mainchatu) \t\t\t\n/connection \t\t\t\t(zobrazi IP a port prez ktery jste pripojen) \t\t\t\t\n/showjoins \t\t\t\t(zapne/vypne zobrazovani a odpojovani useru v mainchatu) \t\n/showblockedipports \t\t\t(zobrazi zablokovane porty-mozna:)) \t\t\t\t\n/shutdown \t\t\t\t(vypne pocitac po urcitem timeoutu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/dc++ \t\t\t\t\t(zobrazi verzi DC++ v mainchatu) \t\t\t\t\t\n/strongdc++ \t\t\t\t(zobrazi verzi StrongDC++ v mainchatu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/away <msg> \t\t\t\t(zapne/vypne away mod) \t\t\t\t\t\n/winamp \t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/w \t\t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/clear,/c \t\t\t\t(smazat obsah mainchatu) \t\t\t\t\t\n/ignorelist \t\t\t\t(zobrazi ignorelist v mainchatu) \t\t\t\t\t\n";
 
-float ProcSpeedCalc() {
+/*float ProcSpeedCalc() {
 #define RdTSC __asm _emit 0x0f __asm _emit 0x31
 __int64 cyclesStart = 0, cyclesStop = 0;
 unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
@@ -700,7 +700,7 @@ unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
         mov DWORD PTR [cyclesStop + 4], edx
     }
 	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
-}
+}*/
 
 bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstring& status) {
 	string::size_type i = cmd.find(' ');
@@ -711,7 +711,17 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 		cmd = cmd.substr(1);
 	}
 
-	if(Util::stricmp(cmd.c_str(), _T("refresh"))==0) {
+	if(Util::stricmp(cmd.c_str(), _T("log")) == 0) {
+		if(Util::stricmp(param.c_str(), _T("system")) == 0) {
+			WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + "system.log")));
+		} else if(Util::stricmp(param.c_str(), _T("downloads")) == 0) {
+			WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + "Downloads.log")));
+		} else if(Util::stricmp(param.c_str(), _T("uploads")) == 0) {
+			WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + "Uploads.log")));
+		} else {
+			return false;
+		}
+	} else if(Util::stricmp(cmd.c_str(), _T("refresh"))==0) {
 		try {
 			ShareManager::getInstance()->setDirty();
 			ShareManager::getInstance()->refresh(true);

@@ -19,6 +19,7 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
+#include "../client/ResourceManager.h"
 
 #include "../client/UserCommand.h"
 
@@ -33,6 +34,24 @@ WinUtil::TextItem CommandDlg::texts[] = {
 
 LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
+	// Translate
+	SetWindowText(CTSTRING(USER_CMD_WINDOW));
+	SetDlgItemText(IDC_SETTINGS_TYPE, CTSTRING(USER_CMD_TYPE));
+	SetDlgItemText(IDC_SETTINGS_SEPARATOR, CTSTRING(SEPARATOR));
+	SetDlgItemText(IDC_SETTINGS_RAW, CTSTRING(USER_CMD_RAW));
+	SetDlgItemText(IDC_SETTINGS_CHAT, CTSTRING(USER_CMD_CHAT));
+	SetDlgItemText(IDC_SETTINGS_PM, CTSTRING(USER_CMD_PM));
+	SetDlgItemText(IDC_SETTINGS_CONTEXT, CTSTRING(USER_CMD_CONTEXT));
+	SetDlgItemText(IDC_SETTINGS_HUB_MENU, CTSTRING(USER_CMD_HUB_MENU));
+	SetDlgItemText(IDC_SETTINGS_USER_MENU, CTSTRING(USER_CMD_USER_MENU));
+	SetDlgItemText(IDC_SETTINGS_SEARCH_MENU, CTSTRING(USER_CMD_SEARCH_MENU));
+	SetDlgItemText(IDC_SETTINGS_PARAMETERS, CTSTRING(USER_CMD_PARAMETERS));
+	SetDlgItemText(IDC_SETTINGS_NAME, CTSTRING(HUB_NAME));
+	SetDlgItemText(IDC_SETTINGS_COMMAND, CTSTRING(USER_CMD_COMMAND));
+	SetDlgItemText(IDC_SETTINGS_HUB, CTSTRING(USER_CMD_HUB));
+	SetDlgItemText(IDC_SETTINGS_TO, CTSTRING(USER_CMD_TO));
+	SetDlgItemText(IDC_SETTINGS_ONCE, CTSTRING(USER_CMD_ONCE));
+	SetDlgItemText(IDC_USER_CMD_PREVIEW, CTSTRING(USER_CMD_PREVIEW));
 
 #define ATTACH(id, var) var.Attach(GetDlgItem(id))
 	ATTACH(IDC_RESULT, ctrlResult);

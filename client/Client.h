@@ -169,6 +169,7 @@ public:
 	GETSET(string, defpassword, Password);
 	GETSET(bool, registered, Registered);
 	GETSET(bool, stealth, Stealth);
+	GETSET(bool, closed, Closed);
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
 	GETSET(string, rawThree, RawThree);
