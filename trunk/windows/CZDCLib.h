@@ -95,47 +95,6 @@ public:
 				(getBValue(c)*(1+brightness))
 				);
 	}
-
-	struct FloodCacheItem {
-		FloodCacheItem();
-		virtual ~FloodCacheItem();
-
-		struct FCIMapper {
-			COLORREF c1;
-			COLORREF c2;
-		} mapper;
-
-		int w;
-		int h;
-		HDC hDC;
-		HBITMAP hBitmap;
-	};
-
-	struct fci_hash {
-#if _MSC_VER < 1300 
-		enum {bucket_size = 4}; 
-		enum {min_buckets = 8}; 
-#else
-		static const size_t bucket_size = 4;
-		static const size_t min_buckets = 8;
-#endif // _MSC_VER == 1200
-		size_t operator()(FloodCacheItem::FCIMapper __x) const { return (__x.c1 ^ __x.c2); }
-		bool operator()(const FloodCacheItem::FCIMapper& a, const FloodCacheItem::FCIMapper& b) {
-			return a.c1 < b.c1 && a.c2 < b.c2;
-		};
-	};
-	struct fci_equal_to : public binary_function<FloodCacheItem::FCIMapper, FloodCacheItem::FCIMapper, bool> {
-		bool operator()(const FloodCacheItem::FCIMapper& __x, const FloodCacheItem::FCIMapper& __y) const {
-			return (__x.c1 == __y.c1) && (__x.c2 == __y.c2);
-		}
-	};
-
-	typedef HASH_MAP<FloodCacheItem::FCIMapper, FloodCacheItem*, fci_hash, fci_equal_to> FCIMap;
-	typedef FCIMap::iterator FCIIter;
-
-	static void ClearCache(); // A _lot_ easier than to clear certain cache items
-	static void ForbidCache(bool forbid = true);
-
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = false);
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c);
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2);
@@ -143,8 +102,6 @@ public:
 	static COLORREF TextFromBackground(COLORREF bg);
 
 private:
-	static FCIMap flood_cache;
-	static bool bCacheForbidden;
 };
 
 #endif // __CZDCLIB_H

@@ -148,7 +148,8 @@ private:
 	typedef HASH_MULTIMAP<string, User::Ptr> UserMap;
 	typedef UserMap::iterator UserIter;
 	typedef pair<UserIter, UserIter> UserPair;
-	typedef map<string, string> NickMap;
+	typedef set<User::Ptr> UserSet;
+	typedef map<string, string, noCaseStringLess> NickMap;
 
 	typedef HASH_MULTIMAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) AdcMap;
 	typedef AdcMap::iterator AdcIter;

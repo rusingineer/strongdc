@@ -30,16 +30,15 @@ Client::Client(const string& hubURL, char separator, bool usesEscapes) :
 	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), countType(COUNT_UNCOUNTED), port(0), isADC(false)
 {
 	string file;
-    isADC = Util::strnicmp("adc://", hubURL.c_str(), 6) == 0;
+    //isADC = Util::strnicmp("adc://", hubURL.c_str(), 6) == 0;
 	Util::decodeUrl(hubURL, address, port, file);
 	addressPort = hubURL;
 	socket->addListener(this);
 }
 
 Client::~Client() {
-	if(isADC)
-		socket->removeListener(this);
-
+//	if(isADC)
+	socket->removeListener(this);
 	BufferedSocket::putSocket(socket);
 
 	updateCounts(true);

@@ -50,7 +50,6 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	Speaker<NmdcHubListener>::removeListeners();
-	socket->removeListener(this);
 	delete[] dscrptn;
 
 	Lock l(cs);

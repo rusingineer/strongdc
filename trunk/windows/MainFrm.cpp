@@ -427,47 +427,11 @@ void MainFrame::parseCommandLine(const string& cmdLine)
 	string::size_type i = 0;
 	string::size_type j;
 
-	if( (j = safestring::SafeFind(cmdLine,"dchub://", i)) != string::npos) {
-		i = j + 8;
-		string server;
-		string user;
-		if( (j = safestring::SafeFind(cmdLine,'/', i)) == string::npos) {
-			server = cmdLine.substr(i);
-		} else {
-			server = cmdLine.substr(i, j-i);
-			i = j + 1;
-			if( (j = cmdLine.find_first_of("\\/ ", i)) == string::npos) {
-				user = cmdLine.substr(i);
-			} else {
-				user = cmdLine.substr(i, j-i);
-			}
+	if( (j = cmdLine.find("dchub://", i)) != string::npos) {
+		WinUtil::parseDchubUrl(cmdLine.substr(j));
 		}
-
-		if(!server.empty()) {
-			HubFrame::openWindow(server);
-		}
-		if(!user.empty()) {
-			try {
-				QueueManager::getInstance()->addList(ClientManager::getInstance()->getUser(user), QueueItem::FLAG_CLIENT_VIEW);
-			} catch(const Exception&) {
-				// ...
-			}
-		}
-	} else if( (j = cmdLine.find("magnet:?", i)) != string::npos) {
-		i = j + 8;
-		string tth;
-		if( (j = cmdLine.find("xt=urn:tree:tiger:", i)) != string::npos) {
-			tth = cmdLine.substr(j + 18, 39);
-			if(Encoder::isBase32(tth.c_str()))
-				SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-		} else if( (j = cmdLine.find("xt=urn:bitprint:", i)) != string::npos) {
-			i = j + 16;
-			if( (j = cmdLine.find(".", i)) != string::npos) {
-				tth = cmdLine.substr(j + 1, 39);
-				if(Encoder::isBase32(tth.c_str()))
-					SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-			}
-		}
+	if( (j = cmdLine.find("magnet:?", i)) != string::npos) {
+		WinUtil::parseMagnetUri(cmdLine.substr(j));
 	}
 }
 

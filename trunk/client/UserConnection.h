@@ -294,7 +294,14 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	void garbageCommand() { send("PosilamBordel|"); }
+	void garbageCommand() { 
+		string tmp;
+		tmp.reserve(20);
+		for(int i = 0; i < 20; i++) {
+			tmp.append(1, (char)Util::rand('a', 'z'));
+		}
+		send(tmp+"|");
+	}
 
 private:
 	BufferedSocket* socket;

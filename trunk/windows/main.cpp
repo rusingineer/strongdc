@@ -69,7 +69,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #ifndef _DEBUG
 #if _MSC_VER == 1200
 	__pfnDliFailureHook = FailHook;
-#elif _MSC_VER == 1300 || _MSC_VER == 1310
+#elif _MSC_VER == 1300 || _MSC_VER == 1310 || _MSC_VER == 1400
 	__pfnDliFailureHook2 = FailHook;
 #else
 #error Unknown Compiler version
@@ -190,68 +190,6 @@ BOOL CALLBACK searchOtherInstance(HWND hWnd, LPARAM lParam) {
 	}
 	return TRUE;
 }
-
-static void installUrlHandler() {
-	HKEY hk; 
-	char Buf[512];
-	string app = "\"" + Util::getAppName() + "\" %1";
-	Buf[0] = 0;
-
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
-		DWORD bufLen = sizeof(Buf);
-		DWORD type;
-		::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
-		::RegCloseKey(hk);
-	}
-
-	if(Util::stricmp(app.c_str(), Buf) != 0) {
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub", &hk);
-		char* tmp = "URL:Direct Connect Protocol";
-		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, strlen(tmp) + 1);
-		::RegSetValueEx(hk, "URL Protocol", 0, REG_SZ, (LPBYTE)"", 1);
-		::RegCloseKey(hk);
-
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", &hk);
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
-		::RegCloseKey(hk); 
-
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\DefaultIcon", &hk);
-		app = Util::getAppName();
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
-		::RegCloseKey(hk);
-	}
-} 
-
-static void installUriHandler() {
-	HKEY hk; 
-	char Buf[512];
-	string app = "\"" + Util::getAppName() + "\" %1";
-	Buf[0] = 0;
-
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "magnet\\Shell\\Open\\Command", 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
-		DWORD bufLen = sizeof(Buf);
-		DWORD type;
-		::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
-		::RegCloseKey(hk);
-	}
-
-	if(Util::stricmp(app.c_str(), Buf) != 0) {
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet", &hk);
-		char* tmp = "URL:Magnet URI";
-		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, strlen(tmp) + 1);
-		::RegSetValueEx(hk, "URL Protocol", 0, REG_SZ, (LPBYTE)"", 1);
-		::RegCloseKey(hk);
-
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\Shell\\Open\\Command", &hk);
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
-		::RegCloseKey(hk); 
-
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\DefaultIcon", &hk);
-		app = Util::getAppName();
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
-		::RegCloseKey(hk);
-	}
-} 
 
 static void checkCommonControls() {
 #define PACKVERSION(major,minor) MAKELONG(minor,major)
@@ -388,13 +326,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.DestroyWindow();
 	dummy.DestroyWindow();
 
-	if(BOOLSETTING(URL_HANDLER)) {
-		installUrlHandler();
-	}
 
-	if(BOOLSETTING(MAGNET_URI_HANDLER)) {
-		installUriHandler();
-	}
 
 	rc = wndMain.rcDefault;
 
@@ -431,10 +363,12 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-
 	dcdebug("String: %d\n", sizeof(string));
 #ifndef _DEBUG
 	SingleInstance dcapp("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}");
+#else
+	SingleInstance dcapp("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48350}");
+#endif
 
 	if(dcapp.IsAnotherInstanceRunning()) {
 		// Allow for more than one instance...
@@ -461,9 +395,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			sendCmdLine(hOther, lpstrCmdLine);
 		}
 		return FALSE;
+
 		}
 	}
-#endif
 	
 	HRESULT hRes = ::CoInitialize(NULL);
 #ifdef _DEBUG
@@ -524,3 +458,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	return nRet;
 }
 
+/**
+ * @file
+ * $Id$
+ */

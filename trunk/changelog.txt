@@ -39,10 +39,13 @@
 * pøidán filtr do hledání (podporuje regulérní pøíkazy)
 * když je k dispozici Tiger Tree, jsou pøi poškozeném soubor staženy pouze chybné bloky
 * odstranìna volba pro neposílání tagu
-* zmìny podle RevConnectu 0.403b
+* vylepšeno segmentováné stahování, které zaruèí dobrou integritu souboru (THX Liny)
+* fronta hledání proti searchspamu s prodlevou 15 sekund (RevConnect)
+* vylepšeno odchytávání magnetù (BCDC++)
+* odstranìna Flood cache pro progressbary
 
 
-	-- StrongDC++ 1.00 RC6 Pre-final --
+	-- StrongDC++ 1.00 RC6 --
 
 * doplnìna chybìjící položka Kopírovat TTH pøi hledání
 * jednoduchá detekce NetLimitera

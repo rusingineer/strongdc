@@ -89,7 +89,7 @@ const string SettingsManager::settingTags[] =
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser",
 	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
-	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed", "FloodCache",
+	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
 	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
@@ -97,7 +97,7 @@ const string SettingsManager::settingTags[] =
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
-	"AutoDropSource", "DisplayCheatsInMainChat",
+	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
 	"SENTRY",
 	// Int64
@@ -223,6 +223,8 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_TOOLBAR, true);
 	setDefault(POPUNDER_PM, false);
 	setDefault(POPUNDER_FILELIST, false);
+	setDefault(MAGNET_ASK, true);
+	setDefault(MAGNET_ACTION, MAGNET_AUTO_SEARCH);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);

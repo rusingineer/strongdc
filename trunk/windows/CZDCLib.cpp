@@ -10,8 +10,7 @@
 bool CZDCLib::bIsXP = false;
 bool CZDCLib::bGotXP = false; 
 int CZDCLib::iWinVerMajor = -1;
-OperaColors::FCIMap OperaColors::flood_cache;
-bool OperaColors::bCacheForbidden = false;
+
 
 bool CZDCLib::isXp() {
 	if (!bGotXP) {
@@ -224,99 +223,38 @@ void OperaColors::FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c
 		return;
 
 	int w = x2 - x1;
-	int h = y2 - y1;
 
-	bool bMayCache = (BOOLSETTING(FLOOD_CACHE) && !bCacheForbidden);
-
-	FloodCacheItem::FCIMapper fcim = {c1 & (light ? 0x80FFFFFF : 0x00FFFFFF), c2 & 0x00FFFFFF}; // Make it hash-safe
-	if (bMayCache) {
-		FCIIter i = flood_cache.find(fcim);
-
-		if (i != flood_cache.end()) {
-			FloodCacheItem* fci = i->second;
-			if (fci->h >= h && fci->w >= w) {
-				// Perfect, this kindof flood already exist in memory, lets paint it stretched
-				StretchBlt(hDC.m_hDC, x1, y1, w, h, fci->hDC, 0, 0, fci->w, fci->h, SRCCOPY);
-				return;
-			}
-			flood_cache.erase(i); // Erase it from the cache
-			delete fci; // Erase it and destroy the bitmap/dc-handles
-		}
-	}
-
-	FloodCacheItem* fci = new FloodCacheItem();
-	fci->hDC = ::CreateCompatibleDC(hDC.m_hDC);
-	fci->w = w;
-	fci->h = h;
-	fci->mapper = fcim;
-	BITMAPINFOHEADER bih;
-	ZeroMemory(&bih, sizeof(BITMAPINFOHEADER));
-	bih.biSize = sizeof(BITMAPINFOHEADER);
-	bih.biWidth = w;
-	bih.biHeight = -h;
-	bih.biPlanes = 1;
-	bih.biBitCount = 32;
-	bih.biCompression = BI_RGB;
-	bih.biClrUsed = 32;
-	fci->hBitmap = ::CreateDIBitmap(hDC.m_hDC, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-	if (fci->hBitmap == NULL) {
-		::MessageBox((HWND)0, Util::translateError(GetLastError()).c_str(), "ERROR", MB_OK);
-		// we should quit, or something... maybe draw directly on device context...
-	}
-	::DeleteObject(::SelectObject(fci->hDC, fci->hBitmap));
-
-	if (bMayCache)
-		SetStretchBltMode(hDC.m_hDC, COLORONCOLOR);
 	if (!light)
-		for (int _x = 0; _x < w; ++_x) {
+		for (int _x = x1; _x <= x2; ++_x) {
 			double k = (_x) / (double)(w);	
-			CBrush hBr(CreateSolidBrush(OperaColors::blendColors(c2, c1, k)));
-			CRect r(_x, 0, _x + 1, h);
-			::FillRect(fci->hDC, &r, hBr.m_hBrush);
+			CBrush hBr(CreateSolidBrush(OperaColors::blendColors(c2, c1, k)));		
+//			CBrush hBr(CreateSolidBrush(blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1))));
+			CRect r(_x, y1, _x + 1, y2);
+			hDC.FillRect(&r, hBr.m_hBrush);
 		}
 	else {
+		int height = y2 - y1;
 		double calc_index;
 		size_t ci_1, ci_2;
 		// Allocate shade-constants
-		double* c = new double[h];
+		double* c = new double[height];
 		// Calculate constants
-		for (int i = 0; i < h; ++i) {
-			calc_index = ((double)(i + 1) / h) * MAX_SHADE - 1;
+		for (int i = 0; i < height; ++i) {
+			calc_index = ((double)(i + 1) / height) * MAX_SHADE - 1;
 			ci_1 = (size_t)floor(calc_index);
 			ci_2 = (size_t)ceil(calc_index);
 			c[i] = (double)(blend_vector[ci_1] + blend_vector[ci_1]) / (double)(SHADE_LEVEL * 2);
 			//c*sqrt(x)/(x * x * x + 1);
 		}
-		for (int _x = 0; _x < w; ++_x) {
-			COLORREF cr = blendColors(c2, c1, (double)(_x) / (double)(w));
-			for (int _y = 0; _y < h; ++_y) {
-				::SetPixelV(fci->hDC, _x, _y, brightenColor(cr, c[_y]));
+		for (int _x = x1; _x <= x2; ++_x) {
+			COLORREF cr = blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1));
+			for (int _y = y1; _y < y2; ++_y) {
+				hDC.SetPixelV(_x, _y, brightenColor(cr, c[_y - y1]));
 			}
 		}
 		delete[] c;
 	}
-
-	if (bMayCache)
-		flood_cache[fci->mapper] = fci;
-
-	StretchBlt(hDC.m_hDC, x1, y1, w, h, fci->hDC, 0, 0, fci->w, fci->h, SRCCOPY);
-
-	if (!bMayCache)
-		delete fci;
 }
-
-void OperaColors::ClearCache() {
-	FCIIter i = flood_cache.begin();
-	for (; !flood_cache.empty(); i = flood_cache.begin()) {
-		FloodCacheItem* fci = i->second;
-		flood_cache.erase(i);
-		delete fci;
-	}
-}
-void OperaColors::ForbidCache(bool forbid /* = true */) {
-	bCacheForbidden = forbid;
-}
-
 void OperaColors::FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c) {
 	CBrush hBr(CreateSolidBrush(c));
 	CRect r(x1, y1, x2 + 1, y2);
@@ -353,17 +291,6 @@ COLORREF OperaColors::TextFromBackground(COLORREF bg) {
 		return RGB(0, 0, 0);
 	else
 		return RGB(255, 255, 255);
-}
-
-OperaColors::FloodCacheItem::FloodCacheItem() : w(0), h(0), hDC(NULL), hBitmap(NULL) {
-}
-OperaColors::FloodCacheItem::~FloodCacheItem() {
-	if (hDC) {
-		if (hBitmap)
-			DeleteObject(hBitmap);
-		DeleteDC(hDC);
-	} else if (hBitmap)
-		DeleteObject(hBitmap);
 }
 
 int CZDCLib::getFirstSelectedIndex(CListViewCtrl& list) {
