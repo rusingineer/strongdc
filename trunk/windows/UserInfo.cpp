@@ -134,8 +134,7 @@ ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION,
 ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS, ResourceManager::ISP,
 ResourceManager::SETTINGS_IP, ResourceManager::PK, ResourceManager::LOCK,  ResourceManager::SUPPORTS };
 
-UserListColumns::UserListColumns()
-{
+UserListColumns::UserListColumns() {
 	memcpy(m_nColumnSizes, def_columnSizes, sizeof(int)* UserInfo::COLUMN_LAST);
 	memcpy(m_nColumnIndexes, def_columnIndexes, sizeof(int)* UserInfo::COLUMN_LAST);
 	memset(m_bColumnUsing,1, sizeof(bool)* UserInfo::COLUMN_LAST);
@@ -144,8 +143,7 @@ UserListColumns::UserListColumns()
 	
 }
 
-void UserListColumns::ReadFromSetup()
-{
+void UserListColumns::ReadFromSetup() {
 	WinUtil::splitTokens(m_nColumnIndexes, SETTING(HUBFRAME_ORDER), UserInfo::COLUMN_LAST);
 	WinUtil::splitTokens(m_nColumnSizes, SETTING(HUBFRAME_WIDTHS), UserInfo::COLUMN_LAST);
 
@@ -168,15 +166,13 @@ void UserListColumns::ReadFromSetup()
 	RecalcIdxData();
 }
 
-void UserListColumns::WriteToSetup(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList)
-{
+void UserListColumns::WriteToSetup(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList) {
 	WinUtil::saveHeaderOrder(UserList, SettingsManager::HUBFRAME_ORDER, 
 			SettingsManager::HUBFRAME_WIDTHS, UserInfo::COLUMN_LAST, m_nColumnIndexes, m_nColumnSizes);
 
 }
 
-void UserListColumns::RecalcIdxData()
-{
+void UserListColumns::RecalcIdxData() {
 	// Nastaveni indexu pro vraceni textu datovych sloupcu
 	int nDataIdx = 0;
 	for(int cnt = 0; cnt < UserInfo::COLUMN_LAST; cnt++) {
@@ -189,15 +185,13 @@ void UserListColumns::RecalcIdxData()
 	}
 }
 
-int UserListColumns::RemapDataColumnToListColumn(int nDataCol) const
-{
+int UserListColumns::RemapDataColumnToListColumn(int nDataCol) const {
 	if ((nDataCol < 0)||(nDataCol >= UserInfo::COLUMN_LAST))
 		return -1;
 	return m_nColumnIdxData[nDataCol];
 }
 
-int UserListColumns::RemapListColumnToDataColumn(int nDataCol) const
-{
+int UserListColumns::RemapListColumnToDataColumn(int nDataCol) const {
 	if ((nDataCol < 0)||(nDataCol >= UserInfo::COLUMN_LAST))
 		return -1;
 	for(int cnt = 0; cnt < UserInfo::COLUMN_LAST; cnt++) {
@@ -207,16 +201,14 @@ int UserListColumns::RemapListColumnToDataColumn(int nDataCol) const
 	return -1;
 }
 
-bool UserListColumns::IsColumnUsed(int nHardColumn) const
-{
+bool UserListColumns::IsColumnUsed(int nHardColumn) const {
 	if ((nHardColumn < 0)||(nHardColumn >= UserInfo::COLUMN_LAST))
 		return false;
 	return m_bColumnUsing[nHardColumn];
 
 }
 
-void UserListColumns::SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList)
-{
+void UserListColumns::SetToList(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList) {
 	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
 		if (!IsColumnUsed(j))
 			continue;
@@ -226,8 +218,7 @@ void UserListColumns::SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList
 	}
 }
 
-void UserListColumns::SwitchColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList)
-{
+void UserListColumns::SwitchColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList) {
 	if ((nHardColumn < 0)||(nHardColumn >= UserInfo::COLUMN_LAST))
 		return;
 	bool bColumnIsOn = m_bColumnUsing[nHardColumn];
@@ -235,8 +226,7 @@ void UserListColumns::SwitchColumnVisibility(int nHardColumn, TypedListViewCtrl<
 	SetColumnVisibility(nHardColumn, UserList, bColumnIsOn);
 }
 
-void UserListColumns::SetColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn)
-{
+void UserListColumns::SetColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn) {
 	if ((nHardColumn < 0)||(nHardColumn >= UserInfo::COLUMN_LAST))
 		return;
 	if (m_bColumnUsing[nHardColumn] == bColumnIsOn)

@@ -185,165 +185,39 @@ void User::setUserDescription(const string& aDescription) {
 		favoriteUser->setDescription(aDescription);
 }
 
-const string User::GetTagPart(string sPart, string ePart) {
-	string sTag = getTag();
-	string TagPart;
-	int iPos = 0;
-	int rPos = 0;
-	iPos = sTag.find( sPart );
-	if (iPos != string::npos) {
-		iPos = iPos + ((string)sPart).size();
-	}
-	rPos = safestring::SafeFind(sTag, ePart, iPos );
-	if ( (iPos != string::npos) && (rPos != string::npos) ) {
-		TagPart = sTag.substr( iPos, rPos-iPos);
-	}
-	return TagPart;
-}
-
-
-const string User::GetPart(string zTag, string sPart, string ePart) {  //zTag
-	string zTagPart;
-	int iPos = 0;
-	int rPos = 0;
-	iPos = zTag.find( sPart );
-	if (iPos != string::npos) {
-		iPos = iPos + ((string)sPart).size();
-	}
-	rPos = safestring::SafeFind(zTag, ePart, iPos );
-	if ( (iPos != string::npos) && (rPos != string::npos) ) {
-		zTagPart = zTag.substr( iPos, rPos-iPos);
-	}
-	return zTagPart;
-}
-
-void User::TagParts(string sTag ) {
-	setTag(sTag);
-	string zTag;
-	string client;
-	string supports = getSupports();
-//MessageBox(0,supports.c_str(),"",MB_OK);
-	int descLen = description.size();
-	if (sTag == Util::emptyString) {
-		string sConn = getConnection();
-		if ((sConn == Util::emptyString) || (sConn == "Bot") || (sConn == "BOT") || (sConn == "bot"))
-			client = "BOT";
-		else
-			client = "NMDC?";
-	} else {
-		if (sTag.find("<++")!= string::npos) {
-			if (description.find("<o5") != string::npos) {
-				client = "oDC";
-			} else if (description.find("<CDM ") != string::npos ) {
-				client = "DC++k CDM";  
-			} else if (description.find("<iDC") != string::npos) {
-				client = "iDC++";
-			} else if (description.find("zDC") != string::npos) {
-				zTag = GetPart( description, "++[", "<+");
-				client = "zDC++";
-			} else if (description.find("<MS++V>") != string::npos ) {
-				client = "MS++V";  
-			} else if (description.find("<.P>")!= string::npos) {
-				client = "PhantomDC";
-			} else if ((descLen >= 3) && ((unsigned(description.find("[A]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[B]")) == unsigned(descLen - 3)) 
-				|| (unsigned(description.find("[C]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[D]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[F]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[M]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[K]")) == unsigned(descLen - 3))
-				|| (unsigned(description.find("[pre E]")) == unsigned(descLen - 7)))) {
-				client = "CZDC++";
-			} else {
-				if (sTag.find("L:")!= string::npos) {
-					client = "CZDC++";
-				} else if (sTag.find("B:")!= string::npos) {
-					client = "BCDC++";
-				} else if (sTag.find("0.241")!= string::npos) {
-					client = "DC++Stealth??";
-				} else if ( supports.find("TTH") != string::npos )	{
-					if ( description.find("<.P>") != string::npos ) { client = "PhantomDC"; }
-					else { client = "BCDC++"; } 
-				} else {
-					client = "DC++";
+void User::TagParts(char *sTag ) {
+	char *temp, *ver, *mod;
+    setTag(sTag);
+	if((temp = strtok(sTag+1, " ")) != NULL) {
+//		setClientID(temp);
+		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'V')) {
+			ver = strdup(temp+2);
+			setVersion(ver);
+			delete[] ver;
+		}
+		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'M')) {
+			mod = strdup(temp+2);
+			setMode(mod);
+			delete[] mod;
+		}
+		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
+			if( strlen(temp+2) > 3 ) {
+                int a,b,c;
+				if( sscanf(temp+2, "%d/%d/%d", &a, &b, &c) == 3 ) {
+					setHubs(Util::toString(a+b+c));
 				}
-			}
-			if (sTag.find("<++V")!= string::npos) { client = "(TAG ERROR!!) " + client; }
-	    } else {
-			client = GetPart( sTag, "<", " ");
-			if (client == "DC") { client = "NMDC2"; }
-			if (client == "StrgDC++") { client = "StrongDC++"; }
-		}
-	}
-//	setClientType(client);
-	string ver;
-	if (description.find("<o5") != string::npos) {
-		ver = GetPart( description, "<o", ">");
-	} else if (description.find("<iDC") != string::npos) {
-		ver = GetPart( description, "<iDC", ">");
-	} else if (description.find("zDC++") != string::npos) {
-		if (description.find("[V:") != string::npos)
-			ver = GetPart( sTag, "V:", ",") + GetPart( description, "[V:", "]");
-		else
-			ver = GetPart( description, "++[", "]");
-	} else {
-		ver = GetPart( sTag, "V:", ",");
-	}
-
-	setVersion(ver);
-	string m = GetTagPart( "M:", ",");
-	if(m == "P" || m == "5") { setFlag(User::PASSIVE); }
-	setMode(m);
-	string hs = GetTagPart( "H:", ",");
-	string n, r, o;
-	int iPos = 0;
-	int rPos;
-	rPos = safestring::SafeFind( hs, "/", iPos );
-	if (rPos == string::npos) {
-		setHubs(hs);
-	} else {
-		n = hs.substr( iPos, rPos-iPos);
-		iPos = rPos + 1;
-		rPos = safestring::SafeFind( hs, "/", iPos );
-		if (rPos == string::npos) {
-			setHubs(hs);
-		} else {
-			r = hs.substr( iPos, rPos-iPos);
-			o = hs.substr( rPos + 1, hs.size());
-			int h = Util::toInt(n) + Util::toInt(r) + Util::toInt(o);
-			setHubs(Util::toString(h));
-		}
-	}
-	string s = GetTagPart( "S:", ",");
-	if (s == "") {
-		s = GetTagPart( "S:", ">");
-	}
-	setSlots(s);
-	string l;
-	iPos = 0;
-	rPos = 0;
-	iPos = sTag.find( "L:" );
-	if (iPos == string::npos) {
-		iPos = sTag.find( "B:" );
-		if (iPos == string::npos) {
-			iPos = sTag.find( "U:" );
-			if (iPos == string::npos) {
-				return;
+			} else {
+				setHubs(Util::toString(atoi(temp+2)));
 			}
 		}
+		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
+			setSlots(Util::toString(atoi(temp+2)));
+		}
+		if(((temp = strtok(NULL, ",")) != NULL) && ((temp[0] == 'L') || (temp[0] == 'B') || (temp[0] == 'U'))) {
+			setUpload(Util::toString(atoi(temp+2)));
+		}
 	}
-	if (iPos != string::npos) {
-		iPos = iPos + 2;
-	}
-	rPos = safestring::SafeFind(sTag, ",", iPos );
-	if (rPos == string::npos) {
-		rPos = safestring::SafeFind(sTag, ">", iPos );
-	}
-	if ( (iPos != string::npos) && (rPos != string::npos) ) {
-		l = sTag.substr( iPos, rPos-iPos);
-	}
-	setUpload(l);
-} 
+}
 
 // CDM EXTENSION BEGINS
 string User::getReport()

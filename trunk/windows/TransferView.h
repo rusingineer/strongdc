@@ -30,7 +30,6 @@
 
 #include "OMenu.h"
 #include "UCHandler.h"
-
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 #include "resource.h"

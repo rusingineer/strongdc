@@ -42,7 +42,7 @@ public:
 
 public:
 	UserInfo(const User::Ptr& u, const UserListColumns* pListColumns);
-	//static string Speed;
+
 	const string& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
@@ -58,23 +58,20 @@ protected:
 	const UserListColumns* m_pListColumns;
 };
 
-class UserListColumns
-{
+class UserListColumns {
 public:
 	UserListColumns();
 	void ReadFromSetup();
-	void WriteToSetup(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
 
-	void SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
-
-	void SwitchColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList);
-	void SetColumnVisibility(int nHardColumn, TypedListViewCtrl<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn);
+	void WriteToSetup(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
+	void SetToList(TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
+	void SwitchColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList);
+	void SetColumnVisibility(int nHardColumn, TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& UserList, bool bColumnIsOn);
 
 	bool IsColumnUsed(int nHardColumn) const;
 	int RemapDataColumnToListColumn(int nDataCol) const;
 	int RemapListColumnToDataColumn(int nDataCol) const;
 	
-
 protected:
 	int m_nColumnSizes[UserInfo::COLUMN_LAST];
 	int m_nColumnIndexes[UserInfo::COLUMN_LAST];
@@ -83,6 +80,5 @@ protected:
 
 	void RecalcIdxData();
 };
-
 
 #endif //USERINFO_H

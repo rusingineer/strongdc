@@ -39,8 +39,7 @@ public:
 				break;
 			}
 		}
-		ReleaseMutex(hMutexMapList);
-		
+		ReleaseMutex(hMutexMapList);		
 	}
 
 	static vector<FileDataInfo*> vecAllFileDataInfo;

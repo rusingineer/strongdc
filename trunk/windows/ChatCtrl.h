@@ -25,6 +25,7 @@ class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl> {
 
 public:
 	ChatCtrl();
+	virtual ~ChatCtrl();
 
 	BEGIN_MSG_MAP(ChatCtrl)
 	  // put your message handler entries here
@@ -48,7 +49,7 @@ public:
 
 	void GoToEnd();
 	void SetAutoScroll( bool boAutoScroll );
-	void SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL );
+	void SetUsers( TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *pUsers = NULL );
 	void SetTextStyleMyNick( CHARFORMAT2 ts ) { m_TextStyleMyNick = ts; };
 
 protected:
@@ -57,8 +58,6 @@ protected:
 
 	IRichEditOle* GetIRichEditOle() const;
 
-	bool m_boAutoScroll;
-
 	CHARFORMAT2 m_TextStyleGeneral;
 	CHARFORMAT2 m_TextStyleTimestamp;
 	CHARFORMAT2 m_TextStyleMyNick;
@@ -66,11 +65,17 @@ protected:
 	CHARFORMAT2 m_TextStyleBold;
 	CHARFORMAT2 m_TextStyleFavUsers;
 	CHARFORMAT2 m_TextStyleOPUsers;
-
-	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
 	
+	TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *m_pUsers;
+	bool m_boAutoScroll, bMyMessage, boOK, boAtTheEnd, bRedrawControl, isOP, myMess;
+	char *g_BufTemp, *beforeAppendText, *afterAppendText;
+	int g_BufTemplen, AppendTextlen, line, iFindBegin, iBegin, iEnd1, iEnd2, iCRLF, iCRLF_Len, len, smiles, maxsmiles, 
+		nIdxFound, iCharPos, iRet, iLeft, iRight, iPos;
+	long lSelBeginSaved, lSelEndSaved, lMask, lSelBegin, lSelEnd, lTextLength, lMyNickStart, lMyNickEnd, lAuthorBegin, 
+		lAuthorEnd, lSearchFrom, lPos;
+	CAtlString sText, sNick, sMsgLower, sSel, sAuthorNick, sN;
+	string msg;
 };
 
 
 #endif //!defined(AFX_CHAT_CTRL_H__595F1372_081B_11D1_890D_00A0244AB9FD__INCLUDED_)
-

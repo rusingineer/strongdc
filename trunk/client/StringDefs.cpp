@@ -659,6 +659,8 @@ string ResourceManager::strings[] = {
 "Add alternative sources with TTH only",
 "TTH Inconsistency",
 "Verifying TTH...",
+"Max Emoticons in one chat message",
+"Remove diacritic marks from Czech chars",
 "Install Magnet URI handler on startup", 
 "Copy magnet link to clipboard",
 "Seconds"
@@ -1321,6 +1323,8 @@ string ResourceManager::names[] = {
 "SettingsOnlyTTH",
 "TTHInconsistency",
 "VerifyTTH",
+"SetczdcMaxEmoticons",
+"SetczdcCzcharsDisable",
 "SetczdcMagnetUriHandler", 
 "CopyMagnetLink",
 "Seconds"

@@ -19,6 +19,7 @@ PropPage::TextItem CZDCPage::texts[] = {
 	{ IDC_MAXCOMPRESS, ResourceManager::SETTINGS_MAX_COMPRESS },
 	{ IDC_MAXSOURCES, ResourceManager::SETTINGS_MAX_SOURCES },
 	{ IDC_CLIENT_EMU, ResourceManager::CLIENT_EMU },
+	{ IDC_SETCZDC_MAX_EMOTICONS, ResourceManager::SETCZDC_MAX_EMOTICONS },
 	{ IDC_SETTINGS_ODC_SHUTDOWNTIMEOUT, ResourceManager::SETTINGS_ODC_SHUTDOWNTIMEOUT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 }; 
@@ -30,6 +31,7 @@ PropPage::Item CZDCPage::items[] = {
 	{ IDC_MAX_COMPRESSION, SettingsManager::MAX_COMPRESSION, PropPage::T_INT },
 	{ IDC_MAX_SOURCES, SettingsManager::MAX_SOURCES, PropPage::T_INT },
 	{ IDC_EMULATION, SettingsManager::CLIENT_EMULATION, PropPage::T_INT },
+	{ IDC_MAX_EMOTICONS, SettingsManager::MAX_EMOTICONS, PropPage::T_INT },
 	{ IDC_SHUTDOWNTIMEOUT, SettingsManager::SHUTDOWN_TIMEOUT, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
@@ -43,6 +45,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
 	{ SettingsManager::CHECK_TTH, ResourceManager::CHECK_TTH_AFTER_DOWNLOAD },
 	{ SettingsManager::SEARCH_TTH_ONLY, ResourceManager::SETTINGS_ONLY_TTH },
+	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -61,6 +64,9 @@ LRESULT CZDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	updown.Detach();
 	updown.Attach(GetDlgItem(IDC_SHUTDOWN_SPIN));
 	updown.SetRange(1, 3600);
+	updown.Detach();
+	updown.Attach(GetDlgItem(IDC_MAX_EMOTICONSSPIN));
+	updown.SetRange32(1, 999);
 	updown.Detach();
 	
 	cClientEmu.Attach(GetDlgItem(IDC_EMULATION));

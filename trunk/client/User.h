@@ -110,8 +110,6 @@ public:
 
 	static void updated(User::Ptr& aUser);
 	
-//	string getReport();
-//	Client* getClient() { return client; }
 	
 	GETSET(string, connection, Connection);
 	GETSET(int, status, Status);
@@ -119,7 +117,6 @@ public:
 	GETSET(string, email, Email);
 	GETSET(string, description, Description);
 	GETSET(string, tag, Tag);
-//	GETSET(string, clientid, ClientID);
 	GETSET(string, version, Version);
 	GETSET(string, mode, Mode);
 	GETSET(string, hubs, Hubs);
@@ -132,12 +129,10 @@ public:
 	GETSET(string, supports, Supports);
 	GETSET(string, lock, Lock);
 	GETSET(string, pk, Pk);
-//	GETSET(string, previousLock, PreviousLock);
 	GETSET(string, clientType, ClientType);
 	GETSET(string, generator, Generator);
 	GETSET(int64_t, downloadSpeed, DownloadSpeed);
 	GETSET(int64_t, fileListSize, FileListSize);
-//	GETSET(int, iconStatus, IconStatus);	
 	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
@@ -150,7 +145,7 @@ public:
 	GETSET(bool, checked, Checked); 
 	GETSET(string, unknownCommand, UnknownCommand);
 	
-	void TagParts( string sTag );
+	void TagParts( char *sTag );
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
 	Client* getClient() { return client; };
@@ -165,14 +160,12 @@ public:
 		host = Util::emptyString;
 		supports = Util::emptyString;
 		clientType = Util::emptyString;
-	//	previousLock = Util::emptyString;
 		downloadSpeed = -1;
 		fileListSize = -1;
 		status = 0;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;
 		hasTestSURinQueue = false;
-	//	userIp = Util::emptyString;
 		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
 	};
@@ -186,9 +179,6 @@ private:
 
 	Client* client;
 	FavoriteUser* favoriteUser;
-	
-	const string GetTagPart( string sPart, string ePart );
-	const string GetPart( string zTag, string sPart, string ePart );
 	StringMap getPreparedFormatedStringMap(Client* aClient = NULL); 
 };
 
@@ -198,4 +188,3 @@ private:
  * @file
  * $Id$
  */
-

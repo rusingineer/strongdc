@@ -42,10 +42,8 @@ void Transfer::updateRunningAverage() {
 			} else {
 				// Weighted average...
 				runningAverage = ((avg * diff) + (runningAverage*(AVG_PERIOD-diff)))/AVG_PERIOD;
-				}
-			
+				}		
 		}
-
 		last = total;
 	}
 	lastTick = tick;
@@ -102,8 +100,7 @@ void UserConnection::onLine(const string& aLine) throw () {
 			return;
 		}
 		i++;
-		//string::size_type j = safestring::SafeFind(param, ' ', i);
-		string::size_type j = param.find(' ', i);
+		string::size_type j = safestring::SafeFind(param, ' ', i);
 		if(j == string::npos)
 			return;
 		int64_t bytes = Util::toInt64(param.substr(i, j-i));

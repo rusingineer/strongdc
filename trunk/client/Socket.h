@@ -226,8 +226,7 @@ public:
 	GETSET(string, ip, Ip);
 	GETSET(short, port, Port);
 	
-	GETSET(bool, noproxy, Noproxy);
-	
+	GETSET(bool, noproxy, Noproxy);	
 protected:
 	socket_t sock;
 	struct sockaddr remote_addr_udp; 

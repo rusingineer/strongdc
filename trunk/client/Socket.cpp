@@ -59,8 +59,7 @@ string Socket::getRemoteIp() const {
 	} else if(type == TYPE_UDP) {
 		sock_addr_rem = *(sockaddr_in *)&remote_addr_udp;
 	}
-
-	return string(inet_ntoa(sock_addr_rem.sin_addr));	// + ":" + string(Util::toString((sock_addr_rem.sin_port >> 8) | (sock_addr_rem.sin_port << 8 & 0xffff)));
+	return string(inet_ntoa(sock_addr_rem.sin_addr));
 }
 
 string Socket::getRemoteHost() const {
@@ -574,4 +573,3 @@ void Socket::socksUpdated() {
  * @file
  * $Id$
  */
-

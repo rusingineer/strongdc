@@ -2,7 +2,6 @@
 #include "DCPlusPlus.h"
 
 #include "FileDataInfo.h"
-#include "Util.h"
 #include "SettingsManager.h"
 
 #define MAPPING_SIZE 2000000
@@ -38,7 +37,7 @@ FileDataInfo::FileDataInfo(const string& name, __int64 size, const vector<__int6
 	if(blocks == NULL){
 		vecFreeBlocks.push_back(0);
 		vecFreeBlocks.push_back(size);
-	}else
+	} else
 		copy(blocks->begin(), blocks->end(), back_inserter(vecFreeBlocks));
 
     iDownloadedSize = iFileSize;
@@ -204,21 +203,3 @@ string FileDataInfo::getFreeBlocksString()
 		return os.str();
 
 }
-
-//__int64 FileDataInfo::GetDownloadedSize()
-//{
-//	WaitForSingleObject(hMutex, INFINITE);
-//	__int64 iUndlSize = 0;
-//
-//	for(vector<__int64>::iterator i = vecFreeBlocks.begin(); i < vecFreeBlocks.end(); i++, i++)
-//		iUndlSize += ((*(i+1)) - (*i));
-//
-//	for(vector<__int64>::iterator i = vecRunBlocks.begin(); i < vecRunBlocks.end(); i++, i++)
-//		iUndlSize += ((*(i+1)) - (*i));
-//
-//	ReleaseMutex(hMutex);
-//
-//	dcassert(iUndlSize <= iFileSize);
-//
-//	return iFileSize - iUndlSize;
-//}

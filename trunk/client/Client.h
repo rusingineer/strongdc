@@ -158,9 +158,9 @@ public:
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
-			x+= *i + ' ';
+			x+= ' ' + *i;
 		}
-		send("$Supports " + x + '|');
+		send("$Supports" + x + '|');
 	}
 	void revConnectToMe(const User::Ptr& aUser) {
 		checkstate(); 
@@ -251,8 +251,6 @@ public:
 
 	const string& getDescription() const { return description.empty() ? SETTING(DESCRIPTION) : description; };
 	void setDescription(const string& aDesc) { description = aDesc; };
-//	int getClientEmulation() const { return (client_emulation >= 0 && client_emulation < SettingsManager::CLIENT_EMULATION_LAST) ? client_emulation : SettingsManager::CLIENT_DC; }
-//	void setClientEmulation(int aClientEmulation) { client_emulation = aClientEmulation; }
 
 	bool getOp() { return me ? me->isSet(User::OP) : false; };
 
@@ -291,7 +289,6 @@ private:
 	bool validatenicksent;
 	int64_t lastbytesshared;
 	short port;
-//	int client_emulation;
 
 	string name;
 	string description;
@@ -319,6 +316,9 @@ private:
 	bool reconnect;
 	u_int32_t lastUpdate;
 	
+	char *cmd, *param, *dscrptn, *temp;
+	int paramlen, dscrptnlen;
+
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;
 	FloodMap seekers;
@@ -336,7 +336,7 @@ private:
 	void connect();
 
 	void clearUsers();
-	void onLine(const string& aLine) throw();
+	void onLine(const char *aLine) throw();
 	
 	// TimerManagerListener
 	virtual void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();
@@ -353,4 +353,3 @@ private:
  * @file
  * $Id$
  */
-

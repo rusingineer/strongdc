@@ -7,8 +7,7 @@
 
 #include "../client/DCPlusPlus.h"
 
-class CImageDataObject : IDataObject
-{
+class CImageDataObject : IDataObject {
 public:
 	static void InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap);
 
@@ -21,39 +20,31 @@ private:
 	FORMATETC m_fromat;
 
 public:
-	CImageDataObject() : m_ulRefCnt(0)
-	{
+	CImageDataObject() : m_ulRefCnt(0) {
 		m_bRelease = FALSE;
 	}
 
-	~CImageDataObject()
-	{
+	~CImageDataObject() {
 		if (m_bRelease)
 			::ReleaseStgMedium(&m_stgmed);
 	}
 
 	// Methods of the IUnknown interface
 
-	STDMETHOD(QueryInterface)(REFIID iid, void ** ppvObject)
-	{
-		if (iid == IID_IUnknown || iid == IID_IDataObject)
-		{
+	STDMETHOD(QueryInterface)(REFIID iid, void ** ppvObject) {
+		if (iid == IID_IUnknown || iid == IID_IDataObject) {
 			*ppvObject = this;
 			AddRef();
 			return S_OK;
-		}
-		else
+		} else
 			return E_NOINTERFACE;
 	}
-	STDMETHOD_(ULONG, AddRef)(void)
-	{
+	STDMETHOD_(ULONG, AddRef)(void) {
 		m_ulRefCnt++;
 		return m_ulRefCnt;
 	}
-	STDMETHOD_(ULONG, Release)(void)
-	{
-		if (--m_ulRefCnt == 0)
-		{
+	STDMETHOD_(ULONG, Release)(void) {
+		if (--m_ulRefCnt == 0) {
 			delete this;
 			return 0;
 		}

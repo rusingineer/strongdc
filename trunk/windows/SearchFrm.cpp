@@ -1118,7 +1118,7 @@ LRESULT SearchFrame::onCopyNick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	dcassert(pos != -1);
 	SearchInfo* si = ctrlResults.getItemData(pos);
 	SearchResult* sr = si->sr;
-	Clipboard::setText(sr->getUser()->getNick());
+	WinUtil::setClipboard(sr->getUser()->getNick());
 	return S_OK;
 }
 
@@ -1127,7 +1127,7 @@ LRESULT SearchFrame::onCopyFilename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	dcassert(pos != -1);
 	SearchInfo* si = ctrlResults.getItemData(pos);
 	SearchResult* sr = si->sr;
-	Clipboard::setText(Util::getFileName(sr->getFile()));
+	WinUtil::setClipboard(Util::getFileName(sr->getFile()));
 	return S_OK;
 }
 
@@ -1136,7 +1136,7 @@ LRESULT SearchFrame::onCopyPath(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	dcassert(pos != -1);
 	SearchInfo* si = ctrlResults.getItemData(pos);
 	SearchResult* sr = si->sr;
-	Clipboard::setText(Util::getFilePath(sr->getFile()));
+	WinUtil::setClipboard(Util::getFilePath(sr->getFile()));
 	return S_OK;
 }
 
@@ -1145,7 +1145,7 @@ LRESULT SearchFrame::onCopySize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	dcassert(pos != -1);
 	SearchInfo* si = ctrlResults.getItemData(pos);
 	SearchResult* sr = si->sr;
-	Clipboard::setText(Util::formatBytes(sr->getSize()));
+	WinUtil::setClipboard(Util::formatBytes(sr->getSize()));
 	return S_OK;
 }
 
@@ -1155,7 +1155,7 @@ LRESULT SearchFrame::onCopyTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	SearchInfo* si = ctrlResults.getItemData(pos);
 	SearchResult* sr = si->sr;
 	if(sr->getTTH() != NULL)
-		Clipboard::setText(sr->getTTH()->toBase32());
+		WinUtil::setClipboard(sr->getTTH()->toBase32());
 	return S_OK;
 }
 
