@@ -94,10 +94,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_DESCRIPTION, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_EMAIL_ADDRESS, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_AUTOSCROLL_CHAT, onAutoScrollChat)
-
 		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
-
 		COMMAND_ID_HANDLER(IDC_BAN_IP, onBanIP)
 		COMMAND_ID_HANDLER(IDC_UNBAN_IP, onUnBanIP)
 		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
@@ -191,13 +189,13 @@ public:
 
 	void updateEntireUserList();
 		
-	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString, 
-		int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
+	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString
 		, const string& rawOne = Util::emptyString
 		, const string& rawTwo = Util::emptyString
 		, const string& rawThree = Util::emptyString
 		, const string& rawFour = Util::emptyString
 		, const string& rawFive = Util::emptyString
+		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
 		);		
 	static void closeDisconnected();
 
@@ -218,7 +216,12 @@ public:
 
 	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		getUserResponses();
+	int i=-1;
+		if(client->isConnected()) {
+			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+				getUserResponses(((UserInfo*)ctrlUsers.getItemData(i))->user);
+			}
+		}
 		return 0;
 	}
 
@@ -238,7 +241,7 @@ public:
 		string param = u->getNick();
 			addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
 	}
-	void getUserResponses();
+	void getUserResponses(User::Ptr& u);
 	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
@@ -334,10 +337,6 @@ private:
 		GET_SHUTDOWN, SET_SHUTDOWN
 	};
 
-	enum {
-		IMAGE_OP = 0, IMAGE_MODEM, IMAGE_ISDN, IMAGE_SATELLITE, IMAGE_WIRELESS, IMAGE_DSL, IMAGE_CABLE, IMAGE_LAN, IMAGE_SERVER, IMAGE_FIREBALL, IMAGE_UNKNOWN
-	};
-	
 	class PMInfo {
 	public:
 		PMInfo(const User::Ptr& u, const string& m) : user(u), msg(m) { };
@@ -351,13 +350,13 @@ private:
 		string msg;
 	};
 
-	HubFrame(const string& aServer, const string& aNick, const string& aPassword, const string& aDescription, 
-		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
+	HubFrame(const string& aServer, const string& aNick, const string& aPassword, const string& aDescription
 		, const string& aRawOne
 		, const string& aRawTwo
 		, const string& aRawThree
 		, const string& aRawFour
 		, const string& aRawFive
+		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
 		) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
@@ -494,49 +493,6 @@ private:
 		}
 		userMap.clear();
 		ctrlUsers.DeleteAll();
-	}
-
-	int getImage(const User::Ptr& u) {
-		int image = IMAGE_UNKNOWN;
-		const string& tmp = u->getConnection();
-		int status = u->getStatus();
-		if (u->isSet(User::OP)) {
-			image = IMAGE_OP;
-		} else if( (status == 4) || (status == 5)  || (status == 6) || (status == 7) ) {
-			image = IMAGE_SERVER;
-		} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11) ) {
-			image = IMAGE_FIREBALL;
-		} else if( (tmp == "28.8Kbps") ||
-			(tmp == "33.6Kbps") ||
-			(tmp == "56Kbps") ||
-			(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ) {
-			image = IMAGE_MODEM;
-		} else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {
-			image = IMAGE_ISDN;
-		} else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) {
-			image = IMAGE_SATELLITE;
-		} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
-			(tmp == "Microwave") ) {
-			image = IMAGE_WIRELESS;
-		} else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) {
-			image = IMAGE_DSL;
-		} else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) {
-			image = IMAGE_CABLE;
-		} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
-			(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
-			image = IMAGE_LAN;
-		}
-		if( (status == 2) || (status == 3) || (status == 6) || (status == 7) || (status == 10) || (status == 11) ) {
-			image+=11;
-		}
-		if(u->isSet(User::DCPLUSPLUS)) {
-			image+=22;
-		}
-		if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5") ||
-			((u->getDescription().substr(0,1) == "P") && ((u->getDescription().substr(1,1) == "") || (u->getDescription().substr(1,1) == " ")))) {
-			image+=44;
-		}
-		return image;	
 	}
 
 	void updateStatusBar() {

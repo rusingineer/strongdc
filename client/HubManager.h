@@ -149,7 +149,7 @@ public:
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
 		userliststate(rhs.userliststate)
 		, rawOne(rhs.rawOne)
-		, rawTwo(rhs.rawOne)
+		, rawTwo(rhs.rawTwo)
 		, rawThree(rhs.rawThree)
 		, rawFour(rhs.rawFour)
 		, rawFive(rhs.rawFive)

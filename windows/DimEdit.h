@@ -27,6 +27,7 @@
     message handler.  The focus handlers are there only to keep the edit
     field in the right state.
 */
+
 #ifndef DIMEDIT
 #define DIMEDIT
 #pragma once
@@ -37,15 +38,11 @@ typedef std::basic_string< TCHAR > tstring;
 #endif
 
 #include <AtlCrack.h>
-//#include <AtlMisc.h>
 
-class CDimEdit : public CWindowImpl< CDimEdit, CEdit >
-{
+class CDimEdit : public CWindowImpl< CDimEdit, CEdit > {
 public:
 
-  /*
-    Constructors and destructors.
-  */
+	// Constructors and destructors.
 
   //  Default constructor
   CDimEdit( )
@@ -53,8 +50,7 @@ public:
     m_getDlgCodeHandled( false ),
     m_isDim( true ),
     m_dimText( "<Click here to enter value>" ),
-    m_dimColor( RGB( 128, 128, 128 ) )
-  {
+    m_dimColor( RGB( 128, 128, 128 ) ) {
   }
 
   //  Constructor that initializes the dim text and the color.
@@ -64,8 +60,7 @@ public:
     m_getDlgCodeHandled( false ),
     m_isDim( true ),
     m_dimText( dimText ),
-    m_dimColor( dimColor )
-  {
+    m_dimColor( dimColor ) {
   }
 
   //  Another constructor that initializes the text and color.
@@ -77,35 +72,28 @@ public:
     m_getDlgCodeHandled( false ),
     m_isDim( true ),
     m_dimText( dimText ),
-    m_dimColor( RGB( red, green, blue ) )
-  {
+    m_dimColor( RGB( red, green, blue ) ) {
   }
 
   //  Destructor
-  virtual ~CDimEdit( )
-  {
+  virtual ~CDimEdit( ) {
   }
 
-  /*
-    Actions.
-  */
+	// Actions.
 
   //  Subclass the control.
-  BOOL SubclassWindow( HWND hWnd )
-  {
+	BOOL SubclassWindow( HWND hWnd ) {
     return( CWindowImpl< CDimEdit, CEdit >::SubclassWindow( hWnd ) );
   }
 
   //  Set the text to display when the control is empty (the "dim" text)
-  CDimEdit& SetDimText( const tstring& dimText )
-  {
+	CDimEdit& SetDimText( const tstring& dimText ) {
     m_dimText = dimText;
     return( *this );
   }
 
   //  Set the color to display the dim text in.
-  CDimEdit& SetDimColor( const COLORREF dimColor )
-  {
+	CDimEdit& SetDimColor( const COLORREF dimColor ) {
     m_dimColor = dimColor;
     return( *this );
   }
@@ -113,27 +101,22 @@ public:
   //  Another way to set the "dim" color.
   CDimEdit& SetDimColor( const unsigned char red,
                          const unsigned char green,
-                         const unsigned char blue )
-  {
+		const unsigned char blue ) {
     m_dimColor = RGB( red, green, blue );
     return( *this );
   }
 
-  /*
-    Message map and message handlers.
-  */
-  BEGIN_MSG_MAP_EX( CDimEdit )
+	// Message map and message handlers.
 
+	BEGIN_MSG_MAP_EX( CDimEdit )
     MSG_WM_PAINT( OnPaint )
     MSG_WM_SETFOCUS( OnSetFocus )
     MSG_WM_KILLFOCUS( OnKillFocus )
-
   END_MSG_MAP( )
 
   //  WM_PAINT message handler.
   //  NOTE:  The device context passed in does not exist.  This is a WTL bug.
-  void OnPaint( HDC )
-  {
+	void OnPaint( HDC ) {
     //  Start the painting operation.
     PAINTSTRUCT paint;
 
@@ -152,16 +135,11 @@ public:
     dc.SelectFont( HFONT( GetStockObject( DEFAULT_GUI_FONT ) ) );
 
     //  If the control is in "dim" mode, display the text centered and dimmed.
-    if( m_isDim == true )
-    {
+		if( m_isDim == true ) {
       dc.SetTextColor( m_dimColor );
       dc.SetTextAlign( TA_CENTER );
       dc.TextOut( ( paint.rcPaint.right - paint.rcPaint.left ) / 2, 1, m_dimText.c_str( ) );
-    }
-
-    //  If the control is "normal", display the text on the left.
-    else
-    {
+		} else { 	//  If the control is "normal", display the text on the left.
       dc.SetTextColor( GetSysColor( COLOR_BTNTEXT ) );
       dc.SetTextAlign( TA_LEFT );
       int length = GetWindowTextLength( ) + 1;
@@ -171,41 +149,35 @@ public:
       delete[] text;
     }
 
-
     //  End the paint operation.  This releases the DC internally.
     EndPaint( &paint );
   }
 
   //  The edit control received the keyboard focus.
-  void OnSetFocus( HWND /*hWnd*/ )
-  {
+	void OnSetFocus( HWND /*hWnd*/ ) {
     //  Allow Windows to process everything normally.
     DefWindowProc( );
 
     //  If the text in the edit control is the dim text, then erase it.
-    if( GetWindowTextLength( ) == 0 )
-    {
+		if( GetWindowTextLength( ) == 0 ) {
       m_isDim = false;
       Invalidate( );
     }
   }
 
   //  The edit control lost the keyboard focus.
-  void OnKillFocus( HWND /*hWnd*/ )
-  {
+	void OnKillFocus( HWND /*hWnd*/ ) {
     //  Allow Windows to process everything normally.
     DefWindowProc( );
 
     //  If the text length is zero, then the field is empty.  Put the dim text back.
-    if( GetWindowTextLength( ) == 0 )
-    {
+		if( GetWindowTextLength( ) == 0 ) {
       m_isDim = true;
       Invalidate( );
     }
   }
 
 private:
-
   //  A flag telling the code if WM_GETDLGCODE has already been handled.
   bool m_getDlgCodeHandled;
 

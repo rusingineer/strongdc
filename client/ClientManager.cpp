@@ -241,6 +241,9 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 		aUser->unsetFlag(User::PASSIVE);
 		aUser->unsetFlag(User::OP);
 		aUser->unsetFlag(User::DCPLUSPLUS);
+		aUser->unsetFlag(User::AWAY);
+		aUser->unsetFlag(User::SERVER);
+		aUser->unsetFlag(User::FIREBALL);
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);
 		aUser->setClient(NULL);

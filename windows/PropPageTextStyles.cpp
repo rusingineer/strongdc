@@ -1,5 +1,3 @@
-// No license, No copyright... use it if you want ;-)
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"

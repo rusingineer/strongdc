@@ -97,7 +97,6 @@ void GeneralPage::write()
 	
 	PropPage::write((HWND)(*this), items);
 
-
 	// Set connection active/passive
 	int ct = -1;
 	if(IsDlgButtonChecked(IDC_ACTIVE))
@@ -137,9 +136,7 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, SETTING(UP_SPEED).c_str()));
 
 	int q = 1;
-	for(int i = 0; i < SettingsManager::SPEED_LAST; i++)
-		//ctrlConnection.AddString(SettingsManager::connectionSpeeds[i].c_str());
-	{
+	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
 		cbitem.pszText = const_cast<char*>(SettingsManager::connectionSpeeds[i].c_str());
 		cbitem.iItem = i;
@@ -177,7 +174,6 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	int m = 0;
 	for (m = 0; m<8; m++) {
 		if(SettingsManager::connectionSpeeds[m] == SETTING(CONNECTION)) break;
-
 	}
 	ctrlConnection.SetCurSel(m);
 
@@ -219,8 +215,6 @@ void GeneralPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_UP_COMBO), checked);
 	::EnableWindow(GetDlgItem(IDC_DU), checked);
 	::EnableWindow(GetDlgItem(IDC_SLASH), checked);
-	
-
 }
 
 LRESULT GeneralPage::onClickedActive(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -239,7 +233,7 @@ LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl,
 	char *b = buf, *f = buf, c;
 	while( (c = *b++) != 0 )
 	{
-		if(c != '$' && c != '|' && (wID == IDC_DESCRIPTION || c != ' ') && ( (wID != IDC_NICK) || (c != '<' && c != '>')) )
+		if(c != '$' && c != '|' && (wID == IDC_DESCRIPTION || c != ' ') && ( (wID != IDC_NICK && wID != IDC_DESCRIPTION) || (c != '<' && c != '>') ) )
 			*f++ = c;
 	}
 
@@ -306,4 +300,3 @@ LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl *
  * @file
  * $Id$
  */
-

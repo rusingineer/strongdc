@@ -23,7 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-
+#include <atlcrack.h>
 #include "PropPage.h"
 #include "atldlgs.h"
 
@@ -35,7 +35,7 @@ public:
 	};
 	virtual ~GeneralPage() { ConnTypes.Destroy(); };
 
-	BEGIN_MSG_MAP(GeneralPage)
+	BEGIN_MSG_MAP_EX(GeneralPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_ACTIVE, onClickedActive)
 		COMMAND_ID_HANDLER(IDC_PASSIVE, onClickedActive)
@@ -50,9 +50,10 @@ public:
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onGetIP(WORD /* wNotifyCode */, WORD /* wID */, HWND /* hWndCtl */, BOOL& /* bHandled */);
-	LRESULT onClickedActive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onTextChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onClickedActive(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onTextChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	string getMyIP();
+	
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	virtual void write();
@@ -74,4 +75,3 @@ private:
  * @file
  * $Id$
  */
-

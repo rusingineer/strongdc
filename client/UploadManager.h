@@ -83,9 +83,7 @@ public:
 	static bool m_boFileServerLast;
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
-	static void resetFireballStatus();
-	static void resetFileServerStatus();
-	
+
 	int getUploads() { Lock l(cs); return uploads.size(); };
 	int getAverageSpeed() {
 		Lock l(cs);

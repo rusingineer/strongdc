@@ -223,7 +223,6 @@ void HubManager::onHttpFinished() throw() {
 void HubManager::save() {
 	if(dontSave)
 		return;
-
 	Lock l(cs);
 	try {
 		SimpleXML xml;
@@ -563,6 +562,11 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
 			e->setUserListState(aXml->getBoolChildAttrib("UserListState"));
+			e->setRawOne(aXml->getChildAttrib("RawOne"));
+			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
+			e->setRawThree(aXml->getChildAttrib("RawThree"));
+			e->setRawFour(aXml->getChildAttrib("RawFour"));
+			e->setRawFive(aXml->getChildAttrib("RawFive"));
 			favoriteHubs.push_back(e);
 		}
 		aXml->stepOut();

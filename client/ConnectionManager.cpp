@@ -37,9 +37,11 @@ ConnectionManager::ConnectionManager() : floodCounter(0), shuttingDown(false) {
 
 	features.push_back(UserConnection::FEATURE_MINISLOTS);
 	features.push_back(UserConnection::FEATURE_XML_BZLIST);
-	features.push_back(UserConnection::FEATURE_ADCGET);
-	features.push_back(UserConnection::FEATURE_TTHL);
-	features.push_back(UserConnection::FEATURE_TTHF);
+	if(BOOLSETTING(ENABLE403FEATURES)) {
+		features.push_back(UserConnection::FEATURE_ADCGET);
+		features.push_back(UserConnection::FEATURE_TTHL);
+		features.push_back(UserConnection::FEATURE_TTHF);
+	}
 };
 
 /**
@@ -354,6 +356,7 @@ void ConnectionManager::connect(const string& aServer, short aPort, const string
 
 void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aSource) throw() {
 	dcassert(aSource->getState() == UserConnection::STATE_CONNECT);
+	if (SETTING(GARBAGE_COMMAND_OUTGOING)) aSource->garbageCommand();
 	aSource->myNick(aSource->getNick());
 	aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	aSource->setState(UserConnection::STATE_NICK);
@@ -400,27 +403,27 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		aSource->setFlag(UserConnection::FLAG_UPLOAD);
 	}
 
-	// We don't want connections from people claiming to be us
-	if(aNick == aSource->getUser()->getClientNick() && aSource->getUser()->getClient()->getStealth() == false && SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) {
-		aSource->error("Fuck You !!!");
-		putConnection(aSource);
-		return;
+	if(aSource->getUser()->isOnline()) {
+		// We don't want connections from people claiming to be us
+		if(aNick == aSource->getUser()->getClientNick() && aSource->getUser()->getClient()->getStealth() == false && SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) {
+			aSource->error("Fuck You !!!");
+			putConnection(aSource);
+			return;
+		}
+
+		aSource->getUser()->setFakeSharing(false);
+		ClientManager::getInstance()->setIPNick(aSource->getRemoteIp(), aNick);
+		aSource->getUser()->setHost(aSource->getRemoteHost());
+		User::updated(aSource->getUser());
 	}
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
+		if(SETTING(GARBAGE_COMMAND_INCOMING)) aSource->garbageCommand();
 		aSource->myNick(aSource->getUser()->getClientNick()); 
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	}
 
 	aSource->setState(UserConnection::STATE_LOCK);
-
-	User::Ptr user = aSource->getUser();
-	if(user->isOnline()) {
-		user->setFakeSharing(false);
-		ClientManager::getInstance()->setIPNick(aSource->getRemoteIp(), aNick);
-		user->setHost(aSource->getRemoteHost());
-		User::updated(user);
-	}
 }
 
 void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSource, const string& aLock, const string& aPk) throw() {
@@ -650,13 +653,13 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 		else if(*i == UserConnection::FEATURE_XML_BZLIST)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_XML_BZLIST);
-		else if(*i == UserConnection::FEATURE_ADCGET)
+		else if((*i == UserConnection::FEATURE_ADCGET) && (BOOLSETTING(ENABLE403FEATURES)))
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ADCGET);
-		else if(*i == UserConnection::FEATURE_ZLIB_GET)
+		else if((*i == UserConnection::FEATURE_ZLIB_GET) && (BOOLSETTING(ENABLE403FEATURES)))
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ZLIB_GET);
-		else if(*i == UserConnection::FEATURE_TTHL)
+		else if((*i == UserConnection::FEATURE_TTHL) && (BOOLSETTING(ENABLE403FEATURES)))
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
-		else if(*i == UserConnection::FEATURE_TTHF)
+		else if((*i == UserConnection::FEATURE_TTHF) && (BOOLSETTING(ENABLE403FEATURES)))
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
 	}
 	conn->getUser()->setSupports(sup); 

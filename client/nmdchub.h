@@ -286,7 +286,7 @@ private:
 	bool validatenicksent;
 	int64_t lastbytesshared;
 
-	char *dscrptn, *temp;
+	char *dscrptn;
 	int dscrptnlen;
 	
 	typedef list<pair<string, u_int32_t> > FloodMap;

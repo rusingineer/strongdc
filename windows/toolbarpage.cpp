@@ -112,7 +112,10 @@ void ToolbarPage::write()
 		if(i!=0)toolbar+=",";
 		toolbar+=Util::toString(ctrlToolbar.GetItemData(i));
 	}
+	if(toolbar != settings->get(SettingsManager::TOOLBAR)) {
 	settings->set(SettingsManager::TOOLBAR, toolbar);
+		::SendMessage(WinUtil::mainWnd, IDC_REBUILD_TOOLBAR, 0, 0);
+	}
 }
 
 void ToolbarPage::BrowseForPic(int DLGITEM) {

@@ -292,7 +292,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& addr
 		string hubIpPort = x.substr(i, j-i);
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
-	isoponhub = false;
+	bool isoponhub = false;
 	if(!address.empty()) {
 		if(user->isOnline()) {
 			if(user->getClient()->getOp()) {

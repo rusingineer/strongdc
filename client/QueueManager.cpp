@@ -1206,7 +1206,7 @@ void QueueManager::saveQueue() throw() {
 		string b32tmp;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 			QueueItem* d = i->second;
-			if(!d->isSet(QueueItem::FLAG_USER_LIST)) {
+			if((!d->isSet(QueueItem::FLAG_USER_LIST)) && (!d->isSet(QueueItem::FLAG_TESTSUR))) {
 				f.write(STRINGLEN("\t<Download Target=\""));
 				f.write(CHECKESCAPE(d->getTarget()));
 				f.write(STRINGLEN("\" Size=\""));

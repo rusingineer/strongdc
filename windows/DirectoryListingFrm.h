@@ -30,9 +30,11 @@
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 #include "QueueFrame.h"
+#include "SearchFrm.h"
 
 #include "../client/DirectoryListing.h"
 #include "../client/StringSearch.h"
+#include "../client/ShareManager.h"
 
 #define STATUS_MESSAGE_MAP 9
 
@@ -82,10 +84,15 @@ public:
 		COMMAND_ID_HANDLER(IDC_DOWNLOADTO, onDownloadTo)
 		COMMAND_ID_HANDLER(IDC_GO_TO_DIRECTORY, onGoToDirectory)
 		COMMAND_ID_HANDLER(IDC_VIEW_AS_TEXT, onViewAsText)
-		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopyTTH)
+		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
-		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnetLink)
+		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
+		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy);
+		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy);
+		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
+		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
+		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchAlternates)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + max(targets.size(), WinUtil::lastDirs.size()), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onDownloadWithPrio)
@@ -106,7 +113,7 @@ public:
 	LRESULT onDownloadDirTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGoToDirectory(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -115,7 +122,7 @@ public:
 	LRESULT onDoubleClickFiles(int idCtrl, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onSelChangedDirectories(int idCtrl, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
-	LRESULT onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 			
 	void downloadList(const string& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3List(const string& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
@@ -142,6 +149,7 @@ public:
 			PostMessage(WM_CLOSE);
 			return 0;
 		} else {
+			m_hMenu = NULL;
 			MDIDestroy(m_hWnd);
 		return 0;
 	}
@@ -284,6 +292,8 @@ private:
 	CMenu directoryMenu;
 	CMenu priorityMenu;
 	CMenu priorityDirMenu;
+	CMenu copyMenu;
+	CMenu searchMenu;
 
 	CContainedWindow statusContainer;
 
@@ -314,6 +324,7 @@ private:
 	int statusSizes[8];
 	
 	DirectoryListing* dl;
+	StringList searchFilter;
 };
 
 #endif // !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)

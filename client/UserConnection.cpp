@@ -60,6 +60,7 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
+	char *temp;
 	if(strncmp(aLine, "$MyNick ", 8) == 0) {
 		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
 			fire(UserConnectionListener::MyNick(), this, temp);
@@ -141,6 +142,7 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 }
 
 void UserConnection::processBlock(const char* param, int type) throw() {
+	char *temp;
 		if((temp = strtok((char*)param, " ")) == NULL)
 			return;
 

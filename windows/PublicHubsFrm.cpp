@@ -25,7 +25,6 @@
 #include "WinUtil.h"
 
 #include "../client/Client.h"
-#include "../client/StringTokenizer.h"
 
 int PublicHubsFrame::columnIndexes[] = { COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_USERS, COLUMN_SERVER, 
 	COLUMN_SHARED, COLUMN_COUNTRY, COLUMN_STATUS, COLUMN_MINSHARE, COLUMN_MINSLOTS, 
@@ -120,6 +119,8 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	hubsMenu.AppendMenu(MF_STRING, IDC_ADD, CSTRING(ADD_TO_FAVORITES));
 	hubsMenu.AppendMenu(MF_STRING, IDC_COPY_HUB, CSTRING(COPY_HUB));
 	hubsMenu.SetMenuDefaultItem(IDC_CONNECT);
+
+	m_hMenu = WinUtil::mainMenu;
 
 	bHandled = FALSE;
 	return TRUE;

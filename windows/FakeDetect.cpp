@@ -50,6 +50,7 @@ PropPage::Item FakeDetect::items[] = {
 };
 
 FakeDetect::ListItem FakeDetect::listItems[] = {
+	{ SettingsManager::CHECK_NEW_USERS, ResourceManager::CHECK_ON_CONNECT },
 		{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

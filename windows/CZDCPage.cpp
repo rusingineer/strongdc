@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -48,6 +47,9 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
 	{ SettingsManager::DEBUG_COMMANDS, ResourceManager::SETTINGS_DEBUG_COMMANDS },
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
+	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
+	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
+	{ SettingsManager::ENABLE403FEATURES, ResourceManager::ENABLE_DC403_FEATURES },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

@@ -397,14 +397,10 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 			vypis += LIT(": ");
 			vypis += symInfo;
 			vypis += LIT("\r\n");
-
 		}
 		if ( hThread != GetCurrentThread() )
 			ResumeThread( hThread );
-
 		return vypis;
-
 }
 
 #endif //_DEBUG && _WIN32
-

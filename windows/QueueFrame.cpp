@@ -115,9 +115,10 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.InsertSeparatorFirst(STRING(FILE));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
+	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
+	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
@@ -163,6 +164,8 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
 	updateStatus();
+
+	m_hMenu = WinUtil::mainMenu;
 
 	bHandled = FALSE;
 	return 1;
@@ -915,6 +918,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
+			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 			string ext = Util::getFileExt(ii->getTargetFileName());
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
@@ -924,6 +928,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
 				}
 			previewMenu.InsertSeparatorFirst(CSTRING(PREVIEW_MENU));
+			}
 
 			menuItems = 0;
 			QueueItemInfo::SourceIter i;
@@ -967,8 +972,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			}
 			if(ii->getTTH() != NULL) {
                 singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+                singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_ENABLED);
             } else {
             	singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
+				singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
             }
 
 			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
@@ -1410,6 +1417,7 @@ LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		WinUtil::saveHeaderOrder(ctrlQueue, SettingsManager::QUEUEFRAME_ORDER, 
 			SettingsManager::QUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
+		m_hMenu = NULL;
 		MDIDestroy(m_hWnd);
 	return 0;
 	}
@@ -1624,6 +1632,20 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	if(ctrlQueue.GetSelectedCount() == 1) {
 	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget());
+	}
+	return 0;
+}
+
+LRESULT QueueFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlQueue.GetSelectedCount() == 1){
+		QueueItemInfo* ii = (QueueItemInfo*)ctrlQueue.GetItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+
+		if(ii && ii->getTTH()) {
+			string link = "magnet:?xt=urn:tree:tiger:" + ii->getTTH()->toBase32() +
+			"&xl=" + Util::toString(ii->getSize()) +
+			"&dn=" +  Util::getFileName(ii->getTarget());
+			WinUtil::setClipboard(link);
+		}
 	}
 	return 0;
 }

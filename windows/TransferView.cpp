@@ -710,7 +710,7 @@ LRESULT TransferView::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	if (item->ptAction.x < rect.left)
 	{
 		ItemInfo* i = (ItemInfo*)ctrlTransfers.getItemData(item->iItem);
-		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem))
+		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem) && (!i->qi->isSet(QueueItem::FLAG_USER_LIST)))
 			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
 	}
 	return 0;
@@ -756,7 +756,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == SET_STATE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
-		ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+		if(!i->qi->isSet(QueueItem::FLAG_USER_LIST))
+			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
@@ -836,6 +837,16 @@ void TransferView::setMainItem(ItemInfo* i) {
 	dcdebug("6. setMainItem finished\n");
 }
 
+bool TransferView::ItemInfo::canDisplayUpper() {
+ if((statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
+   (statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
+   (statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
+   (statusString == STRING(TTH_INCONSISTENCY)) ||
+   (statusString == STRING(CHECKING_TTH)) ||
+   (statusString == STRING(DISCONNECTED)) ||
+   (statusString == STRING(SFV_INCONSISTENCY)) ||
+   (qi->isSet(QueueItem::FLAG_USER_LIST))) return true; else return false;
+}
 
 void TransferView::ItemInfo::update() {
 	u_int32_t colMask = updateMask;
@@ -866,24 +877,10 @@ void TransferView::ItemInfo::update() {
 			if(fdi) {
 				if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
 					upper->columns[COLUMN_STATUS] = upper->statusString;
-				} else if(
-					(upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
-					(upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
-					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
-					(upper->statusString == STRING(TTH_INCONSISTENCY)) ||
-					(upper->statusString == STRING(CHECKING_TTH)) ||
-					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
+				} else if(canDisplayUpper()) {
 						upper->columns[COLUMN_STATUS] = upper->statusString;
-				} 
-			} else if(
-					(upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
-					(upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
-					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
-					(upper->statusString == STRING(TTH_INCONSISTENCY)) ||
-					(upper->statusString == STRING(CHECKING_TTH)) ||
-					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
-						upper->columns[COLUMN_STATUS] = upper->statusString;
-			}
+				}
+			} else if(canDisplayUpper()) upper->columns[COLUMN_STATUS] = upper->statusString;
 		}
 	}
 
