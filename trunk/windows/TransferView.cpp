@@ -1117,7 +1117,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->Target = aDownload->getTarget();
 	}
 	dcdebug(("OnDownloadStarting: " + aDownload->getTarget() +"\n").c_str());
-		if((i->Target != i->oldTarget) || (i->upper->Target == Util::emptyString)) setMainItem(i);
+		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
 	{
 		Lock l(cs);

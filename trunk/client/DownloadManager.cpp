@@ -145,7 +145,7 @@ int DownloadManager::FileMover::run() {
 }
 
 void DownloadManager::removeConnection(UserConnection::Ptr aConn, bool reuse /* = false */, bool reconnect /* = false */) {
-	dcassert(aConn->getDownload() == NULL);
+	//dcassert(aConn->getDownload() == NULL);
 	aConn->removeListener(this);
 	ConnectionManager::getInstance()->putDownloadConnection(aConn, reuse, reconnect);
 }
@@ -316,7 +316,7 @@ void DownloadManager::on(UserConnectionListener::Sending, UserConnection* aSourc
 }
 
 void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSource, int64_t aFileLength) throw() {
-     User::Ptr user = aSource->getUser();
+	User::Ptr user = aSource->getUser();
 	if(aSource->getState() != UserConnection::STATE_FILELENGTH) {
 		dcdebug("DM::onFileLength Bad state, ignoring\n");
 		return;
@@ -366,7 +366,7 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 			return;
 		}
 
-		if(prepareFile(aSource, (bytes == -1) ? -1 : aSource->getDownload()->getPos() + bytes)) {
+	if(prepareFile(aSource, (bytes == -1) ? -1 : aSource->getDownload()->getPos() + bytes)) {
 			aSource->setDataMode();
 		}
 	}
@@ -487,7 +487,7 @@ private:
 bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = -1 */) {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
-
+	
 	if(newSize != -1) {
 		d->setSize(newSize);
 	}
@@ -512,13 +512,14 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	}
 
 	File* file = NULL;
+
 	try {
 		// Let's check if we can find this file in a any .SFV...
 		int trunc = d->isSet(Download::FLAG_RESUME) ? 0 : File::TRUNCATE;
 		file = new File(target, File::RW, File::OPEN | File::CREATE | trunc);
-		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
+/*		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 						file->setSize(d->getSize());
-		}
+		}*/
 		file->setPos(d->getPos());		
 	} catch(const FileException& e) {
 		delete file;
@@ -938,6 +939,7 @@ void DownloadManager::removeDownload(Download* d, bool finished /* = false */) {
 		delete old;
 	}
 
+
 	if(d->getFile()) {
 		try {
 			d->getFile()->flush();
@@ -953,6 +955,7 @@ void DownloadManager::removeDownload(Download* d, bool finished /* = false */) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
 	}
+
 
 	{
 		Lock l(cs);
@@ -971,6 +974,7 @@ void DownloadManager::removeDownload(Download* d, bool finished /* = false */) {
 			}
 		}
 	}
+
 	QueueManager::getInstance()->putDownload(d, finished);
 }
 

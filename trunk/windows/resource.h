@@ -8,6 +8,9 @@
 #define IDC_COPY_HUB                    104
 #define IDC_CDMDEBUG_WINDOW             106
 #define IDD_GENERALPAGE                 107
+#define IDD_EXCEPTION                   108
+#define IDC_EXCEPTION_DETAILS           109
+#define IDC_COPY_EXCEPTION              110
 #define IDR_MAINFRAME                   128
 #define IDR_HUB                         129
 #define IDC_HUBLIST                     131
@@ -74,6 +77,7 @@
 #define IDI_ICON1                       269
 #define IDR_FINISHED_MP3                269
 #define IDR_CDM                         270
+#define IDI_ICON2                       273
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -422,6 +426,7 @@
 #define IDC_UP_COMBO                    1273
 #define IDC_DOWN_COMBO                  1274
 #define IDC_SLASH                       1275
+#define IDC_COMBO1                      1276
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
@@ -640,9 +645,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        271
+#define _APS_NEXT_RESOURCE_VALUE        274
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1276
+#define _APS_NEXT_CONTROL_VALUE         1277
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

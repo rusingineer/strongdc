@@ -171,7 +171,7 @@ string ResourceManager::strings[] = {
 "&View", 
 "&Status bar\tCtrl+2", 
 "&Toolbar\tCtrl+1", 
-"T&ransfers\tCtrl+3", 
+"T&ransfers", 
 "&Window", 
 "Arrange icons", 
 "Cascade", 
