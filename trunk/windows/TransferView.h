@@ -257,7 +257,10 @@ private:
 		void deleteSelf() { delete this; }	
 
 		double getRatio() {
-			if(mainItem) return compressRatio;
+			if(mainItem) {
+				if((compressRatio > 1) || (compressRatio < 0)) compressRatio = 1.0;
+				return compressRatio;
+			}
 			return (pos > 0) ? (double)actual / (double)pos : 1.0;
 		}
 

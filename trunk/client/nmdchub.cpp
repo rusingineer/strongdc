@@ -91,7 +91,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	Lock l(cs);
+//	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
