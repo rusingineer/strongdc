@@ -320,21 +320,22 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 
 void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 {
-			if(!u->isSet(Download::FLAG_USER_LIST))	
-		{	if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
-					PlaySound(SETTING(UPLOADFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+	if(!u->isSet(Download::FLAG_USER_LIST))	{
+		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
+			PlaySound(SETTING(UPLOADFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+	}
+	if(!u->isSet(Upload::FLAG_TTH_LEAVES)) {
+		if(!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) {
+			FinishedItem *item = new FinishedItem(
+				u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
+				u->getUserConnection()->getUser()->getLastHubName(),
+				u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
+			{
+				Lock l(cs);
+				uploads.push_back(item);
+			}
+			fire(FinishedManagerListener::AddedUl(), item);
 		}
-			if(!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) {
-				FinishedItem *item = new FinishedItem(
-					u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
-					u->getUserConnection()->getUser()->getLastHubName(),
-					u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
-				{
-					Lock l(cs);
-					uploads.push_back(item);
-				}
-
-		fire(FinishedManagerListener::AddedUl(), item);
 	}
 }
 

@@ -1110,7 +1110,7 @@ LRESULT QueueFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		if(ii->getTTH() != NULL) {
-			SearchFrame::openWindow(ii->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			WinUtil::searchHash(ii->getTTH());
 		}
 	} 
 
@@ -1296,6 +1296,33 @@ void QueueFrame::removeDir(HTREEITEM ht) {
 	DirectoryPair dp = directories.equal_range(name);
 	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
 		QueueManager::getInstance()->remove(i->second->getTarget());
+	}
+}
+
+/*
+ * @param inc True = increase, False = decrease
+ */
+void QueueFrame::changePriority(bool inc){
+	int i = -1;
+	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1){
+		QueueItem::Priority p = ctrlQueue.getItemData(i)->getPriority();
+
+		if ((inc && p == QueueItem::HIGHEST) || (!inc && p == QueueItem::PAUSED)){
+			// Trying to go higher than HIGHEST or lower than PAUSED
+			// so do nothing
+			return;
+		}
+
+		switch(p){
+			case QueueItem::HIGHEST: p = QueueItem::HIGH; break;
+			case QueueItem::HIGH:    p = inc ? QueueItem::HIGHEST : QueueItem::NORMAL; break;
+			case QueueItem::NORMAL:  p = inc ? QueueItem::HIGH    : QueueItem::LOW; break;
+			case QueueItem::LOW:     p = inc ? QueueItem::NORMAL  : QueueItem::LOWEST; break;
+			case QueueItem::LOWEST:  p = inc ? QueueItem::LOW     : QueueItem::PAUSED; break;
+			case QueueItem::PAUSED:  p = QueueItem::LOWEST; break;
+		}
+
+		QueueManager::getInstance()->setPriority(ctrlQueue.getItemData(i)->getTarget(), p);
 	}
 }
 

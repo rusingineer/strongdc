@@ -222,13 +222,9 @@ void OperaColors::FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c
 	if (x2 <= x1 || y2 <= y1)
 		return;
 
-	int w = x2 - x1;
-
 	if (!light)
 		for (int _x = x1; _x <= x2; ++_x) {
-			double k = (_x) / (double)(w);	
-			CBrush hBr(CreateSolidBrush(OperaColors::blendColors(c2, c1, k)));		
-//			CBrush hBr(CreateSolidBrush(blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1))));
+			CBrush hBr(CreateSolidBrush(blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1))));
 			CRect r(_x, y1, _x + 1, y2);
 			hDC.FillRect(&r, hBr.m_hBrush);
 		}

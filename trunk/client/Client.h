@@ -138,6 +138,8 @@ public:
 	const string& getDescription() const { return description.empty() ? SETTING(DESCRIPTION) : description; };
 	void setDescription(const string& aDesc) { description = aDesc; };
 
+	void scheduleDestruction() const { socket->shutdown(); }
+
 	string getRawCommand(const int aRawCommand) {
 		switch(aRawCommand) {
 			case 1: return rawOne;
@@ -198,10 +200,14 @@ private:
 	string address;
 	string addressPort;
 	short port;
-	bool isADC;
 
 	CountType countType;
 
+	// BufferedSocketListener
+	virtual void on(BufferedSocketListener::Shutdown) throw() {
+		removeListeners();
+		delete this;
+	}
 };
 
 #endif // _CLIENT_H

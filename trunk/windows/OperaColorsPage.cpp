@@ -94,6 +94,7 @@ UINT_PTR CALLBACK MenuBarCommDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				if (current_page->bDoLeft) {
 					current_page->crProgressDown = RGB(color_r, color_g, color_b);
 					current_page->ctrlProgressDownDrawer.Invalidate();
+					current_page->ctrlProgressSegmentDrawer.Invalidate();
 				} else if (current_page->bDoSegment) {
 					current_page->crProgressSegment = RGB(color_r, color_g, color_b);
 					current_page->ctrlProgressSegmentDrawer.Invalidate();
@@ -279,6 +280,7 @@ LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWN
 		else
 			crProgressDown = backup;
 		ctrlProgressDownDrawer.Invalidate();
+		ctrlProgressSegmentDrawer.Invalidate();
 	} else if (wID == IDC_SETTINGS_UPLOAD_BAR_COLOR) {
 		CColorDialog d(crProgressUp, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;

@@ -43,6 +43,7 @@ public:
 	typedef X<5> ModeChange;
 	typedef X<6> TransmitDone;
 	typedef X<7> Failed;
+	typedef X<8> Shutdown;
 
 	virtual void on(Connecting) throw() { }
 	virtual void on(Connected) throw() { }
@@ -52,6 +53,7 @@ public:
 	virtual void on(ModeChange) throw() { }
 	virtual void on(TransmitDone) throw() { }
 	virtual void on(Failed, const string&) throw() { }
+	virtual void on(Shutdown) throw() { }
 };
 
 class BufferedSocket : public Speaker<BufferedSocketListener>, public Socket, public Thread
@@ -84,9 +86,13 @@ public:
 	static void putSocket(BufferedSocket* aSock) { 
 		aSock->removeListeners(); 
 		aSock->Socket::disconnect();
-		Lock l(aSock->cs);
-		aSock->addTask(SHUTDOWN); 
+		aSock->shutdown();
 	};
+
+	virtual void shutdown() {
+		Lock l(cs);
+		addTask(SHUTDOWN);
+	}
 
 	virtual void accept(const ServerSocket& srv) throw(SocketException) { 
 		Socket::accept(srv); 
@@ -111,7 +117,7 @@ public:
 	 */
 	void setLineMode() {
 		dcassert(mode == MODE_DATA);
-		dcassert(dataBytes == -1 || dataBytes == 0);
+		dcassert(dataBytes == -1);
 		mode = MODE_LINE;
 	}
 	int getMode() { return mode; };
@@ -196,6 +202,7 @@ private:
 	 * calling threadShutDown, the thread function should exit as soon as possible
 	 */
 	void threadShutDown() {
+		fire(BufferedSocketListener::Shutdown());
 		removeListeners();
 		delete this;
 	}
