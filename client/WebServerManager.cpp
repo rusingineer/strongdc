@@ -394,24 +394,77 @@ int WebServerSocket::run(){
 					WebServerManager::getInstance()->login(IP);
 			}
 
-			string toSend;
+			string toSend1;
 		
 			if(!WebServerManager::getInstance()->isloggedin(IP)) {
-				toSend = WebServerManager::getInstance()->getLoginPage();
+				toSend1 = WebServerManager::getInstance()->getLoginPage();
 			} else {
-				toSend = WebServerManager::getInstance()->getPage(header);
+				toSend1 = WebServerManager::getInstance()->getPage(header);
 			}
 	
-			::send(sock, toSend.c_str(), toSend.size(), 0);
-			break;
-		}/* else {
-			if(BOOLSETTING(LOG_WEBSERVER)) {
-				StringMap params;
-				params["file"] = "Unknown request type";
-				params["ip"] = IP;
-				LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+		const char* aBuffer = toSend1.c_str();
+		size_t aLen = toSend1.size();
+		
+		if(aLen == 0){
+			return 0;
+		}
+
+		size_t pos = 0;
+		size_t sendSize = min(aLen, (size_t)64 * 1024);
+
+		bool blockAgain = false;
+
+		while(pos < aLen) {
+			int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);
+			if(i == SOCKET_ERROR) {
+				if(errno == EWOULDBLOCK) {
+					if(blockAgain) {
+						// Uhm, two blocks in a row...try making the send window smaller...
+						if(sendSize >= 256) {
+							sendSize /= 2;
+							dcdebug("Reducing send window size to %d\n", sendSize);
+						} else {
+							Thread::sleep(10);
+						}
+						blockAgain = false;
+					} else {
+						blockAgain = true;
+					}
+
+				} else if(errno == ENOBUFS) {
+					if(sendSize > 32) {
+						sendSize /= 2;
+						dcdebug("Reducing send window size to %d\n", sendSize);
+					} else {
+						throw SocketException("Out of buffer");
+					}
+				} else {
+					int a = WSAGetLastError(); ::closesocket(sock); throw SocketException(a);
+				}
+			} else {
+				dcassert(i != 0);
+				pos+=i;
+
+				blockAgain = false;
 			}
-		}*/
+		}
+		break;
+	} /*else {
+		if(BOOLSETTING(LOG_WEBSERVER)) {
+			StringMap params;
+			params["file"] = "Unknown request type";
+			params["ip"] = IP;
+			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+		}
+		string toSend = "";
+		toSend = "HTTP/1.0 400 Bad Request\r\n";
+		toSend += "Content-Type: text/html\r\n";
+		toSend += "Connection: close\r\n";
+		toSend += "Content-Length: 35\r\n";
+		toSend += "Pragma: nocache\r\n";
+		toSend += "\r\n";
+		toSend += "<h1>WTF: You can't do this to me!</h1>";
+		::send(sock, toSend.c_str(), toSend.size(), 0);*/
 	}
 	::closesocket(sock);
 	delete this;

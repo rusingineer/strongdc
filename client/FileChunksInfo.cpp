@@ -77,7 +77,7 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
     for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i < vecFreeBlocks.end(); i++, i++)
         iDownloadedSize -= ((*(i+1)) - (*i));
 
-	iBlockSize = max(TigerTree::calcBlockSize(iFileSize, 10), (int64_t)SMALLEST_BLOCK_SIZE);
+	iBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
 	iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
 
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
@@ -425,7 +425,7 @@ SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t siz
 		}
 	}
 
-	if(size > 0){
+	if((size > 0) && BOOLSETTING(ANTI_FRAG)){
 		Lock l(*shared_handle_ptr);
 
 		DWORD x = (DWORD)(size >> 32);

@@ -44,14 +44,7 @@ public:
 	void fire(T0 type, const T1& p1) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-
-		int a = 0;
 		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			a++;
-			if(IsBadReadPtr(*i, 4))
-				MessageBoxA(0,("ERROR 2 - "+Util::toString(a)).c_str(),"",MB_OK);
-			if(*i == NULL)
-				MessageBoxA(0,("ERROR 3 - "+Util::toString(a)).c_str(),"",MB_OK);
 			(*i)->on(type, p1);
 		}
 	}
@@ -120,7 +113,6 @@ public:
 	}
 	
 protected:
-	Speaker& operator=(const Speaker&);
 	ListenerList listeners;
 	ListenerList tmp;
 	CriticalSection listenerCS;

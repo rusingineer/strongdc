@@ -308,6 +308,7 @@ string ResourceManager::strings[] = {
 "Search String", 
 "Specifying the same search string for more than 5 files for a passive connection or 10 files for an active connection is inefficient. Would you like to continue with the operation?", 
 "Searching for ", 
+"Searching too soon, next search in %i seconds", 
 "Request to seek beyond the end of data", 
 "Send private message", 
 "Separator", 
@@ -864,7 +865,8 @@ string ResourceManager::strings[] = {
 "Transfer progressbar - actual segment", 
 "Max sources for match queue", 
 "Default", 
-"Use vertical view by default"	, 
+"Use vertical view by default", 
+"Ignore TTH searches", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1173,6 +1175,7 @@ string ResourceManager::names[] = {
 "SearchString", 
 "SearchStringInefficient", 
 "SearchingFor", 
+"SearchingWait", 
 "SeekBeyondEnd", 
 "SendPrivateMessage", 
 "Separator", 
@@ -1730,4 +1733,5 @@ string ResourceManager::names[] = {
 "SettingsSbMaxSources", 
 "Default", 
 "SettingsUseVerticalView", 
+"IgnoreTthSearches", 
 };

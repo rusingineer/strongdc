@@ -216,7 +216,7 @@ SettingsManager::SettingsManager()
 	setDefault(FINISHED_DIRTY, true);
 	setDefault(QUEUE_DIRTY, true);
 	setDefault(TAB_DIRTY, true);
-	setDefault(ANTI_FRAG, false);
+	setDefault(ANTI_FRAG, true);
 	setDefault(NO_AWAYMSG_TO_BOTS, true);
 	setDefault(SKIP_ZERO_BYTE, false);
 	setDefault(ADLS_BREAK_ON_FIRST, false);

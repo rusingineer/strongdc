@@ -781,7 +781,19 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		}
 	}
 
-	string description = speedDescription+getDescription();
+	string description = getDescription();
+
+	string::size_type mezera = 0;
+	while((mezera = description.rfind(" ")) == (description.size() - 1)) {
+		description = description.substr(0, description.size() - 1);
+	}
+
+	mezera = 0;
+	while((mezera = description.find(" ")) == 0) {
+		description = description.substr(1, description.size());
+	}
+
+	description = speedDescription + description;
 
 	string myInfoA = 
 		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(description, false)) + 
@@ -933,9 +945,11 @@ void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 		Lock l(cs);
 		clearUsers();
 	}
+
 	if(state == STATE_CONNECTED)
 		state = STATE_CONNECT;
 	Speaker<NmdcHubListener>::fire(NmdcHubListener::Failed(), this, aLine); 
+	updateCounts(true);
 }
 
 /**
