@@ -27,7 +27,7 @@ public:
 
 	BEGIN_MSG_MAP(ChatCtrl)
 	  // put your message handler entries here
-	  MESSAGE_HANDLER(WM_SIZE, OnSize)
+		MESSAGE_HANDLER(WM_SIZE, OnSize)
 		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
 	END_MSG_MAP()
 

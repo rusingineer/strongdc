@@ -290,7 +290,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			if(rpl && (smiles < maxsmiles)) {
 				bRedrawControl = true;
 				strstp(sText, beforeAppendText, Delimiter, afterAppendText);
-				AppendTextOnly(sMyNick, "", beforeAppendText, cf, "", !bRedrawControl);
+				AppendTextOnly(sMyNick, "", beforeAppendText, cf, sAuthor, !bRedrawControl);
 
 				COLORREF clrBkColor = m_TextStyleGeneral.crBackColor;
 				if (bMyMessage)
@@ -301,7 +301,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 				smiles++;
 			} else {
 				if (strlen(sText) > 0) {
-					AppendTextOnly(sMyNick, "", sText, cf, "", !bRedrawControl);
+					AppendTextOnly(sMyNick, "", sText, cf, sAuthor, !bRedrawControl);
 				}
 				break;
 			}
@@ -310,7 +310,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			EndRedrawAppendTextOnly();
 		}
 	} else {
-		AppendTextOnly(sMyNick, "", sText, cf, "");
+		AppendTextOnly(sMyNick, "", sText, cf, sAuthor);
 	}
 }
 

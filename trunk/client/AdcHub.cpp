@@ -88,7 +88,7 @@ void Command::parse(const string& aLine, bool nmdc /* = false */) {
 	}
 }
 
-AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n') {
+AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n', true) {
 }
 
 void AdcHub::handle(Command::INF, Command& c) throw() {
@@ -234,7 +234,7 @@ void AdcHub::redirect(const User* user, const string& aHub, const string& aMessa
 	string strtmp;
 	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + Command::escape(Util::toUtf8(aMessage, strtmp)) + "\n"); 
 }
-void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) { 
+void AdcHub::search(int aSizeMode, int64_t aSize, int /* aFileType */, const string& aString) { 
 	string strtmp;
 	strtmp += "BSCH " + getMe()->getCID().toBase32() + " ";
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {

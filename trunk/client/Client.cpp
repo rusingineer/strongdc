@@ -26,8 +26,8 @@
 
 Client::Counts Client::counts;
 
-Client::Client(const string& hubURL, char separator) : 
-	registered(false), socket(BufferedSocket::getSocket(separator)), countType(COUNT_UNCOUNTED), port(0), isADC(false)
+Client::Client(const string& hubURL, char separator, bool usesEscapes) : 
+	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), countType(COUNT_UNCOUNTED), port(0), isADC(false)
 {
 	string file;
     isADC = Util::strnicmp("adc://", hubURL.c_str(), 6) == 0;

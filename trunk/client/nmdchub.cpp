@@ -92,7 +92,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	Lock l(cs);
+	//Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
@@ -227,6 +227,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		u->setBytesShared(0);
 		u->setDescription(Util::emptyString);
 		u->setcType(10);
+		u->setStatus(1);		
 		u->setConnection(Util::emptyString);
 		u->setEmail(Util::emptyString);
 		u->setTag(Util::emptyString);
@@ -693,6 +694,7 @@ int hexstr2int(char *hexstr) {
         value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
     return value;
 }
+
 void NmdcHub::myInfo() {
 /*	char* s = NULL;
 	s[1] = 5;*/
@@ -739,49 +741,18 @@ void NmdcHub::myInfo() {
 	}
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
-	string connection = SETTING(CONNECTION);
-	string speedDescription = "";
-
-	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
-		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"] ";
-
-	if((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
-		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			int tag = 0;
-			tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
-			extendedtag += tmp5 + Util::toString(tag);
-		}
-
-		if (UploadManager::getFireballStatus()) {
-			StatusMode += 8;
-		} else if (UploadManager::getFileServerStatus()) {
-			StatusMode += 4;
-		}
-
-		if(Util::getAway()) {
-			StatusMode += 2;
-		}
-	} else {
-		if (connection == "Modem") { connection = "56Kbps"; }
-		if (connection == "Wireless") { connection = "Satellite"; }
-
-		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
-		}
-	}
-
-	extendedtag += ">";
-
 	nlfound = false;
 	string nldetect = "";
 
-	EnumWindows(GetWOkna,NULL);
-
-	if(nlfound) {
+	try {
 		char promenna[255];
 		GetEnvironmentVariable("APPDATA",promenna,255);
-		try {
-			File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
+
+		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
+
+		EnumWindows(GetWOkna,NULL);
+
+		if(nlfound) {
 			int NetLimiter_UploadLimit = 0;
 			int NetLimiter_UploadOn = 0;
 			const size_t BUF_SIZE = 800;
@@ -819,17 +790,51 @@ void NmdcHub::myInfo() {
 					buf[255] = 0;
 
 					if(NetLimiter_UploadOn == 1) {
-						nldetect = nlfound ? "NL @ "+Util::toString(NetLimiter_UploadLimit)+"kB/s " : Util::emptyString;
+						nldetect = nlfound ? "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+"kB/s]" : Util::emptyString;
 					}
 				}
 				if(len < BUF_SIZE)
 				break;
 			}
 			f.close();
-			} catch(const Exception&) {
+		}
+	} catch(const Exception&) {
+	}
+
+	string connection = nlfound ? nldetect : SETTING(CONNECTION);
+	string speedDescription = "";
+
+	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
+		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"] ";
+
+	if((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
+		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+			int tag = 0;
+			tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
+			extendedtag += tmp5 + Util::toString(tag);
+		}
+
+		if (UploadManager::getFireballStatus()) {
+			StatusMode += 8;
+		} else if (UploadManager::getFileServerStatus()) {
+			StatusMode += 4;
+		}
+
+		if(Util::getAway()) {
+			StatusMode += 2;
+		}
+	} else {
+		if (connection == "Modem") { connection = "56Kbps"; }
+		if (connection == "Wireless") { connection = "Satellite"; }
+
+		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
 		}
 	}
-	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
+
+	extendedtag += ">";
+
+	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
 		newmyinfo += extendedtag;
 	}

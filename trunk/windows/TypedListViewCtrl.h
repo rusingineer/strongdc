@@ -42,8 +42,6 @@ public:
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
-		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, onInfoTip)
-		DEFAULT_REFLECTION_HANDLER()
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -147,20 +145,20 @@ public:
 		char Buffer[500];
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
-
+		int indexes[32];
+		GetColumnOrderArray(GetHeader().GetItemCount(), indexes);
 		for (int i = 0; i < GetHeader().GetItemCount(); ++i)
 		{
 			if (!NoColumnHeader) {
 				lvCol.mask = LVCF_TEXT;
 				lvCol.pszText = Buffer;
 				lvCol.cchTextMax = sizeof(Buffer);
-
-				GetColumn(i, &lvCol);
+				GetColumn(indexes[i], &lvCol);
 				InfoTip += lvCol.pszText;
 				InfoTip += ": ";
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, i, Buffer, 512);
+			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 512);
 			InfoTip += Buffer;
 			InfoTip += "\r\n";
 		}
@@ -334,8 +332,6 @@ public:
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
-		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, onInfoTip)
-		DEFAULT_REFLECTION_HANDLER()
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -442,20 +438,20 @@ public:
 		char Buffer[500];
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
-
+		int indexes[32];
+		GetColumnOrderArray(GetHeader().GetItemCount(), indexes);
 		for (int i = 0; i < GetHeader().GetItemCount(); ++i)
 		{
 			if (!NoColumnHeader) {
 				lvCol.mask = LVCF_TEXT;
 				lvCol.pszText = Buffer;
 				lvCol.cchTextMax = sizeof(Buffer);
-
-				GetColumn(i, &lvCol);
+				GetColumn(indexes[i], &lvCol);
 				InfoTip += lvCol.pszText;
 				InfoTip += ": ";
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, i, Buffer, 512);
+			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 512);
 			InfoTip += Buffer;
 			InfoTip += "\r\n";
 		}

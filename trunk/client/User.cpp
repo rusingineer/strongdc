@@ -31,7 +31,7 @@
 #include "DebugManager.h"
 #include "HubManager.h"
 #include "QueueManager.h"
-#include "../pme/pme.h"
+#include "../pme-1.0.4/pme.h"
 User::~User() throw() {
 	delete favoriteUser;
 }
@@ -342,7 +342,7 @@ bool User::matchProfile(const string& aString, const string& aProfile) {
 	}
 
 	PME reg(aProfile);
-	if(reg.match(aString) > 0) { return true; }
+	if(reg.match(aString)) { return true; }
 	return false;
 }
 

@@ -163,7 +163,8 @@ public:
 				int q = 0;
 				while(q<s->subItems.size()) {
 					SearchInfo* j = s->subItems[q];
-					ctrlResults.deleteItem(j);
+					if((ctrlResults.findItem(j) == -1) && (j->needDelete))
+						delete j;
 					q++;
 				}
 			}
@@ -171,6 +172,7 @@ public:
 			if(s->main != NULL)
 				s->main->subItems.erase(find(s->main->subItems.begin(), s->main->subItems.end(), s));
 			ctrlResults.deleteItem(i);
+			mainItems.erase(find(mainItems.begin(), mainItems.end(), s));
 		}
 	}
 	

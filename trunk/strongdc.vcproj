@@ -89,13 +89,13 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="4"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
-				FavorSizeOrSpeed="1"
+				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
-				OptimizeForProcessor="3"
+				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
@@ -103,13 +103,13 @@
 				RuntimeLibrary="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
-				UsePrecompiledHeader="3"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="stdafx.h"
 				AssemblerOutput="4"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 				CallingConvention="1"
-				CompileAs="0"/>
+				CompileAs="2"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
