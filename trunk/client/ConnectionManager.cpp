@@ -453,7 +453,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 	if(aSource->getUser()->isOnline()) {
 		// We don't want connections from people claiming to be us
-		if(aNick == aSource->getUser()->getClientNick() && aSource->getUser()->getClient()->getStealth() == false && SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) {
+		if(aNick == aSource->getUser()->getClientNick() && (aSource->getUser()->getClient()->getStealth() == false) && SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) {
 			aSource->error("Fuck You !!!");
 			putConnection(aSource);
 			return;

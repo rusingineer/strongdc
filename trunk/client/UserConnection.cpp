@@ -130,6 +130,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
 			if((temp = strtok(NULL, "\0")) != NULL) {
 				fire(UserConnectionListener::CLock(), this, lock, temp+3);
+			}
 		}
 	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
 		if((temp = strtok((char*)aLine+9, " ")) != NULL) {

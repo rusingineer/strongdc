@@ -32,7 +32,7 @@
 #define SHOWTREE_MESSAGE_MAP 12
 
 class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<UploadQueueFrame, ResourceManager::UPLOAD_QUEUE, IDC_UPLOAD_QUEUE>,
-	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>, private TimerManagerListener, private SettingsManagerListener
+	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
@@ -224,9 +224,8 @@ private:
 		//Lock l(cs);
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
-	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw() {
-		Lock l(UploadManager::getInstance()->cs);
+
+	virtual void on(UploadManagerListener::QueueUpdate) throw() {
 		PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL);
 	}
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();

@@ -107,7 +107,6 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	UpdateLayout();
 
 	UploadManager::getInstance()->addListener(this);
-	TimerManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 	// Load all searches
 	LoadAll();
@@ -119,9 +118,8 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		UploadManager::getInstance()->removeListener(this);
-		CZDCLib::setButtonPressed(IDC_UPLOAD_QUEUE, false);
-		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
+		CZDCLib::setButtonPressed(IDC_UPLOAD_QUEUE, false);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;

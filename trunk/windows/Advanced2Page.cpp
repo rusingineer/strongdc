@@ -22,6 +22,7 @@
 
 #include "Advanced2Page.h"
 #include "../client/SettingsManager.h"
+#include "../client/File.h"
 #include "WinUtil.h"
 
 PropPage::TextItem Advanced2Page::texts[] = {

@@ -30,28 +30,32 @@
 #include "ClientManagerListener.h"
 #include "File.h"
 #include "FastAlloc.h"
+#include "MerkleTree.h"
 
 class Upload : public Transfer, public Flags {
 public:
 	enum Flags {
 		FLAG_USER_LIST = 0x01,
 		FLAG_TTH_LEAVES = 0x02,
-		FLAG_ZUPLOAD = 0x04
+		FLAG_ZUPLOAD = 0x04,
+		FLAG_PARTIAL_LIST = 0x08
 	};
 
 	typedef Upload* Ptr;
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
 	
-	Upload() : file(NULL) { };
+	Upload() : tth(NULL), file(NULL) { };
 	virtual ~Upload() { 
 		delete file;
+		delete tth;
 	};
 
 	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); };
 	
 	GETSET(string, fileName, FileName);
 	GETSET(string, localFileName, LocalFileName);
+	GETSET(TTHValue*, tth, TTH);
 	GETSET(InputStream*, file, File);
 };
 
@@ -67,6 +71,7 @@ public:
 	typedef X<4> QueueAdd;
 	typedef X<5> QueueRemove;
 	typedef X<6> QueueItemRemove;
+	typedef X<7> QueueUpdate;
 
 	virtual void on(Starting, Upload*) throw() { };
 	virtual void on(Tick, const Upload::List&) throw() { };
@@ -75,6 +80,7 @@ public:
 	virtual void on(QueueAdd, UploadQueueItem*) throw() { };
 	virtual void on(QueueRemove, const User::Ptr&) throw() { };
 	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { };
+	virtual void on(QueueUpdate) throw() { };
 
 };
 
@@ -253,7 +259,6 @@ public:
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
 
-	CriticalSection cs;
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
@@ -266,6 +271,7 @@ private:
 		   mByteSlice;
 
 	Upload::List uploads;
+	CriticalSection cs;
 
 	typedef HASH_MAP<User::Ptr, u_int32_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
@@ -307,7 +313,7 @@ private:
 	virtual void on(Command::GET, UserConnection*, const Command&) throw();
 
 	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
-	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool adc);
+	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes);
 };
 
 #endif // !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)

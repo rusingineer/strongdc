@@ -135,7 +135,7 @@ public:
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		if(tth != NULL)
-			HashManager::getInstance()->getTree(aTarget, tth, tiger);
+			HashManager::getInstance()->getTree(*tth, tiger);
 	};
 
 	QueueItem(const QueueItem& rhs) : 

@@ -755,7 +755,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	string speedDescription = "";
 
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
-		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"] ";
+		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
 
 	if((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
@@ -777,12 +777,14 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		if (connection == "Wireless") { connection = "Satellite"; }
 
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K] ";
+			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
 		}
 	}
 
+	string description = speedDescription+getDescription();
+
 	string myInfoA = 
-		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
+		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(description, false)) + 
 		extendedtag +
 		">$ $" + connection + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
 	string myInfoB = ShareManager::getInstance()->getShareSizeString() + "$|";

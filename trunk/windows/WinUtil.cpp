@@ -1021,7 +1021,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 	return true;
 }
 
-void WinUtil::bitziLink(TTHValue* aHash) {
+void WinUtil::bitziLink(const TTHValue* aHash) {
 	// to use this free service by bitzi, we must not hammer or request information from bitzi
 	// except when the user requests it (a mass lookup isn't acceptable), and (if we ever fetch
 	// this data within DC++, we must identify the client/mod in the user agent, so abuse can be 
@@ -1031,13 +1031,13 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	}
 }
 
- void WinUtil::copyMagnet(TTHValue* aHash, const tstring& aFile, int64_t aSize) {
+ void WinUtil::copyMagnet(const TTHValue* aHash, const tstring& aFile, int64_t aSize) {
 	if(aHash != NULL && !aFile.empty()) {
 		setClipboard(Text::toT("magnet:?xt=urn:tree:tiger:" + aHash->toBase32() + "&xl=" + Util::toString(aSize) + "&dn=" + Util::encodeURI(Text::fromT(aFile))));
 	}
 }
 
- void WinUtil::searchHash(TTHValue* aHash) {
+ void WinUtil::searchHash(const TTHValue* aHash) {
 	 if(aHash != NULL) {
 		SearchFrame::openWindow(Text::toT(aHash->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_TTH);
  	}

@@ -27,7 +27,7 @@
 
 #include "../pme-1.0.4/pme.h"
 
-SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, TTHValue* aTTH, bool aUtf8) :
+SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH, bool aUtf8) :
 file(aFile), hubName(aClient->getName()), hubIpPort(aClient->getIpPort()), user(aClient->getMe()), 
 size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
 tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), utf8(aUtf8), ref(1) { }
