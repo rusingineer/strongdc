@@ -181,7 +181,7 @@ private:
 
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
-			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
+			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
 			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0), pocetSegmentu(0),
 			compressRatio(1.0)

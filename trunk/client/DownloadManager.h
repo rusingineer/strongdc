@@ -145,6 +145,7 @@ public:
 
 	int64_t bytesLeft;
 	int64_t quickTick;
+	bool finished;
 private:
 	Download(const Download&);
 
