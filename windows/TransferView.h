@@ -327,6 +327,8 @@ private:
 			return 0;
 		}
 
+		int imageIndex[COLUMN_LAST];
+
 		bool canDisplayUpper();
 	};
 

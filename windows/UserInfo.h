@@ -33,24 +33,23 @@ friend struct CompareItems;
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
 public:
 	enum {
-		COLUMN_FIRST, 
+		COLUMN_FIRST,
 		COLUMN_NICK = COLUMN_FIRST, 
 		COLUMN_SHARED, 
 		COLUMN_EXACT_SHARED, 
 		COLUMN_DESCRIPTION, 
 		COLUMN_TAG,
-		COLUMN_CONNECTION,
-		COLUMN_UPLOAD_SPEED,
+		COLUMN_CONNECTION, 
 		COLUMN_EMAIL, 
 		COLUMN_CLIENTID, 
 		COLUMN_VERSION, 
 		COLUMN_MODE, 
 		COLUMN_HUBS, 
-		COLUMN_SLOTS, 
-		COLUMN_ISP,
-		COLUMN_IP,
-		COLUMN_PK,
-		COLUMN_LOCK,
+		COLUMN_SLOTS,
+		COLUMN_UPLOAD_SPEED, 
+		COLUMN_IP, COLUMN_ISP, 
+		COLUMN_PK, 
+		COLUMN_LOCK, 
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
@@ -59,6 +58,7 @@ public:
 	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
+	int imageIndex[COLUMN_LAST];
 
 	void update();
 

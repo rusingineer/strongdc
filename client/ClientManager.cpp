@@ -263,7 +263,7 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 		aUser->unsetFlag(User::FIREBALL);
 
 		aUser->unCacheClientInfo();
-		QueueManager::getInstance()->removeTestSUR(aUser->getNick());
+		//QueueManager::getInstance()->removeTestSUR(aUser->getNick());
 
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);

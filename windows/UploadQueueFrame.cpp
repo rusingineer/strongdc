@@ -561,15 +561,20 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
-		if(cd->iSubItem == COLUMN_TRANSFERRED) {
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = headerBuf;
+		lvc.cchTextMax = 128;
+		ctrlList.GetColumn(cd->iSubItem, &lvc);
+		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_TRANSFERRED])) == 0 ) {
 			// draw something nice...
 				TCHAR buf[256];
 				UploadQueueItem *ii = (UploadQueueItem*)cd->nmcd.lItemlParam;
 
-				ctrlList.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_TRANSFERRED, buf, 255);
+				ctrlList.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
 				buf[255] = 0;
 
-				ctrlList.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_TRANSFERRED, LVIR_BOUNDS, rc);
+				ctrlList.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 				// Real rc, the original one.
 				CRect real_rc = rc;
 				// We need to offset the current rc to (0, 0) to paint on the New dc

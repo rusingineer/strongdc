@@ -259,38 +259,39 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 	vector<unsigned char> buf;
     buf.reserve(iBlockSize);
 
-	//Lock l(hMutex);
-
-    // This is only called when download finish
-    // Because buffer is used during download, the disk data maybe incorrect
-    dcassert(vecFreeBlocks.empty() && vecRunBlocks.empty());
-
 	// Convert to unverified blocks
     map<int64_t, int64_t> unVerifiedBlocks;
+	vector<int64_t> CorruptedBlocks;
 	int64_t start = 0;
 
-	if(!BOOLSETTING(CHECK_UNVERIFIED_ONLY)) {
-		unVerifiedBlocks.insert(make_pair(start, iFileSize));
-		mapVerifiedBlocks.clear();
-	} else {
-	    for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-        									i != mapVerifiedBlocks.end();
-        	                                i++)
-		{
-			if(i->first > start){
-    	        dcassert((i->first - start) % iBlockSize == 0);
+	{
+		Lock l(hMutex);
 
-	            unVerifiedBlocks.insert(make_pair(start, i->first));
-        	}else{
-    	        dcassert(start == 0);
-	        }
+		// This is only called when download finish
+		// Because buffer is used during download, the disk data maybe incorrect
+  		_ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());
 
-			start = i->second;
+		if(!BOOLSETTING(CHECK_UNVERIFIED_ONLY)) {
+			unVerifiedBlocks.insert(make_pair(start, iFileSize));
+			mapVerifiedBlocks.clear();
+		} else {
+		    for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
+												i != mapVerifiedBlocks.end();
+        		                                i++)
+			{
+				if(i->first > start){
+    		        dcassert((i->first - start) % iBlockSize == 0);
+
+		            unVerifiedBlocks.insert(make_pair(start, i->first));
+				}
+
+				start = i->second;
 	
-		}
+			}
 
-		if(start < iFileSize)
-	        unVerifiedBlocks.insert(make_pair(start, iFileSize));
+			if(start < iFileSize)
+		        unVerifiedBlocks.insert(make_pair(start, iFileSize));
+		}
 	}
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
@@ -323,48 +324,24 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			// Fail!
         	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / iBlockSize)]))
         	{
-	       		if(!vecFreeBlocks.empty() && *(vecFreeBlocks.rbegin()) == start)
+	       		if(!CorruptedBlocks.empty() && *(CorruptedBlocks.rbegin()) == start)
 	        	{
-	                *(vecFreeBlocks.rbegin()) = end;
-	            }
-	            else{
-	        		vecFreeBlocks.push_back(start);
-	        		vecFreeBlocks.push_back(end);
+	                *(CorruptedBlocks.rbegin()) = end;
+	            } else {
+	        		CorruptedBlocks.push_back(start);
+	        		CorruptedBlocks.push_back(end);
 	            }
 
 				iDownloadedSize -= (end - start);
         	}else{
-				map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-
-				for(; i != mapVerifiedBlocks.end(); i++) {
-					if(i->second == start){
-						i->second = end;
-						break;
-					}
-				}
-
-				if(i == mapVerifiedBlocks.end())
-					i = mapVerifiedBlocks.insert(make_pair(start, end)).first;
-
-				for(map<int64_t, int64_t>::iterator j = mapVerifiedBlocks.begin();
-        											j != mapVerifiedBlocks.end();
-										            j++) {
-					if(j->first == end) {
-						i->second = j->second;
-						mapVerifiedBlocks.erase(j);
-						break;
-					}
-				}
-
-				iVerifiedSize += (end - start);
-        	}
+        		MarkVerifiedBlock(start, end);
+			}
 			DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), sFilename, end);
-		}
-
-		dcassert(end == i->second);
+    	}
     }
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+
 	if(vecFreeBlocks.empty()){
 		dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
 
@@ -375,6 +352,9 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 
         return true;
     }
+
+	Lock l(hMutex);
+	copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
 
 	// double smallest size when last verify failed
 	iSmallestBlockSize = min<int64_t>(iSmallestBlockSize * 2, iBlockSize);

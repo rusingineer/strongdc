@@ -45,10 +45,9 @@ public:
 		dcassert(counter==0);
 		DeleteCriticalSection(&cs);
 	}
-	CRITICAL_SECTION cs;
 private:
 	dcdrun(long counter;);
-
+	CRITICAL_SECTION cs;
 #else
 public:
 	CriticalSection() throw() {
@@ -117,30 +116,8 @@ private:
 	LockBase& operator=(const LockBase&);
 	T& cs;
 };
+typedef LockBase<CriticalSection> Lock;
 typedef LockBase<FastCriticalSection> FastLock;
-
-template<class T>
-class SafeLockBase {
-public:
-	SafeLockBase(T& aCs) throw() : cs(aCs), entered(true) {
-		if(cs.cs.OwningThread != (HANDLE) GetCurrentThreadId()) {
-			entered = true;
-			cs.enter();
-		} else {
-			entered = false;
-		}
-	};
-	~SafeLockBase() throw() {
-		if(entered) {
-			cs.leave();
-		}
-	};
-private:
-	SafeLockBase& operator=(const SafeLockBase&);
-	T& cs;
-	bool entered;
-};
-typedef SafeLockBase<CriticalSection> Lock;
 
 template<class T = CriticalSection>
 class RWLock

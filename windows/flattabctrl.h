@@ -86,11 +86,8 @@ public:
 			moving = NULL;
 		delete ti;
 		tabs.erase(i);
-		WindowIter foundTab = find(viewOrder.begin(), viewOrder.end(), aWnd);
-		dcassert(foundTab != viewOrder.end());
-		if (foundTab != viewOrder.end())
-			viewOrder.erase(foundTab);
-
+		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
+		viewOrder.erase(find(viewOrder.begin(), viewOrder.end(), aWnd));
 		nextTab = viewOrder.end();
 		if(!viewOrder.empty())
 			--nextTab;

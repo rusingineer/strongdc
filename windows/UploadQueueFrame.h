@@ -38,9 +38,12 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
 	UploadQueueFrame() : showTree(true), closed(false), usingUserMenu(false), 
-		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) {
+		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP)
+	{
+			headerBuf = new TCHAR[128];
 	}
 	virtual ~UploadQueueFrame() {
+		delete[] headerBuf;
 	}
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
@@ -194,6 +197,7 @@ private:
 	bool showTree;
 	bool closed;
 	bool usingUserMenu;
+	TCHAR * headerBuf;
 	
 	User::List UQFUsers;
 

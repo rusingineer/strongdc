@@ -111,6 +111,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 			}
 			return 0;
 		}
+
 		enum {
 			COLUMN_FIRST,
 			COLUMN_FILE = COLUMN_FIRST,
@@ -123,7 +124,8 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 			COLUMN_WAITING,
 			COLUMN_LAST
 		};
-
+		
+		int imageIndex[COLUMN_LAST];
 		void update();
 
 		User::Ptr User;
@@ -315,7 +317,7 @@ private:
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();
-	virtual void on(Get, UserConnection*, const string&, int64_t, int64_t) throw();
+	virtual void on(Get, UserConnection*, const string&, int64_t) throw();
 	virtual void on(GetBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, false); }
 	virtual void on(GetZBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, true); }
 	virtual void on(Send, UserConnection*) throw();

@@ -289,6 +289,7 @@ private:
 				}
 			}
 		}
+		int imageIndex[COLUMN_LAST];
 
 	private:
 		tstring columns[COLUMN_LAST];

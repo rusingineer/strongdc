@@ -70,7 +70,7 @@ public:
 	virtual void on(CLock, UserConnection*, const string&, const string&) throw() { }
 	virtual void on(Key, UserConnection*, const string&) throw() { }
 	virtual void on(Direction, UserConnection*, const string&, const string&) throw() { }
-	virtual void on(Get, UserConnection*, const string&, int64_t, int64_t) throw() { }
+	virtual void on(Get, UserConnection*, const string&, int64_t) throw() { }
 	virtual void on(GetBlock, UserConnection*, const string&, int64_t, int64_t) throw() { }
 	virtual void on(GetZBlock, UserConnection*, const string&, int64_t, int64_t) throw() { }
 	virtual void on(Sending, UserConnection*, int64_t) throw() { }
@@ -177,7 +177,6 @@ public:
 	static const string FEATURE_ZLIB_GET;
 	static const string FEATURE_TTHL;
 	static const string FEATURE_TTHF;
-	static const string FEATURE_CHUNK;
 	
 	static const string FILE_NOT_AVAILABLE;
 	

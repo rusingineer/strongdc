@@ -300,6 +300,7 @@ private:
 				default: return Util::stricmp(a->getDisplay()->columns[col], b->getDisplay()->columns[col]);
 			}
 		}
+		int imageIndex[COLUMN_LAST];
 
 		const tstring& getTargetFileName() { return getDisplay()->columns[COLUMN_TARGET]; }
 

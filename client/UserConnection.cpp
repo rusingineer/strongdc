@@ -30,7 +30,6 @@ const string UserConnection::FEATURE_ADCGET = "ADCGet";
 const string UserConnection::FEATURE_ZLIB_GET = "ZLIG";
 const string UserConnection::FEATURE_TTHL = "TTHL";
 const string UserConnection::FEATURE_TTHF = "TTHF";
-const string UserConnection::FEATURE_CHUNK = "CHUNK";
 
 const string UserConnection::FILE_NOT_AVAILABLE = "File Not Available";
 
@@ -80,88 +79,96 @@ again:
 	}
 	char *temp;
 	if(strncmp(aLine+1, "MyNick ", 7) == 0) {
-		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
-			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(temp));
+		aLine += 8;
+		if(aLine+8 != NULL)
+			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine));
 	} else if(strncmp(aLine+1, "Direction ", 10) == 0) {
-		char *temp1 = strtok((char*)aLine+11, " ");
-		if(temp1 != NULL && (temp = strtok(NULL, "\0")) != NULL) {
-			fire(UserConnectionListener::Direction(), this, temp1, temp);
+		aLine += 11;
+		if(aLine == NULL) return;
+
+		if((temp = strchr(aLine, ' ')) != NULL) {
+			temp[0] = NULL, temp += 1;
+			if(aLine == NULL || temp == NULL) return;
+
+			fire(UserConnectionListener::Direction(), this, aLine, temp);
 		}
 	} else if(strncmp(aLine+1, "Error ", 6) == 0) {
-		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
-			return;
+		aLine += 7;
+		if(aLine == NULL) return;
 
-		if(stricmp(temp, FILE_NOT_AVAILABLE.c_str()) == 0 || 
-			strstr(temp, /*path/file*/" no more exists") != 0) {
+		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
+			strstr(aLine, " no more exists") != 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
-			fire(UserConnectionListener::Failed(), this, temp);
+			fire(UserConnectionListener::Failed(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
-		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
-			int64_t size = _atoi64(temp);
-			fire(UserConnectionListener::FileLength(), this, size);
+		aLine += 12;
+		if(aLine != NULL) {
+			fire(UserConnectionListener::FileLength(), this, _atoi64(aLine));
 		}
 	} else if(strcmp(aLine+1, "GetListLen") == 0) {
 		fire(UserConnectionListener::GetListLength(), this);
 	} else if(strncmp(aLine+1, "Get ", 4) == 0) {
-		char *temp = strtok((char*)aLine+5, "\0");
+		aLine += 5;
+		if(aLine == NULL) return;
 
-		if((temp = strtok((char*)temp, "$")) == NULL)
-			return;
+		if((temp = strchr(aLine, '$')) != NULL)  {
+			temp[0] = NULL; temp += 1;
+			if(aLine == NULL || temp == NULL) return;
 
-		string name = temp;
-
-		if((temp = strtok(NULL, "$")) == NULL)
-			return;
-
-		int64_t start = _atoi64(temp);
-		int64_t bytes = -1;
-
-		if((temp = strtok(NULL, "\0")) != NULL)
-			bytes = _atoi64(temp);
-
-		fire(UserConnectionListener::Get(), this, Text::acpToUtf8(name), start - (int64_t)1, bytes);
-	//}
+			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
+		}
 	} else if(strncmp(aLine+1, "GetZBlock ", 10) == 0) {
-		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
-			processBlock(temp, 1);
+		aLine += 11;
+		if(aLine != NULL) {
+			processBlock(aLine, 1);
 		}
 	} else if(strncmp(aLine+1, "UGetZBlock ", 11) == 0) {
-		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
-			processBlock(temp, 2);
+		aLine += 12;
+		if(aLine != NULL) {
+			processBlock(aLine, 2);
 		}
 	} else if(strncmp(aLine+1, "UGetBlock ", 10) == 0) {
-		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
-			processBlock(temp, 3);
+		aLine += 11;
+		if(aLine != NULL) {
+			processBlock(aLine, 3);
 		}
 	} else if(strncmp(aLine+1, "Key ", 4) == 0) {
-		if((temp = strtok((char*)aLine+5, "\0")) != NULL) {
-			fire(UserConnectionListener::Key(), this, temp);
+		aLine += 5;
+		if(aLine != NULL) {
+			fire(UserConnectionListener::Key(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
-		char *lock;
-		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
-			if((temp = strtok(((char*)aLine+6+strlen(lock)+4), "\0")) != NULL) {
-				fire(UserConnectionListener::CLock(), this, lock, temp);
-			}
-		}
-	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
-		if((temp = strtok((char*)aLine+9, " ")) != NULL) {
-			int64_t bytes = _atoi64(temp);
-			fire(UserConnectionListener::Sending(), this, bytes);
+		aLine += 6;
+		if(aLine == NULL) return;
+
+		if((temp = strchr(aLine, ' ')) != NULL) {
+			temp[0] = NULL; temp += 1;
+			if(aLine == NULL || temp == NULL) return; 
+
+			fire(UserConnectionListener::CLock(), this, aLine, temp);
+		} else {
+			fire(UserConnectionListener::CLock(), this, aLine, Util::emptyString);
 		}
 	} else if(strcmp(aLine+1, "Send") == 0) {
 		fire(UserConnectionListener::Send(), this);
+	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
+		aLine += 9;
+		if(aLine != NULL) {
+			fire(UserConnectionListener::Sending(), this, _atoi64(aLine));
+		}
 	} else if(strcmp(aLine+1, "MaxedOut") == 0) {
 		fire(UserConnectionListener::MaxedOut(), this);
 	} else if(strncmp(aLine+1, "Supports ", 9) == 0) {
-		if((temp = strtok((char*)aLine+10, "\0")) != NULL) {
-			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(temp, ' ').getTokens());
+		aLine += 10;
+		if(aLine != NULL) {
+			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine, ' ').getTokens());
 		}
 	} else if(strncmp(aLine+1, "ListLen ", 8) == 0) {
-		if((temp = strtok((char*)aLine+9, "\0")) != NULL) {
-			fire(UserConnectionListener::ListLength(), this, temp);
+		aLine += 9;
+		if(aLine != NULL) {
+			fire(UserConnectionListener::ListLength(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "ADC", 3) == 0) {
 		dispatch(aLine, true);
@@ -173,35 +180,38 @@ again:
 }
 
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
-		setState(STATE_UNCONNECTED);
+	setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
 }
 
 void UserConnection::processBlock(const char* param, int type) throw() {
-	char *temp;
-		if((temp = strtok((char*)param, " ")) == NULL)
-			return;
+	char *temp, *temp1;
+	if((temp = strchr(param, ' ')) == NULL) return;
 
-		int64_t start = _atoi64(temp);
-		if(start < 0) {
-			disconnect();
-			return;
-		}
-		if((temp = strtok(NULL, " ")) == NULL)
-			return;
+	temp[0] = NULL; temp += 1;
+	if(param == NULL || temp == NULL) return;
 
-		int64_t bytes = _atoi64(temp);
-		if((temp = strtok(NULL, "\0")) == NULL)
-			return;
+	int64_t start = _atoi64(param);
+	if(start < 0) {
+		disconnect();
+		return;
+	}
 
-		string name = temp;
-		if(type == 2 || type == 3)
-		Text::acpToUtf8(name);
-		if(type == 3) {
-			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
-		} else {
-			fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
-		}
+	if((temp1 = strchr(temp, ' ')) == NULL) return;
+
+	temp1[0] = NULL; temp1 += 1;
+	if(temp == NULL || temp1 == NULL) return;
+
+	int64_t bytes = _atoi64(temp);
+
+	string name = temp1;
+	if(type == 2 || type == 3)
+	Text::acpToUtf8(name);
+	if(type == 3) {
+		fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
+	} else {
+		fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
+	}
 }
 
 /**
