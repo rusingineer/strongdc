@@ -702,7 +702,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			MainFrame::getMainFrame()->ShowBalloonTip((*x).c_str(), CTSTRING(CHEATING_USER));
 		}
 
-		addLine(_T("*** ") + *x,cf);
+		addLine(*x,cf);
 		delete x;
 	} else if(wParam == DISCONNECTED) {
 		clearUserList();
@@ -887,7 +887,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			HubManager::getInstance()->updateRecent(r);
 		}
 		TimerManager::getInstance()->removeListener(this);
-			SettingsManager::getInstance()->removeListener(this);
+		SettingsManager::getInstance()->removeListener(this);
 		client->removeListener(this);
 		client->disconnect();
 	
@@ -1673,7 +1673,7 @@ void HubFrame::on(SearchFlood, Client*, const string& line) throw() {
 	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line);
 }
 void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
-	speak(CHEATING_USER, STRING(USER)+" "+line);
+	speak(CHEATING_USER, line);
 }
 
 void HubFrame::addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat /* = true */) {
@@ -1717,15 +1717,6 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 			user->setRealBytesShared(realSize);
 			bool isFakeSharing = false;
 			
-			PME reg("^0.403");
-			if(reg.match(user->getVersion()) && dl->detectRMDC403B7()) {
-				user->setCheat("rmDC++ 0.403B[7] with DC++ emulation" , true);
-				user->setClientType("rmDC++ 0.403B[7]");
-				user->setBadClient(true);
-				user->setBadFilelist(true);
-				return true;
-			}
-
 			if((user->getVersion() == "0.403") && dl->detectRMDC403D1()) {
 				user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
 				user->setClientType("rmDC++ 0.403D[1]");

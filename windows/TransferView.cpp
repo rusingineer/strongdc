@@ -729,7 +729,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 
 			if(i->upper != NULL) {
 				if(i->qi) {
-					if(i->qi->getActiveSegments().size() < 1) {
+					if((i->qi->getActiveSegments().size() < 1) && (!i->upper->finished)) {
 						i->upper->status = i->status;
 						i->upper->statusString = i->statusString;
 					}
@@ -802,7 +802,7 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			i->oldTarget = i->Target;
 
 			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-			if((i->upper != NULL) && (pocetSegmentu < 1)) {
+			if((i->upper != NULL) && (pocetSegmentu < 1)  && (!i->upper->finished)) {
 				i->upper->statusString = Text::toT(aReason);
 			}
 		}
@@ -1011,7 +1011,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 			if(i->qi) {
 				i->upper->qi = i->qi;
-				if(i->qi->getCurrents().size() <= 1) {
+				if((i->qi->getCurrents().size() <= 1) && (!i->upper->finished)) {
 					i->upper->status = ItemInfo::STATUS_WAITING;
 					i->upper->statusString = Text::toT(aReason);
 				}

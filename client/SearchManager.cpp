@@ -235,10 +235,6 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		string nick = Text::acpToUtf8(x.substr(i, j-i));
 	i = j + 1;
 
-	if (!address.empty()) {
-		ClientManager::getInstance()->setIPNick(address, nick);
-	}
-
 	// A file has 2 0x05, a directory only one
 	size_t cnt = count(x.begin() + j, x.end(), 0x05);
 
@@ -299,30 +295,36 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 
 	file = Util::replace(file, "\\\\", "\\");
 
-/*	if((user->getVersion() == "0.403") && (user->getClientType() != "rmDC++ 0.403D[1]")) {
-		string path(file);
-		path = path.substr(0, path.find("\\"));
-		PME reg("([A-Z])");
-		if(reg.match(path)) {
-			user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
-			user->setClientType("rmDC++ 0.403D[1]");
-			user->setBadClient(true);
-		}
-	}*/
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 		file, hubName, hubIpPort, address, false);
-	//fire(SearchManagerListener::SR(), sr);
-	Lock l(cs);
-	seznam.push_back(sr);
+
+	{
+		Lock l(cs);
+		seznam.push_back(sr);
+	}
 	
 }
 
-void SearchManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
+void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	Lock l(cs);
 	for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
-		Thread::sleep(0);
-		fire(SearchManagerListener::SR(), *i);
-		(*i)->decRef();
+		SearchResult* sr = *i;
+		if (!sr->getIP().empty()) {
+			ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
+		}
+
+		if((sr->user->getVersion() == "0.403") && (sr->user->getClientType() != "rmDC++ 0.403D[1]")) {
+			string path(sr->file);
+			path = path.substr(0, path.find("\\"));
+			PME reg("([A-Z])");
+			if(reg.match(path)) {
+				sr->user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+				sr->user->setClientType("rmDC++ 0.403D[1]");
+				sr->user->setBadClient(true);
+			}
+		}
+		fire(SearchManagerListener::SR(), sr);
+		sr->decRef();
 	}
 	seznam.clear();
 }

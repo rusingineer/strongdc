@@ -936,8 +936,7 @@ noCRC:
 				FileChunksInfo::Free(d->getTempTarget());
 				removeDownload(d, true);
 
-				new FileChunksInfo(tempTarget, size, &v);
-
+				q->setFileChunksInfo(new FileChunksInfo(tempTarget, size, &v));
 				checkDownloads(aSource, reconn);
 				return;
 			}

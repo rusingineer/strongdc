@@ -469,7 +469,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 					host = e.getError();
 				} catch (...) {
 				}
-				ClientManager::getInstance()->setIPNick(ip, aNick);
+				ClientManager::getInstance()->setIPNick(ip, aSource->getUser());
 				aSource->getUser()->setHost(host);
 				User::updated(aSource->getUser());
 			}
