@@ -52,7 +52,7 @@ string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = fals
 				while( (i = aString.find('\n', i) ) != string::npos) {
 					if(aString[i-1] != '\r')
 						aString.insert(i, 1, '\r');
-						
+					
 						i+=2;
 					}
 				}
@@ -171,7 +171,7 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 		if(tmp[j+1] != '"' && tmp[j+1] != '\'') {
 			throw SimpleXMLException("Invalid character after '=' in " + name);
 		}
-	
+
 		string::size_type x = j + 2;
 		string::size_type y;
 		if((y = tmp.find(tmp[j+1], x)) == string::npos) {
@@ -188,18 +188,20 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 	}
 }
 
-string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, string::size_type start, bool inTag) throw(SimpleXMLException) {
+string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, string::size_type start, int depth) throw(SimpleXMLException) {
 	string::size_type i = start;
 	string::size_type j;
 
 	bool hasChildren = false;
-	
+
 	for(;;) {
 		if((j = tmp.find('<', i)) == string::npos) {
-			if(inTag) {
+			if(depth > 0) {
 				throw SimpleXMLException("Missing end tag in " + n);
 			}
 			return tmp.size();
+		} else if(depth > maxNesting) {
+			throw SimpleXMLException("Too many nested tags (depth >" + Util::toString(maxNesting) + ")");
 		}
 
 		// Check that we have at least 3 more characters as the shortest valid xml tag is <a/>...
@@ -224,7 +226,7 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 			i = j + 2;
 			continue;
 		}
-		
+
 		if(tmp[i] == '!' && tmp[i+1] == '-' && tmp[i+2] == '-') {
 			// <!-- comment -->, ignore...
 			if((j = tmp.find("-->", i)) == string::npos) {
@@ -257,7 +259,7 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 		if((j = tmp.find_first_of(" />", i)) == string::npos) {
 			throw SimpleXMLException("Missing '>' in " + n);
 		}
-		
+
 		string name = tmp.substr(i, j-i);
 		hasChildren = true;
 		if(tmp[j] == ' ') {
@@ -275,7 +277,7 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 		if(tmp[j] == '>') {
 			// This is a real tag with data etc...
 			cb->startTag(name, attribs, false);
-			j = fromXML(tmp, name, j+1, true);
+			j = fromXML(tmp, name, j+1, depth+1);
 			cb->endTag(name, data);
 			} else {
 			// A simple tag (<xxx/>

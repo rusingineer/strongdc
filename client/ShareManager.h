@@ -68,7 +68,7 @@ public:
 	void search(SearchResult::List& l, const StringList& params, Client* aClient, StringList::size_type maxResults);
 
 	StringPairList getDirectories() const { RLock l(cs); return virtualMap; }
-		
+
 	int64_t getShareSize() throw();
 	int64_t getShareSize(const string& aDir) throw();
 
@@ -79,11 +79,13 @@ public:
 	string getListLenString() { return Util::toString(getListLen()); };
 	
 	SearchManager::TypeModes getType(const string& fileName);
-	
+
+	string validateVirtual(const string& /*aVirt*/);
+
 	void addHits(u_int32_t aHits) {
 		hits += aHits;
 	}
-	
+
 	string getOwnListFile() {
 		generateXmlList();
 		return getBZXmlFile();
@@ -174,10 +176,10 @@ private:
 
 		void search(SearchResult::List& aResults, StringSearch::List& aStrings, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults) throw();
 		void search(SearchResult::List& aResults, AdcSearch& aStrings, Client* aClient, StringList::size_type maxResults) throw();
-		
+
 		void toNmdc(string& nmdc, string& indent, string& tmp2);
 		void toXml(OutputStream& xmlFile, string& indent, string& tmp2);
-		
+
 		File::Iter findFile(const string& aFile) { return find_if(files.begin(), files.end(), Directory::File::StringComp(aFile)); }
 
 		GETSET(string, name, Name);
@@ -191,7 +193,7 @@ private:
 
 	};
 	friend class Directory;
-	
+
 	friend class Singleton<ShareManager>;
 	ShareManager();
 	
@@ -266,7 +268,6 @@ private:
 	StringPairIter findVirtual(const string& name);
 	/** Find real name from virtual name */
 	StringPairIter lookupVirtual(const string& name);
-	string validateVirtual(const string& /*aVirt*/);
 
 	bool checkFile(const string& aDir, const string& aFile);
 	Directory* buildTree(const string& aName, Directory* aParent);

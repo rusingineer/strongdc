@@ -61,8 +61,8 @@ public:
 		NOTIFY_HANDLER(IDC_RESULTS, NM_DBLCLK, onDoubleClickResults)
 		NOTIFY_HANDLER(IDC_RESULTS, LVN_KEYDOWN, onKeyDown)
 		NOTIFY_HANDLER(IDC_RESULTS, NM_CLICK, onLButton)
-		NOTIFY_HANDLER(IDC_RESULTS, NM_CUSTOMDRAW, onCustomDraw)
 		NOTIFY_HANDLER(IDC_HUB, LVN_ITEMCHANGED, onItemChangedHub)
+		NOTIFY_HANDLER(IDC_RESULTS, NM_CUSTOMDRAW, onCustomDraw)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_SETFOCUS, onFocus)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
@@ -81,6 +81,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_SEARCH, onSearch)
+		COMMAND_ID_HANDLER(IDC_SEARCH_PAUSE, onPause)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_PATH, onCopy)
@@ -114,7 +115,6 @@ public:
 
 	SearchFrame() : 
 	searchBoxContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
-		searchInProgress(false),
 		searchContainer(WC_EDIT, this, SEARCH_MESSAGE_MAP), 
 		sizeContainer(WC_EDIT, this, SEARCH_MESSAGE_MAP), 
 		modeContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
@@ -130,8 +130,8 @@ public:
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
-		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0),
-		droppedResults(0), expandSR(false)
+		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0),
+		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(false)
 	{	
 		SearchManager::getInstance()->addListener(this);
 		SettingsManager::getInstance()->addListener(this);
@@ -249,24 +249,8 @@ public:
 	}
 
 	LRESULT onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(searchInProgress == true) {
- 		  stopSearch();
-	 	} else {
-		  onEnter();
-		}
+		onEnter();
  		return 0;
-	}
-
-	void startSearch() {
-		searchInProgress = true;
-		ctrlDoSearch.SetWindowText(CTSTRING(STOP_SEARCH));
-	}
-
-	void stopSearch() {
-		search.clear();
-		searchInProgress = false;
-		ctrlDoSearch.SetWindowText(CTSTRING(SEARCH));
-		ctrlStatus.SetText(1, CTSTRING(SEARCH_STOPPED));
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -292,11 +276,26 @@ public:
 	}
 
 	void SearchFrame::setInitial(const tstring& str, LONGLONG size, SearchManager::SizeModes mode, SearchManager::TypeModes type) {
-		initialString = str; initialSize = size; initialMode = mode; initialType = type;
+		initialString = str; initialSize = size; initialMode = mode; initialType = type; bPaused = false;
+	}
+
+	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(bPaused == true) {
+			bPaused = false;
+			for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
+				PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)(*i));
+			}
+			PausedResults.clear();
+			ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());			
+			ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
+		} else {
+			bPaused = true;
+			ctrlPauseSearch.SetWindowText(CTSTRING(CONTINUE_SEARCH));
+		}
+		return 0;
 	}
 	
 private:
-	bool searchInProgress;
 	class SearchInfo;
 public:
 	TypedListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
@@ -399,6 +398,7 @@ private:
 		}
 
 		static int doCompareItems(SearchInfo* a, SearchInfo* b, int col) {
+
 			switch(col) {
 				case COLUMN_NICK: return Util::stricmp(a->nick, b->nick);
 				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
@@ -575,6 +575,7 @@ private:
 	CComboBox ctrlFiletype;
 	CImageList searchTypes;
 	CButton ctrlDoSearch;
+	CButton ctrlPauseSearch;
 
 	BOOL ListMeasure(HWND hwnd, UINT uCtrlId, MEASUREITEMSTRUCT *mis);
 	BOOL ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis);
@@ -614,7 +615,7 @@ private:
 	TStringList search;
 	StringList targets;
 	StringList wholeTargets;
-
+	SearchInfo::List PausedResults;
 	SearchInfo::List mainItems;
 
 	CEdit ctrlFilter;
@@ -627,6 +628,7 @@ private:
 	bool onlyTTH;
 	bool expandSR;
 	bool isHash;
+	bool bPaused;
 	bool exactSize1;
 	int64_t exactSize2;
 
@@ -668,7 +670,7 @@ private:
 	void insertSubItem(SearchInfo* j, int idx);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
-	
+
 	void speak(Speakers s, Client* aClient) {
 		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getIpPort()), Text::toT(aClient->getName()), aClient->getOp());
 		PostMessage(WM_SPEAKER, WPARAM(s), LPARAM(hubInfo)); 

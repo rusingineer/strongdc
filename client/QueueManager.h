@@ -167,6 +167,17 @@ public:
 	QueueItem* getRunning(const User::Ptr& aUser);
 	void autoDropSource(User::Ptr& aUser, bool remove = true);
 
+	QueueItem::List getRunningFiles() throw() {
+		QueueItem::List ql;
+		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
+			QueueItem* q = i->second;
+			if(q->getStatus() == QueueItem::STATUS_RUNNING) {
+				ql.push_back(q);
+			}
+		}
+		return ql;
+	}
+
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 

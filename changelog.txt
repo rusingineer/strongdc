@@ -53,6 +53,10 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidána podpora protokolu file:// do chatu
 * opraven "Žádný volný blok", když se objevila chyba bìhem dekomprese
 * pøidána EXPERIMENTÁLNÍ volba pro automatické pøepnutí na rychlejšího uživatele na konci souboru
+* pøidána volba pro pøepnutí userlistu do horizontální polohy (DCDM++)
+* v pøenosech je zobrazen skuteèný uplynulý èas
+* pøidáno tlaèítko Pozastavit hledání (CZDC++)
+* pøidána volba pro nastavení maximálního poètu soubìžnì stahovaných souborù (výchozí = 15)
 
 
 	-- StrongDC++ 1.00 RC8 --

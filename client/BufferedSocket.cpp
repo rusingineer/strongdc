@@ -33,17 +33,17 @@
 // Polling is used for tasks...should be fixed...
 #define POLL_TIMEOUT 250
 
-BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) :
+BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) : 
 separator(aSeparator), usesEscapes(aUsesEscapes), escaped(false), port(0), mode(MODE_LINE), 
 dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
 
 	inbuf = new u_int8_t[inbufSize];
 
-		for(int i = 0; i < BUFFERS; i++) {
-			outbuf[i] = new u_int8_t[inbufSize];
-			outbufPos[i] = 0;
-			outbufSize[i] = inbufSize;
-		}
+	for(int i = 0; i < BUFFERS; i++) {
+		outbuf[i] = new u_int8_t[inbufSize];
+		outbufPos[i] = 0;
+		outbufSize[i] = inbufSize;
+	}
 
 	try {
 		start();
@@ -349,9 +349,9 @@ void BufferedSocket::threadRead() {
 						if(*k == '\\') {
 							escaped = !escaped;
 						} else if(*k == separator && !escaped) {
-								pos = k - l.begin();
-								foundSeparator = true;
-								break;
+							pos = k - l.begin();
+							foundSeparator = true;
+							break;
 						} else {
 							escaped = false;
 						}

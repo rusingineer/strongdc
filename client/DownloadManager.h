@@ -206,21 +206,6 @@ public:
 		return avg;
 	}
 
-	int getWholeFileSpeed(string Target, int64_t Speed = 0) {
-	//	Lock l(cs);
-		int64_t whole = 0;
-		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-			Download* d = *i;
-			if(d->getTarget() == Target) {
-				whole += d->getRunningAverage();
-			}
-			if((Speed > 0) && (whole > Speed)) {
-				break;
-			}
-		}
-		return whole;
-	}
-
 	/** @return Number of downloads. */ 
 	size_t getDownloadCount() {
 		Lock l(cs);

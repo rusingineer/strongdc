@@ -287,7 +287,7 @@ private:
 	}
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();

@@ -21,6 +21,69 @@
 
 #include "AdcCommand.h"
 
+void Command::parse(const string& aLine, bool nmdc /* = false */) {
+	string::size_type i = 5;
+
+	if(nmdc) {
+		// "$ADCxxx ..."
+		if(aLine.length() < 7)
+			return;
+		type = Command::TYPE_CLIENT;
+		memcpy(cmd, &aLine[4], 3);
+		i += 3;
+	} else {
+		// "yxxx ..."
+		if(aLine.length() < 4)
+			return;
+		type = aLine[0];
+		memcpy(cmd, &aLine[1], 3);
+	}
+
+	string::size_type len = aLine.length();
+	const char* buf = aLine.c_str();
+	string cur;
+	cur.reserve(128);
+
+	bool toSet = false;
+	bool fromSet = false;
+
+	while(i < len) {
+		switch(buf[i]) {
+		case '\\': i++; cur += buf[i]; break;
+		case ' ': 
+			// New parameter...
+			{
+				if(type == TYPE_DIRECT && !toSet) {
+					to = CID(cur);
+					toSet = true;
+				} else if(!fromSet && type != TYPE_CLIENT) {
+					from = CID(cur);
+					fromSet = true;
+				} else {
+					parameters.push_back(cur);
+				}
+				cur.clear();
+			}
+			break;
+		default:
+			cur += buf[i];
+		}
+		i++;
+	}
+	if(!cur.empty()) {
+		if(!fromSet && type != TYPE_CLIENT) {
+			from = CID(cur);
+			fromSet = true;
+		} else if(type == TYPE_DIRECT && !toSet) {
+			to = CID(cur);
+			toSet = true;
+		} else {
+			parameters.push_back(cur);
+		}
+		cur.clear();
+	}
+}
+
 string Command::toString(bool nmdc /* = false */) const {
 	string tmp;
 	if(nmdc) {
@@ -28,6 +91,7 @@ string Command::toString(bool nmdc /* = false */) const {
 	} else {
 		tmp += getType();
 	}
+
 	tmp += cmdChar;
 	if(getType() != TYPE_CLIENT) {
 		tmp += ' ';
@@ -37,6 +101,7 @@ string Command::toString(bool nmdc /* = false */) const {
 		tmp += ' ';
 		tmp += to.toBase32();
 	}
+
 	for(StringIterC i = getParameters().begin(); i != getParameters().end(); ++i) {
 		tmp += ' ';
 		tmp += escape(*i);
@@ -44,7 +109,7 @@ string Command::toString(bool nmdc /* = false */) const {
 	if(nmdc) {
 		tmp += '|';
 	} else {
-		tmp += '$';
+		tmp += '\n';
 	}
 	return tmp;
 }

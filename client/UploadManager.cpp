@@ -498,17 +498,17 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			// Pokud vznikne priznak Fireball nebo FileServer, posleme ho jednorazove vsem hubum
 			// Nove pripojenym hubum se posle v ramci pripojovani
 			if ( m_boFireball && !boFireballSent ) {
-		ClientManager::getInstance()->infoUpdated(true);
+				ClientManager::getInstance()->infoUpdated(true);
 				boFireballSent = true;
 				boFileServerSent = true; // Zamezime odeslani MyInfo, kdyz FileServer vznikne po FireBall
 			}
 			else if ( m_boFileServer && !boFileServerSent ) {
-		ClientManager::getInstance()->infoUpdated(true);
+				ClientManager::getInstance()->infoUpdated(true);
 				boFileServerSent = true;
 			}
 }
 
-void UploadManager::on(ClientManagerListener::UserUpdated, User::Ptr& aUser) throw() {
+void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
 	if( (!aUser->isOnline()) && 
 		(aUser->isSet(User::QUIT_HUB)) && 
 		(BOOLSETTING(AUTO_KICK)) ){
@@ -521,7 +521,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, User::Ptr& aUser) thr
 				u->getUserConnection()->disconnect();
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(aUser);
+					reserveSlot(u->getUser());
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}

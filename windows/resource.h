@@ -39,6 +39,7 @@
 #define IDC_COPY                        128
 #define IDR_HUB                         129
 #define IDC_PUB_LIST_DROPDOWN           130
+#define IDC_SEARCH_PAUSE                130
 #define IDC_HUBLIST                     131
 #define IDC_OPEN_MY_LIST                132
 #define IDC_SERVER                      133
@@ -192,6 +193,8 @@
 #define IDC_ADD_TO_FAVORITES            1061
 #define IDC_LOG_MAIN_CHAT               1061
 #define IDC_LOG_PRIVATE_CHAT            1062
+#define IDC_SLOTSSPIN2                  1062
+#define IDC_FILESPIN                    1062
 #define IDC_HELP_HOMEPAGE               1063
 #define IDC_LOG_DOWNLOADS               1063
 #define IDC_LOG_UPLOADS                 1064
@@ -310,6 +313,7 @@
 #define IDC_SETTINGS_PUBLIC_HUB_LIST_URL 1152
 #define IDC_SETTINGS_PUBLIC_HUB_LIST_HTTP_PROXY 1153
 #define IDC_SETTINGS_SHARED_DIRECTORIES 1154
+#define IDC_SETTINGS_FILES_MAX          1154
 #define IDC_SETTINGS_SHARE_SIZE         1155
 #define IDC_SETTINGS_UPLOADS_MIN_SPEED  1156
 #define IDC_SETTINGS_UPLOADS_SLOTS      1157
@@ -360,8 +364,6 @@
 #define IDC_SETTINGS_DOWNLOAD_BAR_COLOR 1215
 #define IDC_PREVIEW_EXTENSION           1215
 #define IDC_CHECK1                      1216
-#define IDC_Stealth                     1216
-#define IDC_STEALTH                     1216
 #define IDC_AUTOSEGMENT                 1216
 #define IDC_UPDATEIP                    1216
 #define IDC_SETTINGS_SEGMENT_BAR_COLOR  1216
@@ -607,6 +609,7 @@
 #define IDC_PREVIEW_APPLICATION         2224
 #define IDC_TOOLBAR_HOT_IMAGE           2224
 #define IDC_LIMITER                     2225
+#define IDC_STEALTH                     2226
 #define IDC_BROWSELIST                  3000
 #define IDC_REMOVE_SOURCE               3500
 #define IDC_PM                          4000
@@ -732,7 +735,6 @@
 #define IDC_WINAMP                      10095
 #define IDC_THROTTLE_ENABLE3            10095
 #define IDC_REMOVE_SLOW_USER            10095
-#define IDC_DISCONNECTING_ENABLE2       10095
 #define IDC_SEGMENTED_ONLY              10095
 #define IDC_READD_ALL_SOURCES           10100
 #define IDC_PROGRESS_TEXT_COLOR_DOWN    10102
@@ -819,6 +821,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        292
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1295
-#define _APS_NEXT_SYMED_VALUE           130
+#define _APS_NEXT_SYMED_VALUE           131
 #endif
 #endif

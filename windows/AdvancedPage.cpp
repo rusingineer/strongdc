@@ -91,6 +91,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::SETTINGS_USE_UPNP, ResourceManager::SETTINGS_USE_UPNP },
 	{ SettingsManager::DONT_DL_ALREADY_SHARED, ResourceManager::DONT_DL_ALREADY_SHARED },
 	{ SettingsManager::SETTINGS_USE_CTRL_FOR_LINE_HISTORY, ResourceManager::SETTINGS_USE_CTRL_FOR_LINE_HISTORY },
+	{ SettingsManager::SETTINGS_OPEN_NEW_WINDOW, ResourceManager::SETTINGS_OPEN_NEW_WINDOW },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
