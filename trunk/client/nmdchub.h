@@ -36,6 +36,69 @@
 
 class NmdcHub;
 
+struct Search
+{
+	int aSizeType;
+	int64_t aSize;
+	int aFileType;
+	string aString;
+};
+
+class SearchQueue
+{
+public:
+	bool add(const Search& s, bool _auto)
+	{
+		Lock l(cs);
+		for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++)
+		{
+			if(i->aString == s.aString){
+				if(!_auto){
+					search_queue.erase(i);
+					search_queue.push_front(s);
+					last_search_time -= 28000;
+				}
+				return false;
+			}
+		}
+
+		if(_auto)
+			search_queue.push_back(s);
+		else{
+			search_queue.push_front(s);
+			last_search_time -= 25000;
+		}
+		return true;
+	}
+
+	bool getSearch(Search& s)
+	{
+		Lock l(cs);
+		if(search_queue.empty())
+			return false;
+
+		if(GET_TICK() - last_search_time < 30000) // 15 seconds
+			return false;
+
+		s = search_queue.front();
+		search_queue.pop_front();
+		last_search_time = GET_TICK();
+
+		return true;
+	}
+
+	void clearAll()
+	{
+		Lock l(cs);
+		search_queue.clear();
+	}
+
+private:
+	deque<Search> search_queue;
+	int32_t last_search_time;
+	CriticalSection cs;
+};
+
 class NmdcHubListener  
 {
 public:
@@ -154,7 +217,8 @@ public:
 
 	void info() { myInfo(); }
 
-	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString);
+	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
+	void doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString);
 	
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
@@ -300,9 +364,9 @@ private:
 	bool reconnect;
 	u_int32_t lastUpdate;
 	string lastmyinfo;
+	SearchQueue searchQueue;	
 	bool validatenicksent;
 	int64_t lastbytesshared;
-	bool auto_search;
 	char *dscrptn;
 	int dscrptnlen;
 	

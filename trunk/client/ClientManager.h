@@ -69,12 +69,12 @@ public:
 		return false;
 	}
 	
-	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) {
+	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto) {
 		Lock l(cs);
 
 		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 			if((*i)->isConnected()) {
-				(*i)->search(aSizeMode, aSize, aFileType, aString);
+				(*i)->search(aSizeMode, aSize, aFileType, aString, _auto);
 			}
 		}
 	}

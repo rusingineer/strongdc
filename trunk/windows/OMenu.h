@@ -43,10 +43,10 @@ public:
 	BOOL CreatePopupMenu();
 
 	void InsertSeparator(UINT uItem, BOOL byPosition, const string& caption, bool accels = false);
-	inline void InsertSeparatorFirst(const string& caption, bool accels = false) {
+	inline void InsertSeparatorFirst(const string& caption/*, bool accels = false*/) {
 		InsertSeparator(0, TRUE, caption);
 	}
-	inline void InsertSeparatorLast(const string& caption, bool accels = false) {
+	inline void InsertSeparatorLast(const string& caption/*, bool accels = false*/) {
 		InsertSeparator(GetMenuItemCount(), TRUE, caption);
 	}
 

@@ -12,7 +12,7 @@
 * pøidáno nastavení pro pøepnutí do starého vzhledu sdílení
 * opraveno pøekreslování seznamù ve Win2000
 * filtr hledání se aktivuje až po stisku Enter
-* odstranìna fronta hledání
+* fronta hledání má prodlevu 30 sekund
 * opraven memory leak pøi detekci NetLimiteru
 * opraveno zobrazení ikon v userlistu pøi kontrole uživatele
 * vyhledávací špion nyní podporuje hledání podle TTH
