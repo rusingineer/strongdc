@@ -20,6 +20,9 @@
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 
+#define COMPILE_MULTIMON_STUBS 1
+#include <MultiMon.h>
+
 #include "WinUtil.h"
 #include "PrivateFrame.h"
 #include "SearchFrm.h"
@@ -1347,8 +1350,9 @@ bool WinUtil::parseDBLClick(const tstring& aString, string::size_type start, str
 		(Util::strnicmp(aString.c_str() + start, _T("www."), 4) == 0) ||
 		(Util::strnicmp(aString.c_str() + start, _T("ftp://"), 6) == 0) ||
 		(Util::strnicmp(aString.c_str() + start, _T("irc://"), 6) == 0) ||
-		(Util::strnicmp(aString.c_str() + start, _T("https://"), 8) == 0) ||
-		(Util::strnicmp(aString.c_str() + start, _T("file://"), 7) == 0) )
+		(Util::strnicmp(aString.c_str() + start, _T("https://"), 8) == 0) ||	
+		(Util::strnicmp(aString.c_str() + start, _T("file://"), 7) == 0) ||
+		(Util::strnicmp(aString.c_str() + start, _T("mailto:"), 7) == 0) )
 	{
 
 		openLink(aString.substr(start, end-start));

@@ -40,8 +40,7 @@
 #include <winsock2.h>
 
 // Fix nt4 startup
-//#define COMPILE_MULTIMON_STUBS
-//#include <multimon.h>
+#include <multimon.h>
 
 #include <atlbase.h>
 #include <atlapp.h>
@@ -60,13 +59,10 @@ extern CAppModule _Module;
 
 #define _CMDBAR_EXTRA_TRACE
 #define _WTL_USE_MDI
-#define _WIN32_IE 0x0500
+#define _WIN32_IE 0x0501
 #define WM_SPEAKER (WM_APP + 500)
 
 //{{AFX_INSERT_LOCATION}}
-
-#define _RICHEDIT_VER 0x0200
-
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
 #endif // !defined(AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_)

@@ -24,6 +24,7 @@
 
 #include "ClientManager.h"
 #include "AdcCommand.h"
+#include "LogManager.h"
 
 #include "../pme-1.0.4/pme.h"
 
@@ -237,7 +238,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 
 		// A file has 2 0x05, a directory only one
 		size_t cnt = count(x.begin() + j, x.end(), 0x05);
-	
+		
 		SearchResult::Types type = SearchResult::TYPE_FILE;
 		string file;
 		int64_t size = 0;
@@ -257,13 +258,13 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 			if(j < i + 1) {
 				return;
 			}
-			file = Text::acpToUtf8(x.substr(i, j-i) + '\\');
+			file = x.substr(i, j-i) + '\\';
 		} else if(cnt == 2) {
 			if( (j = x.find((char)5, i)) == string::npos) {
 				return;
 			}
-			file = Text::acpToUtf8(x.substr(i, j-i));
-			i = j + 1;			
+			file = x.substr(i, j-i);
+			i = j + 1;
 			if( (j = x.find(' ', i)) == string::npos) {
 				return;
 			}
@@ -311,9 +312,9 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 			user->setBadClient(true);
 		}
 	}
-	// utf8 = true is a lie, it's not really Unicode, but we have converted all the text from acp to utf8...
+
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-		file, hubName, hubIpPort, address, true);
+		file, hubName, hubIpPort, address, false);
 	fire(SearchManagerListener::SR(), sr);
 		sr->decRef();
 }

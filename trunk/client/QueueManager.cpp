@@ -1520,7 +1520,7 @@ void QueueManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser
 		}
 
 	if(aUser->isOnline() && hasDown)	
-	ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser);
 }
 
 void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
@@ -1528,14 +1528,13 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		Lock l(cs);
 		QueueItem::List um = getRunningFiles();
 
-		for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
-			QueueItem* q = *j;
-			if(BOOLSETTING(REALTIME_QUEUE_UPDATE))
-				fire(QueueManagerListener::StatusUpdated(), q);
+		if(BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
+			for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
+				fire(QueueManagerListener::StatusUpdated(), *j);
+			}
 		}
 		if(!um.empty())
 			setDirty();
-
 	}
 	if((lastSave + SETTING(AUTOSAVE_QUEUE)*1000 + 1000) < aTick) {
 		saveQueue();

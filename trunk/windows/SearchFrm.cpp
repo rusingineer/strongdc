@@ -502,9 +502,10 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 		} else {
 			// match all here
 			for(TStringIter j = search.begin(); j != search.end(); ++j) {
-				if((*j->begin() != _T('-') && Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) ||
-					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
-					) {
+				if((*j->begin() != _T('-') && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(*j)) == -1) ||
+					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(j->substr(1))) != -1)
+					) 
+				{
 					droppedResults++;
 					PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
 					return;
@@ -517,12 +518,18 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	if(onlyFree && aResult->getFreeSlots() < 1)
 		return;
 
-	if(onlyTTH && aResult->getTTH() == NULL)
+	if(onlyTTH && aResult->getTTH() == NULL) {
+		droppedResults++;
+		PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
 		return;
+	}
 
 	if(exactSize1) {			
-		if(aResult->getSize() != exactSize2)
+		if(aResult->getSize() != exactSize2) {
+			droppedResults++;
+			PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
 			return;
+		}
 	}
 
 	SearchInfo* i = new SearchInfo(aResult);

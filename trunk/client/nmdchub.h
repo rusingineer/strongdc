@@ -188,8 +188,7 @@ public:
 	virtual void send(const string& a) throw() {
 		lastActivity = GET_TICK();
 		//dcdebug("Sending %d to %s: %.40s\n", a.size(), getName().c_str(), a.c_str());
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			COMMAND_DEBUG(a, DebugManager::HUB_OUT, getIpPort());
+		COMMAND_DEBUG(a, DebugManager::HUB_OUT, getIpPort());
 		socket->write(a);
 	}
 	virtual void sendUserCmd(const string& aUserCmd) throw() {
@@ -264,8 +263,7 @@ public:
 	void send(const char* aBuf, int aLen) throw() {
 		lastActivity = GET_TICK();
 		string mess(aBuf);
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			COMMAND_DEBUG(mess, DebugManager::HUB_OUT, getIpPort());
+		COMMAND_DEBUG(mess, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aBuf, aLen);
 	}
 
@@ -350,8 +348,7 @@ private:
 	virtual void on(Connecting) throw() { Speaker<NmdcHubListener>::fire(NmdcHubListener::Connecting(), this); }
 	virtual void on(Connected) throw() { lastActivity = GET_TICK(); Speaker<NmdcHubListener>::fire(NmdcHubListener::Connected(), this); }
 	virtual void on(Line, const string& l) throw() {
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
+		COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
 		onLine(l.c_str());
 	}
 	virtual void on(Failed, const string&) throw();

@@ -131,7 +131,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
                 QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), true);
 				q->setFastUser(true);
-				q->speedUsers[TryToSwitchToUser]->getUser()->connect();
+				ConnectionManager::getInstance()->getDownloadConnection(q->speedUsers[TryToSwitchToUser]->getUser());
 				continue;
 			}
 		}
@@ -695,7 +695,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setDownload(NULL);
 				removeDownload(d, false); // true -> false
 				removeConnection(aSource, false, true);
-				Thread::sleep(20);
 				aSource->getUser()->connect();
 			}
 			return;
