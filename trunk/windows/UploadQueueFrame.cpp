@@ -617,6 +617,18 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 	}
 }
 
+LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	if(wParam == REMOVE_ITEM) {
+		string* aNick = (string*)lParam;
+		onRemoveUser(*aNick);
+		delete aNick;
+	} else if(wParam == ADD_ITEM) {
+		UploadQueueItem* i = (UploadQueueItem*)lParam;
+		onAddFile(i->aNick, i->filename, i->path, i->pos, i->size, i->time);
+		delete i;
+	}
+	return 0;
+}
 /**
  * @file
  * $Id: UploadQueueFrame.cpp,v 1.4 2003/05/13 11:34:07

@@ -709,6 +709,7 @@
 #define IDC_REBUILD_TOOLBAR             10162
 #define IDC_MAGNET_SIZE                 10164
 #define IDC_MAGNET_DISP_SIZE            10165
+#define IDC_TIMESTAMP_HELP              10167
 #define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774

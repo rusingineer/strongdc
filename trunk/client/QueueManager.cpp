@@ -876,14 +876,14 @@ again:
 
 	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
 		if(q->getCurrents().size() >= q->getMaxSegments()) {
-			message = STRING(ALL_SEGMENTS_TAKEN);		
+			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
 
 		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
 			if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
-				message = STRING(ALL_SEGMENTS_TAKEN);		
+				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);		
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				goto again;
 			}

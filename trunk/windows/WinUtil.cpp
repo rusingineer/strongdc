@@ -72,7 +72,6 @@ bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;
 bool WinUtil::isMinimized = false;
-bool WinUtil::initialized = false;
 
 WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
@@ -360,37 +359,6 @@ void WinUtil::init(HWND hWnd) {
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	else 
 		createImageList1(userImages, SETTING(USERLIST_IMAGE));
-
-	initColors(mainWnd);
-
-	if(BOOLSETTING(URL_HANDLER)) {
-		registerDchubHandler();
-	}
-	registerMagnetHandler();
-
-	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
-	
-	grantMenu.CreatePopupMenu();
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
-}
-
-void WinUtil::initColors(HWND mainWnd) {
-	if(initialized) {
-	//	fileImages.Destroy();
-	//	userImages.Destroy();
-		::DeleteObject(font);
-		::DeleteObject(boldFont);
-		::DeleteObject(smallBoldFont);
-		::DeleteObject(tinyFont);
-		::DeleteObject(bgBrush);
-		::DeleteObject(monoFont);
-	}
-
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
 	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, encodeFont(lf));
@@ -419,7 +387,20 @@ void WinUtil::initColors(HWND mainWnd) {
 	systemFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
 	monoFont = (HFONT)::GetStockObject(BOOLSETTING(USE_OEM_MONOFONT)?OEM_FIXED_FONT:ANSI_FIXED_FONT);
 
-	initialized = true;
+	if(BOOLSETTING(URL_HANDLER)) {
+		registerDchubHandler();
+	}
+	registerMagnetHandler();
+
+	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
+	
+	grantMenu.CreatePopupMenu();
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
+	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
 }
 
 void WinUtil::uninit() {
@@ -1336,6 +1317,28 @@ string WinUtil::formatTime(long rest) {
 		formatedTime += (string)buf;
 	}
 	return formatedTime;
+}
+
+int WinUtil::getImage(const User::Ptr& u) {
+	int image = u->getcType();
+	if(u->isSet(User::OP)) {
+		image = 0;
+	} else if(u->isSet(User::FIREBALL)) {
+		image = 9;
+	} else if(u->isSet(User::SERVER)) {
+		image = 8;
+	}
+	if(u->isSet(User::AWAY)) {
+		image+=11;
+	}
+	if(u->isSet(User::DCPLUSPLUS)) {
+		image+=22;
+	}
+	if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5") ||
+		((u->getDescription().substr(0,1) == "P") && ((u->getDescription().substr(1,1) == "") || (u->getDescription().substr(1,1) == " ")))) {
+		image+=44;
+	}
+	return image;	
 }
 
 /**

@@ -33,6 +33,11 @@ public:
 		UploadManager::getInstance()->removeListener(this);
 	}
 
+	enum {
+		ADD_ITEM,
+		REMOVE_ITEM
+	};
+
 	// Frame window declaration
 	DECLARE_FRAME_WND_CLASS_EX("UploadQueueFrame", IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
@@ -43,6 +48,7 @@ public:
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
+		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		COMMAND_HANDLER(IDC_GETLIST, BN_CLICKED, onGetList)
 		COMMAND_HANDLER(IDC_REMOVE, BN_CLICKED, onRemove)
 		COMMAND_HANDLER(IDC_GRANTSLOT, BN_CLICKED, onGrantSlot)
@@ -76,6 +82,7 @@ public:
 	LRESULT onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
+	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 
 	LRESULT onShowTree(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
@@ -125,7 +132,21 @@ public:
 		return 0;
 	}
 	
+	class UploadQueueItem {
+	public:
+		UploadQueueItem(string nick, string file, string Path, int64_t Pos, int64_t Size, int64_t Time) :
+			aNick(nick), filename(file), path(Path), pos(Pos), size(Size), time(Time)	{ }
+
+		string aNick;
+		string filename;
+		string path;
+		int64_t pos;
+		int64_t size;
+		int64_t time;
+	};
+
 private:
+
 	enum {
 		COLUMN_FIRST,
 		COLUMN_FILE = COLUMN_FIRST,
@@ -194,10 +215,13 @@ private:
 
 	// UploadManagerListener
 	virtual void on(UploadManagerListener::QueueAdd, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size, const int64_t time) throw() {
-		onAddFile(aNick, filename, path, pos, size, time);
+		//onAddFile(aNick, filename, path, pos, size, time);
+		UploadQueueItem* i = new UploadQueueItem(aNick, filename, path, pos, size, time);
+		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)i);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const string& aNick) throw() {
-		onRemoveUser(aNick);
+		//onRemoveUser(aNick);
+		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)new string(aNick));
 	}
 };
 

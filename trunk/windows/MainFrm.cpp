@@ -429,6 +429,44 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			}
 		}
 		delete msg;
+	} else if(wParam == UPDATE_SHUTDOWN) {
+		u_int32_t aTick = (u_int32_t)lParam;
+		u_int32_t iSec = (aTick / 1000);
+		if (bShutdown) {
+			if (ctrlStatus.IsWindow()) {
+				if(!isShutdownStatus) {
+					ctrlStatus.SetIcon(9, hShutdownIcon);
+					isShutdownStatus = true;
+				}
+				if (DownloadManager::getInstance()->getActiveDownloads() > 0) {
+					iCurrentShutdownTime = iSec;
+					ctrlStatus.SetText(9, string("").c_str());
+				} else {
+					ctrlStatus.SetText(9, string(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
+					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
+						bool bDidShutDown = false;
+						bDidShutDown = CZDCLib::shutDown();
+						if (bDidShutDown) {
+							// Should we go faster here and force termination?
+							// We "could" do a manual shutdown of this app...
+						} else {
+							ctrlStatus.SetText(0, CSTRING(FAILED_TO_SHUTDOWN));
+							ctrlStatus.SetText(9, "");
+						}
+						// We better not try again. It WON'T work...
+						bShutdown = false;
+					}
+				}
+			}
+		} else {
+			if (ctrlStatus.IsWindow()) {
+				if(isShutdownStatus) {
+					ctrlStatus.SetText(9, "");
+					ctrlStatus.SetIcon(9, NULL);
+					isShutdownStatus = false;
+				}
+			}
+		}
 	}
 
 	return 0;
@@ -439,7 +477,7 @@ void MainFrame::parseCommandLine(const string& cmdLine)
 	string::size_type i = 0;
 	string::size_type j;
 
-	if( (j = cmdLine.find("dchub://", i)) != string::npos) {
+	if( (j = safestring::SafeFind(cmdLine,"dchub://", i)) != string::npos) {
 		WinUtil::parseDchubUrl(cmdLine.substr(j));
 		}
 	if( (j = cmdLine.find("magnet:?", i)) != string::npos) {
@@ -522,8 +560,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	short lastPort = (short)SETTING(IN_PORT);
 	int lastConn = SETTING(CONNECTION_TYPE);
 
-	if(dlg.DoModal(m_hWnd) == IDOK)
-	{		
+	if(dlg.DoModal(m_hWnd) == IDOK) {		
 		SettingsManager::getInstance()->save();
  		if(missedAutoConnect && !SETTING(NICK).empty()) {
  			PostMessage(WM_SPEAKER, AUTO_CONNECT);
@@ -532,6 +569,10 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);
+		if(BOOLSETTING(URL_HANDLER)) {
+			WinUtil::registerDchubHandler();
+		}
+		WinUtil::registerMagnetHandler();
 		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
 		else ctrlToolbar.CheckButton(IDC_LIMITER, false);
 
@@ -541,8 +582,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(getShutDown()) ctrlToolbar.CheckButton(IDC_SHUTDOWN, true);
 		else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
 
-//		WinUtil::initColors(m_hWnd);
-
+		updateTray(BOOLSETTING(MINIMIZE_TRAY));
 	}
 	return 0;
 }
@@ -1101,7 +1141,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
 
-		updateShutdown(aTick);
+		PostMessage(WM_SPEAKER, UPDATE_SHUTDOWN, (LPARAM)aTick);
+//		updateShutdown(aTick);
 }
 
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
@@ -1179,45 +1220,6 @@ LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
 	}
 	ClientManager::getInstance()->infoUpdated(true);
 	return 0;
-}
-
-void MainFrame::updateShutdown(u_int32_t aTick) {
-	u_int32_t iSec = (aTick / 1000);
-	if (bShutdown) {
-		if (ctrlStatus.IsWindow()) {
-			if(!isShutdownStatus) {
-				ctrlStatus.SetIcon(9, hShutdownIcon);
-				isShutdownStatus = true;
-			}
-			if (DownloadManager::getInstance()->getActiveDownloads() > 0) {
-				iCurrentShutdownTime = iSec;
-				ctrlStatus.SetText(9, string("").c_str());
-			} else {
-				ctrlStatus.SetText(9, string(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
-				if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
-					bool bDidShutDown = false;
-					bDidShutDown = CZDCLib::shutDown();
-					if (bDidShutDown) {
-						// Should we go faster here and force termination?
-						// We "could" do a manual shutdown of this app...
-					} else {
-						ctrlStatus.SetText(0, CSTRING(FAILED_TO_SHUTDOWN));
-						ctrlStatus.SetText(9, "");
-					}
-					// We better not try again. It WON'T work...
-					bShutdown = false;
-				}
-			}
-		}
-	} else {
-		if (ctrlStatus.IsWindow()) {
-			if(isShutdownStatus) {
-				ctrlStatus.SetText(9, "");
-				ctrlStatus.SetIcon(9, NULL);
-				isShutdownStatus = false;
-			}
-		}
-	}
 }
 
 void MainFrame::checkFileList(string file, User::Ptr u) {

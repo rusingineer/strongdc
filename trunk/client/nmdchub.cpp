@@ -119,8 +119,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		char *seeker = temp;
 
+		bool bPassive = (strnicmp(seeker, "Hub:", 4) == 0);
+
+		// We don't wan't to answer passive searches if we're in passive mode...
+		if(bPassive == true && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
+			return;
+		}
+
 		// Filter own searches
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
 			if((strcmp(seeker, (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
 				return;
 			}
@@ -149,8 +156,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 					count++;
 
 				if(count > 7) {
-					if( strnicmp(seeker, "Hub:", 4) == 0 ) {
-						if(strlen(seeker) > 4)
+					if(bPassive == true && strlen(seeker) > 4) {
 							Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, strtok(seeker+4, "\0"));
 					} else {
 						Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
@@ -190,15 +196,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		int type = atoi(temp) - 1;
 		if((temp = strtok(NULL, "\0")) != NULL) {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, temp);
-			if(strnicmp(seeker, "Hub:", 4) == 0) {
+			if(bPassive == true && strlen(seeker) > 4) {
 				User::Ptr u;
-				if(strlen(seeker) > 4) {
-					Lock l(cs);
-					User::NickIter ni = users.find(strtok(seeker+4, "\0"));
-					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
-						u = ni->second;
-						u->setPassive();
-					}
+				Lock l(cs);
+				User::NickIter ni = users.find(strtok(seeker+4, "\0"));
+				if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
+					u = ni->second;
+					u->setPassive();
 				}
 
 				if(u) {
@@ -226,7 +230,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		u->setBytesShared(0);
 		u->setDescription(Util::emptyString);
 		u->setcType(10);
-		u->setStatus(1);		
+		u->setStatus(1);
 		u->setConnection(Util::emptyString);
 		u->setEmail(Util::emptyString);
 		u->setTag(Util::emptyString);
@@ -252,7 +256,6 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if(temp[strlen(temp)+1] != '$') {
 				if((temp = strtok(NULL, "$")) != NULL) {
 					char status = temp[strlen(temp)-1];
-	
 					u->setStatus(status);
 					if(status != 1) {
 						if(status == 2 || status == 3) {
@@ -672,7 +675,7 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	buf[0] = NULL;
 	if (!handle)
 		return TRUE;// Not a window
-	SendMessageTimeout(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
+	SendMessageTimeout(handle, WM_GETTEXT, sizeof(buf), (LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
 
 	if(buf[0] != NULL) {
 		if(strnicmp(buf, "NetLimiter", 10) == 0 || strnicmp(buf, "DU Super Controler", 18) == 0) {
@@ -701,9 +704,6 @@ int hexstr2int(char *hexstr) {
 }
 
 void NmdcHub::myInfo() {
-/*	char* a = NULL;
-	a[1]= 5;*/
-
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
@@ -881,10 +881,10 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		chars = sprintf(buf, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
 		} else {
 			buf = new char[getNick().length() + aString.length() + 64];
-			chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", getNick().c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		chars = sprintf(buf, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 		}
 	send(buf, chars);
 	delete[] buf;

@@ -25,6 +25,8 @@
 * pøidáno potvrzení pøi mazaní souboru z Pøenosù
 * v menu "Stáhnout do" jsou nabízeny pouze soubory se stejným TTH
 * odpojování pomalých stahování lze nyní zapnout/vypnout pro jednotlivé soubory
+* opraven filtr hledání pøi jiném seøazení sloupcù
+* kód Fronty odesílání pøesunut do hlavního threadu (x deadlock)
 
 
 	-- StrongDC++ 1.00 RC7 --

@@ -302,6 +302,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		lvCol.cchTextMax = sizeof(Buffer);
 		ctrlResults.GetColumn(indexes[i], &lvCol);
 		ctrlFilterSel.AddString(lvCol.pszText);
+//		ctrlFilterSel.SetItemData(i,lvCol.iSubItem);
 	}
 	ctrlFilterSel.SetCurSel(0);
 
@@ -1416,16 +1417,19 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 	default:
 		return CDRF_DODEFAULT;
 	}
-	
 }
 
 void SearchFrame::insertItem(int pos, SearchInfo* item) {
 	PME reg(filter,"i");
 	bool match;
 	int sel = ctrlFilterSel.GetCurSel();
+
 	if(!reg.IsValid()) {
 		match = true;
-	} else match = reg.match(item->getText(sel));
+	} else {
+		match = reg.match(item->getText(columnIndexes[sel]));
+	}
+
 	if(match) {
 		int image = 0;
 		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
@@ -1452,17 +1456,21 @@ void SearchFrame::insertItem(int pos, SearchInfo* item) {
 		}
 
 		int k = -1;
-		if(pos == 0) 
+		if(pos == 0) {
 			k = ctrlResults.insertItem(item, image);
-		else
+		} else {
 			k = ctrlResults.insertItem(pos, item, image);
+		}
 
 		if(item->subItems.size() > 0) {
-			if(item->collapsed)
+			if(item->collapsed) {
 				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
-			else
+			} else {
 				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
- 	    } else ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
+			}
+		} else {
+			ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
+		}
 	}
 	ctrlResults.resort();
 }

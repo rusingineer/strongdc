@@ -66,7 +66,8 @@ public:
 		VIEW_FILE_AND_DELETE, 
 		SET_STATUSTEXT,
 		STATUS_MESSAGE,
-		CHECK_LISTING
+		CHECK_LISTING,
+		UPDATE_SHUTDOWN
 	};
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -396,7 +397,6 @@ private:
 
 	MainFrame(const MainFrame&) { dcassert(0); };
 
-	void updateShutdown(u_int32_t aTick);
 
 	// LogManagerListener
 	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };
