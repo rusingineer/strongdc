@@ -47,6 +47,7 @@
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
 #include "InputBox.h"
+#include "PopupManager.h"
 
 #ifndef AGEMOTIONSETUP_H__
 	#include "AGEmotionSetup.h"
@@ -514,8 +515,11 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				}
 			}
 		}
+	} else if(wParam == SHOW_POPUP) {
+		Popup* msg = (Popup*)lParam;
+		PopupManager::getInstance()->Show(msg->Message, msg->Title, msg->Icon);
+		delete msg;
 	}
-
 	return 0;
 }
 
@@ -1060,17 +1064,13 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return 0;
 }
 
-BOOL MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags) {
-	NOTIFYICONDATA m_nid;
-	m_nid.cbSize = sizeof(NOTIFYICONDATA);
-	m_nid.hWnd = m_hWnd;
-	m_nid.uID = 0;
-	m_nid.uFlags = NIF_INFO;
-	m_nid.uTimeout = 5000;
-	m_nid.dwInfoFlags = dwInfoFlags;
-	strcpy(m_nid.szInfo,szMsg ? szMsg : _T(""));
-	strcpy(m_nid.szInfoTitle,szTitle ? szTitle : _T(""));
-	return Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+void MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags) {
+	Popup* p = new Popup;
+	p->Title = szTitle;
+	p->Message = szMsg;
+	p->Icon = dwInfoFlags;
+
+	PostMessage(WM_SPEAKER, SHOW_POPUP, (LPARAM)p);
 }
 
 LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

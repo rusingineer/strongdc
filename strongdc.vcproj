@@ -527,6 +527,9 @@
 				RelativePath=".\windows\OperaColorsPage.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\PopupManager.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\Popups.cpp">
 			</File>
 			<File
@@ -817,6 +820,12 @@
 			</File>
 			<File
 				RelativePath=".\windows\OperaColorsPage.h">
+			</File>
+			<File
+				RelativePath=".\windows\PopupDlg.h">
+			</File>
+			<File
+				RelativePath=".\windows\PopupManager.h">
 			</File>
 			<File
 				RelativePath=".\windows\Popups.h">

@@ -362,6 +362,7 @@
 #define IDC_CLIENT_EXTENDED_TAG         1221
 #define IDC_LOG_SYSTEM                  1221
 #define IDC_DU                          1221
+#define IDC_POPUPTYPE                   1221
 #define IDC_STATIC3                     1222
 #define IDC_SEGMENT3_MAX                1222
 #define IDC_CLIENT_LOCK                 1222
@@ -496,6 +497,7 @@
 #define IDC_KBPS                        1280
 #define IDC_PLAY                        1282
 #define IDC_POPUPLIST                   1283
+#define IDC_COMBO1                      1284
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
@@ -749,7 +751,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1284
+#define _APS_NEXT_CONTROL_VALUE         1285
 #define _APS_NEXT_SYMED_VALUE           123
 #endif
 #endif

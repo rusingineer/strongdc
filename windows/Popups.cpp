@@ -33,6 +33,7 @@ static char THIS_FILE[] = __FILE__;
 
 PropPage::TextItem Popups::texts[] = {
 	{ IDC_PREVIEW, ResourceManager::SETCZDC_PREVIEW },
+	{ IDC_POPUPTYPE, ResourceManager::POPUP_TYPE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -59,6 +60,11 @@ LRESULT Popups::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	PropPage::translate((HWND)(*this), texts);
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_POPUPLIST));
 
+	ctrlPopupType.Attach(GetDlgItem(IDC_COMBO1));
+	ctrlPopupType.AddString("Balloon popup");
+	ctrlPopupType.AddString("Window popup");
+	ctrlPopupType.SetCurSel(SETTING(POPUP_TYPE));
+
 	return TRUE;
 }
 
@@ -66,6 +72,8 @@ LRESULT Popups::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 void Popups::write()
 {
 	PropPage::write((HWND)*this, items, listItems, GetDlgItem(IDC_POPUPLIST));
+
+	SettingsManager::getInstance()->set(SettingsManager::POPUP_TYPE, ctrlPopupType.GetCurSel());
 	// Do specialized writing here
 	// settings->set(XX, YY);
 }
@@ -73,7 +81,9 @@ void Popups::write()
 
 LRESULT Popups::onPreview(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	MainFrame::getMainFrame()->ShowBalloonTip("Test Message","Title");
+	MainFrame::getMainFrame()->ShowBalloonTip((
+		STRING(FILE)+": sdc100rc8.rar\n"+
+		STRING(USER)+": BigMuscle").c_str(), CSTRING(DOWNLOAD_FINISHED_IDLE));
 	return 0;
 }
 /**

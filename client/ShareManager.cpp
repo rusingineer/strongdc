@@ -391,7 +391,7 @@ string ShareManager::Directory::getADCPath() const throw() {
 string ShareManager::Directory::getFullName() const throw() {
 	if(parent == NULL)
 		return getName() + '\\';
-	return parent->getName() + '\\' + getName() + '\\';
+	return parent->getFullName() + getName() + '\\';
 }
 
 void ShareManager::Directory::addType(u_int32_t type) throw() {
@@ -710,6 +710,7 @@ void ShareManager::generateNmdcList() {
 			}
 
 			string newName = Util::getAppPath() + "MyList" + Util::toString(listN) + ".DcLst";
+			tmp2.clear();
 			CryptoManager::getInstance()->encodeHuffman(tmp, tmp2);
 			File(newName, File::WRITE, File::CREATE | File::TRUNCATE).write(tmp2);
 

@@ -427,9 +427,6 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 
 		aSource->send(cmd);
 		aSource->setState(UserConnection::STATE_DONE);
-		if(u->isSet(Upload::FLAG_TTH_LEAVES))
-			aSource->transmitFile(u->getFile(), true);
-		else
 		aSource->transmitFile(u->getFile());
 		fire(UploadManagerListener::Starting(), u);
 	}
@@ -442,6 +439,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 
 			throttleSetup();
 			throttleZeroCounters();
+
 			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 				ticks.push_back(*i);
 			}

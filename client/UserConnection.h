@@ -251,8 +251,8 @@ public:
 	}
 	
 	void disconnect() { if(socket) socket->disconnect(); };
-	void transmitFile(InputStream* f, bool disablethrottling = false) { 
-		socket->transmitFile(f, disablethrottling); 
+	void transmitFile(InputStream* f) { 
+		socket->transmitFile(f); 
 	};
 
 	const string& getDirectionString() {

@@ -732,6 +732,9 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				handleEndData(aSource);
 			aSource->setLineMode();
 		}
+		if(d->getPos() > d->getSize()) {
+			throw Exception(STRING(TOO_MUCH_DATA));
+		}	
 /*	} catch(const RollbackException& e) {
 		string target = d->getTarget();
 		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);

@@ -424,6 +424,7 @@ enum Strings { // @DontAdd
 	TIME_LEFT, // "Time left"
 	TIMESTAMPS_DISABLED, // "Timestamps disabled"
 	TIMESTAMPS_ENABLED, // "Timestamps enabled"
+	TOO_MUCH_DATA, // "More data was sent than was expected"
 	TOTAL, // "Total: "
 	TTH_ROOT, // "TTH Root"
 	TYPE, // "Type"
@@ -786,5 +787,6 @@ enum Strings { // @DontAdd
 	CHEATING_USER, // "Cheating user found"
 	REASON, // "Reason"
 	PRIVATE_MESSAGE, // "Private message arrived"
+	POPUP_TYPE, // "Popup type"
 	LAST // @DontAdd
 };

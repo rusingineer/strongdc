@@ -295,7 +295,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 			size_t len = iBlockSize;
 			file.read(&buf[0], len);
 
-			_ASSERT(end - start == len);
+//			_ASSERT(end - start == len);
 
 			TigerTree cur(iBlockSize);
             cur.update(&buf[0], len);
