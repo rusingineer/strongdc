@@ -28,6 +28,10 @@
 #include "../client/ResourceManager.h"
 #include "../client/ConnectionManager.h"
 
+int SpyFrame::columnSizes[] = { 305, 70, 90, 85 };
+int SpyFrame::columnIndexes[] = { COLUMN_STRING, COLUMN_COUNT, COLUMN_USERS, COLUMN_TIME };
+static ResourceManager::Strings columnNames[] = { ResourceManager::SEARCH_STRING, ResourceManager::COUNT, ResourceManager::USERS, ResourceManager::TIME };
+
 LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
@@ -36,7 +40,7 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlSearches.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, WS_EX_CLIENTEDGE, IDC_RESULTS);
 
-	DWORD styles = LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 	ctrlSearches.SetExtendedListViewStyle(styles);
@@ -45,10 +49,12 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlSearches.SetTextBkColor(WinUtil::bgColor);
 	ctrlSearches.SetTextColor(WinUtil::textColor);
 
-	ctrlSearches.AddColumn(CTSTRING(SEARCH_STRING), COLUMN_STRING, COLUMN_STRING);
-	ctrlSearches.AddColumn(CTSTRING(COUNT), COLUMN_COUNT, COLUMN_COUNT);
-	ctrlSearches.AddColumn(CTSTRING(USERS), COLUMN_USERS, COLUMN_USERS);
-	ctrlSearches.AddColumn(CTSTRING(TIME), COLUMN_TIME, COLUMN_TIME);
+	WinUtil::splitTokens(columnIndexes, SETTING(SPYFRAME_ORDER), COLUMN_LAST);
+	WinUtil::splitTokens(columnSizes, SETTING(SPYFRAME_WIDTHS), COLUMN_LAST);
+	for(int j=0; j<COLUMN_LAST; j++) {
+		int fmt = (j == COLUMN_COUNT) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		ctrlSearches.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+	}
 
 	ctrlSearches.setSort(COLUMN_COUNT, ExListViewCtrl::SORT_INT, false);
 
@@ -56,6 +62,41 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	bHandled = FALSE;
 	return 1;
+}
+
+LRESULT SpyFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	if(!closed){
+		ClientManager::getInstance()->removeListener(this);
+		TimerManager::getInstance()->removeListener(this);
+
+		bHandled = TRUE;
+		closed = true;
+		PostMessage(WM_CLOSE);
+		return 0;
+	} else {
+		WinUtil::saveHeaderOrder(ctrlSearches, SettingsManager::SPYFRAME_ORDER, SettingsManager::SPYFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+
+		CZDCLib::setButtonPressed(IDC_SEARCH_SPY, false);
+		bHandled = FALSE;
+		return 0;
+	}
+}
+
+LRESULT SpyFrame::onColumnClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	NMLISTVIEW* l = (NMLISTVIEW*)pnmh;
+	if(l->iSubItem == ctrlSearches.getSortColumn()) {
+		if (!ctrlSearches.isAscending())
+			ctrlSearches.setSort(-1, ctrlSearches.getSortType());
+		else
+			ctrlSearches.setSortDirection(false);
+	} else {
+		if(l->iSubItem == COLUMN_COUNT) {
+			ctrlSearches.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
+		} else {
+			ctrlSearches.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
+		}
+	}
+	return 0;
 }
 
 void SpyFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {

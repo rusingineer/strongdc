@@ -233,9 +233,9 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(!isSet(FLAG_USER_LIST)){
-			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
-			if(filedatainfo)
-				return filedatainfo->GetDownloadedSize();
+			//FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
+			if(fileChunksInfo)
+				return fileChunksInfo->GetDownloadedSize();
 		}
 
 		return 0;
@@ -267,6 +267,7 @@ public:
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
 	GETSET(int64_t, speed, Speed);
+	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

@@ -772,7 +772,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 				r.setShared("*");
 				r.setServer(entry->getServer());
 				HubManager::getInstance()->addRecent(r);
-				HubFrame::openWindow(Text::toT(entry->getServer()), Text::toT(entry->getNick()), Text::toT(entry->getPassword()), Text::toT(entry->getUserDescription())
+				HubFrame::openWindow(Text::toT(entry->getServer())
 					, Text::toT(entry->getRawOne())
 					, Text::toT(entry->getRawTwo())
 					, Text::toT(entry->getRawThree())

@@ -53,6 +53,9 @@ public:
 		COLUMN_LAST
 	};
 
+	static int columnIndexes[COLUMN_LAST];
+	static int columnSizes[COLUMN_LAST];
+
 	DECLARE_FRAME_WND_CLASS_EX(_T("SpyFrame"), IDR_SPY, 0, COLOR_3DFACE)
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
@@ -72,39 +75,8 @@ public:
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	
-	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-		if(!closed){
-		ClientManager::getInstance()->removeListener(this);
-		TimerManager::getInstance()->removeListener(this);
-
-			bHandled = TRUE;
-			closed = true;
-			PostMessage(WM_CLOSE);
-			return 0;
-		} else {
-			CZDCLib::setButtonPressed(IDC_SEARCH_SPY, false);
-			bHandled = FALSE;
-		return 0;
-	}
-	}
-
-	LRESULT onColumnClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-		NMLISTVIEW* l = (NMLISTVIEW*)pnmh;
-		if(l->iSubItem == ctrlSearches.getSortColumn()) {
-			if (!ctrlSearches.isAscending())
-				ctrlSearches.setSort(-1, ctrlSearches.getSortType());
-			else
-				ctrlSearches.setSortDirection(false);
-		} else {
-			if(l->iSubItem == COLUMN_COUNT) {
-				ctrlSearches.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
-			} else {
-				ctrlSearches.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
-			}
-		}
-		return 0;
-	}
+	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onColumnClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	

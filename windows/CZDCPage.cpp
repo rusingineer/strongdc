@@ -49,6 +49,8 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::AUTO_DROP_SOURCE, ResourceManager::SETTINGS_AUTO_DROP_SOURCE },
 	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
+	{ SettingsManager::REALTIME_QUEUE_UPDATE, ResourceManager::QUEUE_UPDATING },
+	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

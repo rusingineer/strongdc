@@ -233,7 +233,7 @@ void FileChunksInfo::PutUndlStart(int64_t start)
 		}
 	}
 
-	_ASSERT(0);
+	//_ASSERT(0);
 }
 
 string FileChunksInfo::getFreeBlocksString()

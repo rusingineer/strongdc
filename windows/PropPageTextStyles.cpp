@@ -400,10 +400,13 @@ void PropPageTextStyles::TextStyleSettings::EditTextStyle() {
 
 LRESULT PropPageTextStyles::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
-	if (m_lsbList.m_hWnd != NULL)
-		m_lsbList.Detach();
-	if (m_Preview.m_hWnd != NULL)
-		m_Preview.Detach();
+	m_lsbList.Detach();
+	m_Preview.Detach();
+	ctrlTabList.Detach();
+	cmdResetTab.Detach();
+	cmdSetTabColor.Detach();
+	ctrlTabExample.Detach();
+
 	return 1;
 }
 

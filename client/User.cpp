@@ -113,7 +113,7 @@ void User::send(const string& aMsg) {
 void User::sendUserCmd(const string& aUserCmd) {
 	RLock l(cs);
 	if(client) {
-		client->send(aUserCmd);
+		client->sendUserCmd(aUserCmd);
 	}
 }
 
@@ -225,14 +225,15 @@ void User::TagParts() {
 					setMode(temp+2);
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
-				if( strlen(temp+2) > 3 ) {
+				/*if( strlen(temp+2) > 3 ) {
             	    int a,b,c;
 						if(sscanf(temp+2, "%d/%d/%d", &a, &b, &c) == 3 ) {
 						setHubs(Util::toString(a+b+c));
 					}
 				} else {
 					setHubs(Util::toString(atoi(temp+2)));
-				}
+				}*/
+				setHubs(temp+2);
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
 				setSlots(Util::toString(atoi(temp+2)));
@@ -281,7 +282,7 @@ string User::getReport()
 	report += "\r\nEmail:		" + email;
 	report += "\r\nConnection:	" + connection;
 	report += "\r\nCommands:	" + unknownCommand;
-	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::toString(fileListSize) + " B)" : "N/A";
+	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
 	if ( listLength != -1 ) {
 		temp = Util::formatBytes(listLength) + "  (" + Util::toString(listLength) + " B)";
@@ -289,15 +290,15 @@ string User::getReport()
 		temp = "N/A";
 	}
 	report += "\r\nListLen:		" + temp;
-	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatExactSize(bytesShared) + " B)";
+	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatExactSize(bytesShared) + " )";
 	if ( getRealBytesShared() > -1 ) {
-		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatExactSize(getRealBytesShared()) + " B)";
+		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatExactSize(getRealBytesShared()) + " )";
 	} else {
 		temp = "N/A";
 	}
 	report += "\r\nReal Share:	" + temp;
 	if ( getJunkBytesShared() > -1 ) {
-		temp = Util::formatBytes(getJunkBytesShared()) + "  (" + Util::formatExactSize(getJunkBytesShared()) + " B)";
+		temp = Util::formatBytes(getJunkBytesShared()) + "  (" + Util::formatExactSize(getJunkBytesShared()) + " )";
 	} else {
 		temp = "N/A";
 	}

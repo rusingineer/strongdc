@@ -736,6 +736,7 @@ public:
 		MESSAGE_HANDLER(WM_DESTROY, onDestroy)
 		MESSAGE_HANDLER(WM_SETTEXT, onSetText)
 		MESSAGE_HANDLER(WM_REALLY_CLOSE, onReallyClose)
+		MESSAGE_HANDLER(WM_NOTIFYFORMAT, onNotifyFormat)
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
@@ -796,6 +797,14 @@ public:
 		}
 		
 		return hWnd;
+	}
+
+	LRESULT onNotifyFormat(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+#ifdef _UNICODE
+		return NFR_UNICODE;
+#else
+		return NFR_ANSI;
+#endif		
 	}
 
 	// All MDI windows must have this in wtl it seems to handle ctrl-tab and so on...

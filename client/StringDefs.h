@@ -281,6 +281,7 @@ enum Strings { // @DontAdd
 	RATIO, // "Ratio"
 	READD_SOURCE, // "Readd source"
 	REALLY_EXIT, // "Really exit?"
+	REALLY_REMOVE, // "Really remove?"
 	REDIRECT_ALREADY_CONNECTED, // "Redirect request received to a hub that's already connected"
 	REDIRECT_USER, // "Redirect user(s)"
 	REFRESH, // "&Refresh"
@@ -326,6 +327,7 @@ enum Strings { // @DontAdd
 	SETTINGS_COMPRESS_TRANSFERS, // "Enable safe and compressed transfers"
 	SETTINGS_COMMAND, // "Command"
 	SETTINGS_CONFIRM_EXIT, // "Confirm application exit"
+	SETTINGS_CONFIRM_HUB_REMOVAL, // "Confirm favorite hub removal"
 	SETTINGS_CONNECTION_SETTINGS, // "Connection Settings (see the readme / newbie help if unsure)"
 	SETTINGS_CONNECTION_TYPE, // "Connection Type"
 	SETTINGS_DEFAULT_AWAY_MSG, // "Default away message"
@@ -850,6 +852,9 @@ enum Strings { // @DontAdd
 	SETTINGS_COLOR_BAD_CLIENT, // "Bad client"
 	SETTINGS_COLOR_BAD_FILELIST, // "Bad filelist/fakeshare"
 	SETTINGS_ADVANCED_SHOW_SHARE_CHECKED_USERS, // "Show share-checked users"
-	EXPANDED_RESULTS, // "Expand search results"	
+	EXPANDED_RESULTS, // "Expand search results"
+	QUEUE_UPDATING, // "Enable queue updating in real time (use more CPU on large queue!!!)"
+	SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT, // "Suppress main chat"
+
 	LAST // @DontAdd
 };

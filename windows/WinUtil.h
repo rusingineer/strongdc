@@ -53,7 +53,9 @@ public:
 	UserInfoBase(const User::Ptr& u) : user(u) { };
 	
 	void getList();
+	void getUserResponses();
 	void checkList();
+	void doReport();
 	void matchQueue();
 	void pm();
 	void grant();
@@ -78,6 +80,7 @@ public:
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
+		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
 		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
 		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPrivateMessage)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
@@ -87,6 +90,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_GRANTSLOT_DAY, onGrantSlotDay)
 		COMMAND_ID_HANDLER(IDC_GRANTSLOT_WEEK, onGrantSlotWeek)
 		COMMAND_ID_HANDLER(IDC_UNGRANTSLOT, onUnGrantSlot)
+		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
 	END_MSG_MAP()
 
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -108,6 +112,30 @@ public:
 			}
 		} else {
 			((T*)this)->getUserList().forEachSelected(&UserInfoBase::getList);
+		}
+		return 0;
+	}
+
+	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+			if ( nAtPos >= 0 ) {
+				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::doReport);
+			}
+		} else {
+			((T*)this)->getUserList().forEachSelected(&UserInfoBase::doReport);
+		}
+		return 0;
+	}
+
+	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+			if ( nAtPos >= 0 ) {
+				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getUserResponses);
+			}
+		} else {
+			((T*)this)->getUserList().forEachSelected(&UserInfoBase::getUserResponses);
 		}
 		return 0;
 	}

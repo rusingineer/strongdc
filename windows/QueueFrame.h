@@ -249,9 +249,13 @@ private:
 			path(Text::toT(Util::getFilePath(aQI->getTarget()))),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
-			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority()), FDI(FileChunksInfo::Get(aQI->getTempTarget()))
+			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority())
 		{ 
 			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : Text::toT(aQI->getTempTarget()));
+
+			FDI = aQI->getFileChunksInfo();			
+			if(FDI)
+				setDownloadedBytes(FDI->GetDownloadedSize());
 
 			for(QueueItem::Source::Iter i = aQI->getSources().begin(); i != aQI->getSources().end(); ++i) {
 				sources.push_back(SourceInfo(*(*i)));

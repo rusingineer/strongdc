@@ -3,7 +3,9 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="zlib"
-	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}">
+	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
+	SccProjectName=""
+	SccLocalPath="">
 	<Platforms>
 		<Platform
 			Name="Win32"/>

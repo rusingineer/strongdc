@@ -210,7 +210,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	return 1;
 }
 
-void HubFrame::openWindow(const tstring& aServer, const tstring& aNick /* = Util::emptyString */, const tstring& aPassword /* = Util::emptyString */, const tstring& aDescription /* = Util::emptyString */
+void HubFrame::openWindow(const tstring& aServer
 							, const tstring& rawOne /*= Util::emptyString*/
 							, const tstring& rawTwo /*= Util::emptyString*/
 							, const tstring& rawThree /*= Util::emptyString*/
@@ -219,7 +219,7 @@ void HubFrame::openWindow(const tstring& aServer, const tstring& aNick /* = Util
 		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
-		HubFrame* frm = new HubFrame(aServer, aNick, aPassword, aDescription
+		HubFrame* frm = new HubFrame(aServer
 			, rawOne
 			, rawTwo 
 			, rawThree 
@@ -445,12 +445,13 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 		// Sort order of the other columns changes too late when the user's updated
 		UserInfo* ui = i->second;
 
-		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) {
+		int a = ctrlUsers.getSortPos(ui);
+		if(ctrlUsers.getItemData(a) != ui) {
 			return ctrlUsers.findItem(Text::toT(aUser->getNick()));
 		}
 		//dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
 
-		return ctrlUsers.getSortPos(ui);
+		return a;
 	}
 	return ctrlUsers.findItem(Text::toT(aUser->getNick()));
 }
@@ -661,7 +662,10 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							if(BOOLSETTING(CHECK_NEW_USERS)) {
 								if((u->getMode() == "P" || u->getMode() == "5" || u->isSet(User::PASSIVE)) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE))
 								{} else {
-									getUserResponses(u, true);
+									try {
+										QueueManager::getInstance()->addTestSUR(u, true);
+									} catch(const Exception&) {
+									}
 								}
 							}
 						}
@@ -681,7 +685,12 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
 						ctrlUsers.DeleteItem(j);
 						delete ui;
+					} else {
+						UserMapIter i = userMap.find(u);
+						if(i != userMap.end())
+							delete i->second;
 					}
+
 					if(showJoins) {
 						if (!favShowJoins | u->isFavoriteUser()) {
 								addLine(Text::toT("*** " + STRING(PARTS) + u->getNick()), m_ChatTextSystem);
@@ -690,7 +699,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					userMap.erase(u);
 					break;
 				}
-		}
+			}
 			updateList.clear();
 		}
 		if(ctrlUsers.getSortColumn() != UserInfo::COLUMN_NICK)
@@ -1500,15 +1509,11 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		server = redirect;
 		frames[server] = this;
 
-		// Is the redirect hub a favorite? Then honor settings for it.
-		FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
-		if(hub) {
-			client->setNick(hub->getNick(true));
-			client->setDescription(hub->getUserDescription());
-			client->setPassword(hub->getPassword());
-			client->setStealth(hub->getStealth());
-		}
-		// else keep current settings
+		// the client is dead, long live the client!
+		client->removeListener(this);
+		ClientManager::getInstance()->putClient(client);
+		clearUserList();
+		client = ClientManager::getInstance()->getClient(Text::fromT(server));
 
 		RecentHubEntry r;
 		r.setName("*");
@@ -1519,7 +1524,7 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		HubManager::getInstance()->addRecent(r);
 
 		client->addListener(this);
-		//client->connect(redirect);
+		client->connect();
 	}
 	return 0;
 }
@@ -1714,7 +1719,8 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 			if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
 				junkSize = dl->getJunkSize();
 				realSize -= junkSize;
-			}	
+			}
+
 			double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
 			int64_t sizeTolerated = (int64_t)(realSize*multiplier);
 			string detectString = "";
@@ -1722,6 +1728,17 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 			user->setJunkBytesShared(junkSize);
 			user->setRealBytesShared(realSize);
 			bool isFakeSharing = false;
+			
+			PME reg("^0.403");
+
+			if(reg.match(user->getVersion()) && dl->detectRMDC()) {			
+				user->setCheat("rmDC++ with DC++ emulation" , true);
+				user->setClientType("rmDC++");
+				user->setBadClient(true);
+				user->setBadFilelist(true);
+
+				return true;
+			}
 
 			if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
 				isFakeSharing = true;
@@ -2096,18 +2113,6 @@ LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	bHandled = FALSE;
 	ctrlClient.GoToEnd();
 	return 0;
-}
-
-void HubFrame::getUserResponses(User::Ptr& u, bool checkList) {
-	if(client->isConnected()) {
-		if( (u->getNick() != client->getNick()) ) {
-				try {
-					QueueManager::getInstance()->addTestSUR(u, checkList);
-				} catch(const Exception&) {
-					//continue;
-				}
-		}
-	}
 }
 
 LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {

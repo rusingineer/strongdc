@@ -18,13 +18,18 @@
 
 #ifdef _WIN32
 // Change these values to use different versions...don't know what happens though...=)
-#define WINVER		0x0500
+#define WINVER		0x0501
+#define _WIN32_WINNT 0x0501
 #define _WIN32_IE	0x0500
-#define _WIN32_WINNT	0x0500
 #define _RICHEDIT_VER	0x0200
 
+#pragma warning(disable: 4711) // function 'xxx' selected for automatic inline expansion
+#pragma warning(disable: 4786) // identifier was truncated to '255' characters in the debug information
 #pragma warning(disable: 4290) // C++ Exception Specification ignored
 #pragma warning(disable: 4512) // can't generate assignment operator
+#pragma warning(disable: 4710) // function not inlined
+#pragma warning(disable: 4127) // conditional expression is constant
+#pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 
 #ifndef CDECL
 #define CDECL _cdecl
@@ -75,6 +80,7 @@
 
 #define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
 #define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
+
 #else // Assume the msvc 7.x stl
 #define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc >
 #define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc >

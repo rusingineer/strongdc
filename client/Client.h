@@ -106,6 +106,7 @@ public:
 	virtual void unlockUserList() = 0;
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
 	virtual string checkNick(const string& nick) = 0;
+	virtual string getHubURL() = 0;
 
 	const string& getAddress() const { return address; }
 	const string& getAddressPort() const { return addressPort; }
@@ -115,7 +116,7 @@ public:
 	string getIpPort() const { return port == 411 ? getIp() : getIp() + ':' + Util::toString(port); };
 	string getLocalIp() const;
 
-	virtual void connect() { socket->connect(address, port); }
+	virtual void connect();
 	bool isConnected() const { return socket->isConnected(); }
 	void disconnect() { socket->disconnect(); }
 	
@@ -165,17 +166,6 @@ public:
 		return sm;
 	}
 
-	GETSET(string, nick, Nick);
-	GETSET(string, defpassword, Password);
-	GETSET(bool, registered, Registered);
-	GETSET(bool, stealth, Stealth);
-	GETSET(bool, closed, Closed);
-	GETSET(string, rawOne, RawOne);
-	GETSET(string, rawTwo, RawTwo);
-	GETSET(string, rawThree, RawThree);
-	GETSET(string, rawFour, RawFour);
-	GETSET(string, rawFive, RawFive);
-
 protected:
 	struct Counts {
 		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
@@ -194,6 +184,22 @@ protected:
 	void updateCounts(bool aRemove);
 
 	void setPort(short aPort) { port = aPort; }
+
+	// reload nick from settings, other details from hubmanager
+	void reloadSettings();
+
+	GETSET(string, nick, Nick);
+	GETSET(string, defpassword, Password);
+	GETSET(bool, registered, Registered);
+	GETSET(u_int32_t, reconnDelay, ReconnDelay);
+	GETSET(bool, stealth, Stealth);
+	GETSET(bool, closed, Closed);
+	GETSET(string, rawOne, RawOne);
+	GETSET(string, rawTwo, RawTwo);
+	GETSET(string, rawThree, RawThree);
+	GETSET(string, rawFour, RawFour);
+	GETSET(string, rawFive, RawFive);
+
 private:
 
 	enum CountType {

@@ -1,26 +1,18 @@
 The most important thing about compiling: If it didn't work, *you* screwed up.
 
-How to compile in 4 easy steps:
+How to compile in 3 easy steps:
 
-1) Make sure you have stlport installed and that it's included _before_ the standard vc directories
-   Use the one supplied on the dc++ sourceforge page (do not use the one from www.stlport.org unless 
-   you know what you're doing, I've modified it a little bit). Mind the version (download the latest
-   one from the source extras).
+1) Dowload the source and STLPort from the download site. Download WTL from http://sf.net/projects/wtl.
+   Unpack the source, then create two  more directories under there, "stlport" and "wtl". Unpack the 
+   two other archives in their folders. If you're brave, you can try compiling without STLPort, see 
+   config.h (I don't maintain it though)
    
-   * Note; This step may not be required, i e it might work without STLPort,
-     but I don't recommend this as it's completely untested, and is not being actively maintained.
-     See client\config.h for further details.
-
-2) Make sure you've downloaded the latest package and have all the files in it in your include path.
-   You can find it on the dc++ sourceforge site. Mind the version.  Make sure it's listed after
-   stlport in your directory includes, but before the rest of the ms include dirs.
-   
-3) You most probably have to update your Platform SDK, http://msdn.microsoft.com will tell you how.
+2) You most probably have to update your Platform SDK, http://msdn.microsoft.com will tell you how.
    You have to do this if you get an error that "natupnp.h" is missing. Since all you need is this
    one file, you can ask someone at the dev hub to supply it for you (or look for it in the DC++
    bugzilla, it's attached to one of the bugs)
 
-4) Open the solution and press your build button. If you find your executable unreasonably large, you
+3) Open the solution and press your build button. If you find your executable unreasonably large, you
    probably compiled in debug mode - switch to release once you're done testing the code.
 
 Note 1;	I now use vc7.1 (2003). I don't care particularily if you use an older MS compiler (6.0, 7.0),
@@ -37,6 +29,11 @@ Note 2;	You'll need DBGHELP.dll from the binary distribution unless you're using
 Note 3;	If you have problems, read the forum posts before posting. Somebody else has probably made your 
 	mistake already. The word to note in the last sentence is 'your', so let me articulate a bit more,
 	it works on my computer, so it's yours that is not correctly set up.
+
+Note 4;	To build the HTML Help file, you will need to download and install the HTML Help Workshop 
+	application.  The custom build setup relies on it being installed to the the default path, which 
+	is: "C:\Program Files\HTML Help Workshop\"
+	http://msdn.microsoft.com/library/default.asp?url=/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp
 
 By the way, with doxygen, graphviz and some luck you can use the supplied doxygen configuration file
 to generate some nice docs...just check that the paths in doxyfile are correct (graphviz)...
@@ -57,9 +54,9 @@ completely random, which just might be the case. Popular reasons for rejecting a
 ugly code, abusable features, feature that I don't like that bloat the applications and incompatibility with other 
 modifications I've already done. 
 To increase the chances of your patch being accepted, mail them to me (j_s@telia.com) as diffs against the latest 
-code you can find (for the moment, it should be the cvs repository on sourceforge, but sometimes I forget to 
-update it, so check the source code distribution of the latest release as well...). You can find a lot of 
+code you can find (in the cvs repository on sourceforge most probably). You can find a lot of 
 information about diff and patch by googling for it. I like unified format (diff -uNr). 
 By submitting a patch, you agree to that I get copyright of it. This to avoid stupid situations later on where
 the copyright is split out over a million people, each of which could stop further distribution of DC++. If you don't
-like this, start your own distribution, if you're lucky it might become more popular than the original =).
+like this, start your own distribution, if you're lucky it might become more popular than the original =). Please
+state explicitly in the email that you give me copyright over the code if the submission is larger than trivial.

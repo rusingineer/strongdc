@@ -93,9 +93,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_TAG, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_DESCRIPTION, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_EMAIL_ADDRESS, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_AUTOSCROLL_CHAT, onAutoScrollChat)
-		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
-		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
+		COMMAND_ID_HANDLER(IDC_AUTOSCROLL_CHAT, onAutoScrollChat)		
 		COMMAND_ID_HANDLER(IDC_BAN_IP, onBanIP)
 		COMMAND_ID_HANDLER(IDC_UNBAN_IP, onUnBanIP)
 		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
@@ -185,7 +183,7 @@ public:
 	void onTab();
 	void runUserCommand(::UserCommand& uc);
 		
-	static void openWindow(const tstring& server, const tstring& nick = Util::emptyStringT, const tstring& password = Util::emptyStringT, const tstring& description = Util::emptyStringT
+	static void openWindow(const tstring& server
 		, const tstring& rawOne = Util::emptyStringT
 		, const tstring& rawTwo = Util::emptyStringT
 		, const tstring& rawThree = Util::emptyStringT
@@ -210,35 +208,6 @@ public:
 		return NULL;
 	}
 
-	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-	int i=-1;
-		if(client->isConnected()) {
-			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				getUserResponses(((UserInfo*)ctrlUsers.getItemData(i))->user);
-			}
-		}
-		return 0;
-	}
-
-	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		int i=-1;
-		if(client->isConnected()) {
-			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				doReport(((UserInfo*)ctrlUsers.getItemData(i))->user);
-			}
-		}
-		return 0;
-	}
-
-	void doReport(User::Ptr& u)
-	{
-		string param = u->getNick();
-		addLine(Text::toT("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n"));
-	}
-	void getUserResponses(User::Ptr& u, bool checkList = false);
-	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
 		return 0;
@@ -344,7 +313,7 @@ private:
 		tstring msg;
 	};
 
-	HubFrame(const tstring& aServer, const tstring& aNick, const tstring& aPassword, const tstring& aDescription
+	HubFrame(const tstring& aServer
 		, const tstring& aRawOne
 		, const tstring& aRawTwo
 		, const tstring& aRawThree
@@ -361,12 +330,6 @@ private:
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP)
 	{
 		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
-		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : Text::fromT(aNick), client, false)); 
-		client->setNick(aNick.empty() ? SETTING(NICK) : Text::fromT(aNick));
-
-		if (!aDescription.empty())
-			client->setDescription(Text::fromT(aDescription));
-		client->setPassword(Text::fromT(aPassword));
 
 		client->setRawOne(Text::fromT(aRawOne));
 		client->setRawTwo(Text::fromT(aRawTwo));

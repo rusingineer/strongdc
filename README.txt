@@ -2,9 +2,14 @@ DC++ Readme
 
 --------------------------------------------------
 DC++
-Copyright (C) 2001-2003 Jacek Sieka, jacek@creatio.se
+Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 
 License
+
+This program is licensed under GPL-2 with the notable exception
+that you may compile it with WTL when redistributing binaries. 
+You can find the full text of the license in license.txt that
+should have been distributed with the rest of the application.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,6 +24,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+Magnet.exe is licensed under the Apache License.
+Full license text: http://www.apache.org/licenses/LICENSE-2.0
+Project Home Page: http://sourceforge.net/projects/magnethandler
+
+GeoIP database Copyright (c) 2003 MaxMind LLC.  All Rights Reserved.
+This product includes GeoIP data created by MaxMind, available from
+http://maxmind.com/
+
 --------------------------------------------------
 
 This Readme will give you a quick startup guide and explain some features
@@ -82,6 +96,8 @@ Contents
   /clear            Clears the main chat windows
   /ts               Switches timestamps in chat windows on and off
   /showjoins        Toggles joins/parts messages for the current hub
+  /favshowjoins     Toggles joins/parts messages of favorite users for the current hub
+                     (requires showjoins to be enabled)
   /search <string>  Searches for <string>
   /join <hub>       Joins <hub>
   /dc++             Gives a comment about DC++ and shows the URL where
@@ -140,6 +156,7 @@ Contents
      speed          speed of download
      time           time to download (hh:mm:ss format)
      sfv            1 if the file was sfv/crc32 checked, 0 otherwise
+     tth            base32 representation of the tiger tree root hash
    
     You can also use all date and time parameters (%Y, %m, ...) of strftime (google for it).
 
@@ -175,10 +192,10 @@ Contents
 ----------------------------------------------
   * you can doubleclick on a user name in chat to select him in the user list
   * you can doubleclick on stuff starting with www. http:// of ftp:// to open :)
-  * DC++ supports uploading filelists and files <16 kB to other DC++ users
+  * DC++ supports uploading filelists and files <64 kB to other DC++ users
     WITHOUT REQUIRING A SLOT. There's a max of 3 connections in addition to
     normal slots.
-  * Files <16 kB and filelists are downloaded first.
+  * Files <64 kB and filelists are downloaded first.
   * There is information added to the description field:
     <++ V:x,M:x,H:x/y/z,S:x[,O:x]> where
      V = client version,
@@ -271,10 +288,10 @@ suggesting and testing of the enhanced auto search in the first place.
 ------------------------
   * Homepage                  @ http://dcplusplus.sourceforge.net
   * Forum                     @ http://dcplusplus.sourceforge.net/forum
-  * Report bugs               @ http://sourceforge.net/tracker/?atid=427632&group_id=40287&func=browse
-  * Request features          @ http://sourceforge.net/tracker/?atid=427635&group_id=40287&func=browse
-  * Download language files   @ http://dcplusplus.sourceforge.net/index.php?page=download
-  * Get newest version        @ http://dcplusplus.sourceforge.net/index.php?page=download
+  * Report bugs               @ http://dcplusplus.sourceforge.net/bugs
+  * Request features          @ http://dcplusplus.sourceforge.net/bugs
+  * Download language files   @ http://sourceforge.net/tracker/?atid=460289&group_id=40287&func=browse
+  * Get newest version        @ http://dcplusplus.sourceforge.net/index.php?t=2&s=1
   * Typos and errors in readme go to Fireball@enLightning.de
 
 11 Have fun

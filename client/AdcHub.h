@@ -25,7 +25,7 @@
 class AdcHub;
 class ClientManager;
 
-class AdcHub : public Client, CommandHandler<AdcHub> {
+class AdcHub : public Client, public CommandHandler<AdcHub> {
 public:
 
 	virtual void connect(const User* user);
@@ -44,6 +44,7 @@ public:
 	virtual void password(const string& pwd);
 	virtual void info();
 	virtual string checkNick(const string& nick);
+	virtual string getHubURL();
 	virtual void sendMeMessage(const string& aMessage);
 
 	virtual size_t getUserCount() const { return 0;};
