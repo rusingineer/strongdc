@@ -57,6 +57,7 @@ void WebServerManager::Start(){
 	pages["/weblog.html"] = new WebPageInfo(LOG, "Logs");
 	pages["/syslog.html"] = new WebPageInfo(SYSLOG, "System Logs");
 
+
 #ifdef _DEBUG  
 	//AllocConsole();
 	//freopen("con:","w",stdout);
@@ -121,13 +122,15 @@ string WebServerManager::getLoginPage(){
     pagehtml += "</body>";
     pagehtml += "</html>";
 
-	return pagehtml;
+	string header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: " + Util::toString(pagehtml.length()) + "\r\n\r\n";
+
+	return header + pagehtml;
 }
 
 string WebServerManager::getPage(string file){
 	printf("requested: '%s'\n",file.c_str()); 
+	string header = "HTTP/1.0 200 OK\r\n";
 	string pagehtml = "";
-
 
 	WebPageInfo *page = page404;
 	WebPages::iterator find = pages.find(file.c_str());
@@ -195,7 +198,11 @@ string WebServerManager::getPage(string file){
 			else if(file == "/suspend.htm") action = 3;
 			else if(file == "/logoff.htm") action = 1;
 			else if(file == "/switch.htm") action = 5;
-			else { pagehtml += "Page not found";	break; }
+			else { 
+				header = "HTTP/1.0 404 Not Found\r\n";
+				pagehtml += "Page not found";
+				break;
+			}
 
 			fire(WebServerListener::ShutdownPC(), action);
 			pagehtml += "Request sent to remote PC :)";
@@ -218,24 +225,10 @@ string WebServerManager::getPage(string file){
     pagehtml += "</body>";
     pagehtml += "</html>";
 
-	printf("sending: %s\n",(pagehtml).c_str());
-	return  pagehtml;
-}
+	header += "Content-Type: text/html\r\nContent-Length: " + Util::toString(pagehtml.length()) + "\r\n\r\n";
 
-string WebServerManager::getPages(){
-	string ret = "";
-	for(WebPages::iterator p = pages.begin(); p != pages.end(); ++p){
-		if(p->second->title != ""){
-			ret+="<a href ='";
-			ret+=p->first;
-			ret+="'>";
-			ret+=p->second->title;
-			ret+="</a>&nbsp";
-		}
-	}
-	if(ret!="")ret+="<br>";
-
-	return ret;
+	printf("sending: %s\n",(header + pagehtml).c_str());
+	return header + pagehtml;
 }
 
 string WebServerManager::getLogs(){
@@ -336,7 +329,6 @@ string WebServerManager::getULQueue(){
 			ret+="<td>" + (*i)->FileName + "</td></tr>";
 		}
 	}
-
 	ret+="</table>";
 	return ret;
 }	
@@ -364,10 +356,15 @@ StringMap WebServerSocket::getArgs(string arguments) {
 
 int WebServerSocket::run(){
 	char buff[512];
-	int size = recv(sock,buff,512,0);	
+
+	ZeroMemory(&buff, sizeof(buff));
+	while(true) {
+
+	int size = recv(sock,buff,sizeof(buff),0);
 
 	string header = buff;
 	header = header.substr(0,size);
+
 	int start = 0, end = 0;
 
 	string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
@@ -401,15 +398,16 @@ int WebServerSocket::run(){
 		}
 	
 		::send(sock, toSend.c_str(), toSend.size(), 0);
-	} else {
+		break;
+	}/* else {
 		if(BOOLSETTING(LOG_WEBSERVER)) {
 			StringMap params;
 			params["file"] = "Unknown request type";
 			params["ip"] = IP;
 			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
 		}
+	}*/
 	}
-
 	::closesocket(sock);
 	return 0;
 }

@@ -218,7 +218,10 @@ public:
 	void removeCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
-		currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
+
+		if(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end()) {
+			currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
+		}
 
 		if(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)) != activeSegments.end()) {
 			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)));

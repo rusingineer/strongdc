@@ -462,7 +462,7 @@ void HubManager::load() {
 	
 	// Add NMDC standard op commands
 	static const char kickstr[] = 
-		"$To: %[nick] From: %[mynick] $<%[mynick]> You are being kicked because: %[line:Reason]|<%[mynick]> %[mynick] is kicking %[nick] because: %[line:Reason]|$Kick %[nick]|";
+		"$To: %[nick] From: %[mynick] $<%[mynick]> You are being kicked because: %[kickline:Reason]|<%[mynick]> is kicking %[nick] because: %[kickline:Reason]|$Kick %[nick]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(KICK_USER), kickstr, "op");
 	static const char kickfilestr[] = 

@@ -1171,40 +1171,45 @@ TransferView::ItemInfo* TransferView::findMainItem(string Target) {
 
 void TransferView::InsertItem(ItemInfo* i) {
 
-	Lock lck(cs);
-	ItemInfo* l = findMainItem(i->Target);
+	ItemInfo* main = findMainItem(i->Target);
 
-	if(!l) {
-	  	ItemInfo* h = new ItemInfo(i->user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
-		h->Target = i->Target;
-		h->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
-		h->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
-		h->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
-		h->file = i->columns[COLUMN_FILE];
-		h->path = i->columns[COLUMN_PATH];
-		h->size = i->size;
-		h->mainItem = true;
-		h->upper = NULL;
-		h->columns[COLUMN_STATUS] = h->statusString = STRING(CONNECTING);
-		h->qi = i->qi;
-		i->upper = h;
-		mainItems.push_back(h);
+	{
+		Lock l(cs);
 
-		PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
-	} else {
-		i->upper = l;
-		i->upper->pocetUseru += 1;
+		if(main == NULL) {
+		  	ItemInfo* h = new ItemInfo(i->user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
+			h->Target = i->Target;
+			h->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
+			h->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
+			h->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
+			h->file = i->columns[COLUMN_FILE];
+			h->path = i->columns[COLUMN_PATH];
+			h->size = i->size;
+			h->mainItem = true;
+			h->upper = NULL;
+			h->columns[COLUMN_STATUS] = h->statusString = STRING(CONNECTING);
+			h->qi = i->qi;
+			i->upper = main;
+			mainItems.push_back(h);
 
-		if(i->upper->pocetUseru == 1) {
-			i->upper->columns[COLUMN_USER] = i->user->getNick();
-			i->upper->columns[COLUMN_HUB] = i->user->getClientName();
+			PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
 		} else {
-			i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
-			i->upper->columns[COLUMN_HUB] = Util::toString((int)i->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
-		}
+			i->upper = main;
+			i->upper->pocetUseru += 1;
 
-		if(!i->upper->collapsed) {
-			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
+			if(i->upper->pocetUseru == 1) {
+				i->upper->columns[COLUMN_USER] = i->user->getNick();
+				i->upper->columns[COLUMN_HUB] = i->user->getClientName();
+			} else {
+				i->upper->columns[COLUMN_USER] = Util::toString(main->pocetUseru)+" "+STRING(HUB_USERS);
+
+				if(main->qi)
+					i->upper->columns[COLUMN_HUB] = Util::toString((int)main->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
+			}
+
+			if(!main->collapsed) {
+				PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
+			}
 		}
 	}
 }
