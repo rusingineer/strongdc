@@ -272,19 +272,23 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
+	bool fNext = false;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
 		if(i != userQueue[p].end()) {
 			dcassert(!i->second.empty());
-			if(pNext == NULL){
+			if(pNext == NULL || fNext){
 				return i->second.front();
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
-				if(iQi != i->second.end() && (*iQi) != i->second.back()){
+                if(iQi != i->second.end()){
+                    fNext = true;   // found, next is target
+
 					iQi++;
-					return *iQi;
+                    if(iQi != i->second.end())
+						return *iQi;
 				}
 			}
 		}
@@ -297,7 +301,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) {
 
 	if(!qi->isSource(aUser)) return;
-	dcassert(qi->isSource(aUser));
+	//dcassert(qi->isSource(aUser));
 	QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 	QueueItem::UserListIter j = ulm.find(aUser);
 	dcassert(j != ulm.end());
@@ -334,6 +338,7 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 
 	if(qi->getCurrents().empty()){
 		qi->setStatus(QueueItem::STATUS_WAITING);
+		qi->setSpeed(0);
 	}
 
 	// Add to the userQueue
@@ -897,7 +902,7 @@ again:
 
 		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
 			int64_t speed = SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024;
-			if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget(), speed) > speed) {
+			if(q->getSpeed() > speed) {
 				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);		
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				goto again;
@@ -908,6 +913,7 @@ again:
 
 		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
+			q->setNoFreeBlocks(true);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
@@ -1239,9 +1245,10 @@ void QueueManager::saveQueue() throw() {
 				f.write(STRINGLEN("\" TempTarget=\""));
 				f.write(CHECKESCAPE(d->getTempTarget()));
 				f.write(STRINGLEN("\" FreeBlocks=\""));
-				f.write(FileChunksInfo::Get(d->getTempTarget())->getFreeBlocksString());
+				FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(d->getTempTarget());
+				f.write(fileChunksInfo ? fileChunksInfo->getFreeBlocksString() : "");
 				f.write(STRINGLEN("\" VerifiedBlocks=\""));
-				f.write(FileChunksInfo::Get(d->getTempTarget())->getVerifiedBlocksString());
+				f.write(fileChunksInfo ? fileChunksInfo->getVerifiedBlocksString() : "");
 				f.write(STRINGLEN("\" Added=\""));
 				f.write(Util::toString(d->getAdded()));
 				if(d->getTTH() != NULL) {
@@ -1511,11 +1518,10 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		Lock l(cs);
 		QueueItem::UserMap& um = userQueue.getRunning();
 
-		if(BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
-			for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
-				QueueItem* q = j->second;
+		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
+			QueueItem* q = j->second;
+			if(BOOLSETTING(REALTIME_QUEUE_UPDATE) && (q->getStatus() == QueueItem::STATUS_WAITING))
 				fire(QueueManagerListener::StatusUpdated(), q);
-			}
 		}
 		if(!um.empty())
 			setDirty();
@@ -1581,6 +1587,25 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
+void QueueManager::autoDropSource(User::Ptr& aUser, bool remove)
+{
+    Lock l(cs);
+
+    QueueItem* q = userQueue.getRunning(aUser);
+
+    if(!q) return;
+
+    userQueue.setWaiting(q, aUser);
+    userQueue.remove(q, aUser);
+
+	if(remove)
+		q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
+
+	fire(QueueManagerListener::StatusUpdated(), q);
+    setDirty();
+
+    DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
+}
 /**
  * @file
  * $Id$

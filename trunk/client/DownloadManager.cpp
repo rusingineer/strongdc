@@ -115,19 +115,31 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		Download* d = *i;
 		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
+		if(q && SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
+			int TryToSwitchToUser = -1;
+			if((d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
+				TryToSwitchToUser = 0;
+			} else if((q->speedUsers.size() > 1) && (d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
+				TryToSwitchToUser = 1;
+			} else if((q->speedUsers.size() > 2) && (d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
+				TryToSwitchToUser = 2;
+			}
+			if((TryToSwitchToUser > -1) && q->speedUsers[TryToSwitchToUser]->getUser()->isOnline() && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
+                QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), true);
+				q->setFastUser(true);
+				q->speedUsers[TryToSwitchToUser]->getUser()->connect();
+			}
+		}
 		if(q && q->getSlowDisconnect()) {
 			if(SETTING(AUTO_DROP_SOURCE) && (q->getActiveSegments().size() < 2)) {
 				continue;
 			}
-			if(getWholeFileSpeed(d->getTarget()) > (iHighSpeed*1024)) {
+			if(q->getSpeed() > (iHighSpeed*1024)) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
 					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() >= 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 						if(((GET_TICK() - d->quickTick)/1000) > iTime){
-							d->getUserConnection()->disconnect();
-							if(d->getRunningAverage() < (SETTING(DISCONNECT)*1024)) { 
-								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(),QueueItem::Source::FLAG_SLOW);
-							}
+			                QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser(), d->getRunningAverage() < (SETTING(DISCONNECT)*1024));
 						}
 					} else {
 						d->quickTick = GET_TICK();
@@ -242,7 +254,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
 
 		if(d == NULL) {
-			removeConnection(aConn, true);
+			removeConnection(aConn, false);
 			return;
 		}
 
@@ -622,8 +634,44 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const BlockDLException e) {
 			dcdebug("BlockDLException.....\n");
 			d->finished = true;
-			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));						
-			aSource->getUser()->setDownloadSpeed(d->getRunningAverage());
+			//fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));						
+			User::Ptr u = aSource->getUser();
+			u->setDownloadSpeed(d->getAverageSpeed());
+			if(SETTING(SPEED_USERS)) {
+				QueueItem* qi = QueueManager::getInstance()->getRunning(aSource->getUser());
+				if(qi != NULL) {
+					if(qi->speedUsers.size() == 0) {
+						qi->speedUsers.push_back(*qi->getSource(u));
+					} else if(qi->speedUsers.size() == 1) {
+						if(u->getDownloadSpeed() > qi->speedUsers[0]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[1] = qi->speedUsers[0];
+							qi->speedUsers[0] = *qi->getSource(u);
+						} else {
+							qi->speedUsers.push_back(*qi->getSource(u));
+						}
+					} else if(qi->speedUsers.size() == 2) {
+						if(u->getDownloadSpeed() > qi->speedUsers[0]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[2] = qi->speedUsers[1];
+							qi->speedUsers[1] = qi->speedUsers[0];
+							qi->speedUsers[0] = *qi->getSource(u);
+						} else if(u->getDownloadSpeed() > qi->speedUsers[1]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[2] = qi->speedUsers[1];
+							qi->speedUsers[1] = *qi->getSource(u);
+						} else qi->speedUsers.push_back(*qi->getSource(u));
+					} else if(qi->speedUsers.size() == 3) {
+						if(u->getDownloadSpeed() > qi->speedUsers[0]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[2] = qi->speedUsers[1];
+							qi->speedUsers[1] = qi->speedUsers[0];
+							qi->speedUsers[0] = *qi->getSource(u);
+						} else if(u->getDownloadSpeed() > qi->speedUsers[1]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[2] = qi->speedUsers[1];
+							qi->speedUsers[1] = *qi->getSource(u);
+						} else if(u->getDownloadSpeed() > qi->speedUsers[2]->getUser()->getDownloadSpeed()) {
+							qi->speedUsers[2] = *qi->getSource(u);
+						}
+					}
+				}
+			}
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
@@ -634,6 +682,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setDownload(NULL);
 				removeDownload(d, false); // true -> false
 				removeConnection(aSource, false, true);
+				Thread::sleep(20);
 				aSource->getUser()->connect();
 			}
 			return;
@@ -1161,7 +1210,6 @@ void DownloadManager::abortDownload(const string& aTarget) {
 		Download* d = *i;
 		if(d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
-			//ConnectionManager::getInstance()->putDownloadConnection(d->getUserConnection());
 			d->getUserConnection()->disconnect();
 		}
 	}
