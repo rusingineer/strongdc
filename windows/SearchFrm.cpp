@@ -28,6 +28,8 @@
 #include "../client/StringTokenizer.h"
 #include "../client/ClientManager.h"
 
+#include "../pme-1.0.4/pme.h"
+
 StringList SearchFrame::lastSearches;
 
 int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
@@ -60,7 +62,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlSearchBox.SetExtendedUI();
 	
 	ctrlMode.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		/*WS_HSCROLL | WS_VSCROLL | */CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
+		WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
 	modeContainer.SubclassWindow(ctrlMode.m_hWnd);
 
 	ctrlSize.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
@@ -68,11 +70,11 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	sizeContainer.SubclassWindow(ctrlSize.m_hWnd);
 
 	ctrlSizeMode.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		/*WS_HSCROLL | WS_VSCROLL | */CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
+		WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
 	sizeModeContainer.SubclassWindow(ctrlSizeMode.m_hWnd);
 
 	ctrlFiletype.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		/*WS_HSCROLL | WS_VSCROLL | */CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED, WS_EX_CLIENTEDGE, IDC_FILETYPES);
+		WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED, WS_EX_CLIENTEDGE, IDC_FILETYPES);
 
 	searchTypes.CreateFromImage(IDB_SEARCH_TYPES, 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	fileTypeContainer.SubclassWindow(ctrlFiletype.m_hWnd);
@@ -101,8 +103,20 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_NOCOLUMNHEADER, WS_EX_CLIENTEDGE, IDC_HUB);
-	hubsContainer.SubclassWindow(ctrlHubs.m_hWnd);	
 	ctrlHubs.SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+	hubsContainer.SubclassWindow(ctrlHubs.m_hWnd);	
+
+	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+
+	ctrlFilterContainer.SubclassWindow(ctrlFilter.m_hWnd);
+	ctrlFilter.SetFont(WinUtil::font);
+
+	ctrlFilterSel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_HSCROLL |
+		WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
+
+	ctrlFilterSelContainer.SubclassWindow(ctrlFilterSel.m_hWnd);
+	ctrlFilterSel.SetFont(WinUtil::font);
 
 	searchLabel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	searchLabel.SetFont(WinUtil::systemFont, FALSE);
@@ -115,6 +129,10 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	typeLabel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	typeLabel.SetFont(WinUtil::systemFont, FALSE);
 	typeLabel.SetWindowText(CSTRING(FILE_TYPE));
+
+	srLabel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	srLabel.SetFont(WinUtil::systemFont, FALSE);
+	srLabel.SetWindowText(CSTRING(SEARCH_IN_RESULTS));
 
 	optionLabel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	optionLabel.SetFont(WinUtil::systemFont, FALSE);
@@ -135,7 +153,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlTTH.SetFont(WinUtil::systemFont, FALSE);
 	ctrlTTH.SetWindowText(CSTRING(ONLY_TTH));
 	tthContainer.SubclassWindow(ctrlTTH.m_hWnd);
-
 
 	if(BOOLSETTING(FREE_SLOTS_DEFAULT)) {
 		ctrlSlots.SetCheck(true);
@@ -213,7 +230,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlHubs.SetTextBkColor(WinUtil::bgColor);
 	ctrlHubs.SetTextColor(WinUtil::textColor);
 	ctrlHubs.SetFont(WinUtil::systemFont, FALSE);	// use Util::font instead to obey Appearace settings
-
 	initHubs();
 
 	copyMenu.CreatePopupMenu();
@@ -227,6 +243,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_PATH, CSTRING(PATH));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CSTRING(SIZE));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CSTRING(TTH_ROOT));
+	copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
 		
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
@@ -250,7 +267,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
 	resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CSTRING(BITZI_LOOKUP));
-	resultsMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
 
 	UpdateLayout();
 	
@@ -265,6 +281,19 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	} else {
 		SetWindowText(CSTRING(SEARCH));
 	}
+
+	char Buffer[500];
+	LV_COLUMN lvCol;
+	int indexes[32];
+	ctrlResults.GetColumnOrderArray(ctrlResults.GetHeader().GetItemCount(), indexes);
+	for (int i = 0; i < ctrlResults.GetHeader().GetItemCount(); ++i) {
+		lvCol.mask = LVCF_TEXT;
+		lvCol.pszText = Buffer;
+		lvCol.cchTextMax = sizeof(Buffer);
+		ctrlResults.GetColumn(indexes[i], &lvCol);
+		ctrlFilterSel.AddString(lvCol.pszText);
+	}
+	ctrlFilterSel.SetCurSel(0);
 
 	bHandled = FALSE;
 	return 1;
@@ -283,58 +312,47 @@ LRESULT SearchFrame::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 };
 
 
-BOOL SearchFrame::ListMeasure(HWND hwnd, UINT uCtrlId, MEASUREITEMSTRUCT *mis)
-{
+BOOL SearchFrame::ListMeasure(HWND hwnd, UINT uCtrlId, MEASUREITEMSTRUCT *mis) {
 	mis->itemHeight = 16;
 	return TRUE;
 }
 
 
-BOOL SearchFrame::ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis)
-{ 	TCHAR szText[MAX_PATH+1];
+BOOL SearchFrame::ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis) {
+	TCHAR szText[MAX_PATH+1];
 	int idx;
 	
-	switch(dis->itemAction)
-	{
-	case ODA_FOCUS:
-		if(!(dis->itemState & 0x0200))
-			DrawFocusRect(dis->hDC, &dis->rcItem);
-		break;
-
-	case ODA_SELECT:
-	case ODA_DRAWENTIRE:
-
-		ctrlFiletype.GetLBText(dis->itemID, szText);
-		if(dis->itemState & ODS_SELECTED)
-		{
-			SetTextColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
-			SetBkColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHT));
-		}
-		else
-		{			
-			SetTextColor(dis->hDC, WinUtil::textColor);
-			SetBkColor(dis->hDC, WinUtil::bgColor);
-		}
-
-		idx = dis->itemData;
-
-	
-		ExtTextOut(dis->hDC, dis->rcItem.left+22, dis->rcItem.top+1, ETO_OPAQUE, &dis->rcItem, szText, lstrlen(szText), 0);
-
-		if(dis->itemState & ODS_FOCUS) 
-		{
-			if(!(dis->itemState &  0x0200 ))
+	switch(dis->itemAction) {
+		case ODA_FOCUS:
+			if(!(dis->itemState & 0x0200))
 				DrawFocusRect(dis->hDC, &dis->rcItem);
-		}
+			break;
 
-		ImageList_Draw(searchTypes, dis->itemID, dis->hDC, 
-			dis->rcItem.left + 2, 
-			dis->rcItem.top, 
-			ILD_TRANSPARENT);
+		case ODA_SELECT:
+		case ODA_DRAWENTIRE:
+			ctrlFiletype.GetLBText(dis->itemID, szText);
+			if(dis->itemState & ODS_SELECTED) {
+				SetTextColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				SetBkColor(dis->hDC, GetSysColor(COLOR_HIGHLIGHT));
+			} else {			
+				SetTextColor(dis->hDC, WinUtil::textColor);
+				SetBkColor(dis->hDC, WinUtil::bgColor);
+			}
 
-		break;
+			idx = dis->itemData;
+			ExtTextOut(dis->hDC, dis->rcItem.left+22, dis->rcItem.top+1, ETO_OPAQUE, &dis->rcItem, szText, lstrlen(szText), 0);
+			if(dis->itemState & ODS_FOCUS) {
+				if(!(dis->itemState &  0x0200 ))
+					DrawFocusRect(dis->hDC, &dis->rcItem);
+			}
+
+			ImageList_Draw(searchTypes, dis->itemID, dis->hDC, 
+				dis->rcItem.left + 2, 
+				dis->rcItem.top, 
+				ILD_TRANSPARENT);
+
+			break;
 	}
-
 	return TRUE;
 }
 
@@ -342,8 +360,7 @@ BOOL SearchFrame::ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis)
 void SearchFrame::onEnter() {
 	StringList clients;
 
-	startSearch();
-	
+	startSearch();	
 	if(!(ctrlSearch.GetWindowTextLength() > 0 && lastSearch + 3*1000 < TimerManager::getInstance()->getTick()))
 			return;
 
@@ -378,8 +395,9 @@ void SearchFrame::onEnter() {
 	int64_t llsize = (int64_t)lsize;
 
 	for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	    SearchInfo* si = ctrlResults.getItemData(i);
+	    SearchInfo* si = mainItems[i];//ctrlResults.getItemData(i);
 		int q = 0;
+		if(si->subItems.size() > 0) {
 			while(q<si->subItems.size()) {
 				SearchInfo* j = si->subItems[q];
 				if((ctrlResults.findItem(j) == -1) && (j->needDelete))
@@ -387,13 +405,13 @@ void SearchFrame::onEnter() {
 				q++;
 			}
 		}
+		if((ctrlResults.findItem(si) == -1) && (si->needDelete)) delete si;
+	}
 
 	mainItems.clear();
 	dcassert(mainItems.size() == 0);
 	ctrlResults.DeleteAll();
 
-	ctrlStatus.SetText(2, ("0 "+STRING(FILES)).c_str());
-		
 	{
 		Lock l(cs);
 		search = StringTokenizer(s, ' ').getTokens();
@@ -409,7 +427,6 @@ void SearchFrame::onEnter() {
 		mode = SearchManager::SIZE_DONTCARE;
 
 	exactSize = (mode == SearchManager::SIZE_EXACT);
-
 	int ftype = ctrlFiletype.GetCurSel();		
 
 	if(BOOLSETTING(CLEAR_SEARCH)){
@@ -431,6 +448,7 @@ void SearchFrame::onEnter() {
 	}
 		
 	ctrlStatus.SetText(1, (STRING(SEARCHING_FOR) + s + "...").c_str());
+	ctrlStatus.SetText(2, ("0 "+STRING(FILES)).c_str());
 	{
 		Lock l(cs);
 		search = StringTokenizer(s, ' ').getTokens();
@@ -648,15 +666,12 @@ LRESULT SearchFrame::onDownloadWholeTarget(WORD /*wNotifyCode*/, WORD wID, HWND 
 }
 
 LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
-//	ctrlResults.forEachSelectedT(SearchInfo::Download(SETTING(DOWNLOAD_DIRECTORY)));
-//PDC {
 	int i = -1;
 	while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		SearchInfo* si = ctrlResults.getItemData(i);
 		string t = SettingsManager::getInstance()->getDownloadDir(Util::getFileExt(si->getFileName()));		
 		(SearchInfo::Download(t))(ctrlResults.getItemData(i));
 	}
-//PDC }
 	return 0;
 }
 
@@ -671,19 +686,22 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-        for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	       SearchInfo* si = ctrlResults.getItemData(i);
+       for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	       SearchInfo* si =  mainItems[i];//ctrlResults.getItemData(i);
 		    int q = 0;
-			while(q<si->subItems.size()) {
-				SearchInfo* j = si->subItems[q];
-				if((ctrlResults.findItem(j) == -1) && (j->needDelete))
-					delete j;
-				q++;
+			if(si->subItems.size() > 0) {
+				while(q<si->subItems.size()) {
+					SearchInfo* j = si->subItems[q];
+					if((ctrlResults.findItem(j) == -1) && (j->needDelete))
+						delete j;
+					q++;
+				}
 			}
+			if((ctrlResults.findItem(si) == -1) && (si->needDelete)) delete si;
 		}
+
  		mainItems.clear();
 		ctrlResults.DeleteAll();
-
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -697,16 +715,14 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	}
 }
 
-LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	if(ctrlResults.GetSelectedCount() == 1){
+LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlResults.GetSelectedCount() == 1) {
 		SearchInfo* si = ctrlResults.getSelectedItem();
 		if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH()) {
 			string url = "http://bitzi.com/lookup/tree:tiger:" + si->sr->getTTH()->toBase32();
 			WinUtil::openLink(url);
 		}
 	}
-	
 	return 0;
 }
 void SearchFrame::UpdateLayout(BOOL bResizeBars)
@@ -777,9 +793,25 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		rc.top += spacing;
 		rc.bottom = rc.top + comboH + 21;
 		ctrlFiletype.MoveWindow(rc);
-		rc.bottom -= comboH;
+		//rc.bottom -= comboH;
 
 		typeLabel.MoveWindow(rc.left + lMargin, rc.top - labelH, width - rMargin, labelH-1);
+
+		// "Search filter"
+		rc.left = lMargin;
+		rc.right = (width - rMargin) / 2 - 3;		
+		rc.top += spacing;
+		rc.bottom = rc.top + 21;
+		
+		ctrlFilter.MoveWindow(rc);
+
+		rc.left = (width - rMargin) / 2 + 3;
+		rc.right = width - rMargin;
+		rc.bottom = rc.top + comboH + 21;
+		ctrlFilterSel.MoveWindow(rc);
+		rc.bottom -= comboH;
+
+		srLabel.MoveWindow(lMargin * 2, rc.top - labelH, width - rMargin, labelH-1);
 
 		// "Search options"
 		rc.left = lMargin+4;
@@ -795,7 +827,6 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		rc.top += labelH+4;
 		rc.bottom += labelH+4;
 		ctrlTTH.MoveWindow(rc);
-
 
 		// "Hubs"
 		rc.left = lMargin;
@@ -872,7 +903,7 @@ LRESULT SearchFrame::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	HDC hDC = (HDC)wParam;
 
 	if(hWnd == searchLabel.m_hWnd || hWnd == sizeLabel.m_hWnd || hWnd == optionLabel.m_hWnd || hWnd == typeLabel.m_hWnd
-		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlTTH.m_hWnd) {
+		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlTTH.m_hWnd || hWnd == srLabel.m_hWnd) {
 		::SetBkColor(hDC, ::GetSysColor(COLOR_3DFACE));
 		::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
 		return (LRESULT)::GetSysColorBrush(COLOR_3DFACE);
@@ -938,7 +969,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
 				SearchInfo* si2 = ctrlResults.getItemData(i);
 				SearchResult* sr2 = si2->sr;
-
 				if(si2->subItems.size() > 0)
 					for(int k = 0, l = si2->subItems.size(); k < l; ++k) {
 						SearchResult* sr3 = si2->subItems[k]->sr;
@@ -951,31 +981,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					delete si;
 					return 0;
 				}
-			}
-
-			int image = 0;
-			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
-				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(sr->getFile()) : WinUtil::getDirIconIndex();
-			} else {
-				const string& tmp = sr->getUser()->getConnection();
-
-				if( (tmp == "28.8Kbps") ||
-					(tmp == "33.6Kbps") ||
-					(tmp == "56Kbps") ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) ) {
-					image = 1;
-				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) ) {
-					image = 2;
-				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
-					image = 3;
-				}
-				if(sr->getType() == SearchResult::TYPE_FILE)
-					image+=4;
 			}
 
 			if(sr->getTTH() != NULL) {
@@ -991,10 +996,8 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 						si->main = si2;
 
 						int m = ctrlResults.findItem(si2);
-						dcassert(m != -1);
-						if(!si2->collapsed) {
-							si->needDelete = false;
-							ctrlResults.insertItem(m+1, si, image);
+						if(!si2->collapsed && m != -1) {					
+							insertItem(m+1, si);
 							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 						} else ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 						ctrlResults.resort();
@@ -1004,7 +1007,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			}
 			mainItems.push_back(si);
 			si->mainitem = true;
-			ctrlResults.insertItem(si, image);
+			insertItem(0, si);
 			setDirty();
 			ctrlStatus.SetText(2, (Util::toString(ctrlResults.GetItemCount())+" "+STRING(FILES)).c_str());
 		}
@@ -1071,6 +1074,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			}
 
 		n = 0;
+		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
 			targetDirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 				for(StringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
@@ -1078,14 +1082,25 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 						n++;
 					}
 				}		
+
 		// magnet link
+		resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
+		resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);
 		resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_BYCOMMAND | MF_GRAYED);
+		resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_GRAYED);
 		if(ctrlResults.GetSelectedCount() == 1){
 			SearchInfo* si = ctrlResults.getSelectedItem();
 			if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH()) {
+				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
+				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
 				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_BYCOMMAND | MF_ENABLED);
 			}
+			if(si && ((Util::getFileExt(si->sr->getFileName()) == "mp3") || (Util::getFileExt(si->sr->getFileName()) == "MP3"))) {
+				resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_ENABLED);
+			}
+				
 		}
+
 		prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
 		if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			resultsMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -1187,64 +1202,45 @@ LRESULT SearchFrame::onItemChangedHub(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* b
 	return 0;
 }
 
-LRESULT SearchFrame::onCopyNick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 	dcassert(pos != -1);
-	SearchInfo* si = ctrlResults.getItemData(pos);
-	SearchResult* sr = si->sr;
-	WinUtil::setClipboard(sr->getUser()->getNick());
-	return S_OK;
-}
-
-LRESULT SearchFrame::onCopyFilename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-	dcassert(pos != -1);
-	SearchInfo* si = ctrlResults.getItemData(pos);
-	SearchResult* sr = si->sr;
-	WinUtil::setClipboard(Util::getFileName(sr->getFile()));
-	return S_OK;
-}
-
-LRESULT SearchFrame::onCopyPath(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-	dcassert(pos != -1);
-	SearchInfo* si = ctrlResults.getItemData(pos);
-	SearchResult* sr = si->sr;
-	WinUtil::setClipboard(Util::getFilePath(sr->getFile()));
-	return S_OK;
-}
-
-LRESULT SearchFrame::onCopySize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-	dcassert(pos != -1);
-	SearchInfo* si = ctrlResults.getItemData(pos);
-	SearchResult* sr = si->sr;
-	WinUtil::setClipboard(Util::formatBytes(sr->getSize()));
-	return S_OK;
-}
-
-LRESULT SearchFrame::onCopyTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-	dcassert(pos != -1);
-	SearchInfo* si = ctrlResults.getItemData(pos);
-	SearchResult* sr = si->sr;
-	if(sr->getTTH() != NULL)
-		WinUtil::setClipboard(sr->getTTH()->toBase32());
-	return S_OK;
-}
-
-LRESULT SearchFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlResults.GetSelectedCount() == 1){
-		SearchInfo* si = ctrlResults.getSelectedItem();
-		if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH() && si->sr->getSize()) {
-			string link = "magnet:?xt=urn:tree:tiger:" + si->sr->getTTH()->toBase32() +
-				"&xl=" + Util::toString(si->sr->getSize()) +
-				"&dn=" +  si->sr->getFileName();
-			WinUtil::setClipboard(link);
+	string sCopy;
+	if ( pos >= 0 ) {
+		SearchInfo* si = ctrlResults.getItemData(pos);
+		SearchResult* sr = si->sr;
+		switch (wID) {
+			case IDC_COPY_NICK:
+				sCopy = sr->getUser()->getNick();
+				break;
+			case IDC_COPY_FILENAME:
+				sCopy = Util::getFileName(sr->getFile());
+				break;
+			case IDC_COPY_PATH:
+				sCopy = Util::getFilePath(sr->getFile());
+				break;
+			case IDC_COPY_SIZE:
+				sCopy = Util::formatBytes(sr->getSize());
+				break;
+			case IDC_COPY_LINK:
+				if(si && si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH() && si->sr->getSize()) {
+					sCopy = "magnet:?xt=urn:tree:tiger:" + si->sr->getTTH()->toBase32() +
+					"&xl=" + Util::toString(si->sr->getSize()) +
+					"&dn=" +  si->sr->getFileName();
+				}
+				break;
+			case IDC_COPY_TTH:
+				if(si->sr->getType() == SearchResult::TYPE_FILE && si->sr->getTTH())
+					sCopy = si->sr->getTTH()->toBase32();
+				break;
+			default:
+				dcdebug("SEARCHFRAME DON'T GO HERE\n");
+				return 0;
 		}
+		if (!sCopy.empty())
+			WinUtil::setClipboard(sCopy);
 	}
-
-	return 0;
+	return S_OK;
 }
 
 LRESULT SearchFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
@@ -1281,9 +1277,7 @@ void SearchFrame::Expand(SearchInfo* i, int a) {
 	int q = 0;
 	while(q<i->subItems.size()) {
 		SearchInfo* j = i->subItems[q];
-		int image = j->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(j->sr->getFile()) : WinUtil::getDirIconIndex();
-		j->needDelete = false;
-		ctrlResults.insertItem(a+1,j, image);
+		insertItem(a+1,j);
 		q++;
 	}
 
@@ -1329,6 +1323,88 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 		return CDRF_DODEFAULT;
 	}
 	
+}
+
+void SearchFrame::insertItem(int pos, SearchInfo* item) {
+	PME reg(filter,"i");
+	int sel = ctrlFilterSel.GetCurSel();
+	if(reg.match(item->getText(sel))) {
+		item->needDelete = false;
+		int image = 0;
+		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
+			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(item->sr->getFile()) : WinUtil::getDirIconIndex();
+		} else {
+			const string& tmp = item->sr->getUser()->getConnection();
+			if( (tmp == "28.8Kbps") ||
+				(tmp == "33.6Kbps") ||
+				(tmp == "56Kbps") ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) ) {
+				image = 1;
+			} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) ) {
+				image = 2;
+			} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
+				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
+				image = 3;
+			}
+			if(item->sr->getType() == SearchResult::TYPE_FILE)
+				image+=4;
+		}
+		int k = ctrlResults.insertItem(pos, item, image);
+		if(item->subItems.size() > 0)
+			ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);						
+	}
+	ctrlResults.resort();
+}
+
+LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
+	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
+	filter = buf;
+	delete buf;
+	
+	updateSearchList();
+
+	bHandled = false;
+
+	return 0;
+}
+
+void SearchFrame::updateSearchList() {
+	Lock l(cs);
+
+	for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	    SearchInfo* si = mainItems[i];
+		si->collapsed = true;
+	}
+
+	while(ctrlResults.GetItemCount() > 0) {
+		ctrlResults.deleteItem(0, false);
+	}
+
+	for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	    SearchInfo* si = mainItems[i];
+		si->collapsed = true;
+		insertItem(0, si);
+	}
+
+
+}
+
+LRESULT SearchFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
+	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
+	filter = buf;
+	delete buf;
+	
+	updateSearchList();
+	
+	bHandled = false;
+
+	return 0;
 }
 /**
  * @file

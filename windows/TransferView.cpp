@@ -677,8 +677,10 @@ void TransferView::CollapseAll() {
 void TransferView::ExpandAll() {
 	for(int q = mainItems.size()-1; q != -1; --q) {
 	  ItemInfo* m = mainItems[q];
-	  int i = ctrlTransfers.findItem(m);
-	  Expand(m,i);
+	  if(m->collapsed) {
+		int i = ctrlTransfers.findItem(m);
+		Expand(m,i);
+	  }
 	}
 }
 
@@ -766,7 +768,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == SET_STATE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
-		if((!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
+		if(!i->qi || (!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
 			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 		}
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
@@ -980,9 +982,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 				i->size = qi->getSize();
 				i->Target = qi->getTarget();
 				i->qi = qi;
-				dcdebug((aCqi->getUser()->getNick()+" --> tady1\n").c_str());
 			}
-			dcdebug((aCqi->getUser()->getNick()+" --> tady2\n").c_str());
 		}
 	}
 
@@ -1266,7 +1266,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 			}
 		}
 
-		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
+		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
 		ItemInfo::MASK_PATH;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);

@@ -263,6 +263,12 @@ string User::getReport()
 	report += "\r\nCommands:	" + unknownCommand;
 	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::toString(fileListSize) + " B)" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
+	if ( listLength != -1 ) {
+		temp = Util::formatBytes(listLength) + "  (" + Util::toString(listLength) + " B)";
+	} else {
+		temp = "N/A";
+	}
+	report += "\r\nListLen:		" + temp;
 	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatNumber(bytesShared) + " B)";
 	if ( getRealBytesShared() > -1 ) {
 		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatNumber(getRealBytesShared()) + " B)";
@@ -284,30 +290,50 @@ string User::getReport()
 }
 
 void User::updateClientType() {
+	if ( isSet(User::DCPLUSPLUS) && (listLength == 11) && (bytesShared > 0) ) {
+		setCheat("Fake file list - ListLen = 11" , true);
+		clientType = "DC++ Stealth";
+		setHasTestSURinQueue(false);
+		sendRawCommand(SETTING(LISTLEN_MISMATCH));
+		return;
+	}
 	int64_t tick = GET_TICK();
 	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
 
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
-		StringMap paramMap;
-		paramMap["version"] = ".*";
-		paramMap["version2"] = ".*";
 		string version, pkVersion, extraVersion;
 		string tagExp = cp.getTag();
+
+		string formattedTagExp = tagExp;
+		string::size_type j = tagExp.find("%[version]");
+		if(j != string::npos) {
+			formattedTagExp.replace(j, 10, ".*");
+		}
 		string pkExp = cp.getPk();
+		string formattedPkExp = pkExp;
+		j = pkExp.find("%[version]");
+		if(j != string::npos) {
+			formattedPkExp.replace(j, 10, ".*");
+		}
 		string extTagExp = cp.getExtendedTag();
+		string formattedExtTagExp = extTagExp;
+		j = extTagExp.find("%[version2]");
+		if(j != string::npos) {
+			formattedExtTagExp.replace(j, 11, ".*");
+		}
 
 		if (BOOLSETTING(DEBUG_COMMANDS))
 			DebugManager::getInstance()->SendDebugMessage("Checking profile: " + cp.getName());
 
 		if (!matchProfile(lock, cp.getLock())) { continue; }
-		if (!matchProfile(tag, Util::formatParams(tagExp, paramMap))) { continue; } 
-		if (!matchProfile(pk, Util::formatParams(pkExp, paramMap))) { continue; }
+		if (!matchProfile(tag, formattedTagExp))									{ continue; } 
+		if (!matchProfile(pk, formattedPkExp))										{ continue; }
 		if (!matchProfile(supports, cp.getSupports())) { continue; }
 		if (!matchProfile(testSUR, cp.getTestSUR())) { continue; }
 		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
 		if (!matchProfile(unknownCommand, cp.getUserConCom())) { continue; }
-		if (!matchProfile(description, Util::formatParams(extTagExp, paramMap))) { continue; }
+		if (!matchProfile(description, formattedExtTagExp))							{ continue; }
 		if (!matchProfile(connection, cp.getConnection()))							{ continue; }
 
 
@@ -335,9 +361,9 @@ void User::updateClientType() {
 			badClient = true;
 			setCheat(cheatingString, true);
 			updated();
+			setHasTestSURinQueue(false);
 			return;
 		}
-
 		if(badClient) setCheat(cheatingString, true);
 		updated();
 		if(cp.getRawToSend() > 0) {
@@ -359,29 +385,63 @@ bool User::matchProfile(const string& aString, const string& aProfile) {
 		DebugManager::getInstance()->SendDebugMessage("Matching " + temp);
 	}
 	PME reg(aProfile);
-	return reg.match(aString);
+	return reg.IsValid() ? reg.match(aString) : false;
 }
 
 string User::getVersion(const string& aExp, const string& aTag) {
 	string::size_type i = aExp.find("%[version]");
 	if (i == string::npos) { 
 		i = aExp.find("%[version2]"); 
-		return splitVersion(aExp.substr(i + 11), splitVersion(aExp.substr(0, i), aTag));
+		return splitVersion(aExp.substr(i + 11), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 	}
-	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag));
+	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 }
 
-string User::splitVersion(const string& aExp, const string& aTag) {
+string User::splitVersion(const string& aExp, const string& aTag, const int part) {
 	PME reg(aExp);
-	reg.split(aTag);
-	return reg[0];
+	if(!reg.IsValid()) { return ""; }
+	reg.split(aTag, 2);
+	return reg[part];
 }
-/*void User::update() {
+
+void User::sendRawCommand(const int aRawCommand) {
 	RLock l(cs);
 	if(client) {
-		client->getInfo(this);
+		if(!client->getOp()) return;
+		string rawCommand = client->getRawCommand(aRawCommand);
+		if (!rawCommand.empty()) {
+			StringMap paramMap;
+			paramMap["mynick"] = client->getNick();
+			paramMap["nick"] = getNick();
+			paramMap["ip"] = getIp();
+//			paramMap["userip"] = getUserIp();
+			paramMap["tag"] = getTag();
+			paramMap["clienttype"] = getClientType();
+			paramMap["statedshare"] = Util::toString(getBytesShared());
+			paramMap["statedshareformat"] = Util::formatBytes(getBytesShared());
+			if(realBytesShared > -1) {
+				paramMap["realshare"] = Util::toString(realBytesShared);
+				paramMap["realshareformat"] = Util::formatBytes(realBytesShared);
+			}
+//			if(filesShared > -1) {
+//				paramMap["filesshared"] = Util::toString(filesShared);
+//			}
+			paramMap["cheatingdescription"] = cheatingString;
+			paramMap["cd"] = cheatingString;
+			paramMap["clientinfo"] = getReport();
+
+			client->sendRaw(Util::formatParams(rawCommand, paramMap));
+		}
 	}
-}*/
+}
+
+void User::updated() {
+	RLock l(cs);
+	if(client) {
+		User::Ptr user = this;
+		client->updated(user);
+	}
+}
 
 StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 {
@@ -441,59 +501,24 @@ string User::insertUserData(const string& s, Client* aClient /* = NULL */)
 }
 
 
-void User::sendRawCommand(const int aRawCommand) {
-	RLock l(cs);
-	if(client) {
-		string rawCommand = client->getRawCommand(aRawCommand);
-		if (!rawCommand.empty()) {
-			StringMap paramMap;
-			paramMap["mynick"] = client->getNick();
-			paramMap["nick"] = getNick();
-			paramMap["ip"] = getIp();
-//			paramMap["userip"] = getUserIp();
-			paramMap["tag"] = getTag();
-			paramMap["clienttype"] = getClientType();
-			paramMap["statedshare"] = Util::toString(getBytesShared());
-			paramMap["statedshareformat"] = Util::formatBytes(getBytesShared());
-//			if(realShare > -1) {
-//				paramMap["realshare"] = Util::toString(realShare);
-//				paramMap["realshareformat"] = Util::formatBytes(realShare);
-//			}
-//			if(filesShared > -1) {
-//				paramMap["filesshared"] = Util::toString(filesShared);
-//			}
-			paramMap["cheatingdescription"] = cheatingString;
-			paramMap["cd"] = cheatingString;
-			paramMap["clientinfo"] = getReport();
 
-			client->sendRaw(Util::formatParams(rawCommand, paramMap));
-		}
-	}
-}
-void User::updated() {
-	RLock l(cs);
-	if(client) {
-		User::Ptr user = this;
-		client->updated(user);
-	}
-}
 bool User::fileListDisconnected() {
 	fileListDisconnects++;
 	if(fileListDisconnects == 5) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
 		updated();
-		//sendRawCommand(SETTING(DISCONNECT_RAW));
+		sendRawCommand(SETTING(DISCONNECT_RAW));
 		return true;
 	}
 	return false;
 }
 bool User::connectionTimeout() {
 	connectionTimeouts++;
-	if(connectionTimeouts == 5) {
+	if(connectionTimeouts == 10) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 		updated();
 		QueueManager::getInstance()->removeTestSUR(nick);
-//		sendRawCommand(SETTING(TIMEOUT_RAW));
+		sendRawCommand(SETTING(TIMEOUT_RAW));
 		return true;
 	}
 	return false;

@@ -36,7 +36,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_MOVE_CLIENT_DOWN, onMoveClientDown)
 		COMMAND_ID_HANDLER(IDC_RELOAD_CLIENTS, onReload)
 		COMMAND_ID_HANDLER(IDC_UPDATE, onUpdate)
-		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, BN_DOUBLECLICKED, onDblClick)
+		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, NM_CUSTOMDRAW, onCustomDraw)
+		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, NM_DBLCLK, onDblClick)
 		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, LVN_GETINFOTIP, onInfoTip)
 	END_MSG_MAP()
 
@@ -49,12 +50,12 @@ public:
 	LRESULT onMoveClientDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onReload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	//LRESULT onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 
 	LRESULT onDblClick(int idCtrl, LPNMHDR /* pnmh */, BOOL& bHandled) {
 		return onChangeClient(0, 0, 0, bHandled);
 	}
+	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	virtual void write();

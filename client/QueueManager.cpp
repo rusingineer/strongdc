@@ -865,18 +865,19 @@ again:
 		return NULL;
 	}
 
-	if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
+	if(((q->getActiveSegments().size() + q->getCurrents().size()) / 2) >= q->getMaxSegments()) {
+		message = STRING(ALL_SEGMENTS_TAKEN);		
+		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+		goto again;
+	}
+
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
+		BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
 		if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
 			message = STRING(ALL_SEGMENTS_TAKEN);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
-	}
-
-	if(((q->getActiveSegments().size() + q->getCurrents().size()) / 2) >= q->getMaxSegments()) {
-		message = STRING(ALL_SEGMENTS_TAKEN);		
-		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-		goto again;
 	}
 
 	int64_t freeBlock = 0;

@@ -45,6 +45,7 @@ public:
 	ClientProfile currentProfile;
 
 	enum { IDD = IDD_CLIENT_PROFILE };
+	enum { MATCH, MISMATCH, INVALID };
 
 	BEGIN_MSG_MAP(ClientProfileDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -105,6 +106,9 @@ private:
 	void updateVars();
 	void updateControls();
 	void getProfile();
+	int matchExp(const string& aExp, const string& aString);
+	string getVersion(const string& aExp, const string& aTag);
+	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
 
 #endif

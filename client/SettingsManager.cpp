@@ -97,7 +97,8 @@ const string SettingsManager::settingTags[] =
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment", "PopunderPm", "PopunderFilelist",
-	"AutoDropSource",
+	"AutoDropSource", "DisplayCheatsInMainChat",
+	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -397,7 +398,14 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 100);
 	setDefault(LOG_SEGMENT, true);
-	
+
+	setDefault(DISCONNECT_RAW, 0);
+	setDefault(TIMEOUT_RAW, 0);
+	setDefault(FAKESHARE_RAW, 0);
+	setDefault(LISTLEN_MISMATCH, 0);
+	setDefault(FILELIST_TOO_SMALL, 0);
+	setDefault(FILELIST_UNAVAILABLE, 0);
+	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);

@@ -436,11 +436,31 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		}
 	}
 
+	lSelEnd = GetTextLengthEx( GTL_PRECISE );
+	CHARFORMAT2 cfSel;
+	memset(&cfSel, 0, sizeof(CHARFORMAT2));
+	cfSel.cbSize = sizeof( cfSel );
+	long magnetStart = sMsgLower.Find("magnet:?", lSearchFrom);
+	if(magnetStart > 0) {
+		for ( lPos = lSelBegin + magnetStart; lPos < lSelEnd; lPos++ ) {
+			SetSel(lPos, lPos + 1);
+			GetSelectionCharFormat( cfSel );
+			cfSel.crBackColor = SETTING(TEXT_URL_BACK_COLOR);
+			cfSel.crTextColor = SETTING(TEXT_URL_FORE_COLOR);
+			cfSel.dwEffects |= CFE_UNDERLINE;
+			if ( SETTING(TEXT_URL_BOLD) )
+				cfSel.dwEffects |= CFE_BOLD;
+			if ( SETTING(TEXT_URL_ITALIC) )
+				cfSel.dwEffects |= CFE_ITALIC;
+			boOK = SetSelectionCharFormat( cfSel );
+		}
+	}
+
 	// Uprava pozadi pro text s bitem CFE_LINK
-		lSelEnd = GetTextLengthEx( GTL_PRECISE );
-		CHARFORMAT2 cfSel;
-		memset(&cfSel, 0, sizeof(CHARFORMAT2));
-		cfSel.cbSize = sizeof( cfSel );
+	lSelEnd = GetTextLengthEx( GTL_PRECISE );
+	//CHARFORMAT2 cfSel;
+	memset(&cfSel, 0, sizeof(CHARFORMAT2));
+	cfSel.cbSize = sizeof( cfSel );
 
 	for ( lPos = lSelBegin; lPos < lSelEnd; lPos++ ) {
 			SetSel( lPos, lPos + 1 );

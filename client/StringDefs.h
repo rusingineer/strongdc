@@ -568,7 +568,7 @@ enum Strings { // @DontAdd
 	SOUND_FAKER_FOUND, // "Faker found"
 	SOUND_TTH_INVALID, // "File is corrupted"
 	SOUND_EXCEPTION, // "Unhandled Exception"
-	EXTRA_HUB_SLOTS, // "Open X extra slots for each hub (when hubs = 2 or more)"
+	EXTRA_HUB_SLOTS, // "Slot ratio"
 	SETTINGS_SEGMENT, // "Segment Downloading"
 	AUTO_SEGMENT_TEXT, // "Automatically do Accelerated (Segmented) downloading"
 	SEGMENT2_TEXT, // "2 segments if file size is between                 and                  MB"
@@ -724,5 +724,7 @@ enum Strings { // @DontAdd
 	DOWNLOADING_TTHL, // "Downloading TTH leaf..."
 	NO_FREE_BLOCK, // "No free block"
 	LOG_SEGMENTS, // "Log segmented downloading"
+	SETTINGS_DISPLAY_CHEATS_IN_MAIN_CHAT, // "Display cheats in main chat"
+	SEARCH_IN_RESULTS, // "Search in results:"
 	LAST // @DontAdd
 };

@@ -206,10 +206,72 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	GET_TEXT(IDC_REGEXP_TESTER_TEXT, text);
 	switch(ctrlRegExpCombo.GetCurSel()) {
 		case 0: GET_TEXT(IDC_CLIENT_VERSION, exp); break;
-		case 1: GET_TEXT(IDC_CLIENT_TAG, exp); break;
-		case 2: GET_TEXT(IDC_CLIENT_EXTENDED_TAG, exp); break;
+		case 1: 
+			{
+				string version = "";
+				string versionExp = "";
+				GET_TEXT(IDC_CLIENT_TAG, exp); 
+				string formattedExp = exp;
+				string::size_type j = exp.find("%[version]");
+				if(j != string::npos) {
+					formattedExp.replace(j, 10, ".*");
+					version = getVersion(exp, text);
+					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
+				}
+				switch(matchExp(formattedExp, text)) {
+					case MATCH:		break;
+					case MISMATCH:	MessageBox("No match for tag.", "RegExp Tester", MB_OK); return 0;
+					case INVALID:	MessageBox("Invalid tag RegExp.", "RegExp Tester", MB_OK); return 0;
+				}
+				if(version.empty()) {
+					MessageBox("It's a match!", "RegExp Tester", MB_OK);
+					return 0;
+				} else {
+					switch(matchExp(versionExp, version)) {
+						case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK);  return 0;
+						case MISMATCH:	MessageBox("No match for version.", "RegExp Tester", MB_OK); return 0;
+						case INVALID:	MessageBox("Invalid version RegExp.", "RegExp Tester", MB_OK); return 0;
+					}
+				}
+			}
+		case 2: 
+			{
+				GET_TEXT(IDC_CLIENT_EXTENDED_TAG, exp);
+				string::size_type j = exp.find("%[version2]");
+				if(j != string::npos) {
+					exp.replace(j, 11, ".*");
+				}
+				break;
+			}
 		case 3: GET_TEXT(IDC_CLIENT_LOCK, exp); break;
-		case 4: GET_TEXT(IDC_CLIENT_PK, exp); break;
+		case 4: 
+			{
+				string version = "";
+				string versionExp = "";
+				GET_TEXT(IDC_CLIENT_PK, exp);
+				string formattedExp = exp;
+				string::size_type j = exp.find("%[version]");
+				if(j != string::npos) {
+					formattedExp.replace(j, 10, ".*");
+					version = getVersion(exp, text);
+					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
+				}
+				switch(matchExp(formattedExp, text)) {
+					case MATCH:		break;
+					case MISMATCH:	MessageBox("No match for Pk.", "RegExp Tester", MB_OK); return 0;
+					case INVALID:	MessageBox("Invalid Pk RegExp.", "RegExp Tester", MB_OK); return 0;
+				}
+				if(version.empty()) {
+					MessageBox("It's a match!", "RegExp Tester", MB_OK);
+					return 0;
+				} else {
+					switch(matchExp(versionExp, version)) {
+						case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK);  return 0;
+						case MISMATCH:	MessageBox("No match for version.", "RegExp Tester", MB_OK); return 0;
+						case INVALID:	MessageBox("Invalid version RegExp.", "RegExp Tester", MB_OK); return 0;
+					}
+				}
+			}
 		case 5: GET_TEXT(IDC_CLIENT_SUPPORTS, exp); break;
 		case 6: GET_TEXT(IDC_CLIENT_TESTSUR_RESPONSE, exp); break;
 		case 7: GET_TEXT(IDC_CLIENT_USER_CON_COM, exp); break;
@@ -217,11 +279,32 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		case 9: GET_TEXT(IDC_CLIENT_CONNECTION, exp); break;
 		default: dcdebug("We shouldn't be here!\n");
 	}
-	PME reg(exp);
-	if(reg.match(text)) {
-		MessageBox("It's a match!", "RegExp Tester", MB_OK);
-	} else {
-		MessageBox("No match.", "RegExp Tester", MB_OK);
+	switch(matchExp(exp, text)) {
+		case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK); break;
+		case MISMATCH:	MessageBox("No match.", "RegExp Tester", MB_OK); break;
+		case INVALID:	MessageBox("Invalid RegExp.", "RegExp Tester", MB_OK); break;
 	}
 	return 0;
+}
+
+int ClientProfileDlg::matchExp(const string& aExp, const string& aString) {
+	PME reg(aExp);
+	if(!reg.IsValid()) { return INVALID; }
+	return reg.match(aString) ? MATCH : MISMATCH;
+}
+
+string ClientProfileDlg::getVersion(const string& aExp, const string& aTag) {
+	string::size_type i = aExp.find("%[version]");
+	if (i == string::npos) { 
+		i = aExp.find("%[version2]"); 
+		return splitVersion(aExp.substr(i + 11), splitVersion(aExp.substr(0, i), aTag, 1), 0);
+	}
+	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
+}
+
+string ClientProfileDlg::splitVersion(const string& aExp, const string& aTag, const int part) {
+	PME reg(aExp);
+	if(!reg.IsValid()) { return ""; }
+	reg.split(aTag, 2);
+	return reg[part];
 }

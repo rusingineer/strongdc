@@ -110,7 +110,7 @@ public:
 	 */
 	void setLineMode() {
 		dcassert(mode == MODE_DATA);
-		dcassert(dataBytes == -1);
+		dcassert(dataBytes == -1 || dataBytes == 0);
 		mode = MODE_LINE;
 	}
 	int getMode() { return mode; };

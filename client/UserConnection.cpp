@@ -129,6 +129,10 @@ void UserConnection::onLine(const char* aLine) throw() {
 		if((temp = strtok((char*)aLine+10, "\0")) != NULL) {
 			fire(UserConnectionListener::Supports(), this, StringTokenizer(temp, ' ').getTokens());
 		}
+	} else if(strncmp(aLine, "$ListLen ", 9) == 0) {
+		if((temp = strtok((char*)aLine+9, "\0")) != NULL) {
+			fire(UserConnectionListener::ListLength(), this, temp);
+		}
 	} else if(strncmp(aLine, "$ADC", 4) == 0) {
 		dispatch(aLine, true);
 	} else {

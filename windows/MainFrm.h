@@ -370,7 +370,7 @@ private:
 	u_int32_t lastUpdate;
 	int64_t lastUp;
 	int64_t lastDown;
-
+	string lastTTHdir;
 	bool oldshutdown;
 
 	bool closing;

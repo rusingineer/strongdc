@@ -36,6 +36,7 @@
 
 #define SEARCH_MESSAGE_MAP 6		// This could be any number, really...
 #define SHOWUI_MESSAGE_MAP 7
+#define FILTER_MESSAGE_MAP 8
 
 class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255), IDR_SEARCH>, 
 	private SearchManagerListener, private ClientManagerListener, 
@@ -78,28 +79,31 @@ public:
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_SEARCH, onSearch)
-		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopyNick)
-		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopyFilename)
-		COMMAND_ID_HANDLER(IDC_COPY_PATH, onCopyPath)
-		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopySize)
-		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopyTTH)		
+		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy)
+		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy)
+		COMMAND_ID_HANDLER(IDC_COPY_PATH, onCopy)
+		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy)
 		COMMAND_ID_HANDLER(IDC_FREESLOTS, onFreeSlots)
 		COMMAND_ID_HANDLER(IDC_TTHONLY, onTTHOnly)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
-		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnetLink)		
+		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
+		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_TARGET, IDC_DOWNLOAD_WHOLE_TARGET + WinUtil::lastDirs.size(), onDownloadWholeTarget)
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_COMMANDS(uicBase)
 		CHAIN_MSG_MAP(baseClass)
-		REFLECT_NOTIFICATIONS()
 	ALT_MSG_MAP(SEARCH_MESSAGE_MAP)
 		MESSAGE_HANDLER(WM_CHAR, onChar)
 		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
 		MESSAGE_HANDLER(WM_KEYUP, onChar)
 	ALT_MSG_MAP(SHOWUI_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowUI)
+	ALT_MSG_MAP(FILTER_MESSAGE_MAP)
+		MESSAGE_HANDLER(WM_CTLCOLORLISTBOX, onCtlColor)
+		MESSAGE_HANDLER(WM_KEYUP, onFilterChar)
+		COMMAND_CODE_HANDLER(CBN_SELCHANGE, onSelChange)
 	END_MSG_MAP()
 
 	SearchFrame() : 
@@ -110,13 +114,14 @@ public:
 		modeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
 		sizeModeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
 		fileTypeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
-//		fileTypeSubContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
 		showUIContainer("BUTTON", this, SHOWUI_MESSAGE_MAP),
 		slotsContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
 		tthContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
 		doSearchContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
 		resultsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		hubsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
+		ctrlFilterContainer("edit", this, FILTER_MESSAGE_MAP),
+		ctrlFilterSelContainer("COMBOBOX", this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize(false)
 	{	
@@ -143,15 +148,12 @@ public:
 	LRESULT onDownloadWholeTarget(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadWholeTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
+	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyNick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyFilename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyPath(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopySize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
+	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void runUserCommand(UserCommand& uc);
@@ -183,14 +185,12 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		//PDC {
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			SearchInfo* si = ctrlResults.getItemData(i);
 			string t = SettingsManager::getInstance()->getDownloadDir(Util::getFileExt(si->getFileName()));		
 			(SearchInfo::Download(t))(ctrlResults.getItemData(i));
 		}
-		//PDC }
 		return 0;
 	}
 
@@ -222,28 +222,25 @@ public:
 	}
 
 	LRESULT onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(searchInProgress == true)
-	 	{
+		if(searchInProgress == true) {
  		  stopSearch();
 	 	} else {
 		  onEnter();
 		}
- 			return 0;
-		}
+ 		return 0;
+	}
 
-void startSearch()
-{
- searchInProgress = true;
- ctrlDoSearch.SetWindowText(CSTRING(STOP_SEARCH));
-}
+	void startSearch() {
+		searchInProgress = true;
+		ctrlDoSearch.SetWindowText(CSTRING(STOP_SEARCH));
+	}
 
-void stopSearch()
-{
- search.clear();
- searchInProgress = false;
- ctrlDoSearch.SetWindowText(CSTRING(SEARCH));
- ctrlStatus.SetText(1, CSTRING(SEARCH_STOPPED));
-}
+	void stopSearch() {
+		search.clear();
+		searchInProgress = false;
+		ctrlDoSearch.SetWindowText(CSTRING(SEARCH));
+		ctrlStatus.SetText(1, CSTRING(SEARCH_STOPPED));
+	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
@@ -274,7 +271,6 @@ void stopSearch()
 private:
 	bool searchInProgress;
 	class SearchInfo;
-
 public:
 	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 
@@ -518,8 +514,11 @@ private:
 	CContainedWindow doSearchContainer;
 	CContainedWindow resultsContainer;
 	CContainedWindow hubsContainer;
+	CContainedWindow ctrlFilterContainer;
+	CContainedWindow ctrlFilterSelContainer;
+	string filter;
 	
-	CStatic searchLabel, sizeLabel, optionLabel, typeLabel, hubsLabel;
+	CStatic searchLabel, sizeLabel, optionLabel, typeLabel, hubsLabel, srLabel;
 	CButton ctrlSlots, ctrlShowUI, ctrlTTH;
 	bool showUI;
 
@@ -539,6 +538,9 @@ private:
 	StringList wholeTargets;
 
 	SearchInfo::List mainItems;
+
+	CEdit ctrlFilter;
+	CComboBox ctrlFilterSel;
 
 	/** Parameter map for user commands */
 	StringMap ucParams;
@@ -576,6 +578,8 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
+	void insertItem(int pos, SearchInfo* item);
+	void updateSearchList();
 
 	void Collapse(SearchInfo* i, int a);
 	void Expand(SearchInfo* i, int a);
