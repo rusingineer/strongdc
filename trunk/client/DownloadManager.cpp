@@ -31,9 +31,7 @@
 #include "User.h"
 #include "File.h"
 #include "FilteredFile.h"
-
 #include "TraceManager.h"
-
 #include "Client.h"
 
 static const string DOWNLOAD_AREA = "Downloads";
@@ -60,8 +58,6 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 
 	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
-	if(qi->isSet(QueueItem::FLAG_NOSEGMENTS))
-		setFlag(Download::FLAG_NOSEGMENTS);
 }
 };
 
@@ -78,6 +74,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		if(((*i)->getTotal() > 0) && (!(*i)->finished)) {
 			tickList.push_back(*i);
+			QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
 		}
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			if(getAverageSpeed() < (iHighSpeed*1024)) {
@@ -108,7 +105,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
                 continue;
             }
         }*/
-		QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
+		if(!(*i)->finished)
+			if((*i)->getQueueTotal() == (*i)->getSize()) handleEndData((*i)->getUserConnection());
 	}
 
 	if(tickList.size() > 0)

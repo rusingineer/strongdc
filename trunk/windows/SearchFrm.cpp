@@ -30,11 +30,11 @@
 
 StringList SearchFrame::lastSearches;
 
-int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
+int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
 	COLUMN_PATH, COLUMN_SLOTS, COLUMN_CONNECTION, COLUMN_HUB, COLUMN_EXACT_SIZE, COLUMN_UPLOAD, COLUMN_IP, COLUMN_TTH };
-int SearchFrame::columnSizes[] = { 200, 100, 50, 80, 100, 40, 70, 150, 80, 80, 100, 125 };
+int SearchFrame::columnSizes[] = { 210, 80, 100, 50, 80, 100, 40, 70, 150, 80, 80, 100, 150 };
 
-static ResourceManager::Strings columnNames[] = { ResourceManager::FILE, ResourceManager::USER, ResourceManager::TYPE, ResourceManager::SIZE, 
+static ResourceManager::Strings columnNames[] = {ResourceManager::FILE,  ResourceManager::HIT_COUNT, ResourceManager::USER, ResourceManager::TYPE, ResourceManager::SIZE,
 	ResourceManager::PATH, ResourceManager::SLOTS, ResourceManager::CONNECTION, 
 	ResourceManager::HUB, ResourceManager::EXACT_SIZE, ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::TTH_ROOT };
 
@@ -200,6 +200,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 
 	ctrlResults.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlResults.setSortColumn(COLUMN_HITS);
+	ctrlResults.setAscending(false);
 
 	ctrlResults.SetBkColor(WinUtil::bgColor);
 	ctrlResults.SetTextBkColor(WinUtil::bgColor);
@@ -907,6 +909,16 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
 					SearchInfo* si2 = ctrlResults.getItemData(i);
 					SearchResult* sr2 = si2->sr;
+
+					if(si2->subItems.size() > 0)
+						for(int k = 0, l = si2->subItems.size(); k < l; ++k) {
+							SearchResult* sr3 = si2->subItems[k]->sr;
+							if((sr->getUser()->getNick() == sr3->getUser()->getNick()) && (sr->getFile() == sr3->getFile())) {
+								delete si;
+								return 0;
+							}
+						}
+
 					if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
 						delete si;
 						return 0;
@@ -946,12 +958,13 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
                     if(sr2->getTTH() && (*sr->getTTH() == *sr2->getTTH())) {
 						si2->subItems.push_back(si);
 
-						int m = ctrlResults.findItem(si2);
 						int pocet = si2->subItems.size() + 1;
 						si2->setHits(Util::toString(pocet)+" "+STRING(HUB_USERS));
-						si->setHits(sr->getUser()->getNick());
 						ctrlResults.updateItem(si2);
 						si->main = si2;
+
+						int m = ctrlResults.findItem(si2);
+						dcassert(m != -1);
 						if(!si2->collapsed) {
 							ctrlResults.insertItem(m+1, si, image);
 							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
@@ -962,7 +975,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				}				
 			}
 			mainItems.push_back(si);
-			si->setHits(sr->getUser()->getNick());
 			si->mainitem = true;
 			ctrlResults.insertItem(si, image);
 			ctrlStatus.SetText(2, (Util::toString(ctrlResults.GetItemCount())+" "+STRING(FILES)).c_str());
@@ -1244,6 +1256,7 @@ void SearchFrame::Expand(SearchInfo* i, int a) {
 
 	i->collapsed = false;
 	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+	ctrlResults.resort();
 }
 
 LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {

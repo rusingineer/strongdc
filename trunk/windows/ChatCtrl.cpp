@@ -406,9 +406,10 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		SetSel( lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd );
 		boOK = SetSelectionCharFormat( m_TextStyleMyNick );
 		lSearchFrom = lMyNickEnd;
-		if ( sNick != sAuthorNick )	 	
-        {	 	
-	        if (!SETTING(CHATNAMEFILE).empty())	 	
+		CAtlString autor = sAuthor;
+		autor.MakeLower();
+		if( ( sNick != autor ) && (autor != "")) {	
+	        if ((!SETTING(CHATNAMEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		        PlaySound(SETTING(CHATNAMEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
         }
 	}

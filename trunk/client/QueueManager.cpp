@@ -82,7 +82,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 
 	// create filedatainfo for this item
 	if(!qi->isSet(QueueItem::FLAG_USER_LIST)){
-	if(!qi->isSet(QueueItem::FLAG_NOSEGMENTS)) {
 		dcassert(!qi->getTempTarget().empty());
 		if ( freeBlocks != Util::emptyString ){
 			vector<int64_t> v;	
@@ -103,11 +102,11 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 			
 		}
 	}
-	}
 
 //	const string& tgt = qi->getTempTarget().empty() ? qi->getTarget() : qi->getTempTarget();
 	if((qi->getDownloadedBytes() > 0))
 		qi->setFlag(QueueItem::FLAG_EXISTS);
+
 
 	dcassert(find(aTarget) == NULL);
 	add(qi);
@@ -137,7 +136,6 @@ QueueItem* QueueManager::FileQueue::findByHash(const string& hash) {
 	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
 		if (i->second->getSources().size()>=SETTING(MAX_SOURCES))
 			continue;
-
 		if(i->second->getTTH() && i->second->getTTH()->toBase32() == hash)
 			return i->second;
 	}
@@ -314,6 +312,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 
 void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) {
 
+	if(!qi->isSource(aUser)) return;
 	dcassert(qi->isSource(aUser));
 	QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 	QueueItem::UserListIter j = ulm.find(aUser);
@@ -456,6 +455,7 @@ QueueManager::~QueueManager() {
 void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	// string fn;
 	string searchString;
+	string fname;
 	// int64_t sz = 0;
 	// bool online = false;
 
@@ -491,6 +491,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 				}
 				online = qi->hasOnlineUsers();*/
 				searchString = qi->getTTH()->toBase32();
+				fname = Util::getFileName(qi->getTargetFileName());
 				recent.push_back(searchString);
 			}else
 				recent.clear();
@@ -505,8 +506,9 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	if(!searchString.empty()){
 		SearchManager::getInstance()->search("TTH:" + searchString, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
 		nextSearch = aTick + 300000;
+		if(BOOLSETTING(REPORT_ALTERNATES))
+			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
 	}
-
 }
 
 enum { TEMP_LENGTH = 8 };
@@ -674,7 +676,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else {
-		if (!SETTING(SOURCEFILE).empty())
+		if ((!SETTING(SOURCEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(SOURCEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		userQueue.add(qi, aUser);
 	}
@@ -933,7 +935,7 @@ again:
 
 	int64_t freeBlock = 0;
 
-	if((!q->isSet(QueueItem::FLAG_USER_LIST)) && (!q->isSet(QueueItem::FLAG_NOSEGMENTS))){
+	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
 		dcassert(!q->getTempTarget().empty());
 		freeBlock = FileDataInfo::GetFileDataInfo(q->getTempTarget())->GetUndlStart();
 
@@ -950,7 +952,7 @@ again:
 	fire(QueueManagerListener::StatusUpdated(), q);
 	
 	d = new Download(q, aUser);
-	if((!q->isSet(QueueItem::FLAG_USER_LIST)) && (!q->isSet(QueueItem::FLAG_NOSEGMENTS))){
+	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
 		d->setStartPos(freeBlock);
 	}
 
@@ -1281,10 +1283,8 @@ void QueueManager::saveQueue() throw() {
 				f.write(Util::toString((int)d->getPriority()));
 				f.write(STRINGLEN("\" TempTarget=\""));
 				f.write(CHECKESCAPE(d->getTempTarget()));
-				if(!d->isSet(QueueItem::FLAG_NOSEGMENTS)) {
-					f.write(STRINGLEN("\" FreeBlocks=\""));
-					f.write(FileDataInfo::GetFileDataInfo(d->getTempTarget())->getFreeBlocksString());
-				}
+				f.write(STRINGLEN("\" FreeBlocks=\""));
+				f.write(FileDataInfo::GetFileDataInfo(d->getTempTarget())->getFreeBlocksString());
 				f.write(STRINGLEN("\" Added=\""));
 				f.write(Util::toString(d->getAdded()));
 				if(d->getTTH() != NULL) {
@@ -1537,7 +1537,6 @@ void QueueManager::importNMQueue(const string& aFile) throw(FileException) {
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
-
 			if(QueueItem* qi = fileQueue.findByHash(sr->getTTH()->toBase32())) {
 				// Wow! found a new source that seems to match...add it...
 				try {
@@ -1546,10 +1545,11 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 						QueueItem::DEFAULT, Util::emptyString, false);
 					dcdebug("QueueManager::onAction New source %s for target %s found\n", sr->getUser()->getNick().c_str(), qi->getTarget().c_str());
 					// Only download list for exact matches
-					/*
+					
+/*
 					if(BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (Util::stricmp(target, fileName) == 0) )
 						addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
-					*/
+*/					
 				} catch(const Exception&) {
 					// ...
 				}

@@ -303,6 +303,7 @@ public:
 	}
 	int getSortColumn() { return sortColumn; }
 	bool isAscending() { return sortAscending; }
+	void setAscending(bool asc){sortAscending = asc;updateArrow();}
 
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
@@ -635,6 +636,7 @@ public:
 	}
 	int getSortColumn() { return sortColumn; }
 	bool isAscending() { return sortAscending; }
+	void setAscending(bool asc){sortAscending = asc;updateArrow();}
 
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }

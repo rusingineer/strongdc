@@ -116,6 +116,7 @@ enum Strings { // @DontAdd
 	HIGH, // "High"
 	HIGHEST, // "Highest"
 	HIT_RATIO, // "Hit Ratio: "
+	HIT_COUNT, // "Hits"
 	HITS, // "Hits: "
 	HOST_UNREACHABLE, // "Host unreachable"
 	HUB, // "Hub"
@@ -692,5 +693,13 @@ enum Strings { // @DontAdd
 	RETRIEVING_DATA, // "Retrieving data"
 	CONNECTION_ERROR, // "Connection error"
 	DATA_RETRIEVED, // "Data retrieved"
+	REMOVE_OFFLINE, // "Remove offline users"
+	DISABLE_SOUNDS, // "Disable sounds"
+	CONNECT_ALL, // "Connect to all users"
+	DISCONNECT_ALL, // "Disconnect all users"
+	REPORT_ALTERNATES, // "Report auto search for alternates in status bar"
+	ALTERNATES_SEND, // "Send alternate search for: "
+	COLLAPSE_ALL,
+	EXPAND_ALL,
 	LAST // @DontAdd
 };

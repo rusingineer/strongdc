@@ -53,7 +53,7 @@ class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFr
 public:
 	MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 		lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-		closing(false) 
+		closing(false), awaybyminimize(false), missedAutoConnect(false)
 	{ 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
@@ -152,6 +152,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_UPLOAD_QUEUE, onUploadQueue);
 		COMMAND_ID_HANDLER(IDC_SHUTDOWN, onShutDown)
 		COMMAND_ID_HANDLER(IDC_UPDATE, onUpdate)
+		COMMAND_ID_HANDLER(IDC_DISABLE_SOUNDS, onDisableSounds)
 		COMMAND_ID_HANDLER(IDC_CLOSE_DISCONNECTED, onCloseDisconnected)
 		COMMAND_ID_HANDLER(IDC_OPEN_DOWNLOADS, onOpenDownloads)
 		COMMAND_ID_HANDLER(IDC_REFRESH_FILE_LIST, onRefreshFileList)
@@ -211,6 +212,7 @@ public:
 	LRESULT onRecents(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCDMDebugWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	static DWORD WINAPI stopper(void* p);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
@@ -399,6 +401,8 @@ private:
 	int statusSizes[9];
 	
 	HANDLE stopperThread;
+
+	bool missedAutoConnect;
 
 	HWND createToolbar();
 	void buildMenu();

@@ -160,7 +160,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				frames[aUser] = p;
 				p->setUser(aUser);
 				p->addLine(aMessage);
-				if(BOOLSETTING(PRIVATE_MESSAGE_BEEP)) {
+				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 					if (SETTING(BEEPFILE).empty())
 					MessageBeep(MB_OK);
 					else
@@ -179,7 +179,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				p->sendMessage(Util::getAwayMessage());
 			}
 
-			if(BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) {
+			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 				if (SETTING(BEEPFILE).empty())
 				MessageBeep(MB_OK);
 				else
@@ -187,7 +187,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 			}
 		}
 	} else {
-		if(BOOLSETTING(PRIVATE_MESSAGE_BEEP)) {
+		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
 			if (SETTING(BEEPFILE).empty())
 			MessageBeep(MB_OK);
 			else

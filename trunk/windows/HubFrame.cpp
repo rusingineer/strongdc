@@ -1772,7 +1772,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				detectString = user->insertUserData(detectString);
 				user->setCheatingString(Util::validateMessage(detectString, false));
 
-				if (!SETTING(FAKERFILE).empty())
+				if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 					PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
 
 			}     

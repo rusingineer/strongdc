@@ -186,7 +186,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	ctrlStatus.SetParts(10, w);
 	statusSizes[0] = WinUtil::getTextWidth(STRING(AWAY), ::GetDC(ctrlStatus.m_hWnd)); // for "AWAY" segment
-	awaybyminimize = false;
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
@@ -268,8 +267,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	if(BOOLSETTING(IPUPDATE)) SettingsManager::getInstance()->set(SettingsManager::SERVER, Util::getLocalIp());
 
-	if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
-	else ctrlToolbar.CheckButton(IDC_LIMITER, false);
+	ctrlToolbar.CheckButton(IDC_LIMITER,BOOLSETTING(THROTTLE_ENABLE));
+	ctrlToolbar.CheckButton(IDC_DISABLE_SOUNDS, BOOLSETTING(SOUNDS_DISABLED));
 
 	if(SETTING(NICK).empty()) {
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
@@ -590,6 +589,9 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if(dlg.DoModal(m_hWnd) == IDOK)
 	{		
 		SettingsManager::getInstance()->save();
+ 		if(missedAutoConnect && !SETTING(NICK).empty()) {
+ 			PostMessage(WM_SPEAKER, AUTO_CONNECT);
+ 		}
 		if(SETTING(CONNECTION_TYPE) != lastConn || SETTING(IN_PORT) != lastPort) {
 			startSocket();
 		}
@@ -707,9 +709,11 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 }
 
 void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
+ 	missedAutoConnect = false;
 	for(FavoriteHubEntry::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
 		FavoriteHubEntry* entry = *i;
-		if(entry->getConnect())
+		if(entry->getConnect()) {
+ 			if(!entry->getNick().empty() || !SETTING(NICK).empty())
 			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
 				entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
 			// CDM EXTENSION BEGINS FAVS
@@ -721,6 +725,9 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 //			, entry->getUserIp()
 			// CDM EXTENSION ENDS				
 				);
+ 			else
+ 				missedAutoConnect = true;
+ 		}				
 	}
 }
 
@@ -760,17 +767,19 @@ void MainFrame::updateTray(bool add /* = true */) {
 LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(wParam == SIZE_MINIMIZED) {
-		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 		if(BOOLSETTING(AUTO_AWAY)) {
-			if(Util::getAway()) {
+			if(!WinUtil::isMinimized)
+			if(Util::getAway() == true) {
 				awaybyminimize = false;
 			} else {
-			Util::setAway(true);
+				awaybyminimize = true;
+				Util::setAway(true);
 				setAwayButton(true);
 				ClientManager::getInstance()->infoUpdated(true);
-				awaybyminimize = true;
 			}
 		}
+
+		WinUtil::isMinimized = true;
 		if(BOOLSETTING(MINIMIZE_TRAY)) {
 			updateTray(true);
 			ShowWindow(SW_HIDE);
@@ -778,19 +787,19 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 			updateTray(false);
 		}
 		maximized = IsZoomed() > 0;
-		WinUtil::isMinimized = true;
+		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 	} else if( (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) ) {
-		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		if(BOOLSETTING(AUTO_AWAY)) {
-			if(awaybyminimize) {
+			if(awaybyminimize == true) {
+				awaybyminimize = false;
 				Util::setAway(false);
 				setAwayButton(false);
 				ClientManager::getInstance()->infoUpdated(true);
-				awaybyminimize = false;
 			}
 		}
 		setNormalTrayIcon();
 		WinUtil::isMinimized = false;
+		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 	}
 
 	bHandled = FALSE;
@@ -1298,6 +1307,10 @@ LRESULT MainFrame::onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	return S_OK;
 }
 
+LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	SettingsManager::getInstance()->set(SettingsManager::SOUNDS_DISABLED, !BOOLSETTING(SOUNDS_DISABLED));
+	return 0;
+}
 /**
  * @file
  * $Id$
