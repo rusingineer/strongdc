@@ -72,16 +72,16 @@ UINT_PTR CALLBACK MenuBarCommDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	if (uMsg == WM_COMMAND) {
 		if (HIWORD(wParam) == EN_CHANGE && 
 			(LOWORD(wParam) == CTLID_VALUE_RED || LOWORD(wParam) == CTLID_VALUE_GREEN || LOWORD(wParam) == CTLID_VALUE_BLUE)) {
-			char buf[16];
+			TCHAR buf[16];
 			ZeroMemory(buf, 16);
 			::GetDlgItemText(hWnd, CTLID_VALUE_RED, buf, 15);
-			int color_r = Util::toInt(buf);
+			int color_r = Util::toInt(Text::fromT(buf));
 			ZeroMemory(buf, 16);
 			::GetDlgItemText(hWnd, CTLID_VALUE_BLUE, buf, 15);
-			int color_g = Util::toInt(buf);
+			int color_g = Util::toInt(Text::fromT(buf));
 			ZeroMemory(buf, 16);
 			::GetDlgItemText(hWnd, CTLID_VALUE_GREEN, buf, 15);
-			int color_b = Util::toInt(buf);
+			int color_b = Util::toInt(Text::fromT(buf));
 
 			color_r = (color_r < 0) ? 0 : ((color_r > 255) ? 255 : color_r);
 			color_g = (color_g < 0) ? 0 : ((color_g > 255) ? 255 : color_g);
@@ -220,7 +220,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				dc.SetTextColor(textcolor);
 			}
 
-			dc.DrawText("Sample text", sizeof("Sample text")-1, rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+			dc.DrawText(Text::toT("Sample text").c_str(), 11, rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
 			dc.Detach();
 		}
@@ -329,10 +329,10 @@ LRESULT OperaColorsPage::onClickedProgressTextUp(WORD /* wNotifyCode */, WORD /*
 }
 
 void OperaColorsPage::BrowseForPic(int DLGITEM) {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 
 	GetDlgItemText(DLGITEM, buf, MAX_PATH);
-	string x = buf;
+	tstring x = buf;
 
 	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
 		SetDlgItemText(DLGITEM, x.c_str());

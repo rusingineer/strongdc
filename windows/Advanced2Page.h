@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@ class Advanced2Page : public CPropertyPage<IDD_ADVANCED2PAGE>, public PropPage
 {
 public:
 	Advanced2Page(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_ADVANCED) + '\\' + STRING(SETTINGS_LOGS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_LOGS)).c_str());
 		SetTitle(title);
 	};
 
-	virtual ~Advanced2Page() { delete[] title; };
+	virtual ~Advanced2Page() { free(title); };
 
 	BEGIN_MSG_MAP_EX(Advanced2Page)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -45,8 +45,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_LOG_UPLOADS, onUpdateEdits)
 	END_MSG_MAP()
 
-	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
-	LRESULT onClickedBrowseDir(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/); 
 	LRESULT onUpdateEdits(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		updateEdits();
 		return 0;
@@ -60,7 +60,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 };
 
 #endif //ADVANCED2PAGE_H
@@ -69,4 +69,3 @@ protected:
  * @file
  * $Id$
  */
-

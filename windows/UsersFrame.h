@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public:
 	UsersFrame() : closed(false), startup(true) { };
 	virtual ~UsersFrame() { images.Destroy(); };
 
-	DECLARE_FRAME_WND_CLASS_EX("UsersFrame", IDR_USERS, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("UsersFrame"), IDR_USERS, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		frame = NULL;
@@ -133,11 +133,11 @@ private:
 	class UserInfo : public UserInfoBase {
 	public:
 		UserInfo(const User::Ptr& u) : UserInfoBase(u) { 
-			columns[COLUMN_NICK] = u->getNick();
+			columns[COLUMN_NICK] = Text::toT(u->getNick());
 			update();
 		};
 
-		const string& getText(int col) const {
+		const tstring& getText(int col) const {
 			return columns[col];
 		}
 
@@ -148,16 +148,16 @@ private:
 		void remove() { HubManager::getInstance()->removeFavoriteUser(user); }
 
 		void update() {
-			columns[COLUMN_STATUS] = user->isOnline() ? STRING(ONLINE) : STRING(OFFLINE);
-			columns[COLUMN_HUB] = user->getClientName();
+			columns[COLUMN_STATUS] = user->isOnline() ? TSTRING(ONLINE) : TSTRING(OFFLINE);
+			columns[COLUMN_HUB] = Text::toT(user->getClientName());
 			if(!user->getLastHubAddress().empty()) {
-				columns[COLUMN_HUB] += " (" + user->getLastHubAddress() + ")";
+				columns[COLUMN_HUB] += Text::toT(" (" + user->getLastHubAddress() + ")");
 			}
-			columns[COLUMN_SEEN] = user->isOnline() ? Util::emptyString : Util::formatTime("%Y-%m-%d %H:%M", user->getFavoriteLastSeen());
-			columns[COLUMN_DESCRIPTION] = user->getUserDescription();
+			columns[COLUMN_SEEN] = user->isOnline() ? Util::emptyStringT : Text::toT(Util::formatTime("%Y-%m-%d %H:%M", user->getFavoriteLastSeen()));
+			columns[COLUMN_DESCRIPTION] = Text::toT(user->getUserDescription());
 		}
 
-		string columns[COLUMN_LAST];
+		tstring columns[COLUMN_LAST];
 	};
 
 	CStatusBarCtrl ctrlStatus;
@@ -190,3 +190,7 @@ private:
 
 #endif // !defined(AFX_USERSFRAME_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_)
 
+/**
+ * @file
+ * $Id$
+ */

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlPad.SetFont(WinUtil::font);
 	string tmp;
 	try {
-		tmp = File(Util::getAppPath() + SETTINGS_DIR + "Notepad.txt", File::READ, File::OPEN).read();
+		tmp = File(Util::getAppPath() + "Notepad.txt", File::READ, File::OPEN).read();
 	} catch(const FileException&) {
 		// ...
 	}
@@ -47,8 +47,9 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		}
 	}
 
-	ctrlPad.SetWindowText(tmp.c_str());
+	ctrlPad.SetWindowText(Text::toT(tmp).c_str());
 	ctrlPad.EmptyUndoBuffer();
+	ctrlClientContainer.SubclassWindow(ctrlPad.m_hWnd);
 	
 	bHandled = FALSE;
 	return 1;
@@ -57,10 +58,11 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	if(dirty || ctrlPad.GetModify()) {
-		AutoArray<char> buf(ctrlPad.GetWindowTextLength() + 1);
+			AutoArray<TCHAR> buf(ctrlPad.GetWindowTextLength() + 1);
 		ctrlPad.GetWindowText(buf, ctrlPad.GetWindowTextLength() + 1);
 		try {
-			File(Util::getAppPath() + SETTINGS_DIR + "Notepad.txt", File::WRITE, File::CREATE | File::TRUNCATE).write(buf, ctrlPad.GetWindowTextLength());
+			string tmp(Text::fromT(tstring(buf, ctrlPad.GetWindowTextLength())));
+			File(Util::getAppPath() + SETTINGS_DIR + "Notepad.txt", File::WRITE, File::CREATE | File::TRUNCATE).write(tmp);
 		} catch(const FileException&) {
 			// Oops...
 		}
@@ -88,6 +90,23 @@ void NotepadFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 	rc.right -=1;
 	ctrlPad.MoveWindow(rc);
 	
+}
+
+LRESULT NotepadFrame::onLButton(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
+	HWND focus = GetFocus();
+	bHandled = false;
+	if(focus == ctrlPad.m_hWnd) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		tstring x;
+		string::size_type start = (string::size_type)WinUtil::textUnderCursor(pt, ctrlPad, x);
+		string::size_type end = x.find(_T(" "), start);
+
+		if(end == string::npos)
+			end = x.length();
+		
+		bHandled = WinUtil::parseDBLClick(x, start, end);
+	}
+	return 0;
 }
 
 /**

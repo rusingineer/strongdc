@@ -40,10 +40,10 @@ LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ctrlCommands.Attach(GetDlgItem(IDC_MENU_ITEMS));
 	ctrlCommands.GetClientRect(rc);
 
-	ctrlCommands.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/5, 0);
-	ctrlCommands.InsertColumn(1, CSTRING(SETTINGS_COMMAND), LVCFMT_LEFT, rc.Width()*2 / 5, 1);
-	ctrlCommands.InsertColumn(2, CSTRING(SETTINGS_ARGUMENT), LVCFMT_LEFT, rc.Width() / 5, 2);
-	ctrlCommands.InsertColumn(3, CSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 5, 3);
+	ctrlCommands.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/5, 0);
+	ctrlCommands.InsertColumn(1, CTSTRING(SETTINGS_COMMAND), LVCFMT_LEFT, rc.Width()*2 / 5, 1);
+	ctrlCommands.InsertColumn(2, CTSTRING(SETTINGS_ARGUMENT), LVCFMT_LEFT, rc.Width() / 5, 2);
+	ctrlCommands.InsertColumn(3, CTSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 5, 3);
 
 	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
@@ -59,11 +59,11 @@ LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 void AVIPreview::write(){ }
 
 void AVIPreview::addEntry(PreviewApplication::Ptr pa, int pos) {
-	StringList lst;
-	lst.push_back(pa->getName());
-	lst.push_back(pa->getApplication()); 
-	lst.push_back(pa->getArguments());
-	lst.push_back(pa->getExtension());
+	TStringList lst;
+	lst.push_back(Text::toT(pa->getName()));
+	lst.push_back(Text::toT(pa->getApplication())); 
+	lst.push_back(Text::toT(pa->getArguments()));
+	lst.push_back(Text::toT(pa->getExtension()));
 	ctrlCommands.insert(pos, lst, 0, 0);
 }
 
@@ -71,7 +71,7 @@ void AVIPreview::addEntry(PreviewApplication::Ptr pa, int pos) {
 LRESULT AVIPreview::onAddMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	PreviewDlg dlg;
 	if(dlg.DoModal() == IDOK){
-		addEntry(HubManager::getInstance()->addPreviewApp(dlg.name, dlg.application, dlg.argument, dlg.extensions), ctrlCommands.GetItemCount());
+		addEntry(HubManager::getInstance()->addPreviewApp(Text::fromT(dlg.name), Text::fromT(dlg.application), Text::fromT(dlg.argument), Text::fromT(dlg.extensions)), ctrlCommands.GetItemCount());
 	}
 	return 0;
 }
@@ -83,16 +83,16 @@ LRESULT AVIPreview::onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 		HubManager::getInstance()->getPreviewApp(sel, pa);
 
 		PreviewDlg dlg;
-		dlg.name = pa.getName();
-		dlg.application  = pa.getApplication();
-		dlg.argument  = pa.getArguments();
-		dlg.extensions = pa.getExtension();
+		dlg.name = Text::toT(pa.getName());
+		dlg.application = Text::toT(pa.getApplication());
+		dlg.argument = Text::toT(pa.getArguments());
+		dlg.extensions = Text::toT(pa.getExtension());
 
 		if(dlg.DoModal() == IDOK) {
-			pa.setName(dlg.name);
-			pa.setApplication(dlg.application);
-			pa.setArguments(dlg.argument);
-			pa.setExtension(dlg.extensions);
+			pa.setName(Text::fromT(dlg.name));
+			pa.setApplication(Text::fromT(dlg.application));
+			pa.setArguments(Text::fromT(dlg.argument));
+			pa.setExtension(Text::fromT(dlg.extensions));
 
 			HubManager::getInstance()->updatePreviewApp(sel, pa);
 

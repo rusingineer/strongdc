@@ -49,7 +49,7 @@ public:
 		{
 			OFSTRUCT of;
 			HANDLE hFile = NULL;;
-			if ( (hFile = (HANDLE)OpenFile( szFileName, &of, OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR )
+			if ( (hFile = (HANDLE)OpenFile( Text::fromT(szFileName).c_str(), &of, OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR )
 			{
 				DWORD dwHighWord = NULL, dwSizeLow = GetFileSize( hFile, &dwHighWord );
 				DWORD dwFileSize = dwSizeLow;

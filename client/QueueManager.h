@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,11 +34,10 @@
 #include "DirectoryListing.h"
 #include "MerkleTree.h"
 
-#include "ConnectionManager.h"
-
 #include "QueueManagerListener.h"
 #include "SearchManagerListener.h"
 #include "ClientManagerListener.h"
+#include "LogManager.h"
 
 STANDARD_EXCEPTION(QueueException);
 
@@ -176,7 +175,6 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
-	//void sendAutoSearch(Client*);
 	
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);

@@ -30,11 +30,11 @@ class OperaColorsPage : public CPropertyPage<IDD_OPERACOLORS>, public PropPage
 {
 public:
 	OperaColorsPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_TEXT_STYLES) + '\\' + STRING(SETTINGS_OPERACOLORS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_OPERACOLORS)).c_str());
 		SetTitle(title);
 	};
 
-	virtual ~OperaColorsPage() { delete[] title;};
+	virtual ~OperaColorsPage() { free(title);};
 
 	BEGIN_MSG_MAP(OperaColorsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -139,7 +139,7 @@ private:
 	CCheckBox ctrlTwoColors;
 	CCheckBox ctrlBumped;
 	CStatic ctrlMenubarDrawer;
-	char* title;
+	TCHAR* title;
 };
 
 #endif //OperaColorsPage_H

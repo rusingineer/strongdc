@@ -92,19 +92,19 @@ LRESULT LimitPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	timeCtrlBegin.Attach(GetDlgItem(IDC_BW_START_TIME));
 	timeCtrlEnd.Attach(GetDlgItem(IDC_BW_END_TIME));
 
-	timeCtrlBegin.AddString("Midnight");
-	timeCtrlEnd.AddString("Midnight");
+	timeCtrlBegin.AddString(_T("Midnight"));
+	timeCtrlEnd.AddString(_T("Midnight"));
 	for (int i = 1; i < 12; ++i)
 	{
-		timeCtrlBegin.AddString((Util::toString(i) + " AM").c_str());
-		timeCtrlEnd.AddString((Util::toString(i) + " AM").c_str());
+		timeCtrlBegin.AddString((Text::toT(Util::toString(i)) + _T(" AM")).c_str());
+		timeCtrlEnd.AddString((Text::toT(Util::toString(i)) + _T(" AM")).c_str());
 	}
-	timeCtrlBegin.AddString("Noon");
-	timeCtrlEnd.AddString("Noon");
+	timeCtrlBegin.AddString(_T("Noon"));
+	timeCtrlEnd.AddString(_T("Noon"));
 	for (int i = 1; i < 12; ++i)
 	{
-		timeCtrlBegin.AddString((Util::toString(i) + " PM").c_str());
-		timeCtrlEnd.AddString((Util::toString(i) + " PM").c_str());
+		timeCtrlBegin.AddString((Text::toT(Util::toString(i)) + _T(" PM")).c_str());
+		timeCtrlEnd.AddString((Text::toT(Util::toString(i)) + _T(" PM")).c_str());
 	}
 
 	timeCtrlBegin.SetCurSel(SETTING(BANDWIDTH_LIMIT_START));

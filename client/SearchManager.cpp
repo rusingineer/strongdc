@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@
 #include "ClientManager.h"
 #include "AdcCommand.h"
 
-SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, TTHValue* aTTH) :
+SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, TTHValue* aTTH, bool aUtf8) :
 file(aFile), hubName(aClient->getName()), hubIpPort(aClient->getIpPort()), user(aClient->getMe()), 
 size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
-tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), ref(1) { }
+tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), utf8(aUtf8), ref(1) { }
 
 string SearchResult::toSR() const {
 	// File:		"$SR %s %s%c%s %d/%d%c%s (%s)|"
@@ -36,14 +36,15 @@ string SearchResult::toSR() const {
 	string tmp;
 	tmp.reserve(128);
 	tmp.append("$SR ", 4);
-	tmp.append(user->getNick());
+	tmp.append(Text::utf8ToAcp(user->getNick()));
 	tmp.append(1, ' ');
+	string acpFile = utf8 ? Text::utf8ToAcp(file) : file;
 	if(type == TYPE_FILE) {
-		tmp.append(file);
+		tmp.append(acpFile);
 		tmp.append(1, '\x05');
 		tmp.append(Util::toString(size));
 	} else {
-		tmp.append(file, 0, file.length() - 1);
+		tmp.append(acpFile, 0, acpFile.length() - 1);
 	}
 	tmp.append(1, ' ');
 	tmp.append(Util::toString(freeSlots));
@@ -51,7 +52,7 @@ string SearchResult::toSR() const {
 	tmp.append(Util::toString(slots));
 	tmp.append(1, '\x05');
 	if(getTTH() == NULL) {
-		tmp.append(hubName);
+		tmp.append(Text::utf8ToAcp(hubName));
 	} else {
 		tmp.append("TTH:" + getTTH()->toBase32());
 	}
@@ -70,7 +71,7 @@ string SearchResult::toRES() const {
 	tmp.append(" SL");
 	tmp.append(Util::toString(freeSlots));
 	tmp.append(" FN");
-	string fn = file;
+	string fn = utf8 ? file : Text::acpToUtf8(file);
 	string::size_type i = 0;
 	while( (i = fn.find('\\', i)) != string::npos ) {
 		fn[i] = '/';
@@ -194,7 +195,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 	
 		if(!name.empty() && freeSlots != -1 && size != -1) {
 			SearchResult::Types type = (name[name.length() - 1] == '/' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
-			SearchResult* sr = new SearchResult(p, type, 0, freeSlots, size, name, p->getClientName(), "0.0.0.0", NULL);
+			SearchResult* sr = new SearchResult(p, type, 0, freeSlots, size, name, p->getClientName(), "0.0.0.0", NULL, true);
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		}
@@ -224,11 +225,10 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
 		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
 		i = 4;
-
-		if( (j = safestring::SafeFind(x,' ', i)) == string::npos) {
+		if( (j = x.find(' ', i)) == string::npos) {
 			return;
 		}
-		string nick = x.substr(i, j-i);
+		string nick = Text::acpToUtf8(x.substr(i, j-i));
 		i = j + 1;
 
 		if (!address.empty()) {
@@ -259,24 +259,24 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 			}
 			file = x.substr(i, j-i) + '\\';
 		} else if(cnt == 2) {
-			if( (j = safestring::SafeFind(x,(char)5, i)) == string::npos) {
+			if( (j = x.find((char)5, i)) == string::npos) {
 				return;
 			}
 			file = x.substr(i, j-i);
 			i = j + 1;			
-			if( (j = safestring::SafeFind(x,' ', i)) == string::npos) {
+			if( (j = x.find(' ', i)) == string::npos) {
 				return;
 			}
 			size = Util::toInt64(x.substr(i, j-i));
 		}
 		i = j + 1;
 		
-		if( (j = safestring::SafeFind(x,'/', i)) == string::npos) {
+		if( (j = x.find('/', i)) == string::npos) {
 			return;
 		}
 		int freeSlots = Util::toInt(x.substr(i, j-i));
 		i = j + 1;
-		if( (j = safestring::SafeFind(x,(char)5, i)) == string::npos) {
+		if( (j = x.find((char)5, i)) == string::npos) {
 			return;
 		}
 		int slots = Util::toInt(x.substr(i, j-i));
@@ -310,7 +310,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 	}
 
 	sr = new SearchResult(user, type, slots, freeSlots, size,
-		file, hubName, hubIpPort, Country);
+		file, hubName, hubIpPort, Country, false);
 	fire(SearchManagerListener::SR(), sr);
 		sr->decRef();
 }

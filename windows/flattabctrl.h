@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -240,7 +240,9 @@ public:
 		int xPos = GET_X_LPARAM(lParam); 
 		int yPos = GET_Y_LPARAM(lParam); 
 		int row = getRows() - ((yPos / getTabHeight()) + 1);
+
 		bool moveLast = true;
+
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* t = *i;
 			if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth())) ) {
@@ -282,7 +284,7 @@ public:
 				ClientToScreen(&pt);
 				OMenu mnu;
 				mnu.CreatePopupMenu();
-				mnu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
+				mnu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 					mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pt.x, pt.y, m_hWnd);
 				}
 				break;
@@ -346,7 +348,7 @@ public:
 	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) { 
 		chevron.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 			BS_PUSHBUTTON , 0, IDC_CHEVRON);
-		chevron.SetWindowText("»");
+		chevron.SetWindowText(_T("»"));
 
 		mnu.CreatePopupMenu();
 
@@ -424,7 +426,7 @@ public:
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* ti = *i;
 			if(ti->row == -1) {
-				mi.dwTypeData = (LPSTR)ti->name;
+				mi.dwTypeData = (LPTSTR)ti->name;
 				mi.dwItemData = (ULONG_PTR)ti->hWnd;
 				mi.fState = MFS_ENABLED | (ti->dirty ? MFS_CHECKED : 0);
 				mi.wID = IDC_SELECT_WINDOW + n;
@@ -524,7 +526,7 @@ private:
 	
 		HWND hWnd;
 		CPen pen;
-		char name[MAX_LENGTH];
+		TCHAR name[MAX_LENGTH];
 		size_t len;
 		SIZE size;
 		SIZE boldSize;
@@ -536,22 +538,22 @@ private:
 		bool bState;
 
 		bool update() {
-			char name2[MAX_LENGTH];
+			TCHAR name2[MAX_LENGTH];
 			len = (size_t)::GetWindowTextLength(hWnd);
 			if(len >= MAX_LENGTH) {
 				::GetWindowText(hWnd, name2, MAX_LENGTH - 3);
-				name2[MAX_LENGTH - 4] = '.';
-				name2[MAX_LENGTH - 3] = '.';
-				name2[MAX_LENGTH - 2] = '.';
+				name2[MAX_LENGTH - 4] = _T('.');
+				name2[MAX_LENGTH - 3] = _T('.');
+				name2[MAX_LENGTH - 2] = _T('.');
 				name2[MAX_LENGTH - 1] = 0;
 				len = MAX_LENGTH - 1;
 			} else {
 				::GetWindowText(hWnd, name2, MAX_LENGTH);
 			}
-			if(strcmp(name, name2) == 0) {
+			if(_tcscmp(name, name2) == 0) {
 				return false;
 			}
-			strcpy(name, name2);
+			_tcscpy(name, name2);
 			CDC dc(::GetDC(hWnd));
 			HFONT f = dc.SelectFont(WinUtil::font);
 			dc.GetTextExtent(name, len, &size);
@@ -563,16 +565,16 @@ private:
 		};
 
 		bool updateText(LPCTSTR text) {
-			len = strlen(text);
+			len = _tcslen(text);
 			if(len >= MAX_LENGTH) {
-				::strncpy(name, text, MAX_LENGTH - 3);
+				::_tcsncpy(name, text, MAX_LENGTH - 3);
 				name[MAX_LENGTH - 4] = '.';
 				name[MAX_LENGTH - 3] = '.';
 				name[MAX_LENGTH - 2] = '.';
 				name[MAX_LENGTH - 1] = 0;
 				len = MAX_LENGTH - 1;
 			} else {
-				strcpy(name, text);
+				_tcscpy(name, text);
 			}
 			CDC dc(::GetDC(hWnd));
 			HFONT f = dc.SelectFont(WinUtil::font);

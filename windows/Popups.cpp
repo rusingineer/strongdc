@@ -55,8 +55,8 @@ LRESULT Popups::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_POPUPLIST));
 
 	ctrlPopupType.Attach(GetDlgItem(IDC_COMBO1));
-	ctrlPopupType.AddString("Balloon popup");
-	ctrlPopupType.AddString("Window popup");
+	ctrlPopupType.AddString(_T("Balloon popup"));
+	ctrlPopupType.AddString(_T("Window popup"));
 	ctrlPopupType.SetCurSel(SETTING(POPUP_TYPE));
 
 	return TRUE;
@@ -76,8 +76,8 @@ void Popups::write()
 LRESULT Popups::onPreview(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	MainFrame::getMainFrame()->ShowBalloonTip((
-		STRING(FILE)+": sdc100rc8.rar\n"+
-		STRING(USER)+": BigMuscle").c_str(), CSTRING(DOWNLOAD_FINISHED_IDLE));
+		TSTRING(FILE)+_T(": sdc100rc8.rar\n")+
+		TSTRING(USER)+_T(": BigMuscle")).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
 	return 0;
 }
 /**

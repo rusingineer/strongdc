@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,6 +110,9 @@ void User::send(const string& aMsg) {
 	}
 }
 
+void User::sendUserCmd(const string& aUserCmd) {
+	send(aUserCmd);
+}
 void User::clientMessage(const string& aMsg) {
 	RLock l(cs);
 	if(client) {
@@ -205,38 +208,37 @@ StringMap& User::clientEscapeParams(StringMap& sm) const {
 	return client->escapeParams(sm);
 }
 
-void User::TagParts(char *sTag ) {
-	char *temp, *ver, *mod;
-    setTag(sTag);
-	if((temp = strtok(sTag+1, " ")) != NULL) {
+void User::TagParts() {
+	char *sTag = strdup(getTag().c_str());
+	char *temp;
+	if(strlen(sTag) > 2) {
+		if((temp = strtok(sTag+1, " ")) != NULL) {
 //		setClientID(temp);
-		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'V')) {
-			ver = strdup(temp+2);
-			setVersion(ver);
-			delete[] ver;
-		}
-		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'M')) {
-			mod = strdup(temp+2);
-			setMode(mod);
-			delete[] mod;
-		}
-		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
-			if( strlen(temp+2) > 3 ) {
-                int a,b,c;
-				if( sscanf(temp+2, "%d/%d/%d", &a, &b, &c) == 3 ) {
-					setHubs(Util::toString(a+b+c));
-				}
-			} else {
-				setHubs(Util::toString(atoi(temp+2)));
+			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'V')) {
+					setVersion(temp+2);
 			}
-		}
-		if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
-			setSlots(Util::toString(atoi(temp+2)));
-		}
-		if(((temp = strtok(NULL, ",")) != NULL) && ((temp[0] == 'L') || (temp[0] == 'B') || (temp[0] == 'U'))) {
-			setUpload(Util::toString(atoi(temp+2)));
-		}
+			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'M')) {
+					setMode(temp+2);
+			}
+			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
+				if( strlen(temp+2) > 3 ) {
+            	    int a,b,c;
+						if(sscanf(temp+2, "%d/%d/%d", &a, &b, &c) == 3 ) {
+						setHubs(Util::toString(a+b+c));
+					}
+				} else {
+					setHubs(Util::toString(atoi(temp+2)));
+				}
+			}
+			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
+				setSlots(Util::toString(atoi(temp+2)));
+			}
+			if(((temp = strtok(NULL, ",")) != NULL) && ((temp[0] == 'L') || (temp[0] == 'B') || (temp[0] == 'U'))) {
+				setUpload(Util::toString(atoi(temp+2)));
+			}
+		}	
 	}
+	free(sTag);
 }
 
 // CDM EXTENSION BEGINS

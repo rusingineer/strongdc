@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ void ExceptionFunction() {
 #ifndef _DEBUG
 
 FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
-	MessageBox(WinUtil::mainWnd, "StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old).", "Unhandled Exception", MB_OK | MB_ICONERROR);
+	MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old)."), _T("Unhandled Exception"), MB_OK | MB_ICONERROR);
 	exit(-1);
 }
 
@@ -87,7 +87,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	if(File::getSize(Util::getAppPath() + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
-		::MessageBox(WinUtil::mainWnd, "StrongDC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution...", "StrongDC++ has crashed", MB_OK);
+		::MessageBox(WinUtil::mainWnd, _T("StrongDC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution..."), _T("StrongDC++ has crashed"), MB_OK);
 #ifndef _DEBUG
 		exit(1);
 #else
@@ -110,7 +110,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	f.write(buf, strlen(buf));
 
-	WinUtil::exceptioninfo = buf;
+	WinUtil::exceptioninfo = Text::toT(buf);
 	OSVERSIONINFOEX ver;
 	WinUtil::getVersionInfo(ver);
 
@@ -118,19 +118,19 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		(DWORD)ver.dwMajorVersion, (DWORD)ver.dwMinorVersion, (DWORD)ver.dwBuildNumber,
 		(DWORD)ver.wServicePackMajor, (DWORD)ver.wProductType);
 
-	WinUtil::exceptioninfo += buf;
+	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
 	time_t now;
 	time(&now);
 	strftime(buf, DEBUG_BUFSIZE, "Time: %Y-%m-%d %H:%M:%S\r\n", localtime(&now));
 
-	WinUtil::exceptioninfo += buf;
+	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
 
-	WinUtil::exceptioninfo += LIT("TTH: ");
-	WinUtil::exceptioninfo += tth;
-	WinUtil::exceptioninfo += LIT("\r\n");
-	WinUtil::exceptioninfo += LIT("\r\n");
+	WinUtil::exceptioninfo += LIT(_T("TTH: "));
+	WinUtil::exceptioninfo += Text::toT(tth);
+	WinUtil::exceptioninfo += LIT(_T("\r\n"));
+	WinUtil::exceptioninfo += LIT(_T("\r\n"));
 
 	f.write(LIT("TTH: "));
 	f.write(tth, strlen(tth));
@@ -146,10 +146,10 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
 
-	WinUtil::exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+	WinUtil::exceptioninfo += Text::toT(StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp));
 	
 	if ((!SETTING(SOUND_EXC).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-		PlaySound(SETTING(SOUND_EXC).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+		PlaySound(Text::toT(SETTING(SOUND_EXC)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	CExceptionDlg dlg;
 	iLastExceptionDlgResult = dlg.DoModal(NULL);
@@ -166,12 +166,12 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 static void sendCmdLine(HWND hOther, LPTSTR lpstrCmdLine)
 {
-	string cmdLine = _T(lpstrCmdLine);
+	tstring cmdLine = lpstrCmdLine;
 	LRESULT result;
 
 	COPYDATASTRUCT cpd;
 	cpd.dwData = 0;
-	cpd.cbData = cmdLine.length() + 1;
+	cpd.cbData = sizeof(TCHAR)*(cmdLine.length() + 1);
 	cpd.lpData = (void *)cmdLine.c_str();
 	result = SendMessage(hOther, WM_COPYDATA, NULL,	(LPARAM)&cpd);
 }
@@ -197,7 +197,7 @@ static void checkCommonControls() {
 	HINSTANCE hinstDll;
 	DWORD dwVersion = 0;
 	
-	hinstDll = LoadLibrary("comctl32.dll");
+	hinstDll = LoadLibrary(_T("comctl32.dll"));
 	
 	if(hinstDll)
 	{
@@ -225,7 +225,7 @@ static void checkCommonControls() {
 	}
 
 	if(dwVersion < PACKVERSION(5,80)) {
-		MessageBox(NULL, "Your version of windows common controls is too old for StrongDC++ to run correctly, and you will most probably experience problems with the user interface. You should download version 5.80 or higher from the DC++ homepage or from Microsoft directly.", "User Interface Warning", MB_OK);
+		MessageBox(NULL, _T("Your version of windows common controls is too old for CZDC++ to run correctly, and you will most probably experience problems with the user interface. You should download version 5.80 or higher from the DC++ homepage or from Microsoft directly."), _T("User Interface Warning"), MB_OK);
 	}
 }
 
@@ -277,7 +277,7 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		::SetBkMode(dc, OPAQUE);
 		::SetBkColor(dc, RGB(255, 255, 255));
 		::SetTextColor(dc, RGB(0,0,0));
-		::DrawText(dc, sTitle.c_str(), sTitle.length(), &rc2, DT_RIGHT);
+		::DrawText(dc, Text::toT(sTitle).c_str(), sTitle.length(), &rc2, DT_RIGHT);
 		DeleteObject(hFont);
 		ReleaseDC(hwnd, dc);
 	}
@@ -304,9 +304,9 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	rc.right = GetSystemMetrics(SM_CXFULLSCREEN);
 	rc.left = rc.right / 2 - 85;
 	
-	dummy.Create(NULL, rc, APPNAME " " VERSIONSTRING " " CZDCVERSIONSTRING, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+	dummy.Create(NULL, rc, _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("[") _T(CZDCVERSIONSTRING) _T("]"), WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_CENTER | ES_READONLY, WS_EX_STATICEDGE);
-	splash.Create("Static", GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM, /*WS_EX_TOPMOST |*/ WS_EX_TOOLWINDOW);
+	splash.Create(_T("Static"), GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM | WS_EX_TOOLWINDOW);
 	splash.SetFont((HFONT)GetStockObject(DEFAULT_GUI_FONT));
 	
 	HDC dc = splash.GetDC();
@@ -364,17 +364,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	dcdebug("String: %d\n", sizeof(string));
 #ifndef _DEBUG
-	SingleInstance dcapp("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}");
+	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}"));
 #else
-	SingleInstance dcapp("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48350}");
+	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48350}"));
 #endif
 
 	if(dcapp.IsAnotherInstanceRunning()) {
 		// Allow for more than one instance...
 				bool multiple = false;
 		if(_tcslen(lpstrCmdLine) == 0) {
-		if (::MessageBox(NULL, "There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?", 
-			APPNAME " " VERSIONSTRING CZDCVERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
+		if (::MessageBox(NULL, _T("There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?"), 
+			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
 					multiple = true;
 				}
 		}
@@ -383,11 +383,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			HWND hOther = NULL;
 			EnumWindows(searchOtherInstance, (LPARAM)&hOther);
 
-#ifndef _DEBUG
 			if( hOther != NULL ) {
-#else
-			if( hOther != NULL && strlen(lpstrCmdLine) > 0 ) {
-#endif
 				// pop up
 				::SetForegroundWindow(hOther);
 
@@ -431,8 +427,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			n2 = DEBUG_BUFSIZE;
 		}
 		tth.finalize();
-		WinUtil::tth = tth.getRoot().toBase32();
-		strcpy(::tth, WinUtil::tth.c_str());
+		strcpy(::tth, tth.getRoot().toBase32().c_str());
+		WinUtil::tth = Text::toT(::tth);
 	} catch(const FileException&) {
 		dcdebug("Failed reading exe\n");
 	}	

@@ -100,10 +100,10 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlBlockSize.Attach(GetDlgItem(IDC_BLOCK_COMBO));
 
 	for(int i = 0; i < SettingsManager::SIZE_LAST; i++) {
-		ctrlBlockSize.AddString(SettingsManager::blockSizes[i].c_str());
+		ctrlBlockSize.AddString(Text::toT(SettingsManager::blockSizes[i]).c_str());
 	}
 
-	ctrlBlockSize.SetCurSel(ctrlBlockSize.FindString(0, SETTING(MIN_BLOCK_SIZE).c_str()));
+	ctrlBlockSize.SetCurSel(ctrlBlockSize.FindString(0, Text::toT(SETTING(MIN_BLOCK_SIZE)).c_str()));
 
 	// Do specialized reading here
 	fixControls();

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 #include "HashManager.h"
 #include "CryptoManager.h"
 #include "SimpleXML.h"
+#include "LogManager.h"
 #include "File.h"
-#include "ShareManager.h"
 
 #define HASH_FILE_VERSION_STRING "1"
 static const u_int32_t HASH_FILE_VERSION=1;
@@ -32,7 +32,6 @@ void HashManager::checkTTH(const string& aFileName, int64_t aSize, u_int32_t aTi
 	Lock l(cs);
 	if(!store.checkTTH(aFileName, aSize, aTimeStamp)) {
 		hasher.hashFile(aFileName, aSize);	
-		fileCount++;
 	}
 }
 
@@ -210,7 +209,7 @@ void HashManager::HashStore::save() {
 			string tmp;
 			string b32tmp;
 
-			f.write(SimpleXML::w1252Header);
+			f.write(SimpleXML::utf8Header);
 			f.write(LITERAL("<HashStore version=\"" HASH_FILE_VERSION_STRING "\">\r\n"));
 			for(TTHIter i = indexTTH.begin(); i != indexTTH.end(); ++i) {
 				if(i->second->getIndex() == 0)
@@ -343,13 +342,13 @@ void HashManager::HashStore::createDataFile(const string& name) {
 bool HashManager::Hasher::fastHash(const string& fname, u_int8_t* buf, TigerTree& tth, int64_t size, bool verify) {
 	HANDLE h = INVALID_HANDLE_VALUE;
 	DWORD x, y;
-	if(!GetDiskFreeSpace(Util::getFilePath(fname).c_str(), &y, &x, &y, &y)) {
+	if(!GetDiskFreeSpace(Text::toT(Util::getFilePath(fname)).c_str(), &y, &x, &y, &y)) {
 		return false;
 	} else {
 		if((BUF_SIZE % x) != 0) {
 			return false;
 		} else {
-			h = ::CreateFile(fname.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, NULL);
+			h = ::CreateFile(Text::toT(fname).c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, NULL);
 			if(h == INVALID_HANDLE_VALUE)
 				return false;
 		}
@@ -617,7 +616,6 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname, bool verify) {
 #endif
 				do {
 					size_t bufSize = BUF_SIZE;
-#ifdef _WIN32
 					if(SETTING(MAX_HASH_SPEED) > 0) {
 						u_int32_t now = GET_TICK();
 						u_int32_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
@@ -625,9 +623,6 @@ TigerTree HashManager::Hasher::getTTfromFile(const string& fname, bool verify) {
 							Thread::sleep(minTime - (now - lastRead));
 						}
 					}
-#else
-#warning FIXME - Add speed measurement and throttling for non WIN32 platforms
-#endif
 					n = f.read(buf, bufSize);
 					tth->update(buf, n);
 				} while (n > 0 && !stop);

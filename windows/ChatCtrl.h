@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #if !defined(AFX_CHAT_CTRL_H__595F1372_081B_11D1_890D_00A0244AB9FD__INCLUDED_)
 #define AFX_CHAT_CTRL_H__595F1372_081B_11D1_890D_00A0244AB9FD__INCLUDED_
 
@@ -39,9 +57,9 @@ public:
 	string LineFromPos( POINT p );
 
 	void ReadSettings();
-	void AdjustTextSize( LPCTSTR lpstrTextToAdd = "" );
-	void AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = "" );
-	void AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = "", bool bRedrawControlAtEnd = true);
+	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
+	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
+	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), bool bRedrawControlAtEnd = true);
 	void EndRedrawAppendTextOnly();
 	void AppendBitmap(HBITMAP hbm);
 
@@ -62,17 +80,18 @@ protected:
 	CHARFORMAT2 m_ChatTextMyOwn;
 	CHARFORMAT2 m_TextStyleBold;
 	CHARFORMAT2 m_TextStyleFavUsers;
-	CHARFORMAT2 m_TextStyleOPUsers;
+	CHARFORMAT2 m_TextStyleOPs;
+	CHARFORMAT2 m_TextStyleURL;
 	
 	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
 	bool m_boAutoScroll, bMyMessage, boOK, boAtTheEnd, bRedrawControl, isOP, myMess;
-	char *g_BufTemp, *beforeAppendText, *afterAppendText;
+	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen, line, iFindBegin, iBegin, iEnd1, iEnd2, iCRLF, iCRLF_Len, len, smiles, maxsmiles, 
 		nIdxFound, iCharPos, iRet, iLeft, iRight, iPos;
 	long lSelBeginSaved, lSelEndSaved, lMask, lSelBegin, lSelEnd, lTextLength, lMyNickStart, lMyNickEnd, lAuthorBegin, 
 		lAuthorEnd, lSearchFrom, lPos;
 	CAtlString sText, sNick, sMsgLower, sSel, sAuthorNick, sN;
-	string msg;
+	tstring msg;
 };
 
 

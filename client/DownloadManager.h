@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,6 @@
 
 class QueueItem;
 class ConnectionQueueItem;
-
-//STANDARD_EXCEPTION(BlockDLException);
-//STANDARD_EXCEPTION(FileDLException);
 
 class Download : public Transfer, public Flags {
 public:
@@ -130,7 +127,6 @@ public:
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;
-
 private:
 	Download(const Download&);
 
@@ -262,6 +258,9 @@ private:
 		TimerManager::getInstance()->addListener(this);
 		mDownloadLimit = 0;
 		mBytesSent = 0;
+		mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
+		mDownloadLimit = 0;
+		mBytesSpokenFor = 0;
 	};
 
 	virtual ~DownloadManager() {
@@ -276,7 +275,6 @@ private:
 		}
 	};
 	
-
 	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 	

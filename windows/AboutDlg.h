@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 #include "../client/HttpConnection.h"
 #include "../client/SimpleXML.h"
 
-static const char thanks[] = 
-"Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, King Wenceslas, Liny, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)";
+static const TCHAR thanks[] = 
+_T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, King Wenceslas, Liny, ProLogic, Testament a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
 
 class CAboutDlg : public CDialogImpl<CAboutDlg>, private HttpConnectionListener
 {
@@ -46,22 +46,22 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, "StrongDC++ v" VERSIONSTRING CZDCVERSIONSTRING " (c) Copyright 2004 Big Muscle\nBased on: DC++ " DCVERSIONSTRING " (c) Copyright 2001-2004 Jacek Sieka\n\nhttp://snail.pc.cz/StrongDC/");
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING) _T(" (c) Copyright 2004 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2004 Jacek Sieka\n\nhttp://snail.pc.cz/StrongDC/"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);
 		ctrlThanks.Detach();
 		SetDlgItemText(IDC_TTH, WinUtil::tth.c_str());
-		SetDlgItemText(IDC_LATEST, CSTRING(DOWNLOADING));
-		SetDlgItemText(IDC_TOTALS, ("Upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + ", Download: " + 
+		SetDlgItemText(IDC_LATEST, CTSTRING(DOWNLOADING));
+		SetDlgItemText(IDC_TOTALS, Text::toT("Upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + ", Download: " + 
 			Util::formatBytes(SETTING(TOTAL_DOWNLOAD))).c_str());
 
 		if(SETTING(TOTAL_DOWNLOAD) > 0) {
 			char buf[64];
 			sprintf(buf, "Ratio (up/down): %.2f", ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
-			SetDlgItemText(IDC_RATIO, buf);
-		/*	sprintf(buf, "Uptime: %s", Util::formatSeconds(Util::getUptime()).c_str());
-			SetDlgItemText(IDC_UPTIME, buf);*/
+			SetDlgItemText(IDC_RATIO, Text::toT(buf).c_str());
+		/*	sprintf(buf, "Uptime: %s", Util::formatTime(Util::getUptime()));
+			SetDlgItemText(IDC_UPTIME, Text::toT(buf).c_str());*/
 		}
 		CenterWindow(GetParent());
 		c.addListener(this);
@@ -70,7 +70,7 @@ public:
 	}
 
 	LRESULT onVersionData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		string* x = (string*) wParam;
+		tstring* x = (tstring*) wParam;
 		SetDlgItemText(IDC_LATEST, x->c_str());
 		delete x;
 		return 0;
@@ -97,7 +97,7 @@ private:
 				if(xml.findChild("DCUpdate")) {
 					xml.stepIn();
 					if(xml.findChild("Version")) {
-						string* x = new string(xml.getChildData());
+					tstring* x = new tstring(Text::toT(xml.getChildData()));
 						PostMessage(WM_VERSIONDATA, (WPARAM) x);
 					}
 				}
@@ -106,13 +106,12 @@ private:
 	}
 
 	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
-				string* x = new string(aLine);
+				tstring* x = new tstring(Text::toT(aLine));
 				PostMessage(WM_VERSIONDATA, (WPARAM) x);
 		conn->removeListener(this);
 	}
 
 	string downBuf;
-
 };
 
 #endif // !defined(AFX_ABOUTDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)

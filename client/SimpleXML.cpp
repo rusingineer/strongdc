@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,13 @@
 #include "SimpleXML.h"
 
 const string SimpleXML::utf8Header = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\r\n";
-const string SimpleXML::w1252Header = "<?xml version=\"1.0\" encoding=\"windows-1252\" standalone=\"yes\"?>\r\n";
 
-string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = false */) {
+string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = false */, bool utf8 /* = true */) {
 	string::size_type i = 0;
 	const char* chars = aAttrib ? "<&>'\"" : "<&>";
 	
 	if(aLoading) {
-		while((i = safestring::SafeFind(aString, '&', i)) != string::npos) {
+		while((i = aString.find('&', i)) != string::npos) {
 			if(aString.compare(i+1, 3, "lt;") == 0) {
 				aString.replace(i, 4, 1, '<');
 			} else if(aString.compare(i+1, 4, "amp;") == 0) {
@@ -50,7 +49,7 @@ string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = fals
 			if(i > 0 && aString[i-1] != '\r') {
 				// This is a unix \n thing...convert it...
 				i = 0;
-				while( (i = safestring::SafeFind(aString, '\n', i) ) != string::npos) {
+				while( (i = aString.find('\n', i) ) != string::npos) {
 					if(aString[i-1] != '\r')
 						aString.insert(i, 1, '\r');
 						
@@ -58,6 +57,10 @@ string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = fals
 					}
 				}
 			}
+		if(!utf8) {
+			// Not very performant, but shouldn't happen very often
+			aString = Text::acpToUtf8(aString);
+		}
 		} else {
 		while( (i = aString.find_first_of(chars, i)) != string::npos) {
 			switch(aString[i]) {
@@ -68,6 +71,9 @@ string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = fals
 			case '"': aString.replace(i, 1, "&quot;"); i+=6; break;
 			default: dcasserta(0);
 				}
+		}
+		if(!utf8) {
+			aString = Text::utf8ToAcp(aString);
 		}
 	}
 	return aString;
@@ -158,7 +164,7 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 	string::size_type j;
 
 	for(;;) {
-		if((j = safestring::SafeFind(tmp, '=', i)) == string::npos) {
+		if((j = tmp.find('=', i)) == string::npos) {
 			throw SimpleXMLException("Missing '=' in " + name);
 		}
 
@@ -168,12 +174,12 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 	
 		string::size_type x = j + 2;
 		string::size_type y;
-		if((y = safestring::SafeFind(tmp, tmp[j+1], x)) == string::npos) {
+		if((y = tmp.find(tmp[j+1], x)) == string::npos) {
 			throw SimpleXMLException("Missing '" + string(1, tmp[j+1]) + "' in " + name);
 		}
 		// Ok, we have an attribute...
 		attribs.push_back(make_pair(tmp.substr(i, j-i), tmp.substr(x, y-x)));
-		SimpleXML::escape(attribs.back().second, true, true);
+		SimpleXML::escape(attribs.back().second, true, true, utf8);
 
 		i = tmp.find_first_not_of(' ', y + 1);
 		if(tmp[i] == '/' || tmp[i] == '>') {
@@ -189,7 +195,7 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 	bool hasChildren = false;
 	
 	for(;;) {
-		if((j = safestring::SafeFind(tmp, '<', i)) == string::npos) {
+		if((j = tmp.find('<', i)) == string::npos) {
 			if(inTag) {
 				throw SimpleXMLException("Missing end tag in " + n);
 			}
@@ -204,17 +210,24 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 		i = j + 1;
 
 		if(tmp[i] == '?') {
-			// <? processing instruction ?>, ignore...
-			if((j = safestring::SafeFind(tmp, "?>", i)) == string::npos) {
+			// <? processing instruction ?>, check encoding...
+			if((j = tmp.find("?>", i)) == string::npos) {
 				throw SimpleXMLException("Missing '?>' in " + n);
 			}
+
+			string str = tmp.substr(i, j - i);
+			if(str.find("encoding=\"utf-8\"") == string::npos) {
+				// Ugly pass to convert from some other codepage to utf-8; note that we convert from the ACP, not the one specified in the xml...
+				utf8 = false;
+			}
+
 			i = j + 2;
 			continue;
 		}
 		
 		if(tmp[i] == '!' && tmp[i+1] == '-' && tmp[i+2] == '-') {
 			// <!-- comment -->, ignore...
-			if((j = safestring::SafeFind(tmp, "-->", i)) == string::npos) {
+			if((j = tmp.find("-->", i)) == string::npos) {
 				throw SimpleXMLException("Missing '-->' in " + n);
 			}
 			i = j + 3;
@@ -230,7 +243,7 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 			{
 				if(!hasChildren) {
 					data = tmp.substr(start, i - start - 2);
-					SimpleXML::escape(data, false, true);
+					SimpleXML::escape(data, false, true, utf8);
 				} else {
 					data.clear();
 			}

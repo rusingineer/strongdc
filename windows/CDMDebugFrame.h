@@ -14,7 +14,7 @@
 class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM>, public StaticFrame<CDMDebugFrame, ResourceManager::MENU_CDMDEBUG_MESSAGES>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("CDMDebugFrame", IDR_CDM, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("CDMDebugFrame"), IDR_CDM, 0, COLOR_3DFACE);
 
 	CDMDebugFrame() { 
 		DebugManager::getInstance()->addListener(this);

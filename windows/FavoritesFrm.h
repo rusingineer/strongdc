@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,10 +36,10 @@ class FavoriteHubsFrame : public MDITabChildWindowImpl<FavoriteHubsFrame, RGB(0,
 public:
 	typedef MDITabChildWindowImpl<FavoriteHubsFrame, RGB(0, 0, 0), IDR_FAVORITES> baseClass;
 
-	FavoriteHubsFrame() : nosave(true),closed(false) { };
+	FavoriteHubsFrame() : nosave(true), closed(false) { };
 	~FavoriteHubsFrame() { };
 
-	DECLARE_FRAME_WND_CLASS_EX("FavoriteHubsFrame", IDR_FAVORITES, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("FavoriteHubsFrame"), IDR_FAVORITES, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -56,6 +56,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_NEWFAV, onNew)
 		COMMAND_ID_HANDLER(IDC_MOVE_UP, onMoveUp);
 		COMMAND_ID_HANDLER(IDC_MOVE_DOWN, onMoveDown);
+		COMMAND_ID_HANDLER(IDC_OPEN_HUB_LOG, onOpenHubLog)
 		NOTIFY_HANDLER(IDC_HUBLIST, NM_DBLCLK, onDoubleClickHublist)
 		NOTIFY_HANDLER(IDC_HUBLIST, NM_RETURN, onEnter)
 		NOTIFY_HANDLER(IDC_HUBLIST, LVN_ITEMCHANGED, onItemChanged)
@@ -71,6 +72,7 @@ public:
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onMoveUp(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onMoveDown(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	
 	bool checkNick();
 	void UpdateLayout(BOOL bResizeBars = TRUE);
@@ -147,23 +149,7 @@ private:
 		ctrlHubs.Invalidate();
 	}
 
-	void addEntry(const FavoriteHubEntry* entry, int pos) {
-		StringList l;
-		l.push_back(entry->getName());
-		l.push_back(entry->getDescription());
-		l.push_back(entry->getNick(false));
-		l.push_back(string(entry->getPassword().size(), '*'));
-		l.push_back(entry->getServer());
-		l.push_back(entry->getUserDescription());	
-		l.push_back(entry->getRawOne());
-		l.push_back(entry->getRawTwo());
-		l.push_back(entry->getRawThree());
-		l.push_back(entry->getRawFour());
-		l.push_back(entry->getRawFive());
-		bool b = entry->getConnect();
-		int i = ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
-		ctrlHubs.SetCheckState(i, b);
-	}
+	void addEntry(const FavoriteHubEntry* entry, int pos);
 	virtual void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { addEntry(e, ctrlHubs.GetItemCount()); }
 	virtual void on(FavoriteRemoved, const FavoriteHubEntry* e) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)e)); }
 };

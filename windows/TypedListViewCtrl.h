@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ public:
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			di->item.pszText = const_cast<char*>(((T*)di->item.lParam)->getText(di->item.iSubItem).c_str());
+			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(di->item.iSubItem).c_str());
 		}
 		return 0;
 	}
@@ -103,8 +103,8 @@ public:
 	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
-		string InfoTip("");
-		char Buffer[500];
+		tstring InfoTip(_T(""));
+		TCHAR Buffer[500];
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
 		int indexes[32];
@@ -117,18 +117,18 @@ public:
 				lvCol.cchTextMax = sizeof(Buffer);
 				GetColumn(indexes[i], &lvCol);
 				InfoTip += lvCol.pszText;
-				InfoTip += ": ";
+				InfoTip += _T(": ");
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
 			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 512);
 			InfoTip += Buffer;
-			InfoTip += "\r\n";
+			InfoTip += _T("\r\n");
 		}
 
 		if (InfoTip.size() > 2)
 			InfoTip.erase(InfoTip.size() - 2);
 
-		strcpy(pInfoTip->pszText, InfoTip.c_str());
+		_tcscpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;
 	}
 
@@ -169,11 +169,11 @@ public:
 	}
 	struct CompFirst {
 		CompFirst() { } 
-		bool operator()(T& a, const string& b) {
+		bool operator()(T& a, const tstring& b) {
 			return Util::stricmp(a.getText(0), b) < 0;
 		}
 	};
-	int findItem(const string& b, int start = -1, bool aPartial = false) {
+	int findItem(const tstring& b, int start = -1, bool aPartial = false) {
 		LVFINDINFO fi = { aPartial ? LVFI_PARTIAL : LVFI_STRING, b.c_str() };
 		return FindItem(&fi, start);
 	}
@@ -241,22 +241,11 @@ public:
 
 			if(comp == 0) {
 				return mid;
-			} else if(comp == -1) {
+			} else if(comp < 0) {
 				high = mid - 1;
-			} else if(comp == 1) {
-				low = mid + 1;
-			} else if(comp == 2){
-				if(sortAscending)
+			} else if(comp > 0) {
 					low = mid + 1;
-				else
-					high = mid -1;
-			} else if(comp == -2){
-				if(!sortAscending)
-					low = mid + 1;
-				else
-					high = mid -1;
 			}
-
 		}
 
 		comp = T::compareItems(a, b, sortColumn);
@@ -419,7 +408,7 @@ public:
 			// di->item.pszText = const_cast<char*>(((T*)di->item.lParam)->getText(di->item.iSubItem).c_str());
 			T* pItem = ArrayGetItemAt((int) di->item.lParam);
 			dcassert(pItem != NULL);
-			di->item.pszText = const_cast<char*>(pItem->getText(di->item.iSubItem).c_str());
+			di->item.pszText = const_cast<TCHAR*>(pItem->getText(di->item.iSubItem).c_str());
 		}
 		return 0;
 	}
@@ -511,11 +500,11 @@ public:
 	}
 	struct CompFirst {
 		CompFirst() { } 
-		bool operator()(T& a, const string& b) {
+		bool operator()(T& a, const tstring& b) {
 			return Util::stricmp(a.getText(0), b) < 0;
 		}
 	};
-	int findItem(const string& b, int start = -1, bool aPartial = false) {
+	int findItem(const tstring& b, int start = -1, bool aPartial = false) {
 		LVFINDINFO fi = { aPartial ? LVFI_PARTIAL : LVFI_STRING, b.c_str() };
 		return FindItem(&fi, start);
 	}

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "../client/Socket.h"
 #include "../client/BufferedSocket.h"
 #include <winsock2.h>
+#include "WinUtil.h"
 
 PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_PERSONAL_INFORMATION, ResourceManager::SETTINGS_PERSONAL_INFORMATION },
@@ -72,10 +73,10 @@ PropPage::Item GeneralPage::items[] = {
 
 void GeneralPage::write()
 {
-	char tmp[1024];
+	TCHAR tmp[1024];
 	GetDlgItemText(IDC_SOCKS_SERVER, tmp, 1024);
-	string x = tmp;
-	string::size_type i;
+	tstring x = tmp;
+	tstring::size_type i;
 
 	while((i = x.find(' ')) != string::npos)
 		x.erase(i, 1);
@@ -122,18 +123,24 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlUploadSpeed.Attach(GetDlgItem(IDC_UP_COMBO));
 
 	for(int i = 0; i < SettingsManager::SP_LAST; i++) {
-		ctrlDownloadSpeed.AddString(SettingsManager::speeds[i].c_str());
-		ctrlUploadSpeed.AddString(SettingsManager::speeds[i].c_str());
+		ctrlDownloadSpeed.AddString(Text::toT(SettingsManager::speeds[i]).c_str());
+		ctrlUploadSpeed.AddString(Text::toT(SettingsManager::speeds[i]).c_str());
 	}
 
-	ctrlDownloadSpeed.SetCurSel(ctrlDownloadSpeed.FindString(0, SETTING(DOWN_SPEED).c_str()));
-	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, SETTING(UP_SPEED).c_str()));
+	ctrlDownloadSpeed.SetCurSel(ctrlDownloadSpeed.FindString(0, Text::toT(SETTING(DOWN_SPEED)).c_str()));
+	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, Text::toT(SETTING(UP_SPEED)).c_str()));
 
 	int q = 1;
+//	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
+		//COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
+		//cbitem.pszText = const_cast<TCHAR*>(Text::toT(SettingsManager::connectionSpeeds[i]).c_str());
+		//cbitem.iItem = i;
 	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
-		cbitem.pszText = const_cast<char*>(SettingsManager::connectionSpeeds[i].c_str());
-		cbitem.iItem = i;
+		tstring conn = Text::toT(SettingsManager::connectionSpeeds[i]); // oprava connections
+		cbitem.pszText = const_cast<TCHAR*>(conn.c_str());
+		cbitem.iItem = i; 
+
 
 		switch(i) {
 			case 0: q = 1; break;
@@ -221,13 +228,13 @@ LRESULT GeneralPage::onClickedActive(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
 {
-	char buf[SETTINGS_BUF_LEN];
+	TCHAR buf[SETTINGS_BUF_LEN];
 
 	GetDlgItemText(wID, buf, SETTINGS_BUF_LEN);
-	string old = buf;
+	tstring old = buf;
 
 	// Strip '$', '|', '<', '>' and ' ' from text
-	char *b = buf, *f = buf, c;
+	TCHAR *b = buf, *f = buf, c;
 	while( (c = *b++) != 0 )
 	{
 		if(c != '$' && c != '|' && (wID == IDC_DESCRIPTION || c != ' ') && ( (wID != IDC_NICK && wID != IDC_DESCRIPTION && wID != IDC_SETTINGS_EMAIL) || (c != '<' && c != '>') ) )
@@ -290,7 +297,7 @@ LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl *
 	{ CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_PASSIVE); } else { CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_ACTIVE); }
 	
 	fixControls();
-	SetDlgItemText(IDC_SERVER,IPAdresa.c_str());
+	SetDlgItemText(IDC_SERVER,Text::toT(IPAdresa).c_str());
 	return 0;
 }
 /**

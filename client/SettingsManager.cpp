@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -622,7 +622,7 @@ void SettingsManager::save(string const& aFileName) {
 	try {
 		File ff(aFileName + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
-		f.write(SimpleXML::w1252Header);
+		f.write(SimpleXML::utf8Header);
 		xml.toXML(&f);
 		f.flush();
 		ff.close();
@@ -636,7 +636,7 @@ void SettingsManager::save(string const& aFileName) {
 string SettingsManager::getDownloadDir(string ext){
 	if(ext.size() > 1) {
 		for(SettingsManager::DDList::iterator i = DownloadDirectories.begin(); i != DownloadDirectories.end(); ++i) {
-			StringList tok = StringTokenizer(i->ext, ';').getTokens();
+			StringList tok = StringTokenizer<string>(i->ext, ';').getTokens();
 			for(StringList::iterator j = tok.begin(); j != tok.end(); ++j) {
 				if(Util::stricmp(ext.substr(1), (*j)) == 0) 
 					return i->dir;			

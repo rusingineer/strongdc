@@ -34,10 +34,7 @@ bool CZDCLib::isXp() {
 	return bIsXP;
 }
 
-int activated = false;
 bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
-	if(activated) return false;
-	activated = true;
 	// Prepare for shutdown
 	UINT iForceIfHung = 0;
 	OSVERSIONINFO osvi;
@@ -319,7 +316,7 @@ int CZDCLib::getFirstSelectedIndex(CListViewCtrl& list) {
 void CZDCLib::CalcTextSize(const string& text, HFONT font, LPSIZE size) {
 	HDC dc = CreateCompatibleDC(NULL);
 	HGDIOBJ old = SelectObject(dc, font);
-	::GetTextExtentPoint32(dc, text.c_str(), MIN(text.size(), 8192), size);
+	::GetTextExtentPoint32(dc, Text::toT(text).c_str(), MIN(text.size(), 8192), size);
 	SelectObject(dc, old);
 	DeleteDC(dc);
 }

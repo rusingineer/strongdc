@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #if !defined(__RECENTS_FRAME_H__)
 #define __RECENTS_FRAME_H__
 
@@ -18,7 +36,7 @@ public:
 	RecentHubsFrame() : closed(false) { };
 	virtual ~RecentHubsFrame() { };
 
-	DECLARE_FRAME_WND_CLASS_EX("RecentHubsFrame", IDR_RECENTS, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("RecentHubsFrame"), IDR_RECENTS, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -127,12 +145,12 @@ private:
 	}
 
 	void addEntry(const RecentHubEntry* entry, int pos) {
-		StringList l;
-		l.push_back(entry->getName());
-		l.push_back(entry->getDescription());
-		l.push_back(entry->getUsers());
-		l.push_back(Util::formatBytes(entry->getShared()));
-		l.push_back(entry->getServer());
+		TStringList l;
+		l.push_back(Text::toT(entry->getName()));
+		l.push_back(Text::toT(entry->getDescription()));
+		l.push_back(Text::toT(entry->getUsers()));
+		l.push_back(Text::toT(Util::formatBytes(entry->getShared())));
+		l.push_back(Text::toT(entry->getServer()));
 
 		ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
 	}
@@ -158,11 +176,11 @@ private:
 	virtual void on(RecentUpdated, const RecentHubEntry* entry) throw() {
 		int i = -1;
 		if((i = ctrlHubs.find((LPARAM)entry)) != -1) {
-			ctrlHubs.SetItemText(i, COLUMN_NAME, entry->getName().c_str());
-			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, entry->getDescription().c_str());
-			ctrlHubs.SetItemText(i, COLUMN_USERS, entry->getUsers().c_str());
-			ctrlHubs.SetItemText(i, COLUMN_SHARED, Util::formatBytes(entry->getShared()).c_str());
-			ctrlHubs.SetItemText(i, COLUMN_SERVER, entry->getServer().c_str());
+			ctrlHubs.SetItemText(i, COLUMN_NAME, Text::toT(entry->getName()).c_str());
+			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, Text::toT(entry->getDescription()).c_str());
+			ctrlHubs.SetItemText(i, COLUMN_USERS, Text::toT(entry->getUsers()).c_str());
+			ctrlHubs.SetItemText(i, COLUMN_SHARED, Text::toT(Util::formatBytes(entry->getShared())).c_str());
+			ctrlHubs.SetItemText(i, COLUMN_SERVER, Text::toT(entry->getServer()).c_str());
 		}
 	}
 };

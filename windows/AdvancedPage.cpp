@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include "../client/SettingsManager.h"
 #include "../client/HubManager.h"
+#include "WinUtil.h"
 
 PropPage::TextItem AdvancedPage::texts[] = {
 	{ IDC_SETTINGS_ADVANCED, ResourceManager::SETTINGS_ADVANCED_SETTINGS },
@@ -108,4 +109,3 @@ void AdvancedPage::write() {
  * @file
  * $Id$
  */
-

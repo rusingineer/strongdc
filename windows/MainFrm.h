@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@
 #include "../client/HubManager.h"
 #include "../client/QueueManagerListener.h"
 #include "../client/Util.h"
+#include "../client/LogManager.h"
 #include "../client/Client.h"
 #include "../client/ShareManager.h"
-#include "../client/LogManager.h"
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
 #include "../client/WebServerManager.h"
@@ -39,7 +39,7 @@
 #include "SingleInstance.h"
 #include "CZDCLib.h"
 #include "TransferView.h"
-#include "./upnp.h"
+#include "upnp.h"
 #include "WinUtil.h"
 #include "picturewindow.h"
 #include "atlctrlxp.h"
@@ -55,14 +55,14 @@ class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFr
 public:
 	MainFrame();
 	virtual ~MainFrame();
-	DECLARE_FRAME_WND_CLASS("StrongDC++", IDR_MAINFRAME)
+	DECLARE_FRAME_WND_CLASS(_T(APPNAME), IDR_MAINFRAME)
 
 	CMDICommandBarXPCtrl m_CmdBar;
 
 	class Popup {
 	public:
-		string Title;
-		string Message;
+		tstring Title;
+		tstring Message;
 		int Icon;
 	};
 
@@ -219,7 +219,7 @@ public:
 
 	static DWORD WINAPI stopper(void* p);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
-	void parseCommandLine(const string& cmdLine);
+	void parseCommandLine(const tstring& cmdLine);
 
 	LRESULT onWhereAreYou(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		return WMU_WHERE_ARE_YOU;
@@ -264,7 +264,7 @@ public:
 	}
 	
 	LRESULT onOpenDownloads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		WinUtil::openFile(SETTING(DOWNLOAD_DIRECTORY));
+		WinUtil::openFile(Text::toT(SETTING(DOWNLOAD_DIRECTORY)));
 		return 0;
 	}
 
@@ -345,15 +345,15 @@ private:
 	public:
 		DirectoryListInfo(LPARAM lp = NULL) : lParam(lp) { };
 		User::Ptr user;
-		string file;
+		tstring file;
 		LPARAM lParam;
 	};
 	
 	TransferView transferView;
 
 	enum { MAX_CLIENT_LINES = 10 };
-	StringList lastLinesList;
-	string lastLines;
+	TStringList lastLinesList;
+	tstring lastLines;
 	CToolTipCtrl ctrlLastLines;
 
 	CStatusBarCtrl ctrlStatus;
@@ -383,7 +383,7 @@ private:
 	u_int32_t lastUpdate;
 	int64_t lastUp;
 	int64_t lastDown;
-	string lastTTHdir;
+	tstring lastTTHdir;
 	bool oldshutdown;
 
 	bool closing;
@@ -416,7 +416,7 @@ private:
 
 
 	// LogManagerListener
-	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };
+	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); };
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();

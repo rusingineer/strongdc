@@ -31,14 +31,14 @@ class Sounds : public CPropertyPage<IDD_SOUNDS>, public PropPage
 {
 public:
 	Sounds(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_SOUNDS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_SOUNDS)).c_str());
 		SetTitle(title);
 	};
 
 	~Sounds() {
-	ctrlSounds.Detach();
-	delete[] title;
-		};
+		ctrlSounds.Detach();
+		free(title);
+	};
 
 	BEGIN_MSG_MAP(Sounds)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -59,7 +59,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 
 	struct snds{
 		ResourceManager::Strings name;

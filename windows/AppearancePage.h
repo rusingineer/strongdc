@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class AppearancePage : public CPropertyPage<IDD_APPEARANCEPAGE>, public PropPage
 {
 public:
 	AppearancePage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_GENERAL) + '\\' + STRING(SETTINGS_APPEARANCE)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_APPEARANCE)).c_str());
 		SetTitle(title);
 	};
 
@@ -55,7 +55,7 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	static ListItem listItems[];
-	char* title;
+	TCHAR* title;
 };
 
 #endif //APPEARANCEPAGE_H

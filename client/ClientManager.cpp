@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,12 +91,6 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
 
 	bool isPassive = (aSeeker.compare(0, 4, "Hub:") == 0);
-	
-	// We don't wan't to answer passive searches if we're in passive mode...
-	if(isPassive && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
-		return;
-	}
-	
 	SearchResult::List l;
 	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
 //		dcdebug("Found %d items (%s)\n", l.size(), aString.c_str());
@@ -238,7 +232,6 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 
 void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	{
-		// TODO: Fix crash in critical section
 		Lock l(cs);
 		aUser->setIp(Util::emptyString);
 		aUser->setHost(Util::emptyString);
@@ -256,6 +249,7 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	}
 	fire(ClientManagerListener::UserUpdated(), aUser);
 }
+
 
 User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
 	Lock l(cs);

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <atlcrack.h>
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
+#include "WinUtil.h"
 #include "FolderTree.h"
 #include "../client/SettingsManager.h"
 
@@ -33,13 +34,13 @@ class UploadPage : public CPropertyPage<IDD_UPLOADPAGE>, public PropPage
 {
 public:
 	UploadPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_GENERAL) + '\\' + STRING(SETTINGS_UPLOADS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_UPLOADS)).c_str());
 		SetTitle(title);
 	};
 	~UploadPage() {
 		ctrlDirectories.Detach();
 		ctrlTotal.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP_EX(UploadPage)
@@ -68,10 +69,15 @@ protected:
 	static TextItem texts[];
 	ExListViewCtrl ctrlDirectories;
 	CStatic ctrlTotal;
-	char* title;
-	void addDirectory(string aPath);
+	TCHAR* title;
+	
+	void addDirectory(const tstring& aPath);
 	FolderTree ft;
 };
 
 #endif //UPLOADPAGE_H
 
+/**
+ * @file
+ * $Id$
+ */

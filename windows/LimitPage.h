@@ -9,11 +9,11 @@ class LimitPage : public CPropertyPage<IDD_LIMITPAGE>, public PropPage
 {
 public:
 	LimitPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_LIMIT)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_LIMIT)).c_str());
 		SetTitle(title);
 	};
 	virtual ~LimitPage() {
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP_EX(LimitPage)
@@ -34,7 +34,7 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	CComboBox timeCtrlBegin, timeCtrlEnd;
-	char* title;
+	TCHAR* title;
 	void fixControls();
 };
 

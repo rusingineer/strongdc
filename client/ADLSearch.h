@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public:
 			string stringParams = Util::formatParams(searchString, params);
 
 			// Split into substrings
-			StringTokenizer st(stringParams, ' ');
+			StringTokenizer<string> st(stringParams, ' ');
 			for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
 				if(i->size() > 0) {
 					// Add substring search

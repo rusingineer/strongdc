@@ -23,8 +23,8 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		m_nid.uFlags = NIF_INFO;
 		m_nid.uTimeout = 5000;
 		m_nid.dwInfoFlags = Icon;
-		strcpy(m_nid.szInfo, aMsg.c_str());
-		strcpy(m_nid.szInfoTitle, aTitle.c_str());
+		_tcscpy(m_nid.szInfo, Text::toT(aMsg).c_str());
+		_tcscpy(m_nid.szInfoTitle, Text::toT(aTitle).c_str());
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 		return;
 
@@ -64,7 +64,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
 		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
 		typedef bool (CALLBACK* LPFUNC)(HWND hwnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
-		LPFUNC _d_SetLayeredWindowAttributes = (LPFUNC)GetProcAddress(LoadLibrary("user32"), "SetLayeredWindowAttributes");
+		LPFUNC _d_SetLayeredWindowAttributes = (LPFUNC)GetProcAddress(LoadLibrary(_T("user32")), "SetLayeredWindowAttributes");
 		_d_SetLayeredWindowAttributes(p->m_hWnd, 0, 200, LWA_ALPHA);
 	}
 

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ public:
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
 			downloadSpeed(0), fileListSize(0), hasTestSURinQueue(false), fakeSharing(false), checked(false), realBytesShared(-1),
-			junkBytesShared(-1), fakeShareBytesShared(-1), ctype(10)
+			junkBytesShared(-1), fakeShareBytesShared(-1), ctype(10), status(1)
 			 { unCacheClientInfo(); };
 	virtual ~User() throw();
 
@@ -101,6 +101,7 @@ public:
 	void clientMessage(const string& aMsg);
 	bool isClientOp() const;
 	void send(const string& msg);
+	void sendUserCmd(const string& aUserCmd);
 	
 	string getFullNick() const { 
 		string tmp(getNick());
@@ -114,6 +115,7 @@ public:
 
 	bool isOnline() const { return isSet(ONLINE); };
 	bool isClient(Client* aClient) const { return client == aClient; };
+
 	void getParams(StringMap& ucParams, bool myNick = false);
 
 	// favorite user stuff
@@ -171,12 +173,12 @@ public:
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
 
 	StringMap& clientEscapeParams(StringMap& sm) const;
-	
+
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
 		if(isSet(User::OP) || !isClientOp()) return;
 
 		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-			PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+			PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		
 		StringMap ucParams;
 		getParams(ucParams);
@@ -187,7 +189,7 @@ public:
 		badClient = aBadClient;
 	}
 		
-	void TagParts( char *sTag );
+	void TagParts();
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
 	string getReport();

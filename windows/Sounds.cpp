@@ -62,16 +62,16 @@ LRESULT Sounds::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlSounds.Attach(GetDlgItem(IDC_SOUNDLIST));
 
 	ctrlSounds.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-	ctrlSounds.InsertColumn(0, CSTRING(SETTINGS_SOUNDS), LVCFMT_LEFT, 172, 0);
-	ctrlSounds.InsertColumn(1, CSTRING(FILENAME), LVCFMT_LEFT, 210, 1);
+	ctrlSounds.InsertColumn(0, CTSTRING(SETTINGS_SOUNDS), LVCFMT_LEFT, 172, 0);
+	ctrlSounds.InsertColumn(1, CTSTRING(FILENAME), LVCFMT_LEFT, 210, 1);
 
 	// Do specialized reading here
 
 	int j;
 	for(int i=0; i < sizeof(sounds) / sizeof(snds); i++){				
-		j = ctrlSounds.insert(i, ResourceManager::getInstance()->getString(sounds[i].name).c_str());
+		j = ctrlSounds.insert(i, Text::toT(ResourceManager::getInstance()->getString(sounds[i].name)).c_str());
 		sounds[i].value = SettingsManager::getInstance()->get((SettingsManager::StrSetting)sounds[i].setting, true);
-		ctrlSounds.SetItemText(j, 1, sounds[i].value.c_str());
+		ctrlSounds.SetItemText(j, 1, Text::toT(sounds[i].value).c_str());
 	}
 
 	return TRUE;
@@ -82,11 +82,11 @@ void Sounds::write()
 {
 	PropPage::write((HWND)*this, items);
 
-	char buf[256];
+	TCHAR buf[256];
 
 	for(int i=0; i < sizeof(sounds) / sizeof(snds); i++){
-		ctrlSounds.GetItemText(i, 1, buf, 256);
-		settings->set((SettingsManager::StrSetting)sounds[i].setting, buf);
+		ctrlSounds.GetItemText(i, 1, buf, 255);
+		settings->set((SettingsManager::StrSetting)sounds[i].setting, Text::fromT(buf));
 	}
 
 	// Do specialized writing here
@@ -95,14 +95,14 @@ void Sounds::write()
 
 LRESULT Sounds::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 	LVITEM item;
 	::ZeroMemory(&item, sizeof(item));
 	item.mask = LVIF_TEXT;
-	item.cchTextMax = sizeof(buf);
+	item.cchTextMax = 255;
 	item.pszText = buf;
 	if(ctrlSounds.GetSelectedItem(&item)) {
-	string x = "";	
+	tstring x = _T("");	
 		if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
 			ctrlSounds.SetItemText(item.iItem, 1, x.c_str());
 		}
@@ -112,14 +112,14 @@ LRESULT Sounds::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
 
 LRESULT Sounds::onClickedNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 	LVITEM item;
 	::ZeroMemory(&item, sizeof(item));
 	item.mask = LVIF_TEXT;
-	item.cchTextMax = sizeof(buf);
+	item.cchTextMax = 255;
 	item.pszText = buf;
 	if(ctrlSounds.GetSelectedItem(&item)) {
-		string x = "";	
+		tstring x = _T("");	
 		ctrlSounds.SetItemText(item.iItem, 1, x.c_str());
 	}
 	return 0;
@@ -127,11 +127,11 @@ LRESULT Sounds::onClickedNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
 LRESULT Sounds::onPlay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 	LVITEM item;
 	::ZeroMemory(&item, sizeof(item));
 	item.mask = LVIF_TEXT;
-	item.cchTextMax = sizeof(buf);
+	item.cchTextMax = 255;
 	item.pszText = buf;
 	if(ctrlSounds.GetSelectedItem(&item)) {
 		ctrlSounds.GetItemText(item.iItem, 1, buf, MAX_PATH);

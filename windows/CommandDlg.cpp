@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ATTACH(IDC_COMMAND, ctrlCommand);
 
 	WinUtil::translate(*this, texts);
-	SetDlgItemText(IDC_COMMAND_DESCRIPTION, "\
+	SetDlgItemText(IDC_COMMAND_DESCRIPTION, _T("\
 Command Types:\r\n\
 Separator: Adds a separator to the menu\r\n\
 Raw: Sends raw command to the hub (experts only, end it with '|'!)\r\n\
@@ -62,8 +62,8 @@ Chat Menu: User right-click menu in chat and PM tab menu\r\n\
 Search Menu: Search right-click menu\r\n\
 Parameters:\r\n\
 Name: Name (use '\\' to create submenus)\r\n\
-Command: Command text (may contain parameters)\r\n\
-Hub: Hub ip as typed when connecting (empty = all hubs, \"op\" = hubs where you're op)\r\n\
+Command: Command text (may contain parameters)\r\n")
+_T("Hub: Hub ip as typed when connecting (empty = all hubs, \"op\" = hubs where you're op)\r\n\
 To: PM recipient\r\n\
 Only once: Send only once per user from search frame\r\n\
 In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m, ...). The following are available:\r\n\
@@ -77,32 +77,32 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 %[ip]: user ip (if supported by hub)\r\n\
 %[file]: filename (search context only)\r\n\
 %[line:reason]: opens up a window asking for \"reason\"\
-");
+"));
 
 	if(type == UserCommand::TYPE_SEPARATOR) {
 		ctrlSeparator.SetCheck(BST_CHECKED);
 	} else {
 		// More difficult, determine type by what it seems to be...
-		if((strncmp(command.c_str(), "$To: ", 5) == 0) &&
-			command.find(" From: %[mynick] $<%[mynick]> ") != string::npos &&
-			command.find('|') == string::npos) 
+		if((_tcsncmp(command.c_str(), _T("$To: "), 5) == 0) &&
+			command.find(_T(" From: %[mynick] $<%[mynick]> ")) != string::npos &&
+			command.find(_T('|')) == string::npos) 
 		{
-			string::size_type i = safestring::SafeFind(command, ' ', 5);
+			string::size_type i = command.find(_T(' '), 5);
 			dcassert(i != string::npos);
-			string to = command.substr(5, i-5);
-			string cmd = Util::validateMessage(command.substr(i + 30, command.length()-i-31), true, false);
+			tstring to = command.substr(5, i-5);
+			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(i + 30, command.length()-i-31)), true, false));
 			ctrlPM.SetCheck(BST_CHECKED);
 			ctrlNick.SetWindowText(to.c_str());
 			ctrlCommand.SetWindowText(cmd.c_str());
-		} else if((strncmp(command.c_str(), "<%[mynick]> ", 12) == 0) &&
+		} else if((_tcsncmp(command.c_str(), _T("<%[mynick]> "), 12) == 0) &&
 			command[command.length()-1] == '|') 
 		{
 			// Looks like a chat thing...
-			string cmd = Util::validateMessage(command.substr(12, command.length()-13), true, false);
+			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(12, command.length()-13)), true, false));
 			ctrlChat.SetCheck(BST_CHECKED);
 			ctrlCommand.SetWindowText(cmd.c_str());
 		} else {
-			string cmd = command;
+			tstring cmd = command;
 			ctrlRaw.SetCheck(BST_CHECKED);
 			ctrlCommand.SetWindowText(cmd.c_str());
 		}
@@ -130,6 +130,34 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 	
 	CenterWindow(GetParent());
 	return FALSE;
+}
+
+LRESULT CommandDlg::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	updateContext();
+	if(wID == IDOK) {
+		TCHAR buf[256];
+
+		if((type != 0) && 
+			((ctrlName.GetWindowTextLength() == 0) || (ctrlCommand.GetWindowTextLength()== 0)))
+		{
+			MessageBox(_T("Name and command must not be empty"));
+			return 0;
+		}
+
+#define GET_TEXT(id, var) \
+	GetDlgItemText(id, buf, 256); \
+	var = buf;
+
+		GET_TEXT(IDC_NAME, name);
+		GET_TEXT(IDC_HUB, hub);
+
+		if(type != 0) {
+			type = (ctrlOnce.GetCheck() == BST_CHECKED) ? 2 : 1;
+		}
+	}
+	EndDialog(wID);
+	return 0;
 }
 
 LRESULT CommandDlg::onChange(WORD , WORD , HWND , BOOL& ) {

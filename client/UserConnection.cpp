@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,15 +65,15 @@ void UserConnection::onLine(const char* aLine) throw() {
 		return;
 	}
 	char *temp;
-	if(strncmp(aLine, "$MyNick ", 8) == 0) {
+	if(strncmp(aLine+1, "MyNick ", 7) == 0) {
 		if((temp = strtok((char*)aLine+8, "\0")) != NULL)
-			fire(UserConnectionListener::MyNick(), this, temp);
-	} else if(strncmp(aLine, "$Direction ", 11) == 0) {
+			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(temp));
+	} else if(strncmp(aLine+1, "Direction ", 10) == 0) {
 		char *temp1 = strtok((char*)aLine+11, " ");
 		if(temp1 != NULL && (temp = strtok(NULL, "\0")) != NULL) {
 			fire(UserConnectionListener::Direction(), this, temp1, temp);
 		}
-	} else if(strncmp(aLine, "$Error ", 7) == 0) {
+	} else if(strncmp(aLine+1, "Error ", 6) == 0) {
 		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
 			return;
 
@@ -83,61 +83,61 @@ void UserConnection::onLine(const char* aLine) throw() {
 		} else {
 			fire(UserConnectionListener::Failed(), this, temp);
 		}
-	} else if(strncmp(aLine, "$FileLength ", 12) == 0) {
+	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
 		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
 			int64_t size = _atoi64(temp);
 			fire(UserConnectionListener::FileLength(), this, size);
 		}
-	} else if(strcmp(aLine, "$GetListLen") == 0) {
+	} else if(strcmp(aLine+1, "GetListLen") == 0) {
 		fire(UserConnectionListener::GetListLength(), this);
-	} else if(strncmp(aLine, "$Get ", 5) == 0) {
+	} else if(strncmp(aLine+1, "Get ", 4) == 0) {
 		char *temp1 = strtok((char*)aLine+5, "$");
 		temp = strtok(NULL, "\0");
 		if(temp != NULL && temp1 != NULL) {
 			int64_t size = _atoi64(temp);
-			fire(UserConnectionListener::Get(), this, temp1, size - (int64_t)1);
+			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(temp1), size - (int64_t)1);
 		}
-	} else if(strncmp(aLine, "$GetZBlock ", 11) == 0) {
+	} else if(strncmp(aLine+1, "GetZBlock ", 10) == 0) {
 		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
 			processBlock(temp, 1);
 		}
-	} else if(strncmp(aLine, "$UGetZBlock ", 12) == 0) {
+	} else if(strncmp(aLine+1, "UGetZBlock ", 11) == 0) {
 		if((temp = strtok((char*)aLine+12, "\0")) != NULL) {
 			processBlock(temp, 2);
 		}
-	} else if(strncmp(aLine, "$UGetBlock ", 11) == 0) {
+	} else if(strncmp(aLine+1, "UGetBlock ", 10) == 0) {
 		if((temp = strtok((char*)aLine+11, "\0")) != NULL) {
 			processBlock(temp, 3);
 		}
-	} else if(strncmp(aLine, "$Key ", 5) == 0) {
+	} else if(strncmp(aLine+1, "Key ", 4) == 0) {
 		if((temp = strtok((char*)aLine+5, "\0")) != NULL) {
 			fire(UserConnectionListener::Key(), this, temp);
 		}
-	} else if(strncmp(aLine, "$Lock ", 6) == 0) {
+	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
 		char *lock;
 		if((lock = strtok((char*)aLine+6, " ")) != NULL) {
 			if((temp = strtok(((char*)aLine+6+strlen(lock)+4), "\0")) != NULL) {
 				fire(UserConnectionListener::CLock(), this, lock, temp);
 			}
 		}
-	} else if(strncmp(aLine, "$Sending ", 9) == 0) {
+	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
 		if((temp = strtok((char*)aLine+9, " ")) != NULL) {
 			int64_t bytes = _atoi64(temp);
 			fire(UserConnectionListener::Sending(), this, bytes);
 		}
-	} else if(strcmp(aLine, "$Send") == 0) {
+	} else if(strcmp(aLine+1, "Send") == 0) {
 		fire(UserConnectionListener::Send(), this);
-	} else if(strcmp(aLine, "$MaxedOut") == 0) {
+	} else if(strcmp(aLine+1, "MaxedOut") == 0) {
 		fire(UserConnectionListener::MaxedOut(), this);
-	} else if(strncmp(aLine, "$Supports ", 10) == 0) {
+	} else if(strncmp(aLine+1, "Supports ", 9) == 0) {
 		if((temp = strtok((char*)aLine+10, "\0")) != NULL) {
-			fire(UserConnectionListener::Supports(), this, StringTokenizer(temp, ' ').getTokens());
+			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(temp, ' ').getTokens());
 		}
-	} else if(strncmp(aLine, "$ListLen ", 9) == 0) {
+	} else if(strncmp(aLine+1, "ListLen ", 8) == 0) {
 		if((temp = strtok((char*)aLine+9, "\0")) != NULL) {
 			fire(UserConnectionListener::ListLength(), this, temp);
 		}
-	} else if(strncmp(aLine, "$ADC", 4) == 0) {
+	} else if(strncmp(aLine+1, "ADC", 3) == 0) {
 		dispatch(aLine, true);
 	} else {
 		fire(UserConnectionListener::Unknown(), this, aLine);
@@ -169,7 +169,7 @@ void UserConnection::processBlock(const char* param, int type) throw() {
 
 		string name = temp;
 		if(type == 2 || type == 3)
-			Util::toAcp(name);
+		Text::acpToUtf8(name);
 		if(type == 3) {
 			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
 		} else {

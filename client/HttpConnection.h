@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,18 +37,13 @@ public:
 	typedef X<3> Redirected;
 	typedef X<4> TypeNormal;
 	typedef X<5> TypeBZ2;
-	// XML hublist addition
-	typedef X<6> TypeXML;	
-	typedef X<7> TypeXMLBZ2;
 
-	virtual void on(Data, HttpConnection*, const u_int8_t*, size_t) throw() =0;
+	virtual void on(Data, HttpConnection*, const u_int8_t*, size_t) throw() { }
 	virtual void on(Failed, HttpConnection*, const string&) throw() { }
 	virtual void on(Complete, HttpConnection*, const string&) throw() { }
 	virtual void on(Redirected, HttpConnection*, const string&) throw() { }
 	virtual void on(TypeNormal, HttpConnection*) throw() { }
 	virtual void on(TypeBZ2, HttpConnection*) throw() { }
-	virtual void on(TypeXML, HttpConnection*) throw() { }
-	virtual void on(TypeXMLBZ2, HttpConnection*) throw() { }
 };
 
 class HttpConnection : BufferedSocketListener, public Speaker<HttpConnectionListener>

@@ -50,7 +50,7 @@ void CDMDebugFrame::addLine(const string& s) {
 		if (frame->ctrlPad.GetWindowTextLength() > MAX_TEXT_LEN) {
 			frame->ctrlPad.SetRedraw(FALSE);
 			frame->ctrlPad.SetSel(0, frame->ctrlPad.LineIndex(frame->ctrlPad.LineFromChar(2000)), TRUE);
-			frame->ctrlPad.ReplaceSel("");
+			frame->ctrlPad.ReplaceSel(_T(""));
 			frame->ctrlPad.SetRedraw(TRUE);
 		}
 		BOOL noscroll = TRUE;
@@ -63,7 +63,7 @@ void CDMDebugFrame::addLine(const string& s) {
 		else {
 			frame->ctrlPad.SetRedraw(FALSE); // Strange!! This disables the scrolling...????
 		}
-		frame->ctrlPad.AppendText((s + "\r\n").c_str());
+		frame->ctrlPad.AppendText(Text::toT(s + "\r\n").c_str());
 		if(noscroll) {
 		frame->ctrlPad.SetRedraw(TRUE);
 		}

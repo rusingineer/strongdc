@@ -77,11 +77,11 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	updown.Detach();
 
 	ctrlShutdownAction.Attach(GetDlgItem(IDC_COMBO1));
-	ctrlShutdownAction.AddString(CSTRING(POWER_OFF));
-	ctrlShutdownAction.AddString(CSTRING(LOG_OFF));
-	ctrlShutdownAction.AddString(CSTRING(REBOOT));
-	ctrlShutdownAction.AddString(CSTRING(SUSPEND));
-	ctrlShutdownAction.AddString(CSTRING(HIBERNATE));
+	ctrlShutdownAction.AddString(CTSTRING(POWER_OFF));
+	ctrlShutdownAction.AddString(CTSTRING(LOG_OFF));
+	ctrlShutdownAction.AddString(CTSTRING(REBOOT));
+	ctrlShutdownAction.AddString(CTSTRING(SUSPEND));
+	ctrlShutdownAction.AddString(CTSTRING(HIBERNATE));
 
 	ctrlShutdownAction.SetCurSel(SETTING(SHUTDOWN_ACTION));
 	// Do specialized reading here
@@ -89,7 +89,7 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	cClientEmu.Attach(GetDlgItem(IDC_EMULATION));
 	
 	for(int i = 0; i < SettingsManager::CLIENT_EMULATION_LAST; i++)
-		cClientEmu.AddString(SettingsManager::clientEmulations[i].c_str());
+		cClientEmu.AddString(Text::toT(SettingsManager::clientEmulations[i]).c_str());
 	cClientEmu.SetCurSel(SETTING(CLIENT_EMULATION));
 
 	cClientEmu.Detach();

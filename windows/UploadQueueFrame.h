@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #if !defined(_UPLOAD_QUEUE_FRAME_H_)
 #define _UPLOAD_QUEUE_FRAME_H_
 
@@ -16,10 +34,10 @@ class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0
 	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("UploadQueueFrame", IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
 	UploadQueueFrame() : showTree(true), closed(false), 
-		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP) {
+		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) {
 		UploadManager::getInstance()->addListener(this);
 	}
 	virtual ~UploadQueueFrame() {
@@ -111,15 +129,14 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
 	static ResourceManager::Strings columnNames[COLUMN_LAST];
-	CriticalSection cs;
 	
 	User::Ptr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();
 		if (!selectedItem) return NULL;
-		char nickBuf[512];
+		TCHAR nickBuf[512];
 		ctrlQueued.GetItemText(selectedItem, nickBuf, 511);
 		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-			if(((*i)->getNick()+" ("+(*i)->getLastHubName()+")") == string(nickBuf)) {
+			if(((*i)->getNick()+" ("+(*i)->getLastHubName()+")") == Text::fromT(nickBuf)) {
 				return *i;
 				break;
 			}
@@ -131,8 +148,6 @@ private:
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
 			removeSelected();
-		} else if(kd->wVKey == VK_TAB) {
-			onTab();
 		}
 		return 0;
 	}
@@ -141,8 +156,6 @@ private:
 		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
 			removeSelectedUser();
-		} else if(kd->wVKey == VK_TAB) {
-			onTab();
 			}
 			return 0;
 		}
@@ -163,17 +176,6 @@ private:
 		User::Ptr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->clearUserFiles(User);
-		}
-	}
-
-	void onTab() {
-		if(showTree) {
-			HWND focus = ::GetFocus();
-			if(focus == ctrlQueued.m_hWnd) {
-				ctrlList.SetFocus();
-			} else if(focus == ctrlQueued.m_hWnd) {
-				ctrlQueued.SetFocus();
-			}
 		}
 	}
 
@@ -212,8 +214,7 @@ private:
 		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
-		UploadQueueItem* aUQI = new UploadQueueItem(aUser, "", "", "", 0, 0, 0);
-		PostMessage(WM_SPEAKER, REMOVE, (LPARAM)aUQI);
+		PostMessage(WM_SPEAKER, REMOVE, (LPARAM) new UserInfoBase(aUser));
 	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 
 #include "UploadManager.h"
 #include "DownloadManager.h"
-
 #define SMALL_BUFFER_SIZE 1024
 
 // Polling is used for tasks...should be fixed...
@@ -95,9 +94,9 @@ bool BufferedSocket::threadSendFile() {
 					sendMaximum = inbufSize;
 				}
 				s = (u_int32_t)min((int64_t)inbufSize, (int64_t)sendMaximum);
-			}
-		 else
+			} else {
 				s = (BOOLSETTING(SMALL_SEND_BUFFER) ? SMALL_BUFFER_SIZE : inbufSize);
+			}
 			size_t actual = file->read(inbuf, s);
 			if(actual > 0) {
 				Socket::write((char*)inbuf, actual);

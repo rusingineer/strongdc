@@ -34,7 +34,7 @@ CInputBox::CInputBox(HWND hWndParent)
 
 	WNDCLASSEX wcex;
 
-	if (!GetClassInfoEx(hInst, "InputBox", &wcex))
+	if (!GetClassInfoEx(hInst, _T("InputBox"), &wcex))
 	{
 		wcex.cbSize = sizeof(WNDCLASSEX); 
 
@@ -47,11 +47,11 @@ CInputBox::CInputBox(HWND hWndParent)
 		wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW);
 		wcex.lpszMenuName	= NULL;
-		wcex.lpszClassName	= "InputBox";
+		wcex.lpszClassName	= _T("InputBox");
 		wcex.hIconSm		= NULL;
 
 		if (RegisterClassEx(&wcex) == 0)
-			MessageBox(NULL, "Can't create CInputBox!", "Error", MB_OK);
+			MessageBox(NULL, _T("Can't create CInputBox!"), _T("Error"), MB_OK);
 	}
 
     m_hWndParent = hWndParent;
@@ -94,7 +94,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
 			// creating Edit
 			m_hWndEdit = CreateWindowEx(WS_EX_STATICEDGE,
-				"edit","",
+				_T("edit"),_T(""),
 				WS_VISIBLE | WS_CHILD  | WS_TABSTOP | ES_AUTOHSCROLL | ES_READONLY, 
 				5, INPUTBOX_HEIGHT - 120, INPUTBOX_WIDTH - 16, 20, 
 				hWnd, 
@@ -107,7 +107,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
 			// creating Edit
 			m_hWndEdit1 = CreateWindowEx(WS_EX_STATICEDGE,
-				"edit","",
+				_T("edit"),_T(""),
 				WS_VISIBLE | WS_CHILD  | WS_TABSTOP | ES_READONLY | ES_MULTILINE, 
 				5, INPUTBOX_HEIGHT - 80, INPUTBOX_WIDTH - 16, 48, 
 				hWnd, 
@@ -120,7 +120,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
             // button OK
 			m_hWndOK = CreateWindowEx(NULL,
-				"button","OK",
+				_T("button"),_T("OK"),
 				WS_VISIBLE | WS_CHILD | WS_TABSTOP, 
 				INPUTBOX_WIDTH - 100, 10, 90, 23, 
 				hWnd, 
@@ -133,7 +133,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
             // static Propmpt
 			m_hWndPrompt = CreateWindowEx(WS_EX_STATICEDGE,
-				"static","",
+				_T("static"),_T(""),
 				WS_VISIBLE | WS_CHILD, 
 				5, 10, INPUTBOX_WIDTH - 110, INPUTBOX_HEIGHT - 150, 
 				hWnd, 
@@ -146,7 +146,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
 			           // static Propmpt
 			m_hWndPrompt1 = CreateWindowEx(NULL,
-				"static","",
+				_T("static"),_T(""),
 				WS_VISIBLE | WS_CHILD, 
 				5, 83, INPUTBOX_WIDTH - 110, 16, 
 				hWnd, 
@@ -163,7 +163,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 			SendMessage(m_hWndPrompt1, WM_CTLCOLORSTATIC, (WPARAM)COLOR_WINDOW, 0);
            // static Propmpt
 			m_hWndPrompt2 = CreateWindowEx(NULL,
-				"static","",
+				_T("static"),_T(""),
 				WS_VISIBLE | WS_CHILD, 
 				5, 123, INPUTBOX_WIDTH - 110, 16, 
 				hWnd, 
@@ -222,7 +222,7 @@ BOOL CInputBox::DoModal(LPCTSTR szCaption, LPCTSTR szPrompt, LPCTSTR szText, LPC
 	GetWindowRect(GetDesktopWindow(), &r);
 
 	m_hWndInputBox = CreateWindowEx(WS_EX_TOOLWINDOW, 
-                "InputBox",
+                _T("InputBox"),
                 szCaption,
                 WS_POPUPWINDOW | WS_CAPTION | WS_TABSTOP, 
                 (r.right - INPUTBOX_WIDTH) / 2, (r.bottom - INPUTBOX_HEIGHT) / 2,
@@ -239,8 +239,8 @@ BOOL CInputBox::DoModal(LPCTSTR szCaption, LPCTSTR szPrompt, LPCTSTR szText, LPC
 	SetWindowText(m_hWndEdit, szText);
 	SetWindowText(m_hWndEdit1, szText1);
 
-	SetWindowText(m_hWndPrompt1, "TTH:");
-	SetWindowText(m_hWndPrompt2, "Magnet Link:");
+	SetWindowText(m_hWndPrompt1, _T("TTH:"));
+	SetWindowText(m_hWndPrompt2, _T("Magnet Link:"));
 
     SetForegroundWindow(m_hWndInputBox);
 

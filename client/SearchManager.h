@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,21 +49,21 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
 	
-	SearchResult(Client* aClient, Types aType, int64_t aSize, const string& name, TTHValue* aTTH);
+	SearchResult(Client* aClient, Types aType, int64_t aSize, const string& name, TTHValue* aTTH, bool aUtf8);
 
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& aHubIpPort, const string& aIp) : 
+		const string& aHubIpPort, const string& aIp, bool aUtf8) : 
 	file(aFile), hubName(isTTH(aHubName) ? Util::emptyString : aHubName), hubIpPort(aHubIpPort), user(aUser), 
 		size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(aIp), 
-		tth(isTTH(aHubName) ? new TTHValue(aHubName.substr(4)) : NULL), ref(1) { }
+		tth(isTTH(aHubName) ? new TTHValue(aHubName.substr(4)) : NULL), utf8(aUtf8), ref(1) { }
 
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& aHubIpPort, TTHValue* aTTH) :
+		const string& aHubIpPort, TTHValue* aTTH, bool aUtf8) :
 	file(aFile), hubName(aHubName), hubIpPort(aHubIpPort), user(aUser), 
 		size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), 
-		tth((aTTH != NULL) ? new TTHValue(*aTTH) : NULL), ref(1) { }
+		tth((aTTH != NULL) ? new TTHValue(*aTTH) : NULL), utf8(aUtf8), ref(1) { }
 
 	string getFileName() const;
 	string toSR() const;
@@ -81,6 +81,7 @@ public:
 	int getFreeSlots() const { return freeSlots; }
 	const string& getIP() const { return IP; }
 	TTHValue* getTTH() const { return tth; }
+	bool getUtf8() const { return utf8; }
 
 	void incRef() { Thread::safeInc(&ref); }
 	void decRef() { 
@@ -107,6 +108,7 @@ private:
 	string IP;
 	TTHValue* tth;
 
+	bool utf8;
 	long ref;
 
 	bool isTTH(const string& str) const {

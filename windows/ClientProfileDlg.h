@@ -32,7 +32,7 @@ public:
 	string userConCom;
 	string status;
 	string cheatingDescription;
-	string addLine;
+	tstring addLine;
 	string connection;
 	string comment;
 	int priority;
@@ -91,7 +91,7 @@ public:
 				ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
 				for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
 					if((*j).getName().compare(name) == 0) {
-						MessageBox("A client profile with this name already exists", "Error!", MB_ICONSTOP);
+						MessageBox(_T("A client profile with this name already exists"), _T("Error!"), MB_ICONSTOP);
 						return 0;
 					}
 				}

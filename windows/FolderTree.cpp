@@ -324,7 +324,7 @@ void FolderTree::Refresh()
 			{
 				SHFILEINFO sfi;
 				if (SHGetFileInfo((LPCTSTR)lpMCPidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_DISPLAYNAME))
-				pItem->m_sRelativePath = sfi.szDisplayName;
+					pItem->m_sRelativePath = Text::fromT(sfi.szDisplayName);
 				nIcon = GetIconIndex(lpMCPidl);
 				nSelIcon = GetSelIconIndex(lpMCPidl);
 
@@ -357,7 +357,7 @@ void FolderTree::Refresh()
 			{
 				SHFILEINFO sfi;
 				if (SHGetFileInfo((LPCTSTR)lpNNPidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_DISPLAYNAME))
-				pItem->m_sRelativePath = sfi.szDisplayName;
+					pItem->m_sRelativePath = Text::fromT(sfi.szDisplayName);
 				nIcon = GetIconIndex(lpNNPidl);
 				nSelIcon = GetSelIconIndex(lpNNPidl);
 
@@ -433,7 +433,7 @@ int FolderTree::GetIconIndex(const string &sFilename)
 	//Retreive the icon index for a specified file/folder
 	SHFILEINFO sfi;
 	ZeroMemory(&sfi, sizeof(SHFILEINFO));
-	SHGetFileInfo(sFilename.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
+	SHGetFileInfo(Text::toT(sFilename).c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
 	return sfi.iIcon;
 }
 
@@ -470,7 +470,7 @@ int FolderTree::GetSelIconIndex(const string &sFilename)
 	//Retreive the icon index for a specified file/folder
 	SHFILEINFO sfi;
 	ZeroMemory(&sfi, sizeof(SHFILEINFO));
-	SHGetFileInfo(sFilename.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_OPENICON | SHGFI_SMALLICON);
+	SHGetFileInfo(Text::toT(sFilename).c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_OPENICON | SHGFI_SMALLICON);
 	return sfi.iIcon;
 }
 
@@ -494,7 +494,7 @@ HTREEITEM FolderTree::InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo *pIte
 	tvis.item.iSelectedImage = nSelIcon;
 
 	tvis.item.lParam = (LPARAM) pItem;
-	tvis.item.pszText = (LPSTR)sLabel.c_str();
+	tvis.item.pszText = (LPWSTR)sLabel.c_str();
 	if (bCheckForChildren)
 		tvis.item.cChildren = HasGotSubEntries(pItem->m_sFQPath);
 	else
@@ -535,7 +535,7 @@ void FolderTree::DisplayDrives(HTREEITEM hParent, bool bUseSetRedraw /* = true *
 		{
 			string sDrive;
 			sDrive = ('A' + i);
-			sDrive += _T(":\\");
+			sDrive += ":\\";
 
 			//check if this drive is one of the types to hide
 			if (CanDisplayDrive(sDrive))
@@ -586,19 +586,19 @@ void FolderTree::DisplayPath(const string &sPath, HTREEITEM hParent, bool bUseSe
 	int nDirectories = 0;
 	
 	string sFile;
-	if (sPath[sPath.size()-1] != _T('\\'))
-		sFile = sPath + _T("\\");
+	if (sPath[sPath.size()-1] != '\\')
+		sFile = sPath + "\\";
 	else
 		sFile = sPath;
 
 	WIN32_FIND_DATA fData;
 	HANDLE hFind;
-	hFind = FindFirstFile((sFile + "*").c_str(), &fData);
+	hFind = FindFirstFile(Text::toT(sFile + "*").c_str(), &fData);
 	if(hFind != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
-			string filename = fData.cFileName;
+			string filename = Text::fromT(fData.cFileName);
 			if((fData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && 
 				(filename != ".") && (filename != ".."))
 			{
@@ -608,12 +608,12 @@ void FolderTree::DisplayPath(const string &sPath, HTREEITEM hParent, bool bUseSe
 				TCHAR szPath[_MAX_PATH];
 				TCHAR szFname[_MAX_FNAME];
 				TCHAR szExt[_MAX_EXT];
-				_tsplitpath(sPath.c_str(), NULL, NULL, szFname, szExt);
+				_tsplitpath(Text::toT(sPath).c_str(), NULL, NULL, szFname, szExt);
 				_tmakepath(szPath, NULL, NULL, szFname, szExt);
 
 				FolderTreeItemInfo* pItem = new FolderTreeItemInfo;
 				pItem->m_sFQPath = sPath;
-				pItem->m_sRelativePath = szPath;
+				pItem->m_sRelativePath = Text::fromT(szPath);
 				InsertFileItem(hParent, pItem, m_bShowSharedUsingDifferentIcon && IsShared(sPath), GetIconIndex(sPath), GetSelIconIndex(sPath), true);
 			}
 		} while (FindNextFile(hFind, &fData));
@@ -640,7 +640,7 @@ void FolderTree::DisplayPath(const string &sPath, HTREEITEM hParent, bool bUseSe
 HTREEITEM FolderTree::SetSelectedPath(const string &sPath, bool bExpanded /* = false */)
 {
 	string sSearch = sPath;
-	sSearch = Util::toLower(sSearch);
+	sSearch = Text::toLower(sSearch);
 	int nSearchLength = sSearch.size();
 	if(nSearchLength == 0)
 	{
@@ -650,7 +650,7 @@ HTREEITEM FolderTree::SetSelectedPath(const string &sPath, bool bExpanded /* = f
 
 	//Remove initial part of path if the root folder is setup
 	string sRootFolder = m_sRootFolder;
-	sRootFolder = Util::toLower(sRootFolder);
+	sRootFolder = Text::toLower(sRootFolder);
 	int nRootLength = sRootFolder.size();
 	if (nRootLength)
 	{
@@ -676,7 +676,7 @@ HTREEITEM FolderTree::SetSelectedPath(const string &sPath, bool bExpanded /* = f
 	if (nRootLength && m_hRootedFolder)
 		hItemFound = m_hRootedFolder;
 	bool bDriveMatch = sRootFolder.empty();
-	bool bNetworkMatch = m_bDisplayNetwork && ((sSearch.size() > 2) && sSearch.find(_T("\\\\")) == 0);
+	bool bNetworkMatch = m_bDisplayNetwork && ((sSearch.size() > 2) && sSearch.find("\\\\") == 0);
 	if (bNetworkMatch)
 	{
 		bDriveMatch = false;
@@ -793,7 +793,7 @@ string FolderTree::GetDriveLabel(const string &sDrive)
 	{
 		SHFILEINFO sfi;
 		if (SHGetFileInfo((LPCTSTR)lpItem, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_DISPLAYNAME))
-		sLabel = sfi.szDisplayName;
+		sLabel = Text::fromT(sfi.szDisplayName);
 
 		//Free the pidl now that we are finished with it
 		m_pMalloc->Free(lpItem);
@@ -825,18 +825,18 @@ bool FolderTree::HasGotSubEntries(const string &sDirectory)
 		//First check to see if there is any sub directories
 		string sFile;
 		if (sDirectory[sDirectory.size()-1] == _T('\\'))
-			sFile = sDirectory + _T("*.*");
+			sFile = sDirectory + "*.*";
 		else
-			sFile = sDirectory + _T("\\*.*");
+			sFile = sDirectory + "\\*.*";
 
 		WIN32_FIND_DATA fData;
 		HANDLE hFind;
-		hFind = FindFirstFile(sFile.c_str(), &fData);
+		hFind = FindFirstFile(Text::toT(sFile).c_str(), &fData);
 		if(hFind != INVALID_HANDLE_VALUE)
 		{
 			do
 			{
-				string cFileName = fData.cFileName;
+				string cFileName = Text::fromT(fData.cFileName);
 				if((fData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && 
 					(cFileName != ".") && (cFileName != ".."))
 				{
@@ -856,7 +856,7 @@ bool FolderTree::CanDisplayDrive(const string &sDrive)
 {
 	//check if this drive is one of the types to hide
 	bool bDisplay = true;
-	UINT nDrive = GetDriveType(sDrive.c_str());
+	UINT nDrive = GetDriveType(Text::toT(sDrive).c_str());
 	switch (nDrive)
 	{
 		case DRIVE_REMOVABLE:
@@ -1042,7 +1042,7 @@ bool FolderTree::DriveHasRemovableMedia(const string &sPath)
 	bool bRemovableMedia = false;
 	if(IsDrive(sPath))
 	{
-		UINT nDriveType = GetDriveType(sPath.c_str());
+		UINT nDriveType = GetDriveType(Text::toT(sPath).c_str());
 		bRemovableMedia = ((nDriveType == DRIVE_REMOVABLE) ||
 						(nDriveType == DRIVE_CDROM));
 	}
@@ -1053,7 +1053,7 @@ bool FolderTree::DriveHasRemovableMedia(const string &sPath)
 bool FolderTree::IsMediaValid(const string &sDrive)
 {
 	//return TRUE if the drive does not support removable media
-	UINT nDriveType = GetDriveType(sDrive.c_str());
+	UINT nDriveType = GetDriveType(Text::toT(sDrive).c_str());
 	if ((nDriveType != DRIVE_REMOVABLE) && (nDriveType != DRIVE_CDROM))
 		return true;
 
@@ -1081,7 +1081,7 @@ bool FolderTree::IsMediaValid(const string &sDrive)
 
 bool FolderTree::IsFolder(const string &sPath)
 {
-	DWORD dwAttributes = GetFileAttributes(sPath.c_str());
+	DWORD dwAttributes = GetFileAttributes(Text::toT(sPath).c_str());
 	return ((dwAttributes != 0xFFFFFFFF) && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY));
 }
 
@@ -1142,9 +1142,9 @@ bool FolderTree::EnumNetwork(HTREEITEM hParent)
 		{
 			string sNameRemote;
 			if(lpnrDrv[i].lpRemoteName != NULL)
-				sNameRemote = lpnrDrv[i].lpRemoteName;
+				sNameRemote = Text::fromT(lpnrDrv[i].lpRemoteName);
 			else
-				sNameRemote = lpnrDrv[i].lpComment;
+				sNameRemote = Text::fromT(lpnrDrv[i].lpComment);
 
 			//Remove leading back slashes
 			if (sNameRemote.size() > 0 && sNameRemote[0] == _T('\\'))
@@ -1167,7 +1167,7 @@ bool FolderTree::EnumNetwork(HTREEITEM hParent)
 			if (lpnrDrv[i].lpProvider)
 				pItem->m_pNetResource->lpProvider	= _tcsdup(lpnrDrv[i].lpProvider);
 			if (lpnrDrv[i].lpRemoteName)
-				pItem->m_sFQPath = lpnrDrv[i].lpRemoteName;
+				pItem->m_sFQPath = Text::fromT(lpnrDrv[i].lpRemoteName);
 			else
 				pItem->m_sFQPath = sNameRemote;
 			
@@ -1189,7 +1189,7 @@ bool FolderTree::EnumNetwork(HTREEITEM hParent)
 			else if (lpnrDrv[i].dwDisplayType == RESOURCEDISPLAYTYPE_SERVER)
 			{
 				//Now add the item into the control
-				string sServer = _T("\\\\");
+				string sServer = "\\\\";
 				sServer += pItem->m_sRelativePath;
 				InsertFileItem(hParent, pItem, false, GetIconIndex(sServer), GetSelIconIndex(sServer), false);
 			}
@@ -1255,7 +1255,7 @@ int FolderTree::DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator)
 
 bool FolderTree::GetSerialNumber(const string &sDrive, DWORD &dwSerialNumber)
 {
-	return GetVolumeInformation(sDrive.c_str(), NULL, 0, &dwSerialNumber, NULL, NULL, NULL, 0);
+	return GetVolumeInformation(Text::toT(sDrive).c_str(), NULL, 0, &dwSerialNumber, NULL, NULL, NULL, 0);
 }
 
 LRESULT FolderTree::OnSelChanged(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
@@ -1274,7 +1274,7 @@ LRESULT FolderTree::OnSelChanged(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
 	//ASSERT(pItem);
 	string sPath = pItem->m_sFQPath;
 	if ((pNMTreeView->itemNew.hItem != m_hNetworkRoot) && (pItem->m_pNetResource == NULL) &&
-		(pNMTreeView->itemNew.hItem != m_hMyComputerRoot) && !IsDrive(sPath) && (GetFileAttributes(sPath.c_str()) == 0xFFFFFFFF))
+		(pNMTreeView->itemNew.hItem != m_hMyComputerRoot) && !IsDrive(sPath) && (GetFileAttributes(Text::toT(sPath).c_str()) == 0xFFFFFFFF))
 	{
 		//Before we delete it see if we are the only child item
 		HTREEITEM hParent = GetParentItem(pNMTreeView->itemNew.hItem);
@@ -1405,20 +1405,20 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
         // if no parent folder is checked then this is a new root dir
 		try {
 			LineDlg virt;
-			virt.title = STRING(VIRTUAL_NAME);
-			virt.description = STRING(VIRTUAL_NAME_LONG);
+			virt.title = TSTRING(VIRTUAL_NAME);
+			virt.description = TSTRING(VIRTUAL_NAME_LONG);
 
 			string path = pItem->m_sFQPath;
 			if( path[ path.length() -1 ] != '\\' )
 				path += '\\';
-			virt.line = Util::getLastDir(path);
+			virt.line = Util::getLastDir(Text::toT(path));
 			if(virt.DoModal() == IDOK) {
-				ShareManager::getInstance()->addDirectory(path, virt.line);
+				ShareManager::getInstance()->addDirectory(path, Text::fromT(virt.line));
 			}
 			HashProgressDlg(true).DoModal();
 			UpdateParentItems(hItem);
 		} catch(const ShareException& e) {
-			MessageBox(e.getError().c_str(), APPNAME " " VERSIONSTRING, MB_ICONSTOP | MB_OK);
+			MessageBox(Text::toT(e.getError()).c_str(), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
 	}
 	
@@ -1597,7 +1597,7 @@ void FolderTree::UpdateStaticCtrl()
 	if(m_pStaticCtrl != NULL)
 	{
 		/* display theActualSizeOfTheShareAfterRefresh = WhatTheShareManagerThinksIsTheCorrectSize - theOffsetCreatedByPlayingAroundWithExcludeFolders */
-		m_pStaticCtrl->SetWindowText((Util::formatBytes(ShareManager::getInstance()->getShareSize()) + "*").c_str());
+		m_pStaticCtrl->SetWindowText(Text::toT(Util::formatBytes(ShareManager::getInstance()->getShareSize()) + "*").c_str());
 	}
 }
 

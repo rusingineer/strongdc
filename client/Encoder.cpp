@@ -85,7 +85,6 @@ void Encoder::fromBase32(const char* src, u_int8_t* dst, size_t len) {
 	}
 }
 
-
 bool Encoder::isBase32(const char* src)
 {
 	for(size_t i = 0; src[i]; i++) {
@@ -95,6 +94,7 @@ bool Encoder::isBase32(const char* src)
 
 	return true;
 }
+
 /**
  * @file
  * $Id$

@@ -58,7 +58,7 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_BITRATE || j == COLUMN_FREQUENCY) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -113,17 +113,17 @@ void FinishedMP3Frame::on(FinishedManagerListener::Added_MP3Dl(), FinishedMP3Ite
 };
 
 void FinishedMP3Frame::addEntry(FinishedMP3Item* entry) {
-	StringList l;
-	l.push_back(Util::getFileName(entry->getTarget()));
-	l.push_back(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime()));
-	l.push_back(entry->getUser());
-	l.push_back(entry->getHub());
-	l.push_back(Util::formatBytes(entry->getSize()));
-	l.push_back(entry->getMPEGVer());
-	l.push_back(entry->getChannels());
-	l.push_back(Util::toString(entry->getSampleRate())+" Hz");
-	l.push_back(Util::toString(entry->getBitRate())+" kbps");
-	int image = WinUtil::getIconIndex(entry->getTarget());
+	TStringList l;
+	l.push_back(Util::getFileName(Text::toT(entry->getTarget())));
+	l.push_back(Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
+	l.push_back(Text::toT(entry->getUser()));
+	l.push_back(Text::toT(entry->getHub()));
+	l.push_back(Text::toT(Util::formatBytes(entry->getSize())));
+	l.push_back(Text::toT(entry->getMPEGVer()));
+	l.push_back(Text::toT(entry->getChannels()));
+	l.push_back(Text::toT(Util::toString(entry->getSampleRate())+" Hz"));
+	l.push_back(Text::toT(Util::toString(entry->getBitRate())+" kbps"));
+	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
 	int loc = ctrlList.insert(l, image, (LPARAM)entry);
 	ctrlList.EnsureVisible(loc, FALSE);
 }

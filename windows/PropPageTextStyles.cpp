@@ -47,7 +47,7 @@ LRESULT PropPageTextStyles::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 	m_lsbList.ResetContent();
 	m_Preview.Attach( GetDlgItem(IDC_PREVIEW) );
 
-	WinUtil::decodeFont(SETTING(TEXT_FONT), m_Font);
+	WinUtil::decodeFont(Text::toT(SETTING(TEXT_FONT)), m_Font);
 	m_BackColor = SETTING(BACKGROUND_COLOR);
 	m_ForeColor = SETTING(TEXT_COLOR);
 
@@ -106,10 +106,10 @@ LRESULT PropPageTextStyles::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 
 	for ( int i = 0; i < TS_LAST; i++ ) {
 		TextStyles[ i ].LoadSettings();
-		strcpy( TextStyles[ i ].szFaceName, m_Font.lfFaceName );
+		_tcscpy(TextStyles[i].szFaceName, m_Font.lfFaceName );
 		TextStyles[ i ].bCharSet = m_Font.lfCharSet;
 		TextStyles[ i ].yHeight = m_Font.lfHeight;
-		m_lsbList.AddString( TextStyles[ i ].m_sText.c_str() );
+		m_lsbList.AddString(Text::toT(TextStyles[i].m_sText).c_str() );
 	}
 	m_lsbList.SetCurSel( 0 );
 
@@ -120,7 +120,7 @@ LRESULT PropPageTextStyles::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 
 	ctrlTabList.Clear();
 	for(int i=0; i < sizeof(colours) / sizeof(clrs); i++){				
-		ctrlTabList.AddString(ResourceManager::getInstance()->getString(colours[i].name).c_str());
+		ctrlTabList.AddString(Text::toT(ResourceManager::getInstance()->getString(colours[i].name)).c_str());
 		onResetColor(i);
 	}
 
@@ -138,8 +138,8 @@ void PropPageTextStyles::write()
 {
 	PropPage::write((HWND)*this, items);
 
-	string f = WinUtil::encodeFont( m_Font );
-	settings->set(SettingsManager::TEXT_FONT, f);
+	tstring f = WinUtil::encodeFont(m_Font);
+	settings->set(SettingsManager::TEXT_FONT, Text::fromT(f));
 
 	m_BackColor = TextStyles[ TS_GENERAL ].crBackColor;
 	m_ForeColor = TextStyles[ TS_GENERAL ].crTextColor;
@@ -177,7 +177,7 @@ LRESULT PropPageTextStyles::onEditTextStyle(WORD /*wNotifyCode*/, WORD /*wID*/, 
 	int iNdx = m_lsbList.GetCurSel();
 	TextStyles[ iNdx ].EditTextStyle();
 
-	strcpy( m_Font.lfFaceName, TextStyles[ iNdx ].szFaceName );
+	_tcscpy( m_Font.lfFaceName, TextStyles[ iNdx ].szFaceName );
 	m_Font.lfCharSet = TextStyles[ iNdx ].bCharSet;
 	m_Font.lfHeight = TextStyles[ iNdx ].yHeight;
 
@@ -189,11 +189,11 @@ LRESULT PropPageTextStyles::onEditTextStyle(WORD /*wNotifyCode*/, WORD /*wID*/, 
 	}
 
 	for ( int i = 0; i < TS_LAST; i++ ) {
-		strcpy( TextStyles[ iNdx ].szFaceName, m_Font.lfFaceName );
+		_tcscpy( TextStyles[ iNdx ].szFaceName, m_Font.lfFaceName );
 		TextStyles[ i ].bCharSet = m_Font.lfCharSet;
 		TextStyles[ i ].yHeight = m_Font.lfHeight;
-		m_Preview.AppendText( "My nick", "12:34 ", TextStyles[ i ].m_sPreviewText.c_str(), 
-		TextStyles[ i ] );
+		m_Preview.AppendText(_T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), 
+			TextStyles[i]);
 	}
 
 	RefreshPreview();
@@ -203,12 +203,12 @@ LRESULT PropPageTextStyles::onEditTextStyle(WORD /*wNotifyCode*/, WORD /*wID*/, 
 void PropPageTextStyles::RefreshPreview() {
 	m_Preview.SetBackgroundColor( bg );
 	m_Preview.SetTextStyleMyNick( TextStyles[ TS_MYNICK ] );
-	m_Preview.SetWindowText("");
+	m_Preview.SetWindowText(_T(""));
 
 	string sText;
 	for ( int i = 0; i < TS_LAST; i++ ) {
-		m_Preview.AppendText( "My nick", "12:34 ", TextStyles[ i ].m_sPreviewText.c_str(), 
-		TextStyles[ i ] );
+		m_Preview.AppendText(_T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), 
+		TextStyles[i] );
 	}
 	m_Preview.InvalidateRect( NULL );
 }
@@ -310,9 +310,9 @@ LRESULT PropPageTextStyles::onBlackAndWhite(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 void PropPageTextStyles::TextStyleSettings::Init( 
 	PropPageTextStyles *pParent, SettingsManager *pSM, 
-	LPCTSTR sText, LPCTSTR sPreviewText,
+	LPCSTR sText, LPCSTR sPreviewText,
 	SettingsManager::IntSetting iBack, SettingsManager::IntSetting iFore, 
-	SettingsManager::IntSetting iBold, SettingsManager::IntSetting iItalic ) {
+	SettingsManager::IntSetting iBold, SettingsManager::IntSetting iItalic) {
 
 	CHARFORMAT2 cf;
 	cbSize = sizeof( cf );
@@ -362,9 +362,9 @@ void PropPageTextStyles::TextStyleSettings::EditForeColor() {
 
 void PropPageTextStyles::TextStyleSettings::EditTextStyle() {
 	LOGFONT font;
-	WinUtil::decodeFont( SETTING(TEXT_FONT), font );
+	WinUtil::decodeFont(Text::toT(SETTING(TEXT_FONT)), font );
 
-	strcpy( font.lfFaceName, szFaceName );
+	_tcscpy( font.lfFaceName, szFaceName );
 	font.lfCharSet = bCharSet;
 	font.lfHeight = yHeight;
 
@@ -381,7 +381,7 @@ void PropPageTextStyles::TextStyleSettings::EditTextStyle() {
 	CFontDialog d( &font, CF_SCREENFONTS, NULL, *m_pParent );
 	d.m_cf.rgbColors = crTextColor;
 	if (d.DoModal() == IDOK) {
-  	strcpy( szFaceName, font.lfFaceName );
+  	_tcscpy( szFaceName, font.lfFaceName );
 	bCharSet = font.lfCharSet;
 	yHeight = font.lfHeight;
 
@@ -408,11 +408,11 @@ LRESULT PropPageTextStyles::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 }
 
 LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string x = "";	
+	tstring x = _T("");	
 	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
 
 	SimpleXML xml;
-	xml.fromXML(File(x, File::READ, File::OPEN).read());
+	xml.fromXML(File(Text::fromT(x), File::READ, File::OPEN).read());
 	xml.resetCurrentChild();
 	xml.stepIn();
 	if(xml.findChild("Settings")) {
@@ -548,7 +548,7 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 }
 
 LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string x = "";	
+	tstring x = _T("");	
 	if(WinUtil::browseFile(x, m_hWnd, true) == IDOK) {
 	SimpleXML xml;
 	xml.addTag("DCPlusPlus");
@@ -675,9 +675,9 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	xml.addChildAttrib(type, curType);
 	
 	try {
-		File ff(x , File::WRITE, File::CREATE | File::TRUNCATE);
+		File ff(Text::fromT(x) , File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
-		f.write(SimpleXML::w1252Header);
+		f.write(SimpleXML::utf8Header);
 		xml.toXML(&f);
 		f.flush();
 		ff.close();
@@ -736,7 +736,7 @@ LRESULT PropPageTextStyles::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lPar
 	HWND hWnd = (HWND)lParam;
 	if(hWnd == ctrlTabExample.m_hWnd) {
 		::SetBkMode((HDC)wParam, TRANSPARENT);
-		HANDLE h = GetProp(hWnd, "fillcolor");
+		HANDLE h = GetProp(hWnd, _T("fillcolor"));
 		if (h != NULL) {
 			return (LRESULT)h;
 		}

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
+#include "WinUtil.h"
 
 #include "FavHubProperties.h"
 
@@ -26,18 +27,18 @@
 
 LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
-	SetDlgItemText(IDC_HUBNAME, entry->getName().c_str());
-	SetDlgItemText(IDC_HUBDESCR, entry->getDescription().c_str());
-	SetDlgItemText(IDC_HUBADDR, entry->getServer().c_str());
-	SetDlgItemText(IDC_HUBNICK, entry->getNick(false).c_str());
-	SetDlgItemText(IDC_HUBPASS, entry->getPassword().c_str());
-	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
+	SetDlgItemText(IDC_HUBNAME, Text::toT(entry->getName()).c_str());
+	SetDlgItemText(IDC_HUBDESCR, Text::toT(entry->getDescription()).c_str());
+	SetDlgItemText(IDC_HUBADDR, Text::toT(entry->getServer()).c_str());
+	SetDlgItemText(IDC_HUBNICK, Text::toT(entry->getNick(false)).c_str());
+	SetDlgItemText(IDC_HUBPASS, Text::toT(entry->getPassword()).c_str());
+	SetDlgItemText(IDC_HUBUSERDESCR, Text::toT(entry->getUserDescription()).c_str());
 	CheckDlgButton(IDC_STEALTH, entry->getStealth() ? BST_CHECKED : BST_UNCHECKED);
-	SetDlgItemText(IDC_RAW_ONE, entry->getRawOne().c_str());
-	SetDlgItemText(IDC_RAW_TWO, entry->getRawTwo().c_str());
-	SetDlgItemText(IDC_RAW_THREE, entry->getRawThree().c_str());
-	SetDlgItemText(IDC_RAW_FOUR, entry->getRawFour().c_str());
-	SetDlgItemText(IDC_RAW_FIVE, entry->getRawFive().c_str());
+	SetDlgItemText(IDC_RAW_ONE, Text::toT(entry->getRawOne()).c_str());
+	SetDlgItemText(IDC_RAW_TWO, Text::toT(entry->getRawTwo()).c_str());
+	SetDlgItemText(IDC_RAW_THREE, Text::toT(entry->getRawThree()).c_str());
+	SetDlgItemText(IDC_RAW_FOUR, Text::toT(entry->getRawFour()).c_str());
+	SetDlgItemText(IDC_RAW_FIVE, Text::toT(entry->getRawFive()).c_str());
 
 	CEdit tmp;
 	tmp.Attach(GetDlgItem(IDC_HUBNAME));
@@ -61,30 +62,30 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 {
 	if(wID == IDOK)
 	{
-		char buf[512];
+		TCHAR buf[256];
 		GetDlgItemText(IDC_HUBNAME, buf, 256);
-		entry->setName(buf);
+		entry->setName(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBDESCR, buf, 256);
-		entry->setDescription(buf);
+		entry->setDescription(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBADDR, buf, 256);
-		entry->setServer(buf);
+		entry->setServer(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBNICK, buf, 256);
-		entry->setNick(buf);
+		entry->setNick(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBPASS, buf, 256);
-		entry->setPassword(buf);
+		entry->setPassword(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBUSERDESCR, buf, 256);
-		entry->setUserDescription(buf);
+		entry->setUserDescription(Text::fromT(buf));
 		entry->setStealth(IsDlgButtonChecked(IDC_STEALTH));
 		GetDlgItemText(IDC_RAW_ONE, buf, 512);
-		entry->setRawOne(buf);
+		entry->setRawOne(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_TWO, buf, 512);
-		entry->setRawTwo(buf);
+		entry->setRawTwo(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_THREE, buf, 512);
-		entry->setRawThree(buf);
+		entry->setRawThree(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_FOUR, buf, 512);
-		entry->setRawFour(buf);
+		entry->setRawFour(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_FIVE, buf, 512);
-		entry->setRawFive(buf);
+		entry->setRawFive(Text::fromT(buf));
 		HubManager::getInstance()->save();
 	}
 	EndDialog(wID);
@@ -93,13 +94,13 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 
 LRESULT FavHubProperties::OnTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
 {
-	char buf[256];
+	TCHAR buf[256];
 
 	GetDlgItemText(wID, buf, 256);
-	string old = buf;
+	tstring old = buf;
 
 	// Strip '$', '|' and ' ' from text
-	char *b = buf, *f = buf, c;
+	TCHAR *b = buf, *f = buf, c;
 	while( (c = *b++) != 0 )
 	{
 		if(c != '$' && c != '|' && (wID == IDC_HUBUSERDESCR || c != ' ') && ( (wID != IDC_HUBNICK) || (c != '<' && c != '>')) )

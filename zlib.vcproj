@@ -3,9 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="zlib"
-	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
-	SccProjectName=""
-	SccLocalPath="">
+	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -18,7 +16,7 @@
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="0">
+			CharacterSet="1">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -33,6 +31,7 @@
 				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -74,7 +73,7 @@
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="0"
+			CharacterSet="1"
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -93,6 +92,7 @@
 				RuntimeLibrary="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="0"

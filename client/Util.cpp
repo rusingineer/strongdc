@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
@@ -44,14 +45,13 @@ FastCriticalSection FastAllocBase::cs;
 
 int64_t Util::mUptimeSeconds = 0;
 string Util::emptyString;
+wstring Util::emptyStringW;
+tstring Util::emptyStringT;
 
 bool Util::away = false;
 string Util::awayMsg;
 time_t Util::awayTime;
-char Util::upper[256];
-char Util::lower[256];
-int8_t Util::cmp[256][256];
-int8_t Util::cmpi[256][256];
+
 Util::CountryList Util::countries;
 string Util::appPath;
 
@@ -83,38 +83,7 @@ void ConvertStringToAscii(string *s) {
 void Util::initialize() {
 	setlocale(LC_ALL, "");
 
-	size_t i;
-	for(i = 0; i < 256; ++i) {
-#ifdef _WIN32
-		upper[i] = (char)CharUpper((LPSTR)i);
-		lower[i] = (char)CharLower((LPSTR)i);
-#else
-		upper[i] = (char)toupper(i);
-		lower[i] = (char)tolower(i);
-#endif
-	}
-
-#ifdef _WIN32
-		TCHAR buf[MAX_PATH+1];
-		GetModuleFileName(NULL, buf, MAX_PATH);
-		appPath = buf;
-		appPath.erase(appPath.rfind('\\') + 1);
-#else // _WIN32
-		char* home = getenv("HOME");
-		if (home) {
-			appPath = home;
-			appPath +=  "/.dc++/";
-		}
-#endif // _WIN32
-
-	// Now initialize the compare table to the current locale (hm...hopefully we
-	// won't have strange problems because of this (users from different locales for instance)
-	for(i = 0; i < 256; ++i) {
-		for(int j = 0; j < 256; ++j) {
-			cmp[i][j] = (int8_t)::strncmp((char*)&i, (char*)&j, 1);
-			cmpi[i][j] = (int8_t)::strncmp((char*)&lower[i], (char*)&lower[j], 1);
-		}
-	}
+	Text::initialize();
 
 	sgenrand((unsigned long)time(NULL));
 
@@ -147,26 +116,39 @@ void Util::initialize() {
 	} catch(const FileException&) {
 	}
 
-	Util::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
+#ifdef _WIN32
+	TCHAR buf[MAX_PATH+1];
+	GetModuleFileName(NULL, buf, MAX_PATH);
+	appPath = Text::fromT(buf);
+	appPath.erase(appPath.rfind('\\') + 1);
+#else // _WIN32
+	char* home = getenv("HOME");
+	if (home) {
+		appPath = Text::fromT(home);
+		appPath += "/.dc++/";
+	}
+#endif // _WIN32
+
+	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
 }
 
 string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
 	string::size_type i = 0;
 
 	if(reverse) {
-		while( (i = safestring::SafeFind(tmp, "&#36;", i)) != string::npos) {
+		while( (i = tmp.find("&#36;", i)) != string::npos) {
 			tmp.replace(i, 5, "$");
 			i++;
 		}
 		i = 0;
-		while( (i = safestring::SafeFind(tmp, "&#124;", i)) != string::npos) {
+		while( (i = tmp.find("&#124;", i)) != string::npos) {
 			tmp.replace(i, 6, "|");
 			i++;
 		}
 		if(checkNewLines) {
 			// Check all '<' and '|' after newlines...
 			i = 0;
-			while( (i = safestring::SafeFind(tmp, '\n', i)) != string::npos) {
+			while( (i = tmp.find('\n', i)) != string::npos) {
 				if(i + 1 < tmp.length()) {
 					if(tmp[i+1] == '[' || tmp[i+1] == '<') {
 						tmp.insert(i+1, "- ");
@@ -178,12 +160,12 @@ string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
 		}
 	} else {
 		i = 0;
-		while( (i = safestring::SafeFind(tmp, '$', i)) != string::npos) {
+		while( (i = tmp.find('$', i)) != string::npos) {
 			tmp.replace(i, 1, "&#36;");
 			i += 4;
 		}
 		i = 0;
-		while( (i = safestring::SafeFind(tmp, '|', i)) != string::npos) {
+		while( (i = tmp.find('|', i)) != string::npos) {
 			tmp.replace(i, 1, "&#124;");
 			i += 5;
 		}
@@ -198,7 +180,7 @@ string Util::validateChatMessage(string tmp) {
 		ConvertStringToAscii( &tmp );
 
 	i = 0;
-	while( (i = safestring::SafeFind(tmp, '|', i)) != string::npos) {
+	while( (i = tmp.find('|', i)) != string::npos) {
 		tmp.replace(i, 1, "&#124;");
 		i += 5;
 	}
@@ -226,7 +208,7 @@ string Util::validateFileName(string tmp) {
 
 	// Then, eliminate all ':' that are not the second letter ("c:\...")
 	i = 0;
-	while( (i = safestring::SafeFind(tmp, ':', i)) != string::npos) {
+	while( (i = tmp.find(':', i)) != string::npos) {
 		if(i == 1) {
 			i++;
 			continue;
@@ -237,19 +219,19 @@ string Util::validateFileName(string tmp) {
 
 	// Remove the .\ that doesn't serve any purpose
 	i = 0;
-	while( (i = safestring::SafeFind(tmp, "\\.\\", i)) != string::npos) {
+	while( (i = tmp.find("\\.\\", i)) != string::npos) {
 		tmp.erase(i+1, 2);
 	}
 
 	// Remove any double \\ that are not at the beginning of the path...
 	i = 1;
-	while( (i = safestring::SafeFind(tmp, "\\\\", i)) != string::npos) {
+	while( (i = tmp.find("\\\\", i)) != string::npos) {
 		tmp.erase(i+1, 1);
 	}
 
 	// And last, but not least, the infamous ..\! ...
 	i = 0;
-	while( ((i = safestring::SafeFind(tmp,"\\..\\", i)) != string::npos) ) {
+	while( ((i = tmp.find("\\..\\", i)) != string::npos) ) {
 		tmp[i + 1] = '_';
 		tmp[i + 2] = '_';
 		tmp[i + 3] = '_';
@@ -283,7 +265,7 @@ void Util::decodeUrl(const string& url, string& aServer, short& aPort, string& a
 	aServer = emptyString;
 	aFile = emptyString;
 
-	if( (j=safestring::SafeFind(url,"://", i)) != string::npos) {
+	if( (j=url.find("://", i)) != string::npos) {
 		// Protocol found
 		string protocol = url.substr(0, j);
 		i = j + 3;
@@ -295,12 +277,12 @@ void Util::decodeUrl(const string& url, string& aServer, short& aPort, string& a
 		}
 	}
 
-	if( (j=safestring::SafeFind(url,'/', i)) != string::npos) {
+	if( (j=url.find('/', i)) != string::npos) {
 		// We have a filename...
 		aFile = url.substr(j);
 	}
 
-	if( (k=safestring::SafeFind(url,':', i)) != string::npos) {
+	if( (k=url.find(':', i)) != string::npos) {
 		// Port
 		if(j == string::npos) {
 			aPort = (short)Util::toInt(url.substr(k+1));
@@ -354,7 +336,7 @@ string Util::formatExactSize(int64_t aBytes) {
 	char buf[64];
 #ifdef _WIN32
 		char number[64];
-		NUMBERFMT nf;
+		NUMBERFMTA nf;
 		sprintf(number, "%I64d", aBytes);
 		char Dummy[16];
     
@@ -365,9 +347,9 @@ string Util::formatExactSize(int64_t aBytes) {
 		nf.NegativeOrder = 0;
 		nf.lpDecimalSep = ",";
 
-		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
+		GetLocaleInfoA( LOCALE_SYSTEM_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
 		nf.Grouping = atoi(Dummy);
-		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
+		GetLocaleInfoA( LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
 		nf.lpThousandSep = Dummy;
 
 		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
@@ -420,21 +402,11 @@ bool Util::isPrivateIp(string const& ip) {
 	return false;
 }
 
-static void cToUtf8(wchar_t c, string& str) { 
-   if(c >= 0x0800) { 
-      str += (char)(0x80 | 0x40 | 0x20  | (c >> 12)); 
-      str += (char)(0x80 | ((c >> 6) & 0x3f)); 
-      str += (char)(0x80 | (c & 0x3f)); 
-   } else if(c >= 0x0080) { 
-      str += (char)(0x80 | 0x40 | (c >> 6)); 
-      str += (char)(0x80 | (c & 0x3f)); 
-   } else { 
-      str += (char)c; 
-   } 
-}
 
-static int utf8ToC(const char* str, wchar_t& c) { 
-   int l = 0; 
+
+typedef const u_int8_t* ccp;
+static wchar_t utf8ToLC(ccp& str) {
+	wchar_t c = 0;
    if(str[0] & 0x80) { 
       if(str[0] & 0x40) { 
          if(str[0] & 0x20) { 
@@ -442,99 +414,133 @@ static int utf8ToC(const char* str, wchar_t& c) {
 				!((((unsigned char)str[1]) & ~0x3f) == 0x80) ||
 					!((((unsigned char)str[2]) & ~0x3f) == 0x80))
 				{
-					return -1;
+					str++;
+					return 0;
 				}
 				c = ((wchar_t)(unsigned char)str[0] & 0xf) << 12 |
 					((wchar_t)(unsigned char)str[1] & 0x3f) << 6 |
 					((wchar_t)(unsigned char)str[2] & 0x3f);
-				l = 3;
+				str += 3;
 			} else {
 				if(str[1] == 0 ||
 					!((((unsigned char)str[1]) & ~0x3f) == 0x80)) 
 				{
-					return -1;
+					str++;
+					return 0;
 				}
 				c = ((wchar_t)(unsigned char)str[0] & 0x1f) << 6 |
 					((wchar_t)(unsigned char)str[1] & 0x3f);
-				l = 2;
+				str += 2;
 			}
 		} else {
-			return -1;
+			str++;
+			return 0;
 		}
 	} else {
-		c = (unsigned char)str[0];
-		l = 1;
+		wchar_t c = Text::asciiToLower((char)str[0]);
+		str++;
+		return c;
 	}
 
-	return l;
+	return Text::toLower(c);
 }
 
-/**
- * Convert a string in the current locale (whatever that happens to be) to UTF-8.
- */
-string& Util::toUtf8(string& str) {
-	if(str.empty())
-		return str;
-	wstring wtmp(str.length(), 0);
-#ifdef _WIN32
-	int sz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), (int)str.length(),
-		&wtmp[0], (int)str.length());
-	if(sz <= 0) {
-		str.clear();
-		return str;
-	}
-#else
-	int sz = mbstowcs(&wtmp[0], str.c_str(), wtmp.length());
-	if(sz <= 0) {
-		str.clear();
-		return str;
-	}
-	if(sz < (int)wtmp.length())
-		sz--;
-#endif
+string::size_type Util::findSubString(const string& aString, const string& aSubString, string::size_type start) throw() {
+	if(aString.length() < start)
+		return (string::size_type)string::npos;
 
-	wtmp.resize(sz);
-	str.clear();
-    for(string::size_type i = 0; i < wtmp.length(); ++i) {
-		cToUtf8(wtmp[i], str);
-	}
-	return str;
-}
+	if(aString.length() - start < aSubString.length())
+		return (string::size_type)string::npos;
 
-string& Util::toAcp(string& str) {
-	if(str.empty())
-		return str;
+	if(aSubString.empty())
+		return 0;
 
-	wstring wtmp;
-	wtmp.reserve(str.length());
-	for(string::size_type i = 0; i < str.length(); ) {
-		wchar_t c = 0;
-		int x = utf8ToC(str.c_str() + i, c);
-		if(x == -1) {
-			i++;
-		} else {
-			i+=x;
-			wtmp += c;
+	// Hm, should start measure in characters or in bytes? bytes for now...
+	const u_int8_t* tx = (const u_int8_t*)aString.c_str() + start;
+	const u_int8_t* px = (const u_int8_t*)aSubString.c_str();
+
+	const u_int8_t* end = tx + aString.length() - aSubString.length() + 1;
+
+	wchar_t wp = utf8ToLC(px);
+
+	while(tx < end) {
+		const u_int8_t* otx = tx;
+		if(wp == utf8ToLC(tx)) {
+			const u_int8_t* px2 = px;
+			const u_int8_t* tx2 = tx;
+
+			for(;;) {
+				if(*px2 == 0)
+					return otx - (u_int8_t*)aString.c_str();
+
+				if(utf8ToLC(px2) != utf8ToLC(tx2))
+					break;
+			}
 		}
 	}
-#ifdef _WIN32
-	int x = WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), (int)wtmp.length(), NULL, 0, NULL, NULL);
-	if(x == 0) {
-		str.clear();
-		return str;
+	return (string::size_type)string::npos;
+}
+
+int Util::stricmp(const char* a, const char* b) {
+	int v1, v2;
+	while(*a != 0 && *b != 0) {
+		v1 = 0; v2 = 0;
+		bool t1 = isNumeric(*a);
+		bool t2 = isNumeric(*b);
+		if(t1 != t2) return (t1) ? -1 : 1;
+		if(!t1) { //string
+			wchar_t ca = 0, cb = 0;
+			int na = Text::utf8ToWc(a, ca);
+			int nb = Text::utf8ToWc(b, cb);
+			ca = Text::toLower(ca);
+			cb = Text::toLower(cb);
+			if(ca != cb) {
+				return (int)cb - (int)ca;
+			}
+			a+= na < 0 ? 1 : na;
+			b+= nb < 0 ? 1 : nb;
+		} else { // number
+			while(isNumeric(*a)) {
+            	v1 *= 10;
+				v1 += *a - '0';
+				a++;
+			}
+
+			while(isNumeric(*b)) {
+				v2 *= 10;
+				v2 += *b - '0';
+				b++;
+			}
+
+			if(v1 != v2)
+				return (v1 < v2) ? -1 : 1;
+		}
 	}
-	str.resize(x);
-	WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), (int)wtmp.length(), &str[0], (int)str.size(), NULL, NULL);
-#else
-	size_t x = wcstombs(NULL, wtmp.c_str(), 0);
-	if(x == (size_t)-1) {
-		str.clear();
-		return str;
+	wchar_t ca = 0, cb = 0;
+	Text::utf8ToWc(a, ca);
+	Text::utf8ToWc(b, cb);
+
+	return (int)Text::toLower(cb) - (int)Text::toLower(ca);
+}
+
+int Util::strnicmp(const char* a, const char* b, size_t n) {
+	const char* end = a + n;
+	while(*a && a < end) {
+		wchar_t ca = 0, cb = 0;
+		int na = Text::utf8ToWc(a, ca);
+		int nb = Text::utf8ToWc(b, cb);
+		ca = Text::toLower(ca);
+		cb = Text::toLower(cb);
+		if(ca != cb) {
+			return (int)cb - (int)ca;
+		}
+		a+= na < 0 ? 1 : na;
+		b+= nb < 0 ? 1 : nb;
 	}
-	str.resize(x);
-	wcstombs(&str[0], wtmp.c_str(), str.size());
-#endif
-	return str;
+	wchar_t ca = 0, cb = 0;
+	Text::utf8ToWc(a, ca);
+	Text::utf8ToWc(b, cb);
+	return (a >= end) ? 0 : ((int)Text::toLower(cb) - (int)Text::toLower(ca));
 }
 
 string Util::encodeURI(const string& aString, bool reverse) {
@@ -583,8 +589,8 @@ string Util::formatParams(const string& msg, StringMap& params) {
 
 	string::size_type i, j, k;
 	i = 0;
-	while (( j = safestring::SafeFind(result,"%[", i)) != string::npos) {
-		if( (result.size() < j + 2) || ((k = safestring::SafeFind(result,']', j + 2)) == string::npos) ) {
+	while (( j = result.find("%[", i)) != string::npos) {
+		if( (result.size() < j + 2) || ((k = result.find(']', j + 2)) == string::npos) ) {
 			break;
 		}
 		string name = result.substr(j + 2, k - j - 2);
@@ -596,7 +602,7 @@ string Util::formatParams(const string& msg, StringMap& params) {
 			if(smi->second.find('%') != string::npos) {
 				string tmp = smi->second;	// replace all % in params with %% for strftime
 				string::size_type m = 0;
-				while(( m = safestring::SafeFind(tmp,'%', m)) != string::npos) {
+				while(( m = tmp.find('%', m)) != string::npos) {
 					tmp.replace(m, 1, "%%");
 					m+=2;
 				}
@@ -620,11 +626,11 @@ u_int64_t Util::getDirSize(const string &sFullPath) {
 	WIN32_FIND_DATA fData;
 	HANDLE hFind;
 	
-	hFind = FindFirstFile((sFullPath + "\\*").c_str(), &fData);
+	hFind = FindFirstFile(Text::toT(sFullPath + "\\*").c_str(), &fData);
 
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
-			string name = fData.cFileName;
+			string name = Text::fromT(fData.cFileName);
 			if(name == "." || name == "..")
 				continue;
 			if(name.find('$') != string::npos)
@@ -657,7 +663,7 @@ bool Util::validatePath(const string &sPath) {
 		return false;
 
 	if((sPath.substr(1, 2) == ":\\") || (sPath.substr(0, 2) == "\\\\")) {
-		if(GetFileAttributes(sPath.c_str()) & FILE_ATTRIBUTE_DIRECTORY)
+		if(GetFileAttributes(Text::toT(sPath).c_str()) & FILE_ATTRIBUTE_DIRECTORY)
 			return true;
 	}
 
@@ -665,7 +671,7 @@ bool Util::validatePath(const string &sPath) {
 }
 
 bool Util::fileExists(const string &aFile) {
-	DWORD attr = GetFileAttributes(aFile.c_str());
+	DWORD attr = GetFileAttributes(Text::toT(aFile).c_str());
 	return (attr != 0xFFFFFFFF);
 }
 
@@ -875,78 +881,6 @@ string Util::toDOS(const string& tmp) {
 	return tmp2;
 }
 
-bool safestring::_CorrectFindPos(const string &InStr, string::size_type &pos)
-{
-	if (pos < 0) {
-		pos = 0;
-		return true;
-	}
-	string::size_type length = InStr.length();
-	if (length == 0){
-		return false;
-	}
-	if (pos >= length) {
-		return false;
-	}
-	return true;
-}
-
-string::size_type safestring::SafeFind(const string &InStr, char c, string::size_type pos)
-{
-	if (!_CorrectFindPos(InStr, pos))
-		return string::npos;
-	return InStr.find(c, pos);
-}
-string::size_type safestring::SafeFind(const string &InStr, const char *s, string::size_type pos)
-{
-	if (!_CorrectFindPos(InStr, pos))
-		return string::npos;
-	return InStr.find(s, pos);
-}
-string::size_type safestring::SafeFind(const string &InStr, const char *s, string::size_type pos, string::size_type n)
-{
-	if (!_CorrectFindPos(InStr, pos))
-		return string::npos;
-	return InStr.find(s, pos, n);
-}
-string::size_type safestring::SafeFind(const string &InStr, const string& str, string::size_type pos)
-{
-	if (!_CorrectFindPos(InStr, pos))
-		return string::npos;
-	return InStr.find(str, pos);
-}
-
-#define TOBIN(x) (((x) >= '0' && (x) <= '9') ? ((x) - '0') : ((x) - 'A' + 0xA))
-#define ISRGBBIT(x) (((x) >= '0' && (x) <= '9') || ((x) >= 'A' && (x) <= 'F'))
-bool Util::RGB2Binary(string sRGB, BYTE* pbData)
-{
-    int i;
-    const char* p = sRGB.c_str();
-
-	for(i = 0; i < sRGB.size(); i ++)
-		if(!ISRGBBIT(*(p+i))) return false;
-
-	for(i = 0; i < sRGB.size(); i += 2)
-        pbData[i/2] = (TOBIN(*(p + i)) << 4) | TOBIN(*(p + i + 1));
-
-    return true;
-}
-
-string Util::Binary2RGB(BYTE* pbBuf, DWORD dwSize)
-{
-	const static char rgb[] = "0123456789ABCDEF";
-	char buf[128];
-
-	dcassert(dwSize < sizeof(buf));
-	for(int i = 0; i < dwSize ; i++){
-		buf[i*2]   = rgb[pbBuf[i] >> 4];
-		buf[i*2+1] = rgb[pbBuf[i] & 0xf];
-	}
-	buf[dwSize * 2] = 0;
-
-	return string(buf);
-}
-
 int Util::getOsMajor() 
 {
 #ifdef _WIN32
@@ -976,9 +910,7 @@ int Util::getOsMinor()
 	return ver.dwMinorVersion;
 #endif //_WIN32
 }
-
 /**
  * @file
  * $Id$
  */
-

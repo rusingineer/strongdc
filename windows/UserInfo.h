@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #ifndef USERINFO_H
 #define USERINFO_H
 
@@ -42,18 +60,19 @@ public:
 
 public:
 	UserInfo(const User::Ptr& u, const UserListColumns* pListColumns);
-	UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) { update(); };
+	UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) {
+		update();
+	};
 
-	const string& getText(int col) const;
+	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
 
 	void update();
 
-	GETSET(string, shared, Shared)
-	GETSET(string, uploadSpeed, UploadSpeed);
+	tstring columns[COLUMN_LAST];
+	GETSET(tstring, uploadSpeed, UploadSpeed);
 	GETSET(bool, op, Op);
-	GETSET(string, exactshare, ExactShare)
 
 protected:
 	const UserListColumns* m_pListColumns;

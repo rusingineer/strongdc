@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 
@@ -16,7 +34,7 @@ HBITMAP AGLoadImage(HINSTANCE hIns, LPCTSTR BmpPath, unsigned int nFlags, int x,
 	if (!hBmp) {
 		char buf[512];
 		sprintf(buf, "Unable to load '%s'. The program is unable to function without this file", BmpPath);
-		MessageBox(NULL, buf, "Unable to load file", MB_ICONSTOP | MB_OK);
+		MessageBox(NULL, Text::toT(buf).c_str(), _T("Unable to load file"), MB_ICONSTOP | MB_OK);
 	}
 	return hBmp;
 }
@@ -46,7 +64,7 @@ CAGEmotion::~CAGEmotion() {
 }
 
 bool CAGEmotion::Create(string& strEmotionText, string& strEmotionBmpPath) {
-	m_EmotionBmp = ::AGLoadImage(0, (strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	m_EmotionBmp = ::AGLoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	if (m_EmotionBmp == NULL) {
 		dcassert(FALSE);
 		return false;

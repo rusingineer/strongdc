@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
 #include "PropPage.h"
 
 
@@ -30,11 +31,11 @@ class FakeDetect : public CPropertyPage<IDD_FAKEDETECT>, public PropPage
 {
 public:
 	FakeDetect(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_FAKEDETECT)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_FAKEDETECT)).c_str());
 		SetTitle(title);
 	};
 
-	virtual ~FakeDetect() { delete[] title;};
+	virtual ~FakeDetect() { free(title); };
 
 	BEGIN_MSG_MAP(FakeDetect)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -49,7 +50,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 	static ListItem listItems[];
 };
 

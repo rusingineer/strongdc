@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
-AppearancePage::~AppearancePage(){ delete[] title; }
+AppearancePage::~AppearancePage(){ free(title); }
 
 LRESULT AppearancePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
@@ -105,20 +105,20 @@ void AppearancePage::write() {
 }
 
 LRESULT AppearancePage::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	char buf[MAX_PATH];
-	static const char types[] = "Language Files\0*.xml\0All Files\0*.*\0";
+	TCHAR buf[MAX_PATH];
+	static const TCHAR types[] = _T("Language Files\0*.xml\0All Files\0*.*\0");
 
 	GetDlgItemText(IDC_LANGUAGE, buf, MAX_PATH);
-	string x = buf;
+	tstring x = buf;
 
-	if(WinUtil::browseFile(x, m_hWnd, false, Util::getAppPath(), types) == IDOK) {
+	if(WinUtil::browseFile(x, m_hWnd, false, Text::toT(Util::getAppPath()), types) == IDOK) {
 		SetDlgItemText(IDC_LANGUAGE, x.c_str());
 	}
 	return 0;
 }
 
 LRESULT AppearancePage::onClickedHelp(WORD /* wNotifyCode */, WORD /*wID*/, HWND /* hWndCtl */, BOOL& /* bHandled */) {
-	MessageBox(CSTRING(TIMESTAMP_HELP), CSTRING(TIMESTAMP_HELP_DESC), MB_OK | MB_ICONINFORMATION);
+	MessageBox(CTSTRING(TIMESTAMP_HELP), CTSTRING(TIMESTAMP_HELP_DESC), MB_OK | MB_ICONINFORMATION);
 	return S_OK;
 }
 

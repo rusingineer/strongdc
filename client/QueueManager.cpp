@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 
 #include "QueueManager.h"
 
+#include "ConnectionManager.h"
 #include "SearchManager.h"
 #include "ClientManager.h"
 #include "DownloadManager.h"
@@ -82,7 +83,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty()) {
 				qi->setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(qi->getTargetFileName(), root));
 				if (File::getSize(qi->getTarget()) > 0 ) {
-					Util::ensureDirectory(qi->getTempTarget());
+					File::ensureDirectory(qi->getTempTarget());
 					File::renameFile(qi->getTarget(), qi->getTempTarget());
 				}
 			}
@@ -130,10 +131,8 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	if((qi->getDownloadedBytes() > 0))
 		qi->setFlag(QueueItem::FLAG_EXISTS);
 
-
 	dcassert(find(aTarget) == NULL);
 	add(qi);
-
 	return qi;
 }
 
@@ -381,7 +380,8 @@ QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTI
 	TimerManager::getInstance()->addListener(this); 
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
-	Util::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
+
+	File::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
 };
 
 QueueManager::~QueueManager() { 
@@ -398,19 +398,19 @@ QueueManager::~QueueManager() {
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
 		
-		hFind = FindFirstFile((path + "\\*.xml.bz2").c_str(), &data);
+		hFind = FindFirstFile(Text::toT(path + "\\*.xml.bz2").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
-				File::deleteFile(path + data.cFileName);			
+				File::deleteFile(path + Text::fromT(data.cFileName));			
 			} while(FindNextFile(hFind, &data));
 			
 			FindClose(hFind);
 		}
 		
-		hFind = FindFirstFile((path + "\\*.DcLst").c_str(), &data);
+		hFind = FindFirstFile(Text::toT(path + "\\*.DcLst").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
-				File::deleteFile(path + data.cFileName);			
+				File::deleteFile(path + Text::fromT(data.cFileName));			
 			} while(FindNextFile(hFind, &data));
 			
 			FindClose(hFind);
@@ -615,7 +615,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 		wantConnection = false;
 	} else {
 		if ((!SETTING(SOURCEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-			PlaySound(SETTING(SOURCEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+			PlaySound(Text::toT(SETTING(SOURCEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		userQueue.add(qi, aUser);
 	} 
 
@@ -687,7 +687,7 @@ static SizeMap sizeMap;
 static string utfTmp;
 
 static const string& utfEscaper(const string& x) {
-	return curDl->getUtf8() ? (utfTmp.clear(), Util::toAcp(x, utfTmp)) : x;
+	return curDl->getUtf8() ? x : (utfTmp.clear(), Text::acpToUtf8(x, utfTmp));
 }
 
 int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw() {
@@ -1006,7 +1006,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 
 			for(DirectoryItem::Iter i = dl.begin(); i != dl.end(); ++i) {
 				DirectoryItem* di = *i;
-				dirList.download(di->getName(), di->getTarget());
+				dirList.download(di->getName(), di->getTarget(), false);
 				delete di;
 			}
 		}
@@ -1020,7 +1020,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 
 void QueueManager::remove(const string& aTarget) throw() {
 	string x;
-	string temptarget;
 	{
 		Lock l(cs);
 
@@ -1035,7 +1034,6 @@ void QueueManager::remove(const string& aTarget) throw() {
 				directories.erase(q->getSources()[0]->getUser());
 			}
 
-			temptarget = q->getTempTarget();
 			if(q->getStatus() == QueueItem::STATUS_RUNNING) {
 				x = q->getTarget();
 			} else if(!q->getTempTarget().empty() && q->getTempTarget() != q->getTarget()) {
@@ -1185,6 +1183,8 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 }
 
 void QueueManager::saveQueue() throw() {
+	if(!dirty)
+		return;
 
 	Lock l(cs);
 
@@ -1196,8 +1196,8 @@ void QueueManager::saveQueue() throw() {
 		File ff(getQueueFile() + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
 		
-		f.write(SimpleXML::w1252Header);
-		f.write(STRINGLEN("<Downloads>\r\n"));
+		f.write(SimpleXML::utf8Header);
+		f.write(STRINGLEN("<Downloads Version=\"" VERSIONSTRING "\">\r\n"));
 		string tmp;
 		string b32tmp;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
@@ -1270,7 +1270,7 @@ void QueueManager::saveQueue() throw() {
 		ff.close();
 
 		File::deleteFile(getQueueFile() + ".bak");
-		CopyFile(getQueueFile().c_str(), (getQueueFile() + ".bak").c_str(), FALSE);
+		CopyFile(Text::toT(getQueueFile()).c_str(), Text::toT(getQueueFile() + ".bak").c_str(), FALSE);
 		File::deleteFile(getQueueFile());
 		File::renameFile(getQueueFile() + ".tmp", getQueueFile());
 
@@ -1300,8 +1300,6 @@ void QueueManager::loadQueue() throw() {
 		QueueLoader l;
 		SimpleXMLReader(&l).fromXML(File(getQueueFile(), File::READ, File::OPEN).read());
 		dirty = false;
-		saveQueue(); // ensure old temp file was converted
-
 	} catch(const Exception&) {
 		// ...
 	}
@@ -1337,7 +1335,8 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			if(size == 0)
 				return;
 			try {
-				target = QueueManager::checkTarget(getAttrib(attribs, sTarget, 0), size, flags);
+				const string& tgt = getAttrib(attribs, sTarget, 0);
+				target = QueueManager::checkTarget(tgt, size, flags);
 				if(target.empty())
 					return;
 			} catch(const Exception&) {
@@ -1347,7 +1346,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& verifiedBlocks = getAttrib(attribs, sVerifiedBlocks, 2);
 
 			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 3));
-			const string& tempTarget = getAttrib(attribs, sTempTarget, 4);
+			string tempTarget = getAttrib(attribs, sTempTarget, 4);
 			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 5));
 			const string& tthRoot = getAttrib(attribs, sTTH, 6);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 6));
@@ -1569,20 +1568,6 @@ void QueueManager::autoDropSource(User::Ptr& aUser)
 
     DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
 }
-
-/*void QueueManager::sendAutoSearch(Client* c)
-{
-    Lock l(cs);
-	QueueItem::StringMap& queue = fileQueue.getQueue();
-
-	for(QueueItem::StringMap::iterator i = queue.begin(); i != queue.end(); i++)
-	{
-		if(i->second->getTTH())
-		{
-			c->search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, "TTH:" + i->second->getTTH()->toBase32(), true);
-		}
-	}
-}*/
 
 /**
  * @file

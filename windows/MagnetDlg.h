@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ class CMagnetDlg : public CDialogImpl<CMagnetDlg > {
 public:
 	enum { IDD = IDD_MAGNET };
 
-	CMagnetDlg(const string& aHash, const string& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { };
+	CMagnetDlg(const tstring& aHash, const tstring& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { };
 	virtual ~CMagnetDlg() { };
 
 	BEGIN_MSG_MAP(CMagnetDlg)
@@ -51,7 +51,7 @@ public:
 	LRESULT onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRadioButton(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 private:
-	string mHash, mFileName;
+	tstring mHash, mFileName;
 	int64_t mSize;
 };
 
@@ -61,4 +61,3 @@ private:
 * @file
 * $Id$
 */
-

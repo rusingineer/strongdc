@@ -46,24 +46,24 @@ LRESULT UpdateDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctrlDownload.Attach(GetDlgItem(IDC_UPDATE_DOWNLOAD));
 	ctrlClose.Attach(GetDlgItem(IDCLOSE));
 
-	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION_CURRENT_LBL), (STRING(CURRENT_VERSION) + ":").c_str());
-	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION_LATEST_LBL), (STRING(LATEST_VERSION) + ":").c_str());
-	PostMessage(WM_SPEAKER, UPDATE_CURRENT_VERSION, (LPARAM)new string(VERSIONSTRING CZDCVERSIONSTRING));
-	PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new string(""));
-	PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new string(""));
-	ctrlDownload.SetWindowText(CSTRING(DOWNLOAD));
+	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION_CURRENT_LBL), (TSTRING(CURRENT_VERSION) + _T(":")).c_str());
+	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION_LATEST_LBL), (TSTRING(LATEST_VERSION) + _T(":")).c_str());
+	PostMessage(WM_SPEAKER, UPDATE_CURRENT_VERSION, (LPARAM)new tstring(_T(VERSIONSTRING) _T(CZDCVERSIONSTRING)));
+	PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new tstring(_T("")));
+	PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new tstring(_T("")));
+	ctrlDownload.SetWindowText(CTSTRING(DOWNLOAD));
 	ctrlDownload.EnableWindow(FALSE);
-	ctrlClose.SetWindowText(CSTRING(CLOSE));
-	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(CONNECTING_TO_SERVER) + "..."));
+	ctrlClose.SetWindowText(CTSTRING(CLOSE));
+	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(CONNECTING_TO_SERVER) + _T("...")));
 
-	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION), CSTRING(VERSION));
-	::SetWindowText(GetDlgItem(IDC_UPDATE_HISTORY), CSTRING(HISTORY));
+	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION), CTSTRING(VERSION));
+	::SetWindowText(GetDlgItem(IDC_UPDATE_HISTORY), CTSTRING(HISTORY));
 
 	hc = new HttpConnection;
 	hc->addListener(this);
 	hc->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
 
-	SetWindowText(CSTRING(UPDATE_CHECK));
+	SetWindowText(CTSTRING(UPDATE_CHECK));
 
 	m_hIcon = ::LoadIcon(_Module.get_m_hInst(), MAKEINTRESOURCE(IDR_UPDATE));
 	SetIcon(m_hIcon, FALSE);
@@ -75,19 +75,19 @@ LRESULT UpdateDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 LRESULT UpdateDlg::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if (wParam == UPDATE_CURRENT_VERSION) {
-		string* text = (string*)lParam;
+		tstring* text = (tstring*)lParam;
 		ctrlCurrentVersion.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_LATEST_VERSION) {
-		string* text = (string*)lParam;
+		tstring* text = (tstring*)lParam;
 		ctrlLatestVersion.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_STATUS) {
-		string* text = (string*)lParam;
+		tstring* text = (tstring*)lParam;
 		ctrlStatus.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_CONTENT) {
-		string* text = (string*)lParam;
+		tstring* text = (tstring*)lParam;
 		ctrlChangeLog.SetWindowText(text->c_str());
 		delete text;
 	}
@@ -95,7 +95,7 @@ LRESULT UpdateDlg::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 }
 
 LRESULT UpdateDlg::OnDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	WinUtil::openLink(downloadURL.c_str());
+	WinUtil::openLink(Text::toT(downloadURL).c_str());
 	return S_OK;
 }
 

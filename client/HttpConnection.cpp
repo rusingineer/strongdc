@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,19 +44,10 @@ void HttpConnection::downloadFile(const string& aUrl) {
 	ok = false;
 	size = -1;
 	// set download type
-	// XML addition
 	if(Util::stricmp(currentUrl.substr(currentUrl.size() - 4), ".bz2") == 0) {
-		if(Util::stricmp(currentUrl.substr(currentUrl.size() - 8), ".xml.bz2") == 0) {
-			fire(HttpConnectionListener::TypeXMLBZ2(), this);
-		} else {
-			fire(HttpConnectionListener::TypeBZ2(), this);
-		}
+		fire(HttpConnectionListener::TypeBZ2(), this);
 	} else {
-		if(Util::stricmp(currentUrl.substr(currentUrl.size() - 4), ".xml") == 0) {
-			fire(HttpConnectionListener::TypeXML(), this);
-		} else {
-			fire(HttpConnectionListener::TypeNormal(), this);
-		}
+		fire(HttpConnectionListener::TypeNormal(), this);
 	}
 
 	if(SETTING(HTTP_PROXY).empty()) {

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ class QueueFrame : public MDITabChildWindowImpl<QueueFrame, RGB(0, 0, 0), IDR_QU
 	private QueueManagerListener, public CSplitterImpl<QueueFrame>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("QueueFrame", IDR_QUEUE, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("QueueFrame"), IDR_QUEUE, 0, COLOR_3DFACE);
 
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
 		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false), PreviewAppsSize(0),
-		showTreeContainer("BUTTON", this, SHOWTREE_MESSAGE_MAP) { }
+		showTreeContainer(WC_BUTTON, this, SHOWTREE_MESSAGE_MAP) { }
 
 	virtual ~QueueFrame();
 	
@@ -127,7 +127,7 @@ public:
 	}
 
 	LRESULT onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox("Do you really want to remove this item?", APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			usingDirMenu ? removeSelectedDir() : removeSelected();
 		return 0;
 	}
@@ -140,8 +140,8 @@ public:
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-			if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox("Do you really want to remove this item?", APPNAME " " VERSIONSTRING CZDCVERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-				removeSelected();
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+			removeSelected();
 		} else if(kd->wVKey == VK_ADD){
 			// Increase Item priority
 			changePriority(true);
@@ -157,8 +157,8 @@ public:
 	LRESULT onKeyDownDirs(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-			if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox("Do you really want to remove this item?", APPNAME " " VERSIONSTRING CZDCVERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-				removeSelectedDir();
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+			removeSelectedDir();
 		} else if(kd->wVKey == VK_TAB) {
 			onTab();
 		}
@@ -225,7 +225,7 @@ private:
 			User::Ptr user;
 		};
 		struct Display : public FastAlloc<Display> {
-			string columns[COLUMN_LAST];
+			tstring columns[COLUMN_LAST];
 		};
 
 		typedef vector<SourceInfo> SourceList;
@@ -245,13 +245,13 @@ private:
 			MASK_TTH = 1 << COLUMN_TTH
 		};
 
-		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(aQI->getTarget()),
-			path(Util::getFilePath(aQI->getTarget())),
+		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(Text::toT(aQI->getTarget())),
+			path(Text::toT(Util::getFilePath(aQI->getTarget()))),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
 			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority()), FDI(FileChunksInfo::Get(aQI->getTempTarget()))
 		{ 
-			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : aQI->getTempTarget());
+			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : Text::toT(aQI->getTempTarget()));
 
 			for(QueueItem::Source::Iter i = aQI->getSources().begin(); i != aQI->getSources().end(); ++i) {
 				sources.push_back(SourceInfo(*(*i)));
@@ -265,10 +265,10 @@ private:
 
 		void update();
 
-		void remove() { QueueManager::getInstance()->remove(getTarget()); }
+		void remove() { QueueManager::getInstance()->remove(Text::fromT(getTarget())); }
 
 		// TypedListViewCtrl functions
-		const string& getText(int col) {
+		const tstring& getText(int col) {
 			return getDisplay()->columns[col];
 		}
 		static int compareItems(QueueItemInfo* a, QueueItemInfo* b, int col) {
@@ -281,7 +281,7 @@ private:
 			}
 		}
 
-		const string& getTargetFileName() { return getDisplay()->columns[COLUMN_TARGET]; }
+		const tstring& getTargetFileName() { return getDisplay()->columns[COLUMN_TARGET]; }
 
 		SourceList& getSources() { return sources; };
 		SourceList& getBadSources() { return badSources; };
@@ -309,14 +309,14 @@ private:
 			return false;
 		}
 		
-		GETSET(string, target, Target);
-		GETSET(string, path, Path);
+		GETSET(tstring, target, Target);
+		GETSET(tstring, path, Path);
 		GETSET(int64_t, size, Size);
 		GETSET(int64_t, downloadedBytes, DownloadedBytes);
 		GETSET(u_int32_t, added, Added);
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
-		GETSET(string, downloadTarget, DownloadTarget);
+		GETSET(tstring, downloadTarget, DownloadTarget);
 		GETSET(TTHValue*, tth, TTH);		
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
@@ -376,11 +376,11 @@ private:
 	typedef QueueMap::iterator QueueIter;
 	QueueMap queue;
 	
-	typedef HASH_MULTIMAP_X(string, QueueItemInfo*, noCaseStringHash, noCaseStringEq, noCaseStringLess) DirectoryMap;
+	typedef HASH_MULTIMAP_X(tstring, QueueItemInfo*, noCaseStringHash, noCaseStringEq, noCaseStringLess) DirectoryMap;
 	typedef DirectoryMap::iterator DirectoryIter;
 	typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
 	DirectoryMap directories;
-	string curDir;
+	tstring curDir;
 	
 	CriticalSection cs;
 	TypedListViewCtrl<QueueItemInfo, IDC_QUEUE> ctrlQueue;
@@ -401,8 +401,8 @@ private:
 
 	void addQueueList(const QueueItem::StringMap& l);
 	void addQueueItem(QueueItemInfo* qi, bool noSort);
-	HTREEITEM addDirectory(const string& dir, bool isFileList = false, HTREEITEM startAt = NULL);
-	void removeDirectory(const string& dir, bool isFileList = false);
+	HTREEITEM addDirectory(const tstring& dir, bool isFileList = false, HTREEITEM startAt = NULL);
+	void removeDirectory(const tstring& dir, bool isFileList = false);
 	void removeDirectories(HTREEITEM ht);
 
 	void updateQueue();
@@ -422,11 +422,11 @@ private:
 		}
 	}
 
-	bool isCurDir(const string& aDir) const { return Util::stricmp(curDir, aDir) == 0; };
+	bool isCurDir(const tstring& aDir) const { return Util::stricmp(curDir, aDir) == 0; };
 
 	void moveSelected();	
 	void moveSelectedDir();
-	void moveDir(HTREEITEM ht, const string& target);
+	void moveDir(HTREEITEM ht, const tstring& target);
 	
 	void moveNode(HTREEITEM item, HTREEITEM parent);
 
@@ -445,15 +445,12 @@ private:
 	
 	void removeSelectedDir() { removeDir(ctrlDirs.GetSelectedItem()); };
 	
-	const string& getSelectedDir() { 
+	const tstring& getSelectedDir() { 
 		HTREEITEM ht = ctrlDirs.GetSelectedItem();
-		return ht == NULL ? Util::emptyString : getDir(ctrlDirs.GetSelectedItem());
+		return ht == NULL ? Util::emptyStringT : getDir(ctrlDirs.GetSelectedItem());
 	};
 	
-	const string& getDir(HTREEITEM ht) { dcassert(ht != NULL); return *((string*)ctrlDirs.GetItemData(ht)); };
-
-	bool isItemCountAtLeast(HTREEITEM ht, unsigned int minItemCount);
-	bool isItemCountAtLeastRecursive(HTREEITEM ht, unsigned int& minItemCount);
+	const tstring& getDir(HTREEITEM ht) { dcassert(ht != NULL); return *((tstring*)ctrlDirs.GetItemData(ht)); };
 
 	virtual void on(QueueManagerListener::Added, QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::Moved, QueueItem* aQI) throw();

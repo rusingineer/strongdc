@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -33,35 +51,35 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = LVCFMT_LEFT;
-		ctrlHubs.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlHubs.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlHubs.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
 	
 	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_CONNECT);
-	ctrlConnect.SetWindowText(CSTRING(CONNECT));
+	ctrlConnect.SetWindowText(CTSTRING(CONNECT));
 	ctrlConnect.SetFont(WinUtil::font);
 
 	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REMOVE);
-	ctrlRemove.SetWindowText(CSTRING(REMOVE));
+	ctrlRemove.SetWindowText(CTSTRING(REMOVE));
 	ctrlRemove.SetFont(WinUtil::font);
 
 	ctrlRemoveAll.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REMOVE_ALL);
-	ctrlRemoveAll.SetWindowText(CSTRING(REMOVE_ALL));
+	ctrlRemoveAll.SetWindowText(CTSTRING(REMOVE_ALL));
 	ctrlRemoveAll.SetFont(WinUtil::font);
 
 	HubManager::getInstance()->addListener(this);
 	updateList(HubManager::getInstance()->getRecentHubs());
 	
 	hubsMenu.CreatePopupMenu();
-	hubsMenu.AppendMenu(MF_STRING, IDC_CONNECT, CSTRING(CONNECT));
-	hubsMenu.AppendMenu(MF_STRING, IDC_ADD, CSTRING(ADD_TO_FAVORITES));
-	hubsMenu.AppendMenu(MF_STRING, IDC_EDIT, CSTRING(PROPERTIES));
-	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
-	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE_ALL, CSTRING(REMOVE_ALL));
+	hubsMenu.AppendMenu(MF_STRING, IDC_CONNECT, CTSTRING(CONNECT));
+	hubsMenu.AppendMenu(MF_STRING, IDC_ADD, CTSTRING(ADD_TO_FAVORITES));
+	hubsMenu.AppendMenu(MF_STRING, IDC_EDIT, CTSTRING(PROPERTIES));
+	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+	hubsMenu.AppendMenu(MF_STRING, IDC_REMOVE_ALL, CTSTRING(REMOVE_ALL));
 	hubsMenu.SetMenuDefaultItem(IDC_CONNECT);
 
 	bHandled = FALSE;
@@ -74,7 +92,7 @@ LRESULT RecentHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 
 	if(item->iItem != -1) {
 		RecentHubEntry* entry = (RecentHubEntry*)ctrlHubs.GetItemData(item->iItem);
-		HubFrame::openWindow(entry->getServer());
+		HubFrame::openWindow(Text::toT(entry->getServer()));
 	}
 	return 0;
 }
@@ -85,7 +103,7 @@ LRESULT RecentHubsFrame::onEnter(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHa
 
 	if(item != -1) {
 		RecentHubEntry* entry = (RecentHubEntry*)ctrlHubs.GetItemData(item);
-		HubFrame::openWindow(entry->getName(), entry->getServer(), entry->getDescription(), entry->getUsers());
+		HubFrame::openWindow(Text::toT(entry->getName()), Text::toT(entry->getServer()), Text::toT(entry->getDescription()), Text::toT(entry->getUsers()));
 	}
 
 	return 0;
@@ -96,24 +114,24 @@ LRESULT RecentHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	int i = -1;
 	while( (i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		RecentHubEntry* entry = (RecentHubEntry*)ctrlHubs.GetItemData(i);
-		HubFrame::openWindow(entry->getServer());
+		HubFrame::openWindow(Text::toT(entry->getServer()));
 	}
 	return 0;
 }
 
 LRESULT RecentHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 
-	char buf[256];
+	TCHAR buf[256];
 	
 	if(ctrlHubs.GetSelectedCount() == 1) {
 		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
 		FavoriteHubEntry e;
 		ctrlHubs.GetItemText(i, COLUMN_NAME, buf, 256);
-		e.setName(buf);
+		e.setName(Text::fromT(buf));
 		ctrlHubs.GetItemText(i, COLUMN_DESCRIPTION, buf, 256);
-		e.setDescription(buf);
+		e.setDescription(Text::fromT(buf));
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
-		e.setServer(buf);
+		e.setServer(Text::fromT(buf));
 		HubManager::getInstance()->addFavorite(e);
 	}
 	return 0;
@@ -186,18 +204,14 @@ LRESULT RecentHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		RecentHubEntry* r = (RecentHubEntry*)ctrlHubs.GetItemData(i);
 		dcassert(r != NULL);
 		LineDlg dlg;
-		dlg.description = STRING(DESCRIPTION);
-		dlg.title = r->getName();
-		dlg.line = r->getDescription();
+		dlg.description = TSTRING(DESCRIPTION);
+		dlg.title = Text::toT(r->getName());
+		dlg.line = Text::toT(r->getDescription());
 		if(dlg.DoModal(m_hWnd) == IDOK) {
-			r->setDescription(dlg.line);
-			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, r->getDescription().c_str());
+			r->setDescription(Text::fromT(dlg.line));
+			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, Text::toT(r->getDescription()).c_str());
 			HubManager::getInstance()->recentsave();
 		}
 	}
 	return 0;
 }
-
-
-
-

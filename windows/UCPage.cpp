@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include "../client/SettingsManager.h"
 #include "../client/HubManager.h"
+#include "WinUtil.h"
 
 PropPage::TextItem UCPage::texts[] = {
 	{ IDC_MOVE_UP, ResourceManager::MOVE_UP },
@@ -49,9 +50,9 @@ LRESULT UCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlCommands.Attach(GetDlgItem(IDC_MENU_ITEMS));
 	ctrlCommands.GetClientRect(rc);
 
-	ctrlCommands.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/4, 0);
-	ctrlCommands.InsertColumn(1, CSTRING(SETTINGS_COMMAND), LVCFMT_LEFT, rc.Width()*2 / 4, 1);
-	ctrlCommands.InsertColumn(2, CSTRING(HUB), LVCFMT_LEFT, rc.Width() / 4, 2);
+	ctrlCommands.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/4, 0);
+	ctrlCommands.InsertColumn(1, CTSTRING(SETTINGS_COMMAND), LVCFMT_LEFT, rc.Width()*2 / 4, 1);
+	ctrlCommands.InsertColumn(2, CTSTRING(HUB), LVCFMT_LEFT, rc.Width() / 4, 2);
 	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
 	// Do specialized reading here
@@ -71,7 +72,7 @@ LRESULT UCPage::onAddMenu(WORD , WORD , HWND , BOOL& ) {
 
 	if(dlg.DoModal() == IDOK) {
 		addEntry(HubManager::getInstance()->addUserCommand(dlg.type, dlg.ctx,
-			0, dlg.name, dlg.command, dlg.hub), ctrlCommands.GetItemCount());
+			0, Text::fromT(dlg.name), Text::fromT(dlg.command), Text::fromT(dlg.hub)), ctrlCommands.GetItemCount());
 	}
 	return 0;
 }
@@ -85,20 +86,20 @@ LRESULT UCPage::onChangeMenu(WORD , WORD , HWND , BOOL& ) {
 		CommandDlg dlg;
 		dlg.type = uc.getType();
 		dlg.ctx = uc.getCtx();
-		dlg.name = uc.getName();
-		dlg.command = uc.getCommand();
-		dlg.hub = uc.getHub();
+		dlg.name = Text::toT(uc.getName());
+		dlg.command = Text::toT(uc.getCommand());
+		dlg.hub = Text::toT(uc.getHub());
 
 		if(dlg.DoModal() == IDOK) {
 			if(dlg.type == UserCommand::TYPE_SEPARATOR)
-				ctrlCommands.SetItemText(sel, 0, CSTRING(SEPARATOR));
+				ctrlCommands.SetItemText(sel, 0, CTSTRING(SEPARATOR));
 			else
 				ctrlCommands.SetItemText(sel, 0, dlg.name.c_str());
 			ctrlCommands.SetItemText(sel, 1, dlg.command.c_str());
 			ctrlCommands.SetItemText(sel, 2, dlg.hub.c_str());
-			uc.setName(dlg.name);
-			uc.setCommand(dlg.command);
-			uc.setHub(dlg.hub);
+			uc.setName(Text::fromT(dlg.name));
+			uc.setCommand(Text::fromT(dlg.command));
+			uc.setHub(Text::fromT(dlg.hub));
 			uc.setType(dlg.type);
 			uc.setCtx(dlg.ctx);
 			HubManager::getInstance()->updateUserCommand(uc);
@@ -151,13 +152,13 @@ LRESULT UCPage::onMoveDown(WORD , WORD , HWND , BOOL& ) {
 }
 
 void UCPage::addEntry(const UserCommand& uc, int pos) {
-	StringList lst;
+	TStringList lst;
 	if(uc.getType() == UserCommand::TYPE_SEPARATOR)
-		lst.push_back(STRING(SEPARATOR));
+		lst.push_back(TSTRING(SEPARATOR));
 	else
-		lst.push_back(uc.getName());
-	lst.push_back(uc.getCommand());
-	lst.push_back(uc.getHub());
+		lst.push_back(Text::toT(uc.getName()));
+	lst.push_back(Text::toT(uc.getCommand()));
+	lst.push_back(Text::toT(uc.getHub()));
 	ctrlCommands.insert(pos, lst, 0, (LPARAM)uc.getId());
 }
 
@@ -165,3 +166,7 @@ void UCPage::write() {
 	PropPage::write((HWND)*this, items);
 }
 
+/**
+ * @file
+ * $Id$
+ */

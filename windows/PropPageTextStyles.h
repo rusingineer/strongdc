@@ -14,10 +14,12 @@ public:
 	PropPageTextStyles(SettingsManager *s) : PropPage(s) { 
 		fg = 0;
 		bg = 0;
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_TEXT_STYLES)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES)).c_str());
 		SetTitle(title);
 	};
-	virtual ~PropPageTextStyles() { delete[] title;};
+	virtual ~PropPageTextStyles() {
+		free(title);
+	};
 
 	BEGIN_MSG_MAP_EX(PropPageTextStyles)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -64,7 +66,7 @@ public:
 
 	void setForeColor(CEdit& cs, const COLORREF& cr) {
 		HBRUSH hBr = CreateSolidBrush(cr);
-		SetProp(cs.m_hWnd, "fillcolor", hBr);
+		SetProp(cs.m_hWnd, _T("fillcolor"), hBr);
 		cs.Invalidate();
 		cs.RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW | RDW_FRAME);
 	}
@@ -82,10 +84,10 @@ private:
 		TextStyleSettings() /*: ChatCtrl()*/ { };
 		~TextStyleSettings() { };
 
-	void Init( PropPageTextStyles *pParent, SettingsManager *pSM, 
-               LPCTSTR sText, LPCTSTR sPreviewText,
+	void Init(PropPageTextStyles *pParent, SettingsManager *pSM, 
+               LPCSTR sText, LPCSTR sPreviewText,
                SettingsManager::IntSetting iBack, SettingsManager::IntSetting iFore, 
-               SettingsManager::IntSetting iBold, SettingsManager::IntSetting iItalic );
+               SettingsManager::IntSetting iBold, SettingsManager::IntSetting iItalic);
 	void LoadSettings();
 	void SaveSettings();
 	void EditBackColor();
@@ -118,10 +120,7 @@ protected:
 
 	static clrs colours[];
 
-//	vector<TextFormat> formatting;
-//	UINT SelectedFormat;
-
-	char* title;
+	TCHAR* title;
 	TextStyleSettings TextStyles[ TS_LAST ];
 	CListBox m_lsbList;
 	ChatCtrl m_Preview;

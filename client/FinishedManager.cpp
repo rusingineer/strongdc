@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 {
 		if(!d->isSet(Download::FLAG_USER_LIST))	
 		{	if((!SETTING(FINISHFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-					PlaySound(SETTING(FINISHFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+		PlaySound(Text::toT(SETTING(FINISHFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		}
 		
 		if(d->isSet(Download::FLAG_MP3_INFO)) {
@@ -142,7 +142,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 
 			string strFile = d->getTarget();
 			HANDLE hFile = NULL;
-			if ((hFile = CreateFile(strFile.c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL))
+			if ((hFile = CreateFile(Text::utf8ToWide(strFile).c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL))
 		!= INVALID_HANDLE_VALUE)
 	{
 		int nNextSearch = 0;
@@ -316,20 +316,19 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 {
 	if(!u->isSet(Download::FLAG_USER_LIST))	{
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
-			PlaySound(SETTING(UPLOADFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
-	if(!u->isSet(Upload::FLAG_TTH_LEAVES)) {
-		if(!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) {
-			FinishedItem *item = new FinishedItem(
-				u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
-				u->getUserConnection()->getUser()->getLastHubName(),
-				u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
-			{
-				Lock l(cs);
-				uploads.push_back(item);
-			}
-			fire(FinishedManagerListener::AddedUl(), item);
+	if((!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && u->isSet(Upload::FLAG_TTH_LEAVES) == false) {
+		FinishedItem *item = new FinishedItem(
+			u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
+			u->getUserConnection()->getUser()->getLastHubName(),
+			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
+		{
+			Lock l(cs);
+			uploads.push_back(item);
 		}
+
+		fire(FinishedManagerListener::AddedUl(), item);
 	}
 }
 

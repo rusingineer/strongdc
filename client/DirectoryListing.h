@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,9 +136,9 @@ public:
 	void load(const string& i, bool doAdl);
 	void loadXML(const string& xml, bool doAdl);
 
-	void download(const string& aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void download(Directory* aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void download(File* aFile, const string& aTarget, bool view = false, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3(File* aFile, const string& aTarget);
 
 	string getPath(Directory* d);	
@@ -146,7 +146,6 @@ public:
 
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
-
 	Directory* getRoot() { return root; };
 	int64_t getJunkSize() { return root->getJunkSize(); };
 

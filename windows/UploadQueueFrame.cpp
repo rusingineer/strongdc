@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
@@ -45,7 +63,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	// column names, sizes
 	for (int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_TRANSFERRED || j == COLUMN_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 		
 	ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -58,27 +76,27 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	ctrlQueued.SetBkColor(WinUtil::bgColor);
 	ctrlQueued.SetTextColor(WinUtil::textColor);
 	
-	ctrlShowTree.Create(ctrlStatus.m_hWnd, rcDefault, "+/-", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	ctrlShowTree.Create(ctrlStatus.m_hWnd, rcDefault, _T("+/-"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowTree.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlShowTree.SetCheck(showTree);
 	showTreeContainer.SubclassWindow(ctrlShowTree.m_hWnd);
 
 	// Create context menu
 	grantMenu.CreatePopupMenu();
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
 
 	contextMenu.CreatePopupMenu();
-	contextMenu.AppendMenu(MF_STRING, IDC_GETLIST, CSTRING(GET_FILE_LIST));
-	contextMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CSTRING(GRANT_SLOTS_MENU));
-	contextMenu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CSTRING(SEND_PRIVATE_MESSAGE));
-	contextMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CSTRING(ADD_TO_FAVORITES));
+	contextMenu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+	contextMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+	contextMenu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+	contextMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
 	contextMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
     memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
@@ -100,6 +118,9 @@ LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
+		ctrlList.DeleteAllItems();
+		ctrlQueued.DeleteAllItems();
+		UQFUsers.clear();
 		SettingsManager::getInstance()->set(SettingsManager::UPLOADQUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::UPLOADQUEUEFRAME_ORDER, 
 			SettingsManager::UPLOADQUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
@@ -331,9 +352,10 @@ LRESULT UploadQueueFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, H
 void UploadQueueFrame::LoadAll() {
 	ctrlList.DeleteAllItems();
 	ctrlQueued.DeleteAllItems();
-	for(User::Iter i = UQFUsers.end(); i != UQFUsers.begin(); --i) {
+/*	for(User::Iter i = UQFUsers.end(); i != UQFUsers.begin(); --i) {
 		UQFUsers.erase(i);
-	}
+	}*/
+	UQFUsers.clear();
 
 	// Load queue
 	UploadQueueItem::UserMap users = UploadManager::getInstance()->getQueue();
@@ -341,7 +363,7 @@ void UploadQueueFrame::LoadAll() {
 	ctrlQueued.SetRedraw(FALSE);
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		UQFUsers.push_back(uit->first);
-		ctrlQueued.InsertItem((uit->first->getNick()+" ("+uit->first->getLastHubName()+")").c_str(), TVI_ROOT, TVI_LAST);
+		ctrlQueued.InsertItem(Text::toT(uit->first->getNick()+" ("+uit->first->getLastHubName()+")").c_str(), TVI_ROOT, TVI_LAST);
 		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
 			AddFile(*i);
 		}
@@ -352,8 +374,6 @@ void UploadQueueFrame::LoadAll() {
 	ctrlQueued.Invalidate(); 
 	updateStatus();
 }
-
-//void UploadQueueFrame::on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) {
 
 void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
@@ -366,9 +386,9 @@ void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 	}
 
 	while(nickNode) {
-		char nickBuf[512];
+		TCHAR nickBuf[512];
 		ctrlQueued.GetItemText(nickNode, nickBuf, 511);
-		if ((aUser->getNick()+" ("+aUser->getLastHubName()+")") == string(nickBuf)) {
+		if ((aUser->getNick()+" ("+aUser->getLastHubName()+")") == Text::fromT(nickBuf)) {
 			ctrlQueued.DeleteItem(nickNode);
 			break;
 		}
@@ -382,11 +402,11 @@ LRESULT UploadQueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL
 
 	while(nickNode) {
 		ctrlList.DeleteAllItems();
-		char nickBuf[256];
+		TCHAR nickBuf[256];
 		ctrlQueued.GetItemText(nickNode, nickBuf, 255);
 		UploadQueueItem::UserMap users = UploadManager::getInstance()->getQueue();
 		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
-			if((uit->first->getNick()+" ("+uit->first->getLastHubName()+")") == string(nickBuf)) {
+			if((uit->first->getNick()+" ("+uit->first->getLastHubName()+")") == Text::fromT(nickBuf)) {
 				ctrlList.SetRedraw(FALSE);
 				ctrlQueued.SetRedraw(FALSE);
 				for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
@@ -407,15 +427,6 @@ LRESULT UploadQueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL
 
 void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) { 
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
-
-	HTREEITEM selNode = ctrlQueued.GetSelectedItem();
-	char selBuf[256];
-	string selNick;
-	if(selNode) {
-		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		selNick = selBuf;
-	} else
-		selNick = "";
 	bool add = true;
 
 	if(nickNode) {
@@ -428,10 +439,10 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 	}
 	if(add) {
 			UQFUsers.push_back(aUQI->User);
-			nickNode = ctrlQueued.InsertItem((aUQI->User->getNick()+" ("+aUQI->User->getLastHubName()+")").c_str(), TVI_ROOT, TVI_LAST);
+			nickNode = ctrlQueued.InsertItem(Text::toT(aUQI->User->getNick()+" ("+aUQI->User->getLastHubName()+")").c_str(), TVI_ROOT, TVI_LAST);
 	}	
 	aUQI->update();
-	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, WinUtil::getIconIndex(aUQI->FileName));
+	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, WinUtil::getIconIndex(Text::toT(aUQI->FileName)));
 }
 
 HTREEITEM UploadQueueFrame::GetParentItem() {
@@ -453,13 +464,13 @@ void UploadQueueFrame::updateStatus() {
 		bool u = false;
 
 		for(int i = 1; i < 3; i++) {
-			int w = WinUtil::getTextWidth(tmp[i-1], ctrlStatus.m_hWnd);
+			int w = WinUtil::getTextWidth(Text::toT(tmp[i-1]), ctrlStatus.m_hWnd);
 				
 			if(statusSizes[i] < w) {
 				statusSizes[i] = w + 50;
 				u = true;
 			}
-			ctrlStatus.SetText(i+1, tmp[i-1].c_str());
+			ctrlStatus.SetText(i+1, Text::toT(tmp[i-1]).c_str());
 		}
 
 		if(u)
@@ -469,27 +480,24 @@ void UploadQueueFrame::updateStatus() {
 
 
 void UploadQueueItem::update() {
-	columns[COLUMN_FILE] = FileName;
-	columns[COLUMN_PATH] = Path;
-	columns[COLUMN_NICK] = User->getNick();
-	columns[COLUMN_HUB] = User->getLastHubName();
-	columns[COLUMN_TRANSFERRED] = Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)";
-	columns[COLUMN_SIZE] = Util::formatBytes(size);
-	columns[COLUMN_ADDED] = Util::formatTime("%Y-%m-%d %H:%M", iTime);
-	columns[COLUMN_WAITING] = Util::formatSeconds(GET_TIME() - iTime);
+	columns[COLUMN_FILE] = Text::toT(FileName);
+	columns[COLUMN_PATH] = Text::toT(Path);
+	columns[COLUMN_NICK] = Text::toT(User->getNick());
+	columns[COLUMN_HUB] = Text::toT(User->getLastHubName());
+	columns[COLUMN_TRANSFERRED] = Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");
+	columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
+	columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime));
+	columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(GET_TIME() - iTime));
 }
 
 LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == REMOVE_ITEM) {
-		UploadQueueItem* i = (UploadQueueItem*)lParam;
-		ctrlList.deleteItem(i);
+		ctrlList.deleteItem((UploadQueueItem*)lParam);
 	} else if(wParam == REMOVE) {
-		UploadQueueItem* i = (UploadQueueItem*)lParam;
-		RemoveUser(i->User);
-		delete i;
+		RemoveUser(((UserInfoBase*)lParam)->user);
+		delete (UserInfoBase*)lParam;
 	} else if(wParam == ADD_ITEM) {
-		UploadQueueItem* i = (UploadQueueItem*)lParam;
-		AddFile(i);
+		AddFile((UploadQueueItem*)lParam);
 	}
 	return 0;
 }
@@ -513,7 +521,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_TRANSFERRED) {
 			// draw something nice...
-			char buf[256];
+				TCHAR buf[256];
 				COLORREF barBase;
 				if (SETTING(PROGRESS_OVERRIDE_COLORS)) {
 					barBase = SETTING(UPLOAD_BAR_COLOR);
@@ -557,7 +565,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				bih.biClrImportant = 0;
 				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
 				if (hBmp == NULL)
-					MessageBox(Util::translateError(GetLastError()).c_str(), "ERROR", MB_OK);
+					MessageBox(Text::toT(Util::translateError(GetLastError())).c_str(), _T("ERROR"), MB_OK);
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 
@@ -573,9 +581,9 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				LONG left = rc.left;
 				int64_t w = rc.Width();
 				// draw start part
-				string per = buf;
+				tstring per = buf;
 				per = per.substr(per.find('(')+1, per.find('%')-(per.find('(')+2));
-				double percent = Util::toDouble(per) / 100;
+				double percent = Util::toDouble(Text::fromT(per)) / 100;
 				//double percent = (ii->getSize() >0) ? (double)((double)ii->getPos()) / ((double)ii->getSize()) : 0;
 				percent = (percent < 0)? 0 : percent;
 				
@@ -603,13 +611,13 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				}
 			
 				SetTextColor(dc, textcolor);
-                ::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+                ::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 				rc2.left = rc2.right;
 				rc2.right = right;
 
 				SetTextColor(dc, WinUtil::textColor);
-				::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+				::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 				SelectObject(dc, oldFont);
 				

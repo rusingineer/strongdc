@@ -38,7 +38,7 @@ public:
 	FinishedMP3Frame() : totalBytes(0), totalTime(0), closed(false) { };
 	virtual ~FinishedMP3Frame() { };
 
-	DECLARE_FRAME_WND_CLASS_EX("FinishedMP3Frame", IDR_FINISHED_MP3, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedMP3Frame"), IDR_FINISHED_MP3, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -155,8 +155,8 @@ private:
 	static int columnIndexes[COLUMN_LAST];
 	
 	void updateStatus() {
-		ctrlStatus.SetText(1, Util::formatBytes(totalBytes).c_str());
-		ctrlStatus.SetText(2, (Util::formatBytes((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + "/s").c_str());
+		ctrlStatus.SetText(1, Text::toT(Util::formatBytes(totalBytes)).c_str());
+		ctrlStatus.SetText(2, Text::toT(Util::formatBytes((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + "/s").c_str());
 	}
 
 	void updateList(const FinishedMP3Item::List& fl) {

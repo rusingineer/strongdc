@@ -139,7 +139,7 @@ struct SharedFileHandle : CriticalSection
 
 	SharedFileHandle(const string& name)
     {
-		handle = ::CreateFile(name.c_str(), 
+		handle = ::CreateFile(Text::utf8ToWide(name).c_str(), 
 						GENERIC_WRITE | GENERIC_READ, 
 						FILE_SHARE_READ, 
 						NULL, 
@@ -185,7 +185,7 @@ public:
 
 			// only work for WinXP
 			SetFileValidDataFunc _SetFileValidData = NULL;
-			HMODULE hModule = GetModuleHandle("kernel32");
+			HMODULE hModule = GetModuleHandle(_T("kernel32"));
 			if(hModule)
 				_SetFileValidData = (SetFileValidDataFunc)GetProcAddress(hModule, "SetFileValidData");
 

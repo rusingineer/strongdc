@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,10 +49,11 @@ public:
 		COLUMN_STRING = COLUMN_FIRST,
 		COLUMN_COUNT,
 		COLUMN_USERS,
+		COLUMN_TIME,
 		COLUMN_LAST
 	};
 
-	DECLARE_FRAME_WND_CLASS_EX("SpyFrame", IDR_SPY, 0, COLOR_3DFACE)
+	DECLARE_FRAME_WND_CLASS_EX(_T("SpyFrame"), IDR_SPY, 0, COLOR_3DFACE)
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
 
@@ -120,7 +121,7 @@ private:
 	int total;
 	int perSecond[AVG_TIME];
 	int cur;
-	string searchString;
+	tstring searchString;
 	
 	bool closed;
 	

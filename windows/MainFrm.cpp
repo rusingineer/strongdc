@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@
 #include "../client/StringTokenizer.h"
 #include "../client/SimpleXML.h"
 #include "../client/ShareManager.h"
+#include "../client/LogManager.h"
 #include "../client/cvsversion.h"
 #include "../client/WebServerManager.h"
 
@@ -70,12 +71,12 @@ bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
-	lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-	closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyString)
-	{ 
+lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
+closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT)
+{ 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
-	};
+};
 
 MainFrame::~MainFrame() {
 	m_CmdBar.m_hImageList = NULL;
@@ -137,15 +138,15 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		m_hWnd, SERVER_SOCKET_MESSAGE, FD_ACCEPT);
  	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSocket(),m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
 
-	trayMessage = RegisterWindowMessage("TaskbarCreated");
+	trayMessage = RegisterWindowMessage(_T("TaskbarCreated"));
 
 	TimerManager::getInstance()->start();
 
 	// Set window name
 #ifdef isCVS
-	SetWindowText(APPNAME " " VERSIONSTRING "" CZDCVERSIONSTRING CVSVERSION);
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(CVSVERSION));
 #else
-	SetWindowText(APPNAME " " VERSIONSTRING "" CZDCVERSIONSTRING);
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING));
 #endif
 
 	// Load images
@@ -207,7 +208,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	ctrlStatus.SetSimple(FALSE);
 	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	ctrlStatus.SetParts(10, w);
-	statusSizes[0] = WinUtil::getTextWidth(STRING(AWAY), ::GetDC(ctrlStatus.m_hWnd)); // for "AWAY" segment
+	statusSizes[0] = WinUtil::getTextWidth(TSTRING(AWAY), ::GetDC(ctrlStatus.m_hWnd)); // for "AWAY" segment
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
@@ -238,13 +239,13 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	pLoop->AddIdleHandler(this);
 
 	trayMenu.CreatePopupMenu();
-	trayMenu.AppendMenu(MF_STRING, IDC_TRAY_SHOW, CSTRING(MENU_SHOW));
-	trayMenu.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CSTRING(MENU_OPEN_DOWNLOADS_DIR));
+	trayMenu.AppendMenu(MF_STRING, IDC_TRAY_SHOW, CTSTRING(MENU_SHOW));
+	trayMenu.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
 	trayMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	trayMenu.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CSTRING(MENU_REFRESH_FILE_LIST));
+	trayMenu.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
 	trayMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	trayMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, CSTRING(MENU_ABOUT));
-	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CSTRING(MENU_EXIT));
+	trayMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
+	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
 	if(BOOLSETTING(GET_UPDATE_INFO)) {
 		c->addListener(this);
@@ -253,7 +254,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	SettingsManager::DDList d = SettingsManager::getInstance()->getDownloadDirs();
 	for(SettingsManager::DDList::iterator i = d.begin(); i != d.end(); ++i) {
-		WinUtil::addLastDir(i->dir);
+		WinUtil::addLastDir(Text::toT(i->dir));
 	}
 
 	if(BOOLSETTING(OPEN_PUBLIC))
@@ -279,7 +280,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	PostMessage(WM_SPEAKER, PARSE_COMMAND_LINE);
 
-	Util::ensureDirectory(SETTING(LOG_DIRECTORY));
+	File::ensureDirectory(SETTING(LOG_DIRECTORY));
 
 	if (CZDCLib::isXp()) {
 		normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME_XP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -348,7 +349,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_PictureWindow.SubclassWindow(m_hWndMDIClient);
 	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
 	currentPic = SETTING(BACKGROUND_IMAGE);
-	m_PictureWindow.Load(currentPic.c_str());
+	m_PictureWindow.Load(Text::toT(currentPic).c_str());
 	// We want to pass this one on to the splitter...hope it get's there...
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 
@@ -378,9 +379,9 @@ void MainFrame::startSocket() {
 				if(SETTING(IN_PORT) == lastPort || (firstPort == newPort)) {
 					// Changing default didn't change port, a fixed port must be in use...(or we
 					// tried all ports
-					char* buf = new char[STRING(PORT_IS_BUSY).size() + 8];
-					sprintf(buf, CSTRING(PORT_IS_BUSY), SETTING(IN_PORT));
-					MessageBox(buf, APPNAME " " VERSIONSTRING, MB_ICONSTOP | MB_OK);
+					TCHAR* buf = new TCHAR[STRING(PORT_IS_BUSY).size() + 8];
+					_stprintf(buf, CTSTRING(PORT_IS_BUSY), SETTING(IN_PORT));
+					MessageBox(buf, _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 					delete[] buf;
 					break;
 				}
@@ -408,7 +409,7 @@ HWND MainFrame::createToolbar() {
 		ctrlToolbar.DeleteButton(0);
 
 	ctrlToolbar.SetButtonStructSize();
-	StringTokenizer t(SETTING(TOOLBAR), ',');
+	StringTokenizer<string> t(SETTING(TOOLBAR), ',');
 	StringList& l = t.getTokens();
 	
 	for(StringList::const_iterator k = l.begin(); k != l.end(); ++k) {
@@ -439,20 +440,20 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		
 	if(wParam == DOWNLOAD_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		checkFileList(i->file, i->user);
+		checkFileList(Text::fromT(i->file), i->user);
 		DirectoryListingFrame::openWindow(i->file, i->user);
 		delete i;
 	} else if(wParam == CHECK_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		checkFileList(i->file, i->user);
+		checkFileList(Text::fromT(i->file), i->user);
 		delete i;
 	} else if(wParam == VIEW_FILE_AND_DELETE) {
-		string* file = (string*)lParam;
+		tstring* file = (tstring*)lParam;
 		TextFrame::openWindow(*file);
-		File::deleteFile(*file);
+		File::deleteFile(Text::fromT(*file));
 		delete file;
 	} else if(wParam == STATS) {
-		StringList& str = *(StringList*)lParam;
+		TStringList& str = *(TStringList*)lParam;
 		if(ctrlStatus.IsWindow()) {
 			HDC dc = ::GetDC(ctrlStatus.m_hWnd);
 			bool u = false;
@@ -476,17 +477,17 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 	} else if(wParam == PARSE_COMMAND_LINE) {
 		parseCommandLine(GetCommandLine());
 	} else if(wParam == STATUS_MESSAGE) {
-		string* msg = (string*)lParam;
+		tstring* msg = (tstring*)lParam;
 		if(ctrlStatus.IsWindow()) {
-			string line = "[" + Util::getShortTimeString() + "] " + *msg;
+			tstring line = Text::toT("[" + Util::getShortTimeString() + "] ") + *msg;
 
 			ctrlStatus.SetText(0, line.c_str());
 			while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
 				lastLinesList.erase(lastLinesList.begin());
-			if (line.find('\r') == string::npos) {
+			if (line.find(_T('\r')) == string::npos) {
 				lastLinesList.push_back(line);
 			} else {
-				lastLinesList.push_back(line.substr(0, line.find('\r')));
+				lastLinesList.push_back(line.substr(0, line.find(_T('\r'))));
 			}
 		}
 		delete msg;
@@ -501,9 +502,9 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				}
 				if (DownloadManager::getInstance()->getActiveDownloads() > 0) {
 					iCurrentShutdownTime = iSec;
-					ctrlStatus.SetText(9, string("").c_str());
+					ctrlStatus.SetText(9, _T(""));
 				} else {
-					ctrlStatus.SetText(9, string(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
+					ctrlStatus.SetText(9, Text::toT(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
 						bDidShutDown = CZDCLib::shutDown(SETTING(SHUTDOWN_ACTION));
@@ -511,8 +512,8 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 							// Should we go faster here and force termination?
 							// We "could" do a manual shutdown of this app...
 						} else {
-							ctrlStatus.SetText(0, CSTRING(FAILED_TO_SHUTDOWN));
-							ctrlStatus.SetText(9, "");
+							ctrlStatus.SetText(0, CTSTRING(FAILED_TO_SHUTDOWN));
+							ctrlStatus.SetText(9, _T(""));
 						}
 						// We better not try again. It WON'T work...
 						bShutdown = false;
@@ -522,7 +523,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		} else {
 			if (ctrlStatus.IsWindow()) {
 				if(isShutdownStatus) {
-					ctrlStatus.SetText(9, "");
+					ctrlStatus.SetText(9, _T(""));
 					ctrlStatus.SetIcon(9, NULL);
 					isShutdownStatus = false;
 				}
@@ -530,28 +531,29 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		}
 	} else if(wParam == SHOW_POPUP) {
 		Popup* msg = (Popup*)lParam;
-		PopupManager::getInstance()->Show(msg->Message, msg->Title, msg->Icon);
+		PopupManager::getInstance()->Show(Text::fromT(msg->Message), Text::fromT(msg->Title), msg->Icon);
 		delete msg;
 	}
+
 	return 0;
 }
 
-void MainFrame::parseCommandLine(const string& cmdLine)
+void MainFrame::parseCommandLine(const tstring& cmdLine)
 {
 	string::size_type i = 0;
 	string::size_type j;
 
-	if( (j = safestring::SafeFind(cmdLine,"dchub://", i)) != string::npos) {
+	if( (j = cmdLine.find(_T("dchub://"), i)) != string::npos) {
 		WinUtil::parseDchubUrl(cmdLine.substr(j));
 		}
-	if( (j = cmdLine.find("magnet:?", i)) != string::npos) {
+	if( (j = cmdLine.find(_T("magnet:?"), i)) != string::npos) {
 		WinUtil::parseMagnetUri(cmdLine.substr(j));
 	}
 }
 
 LRESULT MainFrame::onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	string cmdLine = (LPCSTR) (((COPYDATASTRUCT *)lParam)->lpData);
-	parseCommandLine(Util::getAppName() + " " + cmdLine);
+	tstring cmdLine = (LPCTSTR) (((COPYDATASTRUCT *)lParam)->lpData);
+	parseCommandLine(Text::toT(Util::getAppName() + " ") + cmdLine);
 	return true;
 }
 
@@ -678,7 +680,7 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 				if(xml.findChild("Message")) {
 						if(url.empty()) {
 					const string& msg = xml.getChildData();
-							MessageBox(msg.c_str(), title.c_str(), MB_OK);
+							MessageBox(Text::toT(msg).c_str(), Text::toT(title).c_str(), MB_OK);
 						} else {
 							string msg = xml.getChildData() + "\r\n" + STRING(OPEN_DOWNLOAD_PAGE);
 							UpdateDlg dlg;
@@ -690,7 +692,7 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 				if(xml.findChild("VeryOldVersion")) {
 					if(atof(xml.getChildData().c_str()) >= VERSIONFLOAT) {
 						string msg = xml.getChildAttrib("Message", "Your version of StrongDC++ contains a serious bug that affects all users of the DC network or the security of your computer.");
-						MessageBox((msg + "\r\nPlease get a new one at " + url).c_str());
+						MessageBox(Text::toT(msg + "\r\nPlease get a new one at " + url).c_str());
 						oldshutdown = true;
 						PostMessage(WM_CLOSE);
 					}
@@ -702,7 +704,7 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 						double v = atof(xml.getChildAttrib("Version").c_str());
 						if(v == VERSIONFLOAT) {
 							string msg = xml.getChildAttrib("Message", "Your version of DC++ contains a serious bug that affects all users of the DC network or the security of your computer.");
-							MessageBox((msg + "\r\nPlease get a new one at " + url).c_str());
+						MessageBox(Text::toT(msg + "\r\nPlease get a new one at " + url).c_str(), _T("Bad DC++ version"), MB_OK | MB_ICONEXCLAMATION);
 							oldshutdown = true;
 							PostMessage(WM_CLOSE);
 						}
@@ -740,19 +742,19 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 			}
 		}
 		if(stringId != -1) {
-			strncpy(pDispInfo->lpszText, ResourceManager::getInstance()->getString((ResourceManager::Strings)stringId).c_str(), 79);
+			_tcsncpy(pDispInfo->lpszText, CTSTRING_I((ResourceManager::Strings)stringId), 79);
 			pDispInfo->uFlags |= TTF_DI_SETITEM;
 		}
 	} else { // if we're really in the status bar, this should be detected intelligently
 		lastLines.clear();
-		for(StringIter i = lastLinesList.begin(); i != lastLinesList.end(); ++i) {
+		for(TStringIter i = lastLinesList.begin(); i != lastLinesList.end(); ++i) {
 			lastLines += *i;
-			lastLines += "\r\n";
+			lastLines += _T("\r\n");
 		}
 		if(lastLines.size() > 2) {
 			lastLines.erase(lastLines.size() - 2);
 		}
-		pDispInfo->lpszText = const_cast<char*>(lastLines.c_str());
+		pDispInfo->lpszText = const_cast<TCHAR*>(lastLines.c_str());
 	}
 	return 0;
 }
@@ -770,12 +772,12 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 				r.setShared("*");
 				r.setServer(entry->getServer());
 				HubManager::getInstance()->addRecent(r);
-				HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
-					, entry->getRawOne()
-					, entry->getRawTwo()
-					, entry->getRawThree()
-					, entry->getRawFour()
-					, entry->getRawFive()		
+				HubFrame::openWindow(Text::toT(entry->getServer()), Text::toT(entry->getNick()), Text::toT(entry->getPassword()), Text::toT(entry->getUserDescription())
+					, Text::toT(entry->getRawOne())
+					, Text::toT(entry->getRawTwo())
+					, Text::toT(entry->getRawThree())
+					, Text::toT(entry->getRawFour())
+					, Text::toT(entry->getRawFive())
 					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
  			} else
  				missedAutoConnect = true;
@@ -785,7 +787,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 
 void MainFrame::updateTray(bool add /* = true */) {
 	if(add) {
-		if ( !WinUtil::trayIcon ) {
+		if (!WinUtil::trayIcon) {
 			NOTIFYICONDATA nid;
 			nid.cbSize = sizeof(NOTIFYICONDATA);
 			nid.hWnd = m_hWnd;
@@ -793,14 +795,14 @@ void MainFrame::updateTray(bool add /* = true */) {
 			nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
 			nid.uCallbackMessage = WM_APP + 242;
 			nid.hIcon = normalicon.hIcon;
-			strncpy(nid.szTip, "StrongDC++",64);
+			_tcsncpy(nid.szTip, _T(APPNAME), 64);
 			nid.szTip[63] = '\0';
 			lastMove = GET_TICK() - 1000;
 			::Shell_NotifyIcon(NIM_ADD, &nid);
 			WinUtil::trayIcon = true;
 		}
 	} else {
-		if ( WinUtil::trayIcon ) {
+		if (WinUtil::trayIcon) {
 			NOTIFYICONDATA nid;
 			nid.cbSize = sizeof(NOTIFYICONDATA);
 			nid.hWnd = m_hWnd;
@@ -893,7 +895,7 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	}
 
 	if(!closing) {
-		if( oldshutdown ||(!BOOLSETTING(CONFIRM_EXIT)) || (MessageBox(CSTRING(REALLY_EXIT), APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) ) {
+		if( oldshutdown ||(!BOOLSETTING(CONFIRM_EXIT)) || (MessageBox(CTSTRING(REALLY_EXIT), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) ) {
 			updateTray(false);
 
 			WebServerManager::getInstance()->removeListener(this);
@@ -965,11 +967,11 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 
-	string site;
+	tstring site;
 	bool isFile = false;
 	switch(wID) {
-	case IDC_HELP_HOMEPAGE: site = "http://snail.pc.cz/StrongDC/index.htm"; break;
-	case IDC_HELP_DISCUSS: site = "http://strongdc.berlios.de/index.php"; break;
+	case IDC_HELP_HOMEPAGE: site = _T("http://snail.pc.cz/StrongDC/index.htm"); break;
+	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/index.php"); break;
 	default: dcassert(0);
 	}
 
@@ -982,16 +984,16 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 }
 
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string file = Util::getAppPath() + "*.*";
- 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
+	tstring file = Text::toT(Util::getAppPath()) + _T("*.*");
+	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		lastTTHdir = Util::getFilePath(file);
-		string hash = HashManager::getInstance()->hasher.getTTfromFile(file, false).getRoot().toBase32();
+		string hash = HashManager::getInstance()->hasher.getTTfromFile(Text::fromT(file), false).getRoot().toBase32();
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;
 		FindFirstFile(file.c_str(), &data);
 		int64_t size = (int64_t)data.nFileSizeLow | ((int64_t)data.nFileSizeHigh)<<32;
-		string magnetlink = "magnet:?xt=urn:tree:tiger:"+hash+"&xl="+Util::toString(size)+"&dn="+Util::encodeURI(Util::getFileName(file));
-		ibox.DoModal("Tiger Tree Hash", file.c_str(), hash.c_str(), magnetlink.c_str());
+		string magnetlink = "magnet:?xt=urn:tree:tiger:"+hash+"&xl="+Util::toString(size)+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
+		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(hash).c_str(), Text::toT(magnetlink).c_str());
 	   } 
    return 0;
 }
@@ -1026,20 +1028,20 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	SetSplitterRect(rc2);
 }
 
-static const char types[] = "File Lists\0*.DcLst;*.xml.bz2\0All Files\0*.*\0";
+static const TCHAR types[] = _T("File Lists\0*.DcLst;*.xml.bz2\0All Files\0*.*\0");
 
 LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string file;
-	if(WinUtil::browseFile(file, m_hWnd, false, Util::getAppPath() + "FileLists\\", types)) {
-		string username;
+	tstring file;
+	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), types)) {
+		tstring username;
 		if(file.rfind('\\') != string::npos) {
 			username = file.substr(file.rfind('\\') + 1);
 			if(username.rfind('.') != string::npos) {
 				username.erase(username.rfind('.'));
 			}
-			if(username.length() > 4 && Util::stricmp(username.c_str() + username.length() - 4, ".xml") == 0)
+			if(username.length() > 4 && Util::stricmp(username.c_str() + username.length() - 4, _T(".xml")) == 0)
 				username.erase(username.length()-4);
-			DirectoryListingFrame::openWindow(file, ClientManager::getInstance()->getUser(username));
+			DirectoryListingFrame::openWindow(file, ClientManager::getInstance()->getUser(Text::fromT(username)));
 		}
 	}
 	return 0;
@@ -1065,7 +1067,7 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		nid.hWnd = m_hWnd;
 		nid.uID = 0;
 		nid.uFlags = NIF_TIP;
-		strncpy(nid.szTip, ("D: " + Util::formatBytes(DownloadManager::getInstance()->getAverageSpeed()) + "/s (" + 
+		_tcsncpy(nid.szTip, Text::toT("D: " + Util::formatBytes(DownloadManager::getInstance()->getAverageSpeed()) + "/s (" + 
 			Util::toString(DownloadManager::getInstance()->getDownloads()) + ")\r\nU: " +
 			Util::formatBytes(UploadManager::getInstance()->getAverageSpeed()) + "/s (" + 
 			Util::toString(UploadManager::getInstance()->getUploads()) + ")"
@@ -1080,7 +1082,6 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		trayMenu.TrackPopupMenu(TPM_RIGHTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);		
 		PostMessage(WM_NULL, 0, 0);
 	}
-
 	return 0;
 }
 
@@ -1167,13 +1168,13 @@ LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
 
 LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	LineDlg dlg;
-	dlg.description = STRING(HUB_ADDRESS);
-	dlg.title = STRING(QUICK_CONNECT);
+	dlg.description = TSTRING(HUB_ADDRESS);
+	dlg.title = TSTRING(QUICK_CONNECT);
 	if(dlg.DoModal(m_hWnd) == IDOK){
 		if(SETTING(NICK).empty())
 			return 0;
 
-		string tmp = dlg.line;
+		tstring tmp = dlg.line;
 		// Strip out all the spaces
 		string::size_type i;
 		while((i = tmp.find(' ')) != string::npos)
@@ -1232,22 +1233,22 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 0);
 		}		
 
-		StringList* str = new StringList();
-		str->push_back(Util::getAway() ? STRING(AWAY) : "");
-		str->push_back(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getShareSizeString()));
-		str->push_back("H: " + Client::getCounts());
-		str->push_back(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")" );
-		str->push_back("D: " + Util::formatBytes(Socket::getTotalDown()));
-		str->push_back("U: " + Util::formatBytes(Socket::getTotalUp()));
-		str->push_back("D: [" + Util::toString(DownloadManager::getInstance()->getDownloads()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s" );
-		str->push_back("U: [" + Util::toString(UploadManager::getInstance()->getUploads()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s" );
+		TStringList* str = new TStringList();
+		str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
+		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getShareSizeString())));
+		str->push_back(Text::toT("H: " + Client::getCounts()));
+		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
+		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
+		str->push_back(Text::toT("U: " + Util::formatBytes(Socket::getTotalUp())));
+		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloads()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
+		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploads()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
-		if(currentPic != SETTING(BACKGROUND_IMAGE)) { currentPic = SETTING(BACKGROUND_IMAGE); m_PictureWindow.Load(currentPic.c_str()); }
+		if(currentPic != SETTING(BACKGROUND_IMAGE)) { currentPic = SETTING(BACKGROUND_IMAGE); m_PictureWindow.Load(Text::toT(currentPic).c_str()); }
 
 		PostMessage(WM_SPEAKER, UPDATE_SHUTDOWN, (LPARAM)aTick);
 }
@@ -1267,16 +1268,16 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 			// This is a file listing, show it...
 
 			DirectoryListInfo* i = new DirectoryListInfo();
-			i->file = qi->getListName();
+			i->file = Text::toT(qi->getListName());
 			i->user = qi->getCurrents()[0]->getUser(); 
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
-			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new string(qi->getTarget()));
+			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
 	} else if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 		DirectoryListInfo* i = new DirectoryListInfo();
-		i->file = qi->getListName();
+		i->file = Text::toT(qi->getListName());
 		i->user = qi->getCurrents()[0]->getUser(); 
 		PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
 	}	
@@ -1362,7 +1363,7 @@ void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
 		cf.crBackColor = SETTING(BACKGROUND_COLOR);
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
-		hubFrame->addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
+		hubFrame->addLine(_T("*** ")+TSTRING(USER)+_T(" ")+Text::toT(u->getNick())+_T(": ")+Text::toT(u->getCheatingString()),cf);
 	}
 }
 

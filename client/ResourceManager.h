@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ public:
 
 	void loadLanguage(const string& aFile);
 	const string& getString(Strings x) const { dcassert(x >= 0 && x < LAST); return strings[x]; };
+	const wstring& getStringW(Strings x) const { dcassert(x >= 0 && x < LAST); return wstrings[x]; };
 
 private:
 	friend class Singleton<ResourceManager>;
@@ -40,18 +41,36 @@ private:
 	typedef NameMap::iterator NameIter;
 
 	ResourceManager() { 
+		createWide();
 	};
-
 	virtual ~ResourceManager() { };
 	
 	static string strings[LAST];
+	static wstring wstrings[LAST];
 	static string names[LAST];
+
+	void createWide();
 };
 
 #define STRING(x) ResourceManager::getInstance()->getString(ResourceManager::x)
 #define CSTRING(x) ResourceManager::getInstance()->getString(ResourceManager::x).c_str()
+#define WSTRING(x) ResourceManager::getInstance()->getStringW(ResourceManager::x)
+#define CWSTRING(x) ResourceManager::getInstance()->getStringW(ResourceManager::x).c_str()
+
 #define STRING_I(x) ResourceManager::getInstance()->getString(x)
 #define CSTRING_I(x) ResourceManager::getInstance()->getString(x).c_str()
+#define WSTRING_I(x) ResourceManager::getInstance()->getStringW(x)
+#define CWSTRING_I(x) ResourceManager::getInstance()->getStringW(x).c_str()
+
+#ifdef UNICODE
+#define TSTRING WSTRING
+#define CTSTRING CWSTRING
+#define CTSTRING_I CWSTRING_I
+#else
+#define TSTRING STRING
+#define CTSTRING CSTRING
+#endif
+
 
 #endif // !defined(AFX_RESOURCEMANAGER_H__AA978E1D_82F9_434B_8C3C_1D58B93F7582__INCLUDED_)
 

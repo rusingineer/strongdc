@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,20 +37,17 @@
 #include "cvsversion.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
-	state(STATE_CONNECT), adapter(this),
+	adapter(this), state(STATE_CONNECT), 
 	lastActivity(GET_TICK()), 
 	reconnect(true), lastUpdate(0)
 {
+	searchQueue.last_search_time = 0;
 	TimerManager::getInstance()->addListener(this);
-	dscrptn = (char *) calloc(96, sizeof(char));
-	dscrptn[0] = NULL;
-	dscrptnlen = 95;
 };
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	Speaker<NmdcHubListener>::removeListeners();
-	delete[] dscrptn;
 
 	Lock l(cs);
 	clearUsers();
@@ -76,6 +73,28 @@ void NmdcHub::connect() {
 	socket->connect(getAddress(), getPort());
 }
 
+void NmdcHub::connect(const User* aUser) {
+	checkstate(); 
+	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
+	char buf[256];
+	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
+		ConnectionManager::iConnToMeCount++;
+	} else {
+		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
+	}
+	send(buf); 
+}
+
+int64_t NmdcHub::getAvailable() const {
+	Lock l(cs);
+	int64_t x = 0;
+	for(User::NickMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+		x+=i->second->getBytesShared();
+	}
+	return x;
+}
+
 void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 	Lock l(cs);
 	if(unknownOnly) {
@@ -98,7 +117,7 @@ void NmdcHub::clearUsers() {
 	users.clear();
 }
 
-void NmdcHub::onLine(const char *aLine) throw() {
+void NmdcHub::onLine(const char* aLine) throw() {
 	char *temp;
 	lastActivity = GET_TICK();
 	
@@ -109,17 +128,18 @@ void NmdcHub::onLine(const char *aLine) throw() {
 				reconnect = false;
 			}
 		}
-		Speaker<NmdcHubListener>::fire(NmdcHubListener::Message(), this, Util::validateMessage(aLine, true));
+		Speaker<NmdcHubListener>::fire(NmdcHubListener::Message(), this, Util::validateMessage(fromNmdc(aLine), true));
 		return;
 	}
 
-	if(strncmp(aLine, "$Search ", 8) == 0) {
+
+	if(strncmp(aLine+1, "Search ", 7) == 0) {
 		if(state != STATE_CONNECTED || (temp = strtok((char*)aLine+8, " ")) == NULL)
 			return;
 
-		char *seeker = temp;
+		string seeker = fromNmdc(temp);
 
-		bool bPassive = (strnicmp(seeker, "Hub:", 4) == 0);
+		bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
 
 		// We don't wan't to answer passive searches if we're in passive mode...
 		if(bPassive == true && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
@@ -128,11 +148,11 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		// Filter own searches
 		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
-			if((strcmp(seeker, (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
+			if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
 				return;
 			}
 		} else {
-			if(strcmp(seeker + 4, getNick().c_str()) == 0) {
+			if(strcmp(seeker.c_str() + 4, getNick().c_str()) == 0) {
 				return;
 			}
 		}
@@ -156,8 +176,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 					count++;
 
 				if(count > 7) {
-					if(bPassive == true && strlen(seeker) > 4) {
-							Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, strtok(seeker+4, "\0"));
+					if(bPassive == true && strlen(seeker.c_str()) > 4) {
+						Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker.c_str()+4);
 					} else {
 						Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
 					}
@@ -195,11 +215,11 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		int type = atoi(temp) - 1;
 		if((temp = strtok(NULL, "\0")) != NULL) {
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, temp);
-			if(bPassive == true && strlen(seeker) > 4) {
+			Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, fromNmdc(temp));
+			if(bPassive == true && strlen(seeker.c_str()) > 4) {
 				User::Ptr u;
 					Lock l(cs);
-					User::NickIter ni = users.find(strtok(seeker+4, "\0"));
+				User::NickIter ni = users.find(seeker.c_str()+4);
 					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
 						u = ni->second;
 						u->setPassive();
@@ -210,18 +230,19 @@ void NmdcHub::onLine(const char *aLine) throw() {
 				}
 			}
 		}
-	} else if(strncmp(aLine, "$MyINFO ", 8) == 0) {
+	} else if(strncmp(aLine+1, "MyINFO ", 7) == 0) {
 		if((temp = strtok((char*)aLine+13, " ")) == NULL)
 			return;
 
 		User::Ptr u;
 		dcassert(strlen(temp) > 0);
+		string nick = fromNmdc(temp);
 
 		{
 			Lock l(cs);
-			User::NickIter ni = users.find(temp);
+			User::NickIter ni = users.find(nick);
 			if(ni == users.end()) {
-				u = users[temp] = ClientManager::getInstance()->getUser(temp, this);
+				u = users[nick] = ClientManager::getInstance()->getUser(nick, this);
 			} else {
 				u  = ni->second;
 			}
@@ -243,12 +264,16 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		if(temp[strlen(temp)+1] != '$') {
 			if((temp = strtok(NULL, "$")) != NULL) {
-				int len = strlen(temp);
-				if(len > dscrptnlen) {
-					dscrptn = (char *) realloc(dscrptn, len+1);
-					dscrptnlen = len;
+				int iLen = strlen(temp);
+				if(iLen > 0 && temp[iLen-1] == '>') {
+					char *sTag;
+					if((sTag = strrchr(temp, '<')) != NULL) {
+						u->setTag(fromNmdc(sTag));
+						temp[iLen-strlen(sTag)] = '\0';
+					} else
+						u->setTag(Util::emptyString);
 				}
-				strcpy(dscrptn, temp);
+				u->setDescription(fromNmdc(temp));
 			}
 		}
 
@@ -288,7 +313,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 						u->unsetFlag(User::FIREBALL);
 					}
 					temp[strlen(temp)-1] = '\0';
-					u->setConnection(temp);
+					u->setConnection(fromNmdc(temp));
 					if(strcmp(temp, "28.8Kbps") == 0 || strcmp(temp, "33.6Kbps") == 0 ||
 						strcmp(temp, "56Kbps") == 0 || strcmp(temp, "Modem") == 0) {
 						u->setcType(1);
@@ -317,7 +342,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		if(temp != NULL) {
 			if(temp[strlen(temp)+2] != '$') {
 				if((temp = strtok(NULL, "$")) != NULL)
-					u->setEmail(Util::validateMessage(temp, true));
+					u->setEmail(Util::validateMessage(fromNmdc(temp), true));
 			} else {
 				u->setEmail(Util::emptyString);
 			}
@@ -330,40 +355,29 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			}
 		}
 
-		if(dscrptn != NULL) {
-			if(strlen(dscrptn) > 0 && dscrptn[strlen(dscrptn)-1] == '>') {
-				char *sTag;
-				if((sTag = strrchr(dscrptn, '<')) != NULL) {
-					u->TagParts(sTag);
-					dscrptn[strlen(dscrptn)-strlen(sTag)] = '\0';
-				}
-			}
-			u->setDescription(dscrptn);
-			dscrptn[0] = NULL;
-		}
+		u->TagParts();
 
-		if (u->getNick() == getNick()) {
-			if(state == STATE_MYINFO) {
+		if(state == STATE_MYINFO) {
+			if (u->getNick() == getNick()) {
 				setMe(u);
 				state = STATE_CONNECTED;
 				updateCounts(false);
-			}	
-
-			u->setFlag(User::DCPLUSPLUS);
-			if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
-				u->setFlag(User::PASSIVE);
-			else
-				u->unsetFlag(User::PASSIVE);
+				u->setFlag(User::DCPLUSPLUS);
+				if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+					u->setFlag(User::PASSIVE);
+				else
+					u->unsetFlag(User::PASSIVE);
+			}
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::MyInfo(), this, u);
-	} else if(strncmp(aLine, "$Quit ", 6) == 0) {
+	} else if(strncmp(aLine+1, "Quit ", 5) == 0) {
 		if((temp = strtok((char*)aLine+6, "\0")) == NULL)
 			return;
 
 		User::Ptr u;
 		{
 			Lock l(cs);
-			User::NickIter i = users.find(temp);
+			User::NickIter i = users.find(fromNmdc(temp));
 			if(i == users.end()) {
 				dcdebug("C::onLine Quitting user %s not found\n", temp);
 				return;
@@ -375,7 +389,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Quit(), this, u);
 		ClientManager::getInstance()->putUserOffline(u, true);
-	} else if(strncmp(aLine, "$ConnectToMe ", 13) == 0) {
+	} else if(strncmp(aLine+1, "ConnectToMe ", 12) == 0) {
 		if(state != STATE_CONNECTED || (temp = strtok((char*)aLine+13, " ")) == NULL)
 			return;
 
@@ -390,8 +404,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			return;
 
 		ConnectionManager::getInstance()->connect(server, (short)atoi(temp), getNick()); 
-		Speaker<NmdcHubListener>::fire(NmdcHubListener::ConnectToMe(), this, server, (short)atoi(temp));
-	} else if(strncmp(aLine, "$RevConnectToMe ", 16) == 0) {
+		Speaker<NmdcHubListener>::fire(NmdcHubListener::ConnectToMe(), this, fromNmdc(server), (short)atoi(temp));
+	} else if(strncmp(aLine+1, "RevConnectToMe ", 15) == 0) {
 		if(state != STATE_CONNECTED) {
 				return;
 		}
@@ -402,7 +416,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if((temp = strtok((char*)aLine+16, " ")) == NULL)
 				return;
 
-			User::NickIter i = users.find(temp);
+			User::NickIter i = users.find(fromNmdc(temp));
 			if((temp = strtok(NULL, "\0")) == NULL)
 				return;
 
@@ -433,15 +447,15 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if(up)
 				updated(u);
 		}
-	} else if(strncmp(aLine, "$SR ", 4) == 0) {
+	} else if(strncmp(aLine+1, "SR ", 3) == 0) {
 		SearchManager::getInstance()->onSearchResult(aLine);
-	} else if(strncmp(aLine, "$HubName ", 9) == 0) {
+	} else if(strncmp(aLine+1, "HubName ", 8) == 0) {
 		if((temp = strtok((char*)aLine+9, "\0")) == NULL)
 			return;
 
-		name = temp;
+		name = fromNmdc(temp);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::HubName(), this);
-	} else if(strncmp(aLine, "$Supports", 9) == 0) {
+	} else if(strncmp(aLine+1, "Supports", 8) == 0) {
 		bool QuickList = false;
 		StringList sl;
 		if((temp = strtok((char*)aLine+10, " ")) == NULL) {
@@ -472,7 +486,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			validateNick(getNick());
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Supports(), this, sl);
-	} else if(strncmp(aLine, "$UserCommand ", 13) == 0) {
+	} else if(strncmp(aLine+1, "UserCommand ", 12) == 0) {
 		if((temp = strtok((char*)aLine+13, " ")) == NULL)
 			return;
 
@@ -492,9 +506,9 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if((temp = strtok(NULL, "\0")) == NULL)
 				return;
 
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::UserCommand(), this, type, ctx, Util::validateMessage(name, true, false), Util::validateMessage(temp, true, false));
+			Speaker<NmdcHubListener>::fire(NmdcHubListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(name), true, false), Util::validateMessage(fromNmdc(temp), true, false));
 		}
-	} else if(strncmp(aLine, "$Lock ", 6) == 0) {
+	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
 		char *lock;
 		if(state != STATE_LOCK || (lock = strtok((char*)aLine+6, "\0")) == NULL)
 			return;
@@ -524,17 +538,18 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		}
 
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::CLock(), this, lock, Util::emptyString);
-	} else if(strncmp(aLine, "$Hello ", 7) == 0) {
+	} else if(strncmp(aLine+1, "Hello ", 6) == 0) {
 		if((temp = strtok((char*)aLine+7, "\0")) == NULL)
 			return;
 
-		User::Ptr u = ClientManager::getInstance()->getUser(temp, this);
+		string nick = fromNmdc(temp);
+		User::Ptr u = ClientManager::getInstance()->getUser(nick, this);
 		{
 			Lock l(cs);
-			users[temp] = u;
+			users[nick] = u;
 		}
 		
-		if(getNick() == temp) {
+		if(getNick() == nick) {
 			setMe(u);
 		
 			u->setFlag(User::DCPLUSPLUS);
@@ -554,27 +569,28 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Hello(), this, u);
 
-	} else if(strncmp(aLine, "$ForceMove ", 11) == 0) {
+	} else if(strncmp(aLine+1, "ForceMove ", 10) == 0) {
 		if((temp = strtok((char*)aLine+11, "\0")) == NULL)
 			return;
 
 		disconnect();
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Redirect(), this, temp);
-	} else if(strcmp(aLine, "$HubIsFull") == 0) {
+	} else if(strcmp(aLine+1, "HubIsFull") == 0) {
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::HubFull(), this);
-	} else if(strcmp(aLine, "$ValidateDenide") == 0) {
+	} else if(strncmp(aLine+1, "ValidateDenide", 14) == 0) {
 		disconnect();
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::ValidateDenied(), this);
-	} else if(strncmp(aLine, "$UserIP ", 8) == 0) {
+	} else if(strncmp(aLine+1, "UserIP ", 7) == 0) {
 		User::List v;
 		StringList l;
 		if((temp = strtok((char*)aLine+8, "$$")) == NULL)
 			return;
 
 		while(temp != NULL) {
-			l.push_back(temp);
+			l.push_back(fromNmdc(temp));
 			temp = strtok(NULL, "$$");
 		}
+		string address;
 		for(StringIter it = l.begin(); it != l.end(); ++it) {
 			string::size_type j = 0;
 			if((j = it->find(' ')) == string::npos)
@@ -588,13 +604,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			ClientManager::getInstance()->setIPNick(IP, nick);
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::UserIp(), this, v);
-	} else if(strncmp(aLine, "$NickList ", 10) == 0) {
+	} else if(strncmp(aLine+1, "NickList ", 9) == 0) {
 		User::List v;
 		if((temp = strtok((char*)aLine+10, "$$")) == NULL)
 			return;
 
 		while(temp != NULL) {
-			v.push_back(ClientManager::getInstance()->getUser(temp, this));
+			v.push_back(ClientManager::getInstance()->getUser(fromNmdc(temp), this));
 			temp = strtok(NULL, "$$");
 		}
 
@@ -622,13 +638,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		}
 
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
-	} else if(strncmp(aLine, "$OpList ", 8) == 0) {
+	} else if(strncmp(aLine+1, "OpList ", 7) == 0) {
 		User::List v;
 		if((temp = strtok((char*)aLine+8, "$$")) == NULL)
 			return;
 
 		while(temp != NULL) {
-			v.push_back(ClientManager::getInstance()->getUser(temp, this));
+			v.push_back(ClientManager::getInstance()->getUser(fromNmdc(temp), this));
 			v.back()->setFlag(User::OP);
 			temp = strtok(NULL, "$$");
 		}
@@ -642,7 +658,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::OpList(), this, v);
 		updateCounts(false);
 		myInfo();
-	} else if(strncmp(aLine, "$To: ", 5) == 0) {
+	} else if(strncmp(aLine+1, "To: ", 4) == 0) {
 		char *temp1, *from;
 		if((temp1 = strstr(aLine+5, "From:")) != NULL) {
 
@@ -654,31 +670,39 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if((temp = strtok(NULL, "\0")) == NULL)
 				return;
 
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(from, this, false), Util::validateMessage(temp, true));
+			Speaker<NmdcHubListener>::fire(NmdcHubListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(from), this, false), Util::validateMessage(fromNmdc(temp), true));
 		}
-	} else if(strcmp(aLine, "$GetPass") == 0) {
+	} else if(strcmp(aLine+1, "GetPass") == 0) {
 		setRegistered(true);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::GetPassword(), this);
-	} else if(strcmp(aLine, "$BadPass") == 0) {
+	} else if(strcmp(aLine+1, "BadPass") == 0) {
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::BadPassword(), this);
-	} else if(strncmp(aLine, "$LogedIn", 8) == 0) {
+	} else if(strncmp(aLine+1, "LogedIn", 7) == 0) {
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::LoggedIn(), this);
 	} else {
-		dcassert(aLine[0] == '$');
 		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
 	}
 }
 
+string NmdcHub::checkNick(const string& aNick) {
+	string tmp = aNick;
+	string::size_type i = 0;
+	while( (i = tmp.find_first_of("|$ ", i)) != string::npos) {
+		tmp[i++]='_';
+	}
+	return tmp;
+}
+
 bool nlfound;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
-	char buf[256];
+	TCHAR buf[256];
 	buf[0] = NULL;
 	if (!handle)
 		return TRUE;// Not a window
-	SendMessageTimeout(handle, WM_GETTEXT, sizeof(buf), (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
+	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
 
 	if(buf[0] != NULL) {
-		if(strnicmp(buf, "NetLimiter", 10) == 0/* || strnicmp(buf, "DU Super Controler", 18) == 0*/) {
+		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
 			nlfound = true;
 			return false;
 		}
@@ -751,7 +775,7 @@ void NmdcHub::myInfo() {
 
 	try {
 		char promenna[255];
-		GetEnvironmentVariable("APPDATA",promenna,255);
+		GetEnvironmentVariableA("APPDATA",promenna,255);
 
 		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
 
@@ -849,11 +873,11 @@ void NmdcHub::myInfo() {
 
 	extendedtag += ">";
 
-	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+getDescription(), false));
+	string newmyinfo = ("$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(checkNick(Util::validateMessage(speedDescription+getDescription(), false))));
 	newmyinfo += extendedtag;
 
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
-	newmyinfo += ("$ $" + connection + StatusMode + "$" + Util::validateMessage(SETTING(EMAIL), false) + '$');
+	newmyinfo += ("$ $" + connection + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$');
 	if ( (newmyinfo != lastmyinfo) || ( (newbytesshared < (lastbytesshared - 1048576) ) || (newbytesshared > (lastbytesshared + 1048576) ) ) ){
 		send(newmyinfo + Util::toString(newbytesshared) + "$|");
 		lastmyinfo = newmyinfo;
@@ -888,7 +912,7 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 	char* buf;
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
-	string tmp = aString;
+	string tmp = toNmdc(aString);
 	string::size_type i;
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';
@@ -911,7 +935,7 @@ void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {
 	dcdebug("NmdcHub::kick\n");
 	static const char str[] = 
 		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = Util::validateMessage(aMsg, false);
+	string msg2 = toNmdc(Util::validateMessage(aMsg, false));
 	
 	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
 	const char* u = aUser->getNick().c_str();
@@ -923,7 +947,7 @@ void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {
 	
 	// Short, short break to allow the message to reach the NmdcHub...
 	Thread::sleep(200);
-	send("$Kick " + aUser->getNick() + "|");
+	send("$Kick " + toNmdc(aUser->getNick()) + "|");
 }
 
 void NmdcHub::kick(const User* aUser, const string& aMsg) {
@@ -932,7 +956,7 @@ void NmdcHub::kick(const User* aUser, const string& aMsg) {
 	
 	static const char str[] = 
 		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = Util::validateMessage(aMsg, false);
+	string msg2 = toNmdc(Util::validateMessage(aMsg, false));
 	
 	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
 	const char* u = aUser->getNick().c_str();
@@ -944,7 +968,13 @@ void NmdcHub::kick(const User* aUser, const string& aMsg) {
 	
 	// Short, short break to allow the message to reach the NmdcHub...
 	Thread::sleep(100);
-	send("$Kick " + aUser->getNick() + "|");
+	send("$Kick " + toNmdc(aUser->getNick()) + "|");
+}
+
+void NmdcHub::redirect(const User* aUser, const string& aServer, const string& aMsg) {
+	checkstate(); 
+	dcdebug("NmdcHub::opForceMove\n");
+	send("$OpForceMove $Who:" + aUser->getNick() + "$Where:" + aServer + "$Msg:" + aMsg + "|");
 }
 
 // TimerManagerListener

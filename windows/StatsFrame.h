@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public:
 		static CFrameWndClassInfo wc = { 
 			{	
 				sizeof(WNDCLASSEX), 0, StartWindowProc, 
-				0, 0, NULL, NULL, NULL, NULL, NULL, "StatsFrame", NULL 
+				0, 0, NULL, NULL, NULL, NULL, NULL, _T("StatsFrame"), NULL 
 			},
 			NULL, NULL, IDC_ARROW, TRUE, 0, _T(""), IDR_NET_STATS 
 		};

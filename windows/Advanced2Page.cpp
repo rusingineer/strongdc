@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,14 +89,14 @@ void Advanced2Page::write()
 	if(s.length() > 0 && s[s.length() - 1] != '\\') {
 		SettingsManager::getInstance()->set(SettingsManager::LOG_DIRECTORY, s + '\\');
 	}
-	Util::ensureDirectory(SETTING(LOG_DIRECTORY));
+	File::ensureDirectory(SETTING(LOG_DIRECTORY));
 	// Do specialized writing here
 	// settings->set(XX, YY);
 }
 
 LRESULT Advanced2Page::onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	string dir;
+	tstring dir;
 	if(WinUtil::browseDirectory(dir, m_hWnd))
 	{
 		// Adjust path string
@@ -112,4 +112,3 @@ LRESULT Advanced2Page::onClickedBrowseDir(WORD /*wNotifyCode*/, WORD /*wID*/, HW
  * @file
  * $Id$
  */
-

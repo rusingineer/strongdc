@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ template<class T>
 class UserInfoBaseHandler {
 public:
 	UserInfoBaseHandler() {
-		sSelectedUser = "";
+		sSelectedUser = _T("");
 	}
 
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
@@ -90,8 +90,8 @@ public:
 	END_MSG_MAP()
 
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::matchQueue);
 			}
@@ -101,8 +101,8 @@ public:
 		return 0;
 	}
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getList);
 			}
@@ -113,8 +113,8 @@ public:
 	}
 
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::checkList);
 			}
@@ -125,8 +125,8 @@ public:
 	}
 
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::addFav);
 			}
@@ -136,8 +136,8 @@ public:
 		return 0;
 	}
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::pm);
 			}
@@ -147,8 +147,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grant);
 			}
@@ -158,8 +158,8 @@ public:
 		return 0;
 	}
 	LRESULT onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::removeAll);
 			}
@@ -169,8 +169,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotHour);
 			}
@@ -180,8 +180,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-	if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotDay);
 			}
@@ -191,8 +191,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotWeek);
 			}
@@ -203,8 +203,8 @@ public:
 	}
 
 	LRESULT onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-	if ( sSelectedUser != "" ) {
-			int nAtPos = ((T*)this)->getUserList().findItem( sSelectedUser );
+		if(sSelectedUser != _T("")) {
+			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::ungrantSlot );
 			}
@@ -215,18 +215,18 @@ public:
 	}
 
 	void appendUserItems(CMenu& menu) {
-		sSelectedUser = "";
+		sSelectedUser = _T("");
 
-		menu.AppendMenu(MF_STRING, IDC_GETLIST, CSTRING(GET_FILE_LIST));
-		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CSTRING(MATCH_QUEUE));
-		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CSTRING(SEND_PRIVATE_MESSAGE));
-		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CSTRING(ADD_TO_FAVORITES));
-		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CSTRING(GRANT_SLOTS_MENU));
-		menu.AppendMenu(MF_STRING, IDC_REMOVEALL, CSTRING(REMOVE_FROM_ALL));
+		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
+		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+		menu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_FROM_ALL));
 	}
 
 protected:
-	string sSelectedUser;
+	tstring sSelectedUser;
 };
 
 class FlatTabCtrl;
@@ -241,7 +241,7 @@ public:
 	static void openWindow() {
 		if(frame == NULL) {
 			frame = new T();
-			frame->CreateEx(WinUtil::mdiClient, frame->rcDefault, ResourceManager::getInstance()->getString(ResourceManager::Strings(title)).c_str());
+			frame->CreateEx(WinUtil::mdiClient, frame->rcDefault, CTSTRING_I(ResourceManager::Strings(title)));
 			CZDCLib::setButtonPressed(ID, true);
 		} else {
 			HANDLE_MDI_CLICK(ID, T);
@@ -280,15 +280,16 @@ public:
 	static CMenu mainMenu;
 	static CMenu grantMenu;
 	static int dirIconIndex;
-	static StringList lastDirs;
+	static TStringList lastDirs;
 	static HWND mainWnd;
 	static HWND mdiClient;
 	static FlatTabCtrl* tabCtrl;
 	static string commands;
 	static HHOOK hook;
-	static string tth;
+	static tstring tth;
 	static StringPairList initialDirs;	
-	static string exceptioninfo;
+	static tstring exceptioninfo;
+	static DWORD helpCookie;	
 	static bool isPM;
 	static bool isAppActive;
 	static bool isMinimized;
@@ -297,7 +298,7 @@ public:
 	static void init(HWND hWnd);
 	static void uninit();
 
-	static void decodeFont(const string& setting, LOGFONT &dest);
+	static void decodeFont(const tstring& setting, LOGFONT &dest);
 
 	static void addInitalDir(const User::Ptr& user, string dir) {
 		// Clear out previos initial dirs, just in case
@@ -329,15 +330,15 @@ public:
 	 * @param status Message that should be shown in the status line.
 	 * @return True if the command was processed, false otherwise.
 	 */
-	static bool checkCommand(string& cmd, string& param, string& message, string& status);
+	static bool checkCommand(tstring& cmd, tstring& param, tstring& message, tstring& status);
 
-	static int getTextWidth(const string& str, HWND hWnd) {
+	static int getTextWidth(const tstring& str, HWND hWnd) {
 		HDC dc = ::GetDC(hWnd);
 		int sz = getTextWidth(str, dc);
 		::ReleaseDC(mainWnd, dc);
 		return sz;
 	}
-	static int getTextWidth(const string& str, HDC dc) {
+	static int getTextWidth(const tstring& str, HDC dc) {
 		SIZE sz = { 0, 0 };
 		::GetTextExtentPoint32(dc, str.c_str(), str.length(), &sz);
 		return sz.cx;		
@@ -363,9 +364,9 @@ public:
 		return tm.tmHeight;
 	}
 
-	static void setClipboard(const string& str);
+	static void setClipboard(const tstring& str);
 
-	static void addLastDir(const string& dir) {
+	static void addLastDir(const tstring& dir) {
 		if(find(lastDirs.begin(), lastDirs.end(), dir) != lastDirs.end()) {
 			return;
 		}
@@ -375,38 +376,29 @@ public:
 		lastDirs.push_back(dir);
 	}
 	
-	static string encodeFont(LOGFONT const& font)
-	{
-		string res(font.lfFaceName);
-		res += ',';
-		res += Util::toString(font.lfHeight);
-		res += ',';
-		res += Util::toString(font.lfWeight);
-		res += ',';
-		res += Util::toString(font.lfItalic);
-		return res;
-	}
+	static tstring encodeFont(LOGFONT const& font);
 	
-	static bool browseFile(string& target, HWND owner = NULL, bool save = true, const string& initialDir = Util::emptyString, const char* types = NULL, const char* defExt = NULL);
-	static bool browseDirectory(string& target, HWND owner = NULL);
+	static bool browseFile(tstring& target, HWND owner = NULL, bool save = true, const tstring& initialDir = Util::emptyStringW, const TCHAR* types = NULL, const TCHAR* defExt = NULL);
+	static bool browseDirectory(tstring& target, HWND owner = NULL);
 
 	// Hash related
 	static void bitziLink(TTHValue* /*aHash*/);
-	static void copyMagnet(TTHValue* /*aHash*/, const string& /*aFile*/, int64_t);
+	static void copyMagnet(TTHValue* /*aHash*/, const tstring& /*aFile*/, int64_t);
 	static void searchHash(TTHValue* /*aHash*/);
 
 	// URL related
 	static void registerDchubHandler();
 	static void registerMagnetHandler();
-	static void parseDchubUrl(const string& /*aUrl*/);
-	static void parseMagnetUri(const string& /*aUrl*/, bool aOverride = false);
-	
-	static void openLink(const string& url);
-	static void openFile(const string& file) {
+	static void parseDchubUrl(const tstring& /*aUrl*/);
+	static void parseMagnetUri(const tstring& /*aUrl*/, bool aOverride = false);
+	static bool parseDBLClick(const tstring& /*aString*/, string::size_type start, string::size_type end);
+	static int textUnderCursor(POINT p, CEdit& ctrl, tstring& x);
+	static void openLink(const tstring& url);
+	static void openFile(const tstring& file) {
 		::ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	}
 
-	static int getIconIndex(const string& aFileName);
+	static int getIconIndex(const tstring& aFileName);
 
 	static int getDirIconIndex() {
 		return dirIconIndex;
@@ -418,12 +410,25 @@ public:
 	static void saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
 		SettingsManager::StrSetting widths, int n, int* indexes, int* sizes) throw();
 
+	template<class T> static HWND hiddenCreateEx(T& p) throw() {
+		HWND active = (HWND)::SendMessage(mdiClient, WM_MDIGETACTIVE, 0, 0);
+		::LockWindowUpdate(mdiClient);
+		HWND ret = p.CreateEx(mdiClient);
+		if(active && ::IsWindow(active))
+			::SendMessage(mdiClient, WM_MDIACTIVATE, (WPARAM)active, 0);
+		::LockWindowUpdate(0);
+		return ret;
+	}
+	template<class T> static HWND hiddenCreateEx(T* p) throw() {
+		return hiddenCreateEx(*p);
+	}
+	
 	static void translate(HWND page, TextItem* textItems) 
 	{
 		if (textItems != NULL) {
 			for(int i = 0; textItems[i].itemID != 0; i++) {
 				::SetDlgItemText(page, textItems[i].itemID,
-					ResourceManager::getInstance()->getString(textItems[i].translatedString).c_str());
+					Text::toT(ResourceManager::getInstance()->getString(textItems[i].translatedString)).c_str());
 			}
 		}
 	}
@@ -440,23 +445,13 @@ public:
 	static void RunPreviewCommand(int index, string target);
 	static string formatTime(long rest);
 	static int getImage(const User::Ptr& u);
-
-	template<class T> static HWND hiddenCreateEx(T& p) throw() {
-		HWND active = (HWND)::SendMessage(mdiClient, WM_MDIGETACTIVE, 0, 0);
-		::LockWindowUpdate(mdiClient);
-		HWND ret = p.CreateEx(mdiClient);
-		if(active && ::IsWindow(active))
-			::SendMessage(mdiClient, WM_MDIACTIVATE, (WPARAM)active, 0);
-		::LockWindowUpdate(0);
-		return ret;
-	}
-	template<class T> static HWND hiddenCreateEx(T* p) throw() {
-		return hiddenCreateEx(*p);
-	}
-
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };
 
 #endif // __WINUTIL_H
 
+/**
+ * @file
+ * $Id$
+ */

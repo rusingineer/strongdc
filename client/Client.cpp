@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator, bool usesEscapes) : 
-	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), countType(COUNT_UNCOUNTED), port(0)
+	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), port(0), countType(COUNT_UNCOUNTED)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);

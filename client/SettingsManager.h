@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,6 +164,8 @@ public:
 			strSettings[key - STR_FIRST] = value.substr(0, 35);
 		} else if ( (key == DESCRIPTION) && (value.size() > 50) ) {
 			strSettings[key - STR_FIRST] = value.substr(0, 50);
+		} else if ( (key == EMAIL) && (value.size() > 64) ) {
+			strSettings[key - STR_FIRST] = value.substr(0, 64);
 		} else {
 			strSettings[key - STR_FIRST] = value;
 		}
