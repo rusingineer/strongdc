@@ -180,6 +180,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	ctrlStatus.SetParts(10, w);
 	statusSizes[0] = WinUtil::getTextWidth(STRING(AWAY), ::GetDC(ctrlStatus.m_hWnd)); // for "AWAY" segment
+	awaybyminimize = false;
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
@@ -493,35 +494,14 @@ void MainFrame::parseCommandLine(const string& cmdLine)
 			tth = cmdLine.substr(j + 18, 39);
 			if(Encoder::isBase32(tth.c_str()))
 				SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-//				return;
-		}
-
-		// Maybe for future use ;o) for now search for hash from magnet link only :-p
-/*		int64_t size = 0;
-		if( (j = cmdLine.find("xl=", i)) != string::npos) {
-			i = j + 3;
-			if( (j = cmdLine.find_first_of("&", i)) == string::npos) {
-				size = Util::toInt64(cmdLine.substr(i));
-			} else {
-				size = Util::toInt64(cmdLine.substr(i, j-i));
+		} else if( (j = cmdLine.find("xt=urn:bitprint:", i)) != string::npos) {
+			i = j + 16;
+			if( (j = cmdLine.find(".", i)) != string::npos) {
+				tth = cmdLine.substr(j + 1, 39);
+				if(Encoder::isBase32(tth.c_str()))
+					SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
 			}
 		}
-
-		string name;
-		if( (j = cmdLine.find("dn=", i)) != string::npos) {
-			i = j + 3;
-			if( (j = cmdLine.find_first_of("&", i)) == string::npos) {
-				name = cmdLine.substr(i);
-			} else {
-				name = cmdLine.substr(i, j-i);
-			}
-
-			if(tth.length() == 39){
-				if(QueueManager::getInstance()->add(name, size, tth))
-					ctrlStatus.SetText(0, name.c_str());
-			}
-							
-		}*/
 	}
 }
 
@@ -1221,20 +1201,6 @@ void MainFrame::setNormalTrayIcon() {
 }
 
 LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
-/*	bHandled = FALSE;
-	int uDevice = GET_DEVICE_LPARAM(lParam);
-	if (uDevice == FAPPCOMMAND_MOUSE) {
-		int cmd = GET_APPCOMMAND_LPARAM(lParam);
-		if (cmd == APPCOMMAND_BROWSER_BACKWARD) {
-			ctrlTab.goTo(-1);
-			bHandled = TRUE;
-		}
-		if (cmd == APPCOMMAND_BROWSER_FORWARD) {
-			ctrlTab.goTo(1);
-			bHandled = TRUE;
-		}
-	}
-	return S_OK;*/
 		if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_FORWARD)
 		ctrlTab.SwitchTo();
 	if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_BACKWARD)

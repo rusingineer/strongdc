@@ -547,7 +547,8 @@ private:
 		if(u->isSet(User::DCPLUSPLUS)) {
 			image+=22;
 		}
-		if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5")) {
+		if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5") ||
+			((u->getDescription().substr(0,1) == "P") && ((u->getDescription().substr(1,1) == "") || (u->getDescription().substr(1,1) == " ")))) {
 			image+=44;
 		}
 		return image;	

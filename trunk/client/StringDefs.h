@@ -102,7 +102,7 @@ enum Strings { // @DontAdd
 	FIND, // "Find"
 	FINISHED_DOWNLOADS, // "Finished Downloads"
 	FINISHED_UPLOADS, // "Finished Uploads"
-	FOLDER,
+	FOLDER, // "Folder"
 	FORCE_ATTEMPT, // "Force attempt"
 	GB, // "GB"
 	GET_FILE_LIST, // "Get file list"
@@ -537,7 +537,7 @@ enum Strings { // @DontAdd
 	SETCZDC_TIME_DOWN, // "More than"
 	SETCZDC_H_DOWN_SPEED, // "And all downloads not exceeds"
 	KBPS_DISABLE, // "kB/s (0 = disable)"
-	ISP,
+	ISP, // "ISP"
 	SETTINGS_ZDC_PROGRESS_OVERRIDE, // "Override system colors"
 	SETTINGS_ZDC_PROGRESS_OVERRIDE2, // "Override system colors"
 	MENUBAR, // "Menu bar"
@@ -552,61 +552,61 @@ enum Strings { // @DontAdd
 	SETCZDC_DISCONNECTING_ENABLE, // "Enable slow downloads disconnecting"
 	SETCZDC_MIN_FILE_SIZE, // "And file size is more than"
 	SETCZDC_REMOVE_SLOW_USER, // "Remove slow user from Queue"
-	AVERAGE_UPLOAD,
-	SETTINGS_SOUND,
-	SOUND_DOWNLOAD_BEGINS,
-	SOUND_DOWNLOAD_FINISHED,
-	SOUND_SOURCE_ADDED,
-	SOUND_UPLOAD_FINISHED,
-	SOUND_FAKER_FOUND,
-	EXTRA_HUB_SLOTS,
-	SETTINGS_SEGMENT,
-	AUTO_SEGMENT_TEXT,
-	SEGMENT2_TEXT,
-	SEGMENT3_TEXT,
-	SEGMENT4_TEXT,
-	SEGMENT6_TEXT,
-	SEGMENT8_TEXT,
-	DONT_ADD_SEGMENT_TEXT,
-	WARN_SEGMENT_TEXT,
-	DISABLE_COMPRESSION,
-	SETTINGS_MAX_COMPRESS,
-	SETTINGS_EMPTY_WORKING_SET,
-	SETTINGS_ODC_FLOOD_CACHE,
-	TEXT_FILESIZE,
-	TEXT_CONNECTION,
-	TEXT_MANUAL,
-	TEXT_EXTENSION,
-	TEXT_MINIMUM,
-	SETTINGS_FAKEDETECT,
-	SETTINGS_OPERACOLORS,
-	SETTINGS_AVIPREVIEW,
-	CREATING_HASH,
-	TEXT_IGNORE_JUNK,
-	TEXT_FAKEINFO,
-	TEXT_JUNK,
-	TEXT_BINJUNK,
-	TEXT_VOBJUNK,
-	TEXT_FAKEPERCENT,
-	SETTINGS_ARGUMENT,
-	SETTINGS_EXTENSIONS,
+	AVERAGE_UPLOAD, // "Upload Speed"
+	SETTINGS_SOUND, // "Sounds"
+	SOUND_DOWNLOAD_BEGINS, // "Download begins"
+	SOUND_DOWNLOAD_FINISHED, // "Download finished"
+	SOUND_SOURCE_ADDED, // "Alternate source added"
+	SOUND_UPLOAD_FINISHED, // "Upload finished"
+	SOUND_FAKER_FOUND, // "Faker found"
+	EXTRA_HUB_SLOTS, // "Open X extra slots for each hub (when hubs = 2 or more)"
+	SETTINGS_SEGMENT, // "Segment Downloading"
+	AUTO_SEGMENT_TEXT, // "Automatically do Accelerated (Segmented) downloading"
+	SEGMENT2_TEXT, // "2 segments if file size is between                 and                  MB"
+	SEGMENT3_TEXT, // "3 segments if file size is between                 and                  MB"
+	SEGMENT4_TEXT, // "4 segments if file size is between                 and                  MB"
+	SEGMENT6_TEXT, // "6 segments if file size is between                 and                  MB"
+	SEGMENT8_TEXT, // "8 segments if file size is greater than                  MB"
+	DONT_ADD_SEGMENT_TEXT, // "Don't add any other segment if speed is above"
+	WARN_SEGMENT_TEXT, // "(Too low or too high settings can decrease download speed!)"
+	DISABLE_COMPRESSION, // "Disable safe && compressed transfer"
+	SETTINGS_MAX_COMPRESS, // "Max compression level"
+	SETTINGS_EMPTY_WORKING_SET, // "Empty process working set (experimental)."
+	SETTINGS_ODC_FLOOD_CACHE, // "Use image cache (lowers CPU usage, but might distort the graphics)"
+	TEXT_FILESIZE, // "Number of segments based on the file size"
+	TEXT_CONNECTION, // "Number of segments based on the connection type"
+	TEXT_MANUAL, // "Manual settings of number of segments"
+	TEXT_EXTENSION, // "Don't use segment downloading for this filetypes:\n(use regular expressions)"
+	TEXT_MINIMUM, // "Minimum download block (segment) size"
+	SETTINGS_FAKEDETECT, // "Fake detector"
+	SETTINGS_OPERACOLORS, // "Progressbar colors"
+	SETTINGS_AVIPREVIEW, // "File Preview"
+	CREATING_HASH, // "Hashing"
+	TEXT_IGNORE_JUNK, // "Ignore junk files altogether"
+	TEXT_FAKEINFO, // "Set size to zero to disable, otherwise files larger than this will be considered junk files"
+	TEXT_JUNK, // "Junk file size"
+	TEXT_BINJUNK, // "BIN file size"
+	TEXT_VOBJUNK, // "VOB file size"
+	TEXT_FAKEPERCENT, // "Percent fake share accepted"
+	SETTINGS_ARGUMENT, // "Arguments"
+	SETTINGS_EXTENSIONS, // "Extensions"
 	PREVIEW_MENU, // "Preview"
-	SETTINGS_MAX_SOURCES,
-	CLIENT_EMU,
-	GET_IP,
+	SETTINGS_MAX_SOURCES, // "Max number of alternate sources"
+	CLIENT_EMU, // "Client Emulation"
+	GET_IP, // "Get IP Address"
 	SHUTDOWN, // "Shutdown computer"
 	SHUTDOWN_OFF, // "Shutdown sequence deactivated..."
 	SHUTDOWN_ON, // "Shutdown sequence activated..."
 	FAILED_TO_SHUTDOWN, // "Failed to shutdown!"
 	SETTINGS_ODC_SHUTDOWNTIMEOUT, // "Shutdown timeout (in seconds)"
-	USER_ONLINE,
-	USERS_ONLINE,
-	RECENT_HUBS, // "Recent Hubs",
+	USER_ONLINE, // "Running... (user online)"
+	USERS_ONLINE, // "Running... (%d of %d users online)"
+	RECENT_HUBS, // "Recent Hubs"
 	MENU_FILE_RECENT_HUBS, // "&Recent Hubs"
-	SHOW_ISP,
-	COPY_ALL,
-	COPY_NICK_IP,
-	COPY_ISP,
+	SHOW_ISP, // "Enable ISP column in userlist"
+	COPY_ALL, // "Copy All"
+	COPY_NICK_IP, // "Copy Nick+IP"
+	COPY_ISP, // "Copy Nick+IP"
 	SETTINGS_TOOLBAR, // "Toolbar"	
 	SETTINGS_TOOLBAR_IMAGE, // "Toolbar Images"
 	SETTINGS_TOOLBAR_ADD, // "Add -->"
@@ -615,69 +615,69 @@ enum Strings { // @DontAdd
 	SETTINGS_NORMAL, // "Normal"
 	SETTINGS_DIRS_DESCRIPTION, // "The Following Directories are automatically appended to the \"Download to...\" menu.  When an extension is supplied it becomes the default download directory for that type of file."
 	SETTINGS_DOWNLOADDIRS, // "Directories"
-	PK,
-	LOCK,
-	SUPPORTS,
-	SHOW_PK,
-	SHOW_LOCK,
-	SHOW_SUPPORTS,
-	GET_USER_RESPONSES,
-	REPORT,
-	USERLIST_ICONS,
+	PK, // "PK String"
+	LOCK, // "Lock"
+	SUPPORTS, // "Supports"
+	SHOW_PK, // "Enable PKString column in userlist"
+	SHOW_LOCK, // "Enable Lock column in userlist"
+	SHOW_SUPPORTS, // "Enable Supports column in userlist"
+	GET_USER_RESPONSES, // "Get user response"
+	REPORT, // "Report user"
+	USERLIST_ICONS, // "Userlist Icons"
 	SETTINGS_CLIENTS, // "Clients"
-	ENABLE_EMOTICONS,
+	ENABLE_EMOTICONS, // "Enable emoticons"
 	CHECK_MISMATCHED_SHARE_SIZE, // "Mismatched share size - "
 	CHECK_0BYTE_SHARE, // "zero bytes real size"
 	CHECK_INFLATED, // "filelist was inflated %s times"
 	CHECK_SHOW_REAL_SHARE, // ", stated size = %[statedshareformat], real size = %[realshareformat]"
 	CHECK_JUNK_FILES, // "Junk files found - %[junkshareformat] was junk, Stated share = %[statedshareformat], Real share = %[realshareformat]."
-	NEW_DISCONNECT,
+	NEW_DISCONNECT, // "Remove user from queue, if speed is below"
 	MENU_CDMDEBUG_MESSAGES, // "CDM Debug Messages"
-	GET_MP3INFO,
-	CHECK_FILELIST,
-	SIZE_EXACT,
-	DOWNLOAD_CORRUPTED,
-	BLOCK_FINISHED,
-	STOP_SEARCH,
-	SEARCH_STOPPED,
-	MYNICK_IN_CHAT,
-	NICK_MENU,
-	DESCRIPTION_MENU,
-	TAG_MENU,
-	CLIENT_MENU,
-	CONNECTION_MENU,
-	EMAIL_MENU,
-	ANY_MENU,
-	UPDATE_IP,
+	GET_MP3INFO, // "Get MP3 Info"
+	CHECK_FILELIST, // "Check File List"
+	SIZE_EXACT, // "Exactly"
+	DOWNLOAD_CORRUPTED, // "File was corrupted, redownloading in %d seconds"
+	BLOCK_FINISHED, // "Segment Block Finished, waiting..."
+	STOP_SEARCH, // "Stop Search"
+	SEARCH_STOPPED, // "Search stopped"
+	MYNICK_IN_CHAT, // "My nick in mainchat"
+	NICK_MENU, // "Nick"
+	DESCRIPTION_MENU, // "Description"
+	TAG_MENU, // "Tag"
+	CLIENT_MENU, // "Client"
+	CONNECTION_MENU, // "Client"
+	EMAIL_MENU, // "E-Mail"
+	ANY_MENU, // "Any"
+	UPDATE_IP, // "AutoUpdate IP on every startup"
 	TRANSFERRED, // "Transferred"
-	TTH_CHECKED,
-	FINISHED_MP3_DOWNLOADS,
-	BITRATE,
-	FREQUENCY,
-	MPEG_VER,
-	CHANNEL_MODE,
-	MENU_TTH,
-	CHECK_TTH_AFTER_DOWNLOAD,
-	NUMBER_OF_SEGMENTS,
-	ONLY_TTH,
-	SETTINGS_ONLY_TTH,
-	TTH_INCONSISTENCY,
-	CHECKING_TTH,
+	TTH_CHECKED, // "TTH Checked"
+	FINISHED_MP3_DOWNLOADS, // "Downloaded MP3 Info"
+	BITRATE, // "Bitrate"
+	FREQUENCY, // "Frequency"
+	MPEG_VER, // "MPEG Version"
+	CHANNEL_MODE, // "Channel mode"
+	MENU_TTH, // "Get TTH for file..."
+	CHECK_TTH_AFTER_DOWNLOAD, // "Check TTH after downloading file"
+	NUMBER_OF_SEGMENTS, // "segment(s)"
+	ONLY_TTH, // "Only files with TTH"
+	SETTINGS_ONLY_TTH, // "Search only files with TTH by default"
+	TTH_INCONSISTENCY, // "TTH Inconsistency"
+	CHECKING_TTH, // "Verifying TTH..."
 	SETCZDC_MAX_EMOTICONS, // "Max Emoticons in one chat message"
 	SETCZDC_CZCHARS_DISABLE, // "Remove diacritic marks from Czech chars"
 	SETCZDC_MAGNET_URI_HANDLER, // "Install Magnet URI handler on startup"
 	COPY_MAGNET_LINK, // "Copy magnet link to clipboard"
-	SECONDS,
+	SECONDS, // "Seconds"
 	SETTINGS_DEBUG_COMMANDS, // "Debug commands"
-	SETTINGS_SAVEQUEUE,
-	HUB_SEGMENTS,
+	SETTINGS_SAVEQUEUE, // "Autosave queue every"
+	HUB_SEGMENTS, // "Hub / Segments"
 	SETTINGS_AUTO_PRIORITY_DEFAULT, // "Use Auto Priority by default"
 	AUTO, // "Auto"	
-	SEGMENTBAR,
-	SHOW_SEGMENT_PART,
-	SEGMENT_PART_COLOR,
+	SEGMENTBAR, // "Segmented bar colors"
+	SHOW_SEGMENT_PART, // "Show progressbar on inactive segment part"
+	SEGMENT_PART_COLOR, // "Color of inactive part"
 	STRING_NOT_FOUND, // "String not found: "
-	SHOW_SPEED,
+	SHOW_SPEED, // "Show speed"
 	DU, // "Down/Up:"
 	LAST // @DontAdd
 };

@@ -22,7 +22,7 @@
 * vylepšeno pøijímání pøíkazù od hubu (CZDC++)
 * pøidána volba pro nastavení max. poètu smajlíkù v jedné zprávì (CZDC++)
 * automatické odstraòování diakritiky ze zpráv (CZDC++)
-* ladící pøíkazy (DMDC++)
+* ladící pøíkazy (DCDM++)
 * volba pro automatické ukládání fronty v urèitém èasovém intervalu
 * pøi uložení fronty je vytvoøena záloha
 * komprese povolena pouze s klienty >= 0.307
@@ -43,6 +43,7 @@
 * pøidána volba pro zobrazování rychlosti v popisu
 * aktualizováno na STLPort 4.6.2
 * pøi poškozeném souboru je stažení opakováno za 10 sekund
+* nìkolik zmìn podle CZDC++ 0.401[D]
 
 
 	-- StrongDC++ 1.00 RC5 --

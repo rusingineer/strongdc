@@ -998,7 +998,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				i->file = Util::getFileName(qi->getTarget());
 				i->path = Util::getFilePath(qi->getTarget());
 				i->size = qi->getSize();				
-				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
+				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 				i->Target = qi->getTarget();
 				i->qi = qi;
 
@@ -1073,7 +1073,7 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 		} else {
 			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
 			h->columns[COLUMN_HUB] = Util::toString(h->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
-			i->updateMask |= (ItemInfo::MASK_USER);
+			i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 		}
 	}
@@ -1096,7 +1096,7 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1))
 			i->upper->statusString = aReason;
 			
-		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
+		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS);
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
@@ -1141,7 +1141,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->statusString = STRING(DOWNLOAD_STARTING);
 		i->IP = aDownload->getUserConnection()->getRemoteIp();
 		i->country = Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp());
-		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
+		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
 	}
@@ -1225,7 +1225,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					i->statusString = buf;
 				}
 			}
-			i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
+			i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 
 			v->push_back(i);	
 		}
@@ -1266,7 +1266,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 			}
 		}
 
-		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
+		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
 		ItemInfo::MASK_PATH;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1358,7 +1358,7 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_WAITING;
 				i->upper->statusString = STRING(DOWNLOAD_FINISHED_IDLE);
-				i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
+				i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 			}
 		}
 		i->status = ItemInfo::STATUS_WAITING;
