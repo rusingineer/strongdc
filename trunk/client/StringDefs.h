@@ -98,6 +98,7 @@ enum Strings { // @DontAdd
 	DUPLICATE_FILE_NOT_SHARED, // "Duplicate file will not be shared: "
 	DUPLICATE_MATCH, // "Dupe matched against: "
 	DUPLICATE_SOURCE, // "Duplicate source"
+	EDIT_ACCEL, // "&Edit"
 	EMAIL, // "E-Mail"
 	ENTER_NICK, // "Please enter a nickname in the settings dialog!"
 	ENTER_SEARCH_STRING, // "Enter search string"
@@ -420,6 +421,7 @@ enum Strings { // @DontAdd
 	SETTINGS_UPLOADS_MIN_SPEED, // "Automatically open an extra slot if speed is below (0 = disable)"
 	SETTINGS_UPLOADS_SLOTS, // "Upload slots"
 	SETTINGS_URL_HANDLER, // "Install URL handler on startup (to handle dchub:// links)"
+	SETTINGS_USE_CTRL_FOR_LINE_HISTORY, // "Use CTRL for line history"
 	SETTINGS_USE_OEM_MONOFONT, // "Use OEM monospaced font for viewing text files"
 	SETTINGS_USE_SYSTEM_ICONS, // "Use system icons when browsing files (slows browsing down a bit)"
 	SETTINGS_USER_COMMANDS, // "User Commands"
@@ -856,5 +858,7 @@ enum Strings { // @DontAdd
 	PROGRESS_COMPRESS, // "Transfer progressbar - decompressed part"
 	PROGRESS_SEGMENT, // "Transfer progressbar - actual segment"
 	SETTINGS_SB_MAX_SOURCES, // "Max sources for match queue"
+	DEFAULT, // "Default"
+	MENU_OPEN_MY_LIST, // "Open my file list"
 	LAST // @DontAdd
 };

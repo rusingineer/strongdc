@@ -39,7 +39,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	adapter(this), state(STATE_CONNECT), 
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0),lastSize(0), validatenicksent(false)
+	reconnect(true), lastUpdate(0), validatenicksent(false)
 {
 	TimerManager::getInstance()->addListener(this);
 
@@ -59,8 +59,8 @@ void NmdcHub::connect() {
 	setReconnDelay(120 + Util::rand(0, 60));
 	reconnect = true;
 	supportFlags = 0;
-	lastMyInfo.clear();
-	lastSize = 0;
+	lastMyInfoA.clear();
+ 	lastMyInfoB.clear();
 	lastUpdate = 0;
 	validatenicksent = false;
 
@@ -81,7 +81,7 @@ void NmdcHub::connect() {
 void NmdcHub::connect(const User* aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+	if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
 		send("$ConnectToMe " + toNmdc(aUser->getNick()) + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
 	} else {
 		send("$RevConnectToMe " + toNmdc(getNick()) + " " + toNmdc(aUser->getNick())  + "|");
@@ -151,12 +151,12 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
 
 		// We don't wan't to answer passive searches if we're in passive mode...
-		if(bPassive == true && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
+		if(bPassive == true && getMode() != SettingsManager::CONNECTION_ACTIVE) {
 			return;
 		}
 
 		// Filter own searches
-		if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
+		if((getMode() == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
 			if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(IN_PORT))).c_str())) == 0) {
 				return;
 			}
@@ -372,7 +372,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				state = STATE_CONNECTED;
 				updateCounts(false);
 				u->setFlag(User::DCPLUSPLUS);
-				if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+				if(getMode() != SettingsManager::CONNECTION_ACTIVE)
 					u->setFlag(User::PASSIVE);
 				else
 					u->unsetFlag(User::PASSIVE);
@@ -444,7 +444,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		}
 
 		if(u) {
-			if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+			if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
 				connectToMe(u);
 				Speaker<NmdcHubListener>::fire(NmdcHubListener::RevConnectToMe(), this, u);
 			} else {
@@ -564,7 +564,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			setMe(u);
 		
 			u->setFlag(User::DCPLUSPLUS);
-			if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+			if(getMode() != SettingsManager::CONNECTION_ACTIVE)
 				u->setFlag(User::PASSIVE);
 			else
 				u->unsetFlag(User::PASSIVE);
@@ -707,41 +707,6 @@ string NmdcHub::getHubURL() {
 	return getAddressPort();
 }
 
-bool nlfound;
-BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
-	TCHAR buf[256];
-	buf[0] = NULL;
-	if (!handle)
-		return TRUE;// Not a window
-	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
-	buf[255] = NULL;
-
-	if(buf[0] != NULL) {
-		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
-			nlfound = true;
-			return false;
-		}
-	}
-	return true;
-}
-
-unsigned char HEX_2_INT_TABLE[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
-            6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-int hexstr2int(char *hexstr) {
-    register unsigned int length, i, value, shift;
-    for (length = 0; length < 9; length++) if (!hexstr[length]) break;
-    shift = (length - 1) * 4;
-    for (i = value = 0; i < length; i++, shift -= 4)
-        value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
-    return value;
-}
-
 void NmdcHub::myInfo(bool alwaysSend) {
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
@@ -765,11 +730,11 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
 	}
 	char modeChar = '?';
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)
+	if(getMode() == SettingsManager::CONNECTION_ACTIVE)
 		modeChar = 'A';
-	else if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_PASSIVE)
+	else if(getMode() == SettingsManager::CONNECTION_PASSIVE)
 		modeChar = 'P';
-	else if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5)
+	else if(getMode() == SettingsManager::CONNECTION_SOCKS5)
 		modeChar = '5';
 	
 	string VERZE = DCVERSIONSTRING;	
@@ -785,78 +750,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	}
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
-	nlfound = false;
-	string nldetect = SETTING(CONNECTION);
-
-	try {
-		TCHAR AppData[256];
-		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
-
-		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
-
-		int NetLimiter_UploadLimit = 0;
-		int NetLimiter_UploadOn = 0;
-		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName()+"/";
-		char buf[BUF_SIZE];
-		u_int32_t len;
-		char* w2 = strdup(cesta.c_str());
-
-		for(;;) {
-			size_t n = BUF_SIZE;
-			len = f.read(buf, n);
-			string txt = "";
-			for(int i = 0; i<len; ++i) {
-				if (buf[i]== 0) 
-				txt += "/"; else
-				txt += buf[i];
-			}
-
-			char* w1 = strdup(txt.c_str());
-
-			if(strstr(strupr(w1),strupr(w2)) != NULL) {
-				char buf1[256];
-				char buf2[256];
-
-				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
-				buf1[255] = 0;
-				string a1 = buf1;
-
-				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
-				buf2[255] = 0;
-				string a2 = buf2;
-
-				string limit_hex = "0x" + a2 + a1;
-
-				NetLimiter_UploadLimit = 0;
-
-				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
-				NetLimiter_UploadOn = u_int8_t(txt[16]);
-				buf[255] = 0;
-
-				if(NetLimiter_UploadOn == 1) {
-					EnumWindows(GetWOkna,NULL);
-					if(nlfound) {
-						nldetect = "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+" kB/s]";
-					}
-				}
-
-				delete[] w1;
-				break;
-			}
-
-			delete[] w1;
-
-			if(len < BUF_SIZE)
-				break;
-		}
-	
-		f.close();
-		delete[] w2;
-	} catch(...) {
-	}
-
-	string connection = nlfound ? nldetect : SETTING(CONNECTION);
+	string connection = Util::nlfound ? "NetLimiter [" + Util::nlspeed + " kB/s]" : SETTING(CONNECTION);
 	string speedDescription = "";
 
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
@@ -886,20 +780,16 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		}
 	}
 
-	string minf = 
-		"$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
+	string myInfoA = 
+		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
 		extendedtag +
-		">$ $" + SETTING(CONNECTION) + "\x01$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$' + 
-		ShareManager::getInstance()->getShareSizeString() + "$|";
-	if(alwaysSend || minf != lastMyInfo) {
-		int64_t ssize = ShareManager::getInstance()->getShareSize();
+		">$ $" + SETTING(CONNECTION) + "\x01$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
+	string myInfoB = ShareManager::getInstance()->getShareSizeString() + "$|";
 
-		if((!alwaysSend) && (lastSize != ssize && lastUpdate + 15*60*1000 > GET_TICK())) {
-			return;
-		}
-		send(minf);
-		lastMyInfo = minf;
-		lastSize = ssize;
+ 	if(lastMyInfoA != myInfoA || alwaysSend || (lastMyInfoB != myInfoB && lastUpdate + 15*60*1000 < GET_TICK()) ){
+ 		send(myInfoA + myInfoB);
+ 		lastMyInfoA = myInfoA;
+ 		lastMyInfoB = myInfoB;
 		lastUpdate = GET_TICK();		
 	}
 }
@@ -935,14 +825,14 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 		tmp[i] = '$';
 	}
 	int chars = 0;
-	if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
+	if((getMode() == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
 		chars = _snprintf(buf, x.length() + aString.length() + 63, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
 		buf[x.length() + aString.length() + 63] = 0;
 	} else {
 		buf = new char[getNick().length() + aString.length() + 64];
-		chars = _snprintf(buf, getNick().length() + aString.length() + 63, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		chars = _snprintf(buf, toNmdc(getNick()).length() + aString.length() + 63, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 		buf[getNick().length() + aString.length() + 63] = 0;
 	}
 	send(buf, chars);

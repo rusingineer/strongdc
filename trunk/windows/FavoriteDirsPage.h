@@ -52,3 +52,8 @@ protected:
 };
 
 #endif //FAVORITEDIRSPAGE_H
+
+/**
+ * @file
+ * $Id$
+ */

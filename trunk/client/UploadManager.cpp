@@ -508,7 +508,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			}
 }
 
-void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
+void UploadManager::on(ClientManagerListener::UserUpdated, User::Ptr& aUser) throw() {
 	if( (!aUser->isOnline()) && 
 		(aUser->isSet(User::QUIT_HUB)) && 
 		(BOOLSETTING(AUTO_KICK)) ){
@@ -521,7 +521,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				u->getUserConnection()->disconnect();
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(u->getUser());
+					reserveSlot(aUser);
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}

@@ -358,6 +358,8 @@ void HubManager::save() {
 			xml.addChildAttrib("RawThree", (*i)->getRawThree());
 			xml.addChildAttrib("RawFour", (*i)->getRawFour());
 			xml.addChildAttrib("RawFive", (*i)->getRawFive());
+			xml.addChildAttrib("Mode", Util::toString((*i)->getMode()));
+			xml.addChildAttrib("IP", (*i)->getIP());
 		}
 		xml.stepOut();
 		xml.addTag("Users");
@@ -530,6 +532,8 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setRawThree(aXml->getChildAttrib("RawThree"));
 			e->setRawFour(aXml->getChildAttrib("RawFour"));
 			e->setRawFive(aXml->getChildAttrib("RawFive"));
+			e->setMode(Util::toInt(aXml->getChildAttrib("Mode")));
+			e->setIP(aXml->getChildAttrib("IP"));
 			favoriteHubs.push_back(e);
 		}
 		aXml->stepOut();
@@ -580,6 +584,8 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setRawThree(aXml->getChildAttrib("RawThree"));
 			e->setRawFour(aXml->getChildAttrib("RawFour"));
 			e->setRawFive(aXml->getChildAttrib("RawFive"));
+			e->setMode(Util::toInt(aXml->getChildAttrib("Mode")));
+			e->setIP(aXml->getChildAttrib("IP"));
 			favoriteHubs.push_back(e);
 		}
 		aXml->stepOut();

@@ -208,9 +208,6 @@ public:
 	virtual User::NickMap& lockUserList() { cs.enter(); return users; };
 	virtual void unlockUserList() { cs.leave(); };
 
-	virtual string checkNick(const string& aNick);
-	virtual string getHubURL();
-
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	void disconnect() throw();
@@ -273,7 +270,6 @@ public:
 	void kick(const User::Ptr& aUser, const string& aMsg);
 
 	GETSET(int, supportFlags, SupportFlags);
-
 private:
 
 	struct ClientAdapter : public NmdcHubListener {
@@ -319,8 +315,7 @@ private:
 
 	bool reconnect;
 	u_int32_t lastUpdate;
-	string lastMyInfo;
-	int64_t lastSize;
+	string lastMyInfoA, lastMyInfoB;
 	bool validatenicksent;
 	SearchQueue searchQueue;	
 	
@@ -344,6 +339,9 @@ private:
 	string fromNmdc(const string& str) const { return Text::acpToUtf8(str); }
 	string toNmdc(const string& str) const { return Text::utf8ToAcp(str); }
 	
+	virtual string checkNick(const string& aNick);
+	virtual string getHubURL();
+
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 

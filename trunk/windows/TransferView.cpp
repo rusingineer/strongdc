@@ -219,6 +219,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 
 		ucParams["mynick"] = itemI->user->getClientNick();
 		ucParams["mycid"] = itemI->user->getClientCID().toBase32();
+		ucParams["file"] = Text::fromT(itemI->path) + Text::fromT(itemI->file);
 
 		StringMap tmp = ucParams;
 		itemI->user->getParams(tmp);
@@ -427,7 +428,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
 			CRect rc2 = rc;
 			rc2.left += 2;
-			//FillRect(cd->nmcd.hdc, &rc, WinUtil::bgBrush);
+
 			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
 			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
 			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
@@ -446,7 +447,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				POINT p = { rc2.left, top };
 				WinUtil::flagImages.Draw(cd->nmcd.hdc, ii->flagImage, p, LVSIL_SMALL);
 				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
-				//SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
 				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 				return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
 			}
@@ -1229,6 +1229,8 @@ void TransferView::InsertItem(ItemInfo* i) {
 			i->upper->columns[COLUMN_USER] = Text::toT(Util::toString(mainItem->pocetUseru))+_T(" ")+TSTRING(HUB_USERS);
 			if(mainItem->qi)
 				i->upper->columns[COLUMN_HUB] = Text::toT(Util::toString((int)mainItem->qi->getActiveSegments().size()))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
+			else
+				i->upper->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
 		}
 
 		PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);

@@ -165,12 +165,10 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
-	
-	GETSET(u_int32_t, lastSave, LastSave);
-	GETSET(string, queueFile, QueueFile);
-
 	QueueItem* getRunning(const User::Ptr& aUser);
 
+	GETSET(u_int32_t, lastSave, LastSave);
+	GETSET(string, queueFile, QueueFile);
 
 	/** All queue items by target */
 	class FileQueue {
@@ -200,11 +198,6 @@ public:
 			if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
 				lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
-
-			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
-				FileChunksInfo::Free(qi->getTempTarget());
-			}
-
 			delete qi;
 		}
 
@@ -214,6 +207,10 @@ public:
 		QueueItem::StringIter lastInsert;
 	};
 
+	/** QueueItems by target */
+	FileQueue fileQueue;
+
+private:
 	/** All queue items indexed by user (this is a cache for the FileQueue really...) */
 	class UserQueue {
 	public:
@@ -246,8 +243,6 @@ public:
 	
 	CriticalSection cs;
 	
-	/** QueueItems by target */
-	FileQueue fileQueue;
 	/** QueueItems by user */
 	UserQueue userQueue;
 	/** Directories queued for downloading */

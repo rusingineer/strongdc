@@ -22,7 +22,7 @@
 #include "MagnetDlg.h"
 #include "WinUtil.h"
 
-LRESULT CMagnetDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT MagnetDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	// zombies.
 	SetWindowText(CTSTRING(MAGNET_DLG_TITLE));
 	CenterWindow(GetParent());
@@ -59,7 +59,7 @@ LRESULT CMagnetDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
-LRESULT CMagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT MagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(wID == IDOK) {
 		if(IsDlgButtonChecked(IDC_MAGNET_REMEMBER) == BST_CHECKED) {
 			SettingsManager::getInstance()->set(SettingsManager::MAGNET_ASK,  false);
@@ -80,7 +80,7 @@ LRESULT CMagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	return 0;
 }
 
-LRESULT CMagnetDlg::onRadioButton(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT MagnetDlg::onRadioButton(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	switch(wID) {
 		case IDC_MAGNET_QUEUE:
 		case IDC_MAGNET_SEARCH:

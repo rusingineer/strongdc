@@ -86,7 +86,7 @@ public:
 	/**
      * Get start offset of a free chunk, the end offset of chunk is unpredictable
      */
-	int64_t GetUndlStart(int);
+	int64_t GetUndlStart();
 
 	/**
      * Release the chunk with start offset
@@ -150,7 +150,7 @@ public:
 	vector<int64_t> vecRunBlocks;
     map<int64_t, int64_t> mapVerifiedBlocks;
 
-    int64_t	iBlockSize;						// TigerTree block size
+    size_t	iBlockSize;						// TigerTree block size
 	string  sFilename;						// Temp target file name
 
 	int64_t iFileSize;

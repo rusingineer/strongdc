@@ -230,7 +230,7 @@ void AdcHub::handle(Command::CTM, Command& c) throw() {
 }
 
 void AdcHub::handle(Command::RCM, Command& c) throw() {
-	if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+	if(getMode() != SettingsManager::CONNECTION_ACTIVE)
 		return;
 	User::Ptr p = ClientManager::getInstance()->getUser(c.getFrom(), false);
 	if(!p || p == getMe())
@@ -249,7 +249,7 @@ void AdcHub::connect(const User* user, string const& token) {
 	if(state != STATE_NORMAL)
 		return;
 	string tmp;
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+	if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
 		tmp = "DCTM " + user->getCID().toBase32() + " " +
 				getMe()->getCID().toBase32() + " " + token + " ADC/1.0 " +
 				Util::toString(SETTING(IN_PORT)) + "\n";
@@ -369,7 +369,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	ADDPARAM(" HO", Util::toString(counts.op));
 	ADDPARAM(" VE", "++\\ " VERSIONSTRING);
 	ADDPARAM(" I4", "0.0.0.0");
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+	if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
 		ADDPARAM(" U4", Util::toString(SETTING(IN_PORT)));
 	} else {
 		ADDPARAM(" U4", "");

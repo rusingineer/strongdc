@@ -92,12 +92,10 @@ public:
 		state = ((IsDlgButtonChecked(IDC_PROGRESS_OVERRIDE) != 0) && (IsDlgButtonChecked(IDC_PROGRESS_OVERRIDE2) != 0));
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_PROGRESS_TEXT_COLOR_DOWN), state);
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_PROGRESS_TEXT_COLOR_UP), state);
-		ctrlProgressDownDrawer.Invalidate();
-		ctrlProgressUpDrawer.Invalidate();
-
-		//state =(IsDlgButtonChecked(IDC_PROGRESS_SEGMENT_SHOW) != 0);
-		//::EnableWindow(::GetDlgItem(m_hWnd, IDC_SETTINGS_SEGMENT_BAR_COLOR), state);
-		//ctrlProgressSegmentDrawer.Invalidate();
+		if(ctrlProgressDownDrawer.m_hWnd > 0)
+			ctrlProgressDownDrawer.Invalidate();
+		if(ctrlProgressUpDrawer.m_hWnd > 0)
+			ctrlProgressUpDrawer.Invalidate();
 	}
 
 	void updateScreen() {

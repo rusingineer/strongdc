@@ -186,12 +186,12 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 		bool tooFast = ((SETTING(MAX_DOWNLOAD_SPEED) != 0 && DownloadManager::getInstance()->getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024)));
 		
-		bool startDown = !tooMany && !tooFast;
-
 		int attempts = 0;
 		
 		ConnectionQueueItem::Iter i = pendingDown.begin();
 		while(i != pendingDown.end()) {
+		bool startDown = !tooMany && !tooFast;
+
 			ConnectionQueueItem* cqi = *i;
 			dcassert(cqi->getUser());
 			
@@ -211,7 +211,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				}
 
-				if(cqi->getUser()->isSet(User::PASSIVE) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)) {
+				if(cqi->getUser()->isSet(User::PASSIVE) && (cqi->getUser()->getClient()->getMode() != SettingsManager::CONNECTION_ACTIVE)) {
 					i = pendingDown.erase(i);
 					failPassive.push_back(cqi);
 					continue;

@@ -128,7 +128,7 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize,
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), 
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
@@ -220,7 +220,7 @@ public:
 	// All setCurrent(NULL) should be replaced with this
 	void removeCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
-		dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
+		//dcassert(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end());
 
 		if(find(currents.begin(), currents.end(), *getSource(aUser)) != currents.end()) {
 			currents.erase(find(currents.begin(), currents.end(), *getSource(aUser)));
@@ -267,7 +267,6 @@ public:
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
-	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
 	GETSET(TigerTree, tiger, Tiger);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
 	GETSET(int64_t, speed, Speed);
@@ -329,7 +328,7 @@ private:
 
 	void removeSource(const User::Ptr& aUser, int reason) {
 		Source::Iter i = getSource(aUser, sources);
-		dcassert(i != sources.end());
+		//dcassert(i != sources.end());
 		if(i == sources.end()) return;
 
 		(*i)->setFlag(reason);

@@ -147,7 +147,7 @@ public:
 	 * @remarks This is only used in the tray icons. Could be used in
 	 * MainFrame too.
 	 *
-	 * @return Agerage download speed in Bytes/s
+	 * @return Average download speed in Bytes/s
 	 */
 	int getAverageSpeed() {
 		Lock l(cs);
@@ -198,7 +198,8 @@ public:
 			Lock l(cs);
 			reservedSlots[aUser] = GET_TICK() + 600*1000;
 		}
-		aUser->connect();	
+		if(aUser->isOnline())
+			aUser->connect();	
 	}
 
 	void reserveSlotHour(User::Ptr& aUser) {
@@ -206,7 +207,8 @@ public:
 			Lock l(cs);
 			reservedSlots[aUser] = GET_TICK() + 3600*1000;
 		}
-		aUser->connect();				
+		if(aUser->isOnline())
+			aUser->connect();				
 	}
 
 	void reserveSlotDay(User::Ptr& aUser) {
@@ -214,7 +216,8 @@ public:
 			Lock l(cs);
 			reservedSlots[aUser] = GET_TICK() + 24*3600*1000;
 		}
-		aUser->connect();	
+		if(aUser->isOnline())
+			aUser->connect();	
 	}
 
 	void reserveSlotWeek(User::Ptr& aUser) {
@@ -222,7 +225,8 @@ public:
 			Lock l(cs);
 			reservedSlots[aUser] = GET_TICK() + 7*24*3600*1000;
 		}
-		aUser->connect();	
+		if(aUser->isOnline())
+			aUser->connect();	
 }
 
 	void unreserveSlot(const User::Ptr& aUser) {
@@ -283,7 +287,7 @@ private:
 	}
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserUpdated, User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();

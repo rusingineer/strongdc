@@ -93,6 +93,7 @@ public:
 	GETSET(string, listFile, ListFile);
 	GETSET(string, bzXmlFile, BZXmlFile);
 
+	void generateXmlList(bool force = false);
 private:
 	struct AdcSearch;
 
@@ -267,7 +268,6 @@ private:
 	void addTree(const string& aName, Directory* aDirectory);
 	void addFile(Directory* dir, Directory::File::Iter i);
 	void generateNmdcList();
-	void generateXmlList();
 
 	StringList notShared;
 

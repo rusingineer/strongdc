@@ -111,7 +111,7 @@ LRESULT FavoriteDirsPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	item.pszText = buf;
 
 	int i = -1;
-	while((i = ctrlDirectories.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+	while((i = ctrlDirectories.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		item.iItem = i;
 		item.iSubItem = 0;
 		ctrlDirectories.GetItem(&item);
@@ -123,7 +123,6 @@ LRESULT FavoriteDirsPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		if(virt.DoModal(m_hWnd) == IDOK) {
 			if (HubManager::getInstance()->renameFavoriteDir(Text::fromT(buf), Text::fromT(virt.line))) {
 				ctrlDirectories.SetItemText(i, 0, virt.line.c_str());
-				return 0;
 			} else {
 				MessageBox(CTSTRING(DIRECTORY_ADD_ERROR));
 			}
@@ -132,15 +131,6 @@ LRESULT FavoriteDirsPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	return 0;
 }
 
-/*LRESULT FavoriteDirsPage::onHelpInfo(LPNMHDR) {
-	HtmlHelp(m_hWnd, WinUtil::getHelpFile().c_str(), HH_HELP_CONTEXT, IDD_FAVORITE_DIRSPAGE);
-	return 0;
-}
-
-LRESULT FavoriteDirsPage::onHelp(UINT , WPARAM , LPARAM, BOOL& ) {
-	HtmlHelp(m_hWnd, WinUtil::getHelpFile().c_str(), HH_HELP_CONTEXT, IDD_FAVORITE_DIRSPAGE);
-	return 0;
-}*/
 
 void FavoriteDirsPage::addDirectory(const tstring& aPath){
 	tstring path = aPath;
@@ -160,3 +150,8 @@ void FavoriteDirsPage::addDirectory(const tstring& aPath){
 		}
 	}
 }
+
+/**
+ * @file
+ * $Id$
+ */

@@ -498,7 +498,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
 					) {
 					droppedResults++;
-//					ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
+					PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
 					return;
 				}
 			}
@@ -604,16 +604,19 @@ void SearchFrame::SearchInfo::getList() {
 }
 
 void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
-
 	if(!si->getTTH().empty()) {
-		if(tth.empty()) {
+		if(firstTTH) {
 			tth = si->getTTH();
 			hasTTH = true;
+			firstTTH = false;
 		} else if(hasTTH) {
 			if(tth != si->getTTH()) {
 				hasTTH = false;
 			}
 		} 
+	} else {
+		firstTTH = false;
+		hasTTH = false;
 	}
 
 	if(si->sr->getType() == SearchResult::TYPE_FILE) {
@@ -772,15 +775,6 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		bHandled = FALSE;
 	return 0;
 	}
-}
-
-LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlResults.GetSelectedCount() == 1) {
-		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-		SearchResult* sr = ctrlResults.getItemData(i)->sr;
-		WinUtil::bitziLink(sr->getTTH());
-	}
-	return 0;
 }
 
 void SearchFrame::UpdateLayout(BOOL bResizeBars)
@@ -1037,10 +1031,19 @@ LRESULT SearchFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 		SearchResult* sr = ctrlResults.getItemData(i)->sr;
 
 		if(sr->getTTH() != NULL) {
-			SearchFrame::openWindow(Text::toT(sr->getTTH()->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			WinUtil::searchHash(sr->getTTH());
 		}
 	} 
 
+	return 0;
+}
+
+LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlResults.GetSelectedCount() == 1) {
+		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+		WinUtil::bitziLink(sr->getTTH());
+	}
 	return 0;
 }
 
@@ -1117,6 +1120,13 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
  	case HUB_REMOVED:
  			onHubRemoved((HubInfo*)(lParam));
  		break;
+	case FILTERED_TEXT:
+		{
+			tstring* t = (tstring*)(lParam);
+			ctrlStatus.SetText(3, (*t).c_str());
+			delete t;
+		}
+		break;
  	}
 
 	return 0;
@@ -1165,7 +1175,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 
 		SearchInfo::CheckSize cs = ctrlResults.forEachSelectedT(SearchInfo::CheckSize());
 
-		if(cs.size != -1) {
+		if(cs.size != -1 || cs.hasTTH) {
 			targets.clear();
 			if(cs.hasTTH) {
 				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(Text::fromT(cs.tth)));

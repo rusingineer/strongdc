@@ -75,7 +75,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aDownloadedBytes, aAdded, root);
 
 	qi->setMaxSegments(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
-	qi->setMaxSegmentsInitial(getMaxSegments(qi->getTargetFileName(), qi->getSize()));
 
 	if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
 		if(aTempTarget.empty()) {
@@ -117,7 +116,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 				v.push_back(qi->getSize());
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 			}else
-				new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 
 		}
 		
@@ -242,7 +241,6 @@ QueueItem* QueueManager::FileQueue::findHighest(){
 		if(cand->getPriority() < q->getPriority())
 			cand = q;
 	}
-
 	return cand;
 }
 
@@ -264,7 +262,6 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	dcassert(qi->isSource(aUser));
 
 	QueueItem::List& l = userQueue[qi->getPriority()][aUser];
-
 	if(qi->isSet(QueueItem::FLAG_EXISTS)) {
 		l.insert(l.begin(), qi);
 	} else {
@@ -374,8 +371,9 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 		QueueItem::UserListIter j = ulm.find(aUser);
 		dcassert(j != ulm.end());
 		QueueItem::List& l = j->second;
-		dcassert(find(l.begin(), l.end(), qi) != l.end());
-		l.erase(find(l.begin(), l.end(), qi));
+		QueueItem::Iter t = find(l.begin(), l.end(), qi);
+		if(t != l.end())
+			l.erase(t);
 		
 		if(l.empty()) {
 			ulm.erase(j);
@@ -624,7 +622,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(utf8)
 		s->setFlag(QueueItem::Source::FLAG_UTF8);
 
-	if(aUser->isSet(User::PASSIVE) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) ) {
+	if(aUser->isSet(User::PASSIVE) && (aUser->getClient()->getMode() != SettingsManager::CONNECTION_ACTIVE) ) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else {
@@ -904,21 +902,15 @@ again:
 			}
 		}
 
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
-
-		if(!chunksInfo) {
-			message = "No Chunks Info";
-			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			goto again;
-		}
-
-		freeBlock = chunksInfo->GetUndlStart(q->getMaxSegments());
+		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart();
 
 		if(freeBlock == -1) {
 			message = STRING(NO_FREE_BLOCK);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
+
+
 	}
 
 	d = new Download(q, aUser);
@@ -1251,17 +1243,10 @@ void QueueManager::saveQueue() throw() {
 				f.write(Util::toString((int)d->getPriority()));
 				f.write(STRINGLEN("\" TempTarget=\""));
 				f.write(CHECKESCAPE(d->getTempTarget()));
-				FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(d->getTempTarget());
 				f.write(STRINGLEN("\" FreeBlocks=\""));
-				if(chunksInfo) {
-					f.write(chunksInfo->getFreeBlocksString());
-					f.write(STRINGLEN("\" VerifiedBlocks=\""));
-					f.write(chunksInfo->getVerifiedBlocksString());
-				} else {
-					f.write("");
-					f.write(STRINGLEN("\" VerifiedBlocks=\""));
-					f.write("");
-				}
+				f.write(FileChunksInfo::Get(d->getTempTarget())->getFreeBlocksString());
+				f.write(STRINGLEN("\" VerifiedBlocks=\""));
+				f.write(FileChunksInfo::Get(d->getTempTarget())->getVerifiedBlocksString());
 				f.write(STRINGLEN("\" Added=\""));
 				f.write(Util::toString(d->getAdded()));
 				if(d->getTTH() != NULL) {
@@ -1278,9 +1263,6 @@ void QueueManager::saveQueue() throw() {
 
 				f.write(STRINGLEN("\" MaxSegments=\""));
 				f.write(Util::toString(d->getMaxSegments()));
-
-				f.write(STRINGLEN("\" MaxSegmentsInitial=\""));
-				f.write(Util::toString(d->getMaxSegmentsInitial()));
 
 				f.write(STRINGLEN("\">\r\n"));
 
@@ -1347,6 +1329,8 @@ void QueueManager::loadQueue() throw() {
 		QueueLoader l;
 		SimpleXMLReader(&l).fromXML(File(getQueueFile(), File::READ, File::OPEN).read());
 		dirty = false;
+		saveQueue(); // ensure old temp file was converted
+
 	} catch(const Exception&) {
 		// ...
 	}
@@ -1369,7 +1353,6 @@ static const string sFreeBlocks = "FreeBlocks";
 static const string sVerifiedBlocks = "VerifiedBlocks";
 static const string sAutoPriority = "AutoPriority";
 static const string sMaxSegments = "MaxSegments";
-static const string sMaxSegmentsInitial = "MaxSegmentsInitial";
 
 void QueueLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
 	QueueManager* qm = QueueManager::getInstance();	
@@ -1398,7 +1381,6 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& tthRoot = getAttrib(attribs, sTTH, 6);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 6));
 			int maxsegments = Util::toInt(getAttrib(attribs, sMaxSegments, 6));
-			int maxsegmentsinitial = Util::toInt(getAttrib(attribs, sMaxSegmentsInitial, 6));
 			if (downloaded > size || downloaded < 0)
 				downloaded = 0;
 
@@ -1417,7 +1399,6 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
 				qi->setAutoPriority(ap);
 
-				if(maxsegmentsinitial > 0) qi->setMaxSegmentsInitial(maxsegmentsinitial);
 				if(maxsegments > 1) qi->setMaxSegments(maxsegments);
 					else qi->setMaxSegments(1);
 				
