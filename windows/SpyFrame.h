@@ -26,6 +26,7 @@
 #include "../client/ClientManager.h"
 #include "../client/TimerManager.h"
 #include "CZDCLib.h"
+#include "../client/SearchManager.h"
 
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
@@ -47,6 +48,7 @@ public:
 		COLUMN_FIRST,
 		COLUMN_STRING = COLUMN_FIRST,
 		COLUMN_COUNT,
+		COLUMN_USERS,
 		COLUMN_LAST
 	};
 
@@ -122,8 +124,39 @@ private:
 	
 	bool closed;
 	
+	CriticalSection cs;
+
+	struct SearchData
+	{
+		SearchData() : curpos(0) { }
+		int i;
+		string seekers[3];
+
+		void AddSeeker(const string& s)
+		{
+			seekers[curpos++] = s;
+			curpos = curpos % 3;
+		}
+	private:
+		int curpos;
+	};
+
+	typedef HASH_MAP<string, SearchData> SearchMap;
+  	typedef SearchMap::iterator SearchIter;
+
+  	SearchMap searches;
+
+  	// ClientManagerListener
+	struct SearchInfo
+	{
+		SearchInfo(const string& _user, const string& _s) : seeker(_user), s(_s) { }
+		string seeker, s;
+	};
+
+	void onSearchResult(string aSearchString);
+
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::IncomingSearch, const string& s) throw();
+	virtual void on(ClientManagerListener::IncomingSearch, const string& user, const string& s) throw();
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t) throw();

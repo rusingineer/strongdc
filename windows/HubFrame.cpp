@@ -310,7 +310,11 @@ void HubFrame::onEnter() {
 						ctrlUsers.getItemData(k)->getList();
 					}
 				}
-			} else if(Util::stricmp(s.c_str(), "extraslots")==0) {
+			} else if(Util::stricmp(s.c_str(), "f") == 0) {
+				if(param.empty())
+					param=findTextPopup();
+				findText(param);
+			}  else if(Util::stricmp(s.c_str(), "extraslots")==0) {
 				int j = Util::toInt(param);
 				if(j > 0) {
 					SettingsManager::getInstance()->set(SettingsManager::EXTRA_SLOTS, j);
@@ -880,6 +884,55 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	}
 }
 
+void HubFrame::findText(string const& needle) throw() {
+	int max = ctrlClient.GetWindowTextLength();
+	// a new search? reset cursor to bottom
+	if(needle != currentNeedle || currentNeedlePos == -1) {
+		currentNeedle = needle;
+		currentNeedlePos = max;
+	}
+	// set current selection
+	FINDTEXT ft;
+	ft.chrg.cpMin = currentNeedlePos;
+	ft.chrg.cpMax = 0; // REVERSED!! GAH!! FUCKING RETARDS! *blowing off steam*
+	ft.lpstrText = needle.c_str();
+	// empty search? stop
+	if(needle.empty())
+		return;
+	// find upwards
+	currentNeedlePos = (int)ctrlClient.SendMessage(EM_FINDTEXT, 0, (LPARAM)&ft);
+	// not found? try again on full range
+	if(currentNeedlePos == -1 && ft.chrg.cpMin != max) { // no need to search full range twice
+		currentNeedlePos = max;
+		ft.chrg.cpMin = currentNeedlePos;
+		currentNeedlePos = (int)ctrlClient.SendMessage(EM_FINDTEXT, 0, (LPARAM)&ft);
+	}
+	// found? set selection
+	if(currentNeedlePos != -1) {
+		ft.chrg.cpMin = currentNeedlePos;
+		ft.chrg.cpMax = currentNeedlePos + needle.length();
+		ctrlClient.SetFocus();
+		ctrlClient.SendMessage(EM_EXSETSEL, 0, (LPARAM)&ft);
+	} else {
+		addClientLine(CSTRING(STRING_NOT_FOUND)+needle);
+		currentNeedle="";
+	}
+}
+
+
+string HubFrame::findTextPopup() {
+	LineDlg *finddlg;
+	string param="";
+		finddlg=new LineDlg;
+		finddlg->title=CSTRING(SEARCH);
+		finddlg->description=CSTRING(SPECIFY_SEARCH_STRING);
+		if(finddlg->DoModal()== IDOK) {
+		param=finddlg->line;
+	}
+	delete[] finddlg;
+	return param;
+}
+
 LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND focus = GetFocus();
 	bHandled = false;
@@ -1261,10 +1314,27 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 		return 0;
 			}
 
+	if(wParam == VK_TAB) {
+		onTab();
+		return 0;
+	} else if( wParam == VK_F3 && ( GetKeyState(VK_LSHIFT)&(0x80) )  ) {
+		currentNeedle=findTextPopup();
+		findText(currentNeedle);
+		return 0;
+	}else if(wParam == VK_F3) {
+		if (currentNeedle.empty())
+			currentNeedle=findTextPopup();
+		findText(currentNeedle);
+		return 0;
+	}
+
+	// don't handle these keys unless the user is entering a message
+	if (GetFocus() != ctrlMessage.m_hWnd) {
+		bHandled = FALSE;
+		return 0;
+	}
+
 	switch(wParam) {
-		case VK_TAB:
-				onTab();
-			break;
 		case VK_RETURN:
 			if( (GetKeyState(VK_CONTROL) & 0x8000) || 
 				(GetKeyState(VK_MENU) & 0x8000) ) {

@@ -165,6 +165,7 @@ void OperaColorsPage::write()
 
 	SettingsManager::getInstance()->set(SettingsManager::DOWNLOAD_BAR_COLOR, (int)crProgressDown);
 	SettingsManager::getInstance()->set(SettingsManager::UPLOAD_BAR_COLOR, (int)crProgressUp);
+	SettingsManager::getInstance()->set(SettingsManager::SEGMENT_BAR_COLOR, (int)crProgressSegment);
 	SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_DOWN, (int)crProgressTextDown);
 	SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_UP, (int)crProgressTextUp);
 //	}
@@ -216,7 +217,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 
 				clr = getCheckbox(IDC_PROGRESS_OVERRIDE) ? crProgressDown : GetSysColor(COLOR_HIGHLIGHT);
 				OperaColors::EnlightenFlood(clr, a, b);
-				OperaColors::FloodFill(dc, (rc.right / 2) + 1, rc.top, rc.right, rc.bottom, a, b, getCheckbox(IDC_PROGRESS_BUMPED));
+				OperaColors::FloodFill(dc, rc.right / 2 + 1, rc.top, rc.right, rc.bottom, a, b, getCheckbox(IDC_PROGRESS_BUMPED));				
 				int textcolor = getCheckbox(IDC_PROGRESS_OVERRIDE2) ? ((dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW) ? crProgressTextDown : crProgressTextUp) : OperaColors::TextFromBackground(clr);
 				dc.SetTextColor(textcolor);
 			}

@@ -232,6 +232,10 @@ void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& addr
 		string nick = x.substr(i, j-i);
 		i = j + 1;
 
+		if (!address.empty()) {
+			ClientManager::getInstance()->setIPNick(address, nick);
+		}
+
 		// A file has 2 0x05, a directory only one
 		size_t cnt = count(x.begin() + j, x.end(), 0x05);
 	
@@ -293,8 +297,6 @@ void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& addr
 	if(!address.empty()) {
 		if(user->isOnline()) {
 			if(user->getClient()->getOp()) {
-				user->setIp(address);
-				User::updated(user);
 				isoponhub = true;
 			}
 		}

@@ -26,6 +26,7 @@
 
 #include "../client/ShareManager.h"
 #include "../client/ResourceManager.h"
+#include "../client/ConnectionManager.h"
 
 LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -48,6 +49,7 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	ctrlSearches.AddColumn(CSTRING(SEARCH_STRING), COLUMN_STRING, COLUMN_STRING);
 	ctrlSearches.AddColumn(CSTRING(COUNT), COLUMN_COUNT, COLUMN_COUNT);
+	ctrlSearches.AddColumn(CSTRING(USERS), COLUMN_USERS, COLUMN_USERS);
 
 	ctrlSearches.setSort(COLUMN_COUNT, ExListViewCtrl::SORT_INT, false);
 
@@ -86,18 +88,45 @@ void SpyFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == SEARCH) {
-		string* x = (string*)lParam;
+		SearchInfo* x = (SearchInfo*)lParam;
+
+		SearchIter it2 = searches.find(x->s);
+		int n;
+		if(it2 == searches.end()) {
+			n = searches[x->s].i = 1;
+			it2 = searches.find(x->s);
+		} else {
+			n = ++((it2->second).i);
+		}
+
+		if (x->seeker.find("Hub:")) x->seeker = ClientManager::getInstance()->getIPNick(x->seeker.substr(0, x->seeker.find(':')));
+
+		for (int k = 0; k < 3; ++k)
+			if (x->seeker == (searches[x->s].seekers)[k])
+				break;		//that user's searchfng for file already noted
+
+		{
+			Lock l(cs);
+			if (k == 3)		//loop terminated normally
+				searches[x->s].AddSeeker(x->seeker);
+		}
+
+		string temp;
+
+		for (int k = 0; k < 3; ++k)
+			temp += (searches[x->s].seekers)[k] + "  ";
 
 		total++;
 
 		// Not thread safe, but who cares really...
 		perSecond[cur]++;
 
-		int j = ctrlSearches.find(*x);
+		int j = ctrlSearches.find(x->s);
 		if(j == -1) {
 			StringList a;
-			a.push_back(*x);
+			a.push_back(x->s);
 			a.push_back(Util::toString(1));
+			a.push_back(temp);
 			ctrlSearches.insert(a);
 			if(ctrlSearches.GetItemCount() > 500) {
 				ctrlSearches.DeleteItem(ctrlSearches.GetItemCount() - 1);
@@ -106,6 +135,7 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			char tmp[32];
 			ctrlSearches.GetItemText(j, COLUMN_COUNT, tmp, 32);
 			ctrlSearches.SetItemText(j, COLUMN_COUNT, Util::toString(Util::toInt(tmp)+1).c_str());
+			ctrlSearches.SetItemText(j, COLUMN_USERS, temp.c_str());
 			if(ctrlSearches.getSortColumn() == COLUMN_COUNT )
 				ctrlSearches.resort();
 		}
@@ -157,11 +187,11 @@ LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 	return 0;
 };
 
-void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& s) throw() {
-			string* x = new string(s);
-			string::size_type i = string::npos;
-			while( (i=x->find('$')) != string::npos) {
-				(*x)[i] = ' ';
+void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& user, const string& s) throw() {
+	SearchInfo *x = new SearchInfo(user, s);
+	int i = -1;
+	while( (i=(x->s).find('$')) != string::npos) {
+		(x->s)[i] = ' ';
 			}
 			PostMessage(WM_SPEAKER, SEARCH, (LPARAM)x);
 }

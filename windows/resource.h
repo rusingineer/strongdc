@@ -333,6 +333,7 @@
 #define IDC_STATIC7                     1224
 #define IDC_TOOLBAR_IMAGE               1224
 #define IDC_CLIENT_SUPPORTS             1224
+#define IDC_TREE1                       1224
 #define IDC_CHECK2                      1225
 #define IDC_STATICb                     1225
 #define IDC_SEGMENT4_MIN                1225
@@ -430,7 +431,6 @@
 #define ahoj                            1616
 #define IDC_PROGRESS_COLOR_UP_SHOW      1617
 #define IDC_SETTINGS_SEGMENTBAR         1618
-#define IDC_PROGRESS_COLOR_DOWN_SHOW2   1619
 #define IDC_PROGRESS_COLOR_SEGMENT_SHOW 1619
 #define IDC_PREVIEW_APP                 1700
 #define IDC_TOOLBAR_ADD                 2200

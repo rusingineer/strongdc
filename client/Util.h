@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #endif
 
+
 /** Evaluates op(pair<T1, T2>.first, compareTo) */
 template<class T1, class T2, class op = equal_to<T1> >
 class CompareFirst {
@@ -594,6 +595,10 @@ public:
 	static string Binary2RGB(BYTE* pbData, DWORD dwSize);
 	static bool RGB2Binary(string sRGB, BYTE* pbData);
 //	static string toUtf8(string);
+	static u_int64_t getDirSize(const string &sFullPath);
+	static bool validatePath(const string &sPath);
+	static bool fileExists(const string &aFile);
+
 
 private:
 	static bool away;

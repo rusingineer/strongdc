@@ -558,8 +558,12 @@ void NmdcHub::onLine(const char *aLine) throw() {
 				continue;
 			if((j+1) == it->length())
 				continue;
-			v.push_back(ClientManager::getInstance()->getUser(it->substr(0, j), this));
-			v.back()->setIp(it->substr(j+1));
+			string nick = it->substr(0, j);	
+			v.push_back(ClientManager::getInstance()->getUser(nick, this));
+			string IP = it->substr(j+1);
+			v.back()->setIp(IP);
+			ClientManager::getInstance()->setIPNick(IP, nick);
+
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::UserIp(), this, v);
 	} else if(strcmp(cmd, "$NickList") == 0) {

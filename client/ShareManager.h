@@ -54,6 +54,11 @@ public:
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ShareException);
 	void setDirty() { dirty = true; };
 	
+	bool shareFolder(const string& path, bool thoroughCheck = false);
+	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
+	int64_t addExcludeFolder(const string &path);
+//	void clearExcludeFolders() { notShared.clear(); }
+
 	void search(SearchResult::List& l, const string& aString, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults);
 	void search(SearchResult::List& l, const StringList& params, Client* aClient, StringList::size_type maxResults);
 
@@ -289,6 +294,7 @@ private:
 	
 	bool checkFile(const string& aDir, const string& aFile);
 	Directory* buildTree(const string& aName, Directory* aParent);
+	StringList notShared;
 
 	Directory* getDirectory(const string& fname);
 

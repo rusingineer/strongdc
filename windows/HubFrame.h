@@ -375,7 +375,7 @@ private:
 		// CDM EXTENSION ENDS		
 		) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
-		updateUsers(false), curCommandPosition(0),
+		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
 		ctrlMessageContainer("edit", this, EDIT_MESSAGE_MAP), 
 		ctrlFilterContainer("edit", this, EDIT_FILTER_MAP),  //oDC
 		ctrlFilterByContainer("COMBOBOX", this, EDIT_FILTER_MAP),  //oDC
@@ -431,6 +431,13 @@ private:
 
 	typedef hash_set<string> StringHash;
 	StringHash ignoreList;
+
+	string currentNeedle;		// search in chat window
+	int currentNeedlePos;		// search in chat window
+	void findText(string const& needle) throw();
+	string findTextPopup();
+
+	CFindReplaceDialog findDlg;
 
 	Client* client;
 	string server;

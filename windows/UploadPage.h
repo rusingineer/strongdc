@@ -25,6 +25,10 @@
 
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
+/* POSSUM_MOD_BEGIN */
+#include "FolderTree.h"
+#include "../client/SettingsManager.h"
+/* POSSUM_MOD_END */
 
 class UploadPage : public CPropertyPage<IDD_UPLOADPAGE>, public PropPage
 {
@@ -46,6 +50,9 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD, onClickedAdd)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onClickedRemove)
 		COMMAND_ID_HANDLER(IDC_SHAREHIDDEN, onClickedShareHidden)
+	/* POSSUM_MOD_BEGIN */
+		REFLECT_NOTIFICATIONS()
+	/* POSSUM_MOD_END */
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
@@ -67,6 +74,9 @@ protected:
 	CStatic ctrlTotal;
 	char* title;
 	void addDirectory(string path);
+	/* POSSUM_MOD_BEGIN */
+	FolderTree ft;
+	/* POSSUM_MOD_END */
 };
 
 #endif //UPLOADPAGE_H

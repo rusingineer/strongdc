@@ -675,5 +675,6 @@ enum Strings { // @DontAdd
 	SEGMENTBAR,
 	SHOW_SEGMENT_PART,
 	SEGMENT_PART_COLOR,
+	STRING_NOT_FOUND, // "String not found: "
 	LAST // @DontAdd
 };

@@ -502,6 +502,65 @@ string Util::formatParams(const string& msg, StringMap& params) {
 	return result;
 }
 
+u_int64_t Util::getDirSize(const string &sFullPath)
+{
+	u_int64_t total = 0;
+
+	WIN32_FIND_DATA fData;
+	HANDLE hFind;
+	
+	hFind = FindFirstFile((sFullPath + "\\*").c_str(), &fData);
+
+	if(hFind != INVALID_HANDLE_VALUE) {
+		do {
+			string name = fData.cFileName;
+			if(name == "." || name == "..")
+				continue;
+			if(name.find('$') != string::npos)
+				continue;
+			if(!BOOLSETTING(SHARE_HIDDEN) && (fData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+				continue;
+			if(fData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				string newName = sFullPath + PATH_SEPARATOR + name;
+				if(Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) {
+					total += getDirSize(newName);
+				}
+			} 
+			else
+			{
+				// Not a directory, assume it's a file...make sure we're not sharing the settings file...
+				if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
+					(Util::stricmp(name.c_str(), "Favorites.xml") != 0)) {
+
+					total+=(u_int64_t)fData.nFileSizeLow | ((u_int64_t)fData.nFileSizeHigh)<<32;
+				}
+			}
+		} while(FindNextFile(hFind, &fData));
+	}
+	
+	FindClose(hFind);
+
+	return total;
+}
+
+bool Util::validatePath(const string &sPath)
+{
+	if(sPath.empty())
+		return false;
+
+	if((sPath.substr(1, 2) == ":\\") || (sPath.substr(0, 2) == "\\\\"))
+	{
+		if(GetFileAttributes(sPath.c_str()) & FILE_ATTRIBUTE_DIRECTORY)
+			return true;
+	}
+
+	return false;
+}
+bool Util::fileExists(const string &aFile)
+{
+	DWORD attr = GetFileAttributes(aFile.c_str());
+	return (attr != 0xFFFFFFFF);
+}
 string Util::formatTime(const string &msg, const time_t t) {
 	if (!msg.empty()) {
 		size_t bufsize = msg.size() + 64;
