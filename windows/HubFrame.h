@@ -77,6 +77,7 @@ public:
 		MESSAGE_HANDLER(WM_CAPTURECHANGED, onStyleChanged)
 		MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, onSizeMove)
 		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, OnFileReconnect)
+		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
 		COMMAND_ID_HANDLER(IDC_FOLLOW, onFollow)
 		COMMAND_ID_HANDLER(IDC_SEND_MESSAGE, onSendMessage)
 		COMMAND_ID_HANDLER(IDC_ADD_AS_FAVORITE, onAddAsFavorite)
@@ -232,6 +233,14 @@ public:
 				::SetBkColor(hDC, WinUtil::bgColor);
 				::SetTextColor(hDC, WinUtil::textColor);
 			return (LRESULT)WinUtil::bgBrush;
+	}
+
+	LRESULT onRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(client->isConnected()) {
+			clearUserList();
+			client->refreshUserList();
+		}
+		return 0;
 	}
 
 	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

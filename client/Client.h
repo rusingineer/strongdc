@@ -80,7 +80,7 @@ public:
 	typedef list<Ptr> List;
 	typedef List::iterator Iter;
 
-	Client(const string& hubURL, char separator, bool usesEscapes = false);
+	Client(const string& hubURL, char separator);
 	virtual ~Client() throw();
 
 	virtual void connect(const User* user) = 0;
@@ -105,6 +105,7 @@ public:
 
 	virtual User::NickMap& lockUserList() = 0;
 	virtual void unlockUserList() = 0;
+	virtual void refreshUserList(bool unknownOnly = false) = 0;
 
 	const string& getAddress() const { return address; }
 	const string& getAddressPort() const { return addressPort; }

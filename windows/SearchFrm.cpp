@@ -163,7 +163,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlTTH.SetButtonStyle(BS_AUTOCHECKBOX, FALSE);
 	ctrlTTH.SetFont(WinUtil::systemFont, FALSE);
 	ctrlTTH.SetWindowText(CTSTRING(ONLY_TTH));
-	ctrlTTH.SetCheck(BOOLSETTING(SEARCH_ONLY_TTH));
+	ctrlTTH.SetCheck(onlyTTH);
 	tthContainer.SubclassWindow(ctrlTTH.m_hWnd);
 
 	ctrlCollapsed.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, IDC_COLLAPSED);
@@ -235,6 +235,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 
 	ctrlResults.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlResults.setSortColumn(COLUMN_HITS);
+	ctrlResults.setAscending(false);
 	ctrlResults.setVisible(SETTING(SEARCHFRAME_VISIBLE));
 
 	ctrlResults.SetBkColor(WinUtil::bgColor);
@@ -1141,6 +1143,8 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 							si2->setHits(Text::toT(Util::toString((u_int32_t)si2->subItems.size() + 1) + " "  + CSTRING(USERS)));
 							if(pos != -1)
 								ctrlResults.updateItem(pos);
+							if(ctrlResults.getSortColumn() == COLUMN_HITS)
+								ctrlResults.resort();
 							return 0;
                 	    }
 
@@ -1499,7 +1503,6 @@ void SearchFrame::Expand(SearchInfo* i, int a) {
 
 	i->collapsed = false;
 	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-	//ctrlResults.resort();
 }
 
 void SearchFrame::insertSubItem(SearchInfo* j, int idx)
@@ -1652,7 +1655,6 @@ void SearchFrame::insertItem(int pos, SearchInfo* item) {
 			ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
 		}
 	}
-	ctrlResults.resort();
 }
 
 LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {

@@ -546,14 +546,15 @@ LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	long lSelBegin = 0, lSelEnd = 0;
 
 	// Po kliku dovnitr oznaceneho textu nedelat nic
+	sSelectedLine = Text::toT(LineFromPos(pt));
+	sTempSelectedUser = _T("");
+	sSelectedIP = _T("");
+
 	GetSel(lSelBegin, lSelEnd);
 	int iCharPos = CharFromPos(pt), iBegin = 0, iEnd1 = 0;
 	if((lSelEnd > lSelBegin) && (iCharPos >= lSelBegin) && (iCharPos <= lSelEnd)) {
 		return 1;
 	}
-	sSelectedLine = Text::toT(LineFromPos(pt));
-	sTempSelectedUser = _T("");
-	sSelectedIP = _T("");
 	// Po kliku do IP oznacit IP
 	CAtlString sSel;
 	if(HitIP(pt, &sSel, &iBegin, &iEnd1)) {

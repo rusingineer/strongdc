@@ -134,7 +134,7 @@ public:
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0),
-		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(false), searches(0)
+		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(BOOLSETTING(SEARCH_ONLY_TTH)), searches(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
 		headerBuf = new TCHAR[128];

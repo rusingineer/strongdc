@@ -202,7 +202,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	ConnectionQueueItem::List failPassive;
 	ConnectionQueueItem::List connecting;
 	ConnectionQueueItem::List removed;
-	//UserConnection::List needRemoveListener;
 	User::List getDown;
 	{
 		Lock l(cs);
@@ -220,7 +219,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					dcassert(cqi->getConnection());
 					dcassert(cqi->getConnection()->getCQI() == cqi);
 					cqi->getConnection()->removeListener(this);
-					//needRemoveListener.push_back(cqi->getConnection());
 					DownloadManager::getInstance()->addConnection(cqi->getConnection());
 				}
 			}
@@ -291,10 +289,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 			++i;
 		}
 	}
-
-	/*for(UserConnection::Iter u = needRemoveListener.begin(); u != needRemoveListener.end(); ++u) {
-		(*u)->removeListener(this);
-	}*/
 
 	ConnectionQueueItem::Iter m;
 	for(m = removed.begin(); m != removed.end(); ++m) {
@@ -713,7 +707,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
 	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
 		{
-			Lock l(cs);
+			//Lock l(cs);
 			
 			for(ConnectionQueueItem::Iter i = downPool.begin(); i != downPool.end(); ++i) {
 				dcassert((*i)->getConnection());

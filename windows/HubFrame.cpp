@@ -1247,6 +1247,10 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 		if(PreparePopupMenu(&ctrlUsers, sSelectedUser, &Mnu)) {
 			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getAddressPort()), client->getOp());
+			if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
+				Mnu.AppendMenu(MF_SEPARATOR);
+			}
+			Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
 			if(ctrlUsers.GetSelectedCount() > 0)
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			cleanMenu(Mnu);
@@ -1256,13 +1260,13 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			return TRUE; 
 		}
 	}
-		sSelectedUser = ChatCtrl::sTempSelectedUser;
-		// Get the bounding rectangle of the client area. 
-		ctrlClient.GetClientRect(&rc);
-		ptCl = pt;
-		ctrlClient.ScreenToClient(&ptCl); 
+	sSelectedUser = ChatCtrl::sTempSelectedUser;
+	// Get the bounding rectangle of the client area. 
+	ctrlClient.GetClientRect(&rc);
+	ptCl = pt;
+	ctrlClient.ScreenToClient(&ptCl); 
 	
-		if (PtInRect(&rc, ptCl)) { 
+	if (PtInRect(&rc, ptCl)) { 
 		bool boHitURL = ctrlClient.HitURL(ptCl);
 		if (!boHitURL)
 			sSelectedURL = _T("");
@@ -1470,6 +1474,9 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 		return 0;
 	}
 
+	if ((!SETTING(SOUND_TYPING_NOTIFY).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+		PlaySound(Text::toT(SETTING(SOUND_TYPING_NOTIFY)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
 	switch(wParam) {
 		case VK_RETURN:
 			if( (GetKeyState(VK_CONTROL) & 0x8000) || 
@@ -1582,6 +1589,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 }
 
 LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+
 	if(!redirect.empty()) {
 		string s, f;
 		u_int16_t p = 411;
@@ -1644,7 +1652,7 @@ LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 }
 
 void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
-	tstring line = _T("[") + Text::toT(Util::getShortTimeString()) + _T("] ") + aLine;
+	tstring line = Text::toT("[" + Util::getShortTimeString() + "] ") + aLine;
 
 	ctrlStatus.SetText(0, line.c_str());
 	while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
@@ -1760,7 +1768,7 @@ void HubFrame::on(Message, Client*, const string& line) throw() {
 	}
 }
 void HubFrame::on(PrivateMessage, Client*, const User::Ptr& user, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, user, line);
+	speak(PRIVATE_MESSAGE, user, Util::toDOS(line));
 }
 void HubFrame::on(NickTaken, Client*) throw() { 
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
@@ -2274,8 +2282,6 @@ void HubFrame::updateUserList() {
 		return;
 	}
 	
-	int sel = ctrlFilterSel.GetCurSel();
-
 	for(UserMap::iterator i = userMap.begin(); i != userMap.end(); ++i){
 		if( i->second != NULL ) {
 			if(filterUser(i->second) == true) {

@@ -553,10 +553,8 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 					break;
 				}
 			}
-			if(q == NULL) {
-				q = fileQueue.find(target);
-			}
-		} else {
+
+		if(!root || (q == NULL))
 			q = fileQueue.find(target);
 		}
 
@@ -663,6 +661,10 @@ string QueueManager::checkTarget(const string& aTarget, int64_t aSize, int& flag
 bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, Flags::MaskType addBad, bool utf8) throw(QueueException, FileException) {
 	QueueItem::Source* s = NULL;
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED);
+
+	if(qi->getSources().size() >= SETTING(MAX_SOURCES)) {
+		throw QueueException("Too Many Sources");
+	}
 
 	if(qi->isSource(aUser, aFile)) {
 		throw QueueException(STRING(DUPLICATE_SOURCE));
@@ -908,7 +910,7 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	}
 
 #ifdef _DEBUG
-	return 3;
+	return 500;
 #else
 	return MaxSegments;
 #endif

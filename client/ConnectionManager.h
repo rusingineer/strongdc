@@ -93,9 +93,9 @@ public:
 	}
 
 	static int iConnToMeCount;
+	CriticalSection cs;
 
 private:
-	CriticalSection cs;
 	short port;
 
 	/** Pending connections, i e users we're trying to connect to */

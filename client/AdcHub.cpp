@@ -27,9 +27,9 @@
 #include "ConnectionManager.h"
 #include "version.h"
 
-const string AdcHub::CLIENT_PROTOCOL("ADC/0.8");
+const string AdcHub::CLIENT_PROTOCOL("ADC/0.9");
 
-AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n', true), state(STATE_PROTOCOL) {
+AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n'), state(STATE_PROTOCOL) {
 }
 
 void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
@@ -232,26 +232,26 @@ void AdcHub::kick(const User* user, const string& aMessage) {
 	if(state != STATE_NORMAL)
 		return;
 	string strtmp;
-	send("HDSC " + user->getCID().toBase32() + " KK KK " + getMe()->getCID().toBase32() + " " + AdcCommand::escape(aMessage) + "\n"); 
+	send("HDSC " + user->getCID().toBase32() + " KK KK " + getMe()->getCID().toBase32() + " " + aMessage + "\n"); 
 }
 void AdcHub::ban(const User* user, const string& aMessage, time_t aSeconds) { 
 	if(state != STATE_NORMAL)
 		return;
 	string strtmp;
-	send("HDSC " + user->getCID().toBase32() + " BA BA " + getMe()->getCID().toBase32() + " " + Util::toString(aSeconds) + " " + AdcCommand::escape(aMessage) + "\n"); 
+	send("HDSC " + user->getCID().toBase32() + " BA BA " + getMe()->getCID().toBase32() + " " + Util::toString(aSeconds) + " " + aMessage + "\n"); 
 }
 
 void AdcHub::redirect(const User* user, const string& aHub, const string& aMessage) { 
 	if(state != STATE_NORMAL)
 		return;
 	string strtmp;
-	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + AdcCommand::escape(aMessage) + "\n"); 
+	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + aMessage + "\n"); 
 }
 void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) { 
 	AdcCommand c(AdcCommand::CMD_SCH, AdcCommand::TYPE_BROADCAST);
 
 	if(aFileType == SearchManager::TYPE_TTH) {
-		c.addParam("TR", AdcCommand::escape(aString));
+		c.addParam("TR", aString);
 	} else {
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {
 			c.addParam(">=", Util::toString(aSize));
@@ -260,7 +260,7 @@ void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& a
 	}
 		StringTokenizer<string> st(aString, ' ');
 	for(StringIter i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-			c.addParam("++", AdcCommand::escape(*i));
+			c.addParam("++", *i);
 		}
 	}
 	send(c);

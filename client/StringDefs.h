@@ -746,6 +746,7 @@ enum Strings { // @DontAdd
 	SOUND_SOURCE_ADDED, // "Alternate source added"
 	SOUND_TTH_INVALID, // "File is corrupted"
 	SOUND_UPLOAD_FINISHED, // "Upload finished"
+	SOUND_TYPING_NOTIFY, // "Typing notification"
 	SOURCE_TYPE, // "Source Type"
 	SPECIFY_SEARCH_STRING, // "Specify a search string"
 	SPECIFY_SERVER, // "Specify a server to connect to"

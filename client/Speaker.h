@@ -110,7 +110,7 @@ public:
 		Lock l(listenerCS);
 		listeners.clear();
 	}
-	
+
 protected:
 	ListenerList listeners;
 	ListenerList tmp;
