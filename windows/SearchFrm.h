@@ -383,17 +383,7 @@ private:
 			}
 		}
 
-		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
-			bool canBeSorted = false;
-			if (a->mainitem && b->mainitem)
-				if(a->collapsed && b->collapsed)
-					canBeSorted = true;
-			if(a->sr->getTTH() && b->sr->getTTH())
-				if (*a->sr->getTTH() == *b->sr->getTTH())
-					if((!a->mainitem) && (!b->mainitem))
-						canBeSorted = true;
-
-			if(canBeSorted){
+		static int doCompareItems(SearchInfo* a, SearchInfo* b, int col) {
 			switch(col) {
 				case COLUMN_NICK: return Util::stricmp(a->sr->getUser()->getNick(), b->sr->getUser()->getNick());
 				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
@@ -418,7 +408,34 @@ private:
 				case COLUMN_TTH: return Util::stricmp(a->getTTH(), b->getTTH());
 				default: return 0;
 			}
-			} else return 0;
+		}
+
+		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
+			if(a->mainitem == b->mainitem){
+
+				// both are children with diffent mother, compare their monther
+				if(a->mainitem == false && a->main != b->main)
+					return doCompareItems(a->main, b->main, col);
+				
+				else
+					return doCompareItems(a, b, col);
+			}
+
+
+			if(a->mainitem == false && a->main == b)
+				return 2; // ? Decided by sort order, any better way?
+
+			if(b->mainitem == false && b->main == a)
+				return -2; // b should be displayed below a
+
+			if(a->mainitem == false && a->main != b)
+				return doCompareItems(a->main, b, col);
+
+			if(b->mainitem == false && b->main != a)
+				return doCompareItems(a, b->main, col);
+
+			dcassert(0);
+			return 0;
 		}
 
 		void update() { 

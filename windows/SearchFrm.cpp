@@ -651,12 +651,12 @@ LRESULT SearchFrame::onDownloadWholeTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 }
 
 LRESULT SearchFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	dcassert(wID > IDC_DOWNLOAD_TARGET);
+	dcassert(wID >= IDC_DOWNLOAD_TARGET);
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_TARGET;
 	
 	if(newId < WinUtil::lastDirs.size()) {
 		ctrlResults.forEachSelectedT(SearchInfo::Download(WinUtil::lastDirs[newId]));
-			} else {
+	} else {
 		dcassert((newId - WinUtil::lastDirs.size()) < targets.size());
 		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(targets[newId - WinUtil::lastDirs.size()]));
 	}
@@ -979,11 +979,10 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;
 			// Check previous search results for dupes
-			for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
-				SearchInfo* si2 = ctrlResults.getItemData(i);
+			for(int i = 0, j = mainItems.size(); i < j; ++i) {
+				SearchInfo* si2 = mainItems[i];
 				SearchResult* sr2 = si2->sr;
 
-				if(!si2->mainitem) continue;
 
 				if(!si->getTTH().empty()) {
 					if(si2->getTTH().empty() == false && si2->getTTH() == si->getTTH()){
@@ -1003,10 +1002,12 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 						si->main = si2;
 						si->mainitem = false;
 
+						int pos = ctrlResults.findItem(si2);
+
 						if(si2->subItems.size() == 1){
-							ctrlResults.SetItemState(i, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+							ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 						}else if(!si2->collapsed){
-							insertSubItem(si, i + 1);
+							insertSubItem(si, pos + 1);
 						}
 						int pocet = si2->subItems.size() + 1;
 						si2->setHits(Util::toString(pocet)+" "+STRING(HUB_USERS));

@@ -29,7 +29,7 @@
 #include "../client/StringTokenizer.h"
 
 int FinishedFrame::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED, COLUMN_TTH, COLUMN_CRC32 };
-int FinishedFrame::columnSizes[] = { 100, 80, 290, 125, 80, 80, 80, 80, 80 };
+int FinishedFrame::columnSizes[] = { 100, 80, 290, 125, 80, 80, 80, 80, 125 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
 ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED, ResourceManager::TTH_CHECKED, ResourceManager::CRC_CHECKED
 };
