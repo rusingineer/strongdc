@@ -41,7 +41,7 @@
 #include "DirectoryListing.h"
 
 #include "FileDataInfo.h"
-#include "../pme/pme.h"
+#include "../pme-1.0.4/pme.h"
 
 #ifdef _WIN32
 #define FILELISTS_DIR "FileLists\\"
@@ -615,14 +615,16 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(aUser->isSet(User::PASSIVE) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) ) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
-	} else {
+	} else {//if((getMaxSegments(qi->getTargetFileName(), qi->getSize()) > qi->getCurrents().size()) && (qi->getStatus() != QueueItem::STATUS_RUNNING)) {
 		if ((!SETTING(SOURCEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(SOURCEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		userQueue.add(qi, aUser);
-	}
+	} /*else {
+		wantConnection = false;
+	}*/
+
 	fire(QueueManagerListener::SourcesUpdated(), qi);
 	setDirty();
-	
 	return wantConnection;
 }
 
@@ -804,7 +806,7 @@ QueueItem* QueueManager::lookupNext(User::Ptr& aUser) throw() {
 
 bool QueueManager::matchExtension(const string& aString, const string& aExt) {
 	PME reg(aExt,"i");
-	if(reg.match(aString) > 0) { return true; }
+	if(reg.match(aString)) { return true; }
 	return false;
 }
 
@@ -1468,15 +1470,15 @@ void QueueManager::importNMQueue(const string& aFile) throw(FileException) {
 
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
-	bool found = false;
+	bool added = false;
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
 			if(QueueItem* qi = fileQueue.findByHash(sr->getTTH()->toBase32())) {
 				// Wow! found a new source that seems to match...add it...
 				try {
-					found = true;
 					// TODO : use qi->addSource();
 					add(sr->getFile(), sr->getSize(), sr->getUser(), qi->getTarget(), sr->getTTH(), Util::emptyString, QueueItem::FLAG_RESUME, 
 						QueueItem::DEFAULT, Util::emptyString, false);
+					added = true;
 					dcdebug("QueueManager::onAction New source %s for target %s found\n", sr->getUser()->getNick().c_str(), qi->getTarget().c_str());
 					// Only download list for exact matches
 					
@@ -1487,8 +1489,8 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 			}
 	}
 
-	if(found && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH))
-			addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
+	/*if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH))
+			addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);*/
 
 }
 

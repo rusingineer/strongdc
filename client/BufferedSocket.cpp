@@ -28,13 +28,14 @@
 
 #include "UploadManager.h"
 #include "DownloadManager.h"
+
 #define SMALL_BUFFER_SIZE 1024
 
 // Polling is used for tasks...should be fixed...
 #define POLL_TIMEOUT 250
 
-BufferedSocket::BufferedSocket(char aSeparator) throw(SocketException) :
-separator(aSeparator), port(0), mode(MODE_LINE), 
+BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) :
+separator(aSeparator), usesEscapes(aUsesEscapes), escaped(false), port(0), mode(MODE_LINE), 
 dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
 
 	inbuf = new u_int8_t[inbufSize];
@@ -342,12 +343,33 @@ void BufferedSocket::threadRead() {
 
 				l = string((char*)inbuf + bufpos, i);
 
-				if( (pos = l.find(separator)) != string::npos) {
+				bool foundSeparator = false;
+				if(usesEscapes) {
+					// We need to read every byte to make sure it isn't preceded by the escape character
+					for(string::iterator k = l.begin(); k != l.end(); ++k) {
+						if(*k == '\\') {
+							escaped = !escaped;
+						} else if(*k == separator) {
+							if(!escaped) {
+								pos = k - l.begin();
+								foundSeparator = true;
+								break;
+							}
+						} else {
+							escaped = false;
+						}
+					}
+				} else {
+					// Not using escapes, search is much easier
+					if((pos = l.find(separator)) != string::npos)
+						foundSeparator = true;
+				}
+
+				if(foundSeparator) {
 					if(!line.empty()) {
 						fire(BufferedSocketListener::Line(), line + l.substr(0, pos));
 						line.clear();
 					} else {
-						if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
 						fire(BufferedSocketListener::Line(), l.substr(0, pos));
 					}
 					i-=(pos + sizeof(separator));

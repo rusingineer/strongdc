@@ -34,14 +34,11 @@ int ConnectionManager::iConnToMeCount = 0;
 ConnectionManager::ConnectionManager() : floodCounter(0), shuttingDown(false) {
 	TimerManager::getInstance()->addListener(this);
 	socket.addListener(this);
-
 	features.push_back(UserConnection::FEATURE_MINISLOTS);
 	features.push_back(UserConnection::FEATURE_XML_BZLIST);
-	if(BOOLSETTING(ENABLE403FEATURES)) {
-		features.push_back(UserConnection::FEATURE_ADCGET);
-		features.push_back(UserConnection::FEATURE_TTHL);
-		features.push_back(UserConnection::FEATURE_TTHF);
-	}
+	features.push_back(UserConnection::FEATURE_ADCGET);
+	features.push_back(UserConnection::FEATURE_TTHL);
+	features.push_back(UserConnection::FEATURE_TTHF);
 };
 
 /**
@@ -665,9 +662,9 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 		else if(*i == UserConnection::FEATURE_XML_BZLIST)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_XML_BZLIST);
-		else if((*i == UserConnection::FEATURE_ADCGET) && (BOOLSETTING(ENABLE403FEATURES)))
+		else if(*i == UserConnection::FEATURE_ADCGET)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ADCGET);
-		else if((*i == UserConnection::FEATURE_ZLIB_GET) && (BOOLSETTING(ENABLE403FEATURES)))
+		else if(*i == UserConnection::FEATURE_ZLIB_GET)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ZLIB_GET);
 		else if((*i == UserConnection::FEATURE_TTHL) && (BOOLSETTING(ENABLE403FEATURES)))
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);

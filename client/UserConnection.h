@@ -267,7 +267,11 @@ public:
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; };
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; };
 	void setUpload(Upload* u) { dcassert(isSet(FLAG_UPLOAD)); upload = u; };
-
+	void reconnect() {
+		disconnect();
+		Thread::sleep(100);
+		user->connect();
+	}
 	void handle(Command::GET t, const Command& c) {
 		fire(t, this, c);
 	}

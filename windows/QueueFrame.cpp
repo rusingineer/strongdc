@@ -1537,7 +1537,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
-
 			FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(qi->getDownloadTarget());
 			
 			if(filedatainfo) {
@@ -1551,10 +1550,12 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				if(filedatainfo->vecRunBlocks.size() != NULL)
 					copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
 
-				if(v.size() > 0) {
+				if(qi && (v.size() > 0)) {
+					int64_t size = qi->getSize();
+
 					sort(v.begin(), v.end());
 			
-					p  = (qi->getSize() > 0) ? (double)((double)(*(v.begin()))) / ((double)qi->getSize()) : 0;
+					p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
 					Pright = rc.left + (w * p);
 					Pleft = rc.left;
 					if(Pright >= Pleft)
@@ -1567,13 +1568,14 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					}
 
 					for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
-						if(((*(i+2))< qi->getSize()) && ((*(i+1))< qi->getSize()) && ((*(i))< qi->getSize())) {
+
+						if(((*(i+2))< size) && ((*(i+1))< size) && ((*(i))< size)) {
 							DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
-							p  = (qi->getSize() > 0) ? (double)(((double)(*(i+1))) / ((double)qi->getSize())) : 0;
+							p  = (size > 0) ? (double)(((double)(*(i+1))) / ((double)size)) : 0;
 							Pleft = rc.left + (w * p);
-							p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
+							p  = (size > 0) ? (double)((double)(*(i+2))) / ((double)size) : 0;
 							Pright = rc.left + (w * p);
 							if(Pright >= Pleft)
 								::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
@@ -1589,7 +1591,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
-					p  = (qi->getSize() > 0) ? (double)((double)(*(v.end()-1))) / ((double)qi->getSize()) : 0;
+					p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
 					Pright = rc.left + w;
 					Pleft = rc.left + (w * p);
 

@@ -389,7 +389,7 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_NEW_USERS, false);
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
-	setDefault(ENABLE403FEATURES, false);	
+	setDefault(ENABLE403FEATURES, true);	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

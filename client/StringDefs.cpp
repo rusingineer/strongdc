@@ -564,7 +564,7 @@ string ResourceManager::strings[] = {
 "Upload finished", 
 "Faker found", 
 "File is corrupted",
-"UnhandledException",
+"Unhandled Exception",
 "Open X extra slots for each hub (when hubs = 2 or more)", 
 "Segment Downloading", 
 "Automatically do Accelerated (Segmented) downloading", 
@@ -711,7 +711,7 @@ string ResourceManager::strings[] = {
 "Send garbage on outgoing connection (to avoid ISP P2P throttling)", 
 "By TTH", 
 "By Name", 
-"Enable DC++ 0.403 Special Features",
+"Enable TTH leaves verification",
 };
 string ResourceManager::names[] = {
 "Active", 

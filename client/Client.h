@@ -80,7 +80,7 @@ public:
 	typedef list<Ptr> List;
 	typedef List::iterator Iter;
 
-	Client(const string& hubURL, char separator);
+	Client(const string& hubURL, char separator, bool usesEscapes = false);
 	virtual ~Client();
 
 	virtual void connect(const User* user) = 0;

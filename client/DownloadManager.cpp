@@ -332,7 +332,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	}
 
 	if(prepareFile(aSource, aFileLength)) {
-		aSource->setDataMode(aFileLength);
+		aSource->setDataMode(/*aFileLength*/);
 		aSource->startSend();
 	}
 }
@@ -598,6 +598,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource, false, true);
+			aSource->getUser()->connect();
 			return;
 
 		} catch(const FileDLException) {
@@ -930,6 +931,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
+	User::Ptr uzivatel = d->getUserConnection()->getUser();
 	if(d->getOldDownload() != NULL) {
 		if(d->getFile()) {
 			try {
@@ -994,6 +996,9 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		}
 	}
 	QueueManager::getInstance()->putDownload(d, finished);
+	if(QueueManager::getInstance()->lookupNext(uzivatel) != NULL) {
+		uzivatel->connect();
+	}
 }
 
 void DownloadManager::abortDownload(const string& aTarget) {

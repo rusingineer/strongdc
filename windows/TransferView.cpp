@@ -528,6 +528,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 
 
 void TransferView::InsertItem(ItemInfo* i) {
+	dcdebug(("Jmeno usera: "+i->user->getNick()+" -- Jmeno cile: "+i->Target).c_str());
 	bool add = true;
 	if(!mainItems.empty()) {
 
@@ -710,7 +711,7 @@ LRESULT TransferView::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	if (item->ptAction.x < rect.left)
 	{
 		ItemInfo* i = (ItemInfo*)ctrlTransfers.getItemData(item->iItem);
-		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem) && (!i->qi->isSet(QueueItem::FLAG_USER_LIST)))
+//		if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem) && (!i->qi->isSet(QueueItem::FLAG_USER_LIST)))
 			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
 	}
 	return 0;
@@ -756,8 +757,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == SET_STATE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
-		if(!i->qi->isSet(QueueItem::FLAG_USER_LIST))
-			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+//		if((!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
+			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+//		}
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
@@ -787,6 +789,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 			}
 		}
 
+		dcdebug(("Jmeno usera: "+i->user->getNick()+" -- Jmeno cile: "+i->Target).c_str());
 		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
 
@@ -845,7 +848,8 @@ bool TransferView::ItemInfo::canDisplayUpper() {
    (statusString == STRING(CHECKING_TTH)) ||
    (statusString == STRING(DISCONNECTED)) ||
    (statusString == STRING(SFV_INCONSISTENCY)) ||
-   (qi->isSet(QueueItem::FLAG_USER_LIST))) return true; else return false;
+   (qi->isSet(QueueItem::FLAG_USER_LIST)) ||
+   (qi->isSet(QueueItem::FLAG_TESTSUR))) return true; else return false;
 }
 
 void TransferView::ItemInfo::update() {
@@ -873,14 +877,17 @@ void TransferView::ItemInfo::update() {
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
 		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-			FileDataInfo* fdi = FileDataInfo::GetFileDataInfo(qi->getTempTarget());
-			if(fdi) {
-				if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
-					upper->columns[COLUMN_STATUS] = upper->statusString;
-				} else if(canDisplayUpper()) {
+			if(upper->downloadTarget == "") upper->columns[COLUMN_STATUS] = upper->statusString; else {
+				FileDataInfo* fdi = FileDataInfo::GetFileDataInfo(upper->downloadTarget);
+				if(fdi) {
+					if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
 						upper->columns[COLUMN_STATUS] = upper->statusString;
-				}
-			} else if(canDisplayUpper()) upper->columns[COLUMN_STATUS] = upper->statusString;
+					} else if(canDisplayUpper()) {
+							upper->columns[COLUMN_STATUS] = upper->statusString;
+					}
+				} else if(canDisplayUpper()) upper->columns[COLUMN_STATUS] = upper->statusString;
+			}
+
 		}
 	}
 
@@ -981,7 +988,9 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 				i->size = qi->getSize();
 				i->Target = qi->getTarget();
 				i->qi = qi;
+				dcdebug((aCqi->getUser()->getNick()+" --> tady1\n").c_str());
 			}
+			dcdebug((aCqi->getUser()->getNick()+" --> tady2\n").c_str());
 		}
 	}
 
@@ -1113,7 +1122,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->size = aDownload->getSize();
 		i->file = Util::getFileName(aDownload->getTarget());
 		i->path = Util::getFilePath(aDownload->getTarget());
-
+		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
+		if(qi) i->qi = qi;
 		i->Target = aDownload->getTarget();
 	}
 	dcdebug(("OnDownloadStarting: " + aDownload->getTarget() +"\n").c_str());
@@ -1174,6 +1184,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->timeLeft = d->getSecondsLeft();
 			i->speed = d->getRunningAverage();
 			i->stazenoCelkem = total;
+			QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
+			if(qi) i->qi = qi;
 
 			int NS = 0;
 			int64_t tmp = 0;
@@ -1221,7 +1233,12 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			}
 			i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 
-			v->push_back(i);	
+			v->push_back(i);
+
+			if(d->getRunningAverage() <= 0) {
+				d->getUserConnection()->reconnect();
+			}
+
 		}
 	}
 	delete[] buf;

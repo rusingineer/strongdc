@@ -37,14 +37,17 @@ public:
 
 	LRESULT OnCopyException(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		CopyEditToClipboard(GetDlgItem(IDC_EXCEPTION_DETAILS));
+		return 0;
 	}
 
 	LRESULT OnContinue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		EndDialog(IDOK);
+		return 0;
 	}
 
 	LRESULT OnTerminate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		EndDialog(IDCANCEL);
+		return 0;
 	}
 
 
