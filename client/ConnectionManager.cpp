@@ -412,15 +412,20 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		}
 
 		aSource->getUser()->setFakeSharing(false);
+
+	if (/*aSource->getUser()->getClient()->getOp() &&*/ aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {
 		string host = Util::emptyString;
 		string ip = aSource->getRemoteIp();
 		try {
 			host = aSource->getRemoteHost(ip);
 		} catch (Exception e) {
 			host = e.getError();
+		} catch (...) {
 		}
 		ClientManager::getInstance()->setIPNick(ip, aNick);
 		aSource->getUser()->setHost(host);
+	}
+
 		User::updated(aSource->getUser());
 	}
 
