@@ -83,6 +83,7 @@ void NmdcHub::connect(const User* aUser) {
 	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
 	if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
 		send("$ConnectToMe " + toNmdc(aUser->getNick()) + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
+		ConnectionManager::iConnToMeCount++;
 	} else {
 		send("$RevConnectToMe " + toNmdc(getNick()) + " " + toNmdc(aUser->getNick())  + "|");
 	}
@@ -663,7 +664,9 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::OpList(), this, v);
 		updateCounts(false);
-		myInfo(true);
+		// Special...to avoid op's complaining that their count is not correctly
+		// updated when they log in (they'll be counted as registered first...)
+		myInfo(false);
 	} else if(strncmp(aLine+1, "To: ", 4) == 0) {
 		char *temp1, *from;
 		if((temp1 = strstr(aLine+5, "From:")) != NULL) {

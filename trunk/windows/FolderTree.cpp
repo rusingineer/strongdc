@@ -1412,7 +1412,9 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 			tstring path = pItem->m_sFQPath;
 			if( path[ path.length() -1 ] != '\\' )
 				path += '\\';
-			virt.line = Util::getLastDir(path);
+			virt.line = Text::toT(ShareManager::getInstance()->validateVirtual(
+				Util::getLastDir(Text::fromT(path))));
+
 			if(virt.DoModal() == IDOK) {
 				ShareManager::getInstance()->addDirectory(Text::fromT(path), Text::fromT(virt.line));
 			}

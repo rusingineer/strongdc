@@ -53,7 +53,7 @@ void Transfer::updateRunningAverage() {
 			} else {
 				// Weighted average...
 				runningAverage = ((avg * diff) + (runningAverage*(AVG_PERIOD-diff)))/AVG_PERIOD;
-				}		
+			}
 		}
 		last = tot;
 	}
@@ -61,10 +61,20 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
+
 	if (BOOLSETTING(DEBUG_COMMANDS))
 		COMMAND_DEBUG(aLine, DebugManager::CLIENT_IN, getRemoteIp());
 
-	if(aLine[0] != '$') {
+//	if(aLine.length() < 2)
+//		return;
+
+	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
+		dispatch(aLine);
+		return;
+	} else if(aLine[0] == '$') {
+		setFlag(FLAG_NMDC);
+	} else {
+		// We shouldn't be here?
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		return;
 	}
@@ -145,7 +155,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 		dispatch(aLine, true);
 	} else {
 		fire(UserConnectionListener::Unknown(), this, aLine);
-		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
+		dcdebug("Unknown NMDC command: %.50s\n", aLine);
 	}
 }
 

@@ -129,7 +129,7 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize,
 		Priority aPriority, int aFlag, int64_t /*aDownloadedBytes*/, u_int32_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), target(aTarget), 
+	Flags(aFlag), target(aTarget), start(0),
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0), noFreeBlocks(false)
 	{ 
@@ -141,7 +141,7 @@ public:
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), speedUsers(rhs.speedUsers),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL), noFreeBlocks(rhs.noFreeBlocks),
-		fastUser(rhs.fastUser)
+		fastUser(rhs.fastUser), start(rhs.start)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -275,6 +275,7 @@ public:
 	GETSET(bool, fastUser, FastUser);
 	GETSET(int64_t, speed, Speed);
 	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
+	GETSET(u_int32_t, start, Start);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

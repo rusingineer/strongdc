@@ -339,6 +339,7 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 	if(qi->getCurrents().empty()){
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setSpeed(0);
+		qi->setStart(0);
 	}
 
 	// Add to the userQueue
@@ -528,6 +529,11 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 
 			newItem = true;
 		} else {
+
+			if(q->getSources().size() >= SETTING(MAX_SOURCES)) {
+				throw QueueException("Too Many Sources");
+			}
+
 			// first source set length
 			if(q->getSize() == 0 && root && q->getTTH() && (*root == *q->getTTH())){
 				FileChunksInfo::Ptr fi = FileChunksInfo::Get(q->getTempTarget());
@@ -592,6 +598,9 @@ string QueueManager::checkTarget(const string& aTarget, int64_t aSize, int& flag
 		throw QueueException(STRING(INVALID_TARGET_FILE));
 	}
 #else
+	if(aTarget.length() > PATH_MAX) {
+		throw QueueException(STRING(TARGET_FILENAME_TOO_LONG));
+	}
 	// Check that target contains at least one directory...we don't want headless files...
 	if(aTarget[0] != '/') {
 		throw QueueException(STRING(INVALID_TARGET_FILE));
@@ -888,8 +897,16 @@ again:
 
 	int64_t freeBlock = 0;
 
+	bool slotsFull = (SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS));
+	if(slotsFull && (q->getPriority() != QueueItem::HIGHEST)) {
+		message = STRING(ALL_FILE_SLOTS_TAKEN);		
+		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+		if(q == NULL) reuse = false;
+		goto again;
+	}
+
 	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
-		if(q->getCurrents().size() >= q->getMaxSegments()) {
+		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
 			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			if(q == NULL) reuse = false;
@@ -899,7 +916,7 @@ again:
 		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
 			int64_t speed = SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024;
 			if(q->getSpeed() > speed) {
-				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);		
+				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				if(q == NULL) reuse = false;
 				goto again;
@@ -1510,11 +1527,11 @@ void QueueManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser
 void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	{
 		Lock l(cs);
-		QueueItem::UserMap& um = userQueue.getRunning();
+		QueueItem::List um = getRunningFiles();
 
-		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
-			QueueItem* q = j->second;
-			if(BOOLSETTING(REALTIME_QUEUE_UPDATE) && (q->getStatus() == QueueItem::STATUS_WAITING))
+		for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
+			QueueItem* q = *j;
+			if(BOOLSETTING(REALTIME_QUEUE_UPDATE))
 				fire(QueueManagerListener::StatusUpdated(), q);
 		}
 		if(!um.empty())

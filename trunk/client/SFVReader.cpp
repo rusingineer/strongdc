@@ -16,10 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef _WIN32
+#include <sys/types.h>
+#include <dirent.h>
+#include <fnmatch.h>
+#endif
+
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
 #include "SFVReader.h"
+
 #include "StringTokenizer.h"
 
 bool SFVReader::tryFile(const string& sfvFile, const string& fileName) throw(FileException) {
@@ -67,6 +74,28 @@ void SFVReader::load(const string& fileName) throw() {
 
 	FindClose(hf);
 	
+#else
+	string path = Util::getFilePath(fileName);
+	string fname = Util::getFileName(fileName);
+
+	DIR* dir = opendir(path.c_str());
+	if (!dir) 
+		return;
+	while (struct dirent* ent = readdir(dir)) {
+		if (fnmatch("*.sfv", ent->d_name, 0) == 0) {
+			try {
+				if(tryFile(path + Text::fromT(ent->d_name), fname)) {
+					closedir(dir);
+					return;
+				}
+			} catch(const FileException&) {
+				// Ignore...
+			}					
+		}
+	}
+
+	closedir(dir);	
+
 #endif
 }
 

@@ -43,7 +43,7 @@
 #include <limits>
 
 ShareManager::ShareManager() : hits(0), listLen(0), bzXmlListLen(0),
-	xmlDirty(false), nmdcDirty(false), refreshDirs(false), update(false), listN(0), lFile(NULL), 
+	xmlDirty(true), nmdcDirty(false), refreshDirs(false), update(false), listN(0), lFile(NULL), 
 	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20) 
 { 
 	SettingsManager::getInstance()->addListener(this);
@@ -130,7 +130,7 @@ string ShareManager::translateFileName(const string& aFile, bool adc) throw(Shar
 			if(aFile.compare(0, 4, "TTH/") == 0) {
 				TTHValue v(aFile.substr(4));
 				HashFileIter i = tthIndex.find(&v);
-				if(i != tthIndex.end()) {			
+				if(i != tthIndex.end()) {
 					file = i->second->getADCPath();
 				} else {
 					throw ShareException("File Not Available");
@@ -165,7 +165,7 @@ string ShareManager::translateFileName(const string& aFile, bool adc) throw(Shar
 		if(j == virtualMap.end()) {
 			throw ShareException("File Not Available");
 		}
-		
+
 		file = file.substr(i + 1);
 		
 		if(!checkFile(j->second, file)) {
@@ -197,7 +197,7 @@ bool ShareManager::checkFile(const string& dir, const string& aFile) {
 	if(mi == directories.end())
 		return false;
 	Directory* d = mi->second;
-
+									
 	string::size_type i;
 	string::size_type j = 0;
 	while( (i = aFile.find('\\', j)) != string::npos) {
@@ -218,10 +218,9 @@ string ShareManager::validateVirtual(const string& aVirt) {
 	string tmp = aVirt;
 	string::size_type idx;
 
-	while( (idx = tmp.find_first_of("$|")) != string::npos) {
+	while( (idx = tmp.find_first_of("$|:\\/")) != string::npos) {
 		tmp[idx] = '_';
 	}
-
 	return tmp;
 }
 
@@ -305,10 +304,7 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	if(d[d.length() - 1] != PATH_SEPARATOR)
 		d += PATH_SEPARATOR;
 
-	string tmp(aName);
-	if(tmp[tmp.length() - 1] == PATH_SEPARATOR) {
-		tmp.erase(tmp.length() -1, 1);
-	}
+	string vName = validateVirtual(aName);
 
 	Directory* dp = NULL;
 	{
@@ -326,20 +322,20 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 			}
 		}
 
-		if(lookupVirtual(tmp) != virtualMap.end()) {
+		if(lookupVirtual(vName) != virtualMap.end()) {
 			throw ShareException(STRING(VIRTUAL_NAME_EXISTS));
 		}
 	}
-		
+	
 	dp = buildTree(d, NULL);
-	dp->setName(tmp);
+	dp->setName(vName);
 
 	{
 		WLock l(cs);
 		addTree(d, dp);
-		
+
 		directories[d] = dp;
-		virtualMap.push_back(make_pair(validateVirtual(tmp), d));
+		virtualMap.push_back(make_pair(vName, d));
 		setDirty();
 	}
 }
@@ -511,6 +507,7 @@ public:
 private:
 	HANDLE handle;
 #else
+// This code has been cleaned up/fixed a little.
 public:
 	FileFindIter() {
 		dir = NULL;
@@ -520,41 +517,37 @@ public:
 	~FileFindIter() {
 		if (dir) closedir(dir);
 	}
-	
+
 	FileFindIter(const string& name) {
-		if (!dir) return;
-
-		base = name;
-		if (name[name.size() - 1] != PATH_SEPARATOR)
-			base = base + PATH_SEPARATOR;
 		dir = opendir(name.c_str());
-
+		if (!dir)
+			return;
+		data.base = name;
 		data.ent = readdir(dir);
 		if (!data.ent) {
 			closedir(dir);
 			dir = NULL;
-		} else {
-			data.currentFile = base + data.ent->d_name;
 		}
 	}
 	
 	FileFindIter& operator++() {
-		if (!dir) return *this;
+		if (!dir) 
+			return *this;
 		data.ent = readdir(dir);
 		if (!data.ent) {
 			closedir(dir);
 			dir = NULL;
-		} else {
-			data.currentFile = base + data.ent->d_name;
 		}
 		return *this;
 	}
 	
+	// good enough to to say if it's null
 	bool operator !=(const FileFindIter& rhs) const {
 		return dir != rhs.dir;
 	}
 
 	struct DirData {
+		DirData() : ent(NULL) {}
 		string getFileName() {
 			if (!ent) return Util::emptyString;
 			return string(ent->d_name);
@@ -562,7 +555,7 @@ public:
 		bool isDirectory() {
 			struct stat inode;
 			if (!ent) return false;
-			if (stat(currentFile.c_str(), &inode) == -1) return false;
+			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return false;
 			return S_ISDIR(inode.st_mode);
 		}
 		bool isHidden() {
@@ -572,21 +565,20 @@ public:
 		int64_t getSize() {
 			struct stat inode;
 			if (!ent) return false;
-			if (stat(currentFile.c_str(), &inode) == -1) return 0;
+			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
 			return inode.st_size;
 		}
 		u_int32_t getLastWriteTime() {
 			struct stat inode;
 			if (!ent) return false;
-			if (stat(currentFile.c_str(), &inode) == -1) return 0;
+			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
 			return inode.st_mtime;
 		}
 		struct dirent* ent;
-		string currentFile;
+		string base;
 	};
 private:
 	DIR* dir;
-	string base;
 #endif
 
 public:

@@ -57,6 +57,8 @@ public:
 		//Speaker<AdcHubListener>::fire(t, this, c);
 	}
 
+	void send(const Command& cmd) { socket->write(cmd.toString(false)); };
+
 	void handle(Command::SUP, Command& c) throw();
 	void handle(Command::MSG, Command& c) throw();
 	void handle(Command::INF, Command& c) throw();
@@ -90,6 +92,8 @@ private:
 
 	string salt;
 
+	static const string CLIENT_PROTOCOL;
+	 
 	virtual string checkNick(const string& nick);
 	virtual string getHubURL();
 

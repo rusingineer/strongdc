@@ -108,7 +108,7 @@ const string SettingsManager::settingTags[] =
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
-	"SpeedUsers",
+	"SpeedUsers", "UseVerticalView", "OpenNewWindow", "FileSlots",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -248,7 +248,8 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_DL_ALREADY_SHARED, false);
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
-	
+	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
+
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
@@ -388,7 +389,7 @@ SettingsManager::SettingsManager()
 	setDefault(REMOVE_SLOW_USER, false);
 	setDefault(SHOW_PM_LOG, true);
 	setDefault(PM_LOG_LINES, 10);
-    
+    setDefault(FILE_SLOTS, 15);
 	setDefault(SET_AUTO_SEGMENT, true);
 	setDefault(SET_MIN2, 20);
 	setDefault(SET_MAX2, 40);
@@ -429,6 +430,7 @@ SettingsManager::SettingsManager()
 	setDefault(LISTLEN_MISMATCH, 0);
 	setDefault(FILELIST_TOO_SMALL, 0);
 	setDefault(FILELIST_UNAVAILABLE, 0);
+	setDefault(USE_VERTICAL_VIEW, true);
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);
 	setDefault(REALTIME_QUEUE_UPDATE, true);

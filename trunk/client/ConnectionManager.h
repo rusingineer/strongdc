@@ -30,6 +30,7 @@
 #include "User.h"
 #include "CriticalSection.h"
 #include "Singleton.h"
+#include "Util.h"
 
 #include "ConnectionManagerListener.h"
 
@@ -65,6 +66,7 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 {
 public:
 	void connect(const string& aServer, short aPort, const string& aNick);
+	void connect(const string& aServer, short aPort, const CID& cid, u_int32_t aToken);
 	void getDownloadConnection(const User::Ptr& aUser);
 	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool reconn = false);
 	void putUploadConnection(UserConnection* aSource);
@@ -104,11 +106,10 @@ private:
 	/** Connections that are currently being used by the Up/DownloadManager */
 	ConnectionQueueItem::List active;
 
-	/** All active connections */
-	UserConnection::List userConnections;
-
 	User::List pendingAdd;
 	UserConnection::List pendingDelete;
+	/** All active connections */
+	UserConnection::List userConnections;
 
 	ServerSocket socket;
 	StringList features;
@@ -119,16 +120,18 @@ private:
 
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
-	
+
 	virtual ~ConnectionManager() { shutdown(); };
 	
-	UserConnection* getConnection() throw(SocketException) {
+	UserConnection* getConnection(bool aNmdc) throw(SocketException) {
 		UserConnection* uc = new UserConnection();
 		uc->addListener(this);
 		{
 			Lock l(cs);
 			userConnections.push_back(uc);
 		}
+		if(aNmdc)
+			uc->setFlag(UserConnection::FLAG_NMDC);
 		return uc;
 	}
 	void putConnection(UserConnection* aConn);
@@ -151,7 +154,12 @@ private:
 	virtual void on(MyNick, UserConnection*, const string&) throw();
 	virtual void on(Supports, UserConnection*, const StringList&) throw();
 	virtual void on(Unknown, UserConnection*, const string& aLine) throw();
-    	 
+
+	virtual void on(Command::SUP, UserConnection*, const Command&) throw();
+	virtual void on(Command::INF, UserConnection*, const Command&) throw();
+	virtual void on(Command::NTD, UserConnection*, const Command&) throw();
+	virtual void on(Command::STA, UserConnection*, const Command&) throw();
+
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();	
 	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();	

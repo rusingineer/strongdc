@@ -94,7 +94,7 @@ public:
 	void setClient(Client* aClient);
 	void connect();
 	const string& getClientNick() const;
-	const CID getClientCID() const;
+	CID getClientCID() const;
 	const string& getClientName() const;
 	string getClientAddressPort() const;
 	void privateMessage(const string& aMsg);

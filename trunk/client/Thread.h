@@ -134,7 +134,7 @@ public:
 		return ++v;
 #endif
 	};
-	static long safeDec(volatile long v) { 
+	static long safeDec(volatile long& v) { 
 #ifdef HAVE_ASM_ATOMIC_H
 		atomic_t t = ATOMIC_INIT(v);
 		atomic_dec(&t);

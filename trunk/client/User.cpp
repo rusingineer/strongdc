@@ -52,7 +52,7 @@ const string& User::getClientNick() const {
 	}
 }
 
-const CID User::getClientCID() const {
+CID User::getClientCID() const {
 	RLock l(cs);
 	if(client) {
 		return client->getMe()->getCID();

@@ -217,8 +217,8 @@ private:
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
-			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
-			dwnldStart(0), pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
+			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
+			pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
 			compressRatio(1.0), finished(false), tth(NULL), flagImage(0) { update(); };
 
 		Types type;
@@ -230,8 +230,6 @@ private:
 		int64_t speed;
 		int64_t celkovaRychlost;
 		int64_t timeLeft;
-		int64_t stazenoCelkem;
-		int64_t dwnldStart;
 		tstring statusString;
 		tstring file;
 		tstring path;

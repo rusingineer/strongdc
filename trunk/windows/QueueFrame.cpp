@@ -757,6 +757,7 @@ void QueueFrame::moveSelectedDir() {
 	tstring name = curDir;
 	
 	if(WinUtil::browseDirectory(name, m_hWnd)) {
+		name = name + Util::getLastDir(curDir);
 		moveDir(ctrlDirs.GetSelectedItem(), name);
 	}
 }

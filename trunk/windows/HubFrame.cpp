@@ -96,10 +96,20 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	splitChat.SetSplitterExtendedStyle(0);
 	splitChat.SetSplitterPos( 40 );
 
-	SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
+	m_bVertical = BOOLSETTING(USE_VERTICAL_VIEW);
+	if(m_bVertical) {
+		SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
+		m_nProportionalPos = 7500;
+	} else {
+		SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
+		m_nProportionalPos = 2500;
+	}
+
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
-	if(hubchatusersplit){ m_nProportionalPos = hubchatusersplit;
-	} else { m_nProportionalPos = 7500; }
+
+	if(hubchatusersplit)
+		m_nProportionalPos = hubchatusersplit;
+
 	ctrlShowUsers.Create(ctrlStatus.m_hWnd, rcDefault, _T("+/-"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowUsers.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlShowUsers.SetFont(WinUtil::systemFont);
@@ -239,8 +249,12 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("join"))==0) {
 				if(!param.empty()) {
 					redirect = param;
-					BOOL whatever = FALSE;
-					onFollow(0, 0, 0, whatever);
+					if(BOOLSETTING(SETTINGS_OPEN_NEW_WINDOW)) {
+						HubFrame::openWindow(param);
+					} else {
+						BOOL whatever = FALSE;
+						onFollow(0, 0, 0, whatever);
+					}
 				} else {
 					addClientLine(TSTRING(SPECIFY_SERVER), WinUtil::m_ChatTextSystem);
 				}
@@ -371,6 +385,18 @@ void HubFrame::onEnter() {
 				}
 			} else if(Util::stricmp(s.c_str(), _T("me")) == 0) {
 				client->hubMessage(Text::fromT(m));
+			} else if(Util::stricmp(s.c_str(), _T("switch")) == 0) {
+				m_bVertical = !m_bVertical;
+				if(m_bVertical) {
+					SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
+//					horPos = m_nProportionalPos;
+//					m_nProportionalPos = verPos;
+				} else {
+					SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
+//					verPos = m_nProportionalPos;
+//					m_nProportionalPos = horPos;
+				}
+				UpdateLayout();
 			} else {
 				if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
 					client->hubMessage(Text::fromT(m));
@@ -821,7 +847,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= h + 10;
 	if(!ShowUserList) {
 		if(GetSinglePaneMode() == SPLIT_PANE_NONE)
-			SetSinglePaneMode(SPLIT_PANE_LEFT);
+			SetSinglePaneMode(m_bVertical ? SPLIT_PANE_LEFT : SPLIT_PANE_RIGHT);
 	} else {
 		if(GetSinglePaneMode() != SPLIT_PANE_NONE)
 			SetSinglePaneMode(SPLIT_PANE_NONE);
@@ -1375,6 +1401,8 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 					//replace current chat buffer with current command
 					ctrlMessage.SetWindowText(prevCommands[--curCommandPosition].c_str());
 				}
+				// move cursor to end of line
+				ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
 			} else {
 				bHandled = FALSE;
 			}
@@ -1394,9 +1422,19 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 					ctrlMessage.SetWindowText(currentCommand.c_str());
 					++curCommandPosition;
 				}
+				// move cursor to end of line
+				ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
 			} else {
 				bHandled = FALSE;
 			}
+
+			break;
+		case VK_PRIOR: // page up
+			ctrlClient.SendMessage(WM_VSCROLL, SB_PAGEUP);
+
+			break;
+		case VK_NEXT: // page down
+			ctrlClient.SendMessage(WM_VSCROLL, SB_PAGEDOWN);
 
 			break;
 		case VK_HOME:
