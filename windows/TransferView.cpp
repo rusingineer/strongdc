@@ -72,7 +72,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ctrlTransfers.SetImageList(states, LVSIL_STATE); 
 	ctrlTransfers.SetImageList(arrows, LVSIL_SMALL);
-	ctrlTransfers.setSortColumn(COLUMN_USER);
+	ctrlTransfers.setSortColumn(COLUMN_STATUS);
 
 	ctrlTransfers.setFlickerFree(WinUtil::bgBrush);
 	transferMenu.CreatePopupMenu();
@@ -731,14 +731,12 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
 		if( (i->type == ItemInfo::TYPE_DOWNLOAD) && (i->user != (User::Ptr)NULL)) {
-			dcdebug("1111\n");
 			i->update();
-			dcdebug("2222\n");
 			if (i->upper != NULL) ctrlTransfers.updateItem(i->upper);
 		} else i->update();
 		ctrlTransfers.updateItem(i);
-		//if(ctrlTransfers.getSortColumn() != COLUMN_USER)
-		ctrlTransfers.resort();
+		if(ctrlTransfers.getSortColumn() != COLUMN_USER)
+			ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
@@ -752,8 +750,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			  ctrlTransfers.updateItem(i);
 		}
 
-		//if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
-		ctrlTransfers.resort();
+		if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+			ctrlTransfers.resort();
 		ctrlTransfers.SetRedraw(TRUE);
 				
 		delete v;

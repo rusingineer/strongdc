@@ -149,7 +149,6 @@ public:
 			return 0;
 		} else {
 			bHandled = FALSE;
-			m_hMenu = NULL;
 			return 0;
 		}
 	}

@@ -169,10 +169,16 @@ public:
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
 
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
+		if(isSet(User::OP) || !isClientOp()) return;
 		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-			PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
-		addLine(nick+" - "+aCheatDescription);
-		cheatingString = aCheatDescription;
+			PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+		
+		StringMap ucParams;
+		getParams(ucParams);
+		string cheat = Util::formatParams(aCheatDescription, ucParams);
+
+		addLine(nick+" - "+cheat);
+		cheatingString = cheat;
 		badClient = aBadClient;
 	}
 		

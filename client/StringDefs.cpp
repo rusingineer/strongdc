@@ -572,7 +572,7 @@ string ResourceManager::strings[] = {
 "4 segments if file size is between                 and                  MB", 
 "6 segments if file size is between                 and                  MB", 
 "8 segments if file size is greater than                  MB", 
-"Don't add any other segment if speed is above", 
+"Don't begin new segment if overall file speed is over", 
 "(Too low or too high settings can decrease download speed!)", 
 "Disable safe && compressed transfer", 
 "Max compression level", 
@@ -717,8 +717,9 @@ string ResourceManager::strings[] = {
 "Segment", 
 "Max number of segments", 
 "Disabled",
-"Downloading TTH tree..."
+"Downloading TTH tree...",
 "No free block",
+"Log segmented downloading",
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1438,4 +1439,5 @@ string ResourceManager::names[] = {
 "Disabled",
 "DownloadingTTHL",
 "NoFreeBlock",
+"LogSegment",
 };

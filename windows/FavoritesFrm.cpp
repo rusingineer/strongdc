@@ -103,8 +103,6 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 
 	nosave = false;
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -313,7 +311,6 @@ LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		WinUtil::saveHeaderOrder(ctrlHubs, SettingsManager::FAVORITESFRAME_ORDER, 
 		SettingsManager::FAVORITESFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
-		m_hMenu = NULL;
 		bHandled = FALSE;
 		return 0;
 	}	

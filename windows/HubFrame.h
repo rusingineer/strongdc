@@ -230,7 +230,7 @@ public:
 	void doReport(User::Ptr& u)
 	{
 		string param = u->getNick();
-			addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
+		addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
 	}
 	void getUserResponses(User::Ptr& u, bool checkList = false);
 	
@@ -358,7 +358,6 @@ private:
 		client = ClientManager::getInstance()->getClient(aServer);
 		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : aNick, client, false)); 
 		client->setNick(aNick.empty() ? SETTING(NICK) : aNick);
-
 		if (!aDescription.empty())
 			client->setDescription(aDescription);
 		client->setPassword(aPassword);
@@ -396,6 +395,7 @@ private:
 	
 	bool waitingForPW;
 	bool extraSort;
+	bool ShowUserList;
 
 	StringList prevCommands;
 	string currentCommand;
@@ -416,37 +416,9 @@ private:
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow clientContainer;
 	CContainedWindow showUsersContainer;
-	// CDM EXTENSION BEGINS (fulDC)
-//	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
-//	typedef UserMap::iterator UserMapIter;
-//	UserMap userMap;
-
 	CContainedWindow ctrlFilterContainer;
 	CContainedWindow ctrlFilterSelContainer;
 	string filter;
-	//typedef list< UserInfo* > FilterList;
-	typedef multimap< string, UserInfo* > UserMap;
-	typedef pair< string, UserInfo* > UserPair;
-	UserMap usermap; //save all userinfo items that don't match the filter here
-	CEdit ctrlFilter;
-	CComboBox ctrlFilterSel;
-	void removeUser(const User::Ptr& u);
-	void updateUserList();
-
-	void clearUserList() {
-		{
-			Lock l(updateCS);
-			updateList.clear();
-		}
-
-		UserMap::iterator i = usermap.begin();
-		for(; i != usermap.end(); ++i)
-			delete i->second;
-
-		usermap.clear();
-		ctrlUsers.DeleteAllItems();
-	}
-	// CDM EXTENSION ENDS
 
 	OMenu copyMenu;
 	OMenu grantMenu;
@@ -456,6 +428,8 @@ private:
 	CButton ctrlShowUsers;
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;
+	CEdit ctrlFilter;
+	CComboBox ctrlFilterSel;
 	typedef TypedListViewCtrl<UserInfo, IDC_USERS> CtrlUsers;
 	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
@@ -468,7 +442,10 @@ private:
 	
 	typedef vector<pair<User::Ptr, Speakers> > UpdateList;
 	typedef UpdateList::iterator UpdateIter;
+	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
+	typedef UserMap::iterator UserMapIter;
 
+	UserMap userMap;
 	UpdateList updateList;
 	CriticalSection updateCS;
 	bool updateUsers;
@@ -481,7 +458,28 @@ private:
 	UserListColumns m_UserListColumns;
 	
 	int findUser(const User::Ptr& aUser);
-	bool updateUser(const User::Ptr& u, bool searchinlist = true);
+
+	bool updateUser(const User::Ptr& u);
+	void removeUser(const User::Ptr& u);
+	void updateUserList();
+	void addAsFavorite();
+
+	bool getUserInfo() { return ShowUserList; }
+
+	void clearUserList() {
+		{
+			Lock l(updateCS);
+			updateList.clear();
+		}
+
+		userMap.clear();
+		int j = ctrlUsers.GetItemCount();
+		for(int i = 0; i < j; i++) {
+			delete (UserInfo*) ctrlUsers.GetItemData(i);
+		}
+		ctrlUsers.DeleteAllItems();
+	}
+
 	
 	CHARFORMAT2 m_ChatTextGeneral;
 	CHARFORMAT2 m_ChatTextPrivate;
@@ -492,11 +490,6 @@ private:
 	int hubchatusersplit;
 
 	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick, OMenu *pMenu );
-	bool ShowUserList;
-	
-	void addAsFavorite();
-
-	bool getUserInfo() { return ShowUserList;/*ctrlShowUsers.GetCheck() == BST_CHECKED;*/ }
 
 	void updateStatusBar() {
 		if(m_hWnd)

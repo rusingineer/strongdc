@@ -333,9 +333,12 @@ void User::updateClientType() {
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
 			badClient = true;
+			setCheat(cheatingString, true);
 			updated();
 			return;
 		}
+
+		if(badClient) setCheat(cheatingString, true);
 		updated();
 		if(cp.getRawToSend() > 0) {
 			sendRawCommand(cp.getRawToSend());
@@ -476,7 +479,7 @@ void User::updated() {
 }
 bool User::fileListDisconnected() {
 	fileListDisconnects++;
-	if(fileListDisconnects > 5) {
+	if(fileListDisconnects == 5) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
 		updated();
 		//sendRawCommand(SETTING(DISCONNECT_RAW));
@@ -486,7 +489,7 @@ bool User::fileListDisconnected() {
 }
 bool User::connectionTimeout() {
 	connectionTimeouts++;
-	if(connectionTimeouts > 5) {
+	if(connectionTimeouts == 5) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 		updated();
 		QueueManager::getInstance()->removeTestSUR(nick);
@@ -500,6 +503,7 @@ void User::setPassive() {
 	if(tag.find(",M:A") != string::npos) {
 		setCheat("Tag states active mode but is using passive commands", false);
 		updated();
+		QueueManager::getInstance()->removeTestSUR(nick);
 	}
 }
 // CDM EXTENSION ENDS

@@ -46,7 +46,7 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
 	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()), 
-	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()) { 
+	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()), currPos(0) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -319,22 +319,28 @@ void DownloadManager::on(UserConnectionListener::Sending, UserConnection* aSourc
 }
 
 void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSource, int64_t aFileLength) throw() {
-	User::Ptr user = aSource->getUser();
 	if(aSource->getState() != UserConnection::STATE_FILELENGTH) {
 		dcdebug("DM::onFileLength Bad state, ignoring\n");
 		return;
 	}
-	if ( aSource->getDownload()->isSet(Download::FLAG_USER_LIST) ) {
-		if((aFileLength < 100) && (user != (User::Ptr)NULL) && (user->getBytesShared() > 0))
-		{
-			user->setCheatingString(Util::validateMessage("Too small filelist - " + Util::formatBytes(aFileLength) + " for the specified share of " + Util::formatBytes(user->getBytesShared()), false));
-			user->setFakeSharing(true);
-			User::updated(user);
-			user->getClient()->fire(ClientListener::CheatMessage(), user->getClient(), user->getNick()+": "+user->getCheatingString());
-		}
 
-		aSource->getUser()->setFileListSize(aFileLength);
-		(aSource->getUser()->getClient())->updated(aSource->getUser());
+	Download::Ptr download = aSource->getDownload();
+	User::Ptr user = aSource->getUser();
+	if (download != NULL) {	
+		if ( aSource->getDownload()->isSet(Download::FLAG_USER_LIST) ) {
+			Client* client = NULL;
+			if (user) {
+				client = user->getClient();
+				user->setFileListSize(aFileLength);
+				if (client != NULL) {
+					if((aFileLength < 100) && (user != (User::Ptr)NULL) && (user->getBytesShared() > 0)) {
+						user->setCheat(Util::validateMessage("Too small filelist - " + Util::formatBytes(aFileLength) + " for the specified share of " + Util::formatBytes(user->getBytesShared()), false), false);
+						user->setFakeSharing(true);
+					}
+				client->updated(user);
+				}
+			}
+		}
 	}
 
 	if(prepareFile(aSource, aFileLength)) {
@@ -425,7 +431,7 @@ public:
 			cur.update(buf, bufPos);
 		bufPos = 0;
 
-		cur.finalize();
+		//cur.finalize();
 		checkTrees();
 		return s->flush();
 	}
@@ -612,7 +618,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			d->setCurrPos(d->getPos() + aLen);
 			d->addPos(d->getFile()->write(aData, aLen), aLen);			
 		} catch(const BlockDLException) {
-			d->setCurrPos(d->getPos() + aLen);
+			//d->setCurrPos(d->getPos() + aLen);
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			d->getFile()->flush();
 			aSource->setDownload(NULL);
@@ -853,7 +859,7 @@ noCRC:
 				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
 				removeDownload(d, true);
-				//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 
 				aSource->setDownload(old);
 				checkDownloads(aSource, true);

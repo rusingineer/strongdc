@@ -75,9 +75,9 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	return TRUE;
 }
 
-LRESULT FinishedMP3Frame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT FinishedMP3Frame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	FinishedManager::getInstance()->removeListener(this);
+		FinishedManager::getInstance()->removeListener(this);
 	
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FINISHEDMP3, false);
@@ -87,8 +87,8 @@ LRESULT FinishedMP3Frame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::FINISHEDMP3_ORDER, 
 			SettingsManager::FINISHEDMP3_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
-		MDIDestroy(m_hWnd);
-	return 0;
+		bHandled = FALSE;
+		return 0;
 	}
 }
 

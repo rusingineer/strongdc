@@ -266,8 +266,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		SetWindowText(CSTRING(SEARCH));
 	}
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return 1;
 }
@@ -410,6 +408,8 @@ void SearchFrame::onEnter() {
 	if(llsize == 0)
 		mode = SearchManager::SIZE_DONTCARE;
 
+	exactSize = (mode == SearchManager::SIZE_EXACT);
+
 	int ftype = ctrlFiletype.GetCurSel();		
 
 	if(BOOLSETTING(CLEAR_SEARCH)){
@@ -479,14 +479,13 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	if(onlyTTH && aResult->getTTH() == NULL)
 		return;
 
-	if(SendMessageTimeout(ctrlMode.m_hWnd, CB_GETCURSEL, 0, 0, SMTO_ABORTIFHUNG, 2000, NULL) == SearchManager::SIZE_EXACT)
-		{			
-			string size(ctrlSize.GetWindowTextLength() + 1, '\0');
-			ctrlSize.GetWindowText(&size[0], size.size());
-			size.resize(size.size()-1);
-			if(aResult->getSize() != Util::toInt64(size))
-				return;
-		}
+	if(exactSize) {			
+		string size(ctrlSize.GetWindowTextLength() + 1, '\0');
+		ctrlSize.GetWindowText(&size[0], size.size());
+		size.resize(size.size()-1);
+		if(aResult->getSize() != Util::toInt64(size))
+			return;
+	}
 
 	SearchInfo* i = new SearchInfo(aResult);
 	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
@@ -693,7 +692,6 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		WinUtil::saveHeaderOrder(ctrlResults, SettingsManager::SEARCHFRAME_ORDER,
 			SettingsManager::SEARCHFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 				
-		m_hMenu = NULL;
 		bHandled = FALSE;
 	return 0;
 	}

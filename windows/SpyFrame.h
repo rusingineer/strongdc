@@ -83,7 +83,6 @@ public:
 			return 0;
 		} else {
 			CZDCLib::setButtonPressed(IDC_SEARCH_SPY, false);
-			m_hMenu = NULL;
 			bHandled = FALSE;
 		return 0;
 	}

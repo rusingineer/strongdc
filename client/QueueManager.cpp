@@ -864,9 +864,15 @@ znovu:
 		return NULL;
 	}
 
-	//int k = q->getCurrents().size();
-	int k = q->getActiveSegments().size();
-	if(k >= q->getMaxSegments()) {
+	if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
+		if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
+			message = STRING(ALL_SEGMENTS_TAKEN);		
+			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			goto znovu;
+		}
+	}
+
+	if(q->getCurrents().size() >= q->getMaxSegments()) {
 		message = STRING(ALL_SEGMENTS_TAKEN);		
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto znovu;

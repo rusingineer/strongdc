@@ -118,7 +118,7 @@ public:
 		resultsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		hubsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
-		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false)	
+		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize(false)
 	{	
 		SearchManager::getInstance()->addListener(this);
 	}
@@ -556,6 +556,7 @@ private:
 	bool onlyFree;
 	bool onlyTTH;
 	bool isHash;
+	bool exactSize;
 
 	CriticalSection cs;
 

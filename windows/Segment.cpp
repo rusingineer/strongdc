@@ -38,7 +38,6 @@ PropPage::TextItem Segment::texts[] = {
 	{ IDC_SEGMENT4, ResourceManager::SEGMENT4_TEXT },
 	{ IDC_SEGMENT6, ResourceManager::SEGMENT6_TEXT },
 	{ IDC_SEGMENT8, ResourceManager::SEGMENT8_TEXT },
-	{ IDC_DONTSEGMENT, ResourceManager::DONT_ADD_SEGMENT_TEXT },
 	{ IDC_SEGMENTWARN, ResourceManager::WARN_SEGMENT_TEXT },
 
 	{ IDC_RADIO1, ResourceManager::TEXT_FILESIZE },
@@ -47,6 +46,8 @@ PropPage::TextItem Segment::texts[] = {
 	{ IDC_EXTENSION, ResourceManager::TEXT_EXTENSION },
 	{ IDC_MINIMUM, ResourceManager::TEXT_MINIMUM },
 	{ IDC_KB, ResourceManager::KB },
+	{ IDC_KBPS, ResourceManager::KBPS },
+	{ IDC_DONTBEGIN, ResourceManager::DONT_ADD_SEGMENT_TEXT },
 
 	{ IDC_MINUTES, ResourceManager::MINUTES },
 	
@@ -54,6 +55,9 @@ PropPage::TextItem Segment::texts[] = {
 };
 PropPage::Item Segment::items[] = {
 	{ IDC_AUTOSEGMENT, SettingsManager::AUTO_SEARCH, PropPage::T_BOOL },
+	{ IDC_DONTBEGIN, SettingsManager::DONT_BEGIN_SEGMENT, PropPage::T_BOOL },
+	{ IDC_BEGIN_EDIT, SettingsManager::DONT_BEGIN_SEGMENT_SPEED, PropPage::T_INT },
+
 	{ IDC_SEGMENT2_MIN, SettingsManager::SET_MIN2, PropPage::T_INT },
 	{ IDC_SEGMENT2_MAX, SettingsManager::SET_MAX2, PropPage::T_INT },
 	{ IDC_SEGMENT3_MIN, SettingsManager::SET_MIN3, PropPage::T_INT },
@@ -96,6 +100,10 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	spin.SetRange32(5, 60);
 	spin.Detach();
 
+	spin.Attach(GetDlgItem(IDC_BEGIN_SPIN));
+	spin.SetRange32(2, 100000);
+	spin.Detach();
+
 	ctrlBlockSize.Attach(GetDlgItem(IDC_BLOCK_COMBO));
 
 	for(int i = 0; i < SettingsManager::SIZE_LAST; i++) {
@@ -105,7 +113,7 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlBlockSize.SetCurSel(ctrlBlockSize.FindString(0, SETTING(MIN_BLOCK_SIZE).c_str()));
 
 	// Do specialized reading here
-	
+	fixControls();
 	return TRUE;
 }
 
@@ -127,7 +135,32 @@ void Segment::write()
 	// settings->set(XX, YY);
 }
 
+LRESULT Segment::onClickedRadio(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	fixControls();
+	return 0;
+}
 
+void Segment::fixControls() {
+	BOOL checked = IsDlgButtonChecked(IDC_RADIO1);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT2), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT3), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT4), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT6), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT8), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT2_MIN), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT2_MAX), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT3_MIN), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT3_MAX), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT4_MIN), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT4_MAX), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT6_MIN), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT6_MAX), checked);
+	::EnableWindow(GetDlgItem(IDC_SEGMENT8_MIN), checked);
+
+	checked = IsDlgButtonChecked(IDC_RADIO3);
+	::EnableWindow(GetDlgItem(IDC_SEG_NUMBER_SPIN), checked);
+	::EnableWindow(GetDlgItem(IDC_SEG_NUMBER), checked);
+}
 /**
  * @file
  * $Id$

@@ -276,6 +276,7 @@ string GeneralPage::getMyIP()
 
      hent=gethostbyname (hostnm);
 	 addr=inet_ntoa (*(struct in_addr *) *hent->h_addr_list); 
+	 delete[] hostnm;
      WSACleanup();
      return addr;
 }

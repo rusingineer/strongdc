@@ -13,7 +13,7 @@ bool CDMDebugFrame::pause = false;
 LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	ctrlPad.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL, WS_EX_CLIENTEDGE);
+		WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_READONLY, WS_EX_CLIENTEDGE);
 	
 	ctrlPad.LimitText(0);
 	ctrlPad.SetFont(WinUtil::font);
@@ -24,7 +24,7 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	
-	MDIDestroy(m_hWnd);
+	bHandled = FALSE;
 	return 0;
 	
 }
@@ -47,18 +47,27 @@ void CDMDebugFrame::addLine(const string& s) {
 	if (pause)
 		return;
 	if (frame != NULL) {
-		frame->ctrlPad.SetRedraw(FALSE);
-		frame->ctrlPad.AppendText((s + "\r\n").c_str());
 		if (frame->ctrlPad.GetWindowTextLength() > MAX_TEXT_LEN) {
-			int i = frame->ctrlPad.GetWindowTextLength();
-			AutoArray<char> buf(i + 1);
-			frame->ctrlPad.GetWindowText(buf, i + 1);
-			i -= MAX_TEXT_LEN;
-			string s(buf + i + (MAX_TEXT_LEN / 8));
-			frame->ctrlPad.SetWindowText(s.c_str());
+			frame->ctrlPad.SetRedraw(FALSE);
+			frame->ctrlPad.SetSel(0, frame->ctrlPad.LineIndex(frame->ctrlPad.LineFromChar(2000)), TRUE);
+			frame->ctrlPad.ReplaceSel("");
+			frame->ctrlPad.SetRedraw(TRUE);
 		}
+		BOOL noscroll = TRUE;
+		POINT p = frame->ctrlPad.PosFromChar(frame->ctrlPad.GetWindowTextLength() - 1);
+		CRect r;
+		frame->ctrlPad.GetClientRect(r);
+		
+		if( r.PtInRect(p) || frame->MDIGetActive() != frame->m_hWnd)
+			noscroll = FALSE;
+		else {
+			frame->ctrlPad.SetRedraw(FALSE); // Strange!! This disables the scrolling...????
+		}
+		frame->ctrlPad.AppendText((s + "\r\n").c_str());
+		if(noscroll) {
 		frame->ctrlPad.SetRedraw(TRUE);
-		::SendMessage(frame->ctrlPad.m_hWnd, EM_SCROLL, SB_BOTTOM, 0);
+		}
+		frame->setDirty();
 	}
 }
 void CDMDebugFrame::setPause(bool bPause) {

@@ -126,8 +126,6 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	// Load all searches
 	LoadAll();
 
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -145,7 +143,6 @@ LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::ADLSEARCHFRAME_ORDER, 
 		SettingsManager::ADLSEARCHFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
-		m_hMenu = NULL;
 		bHandled = FALSE;
 		return 0;
 	}	

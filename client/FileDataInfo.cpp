@@ -147,7 +147,7 @@ __int64 FileDataInfo::GetUndlStart(int maxSegments)
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 262143;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 524287;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = iFileSize / maxSegments;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = (iFileSize / maxSegments) / 2;
 	if(maxSegments == 1) SMALLEST_BLOCK_SIZE = iFileSize;
 
 	if((e - b) < SMALLEST_BLOCK_SIZE){
@@ -157,9 +157,7 @@ __int64 FileDataInfo::GetUndlStart(int maxSegments)
 
 	__int64 n = b + (e - b) / 2;
 
-	if(maxSegments == 1) {
-		n = b;
-	}
+	if(maxSegments == 1) { n = b; }
 
 	(* (birr+1)) = n;
 
