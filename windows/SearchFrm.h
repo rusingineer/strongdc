@@ -311,7 +311,7 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL), hits("") { 
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL), hits(""), needDelete(true) { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
@@ -320,6 +320,7 @@ private:
 
 		bool collapsed;
 		bool mainitem;
+		bool needDelete;
 		SearchInfo* main;
 
 		void getList();
