@@ -606,11 +606,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if((j+1) == it->length())
 				continue;
 			string nick = it->substr(0, j);	
-			User::Ptr u = ClientManager::getInstance()->getUser(nick, this);
-			v.push_back(u);
+			v.push_back(ClientManager::getInstance()->getUser(nick, this));
 			string IP = it->substr(j+1);
 			v.back()->setIp(IP);
-			ClientManager::getInstance()->setIPNick(IP, u);
+			ClientManager::getInstance()->setIPNick(IP, nick);
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::UserIp(), this, v);
 	} else if(strncmp(aLine+1, "NickList ", 9) == 0) {

@@ -480,7 +480,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
-			InsertItem(i); 
+			InsertItem(i, true); 
 		} else {
 			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), i, IMAGE_UPLOAD);
 		}
@@ -525,8 +525,10 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.deleteItem(i);
 	} else if(wParam == INSERT_SUBITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		dcassert(i->upper != NULL);
-		int r = ctrlTransfers.findItem(i->upper);
+		int r = -1;
+
+		if(i->upper != NULL)
+			r = ctrlTransfers.findItem(i->upper);
 
 		if(r != -1) {
 			if(!i->upper->collapsed) {
@@ -730,16 +732,18 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 			i->oldTarget = i->Target;
 
 			if(i->upper != NULL) {
-				if(i->qi && i->qi->getActiveSegments().size() < 1) {
-					i->upper->status = i->status;
-					i->upper->statusString = i->statusString;
+				if(i->qi) {
+					if(i->qi->getActiveSegments().size() < 1) {
+						i->upper->status = i->status;
+						i->upper->statusString = i->statusString;
+					}
+					i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
+					i->upper->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(i->qi->getTarget()));
+					i->upper->file = Text::toT(Util::getFileName(i->qi->getTarget()));
+					i->upper->path = Text::toT(Util::getFilePath(i->qi->getTarget()));
+					i->upper->size = i->qi->getSize();				
 				}
-				i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
-				i->upper->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(i->qi->getTarget()));
 				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
-				i->upper->file = Text::toT(Util::getFileName(i->qi->getTarget()));
-				i->upper->path = Text::toT(Util::getFilePath(i->qi->getTarget()));
-				i->upper->size = i->qi->getSize();				
 				i->upper->Target = i->Target;
 				i->upper->tth = i->tth;
 				i->upper->downloadTarget = i->downloadTarget;
@@ -801,7 +805,8 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
 
-			if((i->upper != NULL) && (i->qi->getActiveSegments().size() < 1)) {
+			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
+			if((i->upper != NULL) && (pocetSegmentu < 1)) {
 				i->upper->statusString = Text::toT(aReason);
 			}
 		}
@@ -1201,9 +1206,8 @@ TransferView::ItemInfo* TransferView::findMainItem(tstring Target) {
 	return NULL;
 }
 
-void TransferView::InsertItem(ItemInfo* i) {
-
-	Lock l(cs);
+void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
+	//Lock l(cs);
 	ItemInfo* mainItem = findMainItem(i->Target);
 
 	if(!mainItem) {
@@ -1225,7 +1229,10 @@ void TransferView::InsertItem(ItemInfo* i) {
 		i->upper = h;
 		mainItems.push_back(h);
 
-		PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
+		if(mainThread)
+			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), h, IMAGE_DOWNLOAD);
+		else
+			PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
 	} else {
 		i->upper = mainItem;
 		i->upper->pocetUseru += 1;			
@@ -1241,7 +1248,27 @@ void TransferView::InsertItem(ItemInfo* i) {
 				i->upper->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
 		}
 
-		PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
+		if(mainThread) {
+			int r = ctrlTransfers.findItem(mainItem);
+
+			if(r != -1) {
+				if(!i->upper->collapsed) {
+					int position = 0;
+					if(i->qi) {
+						position = i->qi->getActiveSegments().size();
+					}
+					insertSubItem(i,r + position + 1);
+					if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+						ctrlTransfers.resort();
+				}
+
+				if(i->upper->pocetUseru > 1) {
+					ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
+				}
+			}
+		} else {
+			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
+		}
 	}
 }
 
@@ -1278,7 +1305,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 
 			i->upper = findMainItem(i->Target);
-			InsertItem(i);
+			InsertItem(i, false);
 
 			dcdebug("4. cyklus\n");
 
