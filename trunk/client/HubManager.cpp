@@ -271,55 +271,6 @@ void HubManager::save() {
 	} catch(const Exception& e) {
 		dcdebug("HubManager::save: %s\n", e.getError().c_str());
 	}
-	saveClientProfiles();
-}
-
-void HubManager::saveClientProfiles() {
-	try {
-		SimpleXML xml;
-		xml.addTag("Profiles");
-		xml.stepIn();
-
-		xml.addTag("ClientProfilesV2");
-		xml.stepIn();
-		for(ClientProfile::Iter l = clientProfiles.begin(); l != clientProfiles.end(); ++l) {
-			xml.addTag("ClientProfile");
-			xml.stepIn();
-			xml.addTag("Name", l->getName());
-			xml.addTag("Version", l->getVersion());
-			xml.addTag("Tag", l->getTag());
-			xml.addTag("ExtendedTag", l->getExtendedTag());
-			xml.addTag("Lock", l->getLock());
-			xml.addTag("Pk", l->getPk());
-			xml.addTag("Supports", l->getSupports());
-			xml.addTag("TestSUR", l->getTestSUR());
-			xml.addTag("UserConCom", l->getUserConCom());
-			xml.addTag("Status", l->getStatus());
-			xml.addTag("CheatingDescription", l->getCheatingDescription());
-			xml.addTag("RawToSend", Util::toString(l->getRawToSend()));
-			xml.addTag("TagVersion", Util::toString(l->getTagVersion()));
-			xml.addTag("UseExtraVersion", Util::toString(l->getUseExtraVersion()));
-			xml.addTag("CheckMismatch", Util::toString(l->getCheckMismatch()));
-			xml.addTag("Connection", l->getConnection());
-			xml.addTag("Comment", l->getComment());
-			xml.stepOut();
-		}
-		xml.stepOut();
-
-		xml.stepOut();
-
-		string fname = Util::getAppPath() + SETTINGS_DIR + "Profiles.xml";
-
-		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write(SimpleXML::utf8Header);
-		f.write(xml.toXML());
-		f.close();
-		File::deleteFile(fname);
-		File::renameFile(fname + ".tmp", fname);
-
-	} catch(const Exception& e) {
-		dcdebug("HubManager::saveClientProfiles: %s\n", e.getError().c_str());
-	}
 }
 
 void HubManager::recentsave() {
@@ -355,79 +306,6 @@ void HubManager::recentsave() {
 		File::renameFile(fname + ".tmp", fname);
 	} catch(const Exception& e) {
 		dcdebug("HubManager::recentsave: %s\n", e.getError().c_str());
-	}
-}
-
-void HubManager::loadClientProfiles(SimpleXML* aXml) {
-	string n,v,t,e,l,p,s,te,u,st,c,r,ta,us,ch,co,com;
-	aXml->resetCurrentChild();
-	if(aXml->findChild("ClientProfilesV2")) {
-		aXml->stepIn();
-		while(aXml->findChild("ClientProfile")) {
-			aXml->stepIn();
-			if(aXml->findChild("Name"))					{ n = aXml->getChildData(); }	else { n = Util::emptyString; }
-			if(aXml->findChild("Version"))				{ v = aXml->getChildData(); }	else { v = Util::emptyString; }
-			if(aXml->findChild("Tag"))					{ t = aXml->getChildData(); }	else { t = Util::emptyString; }
-			if(aXml->findChild("ExtendedTag"))			{ e = aXml->getChildData(); }	else { e = Util::emptyString; }
-			if(aXml->findChild("Lock"))					{ l = aXml->getChildData(); }	else { l = Util::emptyString; }
-			if(aXml->findChild("Pk"))					{ p = aXml->getChildData(); }	else { p = Util::emptyString; }
-			if(aXml->findChild("Supports"))				{ s = aXml->getChildData(); }	else { s = Util::emptyString; }
-			if(aXml->findChild("TestSUR"))				{ te = aXml->getChildData(); }	else { te = Util::emptyString; }
-			if(aXml->findChild("UserConCom"))			{ u = aXml->getChildData(); }	else { u = Util::emptyString; }
-			if(aXml->findChild("Status"))				{ st = aXml->getChildData(); }	else { st = Util::emptyString; }
-			if(aXml->findChild("CheatingDescription"))	{ c = aXml->getChildData(); }	else { c = Util::emptyString; }
-			if(aXml->findChild("RawToSend"))			{ r = aXml->getChildData(); }	else { r = Util::emptyString; }
-			if(aXml->findChild("TagVersion"))			{ ta = aXml->getChildData(); }	else { ta = Util::emptyString; }
-			if(aXml->findChild("UseExtraVersion"))		{ us = aXml->getChildData(); }	else { us = Util::emptyString; }
-			if(aXml->findChild("CheckMismatch"))		{ ch = aXml->getChildData(); }	else { ch = Util::emptyString; }
-			
-			if(aXml->findChild("Connection"))			{ co = aXml->getChildData(); }	else { co = Util::emptyString; }
-			if(aXml->findChild("Comment"))				{ com = aXml->getChildData(); }	else { com = Util::emptyString; }
-			
-			addClientProfile(n,v,t,e,l,p,s,te,u,st,c, Util::toInt(r), Util::toInt(ta), Util::toInt(us), Util::toInt(ch),co,com);
-			aXml->stepOut();
-		}
-		aXml->stepOut();
-	} else {
-		aXml->resetCurrentChild();
-	}
-	if (aXml->findChild("ClientProfiles")) {
-		aXml->stepIn();
-		while(aXml->findChild("ClientProfile")) {
-			addClientProfile(
-				aXml->getChildAttrib("Name"), 
-				aXml->getChildAttrib("Version"),
-				aXml->getChildAttrib("Tag"), 
-				aXml->getChildAttrib("ExtendedTag"), 
-				aXml->getChildAttrib("Lock"),
-				aXml->getChildAttrib("Pk"), 
-				aXml->getChildAttrib("Supports"),
-				aXml->getChildAttrib("TestSUR"), 
-				aXml->getChildAttrib("UserConCom"), 
-				aXml->getChildAttrib("Status"), 
-				aXml->getChildAttrib("CheatingDescription"), 
-				aXml->getIntChildAttrib("RawToSend"),
-				aXml->getIntChildAttrib("TagVersion"), 
-				aXml->getIntChildAttrib("UseExtraVersion"), 
-				aXml->getIntChildAttrib("CheckMismatch"), "", ""
-				);
-		}
-		aXml->stepOut();
-	}
-}
-
-void HubManager::loadClientProfiles() {
-	try {
-		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + SETTINGS_DIR + "Profiles.xml", File::READ, File::OPEN).read());
-		
-		if(xml.findChild("Profiles")) {
-			xml.stepIn();
-			loadClientProfiles(&xml);
-			xml.stepOut();
-		}
-	} catch(const Exception& e) {
-		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
 	}
 }
 
@@ -479,7 +357,6 @@ void HubManager::load() {
 		dcdebug("HubManager::load: %s\n", e.getError().c_str());
 	}
 
-	loadClientProfiles();
 	try {
 		SimpleXML xml;
 		xml.fromXML(File(Util::getAppPath() + RECENTS_FILE, File::READ, File::OPEN).read());

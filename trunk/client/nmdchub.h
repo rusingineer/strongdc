@@ -76,7 +76,7 @@ public:
 		if(search_queue.empty())
 			return false;
 
-		if(GET_TICK() - last_search_time < 30000) // 30 seconds
+		if(GET_TICK() - last_search_time < (SETTING(MINIMUM_SEARCH_INTERVAL)) * 1000) // 30 seconds
 			return false;
 
 		s = search_queue.front();
@@ -177,19 +177,14 @@ public:
 #define checkstate() if(state != STATE_CONNECTED) return
 
 	virtual void connect(const User* aUser);
-	virtual void hubMessage(const string& aMessage) {
-		checkstate();
-		char buf[256];
-		sprintf(buf, "<%s> ", getNick().c_str());
-		send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
-	}
+	virtual void hubMessage(const string& aMessage) { checkstate(); send(toNmdc( "<" + getNick() + "> " + Util::validateMessage(aMessage, false) + "|" ) ); }
 	virtual void privateMessage(const User* aUser, const string& aMessage) { privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage); }
 	virtual void kick(const User* aUser, const string& aMsg);
 	virtual void ban(const User*, const string&, time_t) { /*Unimplemented...*/ }
 	virtual void send(const string& a) throw() {
 		lastActivity = GET_TICK();
 		//dcdebug("Sending %d to %s: %.40s\n", a.size(), getName().c_str(), a.c_str());
-		sendDebugMessage("  >> " + a);
+		COMMAND_DEBUG(a, DebugManager::HUB_OUT, getIpPort());
 		socket->write(a);
 	}
 	virtual void sendUserCmd(const string& aUserCmd) throw() {
@@ -231,28 +226,15 @@ public:
 			send("$GetNickList|");
 		}
 	};
-	void getInfo(User::Ptr aUser) {
-		 checkstate();
-		 char buf[256];
-		 sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
-		 send(buf);
-	};
-	void getInfo(User* aUser) {
-		checkstate();
-		char buf[256];
-		sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
-		send(buf);
-	};
+	void getInfo(User::Ptr aUser) { checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
+	void getInfo(User* aUser) {  checkstate(); send("$GetINFO " + toNmdc(aUser->getNick()) + " " + toNmdc(getNick()) + "|"); };
 	void sendMeMessage(const string& aMessage) { checkstate(); send(Util::validateChatMessage(aMessage) + "|"); }
 	void sendRaw(const string& aRaw) { send(aRaw); }
-
 	
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-		char buf[256];
-		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
-		send(buf);
+		send("$ConnectToMe " + toNmdc(aUser->getNick()) + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
 		ConnectionManager::iConnToMeCount++;
 	}
 
@@ -261,35 +243,32 @@ public:
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
-		char buf[512];
-		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getNick()).c_str());
-		send(string(buf)+toNmdc(Util::validateChatMessage(aMessage))+"|");
+		send("$To: " + toNmdc(aNick) + " From: " + toNmdc(getNick()) + " $" + toNmdc(Util::validateMessage(aMessage, false)) + "|");
 	}
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
-			x+= ' ' + *i;
+			x+= *i + ' ';
 		}
-		send("$Supports" + x + '|');
+		send("$Supports " + x + '|');
 	}
 	void revConnectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::revConnectToMe %s\n", aUser->getNick().c_str());
-		char buf[256];
-		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
-		send(buf);
+		send("$RevConnectToMe " + toNmdc(getNick()) + " " + toNmdc(aUser->getNick()) + "|");
 	}
 
-	void sendDebugMessage(const string& aLine);
 	void send(const char* aBuf, int aLen) throw() {
 		lastActivity = GET_TICK();
-		sendDebugMessage("  >> aBuf ??");
+		string mess(aBuf);
+		COMMAND_DEBUG(mess, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aBuf, aLen);
 	}
 
 	void kick(const User::Ptr& aUser, const string& aMsg);
 
 	GETSET(int, supportFlags, SupportFlags);
+
 private:
 
 	struct ClientAdapter : public NmdcHubListener {
@@ -366,7 +345,7 @@ private:
 	virtual void on(Connecting) throw() { Speaker<NmdcHubListener>::fire(NmdcHubListener::Connecting(), this); }
 	virtual void on(Connected) throw() { lastActivity = GET_TICK(); Speaker<NmdcHubListener>::fire(NmdcHubListener::Connected(), this); }
 	virtual void on(Line, const string& l) throw() {
-		sendDebugMessage("<<   " + l);
+		COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
 		onLine(l.c_str());
 	}
 	virtual void on(Failed, const string&) throw();

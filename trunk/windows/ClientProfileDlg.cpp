@@ -11,6 +11,8 @@
 	GetDlgItemText(id, buf, 1024); \
 	var = buf;
 
+#define ATTACH(id, var) var.Attach(GetDlgItem(id))
+
 LRESULT ClientProfileDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	if(currentProfileId != -1) {
@@ -23,7 +25,6 @@ LRESULT ClientProfileDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 		::EnableWindow(GetDlgItem(IDC_NEXT), false);
 	}
 
-#define ATTACH(id, var) var.Attach(GetDlgItem(id))
 	ATTACH(IDC_CLIENT_NAME, ctrlName);
 	ATTACH(IDC_CLIENT_VERSION, ctrlVersion);
 	ATTACH(IDC_CLIENT_TAG, ctrlTag);
@@ -37,9 +38,9 @@ LRESULT ClientProfileDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ATTACH(IDC_CLIENT_CHEATING_DESCRIPTION, ctrlCheatingDescription);
 	ATTACH(IDC_CLIENT_CONNECTION, ctrlConnection);
 
-	//ATTACH(IDC_TAG_VERSION, ctrlTagVersion);
 	ATTACH(IDC_USE_EXTRA_VERSION, ctrlUseExtraVersion);
 	ATTACH(IDC_VERSION_MISMATCH, ctrlCheckMismatch);
+
 	ATTACH(IDC_ADD_LINE, ctrlAddLine);
 	ATTACH(IDC_COMMENT, ctrlComment);
 
@@ -64,6 +65,8 @@ LRESULT ClientProfileDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ctrlRegExpCombo.AddString(_T("Connection"));
 	ctrlRegExpCombo.SetCurSel(0);
 
+	params = ClientProfileManager::getInstance()->getParams();
+
 	updateControls();
 	
 	CenterWindow(GetParent());
@@ -75,6 +78,19 @@ LRESULT ClientProfileDlg::onChange(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
+LRESULT ClientProfileDlg::onChangeTag(WORD , WORD , HWND , BOOL& ) {
+	updateAddLine();
+	updateTag();
+	return 0;
+}
+
+void ClientProfileDlg::updateTag() {
+	TCHAR buf[BUF_LEN];
+	string exp;
+	GET_TEXT(IDC_CLIENT_TAG, Text::toT(exp)); 
+	exp = Util::formatRegExp(exp, params);
+	SetDlgItemText(IDC_CLIENT_FORMATTED_TAG, Text::toT(exp).c_str());
+}
 void ClientProfileDlg::updateAddLine() {
 	addLine = Util::emptyStringT;
 	TCHAR buf[BUF_LEN];
@@ -102,7 +118,7 @@ void ClientProfileDlg::updateAddLine() {
 }
 
 void ClientProfileDlg::getProfile() {
-	HubManager::getInstance()->getClientProfile(currentProfileId, currentProfile);
+	ClientProfileManager::getInstance()->getClientProfile(currentProfileId, currentProfile);
 
 	name = currentProfile.getName();
 	version = currentProfile.getVersion();
@@ -116,7 +132,7 @@ void ClientProfileDlg::getProfile() {
 	status = currentProfile.getStatus();
 	cheatingDescription = currentProfile.getCheatingDescription();
 	rawToSend = currentProfile.getRawToSend();
-	tagVersion = currentProfile.getTagVersion();
+//	tagVersion = currentProfile.getTagVersion();
 	useExtraVersion = currentProfile.getUseExtraVersion();
 	checkMismatch = currentProfile.getCheckMismatch();
 	connection = currentProfile.getConnection();
@@ -139,9 +155,10 @@ void ClientProfileDlg::updateVars() {
 	GET_TEXT(IDC_CLIENT_CHEATING_DESCRIPTION, Text::toT(cheatingDescription));
 	GET_TEXT(IDC_CLIENT_CONNECTION, Text::toT(connection));
 	GET_TEXT(IDC_COMMENT, Text::toT(comment));
-	tagVersion = 0;//(ctrlTagVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
-	useExtraVersion = (ctrlUseExtraVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
-	checkMismatch = (ctrlCheckMismatch.GetCheck() == BST_CHECKED) ? 1 : 0;
+	//tagVersion = 0;//(ctrlTagVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
+	useExtraVersion = ctrlUseExtraVersion.GetCheck() == BST_CHECKED;
+	checkMismatch = ctrlCheckMismatch.GetCheck() == BST_CHECKED;
+
 	rawToSend = ctrlRaw.GetCurSel();
 }
 
@@ -162,8 +179,8 @@ void ClientProfileDlg::updateControls() {
 	ctrlComment.SetWindowText(Text::toT(comment).c_str());
 
 	//ctrlTagVersion.SetCheck((tagVersion) ? BST_CHECKED : BST_UNCHECKED);
-	ctrlUseExtraVersion.SetCheck((useExtraVersion) ? BST_CHECKED : BST_UNCHECKED);
-	ctrlCheckMismatch.SetCheck((checkMismatch) ? BST_CHECKED : BST_UNCHECKED);
+	ctrlUseExtraVersion.SetCheck(useExtraVersion ? BST_CHECKED : BST_UNCHECKED);
+	ctrlCheckMismatch.SetCheck(checkMismatch ? BST_CHECKED : BST_UNCHECKED);
 	
 	ctrlRaw.SetCurSel(rawToSend);
 
@@ -186,12 +203,12 @@ LRESULT ClientProfileDlg::onNext(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	currentProfile.setStatus(status);
 	currentProfile.setCheatingDescription(cheatingDescription);
 	currentProfile.setRawToSend(rawToSend);
-	currentProfile.setTagVersion(tagVersion);
+//	currentProfile.setTagVersion(tagVersion);
 	currentProfile.setUseExtraVersion(useExtraVersion);
 	currentProfile.setCheckMismatch(checkMismatch);
 	currentProfile.setConnection(connection);
 	currentProfile.setComment(comment);
-	HubManager::getInstance()->updateClientProfile(currentProfile);
+	ClientProfileManager::getInstance()->updateClientProfile(currentProfile);
 
 	currentProfileId++;
 	getProfile();

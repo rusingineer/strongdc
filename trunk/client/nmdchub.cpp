@@ -76,14 +76,11 @@ void NmdcHub::connect() {
 void NmdcHub::connect(const User* aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-	char buf[256];
 	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
-		ConnectionManager::iConnToMeCount++;
+		send("$ConnectToMe " + toNmdc(aUser->getNick()) + " " + getLocalIp() + ":" + Util::toString(SETTING(IN_PORT)) + "|");
 	} else {
-		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
+		send("$RevConnectToMe " + toNmdc(getNick()) + " " + toNmdc(aUser->getNick())  + "|");
 	}
-	send(buf); 
 }
 
 int64_t NmdcHub::getAvailable() const {
@@ -209,7 +206,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		if((temp = strtok(NULL, "?")) == NULL)
 			return;
 
-		int64_t size = _atoi64(temp);
+		int64_t size = Util::toInt64(temp);
 		if((temp = strtok(NULL, "?")) == NULL)
 			return;
 
@@ -700,6 +697,7 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	if (!handle)
 		return TRUE;// Not a window
 	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
+	buf[255] = NULL;
 
 	if(buf[0] != NULL) {
 		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
@@ -728,6 +726,7 @@ int hexstr2int(char *hexstr) {
 }
 
 void NmdcHub::myInfo() {
+
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
@@ -803,11 +802,11 @@ void NmdcHub::myInfo() {
 				char buf1[256];
 				char buf2[256];
 
-				sprintf(buf1, "%X", u_int8_t(buf[5]));
+				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
 				buf1[255] = 0;
 				string a1 = buf1;
 
-				sprintf(buf2, "%X", u_int8_t(buf[6]));
+				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
 				buf2[255] = 0;
 				string a2 = buf2;
 
@@ -867,13 +866,13 @@ void NmdcHub::myInfo() {
 		if (connection == "Wireless") { connection = "Satellite"; }
 
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
+			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K] ";
 		}
 	}
 
 	extendedtag += ">";
 
-	string newmyinfo = ("$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(checkNick(Util::validateMessage(speedDescription+getDescription(), false))));
+	string newmyinfo = ("$MyINFO $ALL " + toNmdc(checkNick(getNick())) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)));
 	newmyinfo += extendedtag;
 
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
@@ -921,11 +920,13 @@ void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string
 	if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
-		} else {
-			buf = new char[getNick().length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
-		}
+		chars = _snprintf(buf, x.length() + aString.length() + 63, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, aSize, aFileType+1, tmp.c_str());
+		buf[x.length() + aString.length() + 63] = 0;
+	} else {
+		buf = new char[getNick().length() + aString.length() + 64];
+		chars = _snprintf(buf, getNick().length() + aString.length() + 63, "$Search Hub:%s %c?%c?%I64d?%d?%s|", getNick().c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		buf[getNick().length() + aString.length() + 63] = 0;
+	}
 	send(buf, chars);
 	delete[] buf;
 }
@@ -935,14 +936,14 @@ void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {
 	dcdebug("NmdcHub::kick\n");
 	static const char str[] = 
 		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = toNmdc(Util::validateMessage(aMsg, false));
+	string msg2 = Util::validateMessage(aMsg, false);
 	
 	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
 	const char* u = aUser->getNick().c_str();
 	const char* n = getNick().c_str();
 	const char* m = msg2.c_str();
 	sprintf(tmp, str, u, n, n, m, n, n, u, m);
-	send(tmp);
+	send( toNmdc(tmp) );
 	delete[] tmp;
 	
 	// Short, short break to allow the message to reach the NmdcHub...
@@ -956,14 +957,14 @@ void NmdcHub::kick(const User* aUser, const string& aMsg) {
 	
 	static const char str[] = 
 		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = toNmdc(Util::validateMessage(aMsg, false));
+	string msg2 = Util::validateMessage(aMsg, false);
 	
 	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
 	const char* u = aUser->getNick().c_str();
 	const char* n = getNick().c_str();
 	const char* m = msg2.c_str();
 	sprintf(tmp, str, u, n, n, m, n, n, u, m);
-	send(tmp);
+	send( toNmdc(tmp) );
 	delete[] tmp;
 	
 	// Short, short break to allow the message to reach the NmdcHub...
@@ -1024,11 +1025,9 @@ void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	if(state == STATE_CONNECTED)
 		state = STATE_CONNECT;
 	Speaker<NmdcHubListener>::fire(NmdcHubListener::Failed(), this, aLine); 
-}
 
-void NmdcHub::sendDebugMessage(const string& aLine) {
-	if (BOOLSETTING(DEBUG_COMMANDS))
-		DebugManager::getInstance()->SendDebugMessage("Hub:	" + aLine);
+
+
 }
 
 /**

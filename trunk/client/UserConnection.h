@@ -243,6 +243,7 @@ public:
 	void setLineMode() { dcassert(socket); socket->setLineMode(); };
 
 	void sendRaw(const string& raw) { send(raw); }
+
 	void UserConnection::connect(const string& aServer, short aPort) throw(SocketException) { 
 		socket->connect(aServer, aPort);
 	}
@@ -340,8 +341,7 @@ private:
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			DebugManager::getInstance()->SendDebugMessage("Client:	  >> " + aString);
+		COMMAND_DEBUG(aString, DebugManager::CLIENT_OUT, getRemoteIp());
 		socket->write(aString);
 	}
 
@@ -350,8 +350,7 @@ private:
         fire(UserConnectionListener::Connected(), this); 
     }
 	virtual void on(Line, const string& line) throw() {
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + line + "|");
+		COMMAND_DEBUG(line, DebugManager::CLIENT_IN, getRemoteIp());
 		onLine(line.c_str());
 	}
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 

@@ -24,8 +24,8 @@ public:
 	~FolderTreeItemInfo() {};
 
 	//Member variables
-	string			m_sFQPath;          //Fully qualified path for this item
-	string			m_sRelativePath;    //The relative bit of the path
+	tstring			m_sFQPath;          //Fully qualified path for this item
+	tstring			m_sRelativePath;    //The relative bit of the path
 	NETRESOURCE*	m_pNetResource;     //Used if this item is under Network Neighborhood
 	bool			m_bNetworkNode;     //Item is "Network Neighborhood" or is underneath it
 };
@@ -75,7 +75,7 @@ public:
 
 	//Methods
 	void Refresh(); //Updates the internal enumeration list
-	bool IsShared(const string& sPath);
+	bool IsShared(const tstring& sPath);
 
 protected:
 	//Defines
@@ -150,12 +150,12 @@ public:
 
 	virtual void PopulateTree();
 	virtual void Refresh();
-	virtual string ItemToPath(HTREEITEM hItem) const;
+	virtual tstring ItemToPath(HTREEITEM hItem) const;
 	void Clear();
-	HTREEITEM SetSelectedPath(const string& sPath, bool bExpanded = false);
+	HTREEITEM SetSelectedPath(const tstring& sPath, bool bExpanded = false);
 	virtual bool IsDrive(HTREEITEM hItem);
-	virtual bool IsDrive(const string& sPath);
-	virtual bool IsFolder(const string& sPath);
+	virtual bool IsDrive(const tstring& sPath);
+	virtual bool IsFolder(const tstring& sPath);
 	bool GetChecked(HTREEITEM hItem) const;
     bool SetChecked(HTREEITEM hItem, bool fCheck);
 	void SetStaticCtrl(CStatic *staticCtrl);
@@ -163,31 +163,31 @@ public:
 
 protected:
 	bool IsExpanded(HTREEITEM hItem);
-	virtual int GetIconIndex(const string& sFilename);
+	virtual int GetIconIndex(const tstring& sFilename);
 	virtual int GetIconIndex(HTREEITEM hItem);
 	virtual int GetIconIndex(LPITEMIDLIST lpPIDL);
-	virtual int GetSelIconIndex(const string& sFilename);
+	virtual int GetSelIconIndex(const tstring& sFilename);
 	virtual int GetSelIconIndex(HTREEITEM hItem);
 	virtual int GetSelIconIndex(LPITEMIDLIST lpPIDL);
 	virtual HTREEITEM InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo* pItem, bool bShared, int nIcon, int nSelIcon, bool bCheckForChildren);
 	virtual void DisplayDrives(HTREEITEM hParent, bool bUseSetRedraw = true);
-	virtual void DisplayPath(const string& sPath, HTREEITEM hParent, bool bUseSetRedraw = true);
-	virtual string GetDriveLabel(const string& sDrive);
-	string GetCorrectedLabel(FolderTreeItemInfo* pItem);
-	virtual bool HasGotSubEntries(const string& sDirectory);
-	virtual bool CanDisplayDrive(const string& sDrive);
-	virtual bool IsShared(const string& sPath);
+	virtual void DisplayPath(const tstring& sPath, HTREEITEM hParent, bool bUseSetRedraw = true);
+	virtual tstring GetDriveLabel(const tstring& sDrive);
+	tstring GetCorrectedLabel(FolderTreeItemInfo* pItem);
+	virtual bool HasGotSubEntries(const tstring& sDirectory);
+	virtual bool CanDisplayDrive(const tstring& sDrive);
+	virtual bool IsShared(const tstring& sPath);
 	static int CALLBACK CompareByFilenameNoCase(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	void SetHasPlusButton(HTREEITEM hItem, bool bHavePlus);
 	bool HasPlusButton(HTREEITEM hItem);
 	void DoExpand(HTREEITEM hItem);
 	HTREEITEM FindServersNode(HTREEITEM hFindFrom) const;
-	virtual HTREEITEM FindSibling(HTREEITEM hParent, const string& sItem) const;
-	virtual bool DriveHasRemovableMedia(const string& sPath);
-	virtual bool IsMediaValid(const string& sDrive);
+	virtual HTREEITEM FindSibling(HTREEITEM hParent, const tstring& sItem) const;
+	virtual bool DriveHasRemovableMedia(const tstring& sPath);
+	virtual bool IsMediaValid(const tstring& sDrive);
 	virtual bool EnumNetwork(HTREEITEM hParent);
 	virtual int DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator);
-	virtual bool GetSerialNumber(const string& sDrive, DWORD& dwSerialNumber);
+	virtual bool GetSerialNumber(const tstring& sDrive, DWORD& dwSerialNumber);
 	void SetHasSharedChildren(HTREEITEM hItem, bool bHasSharedChildren);
 	void SetHasSharedChildren(HTREEITEM hItem);
 	bool GetHasSharedChildren(HTREEITEM hItem);
@@ -198,7 +198,7 @@ protected:
 	void UpdateParentItems(HTREEITEM hItem);
 	
 	//Member variables
-	string			m_sRootFolder;
+	tstring			m_sRootFolder;
 	HTREEITEM       m_hNetworkRoot;
 	HTREEITEM       m_hMyComputerRoot;
 	HTREEITEM       m_hRootedFolder;

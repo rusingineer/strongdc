@@ -257,10 +257,8 @@ private:
 	DownloadManager() { 
 		TimerManager::getInstance()->addListener(this);
 		mDownloadLimit = 0;
-		mBytesSent = 0;
 		mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
-		mDownloadLimit = 0;
-		mBytesSpokenFor = 0;
+		throttleZeroCounters();
 	};
 
 	virtual ~DownloadManager() {

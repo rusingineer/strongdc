@@ -101,12 +101,14 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
 #ifdef isCVS
-	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
+	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
 		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING CVSVERSION);
 #else
-	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
+	_snprintf(buf, 8191, "Code: %x\r\nVersion: %s\r\n", 
 		exceptionCode, VERSIONSTRING CZDCVERSIONSTRING);
 #endif
+
+	buf[8191] = 0;
 
 	f.write(buf, strlen(buf));
 
@@ -114,9 +116,11 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	OSVERSIONINFOEX ver;
 	WinUtil::getVersionInfo(ver);
 
-	sprintf(buf, "Major: %d\r\nMinor: %d\r\nBuild: %d\r\nSP: %d\r\nType: %d\r\n",
+	_snprintf(buf, 8191, "Major: %d\r\nMinor: %d\r\nBuild: %d\r\nSP: %d\r\nType: %d\r\n",
 		(DWORD)ver.dwMajorVersion, (DWORD)ver.dwMinorVersion, (DWORD)ver.dwBuildNumber,
 		(DWORD)ver.wServicePackMajor, (DWORD)ver.wProductType);
+
+	buf[8191] = 0;
 
 	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
@@ -137,7 +141,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	f.write(LIT("\r\n"));
 
     f.write(LIT("\r\n"));
-
+    
 	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 
 	f.write(LIT("\r\n"));
@@ -277,7 +281,7 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		::SetBkMode(dc, OPAQUE);
 		::SetBkColor(dc, RGB(255, 255, 255));
 		::SetTextColor(dc, RGB(0,0,0));
-		::DrawText(dc, Text::toT(sTitle).c_str(), sTitle.length(), &rc2, DT_RIGHT);
+		::DrawText(dc, Text::toT(sTitle).c_str(), _tcslen(Text::toT(sTitle).c_str()), &rc2, DT_RIGHT);
 		DeleteObject(hFont);
 		ReleaseDC(hwnd, dc);
 	}

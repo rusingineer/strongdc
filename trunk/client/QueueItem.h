@@ -30,6 +30,7 @@ class Download;
 #include "FastAlloc.h"
 #include "MerkleTree.h"
 #include "FileChunksInfo.h"
+#include "HashManager.h"
 
 class QueueItem : public Flags, public FastAlloc<QueueItem> {
 public:
@@ -133,6 +134,7 @@ public:
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL), speed(0)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
+		HashManager::getInstance()->getTree(aTarget, tth, tiger);
 	};
 
 	QueueItem(const QueueItem& rhs) : 
@@ -168,7 +170,8 @@ public:
 	bool hasOnlineUsers() const { return countOnlineUsers() > 0; };
 
 	const string& getSourcePath(const User::Ptr& aUser) { 
-		dcassert(isSource(aUser)); 
+		//dcassert(isSource(aUser)); 
+		if(!isSource(aUser)) return Util::emptyString;
 		return (*getSource(aUser, sources))->getPath();
 	}
 

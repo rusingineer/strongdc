@@ -46,6 +46,8 @@ Popups::ListItem Popups::listItems[] = {
 	{ SettingsManager::POPUP_UPLOAD_FINISHED, ResourceManager::POPUP_UPLOAD_FINISHED },
 	{ SettingsManager::POPUP_PM, ResourceManager::POPUP_PM },
 	{ SettingsManager::POPUP_NEW_PM, ResourceManager::POPUP_NEW_PM },
+	{ SettingsManager::POPUP_AWAY, ResourceManager::SHOW_POPUP_AWAY },
+	{ SettingsManager::POPUP_MINIMIZED, ResourceManager::SHOW_POPUP_MINIMIZED },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

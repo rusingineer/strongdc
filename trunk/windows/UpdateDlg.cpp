@@ -79,16 +79,16 @@ LRESULT UpdateDlg::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		ctrlCurrentVersion.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_LATEST_VERSION) {
-		tstring* text = (tstring*)lParam;
-		ctrlLatestVersion.SetWindowText(text->c_str());
+		string* text = (string*)lParam;
+		ctrlLatestVersion.SetWindowText(Text::toT(*text).c_str());
 		delete text;
 	} else if (wParam == UPDATE_STATUS) {
-		tstring* text = (tstring*)lParam;
-		ctrlStatus.SetWindowText(text->c_str());
+		string* text = (string*)lParam;
+		ctrlStatus.SetWindowText(Text::toT(*text).c_str());
 		delete text;
 	} else if (wParam == UPDATE_CONTENT) {
-		tstring* text = (tstring*)lParam;
-		ctrlChangeLog.SetWindowText(text->c_str());
+		string* text = (string*)lParam;
+		ctrlChangeLog.SetWindowText(Text::toT(*text).c_str());
 		delete text;
 	}
 	return S_OK;

@@ -104,7 +104,8 @@ string SocketException::errorToString(int aError) {
 	default:
 		{
 			char tmp[64];
-			sprintf(tmp, CSTRING(UNKNOWN_ERROR), aError);
+			_snprintf(tmp, 63, CSTRING(UNKNOWN_ERROR), aError);
+			tmp[63] = 0;
 			return tmp;
 		}
 	}

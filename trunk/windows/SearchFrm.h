@@ -124,7 +124,8 @@ public:
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
-		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0)
+		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0),
+		droppedResults(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
 	}
@@ -596,6 +597,7 @@ private:
 	CriticalSection cs;
 
 	static TStringList lastSearches;
+	size_t droppedResults;
 
 	DWORD lastSearch;
 	bool closed;

@@ -36,7 +36,9 @@ PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_SAVEQUEUE_TEXT, ResourceManager::SETTINGS_SAVEQUEUE },
 	{ IDC_SECOND, ResourceManager::SECONDS },
 	{ IDC_SECOND1, ResourceManager::SECONDS },
+	{ IDC_SECOND2, ResourceManager::SECONDS },
 	{ IDC_CLIENT_EMU, ResourceManager::CLIENT_EMU },
+	{ IDC_INTERVAL_TEXT, ResourceManager::MINIMUM_SEARCH_INTERVAL },
 
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
@@ -51,6 +53,7 @@ PropPage::Item SDCPage::items[] = {
 	{ IDC_MAX_EMOTICONS, SettingsManager::MAX_EMOTICONS, PropPage::T_INT },
 	{ IDC_SAVEQUEUE, SettingsManager::AUTOSAVE_QUEUE, PropPage::T_INT },
 	{ IDC_EMULATION, SettingsManager::CLIENT_EMULATION, PropPage::T_INT },
+	{ IDC_INTERVAL, SettingsManager::MINIMUM_SEARCH_INTERVAL, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -74,6 +77,9 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	updown.Detach();
 	updown.Attach(GetDlgItem(IDC_SAVEQUEUE_SPIN));
 	updown.SetRange32(5, 999);
+	updown.Detach();
+	updown.Attach(GetDlgItem(IDC_INTERVAL_SPIN));
+	updown.SetRange32(5, 120);
 	updown.Detach();
 
 	ctrlShutdownAction.Attach(GetDlgItem(IDC_COMBO1));

@@ -465,7 +465,7 @@ private:
 	
 	int findUser(const User::Ptr& aUser);
 
-	bool updateUser(const User::Ptr& u);
+	bool updateUser(const User::Ptr& u, bool searchinlist = true);
 	void updateUserList();
 	void addAsFavorite();
 

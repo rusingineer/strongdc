@@ -103,7 +103,11 @@ const string SettingsManager::settingTags[] =
 	"AddFinishedInstantly", "Away", "UseUPnP",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
-	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction",
+	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction", "MinimumSearchInterval",
+	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers",
+    "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
+	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
+	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -220,6 +224,15 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);
 	setDefault(UPDATE_URL, "http://www.fin-overclocking.net/");
+	setDefault(NORMAL_COLOUR, RGB(255,255,255));
+	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
+	setDefault(IGNORED_COLOR, RGB(192,192,192));	
+	setDefault(FAVORITE_COLOR, RGB(51,51,255));	
+	setDefault(CLIENT_CHECKED_COLOUR, RGB(160, 160, 160));
+	setDefault(FILELIST_CHECKED_COLOUR, RGB(0, 160, 255));
+	setDefault(FULL_CHECKED_COLOUR, RGB(0, 160, 0));
+	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
+	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
 	setDefault(SHOW_TRANSFERVIEW, true);
@@ -443,8 +456,12 @@ SettingsManager::SettingsManager()
 	setDefault(POPUP_PM, false);
 	setDefault(POPUP_NEW_PM, true);
 	setDefault(POPUP_TYPE, 0);
+	setDefault(POPUP_AWAY, false);
+	setDefault(POPUP_MINIMIZED, true);
+
 	setDefault(AWAY, false);
 	setDefault(SHUTDOWN_ACTION, 0);
+	setDefault(MINIMUM_SEARCH_INTERVAL, 30);
 
 	setDefault(BACKGROUND_IMAGE, "");
 #ifdef _WIN32

@@ -172,6 +172,7 @@ public:
 		return (SETTING(MIN_UPLOAD_SPEED)*1024) < UploadManager::getInstance()->getAverageSpeed();
 	}
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
+	int hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.count(aUser); }
 		
 	void reserveSlot(const User::Ptr& aUser) {
 		Lock l(cs);

@@ -104,18 +104,7 @@ public:
 		aUser->unCacheClientInfo();
 	}
 
-/*	void removeOfflineChecks() {
-		Lock l(cs);
-		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
-			if( i->second->getTargetFileName().find("TestSUR") != string::npos || i->second->isSet(QueueItem::FLAG_CHECK_FILE_LIST) ) {
-				if( !(i->second->hasOnlineUsers()) ) {
-					remove(i->second->getTarget());
-				}
-			}
-		}
-	}*/
 	void removeTestSUR(const string& aNick) {
-//		Lock l(cs);
 		try {
 			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
 		} catch(...) {
@@ -180,9 +169,6 @@ public:
 	GETSET(string, queueFile, QueueFile);
 
 	QueueItem* getRunning(const User::Ptr& aUser);
-	void updateSource(QueueItem* qi) {
-		fire(QueueManagerListener::StatusUpdated(), qi);
-	}
 
 
 	/** All queue items by target */

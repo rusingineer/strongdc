@@ -23,8 +23,6 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "WinUtil.h"
-
 class ADLSearch;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,7 +56,6 @@ private:
 
 	// Current search
 	ADLSearch* search;
-	static WinUtil::TextItem texts[];
 };
 
 #endif // !defined(AFX_ADLSPROPERTIES_H__12B4C4DD_D28F_47FB_AFE8_8C75E5C4FF96__INCLUDED_)

@@ -58,7 +58,8 @@ public:
 
 		if(SETTING(TOTAL_DOWNLOAD) > 0) {
 			char buf[64];
-			sprintf(buf, "Ratio (up/down): %.2f", ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
+			_snprintf(buf, 63, "Ratio (up/down): %.2f", ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
+			buf[63] = 0;
 			SetDlgItemText(IDC_RATIO, Text::toT(buf).c_str());
 		/*	sprintf(buf, "Uptime: %s", Util::formatTime(Util::getUptime()));
 			SetDlgItemText(IDC_UPTIME, Text::toT(buf).c_str());*/

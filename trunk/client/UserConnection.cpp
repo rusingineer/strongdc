@@ -23,6 +23,7 @@
 
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
+#include "DebugManager.h"
 
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
@@ -60,6 +61,8 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
+	COMMAND_DEBUG(aLine, DebugManager::CLIENT_IN, getRemoteIp());
+
 	if(aLine[0] != '$') {
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		return;

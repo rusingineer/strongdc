@@ -306,8 +306,9 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 				fire(FinishedManagerListener::AddedDl(), item);
 			}
 				char* buf = new char[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128];
-				sprintf(buf, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
+				_snprintf(buf, STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
 					d->getUserConnection()->getUser()->getNick().c_str());
+				buf[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127] = 0;
 				LogManager::getInstance()->message(buf, true);
 				delete[] buf;
 }

@@ -14,6 +14,14 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	if(!activated)
 		return;
 
+	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY)) {
+		return;
+	}
+
+	if(!minimized && BOOLSETTING(POPUP_MINIMIZED)) {
+		return;
+	}
+
 	if(SETTING(POPUP_TYPE) == 0) {
 
 		NOTIFYICONDATA m_nid;
@@ -27,16 +35,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		_tcscpy(m_nid.szInfoTitle, Text::toT(aTitle).c_str());
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 		return;
-
 	}
-
-/*	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY)) {
-		return;
-	}
-
-	if(!minimized && BOOLSETTING(POPUP_MINIMIZED)) 
-		return;*/
-	
 	
 	CRect rcDesktop;
 	

@@ -185,13 +185,10 @@ LRESULT SpyFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 }
 
 LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(searchString.compare(0, 4, _T("TTH:")) == 0) {		
-		TTHValue* tth = new TTHValue(Text::fromT(searchString).substr(4));
-		WinUtil::searchHash(tth);
-		delete tth;
-	} else {
+	if(Util::strnicmp(searchString.c_str(), _T("TTH:"), 4) == 0)
+		SearchFrame::openWindow(searchString.substr(4), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+	else
 		SearchFrame::openWindow(searchString);
-	}
 	return 0;
 };
 

@@ -86,8 +86,9 @@ public:
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			downloadSpeed(0), fileListSize(0), hasTestSURinQueue(false), fakeSharing(false), checked(false), realBytesShared(-1),
+			/*checked(false), */realBytesShared(-1),
 			junkBytesShared(-1), fakeShareBytesShared(-1), ctype(10), status(1)
+
 			 { unCacheClientInfo(); };
 	virtual ~User() throw();
 
@@ -158,9 +159,8 @@ public:
 	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
-	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
-	GETSET(bool, fakeSharing, FakeSharing); 
-	GETSET(bool, checked, Checked); 
+	//GETSET(bool, hasTestSURinQueue, HasTestSURinQueue); 
+	//GETSET(bool, checked, Checked); 
 	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
 	GETSET(int64_t, realBytesShared, RealBytesShared);
@@ -168,7 +168,10 @@ public:
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
 	GETSET(string, cheatingString, CheatingString);
 	GETSET(int64_t, listLength, ListLength);
+	GETSET(bool, testSURComplete, TestSURComplete);
+	GETSET(bool, filelistComplete, FilelistComplete);
 	GETSET(bool, badClient, BadClient);	
+	GETSET(bool, badFilelist, BadFilelist);	
 	GETSET(int, fileListDisconnects, FileListDisconnects);
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
 
@@ -183,7 +186,6 @@ public:
 		StringMap ucParams;
 		getParams(ucParams);
 		string cheat = Util::formatParams(aCheatDescription, ucParams);
-
 		addLine(nick+" - "+cheat);
 		cheatingString = cheat;
 		badClient = aBadClient;
@@ -195,6 +197,8 @@ public:
 	string getReport();
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
+		testSURComplete = false;
+		filelistComplete = false;
 		pk = Util::emptyString;
 		lock = Util::emptyString;
 		host = Util::emptyString;
@@ -206,11 +210,12 @@ public:
 		//status = 0;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;
-		hasTestSURinQueue = false;
+		//hasTestSURinQueue = false;
 		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
 		listLength = -1;
 		badClient = false;
+		badFilelist = false;
 		fileListDisconnects = 0;
 		connectionTimeouts = 0;
 	};

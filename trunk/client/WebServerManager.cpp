@@ -356,10 +356,15 @@ StringMap WebServerSocket::getArgs(string arguments) {
 
 int WebServerSocket::run(){
 	char buff[512];
-
+    int test = 0;
 	ZeroMemory(&buff, sizeof(buff));
 	while(true) {
 
+	test++;
+	if(test >= 1000)
+		break;
+
+	Thread::sleep(10);
 	int size = recv(sock,buff,sizeof(buff),0);
 
 	string header = buff;
@@ -409,5 +414,6 @@ int WebServerSocket::run(){
 	}*/
 	}
 	::closesocket(sock);
+	delete this;
 	return 0;
 }

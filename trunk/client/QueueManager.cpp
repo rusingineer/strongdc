@@ -262,25 +262,20 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
-	bool fNext = false;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
 		if(i != userQueue[p].end()) {
 			dcassert(!i->second.empty());
-			if(pNext == NULL || fNext){
-			return i->second.front();
+			if(pNext == NULL){
+				return i->second.front();
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
-                if(iQi != i->second.end()){
-                    fNext = true;   // found, next is target
-
+				if(iQi != i->second.end() && (*iQi) != i->second.back()){
 					iQi++;
-                    if(iQi != i->second.end())
 					return *iQi;
 				}
-
 			}
 		}
 		p--;
@@ -376,7 +371,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTINGS_DIR + "Queue.xml"), dirty(false), nextSearch(0) { 
+QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTINGS_DIR + "Queue.xml"), dirty(true), nextSearch(0) { 
 	TimerManager::getInstance()->addListener(this); 
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
@@ -804,37 +799,52 @@ QueueItem* QueueManager::lookupNext(User::Ptr& aUser) throw() {
 int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	int MaxSegments = 1;
 
-	string s1 = filename;
-	s1.erase(0,s1.find_last_of('.'));
-
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_SIZE) {
-		if( (filesize>=(SETTING(SET_MIN2)*1024*1024)) && (filesize<(SETTING(SET_MAX2)*1024*1024))) { MaxSegments = 2;}
-		else
-			if( (filesize>=(SETTING(SET_MIN3)*1024*1024)) && (filesize<(SETTING(SET_MAX3)*1024*1024))) { MaxSegments = 3;}
-		else
-			if( (filesize>=(SETTING(SET_MIN4)*1024*1024)) && (filesize<(SETTING(SET_MAX4)*1024*1024))) { MaxSegments = 4;}
-		else
-			if( (filesize>=(SETTING(SET_MIN6)*1024*1024)) && (filesize<(SETTING(SET_MAX6)*1024*1024))) { MaxSegments = 6;}
-		else
-			if(filesize>=(SETTING(SET_MIN8)*1024*1024)) { MaxSegments = 8;}
-	} else
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_CONNECTION) { 
-		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { MaxSegments = 3;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {  MaxSegments = 4;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) { MaxSegments = 5;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) { MaxSegments = 6;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) { MaxSegments = 8;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) { MaxSegments = 8;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) { MaxSegments = 10;
-		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) { MaxSegments = 15;
-		}			
-	} else
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_MANUAL) {
-		MaxSegments = SETTING(NUMBER_OF_SEGMENTS);
+	switch(SETTING(SEGMENTS_TYPE)) {
+	case SettingsManager::SEGMENT_ON_SIZE : {
+		if((filesize >= (SETTING(SET_MIN2)*1024*1024)) && (filesize <( SETTING(SET_MAX2)*1024*1024))) {
+			MaxSegments = 2;
+		} else if((filesize >= (SETTING(SET_MIN3)*1024*1024)) && (filesize < (SETTING(SET_MAX3)*1024*1024))) {
+			MaxSegments = 3;
+		} else if( (filesize >= (SETTING(SET_MIN4)*1024*1024)) && (filesize < (SETTING(SET_MAX4)*1024*1024))) {
+			MaxSegments = 4;
+		} else if( (filesize >= (SETTING(SET_MIN6)*1024*1024)) && (filesize < (SETTING(SET_MAX6)*1024*1024))) {
+			MaxSegments = 6;
+		} else if(filesize >= (SETTING(SET_MIN8)*1024*1024)) {
+			MaxSegments = 8;
+		}
+			break;
+		}
+	case SettingsManager::SEGMENT_ON_CONNECTION : {
+		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) {
+			MaxSegments = 3;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {
+			MaxSegments = 4;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) {
+			MaxSegments = 5;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) {
+			MaxSegments = 6;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) {
+			MaxSegments = 8;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) {
+			MaxSegments = 8;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) {
+			MaxSegments = 10;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) {
+			MaxSegments = 15;
+		}
+			break;
+		}
+	case SettingsManager::SEGMENT_MANUAL : {
+			MaxSegments = SETTING(NUMBER_OF_SEGMENTS);
+			break;
+		}
 	} 
 
 	PME reg(SETTING(DONT_EXTENSIONS),"i");
-	if(reg.match(s1)) { MaxSegments = 1; }
+
+	if(reg.match(Util::getFileExt(filename))) {
+		MaxSegments = 1;
+	}
 
  return MaxSegments;
 }
@@ -845,19 +855,28 @@ Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) thr
 	string message = "";
 	QueueItem* q = userQueue.getNext(aUser);
 	Download *d;
+	int test = 0;
 
 again:
 
+	test++;
+
+	if(test > 10000) {
+		//dcassert(false);
+		MessageBoxA(0,"Shouldn't see me. Please report it.","ERROR",MB_OK);
+	}
+
 	if(q == NULL) {
-		if(message != "")
+		if(message != "") {
 			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
+		}
 		return NULL;
 	}
 
 	int64_t freeBlock = 0;
 
 	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
-		if(q->getCurrents().size() >= q->getMaxSegments()) {
+		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
 			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
@@ -890,11 +909,17 @@ again:
 
 	}
 
+	d = new Download(q, aUser);
+
+	if(d->getSource() == Util::emptyString) {
+		dcdebug("Source for downloading not found\n");
+		delete d;
+		return NULL;
+	}
+
 	userQueue.setRunning(q, aUser);
 
 	fire(QueueManagerListener::StatusUpdated(), q);
-	
-	d = new Download(q, aUser);
 /*
 	if( BOOLSETTING(ANTI_FRAG) ) {
 		d->setStartPos(q->getDownloadedBytes());
@@ -1012,7 +1037,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		}
 		if(flag & QueueItem::FLAG_MATCH_QUEUE) {
 			AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
-			sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(&dirList));
+			_snprintf(tmp, STRING(MATCHED_FILES).size() + 15, CSTRING(MATCHED_FILES), matchListing(&dirList));
+			tmp[STRING(MATCHED_FILES).size() + 15] = 0;
 			LogManager::getInstance()->message(up->getNick() + ": " + string(tmp), true);			
 		}
 	}
@@ -1440,7 +1466,7 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 
 			if(found) {
 				try {
-					wantConnection = addSource(qi, sr->getFile(), sr->getUser(), 0, false);
+					wantConnection = addSource(qi, sr->getFile(), sr->getUser(), 0, sr->getUtf8());
 					added = true;
 				} catch(const Exception&) {
 					// ...
@@ -1482,12 +1508,21 @@ void QueueManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser
 }
 
 void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-		if(dirty && ((lastSave + 10000) < aTick)) {
-			saveQueue();
+	{
+		Lock l(cs);
+		QueueItem::UserMap& um = userQueue.getRunning();
+
+		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
+			QueueItem* q = j->second;
+			fire(QueueManagerListener::StatusUpdated(), q);
 		}
-		if((lastSave + SETTING(AUTOSAVE_QUEUE)*1000 + 1000) < aTick) {
-			saveQueue();
-		}
+		if(!um.empty())
+			setDirty();
+
+	}
+	if((lastSave + SETTING(AUTOSAVE_QUEUE)*1000 + 1000) < aTick) {
+		saveQueue();
+	}
 }
 
 bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException) {	

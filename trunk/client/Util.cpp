@@ -87,10 +87,23 @@ void Util::initialize() {
 
 	sgenrand((unsigned long)time(NULL));
 
+#ifdef _WIN32
+	TCHAR buf[MAX_PATH+1];
+	GetModuleFileName(NULL, buf, MAX_PATH);
+	appPath = Text::fromT(buf);
+	appPath.erase(appPath.rfind('\\') + 1);
+#else // _WIN32
+	char* home = getenv("HOME");
+	if (home) {
+		appPath = Text::fromT(home);
+		appPath += "/.StrongDC++/";
+	}
+#endif // _WIN32
+
 	try {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
 		// Updates at http://www.maxmind.com/app/geoip_country
-		string file = Util::getAppPath() + "GeoIpCountryWhois.csv";
+		string file = Util::getAppPath() + SETTINGS_DIR + "GeoIpCountryWhois.csv";
 		string data = File(file, File::READ, File::OPEN).read();
 
 		const char* start = data.c_str();
@@ -115,19 +128,6 @@ void Util::initialize() {
 		}
 	} catch(const FileException&) {
 	}
-
-#ifdef _WIN32
-	TCHAR buf[MAX_PATH+1];
-	GetModuleFileName(NULL, buf, MAX_PATH);
-	appPath = Text::fromT(buf);
-	appPath.erase(appPath.rfind('\\') + 1);
-#else // _WIN32
-	char* home = getenv("HOME");
-	if (home) {
-		appPath = Text::fromT(home);
-		appPath += "/.dc++/";
-	}
-#endif // _WIN32
 
 	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
 }
@@ -315,20 +315,21 @@ string Util::getAwayMessage() {
 string Util::formatBytes(int64_t aBytes) {
 	char buf[128];
 	if(aBytes < 1024) {
-		sprintf(buf, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
+		_snprintf(buf, 127, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
 	} else if(aBytes < 1024*1024) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
 	} else if(aBytes < 1024*1024*1024) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0), CSTRING(MB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0), CSTRING(MB));
 	} else if(aBytes < (int64_t)1024*1024*1024*1024) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0), CSTRING(GB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0), CSTRING(GB));
 	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0), CSTRING(TB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0), CSTRING(TB));
 	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024*1024)  {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(PB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(PB));
 	} else {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));
 	}
+	buf[127] = 0;
 	return buf;
 }
 
@@ -337,7 +338,8 @@ string Util::formatExactSize(int64_t aBytes) {
 #ifdef _WIN32
 		char number[64];
 		NUMBERFMTA nf;
-		sprintf(number, "%I64d", aBytes);
+		_snprintf(number, 63, "%I64d", aBytes);
+		buf[63] = 0;
 		char Dummy[16];
     
 		/*No need to read these values from the system because they are not
@@ -350,13 +352,14 @@ string Util::formatExactSize(int64_t aBytes) {
 		GetLocaleInfoA( LOCALE_SYSTEM_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
 		nf.Grouping = atoi(Dummy);
 		GetLocaleInfoA( LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
-		nf.lpThousandSep = Dummy;
+		nf.lpThousandSep = " ";
 
 		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
 #else
-		sprintf(buf, "%'lld", aBytes);
+		_snprintf(buf, 63, "%'lld", aBytes);
 #endif
-		sprintf(buf, "%s %s", buf, CSTRING(B));
+		_snprintf(buf, 63, "%s %s", buf, CSTRING(B));
+		buf[63] = 0;
 		return buf;
 }
 
@@ -620,6 +623,26 @@ string Util::formatParams(const string& msg, StringMap& params) {
 	return result;
 }
 
+string Util::formatRegExp(const string& msg, StringMap& params) {
+	string result = msg;
+	string::size_type i, j, k;
+	i = 0;
+	while (( j = result.find("%[", i)) != string::npos) {
+		if( (result.size() < j + 2) || ((k = result.find(']', j + 2)) == string::npos) ) {
+			break;
+		}
+		string name = result.substr(j + 2, k - j - 2);
+		StringMapIter smi = params.find(name);
+		if(smi != params.end()) {
+			result.replace(j, k-j + 1, smi->second);
+			i = j + smi->second.size();
+		} else {
+			i = k + 1;
+		}
+	}
+	return result;
+}
+
 u_int64_t Util::getDirSize(const string &sFullPath) {
 	u_int64_t total = 0;
 
@@ -683,7 +706,18 @@ string Util::formatTime(const string &msg, const time_t t) {
 		if(!loc) {
 			return Util::emptyString;
 		}
+#if _WIN32
+		AutoArray<TCHAR> buf(new TCHAR[bufsize]);
 
+		while(!_tcsftime(buf, bufsize-1, Text::toT(msg).c_str(), loc)) {
+			bufsize+=64;
+			buf = new TCHAR[bufsize];
+		}
+
+		return Text::fromT(tstring(buf));
+#else
+		// will this give wide representations for %a and %A?
+		// surely win32 can't have a leg up on linux/unixen in this area. - Todd
 		AutoArray<char> buf(new char[bufsize]);
 
 		while(!strftime(buf, bufsize-1, msg.c_str(), loc)) {
@@ -692,6 +726,7 @@ string Util::formatTime(const string &msg, const time_t t) {
 		}
 
 		return string(buf);
+#endif
 	}
 	return Util::emptyString;
 }

@@ -42,6 +42,7 @@
 #include "DownloadDirsPage.h"
 #include "Popups.h"
 #include "SDCPage.h"
+#include "UserListColours.h"
 
 bool PropertiesDlg::needUpdate = false;
 PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS)) {
@@ -65,6 +66,7 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SE
 	pages[17] = new Sounds(s);
 	pages[18] = new ToolbarPage(s);
 	pages[19] = new ClientsPage(s);	
+	pages[20] = new UserListColours(s);	
 
 	for(int i=0; i<numPages; i++) {
 		AddPage(pages[i]->getPSP());

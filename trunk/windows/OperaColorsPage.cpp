@@ -41,12 +41,11 @@ PropPage::TextItem OperaColorsPage::texts[] = {
 	{ IDC_CZDC_PROGRESS_COLOR, ResourceManager::SETCZDC_PROGRESSBAR_COLORS },
 	{ IDC_CZDC_PROGRESS_TEXT, ResourceManager::SETCZDC_PROGRESSBAR_TEXT },
 	{ IDC_IMAGEBROWSE, ResourceManager::BROWSE },
-	{ IDC_USERLIST, ResourceManager::USERLIST_ICONS },
 	{ IDC_SETTINGS_SEGMENTBAR, ResourceManager::SEGMENTBAR },
 	{ IDC_PROGRESS_SEGMENT_SHOW, ResourceManager::SHOW_SEGMENT_PART },
 	{ IDC_SETTINGS_SEGMENT_BAR_COLOR, ResourceManager::SEGMENT_PART_COLOR },
 	{ IDC_BACK_IMAGE, ResourceManager::BACKGROUND_IMAGE },
-	{ IDC_IMAGEBROWSE2, ResourceManager::BROWSE },
+
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -62,7 +61,6 @@ PropPage::Item OperaColorsPage::items[] = {
 	{ IDC_PROGRESS_OVERRIDE2, SettingsManager::PROGRESS_OVERRIDE_COLORS2, PropPage::T_BOOL },
 	{ IDC_PROGRESS_SEGMENT_SHOW, SettingsManager::SHOW_SEGMENT_COLOR, PropPage::T_BOOL },
 	{ IDC_PROGRESS_BUMPED, SettingsManager::PROGRESS_BUMPED, PropPage::T_BOOL },
-	{ IDC_USERLIST_IMAGE, SettingsManager::USERLIST_IMAGE, PropPage::T_STR },
 	{ IDC_BACKGROUND_IMAGE, SettingsManager::BACKGROUND_IMAGE, PropPage::T_STR },
 	{ 0, 0, PropPage::T_END }
 };
@@ -340,10 +338,7 @@ void OperaColorsPage::BrowseForPic(int DLGITEM) {
 }
 
 LRESULT OperaColorsPage::onImageBrowse(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(wID == IDC_IMAGEBROWSE)
-		BrowseForPic(IDC_USERLIST_IMAGE);
-	else
-		BrowseForPic(IDC_BACKGROUND_IMAGE);
+	BrowseForPic(IDC_BACKGROUND_IMAGE);
 	return 0;
 }
 

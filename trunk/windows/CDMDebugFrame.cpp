@@ -6,70 +6,126 @@
 #include "WinUtil.h"
 #include "../client/File.h"
 
-bool CDMDebugFrame::pause = false;
-
 #define MAX_TEXT_LEN 131072
 
 LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	ctrlPad.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_READONLY, WS_EX_CLIENTEDGE);
-	
 	ctrlPad.LimitText(0);
 	ctrlPad.SetFont(WinUtil::font);
 	
+	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
+
+	ctrlStatus.Attach(m_hWndStatusBar);
+	ctrlCommands.Create(ctrlStatus.m_hWnd, rcDefault, _T("Commands"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
+	ctrlCommands.SetButtonStyle(BS_AUTOCHECKBOX, false);
+	ctrlCommands.SetFont(WinUtil::systemFont);
+	ctrlCommands.SetCheck(showCommands ? BST_CHECKED : BST_UNCHECKED);
+	commandContainer.SubclassWindow(ctrlCommands.m_hWnd);
+
+	ctrlDetection.Create(ctrlStatus.m_hWnd, rcDefault, _T("Detection"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
+	ctrlDetection.SetButtonStyle(BS_AUTOCHECKBOX, false);
+	ctrlDetection.SetFont(WinUtil::systemFont);
+	ctrlDetection.SetCheck(showDetection ? BST_CHECKED : BST_UNCHECKED);
+	detectionContainer.SubclassWindow(ctrlDetection.m_hWnd);
+
+	ctrlFilterIp.Create(ctrlStatus.m_hWnd, rcDefault, _T("Filter"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_STATICEDGE);
+	ctrlFilterIp.SetButtonStyle(BS_AUTOCHECKBOX, false);
+	ctrlFilterIp.SetFont(WinUtil::systemFont);
+	ctrlFilterIp.SetCheck(bFilterIp ? BST_CHECKED : BST_UNCHECKED);
+	cFilterContainer.SubclassWindow(ctrlFilterIp.m_hWnd);
+	
+	ctrlFilterText.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+		ES_NOHIDESEL, WS_EX_STATICEDGE, IDC_DEBUG_FILTER_TEXT);
+	ctrlFilterText.LimitText(0);
+	ctrlFilterText.SetFont(WinUtil::font);
+	eFilterContainer.SubclassWindow(ctrlStatus.m_hWnd);
+	
+	m_hWndClient = ctrlPad;
+	m_hMenu = WinUtil::mainMenu;
+
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	
-	bHandled = FALSE;
-	return 0;
-	
-}
+	if(!closed) {
+		DebugManager::getInstance()->removeListener(this);
+		closed = true;
 
-void CDMDebugFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
-{
-	CRect rc;
-
-	GetClientRect(rc);
-	
-	rc.bottom -= 1;
-	rc.top += 1;
-	rc.left +=1;
-	rc.right -=1;
-	ctrlPad.MoveWindow(rc);
-	
-}
-
-void CDMDebugFrame::addLine(const string& s) {
-	if (pause)
-		return;
-	if (frame != NULL) {
-		if (frame->ctrlPad.GetWindowTextLength() > MAX_TEXT_LEN) {
-			frame->ctrlPad.SetRedraw(FALSE);
-			frame->ctrlPad.SetSel(0, frame->ctrlPad.LineIndex(frame->ctrlPad.LineFromChar(2000)), TRUE);
-			frame->ctrlPad.ReplaceSel(_T(""));
-			frame->ctrlPad.SetRedraw(TRUE);
-		}
-		BOOL noscroll = TRUE;
-		POINT p = frame->ctrlPad.PosFromChar(frame->ctrlPad.GetWindowTextLength() - 1);
-		CRect r;
-		frame->ctrlPad.GetClientRect(r);
-		
-		if( r.PtInRect(p) || frame->MDIGetActive() != frame->m_hWnd)
-			noscroll = FALSE;
-		else {
-			frame->ctrlPad.SetRedraw(FALSE); // Strange!! This disables the scrolling...????
-		}
-		frame->ctrlPad.AppendText(Text::toT(s + "\r\n").c_str());
-		if(noscroll) {
-		frame->ctrlPad.SetRedraw(TRUE);
-		}
-		frame->setDirty();
+		PostMessage(WM_CLOSE);
+		return 0;
+	} else {
+		bHandled = FALSE;
+		return 0;
 	}
+
+	
 }
-void CDMDebugFrame::setPause(bool bPause) {
-	pause = bPause;
+
+void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
+{
+	RECT rect = { 0 };
+	GetClientRect(&rect);
+
+	// position bars and offset their dimensions
+	UpdateBarsPosition(rect, bResizeBars);
+	
+	if(ctrlStatus.IsWindow()) {
+		CRect sr;
+		int w[5];
+		ctrlStatus.GetClientRect(sr);
+
+		int tmp = (sr.Width() / 5) - 4;
+		w[0] = tmp;
+		w[1] = w[0] + tmp;
+		w[2] = w[1] + tmp;
+		w[3] = w[2] + tmp;
+		w[4] = w[3] + tmp;
+		
+		ctrlStatus.SetParts(5, w);
+
+		ctrlStatus.GetRect(0, sr);
+		ctrlCommands.MoveWindow(sr);
+		ctrlStatus.GetRect(1, sr);
+		ctrlDetection.MoveWindow(sr);
+		ctrlStatus.GetRect(2, sr);
+		ctrlFilterIp.MoveWindow(sr);
+		ctrlStatus.GetRect(3, sr);
+		ctrlFilterText.MoveWindow(sr);
+		tstring msg = bFilterIp ? _T("Watching IP: ") + sFilterIp : _T("Watching all IPs");
+		ctrlStatus.SetText(4, msg.c_str());
+	}
+	
+	// resize client window
+	if(m_hWndClient != NULL)
+		::SetWindowPos(m_hWndClient, NULL, rect.left, rect.top,
+			rect.right - rect.left, rect.bottom - rect.top,
+			SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+void CDMDebugFrame::addLine(const string& aLine) {
+	Lock l(cs);	
+	if(ctrlPad.GetWindowTextLength() > MAX_TEXT_LEN) {
+		ctrlPad.SetRedraw(FALSE);
+		ctrlPad.SetSel(0, ctrlPad.LineIndex(ctrlPad.LineFromChar(2000)));
+		ctrlPad.ReplaceSel(_T(""));
+		ctrlPad.SetRedraw(TRUE);
+	}
+	BOOL noscroll = TRUE;
+	POINT p = ctrlPad.PosFromChar(ctrlPad.GetWindowTextLength() - 1);
+	CRect r;
+	ctrlPad.GetClientRect(r);
+		
+	if( r.PtInRect(p) || MDIGetActive() != m_hWnd)
+		noscroll = FALSE;
+	else {
+		ctrlPad.SetRedraw(FALSE); // Strange!! This disables the scrolling...????
+	}
+	ctrlPad.AppendText((Text::toT(aLine) + _T("\r\n")).c_str());
+	if(noscroll) {
+		ctrlPad.SetRedraw(TRUE);
+	}
+	//setDirty();
 }

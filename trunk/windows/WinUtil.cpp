@@ -78,7 +78,7 @@ bool WinUtil::isMinimized = false;
 WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
 	{ID_FILE_RECONNECT, 1, false, ResourceManager::MENU_RECONNECT},
-	{IDC_FOLLOW, 2, false, ResourceManager::MENU_FOLLOW_REDIRECT},
+	{ID_FILE_QUICK_CONNECT, 2, false, ResourceManager::MENU_QUICK_CONNECT},
 	{IDC_FAVORITES, 3, true, ResourceManager::MENU_FAVORITE_HUBS},
 	{IDC_FAVUSERS, 4, true, ResourceManager::MENU_FAVORITE_USERS},
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
@@ -529,33 +529,51 @@ void WinUtil::setClipboard(const tstring& str) {
 
 	EmptyClipboard();
 
-	// Allocate a global memory object for the text. 
-	HGLOBAL hglbCopy;
-	if (CZDCLib::isXp()) { 
-		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1) * sizeof(TCHAR)); 
-	} else {
-		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1));
+#ifdef UNICODE	
+	OSVERSIONINFOEX ver;
+	if( WinUtil::getVersionInfo(ver) ) {
+		if( ver.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ) {
+			string tmp = Text::wideToAcp(str);
+
+			HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (tmp.size() + 1) * sizeof(char)); 
+			if (hglbCopy == NULL) { 
+				CloseClipboard(); 
+				return; 
+			} 
+
+			// Lock the handle and copy the text to the buffer. 
+			char* lptstrCopy = (char*)GlobalLock(hglbCopy); 
+			strcpy(lptstrCopy, tmp.c_str());
+			GlobalUnlock(hglbCopy);
+
+			SetClipboardData(CF_TEXT, hglbCopy);
+
+			CloseClipboard();
+
+			return;
+		}
 	}
+#endif
+
+	// Allocate a global memory object for the text. 
+	HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1) * sizeof(TCHAR)); 
 	if (hglbCopy == NULL) { 
 		CloseClipboard(); 
 		return; 
 	} 
 
 	// Lock the handle and copy the text to the buffer. 
-	if (CZDCLib::isXp()) { 
-		TCHAR* lptstrCopy = (TCHAR*)GlobalLock(hglbCopy); 
-		_tcscpy(lptstrCopy, str.c_str());
-	} else {
-		char* lptstrCopy = (char*)GlobalLock(hglbCopy); 
-		memcpy(lptstrCopy, Text::fromT(str).c_str(), str.length() + 1);
-	}
+	TCHAR* lptstrCopy = (TCHAR*)GlobalLock(hglbCopy); 
+	_tcscpy(lptstrCopy, str.c_str());
 	GlobalUnlock(hglbCopy); 
+
 	// Place the handle on the clipboard. 
-	if (CZDCLib::isXp()) { 
-		SetClipboardData(CF_UNICODETEXT, hglbCopy); 
-	} else {
-		SetClipboardData(CF_TEXT, hglbCopy); 
-	}
+#ifdef UNICODE
+	SetClipboardData(CF_UNICODETEXT, hglbCopy); 
+#else
+	SetClipboardData(CF_TEXT hglbCopy);
+#endif
+
 	CloseClipboard();
 }
 
@@ -620,7 +638,7 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 	return true;
 }
 
-#define LINE2 _T("-- http://dcplusplus.sourceforge.net  <DC++ ") _T(VERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://dcplusplus.sourceforge.net  <DC++ ") _T(DCVERSIONSTRING) _T(">")
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy dc++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- Neo-...what? Nope...never heard of it...\r\n") LINE2,
 _T("\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: NMDC --> DC++\r\n") LINE2,
@@ -956,11 +974,11 @@ void WinUtil::registerMagnetHandler() {
 		::RegSetValueEx(hk, _T("URL Protocol"), NULL, REG_SZ, NULL, NULL);
 		::RegCloseKey(hk);
 		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet\\DefaultIcon"), &hk);
-		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), sizeof(TCHAR)*(magnetLoc.length()+1));
 		::RegCloseKey(hk);
 		magnetLoc += _T(" %1");
 		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet\\shell\\open\\command"), &hk);
-		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), sizeof(TCHAR)*(magnetLoc.length()+1));
 		::RegCloseKey(hk);
 	}
 	// magnet-handler specific code
@@ -1294,9 +1312,10 @@ string WinUtil::formatTime(long rest) {
 	rest %= (24*3600*7);
 	if(n) {
 		if(n >= 2)
-			sprintf(buf, "%d weeks ", n);
+			_snprintf(buf, 127, "%d weeks ", n);
 		else
-			sprintf(buf, "%d week ", n);
+			_snprintf(buf, 127, "%d week ", n);
+		buf[127] = 0;
 		formatedTime += (string)buf;
 		i++;
 	}
@@ -1304,9 +1323,10 @@ string WinUtil::formatTime(long rest) {
 	rest %= (24*3600);
 	if(n) {
 		if(n >= 2)
-			sprintf(buf, "%d days ", n); 
+			_snprintf(buf, 127, "%d days ", n); 
 		else
-			sprintf(buf, "%d day ", n);
+			_snprintf(buf, 127, "%d day ", n);
+		buf[127] = 0;
 		formatedTime += (string)buf;
 		i++;
 	}
@@ -1314,22 +1334,25 @@ string WinUtil::formatTime(long rest) {
 	rest %= (3600);
 	if(n) {
 		if(n >= 2)
-			sprintf(buf, "%d hours ", n);
+			_snprintf(buf, 127, "%d hours ", n);
 		else
-			sprintf(buf, "%d hour ", n);
+			_snprintf(buf, 127, "%d hour ", n);
+		buf[127] = 0;
 		formatedTime += (string)buf;
 		i++;
 	}
 	n = rest / (60);
 	rest %= (60);
 	if(n) {
-		sprintf(buf, "%d min ", n);
+		_snprintf(buf, 127, "%d min ", n);
+		buf[127] = 0;
 		formatedTime += (string)buf;
 		i++;
 	}
 	n = rest;
 	if(++i <= 3) {
-		sprintf(buf, "%d sec ", n); 
+		_snprintf(buf, 127,"%d sec ", n); 
+		buf[127] = 0;
 		formatedTime += (string)buf;
 	}
 	return formatedTime;
