@@ -168,6 +168,128 @@ void ShareManager::save(SimpleXML* aXml) {
 	aXml->stepOut();
 }
 
+bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false */)
+{
+	if(thoroughCheck)	// check if it's part of the share before checking if it's in the exclusions
+	{
+		bool result = false;
+		for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i)
+		{
+			// is it a perfect match
+			if((path.size() == i->first.size()) && (Util::stricmp(path, i->first) == 0))
+				return true;
+			else if (path.size() > i->first.size()) // this might be a subfolder of a shared folder
+			{
+				string temp = path.substr(0, i->first.size());
+				// if the left-hand side matches and there is a \ in the remainder then it is a subfolder
+				if((Util::stricmp(temp, i->first) == 0) && (path.find('\\', i->first.size()) != string::npos))
+				{
+					result = true;
+					break;
+				}
+			}
+		}
+
+		if(!result)
+			return false;
+	}
+
+	// check if it's an excluded folder or a sub folder of an excluded folder
+	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	{
+		if(Util::stricmp(path, *j) == 0)
+			return false;
+
+		if(thoroughCheck)
+		{
+			if(path.size() > (*j).size())
+			{
+				string temp = path.substr(0, (*j).size());
+				if((Util::stricmp(temp, *j) == 0) && (path[(*j).size()] == '\\'))
+					return false;
+			}
+		}
+	}
+	return true;
+}
+
+int64_t ShareManager::addExcludeFolder(const string &path)
+{
+	// make sure this is a sub folder of a shared folder
+	bool result = false;
+	for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i)
+	{
+		if(path.size() > i->first.size())
+		{
+			string temp = path.substr(0, i->first.size());
+			if(Util::stricmp(temp, i->first) == 0)
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+
+	if(!result)
+		return 0;
+
+	// Make sure this not a subfolder of an already excluded folder
+	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	{
+		if(path.size() >= (*j).size())
+		{
+			string temp = path.substr(0, (*j).size());
+			if(Util::stricmp(temp, *j) == 0)
+				return 0;
+		}
+	}
+
+	// remove all sub folder excludes
+	int64_t bytesNotCounted = 0;
+	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	{
+		if(path.size() < (*j).size())
+		{
+			string temp = (*j).substr(0, path.size());
+			if(Util::stricmp(temp, path) == 0)
+			{
+				bytesNotCounted += Util::getDirSize(*j);
+				j = notShared.erase(j);
+				j--;
+			}
+		}
+	}
+
+	// add it to the list
+	notShared.push_back(path);
+
+	int64_t bytesRemoved = Util::getDirSize(path);
+
+	return (bytesRemoved - bytesNotCounted);
+}
+
+int64_t ShareManager::removeExcludeFolder(const string &path, bool returnSize /* = true */)
+{
+	int64_t bytesAdded = 0;
+	// remove all sub folder excludes
+	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	{
+		if(path.size() <= (*j).size())
+		{
+			string temp = (*j).substr(0, path.size());
+			if(Util::stricmp(temp, path) == 0)
+			{
+				if(returnSize) // this needs to be false if the files don't exist anymore
+					bytesAdded += Util::getDirSize(*j);
+				
+				j = notShared.erase(j);
+				j--;
+			}
+		}
+	}
+	
+	return bytesAdded;
+}
 void ShareManager::addDirectory(const string& aDirectory) throw(ShareException) {
 	if(aDirectory.size() == 0) {
 		throw ShareException(STRING(NO_DIRECTORY_SPECIFIED));
@@ -1027,6 +1149,7 @@ void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
 		}
 	}
 }
+
 
 /**
  * @file

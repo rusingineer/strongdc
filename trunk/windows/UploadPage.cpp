@@ -62,6 +62,14 @@ PropPage::Item UploadPage::items[] = {
 LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	PropPage::translate((HWND)(*this), texts);
+
+/* POSSUM_MOD_BEGIN */
+	GetDlgItem(IDC_TREE1).ShowWindow((BOOLSETTING(USE_OLD_SHARING_UI)) ? SW_HIDE : SW_SHOW);
+	GetDlgItem(IDC_DIRECTORIES).ShowWindow((BOOLSETTING(USE_OLD_SHARING_UI)) ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_ADD).ShowWindow((BOOLSETTING(USE_OLD_SHARING_UI)) ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_REMOVE).ShowWindow((BOOLSETTING(USE_OLD_SHARING_UI)) ? SW_SHOW : SW_HIDE);
+/* POSSUM_MOD_END */
+
 	ctrlDirectories.Attach(GetDlgItem(IDC_DIRECTORIES));
 
 	if(BOOLSETTING(FULL_ROW_SELECT)) {
@@ -72,6 +80,9 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 	PropPage::read((HWND)*this, items);
 
+/* POSSUM_MOD_BEGIN */
+	if(BOOLSETTING(USE_OLD_SHARING_UI))
+	{
 	// Prepare shared dir list
 	ctrlDirectories.InsertColumn(0, CSTRING(DIRECTORY), LVCFMT_LEFT, 277, 0);
 	ctrlDirectories.InsertColumn(1, CSTRING(SIZE), LVCFMT_RIGHT, 90, 1);
@@ -81,7 +92,8 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), *j);
 		ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(*j)).c_str());
 	}
-	
+	}
+/* POSSUM_MOD_END */
 	ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());
 
 	CUpDownCtrl updown;
@@ -99,6 +111,14 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	updown.Detach();
 	updown.Attach(GetDlgItem(IDC_EXTRASPIN));
 	updown.SetRange(0,10);
+
+/* POSSUM_MOD_BEGIN */
+	ft.SubclassWindow(GetDlgItem(IDC_TREE1));
+	ft.SetStaticCtrl(&ctrlTotal);
+	if(!BOOLSETTING(USE_OLD_SHARING_UI))
+		ft.PopulateTree();
+/* POSSUM_MOD_END */
+
 	return TRUE;
 }
 
@@ -209,6 +229,9 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	ShareManager::getInstance()->setDirty();
 	ShareManager::getInstance()->refresh(true, false, true);
 
+/* POSSUM_MOD_BEGIN */
+	if(BOOLSETTING(USE_OLD_SHARING_UI))
+	{
 	// Clear the GUI list, for insertion of updated shares
 	ctrlDirectories.DeleteAllItems();
 	StringList directories = ShareManager::getInstance()->getDirectories();
@@ -217,7 +240,8 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 		int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), *j);
 		ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(*j)).c_str());
 	}
-
+	}
+/* POSSUM_MOD_END */
 	// Display the new total share size
 	ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());
 	return 0;

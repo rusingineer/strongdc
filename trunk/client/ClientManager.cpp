@@ -86,7 +86,7 @@ void ClientManager::infoUpdated() {
 void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 									int aFileType, const string& aString) throw() 
 {
-	
+	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
 	bool isPassive = (aSeeker.compare(0, 4, "Hub:") == 0);
 	
 	// We don't wan't to answer passive searches if we're in passive mode...

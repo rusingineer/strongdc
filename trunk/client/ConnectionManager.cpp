@@ -407,22 +407,20 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		return;
 	}
  
+	User::Ptr user = aSource->getUser();
+	if(user->isOnline()) {
+		user->setFakeSharing(false);
+		ClientManager::getInstance()->setIPNick(aSource->getRemoteIp(), aNick);
+		user->setHost(aSource->getRemoteHost());
+		User::updated(aSource->getUser());
+	}
+
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
 		aSource->myNick(aSource->getUser()->getClientNick()); 
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	}
 
 	aSource->setState(UserConnection::STATE_LOCK);
-
-	User::Ptr user = aSource->getUser();
-	if(user->isOnline()) {
-			user->setFakeSharing(false);
-		if(user->getClient()->getOp()) {
-			user->setIp(aSource->getRemoteIp());
-			user->setHost(aSource->getRemoteHost());
-			User::updated(user);
-		}
-	}
 }
 
 void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSource, const string& aLock, const string& aPk) throw() {

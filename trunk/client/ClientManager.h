@@ -111,6 +111,19 @@ public:
 		return false;
 	}
 
+	void setIPNick(const string& IP, const string& Nick) {
+		ipList[IP] = Nick;
+		getUser(Nick)->setIp(IP);
+	}
+
+	const string& getIPNick(const string& IP) const {
+		NickMap::const_iterator it;
+		if ((it = ipList.find(IP)) != ipList.end() && !it->second.empty())
+			return it->second;
+		else
+			return IP;
+	}
+
 	/**
 	 * A user went offline. Must be called whenever a user quits a hub.
 	 * @param quitHub The user went offline because (s)he disconnected from the hub.
@@ -131,17 +144,18 @@ public:
  		}
  	}
 
-	void setIPNick(const string& IP, const string& Nick) {
+/*	void setIPNick(const string& IP, const string& Nick) {
 		//ipList[IP].nick = Nick;
 		User::Ptr user = getUser(Nick);
 		user->setIp(IP);
 		User::updated(user);
-	}
+	}*/
 
 private:
 	typedef HASH_MULTIMAP<string, User::Ptr> UserMap;
 	typedef UserMap::iterator UserIter;
 	typedef pair<UserIter, UserIter> UserPair;
+	typedef map<string, string> NickMap;
 
 	typedef HASH_MULTIMAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) AdcMap;
 	typedef AdcMap::iterator AdcIter;
@@ -149,6 +163,7 @@ private:
 
 	Client::List clients;
 	CriticalSection cs;
+	NickMap ipList;
 	
 	UserMap users;
 	AdcMap adcUsers;

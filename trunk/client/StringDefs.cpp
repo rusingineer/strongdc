@@ -437,7 +437,7 @@ string ResourceManager::strings[] = {
 "Copy URL", 
 "Select all", 
 "Clear chat", 
-"Autoscrool chat", 
+"Autoscroll chat", 
 "Upload Queue", 
 "Extra Slots", 
 "-- WARNING --\r\n-- You are in active mode, but have activated passive search. --\r\n-- Don't use passive search if you have search results without this option --\r\n-- because you don't get search result from passive clients !!! --\r\n-- Turn it off in settings => Advanced => Always use Passive Mode for Search --\r\n", 
@@ -671,7 +671,8 @@ string ResourceManager::strings[] = {
 "Auto",
 "Segmented bar colors",
 "Show progressbar on inactive segment part",
-"Color of inactive part"
+"Color of inactive part",
+"String not found: "
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1343,5 +1344,6 @@ string ResourceManager::names[] = {
 "Auto",
 "SegmentBar",
 "ShowSegmentPart",
-"SegmentPartColor"
+"SegmentPartColor",
+"StringNotFound"
 };

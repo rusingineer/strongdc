@@ -91,7 +91,7 @@ const string SettingsManager::settingTags[] =
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
-	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault",
+	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -368,6 +368,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(AUTOSAVE_QUEUE, 30);
 	setDefault(SHOW_SEGMENT_COLOR, true);
+	setDefault(USE_OLD_SHARING_UI, false);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

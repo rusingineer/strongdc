@@ -35,6 +35,9 @@
 * pøidány progressbary do fronty (CZDC++)
 * automatické nastavování priorit stahovaných souborù (PhantomDC++)
 * opraven pád pøi odpojování pomalých stahování
+* pøidáno nastavení progressbarù pro segmenty
+* pøidán sloupec Nick do vyhledávacího špiona (BCDC++)
+* stromová struktura pro výbìr adresáøù ke sdílení (PossumMod)
 
 
 	-- StrongDC++ 1.00 RC5 --
