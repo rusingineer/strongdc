@@ -872,7 +872,7 @@ void TransferView::ItemInfo::update() {
 				if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
 					upper->columns[COLUMN_STATUS] = upper->statusString;
 				} else if((upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) || (upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
-					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10))) {
+					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) || (upper->statusString == STRING(TTH_INCONSISTENCY))) {
 					upper->columns[COLUMN_STATUS] = upper->statusString;
 				} 
 			} else upper->columns[COLUMN_STATUS] = upper->statusString;
@@ -1321,9 +1321,10 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 			i->timeLeft = u->getSecondsLeft();
 			i->speed = u->getRunningAverage();
 
-			sprintf(buf, CSTRING(UPLOADED_BYTES), Util::formatBytes(u->getPos()).c_str(), 
+			if (u->getPos() >= 0) {
+				sprintf(buf, CSTRING(UPLOADED_BYTES), Util::formatBytes(u->getPos()).c_str(), 
 				(double)u->getPos()*100.0/(double)u->getSize(), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
-
+            } else sprintf(buf, CSTRING(UPLOAD_STARTING));
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				u->isSet(Upload::FLAG_ZUPLOAD) ? i->setFlag(ItemInfo::FLAG_COMPRESSED) : i->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 				i->statusString = buf;

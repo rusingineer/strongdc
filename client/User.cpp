@@ -28,6 +28,7 @@
 #include "Client.h"
 #include "FavoriteUser.h"
 
+#include "DebugManager.h"
 #include "HubManager.h"
 #include "QueueManager.h"
 #include "../pme/pme.h"
@@ -247,12 +248,7 @@ string User::getReport()
 	report += "\r\nEmail:		" + getEmail();
 	report += "\r\nConnection:	" + getConnection();
 	report += "\r\nCommands:	" + getUnknownCommand();
-
-	if ( getFileListSize() > 0 ) {
-		temp = Util::formatBytes(getFileListSize()) + "  (" + Util::formatNumber(getFileListSize()) + " B)";
-	} else {
-		temp = "N/A";
-	}
+	temp = (getFileListSize() != -1) ? Util::formatBytes(getFileListSize()) + "  (" + Util::toString(getFileListSize()) + " B)" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
 	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Util::formatNumber(getBytesShared()) + " B)";
 	if ( getRealBytesShared() > -1 ) {
@@ -275,11 +271,10 @@ string User::getReport()
 	return report;
 }
 
-
-
-void User::updateClientType()
-{
+void User::updateClientType() {
+	int64_t tick = GET_TICK();
 	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
+
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
 		StringMap paramMap;
@@ -289,6 +284,9 @@ void User::updateClientType()
 		string tagExp = cp.getTag();
 		string pkExp = cp.getPk();
 		string extTagExp = cp.getExtendedTag();
+
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			DebugManager::getInstance()->SendDebugMessage("Checking profile: " + cp.getName());
 
 		if (!matchProfile(lock, cp.getLock())) { continue; }
 		if (!matchProfile(tag, Util::formatParams(tagExp, paramMap))) { continue; } 
@@ -305,32 +303,44 @@ void User::updateClientType()
 
 		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
 
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			DebugManager::getInstance()->SendDebugMessage("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
 
 		if (cp.getUseExtraVersion()) {
 			setClientType(cp.getName() + " " + extraVersion );
 		} else {
 			setClientType(cp.getName() + " " + version);
 		}
+		if (!(cp.getCheatingDescription().empty())) {
+			cheatingString = cp.getCheatingDescription();
+			badClient = true;
+		}
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
+			badClient = true;
 			updated();
+			setHasTestSURinQueue(false);
 			return;
-		}
-		if (!(cp.getCheatingDescription().empty())) {
-			cheatingString = cp.getCheatingDescription();
 		}
 		updated();
 		if(cp.getRawToSend() > 0) {
 			sendRawCommand(cp.getRawToSend());
 		}
+		setHasTestSURinQueue(false);
 		return;
 	}
 	setClientType("Unknown");
+	setHasTestSURinQueue(false);
 	updated();
 }
 
 bool User::matchProfile(const string& aString, const string& aProfile) {
+	if (BOOLSETTING(DEBUG_COMMANDS)) {
+		string temp = "String: " + aString + " to Profile: " + aProfile;
+		DebugManager::getInstance()->SendDebugMessage("Matching " + temp);
+	}
+
 	PME reg(aProfile);
 	if(reg.match(aString) > 0) { return true; }
 	return false;
@@ -344,6 +354,7 @@ string User::getVersion(const string& aExp, const string& aTag) {
 	}
 	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag));
 }
+
 string User::splitVersion(const string& aExp, const string& aTag) {
 	PME reg(aExp);
 	reg.split(aTag);

@@ -89,7 +89,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 						if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() >= 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 							if(((GET_TICK() - d->quickTick)/1000) > iTime){
 								d->getUserConnection()->disconnect();
-								if(getAverageSpeed() < (SETTING(DISCONNECT)*1024)) { 
+								if(d->getRunningAverage() < (SETTING(DISCONNECT)*1024)) { 
 									QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(),QueueItem::Source::FLAG_SLOW);
 								}
 							}
@@ -1030,7 +1030,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR File not available\n");
 		User::Ptr user = aSource->getUser();
-		user->setTestSUR("File not available");
+		user->setTestSUR("File Not Available");
 		user->setHasTestSURinQueue(false);
 		user->updateClientType();
 		aSource->setDownload(NULL);

@@ -155,6 +155,7 @@ public:
 	GETSET(bool, fakeSharing, FakeSharing); 
 	GETSET(bool, checked, Checked); 
 	GETSET(string, unknownCommand, UnknownCommand);
+	GETSET(bool, badClient, BadClient);	
 	
 	void TagParts( char *sTag );
 	void updateClientType();
@@ -179,6 +180,7 @@ public:
 		hasTestSURinQueue = false;
 		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
+		badClient = false;
 	};
 	// CDM EXTENSION ENDS
 private:

@@ -43,9 +43,13 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
+	SetDlgItemText(IDC_UPDATE_URL, SETTING(UPDATE_URL).c_str());
+
+	c.addListener(this);
+
 	// Do specialized reading here
 	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
-	StringList cols;
+	//StringList cols;
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
@@ -133,7 +137,6 @@ LRESULT ClientsPage::onRemoveClient(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		int i = ctrlProfiles.GetNextItem(-1, LVNI_SELECTED);
 		HubManager::getInstance()->removeClientProfile(ctrlProfiles.GetItemData(i));
 		ctrlProfiles.DeleteItem(i);
-		HubManager::getInstance()->sortPriorities();
 	}
 	return 0;
 }
@@ -172,16 +175,46 @@ LRESULT ClientsPage::onMoveClientDown(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
+LRESULT ClientsPage::onReload(WORD , WORD , HWND , BOOL& ) {
+	reload();
+	return 0;
+}
+
+LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
+	c.downloadFile(SETTING(UPDATE_URL) + "Profiles.xml");
+	return 0;
+}
+
+LRESULT ClientsPage::onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+void ClientsPage::reload() {
+	ctrlProfiles.SetRedraw(FALSE);
+	int s = HubManager::getInstance()->getProfileListSize();
+	for(int i = 0; i < s; i++) {
+		ctrlProfiles.DeleteItem(0);
+	}
+	ClientProfile::List lst = HubManager::getInstance()->reloadClientProfiles();
+	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
+		ClientProfile& cp = *j;	
+		addEntry(cp, ctrlProfiles.GetItemCount());
+	}
+	ctrlProfiles.SetRedraw(TRUE);
+}
+
 void ClientsPage::addEntry(const ClientProfile& cp, int pos) {
 	StringList lst;
 
 	lst.push_back(cp.getName());
 	lst.push_back(cp.getVersion());
 	ctrlProfiles.insert(pos, lst, 0, (LPARAM)cp.getId());
-	HubManager::getInstance()->sortPriorities();
 }
 
 void ClientsPage::write() {
+	char buf[512];
+	GetDlgItemText(IDC_UPDATE_URL, buf, 512);
+	SettingsManager::getInstance()->set(SettingsManager::UPDATE_URL, buf);
 	HubManager::getInstance()->save();
 	PropPage::write((HWND)*this, items);
 }

@@ -19,8 +19,6 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
-/*#include "atlctrlxp.h"
-#include "atlctrlxp2.h"*/
 
 #include "MainFrm.h"
 #include "AboutDlg.h"
@@ -40,6 +38,7 @@
 #include "ADLSearchFrame.h"
 #include "FinishedULFrame.h"
 #include "TextFrame.h"
+#include "UpdateDlg.h"
 #include "StatsFrame.h"
 #include "UploadQueueFrame.h"
 #include "WinUtil.h"
@@ -162,6 +161,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_CmdBar.m_arrCommand.Add(ID_WINDOW_MINIMIZE_ALL);	
 	m_CmdBar.m_arrCommand.Add(IDC_FINISHEDMP3);	
 	m_CmdBar.m_arrCommand.Add(ID_GET_TTH);	
+	m_CmdBar.m_arrCommand.Add(IDC_UPDATE);	
 
 	showTransfers = BOOLSETTING(SHOW_TRANSFERS);
 	UISetCheck(ID_VIEW_TRANSFERS, showTransfers);
@@ -631,9 +631,12 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 							MessageBox(msg.c_str(), title.c_str(), MB_OK);
 						} else {
 							string msg = xml.getChildData() + "\r\n" + STRING(OPEN_DOWNLOAD_PAGE);
-							if(MessageBox(msg.c_str(), title.c_str(), MB_YESNO) == IDYES) {
-								WinUtil::openLink(url);
-							}
+//							if(MessageBox(msg.c_str(), title.c_str(), MB_YESNO) == IDYES) {
+//								WinUtil::openLink(url);
+			UpdateDlg dlg;
+			dlg.DoModal();
+
+						//	}
 						}
 					}
 				}
@@ -1288,6 +1291,13 @@ void MainFrame::SendCheatMessage(Client* client, User::Ptr u)
 
 		hubFrame->addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
 }
+
+LRESULT MainFrame::onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	UpdateDlg dlg;
+	dlg.DoModal();
+	return S_OK;
+}
+
 /**
  * @file
  * $Id$

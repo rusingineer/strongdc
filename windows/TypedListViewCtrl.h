@@ -42,6 +42,8 @@ public:
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
+		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, onInfoTip)
+		DEFAULT_REFLECTION_HANDLER()
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -135,6 +137,38 @@ public:
 			di->item.mask |= LVIF_DI_SETITEM;
 			di->item.pszText = const_cast<char*>(((T*)di->item.lParam)->getText(di->item.iSubItem).c_str());
 		}
+		return 0;
+	}
+
+	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
+		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
+		string InfoTip("");
+		char Buffer[500];
+		LV_COLUMN lvCol;
+		LVITEM lvItem;
+
+		for (int i = 0; i < GetHeader().GetItemCount(); ++i)
+		{
+			if (!NoColumnHeader) {
+				lvCol.mask = LVCF_TEXT;
+				lvCol.pszText = Buffer;
+				lvCol.cchTextMax = sizeof(Buffer);
+
+				GetColumn(i, &lvCol);
+				InfoTip += lvCol.pszText;
+				InfoTip += ": ";
+			}
+			lvItem.iItem = pInfoTip->iItem /*nItem*/;
+			GetItemText(pInfoTip->iItem /*nItem*/, i, Buffer, 512);
+			InfoTip += Buffer;
+			InfoTip += "\r\n";
+		}
+
+		if (InfoTip.size() > 2)
+			InfoTip.erase(InfoTip.size() - 2);
+
+		strcpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;
 	}
 
@@ -299,6 +333,8 @@ public:
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
+		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, onInfoTip)
+		DEFAULT_REFLECTION_HANDLER()
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -395,6 +431,38 @@ public:
 			dcassert(pItem != NULL);
 			di->item.pszText = const_cast<char*>(pItem->getText(di->item.iSubItem).c_str());
 		}
+		return 0;
+	}
+
+	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
+		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
+		string InfoTip("");
+		char Buffer[500];
+		LV_COLUMN lvCol;
+		LVITEM lvItem;
+
+		for (int i = 0; i < GetHeader().GetItemCount(); ++i)
+		{
+			if (!NoColumnHeader) {
+				lvCol.mask = LVCF_TEXT;
+				lvCol.pszText = Buffer;
+				lvCol.cchTextMax = sizeof(Buffer);
+
+				GetColumn(i, &lvCol);
+				InfoTip += lvCol.pszText;
+				InfoTip += ": ";
+			}
+			lvItem.iItem = pInfoTip->iItem /*nItem*/;
+			GetItemText(pInfoTip->iItem /*nItem*/, i, Buffer, 512);
+			InfoTip += Buffer;
+			InfoTip += "\r\n";
+		}
+
+		if (InfoTip.size() > 2)
+			InfoTip.erase(InfoTip.size() - 2);
+
+		strcpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;
 	}
 

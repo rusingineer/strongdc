@@ -684,5 +684,13 @@ enum Strings { // @DontAdd
 	SETCZDC_PM_LOG, // "Load few last lines from log on new PM"
 	SETCZDC_PM_LINES, // "Lines from log on new PM"
 	SETTINGS_COLOR_ALTERNATE, // "Search Alternate"
+	UPDATE_CHECK, // "Update check"
+	HISTORY, // "History"
+	CURRENT_VERSION, // "Current version"
+	LATEST_VERSION, // "Latest version"
+	CONNECTING_TO_SERVER, // "Connecting to server"
+	RETRIEVING_DATA, // "Retrieving data"
+	CONNECTION_ERROR, // "Connection error"
+	DATA_RETRIEVED, // "Data retrieved"
 	LAST // @DontAdd
 };

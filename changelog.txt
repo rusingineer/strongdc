@@ -14,6 +14,9 @@
 * pøi hledání jsou položky se stejným TTH seskupovány pod jednu [+] položku
 * pøi hledání jsou zvýraznìny soubory, které jsou již ve frontì (PhantomDC++)
 * opraveno øazení uploadù
+* zmìnìn vzhled dialogu O programu (oDC++)
+* vylepšena aktualizace nových verzí (oDC++)
+* vylepšeny profily klientù (DCDM++)
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --
