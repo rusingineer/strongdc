@@ -83,7 +83,7 @@ public:
 		hits += aHits;
 	}
 	
-	BOOLEAN isTTHShared(TTHValue* tth){
+	bool isTTHShared(TTHValue* tth){
 		HashFileIter i = tthIndex.find(tth);
 		return (i != tthIndex.end());
 	}

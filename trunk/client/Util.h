@@ -376,14 +376,16 @@ public:
 	}
 
 	static string toString(u_int32_t val) {
-		char buf[16];
-		_snprintf(buf, 15, "%lu", (unsigned long)val);
-		buf[15] = 0; 
+		char buf[32];
+		_snprintf(buf, 31, "%lu", (unsigned long)val);
+		buf[31] = 0; 
 		return buf;
 	}
 	static string toString(size_t val) {
-		// TODO A better conversion the day we hit 64 bits
-		return toString((u_int32_t)val);
+		char buf[32];
+		_snprintf(buf, 31, "%lu", (unsigned long)val);
+		buf[31] = 0; 
+		return buf;
 	}
 	static string toString(int val) {
 		char buf[16];

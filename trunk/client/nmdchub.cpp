@@ -43,6 +43,7 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),
 {
 	searchQueue.last_search_time = 0;
 	TimerManager::getInstance()->addListener(this);
+
 };
 
 NmdcHub::~NmdcHub() throw() {
@@ -56,6 +57,7 @@ NmdcHub::~NmdcHub() throw() {
 
 void NmdcHub::connect() {
 	setRegistered(false);
+	setReconnDelay(120 + Util::rand(0, 60));
 	reconnect = true;
 	supportFlags = 0;
 	lastmyinfo.clear();
@@ -65,6 +67,8 @@ void NmdcHub::connect() {
 	if(socket->isConnected()) {
 		disconnect();
 	}
+
+	reloadSettings();
 
 	state = STATE_LOCK;
 
@@ -110,7 +114,7 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 void NmdcHub::clearUsers() {
 	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
-		ClientManager::getInstance()->putUserOffline(i->second);		
+		ClientManager::getInstance()->putUserOffline(i->second);
 	}
 	users.clear();
 }
@@ -123,6 +127,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 	lastActivity = GET_TICK();
 	
 	if(aLine[0] != '$') {
+		if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!getOp())) {
+			return;
+		}
+
 		// Check if we're being banned...
 		if(state != STATE_CONNECTED) {
 			if(strstr(aLine, "banned") != 0) {
@@ -693,6 +701,10 @@ string NmdcHub::checkNick(const string& aNick) {
 	return tmp;
 }
 
+string NmdcHub::getHubURL() {
+	return getAddressPort();
+}
+
 bool nlfound;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	TCHAR buf[256];
@@ -983,7 +995,7 @@ void NmdcHub::redirect(const User* aUser, const string& aServer, const string& a
 
 // TimerManagerListener
 void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	if(socket && (lastActivity + (120+Util::rand(0, 60)) * 1000) < aTick) {
+	if(socket && (lastActivity + getReconnDelay() * 1000) < aTick) {
 		// Nothing's happened for ~120 seconds, check if we're connected, if not, try to connect...
 		lastActivity = aTick;
 		// Try to send something for the fun of it...

@@ -139,18 +139,17 @@ template<typename T> struct ReferenceSelector<T,true> {
 };
 
 template<typename T> class IsOfClassType {
-private:
-	struct Overloads {
-		template<typename U> static char check(int U::*);
-		template<typename U> static float check(...);
-	};
 public:
-	enum { Result = (sizeof(IsOfClassType<T>::Overloads::check<T>(0)) == 1) };
+	template<typename U> static char check(int U::*);
+	template<typename U> static float check(...);
+public:
+	enum { Result = sizeof(check<T>(0)) };
 };
 
 template<typename T> struct TypeTraits {
-	typedef typename ReferenceSelector<T,IsOfClassType<T>::Result || 
-		(sizeof(T)>sizeof(char*))>::ResultType ParameterType;
+	typedef IsOfClassType<T> ClassType;
+	typedef ReferenceSelector<T, ((ClassType::Result == 1) || (sizeof(T) > sizeof(char*)) ) > Selector;
+	typedef typename Selector::ResultType ParameterType;
 };
 
 #define GETSET(type, name, name2) \

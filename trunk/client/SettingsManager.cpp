@@ -40,7 +40,7 @@ const string SettingsManager::settingTags[] =
 	"LogFormatPostUpload", "LogFormatMainChat", "LogFormatPrivateChat", "FinishedOrder", "FinishedWidths",	 
 	"TempDownloadDirectory", "SocksServer", "SocksUser", "SocksPassword", "ConfigVersion", 
 	"DefaultAwayMessage", "TimeStampsFormat", "ADLSearchFrameOrder", "ADLSearchFrameWidths", 
-	"FinishedULWidths", "FinishedULOrder", "CID", 
+	"FinishedULWidths", "FinishedULOrder", "CID", "SpyFrameWidths", "SpyFrameOrder", 
 	"BeepFile", "BeginFile", "FinishedFile", "SourceFile", "UploadFile", "FakerFile", "ChatNameFile", "WinampFormat",
 	"KickMsgRecent01", "KickMsgRecent02", "KickMsgRecent03", "KickMsgRecent04", "KickMsgRecent05", 
 	"KickMsgRecent06", "KickMsgRecent07", "KickMsgRecent08", "KickMsgRecent09", "KickMsgRecent10", 
@@ -107,7 +107,8 @@ const string SettingsManager::settingTags[] =
 	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers",
     "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
-	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared",
+	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
+	"ConfirmHubRemoval", "SuppressMainChat",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -244,7 +245,9 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_ACTION, MAGNET_AUTO_SEARCH);
 	setDefault(ADD_FINISHED_INSTANTLY, false);
 	setDefault(SETTINGS_USE_UPNP, false);
-	setDefault(DONT_DL_ALREADY_SHARED, false);	
+	setDefault(DONT_DL_ALREADY_SHARED, false);
+	setDefault(CONFIRM_HUB_REMOVAL, false);
+	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
@@ -432,7 +435,9 @@ SettingsManager::SettingsManager()
 	setDefault(FILELIST_UNAVAILABLE, 0);
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);
-
+	setDefault(REALTIME_QUEUE_UPDATE, true);
+	setDefault(SUPPRESS_MAIN_CHAT, false);
+	
 	setDefault(BEGINFILE, "");
 	setDefault(BEEPFILE, "");
 	setDefault(FINISHFILE, "");

@@ -124,6 +124,8 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			for(vector<int64_t>::iterator i = v.begin(); i + 1< v.end(); i++, i++)
 				pChunksInfo->MarkVerifiedBlock(*i, *(i+1));
 		}
+
+		qi->setFileChunksInfo(pChunksInfo);
 	}
 
 	if((qi->getDownloadedBytes() > 0))
@@ -868,16 +870,8 @@ Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) thr
 	string message = "";
 	QueueItem* q = userQueue.getNext(aUser);
 	Download *d;
-	int test = 0;
 
 again:
-
-	test++;
-
-	if(test > 10000) {
-		//dcassert(false);
-		MessageBoxA(0,"Shouldn't see me. Please report it.","ERROR",MB_OK);
-	}
 
 	if(q == NULL) {
 		if(message != "") {
@@ -903,7 +897,7 @@ again:
 			}
 		}
 
-		FileChunksInfo::Ptr fdi = FileChunksInfo::Get(q->getTempTarget());
+		FileChunksInfo::Ptr fdi = q->getFileChunksInfo();//FileChunksInfo::Get(q->getTempTarget());
 
 		if(!fdi) {
 			message = "No Chunks Info";
@@ -927,6 +921,7 @@ again:
 	if(d->getSource() == Util::emptyString) {
 		dcdebug("Source for downloading not found\n");
 		delete d;
+		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), "Source for downloading not found");
 		return NULL;
 	}
 
@@ -1526,9 +1521,11 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		Lock l(cs);
 		QueueItem::UserMap& um = userQueue.getRunning();
 
-		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
-			QueueItem* q = j->second;
-			fire(QueueManagerListener::StatusUpdated(), q);
+		if(BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
+			for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
+				QueueItem* q = j->second;
+				fire(QueueManagerListener::StatusUpdated(), q);
+			}
 		}
 		if(!um.empty())
 			setDirty();

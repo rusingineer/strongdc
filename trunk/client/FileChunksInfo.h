@@ -26,9 +26,19 @@
 
 extern void ensurePrivilege();
 
-STANDARD_EXCEPTION(BlockDLException);
-STANDARD_EXCEPTION(FileDLException);
+class BlockDLException : public Exception {
+public:
+	BlockDLException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
+	virtual ~BlockDLException() { }; 
+	int64_t pos;
+};
 
+class FileDLException : public Exception {
+public:
+	FileDLException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
+	virtual ~FileDLException() { }; 
+	int64_t pos;
+};
 
 /**
  * Hold chunks information of download target
@@ -304,13 +314,13 @@ public:
 			int64_t oldPos = pos;
             pos = -1;
 			os->flush();
-			throw BlockDLException(Util::toString(oldPos) + "," + Util::toString(oldPos + len));
+			throw BlockDLException(Util::emptyString, oldPos + len);
 
 		}else if(iRet == FileChunksInfo::FILE_OVER){
 			int64_t oldPos = pos;
             pos = -1;
    			os->flush();
-			throw FileDLException(Util::toString(oldPos) + "," + Util::toString(oldPos + len));
+			throw FileDLException(Util::emptyString, oldPos + len);
 
 		}else if(iRet == FileChunksInfo::WRONG_POS){
 			throw FileException(string("Error:") + Util::toString(pos) + "," + Util::toString(pos + len));

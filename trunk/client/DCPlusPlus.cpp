@@ -102,8 +102,11 @@ void shutdown() {
 
 	TimerManager::getInstance()->removeListeners();
 	SettingsManager::getInstance()->save();
-	
+
+	WebServerManager::deleteInstance();
+	ClientProfileManager::deleteInstance();	
 	PopupManager::deleteInstance();
+	DebugManager::deleteInstance();
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();
@@ -117,12 +120,9 @@ void shutdown() {
 	HubManager::deleteInstance();
 	HashManager::deleteInstance();
 	LogManager::deleteInstance();
-	WebServerManager::deleteInstance();
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
-	ClientProfileManager::deleteInstance();
-	DebugManager::deleteInstance();
 }
 
 /**

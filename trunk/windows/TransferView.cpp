@@ -636,12 +636,17 @@ void TransferView::ItemInfo::update() {
 		}
 	}
 	if(colMask & MASK_IP) {
+			tstring countryIP;
 		if (country == _T(""))
-			columns[COLUMN_IP] = IP;
+			countryIP = IP;
 		else if (IP == _T(""))
-			columns[COLUMN_IP] = country;
+			countryIP = country;
 		else
-			columns[COLUMN_IP] = country + _T(" (") + IP + _T(")");
+			countryIP = country + _T(" (") + IP + _T(")");
+		columns[COLUMN_IP] = countryIP;
+		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL) && (upper->pocetUseru <= 1)) {
+			upper->columns[COLUMN_IP] = countryIP;
+		}
 	}
 
 }
@@ -664,6 +669,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 				i->size = qi->getSize();
 				i->Target = Text::toT(qi->getTarget());
 				i->qi = qi;
+				i->downloadTarget = Text::toT(qi->getTempTarget());
  			}
 		}
 	}
@@ -692,6 +698,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				i->size = qi->getSize();				
 				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 				i->Target = Text::toT(qi->getTarget());
+				i->downloadTarget = Text::toT(qi->getTempTarget());
 				i->qi = qi;
 				i->tth = qi->getTTH();
 			}
@@ -713,6 +720,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				i->upper->size = i->qi->getSize();				
 				i->upper->Target = i->Target;
 				i->upper->tth = i->tth;
+				i->upper->downloadTarget = i->downloadTarget;
 			}
 		}
 	}
@@ -1174,6 +1182,8 @@ void TransferView::InsertItem(ItemInfo* i) {
 		h->upper = NULL;
 		h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
 		h->qi = i->qi;
+		if(i->qi)
+			h->downloadTarget = Text::toT(i->qi->getTempTarget());
 		i->upper = h;
 		mainItems.push_back(h);
 

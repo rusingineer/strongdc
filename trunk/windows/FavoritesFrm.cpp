@@ -123,7 +123,7 @@ void FavoriteHubsFrame::openSelected() {
 		r.setShared("*");
 		r.setServer(entry->getServer());
 		HubManager::getInstance()->addRecent(r);
-		HubFrame::openWindow(Text::toT(entry->getServer()), Text::toT(entry->getNick()), Text::toT(entry->getPassword()), Text::toT(entry->getUserDescription()) 
+		HubFrame::openWindow(Text::toT(entry->getServer())
 			, Text::toT(entry->getRawOne())
 			, Text::toT(entry->getRawTwo())
 			, Text::toT(entry->getRawThree())
@@ -168,7 +168,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 		r.setShared("*");
 		r.setServer(entry->getServer());
 		HubManager::getInstance()->addRecent(r);
-		HubFrame::openWindow(Text::toT(entry->getServer()), Text::toT(entry->getNick()), Text::toT(entry->getPassword()), Text::toT(entry->getUserDescription())
+		HubFrame::openWindow(Text::toT(entry->getServer())
 			, Text::toT(entry->getRawOne())
 			, Text::toT(entry->getRawTwo())
 			, Text::toT(entry->getRawThree())
@@ -183,8 +183,10 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 
 LRESULT FavoriteHubsFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
-	while( (i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-		HubManager::getInstance()->removeFavorite((FavoriteHubEntry*)ctrlHubs.GetItemData(i));
+	if(!BOOLSETTING(CONFIRM_HUB_REMOVAL) || MessageBox(CTSTRING(REALLY_REMOVE), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) {
+		while( (i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED)) != -1) {
+			HubManager::getInstance()->removeFavorite((FavoriteHubEntry*)ctrlHubs.GetItemData(i));
+		}
 	}
 	return 0;
 }

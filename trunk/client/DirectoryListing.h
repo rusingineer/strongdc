@@ -83,7 +83,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false) 
-			: name(aName), parent(aParent), adls(_adls) { };
+			: name(aName), parent(aParent), adls(_adls), rmDCdetected(false) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction<Directory*>());
@@ -99,7 +99,12 @@ public:
 			setJunkSize(0);
 			int64_t x = 0;
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
-				x+=(*i)->getSize();				
+				x+=(*i)->getSize();
+
+				if(((*i)->getSize() < (1024*1024)) || (Util::getFileExt((*i)->getName()) == "mp3")) {
+					setRMDCdetected((*i)->getTTH() == NULL);
+				}
+
 				if((*i)->isJunkFile()) {
 					junkSize += (*i)->getSize();
 				}
@@ -110,6 +115,7 @@ public:
 		GETSET(string, name, Name);
 		GETSET(int64_t, junkSize, JunkSize);
 		GETSET(Directory*, parent, Parent);		
+		GETSET(bool, rmDCdetected, RMDCdetected);
 		GETSET(bool, adls, Adls);		
 
 	private:
@@ -148,6 +154,9 @@ public:
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
 	Directory* getRoot() { return root; };
 	int64_t getJunkSize() { return root->getJunkSize(); };
+	bool detectRMDC() {
+		return root->getRMDCdetected();
+	}
 
 	GETSET(User::Ptr, user, User);
 	GETSET(bool, utf8, Utf8);

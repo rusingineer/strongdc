@@ -273,7 +273,15 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	}
 
-	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && d->isSet(Download::FLAG_UTF8)) {
+	// Download::FLAG_UTF8 is not trustful: auto search always set it false, searchframe always set it true
+	// Ensure to use TTHF, it is used by kademlia too, Added by RevConnect
+	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) && d->getTTH() != NULL) {
+		aConn->send(d->getCommand(
+			aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET),
+			true
+			));
+	}
+	else if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && d->isSet(Download::FLAG_UTF8)) {
 		aConn->send(d->getCommand(
 			aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET),
 			aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF)
@@ -588,18 +596,26 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		try{
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
-		} catch(const BlockDLException) {
+		} catch(const BlockDLException e) {
 			dcdebug("BlockDLException.....\n");
 			d->finished = true;
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));						
 			aSource->getUser()->setDownloadSpeed(d->getRunningAverage());
-			aSource->setDownload(NULL);
-			removeDownload(d, true);
-			removeConnection(aSource, false, true);
-			aSource->getUser()->connect();
+			d->setPos(e.pos);
+			if(d->getPos() == d->getSize()){
+				aSource->setDownload(NULL);
+				removeDownload(d, false);
+				aSource->setLineMode();
+				checkDownloads(aSource);
+			}else{
+				aSource->setDownload(NULL);
+				removeDownload(d, false); // true -> false
+				removeConnection(aSource, false, true);
+				aSource->getUser()->connect();
+			}
 			return;
 
-		} catch(const FileDLException) {			
+		} catch(const FileDLException e) {
 			dcdebug("FileDLException.....\n");
 
 			if(!d->getTreeValid() && d->getTTH() != NULL)
@@ -625,10 +641,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				}
 			}
 
-			bool reconn = d->getPos() != d->getSize();
-			handleEndData(aSource);
-			if(!reconn)
+			d->setPos(e.pos);
+			if(d->getPos() == d->getSize())
 				aSource->setLineMode();
+			handleEndData(aSource);
 			return;	
 		}
 
@@ -643,7 +659,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 
-		//d->resetPos();
+		d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -651,7 +667,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const Exception& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 		// Nuke the bytes we have written, this is probably a compression error
-		//d->resetPos();
+		d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -667,8 +683,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	dcassert(d != NULL);
 	
 	d->finished = true;
-	bool reconn = (d->getPos() != d->getSize());
-
 	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->getFile()->flush();
 		delete d->getFile();
@@ -676,7 +690,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 
 		Download* old = d->getOldDownload();
 
-		int64_t bl = 1024;
+		__int64 bl = 1024;
 		while(bl * old->getTigerTree().getLeaves().size() < old->getSize())
 			bl *= 2;
 		old->getTigerTree().setBlockSize(bl);
@@ -775,6 +789,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		return;
 	}
 
+	bool reconn = (d->getPos() != d->getSize());
 	dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
 	// Check if we have some crc:s...
@@ -817,7 +832,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				removeDownload(d, true);
 
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
-				checkDownloads(aSource, reconn);
+				checkDownloads(aSource, true);
 				return;
 			} 
 
@@ -1030,7 +1045,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 		user->updateClientType();
 		aSource->setDownload(NULL);
 		removeDownload(d, true, true);
-		removeConnection(aSource);
+		checkDownloads(aSource);
 		return;
 	}
 
@@ -1046,10 +1061,6 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
-
-	bool checkList = d->isSet(Download::FLAG_CHECK_FILE_LIST) && d->isSet(Download::FLAG_TESTSUR);
-	User::Ptr uzivatel = d->getUserConnection()->getUser();
-
 	if(d->getOldDownload() != NULL) {
 		if(d->getFile()) {
 			try {
@@ -1121,12 +1132,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		}
 	}
 	QueueManager::getInstance()->putDownload(d, finished);
-	if(checkList) {
-		try {
-			QueueManager::getInstance()->addList(uzivatel, QueueItem::FLAG_CHECK_FILE_LIST);
-		} catch(const Exception&) {}
-		uzivatel->connect();
-	}
 }
 
 void DownloadManager::abortDownload(const string& aTarget) {
@@ -1193,7 +1198,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 		user->updateClientType();
 		aSource->setDownload(NULL);
 		removeDownload(d, false, true);
-		removeConnection(aSource);
+		checkDownloads(aSource);
 		return;
 	}
 

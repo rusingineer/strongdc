@@ -108,7 +108,6 @@ void AdcHub::handle(Command::INF, Command& c) throw() {
 		if(i->length() < 2)
 			continue;
 
-		string tmp;
 		if(i->compare(0, 2, "NI") == 0) {
 			u->setNick(i->substr(2));
 		} else if(i->compare(0, 2, "HU") == 0) {
@@ -371,7 +370,6 @@ void AdcHub::info() {
 	ADDPARAM(" VE", "++\\ " VERSIONSTRING);
 	ADDPARAM(" I4", "0.0.0.0");
 	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-
 		ADDPARAM(" U4", Util::toString(SETTING(IN_PORT)));
 	} else {
 		ADDPARAM(" U4", "");
@@ -392,6 +390,10 @@ string AdcHub::checkNick(const string& aNick) {
 		tmp[i++]='_';
 	}
 	return tmp;
+}
+
+string AdcHub::getHubURL() {
+	return "adc://" + getAddressPort();
 }
 
 void AdcHub::on(Connected) throw() { 

@@ -28,6 +28,15 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven pád pøi zadání neplatného regulárního výrazu
 * volba pro rozbalení nových výsledkù hledání (BCDC++ SVN)
 * pøidìlení slotu se ihned pøipojí (BCDC++ SVN)
+* vylepšeno znovupøipojení po dokonèení souboru/segmentu (THX Liny)
+* aktualizováno na WTL 7.5.4291
+* snad opraven deadlock pøenosù
+* opraven pád pøi importování vzhledù
+* pøidána detekce rmDC++ s emulací DC++
+* progressbary ve frontì zobrazují ovìøené bloky
+* pøidána volba pro vypnutí aktualizace fronty v reálném èase (ke snížení využití CPU)
+* pøidána volba pro vypnutí zobrazování chatu (zDC++)
+* opraveno obèasné zatuhnutí klienta pøi otevøení fronty
 
 
 	-- StrongDC++ 1.00 RC8 --

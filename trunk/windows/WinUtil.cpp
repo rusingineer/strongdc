@@ -78,7 +78,7 @@ bool WinUtil::isMinimized = false;
 WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
 	{ID_FILE_RECONNECT, 1, false, ResourceManager::MENU_RECONNECT},
-	{ID_FILE_QUICK_CONNECT, 2, false, ResourceManager::MENU_QUICK_CONNECT},
+	{IDC_FOLLOW, 2, false, ResourceManager::MENU_FOLLOW_REDIRECT},
 	{IDC_FAVORITES, 3, true, ResourceManager::MENU_FAVORITE_HUBS},
 	{IDC_FAVUSERS, 4, true, ResourceManager::MENU_FAVORITE_USERS},
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
@@ -183,6 +183,18 @@ void UserInfoBase::matchQueue() {
 	} catch(const Exception&) {
 	}
 }
+
+void UserInfoBase::getUserResponses() {
+	try {
+		QueueManager::getInstance()->addTestSUR(user, false);
+	} catch(const Exception&) {
+	}
+}
+
+void UserInfoBase::doReport() {
+	user->addLine("*** Info on " + user->getNick() + " ***" + "\r\n" + user->getReport() + "\r\n");
+}
+
 void UserInfoBase::getList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);

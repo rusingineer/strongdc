@@ -51,8 +51,13 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 				return 1;
 			}
 	}
-	if(nHardCol == COLUMN_SHARED) {
-		return compare(a->user->getBytesShared(), b->user->getBytesShared());
+
+	switch(nHardCol) {
+		case COLUMN_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
+		case COLUMN_EXACT_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
+		case COLUMN_HUBS: return compare(Util::toInt(a->user->getHubs()), Util::toInt(b->user->getHubs()));
+		case COLUMN_SLOTS: return compare(Util::toInt(a->user->getSlots()), Util::toInt(b->user->getSlots()));
+		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->user->getUpload()), Util::toInt(b->user->getUpload()));
 	}
 	return Util::stricmp(a->columns[nHardCol], b->columns[nHardCol]);	
 }

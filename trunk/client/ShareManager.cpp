@@ -247,17 +247,12 @@ void ShareManager::load(SimpleXML* aXml) {
 			// get rid of bad characters in virtual names
 			newVirt = validateVirtual(newVirt);
 
-			// ensure uniqueness
-			string oldNewVirt = newVirt;
-			int uniq(0);
-			while(lookupVirtual(newVirt) != virtualMap.end()) {
-				newVirt = newVirt + Util::toString(++uniq);
+			// add only unique directories
+			if(lookupVirtual(newVirt) == virtualMap.end()) {
+				Directory* dp = new Directory(newVirt);
+				directories[d] = dp;
+				virtualMap.push_back(make_pair(newVirt, d));
 			}
-
-			// make map
-			Directory* dp = new Directory(newVirt);
-			directories[d] = dp;
-			virtualMap.push_back(make_pair(newVirt, d));
 		}
 		aXml->stepOut();
 	}

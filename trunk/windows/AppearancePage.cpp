@@ -80,6 +80,7 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_SUPPORTS , ResourceManager::SHOW_SUPPORTS },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
 	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
+	{ SettingsManager::CONFIRM_HUB_REMOVAL, ResourceManager::SETTINGS_CONFIRM_HUB_REMOVAL },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

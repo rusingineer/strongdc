@@ -944,6 +944,18 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		
 		if(ii->getTTH() != NULL) {
 			SearchFrame::openWindow(Text::toT(ii->getTTH()->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+		} else {
+			tstring searchString = Text::toT(SearchManager::clean(Text::fromT(ii->getTargetFileName())));
+			
+			if(!searchString.empty()) {
+				bool bigFile = (ii->getSize() > 10*1024*1024);
+				if(bigFile) {
+					SearchFrame::openWindow(searchString, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(Text::fromT(ii->getTargetFileName())));
+				} else {
+					SearchFrame::openWindow(searchString, ii->getSize()+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(Text::fromT(ii->getTargetFileName())));
+				}		
+			}
+
 		}
 	} 
 	
@@ -1403,11 +1415,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
 			TCHAR buf[256];
-			COLORREF barBase = SETTING(DOWNLOAD_BAR_COLOR);
-			COLORREF bgBase = WinUtil::bgColor;
-			int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
-			COLORREF barPal[3] = { HLS_TRANSFORM(barBase, -40, 50), barBase, HLS_TRANSFORM(barBase, 40, -30) };
-			COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
 
 			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_DOWNLOADED, buf, 255);
 			buf[255] = 0;
@@ -1417,6 +1424,10 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			rc2.left += 6;
 				
 			// draw background
+			COLORREF bgBase = WinUtil::bgColor;
+			int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
+			COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
+
 			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,bgPal[0]));
 			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(bgPal[1]));
 			::Rectangle(cd->nmcd.hdc, rc.left, rc.top - 1, rc.right, rc.bottom);			
@@ -1425,86 +1436,112 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			LONG left = rc.left;
 			int64_t w = rc.Width();
 			// draw start part
-			double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
-			rc.right = left + (int) (w * percent);
-			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+
+			for(int smycka = 0; smycka < 2; smycka++) {
+				
+				COLORREF barBase;
+				if(smycka == 0) {
+					barBase = SETTING(UPLOAD_BAR_COLOR);
+				} else {
+					barBase = SETTING(DOWNLOAD_BAR_COLOR);
+				}
+
+				COLORREF barPal[3] = { HLS_TRANSFORM(barBase, -40, 50), barBase, HLS_TRANSFORM(barBase, 40, -30) };
+
+				double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
+				rc.right = left + (int) (w * percent);
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
-			FileChunksInfo::Ptr filedatainfo = qi->FDI;
+				FileChunksInfo::Ptr filedatainfo = qi->FDI;
 			
+				try {
+					if(filedatainfo) {
+						int Pleft, Pright;
+						double p;
+
+						vector<int64_t> v;
 	
-			try {
-				if(filedatainfo) {
-					int Pleft, Pright;
-					double p;
-
-					vector<int64_t> v;
-
-					if(filedatainfo->vecFreeBlocks.size() != NULL)
-						copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
-					if(filedatainfo->vecRunBlocks.size() != NULL)
-						copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
-
-					if(qi && (v.size() > 0)) {
-						int64_t size = qi->getSize();
-
-						sort(v.begin(), v.end());
-			
-						p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
-						Pright = rc.left + (w * p);
-						Pleft = rc.left;
-						if(Pright >= Pleft)
-							::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
-
-						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						if(smycka == 0) {
+							if(filedatainfo->vecFreeBlocks.size() != NULL)
+								copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
+							if(filedatainfo->vecRunBlocks.size() != NULL)
+								copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
+						} else {
+							for(map<int64_t, int64_t>::iterator i =filedatainfo->mapVerifiedBlocks.begin(); i != filedatainfo->mapVerifiedBlocks.end(); i++) {
+								v.push_back(i->first);
+								v.push_back(i->second);
+							}
+							if(v.empty())
+								break;
 						}
-	
-						for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
-		/*(*(i+2))< size) && ((*(i+1))< size) && */
-							if(((*(i)) < size) && ((*(i+1))< size)) {
-								DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
-								p  = (size > 0) ? (double)(((double)(*(i+1))) / ((double)size)) : 0;
-								Pleft = rc.left + (w * p);
-								p  = (size > 0) ? (double)((double)(*(i+2))) / ((double)size) : 0;
+						if(qi && (v.size() > 0)) {
+							int64_t size = qi->getSize();
+
+							sort(v.begin(), v.end());
+			
+							if(smycka == 0) {		
+								p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
 								Pright = rc.left + (w * p);
+								Pleft = rc.left;
 								if(Pright >= Pleft)
-									::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+									::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+
 								if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
 									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-		
+									::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+									::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+								}
+							}
+
+							for(vector<int64_t>::iterator i = v.begin(); i < v.end(); i++, i++) {
+
+								if(((*(i)) < size) && ((*(i+1))< size)) {
+									DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+									p  = (size > 0) ? (double)(((double)(*(i+1 - smycka))) / ((double)size)) : 0;
+									Pleft = rc.left + (w * p);
+									p  = (size > 0) ? (double)((double)(*(i+2 - smycka))) / ((double)size) : 0;
+									Pright = rc.left + (w * p);
+									if(Pright >= Pleft)
+										::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+									if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+										DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+			
+										::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+										::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+									}
+								}
+							}
+
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+							if(smycka == 0) {		
+								p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
+								Pright = rc.left + w;
+								Pleft = rc.left + (w * p);
+
+								if(Pright >= Pleft)
+									::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+	
+								if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
 									::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
 									::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
 								}
 							}
 						}
-
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-
-						p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
-						Pright = rc.left + w;
-						Pleft = rc.left + (w * p);
-
-						if(Pright >= Pleft)
-							::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-	
-						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-						}
 					}
-				}
-			} catch(...) {}
+				} catch(...) {}
 
-			// draw status text
-			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+				// draw status text
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+			}
 
 			LONG right = rc2.right;
 			left = rc2.left;

@@ -24,10 +24,12 @@
 #include "BufferedSocket.h"
 #include "DebugManager.h"
 
+#include "HubManager.h"
+
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator, bool usesEscapes) : 
-	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), port(0), countType(COUNT_UNCOUNTED)
+	registered(false), socket(BufferedSocket::getSocket(separator, usesEscapes)), port(0), countType(COUNT_UNCOUNTED), reconnDelay(120)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
@@ -40,6 +42,22 @@ Client::~Client() {
 	socket->removeListener(this);
 
 	updateCounts(true);
+}
+
+void Client::reloadSettings() {
+	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	if(hub) {
+		setNick(hub->getNick(true));
+		setDescription(hub->getUserDescription());
+		setPassword(hub->getPassword());
+	} else {
+		setNick(SETTING(NICK));
+	}
+}
+
+void Client::connect() {
+	reloadSettings();
+	socket->connect(address, port);
 }
 
 void Client::updateCounts(bool aRemove) {

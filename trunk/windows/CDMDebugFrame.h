@@ -22,7 +22,7 @@ class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("CDMDebugFrame"), IDR_CDM, 0, COLOR_3DFACE);
 
-	CDMDebugFrame() : closed(false), showCommands(false), showDetection(false), bFilterIp(false),
+	CDMDebugFrame() : closed(false), showCommands(true), showDetection(false), bFilterIp(false),
 		detectionContainer(WC_BUTTON, this, DETECTION_MESSAGE_MAP),
 		commandContainer(WC_BUTTON, this, COMMAND_MESSAGE_MAP),
 		cFilterContainer(WC_BUTTON, this, DEBUG_FILTER_MESSAGE_MAP),

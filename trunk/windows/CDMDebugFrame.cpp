@@ -96,16 +96,16 @@ void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 
 		ctrlStatus.GetRect(0, sr);
 		ctrlClear.MoveWindow(sr);
-		ctrlStatus.GetRect(0, sr);
-		ctrlCommands.MoveWindow(sr);
 		ctrlStatus.GetRect(1, sr);
-		ctrlDetection.MoveWindow(sr);
+		ctrlCommands.MoveWindow(sr);
 		ctrlStatus.GetRect(2, sr);
-		ctrlFilterIp.MoveWindow(sr);
+		ctrlDetection.MoveWindow(sr);
 		ctrlStatus.GetRect(3, sr);
+		ctrlFilterIp.MoveWindow(sr);
+		ctrlStatus.GetRect(4, sr);
 		ctrlFilterText.MoveWindow(sr);
 		tstring msg = bFilterIp ? _T("Watching IP: ") + sFilterIp : _T("Watching all IPs");
-		ctrlStatus.SetText(4, msg.c_str());
+		ctrlStatus.SetText(5, msg.c_str());
 	}
 	
 	// resize client window
