@@ -145,6 +145,9 @@ public:
 	GETSET(int64_t, runningAverage, RunningAverage);
 	GETSET(int64_t, fullSize, FullSize);
 private:
+	Transfer(const Transfer&);
+	Transfer& operator=(const Transfer&);
+	
 	/** Bytes on last avg update */
 	int64_t last;
 	/** Total actual bytes transfered this session (compression?) */
@@ -201,7 +204,7 @@ public:
 		FLAG_SUPPORTS_ADCGET = FLAG_SUPPORTS_XML_BZLIST << 1,
 		FLAG_SUPPORTS_ZLIB_GET = FLAG_SUPPORTS_ADCGET << 1,
 		FLAG_SUPPORTS_TTHL = FLAG_SUPPORTS_ZLIB_GET << 1,
-		FLAG_SUPPORTS_TTHF = FLAG_SUPPORTS_TTHL << 1,
+		FLAG_SUPPORTS_TTHF = FLAG_SUPPORTS_TTHL << 1
 	};
 	
 	enum States {
@@ -215,13 +218,15 @@ public:
 		STATE_LOCK,
 		STATE_DIRECTION,
 		STATE_KEY,
+
 		// UploadManager
 		STATE_GET,
 		STATE_SEND,
 		STATE_DONE,
 		// DownloadManager
 		STATE_FILELENGTH,
-		STATE_TREE,
+		STATE_TREE
+		
 	};
 
 	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
@@ -231,8 +236,8 @@ public:
 	void lock(const string& aLock, const string& aPk) { send ("$Lock " + aLock + " Pk=" + aPk + '|'); }
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
-	void get(const string& aFile, int64_t aResume) { send("$Get " + Text::utf8ToAcp(aFile) + "$" + Util::toString(aResume + 1) + '|'); };
-	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + (utf8 ? aFile : Text::utf8ToAcp(aFile)) + '|'); };
+	void get(const string& aFile, int64_t aResume) { send("$Get " + aFile + "$" + Util::toString(aResume + 1) + '|'); }; 	// No acp - utf conversion here...
+	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); };
 	void uGetBlock(const string& aFile, int64_t aResume, int64_t aBytes) { send("$UGetBlock " + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
 	void fileLength(const string& aLength) { send("$FileLength " + aLength + '|'); }
 	void startSend() { send("$Send|"); }
@@ -277,11 +282,11 @@ public:
 
 	void sendRaw(const string& raw) { send(raw); }
 
-	void UserConnection::connect(const string& aServer, short aPort) throw(SocketException) { 
+	void connect(const string& aServer, short aPort) throw(SocketException) { 
 		socket->connect(aServer, aPort);
 	}
 	
-	void UserConnection::accept(const ServerSocket& aServer) throw(SocketException) {
+	void accept(const ServerSocket& aServer) throw(SocketException) {
 		socket->accept(aServer);
 	}
 	

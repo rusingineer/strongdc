@@ -54,13 +54,13 @@ public:
 		ERROR_TRANSFER_GENERIC = 50,
 		ERROR_FILE_NOT_AVAILABLE = 51,
 		ERROR_FILE_PART_NOT_AVAILABLE = 52,
-		ERROR_SLOTS_FULL = 53,
+		ERROR_SLOTS_FULL = 53
 	};
 
 	enum Severity {
 		SEV_SUCCESS = 0,
 		SEV_RECOVERABLE = 1,
-		SEV_FATAL = 2,
+		SEV_FATAL = 2
 	};
 
 	static const char TYPE_ACTIVE = 'A';
@@ -72,7 +72,7 @@ public:
 	static const char TYPE_PASSIVE = 'P';
 	static const char TYPE_UDP = 'U';
 
-#define CMD(n, a, b, c) static const u_int32_t CMD_##n = (((u_int32_t)a) | (((u_int32_t)b)<<8) | (((u_int32_t)c)<<16)); typedef Type<CMD_##n> n;
+#define CMD(n, a, b, c) static const u_int32_t CMD_##n = (((u_int32_t)a) | (((u_int32_t)b)<<8) | (((u_int32_t)c)<<16)); typedef Type<CMD_##n> n
 	CMD(SUP, 'S','U','P');
 	CMD(STA, 'S','T','A');
 	CMD(INF, 'I','N','F');
@@ -102,6 +102,7 @@ public:
 
 	u_int32_t getCommand() const { return cmdInt; }
 	char getType() const { return type; }
+	void setType(char t) { type = t; }
 
 	StringList& getParameters() { return parameters; }
 	const StringList& getParameters() const { return parameters; }
@@ -145,7 +146,9 @@ public:
 		return tmp;
 	}
 	const CID& getTo() const { return to; }
+	void setTo(const CID& cid) { to = cid; }
 	const CID& getFrom() const { return from; }
+
 private:
 	StringList parameters;
 	union {

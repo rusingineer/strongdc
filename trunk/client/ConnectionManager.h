@@ -41,24 +41,29 @@ public:
 	typedef List::iterator Iter;
 	
 	enum State {
-		CONNECTING,					// In pendingDown, recently sent request to connect
-		WAITING,					// In pendingDown, waiting to send request to connect
-		NO_DOWNLOAD_SLOTS,			// In pendingDown, but not needed right now
+		CONNECTING,					// Recently sent request to connect
+		WAITING,					// Waiting to send request to connect
+		NO_DOWNLOAD_SLOTS,			// Bot needed right now
 		IDLE,						// In the download pool
+		ACTIVE						// In one up/downmanager
 	};
 
-	ConnectionQueueItem(const User::Ptr& aUser) : state(WAITING), connection(NULL), lastAttempt(0), user(aUser) { };
+	ConnectionQueueItem(const User::Ptr& aUser, bool aDownload) : state(WAITING), connection(NULL), lastAttempt(0), download(aDownload), user(aUser) { };
 	
 	User::Ptr& getUser() { return user; };
 	
 	GETSET(State, state, State);
 	GETSET(UserConnection*, connection, Connection);
 	GETSET(u_int32_t, lastAttempt, LastAttempt);
+	GETSET(bool, download, Download);
 private:
+	ConnectionQueueItem(const ConnectionQueueItem&);
+	ConnectionQueueItem& operator=(const ConnectionQueueItem&);
+	
 	User::Ptr user;
 };
 // Comparing with a user...
-inline bool operator==(ConnectionQueueItem::Ptr ptr, const User::Ptr& aUser) { return ptr->getUser() == aUser; };
+inline bool operator==(ConnectionQueueItem::Ptr ptr, const User::Ptr& aUser) { return ptr->getUser() == aUser; }
 
 class ConnectionManager : public Speaker<ConnectionManagerListener>, 
 	public UserConnectionListener, ServerSocketListener, TimerManagerListener, 
@@ -101,12 +106,9 @@ private:
 	CriticalSection cs;
 	short port;
 
-	/** Pending connections, i e users we're trying to connect to */
-	ConnectionQueueItem::List pendingDown;
-	/** Download connection pool, pool of active connections to be used for downloading */
-	ConnectionQueueItem::List downPool;
-	/** Connections that are currently being used by the Up/DownloadManager */
-	ConnectionQueueItem::List active;
+	/** All ConnectionQueueItems */
+	ConnectionQueueItem::List downloads;
+	ConnectionQueueItem::List uploads;
 
 	User::List pendingAdd;
 	UserConnection::List pendingDelete;
@@ -124,18 +126,14 @@ private:
 
 	virtual ~ConnectionManager() throw() { shutdown(); };
 	
-	UserConnection* getConnection(bool aNmdc) throw(SocketException) {
-		UserConnection* uc = new UserConnection();
-		uc->addListener(this);
-		{
-			Lock l(cs);
-			userConnections.push_back(uc);
-		}
-		if(aNmdc)
-			uc->setFlag(UserConnection::FLAG_NMDC);
-		return uc;
-	}
+	UserConnection* getConnection(bool aNmdc) throw(SocketException);
 	void putConnection(UserConnection* aConn);
+
+	void addUploadConnection(UserConnection* uc);
+	void addDownloadConnection(UserConnection* uc, bool sendNTD);
+
+	ConnectionQueueItem* getCQI(const User::Ptr& aUser, bool download);
+	void putCQI(ConnectionQueueItem* cqi);
 
 	// ServerSocketListener
 	virtual void on(ServerSocketListener::IncomingConnection) throw();

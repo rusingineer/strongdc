@@ -459,7 +459,7 @@ void HubFrame::addAsFavorite() {
 	aEntry.setServer(Text::fromT(server));
 	aEntry.setName(Text::fromT(buf));
 	aEntry.setDescription(Text::fromT(buf));
-	aEntry.setConnect(TRUE);
+	aEntry.setConnect(false);
 	aEntry.setNick(client->getNick());
 	aEntry.setPassword(client->getPassword());
 	aEntry.setConnect(false);
@@ -535,7 +535,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 							"\tVersion: " + ui->user->getVersion() + "\r\n" +
 							"\tMode: " + ui->user->getMode() + "\r\n" +
 							"\tHubs: " + ui->user->getHubs() + "\r\n" +
-							"\tSlots: " + ui->user->getSlots() + "\r\n" +
+							"\tSlots: " + Util::toString(ui->user->getSlots()) + "\r\n" +
 							"\tUpLimit: " + ui->user->getUpload() + "\r\n";
 						if(ui->user->isClientOp()) {
 							sCopy += "\tIP: " + ui->user->getIp() + "\r\n"+
@@ -639,15 +639,14 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 	if(i == -1) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u, ui));
-
-		bool add = false;
+		
+		bool adduser = false;
 		if(filter.empty()) {
-			add = true;
+			adduser = true;
 		} else if(filterUser(ui)) {
-				add = true;
-		}
-	
-		if( add ){
+			adduser = true;
+		}	
+		if(adduser == true){
 			ctrlUsers.insertItem(ui, WinUtil::getImage(u));
 		}		
 		return true;
@@ -822,7 +821,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		SetWindowText(x->c_str());
 		delete x;
 	} else if(wParam == STATS) {
-		ctrlStatus.SetText(1, Text::toT(Util::toString(client->getUserCount()) + " " + STRING(HUB_USERS)).c_str());
+		size_t AllUsers = client->getUserCount();
+		size_t ShownUsers = ctrlUsers.GetItemCount();
+		if(filter.empty() == false && AllUsers != ShownUsers) {
+			ctrlStatus.SetText(1, Text::toT(Util::toString(ShownUsers) + "/" + Util::toString(AllUsers) + " " + STRING(HUB_USERS)).c_str());
+		} else {
+			ctrlStatus.SetText(1, Text::toT(Util::toString(client->getUserCount()) + " " + STRING(HUB_USERS)).c_str());
+		}
 		ctrlStatus.SetText(2, Text::toT(Util::formatBytes(client->getAvailable())).c_str());
 		if(client->getUserCount() > 0)
 			ctrlStatus.SetText(3, Text::toT((Util::formatBytes(client->getAvailable() / client->getUserCount()) + "/" + STRING(USER))).c_str());
@@ -932,7 +937,6 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.bottom = rc.bottom + 120;
 		ctrlFilterSel.MoveWindow(rc);
 	}
-	ctrlClient.GoToEnd();
 }
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -1305,7 +1309,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		return;
 
 	ucParams["mynick"] = client->getNick();
-	ucParams["mycid"] = client->getMe()->getCID().toBase32();
+	ucParams["mycid"] = client->getMe() ? client->getMe()->getCID().toBase32() : Util::emptyString;
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);
@@ -1831,8 +1835,6 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setCheat("rmDC++ 0.403D[1] in DC++ "+user->getVersion()+" emulation mode" , true);
 				user->setClientType("rmDC++ 0.403D[1]");
 				user->setBadClient(true);
-				if(ShowUserList && !user->isSet(User::HIDDEN)) 
-					speak(UPDATE_USER, user);
 				return true;
 			}
 
@@ -1842,8 +1844,6 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setClientType("rmDC++ 0.403D[1]");
 				user->setBadClient(true);
 				user->setBadFilelist(true);
-				if(ShowUserList && !user->isSet(User::HIDDEN)) 
-					speak(UPDATE_USER, user);
 				return true;
 			}
 

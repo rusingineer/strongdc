@@ -137,7 +137,7 @@ void User::setClient(Client* aClient) {
 		setFlag(ONLINE);
 		unsetFlag(QUIT_HUB);
 	}
-};
+}
 
 void User::getParams(StringMap& ucParams, bool myNick /* = false */) {
 	ucParams["nick"] = getNick();
@@ -227,7 +227,7 @@ void User::TagParts() {
 				setHubs(temp+2);
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
-				setSlots(Util::toString(atoi(temp+2)));
+				setSlots(atoi(temp+2));
 			}
 			if(((temp = strtok(NULL, ",")) != NULL) && ((temp[0] == 'L') || (temp[0] == 'B') || (temp[0] == 'U'))) {
 				setUpload(Util::toString(atoi(temp+2)));

@@ -237,6 +237,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlResults.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlResults.setAscending(false);
 	ctrlResults.setVisible(SETTING(SEARCHFRAME_VISIBLE));
+	ctrlResults.setSortColumn(COLUMN_HITS);
 
 	ctrlResults.SetBkColor(WinUtil::bgColor);
 	ctrlResults.SetTextBkColor(WinUtil::bgColor);
@@ -456,7 +457,7 @@ void SearchFrame::onEnter() {
 	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 			
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
-		(SearchManager::TypeModes)ftype, mode, (int*)this, fullSearch);
+		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this, fullSearch);
 	searches++;
 }
 
@@ -477,8 +478,8 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 		} else {
 			// match all here
 			for(TStringIter j = search.begin(); j != search.end(); ++j) {
-				if((*j->begin() != _T('-') && Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) ||
-					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
+				if((*j->begin() != _T('-') && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(*j)) == -1) ||
+					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(j->substr(1))) != -1)
 					) 
 				{
 					droppedResults++;
@@ -542,6 +543,11 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 
 		droppedResults = 0;
 	}
+}
+
+void SearchFrame::on(SearchManagerListener::Resort) throw() {
+	if(ctrlResults.GetItemCount() > 1)
+		PostMessage(WM_SPEAKER, RESORT);
 }
 
 void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
@@ -632,6 +638,14 @@ void SearchFrame::SearchInfo::getList() {
 	try {
 		WinUtil::addInitalDir(sr->getUser(), Text::fromT(getPath()));
 		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+	} catch(const Exception&) {
+		// Ignore for now...
+	}
+}
+
+void SearchFrame::SearchInfo::browseList() {
+	try {
+		QueueManager::getInstance()->addPfs(sr->getUser(), Text::fromT(getPath()));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}
@@ -830,7 +844,7 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		w[2] = w[1] + (tmp-16)/2;
 		w[3] = w[1] + (tmp-16);
 		
-		ctrlStatus.SetParts(3, w);
+		ctrlStatus.SetParts(4, w);
 
 		// Layout showUI button in statusbar part #0
 		ctrlStatus.GetRect(0, sr);
@@ -1195,6 +1209,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SetWindowText((TSTRING(SEARCH) + _T(" - ") + (*t)).c_str());
 		}
 		break;
+	case RESORT:
+			ctrlResults.resort();
+		break;
 	}
 
 	return 0;
@@ -1316,6 +1333,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			resultsMenu.AppendMenu(MF_SEPARATOR);
 		}
 		resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+		checkAdcItems(resultsMenu);
 		resultsMenu.InsertSeparatorFirst(sr->getFileName());
 		resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		resultsMenu.RemoveFirstItem();
@@ -1395,6 +1413,11 @@ void SearchFrame::onHubRemoved(HubInfo* info) {
 
 LRESULT SearchFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ctrlResults.forEachSelected(&SearchInfo::getList);
+	return 0;
+}
+
+LRESULT SearchFrame::onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ctrlResults.forEachSelected(&SearchInfo::browseList);
 	return 0;
 }
 

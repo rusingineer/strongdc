@@ -37,12 +37,9 @@
 #include "cvsversion.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
-	adapter(this), state(STATE_CONNECT), 
-	lastActivity(GET_TICK()), bFirstOpList(true), 
-	reconnect(true), lastUpdate(0), validatenicksent(false)
-{
+	adapter(this), state(STATE_CONNECT), lastActivity(GET_TICK()), reconnect(true),
+	lastbytesshared(0), validatenicksent(false), bFirstOpList(true) {
 	TimerManager::getInstance()->addListener(this);
-
 };
 
 NmdcHub::~NmdcHub() throw() {
@@ -59,9 +56,8 @@ void NmdcHub::connect() {
 	setReconnDelay(120 + Util::rand(0, 60));
 	reconnect = true;
 	supportFlags = 0;
-	lastMyInfoA.clear();
- 	lastMyInfoB.clear();
-	lastUpdate = 0;
+	lastmyinfo.clear();
+	lastbytesshared = 0;
 	validatenicksent = false;
 	bFirstOpList = true;
 
@@ -263,7 +259,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		u->setVersion(Util::emptyString);
 		u->setMode(Util::emptyString);
 		u->setHubs(Util::emptyString);
-		u->setSlots(Util::emptyString);
+		u->setSlots(0);
 		u->setUpload(Util::emptyString);
 
 	    Connection = strchr(Description, '$');
@@ -470,7 +466,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				if(state == STATE_HELLO) {
 					state = STATE_MYINFO;
 					updateCounts(false);
-					myInfo(true);
+					myInfo();
 					getNickList();
 					QuickList = true;
 				}
@@ -564,7 +560,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			updateCounts(false);
 
 			version();
-			myInfo(true);
+			myInfo();
 			getNickList();
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Hello(), this, u);
@@ -664,7 +660,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		updateCounts(false);
 		if(bFirstOpList == true) {
 			if(getRegistered() == true) {
-				myInfo(true);
+				myInfo();
             }
 			bFirstOpList = false;
 		}
@@ -702,13 +698,12 @@ string NmdcHub::getHubURL() {
 	return getAddressPort();
 }
 
-void NmdcHub::myInfo(bool alwaysSend) {
+void NmdcHub::myInfo() {
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
 	
 	dcdebug("MyInfo %s...\n", getNick().c_str());
-	lastCounts = counts;
 	char StatusMode = '\x01';
 	string tmp0 = "<++";
 	string tmp1 = "\x1fU9";
@@ -718,11 +713,8 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	string tmp5 = "+K9";
 	string::size_type i;
 	
-	for(i = 0; i < 6; i++) {
-		tmp1[i]++;
-	}
 	for(i = 0; i < 3; i++) {
-		tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
+		tmp1[i]++;tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
 	}
 	char modeChar = '?';
 	if(getMode() == SettingsManager::CONNECTION_ACTIVE)
@@ -732,6 +724,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	else if(getMode() == SettingsManager::CONNECTION_SOCKS5)
 		modeChar = '5';
 	
+	char tag[256];
 	string VERZE = DCVERSIONSTRING;	
 	if (getStealth() == false) {
 		tmp0 = "<StrgDC++";
@@ -743,7 +736,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 #endif
 
 	}
-	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
 	int NetLimit = Util::getNetLimiterLimit();
 	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(CONNECTION);
@@ -753,9 +745,11 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
 
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		int tag = 0;
-		tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
-		extendedtag += tmp5 + Util::toString(tag);
+		sprintf(tag, "%s%s%s%s%c%s%s%s%s%s%s>", tmp0.c_str(), tmp1.c_str(), VERZE.c_str(), tmp2.c_str(), modeChar, tmp3.c_str(), 
+		getCounts().c_str(), tmp4.c_str(), Util::toString(UploadManager::getInstance()->getSlots()).c_str(), tmp5.c_str(), Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)).c_str());
+	} else {
+		sprintf(tag, "%s%s%s%s%c%s%s%s%s>", tmp0.c_str(), tmp1.c_str(), VERZE.c_str(), tmp2.c_str(), modeChar, tmp3.c_str(), 
+		getCounts().c_str(), tmp4.c_str(), Util::toString(UploadManager::getInstance()->getSlots()).c_str());
 	}
 
 	if(getStealth() == false) {
@@ -784,30 +778,31 @@ void NmdcHub::myInfo(bool alwaysSend) {
 
 	description = speedDescription + description;
 
-	string myInfoA = 
-		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(description, false)) + 
-		extendedtag +
-		">$ $" + connection + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
-	string myInfoB = ShareManager::getInstance()->getShareSizeString() + "$|";
-
- 	if(lastMyInfoA != myInfoA || alwaysSend || (lastMyInfoB != myInfoB && lastUpdate + 15*60*1000 < GET_TICK()) ){
- 		send(myInfoA + myInfoB);
- 		lastMyInfoA = myInfoA;
- 		lastMyInfoB = myInfoB;
-		lastUpdate = GET_TICK();		
+	char myinfo[512];
+	sprintf(myinfo, "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toNmdc(getNick()).c_str(), 
+		toNmdc(Util::validateMessage(description, false)).c_str(), tag, connection.c_str(), StatusMode, 
+		toNmdc(Util::validateMessage(SETTING(EMAIL), false)).c_str());
+	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
+	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
+		lastmyinfo = myinfo;
+		lastbytesshared = newbytesshared;
+		tag[0] = NULL;
+		sprintf(tag, "%s$|", Util::toString(newbytesshared).c_str());
+		strcat(myinfo, tag);
+		send(myinfo);	
 	}
 }
 
 void NmdcHub::disconnect() throw() {	
 	state = STATE_CONNECT;
-	socket->disconnect();
+	Client::disconnect();
 	{ 
 		Lock l(cs);
 		clearUsers();
 	}
 }
 
-void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
+void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string&){
 	checkstate(); 
 	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
@@ -827,53 +822,6 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", toNmdc(getNick()).c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
-}
-
-void NmdcHub::kick(const User::Ptr& aUser, const string& aMsg) {
-	checkstate(); 
-	dcdebug("NmdcHub::kick\n");
-	static const char str[] = 
-		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = Util::validateMessage(aMsg, false);
-	
-	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
-	const char* u = aUser->getNick().c_str();
-	const char* n = getNick().c_str();
-	const char* m = msg2.c_str();
-	sprintf(tmp, str, u, n, n, m, n, n, u, m);
-	send( toNmdc(tmp) );
-	delete[] tmp;
-	
-	// Short, short break to allow the message to reach the NmdcHub...
-	Thread::sleep(200);
-	send("$Kick " + toNmdc(aUser->getNick()) + "|");
-}
-
-void NmdcHub::kick(const User* aUser, const string& aMsg) {
-	checkstate(); 
-	dcdebug("NmdcHub::kick\n");
-	
-	static const char str[] = 
-		"$To: %s From: %s $<%s> You are being kicked because: %s|<%s> %s is kicking %s because: %s|";
-	string msg2 = Util::validateMessage(aMsg, false);
-	
-	char* tmp = new char[sizeof(str) + 2*aUser->getNick().length() + 2*msg2.length() + 4*getNick().length()];
-	const char* u = aUser->getNick().c_str();
-	const char* n = getNick().c_str();
-	const char* m = msg2.c_str();
-	sprintf(tmp, str, u, n, n, m, n, n, u, m);
-	send( toNmdc(tmp) );
-	delete[] tmp;
-	
-	// Short, short break to allow the message to reach the NmdcHub...
-	Thread::sleep(100);
-	send("$Kick " + toNmdc(aUser->getNick()) + "|");
-}
-
-void NmdcHub::redirect(const User* aUser, const string& aServer, const string& aMsg) {
-	checkstate(); 
-	dcdebug("NmdcHub::opForceMove\n");
-	send("$OpForceMove $Who:" + aUser->getNick() + "$Where:" + aServer + "$Msg:" + aMsg + "|");
 }
 
 // TimerManagerListener
@@ -910,7 +858,6 @@ void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 		Lock l(cs);
 		clearUsers();
 	}
-
 	if(state == STATE_CONNECTED)
 		state = STATE_CONNECT;
 	Speaker<NmdcHubListener>::fire(NmdcHubListener::Failed(), this, aLine); 

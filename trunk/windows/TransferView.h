@@ -220,7 +220,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
 			pocetUseru(1), Target(Util::emptyStringT), file(Util::emptyStringT),
-			compressRatio(1.0), finished(false), flagImage(0) { update(); };
+			compressRatio(1.0), finished(false), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
 		Status status;
@@ -242,6 +242,7 @@ private:
 		int pocetUseru;
 		double compressRatio;
 		bool finished;
+		bool upperUpdated;
 		int flagImage;
 		
 

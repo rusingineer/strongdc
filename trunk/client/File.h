@@ -227,7 +227,7 @@ public:
 	enum {
 		READ = 0x01,
 		WRITE = 0x02,
-		RW = READ | WRITE,
+		RW = READ | WRITE
 	};
 	File(const string& aFileName, int access, int mode) throw(FileException) {
 		dcassert(access == WRITE || access == READ || access == (READ | WRITE));

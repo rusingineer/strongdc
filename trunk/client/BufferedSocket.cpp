@@ -340,11 +340,11 @@ void BufferedSocket::threadRead() {
 		while(i > 0) {
 			// Special to autodetect nmdc connections...
 			if(separator == 0) {
-				if(inbuf[0] == '$') {
+//				if(inbuf[0] == '$') {
 					separator = '|';
-				} else {
-					separator = '\n';
-				}
+//				} else {
+//					separator = '\n';
+//				}
 			}
 			if(mode == MODE_LINE) {
 				string::size_type pos = 0;

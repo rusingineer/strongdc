@@ -191,6 +191,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 		previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 				
 		if(ii->pocetUseru <= 1) {
+			checkAdcItems(transferMenu);
 			transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
 			transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			transferMenu.RemoveFirstItem();
@@ -582,9 +583,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		ctrlTransfers.deleteItem(i);
-		/*if(i->mainItem) {
-			delete i->qi;
-		}*/
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
@@ -649,7 +647,6 @@ bool TransferView::ItemInfo::canDisplayUpper() {
 	if((statusString == TSTRING(DOWNLOAD_FINISHED_IDLE)) ||
 		(statusString == TSTRING(UPLOAD_FINISHED_IDLE)) ||
    		(statusString == TSTRING(TTH_INCONSISTENCY)) ||
-   		//(statusString.substr(1, TSTRING(CHECKING_TTH).size()) == TSTRING(CHECKING_TTH)) ||
    		(statusString == TSTRING(DISCONNECTED)) ||
    		(statusString == TSTRING(SFV_INCONSISTENCY)))
 			return true;
@@ -732,7 +729,7 @@ void TransferView::ItemInfo::update() {
 }
 
 void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) {
-	ItemInfo::Types t = aCqi->getConnection() && aCqi->getConnection()->isSet(UserConnection::FLAG_UPLOAD) ? ItemInfo::TYPE_UPLOAD : ItemInfo::TYPE_DOWNLOAD;
+	ItemInfo::Types t = aCqi->getDownload() ? ItemInfo::TYPE_DOWNLOAD : ItemInfo::TYPE_UPLOAD;
 	ItemInfo* i = new ItemInfo(aCqi->getUser(), t, ItemInfo::STATUS_WAITING);
 	QueueItem* qi = NULL;
 	if(t == ItemInfo::TYPE_DOWNLOAD)
@@ -845,13 +842,9 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		i->status = ItemInfo::STATUS_WAITING;
 
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
-			//setMainItem(i);
-
 			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
 			if((i->upper != NULL) && (pocetSegmentu < 1)) {
 				i->upper->status = ItemInfo::STATUS_WAITING;
-				//if(!i->upper->finished)
-				//	i->upper->statusString = Text::toT(aReason);
 			}
 		}
 			
@@ -878,18 +871,17 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 		setMainItem(i);
 
-		if(i->user != (User::Ptr)NULL) 
-			if(i->upper != NULL) {	
-				i->upper->qi = i->qi;
-				i->upper->status = ItemInfo::STATUS_RUNNING;
-				i->upper->size = aDownload->getSize();
-				i->upper->Target = Text::toT(aDownload->getTarget());
-				i->upper->actual = aDownload->getQueueTotal();
-				i->upper->start = i->upper->actual;
-				i->upper->pos = i->upper->actual;
-				i->upper->finished = false;
-				if(!isActiveSegment && (i->qi->getActiveSegments().size() <= 1))
-					i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
+		if(i->upper != NULL) {	
+			i->upper->qi = i->qi;
+			i->upper->status = ItemInfo::STATUS_RUNNING;
+			i->upper->size = aDownload->getSize();
+			i->upper->Target = Text::toT(aDownload->getTarget());
+			i->upper->actual = aDownload->getQueueTotal();
+			i->upper->start = i->upper->actual;
+			i->upper->pos = i->upper->actual;
+			i->upper->finished = false;
+			if(!isActiveSegment && (i->qi->getActiveSegments().size() <= 1))
+				i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
 		}
 				
 		if(!isActiveSegment) {
@@ -955,48 +947,51 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->qi = d->getItem();
 
 			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) || (i->qi->getActiveSegments().size() <= 1)) {
-				int NS = 0;
-				int64_t tmp = 0;
-				double pomerKomprese = 0;
-				bool komprese = false;
+				if(!i->upper->upperUpdated) {
+					i->upper->upperUpdated = true;
+					int NS = 0;
+					int64_t tmp = 0;
+					double pomerKomprese = 0;
+					bool komprese = false;
 
-				for(Download::List::const_iterator h = dl.begin(); h != dl.end(); ++h) {
-					Download* e = *h;
-					ConnectionQueueItem* cqi = e->getUserConnection()->getCQI();
-					ItemInfo* ch = transferItems[cqi];
-					if (e->getTarget() == d->getTarget()) {
-						tmp += e->getRunningAverage();
-						if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
-							komprese = true;
+					for(Download::List::const_iterator h = dl.begin(); h != dl.end(); ++h) {
+						Download* e = *h;
+						ConnectionQueueItem* cqi = e->getUserConnection()->getCQI();
+						ItemInfo* ch = transferItems[cqi];
+						if (e->getTarget() == d->getTarget()) {
+							tmp += e->getRunningAverage();
+							if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
+								komprese = true;
+							}
+							pomerKomprese += ch->getRatio();
+							++NS;
 						}
-						pomerKomprese += ch->getRatio();
-						++NS;
 					}
-				}
 	
-				if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
-				i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
+					if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
+					i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
 	
-				i->qi->setSpeed(tmp);
+					i->qi->setSpeed(tmp);
 	
-				if(i->upper && !i->upper->finished) {
-					i->upper->qi = i->qi;
-					i->upper->status = ItemInfo::STATUS_RUNNING;
-					i->upper->compressRatio = pomerKomprese;
-					i->upper->speed = tmp;
+					if(!i->upper->finished) {
+						i->upper->qi = i->qi;
+						i->upper->status = ItemInfo::STATUS_RUNNING;
+						i->upper->compressRatio = pomerKomprese;
+						i->upper->speed = tmp;
 			
-					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
-						(double)total*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - i->qi->getStart())/1000)).c_str());
+						_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
+							(double)total*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - i->qi->getStart())/1000)).c_str());
 	
-					i->upper->statusString = buf;
-					i->upper->actual = total * pomerKomprese;
-					i->upper->pos = total;
-					i->upper->size = d->getSize();
-					i->upper->timeLeft = (tmp > 0) ? ((d->getSize() - total) / tmp) : 0;
-					if(komprese)
-						i->upper->setFlag(ItemInfo::FLAG_COMPRESSED);
-					else	
-						i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
+						i->upper->statusString = buf;
+						i->upper->actual = total * pomerKomprese;
+						i->upper->pos = total;
+						i->upper->size = d->getSize();
+						i->upper->timeLeft = (tmp > 0) ? ((d->getSize() - total) / tmp) : 0;
+						if(komprese)
+							i->upper->setFlag(ItemInfo::FLAG_COMPRESSED);
+						else	
+							i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
+					}
 				}
 
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
@@ -1022,6 +1017,14 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 
 			if(d->getRunningAverage() <= 0) {
 				d->getUserConnection()->reconnect();
+			}
+		}
+
+		if(!mainItems.empty()) {
+			int q = 0;
+			while(q < mainItems.size()) {
+				mainItems[q]->upperUpdated = false;
+				q++;
 			}
 		}
 	}
@@ -1216,7 +1219,7 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 		i = transferItems[aCqi];		
 
 		if(!isUpload) {
-			setMainItem(i);
+			//setMainItem(i);
 
 			if(i->upper != NULL) {	
 				int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
@@ -1324,7 +1327,7 @@ void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
 		h->mainItem = true;
 		h->upper = NULL;
 		h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
-		i->qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(i->Target));
+		//i->qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(i->Target));
 		h->qi = i->qi;
 		i->upper = h;
 		mainItems.push_back(h);
@@ -1386,23 +1389,15 @@ void TransferView::setMainItem(ItemInfo* i) {
 	if(i->type != ItemInfo::TYPE_DOWNLOAD)
 		return;	
 		
-	dcdebug("1. setMainItem started\n");
-
 	if(i->upper != NULL) {
-
 		ItemInfo* h = i->upper;		
-		dcdebug("2. cyklus\n");
-
 		if(h->Target != i->Target) {
-			dcdebug("3. cyklus\n");
 			h->pocetUseru -= 1;
 
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 
 			i->upper = findMainItem(i->Target);
 			InsertItem(i, false);
-
-			dcdebug("4. cyklus\n");
 
 			ItemInfo* lastUserItem = findLastUserItem(h->Target);
 			if(lastUserItem == NULL) {
@@ -1424,7 +1419,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 	} else {
 		i->upper = findMainItem(i->Target);
 	}
-	dcdebug("6. setMainItem finished\n");
 }
 
 void TransferView::CollapseAll() {

@@ -98,6 +98,8 @@ public:
 			true);
 	}
 
+	void addPfs(const User::Ptr& aUser, const string& aDir) throw();
+
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
@@ -144,7 +146,7 @@ public:
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
-		return (userQueue.getNext(aUser, minPrio) != NULL);
+		return (pfsQueue.find(aUser->getCID()) != pfsQueue.end()) || (userQueue.getNext(aUser, minPrio) != NULL);
 	}
 	
 	void loadQueue() throw();
@@ -166,6 +168,9 @@ public:
 
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
+
+	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;
+	typedef PfsQueue::iterator PfsIter;
 
 	/** All queue items by target */
 	class FileQueue {
@@ -243,6 +248,8 @@ private:
 	
 	CriticalSection cs;
 	
+	/** Partial file list queue */
+	PfsQueue pfsQueue;
 	/** QueueItems by user */
 	UserQueue userQueue;
 	/** Directories queued for downloading */
@@ -261,7 +268,7 @@ private:
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, Flags::MaskType addBad, bool utf8) throw(QueueException, FileException);
 
-	int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw();
+	int matchFiles(DirectoryListing::Directory* dir) throw();
 	void processList(const string& name, User::Ptr& user, int flags);
 	
 	void load(SimpleXML* aXml);

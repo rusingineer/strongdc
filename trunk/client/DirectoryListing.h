@@ -84,7 +84,7 @@ public:
 		List directories;
 		File::List files;
 		
-		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false, bool aComplete = true) 
+		Directory(Directory* aParent, const string& aName, bool _adls, bool aComplete) 
 			: name(aName), parent(aParent), adls(_adls), rmDC403D1detected(false), complete(aComplete) { };
 		
 		virtual ~Directory() {
@@ -118,12 +118,12 @@ public:
 
 	class AdlDirectory : public Directory {
 	public:
-		AdlDirectory(const string& aFullPath, Directory* aParent, const string& aName) : Directory(aParent, aName, true), fullPath(aFullPath) { };
+		AdlDirectory(const string& aFullPath, Directory* aParent, const string& aName) : Directory(aParent, aName, true, true), fullPath(aFullPath) { };
 
 		GETSET(string, fullPath, FullPath);
 	};
 
-	DirectoryListing(const User::Ptr& aUser) : user(aUser), utf8(false), root(new Directory()) {
+	DirectoryListing(const User::Ptr& aUser) : user(aUser), utf8(false), root(new Directory(NULL, Util::emptyString, false, false)) {
 	};
 	
 	~DirectoryListing() {
@@ -133,7 +133,7 @@ public:
 	void loadFile(const string& name);
 
 	void load(const string& i);
-	void loadXML(const string& xml);
+	string loadXML(const string& xml, bool updating);
 
 	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);

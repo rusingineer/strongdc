@@ -53,6 +53,7 @@ public:
 	UserInfoBase(const User::Ptr& u) : user(u) { };
 	
 	void getList();
+	void browseList();
 	void getUserResponses();
 	void checkList();
 	void doReport();
@@ -79,6 +80,7 @@ public:
 
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
+		COMMAND_ID_HANDLER(IDC_BROWSELIST, onBrowseList)
 		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
 		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
 		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
@@ -115,7 +117,10 @@ public:
 		}
 		return 0;
 	}
-
+	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::browseList);
+		return 0;
+	}
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		if(sSelectedUser != Util::emptyStringT) {
 			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
@@ -242,8 +247,27 @@ public:
 		return 0;
 	}
 
+	struct NmdcOnly {
+		NmdcOnly() : nmdcOnly(true) { }
+		void operator()(UserInfoBase* ui) { if(!ui->getUser()->getCID().isZero()) nmdcOnly = false; }
+
+		bool nmdcOnly;
+	};
+	void checkAdcItems(CMenu& menu) {
+
+		MENUITEMINFO mii = { 0 };
+		mii.cbSize = sizeof(mii);
+		mii.fMask = MIIM_STATE;
+		if(((T*)this)->getUserList().forEachSelectedT(NmdcOnly()).nmdcOnly) {
+			menu.EnableMenuItem(IDC_BROWSELIST, MFS_DISABLED);
+		} else {
+			menu.EnableMenuItem(IDC_BROWSELIST, MFS_ENABLED);
+		}
+	}
+
 	void appendUserItems(CMenu& menu) {
 		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+		menu.AppendMenu(MF_STRING, IDC_BROWSELIST, CTSTRING(BROWSE_FILE_LIST));
 		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
 		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
 		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
@@ -326,6 +350,7 @@ public:
 	static CMenu mainMenu;
 	static CMenu grantMenu;
 	static int dirIconIndex;
+	static int dirMaskedIndex;
 	static TStringList lastDirs;
 	static HWND mainWnd;
 	static HWND mdiClient;
@@ -463,9 +488,8 @@ public:
 
 	static int getIconIndex(const tstring& aFileName);
 
-	static int getDirIconIndex() {
-		return dirIconIndex;
-	}
+	static int getDirIconIndex() { return dirIconIndex; }
+	static int getDirMaskedIndex() { return dirMaskedIndex; }
 	
 	static int getOsMajor();
 	static int getOsMinor();

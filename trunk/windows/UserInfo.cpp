@@ -46,7 +46,7 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		case COLUMN_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
 		case COLUMN_EXACT_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
 		case COLUMN_HUBS: return compare(Util::toInt(a->user->getHubs()), Util::toInt(b->user->getHubs()));
-		case COLUMN_SLOTS: return compare(Util::toInt(a->user->getSlots()), Util::toInt(b->user->getSlots()));
+		case COLUMN_SLOTS: return compare(a->user->getSlots(), b->user->getSlots());
 		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->user->getUpload()), Util::toInt(b->user->getUpload()));
 	}
 	return Util::stricmp(a->columns[col], b->columns[col]);	
@@ -83,7 +83,7 @@ void UserInfo::update() {
 	columns[COLUMN_VERSION] = Text::toT(user->getVersion());
 	columns[COLUMN_MODE] = Text::toT(user->getMode());
 	columns[COLUMN_HUBS] = Text::toT(user->getHubs());
-	columns[COLUMN_SLOTS] = Text::toT(user->getSlots());
+	columns[COLUMN_SLOTS] = Text::toT(Util::toString(user->getSlots()));
 	columns[COLUMN_ISP] = Text::toT(user->getHost());		
 
 	tstring IP;

@@ -73,7 +73,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 
 	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
-};
+}
 
 int64_t Download::getQueueTotal() {
 	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
@@ -86,6 +86,8 @@ AdcCommand Download::getCommand(bool zlib, bool tthf) {
 	AdcCommand cmd(AdcCommand::CMD_GET);
 	if(isSet(FLAG_TREE_DOWNLOAD)) {
 		cmd.addParam("tthl");
+	} else if(isSet(FLAG_PARTIAL_LIST)) {
+		cmd.addParam("list");
 	} else {
 		cmd.addParam("file");
 	}
@@ -404,22 +406,17 @@ int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, i
 
 		try {
 			File inFile(file, File::READ, File::OPEN);
-			if(blockPos + tt.getBlockSize() >= inFile.getSize()) {
-				startPos = blockPos;
-				continue;
-			}
-
 			inFile.setPos(blockPos);
 			int64_t bytesLeft = tt.getBlockSize();
 			while(bytesLeft > 0) {
-				size_t n = buf.size();
-				n = inFile.read(&buf[0], n);
-				if(n == 0) {
+				size_t n = (size_t)min((int64_t)buf.size(), bytesLeft);
+				size_t nr = inFile.read(&buf[0], n);
+				check.write(&buf[0], nr);
+				bytesLeft -= nr;
+				if(bytesLeft > 0 && nr == 0) {
 					// Huh??
-					check.flush();
+					throw Exception();
 				}
-				check.write(&buf[0], n);
-				bytesLeft -= n;
 			}
 			check.flush();
 			break;
@@ -430,7 +427,6 @@ int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, i
 	} while(startPos > 0);
 	return startPos;
 }
-
 
 void DownloadManager::on(UserConnectionListener::Sending, UserConnection* aSource, int64_t aBytes) throw() {
 	if(aSource->getState() != UserConnection::STATE_FILELENGTH) {
@@ -490,7 +486,8 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 	const string& type = cmd.getParam(0);
 	int64_t bytes = Util::toInt64(cmd.getParam(3));
 
-	if(!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD))))
+	if(!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
+		(type == "list" && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
 	{
 		// Uhh??? We didn't ask for this?
 			aSource->disconnect();
@@ -692,7 +689,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 	dcassert(d->getSize() != -1);
 
-	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+	if(d->isSet(Download::FLAG_PARTIAL_LIST)) {
+		d->setFile(new StringOutputStream(d->getPFS()));
+	} else if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->setFile(new TreeOutputStream(d->getTigerTree()));
 	} else {
 		string target = d->getDownloadTarget();

@@ -27,14 +27,14 @@ void AdcCommand::parse(const string& aLine, bool nmdc /* = false */) throw(Parse
 	if(nmdc) {
 		// "$ADCxxx ..."
 		if(aLine.length() < 7)
-			return;
+			throw ParseException("Too short");
 		type = TYPE_CLIENT;
 		memcpy(cmd, &aLine[4], 3);
 		i += 3;
 	} else {
-		// "yxxx ..."
-		if(aLine.length() < 4)
-			return;
+		// "yxxx cidcidcidcid..."
+		if(aLine.length() < 5 + (8 * 8 + 7) / 5)
+			throw ParseException("Too short");
 		type = aLine[0];
 		memcpy(cmd, &aLine[1], 3);
 	}

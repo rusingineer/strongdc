@@ -57,6 +57,9 @@ public:
 		return ;
 	}
 private:
+	BitInputStream(const BitInputStream&);
+	BitInputStream& operator=(const BitInputStream&);
+	
 	size_t bitPos;
 	size_t endPos;
 	const u_int8_t* is;

@@ -43,7 +43,7 @@ void Thread::start() throw(ThreadException) {
 	if(pthread_create(&threadHandle, NULL, &starter, this) != 0) {
 		throw ThreadException(STRING(UNABLE_TO_CREATE_THREAD));
 	}
-};
+}
 #endif
 /**
  * @file

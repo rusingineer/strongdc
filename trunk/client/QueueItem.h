@@ -329,6 +329,8 @@ public:
 	}
 
 private:
+	QueueItem& operator=(const QueueItem&);
+
 	friend class QueueManager;
 	Source::List sources;
 	Source::List badSources;	
