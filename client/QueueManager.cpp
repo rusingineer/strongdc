@@ -359,7 +359,7 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 		qi->removeActiveSegment(aUser);
 	}
 	
-	if(qi->getCurrents().empty()){
+	if(qi->getCurrents().empty() || !qi->isSet(QueueItem::FLAG_MULTI_SOURCE)){
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setSpeed(0);
 		if(removeSegment)
@@ -935,7 +935,7 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	Lock l(cs);
 
 	bool useOld = false;
-	FileChunksInfo::Ptr chunksInfo = NULL;
+	FileChunksInfo::Ptr chunksInfo = (FileChunksInfo::Ptr)NULL;
 	int64_t freeBlock = 0;
 
 	if(q != NULL) {
@@ -948,6 +948,8 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	reuse = true;
 
 again:
+	chunksInfo = (FileChunksInfo::Ptr)NULL;
+
 	if(q == NULL)
 		return NULL;
 
@@ -999,13 +1001,14 @@ next:
 			freeBlock = chunksInfo->GetUndlStart();
 
 			if(freeBlock == -1) {
+				message = STRING(NO_FREE_BLOCK);
+				q->setNoFreeBlocks(true);
 				if(useOld) {
 					useOld = false;
 					q->removeActiveSegment(aUser);
-				}
-				message = STRING(NO_FREE_BLOCK);
-				q->setNoFreeBlocks(true);
-				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+					q = userQueue.getNext(aUser);
+				} else
+					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				if(q == NULL) reuse = true;
 				goto again;
 			}

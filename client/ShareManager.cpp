@@ -147,7 +147,7 @@ string ShareManager::translateFileName(const string& aFile) throw(ShareException
 		if(i == string::npos)
 			throw ShareException("File Not Available");
 		
-		RLock<> l(cs);
+
 		StringPairIter j = lookupVirtual(file.substr(1, i-1));
 		if(j == virtualMap.end()) {
 			throw ShareException("File Not Available");

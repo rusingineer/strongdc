@@ -20,6 +20,8 @@
 * opraveno øazení ve frontì èekatelù na slot
 * snad opraven problém s odstraòováním uživatelù z fronty
 * opraveno unicode ve webserveru
+* opraveno krátké zamrznutí pøi kontrole seznamu souborù
+* seskupování výsledkù hledání je závislé na velikosti souboru
 
 
 	-- StrongDC++ 1.00 RC9 --

@@ -1842,6 +1842,8 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setCheat("rmDC++ 0.403D[1] in DC++ "+user->getVersion()+" emulation mode" , true);
 				user->setClientType("rmDC++ 0.403D[1]");
 				user->setBadClient(true);
+				if(ShowUserList && !user->isSet(User::HIDDEN)) 
+					speak(UPDATE_USER, user);
 				return true;
 			}
 
@@ -1851,6 +1853,8 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setClientType("rmDC++ 0.403D[1]");
 				user->setBadClient(true);
 				user->setBadFilelist(true);
+				if(ShowUserList && !user->isSet(User::HIDDEN)) 
+					speak(UPDATE_USER, user);
 				return true;
 			}
 
@@ -1879,7 +1883,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->sendRawCommand(SETTING(FAKESHARE_RAW));
 			}     
 			user->setFilelistComplete(true);
-			user->updated();
+
 			if(isFakeSharing) return true;
 		}
 	}

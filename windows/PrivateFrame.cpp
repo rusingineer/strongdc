@@ -702,16 +702,21 @@ void PrivateFrame::readLog() {
 			if(size > 32*1024) {
 				f.setPos(size - 32*1024);
 			}
+			string buf = f.read(32*1024);
+			StringList lines;
 
-			StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
+			if(Util::strnicmp(buf.c_str(), "\xef\xbb\xbf", 3) == 0)
+				lines = StringTokenizer<string>(buf.substr(3), "\r\n").getTokens();
+			else
+				lines = StringTokenizer<string>(buf, "\r\n").getTokens();
 
 			int linesCount = lines.size();
 
-			int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG) + 1) : 0;
+			int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG)) : 0;
 
-			for(; i <= (linesCount - 1); ++i){
-				//addLine(_T("- ") + Text::toT(lines[i]));
-				ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
+			for(; i < linesCount; ++i){
+				if(!lines[i].empty())
+					ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
 			}
 
 			f.close();
