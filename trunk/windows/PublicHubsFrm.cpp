@@ -48,7 +48,7 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlStatus.SetParts(3, w);
 	
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, WS_EX_CLIENTEDGE, IDC_HUBLIST);
+		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_HUBLIST);
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
@@ -128,21 +128,19 @@ LRESULT PublicHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 	if(!checkNick())
 		return 0;
 	
-	NMITEMACTIVATE* item = (NMITEMACTIVATE*) pnmh;
-
-	if(item->iItem != -1) {
 		char buf[256];
-		
+	int item = -1;
+	while((item = ctrlHubs.GetNextItem(item, LVNI_SELECTED)) != -1) {
 		RecentHubEntry r;
-		ctrlHubs.GetItemText(item->iItem, COLUMN_NAME, buf, 256);
+		ctrlHubs.GetItemText(item, COLUMN_NAME, buf, 256);
 		r.setName(buf);
-		ctrlHubs.GetItemText(item->iItem, COLUMN_DESCRIPTION, buf, 256);
+		ctrlHubs.GetItemText(item, COLUMN_DESCRIPTION, buf, 256);
 		r.setDescription(buf);
-		ctrlHubs.GetItemText(item->iItem, COLUMN_USERS, buf, 256);
+		ctrlHubs.GetItemText(item, COLUMN_USERS, buf, 256);
 		r.setUsers(buf);
-		ctrlHubs.GetItemText(item->iItem, COLUMN_SHARED, buf, 256);
+		ctrlHubs.GetItemText(item, COLUMN_SHARED, buf, 256);
 		r.setShared(buf);
-		ctrlHubs.GetItemText(item->iItem, COLUMN_SERVER, buf, 256);
+		ctrlHubs.GetItemText(item, COLUMN_SERVER, buf, 256);
 		r.setServer(buf);
 		HubManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(buf);
@@ -155,10 +153,9 @@ LRESULT PublicHubsFrame::onEnter(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHa
 	if(!checkNick())
 		return 0;
 
-	int item = ctrlHubs.GetNextItem(-1, LVNI_FOCUSED);
-	if(item != -1) {
 		char buf[256];
-
+	int item = -1;
+	while((item = ctrlHubs.GetNextItem(item, LVNI_SELECTED)) != -1) {
 		ctrlHubs.GetItemText(item, COLUMN_SERVER, buf, 256);
 		HubFrame::openWindow(buf);
 	}
@@ -202,9 +199,10 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		HubFrame::openWindow(tmp);
 			
 	} else {
-		if(ctrlHubs.GetSelectedCount() == 1) {
+		if(ctrlHubs.GetSelectedCount() >= 1) {
 			char buf[256];
-			int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
+			int i = -1;
+			while((i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 
 			RecentHubEntry r;
@@ -223,6 +221,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 			HubFrame::openWindow(buf);
 		}
 	}
+	}
 
 	return 0;
 }
@@ -239,8 +238,9 @@ LRESULT PublicHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	
 	char buf[256];
 	
-	if(ctrlHubs.GetSelectedCount() == 1) {
-		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
+	if(ctrlHubs.GetSelectedCount() >= 1) {
+		int i = -1;
+		while((i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		FavoriteHubEntry e;
 		ctrlHubs.GetItemText(i, COLUMN_NAME, buf, 256);
 		e.setName(buf);
@@ -249,6 +249,7 @@ LRESULT PublicHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 		e.setServer(buf);
 		HubManager::getInstance()->addFavorite(e);
+	}
 	}
 	return 0;
 }
@@ -462,7 +463,7 @@ LRESULT PublicHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	
 	// Get the bounding rectangle of the client area. 
-	if(ctrlHubs.GetSelectedCount() == 1) {
+	if(ctrlHubs.GetSelectedCount() >= 1) {
 		ctrlHubs.GetClientRect(&rc);
 		ctrlHubs.ScreenToClient(&pt); 
 
@@ -479,11 +480,16 @@ LRESULT PublicHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 }
 
 LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlHubs.GetSelectedCount() == 1) {
+	if(ctrlHubs.GetSelectedCount() >= 1) {
 		char buf[256];
-		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
+		string sbuf;
+		int i = -1;
+		while((i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
-		WinUtil::setClipboard(buf);
+			sbuf += buf;
+			sbuf += "\r\n";
+		}
+		WinUtil::setClipboard(sbuf);
 	}
 	return 0;
 }

@@ -429,8 +429,22 @@ public:
 		return image;	
 	}
 
+	template<class T> static HWND hiddenCreateEx(T& p) throw() {
+		HWND active = (HWND)::SendMessage(mdiClient, WM_MDIGETACTIVE, 0, 0);
+		::LockWindowUpdate(mdiClient);
+		HWND ret = p.CreateEx(mdiClient);
+		if(active && ::IsWindow(active))
+			::SendMessage(mdiClient, WM_MDIACTIVATE, (WPARAM)active, 0);
+		::LockWindowUpdate(0);
+		return ret;
+	}
+	template<class T> static HWND hiddenCreateEx(T* p) throw() {
+		return hiddenCreateEx(*p);
+	}
+
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
+
 };
 
 #endif // __WINUTIL_H

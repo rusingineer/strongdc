@@ -365,7 +365,7 @@ private:
 				case COLUMN_CONNECTION: return sr->getUser()->getConnection();
 				case COLUMN_HUB: return sr->getHubName();
 				case COLUMN_EXACT_SIZE: return exactSize;
-				case COLUMN_UPLOAD: return uuploadSpeed;
+				case COLUMN_UPLOAD: return uploadSpeed;
 				case COLUMN_IP: return ip;
 				case COLUMN_TTH: return getTTH();
 				case COLUMN_HITS: return hits;
@@ -403,7 +403,7 @@ private:
 				case COLUMN_CONNECTION: return Util::stricmp(a->sr->getUser()->getConnection(), b->sr->getUser()->getConnection());
 				case COLUMN_HUB: return Util::stricmp(a->sr->getHubName(), b->sr->getHubName());
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_UPLOAD: return compare(a->uuploadSpeed,b->uuploadSpeed);
+				case COLUMN_UPLOAD: return compare(a->uploadSpeed,b->uploadSpeed);
 				case COLUMN_IP: return Util::stricmp(a->getIP(), b->getIP());			
 				case COLUMN_TTH: return Util::stricmp(a->getTTH(), b->getTTH());
 				default: return 0;
@@ -435,32 +435,22 @@ private:
 			if(sr->getTTH() != NULL)
 				setTTH(sr->getTTH()->toBase32());
 
-	if(user->getDownloadSpeed()<1)
-		{
-			string s1=sr->getUser()->getDescription();
-			if((s1.find_last_of('@')==-1) || (s1.find('/')==-1)){
-			const string& tmp = sr->getUser()->getConnection();
-			int status = sr->getUser()->getStatus();
-			string Omezeni = user->getUpload();
+			if(user->getDownloadSpeed()<1) {
+				const string& tmp = sr->getUser()->getConnection();
+				int status = sr->getUser()->getStatus();
+				string Omezeni = user->getUpload();
 
-			if (!Omezeni.empty())
-			 { s1=Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";}
-			else			
-			if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { s1 = ">=100 kB/s"; }
-			else if(tmp == "28.8Kbps") { s1 = "*max. 2.1 kB/s"; }
-			else if(tmp == "33.6Kbps") { s1 = "*max. 3 kB/s"; }
-			else if(tmp == "56Kbps") { s1 = "*max. 4.2 kB/s"; }
-			else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { s1 = "*max. 6 kB/s"; }
-			else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { s1 = "*max. 10 kB/s"; }
-			else { s1 = "N/A"; }
-					}
-				else 
-			{
-				
-				s1.erase(0,s1.find_last_of('@')+1);
-			}
-			uuploadSpeed = s1;
-		} else uuploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
+				if (!Omezeni.empty()) {
+					uploadSpeed = Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";
+				} else			
+				if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = ">=100 kB/s"; }
+				else if(tmp == "28.8Kbps") { uploadSpeed = "*max. 2.1 kB/s"; }
+				else if(tmp == "33.6Kbps") { uploadSpeed = "*max. 3 kB/s"; }
+				else if(tmp == "56Kbps") { uploadSpeed = "*max. 4.2 kB/s"; }
+				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = "*max. 6 kB/s"; }
+				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = "*max. 10 kB/s"; }
+				else { uploadSpeed = "N/A"; }			
+			} else uploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
 		}
 
 		GETSET(string, fileName, FileName);
@@ -471,7 +461,7 @@ private:
 		GETSET(string, exactSize, ExactSize);
 		GETSET(string, ip, IP);
 		GETSET(string, tth, TTH);
-		GETSET(string, uuploadSpeed, UuploadSpeed);
+		GETSET(string, uploadSpeed, UploadSpeed);
 		GETSET(string, hits, Hits);
 	};
 

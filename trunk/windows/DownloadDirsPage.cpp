@@ -74,7 +74,8 @@ void DownloadDirsPage::addEntry(SettingsManager::DownloadDirectory *pa, int pos)
 LRESULT DownloadDirsPage::onAddMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	DownloadDirDlg dlg;
 	if(dlg.DoModal() == IDOK){
-		addEntry(&SettingsManager::getInstance()->addDownloadDir(dlg.dir, dlg.extensions, dlg.name), ctrlCommands.GetItemCount());
+		SettingsManager::DownloadDirectory d = SettingsManager::getInstance()->addDownloadDir(dlg.dir, dlg.extensions, dlg.name);
+		addEntry(&d, ctrlCommands.GetItemCount());
 		WinUtil::addLastDir(dlg.dir);
 	}
 	return 0;

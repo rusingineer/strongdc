@@ -391,6 +391,9 @@ void PrivateFrame::addLine(const string& aLine) {
 
 void PrivateFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	if(!created) {
+		if(BOOLSETTING(POPUNDER_PM))
+			WinUtil::hiddenCreateEx(this);
+		else
 		CreateEx(WinUtil::mdiClient);
 	}
 	ctrlClient.AdjustTextSize();

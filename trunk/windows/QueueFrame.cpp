@@ -28,8 +28,6 @@
 
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
-#include "../client/FileDataInfo.h"
-#include "../client/PluginManager.h"
 
 #define FILE_LIST_NAME "File Lists"
 
@@ -612,7 +610,8 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		ii->setDownloadedBytes(aQI->getDownloadedBytes());
+		//ii->setDownloadedBytes(aQI->getDownloadedBytes());
+		if(ii->FDI) ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
 		ii->qi = aQI;
@@ -955,11 +954,14 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				mi.dwItemData = (DWORD)&(*i);
 				mi.wID = IDC_BROWSELIST + menuItems;
 				browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
+				mi.dwItemData = (DWORD)&(*i);
 				mi.wID = IDC_REMOVE_SOURCE + menuItems;
 				removeMenu.InsertMenuItem(menuItems, TRUE, &mi);
+				mi.dwItemData = (DWORD)&(*i);
 				mi.wID = IDC_REMOVE_SOURCES + menuItems;
 				removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
 				if(i->getUser()->isOnline()) {
+					mi.dwItemData = (DWORD)&(*i);
 					mi.wID = IDC_PM + menuItems;
 					pmMenu.InsertMenuItem(menuItems, TRUE, &mi);
 				}
@@ -1571,75 +1573,79 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
-			FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(qi->getDownloadTarget());
+			FileDataInfo* filedatainfo = qi->FDI;
 			
-			if(filedatainfo) {
-				int Pleft, Pright;
-				double p;
-
-				vector<int64_t> v;
-
-				if(filedatainfo->vecFreeBlocks.size() != NULL)
-					copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
-				if(filedatainfo->vecRunBlocks.size() != NULL)
-					copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
-
-				if(qi && (v.size() > 0)) {
-					int64_t size = qi->getSize();
-
-					sort(v.begin(), v.end());
-			
-					p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
-					Pright = rc.left + (w * p);
-					Pleft = rc.left;
-					if(Pright >= Pleft)
-						::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
-
-					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-						::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-						::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-					}
-
-					for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
-
-						if(((*(i+2))< size) && ((*(i+1))< size) && ((*(i))< size)) {
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-
-							p  = (size > 0) ? (double)(((double)(*(i+1))) / ((double)size)) : 0;
-							Pleft = rc.left + (w * p);
-							p  = (size > 0) ? (double)((double)(*(i+2))) / ((double)size) : 0;
-							Pright = rc.left + (w * p);
-							if(Pright >= Pleft)
-								::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-							if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
 	
-								::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-								::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+			try {
+				if(filedatainfo) {
+					int Pleft, Pright;
+					double p;
+
+					vector<int64_t> v;
+
+					if(filedatainfo->vecFreeBlocks.size() != NULL)
+						copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
+					if(filedatainfo->vecRunBlocks.size() != NULL)
+						copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
+
+					if(qi && (v.size() > 0)) {
+						int64_t size = qi->getSize();
+
+						sort(v.begin(), v.end());
+			
+						p  = (size > 0) ? (double)((double)(*(v.begin()))) / ((double)size) : 0;
+						Pright = rc.left + (w * p);
+						Pleft = rc.left;
+						if(Pright >= Pleft)
+							::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+
+						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						}
+	
+						for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
+							if((v.size() < 1) || (IsBadReadPtr(i, 4) != 0)) break;
+		
+							if(((*(i+2))< size) && ((*(i+1))< size) && ((*(i))< size)) {
+								DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+								p  = (size > 0) ? (double)(((double)(*(i+1))) / ((double)size)) : 0;
+								Pleft = rc.left + (w * p);
+								p  = (size > 0) ? (double)((double)(*(i+2))) / ((double)size) : 0;
+								Pright = rc.left + (w * p);
+								if(Pright >= Pleft)
+									::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+								if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+									DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+		
+									::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+									::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+								}
 							}
 						}
-					}
 
-					DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
-					p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
-					Pright = rc.left + w;
-					Pleft = rc.left + (w * p);
+						p  = (size > 0) ? (double)((double)(*(v.end()-1))) / ((double)size) : 0;
+						Pright = rc.left + w;
+						Pleft = rc.left + (w * p);
 
-					if(Pright >= Pleft)
-						::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-
-					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-						::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-						::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						if(Pright >= Pleft)
+							::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+	
+						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+						}
 					}
 				}
-			}
-			
+			} catch(const Exception&) {}
+
 			// draw status text
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));

@@ -15,7 +15,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
@@ -321,7 +320,7 @@ string Util::formatExactSize(int64_t aBytes) {
 
 		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
 #else
-		sprintf(buf, "%lld", aNumber);
+		sprintf(buf, "%'lld", aBytes);
 #endif
 		sprintf(buf, "%s %s", buf, CSTRING(B));
 		return buf;

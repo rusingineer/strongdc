@@ -33,7 +33,7 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
-#include "PluginManager.h"
+
 
 #include "DebugManager.h"
 #include "StringTokenizer.h"
@@ -62,8 +62,6 @@ void startup(void (*f)(void*, const string&), void* p) {
 	QueueManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
-	PluginManager::newInstance();	
-	PluginManager::getInstance()->LoadPluginDirectory();
 	DebugManager::newInstance();
 	SettingsManager::getInstance()->load();	
 

@@ -207,7 +207,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
 			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0),
-			compressRatio(1.0) { update(); };
+			compressRatio(1.0), finished(false) { update(); };
 
 		Types type;
 		Status status;
@@ -234,7 +234,7 @@ private:
 		string oldTarget;
 		double compressRatio;
 		string downloadTarget;
-
+		bool finished;
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,

@@ -40,7 +40,7 @@
 #include <strmif.h>
 #include <control.h>
 #include <Windows.h>
-#include "../client/PluginManager.h"
+
 #include "../client/cvsversion.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
@@ -641,29 +641,22 @@ float ProcSpeedCalc() {
 #define RdTSC __asm _emit 0x0f __asm _emit 0x31
 __int64 cyclesStart = 0, cyclesStop = 0;
 unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
-
     if(!QueryPerformanceFrequency((LARGE_INTEGER *) &nFreq)) return 0;
     QueryPerformanceCounter((LARGE_INTEGER *) &nCtrStop);
-
     nCtrStop += nFreq;
-    _asm
-        {
-            RdTSC
-            mov DWORD PTR cyclesStart, eax
-            mov DWORD PTR [cyclesStart + 4], edx
-        }
-
-        do{
-             QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
-          }while (nCtr < nCtrStop);
-
-    _asm
-        {
-            RdTSC
-            mov DWORD PTR cyclesStop, eax
-            mov DWORD PTR [cyclesStop + 4], edx
-        }
-	return    ((float)cyclesStop-(float)cyclesStart) / 1000000;
+    _asm {
+		RdTSC
+        mov DWORD PTR cyclesStart, eax
+        mov DWORD PTR [cyclesStart + 4], edx
+    } do {
+		QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
+    } while (nCtr < nCtrStop);
+    _asm {
+		RdTSC
+        mov DWORD PTR cyclesStop, eax
+        mov DWORD PTR [cyclesStop + 4], edx
+    }
+	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
 }
 
 bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& status) {
@@ -985,15 +978,13 @@ int WinUtil::getIconIndex(const string& aFileName) {
 
 void WinUtil::ClearPreviewMenu(OMenu &previewMenu){
 	while(previewMenu.GetMenuItemCount() > 0) {
-/*		previewMenu.CheckOwnerDrawn(0, MF_BYPOSITION);
-		previewMenu.RemoveMenu(0, MF_BYPOSITION);*/
-		previewMenu.RemoveFirstItem();
+		previewMenu.RemoveMenu(0, MF_BYPOSITION);
 	}
 }
 
 int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 	int PreviewAppsSize = 0;
-	PreviewApplication::List lst = PluginManager::getInstance()->getPreviewApps();
+	PreviewApplication::List lst = HubManager::getInstance()->getPreviewApps();
 	if(lst.size()>0){		
 		PreviewAppsSize = 0;
 		for(PreviewApplication::Iter i = lst.begin(); i != lst.end(); i++){
@@ -1017,7 +1008,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 }
 
 void WinUtil::RunPreviewCommand(int index, string target){
-	PreviewApplication::List lst = PluginManager::getInstance()->getPreviewApps();
+	PreviewApplication::List lst = HubManager::getInstance()->getPreviewApps();
 
 	if(index <= lst.size()) {
 	string application = lst[index]->getApplication();

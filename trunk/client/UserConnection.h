@@ -104,7 +104,8 @@ public:
 	void setStartPos(int64_t aPos) { startPos = aPos; pos = aPos; };
 	int64_t getStartPos() { return startPos; }
 
-	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; };
+	void addPos(int64_t aBytes) { pos += aBytes; };
+	void addActual(int64_t aBytes) { actual += aBytes; };
 	
 	enum { AVG_PERIOD = 30000 };
 	void updateRunningAverage();

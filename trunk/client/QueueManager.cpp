@@ -854,10 +854,11 @@ Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) thr
 	Lock l(cs);
 
 	string message = "";
-
 	QueueItem* q = userQueue.getNext(aUser);
+	Download *d;
 
-znovu:
+again:
+
 	if(q == NULL) {
 		if(message != "")
 			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
@@ -868,24 +869,14 @@ znovu:
 		if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
 			message = STRING(ALL_SEGMENTS_TAKEN);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			goto znovu;
+			goto again;
 		}
 	}
 
-	if(q->getCurrents().size() >= q->getMaxSegments()) {
+	if(((q->getActiveSegments().size() + q->getCurrents().size()) / 2) >= q->getMaxSegments()) {
 		message = STRING(ALL_SEGMENTS_TAKEN);		
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-		goto znovu;
-	}
-
-	Download *d;
-
-again:
-
-	if(q == NULL) {
-		if(message != "")
-			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
-		return NULL;
+		goto again;
 	}
 
 	int64_t freeBlock = 0;
@@ -905,7 +896,6 @@ again:
 
 	userQueue.setRunning(q, aUser);
 
-	dcdebug(("Pocet segmentu: " +Util::toString((int)q->getActiveSegments().size())+"\n").c_str());
 	fire(QueueManagerListener::StatusUpdated(), q);
 	
 	d = new Download(q, aUser);
@@ -935,6 +925,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		if(q != NULL) {
 			if(finished) {
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
+
 				userQueue.remove(q);
 				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
 					if(aDownload->getSource() == "files.xml.bz2") {
@@ -1601,6 +1592,29 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
+void QueueManager::autoDropSource(User::Ptr& aUser)
+{
+    Lock l(cs);
+
+    QueueItem* q = userQueue.getRunning(aUser);
+
+    if(!q) return;
+
+    dcassert(q->isSource(aUser));
+
+    // Don't drop only downloading source
+    if(q->currents.size() < 2) return;
+
+    userQueue.setWaiting(q, aUser);
+    userQueue.remove(q, aUser);
+
+    q->removeSource(aUser, QueueItem::Source::FLAG_REMOVED);
+
+	fire(QueueManagerListener::SourcesUpdated(), q);
+    setDirty();
+
+    DownloadManager::getInstance()->abortDownload(q->getTarget(), aUser);
+}
 /**
  * @file
  * $Id$

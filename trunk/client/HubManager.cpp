@@ -694,6 +694,33 @@ void HubManager::on(TypeXML, HttpConnection*) throw() {
 void HubManager::on(TypeXMLBZ2, HttpConnection*) throw() { 
 	listType = TYPE_XMLBZIP2; 
 }
+void HubManager::previewload(SimpleXML* aXml){
+	WLock l(rwcs);
+
+	aXml->resetCurrentChild();
+	if(aXml->findChild("PreviewApps")) {
+		aXml->stepIn();
+		while(aXml->findChild("Application")) {					
+			addPreviewApp(aXml->getChildAttrib("Name"), aXml->getChildAttrib("Application"), 
+				aXml->getChildAttrib("Arguments"), aXml->getChildAttrib("Extension"));			
+		}
+		aXml->stepOut();
+	}	
+}
+
+void HubManager::previewsave(SimpleXML* aXml){
+	RLock l(rwcs);
+	aXml->addTag("PreviewApps");
+	aXml->stepIn();
+	for(PreviewApplication::Iter i = previewApplications.begin(); i != previewApplications.end(); ++i) {
+		aXml->addTag("Application");
+		aXml->addChildAttrib("Name", (*i)->getName());
+		aXml->addChildAttrib("Application", (*i)->getApplication());
+		aXml->addChildAttrib("Arguments", (*i)->getArguments());
+		aXml->addChildAttrib("Extension", (*i)->getExtension());
+	}
+	aXml->stepOut();
+}
 
 /**
  * @file

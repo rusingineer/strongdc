@@ -35,6 +35,8 @@
 #include "../client/SettingsManager.h"
 #include "../client/ConnectionManager.h" 
 
+#include "../pme-1.0.4/pme.h"
+
 HubFrame::FrameMap HubFrame::frames;
 
 
@@ -560,7 +562,8 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 		if(filter.empty()){
 			add = true;
 		} else {
-			if((Util::findSubString(ui->getText(ctrlFilterSel.GetCurSel()), filter) != string::npos)) {
+			PME reg(filter,"i");
+			if(reg.match(ui->getText(ctrlFilterSel.GetCurSel()))) {
 				add = true;
 			}
 		}
@@ -2056,35 +2059,6 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_DODEFAULT;
 	}
 }
-// (fulDC)
-void HubFrame::removeUser(const User::Ptr& u) {
-/*	int j = -1;
-	string nick = u->getNick();
-	while( ( j = ctrlUsers.findItem(nick, j) ) != -1 ) {
-		UserInfo* ui = ctrlUsers.getItemData(j);
-		if(Util::stricmp(u->getNick(), ui->user->getNick()) == 0 ) {
-			ctrlUsers.DeleteItem(j);
-			break;
-		}
-	}
-
-	UserMap::iterator i = usermap.begin();
-	for(; i != usermap.end(); ++i) {
-		if(Util::stricmp(i->second->user->getNick(), u->getNick()) == 0){
-			delete i->second;
-			i->second = NULL;
-			usermap.erase(i);
-			
-			break;
-		}
-	}
-
-	if(showJoins) {
-		if (!favShowJoins || u->isFavoriteUser()) {
-			addLine("*** " + STRING(PARTS) + nick);
-		}
-	}*/
-}
 
 LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	char *buf = new char[ctrlFilter.GetWindowTextLength()+1];
@@ -2117,22 +2091,14 @@ void HubFrame::updateUserList() {
 
 	ctrlUsers.DeleteAllItems();
 
-/*	if(filter.empty()) {
-		UserMap::iterator i = userMap.begin();
-		for(; i != usermap.end(); ++i){
-			if(i->second != NULL)
-				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));	
-		}
-		return;
-	}*/
-	
 	int sel = ctrlFilterSel.GetCurSel();
 
 	UserMap::iterator i = userMap.begin();
 	for(; i != userMap.end(); ++i){
 		if( i->second != NULL ) {
-			if(Util::findSubString(i->second->getText(sel), filter) != string::npos)
-			ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));					
+			PME reg(filter,"i");
+			if(reg.match(i->second->getText(sel)))
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));					
 		}
 	}
 }
