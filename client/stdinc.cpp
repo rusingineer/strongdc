@@ -18,6 +18,14 @@
 
 #include "stdinc.h"
 
+#if defined(HAS_STLPORT) && (_STLPORT_VERSION != 0x461)
+#error STLPort not correctly installed, read compile.txt
+#endif
+
+//#ifndef _STLP_NO_IOSTREAMS
+//#error You're not using the STLPort from the DC++ homepage, that uses a different configuration than the original one. Remove this line only if you know what you're doing.
+//#endif
+
 /**
  * @file
  * $Id$

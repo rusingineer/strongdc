@@ -148,7 +148,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlShowUsers.Create(ctrlStatus.m_hWnd, rcDefault, "+/-", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowUsers.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlShowUsers.SetFont(WinUtil::systemFont);
-	ctrlShowUsers.SetCheck(client->getUserInfo());
+	ctrlShowUsers.SetCheck(ShowUserList ? BST_CHECKED : BST_UNCHECKED);
 	showUsersContainer.SubclassWindow(ctrlShowUsers.m_hWnd);
 
 	m_UserListColumns.ReadFromSetup();
@@ -189,12 +189,12 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	m_hMenu = WinUtil::mainMenu;
 
 	bHandled = FALSE;
-	client->connect(server);
+	client->connect();
 	return 1;
 }
 
 void HubFrame::openWindow(const string& aServer, const string& aNick /* = Util::emptyString */, const string& aPassword /* = Util::emptyString */, const string& aDescription /* = Util::emptyString */, 
-		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth
+		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
 							// CDM EXTENSION BEGINS FAVS
 							, const string& rawOne /*= Util::emptyString*/
 							, const string& rawTwo /*= Util::emptyString*/
@@ -207,7 +207,7 @@ void HubFrame::openWindow(const string& aServer, const string& aNick /* = Util::
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
 		HubFrame* frm = new HubFrame(aServer, aNick, aPassword, aDescription, 
-			windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth
+			windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate
 			// CDM EXTENSION BEGINS FAVS
 			, rawOne
 			, rawTwo 
@@ -262,7 +262,7 @@ void HubFrame::onEnter() {
 			string status;
 			if(WinUtil::checkCommand(s, param, message, status)) {
 				if(!message.empty()) {
-					client->sendMessage(message);
+					client->hubMessage(message);
 				}
 				if(!status.empty()) {
 					addClientLine(status, m_ChatTextSystem);
@@ -298,7 +298,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), "close") == 0) {
 				PostMessage(WM_CLOSE);
 			} else if(Util::stricmp(s.c_str(), "userlist") == 0) {
-				ctrlShowUsers.SetCheck(client->getUserInfo() ? BST_UNCHECKED : BST_CHECKED);
+				ctrlShowUsers.SetCheck(ShowUserList ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), "connection") == 0) {
 				addClientLine((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT))), m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), "favorite") == 0) || (Util::stricmp(s.c_str(), "fav") == 0)) {
@@ -393,16 +393,16 @@ addLine(WinUtil::commands + "---------------------------------------------------
 					}
 				}
 			} else if(Util::stricmp(s.c_str(), "me") == 0) {
-				client->sendMessage(m);
+				client->hubMessage(m);
 			} else {
 				if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
-					client->sendMessage(m);
+					client->hubMessage(m);
 				} else {
 					addClientLine(STRING(UNKNOWN_COMMAND) + s);
 				}
 			}
 		} else {
-			client->sendMessage(s);
+			client->hubMessage(s);
 		}
 		ctrlMessage.SetWindowText("");
 	} else {
@@ -548,7 +548,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 
 bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	int i = -1;
-	//if (searchinlist)
+	if(searchinlist)
 		i = findUser(u);
 
 	bool bHideUser = false;
@@ -646,6 +646,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						if(showJoins) {
 							addLine("*** " + STRING(PARTS) + u->getNick(), m_ChatTextSystem);
 						}
+
+						ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
 						dcassert(userMap[u] ==(UserInfo*)ctrlUsers.getItemData(j));
 						userMap.erase(u);
 						ctrlUsers.deleteItem(j);
@@ -684,7 +686,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		string* x = (string*)lParam;
 		int nickPos = x->find('<') + 1;
 		string nick = x->substr(nickPos, x->find('>') - nickPos);
-		int i = ctrlUsers.findItem(nick);
+		int i = -1;
+		if(nick != "")
+			i = ctrlUsers.findItem(nick);
 		if ( i >= 0 ) {
 			UserInfo* ui = (UserInfo*)ctrlUsers.getItemData(i);
 			if (!ignoreList.count(nick) || (ui->user->isSet(User::OP) && !client->getOp()))
@@ -708,10 +712,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		delete x;
 	} else if(wParam == STATS) {
 		ctrlStatus.SetText(1, (Util::toString(client->getUserCount()) + " " + STRING(HUB_USERS)).c_str());
-			if(client->getUserInfo())
 				ctrlStatus.SetText(2, Util::formatBytes(client->getAvailable()).c_str());
-			else
-				ctrlStatus.SetText(2, "");
 	} else if(wParam == GET_PASSWORD) {
 		if(client->getPassword().size() > 0) {
 			client->password(client->getPassword());
@@ -724,23 +725,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 	} else if(wParam == PRIVATE_MESSAGE) {
 		PMInfo* i = (PMInfo*)lParam;
-		if(!ignoreList.count(i->user->getNick()) || i->user->isSet(User::OP)) {
+		if(!ignoreList.count(i->user->getNick()) || (i->user->isSet(User::OP) && !client->getOp())) {
 			if(i->user->isOnline()) {
 			if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(i->user)) {
 					PrivateFrame::gotMessage(i->user, i->msg);
 				} else {
 					addLine(STRING(PRIVATE_MESSAGE_FROM) + i->user->getNick() + ": " + i->msg, m_ChatTextPrivate);
 				}
-			} else {
-				if(BOOLSETTING(IGNORE_OFFLINE)) {
-					addClientLine(STRING(IGNORED_MESSAGE) + i->msg, m_ChatTextPrivate, false);
-				} else if(BOOLSETTING(POPUP_OFFLINE)) {
-					PrivateFrame::gotMessage(i->user, i->msg);
-				} else {
-					addLine(STRING(PRIVATE_MESSAGE_FROM) + i->user->getNick() + ": " + i->msg, m_ChatTextPrivate);
-				}
-			}
-		}
 		HWND hMainWnd = GetTopLevelWindow();
 		if (BOOLSETTING(MINIMIZE_TRAY) && (!WinUtil::isAppActive || WinUtil::isMinimized) && !WinUtil::isPM) {
 			NOTIFYICONDATA nid;
@@ -751,6 +742,16 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			nid.hIcon = pmicon.hIcon;
 			::Shell_NotifyIcon(NIM_MODIFY, &nid);
 			WinUtil::isPM = true;
+		}
+			} else {
+				if(BOOLSETTING(IGNORE_OFFLINE)) {
+					addClientLine(STRING(IGNORED_MESSAGE) + i->msg, m_ChatTextPrivate, false);
+				} else if(BOOLSETTING(POPUP_OFFLINE)) {
+					PrivateFrame::gotMessage(i->user, i->msg);
+				} else {
+					addLine(STRING(PRIVATE_MESSAGE_FROM) + i->user->getNick() + ": " + i->msg, m_ChatTextPrivate);
+				}
+			}
 		}
 		delete i;
 	}
@@ -768,6 +769,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		CRect sr;
 		int w[4];
 		ctrlStatus.GetClientRect(sr);
+
 		int tmp = (sr.Width()) > 332 ? 232 : ((sr.Width() > 132) ? sr.Width()-100 : 32);
 		
 		w[0] = sr.right - tmp;
@@ -790,7 +792,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 	CRect rc = rect;
 	rc.bottom -= h + 10;
-	if(!client->getUserInfo()) {
+	if(!ShowUserList) {
 		if(GetSinglePaneMode() == SPLIT_PANE_NONE)
 			SetSinglePaneMode(SPLIT_PANE_LEFT);
 	} else {
@@ -805,15 +807,13 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		splitChat.SetSplitterPos( -1 );
 	}*/
 
-	bool bShowUsers = client->getUserInfo();// & BOOLSETTING(USER_FILTER);
-	
 	rc = rect;
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
 	rc.left +=2;
-	rc.right -=(2 + (bShowUsers ? 200 : 0));  //oDC: si aggiunge il menu
+	rc.right -=(2 + (ShowUserList ? 200 : 0));  //oDC: si aggiunge il menu
 	ctrlMessage.MoveWindow(rc);
-	if (bShowUsers) {
+	if (ShowUserList) {
 		rc.left = rc.right + 4;
 		rc.right = rc.left + 116;
 		ctrlFilter.MoveWindow(rc);
@@ -828,6 +828,15 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	if(!closed) {
+		RecentHubEntry* r = HubManager::getInstance()->getRecentHubEntry(server);
+		if(r) {
+			char buf[256];
+			this->GetWindowText(buf, 255);
+			r->setName(buf);
+			r->setUsers(Util::toString(client->getUserCount()));
+			r->setShared(Util::toString(client->getAvailable()));
+			HubManager::getInstance()->recentsave();
+		}
 		TimerManager::getInstance()->removeListener(this);
 		client->removeListener(this);
 		client->disconnect();
@@ -836,7 +845,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-		SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, client->getUserInfo());
+		SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, ShowUserList);
 
 		userMap.clear();
 		ctrlUsers.DeleteAll();
@@ -862,6 +871,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			if(wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWMAXIMIZED || wp.showCmd == SW_MAXIMIZE)
 				hub->setWindowType((int)wp.showCmd);
 			hub->setChatUserSplit(m_nProportionalPos);
+			hub->setUserListState(ShowUserList);
 			HubManager::getInstance()->save();
 		}
 		DestroyIcon(pmicon.hIcon);				
@@ -955,17 +965,6 @@ void HubFrame::addLine(const string& aLine) {
 void HubFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	ctrlClient.AdjustTextSize();
 
-	BOOL noscroll = TRUE;
-	POINT p = ctrlClient.PosFromChar(ctrlClient.GetWindowTextLength() - 1);
-	CRect r;
-	ctrlClient.GetClientRect(r);
-	
-	if( r.PtInRect(p) || MDIGetActive() != m_hWnd)
-		noscroll = FALSE;
-	else {
-		ctrlClient.SetRedraw(FALSE);
-	}
-
 	string sTmp = aLine;
 	string sAuthor = "";
 	if (aLine.find("<") == 0) {
@@ -996,7 +995,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	tabMenuShown = true;
 	CMenu hSysMenu;
 	tabMenu.InsertSeparatorFirst((client->getName() != "") ? (client->getName().size() > 50 ? client->getName().substr(0, 50) : client->getName()) : client->getAddressPort());	
-	prepareMenu(tabMenu, UserCommand::CONTEXT_HUB, client->getAddressPort(), client->getOp());
+	prepareMenu(tabMenu, ::UserCommand::CONTEXT_HUB, client->getAddressPort(), client->getOp());
 	hSysMenu.Attach((wParam == NULL) ? (HMENU)tabMenu : (HMENU)wParam);
 	if (wParam != NULL) {
 		hSysMenu.InsertMenu(hSysMenu.GetMenuItemCount() - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)(HMENU)tabMenu, /*CSTRING(USER_COMMANDS)*/ "User Commands");
@@ -1030,7 +1029,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		ptCl = pt;
 		ctrlUsers.ScreenToClient(&ptCl);
 	
-		if (PtInRect(&rc, ptCl)) { 
+		if (PtInRect(&rc, ptCl) && ShowUserList) { 
 			if ( ctrlUsers.GetSelectedCount() == 1 ) {
 				int i = -1;
 				i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
@@ -1040,7 +1039,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			}
 
 			if ( PreparePopupMenu( &ctrlUsers, false, sU, &Mnu ) ) {
-				prepareMenu(Mnu, UserCommand::CONTEXT_CHAT, client->getAddressPort(), client->getOp());
+				prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getAddressPort(), client->getOp());
 				if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 					Mnu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 				}
@@ -1088,7 +1087,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 					if(Mnu != NULL) Mnu.DestroyMenu();
 					return TRUE;
 				} else {
-					prepareMenu(Mnu, UserCommand::CONTEXT_CHAT, client->getAddressPort(), client->getOp());
+					prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getAddressPort(), client->getOp());
 					if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 						Mnu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 					}
@@ -1110,7 +1109,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	}
 }
 
-void HubFrame::runUserCommand(UserCommand& uc) {
+void HubFrame::runUserCommand(::UserCommand& uc) {
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
@@ -1238,6 +1237,10 @@ void HubFrame::onTab() {
 }
 
 LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	if (GetFocus() != ctrlMessage.m_hWnd) { // don't handle these keys unless the user is entering a message
+		bHandled = FALSE;
+		return 0;
+	}
 	if(!complete.empty() && wParam != VK_TAB && uMsg == WM_KEYDOWN)
 		complete.clear();
 
@@ -1372,15 +1375,14 @@ LRESULT HubFrame::onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	::PostMessage(ctrlFilter.m_hWnd, WM_KEYUP, (WPARAM)-1, -1);
 	return S_OK;
 }
+
 LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	bHandled = FALSE;
-	if((wParam == BST_CHECKED) && !client->getUserInfo()) {
+	if((wParam == BST_CHECKED)) {
+		ShowUserList = true;
 		updateEntireUserList();
-
-		client->setUserInfo(true);
-		client->refreshUserList(true);		
 	} else {
-		client->setUserInfo(false);
+		ShowUserList = false;
 		clearUserList();
 	}
 
@@ -1411,11 +1413,20 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 			client->setNick(hub->getNick(true));
 			client->setDescription(hub->getUserDescription());
 			client->setPassword(hub->getPassword());
+			client->setStealth(hub->getStealth());
 		}
 		// else keep current settings
 
+		RecentHubEntry r;
+		r.setName("*");
+		r.setDescription("***");
+		r.setUsers("*");
+		r.setShared("*");
+		r.setServer(redirect);
+		HubManager::getInstance()->addRecent(r);
+
 		client->addListener(this);
-		client->connect(redirect);
+		//client->connect(redirect);
 	}
 	return 0;
 }
@@ -1426,7 +1437,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 		try {
 			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->user, QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
-			addClientLine(e.getError(), m_ChatTextSystem);
+			addClientLine(e.getError());
 		}
 	}
 	return 0;
@@ -1469,61 +1480,98 @@ void HubFrame::closeDisconnected() {
 	}
 };
 
-void HubFrame::onAction(TimerManagerListener::Types type, DWORD /*aTick*/) throw() {
-	if(type == TimerManagerListener::SECOND) {
+void HubFrame::on(TimerManagerListener::Second, DWORD /*aTick*/) throw() {
 		updateStatusBar();
 		if(updateUsers) {
 			updateUsers = false;
 			PostMessage(WM_SPEAKER, UPDATE_USERS);
 		}
-	}
 }
 
-// ClientListener
-void HubFrame::onAction(ClientListener::Types type, Client* client) throw() {
-	switch(type) {
-		case ClientListener::CONNECTING:
+void HubFrame::on(Connecting, Client*) throw() { 
 			if(BOOLSETTING(SEARCH_PASSIVE) && (SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)) {
 				addLine(STRING(ANTI_PASSIVE_SEARCH), m_ChatTextSystem);
 			}
 			speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + client->getAddressPort() + "...");
 			speak(SET_WINDOW_TITLE, client->getAddressPort());
-			break;
-		case ClientListener::CONNECTED: speak(CONNECTED); break;
-		case ClientListener::BAD_PASSWORD: client->setPassword(Util::emptyString); break;
-		case ClientListener::GET_PASSWORD: speak(GET_PASSWORD); break;
-		case ClientListener::HUB_NAME:
-			speak(SET_WINDOW_TITLE, Util::validateMessage(client->getName(), true, false) + " (" + client->getAddressPort() + ")");
-			break;
-		case ClientListener::VALIDATE_DENIED:
-			addLine("*** " + STRING(NICK_TAKEN), m_ChatTextServer);
-			speak(DISCONNECTED);
-			break;
+}
+void HubFrame::on(Connected, Client*) throw() { 
+	speak(CONNECTED);
+}
+void HubFrame::on(BadPassword, Client*) throw() { 
+	client->setPassword(Util::emptyString);
+}
+void HubFrame::on(UserUpdated, Client*, const User::Ptr& user) throw() { 
+	if(/*getUserInfo()*/ShowUserList && !user->isSet(User::HIDDEN)) 
+		speak(UPDATE_USER, user);
+}
+void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
+	Lock l(updateCS);
+	updateList.reserve(aList.size());
+	for(User::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
+		if(!(*i)->isSet(User::HIDDEN))
+			updateList.push_back(make_pair(*i, UPDATE_USERS));
+	}
+	if(!updateList.empty()) {
+		PostMessage(WM_SPEAKER, UPDATE_USERS);
 	}
 }
 
-void HubFrame::onAction(ClientListener::Types type, Client* /*client*/, const string& line) throw() {
-	switch(type) {
-		case ClientListener::SEARCH_FLOOD: speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line); break;
-		case ClientListener::FAILED: speak(ADD_STATUS_LINE, line); speak(DISCONNECTED); break;
-		case ClientListener::MESSAGE: 
-			if(SETTING(FILTER_MESSAGES)) {
-				if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
-					// Do nothing...
-				} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
-					speak(ADD_SILENT_STATUS_LINE, line);
-				} else {
-					speak(ADD_CHAT_LINE, line);
-				}
-			} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos) || 
-				(line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
-				HubFrame::addLine(line, m_ChatTextServer);
-			} else {
-				speak(ADD_CHAT_LINE, line);
-			}
-			break;
-	case ClientListener::CHEAT_MESSAGE: 
-			{	
+void HubFrame::on(UserRemoved, Client*, const User::Ptr& user) throw() {
+	if(/*getUserInfo()*/ShowUserList) 
+		speak(REMOVE_USER, user);
+}
+
+void HubFrame::on(Redirect, Client*, const string& line) throw() { 
+	string s, f;
+	short p = 411;
+	Util::decodeUrl(line, s, p, f);
+	if(ClientManager::getInstance()->isConnected(s, p)) {
+		speak(ADD_STATUS_LINE, STRING(REDIRECT_ALREADY_CONNECTED));
+		return;
+	}
+
+	redirect = line;
+	if(BOOLSETTING(AUTO_FOLLOW)) {
+		PostMessage(WM_COMMAND, IDC_FOLLOW, 0);
+	} else {
+		speak(ADD_STATUS_LINE, STRING(PRESS_FOLLOW) + line);
+	}
+}
+void HubFrame::on(Failed, Client*, const string& line) throw() { 
+	speak(ADD_STATUS_LINE, line); 
+	speak(DISCONNECTED); 
+}
+void HubFrame::on(GetPassword, Client*) throw() { 
+	speak(GET_PASSWORD);
+}
+void HubFrame::on(HubUpdated, Client*) throw() { 
+	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getName(), true, false) + " (" + client->getAddressPort() + ")");
+}
+void HubFrame::on(Message, Client*, const string& line) throw() { 
+	if(SETTING(FILTER_MESSAGES)) {
+		if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
+			// Do nothing...
+		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
+			speak(ADD_SILENT_STATUS_LINE, line);
+		} else {
+			speak(ADD_CHAT_LINE, line);
+		}
+	} else {
+		speak(ADD_CHAT_LINE, line);
+	}
+}
+void HubFrame::on(PrivateMessage, Client*, const User::Ptr& user, const string& line) throw() { 
+	speak(PRIVATE_MESSAGE, user, line);
+}
+void HubFrame::on(NickTaken, Client*) throw() { 
+	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
+	speak(DISCONNECTED);
+}
+void HubFrame::on(SearchFlood, Client*, const string& line) throw() {
+	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line);
+}
+void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
 				CHARFORMAT2 cf;
 				memset(&cf, 0, sizeof(CHARFORMAT2));
 				cf.cbSize = sizeof(cf);
@@ -1533,34 +1581,6 @@ void HubFrame::onAction(ClientListener::Types type, Client* /*client*/, const st
 				cf.crBackColor = SETTING(BACKGROUND_COLOR);
 				cf.crTextColor = SETTING(ERROR_COLOR);
 				HubFrame::addLine("*** "+STRING(USER)+" "+line, cf);
-			}
-			break;
-		case ClientListener::FORCE_MOVE:
-			{
-				string s, f;
-				short p = 411;
-				Util::decodeUrl(line, s, p, f);
-				if(ClientManager::getInstance()->isConnected(s, p)) {
-					speak(ADD_STATUS_LINE, STRING(REDIRECT_ALREADY_CONNECTED));
-					return;
-				}
-			}
-			redirect = line;
-			if(BOOLSETTING(AUTO_FOLLOW)) {
-				PostMessage(WM_COMMAND, IDC_FOLLOW, 0);
-			} else {
-				speak(ADD_STATUS_LINE, STRING(PRESS_FOLLOW) + line);
-			}
-			break;
-	}
-}
-
-void HubFrame::onAction(ClientListener::Types type, Client* /*client*/, const User::Ptr& user) throw() {
-	switch(type) {
-		case ClientListener::MY_INFO: if(client->getUserInfo()) speak(UPDATE_USER, user); break;
-		case ClientListener::QUIT: if(client->getUserInfo()) speak(REMOVE_USER, user); break;
-		case ClientListener::HELLO: if(client->getUserInfo()) speak(UPDATE_USER, user); break;
-	}
 }
 
 void HubFrame::updateEntireUserList() {
@@ -1576,30 +1596,6 @@ void HubFrame::updateEntireUserList() {
 	}
 }
 
-void HubFrame::onAction(ClientListener::Types type, Client* /*client*/, const User::List& aList) throw() {
-	switch(type) {
-		case ClientListener::OP_LIST: 
-			extraSort = true;
-			// Fall through
-		case ClientListener::NICK_LIST: 
-			{
-				Lock l(updateCS);
-				updateList.reserve(aList.size());
-				for(User::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-					updateList.push_back(make_pair(*i, UPDATE_USERS));
-				}
-				if(!updateList.empty()) {
-					PostMessage(WM_SPEAKER, UPDATE_USERS);
-				}
-			}
-	}
-}
-
-void HubFrame::onAction(ClientListener::Types type, Client* /*client*/, const User::Ptr& user, const string&  line) throw() {
-	switch(type) {
-		case ClientListener::PRIVATE_MESSAGE: speak(PRIVATE_MESSAGE, user, line); break;
-	}
-}
 
 void HubFrame::addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat /* = true */) {
 	string line = "[" + Util::getShortTimeString() + "] " + aLine;
@@ -1705,7 +1701,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 
 LRESULT HubFrame::onRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	RECT rc;
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
 	// Get the bounding rectangle of the client area. 
 	ctrlClient.GetClientRect(&rc);
@@ -1948,7 +1944,7 @@ LRESULT HubFrame::onAutoScrollChat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT HubFrame::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if ( sSelectedIP != "" ) {
 		string s = "!ban " + sSelectedIP;
-		client->sendMessage(s);
+		client->hubMessage(s);
 	}
 	return 0;
 }
@@ -1956,7 +1952,7 @@ LRESULT HubFrame::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, 
 LRESULT HubFrame::onUnBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if ( sSelectedIP != "" ) {
 		string s = "!unban " + sSelectedIP;
-		client->sendMessage(s);
+		client->hubMessage(s);
 	}
 	return 0;
 }

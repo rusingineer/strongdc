@@ -26,6 +26,7 @@
 #include "Util.h"
 #include "Pointer.h"
 #include "CriticalSection.h"
+#include "CID.h"
 
 class Client;
 class FavoriteUser;
@@ -42,6 +43,9 @@ public:
 		DCPLUSPLUS_BIT,
 		PASSIVE_BIT,
 		QUIT_HUB_BIT,
+		HIDDEN_BIT,
+		HUB_BIT,
+		BOT_BIT,
 		FORCEZOFF_BIT
 	};
 
@@ -51,7 +55,10 @@ public:
 		DCPLUSPLUS = 1<<DCPLUSPLUS_BIT,
 		PASSIVE = 1<<PASSIVE_BIT,
 		QUIT_HUB = 1<<QUIT_HUB_BIT,
-		FORCEZOFF = 1<<FORCEZOFF_BIT
+		HIDDEN = 1<<HIDDEN_BIT,
+		HUB = 1<<HUB_BIT,
+		BOT = 1<<BOT_BIT,
+		FORCEZOFF = 1<<FORCEZOFF_BIT,
 	};
 
 	typedef Pointer<User> Ptr;
@@ -59,6 +66,8 @@ public:
 	typedef List::iterator Iter;
 	typedef HASH_MAP<string,Ptr> NickMap;
 	typedef NickMap::iterator NickIter;
+	typedef HASH_MAP_X(CID, Ptr, CID::Hash, equal_to<CID>, less<CID>) CIDMap;
+	typedef CIDMap::iterator CIDIter;
 
 	struct HashFunction {
 		static const size_t bucket_size = 4;
@@ -67,7 +76,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); };
 	};
 
-		User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), status(0), autoextraslot(false),
+	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
+	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), status(0), autoextraslot(false),
 			downloadSpeed(0), fileListSize(0), hasTestSURinQueue(false), fakeSharing(false), checked(false), realBytesShared(-1),
 			junkBytesShared(-1), fakeShareBytesShared(-1)
 			 { unCacheClientInfo(); };
@@ -80,7 +90,6 @@ public:
 	string getClientAddressPort() const;
 	void privateMessage(const string& aMsg);
 	void clientMessage(const string& aMsg);
-	void clientPM(const string& aTo, const string& aMsg);
 	bool isClientOp() const;
 	void send(const string& msg);
 	
@@ -110,6 +119,7 @@ public:
 
 	static void updated(User::Ptr& aUser);
 	
+	Client* getClient() { return client; }
 	
 	GETSET(string, connection, Connection);
 	GETSET(int, status, Status);
@@ -125,6 +135,7 @@ public:
 	GETSET(string, lastHubAddress, LastHubAddress);
 	GETSET(string, lastHubName, LastHubName);
 	GETSET(string, ip, Ip);
+	GETSET(CID, cid, CID);
 	GETSET(string, host, Host);
 	GETSET(string, supports, Supports);
 	GETSET(string, lock, Lock);
@@ -148,11 +159,11 @@ public:
 	void TagParts( char *sTag );
 	void updateClientType();
 	bool matchProfile(const string& aString, const string& aProfile);
-	Client* getClient() { return client; };
+//	Client* getClient() { return client; };
 	string getReport();
 	string getVersion(const string& aExp, const string& aTag);
 	string splitVersion(const string& aExp, const string& aTag);
-	void update();
+//	void update();
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
 		pk = Util::emptyString;

@@ -293,6 +293,31 @@ public:
 		return buf;
 	}
 	
+	static string toAdcFile(const string& file) {
+		string ret;
+		ret.reserve(file.length() + 1);
+		ret += '/';
+		ret += file;
+		for(string::size_type i = 0; i < ret.length(); ++i) {
+			if(ret[i] == '\\') {
+				ret[i] = '/';
+			}
+		}
+		return ret;
+	}
+	static string toNmdcFile(const string& file) {
+		if(file.empty())
+			return Util::emptyString;
+		
+		string ret(file.substr(1));
+		for(string::size_type i = 0; i < ret.length(); ++i) {
+			if(ret[i] == '/') {
+				ret[i] = '\\';
+			}
+		}
+		return ret;
+	}
+	
 	static string formatBytes(int64_t aBytes);
 
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
@@ -423,6 +448,7 @@ public:
 		return buf;
 	}
 	static string getLocalIp();
+	static bool isPrivateIp(string const& ip);
 	/**
 	 * Case insensitive substring search.
 	 * @return First position found or string::npos

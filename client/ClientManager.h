@@ -35,7 +35,7 @@ class ClientManager : public Speaker<ClientManagerListener>,
 	private TimerManagerListener
 {
 public:
-	Client* getClient();
+	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
 	int getUserCount() {
@@ -96,6 +96,8 @@ public:
 
 	void infoUpdated();
 
+	User::Ptr getUser(const CID& cid, bool createUser);
+	User::Ptr getUser(const CID& cid, Client* aClient, bool putOnline = true);
 	User::Ptr getUser(const string& aNick, const string& aHint = Util::emptyString);
 	User::Ptr getUser(const string& aNick, Client* aClient, bool putOnline = true);
 	
@@ -113,19 +115,7 @@ public:
 	 * A user went offline. Must be called whenever a user quits a hub.
 	 * @param quitHub The user went offline because (s)he disconnected from the hub.
 	 */
-	void putUserOffline(User::Ptr& aUser, bool quitHub = false) {
-		{
-			Lock l(cs);
-			aUser->setIp(Util::emptyString);
-			aUser->unsetFlag(User::PASSIVE);
-			aUser->unsetFlag(User::OP);
-			aUser->unsetFlag(User::DCPLUSPLUS);
-			if(quitHub)
-				aUser->setFlag(User::QUIT_HUB);
-			aUser->setClient(NULL);
-		}
-		fire(ClientManagerListener::USER_UPDATED, aUser);
-	}
+	void putUserOffline(User::Ptr& aUser, bool quitHub = false);
 	
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
@@ -153,11 +143,16 @@ private:
 	typedef UserMap::iterator UserIter;
 	typedef pair<UserIter, UserIter> UserPair;
 
+	typedef HASH_MULTIMAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) AdcMap;
+	typedef AdcMap::iterator AdcIter;
+	typedef pair<AdcIter, AdcIter> AdcPair;
+
 	Client::List clients;
 	CriticalSection cs;
 	
-	StringList features;
 	UserMap users;
+	AdcMap adcUsers;
+
 	Socket s;
 
 	static int64_t quickTick;
@@ -165,34 +160,23 @@ private:
 	friend class Singleton<ClientManager>;
 	ClientManager() { 
 		TimerManager::getInstance()->addListener(this); 
-
-		features.push_back("UserCommand");
-		features.push_back("NoGetINFO");
-		features.push_back("NoHello");
-		features.push_back("UserIP2");
-		features.push_back("TTHSearch"); 
-		features.push_back("QuickList");
+		if(SETTING(CLIENT_ID).empty())
+			SettingsManager::getInstance()->set(SettingsManager::CLIENT_ID, CID::generate().toBase32());
 	};
 
 	virtual ~ClientManager() { TimerManager::getInstance()->removeListener(this); };
 
 	// ClientListener
-	virtual void onAction(ClientListener::Types type, Client* client) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, const string& line) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, const string& line1, const string& line2) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, const User::Ptr& user) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, const User::List& aList) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, const string& aSeeker, int aSearchType, const string& aSize, int aFileType, const string& aString) throw();
-	virtual void onAction(ClientListener::Types type, Client* client, int aType, int ctx, const string& name, const string& command) throw();
-	
-	void onClientHello(Client* aClient, const User::Ptr& aUser) throw();
-	void onClientSearch(Client* aClient, const string& aSeeker, int aSearchType, const string& aSize, 
+	virtual void on(Connected, Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
+	virtual void on(UsersUpdated, Client* c, const User::List&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	virtual void on(Failed, Client*, const string&) throw();
+	virtual void on(HubUpdated, Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw();
+	virtual void on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 		int aFileType, const string& aString) throw();
-	void onClientLock(Client* aClient, const string& aLock) throw();
 
 	// TimerManagerListener
-	void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();
-	void onTimerMinute(u_int32_t aTick);
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 };
 
 #endif // !defined(AFX_CLIENTMANAGER_H__8EF173E1_F7DC_40B5_B2F3_F92297701034__INCLUDED_)

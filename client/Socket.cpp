@@ -54,10 +54,6 @@ string Socket::getRemoteIp() const {
 		socklen_t len = sizeof(sock_addr_rem);
 		if(getpeername(sock, (sockaddr*)&sock_addr_rem, &len) == SOCKET_ERROR)
 			return Util::emptyString;
-		else
-			;	//don't fall into UDP tail
-	} else if(type == TYPE_UDP) {
-		sock_addr_rem = *(sockaddr_in *)&remote_addr_udp;
 	}
 	return string(inet_ntoa(sock_addr_rem.sin_addr));
 }
@@ -135,12 +131,7 @@ void Socket::accept(const ServerSocket& aSocket) throw(SocketException){
 	}
 	type = TYPE_TCP;
 	dcassert(!isConnected());
-	sockaddr_in sa;
-	socklen_t salen = sizeof(sockaddr_in);
-	checksockerr(sock=::accept(aSocket.getSocket(), (sockaddr*)&sa, &salen));
-	dcassert(salen == sizeof(sockaddr_in));
-	setIp(inet_ntoa(sa.sin_addr));
-	setPort(ntohs(sa.sin_port)); 
+	checksockerr(sock=::accept(aSocket.getSocket(), NULL, NULL));
 #ifdef _WIN32
 	// Make sure we disable any inherited windows message things for this socket.
 	::WSAAsyncSelect(sock, NULL, 0, 0);

@@ -28,8 +28,16 @@
 #include "HubManager.h"
 int64_t ClientManager::quickTick = 0;
 
-Client* ClientManager::getClient() {
-	Client* c = new Client();
+#include "AdcHub.h"
+#include "NmdcHub.h"
+
+Client* ClientManager::getClient(const string& aHubURL) {
+	Client* c;
+	if(Util::strnicmp("adc://", aHubURL.c_str(), 6) == 0) {
+		c = new AdcHub(aHubURL);
+	} else {
+		c = new NmdcHub(aHubURL);
+	}
 
 	{
 		Lock l(cs);
@@ -42,7 +50,7 @@ Client* ClientManager::getClient() {
 
 void ClientManager::putClient(Client* aClient) {
 	aClient->disconnect();
-	fire(ClientManagerListener::CLIENT_DISCONNECTED, aClient);
+	fire(ClientManagerListener::ClientDisconnected(), aClient);
 	aClient->removeListeners();
 
 	{
@@ -63,59 +71,34 @@ void ClientManager::putClient(Client* aClient) {
 	delete aClient;
 }
 
-void ClientManager::onClientHello(Client* aClient, const User::Ptr& aUser) throw() {
-	if(aUser == aClient->getMe() && aClient->getFirstHello()) {
-string Verze = "";		
-if ((!aClient->getStealth()) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
-if(SETTING(CLIENT_EMULATION) == SettingsManager::CLIENT_CZDC)
-	Verze = DCVERSIONSTRING; else Verze = SETTING(CLIENTVERSION);
-
-} else			
-	{ Verze = "1,0091"; }
-
-		aClient->version(Verze);
-		aClient->myInfo();
-		aClient->getNickList();
-	}
-}
-
 void ClientManager::infoUpdated() {
 	if(GET_TICK() > (quickTick + 10000)) {
 	Lock l(cs);
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
-			(*i)->myInfo();
+			(*i)->info();
 		}
 	}
 		quickTick = GET_TICK();
 	}
 }
 
-void ClientManager::onClientSearch(Client* aClient, const string& aSeeker, int aSearchType, const string& aSize, 
-									int aFileType, const string& aString) throw() {
+void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
+									int aFileType, const string& aString) throw() 
+{
 	
-	// Filter own searches
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		if(aSeeker.find(aClient->getLocalIp()) != string::npos) {
-			return;
-		}
-	} else {
-		if(aSeeker.find(aClient->getNick()) != string::npos) {
-			return;
-		}
-	}
+	bool isPassive = (aSeeker.compare(0, 4, "Hub:") == 0);
 	
-	string::size_type pos = aSeeker.find("Hub:");
 	// We don't wan't to answer passive searches if we're in passive mode...
-	if(pos != string::npos && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
+	if(isPassive && SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) {
 		return;
 	}
 	
 	SearchResult::List l;
-	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, (pos == string::npos) ? 10 : 5);
+	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
 //		dcdebug("Found %d items (%s)\n", l.size(), aString.c_str());
 	if(l.size() > 0) {
-		if(pos != string::npos) {
+		if(isPassive) {
 			string name = aSeeker.substr(4);
 			// Good, we have a passive seeker, those are easier...
 			string str;
@@ -130,7 +113,7 @@ void ClientManager::onClientSearch(Client* aClient, const string& aSeeker, int a
 			}
 			
 			if(str.size() > 0)
-				aClient->searchResults(str);
+				aClient->send(str);
 			
 		} else {
 			try {
@@ -224,7 +207,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 		{
 			if(putOnline) {
 				i->second->setClient(aClient);
-				fire(ClientManagerListener::USER_UPDATED, i->second);
+				fire(ClientManagerListener::UserUpdated(), i->second);
 			}
 			return i->second;
 		}
@@ -235,7 +218,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 		if( (!i->second->isOnline()) ) {
 			if(putOnline) {
 				i->second->setClient(aClient);
-				fire(ClientManagerListener::USER_UPDATED, i->second);
+				fire(ClientManagerListener::UserUpdated(), i->second);
 			}
 			return i->second;
 		}
@@ -245,12 +228,68 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	i = users.insert(make_pair(aNick, new User(aNick)));
 	if(putOnline) {
 		i->second->setClient(aClient);
-		fire(ClientManagerListener::USER_UPDATED, i->second);
+		fire(ClientManagerListener::UserUpdated(), i->second);
 	}
 	return i->second;
 }
 
-void ClientManager::onTimerMinute(u_int32_t /* aTick */) {
+void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
+	{
+		Lock l(cs);
+		aUser->setIp(Util::emptyString);
+		aUser->unsetFlag(User::PASSIVE);
+		aUser->unsetFlag(User::OP);
+		aUser->unsetFlag(User::DCPLUSPLUS);
+		if(quitHub)
+			aUser->setFlag(User::QUIT_HUB);
+		aUser->setClient(NULL);
+	}
+	fire(ClientManagerListener::UserUpdated(), aUser);
+}
+
+
+User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
+	Lock l(cs);
+	dcassert(!cid.isZero());
+	AdcIter i = adcUsers.find(cid);
+	if(i != adcUsers.end())
+		return i->second;
+
+	return createUser ? adcUsers.insert(make_pair(cid, new User(cid)))->second : User::Ptr();
+}
+
+User::Ptr ClientManager::getUser(const CID& cid, Client* aClient, bool putOnline /* = true */) {
+	Lock l(cs);
+	dcassert(!cid.isZero());
+	dcassert(aClient != NULL && find(clients.begin(), clients.end(), aClient) != clients.end());
+
+	AdcPair p = adcUsers.equal_range(cid);
+	for(AdcIter i = p.first; i != p.second; ++i) {
+		User::Ptr& u = i->second;
+		if(u->isClient(aClient))
+			return u;
+	}
+
+	if(putOnline) {
+		User::Ptr up;
+		for(AdcIter i = p.first; i != p.second; ++i) {
+			if(!i->second->isOnline()) {
+				up = i->second;
+			}
+		}
+		if(!up)
+			up = adcUsers.insert(make_pair(cid, new User(cid)))->second;
+
+		up->setClient(aClient);
+		fire(ClientManagerListener::UserUpdated(), up);
+		return up;
+	}
+
+	// Create a new user
+	return adcUsers.insert(make_pair(cid, new User(cid)))->second;
+}
+
+void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) throw() {
 	Lock l(cs);
 
 	// Collect some garbage...
@@ -262,117 +301,32 @@ void ClientManager::onTimerMinute(u_int32_t /* aTick */) {
 			++i;
 		}
 	}
+	AdcIter k = adcUsers.begin();
+	while(k != adcUsers.end()) {
+		if(k->second->unique()) {
+			adcUsers.erase(k++);
+	} else {
+			++k;
+		}
+	}
 
 	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-		if((*j)->lastCounts != Client::counts) {
-			(*j)->myInfo();
-		}
+		(*j)->info();
 	}
 }
 
-void ClientManager::onClientLock(Client* client, const string& aLock) throw() {
-	if(CryptoManager::getInstance()->isExtended(aLock)) {
-		StringList feat = features;		
-		if(BOOLSETTING(COMPRESS_TRANSFERS))
-			feat.push_back("GetZBlock");
-		client->supports(feat);
-		client->key(CryptoManager::getInstance()->makeKey(aLock));
-	} else {
-		client->key(CryptoManager::getInstance()->makeKey(aLock));
-		client->validateNick(client->getNick());
-	}
-}
-
-// ClientListener
-void ClientManager::onAction(ClientListener::Types type, Client* client) throw() {
-	if(type == ClientListener::CONNECTED) {
-		fire(ClientManagerListener::CLIENT_CONNECTED, client);
-	}
-}
-
-void ClientManager::onAction(ClientListener::Types type, Client* client, const string& /*line*/) throw() {
-	if(type == ClientListener::FAILED) {
+void ClientManager::on(Failed, Client* client, const string&) throw() { 
 		HubManager::getInstance()->removeUserCommand(client->getAddressPort());
-		fire(ClientManagerListener::CLIENT_DISCONNECTED, client);
-	} else if(type == ClientListener::HUB_NAME) {
-		fire(ClientManagerListener::CLIENT_UPDATED, client);
-	}
+	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 
-void ClientManager::onAction(ClientListener::Types type, Client* client, int aType, int ctx, const string& name, const string& command) throw() {
-	if(type == ClientListener::USER_COMMAND) {
+void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
 		if(BOOLSETTING(HUB_USER_COMMANDS)) {		
-			HubManager::getInstance()->addUserCommand(aType, ctx, UserCommand::FLAG_NOSAVE, name, command, client->getAddressPort());
-		}
+ 		if(aType == ::UserCommand::TYPE_CLEAR) {
+ 			HubManager::getInstance()->removeHubUserCommands(ctx, client->getAddressPort());
+ 		} else {
+			HubManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getAddressPort());
 	}
-}
-
-void ClientManager::onAction(ClientListener::Types type, Client* client, const string& line1, const string& line2) throw() {
-	switch(type) {
-	case ClientListener::C_LOCK:
-		onClientLock(client, line1);
-		break;
-	case ClientListener::CONNECT_TO_ME:
-		ConnectionManager::getInstance()->connect(line1, (short)Util::toInt(line2), client->getNick()); break;
-	default:
-		break;
-	}
-}
-void ClientManager::onAction(ClientListener::Types type, Client* client, const User::Ptr& user) throw() {
-	switch(type) {
-	case ClientListener::HELLO:
-		onClientHello(client, user); break;
-	case ClientListener::REV_CONNECT_TO_ME:
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-			client->connectToMe(user);
-		}
-		break;
-	default:
-		break;		
-	}
-}
-void ClientManager::onAction(ClientListener::Types type, Client* client, const User::List& aList) throw() {
-	switch(type) {
-	case ClientListener::NICK_LIST:
-		if(!(client->getSupportFlags() & Client::SUPPORTS_NOGETINFO)) {
-			string tmp;
-			// Let's assume 10 characters per nick...
-			tmp.reserve(aList.size() * (11 + 10 + client->getNick().length())); 
-			for(User::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-				tmp += "$GetINFO ";
-				tmp += (*i)->getNick();
-				tmp += ' ';
-				tmp += client->getNick(); 
-				tmp += '|';
-			}
-			if(!tmp.empty()) {
-				client->send(tmp);
-			}
-		} break;
-	case ClientListener::OP_LIST:
-		fire(ClientManagerListener::CLIENT_UPDATED, client);
-		break;
-	default:
-		break;
-	}
-}
-
-void ClientManager::onAction(ClientListener::Types type, Client* aClient, const string& aSeeker, int aSearchType, const string& aSize, 
-					  int aFileType, const string& aString) throw() {
-	switch(type) {
-	case ClientListener::SEARCH:
-		fire(ClientManagerListener::INCOMING_SEARCH, aString);
-		onClientSearch(aClient, aSeeker, aSearchType, aSize, aFileType, aString);
-		break;
-	default:
-		break;
-	}
-}
-
-// TimerManagerListener
-void ClientManager::onAction(TimerManagerListener::Types type, u_int32_t aTick) throw() {
-	if(type == TimerManagerListener::MINUTE) {
-		onTimerMinute(aTick);
 	}
 }
 

@@ -210,6 +210,19 @@ void UserInfoBase::ungrantSlot() {
 	UploadManager::getInstance()->unreserveSlot(user);
 }
 
+bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
+		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 	if(code == HC_ACTION) {
 		if(wParam == VK_CONTROL && LOWORD(lParam) == 1) {

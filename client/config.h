@@ -100,7 +100,7 @@ typedef unsigned long u_int32_t;
 typedef unsigned __int64 u_int64_t;
 #endif
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define _LL(x) x##ll
 #define _ULL(x) x##ull
 #define I64_FMT "%I64d"

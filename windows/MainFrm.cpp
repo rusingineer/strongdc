@@ -623,7 +623,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::onHttpComplete(HttpConnection* /*aConn*/)  {
+void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, const string&) throw() {
 	try {
 		SimpleXML xml;
 		xml.fromXML(versionInfo);
@@ -664,7 +664,7 @@ void MainFrame::onHttpComplete(HttpConnection* /*aConn*/)  {
 				if(xml.findChild("BadVersions")) {
 					xml.stepIn();
 					while(xml.findChild("BadVersion")) {
-						float v = atof(xml.getChildAttrib("Version").c_str());
+						double v = atof(xml.getChildAttrib("Version").c_str());
 						if(v == VERSIONFLOAT) {
 							string msg = xml.getChildAttrib("Message", "Your version of DC++ contains a serious bug that affects all users of the DC network or the security of your computer.");
 							MessageBox((msg + "\r\nPlease get a new one at " + url).c_str());
@@ -722,7 +722,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 		FavoriteHubEntry* entry = *i;
 		if(entry->getConnect())
 			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
-				entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth()
+				entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
 			// CDM EXTENSION BEGINS FAVS
 			, entry->getRawOne()
 			, entry->getRawTwo()
@@ -1088,8 +1088,7 @@ LRESULT MainFrame::onCloseDisconnected(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
-void MainFrame::onAction(TimerManagerListener::Types type, u_int32_t aTick) throw() {
-	if(type == TimerManagerListener::SECOND) {
+void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		Util::increaseUptime();
 		int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 		int64_t updiff = Socket::getTotalUp() - lastUp;
@@ -1154,26 +1153,15 @@ void MainFrame::onAction(TimerManagerListener::Types type, u_int32_t aTick) thro
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
-	} else if(type == TimerManagerListener::MINUTE) {
-		if(BOOLSETTING(EMPTY_WORKING_SET))
-	    	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
-	}
+}
+void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
+	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
+}
+void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const BYTE* buf, int len) throw() {
+	versionInfo += string((const char*)buf, len);
 }
 
-// HttpConnectionListener
-void MainFrame::onAction(HttpConnectionListener::Types type, HttpConnection* conn, string const& /*aLine*/) throw() {
-	switch(type) {
-				case HttpConnectionListener::COMPLETE: onHttpComplete(conn); break;	
-	}
-}
-void MainFrame::onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const BYTE* buf, int len) throw() {
-	switch(type) {
-		case HttpConnectionListener::DATA: versionInfo += string((const char*)buf, len); break;
-	}
-}
-
-void MainFrame::onAction(QueueManagerListener::Types type, QueueItem* qi) throw() {
-	if(type == QueueManagerListener::FINISHED) {
+void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 			if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 				// This is a file listing, show it...
@@ -1196,8 +1184,7 @@ void MainFrame::onAction(QueueManagerListener::Types type, QueueItem* qi) throw(
 				i->start = qi->getSearchString();
 
 				PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
-		}
-	}		
+		}	
 }
 
 LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {

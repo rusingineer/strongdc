@@ -19,7 +19,9 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
+#include "SettingsManager.h"
 #include "ResourceManager.h"
+#include "TimerManager.h"
 
 #include "User.h"
 
@@ -36,11 +38,7 @@ User::~User() throw() {
 void User::connect() {
 	RLock l(cs);
 	if(client) {
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-			client->connectToMe(this);
-		} else {
-			client->revConnectToMe(this);
-		}
+		client->connect(this);
 	}
 }
 
@@ -105,14 +103,7 @@ void User::send(const string& aMsg) {
 void User::clientMessage(const string& aMsg) {
 	RLock l(cs);
 	if(client) {
-		client->sendMessage(aMsg);
-	}
-}
-
-void User::clientPM(const string& aTo, const string& aMsg) {
-	RLock l(cs);
-	if(client) {
-		client->privateMessage(aTo, aMsg);
+		client->hubMessage(aMsg);
 	}
 }
 
@@ -358,12 +349,12 @@ string User::splitVersion(const string& aExp, const string& aTag) {
 	reg.split(aTag);
 	return reg[0];
 }
-void User::update() {
+/*void User::update() {
 	RLock l(cs);
 	if(client) {
 		client->getInfo(this);
 	}
-}
+}*/
 
 StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 {

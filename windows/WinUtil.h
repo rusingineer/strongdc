@@ -294,6 +294,8 @@ public:
 
 	static void decodeFont(const string& setting, LOGFONT &dest);
 
+	static bool getVersionInfo(OSVERSIONINFOEX& ver);
+
 	/**
 	 * Check if this is a common /-command.
 	 * @param cmd The whole text string, will be updated to contain only the command.

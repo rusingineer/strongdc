@@ -124,7 +124,9 @@ public:
 
 private:
 	// SettingsManagerListener
-	virtual void onAction(SettingsManagerListener::Types type, SimpleXML* xml) throw();
+//	virtual void onAction(SettingsManagerListener::Types type, SimpleXML* xml) throw();
+	virtual void on(SettingsManagerListener::Load(), SimpleXML* xml) throw();
+	virtual void on(SettingsManagerListener::Save(), SimpleXML* xml) throw();
 	void load(SimpleXML* aXml);
 	void save(SimpleXML* aXml);
 
@@ -146,7 +148,7 @@ public:
 		return PluginManager::getInstance()->getMainWindow();
 	}
 
-	virtual void sendChat(string message){
+/*	virtual void sendChat(string message){
 		if(hub!=NULL)
 			hub->sendMessage(message);
 	}
@@ -155,11 +157,11 @@ public:
 		if(!ClientManager::getInstance()->getUser(user)->isOnline())return;
 		if(hub!=NULL)
 			hub->privateMessage(user,"<" + hub->getNick() + "> " + message);
-	}
+	}*/
 
 	virtual void addClientLine(string message){
 		if(hub!=NULL)
-			hub->fire(ClientListener::MESSAGE, hub, message);
+			hub->fire(ClientListener::Message(), hub, message);
 	}
 
 	virtual void addFavUser(string user, string comment){

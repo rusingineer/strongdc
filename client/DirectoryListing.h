@@ -26,7 +26,6 @@
 #include "User.h"
 #include "QueueItem.h"
 #include "FastAlloc.h"
-#include <limits>
 
 #include "MerkleTree.h"
 
@@ -49,17 +48,11 @@ public:
 		typedef List::iterator Iter;
 		
 		File(Directory* aDir, const string& aName, int64_t aSize, const string& aTTH) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH))
-			 {
-			 };
+			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH)) { };
 		File(Directory* aDir, const string& aName, int64_t aSize) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(NULL)
-			 {
-			 };
+			name(aName), size(aSize), parent(aDir), tthRoot(NULL) { };
 
-		File(const File& rhs) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)) 
-		{
-		}
+		File(const File& rhs) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)) { }
 			~File() {
 				delete tthRoot;
 			}

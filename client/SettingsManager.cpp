@@ -47,7 +47,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent11", "KickMsgRecent12", "KickMsgRecent13", "KickMsgRecent14", "KickMsgRecent15", 
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
-	"UploadQueueFrameOrder", "UploadQueueFrameWidths",
+	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "CID",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch", "FullRow", 
@@ -470,7 +470,7 @@ void SettingsManager::load(string const& aFileName)
 		xml.resetCurrentChild();
 //PDC }
 
-		fire(SettingsManagerListener::LOAD, &xml);
+		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
 
@@ -541,7 +541,7 @@ void SettingsManager::save(string const& aFileName) {
 	xml.stepOut();
 //PDC }
 
-	fire(SettingsManagerListener::SAVE, &xml);
+	fire(SettingsManagerListener::Save(), &xml);
 
 	try {
 		File ff(aFileName + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);

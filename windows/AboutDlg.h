@@ -85,19 +85,11 @@ private:
 
 	CAboutDlg(const CAboutDlg&) { dcassert(0); };
 	
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
-		switch(type) {
-		case HttpConnectionListener::DATA:
-			downBuf.append((char*)buf, len); break;
-		default:
-			dcassert(0);
-		}
+	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
+		downBuf.append((char*)buf, len);
 	}
 
-	virtual void onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const string& aLine) throw() {
-		switch(type) {
-		case HttpConnectionListener::COMPLETE:
-			c.removeListener(this);
+	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
 			if(!downBuf.empty()) {
 				SimpleXML xml;
 				xml.fromXML(downBuf);
@@ -109,15 +101,13 @@ private:
 					}
 				}
 			}
-			break;
-		case HttpConnectionListener::FAILED: 
-			c.removeListener(this);
-			{
+		conn->removeListener(this);
+	}
+
+	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
 				string* x = new string(aLine);
 				PostMessage(WM_VERSIONDATA, (WPARAM) x);
-			}
-			break;
-		}
+		conn->removeListener(this);
 	}
 
 	string downBuf;

@@ -20,8 +20,15 @@
 #include "DCPlusPlus.h"
 
 #include "SearchManager.h"
+#include "UploadManager.h"
 
 #include "ClientManager.h"
+#include "AdcCommand.h"
+
+SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, TTHValue* aTTH) :
+file(aFile), hubName(aClient->getName()), hubIpPort(aClient->getIpPort()), user(aClient->getMe()), 
+size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
+tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), ref(1) { }
 
 string SearchResult::toSR() const {
 	// File:		"$SR %s %s%c%s %d/%d%c%s (%s)|"
@@ -51,6 +58,31 @@ string SearchResult::toSR() const {
 	tmp.append(" (", 2);
 	tmp.append(hubIpPort);
 	tmp.append(")|", 2);
+	return tmp;
+}
+
+string SearchResult::toRES() const {
+	string tmp;
+	tmp.reserve(128);
+	tmp.append(user->getCID().toBase32());
+	tmp.append(" SI");
+	tmp.append(Util::toString(size));
+	tmp.append(" SL");
+	tmp.append(Util::toString(freeSlots));
+	tmp.append(" FN");
+	string fn = file;
+	string::size_type i = 0;
+	while( (i = fn.find('\\', i)) != string::npos ) {
+		fn[i] = '/';
+	}
+	fn.insert(0, "/");
+
+	if(getTTH() != NULL) {
+		tmp.append(" TR");
+		tmp.append(getTTH()->toBase32());
+	}
+
+	tmp.append(1, '\n');
 	return tmp;
 }
 
@@ -109,7 +141,7 @@ int SearchManager::run() {
 		string remoteAddr;
 		try {
 			while( (len = socket->read((u_int8_t*)buf, BUFSIZE, remoteAddr)) != 0) {
-				onData(buf, len, remoteAddr, true);
+				onData(buf, len, remoteAddr);
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());
@@ -132,13 +164,64 @@ int SearchManager::run() {
 	return 0;
 }
 
-void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address, bool withSR) {
+void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address) {
 	string x((char*)buf, aLen);
-//	if(x.find("$SR") != string::npos) {
+	if(x.compare(0, 4, "$SR ") == 0) {
+		onNMDCData(buf, aLen, address, true);
+	} else if(x.compare(1, 4, "RES ")) {
+		Command c(x);
+		if(c.getParameters().empty())
+			return;
+
+		User::Ptr p = ClientManager::getInstance()->getUser(CID(c.getParameters()[0]), false);
+		if(!p)
+			return;
+
+		int freeSlots = -1;
+		int64_t size = -1;
+		string name;
+
+		for(StringIter i = (c.getParameters().begin() + 1); i != c.getParameters().end(); ++i) {
+			string& str = *i;
+			if(str.compare(0, 2, "FN") == 0) {
+				name = str.substr(2);
+			} else if(str.compare(0, 2, "SL")) {
+				freeSlots = Util::toInt(str.substr(2));
+			} else if(str.compare(0, 2, "SI")) {
+				size = Util::toInt64(str.substr(2));
+			}
+		}
+	
+		if(!name.empty() && freeSlots != -1 && size != -1) {
+			SearchResult::Types type = (name[name.length() - 1] == '/' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
+			SearchResult* sr = new SearchResult(p, type, 0, freeSlots, size, name, p->getClientName(), "0.0.0.0", NULL);
+			fire(SearchManagerListener::SR(), sr);
+			sr->decRef();
+		}
+	}
+}
+
+string SearchManager::clean(const string& aSearchString) {
+	static const char* badChars = "$|.[]()-_+";
+	string::size_type i = aSearchString.find_first_of(badChars);
+	if(i == string::npos)
+		return aSearchString;
+
+	string tmp = aSearchString;
+	// Remove all strange characters from the search string
+	do {
+		tmp[i] = ' ';
+	} while ( (i = tmp.find_first_of(badChars, i)) != string::npos);
+
+	return tmp;
+}
+
+void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& address, bool withSR) {
+	string x((char*)buf, aLen);
 		string::size_type i, j;
 		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
 		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-	if(withSR) // simply recognize if is with $SR (active from UDP) or without (pasive from client)
+	if(withSR)
 		i = 4;
 	else
 		i = 0;
@@ -148,10 +231,6 @@ void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address,
 		}
 		string nick = x.substr(i, j-i);
 		i = j + 1;
-
-		if (!address.empty()) {
-			ClientManager::getInstance()->setIPNick(address, nick);
-		}
 
 		// A file has 2 0x05, a directory only one
 		size_t cnt = count(x.begin() + j, x.end(), 0x05);
@@ -210,30 +289,28 @@ void SearchManager::onData(const u_int8_t* buf, int aLen, const string& address,
 		string hubIpPort = x.substr(i, j-i);
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
-		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
+	isoponhub = false;
+	if(!address.empty()) {
+		if(user->isOnline()) {
+			if(user->getClient()->getOp()) {
+				user->setIp(address);
+				User::updated(user);
+				isoponhub = true;
+			}
+		}
+	}
+	SearchResult* sr;
+	if(isoponhub) {
+		sr = new SearchResult(user, type, slots, freeSlots, size,
 			file, hubName, hubIpPort, address);
-		fire(SearchManagerListener::SEARCH_RESULT, sr);
+	} else {
+		sr = new SearchResult(user, type, slots, freeSlots, size,
+			file, hubName, hubIpPort, Util::emptyString);
+	}
+	fire(SearchManagerListener::SR(), sr);
 		sr->decRef();
 }
-
-string SearchManager::clean(const string& aSearchString) {
-	static const char* badChars = "$|.[]()-_+";
-	string::size_type i = aSearchString.find_first_of(badChars);
-	if(i == string::npos)
-		return aSearchString;
-
-	string tmp = aSearchString;
-	// Remove all strange characters from the search string
-	do {
-		tmp[i] = ' ';
-	} while ( (i = tmp.find_first_of(badChars, i)) != string::npos);
-
-	return tmp;
-}
-
-
 /**
  * @file
  * $Id$
  */
-

@@ -66,7 +66,7 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 {
 public:
 	void connect(const string& aServer, short aPort, const string& aNick);
-	void getDownloadConnection(const User::Ptr& aUser/*, QueueItem* fronta*/);
+	void getDownloadConnection(const User::Ptr& aUser);
 	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool reconn = false);
 	void putUploadConnection(UserConnection* aSource);
 	
@@ -136,26 +136,21 @@ private:
 	void addSuspectIpPort(const string& aServer, short aPort) throw();
  
 	// ServerSocketListener
-	virtual void onAction(ServerSocketListener::Types type) throw();
-	void onIncomingConnection() throw();
+	virtual void on(ServerSocketListener::IncomingConnection) throw();
 
 	// UserConnectionListener
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn) throw() ;
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line1, const string& line2) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const StringList& feat) throw();	
-	void onMyNick(UserConnection* aSource, const string& aNick) throw();
-	void onLock(UserConnection* aSource, const string& aLock, const string& aPk) throw();
-	void onDirection(UserConnection* aSource, const string& dir, const string& num) throw();
-	void onConnected(UserConnection* aSource) throw();
-	void onKey(UserConnection* aSource, const string& aKey) throw();
-	void onFailed(UserConnection* aSource, const string& aError) throw();
-	void onUnknown(UserConnection* aSource, const string& aLine) throw();
+	virtual void on(Connected, UserConnection*) throw();
+	virtual void on(Failed, UserConnection*, const string&) throw();
+	virtual void on(CLock, UserConnection*, const string&, const string&) throw();
+	virtual void on(Key, UserConnection*, const string&) throw();
+	virtual void on(Direction, UserConnection*, const string&, const string&) throw();
+	virtual void on(MyNick, UserConnection*, const string&) throw();
+	virtual void on(Supports, UserConnection*, const StringList&) throw();
+	virtual void on(Unknown, UserConnection*, const string& aLine) throw();
     	 
 	// TimerManagerListener
-	virtual void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();	
-	void onTimerSecond(u_int32_t aTick);
-	void onTimerMinute(u_int32_t aTick);
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();	
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();	
 
 };
 

@@ -34,7 +34,7 @@
 int TransferView::columnIndexes[] = { COLUMN_USER, COLUMN_HUB, COLUMN_STATUS, COLUMN_TIMELEFT, COLUMN_SPEED, COLUMN_FILE, COLUMN_SIZE, COLUMN_PATH, COLUMN_IP, COLUMN_RATIO };
 int TransferView::columnSizes[] = { 150, 100, 250, 75, 75, 175, 100, 200, 50, 75 };
 
-static ResourceManager::Strings columnNames[] = { ResourceManager::USER, ResourceManager::HUB, ResourceManager::STATUS,
+static ResourceManager::Strings columnNames[] = { ResourceManager::USER, ResourceManager::HUB_SEGMENTS, ResourceManager::STATUS,
 ResourceManager::TIME_LEFT, ResourceManager::SPEED, ResourceManager::FILENAME, ResourceManager::SIZE, ResourceManager::PATH,
 ResourceManager::IP_BARE, ResourceManager::RATIO};
 
@@ -752,10 +752,10 @@ void TransferView::setMainItem(ItemInfo* i) {
 			}
 		}
 
-	//	if(h->Target != i->upper->Target) {
+//		if((*h) != (*i->upper)) {
 			h->pocetUseru -= 1;
 			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
-			ctrlTransfers.updateItem(h);
+			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 
 			dcdebug("3. cyklus\n");
 			ctrlTransfers.deleteItem(i, false);	
@@ -765,14 +765,14 @@ void TransferView::setMainItem(ItemInfo* i) {
 				int q = 0;
 				dcdebug("5. cyklus\n");
 				while(q<mainItems.size()) {
-					dcdebug(("MainItem : "+Util::toString(q)+"\n").c_str());
+//					dcdebug(("MainItem : "+Util::toString(q)+"\n").c_str());
 					ItemInfo* m = mainItems[q];
 					existuje = false;
 					for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 						ItemInfo* n = j->second;
 						if(m->Target == n->Target)
 						{
-							dcdebug("existuje\n");
+//							dcdebug("existuje\n");
 							existuje = true;
 							break;
 						}
@@ -780,9 +780,9 @@ void TransferView::setMainItem(ItemInfo* i) {
 				
 					if(!existuje)
 					{
-						dcdebug("neexistuje\n");
+	//					dcdebug("neexistuje\n");
 						if(IsBadReadPtr(m, 4) == 0) {
-							dcdebug("Delete it\n");
+	//						dcdebug("Delete it\n");
 							mainItems.erase(find(mainItems.begin(), mainItems.end(), m));				
 							PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)m);
 						}
@@ -791,8 +791,8 @@ void TransferView::setMainItem(ItemInfo* i) {
 				}
 	
 			}	
-		}
-//	}
+	//	}
+	}
 	dcdebug("6. setMainItem finished\n");
 }
 
@@ -877,7 +877,7 @@ void TransferView::ItemInfo::update() {
 		}
 		if(colMask & MASK_IP) {
 			if (country == "") columns[COLUMN_IP] = IP;
-			else columns[COLUMN_IP] = IP + " (" + country + ")";
+			else columns[COLUMN_IP] = country + " (" + IP + ")";
 		}
 		if(colMask & MASK_RATIO) {
 			columns[COLUMN_RATIO] = Util::toString(getRatio());
@@ -901,7 +901,7 @@ void TransferView::ItemInfo::update() {
 	}
 }
 
-void TransferView::onConnectionAdded(ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) {
 	ItemInfo::Types t = aCqi->getConnection() && aCqi->getConnection()->isSet(UserConnection::FLAG_UPLOAD) ? ItemInfo::TYPE_UPLOAD : ItemInfo::TYPE_DOWNLOAD;
 	ItemInfo* i = new ItemInfo(aCqi->getUser(), t, ItemInfo::STATUS_WAITING);
 
@@ -926,7 +926,7 @@ void TransferView::onConnectionAdded(ConnectionQueueItem* aCqi) {
 	PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)i);
 }
 
-void TransferView::onConnectionStatus(ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) {
 	ItemInfo* i;
 	{
 		Lock l(cs);
@@ -964,7 +964,7 @@ void TransferView::onConnectionStatus(ConnectionQueueItem* aCqi) {
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onConnectionRemoved(ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) {
 	ItemInfo* i;
 	ItemInfo* h; 
 	bool isDownload = true;
@@ -1012,7 +1012,7 @@ void TransferView::onConnectionRemoved(ConnectionQueueItem* aCqi) {
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onConnectionFailed(ConnectionQueueItem* aCqi, const string& aReason) {
+void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) {
 	ItemInfo* i;
 	{
 		Lock l(cs);
@@ -1032,7 +1032,7 @@ void TransferView::onConnectionFailed(ConnectionQueueItem* aCqi, const string& a
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onDownloadStarting(Download* aDownload) {
+void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 	ConnectionQueueItem* aCqi = aDownload->getUserConnection()->getCQI();
 	ItemInfo* i;
 	{
@@ -1084,7 +1084,7 @@ void TransferView::onDownloadStarting(Download* aDownload) {
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onDownloadTick(const Download::List& dl) {
+void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	vector<ItemInfo*>* v = new vector<ItemInfo*>();
 	v->reserve(dl.size());
 
@@ -1165,7 +1165,7 @@ void TransferView::onDownloadTick(const Download::List& dl) {
 	PostMessage(WM_SPEAKER, UPDATE_ITEMS, (LPARAM)v);
 }
 
-void TransferView::onDownloadFailed(Download* aDownload, const string& aReason) {
+void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
 	ConnectionQueueItem* aCqi = aDownload->getUserConnection()->getCQI();
 	ItemInfo* i;
 	{
@@ -1202,7 +1202,7 @@ void TransferView::onDownloadFailed(Download* aDownload, const string& aReason) 
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onUploadStarting(Upload* aUpload) {
+void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 	ConnectionQueueItem* aCqi = aUpload->getUserConnection()->getCQI();
 	ItemInfo* i;
 	{
@@ -1229,7 +1229,7 @@ void TransferView::onUploadStarting(Upload* aUpload) {
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
-void TransferView::onUploadTick(const Upload::List& ul) {
+void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 	vector<ItemInfo*>* v = new vector<ItemInfo*>();
 	v->reserve(ul.size());
 
@@ -1305,53 +1305,6 @@ void TransferView::ItemInfo::disconnect() {
 		ConnectionManager::getInstance()->removeConnection(user, (type == TYPE_DOWNLOAD));
 }
 
-void TransferView::onAction(ConnectionManagerListener::Types type, ConnectionQueueItem* aCqi) throw() { 
-	switch(type) {
-		case ConnectionManagerListener::ADDED: onConnectionAdded(aCqi); break;
-		case ConnectionManagerListener::CONNECTED: onConnectionConnected(aCqi); break;
-		case ConnectionManagerListener::REMOVED: onConnectionRemoved(aCqi); break;
-		case ConnectionManagerListener::STATUS_CHANGED: onConnectionStatus(aCqi); break;
-		default: dcassert(0); break;
-	}
-};
-void TransferView::onAction(ConnectionManagerListener::Types type, ConnectionQueueItem* aCqi, const string& aLine) throw() { 
-	switch(type) {
-		case ConnectionManagerListener::FAILED: onConnectionFailed(aCqi, aLine); break;
-		default: dcassert(0); break;
-	}
-}
-
-void TransferView::onAction(DownloadManagerListener::Types type, Download* aDownload) throw() {
-	switch(type) {
-	case DownloadManagerListener::COMPLETE: onTransferComplete(aDownload, false); break;
-	case DownloadManagerListener::STARTING: onDownloadStarting(aDownload); break;
-	default: dcassert(0); break;
-	}
-}
-void TransferView::onAction(DownloadManagerListener::Types type, const Download::List& dl) throw() {
-	switch(type) {	
-	case DownloadManagerListener::TICK: onDownloadTick(dl); break;
-	}
-}
-void TransferView::onAction(DownloadManagerListener::Types type, Download* aDownload, const string& aReason) throw() {
-	switch(type) {
-	case DownloadManagerListener::FAILED: onDownloadFailed(aDownload, aReason); break;
-	default: dcassert(0); break;
-	}
-}
-
-void TransferView::onAction(UploadManagerListener::Types type, Upload* aUpload) throw() {
-	switch(type) {
-		case UploadManagerListener::COMPLETE: onTransferComplete(aUpload, true); break;
-		case UploadManagerListener::STARTING: onUploadStarting(aUpload); break;
-		default: dcassert(0);
-	}
-}
-void TransferView::onAction(UploadManagerListener::Types type, const Upload::List& ul) throw() {
-	switch(type) {	
-		case UploadManagerListener::TICK: onUploadTick(ul); break;
-	}
-}
 
 LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	string target = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED))->downloadTarget;

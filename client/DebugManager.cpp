@@ -4,6 +4,6 @@
 
 DebugManager::DebugManager() {}
 void DebugManager::SendDebugMessage(const string &mess) {
-	fire(DebugManagerListener::DEBUG_MESSAGE, mess);
+	fire(DebugManagerListener::DebugMessage(), mess);
 }
 DebugManager::~DebugManager() {}

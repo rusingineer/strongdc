@@ -27,13 +27,10 @@ class SearchResult;
 
 class SearchManagerListener {
 public:
-	typedef SearchManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
-	enum Types {
-		SEARCH_RESULT
-	};
-	virtual void onAction(Types, SearchResult*) throw() = 0;
+	template<int I>	struct X { enum { TYPE = I };  };
+
+	typedef X<0> SR;
+	virtual void on(SR, SearchResult*) throw() = 0;
 };
 
 #endif

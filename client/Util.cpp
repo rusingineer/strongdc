@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
@@ -33,6 +34,8 @@
 #include <sys/utsname.h>
 #include <ctype.h>
 #endif
+
+#include "CID.h"
 
 #include "FastAlloc.h"
 
@@ -254,13 +257,18 @@ void Util::decodeUrl(const string& url, string& aServer, short& aPort, string& a
 
 	if( (k=safestring::SafeFind(url,':', i)) != string::npos) {
 		// Port
-		if(k < j)
+		if(j == string::npos) {
+			aPort = (short)Util::toInt(url.substr(k+1));
+		} else if(k < j) {
 			aPort = (short)Util::toInt(url.substr(k+1, j-k-1));
+		}
 	} else {
 		k = j;
 	}
 
-	// Only the server should be left now...
+	if(k == string::npos)
+		aServer = url;
+	else
 	aServer = url.substr(i, k-i);
 }
 
@@ -269,7 +277,7 @@ string Util::getAwayMessage() {
 }
 
 string Util::formatBytes(int64_t aBytes) {
-	char buf[64];
+	char buf[128];
 	if(aBytes < 1024) {
 		sprintf(buf, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
 	} else if(aBytes < 1024*1024) {
@@ -278,8 +286,12 @@ string Util::formatBytes(int64_t aBytes) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0), CSTRING(MB));
 	} else if(aBytes < (int64_t)1024*1024*1024*1024) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0), CSTRING(GB));
-	} else {
+	} else {//if(aBytes < (int64_t)1024*1024*1024*1024*1024) {
 		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0), CSTRING(TB));
+/*	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024*1024)  {
+		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(PB));
+	} else {
+		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));*/
 	}
 
 	return buf;
@@ -299,25 +311,34 @@ string Util::getLocalIp() {
 	// We take the first ip as default, but if we can find a better one, use it instead...
 	memcpy(&(dest.sin_addr), he->h_addr_list[i++], he->h_length);
 	tmp = inet_ntoa(dest.sin_addr);
-	if( strncmp(tmp.c_str(), "192", 3) == 0 || 
-		strncmp(tmp.c_str(), "169", 3) == 0 || 
-		strncmp(tmp.c_str(), "127", 3) == 0 || 
-		strncmp(tmp.c_str(), "10.", 3) == 0 ) {
-		
+	if(Util::isPrivateIp(tmp) || strncmp(tmp.c_str(), "169", 3) == 0) {
 		while(he->h_addr_list[i]) {
 			memcpy(&(dest.sin_addr), he->h_addr_list[i], he->h_length);
 			string tmp2 = inet_ntoa(dest.sin_addr);
-			if(	strncmp(tmp2.c_str(), "192", 3) != 0 &&
-				strncmp(tmp2.c_str(), "169", 3) != 0 &&
-				strncmp(tmp2.c_str(), "127", 3) != 0 &&
-				strncmp(tmp2.c_str(), "10.", 3) != 0) {
-				
+			if(!Util::isPrivateIp(tmp2) && strncmp(tmp2.c_str(), "169", 3) != 0) {
 				tmp = tmp2;
 			}
 			i++;
 		}
 	}
 	return tmp;
+}
+
+bool Util::isPrivateIp(string const& ip) {
+#ifdef _WIN32
+	unsigned long in = inet_addr(ip.c_str());
+	unsigned char* p = (unsigned char*)&in;
+	if( p[0] == 10 ||
+		p[0] == 127 ||
+		(p[0] == 172 && (p[1] >= 16 && p[1] < 32)) ||
+		(p[0] == 192 && p[1] == 168)
+	) {
+		return true;
+	}
+	return false;
+#else
+# error fixme
+#endif
 }
 
 static void cToUtf8(wchar_t c, string& str) {

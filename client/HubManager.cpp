@@ -34,6 +34,75 @@
 #define RECENTS_FILE "Recents.xml"
 // iDC++ //
 
+void HubManager::addFavoriteUser(User::Ptr& aUser) { 
+	if(find(users.begin(), users.end(), aUser) == users.end()) {
+		users.push_back(aUser);
+		aUser->setFavoriteUser(new FavoriteUser());
+		fire(HubManagerListener::UserAdded(), aUser);
+		save();
+	}
+}
+
+void HubManager::removeFavoriteUser(User::Ptr& aUser) {
+	User::Iter i = find(users.begin(), users.end(), aUser);
+	if(i != users.end()) {
+		aUser->setFavoriteUser(NULL);
+		fire(HubManagerListener::UserRemoved(), aUser);
+		users.erase(i);
+		save();
+	}
+}
+
+void HubManager::addFavorite(const FavoriteHubEntry& aEntry) {
+	FavoriteHubEntry* f;
+
+	FavoriteHubEntry::Iter i = getFavoriteHub(aEntry.getServer());
+	if(i != favoriteHubs.end()) {
+		return;
+	}
+	f = new FavoriteHubEntry(aEntry);
+	favoriteHubs.push_back(f);
+	fire(HubManagerListener::FavoriteAdded(), f);
+	save();
+}
+
+void HubManager::removeFavorite(FavoriteHubEntry* entry) {
+	FavoriteHubEntry::Iter i = find(favoriteHubs.begin(), favoriteHubs.end(), entry);
+	if(i == favoriteHubs.end()) {
+		return;
+	}
+
+	fire(HubManagerListener::FavoriteRemoved(), entry);
+	favoriteHubs.erase(i);
+	delete entry;
+	save();
+}
+
+void HubManager::addRecent(const RecentHubEntry& aEntry) {
+	RecentHubEntry* f;
+
+	RecentHubEntry::Iter i = getRecentHub(aEntry.getServer());
+	if(i != recentHubs.end()) {
+		return;
+	}
+	f = new RecentHubEntry(aEntry);
+	recentHubs.push_back(f);
+	fire(HubManagerListener::RecentAdded(), f);
+	recentsave();
+}
+
+void HubManager::removeRecent(RecentHubEntry* entry) {
+	RecentHubEntry::Iter i = find(recentHubs.begin(), recentHubs.end(), entry);
+	if(i == recentHubs.end()) {
+		return;
+	}
+		
+	fire(HubManagerListener::RecentRemoved(), entry);
+	recentHubs.erase(i);
+	delete entry;
+	recentsave();
+}
+
 void HubManager::onHttpFinished() throw() {
 	string::size_type i, j;
 	string* x;
@@ -146,43 +215,6 @@ void HubManager::onHttpFinished() throw() {
 	downloadBuf = Util::emptyString;
 }
 
-// iDC++ //
-void HubManager::recentsave() {
-	try {
-		SimpleXML xml;
-
-		xml.addTag("Recents");
-		xml.stepIn();
-
-		xml.addTag("Hubs");
-		xml.stepIn();
-
-		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
-			xml.addTag("Hub");
-			xml.addChildAttrib("Name", (*i)->getName());
-			xml.addChildAttrib("Description", (*i)->getDescription());
-			xml.addChildAttrib("Users", (*i)->getUsers());
-			xml.addChildAttrib("Server", (*i)->getServer());
-		}
-
-		xml.stepOut();
-
-		xml.stepOut();
-		
-		string fname = Util::getAppPath() + RECENTS_FILE;
-
-		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write("<?xml version=\"1.0\" encoding=\"windows-1252\"?>\r\n");
-		f.write(xml.toXML());
-		f.close();
-		File::deleteFile(fname);
-		File::renameFile(fname + ".tmp", fname);
-	} catch(const Exception& e) {
-		dcdebug("HubManager::recentsave: %s\n", e.getError().c_str());
-	}
-}
-// iDC++ //
-
 void HubManager::save() {
 	if(dontSave)
 		return;
@@ -213,6 +245,7 @@ void HubManager::save() {
 			xml.addChildAttrib("WindowType", (*i)->getWindowType());
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
+			xml.addChildAttrib("UserListState", (*i)->getUserListState());
 			// CDM EXTENSION BEGINS FAVS
 			xml.addChildAttrib("RawOne", (*i)->getRawOne());
 			xml.addChildAttrib("RawTwo", (*i)->getRawTwo());
@@ -302,41 +335,41 @@ void HubManager::save() {
 	}
 }
 
-// iDC++ //
-void HubManager::recentload() {
+void HubManager::recentsave() {
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + RECENTS_FILE, File::READ, File::OPEN).read());
+
+		xml.addTag("Recents");
+		xml.stepIn();
+
+		xml.addTag("Hubs");
+		xml.stepIn();
+
+		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
+			xml.addTag("Hub");
+			xml.addChildAttrib("Name", (*i)->getName());
+			xml.addChildAttrib("Description", (*i)->getDescription());
+			xml.addChildAttrib("Users", (*i)->getUsers());
+			xml.addChildAttrib("Shared", (*i)->getShared());
+			xml.addChildAttrib("Server", (*i)->getServer());
+		}
+
+		xml.stepOut();
+
+		xml.stepOut();
 		
-		if(xml.findChild("Recents")) {
-			xml.stepIn();
-			recentload(&xml);
-			xml.stepOut();
-		}
+		string fname = Util::getAppPath() + RECENTS_FILE;
+
+		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
+		f.write(SimpleXML::w1252Header);
+		f.write(xml.toXML());
+		f.close();
+		File::deleteFile(fname);
+		File::renameFile(fname + ".tmp", fname);
 	} catch(const Exception& e) {
-		dcdebug("HubManager::recentload: %s\n", e.getError().c_str());
+		dcdebug("HubManager::recentsave: %s\n", e.getError().c_str());
 	}
 }
-
-void HubManager::recentload(SimpleXML* aXml) {
-	dontSave = true;
-
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Hubs")) {
-		aXml->stepIn();
-		while(aXml->findChild("Hub")) {
-			RecentHubEntry* e = new RecentHubEntry();
-			e->setName(aXml->getChildAttrib("Name"));
-			e->setDescription(aXml->getChildAttrib("Description"));
-			e->setUsers(aXml->getChildAttrib("Users"));
-			e->setServer(aXml->getChildAttrib("Server"));
-			recentHubs.push_back(e);
-		}
-		aXml->stepOut();
-	}
-	dontSave = false;
-}
-// iDC++ //
 
 void HubManager::load() {
 	
@@ -398,6 +431,19 @@ void HubManager::load() {
 	} catch(const Exception& e) {
 		dcdebug("HubManager::load: %s\n", e.getError().c_str());
 	}
+
+	try {
+		SimpleXML xml;
+		xml.fromXML(File(Util::getAppPath() + RECENTS_FILE, File::READ, File::OPEN).read());
+		
+		if(xml.findChild("Recents")) {
+			xml.stepIn();
+			recentload(&xml);
+			xml.stepOut();
+		}
+	} catch(const Exception& e) {
+		dcdebug("HubManager::recentload: %s\n", e.getError().c_str());
+	}
 }
 
 void HubManager::load(SimpleXML* aXml) {
@@ -416,13 +462,6 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setPassword(aXml->getChildAttrib("Password"));
 			e->setServer(aXml->getChildAttrib("Server"));
 			e->setUserDescription(aXml->getChildAttrib("UserDescription"));
-			e->setWindowPosX(aXml->getIntChildAttrib("WindowPosX"));
-			e->setWindowPosY(aXml->getIntChildAttrib("WindowPosY"));
-			e->setWindowSizeX(aXml->getIntChildAttrib("WindowSizeX"));
-			e->setWindowSizeY(aXml->getIntChildAttrib("WindowSizeY"));
-			e->setWindowType(aXml->getIntChildAttrib("WindowType"));
-			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
-			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
 			// CDM EXTENSION BEGINS FAVS
 			e->setRawOne(aXml->getChildAttrib("RawOne"));
 			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
@@ -474,6 +513,7 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setWindowType(aXml->getIntChildAttrib("WindowType"));
 			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
+			e->setUserListState(aXml->getBoolChildAttrib("UserListState"));
 			favoriteHubs.push_back(e);
 		}
 		aXml->stepOut();
@@ -503,8 +543,24 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
-
 	dontSave = false;
+}
+
+void HubManager::recentload(SimpleXML* aXml) {
+	aXml->resetCurrentChild();
+	if(aXml->findChild("Hubs")) {
+		aXml->stepIn();
+		while(aXml->findChild("Hub")) {
+			RecentHubEntry* e = new RecentHubEntry();
+			e->setName(aXml->getChildAttrib("Name"));
+			e->setDescription(aXml->getChildAttrib("Description"));
+			e->setUsers(aXml->getChildAttrib("Users"));
+			e->setShared(aXml->getChildAttrib("Shared"));
+			e->setServer(aXml->getChildAttrib("Server"));
+			recentHubs.push_back(e);
+		}
+		aXml->stepOut();
+	}
 }
 
 void HubManager::refresh() {
@@ -515,7 +571,7 @@ void HubManager::refresh() {
 		return;
 	}
 
-	fire(HubManagerListener::DOWNLOAD_STARTING, server);
+	fire(HubManagerListener::DownloadStarting(), server);
 	if(!running) {
 		if(!c)
 			c = new HttpConnection();
@@ -547,62 +603,36 @@ UserCommand::List HubManager::getUserCommands(int ctx, const string& hub, bool o
 }
 
 // HttpConnectionListener
-void HubManager::onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
-	switch(type) {
-	case HttpConnectionListener::DATA:
-		downloadBuf.append((char*)buf, len); break;
-	default:
-		dcassert(0);
-	}
+void HubManager::on(Data, HttpConnection*, u_int8_t* buf, size_t len) throw() { 
+	downloadBuf.append((char*)buf, len);
 }
 
-void HubManager::onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/, const string& aLine) throw() {
-	switch(type) {
-	case HttpConnectionListener::COMPLETE:
-		dcassert(c);
+void HubManager::on(Failed, HttpConnection* c, const string& aLine) throw() { 
 		c->removeListener(this);
-		onHttpFinished();
+	lastServer++;
 		running = false;
-		fire(HubManagerListener::DOWNLOAD_FINISHED, aLine);
-		break;
-	case HttpConnectionListener::FAILED:
-		dcassert(c);
+	fire(HubManagerListener::DownloadFailed(), aLine);
+}
+void HubManager::on(Complete, HttpConnection* c, const string& aLine) throw() {
 		c->removeListener(this);
-		lastServer++; 
+	onHttpFinished();
 		running = false;
-		fire(HubManagerListener::DOWNLOAD_FAILED, aLine);
-		break;
-	case HttpConnectionListener::REDIRECTED:
-		fire(HubManagerListener::DOWNLOAD_STARTING, aLine);
-		break;
-	default:
-		break;
-	}
+	fire(HubManagerListener::DownloadFinished(), aLine);
 }
-void HubManager::onAction(HttpConnectionListener::Types type, HttpConnection* /*conn*/) throw() {
-	switch(type) {
-	case HttpConnectionListener::SET_DOWNLOAD_TYPE_BZIP2:
-		listType = TYPE_BZIP2; break;
-	case HttpConnectionListener::SET_DOWNLOAD_TYPE_NORMAL:
-		listType = TYPE_NORMAL; break;
-	// for XML
-	case HttpConnectionListener::SET_DOWNLOAD_TYPE_XMLBZIP2:
-		listType = TYPE_XMLBZIP2; break;
-	case HttpConnectionListener::SET_DOWNLOAD_TYPE_XML:
-		listType = TYPE_XML; break;
-	//
-	default:
-		break;
-	}
+void HubManager::on(Redirected, HttpConnection*, const string& aLine) throw() { 
+	fire(HubManagerListener::DownloadStarting(), aLine);
 }
-
-void HubManager::onAction(SettingsManagerListener::Types type, SimpleXML* xml) throw() {
-	if(type == SettingsManagerListener::LOAD) {
-		load(xml); 
-		// iDC++
-		recentload(xml);
-		recentload();
-	}
+void HubManager::on(TypeNormal, HttpConnection*) throw() { 
+	listType = TYPE_NORMAL; 
+}
+void HubManager::on(TypeBZ2, HttpConnection*) throw() { 
+	listType = TYPE_BZIP2; 
+}
+void HubManager::on(TypeXML, HttpConnection*) throw() { 
+	listType = TYPE_XML; 
+}
+void HubManager::on(TypeXMLBZ2, HttpConnection*) throw() { 
+	listType = TYPE_XMLBZIP2; 
 }
 
 /**

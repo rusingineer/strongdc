@@ -34,7 +34,7 @@ class Upload : public Transfer, public Flags {
 public:
 	enum Flags {
 		FLAG_USER_LIST = 0x01,
-		FLAG_SMALL_FILE = 0x02,
+		FLAG_TTH_LEAVES = 0x02,
 		FLAG_ZUPLOAD = 0x04
 	};
 
@@ -56,24 +56,21 @@ public:
 
 class UploadManagerListener {
 public:
-	typedef UploadManagerListener* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
-	
-	enum Types {
-		QUEUE_ADD_FILE,
-		QUEUE_REMOVE_USER,
-		COMPLETE,
-		FAILED,
-		STARTING,
-		TICK
-	};
+	template<int I>	struct X { enum { TYPE = I };  };
 
-	virtual void onAction(Types, Upload*) throw() { };
-	virtual void onAction(Types, const Upload::List&) throw() { };
-	virtual void onAction(Types, Upload*, const string&) throw() { };
-	virtual void onAction(Types, const string&) throw() { };
-	virtual void onAction(Types, const string&, const string &, const string &, const int64_t, const int64_t) throw() { };
+	typedef X<0> Complete;
+	typedef X<1> Failed;
+	typedef X<2> Starting;
+	typedef X<3> Tick;
+	typedef X<4> QueueAdd;
+	typedef X<5> QueueRemove;
+
+	virtual void on(Starting, Upload*) throw() { };
+	virtual void on(Tick, const Upload::List&) throw() { };
+	virtual void on(Complete, Upload*) throw() { };
+	virtual void on(Failed, Upload*, const string&) throw() { };
+	virtual void on(QueueAdd, const string&, const string &, const string &, const int64_t, const int64_t) throw() { };
+	virtual void on(QueueRemove, const string&) throw() { };
 
 };
 
@@ -105,6 +102,13 @@ public:
 	}
 	int getRunning() { return running; };
 	int getFreeSlots() {return max((getSlots() - running), 0); }
+	bool getAutoSlot() {
+		if(SETTING(MIN_UPLOAD_SPEED) == 0)
+			return false;
+		if(getLastGrant() + 30*1000 < GET_TICK())
+			return false;
+		return (SETTING(MIN_UPLOAD_SPEED)*1024) < UploadManager::getInstance()->getAverageSpeed();
+	}
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 		
 	void reserveSlot(const User::Ptr& aUser) {
@@ -148,7 +152,7 @@ public:
 	void clearQueue() { waitingUsers.clear(); waitingFiles.clear(); }
 	void setRunning(int _running) { running = _running; }
 	GETSET(int, extra, Extra);
-	GETSET(u_int32_t, lastAutoGrant, LastAutoGrant);
+	GETSET(u_int32_t, lastGrant, LastGrant);
 
 	// Upload throttling
 	size_t throttleGetSlice();
@@ -193,28 +197,27 @@ private:
 	}
 
 	// ClientManagerListener
-	virtual void onAction(ClientManagerListener::Types type, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void onAction(TimerManagerListener::Types type, u_int32_t aTick) throw();
-	void onTimerMinute(u_int32_t aTick);
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	// UserConnectionListener
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, u_int32_t bytes, u_int32_t actual) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line, int64_t resume) throw();
-	virtual void onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw();
-	
-	void onBytesSent(UserConnection* aSource, u_int32_t aBytes, u_int32_t aActual);
-	void onFailed(UserConnection* aSource, const string& aError);
-	void onTransmitDone(UserConnection* aSource);
-	void onGet(UserConnection* aSource, const string& aFile, int64_t aResume);
-	void onGetZBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes);
-	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
-	void onSend(UserConnection* aSource);
+	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();
+	virtual void on(Failed, UserConnection*, const string&) throw();
+	virtual void on(Get, UserConnection*, const string&, int64_t) throw();
+	virtual void on(GetBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, false); }
+	virtual void on(GetZBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, true); }
+	virtual void on(Send, UserConnection*) throw();
+	virtual void on(GetListLength, UserConnection* conn) throw();
+	virtual void on(TransmitDone, UserConnection*) throw();
 
-	bool prepareFile(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes);
+	virtual void on(Command::GET, UserConnection*, const Command&) throw();
+	//virtual void on(Command::STA, UserConnection*, const Command&) throw();
+
+	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
+	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes);
 };
 
 #endif // !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)

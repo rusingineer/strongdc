@@ -22,6 +22,15 @@
 #include "UserConnection.h"
 
 #include "StringTokenizer.h"
+#include "AdcCommand.h"
+
+const string UserConnection::FEATURE_BZLIST = "BZList";
+const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
+const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
+const string UserConnection::FEATURE_XML_BZLIST = "XmlBZList";
+const string UserConnection::FEATURE_ADCGET = "ADCGet";
+const string UserConnection::FEATURE_ZLIB_GET = "ZLIG";
+const string UserConnection::FEATURE_TTHL = "TTHL";
 
 const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
@@ -30,12 +39,13 @@ void Transfer::updateRunningAverage() {
 	u_int32_t tick = GET_TICK();
 	if(tick > lastTick) {
 		u_int32_t diff = tick - lastTick;
+		int64_t tot = getTotal();
 		if(diff == 0) {
 			// No time passed, don't update runningAverage;
 		} else if( ((tick - getStart()) < AVG_PERIOD) ) {
 			runningAverage = getAverageSpeed();
 		} else {
-			int64_t bdiff = total - last;
+			int64_t bdiff = tot - last;
 			int64_t avg = bdiff * (int64_t)1000 / diff;
 			if(diff > AVG_PERIOD) {
 				runningAverage = avg;
@@ -44,16 +54,12 @@ void Transfer::updateRunningAverage() {
 				runningAverage = ((avg * diff) + (runningAverage*(AVG_PERIOD-diff)))/AVG_PERIOD;
 				}		
 		}
-		last = total;
+		last = tot;
 	}
 	lastTick = tick;
 }
 
-void UserConnection::onLine(const string& aLine) throw () {
-
-	if(aLine.length() == 0)
-		return;
-
+void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 	string cmd;
 	string param;
 
@@ -68,29 +74,29 @@ void UserConnection::onLine(const string& aLine) throw () {
 	
 	if(cmd == "$MyNick") { 
 		if(!param.empty())
-			fire(UserConnectionListener::MY_NICK, this, param);
+			fire(UserConnectionListener::MyNick(), this, param);
 	} else if(cmd == "$Direction") {
 		x = param.find(" ");
 		if(x != string::npos) {
-			fire(UserConnectionListener::DIRECTION, this, param.substr(0, x), param.substr(x+1));
+			fire(UserConnectionListener::Direction(), this, param.substr(0, x), param.substr(x+1));
 		}
 	} else if(cmd == "$Error") {
 		if(Util::stricmp(param.c_str(), "File Not Available") == 0) {
-			fire(UserConnectionListener::FILE_NOT_AVAILABLE, this);
+			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
-			fire(UserConnectionListener::FAILED, this, param);
+			fire(UserConnectionListener::Failed(), this, param);
 		}
 	} else if(cmd == "$FileLength") {
 		if(!param.empty())
-		fire(UserConnectionListener::FILE_LENGTH, this, param);
+			fire(UserConnectionListener::FileLength(), this, Util::toInt64(param));
 	} else if(cmd == "$GetListLen") {
-		fire(UserConnectionListener::GET_LIST_LENGTH, this);
+		fire(UserConnectionListener::GetListLength(), this);
 	} else if(cmd == "$Get") {
 		x = param.find('$');
 		if(x != string::npos) {
-			fire(UserConnectionListener::GET, this, param.substr(0, x), Util::toInt64(param.substr(x+1)) - (int64_t)1);
+			fire(UserConnectionListener::Get(), this, param.substr(0, x), Util::toInt64(param.substr(x+1)) - (int64_t)1);
 		}
-	} else if(cmd == "$GetTestZBlock" || cmd == "$GetZBlock" || cmd == "$UGetZBlock" || cmd == "$UGetBlock") {
+	} else if(cmd == "$GetZBlock" || cmd == "$UGetZBlock" || cmd == "$UGetBlock") {
 		string::size_type i = param.find(' ');
 		if(i == string::npos)
 			return;
@@ -107,96 +113,54 @@ void UserConnection::onLine(const string& aLine) throw () {
 		string name = param.substr(j+1);
 		if(cmd == "$UGetZBlock" || cmd == "$UGetBlock")
 			Util::toAcp(name);
-		fire(cmd == "$UGetBlock" ? UserConnectionListener::GET_BLOCK : UserConnectionListener::GET_ZBLOCK, this, name, start, bytes);
+		if(cmd == "$UGetBlock") {
+			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
+		} else {
+			fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
+		}
 	} else if(cmd == "$Key") {
 		if(!param.empty())
-			fire(UserConnectionListener::KEY, this, param);
+			fire(UserConnectionListener::Key(), this, param);
 	} else if(cmd == "$Lock") {
 		if(!param.empty()) {
 			x = param.find(" Pk=");
 			if(x != string::npos) {
-				fire(UserConnectionListener::C_LOCK, this, param.substr(0, x), param.substr(x + 4));
+				fire(UserConnectionListener::CLock(), this, param.substr(0, x), param.substr(x + 4));
 			} else {
 				// Workaround for faulty linux clients...
 				x = param.find(' ');
 				if(x != string::npos) {
 					setFlag(FLAG_INVALIDKEY);
-					fire(UserConnectionListener::C_LOCK, this, param.substr(0, x), Util::emptyString);
+					fire(UserConnectionListener::CLock(), this, param.substr(0, x), Util::emptyString);
 				} else {
-					fire(UserConnectionListener::C_LOCK, this, param, Util::emptyString);
+					fire(UserConnectionListener::CLock(), this, param, Util::emptyString);
 				}
 			}
 		}
 	} else if(cmd == "$Send") {
-		fire(UserConnectionListener::SEND, this);
+		fire(UserConnectionListener::Send(), this);
 	} else if(cmd == "$Sending") {
 		int64_t bytes = -1;
 		if(!param.empty())
 			bytes = Util::toInt64(param);
-		fire(UserConnectionListener::SENDING, this, bytes);
+		fire(UserConnectionListener::Sending(), this, bytes);
 	} else if(cmd == "$MaxedOut") {
-		fire(UserConnectionListener::MAXED_OUT, this);
+		fire(UserConnectionListener::MaxedOut(), this);
 	} else if(cmd == "$Supports") {
 		if(!param.empty()) {
-			fire(UserConnectionListener::SUPPORTS, this, StringTokenizer(param, ' ').getTokens());
+			fire(UserConnectionListener::Supports(), this, StringTokenizer(param, ' ').getTokens());
 		}
+	} else if(cmd.compare(0, 4, "$ADC") == 0) {
+		dispatch(aLine, true);
 	} else {
-		fire(UserConnectionListener::UNKNOWN, this, aLine);
+		fire(UserConnectionListener::Unknown(), this, aLine);
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
 	}
 }
 
-// BufferedSocketListener
-void UserConnection::onAction(BufferedSocketListener::Types type) throw() {
-	lastActivity = GET_TICK();
-	switch(type) {
-	case BufferedSocketListener::CONNECTED:
-		fire(UserConnectionListener::CONNECTED, this);
-		break;
-	case BufferedSocketListener::TRANSMIT_DONE:
-		fire(UserConnectionListener::TRANSMIT_DONE, this); break;
-	default:
-		break;
-	}
-}
-void UserConnection::onAction(BufferedSocketListener::Types type, u_int32_t bytes, u_int32_t actual) throw() {
-	lastActivity = GET_TICK();
-	switch(type) {
-	case BufferedSocketListener::BYTES_SENT:
-		fire(UserConnectionListener::BYTES_SENT, this, bytes, actual); break;
-	default:
-		dcassert(0);
-	}
-}
-void UserConnection::onAction(BufferedSocketListener::Types type, const string& aLine) throw() {
-	lastActivity = GET_TICK();
-	switch(type) {
-	case BufferedSocketListener::LINE:
-		onLine(aLine); break;
-	case BufferedSocketListener::FAILED:
+void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 		setState(STATE_UNCONNECTED);
-		fire(UserConnectionListener::FAILED, this, aLine); break;
-	default:
-		dcassert(0);
-	}
-}
-void UserConnection::onAction(BufferedSocketListener::Types type, int mode) throw() {
-	lastActivity = GET_TICK();
-	switch(type) {
-	case BufferedSocketListener::MODE_CHANGE:
-		fire(UserConnectionListener::MODE_CHANGE, this, mode); break;
-	default:
-		dcassert(0);
-	}
-}
-void UserConnection::onAction(BufferedSocketListener::Types type, const u_int8_t* buf, int len) throw() {
-	lastActivity = GET_TICK();
-	switch(type) {
-	case BufferedSocketListener::DATA:
-		fire(UserConnectionListener::DATA, this, buf, len); break;
-	default:
-		dcassert(0);
-	}
+	fire(UserConnectionListener::Failed(), this, aLine);
 }
 
 /**
