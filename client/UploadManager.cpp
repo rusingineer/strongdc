@@ -323,7 +323,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 			} catch(const HashException&) {
 			}
 		}
-		LOG(UPLOAD_AREA, Util::formatParams(SETTING(LOG_FORMAT_POST_UPLOAD), params));
+		LOG(Util::formatTime(SETTING(LOG_FILE_UPLOAD), time(NULL)), Util::formatParams(SETTING(LOG_FORMAT_POST_UPLOAD), params));
 	}
 
 	fire(UploadManagerListener::Complete(), u);

@@ -94,7 +94,17 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		} else {
 			sMyNick = SETTING(NICK).c_str();
 		}
-		string lastsession = LOGTAIL("PM\\" + user->getNick(), SETTING(PM_LOG_LINES));
+		
+		StringMap params;
+		params["user"] = user->getNick();
+		params["hub"] = user->getClientName();
+		params["mynick"] = user->getClientNick(); 
+		params["mycid"] = user->getClientCID().toBase32(); 
+		params["cid"] = user->getCID().toBase32(); 
+		params["hubaddr"] = user->getClientAddressPort();
+		
+//		string lastsession = LOGTAIL("PM\\" + user->getNick(), SETTING(PM_LOG_LINES));
+		string lastsession = LOGTAIL(Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params), SETTING(PM_LOG_LINES));
 		lastsession = lastsession.substr(0,lastsession.size()-2);
 		if(lastsession.length() > 0)
 			ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), Text::toT(lastsession).c_str(), WinUtil::m_ChatTextLog, _T(""));
@@ -323,6 +333,15 @@ void PrivateFrame::onEnter()
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0) {
 				BOOL bTmp;
 				onGetList(0,0,0,bTmp);
+			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
+				StringMap params;
+				params["user"] = user->getNick();
+				params["hub"] = user->getClientName();
+				params["mynick"] = user->getClientNick(); 
+				params["mycid"] = user->getClientCID().toBase32(); 
+				params["cid"] = user->getCID().toBase32(); 
+				params["hubaddr"] = user->getClientAddressPort();
+				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
 				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
@@ -392,8 +411,14 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
-		params["message"] = Text::fromT(sTmp);
-		LOG("PM\\" + user->getNick(), Util::formatParams(SETTING(LOG_FORMAT_PRIVATE_CHAT), params));
+		params["message"] = Text::fromT(aLine);
+		params["user"] = user->getNick();
+		params["hub"] = user->getClientName();
+		params["hubaddr"] = user->getClientAddressPort();
+		params["mynick"] = user->getClientNick(); 
+		params["mycid"] = user->getClientCID().toBase32(); 
+		params["cid"] = user->getCID().toBase32(); 
+		LOG(Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params), Util::formatParams(SETTING(LOG_FORMAT_PRIVATE_CHAT), params));
 	}
 
 	if(user->isOnline()) {
@@ -463,6 +488,7 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	if(user->isOnline()) {
 		user->getParams(ucParams);
 		user->clientEscapeParams(ucParams);
+
 		user->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams));
 	}
 	return;
@@ -674,13 +700,14 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 }
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
-	string file = Util::emptyString;
-	file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + user->getNick() + ".log");
-	if(Util::fileExists(file)) {
-		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);
-	} else {
-		MessageBox(CTSTRING(NO_LOG_FOR_USER), CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
-	}	
+	StringMap params;
+	params["user"] = user->getNick();
+	params["hub"] = user->getClientName();
+	params["mynick"] = user->getClientNick(); 
+	params["mycid"] = user->getClientCID().toBase32(); 
+	params["cid"] = user->getCID().toBase32(); 
+	params["hubaddr"] = user->getClientAddressPort();
+	WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 
 	return 0;
 }

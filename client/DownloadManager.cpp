@@ -360,7 +360,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 						user->setCheat("Fake file list - ListLen = " + Util::toString(user->getListLength()) + " FileLength = " + Util::toString(aFileLength), false);
 						user->sendRawCommand(SETTING(LISTLEN_MISMATCH));
 					}
-				client->updated(user);
+					client->updated(user);
 				}
 			}
 		}
@@ -544,18 +544,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 
 	SharedFileStream* file = NULL;
 	try {
-		// Let's check if we can find this file in a any .SFV...
-		//int trunc = d->isSet(Download::FLAG_RESUME) ? 0 : File::TRUNCATE;		
-		//if(!d->isSet(Download::FLAG_USER_LIST) && BOOLSETTING(MEMORY_MAPPED_FILE)){
-		//	file = new MappedFile(target, d->getSize(), File::RW, File::OPEN | File::CREATE | trunc);			
-		//} else {
-			//file = new File(target, File::RW, File::OPEN | File::CREATE | trunc);
-			file = new SharedFileStream(target, d->getStartPos(),d->getSize());
-		//}
-		//if(d->isSet(Download::FLAG_ANTI_FRAG)) {
-		//	file->setSize(d->getSize());
-		//}
-		//file->setPos(d->getPos());
+		file = new SharedFileStream(target, d->getStartPos(),d->getSize());
 	} catch(const FileException& e) {
 		delete file;
 		fire(DownloadManagerListener::Failed(), d, STRING(COULD_NOT_OPEN_TARGET_FILE) + e.getError());
@@ -964,7 +953,7 @@ noCRC:
 		if(hash != NULL) {
 			params["tth"] = d->getTTH()->toBase32();
 		}
-		LOG(DOWNLOAD_AREA, Util::formatParams(SETTING(LOG_FORMAT_POST_DOWNLOAD), params));
+		LOG(Util::formatTime(SETTING(LOG_FILE_DOWNLOAD), time(NULL)), Util::formatParams(SETTING(LOG_FORMAT_POST_DOWNLOAD), params));
 	}
 	
 	// Check if we need to move the file
@@ -1022,10 +1011,9 @@ void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSour
 		aSource->setDownload(NULL);
 		removeDownload(d, true, true);
 		removeConnection(aSource);
-		user->setCheatingString(Util::validateMessage("No slots for TestSUR. User is using slotlocker.", false));
-		user->setBadClient(true);
+		user->setCheat(Util::validateMessage("No slots for TestSUR. User is using slotlocker.", false), true);
 		User::updated(user);
-		user->getClient()->fire(ClientListener::CheatMessage(), user->getClient(), user->getNick()+": "+user->getCheatingString());
+		//user->getClient()->fire(ClientListener::CheatMessage(), user->getClient(), user->getNick()+": "+user->getCheatingString());
 		return;
 	}
 

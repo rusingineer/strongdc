@@ -348,6 +348,7 @@ enum Strings { // @DontAdd
 	SETTINGS_FAV_SHOW_JOINS, // "Only show joins / parts for favorite users"
 	SETTINGS_FAVORITE_DIRS_PAGE, // "Download to"
 	SETTINGS_FAVORITE_DIRS, // "Favorite download to directories"
+	SETTINGS_FILE_NAME, // "Filename"
 	SETTINGS_FILES_MAX, // "Maximum simultaneous files (0 = infinite)"
 	SETTINGS_FILTER_MESSAGES, // "Filter kick and NMDC debug messages"
 	SETTINGS_FINISHED_DIRTY, // "Set Finished Manager(s) tab bold when an entry is added"

@@ -209,18 +209,24 @@ private:
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
 
+	CriticalSection cs;
+
 	// UploadManagerListener
 	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() {
+		//Lock l(cs);
 		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
+		//Lock l(cs);
 		PostMessage(WM_SPEAKER, REMOVE, (LPARAM) new UserInfoBase(aUser));
 	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
+		//Lock l(cs);
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw() {
+		Lock l(UploadManager::getInstance()->cs);
 		PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL);
 	}
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
