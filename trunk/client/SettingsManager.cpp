@@ -92,7 +92,7 @@ const string SettingsManager::settingTags[] =
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
 	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
-	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
+	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
@@ -408,7 +408,6 @@ SettingsManager::SettingsManager()
 	setDefault(CLIENT_EMULATION, CLIENT_STRONGDC);
 	setDefault(USE_EMOTICONS, true);
 	setDefault(MAX_EMOTICONS, 256);
-	setDefault(CZCHARS_DISABLE, true);
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(AUTOSAVE_QUEUE, 30);

@@ -244,7 +244,7 @@ public:
 	}
 
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
+		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + Util::validateChatMessage(aMessage));
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
