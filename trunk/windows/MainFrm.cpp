@@ -41,6 +41,8 @@
 #include "UpdateDlg.h"
 #include "StatsFrame.h"
 #include "LineDlg.h"
+#include "HashProgressDlg.h"
+#include "UPnP.h"
 #include "UploadQueueFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
@@ -277,6 +279,51 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 	updateTray( BOOLSETTING( MINIMIZE_TRAY ) );
 	startSocket();
+	// we should have decided what ports we are using by now
+	// so if we are using UPnP lets open the ports.
+	if( BOOLSETTING( SETTINGS_USE_UPNP ) )
+	{
+		 if ( ( Util::getOsMajor() >= 5 && Util::getOsMinor() >= 1 )//WinXP & WinSvr2003
+			  || Util::getOsMajor() >= 6 )  //Longhorn
+		 {
+			UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", "DC++ TCP Port Mapping", SearchManager::getInstance()->getPort() );
+			UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", "DC++ UDP Port Mapping", SearchManager::getInstance()->getPort() );
+		
+			if ( UPnP_UDPConnection->OpenPorts() || UPnP_TCPConnection->OpenPorts() )
+			{
+				LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS), true);
+				UPnP_TCPConnection = NULL;
+				UPnP_UDPConnection = NULL;
+			}
+
+			// now lets configure the external IP (connect to me) address
+			string ExternalIP = UPnP_TCPConnection->GetExternalIP();
+			if ( ExternalIP.size() > 0 )
+			{
+				// woohoo, we got the external IP from the UPnP framework
+				// lets populate the  Active IP dialog textbox with the discovered IP and disable it
+				SettingsManager::getInstance()->set(SettingsManager::SERVER, ExternalIP );
+				SettingsManager::getInstance()->set(SettingsManager::CONNECTION_TYPE, SettingsManager::CONNECTION_ACTIVE );
+				::EnableWindow(GetDlgItem(IDC_SERVER), FALSE);
+			}
+			else
+			{
+				//:-(  Looks like we have to rely on the user setting the external IP manually
+				// so lets log something to the log, and ungrey the Active IP dialog textbox
+			}
+		}
+		 else
+		 {
+			LogManager::getInstance()->message(STRING(OPERATING_SYSTEM_NOT_COMPATIBLE), true);
+			UPnP_TCPConnection = NULL;
+			UPnP_UDPConnection = NULL;
+		 }
+	}
+	else
+	{
+		UPnP_TCPConnection = NULL;
+		UPnP_UDPConnection = NULL;
+	}
 
 	if(BOOLSETTING(IPUPDATE)) SettingsManager::getInstance()->set(SettingsManager::SERVER, Util::getLocalIp());
 
@@ -503,6 +550,11 @@ LRESULT MainFrame::onRecents(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 
 LRESULT MainFrame::onFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	FavoriteHubsFrame::openWindow();
+	return 0;
+}
+
+LRESULT MainFrame::onHashProgress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	HashProgressDlg(false).DoModal(m_hWnd);
 	return 0;
 }
 
@@ -847,6 +899,27 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
+
+			if( BOOLSETTING( SETTINGS_USE_UPNP ) )
+			{
+			 if ( ( Util::getOsMajor() >= 5 && Util::getOsMinor() >= 1 )//WinXP & WinSvr2003
+				  || Util::getOsMajor() >= 6 )  //Longhorn
+				{
+					if (UPnP_UDPConnection && UPnP_TCPConnection )
+					{
+						if ( UPnP_UDPConnection->ClosePorts() || UPnP_TCPConnection->ClosePorts() )
+						{
+							LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS), true);
+						}
+						delete UPnP_UDPConnection;
+						delete UPnP_TCPConnection;
+					}
+				}
+				else
+				{
+					LogManager::getInstance()->message(STRING(OPERATING_SYSTEM_NOT_COMPATIBLE), true);
+				}
+			}
 
 			DWORD id;
 			stopperThread = CreateThread(NULL, 0, stopper, this, 0, &id);

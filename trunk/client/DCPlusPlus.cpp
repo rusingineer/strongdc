@@ -118,7 +118,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	HashManager::getInstance()->startup();
 	if(f != NULL)
 		(*f)(p, STRING(SHARED_FILES));
-	ShareManager::getInstance()->refresh(false, false, true);
+	ShareManager::getInstance()->refresh(true, false, true);
 	if(f != NULL)
 		(*f)(p, STRING(DOWNLOAD_QUEUE));
 	QueueManager::getInstance()->loadQueue();

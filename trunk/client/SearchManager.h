@@ -147,6 +147,11 @@ public:
 	}
 	static string clean(const string& aSearchString);
 
+	short getPort()
+	{
+		return port;
+	}
+
 	void setPort(short aPort) throw(SocketException);
 	void disconnect() throw();
 	void onSearchResult(const string& aLine) {

@@ -22,6 +22,7 @@
 
 #include "UploadPage.h"
 #include "WinUtil.h"
+#include "HashProgressDlg.h"
 
 #include "../client/Util.h"
 #include "../client/ShareManager.h"
@@ -80,11 +81,11 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		// Prepare shared dir list
 		ctrlDirectories.InsertColumn(0, CSTRING(DIRECTORY), LVCFMT_LEFT, 200, 0);
 		ctrlDirectories.InsertColumn(1, CSTRING(SIZE), LVCFMT_RIGHT, 85, 1);
-		StringList directories = ShareManager::getInstance()->getDirectories();
-		for(StringIter j = directories.begin(); j != directories.end(); j++)
+		StringPairList directories = ShareManager::getInstance()->getDirectories();
+	for(StringPairIter j = directories.begin(); j != directories.end(); j++)
 		{
-			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), *j);
-			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(*j)).c_str());
+			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), j->second);
+			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(j->second)).c_str());
 		}
 	}
 
@@ -189,6 +190,7 @@ LRESULT UploadPage::onClickedAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	string target;
 	if(WinUtil::browseDirectory(target, m_hWnd)) {
 		addDirectory(target);
+		HashProgressDlg(true).DoModal();
 	}
 	
 	return 0;
@@ -233,11 +235,11 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	if(BOOLSETTING(USE_OLD_SHARING_UI))	{
 		// Clear the GUI list, for insertion of updated shares
 		ctrlDirectories.DeleteAllItems();
-		StringList directories = ShareManager::getInstance()->getDirectories();
-		for(StringIter j = directories.begin(); j != directories.end(); j++)
+		StringPairList directories = ShareManager::getInstance()->getDirectories();
+		for(StringPairIter j = directories.begin(); j != directories.end(); j++)
 		{
-			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), *j);
-			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(*j)).c_str());
+			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), j->second);
+			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(j->second)).c_str());
 		}
 	}
 
@@ -248,7 +250,7 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 void UploadPage::addDirectory(string path){
 	try {
-		ShareManager::getInstance()->addDirectory(path);
+		ShareManager::getInstance()->addDirectory(path, Util::getLastDir(path));
 		int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), path);
 		ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(path)).c_str());
 		ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());

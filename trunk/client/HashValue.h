@@ -29,6 +29,15 @@ template<class Hasher>
 struct HashValue : FastAlloc<HashValue<Hasher> >{
 	static const size_t SIZE = Hasher::HASH_SIZE;
 
+	typedef HashValue* Ptr;
+	struct PtrHash {
+		size_t operator()(const Ptr rhs) const { return *(size_t*)rhs; };
+		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); };
+	};
+	struct PtrLess {
+		int operator()(const Ptr lhs, const Ptr rhs) { return (*lhs) < (*rhs); };
+	};
+
 	HashValue() { };
 	HashValue(u_int8_t* aData) { memcpy(data, aData, SIZE); }
 	HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); };

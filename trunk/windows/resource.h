@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\StrongDC.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\strongdc.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -105,6 +105,8 @@
 #define IDB_SHUTDOWN                    278
 #define IDD_MAGNET                      281
 #define IDI_MAGNET                      283
+#define IDD_DIALOG1                     284
+#define IDD_HASH_PROGRESS               284
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -435,23 +437,30 @@
 #define IDC_COMMENT                     1244
 #define IDC_STATIC8                     1245
 #define IDC_MAXCOMPRESS                 1246
+#define IDC_HASH_PROGRESS               1246
 #define IDC_MAX_COMPRESSION             1247
+#define IDC_HASH_INDEXING               1247
 #define IDC_MAX_COMP_SPIN               1248
+#define IDC_FILES_PER_HOUR              1248
 #define IDC_RADIO1                      1249
 #define IDC_MAX_SOURCES                 1249
 #define IDC_RELOAD_CLIENTS              1249
+#define IDC_HASH_SPEED                  1249
 #define IDC_MAX_COMP_SPIN2              1250
 #define IDC_RADIO2                      1250
 #define IDC_MAX_SOURCES_SPIN            1250
 #define IDC_RADIO3                      1251
 #define IDC_MAXSOURCES                  1251
+#define IDC_TIME_LEFT                   1251
 #define IDC_MINIMUM                     1252
 #define IDC_EXTENSION                   1253
 #define IDC_SHUTDOWN_SPIN               1253
+#define IDC_STATISTICS                  1253
 #define IDC_KB                          1254
 #define IDC_MAX_EMOTICONSSPIN           1254
 #define IDC_SEG_NUMBER                  1255
 #define IDC_SAVEQUEUE_SPIN              1255
+#define IDC_CURRENT_FILE                1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define BAA                             1257
 #define IDC_SEARCH_EDIT                 1257
@@ -734,7 +743,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        284
+#define _APS_NEXT_RESOURCE_VALUE        285
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1283
 #define _APS_NEXT_SYMED_VALUE           123

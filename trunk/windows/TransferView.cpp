@@ -221,11 +221,13 @@ void TransferView::runUserCommand(UserCommand& uc) {
 		ItemInfo* itemI = ctrlTransfers.getItemData(i);
 
 		ucParams["mynick"] = itemI->user->getClientNick();
+		ucParams["mycid"] = itemI->user->getClientCID().toBase32();
 
-		itemI->user->getParams(ucParams);
-
-		itemI->user->send(Util::formatParams(uc.getCommand(), ucParams));
-		}
+		StringMap tmp = ucParams;
+		itemI->user->getParams(tmp);
+		itemI->user->clientEscapeParams(tmp);
+		itemI->user->send(Util::formatParams(uc.getCommand(), tmp));
+	}
 	return;
 };
 

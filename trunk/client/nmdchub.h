@@ -177,10 +177,10 @@ public:
 		send(buf);
 	}
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), aMessage);
+		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
 	}
 	void privateMessage(const User* aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), aMessage);
+		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
@@ -250,6 +250,8 @@ public:
 
 	const string& getName() const { return name; };
 	bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
+
+	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	GETSET(int, supportFlags, SupportFlags);
 private:
