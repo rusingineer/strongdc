@@ -179,8 +179,8 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	fileMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
 	
 	directoryMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CSTRING(DOWNLOAD));
-	directoryMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)targetDirMenu, CSTRING(DOWNLOAD_TO));
-	directoryMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityDirMenu, CSTRING(DOWNLOAD_WITH_PRIORITY));
+	directoryMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CSTRING(DOWNLOAD_TO));
+	directoryMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityDirMenu, CSTRING(DOWNLOAD_WITH_PRIORITY));
 	directoryMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	directoryMenu.AppendMenu(MF_STRING,IDC_ADD_TO_FAVORITES, CSTRING(ADD_TO_FAVORITES));
 	

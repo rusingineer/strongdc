@@ -53,6 +53,7 @@ char Util::lower[256];
 int8_t Util::cmp[256][256];
 int8_t Util::cmpi[256][256];
 Util::CountryList Util::countries;
+string Util::appPath;
 
 static void sgenrand(unsigned long seed);
 
@@ -80,7 +81,9 @@ void ConvertStringToAscii(string *s) {
 }
 
 void Util::initialize() {
-	int i;
+	setlocale(LC_ALL, "");
+
+	size_t i;
 	for(i = 0; i < 256; ++i) {
 #ifdef _WIN32
 		upper[i] = (char)CharUpper((LPSTR)i);
@@ -91,7 +94,6 @@ void Util::initialize() {
 #endif
 	}
 
-	setlocale(LC_ALL, "");
 
 	// Now initialize the compare table to the current locale (hm...hopefully we
 	// won't have strange problems because of this (users from different locales for instance)
@@ -102,7 +104,7 @@ void Util::initialize() {
 		}
 	}
 
-	sgenrand(time(NULL));
+	sgenrand((unsigned long)time(NULL));
 
 	try {
 		string file = Util::getAppPath() + "GeoIpCountryWhois.csv";
@@ -118,6 +120,19 @@ void Util::initialize() {
 		}
 	} catch(const FileException&) {
 	}
+
+#ifdef _WIN32
+		TCHAR buf[MAX_PATH+1];
+		GetModuleFileName(NULL, buf, MAX_PATH);
+		appPath = buf;
+		appPath.erase(appPath.rfind('\\') + 1);
+#else // _WIN32
+		char* home = getenv("HOME");
+		if (home) {
+			appPath +=  "/.dc++/";
+		}
+#endif // _WIN32
+
 }
 
 string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
@@ -408,7 +423,7 @@ static int utf8ToC(const char* str, wchar_t& c) {
    if(str[0] & 0x80) { 
       if(str[0] & 0x40) { 
          if(str[0] & 0x20) { 
-            if(str[1] == 0 || str[2] == 0||
+            if(str[1] == 0 || str[2] == 0 ||
 				!((((unsigned char)str[1]) & ~0x3f) == 0x80) ||
 					!((((unsigned char)str[2]) & ~0x3f) == 0x80))
 				{
@@ -447,8 +462,8 @@ string& Util::toUtf8(string& str) {
 		return str;
 	wstring wtmp(str.length(), 0);
 #ifdef _WIN32
-	int sz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), str.length(),
-		&wtmp[0], str.length());
+	int sz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), (int)str.length(),
+		&wtmp[0], (int)str.length());
 	if(sz <= 0) {
 		str.clear();
 		return str;
@@ -488,13 +503,13 @@ string& Util::toAcp(string& str) {
 		}
 	}
 #ifdef _WIN32
-	int x = WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), wtmp.length(), NULL, 0, NULL, NULL);
+	int x = WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), (int)wtmp.length(), NULL, 0, NULL, NULL);
 	if(x == 0) {
 		str.clear();
 		return str;
 	}
 	str.resize(x);
-	WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), wtmp.length(), &str[0], str.size(), NULL, NULL);
+	WideCharToMultiByte(CP_ACP, 0, wtmp.c_str(), (int)wtmp.length(), &str[0], (int)str.size(), NULL, NULL);
 #else
 	size_t x = wcstombs(NULL, wtmp.c_str(), 0);
 	if(x == (size_t)-1) {

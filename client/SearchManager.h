@@ -178,8 +178,8 @@ private:
 		}
 	};
 
-	void onData(const u_int8_t* buf, int aLen, const string& address);
-	void onNMDCData(const u_int8_t* buf, int aLen, const string& address);
+	void onData(const u_int8_t* buf, size_t aLen, const string& address);
+	void onNMDCData(const u_int8_t* buf, size_t aLen, const string& address);
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)

@@ -434,7 +434,7 @@ void HubFrame::onEnter() {
 struct CompareItems {
 	CompareItems(int aCol) : col(aCol) { }
 	bool operator()(const UserInfo& a, const UserInfo& b) const {
-		return UserInfo::compareItems(&a, &b, col) == -1;
+		return UserInfo::compareItems(&a, &b, col) < 0;
 	}
 	const int col;
 };
@@ -785,8 +785,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			}
 		}
 		delete i;
+	} else if(wParam == KICK_MSG) {
+		string* x = (string*)lParam;
+		HubFrame::addLine(*x, m_ChatTextServer);
+		delete x;
 	}
-
 	return 0;
 };
 
@@ -1610,7 +1613,7 @@ void HubFrame::on(Message, Client*, const string& line) throw() {
 		}
 	} else if((strstr(line.c_str(), "is kicking") != NULL) && (strstr(line.c_str(), "because:") != NULL) || 
 		(strstr(line.c_str(), "Hub-Security") != NULL) && (strstr(line.c_str(), "was kicked by") != NULL)) {
-		HubFrame::addLine(line, m_ChatTextServer);
+		speak(KICK_MSG, Util::toDOS(line));		
 	} else {
 		speak(ADD_CHAT_LINE, Util::toDOS(line));
 	}

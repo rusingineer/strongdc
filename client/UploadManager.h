@@ -84,7 +84,7 @@ public:
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
 
-	int getUploads() { Lock l(cs); return uploads.size(); };
+	size_t getUploads() { Lock l(cs); return uploads.size(); };
 	int getAverageSpeed() {
 		Lock l(cs);
 		int avg = 0;

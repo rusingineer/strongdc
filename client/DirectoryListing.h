@@ -41,7 +41,7 @@ public:
 		typedef File* Ptr;
 		struct FileSort {
 			bool operator()(const Ptr& a, const Ptr& b) const {
-				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) == -1;
+				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
 			}
 		};
 		typedef vector<Ptr> List;
@@ -73,7 +73,7 @@ public:
 		typedef Directory* Ptr;
 		struct DirSort {
 			bool operator()(const Ptr& a, const Ptr& b) const {
-				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) == -1;
+				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
 			}
 		};
 		typedef vector<Ptr> List;
@@ -90,10 +90,10 @@ public:
 			for_each(files.begin(), files.end(), DeleteFunction<File*>());
 		}
 
-		int getTotalFileCount(bool adls = false);		
+		size_t getTotalFileCount(bool adls = false);		
 		int64_t getTotalSize(bool adls = false);
 		
-		int getFileCount() { return files.size(); };
+		size_t getFileCount() { return files.size(); };
 		
 		int64_t getSize() {
 			setJunkSize(0);
@@ -139,11 +139,11 @@ public:
 	void download(const string& aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void download(Directory* aDir, const string& aTarget, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 
-	string getPath(Directory* d);
-	
+	string getPath(Directory* d);	
 	string getPath(File* f) { return getPath(f->getParent()); };
+
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
-	int getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
+	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
 	Directory* getRoot() { return root; };
 	
 	void download(File* aFile, const string& aTarget, bool view = false, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);

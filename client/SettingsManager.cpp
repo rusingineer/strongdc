@@ -137,7 +137,7 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_TTH, true);
 	setDefault(IN_PORT, Util::rand(1025, 32000));
 	setDefault(ROLLBACK, 0);
-	setDefault(EMPTY_WORKING_SET, true);
+	setDefault(EMPTY_WORKING_SET, false);
 	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_AUTO]);
 	setDefault(DONT_EXTENSIONS, "(.iso)|(.bin)|(.img)|(.r(ar)|[0-9]+)");
 	setDefault(NUMBER_OF_SEGMENTS, 4);

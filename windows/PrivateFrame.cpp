@@ -161,10 +161,11 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 				p->setUser(aUser);
 				p->addLine(aMessage);
 				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
-					if (SETTING(BEEPFILE).empty())
+					if(SETTING(BEEPFILE).empty()) {
 						MessageBeep(MB_OK);
-					else
+					} else {
 						PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+					}
 				}
 				break;
 			}
@@ -180,18 +181,20 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const string& aMessage) {
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
-				if (SETTING(BEEPFILE).empty())
+				if (SETTING(BEEPFILE).empty()) {
 					MessageBeep(MB_OK);
-				else
+				} else {
 					::PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+				}
 			}
 		}
 	} else {
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
-			if (SETTING(BEEPFILE).empty())
+			if (SETTING(BEEPFILE).empty()) {
 				MessageBeep(MB_OK);
-			else
+			} else {
 				::PlaySound(SETTING(BEEPFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+			}
 		}
 		i->second->addLine(aMessage);
 	}
@@ -333,7 +336,7 @@ void PrivateFrame::onEnter()
 				if(!status.empty()) {
 					addClientLine(status);
 				}
-			} else if(Util::stricmp(s.c_str(), "clear") == 0) {
+			} else if((Util::stricmp(s.c_str(), "clear") == 0) || (Util::stricmp(s.c_str(), "cls") == 0)) {
 				ctrlClient.SetWindowText("");
 			} else if(Util::stricmp(s.c_str(), "grant") == 0) {
 				UploadManager::getInstance()->reserveSlot(getUser());

@@ -116,7 +116,7 @@ public:
 		}
 	}*/
 	void removeTestSUR(const string& aNick) {
-		Lock l(cs);
+//		Lock l(cs);
 		try {
 			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
 		} catch(...) {
@@ -220,10 +220,10 @@ public:
 				lastInsert = queue.end();
 			queue.erase(qi->getTarget());
 
-			for(QueueItem::Source::Iter i = qi->getSources().begin(); i != qi->getSources().end(); ++i) {
+		/*	for(QueueItem::Source::Iter i = qi->getSources().begin(); i != qi->getSources().end(); ++i) {
 				if(!getInstance()->hasDownload((*i)->getUser()))
 					ConnectionManager::getInstance()->removeConnection((*i)->getUser(), true);
-			}
+			}*/
 
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 				FileChunksInfo::Free(qi->getTempTarget());

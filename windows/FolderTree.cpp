@@ -1392,7 +1392,7 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 		bHandled = TRUE;
 		return 1;
 	}
-
+	
 	HTREEITEM hSharedParent = HasSharedParent(hItem);
 	// if a parent is checked then this folder should be removed from the ex list
 	if(hSharedParent != NULL)
@@ -1403,7 +1403,7 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 	{
         // if no parent folder is checked then this is a new root dir
 		try {		
-			ShareManager::getInstance()->addDirectory(pItem->m_sFQPath, Util::getLastDir(pItem->m_sFQPath));
+			ShareManager::getInstance()->addDirectory(pItem->m_sFQPath  + PATH_SEPARATOR, Util::getLastDir(pItem->m_sFQPath + PATH_SEPARATOR));
 			HashProgressDlg(true).DoModal();
 			UpdateParentItems(hItem);
 		} catch(const ShareException& e) {
@@ -1426,7 +1426,7 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
 	// if no parent is checked remove this root folder from share
 	if(hSharedParent == NULL)
 	{
-		int64_t temp = ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath);
+		int64_t temp = ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 		/* fun with math
 		futureShareSize = currentShareSize + currentOffsetSize - (sizeOfDirToBeRemoved - sizeOfSubDirsWhichWhereAlreadyExcluded) */
 		//int64_t futureShareSize = ShareManager::getInstance()->getShareSize();/* + m_nShareSizeDiff - (Util::getDirSize(pItem->m_sFQPath) - temp); */
@@ -1439,7 +1439,7 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
 	else if(GetChecked(GetParentItem(hItem)))
 	{
 		// if the parent is checked add this folder to excludes
-		//m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
+		/*m_nShareSizeDiff -= */ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 	}
 	
 	UpdateStaticCtrl();
@@ -1550,7 +1550,7 @@ void FolderTree::ShareParentButNotSiblings(HTREEITEM hItem)
 	{
 		SetChecked(hParent, true);
 		pItem = (FolderTreeItemInfo*) GetItemData(hParent);
-		m_nShareSizeDiff += ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath);
+		m_nShareSizeDiff += ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 
 		ShareParentButNotSiblings(hParent);
 		
@@ -1562,7 +1562,7 @@ void FolderTree::ShareParentButNotSiblings(HTREEITEM hItem)
 			{
 				pItem = (FolderTreeItemInfo*) GetItemData(hChild);
 				if(hChild != hItem)
-					m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
+					m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 			}
 			hChild = hNextItem;
 		}
@@ -1571,7 +1571,7 @@ void FolderTree::ShareParentButNotSiblings(HTREEITEM hItem)
 	else
 	{
 		pItem = (FolderTreeItemInfo*) GetItemData(hItem);
-		m_nShareSizeDiff += ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath);
+		m_nShareSizeDiff += ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 	}
 }
 

@@ -174,6 +174,7 @@ public:
 	
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
 		if(isSet(User::OP) || !isClientOp()) return;
+
 		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		

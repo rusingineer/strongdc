@@ -1,7 +1,28 @@
+/* 
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
+#include "../client/DCPlusPlus.h"
+
 #include <ole2.h>
-#include ".\upnp.h"
+#include "UPnP.h"
 #include <atlconv.h>
+#include "../client/Util.h"
 
 UPnP::UPnP( const string theIPAddress, const string theProtocol, const string theDescription, const short thePort )
 {
@@ -28,26 +49,19 @@ HRESULT UPnP::OpenPorts()
                                    CLSCTX_INPROC_SERVER,
                                    __uuidof(IUPnPNAT),
                                    (void**)&pUN);
-    if (SUCCEEDED(hr)) 
-	{
+	if(SUCCEEDED(hr)) {
         IStaticPortMappingCollection * pSPMC = NULL;
         hr = pUN->get_StaticPortMappingCollection (&pSPMC);
-        if (SUCCEEDED(hr) && pSPMC) 
-		{ // see comment in "else"
+		if(SUCCEEDED(hr) && pSPMC) { // see comment in "else"
 
-            if (bstrProtocol && bstrInternalClient && bstrDescription    )
-			{
+			if(bstrProtocol && bstrInternalClient && bstrDescription) {
 				IStaticPortMapping * pSPM = NULL;
 				hr = pSPMC->Add (PortNumber,bstrProtocol,PortNumber,bstrInternalClient,
                                  VARIANT_TRUE,bstrDescription,&pSPM );
-            } 
-			else 
-			{
+			} else {
                 hr = E_OUTOFMEMORY;
             }
-        } 
-		else 
-		{
+		} else {
             hr = E_FAIL;    // work around a known bug here:  in some error 
 			                // conditions, get_SPMC NULLs out the pointer, but incorrectly returns a success code.
         }
@@ -61,12 +75,10 @@ HRESULT UPnP::ClosePorts()
 	HRESULT hr = E_FAIL;
 	HRESULT hr2 = E_FAIL;
 
-	if (bstrProtocol && bstrInternalClient && bstrDescription )
-	{
+	if(bstrProtocol && bstrInternalClient && bstrDescription ) {
 		IStaticPortMappingCollection * pSPMC = NULL;
 		hr2 = pUN->get_StaticPortMappingCollection (&pSPMC);
-		if (SUCCEEDED(hr2) && pSPMC) 
-		{
+		if(SUCCEEDED(hr2) && pSPMC) {
 			hr = pSPMC->Remove (PortNumber,bstrProtocol);
 			pSPMC->Release();
 		}
@@ -86,16 +98,14 @@ string UPnP::GetExternalIP()
 {
 	USES_CONVERSION;
 	HRESULT hResult;
-	CoInitialize(NULL);
 
 	IUPnPNAT *pIUN=NULL;
 	hResult=CoCreateInstance( CLSID_UPnPNAT,NULL,CLSCTX_INPROC_SERVER, IID_IUPnPNAT, (void **) &pIUN); 
 	IStaticPortMappingCollection *pIMaps=NULL;
 	hResult=pIUN->get_StaticPortMappingCollection(&pIMaps);
 	  
-	if (!pIMaps)
-	{
-		return "";
+	if(!pIMaps) {
+		return Util::emptyString;
 	}
 
 	IUnknown *pUnk=NULL;
@@ -107,7 +117,7 @@ string UPnP::GetExternalIP()
 	VARIANT varCurMapping;
 	VariantInit(&varCurMapping);
 	pEnumVar->Reset();
-    // were are only interested in the 1st map... (as going round in a while loop can take ages)
+	// we are only interested in the 1st map... (as going round in a while loop can take ages)
 	BSTR bStrExt = NULL;
 	pEnumVar->Next(1,&varCurMapping,NULL);
 	IStaticPortMapping *pITheMap=NULL;
@@ -122,17 +132,18 @@ string UPnP::GetExternalIP()
 	pUnk->Release();
 	pIMaps->Release();
 
-	CoUninitialize();
-	if (bStrExt!=NULL)
-	{
+	if(bStrExt != NULL) {
 		return OLE2A(bStrExt);
-	}
-	else
-	{	
-		return "";
+	} else {
+		return Util::emptyString;
 	}
 }
 
 UPnP::~UPnP()
 {
 }
+
+/**
+ * @file
+ * $Id$
+ */

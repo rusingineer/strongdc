@@ -280,7 +280,7 @@ void WinUtil::init(HWND hWnd) {
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	file.AppendMenu(MF_STRING, ID_APP_EXIT, CSTRING(MENU_EXIT));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)file, CSTRING(MENU_FILE));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)file, CSTRING(MENU_FILE));
 
 	CMenuHandle view;
 	view.CreatePopupMenu();
@@ -303,7 +303,7 @@ void WinUtil::init(HWND hWnd) {
 	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CSTRING(MENU_STATUS_BAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFER_VIEW, CSTRING(MENU_TRANSFER_VIEW));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)view, CSTRING(MENU_VIEW));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)view, CSTRING(MENU_VIEW));
 
 	CMenuHandle transfers;
 	transfers.CreatePopupMenu();
@@ -317,7 +317,7 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CSTRING(MENU_NETWORK_STATISTICS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)transfers, CSTRING(MENU_TRANSFERS));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)transfers, CSTRING(MENU_TRANSFERS));
 
 	CMenuHandle window;
 	window.CreatePopupMenu();
@@ -330,7 +330,7 @@ void WinUtil::init(HWND hWnd) {
 	window.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	window.AppendMenu(MF_STRING, IDC_CLOSE_DISCONNECTED, CSTRING(MENU_CLOSE_DISCONNECTED));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)window, CSTRING(MENU_WINDOW));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)window, CSTRING(MENU_WINDOW));
 
 	CMenuHandle help;
 	help.CreatePopupMenu();
@@ -340,7 +340,7 @@ void WinUtil::init(HWND hWnd) {
 	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CSTRING(MENU_HOMEPAGE));
 	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CSTRING(MENU_DISCUSS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)help, CSTRING(MENU_HELP));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)help, CSTRING(MENU_HELP));
 
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;

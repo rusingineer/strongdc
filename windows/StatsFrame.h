@@ -106,7 +106,7 @@ private:
 
 	int width;
 	int height;
-	int timerId;
+	UINT_PTR timerId;
 	int twidth;
 
 	u_int32_t lastTick;

@@ -170,7 +170,7 @@ public:
 	struct CompFirst {
 		CompFirst() { } 
 		bool operator()(T& a, const string& b) {
-			return Util::stricmp(a.getText(0), b) == -1;
+			return Util::stricmp(a.getText(0), b) < 0;
 		}
 	};
 	int findItem(const string& b, int start = -1, bool aPartial = false) {
@@ -262,7 +262,7 @@ public:
 		comp = T::compareItems(a, b, sortColumn);
 		if(!sortAscending)
 			comp = -comp;
-		if(comp == 1)
+		if(comp > 0)
 			mid++;
 
 		return mid;
@@ -512,7 +512,7 @@ public:
 	struct CompFirst {
 		CompFirst() { } 
 		bool operator()(T& a, const string& b) {
-			return Util::stricmp(a.getText(0), b) == -1;
+			return Util::stricmp(a.getText(0), b) < 0;
 		}
 	};
 	int findItem(const string& b, int start = -1, bool aPartial = false) {
@@ -597,9 +597,9 @@ public:
 
 			if(comp == 0) {
 				return mid;
-			} else if(comp == -1) {
+			} else if(comp < 0) {
 				high = mid - 1;
-			} else if(comp == 1) {
+			} else if(comp > 0) {
 				low = mid + 1;
 			}
 		}
@@ -607,7 +607,7 @@ public:
 		comp = T::compareItems(a, b, sortColumn);
 		if(!sortAscending)
 			comp = -comp;
-		if(comp == 1)
+		if(comp > 0)
 			mid++;
 
 		return mid;
