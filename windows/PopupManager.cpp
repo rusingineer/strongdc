@@ -18,7 +18,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		return;
 	}
 
-	if(!WinUtil::isMinimized && BOOLSETTING(POPUP_MINIMIZED)) {
+	if(!MainFrame::getMainFrame()->bAppMinimized && BOOLSETTING(POPUP_MINIMIZED)) {
 		return;
 	}
 

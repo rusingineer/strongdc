@@ -54,7 +54,7 @@ const string& User::getClientNick() const {
 
 CID User::getClientCID() const {
 	RLock<> l(cs);
-	if(client) {
+	if(client && client->getMe()) {
 		return client->getMe()->getCID();
 	} else {
 		return CID(SETTING(CLIENT_ID));
@@ -330,14 +330,14 @@ void User::updateClientType() {
 		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
 
 		if (!matchProfile(lock, cp.getLock())) { continue; }
-		if (!matchProfile(tag, formattedTagExp))									{ continue; } 
-		if (!matchProfile(pk, formattedPkExp))										{ continue; }
+		if (!matchProfile(tag, formattedTagExp)) { continue; } 
+		if (!matchProfile(pk, formattedPkExp)) { continue; }
 		if (!matchProfile(supports, cp.getSupports())) { continue; }
 		if (!matchProfile(testSUR, cp.getTestSUR())) { continue; }
 		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
-		if (!matchProfile(unknownCommand, cp.getUserConCom()))			{ continue; }
-		if (!matchProfile(description, formattedExtTagExp))							{ continue; }
-		if (!matchProfile(connection, cp.getConnection()))							{ continue; }
+		if (!matchProfile(unknownCommand, cp.getUserConCom())) { continue; }
+		if (!matchProfile(description, formattedExtTagExp))	{ continue; }
+		if (!matchProfile(connection, cp.getConnection()))	{ continue; }
 
 		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, tag); }
 		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, description); }

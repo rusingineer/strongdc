@@ -102,7 +102,7 @@ class ConnectionQueueItem;
 class Transfer {
 public:
 	Transfer() : userConnection(NULL), start(0), lastTick(GET_TICK()), runningAverage(0), 
-		last(0), actual(0), pos(0), startPos(0), size(-1), endOnEndFile(true) { };
+		last(0), actual(0), pos(0), startPos(0), size(-1), fullSize(-1) { };
 	virtual ~Transfer() { };
 	
 	int64_t getPos() const { return pos; };
@@ -143,7 +143,7 @@ public:
 	GETSET(u_int32_t, start, Start);
 	GETSET(u_int32_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
-	GETSET(bool, endOnEndFile, EndOnEndFile);
+	GETSET(int64_t, fullSize, FullSize);
 private:
 	/** Bytes on last avg update */
 	int64_t last;

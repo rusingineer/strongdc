@@ -314,7 +314,7 @@ void QueueFrame::QueueItemInfo::update() {
 			display->columns[COLUMN_TTH] = Text::toT(getTTH()->toBase32());
 		}
 		if(colMask & MASK_TYPE) {
-			display->columns[COLUMN_TYPE] = Util::getFileExt(Util::getFileName(getTarget()));
+			display->columns[COLUMN_TYPE] = Util::getFileExt(getTarget());
 			if(display->columns[COLUMN_TYPE].size() > 0 && display->columns[COLUMN_TYPE][0] == '.')
 				display->columns[COLUMN_TYPE].erase(0, 1);
 		}
@@ -861,28 +861,36 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 
 			menuItems = 0;
 			int pmItems = 0;
-			QueueItemInfo::SourceIter i;
-			for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
-				tstring nick = Text::toT(i->getUser()->getNick());
-				mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
-				mi.fType = MFT_STRING;
-				mi.dwTypeData = (LPTSTR)nick.c_str();
-				mi.dwItemData = (ULONG_PTR)&(*i);
-				mi.wID = IDC_BROWSELIST + menuItems;
-				browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
-				mi.wID = IDC_REMOVE_SOURCE + 1 + menuItems; // "All" is before sources
-				removeMenu.InsertMenuItem(menuItems + 2, TRUE, &mi); // "All" and separator come first
-				mi.wID = IDC_REMOVE_SOURCES + menuItems;
-				removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
-				if(i->getUser()->isOnline()) {
-					mi.wID = IDC_PM + menuItems;
-					pmMenu.InsertMenuItem(menuItems, TRUE, &mi);
-					pmItems++;
+			if(ii) {
+				QueueItemInfo::SourceIter i;
+				for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
+					if(!i->getUser()) {
+						continue;
+					}
+					tstring nick = Text::toT(i->getUser()->getNick());
+					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
+					mi.fType = MFT_STRING;
+					mi.dwTypeData = (LPTSTR)nick.c_str();
+					mi.dwItemData = (ULONG_PTR)&(*i);
+					mi.wID = IDC_BROWSELIST + menuItems;
+					browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
+					mi.wID = IDC_REMOVE_SOURCE + 1 + menuItems; // "All" is before sources
+					removeMenu.InsertMenuItem(menuItems + 2, TRUE, &mi); // "All" and separator come first
+					mi.wID = IDC_REMOVE_SOURCES + menuItems;
+					removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
+					if(i->getUser()->isOnline()) {
+						mi.wID = IDC_PM + menuItems;
+						pmMenu.InsertMenuItem(menuItems, TRUE, &mi);
+						pmItems++;
+					}
+					menuItems++;
 				}
-				menuItems++;
-			}
-			readdItems = 0;
+
+				readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
+					if(!i->getUser()) {
+						continue;
+					}
 					tstring nick = Text::toT(i->getUser()->getNick());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
@@ -905,24 +913,25 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 					readdMenu.InsertMenuItem(readdItems + 2, TRUE, &mi);  // "All" and separator come first
 					readdItems++;
 				}
+			}
 
-				if(menuItems == 0) {
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_GRAYED);
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_GRAYED);
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_GRAYED);
-				}
-				else {
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_ENABLED);
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_ENABLED);
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_ENABLED);
-				}
+			if(menuItems == 0) {
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_GRAYED);
+			}
+			else {
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_ENABLED);
+			}
 
-				if(pmItems == 0) {
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_GRAYED);
-				}
-				else {
-					singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_ENABLED);
-				}
+			if(pmItems == 0) {
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_GRAYED);
+			}
+			else {
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_ENABLED);
+			}
 
 			if(readdItems == 0) {
 				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MF_GRAYED);
@@ -1612,9 +1621,11 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 LRESULT QueueFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	QueueItemInfo *ii = (QueueItemInfo*)ctrlQueue.GetItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
-	int tmp = wID - IDC_COPY;
+	if(ii != NULL) {
+		int tmp = wID - IDC_COPY;
 	
-	WinUtil::setClipboard(ii->getText(tmp));	
+		WinUtil::setClipboard(ii->getText(tmp));
+	}
 	return 0;
 }
 

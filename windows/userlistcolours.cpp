@@ -9,7 +9,7 @@
 PropPage::TextItem UserListColours::texts[] = {
 	{ IDC_CHANGE_COLOR, ResourceManager::SETTINGS_CHANGE },
 	{ IDC_USERLIST, ResourceManager::USERLIST_ICONS },
-	{ IDC_IMAGEBROWSE2, ResourceManager::BROWSE },
+	{ IDC_IMAGEBROWSE, ResourceManager::BROWSE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

@@ -745,7 +745,8 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	}
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
-	string connection = Util::nlfound ? "NetLimiter [" + Util::toString(Util::nlspeed) + " kB/s]" : SETTING(CONNECTION);
+	int NetLimit = Util::getNetLimiterLimit();
+	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(CONNECTION);
 	string speedDescription = "";
 
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))

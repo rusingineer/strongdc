@@ -174,12 +174,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	tabMenu.AppendMenu(MF_SEPARATOR);	
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 
-	if (CZDCLib::isXp()) {
-		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE( IDR_TRAY_PM_XP ), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	} else {
-		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE( IDR_TRAY_PM ), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	}
-
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
@@ -853,16 +847,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getNick()) + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 					}
-				HWND hMainWnd = GetTopLevelWindow();
-				if(BOOLSETTING(MINIMIZE_TRAY) && (!WinUtil::isAppActive || WinUtil::isMinimized) && !WinUtil::isPM && i->user->getConnection().empty() == false) {
-					NOTIFYICONDATA nid;
-					nid.cbSize = sizeof(NOTIFYICONDATA);
-					nid.hWnd = hMainWnd;
-					nid.uID = 0;
-					nid.uFlags = NIF_ICON;
-					nid.hIcon = pmicon.hIcon;
-					::Shell_NotifyIcon(NIM_MODIFY, &nid);
-					WinUtil::isPM = true;
+				if(BOOLSETTING(MINIMIZE_TRAY) && i->user->getConnection().empty() == false) {
+					HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
+					::PostMessage(hMainWnd, WM_SPEAKER, MainFrame::SET_PM_TRAY_ICON, NULL);
 				}
 			} else {
 				if(BOOLSETTING(IGNORE_OFFLINE)) {
@@ -1004,7 +991,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			ctrlUsers.saveHeaderOrder(SettingsManager::HUBFRAME_ORDER, SettingsManager::HUBFRAME_WIDTHS,
 				SettingsManager::HUBFRAME_VISIBLE);
 		}
-		DestroyIcon(pmicon.hIcon);				
+
 		bHandled = FALSE;
 	return 0;
 	}

@@ -1138,7 +1138,7 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->pos = 0;
 		i->start = aUpload->getPos();
 		i->actual = i->start;
-		i->size = aUpload->getSize();
+		i->size = aUpload->isSet(Upload::FLAG_TTH_LEAVES) ? aUpload->getSize() : aUpload->getFullSize();
 		i->status = ItemInfo::STATUS_RUNNING;
 		i->speed = 0;
 		i->timeLeft = 0;
@@ -1186,7 +1186,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 
 			if (u->getPos() > 0) {
 				_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 
-				(double)u->getPos()*100.0/(double)u->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
+				(double)u->getPos()*100.0/(double)(u->isSet(Upload::FLAG_TTH_LEAVES) ? u->getSize() : u->getFullSize()), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
             } else _stprintf(buf, CTSTRING(UPLOAD_STARTING));
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				u->isSet(Upload::FLAG_ZUPLOAD) ? i->setFlag(ItemInfo::FLAG_COMPRESSED) : i->unsetFlag(ItemInfo::FLAG_COMPRESSED);

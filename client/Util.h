@@ -578,9 +578,9 @@ public:
 		buf[63] = 0;
 		return buf;
 	}
-	static bool nlfound;
-	static int nlspeed;
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
+	static int getNetLimiterLimit();
+
 private:
 	static string appPath;
 	static string dataPath;

@@ -72,7 +72,7 @@ public:
 
 	// Methods of the IDataObject Interface
 
-	STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) {
+	STDMETHOD(GetData)(FORMATETC* /*pformatetcIn*/, STGMEDIUM *pmedium) {
 
 		pmedium->tymed = TYMED_GDI;
 		pmedium->hBitmap = m_stgmed.hBitmap;

@@ -74,8 +74,8 @@ CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT)
-{ 
+closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT),
+bTrayIcon(false), bAppMinimized(false), bIsPM(false) { 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
 };
@@ -293,8 +293,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	if (CZDCLib::isXp()) {
 		normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME_XP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM_XP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	} else {
 		normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	}
 	updateTray( BOOLSETTING( MINIMIZE_TRAY ) );
 	startSocket();
@@ -580,7 +582,29 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		Popup* msg = (Popup*)lParam;
 		PopupManager::getInstance()->Show(Text::fromT(msg->Message), Text::fromT(msg->Title), msg->Icon);
 		delete msg;
-	}
+	} else if(wParam == SET_NORMAL_TRAY_ICON) {
+		if(bIsPM && bTrayIcon == true) {
+			NOTIFYICONDATA nid;
+			nid.cbSize = sizeof(NOTIFYICONDATA);
+			nid.hWnd = m_hWnd;
+			nid.uID = 0;
+			nid.uFlags = NIF_ICON;
+			nid.hIcon = normalicon.hIcon;
+			::Shell_NotifyIcon(NIM_MODIFY, &nid);
+			bIsPM = false;
+		}
+	} else if(wParam == SET_PM_TRAY_ICON) {
+		if(bIsPM == false && (!WinUtil::isAppActive || bAppMinimized) && bTrayIcon == true) {
+			NOTIFYICONDATA nid;
+			nid.cbSize = sizeof(NOTIFYICONDATA);
+			nid.hWnd = m_hWnd;
+			nid.uID = 0;
+			nid.uFlags = NIF_ICON;
+			nid.hIcon = pmicon.hIcon;
+			::Shell_NotifyIcon(NIM_MODIFY, &nid);
+			bIsPM = true;
+		}
+    }
 
 	return 0;
 }
@@ -840,7 +864,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 
 void MainFrame::updateTray(bool add /* = true */) {
 	if(add) {
-		if (!WinUtil::trayIcon) {
+		if(bTrayIcon == false) {
 			NOTIFYICONDATA nid;
 			nid.cbSize = sizeof(NOTIFYICONDATA);
 			nid.hWnd = m_hWnd;
@@ -852,10 +876,10 @@ void MainFrame::updateTray(bool add /* = true */) {
 			nid.szTip[63] = '\0';
 			lastMove = GET_TICK() - 1000;
 			::Shell_NotifyIcon(NIM_ADD, &nid);
-			WinUtil::trayIcon = true;
+			bTrayIcon = true;
 		}
 	} else {
-		if (WinUtil::trayIcon) {
+		if(bTrayIcon) {
 			NOTIFYICONDATA nid;
 			nid.cbSize = sizeof(NOTIFYICONDATA);
 			nid.hWnd = m_hWnd;
@@ -863,7 +887,7 @@ void MainFrame::updateTray(bool add /* = true */) {
 			nid.uFlags = 0;
 			::Shell_NotifyIcon(NIM_DELETE, &nid);
 			ShowWindow(SW_SHOW);
-			WinUtil::trayIcon = false;		
+			bTrayIcon = false;
 		}
 	}
 }
@@ -873,7 +897,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 	if(wParam == SIZE_MINIMIZED) {
 		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 		if(BOOLSETTING(AUTO_AWAY)) {
-			if(!WinUtil::isMinimized)
+			if(bAppMinimized == false)
 			if(Util::getAway() == true) {
 				awaybyminimize = false;
 			} else {
@@ -884,7 +908,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 			}
 		}
 
-		WinUtil::isMinimized = true;
+		bAppMinimized = true;
 		if(BOOLSETTING(MINIMIZE_TRAY)) {
 			updateTray(true);
 			ShowWindow(SW_HIDE);
@@ -892,7 +916,6 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 			updateTray(false);
 		}
 		maximized = IsZoomed() > 0;
-		//SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 	} else if( (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) ) {
 		if(BOOLSETTING(AUTO_AWAY)) {
 			if(awaybyminimize == true) {
@@ -903,8 +926,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 			}
 		}
 		setNormalTrayIcon();
-		WinUtil::isMinimized = false;
-		//SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+		bAppMinimized = false;
 	}
 
 	bHandled = FALSE;
@@ -1014,6 +1036,7 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		stopperThread = NULL;
 		DestroyIcon(normalicon.hIcon);
 		DestroyIcon(hShutdownIcon); 	
+		DestroyIcon(pmicon.hIcon);
 		bHandled = FALSE;
 	}
 
@@ -1141,7 +1164,7 @@ LRESULT MainFrame::onRefreshFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	if (lParam == WM_LBUTTONUP) {
-		if (WinUtil::isMinimized) {
+		if(bAppMinimized) {
 			ShowWindow(SW_SHOW);
 			ShowWindow(maximized ? SW_MAXIMIZE : SW_RESTORE);
 		} else {
@@ -1383,21 +1406,6 @@ LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BO
 		setNormalTrayIcon();
 	}
 	return 0;
-}
-
-void MainFrame::setNormalTrayIcon() {
-	if(WinUtil::isPM) {
-		if ( !WinUtil::trayIcon )
-				return;
-		NOTIFYICONDATA nid;
-		nid.cbSize = sizeof(NOTIFYICONDATA);
-		nid.hWnd = m_hWnd;
-		nid.uID = 0;
-		nid.uFlags = NIF_ICON;
-		nid.hIcon = normalicon.hIcon;
-		::Shell_NotifyIcon(NIM_MODIFY, &nid);
-		WinUtil::isPM = false;
-	}
 }
 
 LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
