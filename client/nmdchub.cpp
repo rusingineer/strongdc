@@ -829,9 +829,8 @@ void NmdcHub::myInfo() {
 	extendedtag += ">";
 
 	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+getDescription(), false));
-	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
-		newmyinfo += extendedtag;
-	}
+	newmyinfo += extendedtag;
+
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
 	newmyinfo += ("$ $" + connection + StatusMode + "$" + Util::validateMessage(SETTING(EMAIL), false) + '$');
 	if ( (newmyinfo != lastmyinfo) || ( (newbytesshared < (lastbytesshared - 1048576) ) || (newbytesshared > (lastbytesshared + 1048576) ) ) ){

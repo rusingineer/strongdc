@@ -66,7 +66,7 @@ const string SettingsManager::settingTags[] =
 	"LogFilelistTransfers", "EmptyWorkingSet", "SegmentColor", "ShowSegmentColor",
 	"ShowStatusbar",
 	"ShowToolbar", "ShowTransferview", 
-	"OptionalInfo", "GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
+	"GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
 	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
 	"TextMyOwnBackColor", "TextMyOwnForeColor", "TextMyOwnBold", "TextMyOwnItalic", 
@@ -95,8 +95,8 @@ const string SettingsManager::settingTags[] =
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
-	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", 
-	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment", "PopunderPm", "PopunderFilelist",
+	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
+	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
 	"SENTRY",
@@ -210,7 +210,6 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FILELIST_TRANSFERS, true);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
-	setDefault(MEMORY_MAPPED_FILE, false);
 	setDefault(AUTO_DROP_SOURCE, true);
 	
 	setDefault(DEBUG_COMMANDS, true);
@@ -227,7 +226,6 @@ SettingsManager::SettingsManager()
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
-	setDefault(SEND_EXTENDED_INFO, true);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(GET_UPDATE_INFO, true);
 	setDefault(SEARCH_PASSIVE, false);
@@ -396,8 +394,7 @@ SettingsManager::SettingsManager()
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
 	setDefault(DONT_BEGIN_SEGMENT, true);
-	setDefault(DONT_BEGIN_SEGMENT_SPEED, 100);
-	setDefault(LOG_SEGMENT, false);
+	setDefault(DONT_BEGIN_SEGMENT_SPEED, 200);
 
 	setDefault(DISCONNECT_RAW, 0);
 	setDefault(TIMEOUT_RAW, 0);

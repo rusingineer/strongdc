@@ -53,6 +53,13 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
+
+	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+		ctrlTransfers.setLeftEraseBackgroundMargin(40);
+	}else{
+		styles |= 0x00010000;
+	}
+
 	ctrlTransfers.SetExtendedListViewStyle(styles);
 
 	WinUtil::splitTokens(columnIndexes, SETTING(MAINFRAME_ORDER), COLUMN_LAST);
@@ -73,7 +80,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlTransfers.SetImageList(arrows, LVSIL_SMALL);
 	ctrlTransfers.setSortColumn(COLUMN_STATUS);
 
-	ctrlTransfers.setFlickerFree(WinUtil::bgBrush);
+//	ctrlTransfers.setFlickerFree(WinUtil::bgBrush);
 	transferMenu.CreatePopupMenu();
 	appendUserItems(transferMenu);
 	transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CSTRING(FORCE_ATTEMPT));
@@ -240,95 +247,6 @@ void TransferView::ItemInfo::removeAll() {
 	} else QueueManager::getInstance()->remove(Target);
 }
 
-#define COLORREF2RGB(Color) (Color & 0xff00) | ((Color >> 16) & 0xff) \
-                                 | ((Color << 16) & 0xff0000)
-
-HBITMAP ReplaceColor(HBITMAP hBmp,COLORREF cOldColor,COLORREF cNewColor,HDC hBmpDC)
-{
-    HBITMAP RetBmp=NULL;
-    if (hBmp)
-    {
-        HDC BufferDC=CreateCompatibleDC(NULL);// DC for Source Bitmap
-if (BufferDC)
-{
-    HBITMAP hTmpBitmap = (HBITMAP) NULL;
-    if (hBmpDC)
-        if (hBmp == (HBITMAP)GetCurrentObject(hBmpDC, OBJ_BITMAP))
-{
-    hTmpBitmap = CreateBitmap(1, 1, 1, 1, NULL);
-    SelectObject(hBmpDC, hTmpBitmap);
-}
-    
-            HGDIOBJ PreviousBufferObject=SelectObject(BufferDC,hBmp);
-    // here BufferDC contains the bitmap
-
-    HDC DirectDC=CreateCompatibleDC(NULL); // DC for working
-    if (DirectDC)
-    {
-// Get bitmap size
-BITMAP bm;
-GetObject(hBmp, sizeof(bm), &bm);
-
-// create a BITMAPINFO with minimal initilisation 
-                // for the CreateDIBSection
-BITMAPINFO RGB32BitsBITMAPINFO; 
-ZeroMemory(&RGB32BitsBITMAPINFO,sizeof(BITMAPINFO));
-RGB32BitsBITMAPINFO.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
-RGB32BitsBITMAPINFO.bmiHeader.biWidth=bm.bmWidth;
-RGB32BitsBITMAPINFO.bmiHeader.biHeight=bm.bmHeight;
-RGB32BitsBITMAPINFO.bmiHeader.biPlanes=1;
-RGB32BitsBITMAPINFO.bmiHeader.biBitCount=32;
-
-                // pointer used for direct Bitmap pixels access
-UINT * ptPixels;
-
-HBITMAP DirectBitmap = CreateDIBSection(DirectDC, 
-                                       (BITMAPINFO *)&RGB32BitsBITMAPINFO, 
-                                       DIB_RGB_COLORS,
-                                       (void **)&ptPixels, 
-                                       NULL, 0);
-if (DirectBitmap)
-{
-    // here DirectBitmap!=NULL so ptPixels!=NULL no need to test
-    HGDIOBJ PreviousObject=SelectObject(DirectDC, DirectBitmap);
-    BitBlt(DirectDC,0,0,
-                           bm.bmWidth,bm.bmHeight,
-                           BufferDC,0,0,SRCCOPY);
-
-    // here the DirectDC contains the bitmap
-
-    // Convert COLORREF to RGB (Invert RED and BLUE)
-    cOldColor=COLORREF2RGB(cOldColor);
-    cNewColor=COLORREF2RGB(cNewColor);
-
-    // After all the inits we can do the job : Replace Color
-    for (int i=((bm.bmWidth*bm.bmHeight)-1);i>=0;i--)
-    {
-if (ptPixels[i]==cOldColor) ptPixels[i]=cNewColor;
-    }
-    // little clean up
-    // Don't delete the result of SelectObject because it's 
-                    // our modified bitmap (DirectBitmap)
-    SelectObject(DirectDC,PreviousObject);
-
-    // finish
-    RetBmp=DirectBitmap;
-}
-// clean up
-DeleteDC(DirectDC);
-    }
-    if (hTmpBitmap)
-    {
-SelectObject(hBmpDC, hBmp);
-DeleteObject(hTmpBitmap);
-    }
-    SelectObject(BufferDC,PreviousBufferObject);
-    // BufferDC is now useless
-    DeleteDC(BufferDC);
-}
-    }
-    return RetBmp;
-}
 LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
     NMLVCUSTOMDRAW* cd = (NMLVCUSTOMDRAW*)pnmh;
@@ -365,7 +283,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
 		if(cd->iSubItem == COLUMN_STATUS) {
-			ItemInfo* ii = ctrlTransfers.getStoredItemAt(cd->nmcd.lItemlParam); 
+			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			if(ii->status == ItemInfo::STATUS_RUNNING) {
 				// Get the color of this bar
 				COLORREF clr = SETTING(PROGRESS_OVERRIDE_COLORS) ? 
@@ -511,7 +429,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				return CDRF_SKIPDEFAULT;
 			}
 		} else if (cd->iSubItem == COLUMN_FILE || cd->iSubItem == COLUMN_SIZE || cd->iSubItem == COLUMN_PATH) {
-			ItemInfo* ii = ctrlTransfers.getStoredItemAt(cd->nmcd.lItemlParam); 
+			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			if (ii->type == ItemInfo::TYPE_DOWNLOAD && ii->status != ItemInfo::STATUS_RUNNING) {
 				cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.6);
 				return CDRF_NEWFONT;
@@ -534,7 +452,6 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 
 
 void TransferView::InsertItem(ItemInfo* i) {
-	dcdebug(("Jmeno usera: "+i->user->getNick()+" -- Jmeno cile: "+i->Target).c_str());
 	bool add = true;
 	if(!mainItems.empty()) {
 
@@ -572,22 +489,35 @@ void TransferView::InsertItem(ItemInfo* i) {
 		if(!i->upper->collapsed) {
 			int r = ctrlTransfers.findItem(i->upper);
 			dcassert(r != -1);
-			ctrlTransfers.insertItem(r+i->qi->getActiveSegments().size()+1,i,IMAGE_SEGMENT);
+			//ctrlTransfers.insertItem(r+i->qi->getActiveSegments().size()+1,i,IMAGE_SEGMENT);
+			insertSubItem(i,r+i->qi->getActiveSegments().size()+1);
 		}
 		i->upper->pocetUseru += 1;
 	}
 
-	if(i->upper != NULL)
-		{
-			if(i->upper->pocetUseru == 1)	{
-				i->upper->columns[COLUMN_USER] = i->user->getNick();
-				i->upper->columns[COLUMN_HUB] = i->user->getClientName();
-			}
-			else {
-				i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
-				i->upper->columns[COLUMN_HUB] = Util::toString((int)i->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
-			}
+	if(i->upper != NULL) {
+		if(i->upper->pocetUseru == 1) {
+			i->upper->columns[COLUMN_USER] = i->user->getNick();
+			i->upper->columns[COLUMN_HUB] = i->user->getClientName();
+		} else {
+			i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
+			i->upper->columns[COLUMN_HUB] = Util::toString((int)i->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 		}
+	}
+}
+
+void TransferView::insertSubItem(ItemInfo* j, int idx) {
+	LV_ITEM lvi;
+	lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
+	lvi.iItem = idx;
+	lvi.iSubItem = 0;
+	lvi.iIndent = 1;
+	lvi.pszText = LPSTR_TEXTCALLBACK;
+	lvi.iImage = IMAGE_SEGMENT;
+	lvi.lParam = (LPARAM)j;
+	lvi.state = 0;
+	lvi.stateMask = 0;
+	ctrlTransfers.InsertItem(&lvi);
 }
 
 bool TransferView::ItemInfo::canBeSorted(ItemInfo* a, ItemInfo* b) {
@@ -664,7 +594,7 @@ void TransferView::CollapseAll() {
 	for(int q = ctrlTransfers.GetItemCount()-1; q != -1; --q) {
 	  ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
 	  if((m->type == ItemInfo::TYPE_DOWNLOAD) && (!m->mainItem))
-		  {	ctrlTransfers.deleteItem(m, false);  }
+		  {	ctrlTransfers.deleteItem(m);  }
 	if(m->mainItem) {
 		m->collapsed = true;
 		ctrlTransfers.SetItemState(ctrlTransfers.findItem(m), INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
@@ -684,9 +614,10 @@ void TransferView::ExpandAll() {
 
 void TransferView::Collapse(ItemInfo* i, int a) {
 	for(int q = ctrlTransfers.GetItemCount()-1; q != -1; --q) {
-	  ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
-	  if((m->type == ItemInfo::TYPE_DOWNLOAD) && (m->Target == i->Target) && (!m->mainItem))
-		  { ctrlTransfers.deleteItem(m, false); }
+		ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
+		if((m->type == ItemInfo::TYPE_DOWNLOAD) && (m->Target == i->Target) && (!m->mainItem)) {
+			ctrlTransfers.deleteItem(m);
+		}
 	}
 	i->collapsed = true;
 	ctrlTransfers.SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
@@ -695,13 +626,11 @@ void TransferView::Collapse(ItemInfo* i, int a) {
 void TransferView::Expand(ItemInfo* i, int a) {
 	int b = 0;
 	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
-	 ItemInfo* m = j->second;
-	 if((m->Target == i->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD))
-	 {	
-		 b++;
-		 int l = ctrlTransfers.insertItem(a+1,m,IMAGE_SEGMENT);
-		 ctrlTransfers.SetItemState(l, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-	 }
+		ItemInfo* m = j->second;
+		if((m->Target == i->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			b++;
+			insertSubItem(m,a+1);
+		}
 	}
 
 	i->pocetUseru = b;
@@ -734,7 +663,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
-		ctrlTransfers.deleteItem(i, true);
+		ctrlTransfers.deleteItem(i);
+		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
@@ -772,7 +702,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		dcassert(i != NULL);
-		ctrlTransfers.deleteItem(i, false);
+		ctrlTransfers.deleteItem(i);
 	}
 
 	return 0;
@@ -798,7 +728,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 			}
 		}
 
-		dcdebug(("Jmeno usera: "+i->user->getNick()+" -- Jmeno cile: "+i->Target).c_str());
 		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
 
@@ -1064,7 +993,8 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 			}
 		} else {
 			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
-			h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
+			if(h->qi)
+				h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 			i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 		}

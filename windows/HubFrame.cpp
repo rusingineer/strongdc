@@ -128,6 +128,13 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
+
+	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+		ctrlUsers.setLeftEraseBackgroundMargin(3);
+	} else {
+		styles |= 0x00010000;
+	}
+
 	ctrlUsers.SetExtendedListViewStyle(styles);
 
 	splitChat.Create( m_hWnd );

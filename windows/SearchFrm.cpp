@@ -91,6 +91,13 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
+
+	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+		ctrlResults.setLeftEraseBackgroundMargin(40);
+	} else {
+		//#define LVS_EX_DOUBLEBUFFER     0x00010000
+		styles |= 0x00010000;
+	}
 	ctrlResults.SetExtendedListViewStyle(styles);
 	
 	if (BOOLSETTING(USE_SYSTEM_ICONS)) {

@@ -62,6 +62,13 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
+
+	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+		ctrlQueue.setLeftEraseBackgroundMargin(3);
+	} else {
+		//#define LVS_EX_DOUBLEBUFFER     0x00010000
+		styles |= 0x00010000;
+	}
 	ctrlQueue.SetExtendedListViewStyle(styles);
 
 	ctrlDirs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
