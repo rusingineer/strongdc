@@ -294,7 +294,7 @@
 				RelativePath=".\StrongDC.rc">
 			</File>
 			<File
-				RelativePath=".\compiled\EmoPacks\Images\sweetplus_3.bmp">
+				RelativePath=".\res\emoticon.bmp">
 			</File>
 			<File
 				RelativePath=".\res\toolbar.bmp">
