@@ -646,6 +646,7 @@ enum Strings { // @DontAdd
 	CHECK_FILELIST, // "Check File List"
 	SIZE_EXACT, // "Exactly"
 	DOWNLOAD_CORRUPTED, // "File was corrupted, redownloading in %d seconds"
+	LEAF_CORRUPTED, // "File was corrupted, redownloading %s in %d seconds"
 	BLOCK_FINISHED, // "Segment Block Finished, waiting..."
 	STOP_SEARCH, // "Stop Search"
 	SEARCH_STOPPED, // "Search stopped"

@@ -127,7 +127,7 @@ public:
 		Priority aPriority, int aFlag, int64_t, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), searchString(aSearchString), 
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL)
 	{ };
 
 	QueueItem(const QueueItem& rhs) : 
@@ -248,6 +248,7 @@ public:
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
+	GETSET(TigerTree, tiger, Tiger);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

@@ -670,9 +670,9 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ADCGET);
 		else if(*i == UserConnection::FEATURE_ZLIB_GET)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_ZLIB_GET);
-		else if((*i == UserConnection::FEATURE_TTHL) && (BOOLSETTING(ENABLE403FEATURES)))
+		else if(*i == UserConnection::FEATURE_TTHL)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
-		else if((*i == UserConnection::FEATURE_TTHF) && (BOOLSETTING(ENABLE403FEATURES)))
+		else if(*i == UserConnection::FEATURE_TTHF)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
 	}
 	conn->getUser()->setSupports(sup); 

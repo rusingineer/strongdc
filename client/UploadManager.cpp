@@ -102,7 +102,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	File* f;
 	try {
 		f = new File(file, File::READ, File::OPEN);
-	} catch(const Exception&) {
+	} catch(const FileException&) {
 		aSource->fileNotAvail();
 		return false;
 	}
@@ -132,7 +132,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				is = new LimitedInputStream<true>(is, aBytes);
 			}	
 	} else if(aType == "tthl") {
-		// Fix for "ANOTHER DC++ BUG" minislots not working for files requested by adcget with tthl...
 		free = f->getSize() <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024);
 		delete f;
 		// TTH Leaves...
@@ -298,7 +297,6 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setState(UserConnection::STATE_GET);
 
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-
 		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
 		params["source"] = u->getLocalFileName();

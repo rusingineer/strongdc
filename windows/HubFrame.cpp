@@ -568,7 +568,9 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 			add = true;
 		} else {
 			PME reg(filter,"i");
-			if(reg.match(ui->getText(ctrlFilterSel.GetCurSel()))) {
+			if(!reg.IsValid()) { 
+				add = true;
+			} else if(reg.match(ui->getText(ctrlFilterSel.GetCurSel()))) {
 				add = true;
 			}
 		}
@@ -811,12 +813,6 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.top = rc.top + 0;
 		rc.bottom = rc.bottom + 120;
 		ctrlFilterSel.MoveWindow(rc);
-}
-
-LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	bHandled = FALSE;
-	ctrlClient.GoToEnd();
-	return 0;
 }
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -1643,56 +1639,58 @@ LRESULT HubFrame::onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 }
 
 BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
-	if(user->getClient()->getOp()) {
-		int64_t statedSize = dl->getUser()->getBytesShared();
-		int64_t realSize = dl->getTotalSize();
-		int64_t junkSize = 0;
+	if(user && dl) {
+		if(user->getClient()->getOp()) {
+			int64_t statedSize = user->getBytesShared();
+			int64_t realSize = dl->getTotalSize();
+			int64_t junkSize = 0;
 	
-		if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
-			junkSize = dl->getJunkSize();
-			realSize -= junkSize;
-		}	
-		user->setChecked(true);
-		double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
-		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
-		string detectString = "";
-		string inflationString = "";
-		user->setJunkBytesShared(junkSize);
-		user->setRealBytesShared(realSize);
-		bool isFakeSharing = false;
+			if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
+				junkSize = dl->getJunkSize();
+				realSize -= junkSize;
+			}	
+			user->setChecked(true);
+			double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
+			int64_t sizeTolerated = (int64_t)(realSize*multiplier);
+			string detectString = "";
+			string inflationString = "";
+			user->setJunkBytesShared(junkSize);
+			user->setRealBytesShared(realSize);
+			bool isFakeSharing = false;
 
-		if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
-			isFakeSharing = true;
-		}
-
-		if(statedSize > sizeTolerated) {
-			isFakeSharing = true;
-		}
-
-		if(isFakeSharing) {
-			user->setFakeSharing(true);
-			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
-			if(realSize == 0) {
-				detectString += STRING(CHECK_0BYTE_SHARE);
-			} else {
-				double qwe = (double)((double)statedSize / (double)realSize);
-				string str = Util::toString(qwe);
-				char buf[128];
-				sprintf(buf, CSTRING(CHECK_INFLATED), str);
-				inflationString = buf;
-				detectString += inflationString;
-			}
-			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 			if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
-				detectString = STRING(CHECK_JUNK_FILES);
+				isFakeSharing = true;
 			}
-			detectString = user->insertUserData(detectString);
-			user->setCheat(Util::validateMessage(detectString, false), false);
-			user->sendRawCommand(SETTING(FAKESHARE_RAW));
-		}     
-		//this->updateUser(user);
-		user->updated();
-		if(isFakeSharing) return true;
+
+			if(statedSize > sizeTolerated) {
+				isFakeSharing = true;
+			}
+
+			if(isFakeSharing) {
+				user->setFakeSharing(true);
+				detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
+				if(realSize == 0) {
+					detectString += STRING(CHECK_0BYTE_SHARE);
+				} else {
+					double qwe = (double)((double)statedSize / (double)realSize);
+					string str = Util::toString(qwe);
+					char buf[128];
+					sprintf(buf, CSTRING(CHECK_INFLATED), str);
+					inflationString = buf;
+					detectString += inflationString;
+				}
+				detectString += STRING(CHECK_SHOW_REAL_SHARE);
+				if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
+					detectString = STRING(CHECK_JUNK_FILES);
+				}
+				detectString = user->insertUserData(detectString);
+				user->setCheat(Util::validateMessage(detectString, false), false);
+				user->sendRawCommand(SETTING(FAKESHARE_RAW));
+			}     
+			//this->updateUser(user);
+			user->updated();
+			if(isFakeSharing) return true;
+		}
 	}
 	return false;
 }
@@ -2097,8 +2095,11 @@ void HubFrame::updateUserList() {
 	for(; i != userMap.end(); ++i){
 		if( i->second != NULL ) {
 			PME reg(filter,"i");
-			if(reg.match(i->second->getText(sel)))
-				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));					
+			if(!reg.IsValid()) {
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));
+			} else if(reg.match(i->second->getText(sel))) {
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));
+			}
 		}
 	}
 }
