@@ -177,7 +177,7 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
 	void addClientLine(const tstring& aLine, bool inChat = true);
-	void addLine(const tstring& aLine, CHARFORMAT2& cf);
+	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
 	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
 	void onTab();
@@ -189,7 +189,7 @@ public:
 		, const tstring& rawThree = Util::emptyStringT
 		, const tstring& rawFour = Util::emptyStringT
 		, const tstring& rawFive = Util::emptyStringT
-		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true,
+		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = true, bool userliststate = true,
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void closeDisconnected();
 
@@ -210,6 +210,7 @@ public:
 
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
+		ctrlClient.GoToEnd();
 		return 0;
 	}
 

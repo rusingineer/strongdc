@@ -87,7 +87,7 @@ again:
 		aLine += 11;
 		if(aLine == NULL) return;
 
-		if((temp = strchr(aLine, ' ')) != NULL) {
+		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
 			temp[0] = NULL, temp += 1;
 			if(aLine == NULL || temp == NULL) return;
 
@@ -98,10 +98,10 @@ again:
 		if(aLine == NULL) return;
 
 		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
-			strstr(aLine, " no more exists") != 0) {
+			strstr(aLine, /*path/file*/" no more exists") != 0) {
 			fire(UserConnectionListener::FileNotAvailable(), this);
 		} else {
-			ConnectionManager::getInstance()->cs.enter();
+			Lock l(ConnectionManager::getInstance()->cs_deadlock_fix);
 			fire(UserConnectionListener::Failed(), this, aLine);
 		}
 	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
@@ -115,7 +115,7 @@ again:
 		aLine += 5;
 		if(aLine == NULL) return;
 
-		if((temp = strchr(aLine, '$')) != NULL)  {
+		if((temp = strchr(aLine, '$')) != NULL && temp+1 != NULL)  {
 			temp[0] = NULL; temp += 1;
 			if(aLine == NULL || temp == NULL) return;
 
@@ -145,7 +145,7 @@ again:
 		aLine += 6;
 		if(aLine == NULL) return;
 
-		if((temp = strchr(aLine, ' ')) != NULL) {
+		if((temp = strchr(aLine, ' ')) != NULL && temp+4 != NULL) {
 			temp[0] = NULL; temp += 4;
 			if(aLine == NULL || temp == NULL) return; 
 
@@ -183,13 +183,13 @@ again:
 
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
-	Lock l(ConnectionManager::getInstance()->cs);
+	Lock l(ConnectionManager::getInstance()->cs_deadlock_fix);
 	fire(UserConnectionListener::Failed(), this, aLine);
 }
 
 void UserConnection::processBlock(const char* param, int type) throw() {
 	char *temp, *temp1;
-	if((temp = strchr(param, ' ')) == NULL) return;
+	if((temp = strchr(param, ' ')) == NULL || temp+1 == NULL) return;
 
 	temp[0] = NULL; temp += 1;
 	if(param == NULL || temp == NULL) return;
@@ -200,7 +200,7 @@ void UserConnection::processBlock(const char* param, int type) throw() {
 		return;
 	}
 
-	if((temp1 = strchr(temp, ' ')) == NULL) return;
+	if((temp1 = strchr(temp, ' ')) == NULL || temp1+1 == NULL) return;
 
 	temp1[0] = NULL; temp1 += 1;
 	if(temp == NULL || temp1 == NULL) return;

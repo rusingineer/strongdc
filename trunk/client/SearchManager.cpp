@@ -348,7 +348,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	{
+	if(((aTick / 1000) % 2) == 0) {
 		Lock l(cs);
 
 		for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {

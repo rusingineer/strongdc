@@ -122,13 +122,17 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 
 		Download* d = *i;
+
+		if(d->finished)
+			continue;
+
 		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
 		d->setItem(q);
 
 		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 40) // check every 40 sec
         {
             if(d->getRunningAverage() < 1230){
-				if(q && (q->getActiveSegments().size() >= 2)) {
+				if(q && (q->getActiveSegments().size() > 2)) {
 					d->getUserConnection()->disconnect();
 					continue;
 				}

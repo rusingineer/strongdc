@@ -514,14 +514,6 @@ void WinUtil::initColors() {
 	cf.crBackColor = SETTING(BACKGROUND_COLOR);
 	cf.crTextColor = SETTING(TEXT_COLOR);
 
-	memset(&m_TextStyleBold, 0, sizeof(CHARFORMAT2));
-	m_TextStyleBold.cbSize = sizeof(m_TextStyleBold);
-	m_TextStyleBold.dwMask = CFM_BOLD;
-	m_TextStyleBold.dwReserved = 0;
-	m_TextStyleBold.crBackColor = 0;
-	m_TextStyleBold.crTextColor = 0;
-	m_TextStyleBold.dwEffects = CFE_BOLD;
-
 	m_TextStyleTimestamp = cf;
 	m_TextStyleTimestamp.crBackColor = SETTING(TEXT_TIMESTAMP_BACK_COLOR);
 	m_TextStyleTimestamp.crTextColor = SETTING(TEXT_TIMESTAMP_FORE_COLOR);
@@ -538,6 +530,9 @@ void WinUtil::initColors() {
 	if(SETTING(TEXT_GENERAL_ITALIC))
 		m_ChatTextGeneral.dwEffects |= CFE_ITALIC;
 
+	m_TextStyleBold = m_ChatTextGeneral;
+	m_TextStyleBold.dwEffects = CFE_BOLD;
+	
 	m_TextStyleMyNick = cf;
 	m_TextStyleMyNick.crBackColor = SETTING(TEXT_MYNICK_BACK_COLOR);
 	m_TextStyleMyNick.crTextColor = SETTING(TEXT_MYNICK_FORE_COLOR);
@@ -855,8 +850,8 @@ _T("\r\n-- I came, I searched, I found...\r\n") LINE2,
 _T("\r\n-- I came, I shared, I sent...\r\n") LINE2,
 _T("\r\n-- I can add multiple users to the same file and download from them simultaneously :)\r\n") LINE2,
 _T("\r\n-- My client supports TTH hashes, does yours?\r\n") LINE2,
-_T("\r\n-- I support segmented downloading and I can't lose precious slot between segments :-P\r\n") LINE2,
-_T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE2,
+_T("\r\n-- Ja jsem byl prvni klient, ktery nemuze ztratit slot pri segmentovem stahovani :-P\r\n") LINE2,
+_T("\r\n-- Ja jsem byl prvni klient, ktery umi seskupovat prenosy se stejnym nazvem souboru :-P\r\n") LINE2,
 _T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
 _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE2,
 _T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,

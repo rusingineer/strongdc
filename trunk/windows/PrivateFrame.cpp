@@ -269,6 +269,10 @@ LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& 
 	default:
 		bHandled = FALSE;
 	}
+
+	if ((!SETTING(SOUND_TYPING_NOTIFY).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+		PlaySound(Text::toT(SETTING(SOUND_TYPING_NOTIFY)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
 	return 0;
 }
 
@@ -385,11 +389,15 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 
 	tstring sTmp = aLine;
 	tstring sAuthor = _T("");
-	if (aLine.find(_T("<")) == 0) {
+	int iAuthorLen = 0;
+	bool isMe = false;
+	if(aLine[0] == _T('<')) {
 		string::size_type i = aLine.find(_T(">"));
 		if (i != string::npos) {
      		sAuthor = aLine.substr(1, i-1);
+     		iAuthorLen = i;
 			if (_tcsncmp(_T(" /me "), aLine.substr(i+1, 5).c_str(), 5) == 0 ) {
+				isMe = true;
 				sTmp = _T("* ") + sAuthor + aLine.substr(i+5);
 			}
 		}
@@ -397,7 +405,7 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
-		params["message"] = Text::fromT(aLine);
+		params["message"] = Text::fromT(sTmp);
 		params["user"] = user->getNick();
 		params["hub"] = user->getClientName();
 		params["hubaddr"] = user->getClientAddressPort();
@@ -414,10 +422,10 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 	}
 
 	if(BOOLSETTING(TIME_STAMPS)) {
-		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), sTmp.c_str(), cf, sAuthor.c_str() );
+		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe);
 		
 	} else {
-		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), sTmp.c_str(), cf, sAuthor.c_str() );
+		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe);
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
@@ -575,11 +583,7 @@ void PrivateFrame::updateTitle() {
 		isoffline = false;
 	} else {
 		setIconState();
-        if(user->getClientName() == STRING(OFFLINE)) {
-            SetWindowText(Text::toT(user->getFullNick()).c_str());
-        } else {
-            SetWindowText((Text::toT(user->getFullNick()) + _T(" [") + TSTRING(OFFLINE) + _T("]")).c_str());
-		}
+        SetWindowText(Text::toT(user->getFullNick()).c_str());
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
 			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), WinUtil::m_ChatTextServer);
@@ -734,7 +738,12 @@ LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	params["mycid"] = user->getClientCID().toBase32(); 
 	params["cid"] = user->getCID().toBase32(); 
 	params["hubaddr"] = user->getClientAddressPort();
-	WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
+	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
+	if(Util::fileExists(file)) {
+		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);
+	} else {
+		MessageBox(CTSTRING(NO_LOG_FOR_USER), CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
+	}	
 
 	return 0;
 }

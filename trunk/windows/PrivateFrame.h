@@ -149,6 +149,7 @@ public:
 
 	LRESULT onFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
+		ctrlClient.GoToEnd();
 		return 0;
 	}
 	

@@ -235,7 +235,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 
 	ctrlResults.setColumnOrderArray(COLUMN_LAST, columnIndexes);
-	ctrlResults.setSortColumn(COLUMN_HITS);
 	ctrlResults.setAscending(false);
 	ctrlResults.setVisible(SETTING(SEARCHFRAME_VISIBLE));
 
@@ -1143,8 +1142,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 							si2->setHits(Text::toT(Util::toString((u_int32_t)si2->subItems.size() + 1) + " "  + CSTRING(USERS)));
 							if(pos != -1)
 								ctrlResults.updateItem(pos);
-							if(ctrlResults.getSortColumn() == COLUMN_HITS)
-								ctrlResults.resort();
 							return 0;
                 	    }
 

@@ -54,6 +54,7 @@ void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers) {
 }
 
 void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
+	long lSelBeginSaved, lSelEndSaved;
 	CAtlString sText = lpstrTextToAdd;
 
 	if((GetTextLengthEx(GTL_PRECISE) + sText.GetLength()) > 25000) {
@@ -65,13 +66,87 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 	SendMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
 }
 
-void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor) {
+void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor, int iAuthorLen, bool isMe, bool bUseEmo/* = true*/) {
+	SetRedraw(FALSE);
+	long lSelBeginSaved, lSelEndSaved;
+	GetSel(lSelBeginSaved, lSelEndSaved);
+	POINT cr;
+	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
+
+	bool boOK = false;
+	long lSelBegin = 0, lSelEnd = 0;
+
+	PARAFORMAT2 pf;
+	memset(&pf, 0, sizeof(PARAFORMAT2));
+	pf.dwMask = PFM_STARTINDENT; 
+	pf.dxStartIndent = 0;
+
+	// Insert TimeStamp and format with default style
+	if(sTime != Util::emptyStringT) {
+		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
+		SetSel(lSelEnd, lSelEnd);
+		ReplaceSel(sTime, false);
+		lSelEnd = GetTextLengthEx(GTL_PRECISE);
+		SetSel(lSelBegin, lSelEnd - 1);
+		boOK = SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
+		boOK = SetParaFormat(pf);
+	}
+    	
 	myMess = false;
 	tstring msg = sMsg;
-	CAtlString sText = _tcschr(sMsg+_tcslen(sAuthor), ' ');
-	msg = msg.substr(0, (msg.length()-sText.GetLength()));
-
-	SetRedraw(FALSE);
+	CAtlString sText;
+	if(iAuthorLen > 0) {
+		int iLen = 0;
+		if(isMe) iLen = 1;
+   		sText = sMsg+iAuthorLen+iLen;
+		msg = msg.substr(0, iAuthorLen+iLen);
+		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
+		SetSel(lSelEnd, lSelEnd);
+		ReplaceSel(msg.c_str(), false);
+		if(_tcsicmp(sMyNick, sAuthor) == 0) {
+			myMess = true;
+			SetSel(lSelBegin, lSelBegin+iLen+1);
+			boOK = SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
+			SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
+			boOK = SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
+		} else {
+			bool isFavorite = false;
+			User::List ul = HubManager::getInstance()->getFavoriteUsers();
+			for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
+				User::Ptr pUser = *i;
+				if(_tcsicmp(Text::toT(pUser->getNick()).c_str(), sAuthor) == 0) {
+					isFavorite = true;
+					break;
+				}
+			}
+			bool isOP = false;
+			if(isFavorite == false) {
+				int i = -1;
+				if(m_pUsers != NULL) // fix for pm windows without userlist :-(
+					i = m_pUsers->findItem(sAuthor);
+				if(i != -1) {
+					UserInfo* ui = m_pUsers->getItemData(i);
+					isOP = ui->getOp();
+				}
+			}
+			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP || isFavorite) {
+				SetSel(lSelBegin, lSelBegin+iLen+1);
+				boOK = SetSelectionCharFormat(cf);
+				if(isFavorite){
+					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
+					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
+				} else if(isOP) {
+					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
+					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
+				} else {
+					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
+					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleBold);
+				}
+			}
+		}
+	} else {
+		sText = sMsg;
+	}
 
 	long lMask = GetEventMask();
 	SetEventMask(lMask | ENM_LINK);
@@ -104,12 +179,8 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 		AppendTextlen = len;
 	}
 
-	AppendTextOnly(sMyNick, sTime, msg.c_str(), cf, sAuthor, false); // maybe ugly but no emoticon in author nick ;-)
 	// cachry machry a maj s toho vylizt smajlove
-	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS)) {
-		bool bMyMessage = (sMyNick == sAuthor);
-
-		bool bRedrawControl = false;
+	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS) && bUseEmo) {
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
 		int smiles = 0; int nIdxFound = -1, maxsmiles = SETTING(MAX_EMOTICONS);
 		for(;;) {
@@ -132,7 +203,6 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 			}
 
 			if(rpl && (smiles < maxsmiles)) {
-				bRedrawControl = true;
 				TCHAR *cmp = _tcsstr(sText, Delimiter);
 				if(cmp) {
 					_tcsncpy(beforeAppendText, sText, cmp - sText);
@@ -140,52 +210,38 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 					TCHAR *out = cmp + _tcslen(Delimiter); 
 					_tcscpy(afterAppendText, out);
 				}
-				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, sAuthor, !bRedrawControl);
+				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, sAuthor);
 				COLORREF clrBkColor = WinUtil::m_ChatTextGeneral.crBackColor;
-				if(bMyMessage)
-					clrBkColor = WinUtil::m_ChatTextMyOwn.crBackColor;
+				if(myMess) clrBkColor = WinUtil::m_ChatTextMyOwn.crBackColor;
 				HBITMAP hbmNext = pFoundedEmotion->GetEmotionBmp(clrBkColor);
-				AppendBitmap(hbmNext);
+				lSelEnd = GetTextLengthEx(GTL_PRECISE);
+				SetSel(lSelEnd, lSelEnd);
+				CImageDataObject::InsertBitmap(GetIRichEditOle(), hbmNext);
 				sText = afterAppendText;
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor, !bRedrawControl);
+					AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
 				}
 				break;
 			}
 		}
-		if(bRedrawControl) {
-			EndRedrawAppendTextOnly();
-		}
 	} else {
-		AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
+		AppendTextOnly(sMyNick, _T(""), sText, cf, _T(""));
 	}
+	SetSel(lSelBeginSaved, lSelEndSaved);
+	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
+	EndRedrawAppendTextOnly();
 }
 
-void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor , bool bRedrawControlAtEnd) {
+void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor) {
 	bool boOK = false;
 	long lSelBegin = 0, lSelEnd = 0;
-
-	GetSel(lSelBeginSaved, lSelEndSaved);
-	POINT cr;
-	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
 
 	PARAFORMAT2 pf;
 	memset(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
-
-	// Insert TimeStamp and format with default style
-	if((sTime != 0)&& (_tcslen(sTime) > 0)) {
-		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
-		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(sTime, false);
-		lSelEnd = GetTextLengthEx(GTL_PRECISE);
-		SetSel(lSelBegin, lSelEnd - 1);
-		boOK = SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
-		boOK = SetParaFormat(pf);
-	}
 
 	// Insert text at the end
 	lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
@@ -197,44 +253,15 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 	CAtlString sMsgLower = sText;
 	sMsgLower.MakeLower();
 	CAtlString sNick = sMyNick;
-	if(sNick == sAuthor || myMess == true) {
+   if(myMess == true) {
 		// Moje vlastni zprava
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelBegin, lSelEnd);
 		boOK = SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
-		myMess = true;
 	} else {
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelBegin, lSelEnd);
 		boOK = SetSelectionCharFormat(cf);
-		myMess = false;
-	}
-
-	// Zvyrazneni nicku autora zpravy ci OPicaka ;o)
-	if(!myMess) { // don't waste cpu time, it's my mess and not need to set another author style :-P
-		if(_tcslen(sAuthor) > 0) {
-			int i = -1;
-			if(m_pUsers != NULL) // fix for pm windows without userlist :-(
-				i = m_pUsers->findItem(sAuthor);
-			bool isOP = false;
-			if(i != -1) {
-				UserInfo* ui = m_pUsers->getItemData(i);
-				isOP = ui->getOp();
-			}
-			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP) {
-  				CAtlString sAuthorNick = sAuthor;
-  			sAuthorNick.MakeLower();
-				long lAuthorBegin = sMsgLower.Find(sAuthorNick, 0);
-    			if(lAuthorBegin > 0) {
-					long lAuthorEnd = lAuthorBegin + sAuthorNick.GetLength();
-					SetSel(lSelBegin + lAuthorBegin, lSelBegin + lAuthorEnd);
-					if(isOP)
-						boOK = SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
-					else
-						boOK = SetSelectionCharFormat(WinUtil::m_TextStyleBold);
-			}
-		}
-	}
 	}
 	
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
@@ -303,13 +330,6 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 			lSearchFrom = lMyNickEnd;
 		}
 	}
-
-	SetSel(lSelBeginSaved, lSelEndSaved);
-	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
-
-	if(bRedrawControlAtEnd){
-		EndRedrawAppendTextOnly();
-		}
 }
 
 void ChatCtrl::EndRedrawAppendTextOnly() {
@@ -317,20 +337,6 @@ void ChatCtrl::EndRedrawAppendTextOnly() {
 	SetRedraw(TRUE);
 	InvalidateRect(NULL);
 	GoToEnd();
-}
-
-void ChatCtrl::AppendBitmap(HBITMAP hbm) {
-	POINT cr;
-	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
-	GetSel(lSelBeginSaved, lSelEndSaved);
-	
-	// Insert text at the end
-	long lSelEnd = GetTextLengthEx(GTL_PRECISE);
-	SetSel(lSelEnd, lSelEnd);
-	CImageDataObject::InsertBitmap(GetIRichEditOle(), hbm);
-
-	SetSel(lSelBeginSaved, lSelEndSaved);
-	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
 }
 
 IRichEditOle* ChatCtrl::GetIRichEditOle() const {
@@ -555,6 +561,7 @@ LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	if((lSelEnd > lSelBegin) && (iCharPos >= lSelBegin) && (iCharPos <= lSelEnd)) {
 		return 1;
 	}
+
 	// Po kliku do IP oznacit IP
 	CAtlString sSel;
 	if(HitIP(pt, &sSel, &iBegin, &iEnd1)) {

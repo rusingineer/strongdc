@@ -233,8 +233,12 @@ void TransferView::runUserCommand(UserCommand& uc) {
 LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
-		ctrlTransfers.getItemData(i)->user->connect();
+		ItemInfo *ii = ctrlTransfers.getItemData(i);
+		ii->statusString = CTSTRING(CONNECTING_FORCED);
+		ii->updateMask |= ItemInfo::MASK_STATUS;
+		ii->update();
+		ctrlTransfers.updateItem( ii );
+		ii->user->connect();
 	}
 	return 0;
 }
@@ -955,7 +959,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				int64_t tmp = 0;
 				double pomerKomprese = 0;
 				bool komprese = false;
-				double a = 0;
 
 				for(Download::List::const_iterator h = dl.begin(); h != dl.end(); ++h) {
 					Download* e = *h;
@@ -963,14 +966,11 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					ItemInfo* ch = transferItems[cqi];
 					if (e->getTarget() == d->getTarget()) {
 						tmp += e->getRunningAverage();
-						a = ch->getRatio();
 						if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
 							komprese = true;
 						}
-						if(a>0) {
-							pomerKomprese += a;
-							++NS;
-						}
+						pomerKomprese += ch->getRatio();
+						++NS;
 					}
 				}
 	
@@ -1002,8 +1002,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)).c_str(), 
 						(double)(BOOLSETTING(SHOW_CHUNK_INFO) ? d->getTotal() : total)*100.0/(double)(i->size), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+					dcassert(d->getTotal() <= d->getSegmentSize());
 				}
-				dcassert(d->getTotal() <= d->getSegmentSize());
 			}
 
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
@@ -1041,7 +1041,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 		i->statusString = Text::toT(aReason);
 		i->qi = aDownload->getItem();
-		i->size = aDownload->getItem()->getSize();
+		i->size = i->qi->getSize();
 		i->Target = Text::toT(aDownload->getTarget());
 
 		setMainItem(i);
