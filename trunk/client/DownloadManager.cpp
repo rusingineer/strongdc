@@ -770,7 +770,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	
 	d->finished = true;
 
-	if(d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_MP3_INFO))) {
+	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->getFile()->flush();
 		delete d->getFile();
 		d->setFile(NULL);

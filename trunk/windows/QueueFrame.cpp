@@ -811,16 +811,13 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	WinUtil::ClearPreviewMenu(readdMenu);
 	WinUtil::ClearPreviewMenu(previewMenu);
 
-	priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
-	for(int i=1;i<8;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
+	for(int i=0;i<7;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
 		usingDirMenu = false;
 		CMenuItemInfo mi;
 
 		singleMenu.InsertSeparatorFirst(STRING(FILE));
 		multiMenu.InsertSeparatorFirst(STRING(FILES));			
-
-
 
 		ctrlQueue.ClientToScreen(&pt);
 		
@@ -901,9 +898,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			case QueueItem::HIGHEST: pos = 5; break;
 			default: dcassert(0); break;
 		}
-		priorityMenu.CheckMenuItem(pos+1, MF_BYPOSITION | MF_CHECKED);
+		priorityMenu.CheckMenuItem(pos, MF_BYPOSITION | MF_CHECKED);
 		if(ii->getAutoPriority())
-			priorityMenu.CheckMenuItem(7, MF_BYPOSITION | MF_CHECKED);
+			priorityMenu.CheckMenuItem(6, MF_BYPOSITION | MF_CHECKED);
 
 			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
 			removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
@@ -911,6 +908,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
 			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
 			segmentsMenu.InsertSeparatorFirst(STRING(MAX_SEGMENTS_NUMBER));
+			priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 
 			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
@@ -923,12 +921,13 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			readdMenu.RemoveFirstItem();
 
 		} else {
-			multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
+			priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
+			multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			priorityMenu.RemoveFirstItem();
 		}		
 
 		singleMenu.RemoveFirstItem();
 		multiMenu.RemoveFirstItem();
-		priorityMenu.RemoveFirstItem();
 
 		return TRUE; 
 	}
@@ -947,6 +946,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			ctrlDirs.SelectItem(ht);
 		
 		ctrlDirs.ClientToScreen(&pt);
+		priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 		dirMenu.InsertSeparatorFirst(STRING(FOLDER));
 		dirMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		priorityMenu.RemoveFirstItem();

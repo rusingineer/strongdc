@@ -1,2 +1,2 @@
 #define isCVS
-#define CVSVERSION "cvs38"
+#define CVSVERSION "cvs39"

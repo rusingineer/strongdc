@@ -90,6 +90,8 @@ ShareManager::~ShareManager() {
 		File::deleteFile(Util::getAppPath() + "files" + Util::toString(i) + ".xml.bz2");
 	}
 
+	File::deleteFile(Util::getAppPath() + "files.xml.bz2");
+
 	for(Directory::MapIter j = directories.begin(); j != directories.end(); ++j) {
 		delete j->second;
 	}
@@ -108,10 +110,10 @@ ShareManager::Directory::~Directory() {
 string ShareManager::translateFileName(const string& aFile, bool adc, bool utf8) throw(ShareException) {
 	RLock l(cs);
 	if(aFile == "MyList.DcLst") {
-		generateNmdcList();
+		//generateNmdcList();
 		return getListFile();
 	} else if(aFile == "files.xml.bz2") {
-		generateXmlList();
+		//generateXmlList();
 		return getBZXmlFile();
 	} else {
 		string file;
@@ -638,7 +640,12 @@ int ShareManager::run() {
 			}
 			refreshDirs = false;
 		}
-		}
+
+		listN++;
+		generateXmlList();
+		generateNmdcList();
+
+	}
 
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
 	if(update) {
@@ -648,8 +655,8 @@ int ShareManager::run() {
 }
 		
 void ShareManager::generateXmlList() {
-	if(xmlDirty && lastXmlUpdate + 15 * 60 * 1000 < GET_TICK()) {
-		listN++;
+	if(xmlDirty/* && lastXmlUpdate + 15 * 60 * 1000 < GET_TICK()*/) {
+		//listN++;
 
 		try {
 			string tmp2;
@@ -688,9 +695,10 @@ void ShareManager::generateXmlList() {
 		lastXmlUpdate = GET_TICK();
 	}
 }
+
 void ShareManager::generateNmdcList() {
-	if(nmdcDirty && lastNmdcUpdate + 15 * 60 * 1000 < GET_TICK()) {
-		listN++;
+	if(nmdcDirty/* && lastNmdcUpdate + 15 * 60 * 1000 < GET_TICK()*/) {
+		//listN++;
 
 		try {
 			string tmp;
