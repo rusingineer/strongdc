@@ -420,7 +420,7 @@ private:
 				if(!type.empty() && type[0] == '.')
 					type.erase(0, 1);
 				size = Util::formatBytes(sr->getSize());
-				exactSize = Util::formatNumber(sr->getSize());
+				exactSize = Util::formatExactSize(sr->getSize());
 			} else {
 				fileName = sr->getFileName();
 				path = sr->getFile();

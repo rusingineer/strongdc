@@ -115,7 +115,7 @@ public:
 			else
 				ctrlList.setSortDirection(false);
 		} else {
-			if(l->iSubItem == 3) {
+			if(l->iSubItem == 4 || l->iSubItem == 5) {
 				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
 			} else {
 				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);

@@ -449,7 +449,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	
 	dummy.Create(NULL, rc, APPNAME " " VERSIONSTRING " " CZDCVERSIONSTRING, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_CENTER | ES_READONLY, WS_EX_STATICEDGE);
-	splash.Create("Static", GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM, WS_EX_TOPMOST | WS_EX_TOOLWINDOW);
+	splash.Create("Static", GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM, /*WS_EX_TOPMOST |*/ WS_EX_TOOLWINDOW);
 	splash.SetFont((HFONT)GetStockObject(DEFAULT_GUI_FONT));
 	
 	HDC dc = splash.GetDC();
@@ -457,7 +457,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	rc.bottom = rc.top + 240;
 	splash.ReleaseDC(dc);
 	splash.HideCaret();
-	splash.SetWindowPos(HWND_TOPMOST, &rc, SWP_SHOWWINDOW);
+	splash.SetWindowPos(NULL, &rc, SWP_SHOWWINDOW);
 	splash.SetWindowLong(GWL_WNDPROC, (LONG)&splashCallback);
 	splash.CenterWindow();
 	sTitle = VERSIONSTRING "" CZDCVERSIONSTRING;
@@ -577,7 +577,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			n2 = DEBUG_BUFSIZE;
 		}
 		tth.finalize();
-		strcpy(::tth, tth.getRoot().toBase32().c_str());
+		WinUtil::tth = tth.getRoot().toBase32();
+		strcpy(::tth, WinUtil::tth.c_str());
 	} catch(const FileException&) {
 		dcdebug("Failed reading exe\n");
 	}	

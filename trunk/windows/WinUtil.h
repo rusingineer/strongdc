@@ -285,6 +285,7 @@ public:
 	static FlatTabCtrl* tabCtrl;
 	static string commands;
 	static HHOOK hook;
+	static string tth;	
 	static bool isPM;
 	static bool isAppActive;
 	static bool isMinimized;

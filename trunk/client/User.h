@@ -64,7 +64,7 @@ public:
 	typedef Pointer<User> Ptr;
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
-	typedef HASH_MAP<string,Ptr> NickMap;
+	typedef HASH_MAP_X(string,Ptr,noCaseStringHash,noCaseStringEq,noCaseStringLess) NickMap;
 	typedef NickMap::iterator NickIter;
 	typedef HASH_MAP_X(CID, Ptr, CID::Hash, equal_to<CID>, less<CID>) CIDMap;
 	typedef CIDMap::iterator CIDIter;

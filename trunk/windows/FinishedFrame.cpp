@@ -77,6 +77,7 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctxMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	ctxMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CSTRING(REMOVE_ALL));
+	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
 	tabMenu.CreatePopupMenu();
 	if(BOOLSETTING(LOG_DOWNLOADS)) {

@@ -29,7 +29,6 @@ void Command::parse(const string& aLine, bool nmdc /* = false */) {
 	string::size_type i = 5;
 
 	if(nmdc) {
-
 		// "$ADCxxx ..."
 		if(aLine.length() < 7)
 			return;
@@ -44,27 +43,48 @@ void Command::parse(const string& aLine, bool nmdc /* = false */) {
 		memcpy(cmd, &aLine[1], 3);
 	}
 
-	string::size_type k = i;
+	string::size_type len = aLine.length();
+	const char* buf = aLine.c_str();
+	string cur;
+	cur.reserve(128);
 
-	while(k < aLine.length() && i < aLine.length()) {
-		string::size_type j = aLine.find(' ', k);
-		if(j == string::npos)
-			j = aLine.length();
-		if((j > i) && (aLine[j-1] != '\\')) {
-			if(type == TYPE_DIRECT && to.isZero()) {
-				to = CID(aLine.substr(i, j-i));
+	bool toSet = false;
+	bool fromSet = false;
+
+	while(i < len) {
+		switch(buf[i]) {
+		case '\\': i++; cur += buf[i];
+		case ' ': 
+			// New parameter...
+			{
+				if(!fromSet && type != TYPE_CLIENT) {
+					from = CID(cur);
+					fromSet = true;
+				} else 	if(type == TYPE_DIRECT && !toSet) {
+					to = CID(cur);
+					toSet = true;
 			} else {
-				parameters.push_back(aLine.substr(i, j-i));
-				string::size_type l = 0;
-				string& s = parameters.back();
-				while( (l = s.find('\\', l)) != string::npos) {
-					s.erase(l++, 1);
+					parameters.push_back(cur);
 				}
+				cur.clear();
 			}
-			k = i = j + 1;
-		} else {
-			k = j + 1;
+			break;
+		default:
+			cur += buf[i];
 		}
+		i++;
+	}
+	if(!cur.empty()) {
+		if(!fromSet && type != TYPE_CLIENT) {
+			from = CID(cur);
+			fromSet = true;
+		} else 	if(type == TYPE_DIRECT && !toSet) {
+			to = CID(cur);
+			toSet = true;
+		} else {
+			parameters.push_back(cur);
+		}
+		cur.clear();
 	}
 }
 
@@ -72,9 +92,10 @@ AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n') {
 }
 
 void AdcHub::handle(Command::INF, Command& c) throw() {
-	if(c.getParameters().empty())
+	if(c.getFrom().isZero() || c.getParameters().empty())
 		return;
-	User::Ptr u = ClientManager::getInstance()->getUser(CID(c.getParameters()[0]), this, true);
+
+	User::Ptr u = ClientManager::getInstance()->getUser(c.getFrom(), this, true);
 
 	int op = 0;
 	int reg = 0;
@@ -82,7 +103,7 @@ void AdcHub::handle(Command::INF, Command& c) throw() {
 	string ve;
 	int sl = 0;
 
-	for(StringIterC i = (c.getParameters().begin()+1); i != c.getParameters().end(); ++i) {
+	for(StringIterC i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
 		if(i->length() < 2)
 			continue;
 
@@ -156,17 +177,17 @@ void AdcHub::handle(Command::SUP, Command& c) throw() {
 }
 
 void AdcHub::handle(Command::MSG, Command& c) throw() {
-	if(c.getParameters().size() < 2)
+	if(c.getFrom().isZero() || c.getParameters().empty())
 		return;
-	User::Ptr p = ClientManager::getInstance()->getUser(CID(c.getParameters()[0]), false);
+	User::Ptr p = ClientManager::getInstance()->getUser(c.getFrom(), false);
 	if(!p)
 		return;
-	string msg = '<' + p->getNick() + "> " + Util::toAcp(c.getParameters()[1]);
+	string msg = '<' + p->getNick() + "> " + Util::toAcp(c.getParameters()[0]);
 	fire(ClientListener::Message(), this, msg);
 }
 
 void AdcHub::handle(Command::GPA, Command& c) throw() {
-	if(c.getParameters().size() < 1)
+	if(c.getParameters().empty())
 		return;
 	salt = c.getParameters()[0];
 
@@ -174,7 +195,9 @@ void AdcHub::handle(Command::GPA, Command& c) throw() {
 }
 
 void AdcHub::handle(Command::QUI, Command& c) throw() {
-	User::Ptr p = ClientManager::getInstance()->getUser(CID(c.getParameters()[0]), false);
+	if(c.getFrom().isZero())
+		return;
+	User::Ptr p = ClientManager::getInstance()->getUser(c.getFrom(), false);
 	if(!p)
 		return;
 	ClientManager::getInstance()->putUserOffline(p);
@@ -211,7 +234,7 @@ void AdcHub::redirect(const User* user, const string& aHub, const string& aMessa
 	string strtmp;
 	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + Command::escape(Util::toUtf8(aMessage, strtmp)) + "\n"); 
 }
-void AdcHub::search(int aSizeMode, int64_t aSize, int /*aFileType*/, const string& aString) { 
+void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) { 
 	string strtmp;
 	strtmp += "BSCH " + getMe()->getCID().toBase32() + " ";
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {
@@ -236,9 +259,10 @@ void AdcHub::password(const string& pwd) {
 		string tmp;
 		const string& x = Util::toUtf8(pwd, tmp);
 		TigerHash th;
+		th.update(getMe()->getCID().getData(), CID::SIZE);
 		th.update(x.data(), x.length());
 		th.update(buf, SALT_SIZE);
-		send("HPAS " + Encoder::toBase32(th.finalize(), TigerHash::HASH_SIZE) + "\n");
+		send("HPAS " + getMe()->getCID().toBase32() + " " + Encoder::toBase32(th.finalize(), TigerHash::HASH_SIZE) + "\n");
 		salt.clear();
 	}
 }
@@ -274,7 +298,7 @@ void AdcHub::info() {
 void AdcHub::on(Connected) throw() { 
 	setMe(ClientManager::getInstance()->getUser(CID(SETTING(CLIENT_ID)), this, false));
 	lastInfo.clear();
-	send("HSUP +BASE\n");
+	send("HSUP +BAS0\n");
 	
 	fire(ClientListener::Connected(), this);
 }
@@ -284,13 +308,11 @@ void AdcHub::on(Failed, const string& aLine) throw() {
 		ClientManager::getInstance()->putUserOffline(getMe());
 	setMe(NULL);
 	fire(ClientListener::Failed(), this, aLine);
-	
 }
 
 void AdcHub::sendMeMessage(const string& aMessage) {
 	send(aMessage + "\n"); 
 }
-
 /**
  * @file
  * $Id$

@@ -74,7 +74,7 @@ bool BufferedSocket::threadSendFile() {
 	dcassert(inbufSize >= SMALL_BUFFER_SIZE);
 
 	UploadManager *um = UploadManager::getInstance();
-	size_t s, sendMaximum, start = 0, current= 0;
+	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;
 	try {
 		for(;;) {
@@ -88,6 +88,7 @@ bool BufferedSocket::threadSendFile() {
      return false;
    }
 	
+			size_t s;
 			if (throttling) {
 				sendMaximum = um->throttleGetSlice();
 				if (sendMaximum < 0) {
