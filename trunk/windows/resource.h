@@ -407,6 +407,7 @@
 #define IDC_USERLIST                    1268
 #define IDC_IMPORT                      1269
 #define IDC_EXPORT                      1270
+#define IDC_SETTINGS_GET_USER_COUNTRY	1271
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517

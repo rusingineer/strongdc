@@ -20,6 +20,7 @@
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 
+
 #include "../client/QueueManager.h"
 #include "../client/ConnectionManager.h"
 #include "../client/QueueItem.h"
@@ -516,6 +517,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 void TransferView::InsertItem(ItemInfo* i) {
 	bool add = true;
 	if(!mainItems.empty()) {
+
 		for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
 			ItemInfo* m = *q;
 			if(m->Target == i->Target)
@@ -547,10 +549,10 @@ void TransferView::InsertItem(ItemInfo* i) {
 			int l =	ctrlTransfers.insertItem(ctrlTransfers.findItem(i->upper)+1,i,IMAGE_DOWNLOAD);
 			ctrlTransfers.SetItemState(l, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 		}
+		i->upper->pocetUseru += 1;
 		//i->upper->user = (User::Ptr)NULL;
 	}
 
-	i->upper->pocetUseru += 1;
 
 	if(i->upper != NULL)
 		{
@@ -743,7 +745,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 	if(i->upper != NULL) {
 		i->upper->pocetUseru -= 1;
 		bool existuje = false;
-
+		dcdebug("1. cyklus\n");
 		if(!mainItems.empty()) {
 			for(ItemInfo::Iter q = mainItems.begin(); q != mainItems.end(); ++q) {
 				ItemInfo* m = *q;
@@ -754,11 +756,13 @@ void TransferView::setMainItem(ItemInfo* i) {
 				}
 			}
 		}
-
+		dcdebug("2. cyklus\n");
 		if(ctrlTransfers.findItem(i) != -1) ctrlTransfers.deleteItem(i);	
+		dcdebug("3. cyklus\n");
 		InsertItem(i);
 		if(!mainItems.empty()) {
 			int q = 0;
+			dcdebug("4. cyklus\n");
 			xxx:
 				ItemInfo* m = mainItems[q];
 				existuje = false;
@@ -782,6 +786,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 	
 		}	
 	}
+	dcdebug("5. konec\n");
 }
 
 
@@ -819,10 +824,11 @@ void TransferView::ItemInfo::update() {
 
 	if (status == STATUS_RUNNING) {
 		if(type == TYPE_DOWNLOAD) {
+			
 		int64_t total = 0;
 		int NS = 0;
 	
-		if(!seznam.empty()) {
+		if(!seznam.empty())
 			for(Download::Iter j = seznam.begin(); j != seznam.end(); ++j)
 				{
 					Download* d = *j;
@@ -834,7 +840,6 @@ void TransferView::ItemInfo::update() {
 							}
 
 				}
-		}
 
 		if (NS>1) {
 			 int64_t ZbyvajiciCas;
@@ -857,8 +862,6 @@ void TransferView::ItemInfo::update() {
 			}
 		}
 	}
-
-
 
 	if(colMask & MASK_TIMELEFT) {
 		if (status == STATUS_RUNNING) {
@@ -900,7 +903,8 @@ void TransferView::ItemInfo::update() {
 				if(upper != NULL) {	upper->columns[COLUMN_PATH] = path; }
 		}
 	if(colMask & MASK_IP) {
-		columns[COLUMN_IP] = IP;
+		if (country == "") columns[COLUMN_IP] = IP;
+		else columns[COLUMN_IP] = IP + " (" + country + ")";
 	}
 		if(colMask & MASK_RATIO) {
 			columns[COLUMN_RATIO] = Util::toString(getRatio());
@@ -954,17 +958,19 @@ void TransferView::onConnectionStatus(ConnectionQueueItem* aCqi) {
 				i->Target = qi->getTarget();
 				i->qi = qi;
 
+			}
+		}
+	}	
 				if(i->Target != i->oldTarget) setMainItem(i);
 				i->oldTarget = i->Target;
 
+				if(i->qi)		
 				if(i->qi->getCurrents().size() <= 1)
 					if(i->upper != NULL) {
 						if(IsBadStringPtr(i->upper->statusString.c_str(), 1) == 0)
 							i->upper->statusString = i->statusString;
 					}
-			}
-		}
-	}
+	
 		
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
@@ -991,27 +997,27 @@ void TransferView::onConnectionRemoved(ConnectionQueueItem* aCqi) {
 		h = i->upper;
 		isDownload = (i->type == ItemInfo::TYPE_DOWNLOAD);
 		transferItems.erase(ii);
+	}
 
-		if(isDownload) {
-			for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
-				ItemInfo* q = j->second;
-				if(IsBadReadPtr(q, 4) == 0 && IsBadReadPtr(h, 4) == 0)			
-					if(q->Target == h->Target) {
-						existuje = true;
-						break;
-					}
-			}
-
-			if(!existuje)
-			{
-				if(IsBadReadPtr(h,4) == 0) {
-					mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
-					PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
+	if(isDownload) {
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* q = j->second;
+			if(IsBadReadPtr(q, 4) == 0 && IsBadReadPtr(h, 4) == 0)			
+				if(q->Target == h->Target) {
+					existuje = true;
+					break;
 				}
-	
+		}
+
+		if(!existuje)
+		{
+			if(IsBadReadPtr(h,4) == 0) {
+				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
+				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			}
 		}
 	}
+
 
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
 }
@@ -1024,11 +1030,12 @@ void TransferView::onConnectionFailed(ConnectionQueueItem* aCqi, const string& a
 		i = transferItems[aCqi];		
 		i->statusString = aReason;
 
-		if(i->Target != i->oldTarget) setMainItem(i);
-		i->oldTarget = i->Target;
+	//	if(i->Target != i->oldTarget) setMainItem(i);
+	//	i->oldTarget = i->Target;
 
 		if((i->upper != NULL) && (i->qi->getCurrents().size() <= 1))
 			i->upper->statusString = aReason;
+			
 		i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1049,10 +1056,11 @@ void TransferView::onDownloadStarting(Download* aDownload) {
 		i->file = Util::getFileName(aDownload->getTarget());
 		i->path = Util::getFilePath(aDownload->getTarget());
 		i->Target = aDownload->getTarget();
-
+	}
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
-
+	{
+		Lock l(cs);
 		if(i->user != (User::Ptr)NULL) 
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_RUNNING;
@@ -1070,6 +1078,7 @@ void TransferView::onDownloadStarting(Download* aDownload) {
 		i->downloadTarget = aDownload->getDownloadTarget();
 		i->statusString = STRING(DOWNLOAD_STARTING);
 		i->IP = aDownload->getUserConnection()->getRemoteIp();
+		i->country = Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp());
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
@@ -1092,7 +1101,6 @@ void TransferView::onDownloadTick(const Download::List& dl) {
 		Lock l(cs);
 		for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 			Download* d = *j;
-
 			int64_t total = d->getQueueTotal();
 			sprintf(buf, CSTRING(DOWNLOADED_BYTES), Util::formatBytes(total).c_str(), 
 				(double)total*100.0/(double)d->getSize(), Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
@@ -1107,16 +1115,15 @@ void TransferView::onDownloadTick(const Download::List& dl) {
 			i->stazenoCelkem = total;
 			i->seznam = dl;
 
-			if(i->Target != i->oldTarget) setMainItem(i);
-			i->oldTarget = i->Target;
+//			if(i->Target != i->oldTarget) setMainItem(i);
+//			i->oldTarget = i->Target;
 
-			if(i->user != (User::Ptr)NULL) 
-				if(i->upper != NULL) {	
+			if(i->upper != NULL) {	
 				i->upper->statusString = buf;
 				i->upper->actual = total;
 				i->upper->stazenoCelkem = d->getQueueTotal();
 				i->upper->pos = total;
-				}	
+			}	
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				d->isSet(Download::FLAG_ZDOWNLOAD) ? i->setFlag(ItemInfo::FLAG_COMPRESSED) : i->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 				i->statusString = buf;
@@ -1153,10 +1160,11 @@ void TransferView::onDownloadFailed(Download* aDownload, const string& aReason) 
 		i->file = Util::getFileName(aDownload->getTarget());
 		i->path = Util::getFilePath(aDownload->getTarget());
 		i->Target = aDownload->getTarget();
-
+	}
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
-
+	{
+		Lock l(cs);
 		if(i->upper != NULL) {
 			if(i->qi->getCurrents().size() <= 1) {
 				i->upper->status = ItemInfo::STATUS_WAITING;
@@ -1192,6 +1200,7 @@ void TransferView::onUploadStarting(Upload* aUpload) {
 		i->path = Util::getFilePath(aUpload->getFileName());
 		i->statusString = STRING(UPLOAD_STARTING);
 		i->IP = aUpload->getUserConnection()->getRemoteIp();
+		i->country = Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp());
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 	}
@@ -1230,7 +1239,6 @@ void TransferView::onUploadTick(const Upload::List& ul) {
 					i->statusString = buf;
 				}
 			}
-
 
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 			v->push_back(i);

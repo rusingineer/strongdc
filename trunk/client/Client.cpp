@@ -133,6 +133,7 @@ void Client::clearUsers() {
 void Client::onLine(const string& aLine) throw() {
 	lastActivity = GET_TICK();
 
+	char *temp;
 //	logovani vsech prichozich dat... posila se do chatu :-)
 //	fire(ClientListener::MESSAGE, this, aLine);
 
@@ -245,7 +246,7 @@ void Client::onLine(const string& aLine) throw() {
 		}
 
 } else if(cmd == "$MyINFO") { 
-    char *description, *temp; 
+    char *description; 
       char *prm = new char[param.length()+1]; 
       strcpy(prm, param.c_str()); 
       if((temp = strtok(prm+5, " ")) == NULL) { 
@@ -534,7 +535,9 @@ void Client::onLine(const string& aLine) throw() {
 		strcpy(prm, param.c_str());
 		if(prm != NULL) {
 			User::List v;
-			char *temp = strtok(prm, "$$");
+			if((temp = strtok(prm, "$$")) == NULL)
+			return;
+
 			while(temp != NULL) {
 				v.push_back(ClientManager::getInstance()->getUser(temp, this));
 				temp = strtok(NULL, "$$");
@@ -555,7 +558,9 @@ void Client::onLine(const string& aLine) throw() {
 		strcpy(prm, param.c_str());
 		if(prm != NULL) {
 			User::List v;
-			char *temp = strtok(prm, "$$");
+		if((temp = strtok(prm, "$$")) == NULL)
+			return;
+
 			while(temp != NULL) {
 				v.push_back(ClientManager::getInstance()->getUser(temp, this));
 				v.back()->setFlag(User::OP);

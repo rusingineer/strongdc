@@ -64,7 +64,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 #endif
 
-	File f(Util::getAppPath() + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE);
+	File f(Util::getAppPath() + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE | File::TRUNCATE);
 	f.setEndPos(0);
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
@@ -72,7 +72,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	sprintf(buf, "\r\nUnhandled Exception\r\n  Code: %x\r\nVersion: %s\r\nOs: %s\r\n", 
 		exceptionCode, VERSIONSTRING "" CZDCVERSIONSTRING, Util::getOsVersion().c_str() );
 
-	f.write(buf);
+	f.write(buf, strlen(buf));
 
 	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 	f.close();

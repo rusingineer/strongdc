@@ -180,8 +180,8 @@ public:
 	
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
-	int32_t throttleGetSlice();
-	u_int32_t throttleCycleTime();
+	size_t throttleGetSlice();
+	size_t throttleCycleTime();
 
 	int getActiveDownloads() {
 		int j = 0;

@@ -364,6 +364,7 @@ void BufferedSocket::threadRead() {
 						fire(BufferedSocketListener::LINE, line + l.substr(0, pos));
 						line.clear();
 					} else {
+						if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
 						fire(BufferedSocketListener::LINE, l.substr(0, pos));
 					}
 					i-=(pos + sizeof(separator));
