@@ -461,6 +461,25 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 				LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_FILE) + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
 				continue;
 			}
+			if(BOOLSETTING(REMOVE_FORBIDDEN)) {
+			//check for forbidden file patterns
+				string::size_type nameLen = name.size();
+				if ((nameLen >= 28 && name.find("download") == 0 && name.rfind(".dat") == nameLen - 4 && Util::toInt64(name.substr(8, 16))) ||		//kazaa temps
+					name.find("__INCOMPLETE__") == 0 ||		//winmx
+					name.find("__incomplete__") == 0 ||		//winmx
+					(nameLen > 9 && name.rfind(".GetRight") == nameLen - 9) ||
+					(nameLen > 9 && name.rfind(".tdc") == nameLen - 4) ||
+					(nameLen > 9 && name.rfind(".temp") == nameLen - 5) ||
+					(nameLen > 9 && name.rfind("part.met") == nameLen - 8) ||
+					(nameLen > 9 && name.rfind(".antifrag") == nameLen - 9) ||
+					(nameLen > (39 + 2 + 5) && name.rfind(".dctmp") == nameLen - 6)) {	// dc++ temp files
+					LogManager::getInstance()->message("Forbidden file will not be shared: " + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
+						//size-=j->getSize();
+						//++j;
+						continue;
+				}
+			}
+
 			if(!BOOLSETTING(SHARE_HIDDEN) && ((data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (name[0] == '.')) )
 				continue;
 			if(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -683,24 +702,6 @@ void ShareManager::Directory::toString(string& tmp, OutputStream* xmlFile, strin
 		if(f->getTTH() != NULL) {
 			dcassert(ShareManager::getInstance()->tthIndex.find(f->getTTH()) != ShareManager::getInstance()->tthIndex.end());
 			dupe = (&(*ShareManager::getInstance()->tthIndex[f->getTTH()]) != f);
-		}
-
-		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
-		//check for forbidden file patterns
-		string::size_type nameLen = j->getName().size();
-		if ((nameLen >= 28 && j->getName().find("download") == 0 && j->getName().rfind(".dat") == nameLen - 4 && Util::toInt64(j->getName().substr(8, 16))) ||
-			j->getName().find("__INCOMPLETE__") == 0 ||		//winmx
-			j->getName().find("__incomplete__") == 0 ||		//winmx
-			(nameLen > 9 && j->getName().rfind(".GetRight") == nameLen - 9) ||
-			(nameLen > 9 && j->getName().rfind(".tdc") == nameLen - 4) ||
-			(nameLen > 9 && j->getName().rfind(".temp") == nameLen - 5) ||
-			(nameLen > 9 && j->getName().rfind("part.met") == nameLen - 8) ||
-			(nameLen > 9 && j->getName().rfind(".antifrag") == nameLen - 9)) {
-				LogManager::getInstance()->message("Forbidden file will not be shared: " + j->getName() + " (size: " + Util::toString(j->getSize()) + " bytes) (Path: \"" + j->getParent()->getName() + "\")", true);
-				size-=j->getSize();
-				++j;
-				continue;
-			}
 		}
 
 		if(dupe) {
