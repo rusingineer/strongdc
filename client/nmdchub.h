@@ -249,9 +249,9 @@ public:
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
-			x+= *i + ' ';
+			x+= ' ' + *i;
 		}
-		send("$Supports " + x + '|');
+		send("$Supports" + x + '|');
 	}
 	void revConnectToMe(const User::Ptr& aUser) {
 		checkstate(); 

@@ -188,7 +188,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 	dcassert(aClient != NULL);
-	dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
+	//dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
 
 	UserPair p = users.equal_range(aNick);
 	UserIter i;

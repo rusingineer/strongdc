@@ -268,87 +268,13 @@ public:
 		return publicHubs;
 	}
 
-	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub) {
-		// No dupes, add it...
-		Lock l(cs);
-		userCommands.push_back(UserCommand(lastId++, type, ctx, flags, name, command, hub));
-		UserCommand& uc = userCommands.back();
-		if(!uc.isSet(UserCommand::FLAG_NOSAVE)) 
-			save();
-		return userCommands.back();
-	}
-
-	bool getUserCommand(int id, UserCommand& uc) {
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
-			if(i->getId() == id) {
-				uc = *i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool moveUserCommand(int id, int pos) {
-		dcassert(pos == -1 || pos == 1);
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
-			if(i->getId() == id) {
-				swap(*i, *(i + pos));
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void updateUserCommand(const UserCommand& uc) {
-		bool nosave = true;
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
-			if(i->getId() == uc.getId()) {
-				*i = uc;
-				nosave = uc.isSet(UserCommand::FLAG_NOSAVE);
-				break;
-			}
-		}
-		if(!nosave)
-			save();
-	}
-
-	void removeUserCommand(int id) {
-		bool nosave = true;
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
-			if(i->getId() == id) {
-				nosave = i->isSet(UserCommand::FLAG_NOSAVE);
-				userCommands.erase(i);
-				break;
-			}
-	}
-		if(!nosave)
-			save();
-	}
-	void removeUserCommand(const string& srv) {
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ) {
-			if((i->getHub() == srv) && i->isSet(UserCommand::FLAG_NOSAVE)) {
-				i = userCommands.erase(i);
-			} else {
-				++i;
-			}
-		}
-	}
-
-	void removeHubUserCommands(int ctx, const string& hub) {
-		Lock l(cs);
-		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ) {
-			if(i->getHub() == hub && i->isSet(UserCommand::FLAG_NOSAVE) && i->getCtx() & ctx) {
-				i = userCommands.erase(i);
-			} else {
-				++i;
-			}
-		}
-	}
+	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub);
+	bool getUserCommand(int cid, UserCommand& uc);
+	bool moveUserCommand(int cid, int pos);
+	void updateUserCommand(const UserCommand& uc);
+	void removeUserCommand(int cid);
+	void removeUserCommand(const string& srv);
+	void removeHubUserCommands(int ctx, const string& hub);
 
 	UserCommand::List getUserCommands() { Lock l(cs); return userCommands; };
 	UserCommand::List getUserCommands(int ctx, const string& hub, bool op);

@@ -933,6 +933,8 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 			continue;
 			nicks.insert(sr->getUser());
 		}
+		if(!sr->getUser()->isOnline())
+			return;
 		ucParams["mynick"] = sr->getUser()->getClientNick();
 		ucParams["mycid"] = sr->getUser()->getClientCID().toBase32();
 		ucParams["file"] = sr->getFile();

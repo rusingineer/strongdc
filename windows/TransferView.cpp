@@ -31,6 +31,8 @@
 #include "MainFrm.h"
 #include "SearchFrm.h"
 
+#include "BarShader.h"
+
 int TransferView::columnIndexes[] = { COLUMN_USER, COLUMN_HUB, COLUMN_STATUS, COLUMN_TIMELEFT, COLUMN_SPEED, COLUMN_FILE, COLUMN_SIZE, COLUMN_PATH, COLUMN_IP, COLUMN_RATIO };
 int TransferView::columnSizes[] = { 150, 100, 250, 75, 75, 175, 100, 200, 50, 75 };
 
@@ -210,6 +212,8 @@ void TransferView::runUserCommand(UserCommand& uc) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* itemI = ctrlTransfers.getItemData(i);
+		if(!itemI->user->isOnline())
+			return;
 
 		ucParams["mynick"] = itemI->user->getClientNick();
 		ucParams["mycid"] = itemI->user->getClientCID().toBase32();
@@ -334,75 +338,46 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				bih.biClrUsed = 32;
 				bih.biClrImportant = 0;
 				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-//				if (hBmp == NULL)
-//					MessageBox(Text::toT(Util::translateError(GetLastError())).c_str(), _T("ERROR"), MB_OK);
+
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 		
-				// New style progressbar tweaks the current colors
-				HLSTRIPLE hls_bk = OperaColors::RGB2HLS(cd->clrTextBk);
-
-				// Create pen (ie outline border of the cell)
-				HPEN penBorder = ::CreatePen(PS_SOLID, 1, OperaColors::blendColors(cd->clrTextBk, clr, (hls_bk.hlstLightness > 0.75) ? 0.6 : 0.4));
-				HGDIOBJ pOldPen = ::SelectObject(dc, penBorder);
-
-				// Draw the outline (but NOT the background) using pen
-				HBRUSH hBrOldBg = CreateSolidBrush(cd->clrTextBk);
-				hBrOldBg = (HBRUSH)::SelectObject(dc, hBrOldBg);
-				::Rectangle(dc, rc.left, rc.top, rc.right, rc.bottom);
-				DeleteObject(::SelectObject(dc, hBrOldBg));
-
-				// Set the background color, by slightly changing it
-				HBRUSH hBrDefBg = CreateSolidBrush(OperaColors::blendColors(cd->clrTextBk, clr, (hls_bk.hlstLightness > 0.75) ? 0.85 : 0.70));
-				HGDIOBJ oldBg = ::SelectObject(dc, hBrDefBg);
 				// Set the text color
 				COLORREF hTextDefColor = cd->clrText; // Even tho we "change" background, we don't change it very much
 
-				// Draw the outline AND the background using pen+brush
-				::Rectangle(dc, rc.left, rc.top, rc.left + (LONG)(rc.Width() * ii->getRatio() + 0.5), rc.bottom);
-
-				// Reset pen
-				DeleteObject(::SelectObject(dc, pOldPen));
-				// Reset bg (brush)
-				DeleteObject(::SelectObject(dc, oldBg));
-
 				// Draw the text over the entire item
                 COLORREF oldcol = ::SetTextColor(dc, hTextDefColor);
-				::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				// Draw the background and border of the bar
 				if(ii->size == 0)
 					ii->size = 1;
 
+				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
+				statusBar.SetFileSize(ii->size);
+				statusBar.Fill(RGB(95, 95, 95));
+
 				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
-					int w = (LONG)(rc.Width() * ii->getRatio() + 0.5);
-
-					rc.right = rc.left + (int) (((int64_t)w) * ii->actual / ii->size);
-               
-					COLORREF a, b;
-					OperaColors::EnlightenFlood(clr, a, b);
-					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
+					if(ii->type == ItemInfo::TYPE_UPLOAD) {
+						statusBar.FillRange(0, ii->start, HLS_TRANSFORM(clr, -20, 30));
+						statusBar.FillRange(ii->start, ii->actual,  clr);
+					} else
+						statusBar.FillRange(0, ii->actual, clr);
+					if(ii->pos > ii->actual)
+						statusBar.FillRange(ii->actual, ii->pos, RGB(222, 160, 0));
 				} else {
-					LONG left = rc.left;					
-					int w = rc.Width(); 						
-
-					rc.right = left + (int) (w * ii->start / ii->size); 
-					COLORREF a, b;
-					OperaColors::EnlightenFlood(SETTING(SEGMENT_BAR_COLOR), a, b);
-					
-					if(BOOLSETTING(SHOW_SEGMENT_COLOR))
-						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
-
-					rc.left = rc.right;
-					rc.right = left + (int) (w * ii->actual / ii->size); 
-					OperaColors::EnlightenFlood(clr, a, b);
-					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
+					statusBar.FillRange(ii->start, ii->actual, clr);
+					if(ii->pos > ii->actual)
+						statusBar.FillRange(ii->actual, ii->pos, RGB(222, 160, 0));
 				}
-				
+				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
+
 				// Draw the text only over the bar and with correct color
+				int right = rc2.right;
 				rc2.right = rc.right + 1;
 				::SetTextColor(dc, OperaColors::TextFromBackground(clr));
                 ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
@@ -417,6 +392,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 						SETTING(PROGRESS_TEXT_COLOR_UP)) : 
 					OperaColors::TextFromBackground(clr); //GetSysColor(COLOR_HIGHLIGHT);
 				::SetTextColor(dc, textcolor);
+				rc2.right = right;
                 ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				SelectObject(dc, oldFont);
@@ -518,7 +494,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 
 		if(i->upper->pocetUseru > 1) {
-			ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+			ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
 		}
 	}
 
@@ -823,6 +799,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 				i->upper->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
 				i->upper->Target = Text::toT(aDownload->getTarget());
 				i->upper->actual = aDownload->getQueueTotal();
+				i->upper->start = i->upper->actual;
+				i->upper->pos = i->upper->actual;
 				i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 				i->upper->finished = false;
 				if(i->qi->getActiveSegments().size() <= 1)
@@ -908,7 +886,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				i->upper->speed = tmp;
 				i->upper->celkovaRychlost = tmp;
 				i->upper->statusString = buf;
-				i->upper->actual = total;
+				i->upper->actual = total * pomerKomprese;
 				i->upper->stazenoCelkem = d->getQueueTotal();
 				i->upper->pos = total;
 				i->upper->size = d->getSize();

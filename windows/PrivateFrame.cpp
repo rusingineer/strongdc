@@ -218,6 +218,8 @@ void PrivateFrame::openWindow(const User::Ptr& aUser, const tstring& msg) {
 		p->CreateEx(WinUtil::mdiClient);
 	} else {
 		p = i->second;
+		if(::IsIconic(p->m_hWnd))
+			::ShowWindow(p->m_hWnd, SW_RESTORE);
 		p->MDIActivate(p->m_hWnd);
 	}
 	if(!msg.empty())

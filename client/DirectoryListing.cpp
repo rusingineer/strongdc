@@ -32,6 +32,10 @@
 #include "CryptoManager.h"
 #include "User.h"
 
+#ifdef ff
+#undef ff
+#endif
+
 void DirectoryListing::loadFile(const string& name, bool doAdl) {
 	string txt;
 
@@ -350,8 +354,10 @@ int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
 		if(!(adl && (*i)->getAdls())) {	
 			x += (*i)->getTotalSize(adls);
 			junkSize += (*i)->getJunkSize();
-			if((*i)->getRMDCdetected())
-				rmDCdetected = true;
+			if(rmDCdetected != 2) {
+				if((*i)->getRMDCdetected() != 0)
+					rmDCdetected = (*i)->getRMDCdetected();
+			}
 		}
 	}
 	return x;

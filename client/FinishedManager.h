@@ -121,39 +121,8 @@ public:
 	FinishedMP3Item::List& lockMP3List(bool upload = false) { cs.enter(); return MP3downloads; };
 	void unlockList() { cs.leave(); };
 
-	void remove(FinishedItem *item, bool upload = false)
-	{
-		{
-			Lock l(cs);
-			FinishedItem::List *listptr = upload ? &uploads : &downloads;
-			FinishedItem::Iter it = find(listptr->begin(), listptr->end(), item);
-
-			if(it != listptr->end())
-				listptr->erase(it);
-			else
-				return;
-		}
-		if (!upload)
-			fire(FinishedManagerListener::RemovedDl(), item);
-		else
-			fire(FinishedManagerListener::RemovedUl(), item);
-		delete item;		
-	}
-
-	void removeAll(bool upload = false)
-	{
-		{
-			Lock l(cs);
-			FinishedItem::List *listptr = upload ? &uploads : &downloads;
-			for_each(listptr->begin(), listptr->end(), DeleteFunction<FinishedItem*>());
-			listptr->clear();
-		}
-		if (!upload)
-			fire(FinishedManagerListener::RemovedAllDl());
-		else
-			fire(FinishedManagerListener::RemovedAllUl());
-	}
-
+	void remove(FinishedItem *item, bool upload = false);
+	void removeAll(bool upload = false);
 private:
 	friend class Singleton<FinishedManager>;
 	

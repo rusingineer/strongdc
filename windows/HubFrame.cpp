@@ -242,6 +242,8 @@ void HubFrame::openWindow(const tstring& aServer
 		if(windowtype)
 			frm->ShowWindow(((nCmdShow == SW_SHOWDEFAULT) || (nCmdShow == SW_SHOWNORMAL)) ? windowtype : nCmdShow);
 	} else {
+		if(::IsIconic(i->second->m_hWnd))
+			::ShowWindow(i->second->m_hWnd, SW_RESTORE);
 		i->second->MDIActivate(i->second->m_hWnd);
 	}
 }

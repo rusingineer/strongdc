@@ -1,4 +1,4 @@
-	-- StrongDC++ 1.00 --
+	-- StrongDC++ 1.00 RC9 --
 
 *** VAROVÁNÍ ***
 Tato verze zmìní všechny Vaše konfiguraèní soubory a frontu, a je
@@ -37,6 +37,9 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidána volba pro vypnutí aktualizace fronty v reálném èase (ke snížení využití CPU)
 * pøidána volba pro vypnutí zobrazování chatu (zDC++)
 * opraveno obèasné zatuhnutí klienta pøi otevøení fronty
+* zmìnìn vzhled progressbarù
+* opraven problém pøi sdílení celé koøenové složky
+* nástroj pro zjištìní TTH hashuje ve vlastním threadu (THX Prologic)
 
 
 	-- StrongDC++ 1.00 RC8 --

@@ -48,7 +48,7 @@
 #define SERVER_SOCKET_MESSAGE (WM_APP + 1235)
 
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
-		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>,
+		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>, public Thread,
 		private TimerManagerListener, private HttpConnectionListener, private QueueManagerListener,
 		private LogManagerListener, private WebServerListener
 {
@@ -240,16 +240,14 @@ public:
 	LRESULT onSelected(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		HWND hWnd = (HWND)wParam;
 		if(MDIGetActive() != hWnd) {
-			if(::IsIconic(hWnd))
-				::ShowWindow(hWnd, SW_RESTORE);
 			MDIActivate(hWnd);
 		} else {
 			::SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 			MDINext(hWnd);
 			hWnd = MDIGetActive();
-			if(::IsIconic(hWnd))
-				::ShowWindow(hWnd, SW_RESTORE);
 		}
+		if(::IsIconic(hWnd))
+			::ShowWindow(hWnd, SW_RESTORE);
 		return 0;
 	}
 	
@@ -341,6 +339,7 @@ public:
 	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
 
 	CImageList largeImages, largeImagesHot;
+	virtual int run();
 private:
 	friend bool isMDIChildActive(HWND hWnd);
 	friend void handleMDIClick(int nID, HWND mdiWindow);

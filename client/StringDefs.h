@@ -855,6 +855,7 @@ enum Strings { // @DontAdd
 	EXPANDED_RESULTS, // "Expand search results"
 	QUEUE_UPDATING, // "Enable queue updating in real time (use more CPU on large queue!!!)"
 	SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT, // "Suppress main chat"
+	DOWNLOADED_PARTS, // "Downloaded parts"
 
 	LAST // @DontAdd
 };

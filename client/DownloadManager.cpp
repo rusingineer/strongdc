@@ -36,6 +36,10 @@
 
 #include <limits>
 
+#ifdef ff
+#undef ff
+#endif
+
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
@@ -69,6 +73,29 @@ int64_t Download::getQueueTotal() {
 	if(chunksInfo != (FileChunksInfo*)NULL)
 		return chunksInfo->GetDownloadedSize();
 	return getTotal();
+}
+
+Command Download::getCommand(bool zlib, bool tthf) {
+	Command cmd = Command(Command::GET());
+	if(isSet(FLAG_TREE_DOWNLOAD)) {
+		cmd.addParam("tthl");
+	} else {
+		cmd.addParam("file");
+	}
+	if(tthf && getTTH() != NULL) {
+		cmd.addParam("TTH/" + getTTH()->toBase32());
+	} else {
+		cmd.addParam(Util::toAdcFile(getSource()));
+	}
+	cmd.addParam(Util::toString(getPos()));
+	cmd.addParam(Util::toString(getSize() - getPos()));
+
+	if(zlib && getSize() != -1 && BOOLSETTING(COMPRESS_TRANSFERS)) {
+		setFlag(FLAG_ZDOWNLOAD);
+		cmd.addParam("ZL1");
+	}
+
+	return cmd;
 }
 
 void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
@@ -659,7 +686,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 
-		d->resetPos();
+		//d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -667,7 +694,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const Exception& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 		// Nuke the bytes we have written, this is probably a compression error
-		d->resetPos();
+		//d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -690,7 +717,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 
 		Download* old = d->getOldDownload();
 
-		__int64 bl = 1024;
+		int64_t bl = 1024;
 		while(bl * old->getTigerTree().getLeaves().size() < old->getSize())
 			bl *= 2;
 		old->getTigerTree().setBlockSize(bl);

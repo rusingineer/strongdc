@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_UTIL_H__1758F242_8D16_4C50_B40D_E59B3DD63913__INCLUDED_)
-#define AFX_UTIL_H__1758F242_8D16_4C50_B40D_E59B3DD63913__INCLUDED_
+#ifndef UTIL_H
+#define UTIL_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -345,6 +345,9 @@ public:
 	static int toInt(const string& aString) {
 		return atoi(aString.c_str());
 	}
+	static u_int32_t toUInt32(const string& str) {
+		return toUInt32(str.c_str());
+	}
 	static u_int32_t toUInt32(const char* c) {
 		return (u_int32_t)atoi(c);
 	}
@@ -428,15 +431,17 @@ public:
 
 	/* Utf-8 versions of strnicmp and stricmp, unicode char code order (!) */
 	static int stricmp(const char* a, const char* b);
+	static int strnicmp(const char* a, const char* b, size_t n);
+
 	static int stricmp(const wchar_t* a, const wchar_t* b) {
 #ifdef _WIN32
 		return ::_wcsicmp(a, b);
 #else
 		return wcscasecmp(a, b);
 #endif
-
+		// return ::stricmp(a, b);
+		
 	}
-	static int strnicmp(const char* a, const char* b, size_t n);
 	static int strnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
 #ifdef _WIN32
 		return ::_wcsnicmp(a, b, n);

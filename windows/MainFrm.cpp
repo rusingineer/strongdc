@@ -63,6 +63,7 @@
 #include "../client/LogManager.h"
 #include "../client/cvsversion.h"
 #include "../client/WebServerManager.h"
+#include "../client/Thread.h"
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
@@ -351,7 +352,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	currentPic = SETTING(BACKGROUND_IMAGE);
 	m_PictureWindow.Load(Text::toT(currentPic).c_str());
 	// We want to pass this one on to the splitter...hope it get's there...
-	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 
 	bHandled = FALSE;
 	return 0;
@@ -440,7 +440,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		
 	if(wParam == DOWNLOAD_LISTING) {
 		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		checkFileList(Text::fromT(i->file), i->user);
+		//checkFileList(Text::fromT(i->file), i->user);
 		DirectoryListingFrame::openWindow(i->file, i->user);
 		delete i;
 	} else if(wParam == CHECK_LISTING) {
@@ -983,7 +983,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	return 0;
 }
 
-LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+int MainFrame::run() {
 	tstring file = Text::toT(Util::getAppPath()) + _T("*.*");
 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		lastTTHdir = Util::getFilePath(file);
@@ -996,6 +996,12 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(hash).c_str(), Text::toT(magnetlink).c_str());
 	   } 
    return 0;
+}
+
+LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	Thread::start();
+	Thread::setThreadPriority(Thread::NORMAL); // change as you wish
+  return 0;
 }
 
 void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)

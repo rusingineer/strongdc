@@ -150,7 +150,7 @@ public:
 	vector<int64_t> vecRunBlocks;
     map<int64_t, int64_t> mapVerifiedBlocks;
 
-    size_t	iBlockSize;						// TigerTree block size
+    int64_t	iBlockSize;						// TigerTree block size
 	string  sFilename;						// Temp target file name
 
 	int64_t iFileSize;

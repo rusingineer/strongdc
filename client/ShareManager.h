@@ -112,6 +112,19 @@ private:
 			File() : size(0), parent(NULL), tth(NULL) { };
 			File(const string& aName, int64_t aSize, Directory* aParent, TTHValue* aRoot) : 
 			    name(aName), size(aSize), parent(aParent), tth(aRoot) { };
+			File(const File& f) : 
+				name(f.getName()), size(f.getSize()), parent(f.getParent()), 
+					tth(f.getTTH() ? new TTHValue(*f.getTTH()) : NULL) { };
+
+			~File() {
+				delete tth;
+			}
+
+			File& operator=(const File& rhs) {
+				delete tth;
+				name = rhs.name; size = rhs.size; parent = rhs.parent; tth = rhs.tth ? new TTHValue(*rhs.tth) : NULL;
+				return *this;
+			}
 
 			string getADCPath() const { return parent->getADCPath() + name; }
 			string getFullName() const { return parent->getFullName() + getName(); }
@@ -163,8 +176,12 @@ private:
 		GETSET(string, name, Name);
 		GETSET(Directory*, parent, Parent);
 	private:
+		Directory(const Directory&);
+		Directory& operator=(const Directory&);
+
 		/** Set of flags that say which SearchManager::TYPE_* a directory contains */
 		u_int32_t fileTypes;
+
 	};
 	friend class Directory;
 	
@@ -263,7 +280,7 @@ private:
 	virtual void on(DownloadManagerListener::Complete, Download* d) throw();
 
 	// HashManagerListener
-	virtual void on(HashManagerListener::TTHDone, const string& fname, TTHValue* root) throw();
+	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
 	virtual void on(HashManagerListener::Finished) throw();
 	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw() { }
 

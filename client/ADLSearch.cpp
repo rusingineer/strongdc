@@ -18,7 +18,7 @@
 
 /*
 * Automatic Directory Listing Search
-* Henrik Engström, henrikengstrom@home.se
+* Henrik Engström, henrikengstrom at home se
 */
 
 #include "stdinc.h"
@@ -183,6 +183,8 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 	for(DestDirList::iterator id = destDirVector.begin(); id != destDirVector.end(); ++id) {
 		if(id->subdir != NULL) {
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile);
+			dcassert(id->subdir->getAdls());
+			
 			id->subdir->files.push_back(copyFile);
 		}
 		id->fileAdded = false;	// Prepare for next stage

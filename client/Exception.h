@@ -38,14 +38,16 @@ protected:
 
 #define STANDARD_EXCEPTION(name) class name : public Exception { \
 public:\
-	name(const string& aError) throw() : Exception(#name ": " + aError) { }; \
-	virtual ~name() { }; \
+	name() throw() : Exception(#name) { } \
+	name(const string& aError) throw() : Exception(#name ": " + aError) { } \
+	virtual ~name() { } \
 }
 
 #else // _DEBUG
 
 #define STANDARD_EXCEPTION(name) class name : public Exception { \
 public:\
+	name() throw() : Exception() { } \
 	name(const string& aError) throw() : Exception(aError) { }; \
 	virtual ~name() { }; \
 }

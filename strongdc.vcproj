@@ -358,6 +358,9 @@
 				RelativePath=".\windows\AVIPreview.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\BarShader.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\CDMDebugFrame.cpp">
 			</File>
 			<File
@@ -639,6 +642,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\AVIPreview.h">
+			</File>
+			<File
+				RelativePath=".\windows\BarShader.h">
 			</File>
 			<File
 				RelativePath=".\windows\CDMDebugFrame.h">

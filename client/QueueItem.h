@@ -140,7 +140,7 @@ public:
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments), added(rhs.added),
-		tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority)
+		tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -232,10 +232,14 @@ public:
 	}
 
 	int64_t getDownloadedBytes(){
-		if(!isSet(FLAG_USER_LIST)){
-			//FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
-			if(fileChunksInfo)
+		if(!isSet(FLAG_USER_LIST) && !isSet(FLAG_MP3_INFO) && !isSet(FLAG_TESTSUR)){
+			if(fileChunksInfo) {
 				return fileChunksInfo->GetDownloadedSize();
+			} else {
+				FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
+				if(filedatainfo)
+					return filedatainfo->GetDownloadedSize();
+			}
 		}
 
 		return 0;

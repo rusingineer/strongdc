@@ -36,6 +36,7 @@
 #define IDC_CLEAR                       127
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
+#define IDC_COPY                        128
 #define IDR_HUB                         129
 #define IDC_HUBLIST                     131
 #define IDC_SERVER                      133
@@ -532,6 +533,8 @@
 #define IDC_SECOND                      1288
 #define IDC_SECOND1                     1289
 #define IDC_SECOND2                     1290
+#define IDC_FLAT                        1291
+#define IDC_FLAT_SPIN                   1292
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
@@ -787,7 +790,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1290
-#define _APS_NEXT_SYMED_VALUE           128
+#define _APS_NEXT_CONTROL_VALUE         1293
+#define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif
