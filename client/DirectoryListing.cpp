@@ -57,11 +57,7 @@ void DirectoryListing::loadFile(const string& name, bool doAdl) {
 				break;
 		}
 
-		if(txt.compare(0, 5, "<?xml") == 0) {
 			loadXML(txt, doAdl);
-		} else {
-			load(txt, doAdl);
-		}
 	}
 }
 
@@ -221,8 +217,6 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool) {
 		if(uziv->isOnline())
 		{
 			uziv->setGenerator(generator);
-//			uziv->update();
-//			User::updated(uziv);
 		}
 		
 

@@ -51,11 +51,11 @@ PropPage::Item AppearancePage::items[] = {
 PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_PROGRESS_BARS, ResourceManager::SETTINGS_SHOW_PROGRESS_BARS },
 	{ SettingsManager::SHOW_INFOTIPS , ResourceManager::SETTINGS_SHOW_INFO_TIPS },
-	{ SettingsManager::FULL_ROW_SELECT, ResourceManager::SETTINGS_FULL_ROW_SELECT },
 	{ SettingsManager::MINIMIZE_TRAY, ResourceManager::SETTINGS_MINIMIZE_TRAY },
 	{ SettingsManager::TIME_STAMPS, ResourceManager::SETTINGS_TIME_STAMPS },
 	{ SettingsManager::STATUS_IN_CHAT, ResourceManager::SETTINGS_STATUS_IN_CHAT },
 	{ SettingsManager::SHOW_JOINS, ResourceManager::SETTINGS_SHOW_JOINS },
+	{ SettingsManager::FAV_SHOW_JOINS, ResourceManager::SETTINGS_FAV_SHOW_JOINS },
 	{ SettingsManager::FILTER_MESSAGES, ResourceManager::SETTINGS_FILTER_MESSAGES },
 	{ SettingsManager::FINISHED_DIRTY, ResourceManager::SETTINGS_FINISHED_DIRTY },
 	{ SettingsManager::QUEUE_DIRTY, ResourceManager::SETTINGS_QUEUE_DIRTY },

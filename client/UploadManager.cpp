@@ -101,7 +101,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 	if(aType == "file") {
 		userlist = ((Util::stricmp(aFile.c_str(), "MyList.DcLst") == 0) ||
-			(Util::stricmp(aFile.c_str(), "MyList.bz2") == 0) ||
 			(Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0));
 
 		File* f;
@@ -170,10 +169,10 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
 		} else {
+			delete is;
 			aSource->maxedOut();
 			addFailedUpload(aSource, aFile, aStartPos, File::getSize(file));
 			aSource->disconnect();
-			delete is;
 			return false;
 		}
 	}
@@ -377,8 +376,11 @@ void UploadManager::on(GetListLength, UserConnection* conn) throw() {
 void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) throw() {
 	int64_t aBytes = Util::toInt64(c.getParam(3));
 	int64_t aStartPos = Util::toInt64(c.getParam(2));
+	const string& fname = c.getParam(1);
+	const string& type = c.getParam(0);
+	string tmp;
 
-	if(prepareFile(aSource, c.getParam(0), Util::toNmdcFile(c.getParam(1)), aStartPos, aBytes)) {
+	if(prepareFile(aSource, type, Util::toNmdcFile(Util::toAcp(fname, tmp)), aStartPos, aBytes)) {
 		Upload* u = aSource->getUpload();
 		dcassert(u != NULL);
 		if(aBytes == -1)
@@ -392,7 +394,7 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 		cmd.addParam(c.getParam(0));
 		cmd.addParam(c.getParam(1));
 		cmd.addParam(c.getParam(2));
-		cmd.addParam(Util::toString(aBytes));
+		cmd.addParam(Util::toString(u->getSize()));
 
 		if(c.hasFlag("ZL", 4)) {
 			u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));

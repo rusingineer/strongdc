@@ -66,9 +66,7 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	listContainer.SubclassWindow(ctrlList.m_hWnd);
 
 	// Ev. set full row select
-	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP;
-	if (BOOLSETTING(FULL_ROW_SELECT))
-		styles |= LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 	ctrlList.SetExtendedListViewStyle(styles);

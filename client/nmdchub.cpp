@@ -32,11 +32,12 @@
 #include "UserCommand.h"
 #include "StringTokenizer.h"
 #include "DebugManager.h"
+#include "QueueManager.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	state(STATE_CONNECT), adapter(this),
 	lastActivity(GET_TICK()), 
-	reconnect(true), lastUpdate(0)
+	reconnect(true), lastUpdate(0) , auto_search(true)
 {
 	TimerManager::getInstance()->addListener(this);
 	dscrptn = (char *) calloc(96, sizeof(char));
@@ -594,6 +595,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			}
 		}
 
+		// send auto search
+		if(auto_search){
+			auto_search = false;
+			string search_string = QueueManager::getInstance()->getTopAutoSearchString();
+			search(SearchManager::SIZE_DONTCARE, 0, SearchManager::TYPE_HASH, search_string);
+		}
+
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
 	} else if(strcmp(cmd, "$OpList") == 0) {
 		if(param == NULL)
@@ -656,8 +664,13 @@ bool nlfound;
 
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	char buf[256];
-	GetWindowText(handle,buf,256);
-	if(strstr(buf,"NetLimiter") != 0) nlfound = true;
+	if (!handle)
+		return TRUE;// Not a window
+	//SendMessage(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf);
+	//GetWindowText(handle,buf,256);
+	
+	if(FindWindowEx(handle, 0, NULL, "NLInfoPane") > 0) nlfound = true;
+	//if(strstr(buf,"NetLimiter") != 0) nlfound = true;
 	return true;
 }
 
@@ -737,7 +750,10 @@ void NmdcHub::myInfo() {
 
 	nlfound = false;
 	string nldetect = "";
+
 	EnumWindows(GetWOkna,NULL);
+
+//	nlfound = FindWindow(NULL, "NLInfoPane") > 0;
 
 	if(nlfound) {
 		char promenna[255];

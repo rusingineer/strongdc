@@ -350,6 +350,7 @@
 #define IDC_CLIENT_STATUS               1227
 #define IDC_NORMAL                      1228
 #define IDC_TAG_VERSION                 1228
+#define IDC_SETTINGS_LOG_STATUS_MESSAGES 1228
 #define IDC_SEGMENT4_MAX                1229
 #define IDC_TOOLBAR_IMAGE_BOX           1229
 #define IDC_VERSION_MISMATCH            1229

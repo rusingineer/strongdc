@@ -72,6 +72,8 @@ class QueueLoader;
 
 class QueueManager : public Singleton<QueueManager>, public Speaker<QueueManagerListener>, TimerManagerListener, SearchManagerListener, ClientManagerListener{
 public:
+	/** Add a file with hash to the queue. */
+	bool add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException); 
 	
 	/** Add a file to the queue. */
 	void add(const string& aFile, int64_t aSize, User::Ptr aUser, 
@@ -122,12 +124,8 @@ public:
 
 	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
 		Lock l(cs);
-		QueueItem::List ql;
-		fileQueue.find(ql, aSize, suffix);
-		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
-			sl.push_back((*i)->getTarget());
-		}
-	}
+		fileQueue.find(sl, aSize, suffix);
+	};
 
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
@@ -146,6 +144,7 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
+	string getTopAutoSearchString();	
 	void updateSource(QueueItem* qi) {
 		fire(QueueManagerListener::StatusUpdated(), qi);
 	}
@@ -172,10 +171,10 @@ public:
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			u_int32_t aAdded, const TTHValue* root, const string& freeBlocks = Util::emptyString) throw(QueueException, FileException);
 		QueueItem* find(const string& target);
-		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
-		void find(QueueItem::List& ql, TTHValue* tth);
-
+		QueueItem* findByHash(const string& hash);
+		void find(StringList& sl, int64_t aSize, const string& ext);
 		QueueItem* findAutoSearch(StringList& recent);
+		QueueItem* findHighest();
 		size_t getSize() { return queue.size(); };
 		QueueItem::StringMap& getQueue() { return queue; };
 		void move(QueueItem* qi, const string& aTarget);

@@ -219,7 +219,7 @@ public:
 	void getBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetBlock " : "$GetBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
 	void fileLength(const string& aLength) { send("$FileLength " + aLength + '|'); }
 	void startSend() { send("$Send|"); }
-	void sending(int64_t bytes) { send(bytes == -1 ? "$Sending|" : "$Sending " + Util::toString(bytes) + "|"); };
+	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); };
 	void error(const string& aError) { send("$Error " + aError + '|'); };
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); };
 	void maxedOut() { send("$MaxedOut|"); };

@@ -31,6 +31,7 @@
 #pragma warning(disable: 4114) // duplicate parameter types
 #pragma warning(disable: 4125) // octal constant usage
 #pragma warning(disable: 4127) // conditional expression is constant
+#pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 
 #ifndef CDECL
 #define CDECL _cdecl

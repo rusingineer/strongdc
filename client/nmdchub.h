@@ -281,6 +281,8 @@ private:
 
 	bool reconnect;
 	u_int32_t lastUpdate;
+	bool auto_search;
+
 	string lastmyinfo;
 	bool validatenicksent;
 	int64_t lastbytesshared;

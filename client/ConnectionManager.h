@@ -38,8 +38,6 @@ public:
 	typedef ConnectionQueueItem* Ptr;
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
-	typedef HASH_MAP_X(Ptr, u_int32_t, PointerHash<ConnectionQueueItem>, equal_to<Ptr>, less<Ptr>) TimeMap;
-	typedef TimeMap::iterator TimeIter;
 	
 	enum State {
 		CONNECTING,					// In pendingDown, recently sent request to connect
@@ -48,12 +46,13 @@ public:
 		IDLE,						// In the download pool
 	};
 
-	ConnectionQueueItem(const User::Ptr& aUser) : state(WAITING), connection(NULL), user(aUser) { };
+	ConnectionQueueItem(const User::Ptr& aUser) : state(WAITING), connection(NULL), lastAttempt(0), user(aUser) { };
 	
 	User::Ptr& getUser() { return user; };
 	
 	GETSET(State, state, State);
 	GETSET(UserConnection*, connection, Connection);
+	GETSET(u_int32_t, lastAttempt, LastAttempt);
 private:
 	User::Ptr user;
 };
@@ -95,7 +94,7 @@ private:
 	CriticalSection cs;
 
 	/** Pending connections, i e users we're trying to connect to */
-	ConnectionQueueItem::TimeMap pendingDown;
+	ConnectionQueueItem::List pendingDown;
 	/** Download connection pool, pool of active connections to be used for downloading */
 	ConnectionQueueItem::List downPool;
 	/** Connections that are currently being used by the Up/DownloadManager */

@@ -105,7 +105,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 		ctrl.Attach(list);
 		CRect rc;
 		ctrl.GetClientRect(rc);
-		ctrl.SetExtendedListViewStyle(LVS_EX_CHECKBOXES | (BOOLSETTING(FULL_ROW_SELECT) ? LVS_EX_FULLROWSELECT : 0));
+		ctrl.SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
 		ctrl.InsertColumn(0, "Dummy", LVCFMT_LEFT, rc.Width(), 0);
 
 		LVITEM lvi;

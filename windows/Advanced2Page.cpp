@@ -43,6 +43,7 @@ PropPage::TextItem Advanced2Page::texts[] = {
 	{ IDC_SETTINGS_FORMAT2, ResourceManager::SETTINGS_FORMAT },
 	{ IDC_SETTINGS_FORMAT3, ResourceManager::SETTINGS_FORMAT },
 	{ IDC_SETTINGS_FORMAT4, ResourceManager::SETTINGS_FORMAT },
+	{ IDC_SETTINGS_LOG_STATUS_MESSAGES, ResourceManager::SETTINGS_LOG_STATUS_MESSAGES },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -57,6 +58,7 @@ PropPage::Item Advanced2Page::items[] = {
 	{ IDC_POST_UPLOAD, SettingsManager::LOG_FORMAT_POST_UPLOAD, PropPage::T_STR },
 	{ IDC_MAIN_CHAT, SettingsManager::LOG_FORMAT_MAIN_CHAT, PropPage::T_STR },
 	{ IDC_PRIVATE_CHAT, SettingsManager::LOG_FORMAT_PRIVATE_CHAT, PropPage::T_STR },
+	{ IDC_SETTINGS_LOG_STATUS_MESSAGES, SettingsManager::LOG_STATUS_MESSAGES, PropPage::T_BOOL },
 	{ 0, 0, PropPage::T_END }
 };
 

@@ -41,8 +41,7 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlProfiles.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 2, 0);
 	ctrlProfiles.InsertColumn(1, CSTRING(SETTINGS_CLIENT_VER), LVCFMT_LEFT, rc.Width() / 2, 1);
 
-	if(BOOLSETTING(FULL_ROW_SELECT))
-		ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
 	// Do specialized reading here
 	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
