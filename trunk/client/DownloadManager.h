@@ -146,6 +146,7 @@ public:
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(Download*, oldDownload, OldDownload);
 	GETSET(TTHValue*, tth, TTH);
+	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;

@@ -36,7 +36,7 @@
 
 BufferedSocket::BufferedSocket(char aSeparator, bool aUsesEscapes) throw(SocketException) :
 separator(aSeparator), usesEscapes(aUsesEscapes), escaped(false), port(0), mode(MODE_LINE), 
-dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL) {
+dataBytes(0), inbufSize(64*1024), curBuf(0), file(NULL), disablethrottle(false) {
 
 	inbuf = new u_int8_t[inbufSize];
 
@@ -77,7 +77,7 @@ bool BufferedSocket::threadSendFile() {
 	bool throttling;
 	try {
 		for(;;) {
-			throttling = BOOLSETTING(THROTTLE_ENABLE);
+			throttling = disablethrottle ? false : BOOLSETTING(THROTTLE_ENABLE);
 			if (throttling) { 
 				start = TimerManager::getTick();
 			}

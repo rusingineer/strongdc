@@ -250,6 +250,7 @@ public:
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();
+		if(p == QueueItem::PAUSED) return p;
 		if(getAutoPriority()){			
 			int percent = getDownloadedBytes() * 10.0 / getSize();
 

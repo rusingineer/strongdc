@@ -905,6 +905,13 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		segmentsMenu.EnableMenuItem(i + 109, MF_ENABLED);		
 	}
 
+	WinUtil::ClearPreviewMenu(browseMenu);
+	WinUtil::ClearPreviewMenu(removeMenu);
+	WinUtil::ClearPreviewMenu(removeAllMenu);
+	WinUtil::ClearPreviewMenu(pmMenu);
+	WinUtil::ClearPreviewMenu(readdMenu);
+	WinUtil::ClearPreviewMenu(previewMenu);
+
 	priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 	for(int i=1;i<8;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
@@ -1023,12 +1030,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		singleMenu.RemoveFirstItem();
 		multiMenu.RemoveFirstItem();
 		priorityMenu.RemoveFirstItem();
-		WinUtil::ClearPreviewMenu(browseMenu);
-		WinUtil::ClearPreviewMenu(removeMenu);
-		WinUtil::ClearPreviewMenu(removeAllMenu);
-		WinUtil::ClearPreviewMenu(pmMenu);
-		WinUtil::ClearPreviewMenu(readdMenu);
-		WinUtil::ClearPreviewMenu(previewMenu);
 
 		return TRUE; 
 	}

@@ -33,8 +33,14 @@
 
 void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUser, const string& start) {
 	DirectoryListingFrame* frame = new DirectoryListingFrame(aFile, aUser, start);
+	if(!BOOLSETTING(POPUP_FILELIST)) {
+		::LockWindowUpdate(WinUtil::mdiClient);
 	frame->CreateEx(WinUtil::mdiClient);
-	if(!BOOLSETTING(POPUP_FILELIST)) { frame->ShowWindow(SW_SHOWMINIMIZED); }
+		frame->ShowWindow(SW_SHOWMINIMIZED);
+		::LockWindowUpdate(NULL);
+	} else {
+		frame->CreateEx(WinUtil::mdiClient);
+	}
 }
 
 DirectoryListingFrame::DirectoryListingFrame(const string& aFile, const User::Ptr& aUser, const string& s) :
@@ -583,16 +589,16 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), i->c_str());
 				}
 			}
+			if(ii && ii->file->getTTH() && ii->file->getSize()) {
+				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
+				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
+				searchMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_BYCOMMAND | MF_ENABLED);
+			}
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 				for(StringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), i->c_str());
 				}
-			}
-			if(ii && ii->file->getTTH() && ii->file->getSize()) {
-				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
-				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
-				searchMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_BYCOMMAND | MF_ENABLED);
 			}
 			if(ii->file->getAdls())			{
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CSTRING(GO_TO_DIRECTORY));

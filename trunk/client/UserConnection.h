@@ -249,8 +249,8 @@ public:
 	}
 	
 	void disconnect() { if(socket) socket->disconnect(); };
-	void transmitFile(InputStream* f) { 
-		socket->transmitFile(f); 
+	void transmitFile(InputStream* f, bool disablethrottling = false) { 
+		socket->transmitFile(f, disablethrottling); 
 	};
 
 	const string& getDirectionString() {
@@ -291,7 +291,7 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	void garbageCommand() { send("JednadvePePeKjdeaomezovacobejdemoznakdyzbuhdaakdyznedatakholtnicasponsemtozkusil|"); }
+	void garbageCommand() { send("AtUzDouVsechnyTyOmezovaceDoPrcicASNimaITyPodelanyKlientDetektoryAleAsiSemDamNahodnejString|"); }
 private:
 	BufferedSocket* socket;
 	User::Ptr user;
