@@ -553,10 +553,10 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 					break;
 				}
 			}
+		}
 
 		if(!root || (q == NULL))
 			q = fileQueue.find(target);
-		}
 
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, p, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
@@ -1324,6 +1324,7 @@ void QueueManager::removeSources(User::Ptr aUser, int reason) throw() {
 
 void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) throw() {
 	User::List ul;
+	bool running = false;
 
 	{
 		Lock l(cs);
@@ -1340,6 +1341,7 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 				q->setPriority(p);
 				userQueue.add(q);
 			} else {
+				running = true;
 				if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 					for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
 						if(!q->isCurrent((*i)->getUser())) userQueue.remove(q, (*i)->getUser());
@@ -1357,8 +1359,13 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 		}
 	}
 
-	for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
-	ConnectionManager::getInstance()->getDownloadConnection(*i);
+	if(p == QueueItem::PAUSED) {
+		if(running)
+			DownloadManager::getInstance()->abortDownload(aTarget);
+	} else {
+		for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
+			ConnectionManager::getInstance()->getDownloadConnection(*i);
+		}
 	}
 }
 

@@ -18,6 +18,7 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
+#include "ConnectionManager.h"
 
 #include "Socket.h"
 
@@ -259,7 +260,7 @@ void Socket::write(const char* aBuffer, size_t aLen) throw(SocketException) {
 	bool blockAgain = false;
 
 	while(pos < aLen) {
-		if(wait(20000, WAIT_WRITE) == 0) {
+		if(ConnectionManager::getInstance()->shuttingDown && (wait(5000, WAIT_WRITE) == 0)) {
 			throw SocketException(STRING(CONNECTION_TIMEOUT));
 		}
 		int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);

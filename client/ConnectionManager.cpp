@@ -204,6 +204,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	ConnectionQueueItem::List removed;
 	User::List getDown;
 	{
+		Lock l_deadlock_fix(cs_deadlock_fix);
 		Lock l(cs);
 		{
 			for(User::Iter k = pendingAdd.begin(); k != pendingAdd.end(); ++k) {
@@ -306,6 +307,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 }
 
 void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
+	Lock l_deadlock_fix(cs_deadlock_fix);
 	Lock l(cs);
 	{
 		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
@@ -377,8 +379,8 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 			unsigned count = 0;
 			for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
 				if((*j)->getSocket()->getIp() == aServer && (*j)->getSocket()->getPort() == aPort) {
-					if(++count >= 2) {
-						// More than 2 outbound connections to the same addr/port? Can't trust that..
+					if(++count >= 5) {
+						// More than 5 outbound connections to the same addr/port? Can't trust that..
 						dcdebug("ConnectionManager::connect Tried to connect more than 2 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
 						return;
 					}
@@ -707,7 +709,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
 	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
 		{
-			//Lock l(cs);
+			Lock l(cs);
 			
 			for(ConnectionQueueItem::Iter i = downPool.begin(); i != downPool.end(); ++i) {
 				dcassert((*i)->getConnection());

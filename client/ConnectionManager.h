@@ -93,9 +93,12 @@ public:
 	}
 
 	static int iConnToMeCount;
-	CriticalSection cs;
+	CriticalSection cs_deadlock_fix;
+
+	bool shuttingDown;
 
 private:
+	CriticalSection cs;
 	short port;
 
 	/** Pending connections, i e users we're trying to connect to */
@@ -115,8 +118,6 @@ private:
 	StringList adcFeatures;
 
 	u_int32_t floodCounter;
-
-	bool shuttingDown;
 
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();

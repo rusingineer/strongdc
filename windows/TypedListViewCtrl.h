@@ -624,6 +624,13 @@ private:
 			GetHeader().GetItem(column, &hd);
 			ci->pos = hd.iOrder;
 
+			int itemCount = GetHeader().GetItemCount();
+			if(itemCount >= 0 && sortColumn > itemCount - 2)
+				setSortColumn(0);
+
+			if(sortColumn == ci->pos)
+				setSortColumn(0);
+
 			DeleteColumn(column);
 
 			for(int i = 0; i < GetItemCount(); i++) {
@@ -636,10 +643,7 @@ private:
 				SetItem(&lvItem);
 			}
 
-			if(sortColumn == ci->pos)
-				sortColumn = 0;
-		}
-		
+		}		
 	}
 
 	int findColumn(ColumnInfo* ci){

@@ -884,12 +884,25 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
 					tstring nick = Text::toT(i->getUser()->getNick());
+					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
+						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
+					} else if(i->isSet(QueueItem::Source::FLAG_PASSIVE)) {
+						nick += _T(" (") + TSTRING(PASSIVE_USER) + _T(")");
+					} else if(i->isSet(QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY)) {
+						nick += _T(" (") + TSTRING(ROLLBACK_INCONSISTENCY) + _T(")");
+					} else if(i->isSet(QueueItem::Source::FLAG_CRC_FAILED)) {
+						nick += _T(" (") + TSTRING(SFV_INCONSISTENCY) + _T(")");
+					} else if(i->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
+						nick += _T(" (") + TSTRING(INVALID_TREE) + _T(")");
+					} else if(i->isSet(QueueItem::Source::FLAG_SLOW)) {
+						nick += _T(" (") + TSTRING(SLOW_USER) + _T(")");
+					}
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
 					mi.dwItemData = (ULONG_PTR)&(*i);
-				mi.wID = IDC_READD + 1 + readdItems;  // "All" is before sources
-				readdMenu.InsertMenuItem(readdItems + 2, TRUE, &mi);  // "All" and separator come first
+					mi.wID = IDC_READD + 1 + readdItems;  // "All" is before sources
+					readdMenu.InsertMenuItem(readdItems + 2, TRUE, &mi);  // "All" and separator come first
 					readdItems++;
 				}
 

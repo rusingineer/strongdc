@@ -20,7 +20,6 @@
 * opraveno øazení ve frontì èekatelù na slot
 * snad opraven problém s odstraòováním uživatelù z fronty
 * opraveno unicode ve webserveru
-* opraveno krátké zamrznutí pøi kontrole seznamu souborù
 * seskupování výsledkù hledání je závislé na velikosti souboru
 * pøidána volba pro použití starého oDC stylu progressbarù
 * pøidána detekce ZoneAlarmu (Zion++)
@@ -35,6 +34,9 @@
 * pøidán do chatu pøíkaz /csfd (THX Atom)
 * pøidána zvuková událost pøi psaní do chatu
 * znovu pøidáno automatické odpojování zdrojù pod 1.2 kB/s, aby se pøedešlo zneužívání segmentového stahování
+* pøidán dùvod do menu Znovu vložit zdroj ve frontì
+* emulace DC++ je zapnuta pøi pøipojování k hubu použitím Rychlého pøipojení
+* stahování je odpojeno, když je priorita zmìnìna do pauznutého stavu
 
 
 	-- StrongDC++ 1.00 RC9 --

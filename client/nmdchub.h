@@ -155,7 +155,7 @@ public:
 	void refreshUserList(bool unknownOnly = false);
 	
 	void validateNick(const string& aNick) {
-		if (validatenicksent != true) {
+		if (validatenicksent == false) {
 			send("$ValidateNick " + toNmdc(aNick) + "|");
 			validatenicksent = true;
 		}
@@ -256,7 +256,7 @@ private:
 	bool reconnect;
 	u_int32_t lastUpdate;
 	string lastMyInfoA, lastMyInfoB;
-	bool validatenicksent;
+	bool validatenicksent, bFirstOpList;
 
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;

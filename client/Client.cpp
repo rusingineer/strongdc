@@ -56,7 +56,7 @@ void Client::reloadSettings() {
 		}
 	} else {
 		setNick(checkNick(SETTING(NICK)));
-		setStealth(false);
+		setStealth(true);
 		setIP(SETTING(SERVER));
 	}
 }

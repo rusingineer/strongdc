@@ -55,10 +55,9 @@ public:
 	string LineFromPos(POINT p);
 
 	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
-	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
-	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), bool bRedrawControlAtEnd = true);
+	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), int iAuthorLen = 0, bool isMe = false, bool bUseEmo = true);
+	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
 	void EndRedrawAppendTextOnly();
-	void AppendBitmap(HBITMAP hbm);
 
 	void GoToEnd();
 	void SetAutoScroll(bool boAutoScroll);
@@ -77,7 +76,6 @@ protected:
 	bool m_boAutoScroll, myMess;
 	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen;
-	long lSelBeginSaved, lSelEndSaved;
 };
 
 
