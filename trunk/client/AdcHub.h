@@ -42,7 +42,7 @@ public:
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage);
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
 	virtual void password(const string& pwd);
-	virtual void info();
+	virtual void info(bool alwaysSend);
 	virtual string checkNick(const string& nick);
 	virtual string getHubURL();
 	virtual void sendMeMessage(const string& aMessage);

@@ -576,6 +576,17 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 		}
 
 		if(ctrlList.GetSelectedCount() == 1 && ii->type == ItemInfo::FILE) {
+			//Append Favorite download dirs
+			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			if (spl.size() > 0) {
+				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+					n++;
+				}
+				targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			}
+
+			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			targets.clear();
 			if(ii->file->getTTH() != NULL) {
@@ -612,6 +623,17 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 		} else {
 			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MF_GRAYED);
 			fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MF_GRAYED);
+			//Append Favorite download dirs
+			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			if (spl.size() > 0) {
+				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+					n++;
+				}
+				targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			}
+
+			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -619,7 +641,8 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), i->c_str());
 				}
 			}
-			if(ii->dir->getAdls() && ii->dir->getParent() != dl->getRoot())			{
+			if(ii->type == ItemInfo::DIRECTORY && ii->type == ItemInfo::DIRECTORY && 
+			   ii->dir->getAdls() && ii->dir->getParent() != dl->getRoot()) {
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CTSTRING(GO_TO_DIRECTORY));
 			}
 			fileMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -644,11 +667,22 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 				targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
 			}
 
+			int n = 0;
+			//Append Favorite download dirs
+			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			if (spl.size() > 0) {
+				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
+					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+					n++;
+				}
+				targetDirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			}
+
+			n = 0;
 			targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
 
 			if(WinUtil::lastDirs.size() > 0) {
 				targetDirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-				int n = 0;
 				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET_DIR + (n++), i->c_str());
 				}
@@ -705,6 +739,55 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 		try {
 			dcassert(newId < (int)WinUtil::lastDirs.size());
 			dl->download(dir, Text::fromT(WinUtil::lastDirs[newId]), (GetKeyState(VK_SHIFT) & 0x8000) > 0);
+		} catch(const Exception& e) {
+			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
+		}
+	}
+	return 0;
+}
+LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS;
+	dcassert(newId >= 0);
+	StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+	
+	if(ctrlList.GetSelectedCount() == 1) {
+		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
+
+		if(ii->type == ItemInfo::FILE) {
+			if(newId < (int)targets.size()) {
+				try {
+					dl->download(ii->file, targets[newId], false, (GetKeyState(VK_SHIFT) & 0x8000) > 0);
+				} catch(const Exception& e) {
+					ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
+				}
+			} else {
+				newId -= (int)targets.size();
+				dcassert(newId < (int)spl.size());
+				downloadList(Text::toT(spl[newId].first));
+			}
+		} else {
+			dcassert(newId < (int)spl.size());
+			downloadList(Text::toT(spl[newId].first));
+		}
+	} else if(ctrlList.GetSelectedCount() > 1) {
+		dcassert(newId < (int)spl.size());
+		downloadList(Text::toT(spl[newId].first));
+	}
+	return 0;
+}
+
+LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	int newId = wID - IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS;
+	dcassert(newId >= 0);
+	
+	HTREEITEM t = ctrlTree.GetSelectedItem();
+	if(t != NULL) {
+		DirectoryListing::Directory* dir = (DirectoryListing::Directory*)ctrlTree.GetItemData(t);
+		string target = SETTING(DOWNLOAD_DIRECTORY);
+		try {
+			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			dcassert(newId < (int)spl.size());
+			dl->download(dir, spl[newId].first, (GetKeyState(VK_SHIFT) & 0x8000) > 0);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}

@@ -271,12 +271,6 @@ string User::getReport()
 	}
 	report += "\r\nDownspeed:	" + temp;
 	report += "\r\nIP:		" + ip;
-	/*if ( getConnectedHubs() == -1 ) {
-		report += "\r\nKnown hubs:	Failed";
-	} else {
-		report += "\r\nKnown hubs:	" + Util::toString(getConnectedHubs()) + "   " + getKnownHubsString();
-	}
-	report += "\r\nStated hubs:	" + getTotalHubs();*/
 	report += "\r\nHost:		" + host;
 	report += "\r\nDescription:	" + description;
 	report += "\r\nEmail:		" + email;
@@ -297,12 +291,6 @@ string User::getReport()
 		temp = "N/A";
 	}
 	report += "\r\nReal Share:	" + temp;
-	if ( getJunkBytesShared() > -1 ) {
-		temp = Util::formatBytes(getJunkBytesShared()) + "  (" + Util::formatExactSize(getJunkBytesShared()) + " )";
-	} else {
-		temp = "N/A";
-	}
-	report += "\r\nJunk Share:	" + temp;
 	temp = cheatingString;
 	if (temp.empty()) {	temp = "N/A"; }
 	report += "\r\nCheat status:	" + temp;
@@ -490,11 +478,6 @@ StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 			fakeShareParams["realshare"] = Util::toString(realBytesShared);
 			fakeShareParams["realshareformat"] = Util::formatBytes(realBytesShared);
 		}
-		if(junkBytesShared > -1)
-		{
-			fakeShareParams["junkshare"] = Util::toString(junkBytesShared);
-			fakeShareParams["junkshareformat"] = Util::formatBytes(junkBytesShared);
-		}
 		fakeShareParams["statedshare"] = Util::toString(getBytesShared());
 		fakeShareParams["statedshareformat"] = Util::formatBytes(getBytesShared());
 		fakeShareParams["cheatingdescription"] = cheatingString;
@@ -520,7 +503,7 @@ string User::insertUserData(const string& s, Client* aClient /* = NULL */)
 
 bool User::fileListDisconnected() {
 	fileListDisconnects++;
-	if(fileListDisconnects == 5) {
+	if(fileListDisconnects == 10) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
 		updated();
 		sendRawCommand(SETTING(DISCONNECT_RAW));
@@ -530,7 +513,7 @@ bool User::fileListDisconnected() {
 }
 bool User::connectionTimeout() {
 	connectionTimeouts++;
-	if(connectionTimeouts == 10) {
+	if(connectionTimeouts == 15) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 		updated();
 		try {

@@ -203,6 +203,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 		}
 		if(is->MatchesFile(currentFile->getName(), filePath, currentFile->getSize())) {
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile);
+			copyFile->setAdls(true);
 			destDirVector[is->ddIndex].dir->files.push_back(copyFile);
 			destDirVector[is->ddIndex].fileAdded = true;
 

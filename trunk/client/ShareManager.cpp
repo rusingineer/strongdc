@@ -420,9 +420,8 @@ string ShareManager::Directory::getADCPath() const throw() {
 	return parent->getADCPath() + name + '/';
 }
 string ShareManager::Directory::getFullName() const throw() {
-	if(parent == NULL) {
+	if(parent == NULL)
 		return getName() + '\\';
-	}
 	return parent->getFullName() + getName() + '\\';
 }
 

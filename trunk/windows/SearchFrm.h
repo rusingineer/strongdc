@@ -31,6 +31,7 @@
 #include "../client/SearchManager.h"
 #include "../client/CriticalSection.h"
 #include "../client/ClientManagerListener.h"
+#include "../client/HubManager.h"
 
 #include "UCHandler.h"
 
@@ -88,9 +89,11 @@ public:
 		COMMAND_ID_HANDLER(IDC_COLLAPSED, onCollapsed)		
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)
-				COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
+		COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_TARGET, IDC_DOWNLOAD_WHOLE_TARGET + WinUtil::lastDirs.size(), onDownloadWholeTarget)
 		CHAIN_COMMANDS(ucBase)
@@ -151,6 +154,8 @@ public:
 	LRESULT onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadWholeTarget(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadWholeTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -205,12 +210,7 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		int i = -1;
-		while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			SearchInfo* si = ctrlResults.getItemData(i);
-			string t = SettingsManager::getInstance()->getDownloadDir(Text::fromT(Util::getFileExt(si->getFileName())));		
-			(SearchInfo::Download(Text::toT(t)))(ctrlResults.getItemData(i));
-		}
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 

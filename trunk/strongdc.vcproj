@@ -388,9 +388,6 @@
 				RelativePath=".\windows\DownloadDirDlg.cpp">
 			</File>
 			<File
-				RelativePath=".\windows\DownloadDirsPage.cpp">
-			</File>
-			<File
 				RelativePath=".\windows\DownloadPage.cpp">
 			</File>
 			<File
@@ -404,6 +401,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\FavHubProperties.cpp">
+			</File>
+			<File
+				RelativePath=".\windows\FavoriteDirsPage.cpp">
 			</File>
 			<File
 				RelativePath=".\windows\FavoritesFrm.cpp">
@@ -677,9 +677,6 @@
 				RelativePath=".\windows\DownloadDirDlg.h">
 			</File>
 			<File
-				RelativePath=".\windows\DownloadDirsPage.h">
-			</File>
-			<File
 				RelativePath=".\windows\DownloadPage.h">
 			</File>
 			<File
@@ -696,6 +693,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\FavHubProperties.h">
+			</File>
+			<File
+				RelativePath=".\windows\FavoriteDirsPage.h">
 			</File>
 			<File
 				RelativePath=".\windows\FavoritesFrm.h">
@@ -783,6 +783,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\PublicHubsFrm.h">
+			</File>
+			<File
+				RelativePath=".\windows\PublicHubsListDlg.h">
 			</File>
 			<File
 				RelativePath=".\windows\QueueFrame.h">

@@ -28,11 +28,11 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven pád pøi zadání neplatného regulárního výrazu
 * volba pro rozbalení nových výsledkù hledání (BCDC++ SVN)
 * pøidìlení slotu se ihned pøipojí (BCDC++ SVN)
-* vylepšeno znovupøipojení po dokonèení souboru/segmentu (THX Liny)
+* neprovádí reconnect, pokud segment konèí na konci souboru (THX Liny)
 * aktualizováno na WTL 7.5.4291
 * snad opraven deadlock pøenosù
 * opraven pád pøi importování vzhledù
-* pøidána detekce rmDC++ s emulací DC++
+* pøidána detekce rmDC++ 0.403B[7] a 0.403D[1] s emulací DC++
 * progressbary ve frontì zobrazují ovìøené bloky
 * pøidána volba pro vypnutí aktualizace fronty v reálném èase (ke snížení využití CPU)
 * pøidána volba pro vypnutí zobrazování chatu (zDC++)
@@ -41,6 +41,8 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven problém pøi sdílení celé koøenové složky
 * nástroj pro zjištìní TTH hashuje ve vlastním threadu (THX Prologic)
 * pøidána položka pro otevøení stavu hashování do hlavního menu (fulDC)
+* opraveno stažení souboru pokud existuje doèasný soubory stejné velikosti
+* aktualizováno na ZLIB 1.2.2
 
 
 	-- StrongDC++ 1.00 RC8 --

@@ -159,6 +159,53 @@ void HubManager::removeFavorite(FavoriteHubEntry* entry) {
 	save();
 }
 
+bool HubManager::addFavoriteDir(const string& aDirectory, const string & aName){
+	string path = aDirectory;
+
+	if( path[ path.length() -1 ] != PATH_SEPARATOR )
+		path += PATH_SEPARATOR;
+
+	for(StringPairIter i = favoriteDirs.begin(); i != favoriteDirs.end(); ++i) {
+		if((Util::strnicmp(path, i->first, i->first.length()) == 0) && (Util::strnicmp(path, i->first, path.length()) == 0)) {
+			return false;
+		}
+		if(Util::stricmp(aName, i->second) == 0) {
+			return false;
+		}
+	}
+	favoriteDirs.push_back(make_pair(aDirectory, aName));
+	save();
+	return true;
+}
+
+bool HubManager::removeFavoriteDir(const string& aName) {
+	string d(aName);
+
+	if(d[d.length() - 1] != PATH_SEPARATOR)
+		d += PATH_SEPARATOR;
+
+	for(StringPairIter j = favoriteDirs.begin(); j != favoriteDirs.end(); ++j) {
+		if(Util::stricmp(j->first.c_str(), d.c_str()) == 0) {
+			favoriteDirs.erase(j);
+			save();
+			return true;
+		}
+	}
+	return false;
+}
+
+bool HubManager::renameFavoriteDir(const string& aName, const string& anotherName) {
+
+	for(StringPairIter j = favoriteDirs.begin(); j != favoriteDirs.end(); ++j) {
+		if(Util::stricmp(j->second.c_str(), aName.c_str()) == 0) {
+			j->second = anotherName;
+			save();
+			return true;
+		}
+	}
+	return false;
+}
+
 void HubManager::addRecent(const RecentHubEntry& aEntry) {
 	RecentHubEntry* f;
 
@@ -212,7 +259,7 @@ void HubManager::onHttpFinished() throw() {
 
 	{
 		Lock l(cs);
-		publicHubs.clear();
+		publicListMatrix[publicListServer].clear();
 
 		if(x->compare(0, 5, "<?xml") == 0) {
 			loadXmlList(*x);
@@ -232,7 +279,7 @@ void HubManager::onHttpFinished() throw() {
 			const string& server = *k++;
 			const string& desc = *k++;
 			const string& usersOnline = *k++;
-			publicHubs.push_back(HubEntry(name, server, desc, usersOnline));
+				publicListMatrix[publicListServer].push_back(HubEntry(name, server, desc, usersOnline));
 		}
 	}
 							}
@@ -269,7 +316,7 @@ private:
 
 void HubManager::loadXmlList(const string& xml) {
 	try {
-		XmlListLoader loader(publicHubs);
+		XmlListLoader loader(publicListMatrix[publicListServer]);
 		SimpleXMLReader(&loader).fromXML(xml);
 	} catch(const SimpleXMLException&) {
 
@@ -337,6 +384,15 @@ void HubManager::save() {
 				xml.addChildAttrib("Command", k->getCommand());
 				xml.addChildAttrib("Hub", k->getHub());
 			}
+		}
+		xml.stepOut();
+		//Favorite download to dirs
+		xml.addTag("FavoriteDirs");
+		xml.stepIn();
+		StringPairList spl = getFavoriteDirs();
+		for(StringPairIter i = spl.begin(); i != spl.end(); ++i) {
+			xml.addTag("Directory", i->first);
+			xml.addChildAttrib("Name", i->second);
 		}
 		xml.stepOut();
 
@@ -554,6 +610,18 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
+	//Favorite download to dirs
+	aXml->resetCurrentChild();
+	if(aXml->findChild("FavoriteDirs")) {
+		aXml->stepIn();
+		while(aXml->findChild("Directory")) {
+			string virt = aXml->getChildAttrib("Name");
+			string d(aXml->getChildData());
+			HubManager::getInstance()->addFavoriteDir(d, virt);
+		}
+		aXml->stepOut();
+	}
+
 	dontSave = false;
 }
 
@@ -574,26 +642,41 @@ void HubManager::recentload(SimpleXML* aXml) {
 	}
 }
 
+StringList HubManager::getHubLists() {
+	StringTokenizer<string> lists(SETTING(HUBLIST_SERVERS), ';');
+	return lists.getTokens();
+}
+
+bool HubManager::setHubList(int aHubList) {
+	if(!running) {
+		lastServer = aHubList;
+		StringList sl = getHubLists();
+		publicListServer = sl[(lastServer) % sl.size()];
+		return true;
+	}
+	return false;
+}
+
 void HubManager::refresh() {
-	StringList sl = StringTokenizer<string>(SETTING(HUBLIST_SERVERS), ';').getTokens();
+	StringList sl = getHubLists();
 	if(sl.empty())
 		return;
-	const string& server = sl[(lastServer) % sl.size()];
-	if(Util::strnicmp(server.c_str(), "http://", 7) != 0) {
+	publicListServer = sl[(lastServer) % sl.size()];
+	if(Util::strnicmp(publicListServer.c_str(), "http://", 7) != 0) {
 		lastServer++;
 		return;
 	}
 
-	fire(HubManagerListener::DownloadStarting(), server);
+	fire(HubManagerListener::DownloadStarting(), publicListServer);
 	if(!running) {
 		if(!c)
 			c = new HttpConnection();
 		{
 			Lock l(cs);
-			publicHubs.clear();
+			publicListMatrix[publicListServer].clear();
 		}
 		c->addListener(this);
-		c->downloadFile(server);
+		c->downloadFile(publicListServer);
 		running = true;
 	}
 }

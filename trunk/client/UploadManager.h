@@ -140,7 +140,15 @@ public:
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
 
-	size_t getUploads() { Lock l(cs); return uploads.size(); };
+	/** @return Number of uploads. */ 
+	size_t getUploadCount() { Lock l(cs); return uploads.size(); };
+
+	/**
+	 * @remarks This is only used in the tray icons. Could be used in
+	 * MainFrame too.
+	 *
+	 * @return Agerage download speed in Bytes/s
+	 */
 	int getAverageSpeed() {
 		Lock l(cs);
 		int avg = 0;
@@ -162,8 +170,16 @@ public:
 		return slots;
 	}
 
-	int getRunning() { return running; };
+	/**
+	 * @remarks This is defined with GETSET below.
+	 * @return Number of running uploads.
+	 */
+//	int getRunning() { return running; };
+
+	/** @return Number of free slots. */
 	int getFreeSlots() { return max((getSlots() - running), 0); }
+
+	/** @internal */
 	bool getAutoSlot() {
 		if(SETTING(MIN_UPLOAD_SPEED) == 0)
 			return false;
@@ -171,9 +187,12 @@ public:
 			return false;
 		return (SETTING(MIN_UPLOAD_SPEED)*1024) < UploadManager::getInstance()->getAverageSpeed();
 	}
+
+	/** @internal */
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
 	int hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.count(aUser); }
 		
+	/** @param aUser Reserve an upload slot for this user. */
 	void reserveSlot(User::Ptr& aUser) {
 		{
 			Lock l(cs);
@@ -212,12 +231,13 @@ public:
 			reservedSlots.erase(uis);
 	}
 
+	/** @internal */
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
 		conn->setState(UserConnection::STATE_GET);
 	}
 
-	void setRunning(int _running) { running = _running; }
+	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);
 	GETSET(u_int32_t, lastGrant, LastGrant);
 
@@ -229,7 +249,6 @@ public:
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
 private:
-	int running;
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
 	void throttleSetup();

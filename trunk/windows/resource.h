@@ -38,6 +38,7 @@
 #define IDR_MAINFRAMEICON               128
 #define IDC_COPY                        128
 #define IDR_HUB                         129
+#define IDC_PUB_LIST_DROPDOWN           130
 #define IDC_HUBLIST                     131
 #define IDC_SERVER                      133
 #define IDC_FILES                       135
@@ -94,6 +95,7 @@
 #define IDD_DOWNLOADDIR                 260
 #define IDD_DIALOG2                     261
 #define IDD_DOWNLOADDIRS                261
+#define IDD_FAVORITE_DIRSPAGE           261
 #define IDD_CLIENT_PROFILE              263
 #define IDD_CLIENTS_PAGE                264
 #define IDB_BITMAP3                     266
@@ -117,6 +119,8 @@
 #define IDD_POPUPS                      287
 #define IDD_SDCPAGE                     288
 #define IDD_USERLIST_COLOURS            289
+#define IDD_DIALOG3                     290
+#define IDD_HUB_LIST                    290
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -169,6 +173,7 @@
 #define IDC_HUBADDR                     1048
 #define IDC_GRANTSLOT                   1049
 #define IDC_RAW_FOUR                    1049
+#define IDC_SETTINGS_LIST_CONFIG        1049
 #define IDC_FORCE                       1050
 #define IDC_RAW_FIVE                    1050
 #define IDC_BUFFERSIZE                  1051
@@ -251,6 +256,8 @@
 #define IDC_MAX_TAB_ROWS                1107
 #define IDC_INTERVAL                    1107
 #define IDC_CLOSE_DISCONNECTED          1108
+#define IDC_INTERVAL2                   1108
+#define IDC_MATCH                       1108
 #define IDC_OPEN_FOLDER                 1109
 #define IDC_OPEN_FILE                   1110
 #define IDC_SETTINGS_ODC_MENUBAR_BUMPED 1110
@@ -481,9 +488,11 @@
 #define IDC_MAXSOURCES                  1251
 #define IDC_TIME_LEFT                   1251
 #define IDC_MINIMUM                     1252
+#define IDC_SETTINGS_FAVORITE_DIRECTORIES 1252
 #define IDC_EXTENSION                   1253
 #define IDC_SHUTDOWN_SPIN               1253
 #define IDC_STATISTICS                  1253
+#define IDC_FAVORITE_DIRECTORIES        1253
 #define IDC_KB                          1254
 #define IDC_MAX_EMOTICONSSPIN           1254
 #define IDC_SEG_NUMBER                  1255
@@ -491,17 +500,26 @@
 #define IDC_CURRENT_FILE                1255
 #define IDC_SEG_NUMBER_SPIN             1256
 #define IDC_INTERVAL_SPIN               1256
+#define IDC_LIST_ADD                    1256
 #define BAA                             1257
 #define IDC_SEARCH_EDIT                 1257
+#define IDC_LIST_EDIT                   1257
+#define IDC_MATCH_SPIN                  1257
 #define CAA                             1258
 #define IDC_SEARCH_SPIN                 1258
+#define IDC_LIST_UP                     1258
 #define DAA                             1259
 #define IDC_BEGIN_EDIT                  1259
+#define IDC_LIST_DOWN                   1259
 #define FAKE_SET                        1260
 #define IDC_BEGIN_SPIN                  1260
+#define IDC_LIST_REMOVE                 1260
 #define INFORMACE                       1261
+#define IDC_LIST_DESC                   1261
 #define AAA                             1262
+#define IDC_LIST_LIST                   1262
 #define IDC_SOUNDLIST                   1263
+#define IDC_RENAME                      1263
 #define IDC_EMULATION                   1264
 #define IDC_UPDATE_URL                  1264
 #define IDC_REGEXP_TESTER_TEXT          1264
@@ -538,6 +556,7 @@
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
+#define IDC_PUB_LIST_CONFIG             1297
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445
@@ -600,6 +619,8 @@
 #define IDC_PRIORITY_HIGHEST            7005
 #define IDC_DOWNLOAD_WHOLE_TARGET       7500
 #define IDC_REMOVE_SOURCES              8000
+#define IDC_DOWNLOAD_FAVORITE_DIRS      8500
+#define IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS 9000
 #define IDR_TRAY_PM                     10000
 #define IDR_TRAY_PM_XP                  10001
 #define IDC_EXTRASLOTSSPIN              10002
@@ -727,6 +748,7 @@
 #define IDC_SETCZDC_MAX_EMOTICONS2      10117
 #define IDC_SAVEQUEUE_TEXT              10117
 #define IDC_INTERVAL_TEXT               10118
+#define IDC_MATCH_QUEUE_TEXT            10119
 #define IDC_CZDC_WINAMP                 10120
 #define IDC_SETCZDC_PM_LINES            10121
 #define IDC_CZDC_AVAILABLE_STYLES       10122
@@ -788,9 +810,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        290
+#define _APS_NEXT_RESOURCE_VALUE        291
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1293
-#define _APS_NEXT_SYMED_VALUE           129
+#define _APS_NEXT_SYMED_VALUE           130
 #endif
 #endif

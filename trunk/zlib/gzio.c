@@ -5,6 +5,8 @@
  * Compile this file with -DNO_GZCOMPRESS to avoid the compression code.
  */
 
+/* @(#) $Id$ */
+
 #include <stdio.h>
 
 #include "zutil.h"
@@ -451,6 +453,10 @@ int ZEXPORT gzread (file, buf, len)
                 s->z_eof = 1;
                 if (ferror(s->file)) {
                     s->z_err = Z_ERRNO;
+                    break;
+                }
+                if (feof(s->file)) {        /* avoid error for empty file */
+                    s->z_err = Z_STREAM_END;
                     break;
                 }
             }

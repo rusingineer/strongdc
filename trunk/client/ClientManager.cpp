@@ -81,7 +81,7 @@ void ClientManager::infoUpdated(bool antispam) {
 	Lock l(cs);
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
-			(*i)->info();
+			(*i)->info(false);
 		}
 	}
 		quickTick = GET_TICK();
@@ -316,7 +316,7 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 	}
 
 	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-		(*j)->info();
+		(*j)->info(false);
 	}
 }
 

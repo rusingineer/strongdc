@@ -39,7 +39,7 @@
 #include "OperaColorsPage.h"
 #include "ClientsPage.h"
 #include "ToolbarPage.h"
-#include "DownloadDirsPage.h"
+#include "FavoriteDirsPage.h"
 #include "Popups.h"
 #include "SDCPage.h"
 #include "UserListColours.h"
@@ -55,7 +55,7 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SE
 	pages[6] = new UCPage(s);
 	pages[7] = new CZDCPage(s);
 	pages[8] = new SDCPage(s);
-	pages[9] = new DownloadDirsPage(s);
+	pages[9] = new FavoriteDirsPage(s);
 	pages[10] = new Popups(s);
 	pages[11] = new PropPageTextStyles(s);
 	pages[12] = new OperaColorsPage(s);

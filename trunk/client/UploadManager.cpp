@@ -580,7 +580,7 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 void UploadManager::throttleSetup() {
 #define INBUFSIZE 64*1024
 	Lock l(cs);
-	unsigned int num_transfers = getUploads();
+	unsigned int num_transfers = getUploadCount();
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {

@@ -24,7 +24,7 @@
 #endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
-#include "CryptoManager.h"
+//#include "CryptoManager.h"
 #include "UserConnection.h"
 #include "Singleton.h"
 #include "FilteredFile.h"
@@ -36,6 +36,10 @@
 class QueueItem;
 class ConnectionQueueItem;
 
+/**
+ * Comes as an argument in the DownloadManagerListener functions.
+ * Use it to retrieve information about the ongoing transfer.
+ */
 class Download : public Transfer, public Flags {
 public:
 	static const string ANTI_FRAG_EXT;
@@ -64,6 +68,12 @@ public:
 	Download() throw();
 	Download(QueueItem* qi, User::Ptr& aUser) throw();
 
+	/**
+	 * @remarks This function is only used from DownloadManager but its
+	 * functionality could be useful in TransferView.
+	 *
+	 * @return Target filename without path.
+	 */
 	string getTargetFileName() {
 		string::size_type i = getTarget().rfind('\\');
 		if(i != string::npos) {
@@ -75,15 +85,18 @@ public:
 
 	int64_t getQueueTotal();
 	
+	/** @internal */
 	string getDownloadTarget() {
 		const string& tgt = (getTempTarget().empty() ? getTarget() : getTempTarget());
 		return isSet(FLAG_ANTI_FRAG) ? tgt + ANTI_FRAG_EXT : tgt;			
 	}
 
+	/** @internal */
 	TigerTree& getTigerTree() {
 		return tt;
 	}
 
+	/** @internal */
 	Command getCommand(bool zlib, bool tthf);
 
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
@@ -99,6 +112,7 @@ public:
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;
+	
 private:
 	Download(const Download&);
 
@@ -107,6 +121,20 @@ private:
 	TigerTree tt;
 };
 
+
+/**
+ * Use this liestener interface to get progress information for downloads.
+ *
+ * @remarks All methods are sending a pointer to a Download but the receiver
+ * (TransferView) is not usig any of the methods in Download, only methods
+ * from its super class, Transfer. The listener functions should send Transfer
+ * objects instead.
+ *
+ * Changing this will will cause a problem with Download::List which is used
+ * in the on Tick function. One solution is reimplement on Tick to call once
+ * for every Downloads, sending one Download at a time. But maybe updating the
+ * GUI is not DownloadManagers problem at all???
+ */
 class DownloadManagerListener {
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
@@ -116,30 +144,60 @@ public:
 	typedef X<2> Starting;
 	typedef X<3> Tick;
 
-	/** This is the first message sent before a download starts. No other messages will be sent before. */
+	/** 
+	 * This is the first message sent before a download starts. 
+	 * No other messages will be sent before.
+	 */
 	virtual void on(Starting, Download*) throw() { };
-	/** Sent once a second if something has actually been downloaded. */
+
+	/**
+	 * Sent once a second if something has actually been downloaded.
+	 */
 	virtual void on(Tick, const Download::List&) throw() { };
-	/** This is the last message sent before a download is deleted. No more messages will be sent after it. */
+
+	/** 
+	 * This is the last message sent before a download is deleted. 
+	 * No more messages will be sent after it.
+	 */
 	virtual void on(Complete, Download*) throw() { };
-	/** This indicates some sort of failure with a particular download. No more messages will be sent after it */
+
+	/** 
+	 * This indicates some sort of failure with a particular download.
+	 * No more messages will be sent after it.
+	 *
+	 * @remarks Should send an error code instead of a string and let the GUI
+	 * display an error string.
+	 */
 	virtual void on(Failed, Download*, const string&) throw() { };
 };
 
+
+/**
+ * Singleton. Use its listener interface to update the download list
+ * in the user interface.
+ */
 class DownloadManager : public Speaker<DownloadManagerListener>, 
 	private UserConnectionListener, private TimerManagerListener, 
 	public Singleton<DownloadManager>
 {
 public:
 
+	/** @internal */
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
 		checkDownloads(conn);
 	}
 
+	/** @internal */
 	void abortDownload(const string& aTarget);
 	void abortDownload(const string& aTarget, User::Ptr& aUser);
 
+	/**
+	 * @remarks This is only used in the tray icons. In MainFrame this is
+	 * calculated instead so there seems to be a little duplication of code.
+	 *
+	 * @return Agerage download speed in Bytes/s
+	 */
 	int getAverageSpeed() {
 		Lock l(cs);
 		int avg = 0;
@@ -161,7 +219,8 @@ public:
 		return whole;
 	}
 
-	size_t getDownloads() {
+	/** @return Number of downloads. */ 
+	size_t getDownloadCount() {
 		Lock l(cs);
 		return downloads.size();
 	}

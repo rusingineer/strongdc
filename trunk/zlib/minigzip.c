@@ -13,6 +13,8 @@
  * or in pipe mode.
  */
 
+/* @(#) $Id$ */
+
 #include <stdio.h>
 #include "zlib.h"
 

@@ -129,9 +129,8 @@ public:
 		}
 	}
 
-	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if( IsWindow() )
-			DestroyWindow();
+	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		EndDialog(wID);	
 		return 0;
 	}
 

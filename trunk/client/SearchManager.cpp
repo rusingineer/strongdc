@@ -25,6 +25,8 @@
 #include "ClientManager.h"
 #include "AdcCommand.h"
 
+#include "../pme-1.0.4/pme.h"
+
 SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, TTHValue* aTTH, bool aUtf8) :
 file(aFile), hubName(aClient->getName()), hubIpPort(aClient->getIpPort()), user(aClient->getMe()), 
 size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
@@ -310,6 +312,17 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 	}
 
 	file = Util::replace(file, "\\\\", "\\");
+
+	if((user->getVersion() == "0.403") && (user->getClientType() != "rmDC++ 0.403D[1]")) {
+		string path(file);
+		path = path.substr(0, path.find("\\"));
+		PME reg("([A-Z])");
+		if(reg.match(path)) {
+			user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+			user->setClientType("rmDC++ 0.403D[1]");
+			user->setBadClient(true);
+		}
+	}
 	// utf8 = true is a lie, it's not really Unicode, but we have converted all the text from acp to utf8...
 	SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 		file, hubName, hubIpPort, Country, true);

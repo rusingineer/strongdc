@@ -225,11 +225,11 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	if(d == NULL) {
 		firstTry = true;
 
-		bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)SETTING(DOWNLOAD_SLOTS));
+		bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 		bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
 
 		if( slotsFull || speedFull ) {
-			bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
+			bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 			if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
 				removeConnection(aConn);
 				return;
@@ -1072,7 +1072,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 		user->updateClientType();
 		aSource->setDownload(NULL);
 		removeDownload(d, true, true);
-		checkDownloads(aSource);
+		removeConnection(aSource);
 		return;
 	}
 
@@ -1225,7 +1225,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 		user->updateClientType();
 		aSource->setDownload(NULL);
 		removeDownload(d, false, true);
-		checkDownloads(aSource);
+		removeConnection(aSource);
 		return;
 	}
 
@@ -1287,7 +1287,7 @@ void DownloadManager::throttleSetup() {
 // with 64k, a few people get winsock error 0x2747
 #define INBUFSIZE 64*1024
 	Lock l(cs);
-	unsigned int num_transfers = getDownloads();
+	unsigned int num_transfers = getDownloadCount();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {

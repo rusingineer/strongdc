@@ -539,10 +539,12 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 							"\tMode: " + ui->user->getMode() + "\r\n" +
 							"\tHubs: " + ui->user->getHubs() + "\r\n" +
 							"\tSlots: " + ui->user->getSlots() + "\r\n" +
-							"\tUpLimit: " + ui->user->getUpload() + "\r\n" +
-							"\tIP: " + ui->user->getIp() + "\r\n"+
-							"\tISP: " + ui->user->getHost() + "\r\n"+
-							"\tPk String: " + ui->user->getPk() + "\r\n"+
+							"\tUpLimit: " + ui->user->getUpload() + "\r\n";
+						if(ui->user->isClientOp()) {
+							sCopy += "\tIP: " + ui->user->getIp() + "\r\n"+
+								"\tISP: " + ui->user->getHost() + "\r\n";
+						}
+						sCopy += "\tPk String: " + ui->user->getPk() + "\r\n"+
 							"\tLock: " + ui->user->getLock() + "\r\n"+
 							"\tSupports: " + ui->user->getSupports();
 						break;		
@@ -660,8 +662,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							}
 						
 							if(BOOLSETTING(CHECK_NEW_USERS)) {
-								if((u->getMode() == "P" || u->getMode() == "5" || u->isSet(User::PASSIVE)) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE))
-								{} else {
+								if(u->getMode() == "A" || !u->isSet(User::PASSIVE) || SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
 									try {
 										QueueManager::getInstance()->addTestSUR(u, true);
 									} catch(const Exception&) {
@@ -717,7 +718,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		cf.crBackColor = SETTING(BACKGROUND_COLOR);
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
-		if(BOOLSETTING(POPUP_CHEATING_USER)) {
+		if(BOOLSETTING(POPUP_CHEATING_USER) && (*x).length() < 256) {
 			MainFrame::getMainFrame()->ShowBalloonTip((*x).c_str(), CTSTRING(CHEATING_USER));
 		}
 
@@ -1570,7 +1571,7 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	if(BOOLSETTING(STATUS_IN_CHAT) && inChat) {
 		addLine(_T("*** ") + aLine, m_ChatTextSystem);
 	}
-	if(BOOLSETTING(LOG_STATUS_MESSAGES) && inChat) {
+	if(BOOLSETTING(LOG_STATUS_MESSAGES)) {
 		LOGDT("MainChat\\" + client->getAddressPort() + "_Status", Text::fromT(aLine));
 	}
 }
@@ -1658,13 +1659,13 @@ void HubFrame::on(Message, Client*, const string& line) throw() {
 		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
 			speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
 		} else {
-			speak(ADD_CHAT_LINE, line);
+			speak(ADD_CHAT_LINE, Util::toDOS(line));
 		}
 	} else if((strstr(line.c_str(), "is kicking") != NULL) && (strstr(line.c_str(), "because:") != NULL) || 
 		(strstr(line.c_str(), "Hub-Security") != NULL) && (strstr(line.c_str(), "was kicked by") != NULL)) {
-		speak(KICK_MSG, line);		
+		speak(KICK_MSG, Util::toDOS(line));		
 	} else {
-		speak(ADD_CHAT_LINE, line);
+		speak(ADD_CHAT_LINE, Util::toDOS(line));
 	}
 }
 void HubFrame::on(PrivateMessage, Client*, const User::Ptr& user, const string& line) throw() { 
@@ -1710,38 +1711,32 @@ LRESULT HubFrame::onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 }
 
 BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
-	if(user && dl) {
+	if(user && dl && user->getClient()) {
 		if(user->getClient()->getOp()) {
 			int64_t statedSize = user->getBytesShared();
 			int64_t realSize = dl->getTotalSize();
-			int64_t junkSize = 0;
 	
-			if(!BOOLSETTING(IGNORE_JUNK_FILES)) {
-				junkSize = dl->getJunkSize();
-				realSize -= junkSize;
-			}
-
 			double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
 			int64_t sizeTolerated = (int64_t)(realSize*multiplier);
 			string detectString = "";
 			string inflationString = "";
-			user->setJunkBytesShared(junkSize);
 			user->setRealBytesShared(realSize);
 			bool isFakeSharing = false;
 			
 			PME reg("^0.403");
-
-			if(reg.match(user->getVersion()) && dl->detectRMDC()) {			
-				user->setCheat("rmDC++ with DC++ emulation" , true);
-				user->setClientType("rmDC++");
+			if(reg.match(user->getVersion()) && dl->detectRMDC403B7()) {
+				user->setCheat("rmDC++ 0.403B[7] with DC++ emulation" , true);
+				user->setClientType("rmDC++ 0.403B[7]");
 				user->setBadClient(true);
 				user->setBadFilelist(true);
-
 				return true;
 			}
 
-			if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
-				isFakeSharing = true;
+			if((user->getVersion() == "0.403") && dl->detectRMDC403D1()) {
+				user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+				user->setClientType("rmDC++ 0.403D[1]");
+				user->setBadClient(true);
+				return true;
 			}
 
 			if(statedSize > sizeTolerated) {
@@ -1763,9 +1758,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 					detectString += inflationString;
 				}
 				detectString += STRING(CHECK_SHOW_REAL_SHARE);
-				if((junkSize > 0) && (!BOOLSETTING(IGNORE_JUNK_FILES))) {
-					detectString = STRING(CHECK_JUNK_FILES);
-				}
+
 				detectString = user->insertUserData(detectString);
 				user->setCheat(Util::validateMessage(detectString, false), false);
 				user->sendRawCommand(SETTING(FAKESHARE_RAW));

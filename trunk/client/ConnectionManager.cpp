@@ -183,7 +183,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 			pendingAdd.clear();
 		}
 
-		bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloads() >= (size_t)SETTING(DOWNLOAD_SLOTS));
+		bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 		bool tooFast = ((SETTING(MAX_DOWNLOAD_SPEED) != 0 && DownloadManager::getInstance()->getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024)));
 		
 		bool startDown = !tooMany && !tooFast;
@@ -219,7 +219,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 
 				// Always start high-priority downloads unless we have 3 more than maxdownslots already...
 				if(!startDown) {
-					bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (DownloadManager::getInstance()->getDownloads() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
+					bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (DownloadManager::getInstance()->getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 					startDown = !extraFull && QueueManager::getInstance()->hasDownload(cqi->getUser(), QueueItem::HIGHEST);
 				}
 				if(cqi->getState() == ConnectionQueueItem::WAITING) {
@@ -412,21 +412,21 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 			return;
 		}
 
-		//aSource->getUser()->setBadClient(false);
-
-		if (/*aSource->getUser()->getClient()->getOp() &&*/ aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {
-			string host = Util::emptyString;
+		if (aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {		
 			string ip = aSource->getRemoteIp();
-			try {
-				host = aSource->getRemoteHost(ip);
-			} catch (Exception e) {
-				host = e.getError();
-			} catch (...) {
+			if(ip != Util::emptyString) {
+				string host = Util::emptyString;
+				try {
+					host = aSource->getRemoteHost(ip);
+				} catch (Exception e) {
+					host = e.getError();
+				} catch (...) {
+				}
+				ClientManager::getInstance()->setIPNick(ip, aNick);
+				aSource->getUser()->setHost(host);
+				User::updated(aSource->getUser());
 			}
-			ClientManager::getInstance()->setIPNick(ip, aNick);
-			aSource->getUser()->setHost(host);
 		}
-		User::updated(aSource->getUser());
 	}
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {

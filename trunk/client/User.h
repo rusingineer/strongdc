@@ -86,8 +86,7 @@ public:
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			/*checked(false), */realBytesShared(-1),
-			junkBytesShared(-1), fakeShareBytesShared(-1), ctype(10), status(1)
+			/*checked(false), */realBytesShared(-1), fakeShareBytesShared(-1), ctype(10), status(1)
 
 			 { unCacheClientInfo(); };
 	virtual ~User() throw();
@@ -164,7 +163,6 @@ public:
 	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
 	GETSET(int64_t, realBytesShared, RealBytesShared);
-	GETSET(int64_t, junkBytesShared, JunkBytesShared);
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
 	GETSET(string, cheatingString, CheatingString);
 	GETSET(int64_t, listLength, ListLength);

@@ -357,7 +357,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
 				statusBar.SetFileSize(ii->size);
-				statusBar.Fill(RGB(95, 95, 95));
+				statusBar.Fill(SETTING(PROGRESS_BACK_COLOR));
 
 				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
 					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
@@ -367,13 +367,13 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					} else
 						statusBar.FillRange(0, ii->actual, clr);
 					if(ii->pos > ii->actual)
-						statusBar.FillRange(ii->actual, ii->pos, RGB(222, 160, 0));
+						statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
 				} else {
 					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
 					statusBar.FillRange(0, ii->start, clr);
-					statusBar.FillRange(ii->start, ii->actual, RGB(222, 160, 0));
+					statusBar.FillRange(ii->start, ii->actual, SETTING(PROGRESS_SEGMENT_COLOR));
 					if(ii->pos > ii->actual)
-						statusBar.FillRange(ii->actual, ii->pos, RGB(255, 255, 100));
+						statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
 				}
 				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 
@@ -486,16 +486,18 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		dcassert(i->upper != NULL);
 		int r = ctrlTransfers.findItem(i->upper);
 
-		if(!i->upper->collapsed) {
-			int position = 0;
-			if(i->qi) {
-				position = i->qi->getActiveSegments().size();
+		if(r != -1) {
+			if(!i->upper->collapsed) {
+				int position = 0;
+				if(i->qi) {
+					position = i->qi->getActiveSegments().size();
+				}
+				insertSubItem(i,r + position + 1);
 			}
-			insertSubItem(i,r + position + 1);
-		}
 
-		if(i->upper->pocetUseru > 1) {
-			ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
+			if(i->upper->pocetUseru > 1) {
+				ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
+			}
 		}
 	}
 
@@ -541,7 +543,8 @@ void TransferView::ItemInfo::update() {
 
 		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
 			if(upper->pocetUseru > 1) {
-				upper->columns[COLUMN_HUB] = Text::toT(Util::toString((int)qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS));
+				int pocetSegmentu = qi ? qi->getActiveSegments().size() : 0;
+				upper->columns[COLUMN_HUB] = Text::toT(Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS));
 			} else {
 				upper->columns[COLUMN_HUB] = Text::toT(user->getClientName());
 			}
@@ -613,7 +616,7 @@ void TransferView::ItemInfo::update() {
 		}
 	}
 	if(colMask & MASK_IP) {
-			tstring countryIP;
+		tstring countryIP;
 		if (country == _T(""))
 			countryIP = IP;
 		else if (IP == _T(""))
@@ -810,7 +813,10 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 				
 		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 		i->statusString = TSTRING(DOWNLOAD_STARTING);
-		i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+		if(i->user->isClientOp())
+			i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+		else 
+			i->IP = Util::emptyStringT;
 		i->country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
@@ -1013,7 +1019,10 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->path = Text::toT(Util::getFilePath(aUpload->getLocalFileName()));
 		i->statusString = TSTRING(UPLOAD_STARTING);
 
-		i->IP = Text::toT(aUpload->getUserConnection()->getRemoteIp());
+		if(i->user->isClientOp())
+			i->IP = Text::toT(aUpload->getUserConnection()->getRemoteIp());
+		else 
+			i->IP = Util::emptyStringT;
 		i->country = Text::toT(Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp()));
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
@@ -1157,6 +1166,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 		h->mainItem = true;
 		h->upper = NULL;
 		h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
+		i->qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(i->Target));
 		h->qi = i->qi;
 		if(i->qi)
 			h->downloadTarget = Text::toT(i->qi->getTempTarget());

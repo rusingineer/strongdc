@@ -40,7 +40,6 @@
 #include "CZDCLib.h"
 #include "TransferView.h"
 #include "upnp.h"
-#include "HashProgressDlg.h"
 #include "WinUtil.h"
 #include "picturewindow.h"
 #include "atlctrlxp.h"
@@ -173,6 +172,7 @@ public:
 		UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
 		UPDATE_ELEMENT(ID_VIEW_TRANSFER_VIEW, UPDUI_MENUPOPUP)
 	END_UPDATE_UI_MAP()
+
 
 	LRESULT onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -383,7 +383,6 @@ private:
 	static bool isShutdownStatus;
 
 	CMenu trayMenu;
-	HashProgressDlg hashProgress;
 
 	UINT trayMessage;
 	/** Was the window maximized when minimizing it? */

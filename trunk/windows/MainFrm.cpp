@@ -73,8 +73,7 @@ CAGEmotionSetup* g_pEmotionsSetup;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT),
-hashProgress(false)
+closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT)
 { 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
@@ -252,11 +251,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(BOOLSETTING(GET_UPDATE_INFO)) {
 		c->addListener(this);
 		c->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
-	}
-
-	SettingsManager::DDList d = SettingsManager::getInstance()->getDownloadDirs();
-	for(SettingsManager::DDList::iterator i = d.begin(); i != d.end(); ++i) {
-		WinUtil::addLastDir(Text::toT(i->dir));
 	}
 
 	if(BOOLSETTING(OPEN_PUBLIC))
@@ -573,11 +567,7 @@ LRESULT MainFrame::onFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 }
 
 LRESULT MainFrame::onHashProgress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if( !hashProgress.IsWindow() ){
-		hashProgress.Create( m_hWnd );
-		hashProgress.ShowWindow( SW_SHOW );
-	}
-
+	HashProgressDlg(false).DoModal(m_hWnd);
 	return 0;
 }
 
@@ -906,9 +896,6 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			string tmp1;
 			string tmp2;
 
-			if( hashProgress.IsWindow() )
-				hashProgress.DestroyWindow();
-
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(wp);
 			GetWindowPlacement(&wp);
@@ -1081,9 +1068,9 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		nid.uID = 0;
 		nid.uFlags = NIF_TIP;
 		_tcsncpy(nid.szTip, Text::toT("D: " + Util::formatBytes(DownloadManager::getInstance()->getAverageSpeed()) + "/s (" + 
-			Util::toString(DownloadManager::getInstance()->getDownloads()) + ")\r\nU: " +
+			Util::toString(DownloadManager::getInstance()->getDownloadCount()) + ")\r\nU: " +
 			Util::formatBytes(UploadManager::getInstance()->getAverageSpeed()) + "/s (" + 
-			Util::toString(UploadManager::getInstance()->getUploads()) + ")"
+			Util::toString(UploadManager::getInstance()->getUploadCount()) + ")"
 			+ "\r\nUptime: " + Util::formatSeconds(Util::getUptime())
 			).c_str(), 64);
 		
@@ -1253,8 +1240,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
 		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
 		str->push_back(Text::toT("U: " + Util::formatBytes(Socket::getTotalUp())));
-		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloads()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
-		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploads()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
+		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloadCount()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
+		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploadCount()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);
