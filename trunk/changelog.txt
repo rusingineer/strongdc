@@ -24,7 +24,7 @@
 * komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
 * pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
 * pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
-* synchronizace s DC++ 0.403
+* synchronizace s CVS DC++ 0.404
 * opraven bug v DC++ emulaci (THX PPK)
 * opravena nemožnost stahovat od klientù založených na DC++ 0.402 CVS a vyšších
 * spouštìcí logo není Vždy na vrchu

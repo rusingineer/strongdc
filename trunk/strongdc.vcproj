@@ -42,7 +42,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO /NODEFAULTLIB:MSVCRTD"
+				AdditionalOptions="/FIXED:NO /NODEFAULTLIB:MSVCRTD /SAFESEH:NO"
 				AdditionalDependencies="comctl32.lib Ws2_32.lib winmm.lib"
 				OutputFile=".\Compiled/StrongDC.exe"
 				LinkIncremental="2"
@@ -124,7 +124,7 @@
 				DelayLoadDLLs="comdlg32.dll;dbghelp.dll"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="./Compiled/StrongDC.pdb"
-				GenerateMapFile="TRUE"
+				GenerateMapFile="FALSE"
 				MapFileName=""
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -688,6 +688,9 @@
 			<File
 				RelativePath=".\windows\LineDlg.h">
 			</File>
+			<File	
+ 	                        RelativePath=".\windows\ListViewArrows.h">	
+ 	                </File>
 			<File
 				RelativePath=".\windows\MainFrm.h">
 			</File>

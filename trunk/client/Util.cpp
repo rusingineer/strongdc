@@ -34,6 +34,7 @@
 #include <sys/utsname.h>
 #include <ctype.h>
 #endif
+#include <locale.h>
 
 #include "CID.h"
 
@@ -89,6 +90,8 @@ void Util::initialize() {
 		lower[i] = (char)tolower(i);
 #endif
 	}
+
+	setlocale(LC_ALL, "");
 
 	// Now initialize the compare table to the current locale (hm...hopefully we
 	// won't have strange problems because of this (users from different locales for instance)

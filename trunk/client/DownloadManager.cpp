@@ -332,7 +332,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	}
 
 	if(prepareFile(aSource, aFileLength)) {
-		aSource->setDataMode();
+		aSource->setDataMode(aFileLength);
 		aSource->startSend();
 	}
 }
@@ -922,7 +922,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	aSource->setDownload(NULL);
 	removeDownload(d, true);
 	
-	if(aError.find("File Not Available") != string::npos) {
+	if(aError.find("File Not Available") != string::npos || aError.find(" no more exists") != string::npos) { //solved DCTC
 		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_FILE_NOT_AVAILABLE, false);
 	}
 
