@@ -24,7 +24,6 @@
 
 #include "ClientManager.h"
 #include "AdcCommand.h"
-#include "LogManager.h"
 
 #include "../pme-1.0.4/pme.h"
 
@@ -236,9 +235,13 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		string nick = Text::acpToUtf8(x.substr(i, j-i));
 		i = j + 1;
 
+		if (!address.empty()) {
+			ClientManager::getInstance()->setIPNick(address, nick);
+		}
+
 		// A file has 2 0x05, a directory only one
 		size_t cnt = count(x.begin() + j, x.end(), 0x05);
-		
+	
 		SearchResult::Types type = SearchResult::TYPE_FILE;
 		string file;
 		int64_t size = 0;
@@ -294,11 +297,17 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		string hubIpPort = x.substr(i, j-i);
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
-		if(!address.empty() && user->isOnline()) {
-			ClientManager::getInstance()->setIPNick(address, user);
-			user->setIp(address);
-			user->setHost(socket->getRemoteHost(address));
+	if(!address.empty()) {
+		if(user->isOnline()) {
+			if(user->getClient()->getOp()) {
+				if(user->getIp() != address) {
+					user->setIp(address);
+					user->setHost(socket->getRemoteHost(address));
+					User::updated(user);
+				}
+			}
 		}
+	}
 
 	file = Util::replace(file, "\\\\", "\\");
 

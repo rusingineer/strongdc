@@ -377,7 +377,7 @@ private:
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload);
 
-	void InsertItem(ItemInfo* i);
+	void InsertItem(ItemInfo* i, bool mainThread = false);
 	void Collapse(ItemInfo* i, int a);
 	void CollapseAll();
 	void ExpandAll();
