@@ -219,6 +219,7 @@ bool ShareEnumerator::IsShared(const string& sPath)
 
 				//LPWSTR sShare =((LPWSTR) m_pNTShareInfo[i].shi502_path);
 				bShared = (Util::stricmp(sPath.c_str(), result) == 0) && ((m_pNTShareInfo[i].shi502_type == STYPE_DISKTREE) || ((m_pNTShareInfo[i].shi502_type == STYPE_PRINTQ)));
+				delete[] result;
 			}
 		}
 	}

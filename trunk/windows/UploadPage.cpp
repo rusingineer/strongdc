@@ -177,7 +177,13 @@ void UploadPage::write()
 		}
 	}
 
-	ShareManager::getInstance()->refresh();
+	/* POSSUM_MOD_BEGIN */
+	if(!BOOLSETTING(USE_OLD_SHARING_UI) && ft.IsDirty())
+	{
+		ShareManager::getInstance()->setDirty();
+		ShareManager::getInstance()->refresh(true);
+	}
+	/* POSSUM_MOD_END */
 }
 
 LRESULT UploadPage::onItemchangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)

@@ -146,6 +146,9 @@ bool ShareManager::checkFile(const string& dir, const string& aFile) {
 
 void ShareManager::load(SimpleXML* aXml) {
 	WLock l(cs);
+	/* PSSUM_MOD_BEGIN */
+	StringList rootDirs;
+	/* POSSUM_MOD_END */
 
 	if(aXml->findChild("Share")) {
 		aXml->stepIn();
@@ -154,6 +157,14 @@ void ShareManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
+	if(aXml->findChild("NoShare")) {
+		aXml->stepIn();
+		while(aXml->findChild("Directory"))
+			notShared.push_back(aXml->getChildData());
+	
+		aXml->stepOut();
+	}
+
 	dirty = true;
 }
 
@@ -166,6 +177,15 @@ void ShareManager::save(SimpleXML* aXml) {
 		aXml->addTag("Directory", i->first);
 	}
 	aXml->stepOut();
+
+	/* POSSUM_MOD_BEGIN */
+	aXml->addTag("NoShare");
+	aXml->stepIn();
+	for(StringIter j = notShared.begin(); j != notShared.end(); ++j) {
+		aXml->addTag("Directory", *j);
+	}
+	aXml->stepOut();
+	/* POSSUM_MOD_END */
 }
 
 bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false */)
@@ -303,16 +323,21 @@ void ShareManager::addDirectory(const string& aDirectory) throw(ShareException) 
 		string d = ((aDirectory[aDirectory.size() - 1] == PATH_SEPARATOR) ? 
 			aDirectory.substr(0, aDirectory.size()-1) : aDirectory);
 		
-		for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
+	
+		Directory::Map a = directories;
+		for(Directory::MapIter i = a.begin(); i != a.end(); ++i) {
 			if(Util::stricmp(d, i->first) == 0) {
 				// Trying to share an already shared directory
-				throw ShareException(STRING(DIRECTORY_ALREADY_SHARED));
+				//throw ShareException(STRING(DIRECTORY_ALREADY_SHARED));
+				directories.erase(i);
 			} else if(Util::findSubString(d, i->first + PATH_SEPARATOR) != string::npos) {
  				// Trying to share a subdirectory
- 				throw ShareException(STRING(DIRECTORY_ALREADY_SHARED));
+ 				//throw ShareException(STRING(DIRECTORY_ALREADY_SHARED));
+				directories.erase(i);
 			} else if(Util::findSubString(i->first, d + PATH_SEPARATOR) != string::npos) {
  				// Trying to share a parent directory
-				throw ShareException(STRING(REMOVE_ALL_SUBDIRECTORIES));
+				//throw ShareException(STRING(REMOVE_ALL_SUBDIRECTORIES));
+				directories.erase(i);
 			}
 		}
 
@@ -384,7 +409,8 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 				continue;
 			if(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				string newName = aName + PATH_SEPARATOR + name;
-				if(Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) {
+				if((Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0)
+					/* POSSUM_MOD_BEGIN */ && shareFolder(newName)) /* POSSUM_MOD_END */{
 					dir->directories[name] = buildTree(newName, dir);
 					dir->addSearchType(dir->directories[name]->getSearchTypes()); 
 				}
