@@ -62,7 +62,7 @@ const string SettingsManager::settingTags[] =
 	"MaxCompression", "FinishedDirty", "QueueDirty", "AntiFrag", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", "OpenFavoriteHubs", "OpenFinishedDownloads", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
-	"LogFilelistTransfers", "EmptyWorkingSet",
+	"LogFilelistTransfers", "EmptyWorkingSet", "SegmentColor", "ShowSegmentColor",
 	"OptionalInfo", "GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
 	"PopupFilelist", "CzertHiddenSettingA", "FilterSearchResults", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
@@ -91,7 +91,7 @@ const string SettingsManager::settingTags[] =
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
-	"DebugCommands", "AutoSaveQueue",
+	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -216,6 +216,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,-1,13,-1,14,-1,15,-1,16,-1,17,19,-1,18");
+	setDefault(AUTO_PRIORITY_DEFAULT, false);
 	setDefault(TOOLBARIMAGE,"");
 	setDefault(TOOLBARHOTIMAGE,"");
 	setDefault(TIME_DEPENDENT_THROTTLE, false);
@@ -366,6 +367,7 @@ SettingsManager::SettingsManager()
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(MAGNET_URI_HANDLER, true);
 	setDefault(AUTOSAVE_QUEUE, 30);
+	setDefault(SHOW_SEGMENT_COLOR, true);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
@@ -375,7 +377,7 @@ SettingsManager::SettingsManager()
 	setDefault(MDI_MAXIMIZED, true);
 	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
 	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
-
+	setDefault(SEGMENT_BAR_COLOR, RGB(10, 74, 138));
 #endif
 }
 

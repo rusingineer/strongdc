@@ -196,6 +196,7 @@
 #define IDC_HUB                         1103
 #define IDC_PROGRESS_OVERRIDE2          1103
 #define IDC_SHUTDOWNTIMEOUT             1104
+#define IDC_PROGRESS_SEGMENT_SHOW       1104
 #define IDC_COMMAND_DESCRIPTION         1105
 #define IDC_SETTINGS_ODC_MENUBAR_RIGHT  1105
 #define IDC_MAX_EMOTICONS               1105
@@ -304,6 +305,7 @@
 #define IDC_STEALTH                     1216
 #define IDC_AUTOSEGMENT                 1216
 #define IDC_UPDATEIP                    1216
+#define IDC_SETTINGS_SEGMENT_BAR_COLOR  1216
 #define IDC_COPY_TTH                    1217
 #define IDC_SETTINGS_FORMAT1            1217
 #define IDC_EDIT1                       1218
@@ -419,6 +421,7 @@
 #define IDC_TF_OPEN_FOLDER              1518
 #define IDC_TF_OPEN_TMP_FOLDER          1519
 #define IDC_TF_REMOVE                   1520
+#define IDC_AUTOPRIORITY                1572
 #define IDC_SETTINGS_ODC_MENUBAR        1612
 #define IDC_SETTINGS_ODC_MENUBAR_USETWO 1613
 #define IDC_SETTINGS_ODC_MENUBAR_COLOR  1614
@@ -426,6 +429,9 @@
 #define IDC_PROGRESS_COLOR_DOWN_SHOW    1616
 #define ahoj                            1616
 #define IDC_PROGRESS_COLOR_UP_SHOW      1617
+#define IDC_SETTINGS_SEGMENTBAR         1618
+#define IDC_PROGRESS_COLOR_DOWN_SHOW2   1619
+#define IDC_PROGRESS_COLOR_SEGMENT_SHOW 1619
 #define IDC_PREVIEW_APP                 1700
 #define IDC_TOOLBAR_ADD                 2200
 #define IDC_HOTBROWSE                   2201

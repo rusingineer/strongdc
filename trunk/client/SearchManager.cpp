@@ -301,17 +301,13 @@ void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& addr
 	}
 	SearchResult* sr;
 	string Country;
-	dcdebug(address.c_str());
 	if(address != "")
 		Country = Util::getIpCountry(address);
-
-	Country = Country + " (" + address + ")";
 
 	if(isoponhub) {
 		if (Country == "") Country = address; else Country = Country + " (" + address + ")";
 	}
 
-	dcdebug((Country+"\n").c_str());
 	sr = new SearchResult(user, type, slots, freeSlots, size,
 	file, hubName, hubIpPort, Country);
 

@@ -27,17 +27,19 @@
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator) : 
-	registered(false), socket(BufferedSocket::getSocket(separator)), countType(COUNT_UNCOUNTED)
+	registered(false), socket(BufferedSocket::getSocket(separator)), countType(COUNT_UNCOUNTED), port(0), isADC(false)
 {
 	string file;
-	port = 0; // initialize port !!!
+
+    isADC = Util::strnicmp("adc://", hubURL.c_str(), 6) == 0;
+
 	Util::decodeUrl(hubURL, address, port, file);
 	addressPort = hubURL;
 	socket->addListener(this);
 }
 
 Client::~Client() {
-	socket->removeListener(this);
+	if(isADC) socket->removeListener(this);
 	BufferedSocket::putSocket(socket);
 
 	updateCounts(true);

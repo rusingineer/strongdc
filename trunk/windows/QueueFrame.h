@@ -82,6 +82,7 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_REMOVE_SOURCES, IDC_REMOVE_SOURCES + menuItems, onRemoveSources)
 		COMMAND_RANGE_HANDLER(IDC_PM, IDC_PM + menuItems, onPM)
 		COMMAND_RANGE_HANDLER(IDC_READD, IDC_READD + readdItems, onReadd)
+		COMMAND_ID_HANDLER(IDC_AUTOPRIORITY, onAutoPriority)
 		COMMAND_RANGE_HANDLER(IDC_PREVIEW_APP, IDC_PREVIEW_APP + PreviewAppsSize, onPreviewCommand)
 		NOTIFY_HANDLER(IDC_QUEUE, NM_CUSTOMDRAW, onCustomDraw)
 		CHAIN_MSG_MAP(splitBase)
@@ -105,12 +106,15 @@ public:
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 		
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void removeDir(HTREEITEM ht);
 	void setPriority(HTREEITEM ht, const QueueItem::Priority& p);
+	void setAutoPriority(HTREEITEM ht, const bool& ap);
+
 
 	LRESULT onItemChangedQueue(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLISTVIEW* lv = (NMLISTVIEW*)pnmh;
@@ -245,7 +249,7 @@ private:
 			searchString(aQI->getSearchString()), path(Util::getFilePath(aQI->getTarget())),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
-			updateMask((u_int32_t)-1), display(NULL)
+			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority())
 		{ 
 			setDownloadTarget(aQI->getTempTarget().empty() ? getTarget() : aQI->getTempTarget());
 
@@ -316,6 +320,7 @@ private:
 		GETSET(QueueItem::Status, status, Status);
 		GETSET(string, downloadTarget, DownloadTarget);
 		GETSET(TTHValue*, tth, TTH);		
+		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
 
 	private:

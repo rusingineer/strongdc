@@ -60,6 +60,9 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
+	if (BOOLSETTING(DEBUG_COMMANDS))
+		DebugManager::getInstance()->SendDebugMessage("Client:	<<   " + aLine + "|");
+
 	string cmd;
 	string param;
 

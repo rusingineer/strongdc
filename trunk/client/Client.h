@@ -194,6 +194,7 @@ private:
 	string address;
 	string addressPort;
 	short port;
+	bool isADC;
 
 	CountType countType;
 

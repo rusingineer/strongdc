@@ -149,6 +149,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_NORMAL, CSTRING(NORMAL));
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH, CSTRING(HIGH));
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CSTRING(HIGHEST));
+	priorityMenu.AppendMenu(MF_STRING, IDC_AUTOPRIORITY, CSTRING(AUTO));
 
 	dirMenu.InsertSeparatorFirst(STRING(FOLDER));
 	dirMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
@@ -260,6 +261,9 @@ void QueueFrame::QueueItemInfo::update() {
 				case QueueItem::HIGHEST: display->columns[COLUMN_PRIORITY] = STRING(HIGHEST); break;
 				default: dcasserta(0); break;
 			}
+		if(getAutoPriority()) {
+			display->columns[COLUMN_PRIORITY] += " (" + STRING(AUTO) + ")";
+		}
 		}
 
 		if(colMask & MASK_PATH) {
@@ -285,6 +289,8 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += STRING(SFV_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
 						tmp += STRING(SLOW_USER);
+					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
+						tmp = "(" + STRING(DOWNLOAD_CORRUPTED);
 					}
 					tmp += ')';
 				}
@@ -604,6 +610,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 		ii->setStatus(aQI->getStatus());
 		//ii->setDownloadedBytes(aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
+		ii->setAutoPriority(aQI->getAutoPriority()); 
 
 		{
 			for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); ) {
@@ -967,6 +974,20 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
 			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
 			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
+		UINT pos = 0;
+		switch(ii->getPriority()) {
+			case QueueItem::PAUSED: pos = 0; break;
+			case QueueItem::LOWEST: pos = 1; break;
+			case QueueItem::LOW: pos = 2; break;
+			case QueueItem::NORMAL: pos = 3; break;
+			case QueueItem::HIGH: pos = 4; break;
+			case QueueItem::HIGHEST: pos = 5; break;
+			default: dcassert(0); break;
+		}
+		priorityMenu.CheckMenuItem(pos, MF_BYPOSITION | MF_CHECKED);
+		if(ii->getAutoPriority())
+			priorityMenu.CheckMenuItem(6, MF_BYPOSITION | MF_CHECKED);
+
 			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 			browseMenu.RemoveFirstItem();
@@ -1156,6 +1177,21 @@ LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL&
 	}
 	return 0;
 }
+
+
+LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
+
+	if(usingDirMenu) {
+		setAutoPriority(ctrlDirs.GetSelectedItem(), true);
+	} else {
+		int i = -1;
+		while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(),!ctrlQueue.getItemData(i)->getAutoPriority());
+//			if(viewmode == PriorityView) RemakeList();
+		}
+	}
+	return 0;
+}
 LRESULT QueueFrame::onPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	QueueItem::Priority p;
 
@@ -1174,6 +1210,7 @@ LRESULT QueueFrame::onPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	} else {
 		int i = -1;
 		while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(), false);
 			QueueManager::getInstance()->setPriority(ctrlQueue.getItemData(i)->getTarget(), p);
 		}
 	}
@@ -1211,6 +1248,21 @@ void QueueFrame::setPriority(HTREEITEM ht, const QueueItem::Priority& p) {
 	}
 }
 
+void QueueFrame::setAutoPriority(HTREEITEM ht, const bool& ap) {
+	if(ht == NULL)
+		return;
+	HTREEITEM child = ctrlDirs.GetChildItem(ht);
+	while(child) {
+		setAutoPriority(child, ap);
+		child = ctrlDirs.GetNextSiblingItem(child);
+	}
+	string name = getDir(ht);
+	DirectoryPair dp = directories.equal_range(name);
+	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
+		QueueManager::getInstance()->setAutoPriority(i->second->getTarget(), ap);
+//		QueueManager::getInstance()->setPriority(i->second->getTarget(), i->second->calculateAutoPriority());
+	}
+}
 void QueueFrame::updateStatus() {
 	if(ctrlStatus.IsWindow()) {
 		int64_t total = 0;
@@ -1402,22 +1454,91 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
-	
+
+	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
+			bHandled = FALSE;
+			return 0;
+		}
+	}
+
 	switch(cd->nmcd.dwDrawStage) {
 	case CDDS_PREPAINT:
 		return CDRF_NOTIFYITEMDRAW;
 	case CDDS_ITEMPREPAINT:
 		{
-			QueueItemInfo* ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			QueueItemInfo::SourceIter j;
-			for(j = ii->getBadSources().begin(); j != ii->getBadSources().end(); ++j) {
-				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
-					cd->clrText = SETTING(ERROR_COLOR);
-					return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-					break;
-				}
-			}
+			QueueItemInfo *ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			if(ii->getText(COLUMN_ERRORS) != (STRING(NO_ERRORS))){
+				cd->clrText = SETTING(ERROR_COLOR);
+				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+			}				
 		}
+		return CDRF_NOTIFYSUBITEMDRAW;
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+		// Let's draw a box if needed...
+		if(cd->iSubItem == COLUMN_DOWNLOADED) {
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			// draw something nice...
+			char buf[256];
+			COLORREF barBase = SETTING(DOWNLOAD_BAR_COLOR);
+			COLORREF bgBase = WinUtil::bgColor;
+			int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
+			COLORREF barPal[3] = { HLS_TRANSFORM(barBase, -40, 50), barBase, HLS_TRANSFORM(barBase, 40, -30) };
+			COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
+
+			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_DOWNLOADED, buf, 255);
+			buf[255] = 0;
+
+			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_DOWNLOADED, LVIR_BOUNDS, rc);
+			CRect rc2 = rc;
+			rc2.left += 6;
+				
+			// draw background
+			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,bgPal[0]));
+			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(bgPal[1]));
+			::Rectangle(cd->nmcd.hdc, rc.left, rc.top - 1, rc.right, rc.bottom);			
+			rc.DeflateRect(1, 0, 1, 1);
+
+			LONG left = rc.left;
+			int64_t w = rc.Width();
+			// draw start part
+			double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
+			rc.right = left + (int) (w * percent);
+			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+			
+			::Rectangle(cd->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom);
+				
+			// draw progressbar highlight
+			if(rc.Width()>2) {
+				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+
+				rc.top += 2;
+				::MoveToEx(cd->nmcd.hdc,rc.left+1,rc.top,(LPPOINT)NULL);
+				::LineTo(cd->nmcd.hdc,rc.right-2,rc.top);
+			};
+								
+			// draw status text
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+			LONG right = rc2.right;
+			left = rc2.left;
+			rc2.right = rc.right;
+			LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+			int textcolor = SETTING(PROGRESS_TEXT_COLOR_DOWN);
+			SetTextColor(cd->nmcd.hdc, textcolor);
+			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+
+			rc2.left = rc2.right;
+			rc2.right = right;
+
+			SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+
+			return CDRF_SKIPDEFAULT;
+		}
+
 	default:
 		return CDRF_DODEFAULT;
 	}

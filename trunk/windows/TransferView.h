@@ -147,7 +147,8 @@ private:
 
 	enum {
 		IMAGE_DOWNLOAD = 0,
-		IMAGE_UPLOAD
+		IMAGE_UPLOAD,
+		IMAGE_SEGMENT
 	};
 
 	class ItemInfo : public UserInfoBase, public Flags {
