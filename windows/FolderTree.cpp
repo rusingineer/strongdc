@@ -14,7 +14,8 @@ Copyright (c) 1999 - 2003 by PJ Naughter.  (Web: www.naughter.com, Email: pjna@n
 #include "../client/Util.h"
 #include "../client/ShareManager.h"
 #include "Resource.h"
-#include "..\client\ResourceManager.h"
+#include "../client/ResourceManager.h"
+#include "../client/version.h"
 #include "HashProgressDlg.h"
 #include "LineDlg.h"
 

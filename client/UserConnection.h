@@ -241,12 +241,17 @@ public:
 	void getListLen() { send("$GetListLen|"); };
 
 	// ADC Stuff
-	void sup() { send(Command(Command::SUP()).addParam("BASE")); };
+	void sup(const StringList& features) { 
+		Command c = Command(Command::SUP());
+		for(StringIterC i = features.begin(); i != features.end(); ++i)
+			c.addParam(*i);
+		send(c);
+	}
 	void inf(bool withToken) { 
 		Command c = Command(Command::INF());
 		c.addParam("CI", getCID().toBase32());
 		if(withToken) {
-			c.addParam("TO", Util::toString(getToken()));
+			c.addParam("TO", getToken());
 		}
 		send(c);
 	}
@@ -326,7 +331,7 @@ public:
 	}
 
 	GETSET(string, nick, Nick);
-	GETSET(int32_t, token, Token);
+	GETSET(string, token, Token);
 	GETSET(CID, cid, CID);
 	GETSET(ConnectionQueueItem*, cqi, CQI);
 	GETSET(States, state, State);

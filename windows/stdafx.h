@@ -39,6 +39,10 @@
 
 #include <winsock2.h>
 
+// Fix nt4 startup
+//#define COMPILE_MULTIMON_STUBS
+//#include <multimon.h>
+
 #include <atlbase.h>
 #include <atlapp.h>
 

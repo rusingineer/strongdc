@@ -27,6 +27,7 @@
 
 #include "../client/ClientManager.h"
 #include "../client/StringTokenizer.h"
+#include "../client/version.h"
 
 int FavoriteHubsFrame::columnIndexes[] = { COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_NICK, COLUMN_PASSWORD, COLUMN_SERVER, COLUMN_USERDESCRIPTION };
 int FavoriteHubsFrame::columnSizes[] = { 200, 290, 125, 100, 100, 125 };

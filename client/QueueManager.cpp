@@ -99,15 +99,16 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 		dcassert(!qi->getTempTarget().empty());
 		if ( freeBlocks != Util::emptyString ){
-			vector<int64_t> v;	
+			vector<int64_t> v;
 			istringstream is(freeBlocks);
-			copy(istream_iterator<int64_t>(is),
-			istream_iterator<int64_t>(),
-			back_inserter(v)); 
+			copy(istream_iterator<int64_t>(is), 
+				istream_iterator<int64_t>(), 
+				back_inserter(v)); 
 			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
+				// fix for antifrag files
 				if(tmpSize < 65535)
 					tmpSize = 0;
 				else
@@ -120,7 +121,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 
 		}
-		
 		qi->setFileChunksInfo(pChunksInfo);
 		
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
@@ -272,23 +272,19 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
-	bool fNext = false;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
 		if(i != userQueue[p].end()) {
 			dcassert(!i->second.empty());
-			if(pNext == NULL || fNext){
+			if(pNext == NULL){
 				return i->second.front();
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
-                if(iQi != i->second.end()){
-                    fNext = true;   // found, next is target
-
+				if(iQi != i->second.end() && (*iQi) != i->second.back()){
 					iQi++;
-                    if(iQi != i->second.end())
-						return *iQi;
+					return *iQi;
 				}
 			}
 		}
@@ -316,8 +312,9 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) 
 	// Set the flag to running...
 	if(qi->getStatus() == QueueItem::STATUS_WAITING)
 		qi->setStatus(QueueItem::STATUS_RUNNING);
-	qi->addCurrent(aUser);
-
+	
+    qi->addCurrent(aUser);
+    
 	// Move the download to the running list...
 	dcassert(running.find(aUser) == running.end());
 	running[aUser] = qi;
@@ -332,16 +329,16 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 
 	// Remove the download from running
 	running.erase(aUser);
-
+	
 	// Set flag to waiting
 	qi->removeCurrent(aUser);
-
+	
 	if(qi->getCurrents().empty()){
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setSpeed(0);
 		qi->setStart(0);
 	}
-
+    
 	// Add to the userQueue
 	add(qi, aUser);
 }
@@ -373,17 +370,19 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 			qi->setStatus(QueueItem::STATUS_WAITING);
 
 	} else {
-		dcassert(qi->isSource(aUser));
-		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
-		QueueItem::UserListIter j = ulm.find(aUser);
-		dcassert(j != ulm.end());
-		QueueItem::List& l = j->second;
-		QueueItem::Iter t = find(l.begin(), l.end(), qi);
-		if(t != l.end())
-			l.erase(t);
-		
-		if(l.empty()) {
-			ulm.erase(j);
+		if(qi->isSource(aUser)) {
+			QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
+			QueueItem::UserListIter j = ulm.find(aUser);
+			if(j != ulm.end()) {
+				QueueItem::List& l = j->second;
+				QueueItem::Iter t = find(l.begin(), l.end(), qi);
+				if(t != l.end())
+					l.erase(t);
+
+				if(l.empty()) {
+					ulm.erase(j);
+				}
+			}
 		}
 	}
 }

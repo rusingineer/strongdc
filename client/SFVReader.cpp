@@ -30,9 +30,9 @@
 #include "StringTokenizer.h"
 
 bool SFVReader::tryFile(const string& sfvFile, const string& fileName) throw(FileException) {
-	
+
 	string sfv = File(sfvFile, File::READ, File::OPEN).read();
-	
+
 	string::size_type i = 0;
 	while( (i = Util::findSubString(sfv, fileName, i)) != string::npos) {
 		// Either we're at the beginning of the file or the line...otherwise skip...
@@ -46,7 +46,7 @@ bool SFVReader::tryFile(const string& sfvFile, const string& fileName) throw(Fil
 		}
 		i += fileName.length();
 	}
-	
+
 	return false;
 }
 
@@ -73,7 +73,7 @@ void SFVReader::load(const string& fileName) throw() {
 	} while(FindNextFile(hf, &fd));
 
 	FindClose(hf);
-	
+
 #else
 	string path = Util::getFilePath(fileName);
 	string fname = Util::getFileName(fileName);

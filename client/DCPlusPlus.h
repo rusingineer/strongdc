@@ -126,8 +126,6 @@ typedef StringMap TStringMap;
 typedef StringMapIter TStringMapIter;
 #endif
 
-#include "version.h"
-
 extern void startup(void (*f)(void*, const string&), void* p);
 extern void shutdown();
 

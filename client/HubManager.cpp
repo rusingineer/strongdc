@@ -260,11 +260,11 @@ void HubManager::onHttpFinished() throw() {
 		Lock l(cs);
 		publicListMatrix[publicListServer].clear();
 
-		if(x->compare(0, 5, "<?xml") == 0) {
+		if(x->compare(0, 5, "<?xml") == 0 || x->compare(0, 8, "\xEF\xBB\xBF<?xml") == 0) {
 			loadXmlList(*x);
 		} else {
 		i = 0;
-		
+
 			string utfText = Text::acpToUtf8(*x);
 
 			while( (i < utfText.size()) && ((j=utfText.find("\r\n", i)) != string::npos)) {

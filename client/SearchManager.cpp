@@ -293,14 +293,11 @@ void SearchManager::onNMDCData(const u_int8_t* buf, size_t aLen, const string& a
 		string hubIpPort = x.substr(i, j-i);
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 
-	if(!address.empty()) {
-		if(user->isOnline()) {
+		if(!address.empty() && user->isOnline()) {
+			ClientManager::getInstance()->setIPNick(address, user);
 			user->setIp(address);
 			user->setHost(socket->getRemoteHost(address));
-			ClientManager::getInstance()->setIPNick(address, nick);
-			User::updated(user);
 		}
-	}
 
 	file = Util::replace(file, "\\\\", "\\");
 
