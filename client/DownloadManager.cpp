@@ -794,7 +794,7 @@ noCRC:
 		
 		if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
 
-		if(hashMatch) {		
+		if(!hashMatch) {		
 			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
 
 			string target = d->getTarget();
