@@ -42,8 +42,9 @@ public:
 		if(cur.getLeaves().size() == real.getLeaves().size()) {
 			if(cur.getRoot() != real.getRoot())
 				throw FileException(STRING(TTH_INCONSISTENCY));
-		} else 
+		} else  {
 			checkTrees();
+		}
 		return s->flush(finished);
 	}
 

@@ -115,7 +115,7 @@ const string SettingsManager::settingTags[] =
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
-	"CheckUnverifiedOnly",
+	"CheckUnverifiedOnly", "ToggleActiveWindow", 
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -215,7 +215,7 @@ SettingsManager::SettingsManager()
 	setDefault(TIME_STAMPS_FORMAT, "%H:%M");
 	setDefault(MAX_TAB_ROWS, 2);
 	setDefault(AUTO_UPDATE_LIST, true);
-	setDefault(MAX_COMPRESSION, 6);
+	setDefault(MAX_COMPRESSION, 3);
 	setDefault(FINISHED_DIRTY, true);
 	setDefault(QUEUE_DIRTY, true);
 	setDefault(TAB_DIRTY, true);
@@ -252,6 +252,7 @@ SettingsManager::SettingsManager()
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
 	setDefault(ADC_DEBUG, false);
+	setDefault(TOGGLE_ACTIVE_WINDOW, true);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);

@@ -203,12 +203,11 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 		}
 		if(is->MatchesFile(currentFile->getName(), filePath, currentFile->getSize())) {
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
-			copyFile->setAdls(true);
 			destDirVector[is->ddIndex].dir->files.push_back(copyFile);
 			destDirVector[is->ddIndex].fileAdded = true;
 
 			if(is->isAutoQueue){
-				QueueManager::getInstance()->add(currentFile->getName(), currentFile->getSize(), getUser(), Util::getTempPath() + currentFile->getName(), currentFile->getTTH(), QueueItem::FLAG_RESUME);
+				QueueManager::getInstance()->add(currentFile->getName(), currentFile->getSize(), getUser(), SETTING(DOWNLOAD_DIRECTORY) + currentFile->getName(), currentFile->getTTH());
 			}
 
 			if(breakOnFirst) {

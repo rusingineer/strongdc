@@ -249,7 +249,7 @@ static inline const string& escaper(const string& n, string& tmp, bool utf8) {
 
 void DirectoryListing::download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
 	string tmp;
-	string target = (aDir == getRoot()) ? aTarget : aTarget + escaper(aDir->getName(), tmp, getUtf8()) + '\\';
+	string target = (aDir == getRoot()) ? aTarget : aTarget + escaper(aDir->getName(), tmp, getUtf8()) + PATH_SEPARATOR;
 	// First, recurse over the directories
 	Directory::List& lst = aDir->directories;
 	sort(lst.begin(), lst.end(), Directory::DirSort());
@@ -273,7 +273,7 @@ void DirectoryListing::download(Directory* aDir, const string& aTarget, bool hig
 
 void DirectoryListing::download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
 	dcassert(aDir.size() > 2);
-	dcassert(aDir[aDir.size() - 1] == '\\');
+	dcassert(aDir[aDir.size() - 1] == PATH_SEPARATOR);
 	Directory* d = find(aDir, getRoot());
 	if(d != NULL)
 		download(d, aTarget, highPrio, prio);

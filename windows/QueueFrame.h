@@ -129,8 +129,7 @@ public:
 	}
 
 	LRESULT onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-			usingDirMenu ? removeSelectedDir() : removeSelected();
+		usingDirMenu ? removeSelectedDir() : removeSelected();
 		return 0;
 	}
 
@@ -142,7 +141,6 @@ public:
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			removeSelected();
 		} else if(kd->wVKey == VK_ADD){
 			// Increase Item priority
@@ -159,7 +157,6 @@ public:
 	LRESULT onKeyDownDirs(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
-		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(_T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 			removeSelectedDir();
 		} else if(kd->wVKey == VK_TAB) {
 			onTab();
@@ -452,10 +449,14 @@ private:
 	}
 
 	void removeSelected() {
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(CTSTRING(REALLY_REMOVE), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
 		ctrlQueue.forEachSelected(&QueueItemInfo::remove);
 	}
 	
-	void removeSelectedDir() { removeDir(ctrlDirs.GetSelectedItem()); };
+	void removeSelectedDir() { 
+		if(!BOOLSETTING(CONFIRM_DELETE) || MessageBox(CTSTRING(REALLY_REMOVE), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)	
+			removeDir(ctrlDirs.GetSelectedItem()); 
+	};
 	
 	const tstring& getSelectedDir() { 
 		HTREEITEM ht = ctrlDirs.GetSelectedItem();

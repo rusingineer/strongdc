@@ -184,9 +184,7 @@ public:
 	bool hasOnlineUsers() const { return countOnlineUsers() > 0; };
 
 	const string& getSourcePath(const User::Ptr& aUser) { 
-		if(!isSource(aUser))
-			return Util::emptyString;
-
+		dcassert(isSource(aUser));
 		return (*getSource(aUser, sources))->getPath();
 	}
 

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ UPnP::UPnP( const string theIPAddress, const string theProtocol, const string th
 	// required for the UPnP code.
 	// if anyone knows a better way, please tell....
 
+	PortsAreOpen		= false;
+	
 	PortNumber		    = thePort;
 	bstrProtocol        = A2BSTR(theProtocol.c_str());
 	bstrInternalClient  = A2BSTR(theIPAddress.c_str());
@@ -48,19 +50,39 @@ HRESULT UPnP::OpenPorts()
                                    CLSCTX_INPROC_SERVER,
                                    __uuidof(IUPnPNAT),
                                    (void**)&pUN);
-	if(SUCCEEDED(hr)) {
+
+	if ( SUCCEEDED(hr) )
+	{
         IStaticPortMappingCollection * pSPMC = NULL;
         hr = pUN->get_StaticPortMappingCollection (&pSPMC);
-		if(SUCCEEDED(hr) && pSPMC) { // see comment in "else"
 
-			if(bstrProtocol && bstrInternalClient && bstrDescription) {
+		if( SUCCEEDED(hr) && pSPMC )
+		{ // see comment in "else"
+			if(bstrProtocol && bstrInternalClient && bstrDescription)
+			{
 				IStaticPortMapping * pSPM = NULL;
-				hr = pSPMC->Add (PortNumber,bstrProtocol,PortNumber,bstrInternalClient,
-                                 VARIANT_TRUE,bstrDescription,&pSPM );
-			} else {
+				hr = pSPMC->Add(
+					PortNumber,
+					bstrProtocol,
+					PortNumber,
+					bstrInternalClient,
+					VARIANT_TRUE,
+					bstrDescription,
+					&pSPM
+				);
+
+				if ( SUCCEEDED(hr) )
+				{
+					PortsAreOpen = true;
+				}
+			}
+			else
+			{
                 hr = E_OUTOFMEMORY;
             }
-		} else {
+		}
+		else
+		{
             hr = E_FAIL;    // work around a known bug here:  in some error 
 			                // conditions, get_SPMC NULLs out the pointer, but incorrectly returns a success code.
         }
@@ -71,13 +93,21 @@ HRESULT UPnP::OpenPorts()
 // Closes the UPnP ports defined when the object was created
 HRESULT UPnP::ClosePorts()
 {
+	if ( PortsAreOpen == false )
+	{
+		return S_OK;
+	}
+
 	HRESULT hr = E_FAIL;
 	HRESULT hr2 = E_FAIL;
 
-	if(bstrProtocol && bstrInternalClient && bstrDescription ) {
+	if( bstrProtocol && bstrInternalClient && bstrDescription )
+	{
 		IStaticPortMappingCollection * pSPMC = NULL;
 		hr2 = pUN->get_StaticPortMappingCollection (&pSPMC);
-		if(SUCCEEDED(hr2) && pSPMC) {
+
+		if( SUCCEEDED(hr2) && pSPMC)
+		{
 			hr = pSPMC->Remove (PortNumber,bstrProtocol);
 			pSPMC->Release();
 		}
@@ -87,7 +117,6 @@ HRESULT UPnP::ClosePorts()
 		SysFreeString (bstrDescription);
 		SysFreeString (bstrExternalIP);
 	}
-
 	return hr;
 }
 
@@ -95,89 +124,87 @@ HRESULT UPnP::ClosePorts()
 string UPnP::GetExternalIP()
 {
 	USES_CONVERSION;
-	HRESULT hResult;
+ 	HRESULT hr;
 
-	IUPnPNAT *pIUN=NULL;
-	hResult = CoCreateInstance( CLSID_UPnPNAT,NULL,CLSCTX_INPROC_SERVER, IID_IUPnPNAT, (void **) &pIUN); 
-	if(!SUCCEEDED(hResult)) {
+ 	// Check if we opened the desired port, 'cause we use it for getting the IP
+ 	// This shouldn't be a problem because we only try to get the external IP when
+ 	// we opened the mapping
+	// This function is not used somewhere else, hence it is "save" to do it like this
+ 	if (!PortsAreOpen)
+	{
 		return Util::emptyString;
 	}
 
+ 	// Get the Collection
 	IStaticPortMappingCollection *pIMaps=NULL;
+ 	hr = pUN->get_StaticPortMappingCollection(&pIMaps);
 	
-	hResult=pIUN->get_StaticPortMappingCollection(&pIMaps);
-	  
-	if(!SUCCEEDED(hResult) || !pIMaps) {
-		pIUN->Release();
-		return Util::emptyString;
-	}
-
-	IUnknown *pUnk=NULL;
-	hResult=pIMaps->get__NewEnum(&pUnk);
-
-	if(!SUCCEEDED(hResult)) {
+ 	// Check it
+ 	// We also check against that bug mentioned in OpenPorts()
+ 	if( !SUCCEEDED(hr) || !pIMaps )
+ 	{
+         // Only release when OK
+ 		if (pIMaps != NULL)
+ 		{
 		pIMaps->Release();
-		pIUN->Release();
+ 		}
 		return Util::emptyString;
 	}
 
-	IEnumVARIANT *pEnumVar=NULL;
-	hResult=pUnk->QueryInterface(IID_IEnumVARIANT, (void **)&pEnumVar);
+ 	// Lets Query our mapping
+ 	IStaticPortMapping *pISM;
+ 	hr = pIMaps->get_Item(
+		PortNumber,
+		bstrProtocol,
+		&pISM
+ 	);
 
-	if(!SUCCEEDED(hResult)) {
-		pUnk->Release();
+ 	// Query failed!
+ 	if(!SUCCEEDED(hr))
+ 	{
 		pIMaps->Release();
-		pIUN->Release();
 		return Util::emptyString;
 	}
 
-	VARIANT varCurMapping;
-	VariantInit(&varCurMapping);
-	pEnumVar->Reset();
-	// we are only interested in the 1st map... (as going round in a while loop can take ages)
-	BSTR bStrExt = NULL;
-	pEnumVar->Next(1,&varCurMapping,NULL);
-	IStaticPortMapping *pITheMap=NULL;
-	IDispatch *pDispMap = V_DISPATCH(&varCurMapping);
-	if(pDispMap == NULL) {
-		pUnk->Release();
+ 	// Get the External IP from our mapping
+ 	BSTR bstrExternal = NULL;
+ 	hr = pISM->get_ExternalIPAddress(&bstrExternal);
+
+ 	// D'OH. Failed
+ 	if(!SUCCEEDED(hr))
+ 	{
 		pIMaps->Release();
-		pIUN->Release();
-		return Util::emptyString;
-	}
-	hResult=pDispMap->QueryInterface(IID_IStaticPortMapping, (void **)&pITheMap);
-	if(!SUCCEEDED(hResult)) {
-		pUnk->Release();
-		pIMaps->Release();
-		pIUN->Release();
+ 		pISM->Release();
 		return Util::emptyString;
 	}
 
-	hResult=pITheMap->get_ExternalIPAddress(&bStrExt);
-	if(!SUCCEEDED(hResult)) {
-		pUnk->Release();
-		pIMaps->Release();
-		pIUN->Release();
-		return Util::emptyString;
-	}
-
+ 	// Check and convert the result
 	string tmp;
-	if(bStrExt != NULL)
-		tmp = OLE2A(bStrExt);
+ 	if(bstrExternal != NULL)
+ 	{
+ 		tmp = OLE2A(bstrExternal);
+  	}
+ 	else
+ 	{
+ 		tmp = Util::emptyString;
+  	}
 
-	SysFreeString(bStrExt);
-	VariantClear(&varCurMapping);
+ 	// no longer needed
+ 	SysFreeString(bstrExternal);
 
-	pEnumVar->Release();
-	pUnk->Release();
+ 	// no longer needed
 	pIMaps->Release();
-	pIUN->Release();
+ 	pISM->Release();
 
 	return tmp;
 }
 
 UPnP::~UPnP()
 {
+	if (pUN)
+	{
+		pUN->Release();
+	}
 }
 
 /**

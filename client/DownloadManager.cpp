@@ -70,7 +70,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 		setFlag(Download::FLAG_MULTI_CHUNK);
 
-	if(!qi->isSource(aUser) || (*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
+	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
 };
 
@@ -380,11 +380,20 @@ int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, i
 
 		try {
 			File inFile(file, File::READ, File::OPEN);
+			if(blockPos + tt.getBlockSize() >= inFile.getSize()) {
+				startPos = blockPos;
+				continue;
+			}
+
 			inFile.setPos(blockPos);
 			int64_t bytesLeft = tt.getBlockSize();
 			while(bytesLeft > 0) {
 				size_t n = buf.size();
 				n = inFile.read(&buf[0], n);
+				if(n == 0) {
+					// Huh??
+					check.flush();
+				}
 				check.write(&buf[0], n);
 				bytesLeft -= n;
 			}
@@ -625,8 +634,8 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 	bool isActiveSegment = find(q->getActiveSegments().begin(), q->getActiveSegments().end(), *q->getSource(aSource->getUser())) != q->getActiveSegments().end();
 
-	if((q != NULL) && !isActiveSegment) {
-		if(q->getMaxSegments() <= q->getActiveSegments().size()) {
+	if(q && !isActiveSegment && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		if(!d->isSet(Download::FLAG_MULTI_CHUNK) && (q->getMaxSegments() <= q->getActiveSegments().size())) {	
 			fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
 			aSource->setDownload(NULL);
 			removeDownload(d);
@@ -955,7 +964,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		d->setTreeValid(true);
 		d->getItem()->setHasTree(true);
 		// set the tree to other downloads
-	/*	{
+		if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 			Lock l(cs);
 
 			dcdebug("Begin set tree to other downloads\n");
@@ -982,7 +991,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				}
 			}
 		}
-*/
 	}else{
 
 		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
