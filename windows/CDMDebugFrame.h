@@ -64,7 +64,7 @@ public:
 private:
 	static bool pause;
 	CEdit ctrlPad;
-	void on(DebugManagerListener::DebugMessage(), const string& aLine) throw() {
+	void on(DebugManagerListener::DebugMessage, const string& aLine) throw() {
 		addLine(aLine);
 	}
 };

@@ -670,5 +670,10 @@ enum Strings { // @DontAdd
 	SETTINGS_DEBUG_COMMANDS, // "Debug commands"
 	SETTINGS_SAVEQUEUE,
 	HUB_SEGMENTS,
+	SETTINGS_AUTO_PRIORITY_DEFAULT, // "Use Auto Priority by default"
+	AUTO, // "Auto"	
+	SEGMENTBAR,
+	SHOW_SEGMENT_PART,
+	SEGMENT_PART_COLOR,
 	LAST // @DontAdd
 };

@@ -176,10 +176,13 @@ HLSTRIPLE OperaColors::RGB2HLS(BYTE red, BYTE green, BYTE blue) {
 
 	hlst.hlstLightness = (m2 + m0) / 2;
 	d = (m2 - m0) / 2;
-	if (hlst.hlstLightness <= 0.5)
+	if (hlst.hlstLightness <= 0.5) {
+		if(hlst.hlstLightness == 0) hlst.hlstLightness = 0.1;
 		hlst.hlstSaturation = d / hlst.hlstLightness;
-	else
+	} else {
+		if(hlst.hlstLightness == 1) hlst.hlstLightness = 0.99;
 		hlst.hlstSaturation = d / (1 - hlst.hlstLightness);
+	}
 	if (hlst.hlstSaturation > 0 && hlst.hlstSaturation < 1)
 		hlst.hlstHue = RGB2HUE(r, g, b);
 	return hlst;

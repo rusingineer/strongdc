@@ -666,7 +666,12 @@ string ResourceManager::strings[] = {
 "Seconds",
 "Debug commands",
 "Autosave queue every",
-"Hub / Segments"
+"Hub / Segments",
+"Use Auto Priority by default",
+"Auto",
+"Segmented bar colors",
+"Show progressbar on inactive segment part",
+"Color of inactive part"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1333,5 +1338,10 @@ string ResourceManager::names[] = {
 "Seconds",
 "SettingsDebugCommands",
 "AutoSaveQueue",
-"HubAndSegments"
+"HubAndSegments",
+"SettingsAutoPriorityDefault",
+"Auto",
+"SegmentBar",
+"ShowSegmentPart",
+"SegmentPartColor"
 };

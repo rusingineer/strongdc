@@ -60,6 +60,10 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, aSearchString, p, aFlags, aDownloadedBytes, aAdded, root);
 	//qi->setFlag(QueueItem::FLAG_NOSEGMENTS);
+	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
+		qi->setAutoPriority(true);
+		qi->setPriority(qi->calculateAutoPriority());
+	}
 
 	if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
 		if(aTempTarget.empty()) {
@@ -397,13 +401,16 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	{
 		Lock l(cs);
 		QueueItem::UserMap& um = userQueue.getRunning();
-/*
+
 		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
 			QueueItem* q = j->second;
-			dcassert(!q->getCurrentDownload().empty());
-			q->setDownloadedBytes(q->getCurrentDownload()->getPos());
+	//		dcassert(!q->getCurrentDownload().empty());
+	//		q->setDownloadedBytes(q->getCurrentDownload()->getPos());
+			if(q->getAutoPriority())
+				setPriority(q->getTarget(), q->calculateAutoPriority());
+
 		}
-*/
+
 		if(!um.empty())
 			setDirty();
 
@@ -1134,6 +1141,24 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 	}
 }
 
+void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
+	User::List ul;
+
+	{
+		Lock l(cs);
+	
+		QueueItem* q = fileQueue.find(aTarget);
+		if( (q != NULL) && (q->getAutoPriority() != ap) ) {
+			q->setAutoPriority(ap);
+			if(ap) {
+				QueueManager::getInstance()->setPriority(q->getTarget(), q->calculateAutoPriority());
+			}
+			setDirty();
+			fire(QueueManagerListener::StatusUpdated(), q);
+		}
+	}
+}
+
 void QueueManager::setSearchString(const string& aTarget, const string& searchString) throw()
 {
 	Lock l(cs);
@@ -1194,6 +1219,8 @@ void QueueManager::saveQueue() throw() {
 					f.write(STRINGLEN("\" Downloaded=\""));
 					f.write(Util::toString(d->getDownloadedBytes()));
 				}
+				f.write(STRINGLEN("\" AutoPriority=\""));
+				f.write(Util::toString(d->getAutoPriority()));
 				f.write(STRINGLEN("\">\r\n"));
 
 				for(QueueItem::Source::List::const_iterator j = d->sources.begin(); j != d->sources.end(); ++j) {
@@ -1280,6 +1307,7 @@ static const string sAdded = "Added";
 static const string sUtf8 = "Utf8";
 static const string sTTH = "TTH";
 static const string sFreeBlocks = "FreeBlocks";
+static const string sAutoPriority = "AutoPriority";
 
 void QueueLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
 	QueueManager* qm = QueueManager::getInstance();	
@@ -1320,6 +1348,8 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 					TTHValue root(tthRoot);
 					qi = qm->fileQueue.add(target, size, searchString, flags, p, tempTarget, downloaded, added, &root, freeBlocks);
 				}
+				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
+				qi->setAutoPriority(ap);
 				qm->fire(QueueManagerListener::Added(), qi);
 			}
 			if(!simple)

@@ -20,7 +20,7 @@
 #define VERSIONSTRING "1.00"
 #define DCVERSIONSTRING "0.402"
 #define VERSIONFLOAT 1.00
-#define CZDCVERSIONSTRING " RC5.5 Debug"
+#define CZDCVERSIONSTRING " RC6 Beta"
 
 /* Update the .rc file as well... */
 

@@ -32,7 +32,9 @@
 * snad opraveno skrolování v chatu
 * profily klientù jsou nyní kompatibilní s DCDM++
 * jednoduchá detekce NetLimitera
-
+* pøidány progressbary do fronty (CZDC++)
+* automatické nastavování priorit stahovaných souborù (PhantomDC++)
+* opraven pád pøi odpojování pomalých stahování
 
 
 	-- StrongDC++ 1.00 RC5 --

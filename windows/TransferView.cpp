@@ -45,7 +45,7 @@ TransferView::~TransferView() {
 
 LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 
-	arrows.CreateFromImage(IDB_ARROWS, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	arrows.CreateFromImage(IDB_ARROWS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	states.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	ctrlTransfers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_TRANSFERS);
@@ -445,12 +445,30 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				if(ii->size == 0)
 					ii->size = 1;
-				rc.right = rc.left + (int) (((int64_t)rc.Width()) * ii->actual / ii->size);
-                
-				COLORREF a, b;
-				OperaColors::EnlightenFlood(clr, a, b);
-				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
 
+				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
+					rc.right = rc.left + (int) (((int64_t)rc.Width()) * ii->actual / ii->size);
+                
+					COLORREF a, b;
+					OperaColors::EnlightenFlood(clr, a, b);
+					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+				} else {
+					LONG left = rc.left;
+					int64_t w = rc.Width(); 
+                
+					rc.right = left + (int) (w * ii->start / ii->size); 
+					COLORREF a, b;
+					OperaColors::EnlightenFlood(SETTING(SEGMENT_BAR_COLOR), a, b);
+					
+					if(BOOLSETTING(SHOW_SEGMENT_COLOR))
+						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+
+					rc.left = rc.right;
+					rc.right = left + (int) (w * ii->actual / ii->size); 
+					OperaColors::EnlightenFlood(clr, a, b);
+					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+				}
+				
 				// Draw the text only over the bar and with correct color
 				rc2.right = rc.right + 1;
 				::SetTextColor(dc, OperaColors::TextFromBackground(clr));
@@ -546,7 +564,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 		if(!i->upper->collapsed) {
 			int r = ctrlTransfers.findItem(i->upper);
 			dcassert(r != -1);
-			int l =	ctrlTransfers.insertItem(r+1,i,IMAGE_DOWNLOAD);
+			int l =	ctrlTransfers.insertItem(r+1,i,IMAGE_SEGMENT);
 			dcassert(l >= 0);
 		}
 		i->upper->pocetUseru += 1;
@@ -657,7 +675,7 @@ void TransferView::Expand(ItemInfo* i, int a) {
 	 if(m->Target == i->Target)
 	 {	
 		 b++;
-		 int l = ctrlTransfers.insertItem(a+1,m,IMAGE_DOWNLOAD);
+		 int l = ctrlTransfers.insertItem(a+1,m,IMAGE_SEGMENT);
 		 ctrlTransfers.SetItemState(l, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 	 }
 	}
@@ -765,14 +783,12 @@ void TransferView::setMainItem(ItemInfo* i) {
 				int q = 0;
 				dcdebug("5. cyklus\n");
 				while(q<mainItems.size()) {
-//					dcdebug(("MainItem : "+Util::toString(q)+"\n").c_str());
 					ItemInfo* m = mainItems[q];
 					existuje = false;
 					for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 						ItemInfo* n = j->second;
 						if(m->Target == n->Target)
 						{
-//							dcdebug("existuje\n");
 							existuje = true;
 							break;
 						}
@@ -780,9 +796,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 				
 					if(!existuje)
 					{
-	//					dcdebug("neexistuje\n");
 						if(IsBadReadPtr(m, 4) == 0) {
-	//						dcdebug("Delete it\n");
 							mainItems.erase(find(mainItems.begin(), mainItems.end(), m));				
 							PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)m);
 						}
@@ -813,7 +827,12 @@ void TransferView::ItemInfo::update() {
 		}
 	}
 	if(colMask & MASK_HUB) {
-		if(user != (User::Ptr)NULL)	columns[COLUMN_HUB] = user->getClientName();
+		if(user != (User::Ptr)NULL) {
+			columns[COLUMN_HUB] = user->getClientName();
+			if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
+				if(upper->pocetUseru == 1) upper->columns[COLUMN_HUB] = user->getClientName();
+			}
+		}
 	}
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
@@ -933,6 +952,8 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
 		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? STRING(CONNECTING) : STRING(WAITING_TO_RETRY);
+		if(i->statusString == STRING(CONNECTING)) i->status = ItemInfo::STATUS_WAITING;
+		else i->status = ItemInfo::STATUS_RUNNING;
 		i->updateMask |= ItemInfo::MASK_STATUS;		
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());

@@ -891,7 +891,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	bool isFile = false;
 	switch(wID) {
 	case IDC_HELP_HOMEPAGE: site = "http://snail.pc.cz/StrongDC/index.htm"; break;
-	case IDC_HELP_DISCUSS: site = "http://strongdc.wz.cz/index.php"; break;
+	case IDC_HELP_DISCUSS: site = "http://strongdc.berlios.de/index.php"; break;
 	default: dcassert(0);
 	}
 
@@ -921,7 +921,7 @@ LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
  	if(WinUtil::browseFile(file, m_hWnd, false) == IDOK) {
 		string hash = HashManager::getInstance()->hasher.getTTfromFile(file).getRoot().toBase32();
 //		MessageBox(hash.c_str(),"Tiger Tree Hash",MB_OK);
-
+	
 		CInputBox ibox(m_hWnd);
 		WIN32_FIND_DATA data;
 		FindFirstFile(file.c_str(), &data);

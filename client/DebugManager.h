@@ -39,7 +39,7 @@ template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> DebugMessage;
 
-	virtual void on(DebugMessage, string) throw() { }
+	virtual void on(DebugMessage, const string&) throw() { }
 };
 
 class DebugManager : public Singleton<DebugManager>, public Speaker<DebugManagerListener>

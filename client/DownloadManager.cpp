@@ -776,7 +776,8 @@ noCRC:
 				
 			aSource->setDownload(NULL);
 			d->setPos(0);
-			removeDownload(d);				
+			removeDownload(d);
+			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
 			checkDownloads(aSource, true, false);
 			return;
 		}

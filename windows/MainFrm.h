@@ -410,7 +410,6 @@ private:
 	void startSocket();
 
 	MainFrame(const MainFrame&) { dcassert(0); };
-	//INT WINAPI getTTHFromFile();
 
 	// LogManagerListener
 	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new string(m)); };

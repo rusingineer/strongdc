@@ -30,6 +30,7 @@
 #include "File.h"
 #include "User.h"
 #include "AdcCommand.h"
+#include "DebugManager.h"
 
 class UserConnection;
 
@@ -324,6 +325,8 @@ private:
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			DebugManager::getInstance()->SendDebugMessage("Client:	  >> " + aString);
 		socket->write(aString);
 	}
 

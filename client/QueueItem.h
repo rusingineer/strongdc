@@ -107,6 +107,7 @@ public:
 			FLAG_CRC_WARN = 0x20,
 			FLAG_SLOW = 0x40,
 			FLAG_UTF8 = 0x80,
+			FLAG_TTH_INCONSISTENCY = 0x100
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -127,13 +128,14 @@ public:
 	Flags(aFlag), target(aTarget), searchString(aSearchString), 
 	size(aSize), /*downloadedBytes(aDownloadedBytes),*/ status(STATUS_WAITING), 
 	priority(aPriority), /*current(NULL), currentDownload(NULL),*/ added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth))
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false)
 	{ };
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget), searchString(rhs.searchString),
 		size(rhs.size), /*downloadedBytes(rhs.downloadedBytes), */status(rhs.status), priority(rhs.priority), 
 		currents(rhs.currents), /*currentDownload(rhs.currentDownload), */added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot))
+		,autoPriority(rhs.autoPriority)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -242,6 +244,42 @@ public:
 	GETSET(Source::List, currents, Currents);
 	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
+	GETSET(bool, autoPriority, AutoPriority);
+
+
+	QueueItem::Priority calculateAutoPriority(){
+		QueueItem::Priority p = getPriority();
+		if(getAutoPriority()){			
+			int percent = getDownloadedBytes() * 10.0 / getSize();
+
+			switch(percent){
+					case 0:
+					case 1:
+						p = QueueItem::LOWEST;
+						break;
+					case 2:
+					case 3:
+						p = QueueItem::LOW;
+						break;
+					case 4:
+					case 5:						
+					case 6:
+					default:
+						p = QueueItem::NORMAL;
+						break;
+					case 7:
+					case 8:
+						p = QueueItem::HIGH;
+						break;
+					case 9:
+					case 10:
+						p = QueueItem::HIGHEST;			
+						break;
+			}			
+		}
+		return p;
+	}
+
 private:
 	friend class QueueManager;
 	Source::List sources;

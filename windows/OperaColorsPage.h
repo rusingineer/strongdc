@@ -41,9 +41,11 @@ public:
 
 		COMMAND_HANDLER(IDC_PROGRESS_OVERRIDE, BN_CLICKED, onClickedProgressOverride)
 		COMMAND_HANDLER(IDC_PROGRESS_OVERRIDE2, BN_CLICKED, onClickedProgressOverride)
+		COMMAND_HANDLER(IDC_PROGRESS_SEGMENT_SHOW, BN_CLICKED, onClickedProgressOverride)
 		COMMAND_HANDLER(IDC_PROGRESS_BUMPED, BN_CLICKED, onClickedProgressOverride)
 		COMMAND_HANDLER(IDC_SETTINGS_DOWNLOAD_BAR_COLOR, BN_CLICKED, onClickedProgress)
 		COMMAND_HANDLER(IDC_SETTINGS_UPLOAD_BAR_COLOR, BN_CLICKED, onClickedProgress)
+		COMMAND_HANDLER(IDC_SETTINGS_SEGMENT_BAR_COLOR, BN_CLICKED, onClickedProgress)
 		COMMAND_HANDLER(IDC_PROGRESS_TEXT_COLOR_DOWN, BN_CLICKED, onClickedProgressTextDown)
 		COMMAND_HANDLER(IDC_PROGRESS_TEXT_COLOR_UP, BN_CLICKED, onClickedProgressTextUp)
 		MESSAGE_HANDLER(WM_DRAWITEM, onDrawItem)
@@ -82,6 +84,10 @@ public:
 		::EnableWindow(::GetDlgItem(m_hWnd, IDC_PROGRESS_TEXT_COLOR_UP), state);
 		ctrlProgressDownDrawer.Invalidate();
 		ctrlProgressUpDrawer.Invalidate();
+
+		state =(IsDlgButtonChecked(IDC_PROGRESS_SEGMENT_SHOW) != 0);
+		::EnableWindow(::GetDlgItem(m_hWnd, IDC_SETTINGS_SEGMENT_BAR_COLOR), state);
+		ctrlProgressSegmentDrawer.Invalidate();
 	}
 
 	void updateScreen() {
@@ -98,6 +104,7 @@ private:
 
 	bool bDoProgress;
 	bool bDoLeft;
+	bool bDoSegment;
 	
 	static Item items[];
 	static TextItem texts[];
@@ -108,10 +115,12 @@ private:
 	COLORREF crProgressUp;
 	COLORREF crProgressTextDown;
 	COLORREF crProgressTextUp;
+	COLORREF crProgressSegment;
 	CCheckBox ctrlProgressOverride1;
 	CCheckBox ctrlProgressOverride2;
 	CButton ctrlProgressDownDrawer;
 	CButton ctrlProgressUpDrawer;
+	CButton ctrlProgressSegmentDrawer;
 
 		void checkBox(int id, bool b) {
 		CheckDlgButton(id, b ? BST_CHECKED : BST_UNCHECKED);
