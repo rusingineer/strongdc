@@ -152,8 +152,7 @@ public:
 	void removeSelected() {
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			delete ctrlResults.getItemData(i);
-			ctrlResults.DeleteItem(i);
+			ctrlResults.deleteItem(i);
 		}
 	}
 	
@@ -256,7 +255,7 @@ private:
 	class SearchInfo;
 
 public:
-	TypedListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
+	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 
 private:
 	enum {
@@ -489,7 +488,7 @@ private:
 	bool showUI;
 
 	CImageList images;
-	TypedListViewCtrl<SearchInfo, IDC_RESULTS> ctrlResults;
+	TypedListViewCtrlCleanup<SearchInfo, IDC_RESULTS> ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
 	OMenu grantMenu;

@@ -370,10 +370,12 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
-	for(int i = 0; i != ctrlResults.GetItemCount(); i++) {
+/*	for(int i = 0; i != ctrlResults.GetItemCount(); i++) {
 		delete ctrlResults.getItemData(i);
 	}
-	ctrlResults.DeleteAllItems();
+	ctrlResults.DeleteAllItems();*/
+	ctrlResults.DeleteAll();
+
 	ctrlStatus.SetText(2, ("0 "+STRING(FILES)).c_str());
 		
 	{
@@ -642,10 +644,7 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-		for(int i = 0; i < ctrlResults.GetItemCount(); i++) {
-			delete ctrlResults.getItemData(i);
-		}
-		ctrlResults.DeleteAllItems();
+		ctrlResults.DeleteAll();
 		for(int i = 0; i < ctrlResults.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
