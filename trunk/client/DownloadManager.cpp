@@ -525,7 +525,7 @@ public:
 	}
 	
 	virtual int64_t verifiedBytes() {
-		return min(real.getFileSize(), cur.getBlockSize() * (int64_t)cur.getLeaves().size());
+		return min(real.getFileSize(), (int64_t)(cur.getBlockSize() * cur.getLeaves().size()));
 	}
 private:
 	OutputStream* s;

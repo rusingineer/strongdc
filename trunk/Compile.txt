@@ -1,38 +1,53 @@
+The most important thing about compiling: If it didn't work, *you* screwed up.
+
 How to compile in 4 easy steps:
 
-1) Make sure you've downloaded the WTL 7.1 Package and have all the files in it in your include path.
-   You can find it on the dc++ sourceforge site. Mind the version.
-
-2) Make sure you have stlport installed and that it's included _before_ the standard vc directories
+1) Make sure you have stlport installed and that it's included _before_ the standard vc directories
    Use the one supplied on the dc++ sourceforge page (do not use the one from www.stlport.org unless 
    you know what you're doing, I've modified it a little bit). Mind the version (download the latest
    one from the source extras).
    
-   * Note; This step may not be required if you use MSVC 7.x, i e it might work without STLPort,
-     but I don't recommend this as it's completely untested, and the original distribution uses it.
-     See client\config.h for further details
+   * Note; This step may not be required, i e it might work without STLPort,
+     but I don't recommend this as it's completely untested, and is not being actively maintained.
+     See client\config.h for further details.
 
-3) Make sure you have a fairly recent platform sdk (November 2001 or newer has worked for me)
-   The sdk is freely available from ms: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
-   You need the core sdk at least (not the 64-bit edition...)
-   Make sure that this sdk is included _before_ the standard vc directories.
+2) Make sure you've downloaded the latest package and have all the files in it in your include path.
+   You can find it on the dc++ sourceforge site. Mind the version.  Make sure it's listed after
+   stlport in your directory includes, but before the rest of the ms include dirs.
+   
+3) You most probably have to update your Platform SDK, http://msdn.microsoft.com will tell you how.
+   You have to do this if you get an error that "natupnp.h" is missing. Since all you need is this
+   one file, you can ask someone at the dev hub to supply it for you (or look for it in the DC++
+   bugzilla, it's attached to one of the bugs)
 
-4) Open the project workspace and press your build button.
+4) Open the solution and press your build button. If you find your executable unreasonably large, you
+   probably compiled in debug mode - switch to release once you're done testing the code.
 
-Note 1;	you'll probably get a whole bunch of warnings, ignore those, it's a bug in the compiler...
+Note 1;	I now use vc7.1 (2003). I don't care particularily if you use an older MS compiler (6.0, 7.0),
+	because these don't even come close to supporting the c++ standard. If you want to try anyway,
+	you're on your own.  You will need a new Platform SDK if you're using VS 6.0.
+	That said, the client part usually compiles fine with g++ 3.x, although there's a bug in 3.3
+	(and perhaps other versions) that prevents a few files from being compiled. Wait for 3.4 to
+	become mature for release, it's fixed there. 
 
-Note 2;	I now use vc7.1 (2003). VC7.0 and VC6 is no longer supported.
-
-Note 3;	You'll need DBGHELP.dll from the binary distribution unless you're using WinXP, otherwise 
+Note 2;	You'll need DBGHELP.dll from the binary distribution unless you're using WinXP, otherwise 
         you'll get errors saying symbols are missing when running your compiled executable. My copy 
         says version 5.1.2600.1106 right now.
 
-Note 4;	If you have problems, read the forum posts before posting. Somebody else has probably done your mistake
-	already.
+Note 3;	If you have problems, read the forum posts before posting. Somebody else has probably made your 
+	mistake already. The word to note in the last sentence is 'your', so let me articulate a bit more,
+	it works on my computer, so it's yours that is not correctly set up.
 
 By the way, with doxygen, graphviz and some luck you can use the supplied doxygen configuration file
 to generate some nice docs...just check that the paths in doxyfile are correct (graphviz)...
 
+Linux / Unix:
+I've made some rudimentary autoconf/automake scripts now, so you can compile the client part into a library
+without too much hassle (I don't check if it compiles very often though...). You'll need the latest versions
+of automake and autoconf, and after getting the source (from CVS is easiest), do 
+"aclocal && automake && autoconf && configure && make" and you'll have the client part nicely compiled.
+When / if I test it I do it on a Gentoo AMD64 box with the latest gcc in 64-bit mode, so I don't have a clue
+if the 32-bit compile works...
 
 Submitting patches
 
@@ -47,4 +62,4 @@ update it, so check the source code distribution of the latest release as well..
 information about diff and patch by googling for it. I like unified format (diff -uNr). 
 By submitting a patch, you agree to that I get copyright of it. This to avoid stupid situations later on where
 the copyright is split out over a million people, each of which could stop further distribution of DC++. If you don't
-like this, start your own distribtution, if you're lucky it might become more popular than the original =).
+like this, start your own distribution, if you're lucky it might become more popular than the original =).

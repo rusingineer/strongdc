@@ -75,7 +75,7 @@ private:
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
-			string fname = Util::getAppPath() + "Profiles.xml";
+			string fname = Util::getAppPath() + SETTINGS_DIR + "Profiles.xml";
 			File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 			f.write(downBuf);
 			f.close();

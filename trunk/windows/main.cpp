@@ -421,7 +421,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 	
-	try {
+	try {		
 		File f(Util::getAppName(), File::READ, File::OPEN);
 		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
 		size_t n = 0;

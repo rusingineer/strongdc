@@ -377,7 +377,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + "Queue.xml"), dirty(false), nextSearch(0) { 
+QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTINGS_DIR + "Queue.xml"), dirty(false), nextSearch(0) { 
 	TimerManager::getInstance()->addListener(this); 
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
@@ -687,7 +687,7 @@ static SizeMap sizeMap;
 static string utfTmp;
 
 static const string& utfEscaper(const string& x) {
-	return curDl->getUtf8() ? Util::toAcp(x, utfTmp) : x;
+	return curDl->getUtf8() ? (utfTmp.clear(), Util::toAcp(x, utfTmp)) : x;
 }
 
 int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw() {

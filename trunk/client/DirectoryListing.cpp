@@ -293,7 +293,7 @@ void DirectoryListing::download(File* aFile, const string& aTarget, bool view /*
 	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
 		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
-		aFile->getTTH(), flags, prio);
+		aFile->getTTH(), flags, view ? QueueItem::HIGHEST : prio);
 }
 
 void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {

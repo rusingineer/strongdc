@@ -94,6 +94,18 @@ void Util::initialize() {
 #endif
 	}
 
+#ifdef _WIN32
+		TCHAR buf[MAX_PATH+1];
+		GetModuleFileName(NULL, buf, MAX_PATH);
+		appPath = buf;
+		appPath.erase(appPath.rfind('\\') + 1);
+#else // _WIN32
+		char* home = getenv("HOME");
+		if (home) {
+			appPath = home;
+			appPath +=  "/.dc++/";
+		}
+#endif // _WIN32
 
 	// Now initialize the compare table to the current locale (hm...hopefully we
 	// won't have strange problems because of this (users from different locales for instance)
@@ -107,7 +119,7 @@ void Util::initialize() {
 	sgenrand((unsigned long)time(NULL));
 
 	try {
-		string file = Util::getAppPath() + "GeoIpCountryWhois.csv";
+		string file = Util::getAppPath() + SETTINGS_DIR + "GeoIpCountryWhois.csv";
 
 		StringTokenizer st(File(file , File::READ, File::OPEN).read());
 		CountryIter last = countries.end();
@@ -121,18 +133,7 @@ void Util::initialize() {
 	} catch(const FileException&) {
 	}
 
-#ifdef _WIN32
-		TCHAR buf[MAX_PATH+1];
-		GetModuleFileName(NULL, buf, MAX_PATH);
-		appPath = buf;
-		appPath.erase(appPath.rfind('\\') + 1);
-#else // _WIN32
-		char* home = getenv("HOME");
-		if (home) {
-			appPath +=  "/.dc++/";
-		}
-#endif // _WIN32
-
+	Util::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
 }
 
 string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {

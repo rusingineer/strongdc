@@ -34,7 +34,7 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlPad.SetFont(WinUtil::font);
 	string tmp;
 	try {
-		tmp = File(Util::getAppPath() + "Notepad.txt", File::READ, File::OPEN).read();
+		tmp = File(Util::getAppPath() + SETTINGS_DIR + "Notepad.txt", File::READ, File::OPEN).read();
 	} catch(const FileException&) {
 		// ...
 	}
@@ -60,7 +60,7 @@ LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		AutoArray<char> buf(ctrlPad.GetWindowTextLength() + 1);
 		ctrlPad.GetWindowText(buf, ctrlPad.GetWindowTextLength() + 1);
 		try {
-			File(Util::getAppPath() + "Notepad.txt", File::WRITE, File::CREATE | File::TRUNCATE).write(buf, ctrlPad.GetWindowTextLength());
+			File(Util::getAppPath() + SETTINGS_DIR + "Notepad.txt", File::WRITE, File::CREATE | File::TRUNCATE).write(buf, ctrlPad.GetWindowTextLength());
 		} catch(const FileException&) {
 			// Oops...
 		}
