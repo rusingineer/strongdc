@@ -133,7 +133,9 @@ public:
 	Flags(aFlag), target(aTarget), searchString(aSearchString), 
 	size(aSize), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), tiger(NULL)
-	{ };
+	{ 
+		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
+	};
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget), searchString(rhs.searchString),
@@ -261,6 +263,7 @@ public:
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
 	GETSET(TigerTree, tiger, Tiger);
+	GETSET(bool, slowDisconnect, SlowDisconnect);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

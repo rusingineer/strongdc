@@ -54,6 +54,7 @@ public:
 		COMMAND_HANDLER(IDC_PRIVATEMESSAGE, BN_CLICKED, onPrivateMessage)
 		NOTIFY_HANDLER(IDC_DIRECTORIES, TVN_SELCHANGED, onItemChanged)
 		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE_LIST, LVN_COLUMNCLICK, onColumnClickList)
+		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE_LIST, NM_CUSTOMDRAW, onCustomDraw)
 		CHAIN_MSG_MAP(baseClass)
 		CHAIN_MSG_MAP(splitBase)
 	ALT_MSG_MAP(SHOWTREE_MESSAGE_MAP)
@@ -74,6 +75,7 @@ public:
 	LRESULT onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 
 	LRESULT onShowTree(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;

@@ -287,6 +287,15 @@ void Util::decodeUrl(const string& url, string& aServer, short& aPort, string& a
 	aServer = url.substr(i, k-i);
 }
 
+void Util::setAway(bool aAway) {
+	away = aAway;
+
+	SettingsManager::getInstance()->set(SettingsManager::AWAY, aAway);
+
+	if (away)
+		awayTime = time(NULL);
+}
+
 string Util::getAwayMessage() { 
 	return (formatTime(awayMsg.empty() ? SETTING(DEFAULT_AWAY_MESSAGE) : awayMsg, awayTime));
 }

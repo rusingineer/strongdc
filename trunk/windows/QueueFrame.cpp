@@ -63,11 +63,11 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if (CZDCLib::isXp()) {
-		ctrlQueue.setLeftEraseBackgroundMargin(3);
-	} else {
+//	if (CZDCLib::isXp()) {
+//		ctrlQueue.setLeftEraseBackgroundMargin(3);
+//	} else {
 		styles |= 0x00010000;
-	}
+//	}
 	ctrlQueue.SetExtendedListViewStyle(styles);
 
 	ctrlDirs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |

@@ -43,11 +43,13 @@ public:
 	BEGIN_MSG_MAP(Sounds)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_HANDLER(IDC_BROWSE, BN_CLICKED, onBrowse)
+		COMMAND_HANDLER(IDC_PLAY, BN_CLICKED, onPlay)
 		COMMAND_ID_HANDLER(IDC_NONE, onClickedNone)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT onBrowse(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onClickedNone(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 	// Common PropPage interface
@@ -58,6 +60,14 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	char* title;
+
+	struct snds{
+		ResourceManager::Strings name;
+		int setting;
+		string value;
+	};
+
+	static snds sounds[];
 
 	ExListViewCtrl ctrlSounds;
 };

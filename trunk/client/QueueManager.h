@@ -116,6 +116,7 @@ public:
 		}
 	}*/
 	void removeTestSUR(const string& aNick) {
+		Lock l(cs);
 		remove(Util::getAppPath() + "TestSURs\\TestSUR" + aNick);
 		return;
 	}

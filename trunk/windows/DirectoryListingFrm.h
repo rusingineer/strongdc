@@ -78,6 +78,7 @@ public:
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
+		MESSAGE_HANDLER(FTM_CONTEXTMENU, onTabContextMenu)
 		COMMAND_ID_HANDLER(IDC_DOWNLOAD, onDownload)
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIR, onDownloadDir)
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIRTO, onDownloadDirTo)
@@ -89,6 +90,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
+		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPM)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
@@ -116,6 +118,7 @@ public:
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGoToDirectory(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadTarget(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadTargetDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -124,7 +127,8 @@ public:
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	
+	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/); 
+
 	void downloadList(const string& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3List(const string& aTarget);
 	void updateTree(DirectoryListing::Directory* tree, HTREEITEM treeItem);
@@ -280,6 +284,7 @@ private:
 	CMenu priorityDirMenu;
 	CMenu copyMenu;
 	CMenu searchMenu;
+	OMenu tabMenu;
 
 	CContainedWindow statusContainer;
 

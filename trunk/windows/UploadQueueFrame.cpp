@@ -1,3 +1,4 @@
+
 #include "stdafx.h"
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
@@ -485,3 +486,138 @@ void UploadQueueFrame::updateStatus() {
 			UpdateLayout(TRUE);
 	}
 }
+
+LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+		bHandled = FALSE;
+		return 0;
+	}
+
+	CRect rc;
+	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
+	case CDDS_ITEMPREPAINT:
+		return CDRF_NOTIFYSUBITEMDRAW;
+
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+		// Let's draw a box if needed...
+		if(cd->iSubItem == COLUMN_TRANSFERRED) {
+			// draw something nice...
+			char buf[256];
+				COLORREF barBase;
+				if (SETTING(PROGRESS_OVERRIDE_COLORS)) {
+					barBase = SETTING(UPLOAD_BAR_COLOR);
+				} else {
+					barBase = GetSysColor(COLOR_HIGHLIGHT);
+				}
+				COLORREF bgBase = WinUtil::bgColor;
+				int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
+				//COLORREF barPal[4] = { HLS_TRANSFORM(barBase, -90, 80), HLS_TRANSFORM(barBase, -50, 40), barBase, HLS_TRANSFORM(barBase, 40, -30) };
+				COLORREF bgPal[2] = { HLS_TRANSFORM(bgBase, mod, 0), HLS_TRANSFORM(bgBase, mod/2, 0) };
+
+				ctrlList.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_TRANSFERRED, buf, 255);
+				buf[255] = 0;
+
+				ctrlList.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_TRANSFERRED, LVIR_BOUNDS, rc);
+				// Real rc, the original one.
+				CRect real_rc = rc;
+				// We need to offset the current rc to (0, 0) to paint on the New dc
+				rc.MoveToXY(0, 0);
+
+				// Text rect
+				CRect rc2 = rc;
+                rc2.left += 6; // indented with 6 pixels
+				rc2.right -= 2; // and without messing with the border of the cell
+
+				// Set references
+				CDC cdc;
+				cdc.CreateCompatibleDC(cd->nmcd.hdc);
+
+				BITMAPINFOHEADER bih;
+				bih.biSize = sizeof(BITMAPINFOHEADER);
+				bih.biWidth = real_rc.Width();
+				bih.biHeight = -real_rc.Height(); // kanske minus
+				bih.biPlanes = 1;
+				bih.biBitCount = 32;
+				bih.biCompression = BI_RGB;
+				bih.biSizeImage = 0;
+				bih.biXPelsPerMeter = 0;
+				bih.biYPelsPerMeter = 0;
+				bih.biClrUsed = 32;
+				bih.biClrImportant = 0;
+				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
+				if (hBmp == NULL)
+					MessageBox(Util::translateError(GetLastError()).c_str(), "ERROR", MB_OK);
+				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
+				HDC& dc = cdc.m_hDC;
+
+				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
+				SetBkMode(dc, TRANSPARENT);
+
+			// draw background
+				HGDIOBJ oldpen = ::SelectObject(dc, CreatePen(PS_SOLID,0,bgPal[0]));
+				HGDIOBJ oldbr = ::SelectObject(dc, CreateSolidBrush(bgPal[1]));
+				::Rectangle(dc, rc.left, rc.top - 1, rc.right, rc.bottom);			
+		        rc.DeflateRect(1, 0, 1, 1); 
+
+				LONG left = rc.left;
+				int64_t w = rc.Width();
+				// draw start part
+				string per = buf;
+				per = per.substr(per.find('(')+1, per.find('%')-(per.find('(')+2));
+				double percent = Util::toDouble(per) / 100;
+				//double percent = (ii->getSize() >0) ? (double)((double)ii->getPos()) / ((double)ii->getSize()) : 0;
+				percent = (percent < 0)? 0 : percent;
+				
+				rc.right = left + (int) (w * percent);
+
+				COLORREF a, b;
+				OperaColors::EnlightenFlood(barBase, a, b);
+				OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, a, b, SETTING(PROGRESS_BUMPED));
+				//OperaColors::FloodFill(cdc, rc.left, rc.top, rc.right, rc.bottom, barPal[2], barPal[0], SETTING(PROGRESS_BUMPED));
+				rc.left = left;
+				
+				// draw status text
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+				LONG right = rc2.right;
+				left = rc2.left;
+				rc2.right = rc.right;
+				LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(dc) - 1)/2;
+				int textcolor;
+				if (SETTING(PROGRESS_OVERRIDE_COLORS)) {
+					textcolor = SETTING(PROGRESS_TEXT_COLOR_UP);
+				} else {
+					textcolor = OperaColors::TextFromBackground(barBase);
+				}
+			
+				SetTextColor(dc, textcolor);
+                ::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+
+				rc2.left = rc2.right;
+				rc2.right = right;
+
+				SetTextColor(dc, WinUtil::textColor);
+				::ExtTextOut(dc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+
+				SelectObject(dc, oldFont);
+				
+				BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
+
+				DeleteObject(cdc.SelectBitmap(pOldBmp));
+				return CDRF_SKIPDEFAULT;	
+		}
+		// Fall through
+	default:
+		return CDRF_DODEFAULT;
+	}
+}
+
+/**
+ * @file
+ * $Id: UploadQueueFrame.cpp,v 1.4 2003/05/13 11:34:07
+ */

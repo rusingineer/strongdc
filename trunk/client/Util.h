@@ -575,11 +575,7 @@ public:
 	static string getIpCountry (string IP);
 
 	static bool getAway() { return away; };
-	static void setAway(bool aAway) {
-		away = aAway;
-		if (away)
-			awayTime = time(NULL);
-	};
+	static void setAway(bool aAway);
 	static string getAwayMessage();
 	static string replace(string message, string r, string rw){
 		string::size_type  k = 0, j = 0;

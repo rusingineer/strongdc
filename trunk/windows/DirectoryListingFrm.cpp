@@ -30,6 +30,7 @@
 #include "QueueFrame.h"
 #include "WinUtil.h"
 #include "LineDlg.h"
+#include "PrivateFrame.h"
 
 void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUser, const string& start) {
 	DirectoryListingFrame* frame = new DirectoryListingFrame(aFile, aUser, start);
@@ -149,6 +150,12 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	priorityDirMenu.CreatePopupMenu();
 	copyMenu.CreatePopupMenu();
 	searchMenu.CreatePopupMenu();
+	tabMenu.CreatePopupMenu();
+
+	tabMenu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CSTRING(SEND_PRIVATE_MESSAGE));
+	tabMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CSTRING(ADD_TO_FAVORITES));
+	tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
 
 	searchMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_FOR_ALTERNATES_TTH));
 	searchMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES_NAME));
@@ -467,6 +474,14 @@ LRESULT DirectoryListingFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID
 	return 0;
 }
 
+LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(dl != NULL) {
+		User::Ptr pUser = dl->getUser();
+		if(pUser != (User*) NULL)
+			PrivateFrame::openWindow(pUser);
+	}
+	return 0;
+}
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int x = QueueManager::getInstance()->matchListing(dl);
 	char* buf = new char[STRING(MATCHED_FILES).length() + 32];
@@ -649,7 +664,7 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 }
 
 LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_TARGET - 1;
+	int newId = wID - IDC_DOWNLOAD_TARGET;
 	dcassert(newId >= 0);
 	
 	if(ctrlList.GetSelectedCount() == 1) {
@@ -679,7 +694,7 @@ LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, 
 }
 
 LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_TARGET_DIR - 1;
+	int newId = wID - IDC_DOWNLOAD_TARGET_DIR;
 	dcassert(newId >= 0);
 	
 	HTREEITEM t = ctrlTree.GetSelectedItem();
@@ -982,6 +997,21 @@ LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 		bHandled = FALSE;
 		return 0;
 	}
+}
+
+LRESULT DirectoryListingFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+
+	string nick = "";
+	if(dl != NULL) {
+		User::Ptr pUser = dl->getUser();
+		if(pUser != (User*) NULL)
+			nick = pUser->getNick();
+	}
+	tabMenu.InsertSeparatorFirst(nick);
+	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+	tabMenu.RemoveFirstItem();
+	return TRUE;
 }
 
 /**

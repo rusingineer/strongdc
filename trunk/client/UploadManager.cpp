@@ -319,30 +319,14 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 
 void UploadManager::addFailedUpload(UserConnection::Ptr source, string filename, int64_t pos, int64_t size)
 {
-	Lock l(cs);
 	SlotQueue::iterator userPos = find(waitingUsers.begin(), waitingUsers.end(), source->getUser());
 	if (userPos == waitingUsers.end()) waitingUsers.push_back(source->getUser());
 	string path = Util::getFilePath(filename);
 	filename = Util::getFileName(filename);
-	User::Ptr u = source->getUser();
-	int64_t itime;
-	//maintain list of files the user's searched for
-	if(waitingFiles.find(u) != waitingFiles.end()) {
-		FileSet& fileset = waitingFiles.find(u)->second;
-		for(FileSet::const_iterator i=fileset.begin(); i != fileset.end(); ++i) {
-			string a = i->c_str();
-			if(a.substr(0, a.find("|")) == filename) {
-				fileset.erase(i);
-				string old_time = a.substr(a.rfind("|") + 1);
-				fileset.insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+old_time);
-				itime = Util::toInt64(old_time);
-			}
-		}
-	} else {
-		time_t now;	
-		itime = time(&now);
-		waitingFiles[source->getUser()].insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+Util::toString(now));
-	}
+
+	time_t now;	
+	int64_t itime = time(&now);
+	waitingFiles[source->getUser()].insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+Util::toString(itime));		//maintain list of files the user's searched for
 
 	fire(UploadManagerListener::QueueAdd(), source->getUser()->getNick(), filename, path, pos, size, itime);
 }

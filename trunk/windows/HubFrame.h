@@ -107,6 +107,10 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_NICK_IP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_ISP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_ALL, onCopyUserInfo)
+		
+		COMMAND_ID_HANDLER(IDC_COPY_HUBNAME, onCopyHubInfo)
+		COMMAND_ID_HANDLER(IDC_COPY_HUBADDRESS, onCopyHubInfo)
+
 		COMMAND_ID_HANDLER(IDC_IGNORE, onIgnore)
 		COMMAND_ID_HANDLER(IDC_UNIGNORE, onUnignore)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
@@ -135,6 +139,7 @@ public:
 
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onDoubleClickUsers(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
@@ -421,6 +426,7 @@ private:
 	string filter;
 
 	OMenu copyMenu;
+	OMenu copyHubMenu;
 	OMenu grantMenu;
 	OMenu userMenu;
 	OMenu tabMenu;

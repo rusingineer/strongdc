@@ -74,6 +74,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_DISCONNECT_ALL, onDisconnectAll)
 		COMMAND_ID_HANDLER(IDC_COLLAPSE_ALL, onCollapseAll)
 		COMMAND_ID_HANDLER(IDC_EXPAND_ALL, onExpandAll)
+		COMMAND_ID_HANDLER(IDC_MENU_SLOWDISCONNECT, onSlowDisconnect)
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
@@ -94,6 +95,7 @@ public:
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
