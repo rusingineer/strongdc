@@ -445,7 +445,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 
 	if(!searchString.empty()){
 		SearchManager::getInstance()->search("TTH:" + searchString, 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
-		nextSearch = aTick + 300000;
+		nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 		if(BOOLSETTING(REPORT_ALTERNATES))
 			LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + fname, true);		
 	}
@@ -816,10 +816,7 @@ int QueueManager::getMaxSegments(string filename, int64_t filesize) {
 	string s1 = filename;
 	s1.erase(0,s1.find_last_of('.'));
 
-	if(matchExtension(s1,SETTING(DONT_EXTENSIONS))) {  MaxSegments = 1; }
-		else
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_SIZE)
-		{
+	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_SIZE) {
 		if( (filesize>=(SETTING(SET_MIN2)*1024*1024)) && (filesize<(SETTING(SET_MAX2)*1024*1024))) { MaxSegments = 2;}
 		else
 			if( (filesize>=(SETTING(SET_MIN3)*1024*1024)) && (filesize<(SETTING(SET_MAX3)*1024*1024))) { MaxSegments = 3;}
@@ -829,23 +826,24 @@ int QueueManager::getMaxSegments(string filename, int64_t filesize) {
 			if( (filesize>=(SETTING(SET_MIN6)*1024*1024)) && (filesize<(SETTING(SET_MAX6)*1024*1024))) { MaxSegments = 6;}
 		else
 			if(filesize>=(SETTING(SET_MIN8)*1024*1024)) { MaxSegments = 8;}
-		} else
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_CONNECTION)
-		{ 
-			if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { MaxSegments = 3;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {  MaxSegments = 4;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) { MaxSegments = 5;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) { MaxSegments = 6;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) { MaxSegments = 8;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) { MaxSegments = 8;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) { MaxSegments = 10;
-			} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) { MaxSegments = 15;
-			}			
-		} else
-	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_MANUAL)
-		{
-			MaxSegments = SETTING(NUMBER_OF_SEGMENTS);
-		} 
+	} else
+	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_ON_CONNECTION) { 
+		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { MaxSegments = 3;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {  MaxSegments = 4;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) { MaxSegments = 5;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) { MaxSegments = 6;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) { MaxSegments = 8;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) { MaxSegments = 8;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) { MaxSegments = 10;
+		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) { MaxSegments = 15;
+		}			
+	} else
+	if(SETTING(SEGMENTS_TYPE)==SettingsManager::SEGMENT_MANUAL) {
+		MaxSegments = SETTING(NUMBER_OF_SEGMENTS);
+	} 
+
+	if(matchExtension(s1,SETTING(DONT_EXTENSIONS))) {  MaxSegments = 1; }
+
  return MaxSegments;
 }
 

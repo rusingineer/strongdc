@@ -267,7 +267,7 @@ string ResourceManager::strings[] = {
 "Auto-away on minimize (and back on restore)", 
 "Automatically follow redirects", 
 "Automatically disconnect users who leave the hub (does not disconnect when hub goes down / you leave it)", 
-"Automatically search for alternative TTH source every 5 minutes", 
+"Automatically search for alternative TTH source every", 
 "Automatically match queue for auto search hits", 
 "Use default search strings in auto search when no string is specified", 
 "Automatically refresh share list every hour", 

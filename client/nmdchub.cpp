@@ -742,7 +742,7 @@ void NmdcHub::myInfo() {
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
 	nlfound = false;
-	string nldetect = "";
+	string nldetect = SETTING(CONNECTION);
 
 	try {
 		char promenna[255];
@@ -789,8 +789,8 @@ void NmdcHub::myInfo() {
 					NetLimiter_UploadOn = u_int8_t(txt[16]);
 					buf[255] = 0;
 
-					if(NetLimiter_UploadOn == 1) {
-						nldetect = nlfound ? "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+"kB/s]" : Util::emptyString;
+					if(nlfound && (NetLimiter_UploadOn == 1)) {
+						nldetect = "NetLimiter ["+Util::toString(NetLimiter_UploadLimit)+"kB/s]";
 					}
 				}
 				if(len < BUF_SIZE)

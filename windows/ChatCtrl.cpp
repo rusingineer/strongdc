@@ -317,7 +317,6 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor , bool bRedrawControlAtEnd) {
 	boOK = false;
 	boAtTheEnd = false;
-
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	POINT cr;
 	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
@@ -410,7 +409,7 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		autor.MakeLower();
 		if( ( sNick != autor ) && (autor != "")) {	
 	        if ((!SETTING(CHATNAMEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-		        PlaySound(SETTING(CHATNAMEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
+		        sndPlaySound(SETTING(CHATNAMEFILE).c_str(), SND_FILENAME | SND_ASYNC);	 	
         }
 	}
 

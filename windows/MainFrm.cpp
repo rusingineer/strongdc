@@ -60,8 +60,16 @@
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
 u_int32_t MainFrame::iCurrentShutdownTime = 0;
-string ShutDownText = "";
+bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup;
+
+MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
+	lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
+	closing(false), awaybyminimize(false), missedAutoConnect(false)
+	{ 
+		memset(statusSizes, 0, sizeof(statusSizes));
+		anyMF = this;
+	};
 
 MainFrame::~MainFrame() {
 	m_CmdBar.m_hImageList = NULL;
@@ -126,14 +134,12 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	m_hMenu = WinUtil::mainMenu;
 
+	hShutdownIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SHUTDOWN), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+
 	// attach menu
 	m_CmdBar.AttachMenu(m_hMenu);
 	// load command bar images
 	images.CreateFromImage(IDB_TOOLBAR, 16, 16, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	CImageList imlShutdown;
-	imlShutdown.CreateFromImage(IDB_O_OTOOLS, 16, 5, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	hShutdownIcon = imlShutdown.GetIcon(0);
-	imlShutdown.Destroy();
 	m_CmdBar.m_hImageList = images;
 
 	m_CmdBar.m_arrCommand.Add(ID_FILE_CONNECT);
@@ -161,9 +167,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_CmdBar.m_arrCommand.Add(IDC_FINISHEDMP3);	
 	m_CmdBar.m_arrCommand.Add(ID_GET_TTH);	
 	m_CmdBar.m_arrCommand.Add(IDC_UPDATE);	
-
-	showTransfers = BOOLSETTING(SHOW_TRANSFERS);
-	UISetCheck(ID_VIEW_TRANSFERS, showTransfers);
 
 	// remove old menu
 	SetMenu(NULL);
@@ -204,14 +207,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	m_nProportionalPos = SETTING(TRANSFER_SPLIT_SIZE);
 	UIAddToolBar(hWndToolBar);
-
-	bVisible = BOOLSETTING(SHOW_TOOLBAR);
-	CReBarCtrl rebar = m_hWndToolBar;
-	int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);
-	rebar.ShowBand(nBandIndex, bVisible);
-	UISetCheck(ID_VIEW_TOOLBAR, bVisible);
-	::ShowWindow(m_hWndStatusBar, BOOLSETTING(SHOW_STATUS_BAR));
-	UISetCheck(ID_VIEW_STATUS_BAR, BOOLSETTING(SHOW_STATUS_BAR));
+	UISetCheck(ID_VIEW_TOOLBAR, 1);
+	UISetCheck(ID_VIEW_STATUS_BAR, 1);
+	UISetCheck(ID_VIEW_TRANSFER_VIEW, 1);
 
 	// register object for message filtering and idle updates
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -248,6 +246,13 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		PostMessage(WM_COMMAND, IDC_FINISHED);
 	if(BOOLSETTING(OPEN_NETWORK_STATISTIC))
 		PostMessage(WM_COMMAND, IDC_NET_STATS);
+
+	if(!BOOLSETTING(SHOW_STATUSBAR))
+		PostMessage(WM_COMMAND, ID_VIEW_STATUS_BAR);
+	if(!BOOLSETTING(SHOW_TOOLBAR))
+		PostMessage(WM_COMMAND, ID_VIEW_TOOLBAR);
+	if(!BOOLSETTING(SHOW_TRANSFERVIEW))
+		PostMessage(WM_COMMAND, ID_VIEW_TRANSFER_VIEW);
 
 	if(!(GetAsyncKeyState(VK_SHIFT) & 0x8000))
 		PostMessage(WM_SPEAKER, AUTO_CONNECT);
@@ -311,21 +316,6 @@ void MainFrame::startSocket() {
 		}
 	}
 }
-
-/*void createImageList(CImageList &imglst, string file) {
-	HBITMAP hBitmap = (HBITMAP)::LoadImage(
-		NULL, file.c_str(), IMAGE_BITMAP,
-		0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
-	
-	if( !hBitmap )
-		return;
-    CBitmap b;
-	b.Attach(hBitmap);
-	
-	imglst.Create(20, 20, ILC_MASK | ILC_COLOR32, 0, 0);
-	imglst.Add(b, RGB(255,0,255));
-    
-}*/
 
 HWND MainFrame::createToolbar() {
 	if(!tbarcreated) {
@@ -394,31 +384,15 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			HDC dc = ::GetDC(ctrlStatus.m_hWnd);
 			bool u = false;
 			ctrlStatus.SetText(1, str[0].c_str());
-			for(int i = 1; i < 9; i++) {
+			for(int i = 1; i < 8; i++) {
 				int w = WinUtil::getTextWidth(str[i], dc);
 				
 			if(statusSizes[i] < w) {
-				if(i != 8) statusSizes[i] = w;
-				u = true;	
-				}
-				ctrlStatus.SetText(i+1, str[i].c_str());
-				if(i==8)
-					{ if(str[8] == "")
-						{ ctrlStatus.SetIcon(9, NULL);
-						  statusSizes[i] = 0;
+					statusSizes[i] = w;
 						  u = true;
 						}
-						else
-						{	statusSizes[i] = WinUtil::getTextWidth("icon "+str[i], dc);
-							ctrlStatus.SetIcon(9, hShutdownIcon);
-						    ctrlStatus.SetText(i+1, str[8].c_str());							
-						}
-					}
-				else
-				{	
 					ctrlStatus.SetText(i+1, str[i].c_str());
 				}
-			}
 			::ReleaseDC(ctrlStatus.m_hWnd, dc);
 			if(u)
 				UpdateLayout(TRUE);
@@ -696,16 +670,22 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 	for(FavoriteHubEntry::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
 		FavoriteHubEntry* entry = *i;
 		if(entry->getConnect()) {
- 			if(!entry->getNick().empty() || !SETTING(NICK).empty())
-			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
-			, entry->getRawOne()
-			, entry->getRawTwo()
-			, entry->getRawThree()
-			, entry->getRawFour()
-			, entry->getRawFive()		
-			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
-				);
- 			else
+ 			if(!entry->getNick().empty() || !SETTING(NICK).empty()) {
+				RecentHubEntry r;
+				r.setName(entry->getName());
+				r.setDescription(entry->getDescription());
+				r.setUsers("*");
+				r.setShared("*");
+				r.setServer(entry->getServer());
+				HubManager::getInstance()->addRecent(r);
+				HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
+					, entry->getRawOne()
+					, entry->getRawTwo()
+					, entry->getRawThree()
+					, entry->getRawFour()
+					, entry->getRawFive()		
+					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+ 			} else
  				missedAutoConnect = true;
  		}				
 	}
@@ -823,9 +803,6 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	if(!closing) {
 		if( oldshutdown ||(!BOOLSETTING(CONFIRM_EXIT)) || (MessageBox(CSTRING(REALLY_EXIT), APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) ) {
 			updateTray(false);
-			SettingsManager::getInstance()->set(SettingsManager::SHOW_TRANSFERS, showTransfers);
-			SettingsManager::getInstance()->set(SettingsManager::SHOW_STATUS_BAR, ::IsWindowVisible(m_hWndStatusBar));
-			SettingsManager::getInstance()->set(SettingsManager::SHOW_TOOLBAR, bVisible);
 			string tmp1;
 			string tmp2;
 
@@ -835,7 +812,7 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 			CRect rc;
 			GetWindowRect(rc);
-			if(showTransfers) {
+			if(BOOLSETTING(SHOW_TRANSFERVIEW)) {
 				SettingsManager::getInstance()->set(SettingsManager::TRANSFER_SPLIT_SIZE, m_nProportionalPos);
 			}
 			if(wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWNORMAL) {
@@ -928,9 +905,10 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 		CRect sr;
 		int w[10];
 		ctrlStatus.GetClientRect(sr);
-		w[9] = sr.right - 20;
+		w[9] = sr.right - 16;
+		w[8] = w[9] - 60;
 #define setw(x) w[x] = max(w[x+1] - statusSizes[x], 0)
-		setw(8); setw(7); setw(6); setw(5); setw(4); setw(3); setw(2); setw(1); setw(0);
+		setw(7); setw(6); setw(5); setw(4); setw(3); setw(2); setw(1); setw(0);
 
 		ctrlStatus.SetParts(10, w);
 		ctrlLastLines.SetMaxTipWidth(w[0]);
@@ -943,13 +921,6 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	
 	CRect rc2 = rect;
 	rc2.bottom = rc.top;
-	if (!showTransfers) {
-		if(GetSinglePaneMode() == SPLIT_PANE_NONE)
-			SetSinglePaneMode(SPLIT_PANE_TOP);
-	} else {
-		if(GetSinglePaneMode() != SPLIT_PANE_NONE)
-			SetSinglePaneMode(SPLIT_PANE_NONE);
-	}
 	SetSplitterRect(rc2);
 }
 
@@ -1012,12 +983,40 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 
 LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
+	static BOOL bVisible = TRUE;	// initially visible
 	bVisible = !bVisible;
 	CReBarCtrl rebar = m_hWndToolBar;
 	int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);	// toolbar is 2nd added band
 	rebar.ShowBand(nBandIndex, bVisible);
 	UISetCheck(ID_VIEW_TOOLBAR, bVisible);
 	UpdateLayout();
+	SettingsManager::getInstance()->set(SettingsManager::SHOW_TOOLBAR, bVisible);
+	return 0;
+}
+
+LRESULT MainFrame::OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	BOOL bVisible = !::IsWindowVisible(m_hWndStatusBar);
+	::ShowWindow(m_hWndStatusBar, bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
+	UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
+	UpdateLayout();
+	SettingsManager::getInstance()->set(SettingsManager::SHOW_STATUSBAR, bVisible);
+	return 0;
+}
+
+LRESULT MainFrame::OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	BOOL bVisible = !transferView.IsWindowVisible();
+	if(!bVisible) {	
+		if(GetSinglePaneMode() == SPLIT_PANE_NONE)
+			SetSinglePaneMode(SPLIT_PANE_TOP);
+	} else { 
+		if(GetSinglePaneMode() != SPLIT_PANE_NONE)
+			SetSinglePaneMode(SPLIT_PANE_NONE);
+	}
+	UISetCheck(ID_VIEW_TRANSFER_VIEW, bVisible);
+	UpdateLayout();
+	SettingsManager::getInstance()->set(SettingsManager::SHOW_TRANSFERVIEW, bVisible);
 	return 0;
 }
 
@@ -1028,19 +1027,6 @@ LRESULT MainFrame::onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
 LRESULT MainFrame::onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	FinishedMP3Frame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
-	if(Util::getAway()) { 
-		setAwayButton(false);
-		Util::setAway(false);
-	} else {
-		setAwayButton(true);
-		Util::setAway(true);
-	}
-
-	ClientManager::getInstance()->infoUpdated(true);
 	return 0;
 }
 
@@ -1116,7 +1102,6 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		}		
 
 		StringList* str = new StringList();
-		updateShutdown(aTick);
 		str->push_back(Util::getAway() ? STRING(AWAY) : "");
 		str->push_back(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getShareSizeString()));
 		str->push_back("H: " + Client::getCounts());
@@ -1125,13 +1110,14 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		str->push_back("U: " + Util::formatBytes(Socket::getTotalUp()));
 		str->push_back("D: [" + Util::toString(DownloadManager::getInstance()->getDownloads()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s" );
 		str->push_back("U: [" + Util::toString(UploadManager::getInstance()->getUploads()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s" );
-		str->push_back(getShutDown() ? ShutDownText : "");
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
+
+		updateShutdown(aTick);
 }
 
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
@@ -1199,15 +1185,31 @@ LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	return TRUE;
 }
 
+LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
+	if(Util::getAway()) { 
+		setAwayButton(false);
+		Util::setAway(false);
+	} else {
+		setAwayButton(true);
+		Util::setAway(true);
+	}
+	ClientManager::getInstance()->infoUpdated(true);
+	return 0;
+}
+
 void MainFrame::updateShutdown(u_int32_t aTick) {
 	u_int32_t iSec = (aTick / 1000);
 	if (bShutdown) {
 		if (ctrlStatus.IsWindow()) {
+			if(!isShutdownStatus) {
+				ctrlStatus.SetIcon(9, hShutdownIcon);
+				isShutdownStatus = true;
+			}
 			if (DownloadManager::getInstance()->getActiveDownloads() > 0) {
 				iCurrentShutdownTime = iSec;
-				ShutDownText = "";
+				ctrlStatus.SetText(9, string("").c_str());
 			} else {
-				ShutDownText = ' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime));
+				ctrlStatus.SetText(9, string(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
 				if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 					bool bDidShutDown = false;
 					bDidShutDown = CZDCLib::shutDown();
@@ -1217,7 +1219,6 @@ void MainFrame::updateShutdown(u_int32_t aTick) {
 					} else {
 						ctrlStatus.SetText(0, CSTRING(FAILED_TO_SHUTDOWN));
 						ctrlStatus.SetText(9, "");
-						ShutDownText = "";
 					}
 					// We better not try again. It WON'T work...
 					bShutdown = false;
@@ -1226,6 +1227,11 @@ void MainFrame::updateShutdown(u_int32_t aTick) {
 		}
 	} else {
 		if (ctrlStatus.IsWindow()) {
+			if(isShutdownStatus) {
+				ctrlStatus.SetText(9, "");
+				ctrlStatus.SetIcon(9, NULL);
+				isShutdownStatus = false;
+			}
 		}
 	}
 }

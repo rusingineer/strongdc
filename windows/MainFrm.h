@@ -52,13 +52,7 @@ class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFr
 		private LogManagerListener
 {
 public:
-	MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
-		lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-		closing(false), awaybyminimize(false), missedAutoConnect(false)
-	{ 
-		memset(statusSizes, 0, sizeof(statusSizes));
-		anyMF = this;
-	};
+	MainFrame();
 	virtual ~MainFrame();
 	DECLARE_FRAME_WND_CLASS("StrongDC++", IDR_MAINFRAME)
 
@@ -120,7 +114,7 @@ public:
 		COMMAND_ID_HANDLER(ID_FILE_SEARCH, OnFileSearch)
 		COMMAND_ID_HANDLER(ID_VIEW_TOOLBAR, OnViewToolBar)
 		COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
-		COMMAND_ID_HANDLER(ID_VIEW_TRANSFERS, OnViewTransfers)
+		COMMAND_ID_HANDLER(ID_VIEW_TRANSFER_VIEW, OnViewTransferView)
 		COMMAND_ID_HANDLER(ID_GET_TTH, onGetTTH)
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		COMMAND_ID_HANDLER(ID_WINDOW_CASCADE, OnWindowCascade)
@@ -164,7 +158,7 @@ public:
 	BEGIN_UPDATE_UI_MAP(MainFrame)
 		UPDATE_ELEMENT(ID_VIEW_TOOLBAR, UPDUI_MENUPOPUP)
 		UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
-		UPDATE_ELEMENT(ID_VIEW_TRANSFERS, UPDUI_MENUPOPUP)
+		UPDATE_ELEMENT(ID_VIEW_TRANSFER_VIEW, UPDUI_MENUPOPUP)
 	END_UPDATE_UI_MAP()
 
 	LRESULT onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
@@ -188,17 +182,15 @@ public:
 	LRESULT onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onOpenFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
+	LRESULT OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
-	LRESULT onShutDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		setShutDown(!getShutDown());
-		return S_OK;
-	}
 	LRESULT onCloseDisconnected(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onRefreshFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);	
@@ -257,23 +249,6 @@ public:
 		return 0;
 	}
 	
-	LRESULT OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		BOOL bVisible = !::IsWindowVisible(m_hWndStatusBar);
-		::ShowWindow(m_hWndStatusBar, bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
-		UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
-		UpdateLayout();
-		return 0;
-	}
-
-	LRESULT OnViewTransfers(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		showTransfers = !showTransfers;
-		UISetCheck(ID_VIEW_TRANSFERS, showTransfers);
-		UpdateLayout();
-		return 0;
-	}
-
 	LRESULT onOpenDownloads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		WinUtil::openFile(SETTING(DOWNLOAD_DIRECTORY));
 		return 0;
@@ -308,26 +283,31 @@ public:
 		}
 		return 0;
 	}
+	LRESULT onShutDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		setShutDown(!getShutDown());
+		return S_OK;
+	}
 	LRESULT OnCreateToolbar(WORD /*wNotifyCode*/,WPARAM wParam, LPARAM, BOOL& /*bHandled*/) {
 		createToolbar();
 		return S_OK;
+	}
+	static MainFrame* getMainFrame() {
+		return anyMF;
 	}
 	static void setShutDown(bool b) {
 		if (b)
 			iCurrentShutdownTime = (unsigned long) (TimerManager::getTick() / 1000);
 		bShutdown = b;
-		if (anyMF != NULL) {
+/*		if (anyMF != NULL) {
 			if (b) { if(!anyMF->ctrlToolbar.IsButtonChecked(IDC_SHUTDOWN)) { anyMF->ctrlToolbar.CheckButton(IDC_SHUTDOWN,true); } }
 			else { if(anyMF->ctrlToolbar.IsButtonChecked(IDC_SHUTDOWN)) {  anyMF->ctrlToolbar.CheckButton(IDC_SHUTDOWN,false); } }
 			anyMF->UpdateLayout();
-		}
+		}*/
 	}
 	static bool getShutDown() {
 		return bShutdown;
 	}
-	static MainFrame* getMainFrame() {
-		return anyMF;
-	}
+
 	
 	static void setAwayButton(bool a) {
 		if(a) {
@@ -341,7 +321,6 @@ public:
 
 	void SendCheatMessage(Client* client, User::Ptr u);
 	CImageList largeImages, largeImagesHot;
-
 private:
 	friend bool isMDIChildActive(HWND hWnd);
 	friend void handleMDIClick(int nID, HWND mdiWindow);
@@ -373,8 +352,6 @@ private:
 	CImageList images;
 	CToolBarCtrl ctrlToolbar;
 
-	bool showTransfers;
-	bool bVisible;
 	bool tbarcreated;
 	bool awaybyminimize;
 	
@@ -382,6 +359,7 @@ private:
 	static u_int32_t iCurrentShutdownTime;
 	static bool bIsShuttingDown;
 	HICON hShutdownIcon;
+	static bool isShutdownStatus;
 
 	CMenu trayMenu;
 
@@ -399,7 +377,7 @@ private:
 
 	int lastUpload;
 
-	int statusSizes[9];
+	int statusSizes[10];
 	
 	HANDLE stopperThread;
 

@@ -69,8 +69,7 @@ public:
 template<class T>
 class UserInfoBaseHandler {
 public:
-	UserInfoBaseHandler()
-	{
+	UserInfoBaseHandler() {
 		sSelectedUser = "";
 	}
 

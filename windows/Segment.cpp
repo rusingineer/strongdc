@@ -47,6 +47,8 @@ PropPage::TextItem Segment::texts[] = {
 	{ IDC_EXTENSION, ResourceManager::TEXT_EXTENSION },
 	{ IDC_MINIMUM, ResourceManager::TEXT_MINIMUM },
 	{ IDC_KB, ResourceManager::KB },
+
+	{ IDC_MINUTES, ResourceManager::MINUTES },
 	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
@@ -61,7 +63,7 @@ PropPage::Item Segment::items[] = {
 	{ IDC_SEGMENT6_MIN, SettingsManager::SET_MIN6, PropPage::T_INT },
 	{ IDC_SEGMENT6_MAX, SettingsManager::SET_MAX6, PropPage::T_INT },
 	{ IDC_SEGMENT8_MIN, SettingsManager::SET_MIN8, PropPage::T_INT },
-//	{ IDC_SEGMENT2_MIN, SettingsManager::SET_MIN2, PropPage::T_INT },
+	{ IDC_SEARCH_EDIT, SettingsManager::SEARCH_TIME, PropPage::T_INT },
 
 	{ IDC_SEG_NUMBER, SettingsManager::NUMBER_OF_SEGMENTS, PropPage::T_INT },
 	{ IDC_BLOCK_COMBO, SettingsManager::MIN_BLOCK_SIZE, PropPage::T_STR },
@@ -88,6 +90,10 @@ LRESULT Segment::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	CUpDownCtrl spin;
 	spin.Attach(GetDlgItem(IDC_SEG_NUMBER_SPIN));
 	spin.SetRange32(1, 10);
+	spin.Detach();
+
+	spin.Attach(GetDlgItem(IDC_SEARCH_SPIN));
+	spin.SetRange32(5, 60);
 	spin.Detach();
 
 	ctrlBlockSize.Attach(GetDlgItem(IDC_BLOCK_COMBO));
