@@ -468,6 +468,9 @@ void ChatCtrl::EndRedrawAppendTextOnly() {
 }
 
 void ChatCtrl::AppendBitmap(HBITMAP hbm) {
+
+	POINT cr;
+	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	
 	// Insert text at the end
@@ -476,6 +479,7 @@ void ChatCtrl::AppendBitmap(HBITMAP hbm) {
 	CImageDataObject::InsertBitmap(GetIRichEditOle(), hbm);
 
 	SetSel( lSelBeginSaved, lSelEndSaved );
+	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
 }
 
 IRichEditOle* ChatCtrl::GetIRichEditOle() const {

@@ -703,6 +703,9 @@ void NmdcHub::myInfo() {
 	string connection = SETTING(CONNECTION);
 	string speedDescription = "";
 
+	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
+		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"] ";
+
 	if((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 			int tag = 0;
@@ -724,7 +727,7 @@ void NmdcHub::myInfo() {
 		if (connection == "Wireless") { connection = "Satellite"; }
 
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			speedDescription = Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) + "kbps ";
+			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
 		}
 
 	}
@@ -734,9 +737,6 @@ void NmdcHub::myInfo() {
 	string nldetect =
 	(FindWindow(NULL, "NetLimiter v1.30") || FindWindow(NULL, "NetLimiter v1.29") || FindWindow(NULL, "NetLimiter v1.25") || FindWindow(NULL, "NetLimiter v1.22"))
 	? "NetLimiter " : Util::emptyString;
-
-	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
-		speedDescription = SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+" ";
 
 	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {

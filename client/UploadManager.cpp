@@ -392,7 +392,7 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 		cmd.addParam(c.getParam(0));
 		cmd.addParam(c.getParam(1));
 		cmd.addParam(c.getParam(2));
-		cmd.addParam(Util::toString(u->getSize()));
+		cmd.addParam(Util::toString(aBytes));
 
 		if(c.hasFlag("ZL", 4)) {
 			u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));

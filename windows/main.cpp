@@ -387,7 +387,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		// Allow for more than one instance...
 				bool multiple = false;
 		if(_tcslen(lpstrCmdLine) == 0) {
-
 		if (::MessageBox(NULL, "There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?", 
 			APPNAME " " VERSIONSTRING CZDCVERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
 					multiple = true;
@@ -433,8 +432,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 	
-	HINSTANCE hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());	
-
 	try {
 		File f(Util::getAppName(), File::READ, File::OPEN);
 		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
@@ -449,6 +446,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	} catch(const FileException&) {
 		dcdebug("Failed reading exe\n");
 	}	
+
+	HINSTANCE hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());	
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
  
