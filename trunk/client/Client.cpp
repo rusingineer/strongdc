@@ -1,0 +1,804 @@
+/* 
+ * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#include "stdinc.h"
+#include "DCPlusPlus.h"
+
+#include "Client.h"
+
+#include "ResourceManager.h"
+#include "ClientManager.h"
+#include "SearchManager.h"
+#include "ShareManager.h"
+#include "UploadManager.h"
+
+#include "Socket.h"
+#include "UserCommand.h"
+#include "StringTokenizer.h"
+
+Client::Counts Client::counts;
+
+Client::Client() : supportFlags(0), userInfo(true), 
+	registered(false), firstHello(true), state(STATE_CONNECT), 
+	socket(BufferedSocket::getSocket('|')), lastActivity(GET_TICK()), 
+	countType(COUNT_UNCOUNTED), reconnect(true), lastUpdate(0)
+
+{
+	TimerManager::getInstance()->addListener(this);
+	socket->addListener(this);
+
+};
+
+Client::~Client() throw() {
+	TimerManager::getInstance()->removeListener(this);
+	socket->removeListener(this);
+	removeListeners();
+
+	clearUsers();
+	updateCounts(true);
+
+		BufferedSocket::putSocket(socket);
+		socket = NULL;
+};
+
+void Client::updateCounts(bool aRemove) {
+	// We always remove the count and then add the correct one if requested...
+
+	if(countType == COUNT_NORMAL) {
+		Thread::safeDec(&counts.normal);
+	} else if(countType == COUNT_REGISTERED) {
+		Thread::safeDec(&counts.registered);
+	} else if(countType == COUNT_OP) {
+		Thread::safeDec(&counts.op);
+	}
+	countType = COUNT_UNCOUNTED;
+
+	if(!aRemove) {
+		if(getOp()) {
+			Thread::safeInc(&counts.op);
+			countType = COUNT_OP;
+		} else if(registered) {
+			Thread::safeInc(&counts.registered);
+			countType = COUNT_REGISTERED;
+		} else {
+			Thread::safeInc(&counts.normal);
+			countType = COUNT_NORMAL;
+		}
+	}
+}
+
+void Client::connect(const string& aAddressPort) {
+	addressPort = aAddressPort;
+	string tmp;
+	port = 411;
+	Util::decodeUrl(aAddressPort, address, port, tmp);
+
+	connect();
+}
+
+void Client::connect() {
+	registered = false;
+	reconnect = true;
+	firstHello = true;
+	supportFlags = 0;
+	lastmyinfo = "";
+	lastbytesshared = 0;
+	validatenicksent = false;
+
+	if(socket->isConnected()) {
+		disconnect();
+	}
+
+	state = STATE_LOCK;
+
+	socket->connect(address, port);
+}
+
+void Client::refreshUserList(bool unknownOnly /* = false */) {
+	Lock l(cs);
+	if(unknownOnly) {
+		for(User::NickIter i = users.begin(); i != users.end(); ++i) {
+			if(i->second->getConnection().empty()) {
+				getInfo(i->second);
+			}
+		}
+	} else {
+		clearUsers();
+		getNickList();
+	}
+}
+
+void Client::clearUsers() {
+	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
+		ClientManager::getInstance()->putUserOffline(i->second);		
+	}
+	users.clear();
+}
+
+void Client::onLine(const string& aLine) throw() {
+	lastActivity = GET_TICK();
+
+//	logovani vsech prichozich dat... posila se do chatu :-)
+//	fire(ClientListener::MESSAGE, this, aLine);
+
+	if(aLine.length() == 0)
+		return;
+	
+	if(aLine[0] != '$') {
+		// Check if we're being banned...
+		if(state != STATE_CONNECTED) {
+			if(Util::findSubString(aLine, "banned") != string::npos) {
+				reconnect = false;
+			}
+		}
+		fire(ClientListener::MESSAGE, this, Util::validateMessage(aLine, true));
+		return;
+	}
+
+	string cmd;
+	string param;
+	string::size_type x;
+	
+	if( (x = aLine.find(' ')) == string::npos) {
+		cmd = aLine;
+	} else {
+		cmd = aLine.substr(0, x);
+		param = aLine.substr(x+1);
+	}
+
+	if(cmd == "$Search") {
+		if(state != STATE_CONNECTED) {
+			return;
+		}
+		string::size_type i = 0;
+		string::size_type j = safestring::SafeFind(param, ' ', i);
+		if(j == string::npos || i == j)
+			return;
+		string seeker = param.substr(i, j-i);
+		i = j + 1;
+		
+		{
+			Lock l(cs);
+			u_int32_t tick = GET_TICK();
+
+			seekers.push_back(make_pair(seeker, tick));
+
+			// First, check if it's a flooder
+			FloodIter fi;
+			for(fi = flooders.begin(); fi != flooders.end(); ++fi) {
+				if(fi->first == seeker) {
+					return;
+				}
+			}
+
+			int count = 0;
+			for(fi = seekers.begin(); fi != seekers.end(); ++fi) {
+				if(fi->first == seeker)
+					count++;
+
+				if(count > 7) {
+					if(seeker.find("Hub:") != string::npos)
+						fire(ClientListener::SEARCH_FLOOD, this, seeker.substr(4));
+					else
+						fire(ClientListener::SEARCH_FLOOD, this, seeker + STRING(NICK_UNKNOWN));
+
+					flooders.push_back(make_pair(seeker, tick));
+					return;
+				}
+			}
+		}
+
+		int a;
+		if(param[i] == 'F') {
+			a = SearchManager::SIZE_DONTCARE;
+		} else if(param[i+2] == 'F') {
+			a = SearchManager::SIZE_ATLEAST;
+		} else {
+			a = SearchManager::SIZE_ATMOST;
+		}
+		i += 4;
+		j = safestring::SafeFind(param, '?', i);
+		if(j == string::npos || i == j)
+			return;
+		string size = param.substr(i, j-i);
+		i = j + 1;
+		j = safestring::SafeFind(param, '?', i);
+		if(j == string::npos || i == j)
+			return;
+		int type = Util::toInt(param.substr(i, j-i)) - 1;
+		i = j + 1;
+		param = param.substr(i);
+
+		if(param.size() > 0) {
+			fire(ClientListener::SEARCH, this, seeker, a, size, type, param);
+			
+			if(seeker.find("Hub:") != string::npos) {
+				User::Ptr u;
+				{
+					Lock l(cs);
+					User::NickIter ni = users.find(seeker.substr(4));
+					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
+						u = ni->second;
+						u->setFlag(User::PASSIVE);
+					}
+				}
+
+				if(u) {
+					updated(u);
+				}
+			}
+		}
+
+} else if(cmd == "$MyINFO") { 
+    char *description, *temp; 
+      char *prm = new char[param.length()+1]; 
+      strcpy(prm, param.c_str()); 
+      if((temp = strtok(prm+5, " ")) == NULL) { 
+         delete[] prm; 
+         return; 
+      } 
+      User::Ptr u; 
+      dcassert(strlen(temp) > 0); 
+
+      { 
+         Lock l(cs); 
+         User::NickIter ni = users.find(temp); 
+         if(ni == users.end()) { 
+            u = users[temp] = ClientManager::getInstance()->getUser(temp, this); 
+         } else { 
+            u  = ni->second; 
+         } 
+      } 
+      if((temp[strlen(temp)+1] != '$') && ((temp = strtok(NULL, "$")) != NULL)) { 
+         description = strdup(temp); 
+      } else { 
+         description = NULL; 
+      } 
+      if((temp = strtok(NULL, "$")) == NULL)
+      		return;
+      		
+      if(temp[strlen(temp)+1] != '$') {
+      	if((temp = strtok(NULL, "$")) == NULL)
+			return;
+		else {
+         char status = temp[strlen(temp)-1]; 
+         u->setStatus(status); 
+         temp[strlen(temp)-1] = '\0'; 
+         u->setConnection(temp); 
+      }
+    		} else {
+			u->setStatus(1);
+			u->setConnection(Util::emptyString);
+		}
+  	   if(temp[strlen(temp)+2] != '$') {
+      	if((temp = strtok(NULL, "$")) == NULL)
+			return;
+		else
+          u->setEmail(Util::validateMessage(temp, true)); 
+		} else {
+			u->setEmail(Util::emptyString);
+      } 
+      if(temp[strlen(temp)+1] != '$') {
+      	if((temp = strtok(NULL, "$")) == NULL)
+			return;
+		else
+         u->setBytesShared(temp); 
+      }        
+
+      if(description) { 
+         if(strlen(description) > 0 && description[strlen(description)-1] == '>') { 
+            char *sTag; 
+            if((sTag = strrchr(description, '<')) != NULL) { 
+               u->TagParts(sTag); 
+               description[strlen(description)-strlen(sTag)] = '\0'; 
+            } 
+         } 
+         u->setDescription(description); 
+         free(description); 
+      } 
+
+      if (u->getNick() == getNick()) { 
+         if(state == STATE_MYINFO) { 
+            state = STATE_CONNECTED; 
+            updateCounts(false); 
+         }    
+
+         u->setFlag(User::DCPLUSPLUS); 
+         if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) 
+            u->setFlag(User::PASSIVE); 
+      } 
+      fire(ClientListener::MY_INFO, this, u); 
+      delete[] prm; 
+
+   } else if(cmd == "$Quit") {
+		if(!param.empty()) {
+			User::Ptr u;
+			{
+				Lock l(cs);
+				User::NickIter i = users.find(param);
+				if(i == users.end()) {
+					dcdebug("C::onLine Quitting user %s not found\n", param.c_str());
+					return;
+				}
+				
+				u = i->second;
+				users.erase(i);
+			}
+			
+			fire(ClientListener::QUIT, this, u);
+			ClientManager::getInstance()->putUserOffline(u, true);
+		}
+	} else if(cmd == "$ConnectToMe") {
+		if(state != STATE_CONNECTED) {
+			return;
+		}
+		string::size_type i = param.find(' ');
+		string::size_type j;
+		if( (i == string::npos) || ((i + 1) >= param.size()) ) {
+			return;
+		}
+		i++;
+		j = safestring::SafeFind(param, ':', i);
+		if(j == string::npos) {
+			return;
+		}
+		string server = param.substr(i, j-i);
+		if(j+1 >= param.size()) {
+			return;
+		}
+		fire(ClientListener::CONNECT_TO_ME, this, server, param.substr(j+1));
+
+	} else if(cmd == "$RevConnectToMe") {
+		if(state != STATE_CONNECTED) {
+			return;
+		}
+		User::Ptr u;
+		bool up = false;
+		{
+			Lock l(cs);
+			string::size_type j = param.find(' ');
+			if(j == string::npos) {
+				return;
+			}
+
+			User::NickIter i = users.find(param.substr(0, j));
+			if(i == users.end()) {
+				return;
+			}
+
+			u = i->second;
+			if(!u->isSet(User::PASSIVE)) {
+				u->setFlag(User::PASSIVE);
+				up = true;
+			}
+		}
+
+		if(u) {
+			if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+				fire(ClientListener::REV_CONNECT_TO_ME, this, u);
+			} else {
+				// Notify the user that we're passive too...
+				if(up)
+					revConnectToMe(u);
+			}
+
+			if(up)
+				updated(u);
+		}
+	} else if(cmd == "$SR") {
+		SearchManager::getInstance()->onSearchResult(aLine);
+	} else if(cmd == "$HubName") {
+		name = param;
+		fire(ClientListener::HUB_NAME, this);
+	} else if(cmd == "$Supports") {
+		StringTokenizer st(param, ' ');
+		bool QuickList = false;
+		StringList& sl = st.getTokens();
+		for(StringIter i = sl.begin(); i != sl.end(); ++i) {
+			if(*i == "UserCommand") {
+				supportFlags |= SUPPORTS_USERCOMMAND;
+			} else if(*i == "NoGetINFO") {
+				supportFlags |= SUPPORTS_NOGETINFO;
+			} else if(*i == "UserIP2") {
+				supportFlags |= SUPPORTS_USERIP2;
+			} else if(*i == "QuickList") {
+				if(state == STATE_HELLO) {
+					state = STATE_MYINFO;
+				}
+				updateCounts(false);
+				myInfo();
+				getNickList();
+				QuickList = true;
+			}
+		}
+		if (!QuickList) {
+			validateNick(getNick());
+		}
+		fire(ClientListener::SUPPORTS, this, sl);
+	} else if(cmd == "$UserCommand") {
+		string::size_type i = string::npos;
+		string::size_type j = param.find(' ');
+		if(j == string::npos)
+			return;
+
+		int type = Util::toInt(param.substr(0, j));
+		i = j+1;
+		if(type == UserCommand::TYPE_SEPARATOR) {
+			int ctx = Util::toInt(param.substr(i));
+			fire(ClientListener::USER_COMMAND, this, type, ctx, Util::emptyString, Util::emptyString);
+		} else if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
+			j = safestring::SafeFind(param, ' ', i);
+			if(j == string::npos)
+				return;
+			int ctx = Util::toInt(param.substr(i));
+			i = j+1;
+			j = param.find('$');
+			if(j == string::npos)
+				return;
+			string name = param.substr(i, j-i);
+			i = j+1;
+			string command = param.substr(i, param.length() - i);
+			fire(ClientListener::USER_COMMAND, this, type, ctx, Util::validateMessage(name, true, false), Util::validateMessage(command, true, false));
+		}
+	} else if(cmd == "$Lock") {
+		if(state != STATE_LOCK) {
+			return;
+		}
+		state = STATE_HELLO;
+
+		if(!param.empty()) {
+			string::size_type j = param.find(" Pk=");
+			string lock, pk;
+			if( j != string::npos ) {
+				lock = param.substr(0, j);
+				pk = param.substr(j + 4);
+			} else {
+				// Workaround for faulty linux hubs...
+				j = param.find(" ");
+				if(j != string::npos)
+					lock = param.substr(0, j);
+				else
+					lock = param;
+			}
+			fire(ClientListener::C_LOCK, this, lock, pk);	
+		}
+	} else if(cmd == "$Hello") {
+		if(!param.empty()) {
+			User::Ptr u = ClientManager::getInstance()->getUser(param, this);
+			{
+				Lock l(cs);
+				users[param] = u;
+			}
+			
+			if(getNick() == param)
+				setMe(u);
+			
+			if(u == getMe()) {
+				if(state == STATE_HELLO) {
+					state = STATE_CONNECTED;
+					updateCounts(false);
+
+					u->setFlag(User::DCPLUSPLUS);
+					if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+						u->setFlag(User::PASSIVE);
+				}
+				fire(ClientListener::HELLO, this, u);
+				setFirstHello(false);
+			} else {
+				fire(ClientListener::HELLO, this, u);
+			}			
+		}
+	} else if(cmd == "$ForceMove") {
+		disconnect();
+		fire(ClientListener::FORCE_MOVE, this, param);
+	} else if(cmd == "$HubIsFull") {
+		fire(ClientListener::HUB_FULL, this);
+	} else if(cmd == "$ValidateDenide") {		// Mind the spelling...
+		disconnect();
+		fire(ClientListener::VALIDATE_DENIED, this);
+	} else if(cmd == "$UserIP") {
+		if(!param.empty()) {
+			//User::List v;
+			StringTokenizer t(param, "$$");
+			StringList& l = t.getTokens();
+			/*for(StringIter it = l.begin(); it != l.end(); ++it) {
+				string::size_type j = 0;
+				if((j = it->find(' ')) == string::npos)
+					continue;
+				if((j+1) == it->length())
+					continue;
+				v.push_back(ClientManager::getInstance()->getUser(it->substr(0, j), this));
+				v.back()->setIp(it->substr(j+1));
+			}
+
+			fire(ClientListener::USER_IP, this, v);*/
+			fire(ClientListener::USER_IP, this, l); 
+		}
+	} else if(cmd == "$NickList") {
+		char *prm = new char[param.length()+1];
+		strcpy(prm, param.c_str());
+		if(prm != NULL) {
+			User::List v;
+			char *temp = strtok(prm, "$$");
+			while(temp != NULL) {
+				v.push_back(ClientManager::getInstance()->getUser(temp, this));
+				temp = strtok(NULL, "$$");
+			}
+
+			{
+				Lock l(cs);
+				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+					users[(*it2)->getNick()] = *it2;
+				}
+			}
+			
+			fire(ClientListener::NICK_LIST, this, v);
+		}
+		delete[] prm;
+	} else if(cmd == "$OpList") {
+		char *prm = new char[param.length()+1];
+		strcpy(prm, param.c_str());
+		if(prm != NULL) {
+			User::List v;
+			char *temp = strtok(prm, "$$");
+			while(temp != NULL) {
+				v.push_back(ClientManager::getInstance()->getUser(temp, this));
+				v.back()->setFlag(User::OP);
+				temp = strtok(NULL, "$$");
+			}
+
+			{
+				Lock l(cs);
+				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+					users[(*it2)->getNick()] = *it2;
+				}
+			}
+			fire(ClientListener::OP_LIST, this, v);
+			updateCounts(false);
+			// Special...to avoid op's complaining that their count is not correctly
+			// updated when they log in (they'll be counted as registered first...)
+			if(lastCounts != counts) {
+				myInfo();
+			}
+		}
+		delete[] prm;
+	} else if(cmd == "$To:") {
+		string::size_type i = param.find("From:");
+		if(i != string::npos) {
+			i+=6;
+			string::size_type j = param.find("$");
+			if(j != string::npos) {
+				string from = param.substr(i, j - 1 - i);
+				if(from.size() > 0 && param.size() > (j + 1)) {
+					fire(ClientListener::PRIVATE_MESSAGE, this, ClientManager::getInstance()->getUser(from, this, false), Util::validateMessage(param.substr(j + 1), true));
+				}
+			}
+		}
+	} else if(cmd == "$GetPass") {
+		registered = true;
+		fire(ClientListener::GET_PASSWORD, this);
+	} else if(cmd == "$BadPass") {
+		fire(ClientListener::BAD_PASSWORD, this);
+	} else if(cmd == "$LogedIn") {
+		fire(ClientListener::LOGGED_IN, this);
+	} else {
+		dcassert(cmd[0] == '$');
+		dcdebug("Client::onLine Unknown command %s\n", aLine.c_str());
+	} 
+}
+
+void Client::myInfo() {
+	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
+		return;
+	}
+
+	dcdebug("MyInfo %s...\n", getNick().c_str());
+	lastCounts = counts;
+	char StatusMode = '\x01';
+	string tmp0 = "<++";
+	string tmp1 = "\x1fU9";
+	string tmp2 = "+L9";
+	string tmp3 = "+G9";
+	string tmp4 = "+R9";
+	string tmp5 = "+K9";
+	string::size_type i;
+	
+	for(i = 0; i < 6; i++) {
+		tmp1[i]++;
+	}
+	for(i = 0; i < 3; i++) {
+		tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
+	}
+	char modeChar = '?';
+	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)
+		modeChar = 'A';
+	else if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_PASSIVE)
+		modeChar = 'P';
+	else if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5)
+		modeChar = '5';
+	
+	string VERZE = DCVERSIONSTRING;
+	
+
+
+	if ((!stealth) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_CZDC)) {
+		tmp0 = "<StrgDC++";
+		VERZE = VERSIONSTRING CZDCVERSIONSTRING;
+	}
+	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
+
+	string connection = SETTING(CONNECTION);
+	string speedDescription = "";
+
+	if((!stealth) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
+	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+		int tag = 0;
+		tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
+		extendedtag += tmp5 + Util::toString(tag);
+	}
+
+	if (UploadManager::getFireballStatus()) {
+		StatusMode += 8;
+	} else if (UploadManager::getFileServerStatus()) {
+		StatusMode += 4;
+	}
+	
+	if(Util::getAway()) {
+		StatusMode += 2;
+	}
+	} else {
+		if (connection == "Modem") { connection = "56Kbps"; }
+		if (connection == "Wireless") { connection = "Satellite"; }
+
+		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+			speedDescription = Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) + "kbps ";
+		}
+
+	}
+
+	extendedtag += ">";
+
+	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+getDescription(), false));
+	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
+		newmyinfo += extendedtag;
+	}
+	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
+	newmyinfo += ("$ $" + connection + StatusMode + "$" + Util::validateMessage(SETTING(EMAIL), false) + '$');
+		if ( (newmyinfo != lastmyinfo) || ( (newbytesshared < (lastbytesshared - 1048576) ) || (newbytesshared > (lastbytesshared + 1048576) ) ) ){
+		send(newmyinfo + Util::toString(newbytesshared) + "$|");
+		lastmyinfo = newmyinfo;
+		lastbytesshared = newbytesshared;
+	}
+}
+
+void Client::disconnect() throw() {	
+	state = STATE_CONNECT;
+	socket->disconnect();
+	{ 
+		Lock l(cs);
+		clearUsers();
+	}
+}
+
+void Client::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
+	checkstate(); 
+	char* buf;
+	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
+	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
+	string tmp = aString;
+	string::size_type i;
+	while((i = tmp.find(' ')) != string::npos) {
+		tmp[i] = '$';
+	}
+	int chars = 0;
+	if((SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
+		string x = getLocalIp();
+		buf = new char[x.length() + aString.length() + 64];
+		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(IN_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+	} else {
+		buf = new char[getNick().length() + aString.length() + 64];
+		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", getNick().c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+	}
+	send(buf, chars);
+	delete[] buf;
+}
+
+void Client::whoip(const string& aMsg) {
+	checkstate(); 
+	dcdebug("Client::whoip\n");
+
+	send("$WhoIP " + Util::validateMessage(aMsg, false) + "|");
+}
+
+void Client::banned(const string& aMsg) {
+	checkstate(); 
+	dcdebug("Client::banned\n");
+
+	send("$Banned " + Util::validateMessage(aMsg, false) + "|");
+}
+
+// TimerManagerListener
+void Client::onAction(TimerManagerListener::Types type, u_int32_t aTick) throw() {
+	if(type == TimerManagerListener::SECOND) {
+		if(socket && (lastActivity + (120+Util::rand(0, 60)) * 1000) < aTick) {
+			// Nothing's happened for ~120 seconds, check if we're connected, if not, try to connect...
+			lastActivity = aTick;
+			// Try to send something for the fun of it...
+			if(isConnected()) {
+				dcdebug("Testing writing...\n");
+				socket->write("|", 1);
+			} else {
+				// Try to reconnect...
+				if(reconnect && !address.empty())
+					connect();
+			}
+		}
+		{
+			Lock l(cs);
+			
+			while(!seekers.empty() && seekers.front().second + (5 * 1000) < aTick) {
+				seekers.pop_front();
+			}
+			
+			while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
+				flooders.pop_front();
+			}
+		}
+	} 
+}
+
+// BufferedSocketListener
+void Client::onAction(BufferedSocketListener::Types type, const string& aLine) throw() {
+	switch(type) {
+	case BufferedSocketListener::LINE:
+//		if (onClientMessage(this, Util::validateMessage(aLine, true)))
+//			break;
+
+		onLine(aLine); break;
+	case BufferedSocketListener::FAILED:
+		{
+			Lock l(cs);
+			clearUsers();
+		}
+		if(state == STATE_CONNECTED)
+			state = STATE_CONNECT;
+		fire(ClientListener::FAILED, this, aLine); break;
+	default:
+		dcassert(0);
+	}
+}
+
+void Client::onAction(BufferedSocketListener::Types type) throw() {
+	switch(type) {
+	case BufferedSocketListener::CONNECTING:
+		fire(ClientListener::CONNECTING, this); break;
+	case BufferedSocketListener::CONNECTED:
+		lastActivity = GET_TICK();
+		fire(ClientListener::CONNECTED, this);
+		break;
+	default:
+		break;
+	}
+}
+
+
+/**
+ * @file
+ * $Id$
+ */
+
