@@ -138,7 +138,7 @@ SettingsManager::SettingsManager()
 	setDefault(MINIMIZE_TRAY, false);
 	setDefault(OPEN_PUBLIC, false);
 	setDefault(OPEN_QUEUE, false);
-	setDefault(AUTO_SEARCH, false);
+	setDefault(AUTO_SEARCH, true);
 	setDefault(AUTO_SEARCH_AUTO_STRING, false);
 	setDefault(TIME_STAMPS, false);
 	setDefault(CONFIRM_EXIT, false);
@@ -147,7 +147,7 @@ SettingsManager::SettingsManager()
 	setDefault(LIST_DUPES, false);
 	setDefault(BUFFER_SIZE, 64);
 	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2");
-	setDefault(DOWNLOAD_SLOTS, 3);
+	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(HUB_SLOTS, 0);
 	setDefault(LOG_DIRECTORY, Util::getAppPath() + "Logs\\");
@@ -195,9 +195,9 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_FAVORITE_HUBS, false);
 	setDefault(OPEN_FINISHED_DOWNLOADS, false);
 	setDefault(HUB_USER_COMMANDS, true);
-	setDefault(AUTO_SEARCH_AUTO_MATCH, true);
+	setDefault(AUTO_SEARCH_AUTO_MATCH, false);
 	setDefault(LOG_FILELIST_TRANSFERS, true);
-	setDefault(AUTO_SEARCH_EXACT, true);
+	setDefault(AUTO_SEARCH_EXACT, false);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);

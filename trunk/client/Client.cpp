@@ -163,16 +163,18 @@ void Client::onLine(const string& aLine) throw() {
 	}
 
 	if(cmd == "$Search") {
-		if(state != STATE_CONNECTED) {
+		char *prm = new char[param.length()+1]; 
+		strcpy(prm, param.c_str()); 
+		if(state != STATE_CONNECTED || prm == NULL) {
+			delete[] prm;
 			return;
 		}
-		string::size_type i = 0;
-		string::size_type j = safestring::SafeFind(param, ' ', i);
-		if(j == string::npos || i == j)
+		if((temp = strtok(prm, " ")) == NULL) {
+			delete[] prm;
 			return;
-		string seeker = param.substr(i, j-i);
-		i = j + 1;
+		}
 		
+		char *seeker = temp;
 		{
 			Lock l(cs);
 			u_int32_t tick = GET_TICK();
@@ -183,6 +185,7 @@ void Client::onLine(const string& aLine) throw() {
 			FloodIter fi;
 			for(fi = flooders.begin(); fi != flooders.end(); ++fi) {
 				if(fi->first == seeker) {
+					delete[] prm;
 					return;
 				}
 			}
@@ -193,46 +196,60 @@ void Client::onLine(const string& aLine) throw() {
 					count++;
 
 				if(count > 7) {
-					if(seeker.find("Hub:") != string::npos)
-						fire(ClientListener::SEARCH_FLOOD, this, seeker.substr(4));
-					else
+					if( strnicmp(seeker, "Hub:", 4) == 0 ) {
+						fire(ClientListener::SEARCH_FLOOD, this, strtok(seeker+4, "\0"));
+					} else {
 						fire(ClientListener::SEARCH_FLOOD, this, seeker + STRING(NICK_UNKNOWN));
+					}
 
 					flooders.push_back(make_pair(seeker, tick));
+					delete[] prm;
 					return;
 				}
 			}
 		}
-
 		int a;
-		if(param[i] == 'F') {
+		if((temp = strtok(NULL, "?")) == NULL)
+			return;
+
+		if(strnicmp(temp, "F", 1) == 0 ) {
 			a = SearchManager::SIZE_DONTCARE;
-		} else if(param[i+2] == 'F') {
+			if((temp = strtok(NULL, "?")) == NULL) {
+				delete[] prm;				
+				return;
+			}
+		} else {
+			if((temp = strtok(NULL, "?")) == NULL) {
+				delete[] prm;
+				return;
+			}
+
+			if(strnicmp(temp, "F", 1) == 0 ) {
 			a = SearchManager::SIZE_ATLEAST;
 		} else {
 			a = SearchManager::SIZE_ATMOST;
 		}
-		i += 4;
-		j = safestring::SafeFind(param, '?', i);
-		if(j == string::npos || i == j)
-			return;
-		string size = param.substr(i, j-i);
-		i = j + 1;
-		j = safestring::SafeFind(param, '?', i);
-		if(j == string::npos || i == j)
-			return;
-		int type = Util::toInt(param.substr(i, j-i)) - 1;
-		i = j + 1;
-		param = param.substr(i);
+		}
 
-		if(param.size() > 0) {
-			fire(ClientListener::SEARCH, this, seeker, a, size, type, param);
-			
-			if(seeker.find("Hub:") != string::npos) {
+		if((temp = strtok(NULL, "?")) == NULL) {
+			delete[] prm;
+			return;
+		}
+
+		char *size = temp;
+		if((temp = strtok(NULL, "?")) == NULL) {
+			delete[] prm;
+			return;
+		}
+
+		int type = Util::toInt(temp) - 1;
+		if((temp = strtok(NULL, "\0")) != NULL) {
+			fire(ClientListener::SEARCH, this, seeker, a, size, type, temp);
+			if( strnicmp(seeker, "Hub:", 4) == 0 ) {
 				User::Ptr u;
 				{
 					Lock l(cs);
-					User::NickIter ni = users.find(seeker.substr(4));
+					User::NickIter ni = users.find(strtok(seeker+4, "\0"));
 					if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
 						u = ni->second;
 						u->setFlag(User::PASSIVE);
@@ -243,6 +260,7 @@ void Client::onLine(const string& aLine) throw() {
 					updated(u);
 				}
 			}
+	delete[] prm;
 		}
 
 } else if(cmd == "$MyINFO") { 
