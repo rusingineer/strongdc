@@ -191,12 +191,3 @@ private:
 
 #endif // !defined(AFX_USERSFRAME_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_)
 
-/**
- * @file
-<<<<<<< UsersFrame.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
-

@@ -79,12 +79,3 @@ protected:
 
 #endif //ADVANCEDPAGE_H
 
-/**
- * @file
-<<<<<<< UCPage.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
-

@@ -173,12 +173,3 @@ void UCPage::write() {
 	PropPage::write((HWND)*this, items);
 }
 
-/**
- * @file
-<<<<<<< UCPage.cpp
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
-

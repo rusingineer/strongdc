@@ -234,12 +234,3 @@ void UploadPage::addDirectory(string path){
 	}
 }
 
-/**
- * @file
-<<<<<<< UploadPage.cpp
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
-

@@ -71,12 +71,3 @@ protected:
 
 #endif //UPLOADPAGE_H
 
-/**
- * @file
-<<<<<<< UploadPage.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
-

@@ -125,11 +125,3 @@ private:
 
 #endif
 
-/**
-* @file
-<<<<<<< UCHandler.h
-* $Id$
-=======
-* $Id$
->>>>>>> 1.2
-*/

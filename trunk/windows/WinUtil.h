@@ -406,11 +406,3 @@ private:
 
 #endif // __WINUTIL_H
 
-/**
- * @file
-<<<<<<< WinUtil.h
- * $Id$
-=======
- * $Id$
->>>>>>> 1.2
- */
