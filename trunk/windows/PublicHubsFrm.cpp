@@ -228,6 +228,20 @@ LRESULT PublicHubsFrame::onClickedConfigure(WORD /*wNotifyCode*/, WORD /*wID*/, 
 	return 0;
 }
 
+LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!checkNick())
+		return 0;
+
+	if(ctrlHubs.GetSelectedCount() == 1) {
+		TCHAR buf[256];
+		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
+		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
+		HubFrame::openWindow(buf);
+	}
+
+	return 0;
+}
+
 LRESULT PublicHubsFrame::onFilterFocus(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
 	bHandled = true;
 	ctrlFilter.SetFocus();

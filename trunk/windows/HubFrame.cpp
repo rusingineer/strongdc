@@ -290,7 +290,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(ShowUserList ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
-				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT)))), WinUtil::m_ChatTextSystem);
+				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT)) + "/" + Util::toString(SETTING(UDP_PORT)))), WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){

@@ -108,7 +108,7 @@ const string SettingsManager::settingTags[] =
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
-	"SpeedUsers", "UseVerticalView", "OpenNewWindow", "FileSlots",
+	"SpeedUsers", "UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -145,6 +145,7 @@ SettingsManager::SettingsManager()
 	setDefault(SEARCH_TTH_ONLY, false);
 	setDefault(CHECK_TTH, true);
 	setDefault(IN_PORT, Util::rand(1025, 32000));
+	setDefault(UDP_PORT, Util::rand(1025, 32000));
 	setDefault(ROLLBACK, 0);
 	setDefault(EMPTY_WORKING_SET, false);
 	setDefault(MIN_BLOCK_SIZE, SettingsManager::blockSizes[SIZE_64]);
