@@ -40,7 +40,9 @@
 * stromová struktura pro výbìr adresáøù ke sdílení, neexistující složky jsou automaticky odstranìny (PossumMod)
 * v transferviewu jsou zdroje vyhledávány podle TTH
 * minimální velikost segmentu je nastavena automaticky podle velikosti souboru
-* upgradováno na WTL 7.5
+* aktualizováno na WTL 7.5
+* pøidána volba pro zobrazování rychlosti v popisu
+* aktualizováno na STLPort 4.6.2
 
 
 	-- StrongDC++ 1.00 RC5 --

@@ -59,6 +59,7 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	CComboBoxEx ctrlConnection;
+	CComboBox ctrlDownloadSpeed, ctrlUploadSpeed;
 	CEdit nick;
 	CImageList ConnTypes;
 

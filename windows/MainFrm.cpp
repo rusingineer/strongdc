@@ -607,7 +607,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(SETTING(CONNECTION_TYPE) != lastConn || SETTING(IN_PORT) != lastPort) {
 			startSocket();
 		}
-		ClientManager::getInstance()->infoUpdated();
+		ClientManager::getInstance()->infoUpdated(false);
 		createToolbar();
 
 	if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
@@ -773,8 +773,14 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 	if(wParam == SIZE_MINIMIZED) {
 		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 		if(BOOLSETTING(AUTO_AWAY)) {
+			if(Util::getAway()) {
+				awaybyminimize = false;
+			} else {
 			Util::setAway(true);
-			ClientManager::getInstance()->infoUpdated();
+				setAwayButton(true);
+				ClientManager::getInstance()->infoUpdated(true);
+				awaybyminimize = true;
+			}
 		}
 		if(BOOLSETTING(MINIMIZE_TRAY)) {
 			updateTray(true);
@@ -787,8 +793,12 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 	} else if( (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) ) {
 		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		if(BOOLSETTING(AUTO_AWAY)) {
-			Util::setAway(false);
-			ClientManager::getInstance()->infoUpdated();
+			if(awaybyminimize) {
+				Util::setAway(false);
+				setAwayButton(false);
+				ClientManager::getInstance()->infoUpdated(true);
+				awaybyminimize = false;
+			}
 		}
 		setNormalTrayIcon();
 		WinUtil::isMinimized = false;
@@ -1028,7 +1038,6 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 
 LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-//	static BOOL bVisible = TRUE;
 	bVisible = !bVisible;
 	CReBarCtrl rebar = m_hWndToolBar;
 	int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);	// toolbar is 2nd added band
@@ -1061,7 +1070,7 @@ LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
 		Util::setAway(true);
 	}
 
-	ClientManager::getInstance()->infoUpdated();
+	ClientManager::getInstance()->infoUpdated(true);
 	return 0;
 }
 
@@ -1069,7 +1078,7 @@ LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
 	if(BOOLSETTING(THROTTLE_ENABLE)) SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,false);
 	else SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,true);
  
-	ClientManager::getInstance()->infoUpdated();
+	ClientManager::getInstance()->infoUpdated(true);
 	return 0;
 }
 
@@ -1157,7 +1166,7 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
-void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, int len) throw() {
+void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 	versionInfo += string((const char*)buf, len);
 }
 

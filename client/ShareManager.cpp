@@ -610,7 +610,7 @@ int ShareManager::run() {
 
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
 	if(update) {
-		ClientManager::getInstance()->infoUpdated();
+		ClientManager::getInstance()->infoUpdated(false);
 	}
 	return 0;
 }
@@ -651,14 +651,14 @@ void ShareManager::Directory::toString(string& tmp, OutputStream* xmlFile, strin
 		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
 		//check for forbidden file patterns
 		string::size_type nameLen = j->getName().size();
-		if ((nameLen >= 28 && j->getName().find("download") == 0 && j->getName().rfind(".dat") == nameLen - 4 && Util::toInt64(j->getName().substr(8, 16))) ||		//kazaa temps
+		if ((nameLen >= 28 && j->getName().find("download") == 0 && j->getName().rfind(".dat") == nameLen - 4 && Util::toInt64(j->getName().substr(8, 16))) ||
 			j->getName().find("__INCOMPLETE__") == 0 ||		//winmx
 			j->getName().find("__incomplete__") == 0 ||		//winmx
 			(nameLen > 9 && j->getName().rfind(".GetRight") == nameLen - 9) ||
 			(nameLen > 9 && j->getName().rfind(".tdc") == nameLen - 4) ||
 			(nameLen > 9 && j->getName().rfind(".temp") == nameLen - 5) ||
 			(nameLen > 9 && j->getName().rfind("part.met") == nameLen - 8) ||
-			(nameLen > 9 && j->getName().rfind(".antifrag") == nameLen - 9)) {	//DC++ temps
+			(nameLen > 9 && j->getName().rfind(".antifrag") == nameLen - 9)) {
 				LogManager::getInstance()->message("Forbidden file will not be shared: " + j->getName() + " (size: " + Util::toString(j->getSize()) + " bytes) (Path: \"" + j->getParent()->getName() + "\")", true);
 				size-=j->getSize();
 				++j;
@@ -1183,7 +1183,6 @@ void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
 		}
 	}
 }
-
 
 /**
  * @file

@@ -143,7 +143,7 @@ __int64 FileDataInfo::GetUndlStart()
 	__int64 e = (* (birr+1));
 
 	//int64_t SMALLEST_BLOCK_SIZE = (SETTING(MIN_BLOCK_SIZE) *1024)-1;
-	int64_t SMALLEST_BLOCK_SIZE = ((iFileSize - iDownloadedSize) / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize)) - 1;
+	int64_t SMALLEST_BLOCK_SIZE = iFileSize / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
 	if((e - b) < SMALLEST_BLOCK_SIZE){
 		ReleaseMutex(hMutex);
 		return -1;

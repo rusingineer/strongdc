@@ -94,7 +94,7 @@ public:
 		}
 	}
 
-	void infoUpdated();
+	void infoUpdated(bool antispam);
 
 	User::Ptr getUser(const CID& cid, bool createUser);
 	User::Ptr getUser(const CID& cid, Client* aClient, bool putOnline = true);

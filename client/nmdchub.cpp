@@ -735,6 +735,9 @@ void NmdcHub::myInfo() {
 	(FindWindow(NULL, "NetLimiter v1.30") || FindWindow(NULL, "NetLimiter v1.29") || FindWindow(NULL, "NetLimiter v1.25") || FindWindow(NULL, "NetLimiter v1.22"))
 	? "NetLimiter " : Util::emptyString;
 
+	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
+		speedDescription = SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+" ";
+
 	string newmyinfo = ("$MyINFO $ALL " + Util::validateNick(getNick()) + " " + Util::validateMessage(speedDescription+nldetect+getDescription(), false));
 	if(BOOLSETTING(SEND_EXTENDED_INFO) || (((counts.normal) + (counts.registered) + (counts.op)) > 10) ) {
 		newmyinfo += extendedtag;
