@@ -690,6 +690,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 
 void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) {
 	ItemInfo* i;
+	QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 	{
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) != transferItems.end());
@@ -702,11 +703,10 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		}
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
-			//QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
-			if (i->qi) {
-				i->size = i->qi->getSize();				
-				i->Target = Text::toT(i->qi->getTarget());
-				//i->qi = qi;
+			if (qi) {
+				i->size = qi->getSize();				
+				i->Target = Text::toT(qi->getTarget());
+				i->qi = qi;
 				i->updateMask |= (ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 			}
 

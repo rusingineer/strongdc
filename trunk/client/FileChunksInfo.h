@@ -255,11 +255,11 @@ public:
 
 	virtual size_t flush(bool finished = true) throw(Exception) 
 	{
-		Lock l(*shared_handle_ptr);
-
-		if(finished)
+		if(finished) {
+			Lock l(*shared_handle_ptr);
 			if(!FlushFileBuffers(shared_handle_ptr->handle))
 				throw FileException(Util::translateError(GetLastError()));
+		}
 		return 0;
 	}
 

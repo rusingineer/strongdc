@@ -308,7 +308,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 			int64_t totalBytes = item->getSize();
 			int64_t totalTime = item->getMilliSeconds();
 			d->getUserConnection()->getUser()->setDownloadSpeed((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0 );
-			User::updated(d->getUserConnection()->getUser());
+			//User::updated(d->getUserConnection()->getUser());
 
 			{
 				Lock l(cs);
