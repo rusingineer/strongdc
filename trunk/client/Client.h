@@ -154,7 +154,7 @@ public:
 	}
 
 	void addLine(const string& line) {
-		fire(ClientListener::CheatMessage(), this, Util::validateMessage(line, true));
+		fire(ClientListener::CheatMessage(), this, line);
 	}
 
 	virtual string escape(string const& str) const { return str; };

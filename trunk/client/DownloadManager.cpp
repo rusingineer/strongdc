@@ -953,7 +953,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 		d->setTreeValid(true);
-
+		d->getItem()->setHasTree(true);
 		// set the tree to other downloads
 	/*	{
 			Lock l(cs);

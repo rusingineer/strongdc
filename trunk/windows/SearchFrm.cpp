@@ -1106,7 +1106,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 
 
 					if(!si->getTTH().empty()) {
-						if(si2->getTTH().empty() == false && si2->getTTH() == si->getTTH()){
+						if((!si2->getTTH().empty()) && (si2->getTTH() == si->getTTH()) && (sr2->getSize() == sr->getSize())){
 							if(sr->getUser()->getNick() == sr2->getUser()->getNick()){
 								delete si;
 								return 0;

@@ -463,12 +463,6 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			DirectoryListingFrame::openWindow(i->file, i->user);
 		}
 		delete i;
-	} else if(wParam == CHECK_LISTING) {
-		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		if(Util::fileExists(Text::fromT(i->file))) {
-			checkFileList(Text::fromT(i->file), i->user);
-		}
-		delete i;
 	} else if(wParam == VIEW_FILE_AND_DELETE) {
 		tstring* file = (tstring*)lParam;
 		TextFrame::openWindow(*file);
@@ -1346,7 +1340,10 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		DirectoryListInfo* i = new DirectoryListInfo();
 		i->file = Text::toT(qi->getListName());
 		i->user = qi->getCurrents()[0]->getUser(); 
-		PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
+
+		if(Util::fileExists(Text::fromT(i->file))) {
+			checkFileList(Text::fromT(i->file), i->user);
+		}
 	}	
 }
 
