@@ -119,9 +119,6 @@ void NmdcHub::clearUsers() {
 }
 
 void NmdcHub::onLine(const char* aLine) throw() {
-	if(this->getClosed())
-		return;
-
 	char *temp;
 	lastActivity = GET_TICK();
 	

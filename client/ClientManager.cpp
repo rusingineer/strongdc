@@ -61,8 +61,6 @@ void ClientManager::putClient(Client* aClient) {
 		//		dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
 		//		clients.erase(find(clients.begin(), clients.end(), aClient));
 	
-		aClient->setClosed(true);
-
 		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 			if(*i == aClient) {
 				clients.erase(i);
