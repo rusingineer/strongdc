@@ -195,6 +195,7 @@ public:
 				} else {
 					s->main->setHits(Text::toT(Util::toString((int)s->main->subItems.size() + 1)+" ")+TSTRING(HUB_USERS));
 				}
+				ctrlResults.updateItem(s->main);
 			}
 
 			SearchInfo::List::iterator k = find(mainItems.begin(), mainItems.end(), s);
@@ -203,7 +204,7 @@ public:
 			delete s;
 			ctrlResults.DeleteItem(l);
 		}
-		ctrlResults.resort();
+		//ctrlResults.resort();
 	}
 	
 	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

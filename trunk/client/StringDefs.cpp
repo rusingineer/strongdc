@@ -862,7 +862,6 @@ string ResourceManager::strings[] = {
 "Transfer progressbar - actual segment", 
 "Max sources for match queue", 
 "Default", 
-"EXPERIMENTAL: Try to switch to faster user when no free block", 
 "Use vertical view by default"	, 
 };
 string ResourceManager::names[] = {
@@ -1726,6 +1725,5 @@ string ResourceManager::names[] = {
 "ProgressSegment", 
 "SettingsSbMaxSources", 
 "Default", 
-"SpeedUsers", 
 "SettingsUseVerticalView", 
 };
