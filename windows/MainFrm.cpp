@@ -730,7 +730,6 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		if(lastLines.size() > 2) {
 			lastLines.erase(lastLines.size() - 2);
 		}
-		MessageBox(lastLines.c_str());
 		pDispInfo->lpszText = const_cast<char*>(lastLines.c_str());
 	}
 	return 0;
@@ -1061,18 +1060,17 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return 0;
 }
 
-BOOL MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags)
-{
-  NOTIFYICONDATA m_nid;
-  m_nid.cbSize=sizeof(NOTIFYICONDATA);
-  m_nid.hWnd = m_hWnd;
-  m_nid.uID = 0;
-  m_nid.uFlags = NIF_INFO;
-  m_nid.uTimeout = 5000;
-  m_nid.dwInfoFlags = dwInfoFlags;
-  strcpy(m_nid.szInfo,szMsg ? szMsg : _T(""));
-  strcpy(m_nid.szInfoTitle,szTitle ? szTitle : _T(""));
-  return Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+BOOL MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags) {
+	NOTIFYICONDATA m_nid;
+	m_nid.cbSize = sizeof(NOTIFYICONDATA);
+	m_nid.hWnd = m_hWnd;
+	m_nid.uID = 0;
+	m_nid.uFlags = NIF_INFO;
+	m_nid.uTimeout = 5000;
+	m_nid.dwInfoFlags = dwInfoFlags;
+	strcpy(m_nid.szInfo,szMsg ? szMsg : _T(""));
+	strcpy(m_nid.szInfoTitle,szTitle ? szTitle : _T(""));
+	return Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 }
 
 LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -1231,7 +1229,6 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastDown = Socket::getTotalDown();
 
 		PostMessage(WM_SPEAKER, UPDATE_SHUTDOWN, (LPARAM)aTick);
-//		updateShutdown(aTick);
 }
 
 void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
