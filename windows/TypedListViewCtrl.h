@@ -34,7 +34,7 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, C
 	ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
-	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(NULL), leftMargin(0) { };
+	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { };
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;

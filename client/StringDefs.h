@@ -743,5 +743,15 @@ enum Strings { // @DontAdd
 	WAITING_TIME, // "Waiting time"
 	MAGNET_DLG_SIZE, // "File Size:"
 	SETTINGS_USE_OLD_SHARING_UI, // "Use old sharing user interface"
+	SETTINGS_RESET, // "Reset"
+	SETTINGS_SELECT_COLOR, // "Select color"
+	SETTINGS_COLORS, // "Other colors"
+	USERINFO, // "Info User"
+	PREVIOUS_FOLDERS, // "Previous folders"
+	ADD_AS_SOURCE, // "Add as source"
+	PLAY, // "Play"
+	HUB_CONNECTED, // "Hub connected"
+	HUB_DISCONNECTED, // "Hub disconnected"
+	FAVUSER_ONLINE, // "Favorite user online"
 	LAST // @DontAdd
 };

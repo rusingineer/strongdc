@@ -21,6 +21,7 @@ public:
 
 	BEGIN_MSG_MAP_EX(PropPageTextStyles)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
+		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)	
 		COMMAND_HANDLER(IDC_IMPORT, BN_CLICKED, onImport)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, onExport)
 		COMMAND_HANDLER(IDC_BACK_COLOR, BN_CLICKED, onEditBackColor)
@@ -28,14 +29,20 @@ public:
 		COMMAND_HANDLER(IDC_TEXT_STYLE, BN_CLICKED, onEditTextStyle)
 		COMMAND_HANDLER(IDC_DEFAULT_STYLES, BN_CLICKED, onDefaultStyles)
 		COMMAND_HANDLER(IDC_BLACK_AND_WHITE, BN_CLICKED, onBlackAndWhite)
-		COMMAND_HANDLER(IDC_SELWINCOLOR, BN_CLICKED, onEditBackground)
-		COMMAND_HANDLER(IDC_ERROR_COLOR, BN_CLICKED, onEditError)
-		COMMAND_HANDLER(IDC_ALTERNATE_COLOR, BN_CLICKED, onEditAlternate)
+		//COMMAND_HANDLER(IDC_SELWINCOLOR, BN_CLICKED, onEditBackground)
+		//COMMAND_HANDLER(IDC_ERROR_COLOR, BN_CLICKED, onEditError)
+		//COMMAND_HANDLER(IDC_ALTERNATE_COLOR, BN_CLICKED, onEditAlternate)
 		COMMAND_ID_HANDLER(IDC_SELTEXT, onClickedText)
+
+		COMMAND_HANDLER(IDC_TABCOLOR_LIST, LBN_SELCHANGE, onTabListChange)
+		COMMAND_HANDLER(IDC_RESET_TAB_COLOR, BN_CLICKED, onClickedResetTabColor)
+		COMMAND_HANDLER(IDC_SELECT_TAB_COLOR, BN_CLICKED, onClientSelectTabColor)
+
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onCtlColor(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT onImport(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onExport(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onEditBackColor(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -44,11 +51,24 @@ public:
 	LRESULT onDefaultStyles(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onBlackAndWhite(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onClickedText(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onEditBackground(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onEditError(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onEditAlternate(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	//LRESULT onEditBackground(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	//LRESULT onEditError(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	//LRESULT onEditAlternate(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onTabListChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onClickedResetTabColor(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onClientSelectTabColor(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+
+	void onResetColor(int i);
+
+	void setForeColor(CEdit& cs, const COLORREF& cr) {
+		HBRUSH hBr = CreateSolidBrush(cr);
+		SetProp(cs.m_hWnd, "fillcolor", hBr);
+		cs.Invalidate();
+		cs.RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW | RDW_FRAME);
+	}
+
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
@@ -90,6 +110,17 @@ protected:
 		TS_GENERAL, TS_MYNICK, TS_MYMSG, TS_PRIVATE, TS_SYSTEM, TS_SERVER, TS_TIMESTAMP, TS_URL, TS_FAVORITE, TS_OP,
 	TS_LAST };
 
+	struct clrs{
+		ResourceManager::Strings name;
+		int setting;
+		COLORREF value;
+	};
+
+	static clrs colours[];
+
+//	vector<TextFormat> formatting;
+//	UINT SelectedFormat;
+
 	char* title;
 	TextStyleSettings TextStyles[ TS_LAST ];
 	CListBox m_lsbList;
@@ -97,7 +128,13 @@ protected:
 	LOGFONT m_Font;
 	COLORREF m_BackColor;
 	COLORREF m_ForeColor;
-	COLORREF fg, bg, err, alt;
+	COLORREF fg, bg;//, err, alt;
+
+	CComboBox ctrlTabList;
+	CButton cmdResetTab;
+	CButton cmdSetTabColor;
+	CEdit ctrlTabExample;
+
 };
 
 #endif // _PROP_PAGE_TEXT_STYLES_H_

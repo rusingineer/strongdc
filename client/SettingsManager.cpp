@@ -48,7 +48,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
-	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException",
+	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -99,7 +99,7 @@ const string SettingsManager::settingTags[] =
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
-	"AddFinishedInstantly",
+	"AddFinishedInstantly", "Away",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -408,7 +408,23 @@ SettingsManager::SettingsManager()
 	setDefault(FILELIST_TOO_SMALL, 0);
 	setDefault(FILELIST_UNAVAILABLE, 0);
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
-	setDefault(SEARCH_TIME, 10);	
+	setDefault(SEARCH_TIME, 10);
+
+	setDefault(BEGINFILE, "");
+	setDefault(BEEPFILE, "");
+	setDefault(FINISHFILE, "");
+	setDefault(SOURCEFILE, "");
+	setDefault(UPLOADFILE, "");
+	setDefault(FAKERFILE, "");
+	setDefault(CHATNAMEFILE, "");
+	setDefault(SOUND_TTH, "");
+	setDefault(SOUND_EXC, "");
+	setDefault(SOUND_HUBCON, "");
+	setDefault(SOUND_HUBDISCON, "");
+	setDefault(SOUND_FAVUSER, "");
+
+	setDefault(AWAY, false);
+
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

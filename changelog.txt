@@ -15,6 +15,16 @@
 * odstranìna fronta hledání
 * opraven memory leak pøi detekci NetLimiteru
 * opraveno zobrazení ikon v userlistu pøi kontrole uživatele
+* vyhledávací špion nyní podporuje hledání podle TTH
+* pøidán progressbar do fronty odesílání (iDC++)
+* vylepšeno nastavování barev
+* pøidány 2 položky do menu záložky seznamù souborù
+* pøidáno menu Kopírovat do menu záložky hubu
+* away je ukládán pøi vypnutí
+* pøidáno tlaèítko pro náhled zvuku v nastavení
+* pøidáno potvrzení pøi mazaní souboru z Pøenosù
+* v menu "Stáhnout do" jsou nabízeny pouze soubory se stejným TTH
+* odpojování pomalých stahování lze nyní zapnout/vypnout pro jednotlivé soubory
 
 
 	-- StrongDC++ 1.00 RC7 --

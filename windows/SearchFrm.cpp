@@ -92,11 +92,11 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if (CZDCLib::isXp()) {
-		ctrlResults.setLeftEraseBackgroundMargin(40);
-	} else {
+//	if (CZDCLib::isXp()) {
+//		ctrlResults.setLeftEraseBackgroundMargin(40);
+//	} else {
 		styles |= 0x00010000;
-	}
+//	}
 	ctrlResults.SetExtendedListViewStyle(styles);
 	
 	if (BOOLSETTING(USE_SYSTEM_ICONS)) {
@@ -251,6 +251,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CSTRING(SIZE));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CSTRING(TTH_ROOT));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
+	copyMenu.InsertSeparator(0, TRUE, STRING(USERINFO));
 		
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
@@ -258,6 +259,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
+	grantMenu.InsertSeparator(0, TRUE, STRING(GRANT_SLOTS_MENU));
 	
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CSTRING(DOWNLOAD));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)targetMenu, CSTRING(DOWNLOAD_TO));
@@ -313,8 +315,39 @@ LRESULT SearchFrame::onMeasure(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 		else return FALSE;
 };
 
-LRESULT SearchFrame::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+LRESULT SearchFrame::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
+	bHandled = FALSE;
+	if (wParam == NULL) {
+		DRAWITEMSTRUCT dis = *(DRAWITEMSTRUCT*)lParam;
+		if (dis.CtlType == ODT_MENU) {
+			OMenuItem* mi = (OMenuItem*)dis.itemData;
+			if (mi) {
+				bHandled = TRUE;
+				CRect rc(dis.rcItem);
+				rc.top += 2;
+				rc.bottom -= 2;
+				CDC dc;
+				dc.Attach(dis.hDC);
+
+				if (BOOLSETTING(MENUBAR_TWO_COLORS))
+					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, SETTING(MENUBAR_LEFT_COLOR), SETTING(MENUBAR_RIGHT_COLOR), BOOLSETTING(MENUBAR_BUMPED));
+				else
+					dc.FillSolidRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SETTING(MENUBAR_LEFT_COLOR));
+
+				dc.SetBkMode(TRANSPARENT);
+				dc.SetTextColor(OperaColors::TextFromBackground(SETTING(MENUBAR_LEFT_COLOR)));
+				HFONT oldFont = dc.SelectFont(WinUtil::smallBoldFont);
+				dc.DrawText(mi->text.c_str(), mi->text.size(), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				dc.SelectFont(oldFont);
+
+				dc.Detach();
+				return TRUE;
+			}
+		}
+		return S_OK;
+	}
+	else
 	if(wParam == IDC_FILETYPES) return ListDraw(hwnd, wParam, (DRAWITEMSTRUCT*)lParam);
 		else return FALSE;
 };
@@ -1077,9 +1110,10 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 
 		int n = 0;
 
+		targetMenu.InsertSeparatorFirst(STRING(DOWNLOAD_TO));
 		targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CSTRING(BROWSE));
 		if(WinUtil::lastDirs.size() > 0) {
-			targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			targetMenu.InsertSeparatorLast(STRING(PREVIOUS_FOLDERS));
 			for(StringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 				targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, i->c_str());
 				n++;
@@ -1089,14 +1123,22 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 		SearchInfo::CheckSize cs = ctrlResults.forEachSelectedT(SearchInfo::CheckSize());
 
 		if(cs.size != -1) {
-				targets.clear();
-			if(BOOLSETTING(USE_EXTENSION_DOWNTO)) { 
-				QueueManager::getInstance()->getTargetsBySize(targets, cs.size, cs.ext);
+			targets.clear();
+
+			int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+			SearchResult* sr = ctrlResults.getItemData(i)->sr;
+			if(sr && sr->getTTH()) {
+				QueueManager::getInstance()->getTargetsByTTH(targets, sr->getTTH());
 			} else {
-				QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Util::emptyString);
+				if(BOOLSETTING(USE_EXTENSION_DOWNTO)) { 
+					QueueManager::getInstance()->getTargetsBySize(targets, cs.size, cs.ext);
+				} else {
+					QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Util::emptyString);
+				}
 			}
-				if(targets.size() > 0) {
-					targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+
+			if(targets.size() > 0) {
+				targetMenu.InsertSeparatorLast(STRING(ADD_AS_SOURCE));
 					for(StringIter i = targets.begin(); i != targets.end(); ++i) {
 						targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, i->c_str());
 						n++;
@@ -1105,9 +1147,10 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 			}
 
 		n = 0;
+		targetDirMenu.InsertSeparatorFirst(STRING(DOWNLOAD_WHOLE_DIR_TO));
 		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
-			targetDirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			targetDirMenu.InsertSeparatorLast(STRING(PREVIOUS_FOLDERS));
 				for(StringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_TARGET + n, i->c_str());
 						n++;

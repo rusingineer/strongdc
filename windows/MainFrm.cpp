@@ -280,6 +280,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	if(BOOLSETTING(IPUPDATE)) SettingsManager::getInstance()->set(SettingsManager::SERVER, Util::getLocalIp());
 
+	Util::setAway(BOOLSETTING(AWAY));
+
+	ctrlToolbar.CheckButton(IDC_AWAY,BOOLSETTING(AWAY));
 	ctrlToolbar.CheckButton(IDC_LIMITER,BOOLSETTING(THROTTLE_ENABLE));
 	ctrlToolbar.CheckButton(IDC_DISABLE_SOUNDS, BOOLSETTING(SOUNDS_DISABLED));
 
@@ -538,6 +541,8 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(getShutDown()) ctrlToolbar.CheckButton(IDC_SHUTDOWN, true);
 		else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
 
+//		WinUtil::initColors(m_hWnd);
+
 	}
 	return 0;
 }
@@ -706,7 +711,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 				awaybyminimize = true;
 				Util::setAway(true);
 				setAwayButton(true);
-				ClientManager::getInstance()->infoUpdated(true);
+				ClientManager::getInstance()->infoUpdated(false);
 			}
 		}
 
@@ -725,7 +730,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 				awaybyminimize = false;
 				Util::setAway(false);
 				setAwayButton(false);
-				ClientManager::getInstance()->infoUpdated(true);
+				ClientManager::getInstance()->infoUpdated(false);
 			}
 		}
 		setNormalTrayIcon();

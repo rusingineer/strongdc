@@ -27,6 +27,9 @@
 #define IDC_SEGMENTEIGHT                117
 #define IDC_SEGMENTNINE                 118
 #define IDC_SEGMENTTEN                  119
+#define IDC_COPY_HUBNAME                120
+#define IDC_COPY_HUBADDRESS             121
+#define IDC_MENU_SLOWDISCONNECT         122
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
 #define IDR_HUB                         129
@@ -479,10 +482,13 @@
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_MINUTES                     1279
 #define IDC_KBPS                        1280
+#define IDC_PLAY                        1282
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
+#define IDC_STYLES                      1408
+#define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -498,6 +504,10 @@
 #define IDC_TF_OPEN_FOLDER              1518
 #define IDC_TF_OPEN_TMP_FOLDER          1519
 #define IDC_TF_REMOVE                   1520
+#define IDC_TABCOLOR_LIST               1522
+#define IDC_SELECT_TAB_COLOR            1523
+#define IDC_SAMPLE_TAB_COLOR            1524
+#define IDC_RESET_TAB_COLOR             1525
 #define IDC_AUTOPRIORITY                1572
 #define IDC_SETTINGS_ODC_MENUBAR        1612
 #define IDC_SETTINGS_ODC_MENUBAR_USETWO 1613
@@ -716,6 +726,7 @@
 #define IDC_REPORT                      32790
 #define ID_ACCELERATOR32791             32791
 #define ID_WINDOW_MINIMIZE_ALL          57654
+#define IDC_CHATCOLORS                  65535
 
 // Next default values for new objects
 // 
@@ -724,7 +735,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        284
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1282
-#define _APS_NEXT_SYMED_VALUE           120
+#define _APS_NEXT_CONTROL_VALUE         1283
+#define _APS_NEXT_SYMED_VALUE           123
 #endif
 #endif

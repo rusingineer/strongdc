@@ -234,7 +234,7 @@ string FileChunksInfo::getVerifiedBlocksString()
 
 bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 {
-    _ASSERT(iBlockSize == aTree.getBlockSize());
+  //  _ASSERT(iBlockSize == aTree.getBlockSize());
 
 	dcdebug("DoLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
 	dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());

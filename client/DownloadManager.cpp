@@ -89,23 +89,21 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			QueueManager::getInstance()->updateSource(QueueManager::getInstance()->getRunning((*i)->getUserConnection()->getUser()));
 		}
 
-		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
-			Download* d = *i;
+		Download* d = *i;
+		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
+		if(q && q->getSlowDisconnect()) {
 			if(getWholeFileSpeed(d->getTarget()) > (iHighSpeed*1024)) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
-					QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
-					if(q != NULL) {		
-						if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() >= 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
-							if(((GET_TICK() - d->quickTick)/1000) > iTime){
-								d->getUserConnection()->disconnect();
-								if(d->getRunningAverage() < (SETTING(DISCONNECT)*1024)) { 
-									QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(),QueueItem::Source::FLAG_SLOW);
-								}
+					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() >= 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
+						if(((GET_TICK() - d->quickTick)/1000) > iTime){
+							d->getUserConnection()->disconnect();
+							if(d->getRunningAverage() < (SETTING(DISCONNECT)*1024)) { 
+								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(),QueueItem::Source::FLAG_SLOW);
 							}
-						} else {
-								d->quickTick = GET_TICK();
 						}
+					} else {
+						d->quickTick = GET_TICK();
 					}
 				}
 			}

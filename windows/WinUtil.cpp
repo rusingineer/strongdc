@@ -72,6 +72,7 @@ bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;
 bool WinUtil::isMinimized = false;
+bool WinUtil::initialized = false;
 
 WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
@@ -360,6 +361,36 @@ void WinUtil::init(HWND hWnd) {
 	else 
 		createImageList1(userImages, SETTING(USERLIST_IMAGE));
 
+	initColors(mainWnd);
+
+	if(BOOLSETTING(URL_HANDLER)) {
+		registerDchubHandler();
+	}
+	registerMagnetHandler();
+
+	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
+	
+	grantMenu.CreatePopupMenu();
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
+	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
+}
+
+void WinUtil::initColors(HWND mainWnd) {
+	if(initialized) {
+	//	fileImages.Destroy();
+	//	userImages.Destroy();
+		::DeleteObject(font);
+		::DeleteObject(boldFont);
+		::DeleteObject(smallBoldFont);
+		::DeleteObject(tinyFont);
+		::DeleteObject(bgBrush);
+		::DeleteObject(monoFont);
+	}
+
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
 	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, encodeFont(lf));
@@ -388,20 +419,7 @@ void WinUtil::init(HWND hWnd) {
 	systemFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
 	monoFont = (HFONT)::GetStockObject(BOOLSETTING(USE_OEM_MONOFONT)?OEM_FIXED_FONT:ANSI_FIXED_FONT);
 
-	if(BOOLSETTING(URL_HANDLER)) {
-		registerDchubHandler();
-	}
-	registerMagnetHandler();
-
-	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
-	
-	grantMenu.CreatePopupMenu();
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
+	initialized = true;
 }
 
 void WinUtil::uninit() {

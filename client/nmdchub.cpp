@@ -252,6 +252,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 			if(temp[strlen(temp)+1] != '$') {
 				if((temp = strtok(NULL, "$")) != NULL) {
 					char status = temp[strlen(temp)-1];
+	
 					u->setStatus(status);
 					if(status != 1) {
 						if(status == 2 || status == 3) {

@@ -128,11 +128,11 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
-	if (CZDCLib::isXp()) {
-		ctrlUsers.setLeftEraseBackgroundMargin(3);
-	} else {
+//	if (CZDCLib::isXp()) {
+//		ctrlUsers.setLeftEraseBackgroundMargin(3);
+//	} else {
 		styles |= 0x00010000;
-	}
+//	}
 	ctrlUsers.SetExtendedListViewStyle(styles);
 
 	splitChat.Create( m_hWnd );
@@ -168,6 +168,10 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS_EX_TOPMOST);
 	ctrlLastLines.AddTool(&ti);
 
+	copyHubMenu.CreatePopupMenu();
+	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBNAME, CSTRING(HUB_NAME));
+	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBADDRESS, CSTRING(HUB_ADDRESS));
+
 	tabMenu.CreatePopupMenu();
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_OPEN_HUB_LOG, CSTRING(OPEN_HUB_LOG));
@@ -175,6 +179,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	}
 	tabMenu.AppendMenu(MF_STRING, IDC_ADD_AS_FAVORITE, CSTRING(ADD_TO_FAVORITES));
 	tabMenu.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CSTRING(MENU_RECONNECT));
+	tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyHubMenu, CSTRING(COPY));
 	tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);	
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
 
@@ -462,6 +467,25 @@ void HubFrame::addAsFavorite() {
 	addClientLine(STRING(FAVORITE_HUB_ADDED), m_ChatTextSystem );
 }
 
+LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+    if(client->isConnected()) {
+        string sCopy;
+
+		switch (wID) {
+			case IDC_COPY_HUBNAME:
+				sCopy += client->getName();
+				break;
+			case IDC_COPY_HUBADDRESS:
+				sCopy += client->getAddressPort();
+				break;
+		}
+
+		if (!sCopy.empty())
+			WinUtil::setClipboard(sCopy);
+    }
+	return 0;
+}
+
 LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
     if(client->isConnected()) {
         string sCopy;
@@ -608,6 +632,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				switch(i->second) {
 				case UPDATE_USER:
 					if(updateUser(u)) {
+						if (u->isFavoriteUser() && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+							PlaySound(SETTING(SOUND_FAVUSER).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 						if(showJoins) {
 							if (!favShowJoins || u->isFavoriteUser()) {
 								addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
@@ -678,10 +704,14 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		clearUserList();
 		setTabColor(RGB(255, 0, 0));
 		setIconState();
+		if ((!SETTING(SOUND_HUBDISCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+			PlaySound(SETTING(SOUND_HUBDISCON).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	} else if(wParam == CONNECTED) {
 		addClientLine(STRING(CONNECTED), m_ChatTextServer);
 		setTabColor(RGB(0, 255, 0));
 		unsetIconState();
+		if ((!SETTING(SOUND_HUBCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+			PlaySound(SETTING(SOUND_HUBCON).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	} else if(wParam == ADD_CHAT_LINE) {
 		string* x = (string*)lParam;
 		int nickPos = x->find('<') + 1;
@@ -1026,6 +1056,13 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	tabMenuShown = true;
 	CMenu hSysMenu;
 	tabMenu.InsertSeparatorFirst((client->getName() != "") ? (client->getName().size() > 50 ? client->getName().substr(0, 50) : client->getName()) : client->getAddressPort());	
+	copyHubMenu.InsertSeparatorFirst(CSTRING(COPY));
+	
+	if(!client->isConnected())
+		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_GRAYED);
+	else
+		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_ENABLED);
+
 	prepareMenu(tabMenu, ::UserCommand::CONTEXT_HUB, client->getAddressPort(), client->getOp());
 	hSysMenu.Attach((wParam == NULL) ? (HMENU)tabMenu : (HMENU)wParam);
 	if (wParam != NULL) {
@@ -1039,6 +1076,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	}
 	cleanMenu(tabMenu);	
 	tabMenu.RemoveFirstItem();
+	copyHubMenu.RemoveFirstItem();
 	hSysMenu.Detach();
 	return TRUE;
 }

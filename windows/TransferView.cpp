@@ -54,11 +54,11 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if (CZDCLib::isXp()) {
-		ctrlTransfers.setLeftEraseBackgroundMargin(40);
-	}else{
+//	if (CZDCLib::isXp()) {
+//		ctrlTransfers.setLeftEraseBackgroundMargin(40);
+//	}else{
 		styles |= 0x00010000;
-	}
+//	}
 
 	ctrlTransfers.SetExtendedListViewStyle(styles);
 
@@ -94,6 +94,8 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	usercmdsMenu.CreatePopupMenu();
 	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CSTRING(SETTINGS_USER_COMMANDS));
 
+	transferMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
+	transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CSTRING(SETCZDC_DISCONNECTING_ENABLE));
 	transferMenu.AppendMenu(MF_STRING, IDC_OFFCOMPRESS, CSTRING(DISABLE_COMPRESSION));
 	transferMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
 	transferMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(CLOSE_CONNECTION));
@@ -102,6 +104,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	segmentedMenu.CreatePopupMenu();
 	segmentedMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	segmentedMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CSTRING(SETCZDC_DISCONNECTING_ENABLE));
 	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
 	segmentedMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CSTRING(CONNECT_ALL));
 	segmentedMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CSTRING(DISCONNECT_ALL));
@@ -165,10 +168,19 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 	}
 		ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
 		WinUtil::ClearPreviewMenu(previewMenu);
+
+		segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
+		transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
+
 		if(ii->type == ItemInfo::TYPE_DOWNLOAD && ii->file != "") {
 			string ext = Util::getFileExt(ii->file);
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+			QueueItem* qi = ii->qi;
+			if(qi && qi->getSlowDisconnect()) {
+				segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+				transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+			}
 		}
 
 		if(previewMenu.GetMenuItemCount() > 0) {
@@ -228,10 +240,12 @@ LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 void TransferView::ItemInfo::removeAll() {
-	if(pocetUseru == 1)
+	if(pocetUseru == 1) {
 		QueueManager::getInstance()->removeSources(user, QueueItem::Source::FLAG_REMOVED);
-	else
-		QueueManager::getInstance()->remove(Target);
+	} else {
+		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, "Do you really want to remove this item?", APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+			QueueManager::getInstance()->remove(Target);
+	}
 }
 
 LRESULT TransferView::onOffCompress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -1305,6 +1319,17 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(DISCONNECTED));
 				m->disconnect();
 			}
+		}
+	}
+	return 0;
+}
+
+LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlTransfers.GetSelectedCount() == 1) {
+		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
+		QueueItem* qi = ctrlTransfers.getItemData(i)->qi;
+		if(qi) {
+			qi->setSlowDisconnect(!qi->getSlowDisconnect());
 		}
 	}
 	return 0;

@@ -292,8 +292,10 @@ public:
 	static bool isAppActive;
 	static bool isMinimized;
 	static bool trayIcon;
+	static bool initialized;
 
 	static void init(HWND hWnd);
+	static void initColors(HWND mainWnd);
 	static void uninit();
 
 	static void decodeFont(const string& setting, LOGFONT &dest);
