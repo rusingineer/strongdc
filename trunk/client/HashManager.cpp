@@ -91,7 +91,7 @@ void HashManager::HashStore::addFile(const string& aFileName, const TigerTree& t
 			int64_t pos = addLeaves(tth.getLeaves());
 			if(pos == 0)
 				return;
-			i->second.push_back(new FileInfo(aFileName, tth.getRoot(), tth.getFileSize(), pos, tth.getBlockSize(), tth.getTimeStamp(), aUsed));
+			i->second.push_back(new FileInfo(fname, tth.getRoot(), tth.getFileSize(), pos, tth.getBlockSize(), tth.getTimeStamp(), aUsed));
 			dirty = true;
 		} catch(const FileException&) {
 			// Oops, lost it...
@@ -346,9 +346,10 @@ void HashLoader::startTag(const string& name, StringPairList& attribs, bool) {
 		int64_t index = Util::toInt64(getAttrib(attribs, sIndex, 2));
 		const string& root = getAttrib(attribs, sRoot, 3);
 		if(!file.empty() && (type == sTTH) && (blockSize >= 1024) && (index >= 8) && !root.empty()) {
+			string fname = Text::toLower(Util::getFileName(file));
 			string fpath = Text::toLower(Util::getFilePath(file));
 			/** @todo Verify root against data file */
-			store.indexTTH[fpath].push_back(new HashManager::HashStore::FileInfo(file, TTHValue(root), size, index, blockSize, timeStamp, false));
+			store.indexTTH[fpath].push_back(new HashManager::HashStore::FileInfo(fname, TTHValue(root), size, index, blockSize, timeStamp, false));
 		}
 	}
 }

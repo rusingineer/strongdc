@@ -71,6 +71,7 @@ public:
 	
 	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString);
+	u_int32_t getMinimumSearchInterval(StringList& who, const string& aString, u_int32_t& casNavic);
 
 	void infoUpdated(bool antispam);
 

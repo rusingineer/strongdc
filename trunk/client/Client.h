@@ -164,6 +164,8 @@ public:
 		return sm;
 	}
 
+	virtual int getSearchQueueNumber(const string& aString) = 0;
+
 protected:
 	struct Counts {
 		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
@@ -201,6 +203,7 @@ protected:
 	GETSET(string, rawFive, RawFive);
 	GETSET(int, mode, Mode);
 	GETSET(string, ip, IP);
+	GETSET(u_int32_t, last_search_time, LastSearchTime);
 
 private:
 

@@ -82,6 +82,10 @@ public:
 	int getFreeSlots() const { return freeSlots; }
 	const string& getIP() const { return IP; }
 	TTHValue* getTTH() const { return tth; }
+	
+	//should always return false for nmdc results and true for adc results
+	//this has nothing to do with how the filename is encoded, filenames
+	//are always utf8
 	bool getUtf8() const { return utf8; }
 
 	void incRef() { Thread::safeInc(ref); }

@@ -141,6 +141,12 @@ string UPnP::GetExternalIP()
 	pEnumVar->Next(1,&varCurMapping,NULL);
 	IStaticPortMapping *pITheMap=NULL;
 	IDispatch *pDispMap = V_DISPATCH(&varCurMapping);
+	if(pDispMap == NULL) {
+		pUnk->Release();
+		pIMaps->Release();
+		pIUN->Release();
+		return Util::emptyString;
+	}
 	hResult=pDispMap->QueryInterface(IID_IStaticPortMapping, (void **)&pITheMap);
 	if(!SUCCEEDED(hResult)) {
 		pUnk->Release();

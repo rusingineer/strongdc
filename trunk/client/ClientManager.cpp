@@ -252,9 +252,35 @@ void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aF
 	}
 }
 
+u_int32_t ClientManager::getMinimumSearchInterval(StringList& who, const string& aString, u_int32_t& casNavic) {
+	Lock l(cs);
+
+	u_int32_t last_search_time = 0;
+	int navic = 0;
+	casNavic = 0;
+
+	for(StringIter it = who.begin(); it != who.end(); ++it) {
+		string& client = *it;
+		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
+			Client* c = *j;
+			if(c->isConnected() && c->getIpPort() == client) {
+				if((c->getLastSearchTime() < last_search_time) || (j == clients.begin())) {
+					last_search_time = c->getLastSearchTime();
+				}
+				navic = c->getSearchQueueNumber(aString);
+				if((navic < casNavic) || (j == clients.begin())) {
+					casNavic = navic;
+				}
+			}
+		}
+	}
+	return last_search_time;
+}
+
 void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	{
 		Lock l(cs);
+
 		aUser->setIp(Util::emptyString);
 		aUser->setHost(Util::emptyString);
 		aUser->unsetFlag(User::PASSIVE);

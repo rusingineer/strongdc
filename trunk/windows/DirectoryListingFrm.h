@@ -29,6 +29,7 @@
 #include "FlatTabCtrl.h"
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
+#include "UCHandler.h"
 #include "QueueFrame.h"
 #include "SearchFrm.h"
 
@@ -39,12 +40,14 @@
 #define STATUS_MESSAGE_MAP 9
 
 class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY>, public CSplitterImpl<DirectoryListingFrame>, 
-	private SettingsManagerListener
+	public UCHandler<DirectoryListingFrame>, private SettingsManagerListener
+
 {
 public:
 	static void openWindow(const tstring& aFile, const User::Ptr& aUser);
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
+	typedef UCHandler<DirectoryListingFrame> ucBase;
 
 	enum {
 		COLUMN_FILENAME,
@@ -102,6 +105,7 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED+90, IDC_PRIORITY_HIGHEST+90, onDownloadDirWithPrio)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
+		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		CHAIN_MSG_MAP(CSplitterImpl<DirectoryListingFrame>)
 	ALT_MSG_MAP(STATUS_MESSAGE_MAP)
@@ -139,6 +143,7 @@ public:
 	void updateTree(DirectoryListing::Directory* tree, HTREEITEM treeItem);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void findFile(bool findNext);
+	void runUserCommand(UserCommand& uc);
 	
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
 		updateStatus();
@@ -291,13 +296,13 @@ private:
 		tstring columns[COLUMN_LAST];
 	};
 	
-	CMenu targetMenu;
-	CMenu targetDirMenu;
-	CMenu fileMenu;
-	CMenu directoryMenu;
-	CMenu priorityMenu;
-	CMenu priorityDirMenu;
-	CMenu copyMenu;
+	OMenu targetMenu;
+	OMenu targetDirMenu;
+	OMenu fileMenu;
+	OMenu directoryMenu;
+	OMenu priorityMenu;
+	OMenu priorityDirMenu;
+	OMenu copyMenu;
 	OMenu tabMenu;
 
 	CContainedWindow statusContainer;
@@ -311,6 +316,9 @@ private:
 	
 	CButton ctrlFind, ctrlFindNext;
 	CButton ctrlMatchQueue;
+
+	/** Parameter map for user commands */
+	StringMap ucParams;
 
 	string findStr;
 	tstring error;

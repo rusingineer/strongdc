@@ -43,6 +43,7 @@ struct Search
 	int64_t aSize;
 	int aFileType;
 	string aString;
+	bool autoSearch;
 };
 
 class SearchQueue
@@ -50,7 +51,7 @@ class SearchQueue
 public:
 	SearchQueue()
 	{
-		last_search_time = 0;
+		last_search_time = GET_TICK();
 	}
 
 	bool add(const Search& s, bool _auto)
@@ -59,10 +60,10 @@ public:
 		for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++)
 		{
 			if(i->aString == s.aString){
-				if(!_auto){
+/*				if(!_auto){
 					search_queue.erase(i);
 					search_queue.push_front(s);
-				}
+				}*/
 				return false;
 			}
 		}
@@ -70,7 +71,16 @@ public:
 		if(_auto)
 			search_queue.push_back(s);
 		else{
-			search_queue.push_front(s);
+			bool added = false;
+			for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++) {
+				if(i->autoSearch) {
+					added = true;
+					search_queue.insert(i, s);
+					break;
+				}
+			}
+			if(!added)
+				search_queue.push_back(s);
 		}
 		return true;
 	}
@@ -97,9 +107,23 @@ public:
 		search_queue.clear();
 	}
 
+	int getQueueNumber(const string& s)
+	{
+		Lock l(cs);
+		int number = 0;
+		for(deque<Search>::iterator i = search_queue.begin(); i != search_queue.end(); i++)
+		{
+			if(i->aString == s) {
+				return number;
+			}
+			number++;
+		}
+		return 0;
+	}
+
+	u_int32_t last_search_time;
 private:
 	deque<Search> search_queue;
-	u_int32_t last_search_time;
 	CriticalSection cs;
 };
 
@@ -267,6 +291,11 @@ public:
 		socket->write(aBuf, aLen);
 	}
 
+	virtual int getSearchQueueNumber(const string& aString) {
+		return searchQueue.getQueueNumber(aString);
+	}
+	u_int32_t last_search_time;
+
 	void kick(const User::Ptr& aUser, const string& aMsg);
 
 	GETSET(int, supportFlags, SupportFlags);
@@ -318,7 +347,7 @@ private:
 	string lastMyInfoA, lastMyInfoB;
 	bool validatenicksent;
 	SearchQueue searchQueue;	
-	
+
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;
 	FloodMap seekers;

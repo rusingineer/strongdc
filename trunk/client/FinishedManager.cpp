@@ -28,6 +28,9 @@ FinishedManager::~FinishedManager()
 	for_each(downloads.begin(), downloads.end(), DeleteFunction<FinishedItem*>());
 	for_each(uploads.begin(), uploads.end(), DeleteFunction<FinishedItem*>());
 	for_each(MP3downloads.begin(), MP3downloads.end(), DeleteFunction<FinishedMP3Item*>());
+	DownloadManager::getInstance()->removeListener(this);
+	UploadManager::getInstance()->removeListener(this);
+
 }
 
 static int g_nMP3BitRate[6][16] = {

@@ -42,7 +42,7 @@
 class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255), IDR_SEARCH>, 
 	private SearchManagerListener, private ClientManagerListener, 
 	public UCHandler<SearchFrame>, public UserInfoBaseHandler<SearchFrame>,
-	private SettingsManagerListener
+	private SettingsManagerListener, private TimerManagerListener
 {
 public:
 	static void openWindow(const tstring& str = Util::emptyStringW, LONGLONG size = 0, SearchManager::SizeModes mode = SearchManager::SIZE_ATLEAST, SearchManager::TypeModes type = SearchManager::TYPE_ANY);
@@ -135,6 +135,8 @@ public:
 	{	
 		SearchManager::getInstance()->addListener(this);
 		SettingsManager::getInstance()->addListener(this);
+		lastSearchTime = 0;
+		navic = 0;
 	}
 
 	virtual ~SearchFrame() {
@@ -457,10 +459,10 @@ private:
 		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
 				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-					fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+					fileName = Text::toT(sr->getFile());
 				} else {
-					fileName = Text::toT(Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
-					path = Text::toT(Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
+					fileName = Text::toT(Util::getFileName(sr->getFile()));
+					path = Text::toT(Util::getFilePath(sr->getFile()));
 				}
 
 				type = Text::toT(Util::getFileExt(Text::fromT(fileName)));
@@ -469,8 +471,8 @@ private:
 				size = Text::toT(Util::formatBytes(sr->getSize()));
 				exactSize = Text::toT(Util::formatExactSize(sr->getSize()));
 			} else {
-				fileName = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
-				path = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+				fileName = Text::toT(sr->getFileName());
+				path = Text::toT(sr->getFile());
 				type = TSTRING(DIRECTORY);
 			}
 			nick = Text::toT(sr->getUser()->getNick());
@@ -554,7 +556,9 @@ private:
 		HUB_ADDED,
 		HUB_CHANGED,
 		HUB_REMOVED,
-		FILTERED_TEXT
+		FILTERED_TEXT,
+		STATS,
+		START_SEARCH
 	};
 
 	tstring initialString;
@@ -617,6 +621,10 @@ private:
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
 
+	u_int32_t lastSearchTime;
+	u_int32_t navic;
+	tstring SearchString;
+
 	/** Parameter map for user commands */
 	StringMap ucParams;
 
@@ -653,6 +661,8 @@ private:
 	virtual void on(ClientUpdated, Client* c) throw() { speak(HUB_CHANGED, c); }
 	virtual void on(ClientDisconnected, Client* c) throw() { speak(HUB_REMOVED, c); }
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

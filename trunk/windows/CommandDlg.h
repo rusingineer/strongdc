@@ -39,6 +39,7 @@ class CommandDlg : public CDialogImpl<CommandDlg>
 	CButton ctrlHubMenu;
 	CButton ctrlUserMenu;
 	CButton ctrlSearchMenu;
+	CButton ctrlFilelistMenu;
 	CButton ctrlOnce;
 	CEdit ctrlResult;
 

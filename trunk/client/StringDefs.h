@@ -486,6 +486,7 @@ enum Strings { // @DontAdd
 	USER_CMD_CHAT, // "Chat"
 	USER_CMD_COMMAND, // "Command"
 	USER_CMD_CONTEXT, // "Context"
+	USER_CMD_FILELIST_MENU, // "Filelist Menu"
 	USER_CMD_HUB, // "Hub IP / DNS (empty = all, 'op' = where operator)"
 	USER_CMD_HUB_MENU, // "Hub Menu"
 	USER_CMD_ONCE, // "Send once per nick"

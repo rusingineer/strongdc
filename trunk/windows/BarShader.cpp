@@ -12,7 +12,7 @@
 
 #define HALF(X) (((X) + 1) / 2)
 
-CBarShader::CBarShader(unsigned long height, unsigned long width) 
+CBarShader::CBarShader(int64_t height, int64_t width) 
 {
 	m_iWidth = width;
 	m_iHeight = height;
@@ -66,7 +66,7 @@ void CBarShader::SetWidth(int width) {
 	}
 }
 
-void CBarShader::SetFileSize(unsigned long dwFileSize)
+void CBarShader::SetFileSize(int64_t dwFileSize)
 {
 	if (m_dwFileSize != dwFileSize)
 	{
@@ -92,7 +92,7 @@ void CBarShader::SetHeight(int height)
 	}
 }
 
-void CBarShader::FillRange(unsigned long start, unsigned long end, COLORREF crColor)
+void CBarShader::FillRange(int64_t start, int64_t end, COLORREF crColor)
 {
 	if(end > m_dwFileSize)
 		end = m_dwFileSize;
@@ -138,11 +138,11 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth) {
 	rectSpan.right = iLeft;
 
 	int iBytesInOnePixel = static_cast<int>(m_dblBytesPerPixel + 0.5);
-	unsigned long start = 0;
+	int64_t start = 0;
 	COLORREF m_crColor = m_Spans.GetValueAt(pos);
 	m_Spans.GetNext(pos);
 	while(pos != NULL && rectSpan.right < (iLeft + m_iWidth)) {
-		unsigned long uSpan = m_Spans.GetKeyAt(pos) - start;
+		int64_t uSpan = m_Spans.GetKeyAt(pos) - start;
 		int iPixels = static_cast<int>(uSpan * m_dblPixelsPerByte + 0.5);
 		if(iPixels > 0) {
 			rectSpan.left = rectSpan.right;
@@ -154,7 +154,7 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth) {
 			double dblRed = 0;
 			double dblGreen = 0;
 			double dblBlue = 0;
-			unsigned long iEnd = start + iBytesInOnePixel;
+			int64_t iEnd = start + iBytesInOnePixel;
 			int iLast = start;
 			do {
 				double	dblWeight = (min(m_Spans.GetKeyAt(pos), iEnd) - iLast) * m_dblPixelsPerByte;

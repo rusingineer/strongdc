@@ -57,6 +57,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * pøidáno tlaèítko Pozastavit hledání (CZDC++)
 * pøidána volba pro nastavení maximálního poètu soubìžnì stahovaných souborù (výchozí = 15)
 * opraven bug se ztrátou výsledkù hledání
+* je zobrazen èas do dalšího hledání
 
 
 	-- StrongDC++ 1.00 RC8 --

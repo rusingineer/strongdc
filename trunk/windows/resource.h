@@ -553,6 +553,7 @@
 #define IDC_SETTINGS_FILE_NAME4         1276
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
+#define IDC_SETTINGS_FILELIST_MENU      1278
 #define IDC_MINUTES                     1279
 #define IDC_KBPS                        1280
 #define IDC_PLAY                        1282

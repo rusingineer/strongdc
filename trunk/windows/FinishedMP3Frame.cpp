@@ -67,6 +67,7 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	UpdateLayout();
 	
 	FinishedManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
 	updateList(FinishedManager::getInstance()->lockMP3List());
 	FinishedManager::getInstance()->unlockList();
 
@@ -78,7 +79,7 @@ LRESULT FinishedMP3Frame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 LRESULT FinishedMP3Frame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		FinishedManager::getInstance()->removeListener(this);
-	
+		SettingsManager::getInstance()->removeListener(this);	
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FINISHEDMP3, false);
 		PostMessage(WM_CLOSE);
@@ -126,6 +127,22 @@ void FinishedMP3Frame::addEntry(FinishedMP3Item* entry) {
 	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
 	int loc = ctrlList.insert(l, image, (LPARAM)entry);
 	ctrlList.EnsureVisible(loc, FALSE);
+}
+
+void FinishedMP3Frame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	bool refresh = false;
+	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
+		ctrlList.SetBkColor(WinUtil::bgColor);
+		ctrlList.SetTextBkColor(WinUtil::bgColor);
+		refresh = true;
+	}
+	if(ctrlList.GetTextColor() != WinUtil::textColor) {
+		ctrlList.SetTextColor(WinUtil::textColor);
+		refresh = true;
+	}
+	if(refresh == true) {
+		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
 }
 
 /**
