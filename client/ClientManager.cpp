@@ -26,6 +26,7 @@
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
 #include "HubManager.h"
+int64_t ClientManager::quickTick = 0;
 
 Client* ClientManager::getClient() {
 	Client* c = new Client();
@@ -75,17 +76,18 @@ if(SETTING(CLIENT_EMULATION) == SettingsManager::CLIENT_CZDC)
 		aClient->version(Verze);
 		aClient->myInfo();
 		aClient->getNickList();
-	} else {
-		//aClient->getInfo(aUser);
 	}
 }
 
 void ClientManager::infoUpdated() {
+	if(GET_TICK() > (quickTick + 10000)) {
 	Lock l(cs);
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
 			(*i)->myInfo();
 		}
+	}
+		quickTick = GET_TICK();
 	}
 }
 
@@ -270,14 +272,15 @@ void ClientManager::onTimerMinute(u_int32_t /* aTick */) {
 
 void ClientManager::onClientLock(Client* client, const string& aLock) throw() {
 	if(CryptoManager::getInstance()->isExtended(aLock)) {
-		StringList feat = features;
-		feat.push_back("TTHSearch"); 		
+		StringList feat = features;		
 		if(BOOLSETTING(COMPRESS_TRANSFERS))
 			feat.push_back("GetZBlock");
 		client->supports(feat);
-	}
+		client->key(CryptoManager::getInstance()->makeKey(aLock));
+	} else {
 		client->key(CryptoManager::getInstance()->makeKey(aLock));
 		client->validateNick(client->getNick());
+	}
 }
 
 // ClientListener

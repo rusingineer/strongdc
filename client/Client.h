@@ -172,6 +172,7 @@ public:
 		dcdebug("Client::revConnectToMe %s\n", aUser->getNick().c_str());
 		send("$RevConnectToMe " + getNick() + " " + aUser->getNick()  + "|");
 	}
+	void sendDebugMessage(const string& aLine);
 		string getRawCommand(const int aRawCommand) {
 		switch(aRawCommand) {
 			case 1: return rawOne;
@@ -185,10 +186,12 @@ public:
 	void send(const string& a) throw() {
 		lastActivity = GET_TICK();
 		//dcdebug("Sending %d to %s: %.40s\n", a.size(), getName().c_str(), a.c_str());
+		sendDebugMessage("  >> " + a);
 		socket->write(a);
 	}
 	void send(const char* aBuf, int aLen) throw() {
 		lastActivity = GET_TICK();
+		sendDebugMessage("  >> aBuf ??");
 		socket->write(aBuf, aLen);
 	}
 

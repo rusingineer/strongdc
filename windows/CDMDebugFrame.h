@@ -11,10 +11,10 @@
 
 #include "../client/DebugManager.h"
 
-class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl<CDMDebugFrame>, public StaticFrame<CDMDebugFrame, ResourceManager::MENU_CDMDEBUG_MESSAGES>
+class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM>, public StaticFrame<CDMDebugFrame, ResourceManager::MENU_CDMDEBUG_MESSAGES>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("CDMDebugFrame", IDR_MAINFRAME, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX("CDMDebugFrame", IDR_CDM, 0, COLOR_3DFACE);
 
 	CDMDebugFrame() { 
 		DebugManager::getInstance()->addListener(this);
@@ -27,7 +27,7 @@ public:
 		delete this;
 	}
 
-	typedef MDITabChildWindowImpl<CDMDebugFrame> baseClass;
+	typedef MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM> baseClass;
 	BEGIN_MSG_MAP(CDMDebugFrame)
 		MESSAGE_HANDLER(WM_SETFOCUS, OnFocus)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)

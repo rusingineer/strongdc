@@ -80,28 +80,6 @@ int CZDCLib::getWinVerMajor() {
 	return iWinVerMajor;
 }
 
-/*bool Clipboard::setText(const string& s) { 
-	if(!::OpenClipboard(NULL)) {
-		return 0;
-	}
-	EmptyClipboard();    
-	// Allocate a global memory object for the text. 
-	HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (s.size() + 1)); 
-	if (hglbCopy == NULL) { 
-		CloseClipboard(); 
-		return FALSE; 
-	}     
-	// Lock the handle and copy the text to the buffer. 
-	char* lptstrCopy = (char*)GlobalLock(hglbCopy); 
-	memcpy(lptstrCopy, s.c_str(), s.length() + 1);
-	GlobalUnlock(hglbCopy); 
-    
-	// Place the handle on the clipboard. 
-	SetClipboardData(CF_TEXT, hglbCopy); 
-	CloseClipboard();
-	return true;
-}
-*/
 bool isMDIChildActive(HWND hWnd) {
 	HWND wnd = MainFrame::anyMF->MDIGetActive();
 	dcassert(wnd != NULL);

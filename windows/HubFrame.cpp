@@ -548,7 +548,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 
 bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	int i = -1;
-	if (searchinlist)
+	//if (searchinlist)
 		i = findUser(u);
 
 	bool bHideUser = false;

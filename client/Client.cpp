@@ -30,6 +30,7 @@
 #include "Socket.h"
 #include "UserCommand.h"
 #include "StringTokenizer.h"
+#include "DebugManager.h"
 
 Client::Counts Client::counts;
 
@@ -134,7 +135,8 @@ void Client::clearUsers() {
 
 void Client::onLine(const char *aLine) throw() {
 	lastActivity = GET_TICK();
-	
+
+
 	if(aLine[0] != '$') {
 		// Check if we're being banned...
 		if(state != STATE_CONNECTED) {
@@ -413,7 +415,6 @@ void Client::onLine(const char *aLine) throw() {
 				updated(u);
 		}
 	} else if(strcmp(cmd, "$SR") == 0) {
-		dcdebug(param);
 		if(param != NULL)
 			SearchManager::getInstance()->onSearchResult(param);
 	} else if(strcmp(cmd, "$HubName") == 0) {
@@ -796,6 +797,7 @@ void Client::onAction(TimerManagerListener::Types type, u_int32_t aTick) throw()
 void Client::onAction(BufferedSocketListener::Types type, const string& aLine) throw() {
 	switch(type) {
 	case BufferedSocketListener::LINE:
+		sendDebugMessage("<<   " + aLine);
 		onLine(aLine.c_str()); break;
 	case BufferedSocketListener::FAILED:
 		{
@@ -822,7 +824,10 @@ void Client::onAction(BufferedSocketListener::Types type) throw() {
 		break;
 	}
 }
-
+void Client::sendDebugMessage(const string& aLine) {
+	if (BOOLSETTING(DEBUG_COMMANDS))
+		DebugManager::getInstance()->SendDebugMessage("Hub:	" + aLine);
+}
 /**
  * @file
  * $Id$

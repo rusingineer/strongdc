@@ -492,7 +492,6 @@ void ShareManager::Directory::toString(string& tmp, OutputStream* xmlFile, strin
 		if(f->getTTH() != NULL) {
 			dcassert(ShareManager::getInstance()->tthIndex.find(f->getTTH()) != ShareManager::getInstance()->tthIndex.end());
 			dupe = (&(*ShareManager::getInstance()->tthIndex[f->getTTH()]) != f);
-
 		}
 		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
 		//check for forbidden file patterns
@@ -586,24 +585,34 @@ static bool checkType(const string& aString, int aType) {
 					return true;
 				}
 			}
-			if( IS_TYPE2(type2Audio[0]) || IS_TYPE2(type2Audio[1]) ) {
+			for(size_t i = 0; i < (sizeof(type2Audio) / sizeof(type2Audio[0])); i++) {
+				if(IS_TYPE2(type2Audio[i])) {
+				return true;
+			}
+		}
+		}
+		break;
+	case SearchManager::TYPE_COMPRESSED:
+		{
+			for(size_t i = 0; i < (sizeof(typeCompressed) / sizeof(typeCompressed[0])); i++) {
+				if(IS_TYPE(typeCompressed[i])) {
+			return true;
+		}
+			}
+			if( IS_TYPE2(type2Compressed[0]) ) {
 				return true;
 			}
 		}
 		break;
-	case SearchManager::TYPE_COMPRESSED:
-		if( IS_TYPE(typeCompressed[0]) || IS_TYPE(typeCompressed[1]) || IS_TYPE(typeCompressed[2]) ) {
+	case SearchManager::TYPE_DOCUMENT:
+			for(size_t i = 0; i < (sizeof(typeDocument) / sizeof(typeDocument[0])); i++) {
+			if(IS_TYPE(typeDocument[i])) {
 			return true;
 		}
-		break;
-	case SearchManager::TYPE_DOCUMENT:
-		if( IS_TYPE(typeDocument[0]) || IS_TYPE(typeDocument[1]) || 
-			IS_TYPE(typeDocument[2]) || IS_TYPE(typeDocument[3]) ) {
-			return true;
 		}
 		break;
 	case SearchManager::TYPE_EXECUTABLE:
-		if(IS_TYPE(typeExecutable[0]) ) {
+		if(IS_TYPE(typeExecutable[0]) || IS_TYPE(typeExecutable[1])) {
 			return true;
 		}
 		break;
@@ -614,9 +623,11 @@ static bool checkType(const string& aString, int aType) {
 					return true;
 				}
 			}
-			if( IS_TYPE2(type2Picture[0]) || IS_TYPE2(type2Picture[1]) || IS_TYPE2(type2Picture[2]) ) {
+			for(size_t i = 0; i < (sizeof(type2Picture) / sizeof(type2Picture[0])); i++) {
+				if(IS_TYPE2(type2Picture[i])) {
 				return true;
 			}
+		}
 		}
 		break;
 	case SearchManager::TYPE_VIDEO:
@@ -626,9 +637,11 @@ static bool checkType(const string& aString, int aType) {
 					return true;
 				}
 			}
-			if( IS_TYPE2(type2Video[0]) || IS_TYPE2(type2Video[1]) || IS_TYPE2(type2Video[2]) ) {
+			for(size_t i = 0; i < (sizeof(type2Video) / sizeof(type2Video[0])); i++) {
+				if(IS_TYPE2(type2Video[i])) {
 				return true;
 			}
+		}
 		}
 		break;
 	default:
@@ -892,4 +905,3 @@ void ShareManager::onAction(TimerManagerListener::Types type, u_int32_t tick) th
  * @file
  * $Id$
  */
-

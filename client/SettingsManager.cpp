@@ -91,6 +91,7 @@ const string SettingsManager::settingTags[] =
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
+	"DebugCommands", "AutoSaveQueue",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -199,6 +200,7 @@ SettingsManager::SettingsManager()
 	setDefault(AUTO_SEARCH_EXACT, false);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
+	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);	
 	setDefault(EXTRA_SLOTS, 3);
@@ -363,6 +365,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_EMOTICONS, 256);
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(MAGNET_URI_HANDLER, true);
+	setDefault(AUTOSAVE_QUEUE, 30);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

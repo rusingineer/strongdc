@@ -78,13 +78,13 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="4"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
-				OptimizeForProcessor="3"
+				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				PreprocessorDefinitions="ZLIB_COMPILE"
 				StringPooling="TRUE"

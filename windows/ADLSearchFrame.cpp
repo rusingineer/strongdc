@@ -150,7 +150,6 @@ LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 		MDIDestroy(m_hWnd);
 		return 0;
 	}	
-
 }
 
 // Recalculate frame control layout

@@ -196,6 +196,9 @@ void PropPageTextStyles::RefreshPreview() {
 LRESULT PropPageTextStyles::onDefaultStyles(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	bg = RGB(0,0,96);
 	fg = RGB(255,255,255);
+	
+	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(m_Font), &m_Font);
+
 	TextStyles[ TS_GENERAL ].crBackColor = RGB(0,0,96);
 	TextStyles[ TS_GENERAL ].crTextColor = RGB(255,255,255);
 	TextStyles[ TS_GENERAL ].dwEffects = 0;

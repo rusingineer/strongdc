@@ -121,7 +121,7 @@ private:
 	int PreviewAppsSize;
 //PDC }
 public:
-	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
+	TypedListViewCtrlCleanup<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
 private:
 	enum {
 		ADD_ITEM,
@@ -246,7 +246,7 @@ private:
 	ItemInfo::Map transferItems;
 	ItemInfo::List mainItems;
 
-	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
+	TypedListViewCtrlCleanup<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
 	static int columnSizes[];
 

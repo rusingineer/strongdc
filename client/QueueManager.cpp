@@ -306,7 +306,6 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 
 		if(qi->getCurrents().empty())
 			qi->setStatus(QueueItem::STATUS_WAITING);
-
 	} else {
 		dcassert(qi->isSource(aUser));
 		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
@@ -327,7 +326,6 @@ QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + "Queu
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
 	Util::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
-
 };
 
 QueueManager::~QueueManager() { 
@@ -864,7 +862,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		if(q != NULL) {
 			if(finished) {
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
-
 				userQueue.remove(q);
 				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
 					if(aDownload->getSource() == "files.xml.bz2") {
@@ -1206,6 +1203,8 @@ void QueueManager::saveQueue() throw() {
 		f.write("</Downloads>\r\n");
 		f.flush();
 		ff.close();
+		File::deleteFile(getQueueFile() + ".bak");
+		CopyFile(getQueueFile().c_str(), (getQueueFile() + ".bak").c_str(), FALSE);
 		File::deleteFile(getQueueFile());
 		File::renameFile(getQueueFile() + ".tmp", getQueueFile());
 
@@ -1503,6 +1502,9 @@ void QueueManager::onAction(TimerManagerListener::Types type, u_int32_t aTick) t
 		onTimerMinute(aTick); break;
 	case TimerManagerListener::SECOND:
 		if(dirty && ((lastSave + 10000) < aTick)) {
+			saveQueue();
+		}
+		if((lastSave + SETTING(AUTOSAVE_QUEUE)*1000 + 1000) < aTick) {
 			saveQueue();
 		}
 		break;
