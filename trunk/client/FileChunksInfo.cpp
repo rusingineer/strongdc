@@ -149,7 +149,7 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
-	int64_t SMALLEST_BLOCK_SIZE = 64*1024;
+/*	int64_t SMALLEST_BLOCK_SIZE = 64*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) SMALLEST_BLOCK_SIZE = 64*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) SMALLEST_BLOCK_SIZE = 128*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 256*1024;
@@ -157,15 +157,17 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1024*1024;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = (iFileSize / maxSegments) / 2;
 	if(maxSegments == 1) SMALLEST_BLOCK_SIZE = iFileSize;
-
-	if((e - b) < SMALLEST_BLOCK_SIZE){
-		dcdebug("GetUndlStart return -1 (SMALLEST_BLOCK_SIZE)\n");
+*/
+	if((e - b) < iSmallestBlockSize){
+		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
 		return -1;
 	}
 
 	int64_t n = b + (e - b) / 2;
 
-	if(maxSegments == 1) { n = b; }
+	// align to tiger tree block size
+	if(n - b > iBlockSize)
+		n = n - (n % iBlockSize);
 
 	(* (birr+1)) = n;
 

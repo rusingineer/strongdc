@@ -158,6 +158,8 @@ struct SharedFileHandle : CriticalSection
     }
 };
 
+typedef BOOL (__stdcall *SetFileValidDataFunc) (HANDLE hFile, LONGLONG ValidDataLength);
+
 class SharedFileStream : public IOStream
 {
 
@@ -165,7 +167,7 @@ public:
 
     typedef map<string, SharedFileHandle*> SharedFileHandleMap;
 
-    SharedFileStream(const string& name, int64_t _pos, int64_t size) 
+    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0) 
     	: pos(_pos)
     {
 		Lock l(critical_section);
@@ -182,8 +184,13 @@ public:
 			file_handle_pool[name] = shared_handle_ptr;
 
 			// only work for WinXP
-			// if(size)
-			//		SetValidDataLength(size);
+			SetFileValidDataFunc _SetFileValidData = NULL;
+			HMODULE hModule = GetModuleHandle("kernel32");
+			if(hModule)
+				_SetFileValidData = (SetFileValidDataFunc)GetProcAddress(hModule, "SetFileValidData");
+
+			if(size > 0 && _SetFileValidData != NULL)
+				_SetFileValidData(shared_handle_ptr->handle, size);
 
         }
     }

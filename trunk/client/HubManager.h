@@ -539,7 +539,7 @@ public:
 			save();
 	}
 
-	void removeUserCommnad(int id) {
+	void removeUserCommand(int id) {
 		bool nosave = true;
 		Lock l(cs);
 		for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {

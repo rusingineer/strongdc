@@ -115,8 +115,8 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			dcassert(find(active.begin(), active.end(), aSource->getCQI()) != active.end());
 			active.erase(find(active.begin(), active.end(), aSource->getCQI()));
 
-			if(reconnect) cqi->setLastAttempt(0);
-				else cqi->setLastAttempt(GET_TICK());
+			cqi->setLastAttempt(reconnect ? 0: GET_TICK());
+
 			pendingDown.push_back(cqi);
 		} else {
 			{
@@ -277,7 +277,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 10000;
-static const u_int32_t FLOOD_ADD = 1000;
+static const u_int32_t FLOOD_ADD = 2000;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...

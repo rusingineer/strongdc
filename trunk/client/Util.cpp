@@ -490,8 +490,8 @@ string Util::encodeURI(const string& aString, bool reverse) {
 	string tmp = aString;
 	if(reverse) {
 		string::size_type idx;
-		for(idx = 0; idx < tmp.length()-2; ++idx) { // valid escapes are not < 2 characters from eos
-			if(tmp[idx] == '%' && isxdigit(tmp[idx+1]) && isxdigit(tmp[idx+2])) {
+		for(idx = 0; idx < tmp.length(); ++idx) {
+			if(tmp.length() > idx + 2 && tmp[idx] == '%' && isxdigit(tmp[idx+1]) && isxdigit(tmp[idx+2])) {
 				tmp[idx] = fromHexEscape(tmp.substr(idx+1,2));
 				tmp.erase(idx+1, 2);
 			} else { // reference: rfc1630, magnet-uri draft

@@ -171,14 +171,12 @@ public:
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
 		return (userQueue.getNext(aUser, minPrio) != NULL);
-	}
+	};
 	
-	void importNMQueue(const string& aFile) throw(FileException);
 	void loadQueue() throw();
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
-	string getTopAutoSearchString();	
 	void sendAutoSearch(Client*);
 	
 	GETSET(u_int32_t, lastSave, LastSave);
@@ -201,7 +199,8 @@ public:
 //		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, const string& aSearchString, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
-			u_int32_t aAdded, const TTHValue* root, const string& freeBlocks = Util::emptyString) throw(QueueException, FileException);
+			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
+
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
 		int getMaxSegments(string filename, int64_t filesize);
@@ -293,7 +292,7 @@ public:
 			dirty = true;
 			lastSave = GET_TICK();
 		}
-	};
+	}
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();

@@ -114,7 +114,7 @@ public:
 			}
 		}
 
-		h = ::CreateFile(aFileName.c_str(), access, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, m, 0/*FILE_FLAG_SEQUENTIAL_SCAN*/, NULL);
+		h = ::CreateFile(aFileName.c_str(), access, FILE_SHARE_READ, NULL, m, 0/*FILE_FLAG_SEQUENTIAL_SCAN*/, NULL);
 		
 		if(h == INVALID_HANDLE_VALUE) {
 			throw FileException(Util::translateError(GetLastError()));

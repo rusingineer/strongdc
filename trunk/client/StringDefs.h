@@ -6,7 +6,7 @@
 
 enum Strings { // @DontAdd
 	ACTIVE, // "Active"
-	ACTIVE_SEARCH_STRING, // "Active / Search String"
+	ACTIVE_SEARCH_STRING, // "Enabled / Search String"
 	ADD, // "&Add"
 	ADDED, // "Added"
 	ADD_TO_FAVORITES, // "Add To Favorites"
@@ -77,6 +77,7 @@ enum Strings { // @DontAdd
 	DOWNLOADING, // "Downloading..."
 	DOWNLOADING_HUB_LIST, // "Downloading public hub list..."
 	DUPLICATE_FILE_NOT_SHARED, // "Duplicate file will not be shared: "
+	DUPLICATE_MATCH, // "Dupe matched against: "
 	DUPLICATE_SOURCE, // "Duplicate source"
 	EMAIL, // "E-Mail"
 	ENTER_NICK, // "Please enter a nickname in the settings dialog!"
@@ -159,7 +160,6 @@ enum Strings { // @DontAdd
 	MENU_FAVORITE_HUBS, // "&Favorite Hubs\tCtrl+F"
 	MENU_FAVORITE_USERS, // "Favorite &Users\tCtrl+U"
 	MENU_FOLLOW_REDIRECT, // "Follow last redirec&t\tCtrl+T"
-	MENU_IMPORT_QUEUE, // "Import queue from NMDC..."
 	MENU_NETWORK_STATISTICS, // "Network Statistics"
 	MENU_NOTEPAD, // "&Notepad\tCtrl+N"
 	MENU_OPEN_FILE_LIST, // "Open file list..."
@@ -356,6 +356,7 @@ enum Strings { // @DontAdd
 	SETTINGS_SPEEDS_NOT_ACCURATE, // "Note; because of changing download speeds, this is not 100% accurate..."
 	SETTINGS_STATUS_IN_CHAT, // "View status messages in main chat"
 	SETTINGS_TAB_COMPLETION, // "Tab completion of nicks in chat"
+	SETTINGS_TAB_DIRTY, // "Set hub/PM tab bold when contents change"
 	SETTINGS_TIME_STAMPS, // "Show timestamps in chat by default"
 	SETTINGS_UNFINISHED_DOWNLOAD_DIRECTORY, // "Unfinished downloads directory (empty = download directly to target)"
 	SETTINGS_UPLOADS, // "Sharing"

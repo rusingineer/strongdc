@@ -866,18 +866,6 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	return 0;
 }
 
-LRESULT MainFrame::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string file = Util::getAppPath() + "queue.config";
- 	if(WinUtil::browseFile(file, m_hWnd, false) == IDOK) {
-		try {
-			QueueManager::getInstance()->importNMQueue(file);
- 		} catch(const FileException&) {
-			ctrlStatus.SetText(0, CSTRING(ERROR_OPENING_FILE));
- 		}
- 	} 
-  	return 0;
-}
- 
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string file = Util::getAppPath() + "*.*";
  	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
@@ -923,7 +911,7 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	SetSplitterRect(rc2);
 }
 
-static const char types[] = "File Lists\0*.DcLst;*.bz2\0All Files\0*.*\0";
+static const char types[] = "File Lists\0*.DcLst;*.xml.bz2\0All Files\0*.*\0";
 
 LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string file;

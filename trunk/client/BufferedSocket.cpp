@@ -349,12 +349,10 @@ void BufferedSocket::threadRead() {
 					for(string::iterator k = l.begin(); k != l.end(); ++k) {
 						if(*k == '\\') {
 							escaped = !escaped;
-						} else if(*k == separator) {
-							if(!escaped) {
+						} else if(*k == separator && !escaped) {
 								pos = k - l.begin();
 								foundSeparator = true;
 								break;
-							}
 						} else {
 							escaped = false;
 						}
