@@ -312,7 +312,7 @@ void MainFrame::startSocket() {
 	}
 }
 
-void createImageList(CImageList &imglst, string file) {
+/*void createImageList(CImageList &imglst, string file) {
 	HBITMAP hBitmap = (HBITMAP)::LoadImage(
 		NULL, file.c_str(), IMAGE_BITMAP,
 		0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
@@ -325,19 +325,15 @@ void createImageList(CImageList &imglst, string file) {
 	imglst.Create(20, 20, ILC_MASK | ILC_COLOR32, 0, 0);
 	imglst.Add(b, RGB(255,0,255));
     
-}
+}*/
 
 HWND MainFrame::createToolbar() {
 	if(!tbarcreated) {
 	if(SETTING(TOOLBARIMAGE) == "")
-		largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 16, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	else 
-		createImageList(largeImages, SETTING(TOOLBARIMAGE));
+		largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 
 	if(SETTING(TOOLBARHOTIMAGE) == "")
-		largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 16, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);	
-	else
-		createImageList(largeImagesHot, SETTING(TOOLBARHOTIMAGE));
+		largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 
 	ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
 	ctrlToolbar.SetImageList(largeImages);
@@ -356,13 +352,7 @@ HWND MainFrame::createToolbar() {
 		int i = Util::toInt(*k);		
 		
 	TBBUTTON nTB;
-
-	nTB.dwData = NULL;
-	nTB.fsState = NULL;
-	nTB.fsStyle = NULL;
-	nTB.iBitmap = NULL;
-	nTB.idCommand = NULL;
-	nTB.iString = NULL;
+		memset(&nTB, 0, sizeof(TBBUTTON));
 
 		if(i == -1) {
 			nTB.fsStyle = TBSTYLE_SEP;			
@@ -592,8 +582,6 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);
-		createToolbar();
-
 		if(BOOLSETTING(THROTTLE_ENABLE)) ctrlToolbar.CheckButton(IDC_LIMITER, true);
 		else ctrlToolbar.CheckButton(IDC_LIMITER, false);
 
@@ -709,13 +697,13 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 		FavoriteHubEntry* entry = *i;
 		if(entry->getConnect()) {
  			if(!entry->getNick().empty() || !SETTING(NICK).empty())
-			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
-				entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
+			HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
 			, entry->getRawFour()
 			, entry->getRawFive()		
+			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
 				);
  			else
  				missedAutoConnect = true;

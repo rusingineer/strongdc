@@ -56,7 +56,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_NEWFAV, onNew)
 		COMMAND_ID_HANDLER(IDC_MOVE_UP, onMoveUp);
 		COMMAND_ID_HANDLER(IDC_MOVE_DOWN, onMoveDown);
-//		NOTIFY_HANDLER(IDC_HUBLIST, LVN_COLUMNCLICK, onColumnClickHublist)
 		NOTIFY_HANDLER(IDC_HUBLIST, NM_DBLCLK, onDoubleClickHublist)
 		NOTIFY_HANDLER(IDC_HUBLIST, NM_RETURN, onEnter)
 		NOTIFY_HANDLER(IDC_HUBLIST, LVN_ITEMCHANGED, onItemChanged)
@@ -155,14 +154,12 @@ private:
 		l.push_back(entry->getNick(false));
 		l.push_back(string(entry->getPassword().size(), '*'));
 		l.push_back(entry->getServer());
-		l.push_back(entry->getUserDescription());
-		// CDM EXTENSION BEGINS FAVS
+		l.push_back(entry->getUserDescription());	
 		l.push_back(entry->getRawOne());
 		l.push_back(entry->getRawTwo());
 		l.push_back(entry->getRawThree());
 		l.push_back(entry->getRawFour());
 		l.push_back(entry->getRawFive());
-		// CDM EXTENSION ENDS
 		bool b = entry->getConnect();
 		int i = ctrlHubs.insert(pos, l, 0, (LPARAM)entry);
 		ctrlHubs.SetCheckState(i, b);
@@ -177,4 +174,3 @@ private:
  * @file
  * $Id$
  */
-

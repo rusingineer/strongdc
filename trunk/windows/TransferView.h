@@ -270,6 +270,7 @@ private:
 
 		static int compareItems(ItemInfo* a, ItemInfo* b, int col);
 		static bool canBeSorted(ItemInfo* a, ItemInfo* b);
+		bool canDisplayUpper();
 	};
 
 	CriticalSection cs;

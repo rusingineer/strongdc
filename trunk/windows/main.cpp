@@ -44,16 +44,11 @@ EXCEPTION_RECORD CurrExceptionRecord;
 CONTEXT CurrContext;
 int iLastExceptionDlgResult;
 
-
-void ExceptionFunction()
-{
-	if (iLastExceptionDlgResult == IDCANCEL)
-	{
-		//If the user selects "Terminate Application", exit from the program.
+void ExceptionFunction() {
+	if (iLastExceptionDlgResult == IDCANCEL) {
 		ExitProcess(1);
 	}
 }
-
 
 #ifndef _DEBUG
 
@@ -144,6 +139,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
     f.write(LIT("\r\n"));
 
 	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+
 	f.write(LIT("\r\n"));
 	f.close();
 
@@ -152,7 +148,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	WinUtil::exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 	
-	if(!BOOLSETTING(SOUNDS_DISABLED)) PlaySound("DeviceFail", NULL, SND_ASYNC);
+	if ((!SETTING(SOUND_EXC).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+		PlaySound(SETTING(SOUND_EXC).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	CExceptionDlg dlg;
 	iLastExceptionDlgResult = dlg.DoModal(MainFrame::getMainFrame()->m_hWnd);

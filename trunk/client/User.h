@@ -46,7 +46,11 @@ public:
 		HIDDEN_BIT,
 		HUB_BIT,
 		BOT_BIT,
-		FORCEZOFF_BIT
+		FORCEZOFF_BIT,
+		AWAY_BIT,
+		SERVER_BIT,
+		FIREBALL_BIT
+
 	};
 
 	enum {
@@ -59,6 +63,9 @@ public:
 		HUB = 1<<HUB_BIT,
 		BOT = 1<<BOT_BIT,
 		FORCEZOFF = 1<<FORCEZOFF_BIT,
+		AWAY = 1<<AWAY_BIT,
+		SERVER = 1<<SERVER_BIT,
+		FIREBALL = 1<<FIREBALL_BIT,
 	};
 
 	typedef Pointer<User> Ptr;
@@ -77,9 +84,9 @@ public:
 	};
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
-	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), status(0), autoextraslot(false),
+	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
 			downloadSpeed(0), fileListSize(0), hasTestSURinQueue(false), fakeSharing(false), checked(false), realBytesShared(-1),
-			junkBytesShared(-1), fakeShareBytesShared(-1)
+			junkBytesShared(-1), fakeShareBytesShared(-1), ctype(10)
 			 { unCacheClientInfo(); };
 	virtual ~User() throw();
 
@@ -122,6 +129,7 @@ public:
 	Client* getClient() { return client; }
 	
 	GETSET(string, connection, Connection);
+	GETSET(int, ctype, cType);
 	GETSET(int, status, Status);
 	GETSET(string, nick, Nick);
 	GETSET(string, email, Email);
@@ -172,6 +180,7 @@ public:
 		clientType = Util::emptyString;
 		downloadSpeed = -1;
 		fileListSize = -1;
+		ctype = 10;
 		status = 0;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;

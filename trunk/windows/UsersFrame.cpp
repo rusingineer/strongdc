@@ -77,6 +77,8 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	}
 	ctrlUsers.SetRedraw(TRUE);
 
+	m_hMenu = WinUtil::mainMenu;
+
 	startup = false;
 
 	bHandled = FALSE;
@@ -203,7 +205,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			SettingsManager::USERSFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
 		ctrlUsers.DeleteAll();
-
+		m_hMenu = NULL;
 		MDIDestroy(m_hWnd);
 	return 0;
 	}

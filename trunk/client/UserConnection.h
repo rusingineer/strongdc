@@ -287,7 +287,7 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	
+	void garbageCommand() { send("JednadvePePeKjdeaomezovacobejdemoznakdyzbuhdaakdyznedatakholtnicasponsemtozkusil|"); }
 private:
 	BufferedSocket* socket;
 	User::Ptr user;
@@ -353,7 +353,6 @@ private:
 	virtual void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
 	virtual void on(Failed, const string&) throw();
 
-	char *temp;
 	void processBlock(const char* param, int type) throw();
 };
 

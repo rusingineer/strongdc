@@ -710,5 +710,10 @@ enum Strings { // @DontAdd
 	PB, // "PB"
 	EB, // "EB"
 	CHECK_ON_CONNECT, // "Check user on join"
+	GARBAGE_INCOMING, // "Send garbage on incomming connection (to avoid ISP P2P throttling)"
+	GARBAGE_OUTGOING, // "Send garbage on outgoing connection (to avoid ISP P2P throttling)"
+	SEARCH_FOR_ALTERNATES_TTH, // "By TTH"
+	SEARCH_FOR_ALTERNATES_NAME, // "By Name"
+	ENABLE_DC403_FEATURES, // "Enable DC++ 0.403 Speacial Features"
 	LAST // @DontAdd
 };

@@ -1,5 +1,3 @@
-// No license, No copyright... use it if you want ;-)
-
 #ifndef LimitPAGE_H
 #define LimitPAGE_H
 
@@ -14,7 +12,9 @@ public:
 		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_LIMIT)).c_str());
 		SetTitle(title);
 	};
-	virtual ~LimitPage() { delete[] title; };
+	virtual ~LimitPage() {
+		delete[] title;
+	};
 
 	BEGIN_MSG_MAP_EX(LimitPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

@@ -23,6 +23,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
+
 class FavoriteHubEntry;
 
 class FavHubProperties : public CDialogImpl<FavHubProperties>  
@@ -33,7 +35,7 @@ public:
 
 	enum { IDD = IDD_FAVORITEHUB };
 	
-	BEGIN_MSG_MAP(FavHubProperties)
+	BEGIN_MSG_MAP_EX(FavHubProperties)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		COMMAND_HANDLER(IDC_HUBNICK, EN_CHANGE, OnTextChanged)
 		COMMAND_HANDLER(IDC_HUBPASS, EN_CHANGE, OnTextChanged)

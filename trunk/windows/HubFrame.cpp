@@ -197,29 +197,29 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
+	m_hMenu = WinUtil::mainMenu;
+
 	bHandled = FALSE;
 	client->connect();
 	return 1;
 }
 
-void HubFrame::openWindow(const string& aServer, const string& aNick /* = Util::emptyString */, const string& aPassword /* = Util::emptyString */, const string& aDescription /* = Util::emptyString */, 
-		int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
+void HubFrame::openWindow(const string& aServer, const string& aNick /* = Util::emptyString */, const string& aPassword /* = Util::emptyString */, const string& aDescription /* = Util::emptyString */
 							, const string& rawOne /*= Util::emptyString*/
 							, const string& rawTwo /*= Util::emptyString*/
 							, const string& rawThree /*= Util::emptyString*/
 							, const string& rawFour /*= Util::emptyString*/
 							, const string& rawFive /*= Util::emptyString*/
-		) {
+		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
-		HubFrame* frm = new HubFrame(aServer, aNick, aPassword, aDescription, 
-			windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate
+		HubFrame* frm = new HubFrame(aServer, aNick, aPassword, aDescription
 			, rawOne
 			, rawTwo 
 			, rawThree 
 			, rawFour 
 			, rawFive 
-			);
+			, windowposx, windowposy, windowsizex, windowsizey, windowtype, chatusersplit, stealth, userliststate);
 		frames[aServer] = frm;
 
 		int nCmdShow = SW_SHOWDEFAULT;
@@ -384,7 +384,7 @@ void HubFrame::onEnter() {
 				string ignorelist = "Ignored users:";
 				for (StringHash::iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
 					ignorelist += " " + *i;
-				addClientLine(ignorelist, m_ChatTextSystem);
+				addLine(ignorelist, m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), "help") == 0) {
 				addLine(WinUtil::commands + "------------------------------------------------------------------------------------------------------------------------------------------------------------\n/join <hub-ip> \t\t\t\t(pripojit k hubu...) \t\t\t\t\t\t\n/close \t\t\t\t\t(odpoji z hubu) \t\t\t\t\t\t\t\n/favorite \t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n/fav \t\t\t\t\t(prida hub do favorites) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/pm <user> [message] \t\t\t(odesle uzivateli privatni zpravu) \t\t\t\t\t\n/getlist <user> \t\t\t\t(stahne od uzivatele file list) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/showshared \t\t\t\t(zapne/vypne sloupec Shared v userlistu) \t\t\t\n/showexactshared \t\t\t(zapne/vypne sloupec Exact Shared v userlistu) \t\t\t\n/showdescription \t\t\t(zapne/vypne sloupec Description v userlistu) \t\t\t\n/showtag \t\t\t\t(zapne/vypne sloupec Tag v userlistu) \t\t\t\t\n/showconnection \t\t\t(zapne/vypne sloupec Connection v userlistu) \t\t\t\n/showemail \t\t\t\t(zapne/vypne sloupec E-mail v userlistu) \t\t\t\t\n/showclient \t\t\t\t(zapne/vypne sloupec Client v userlistu) \t\t\t\t\n/showversion \t\t\t\t(zapne/vypne sloupec Version v userlistu) \t\t\t\n/showmode \t\t\t\t(zapne/vypne sloupec Mode v userlistu) \t\t\t\t\n/showhubs \t\t\t\t(zapne/vypne sloupec Hubs v userlistu) \t\t\t\t\n/showslots \t\t\t\t(zapne/vypne sloupec Slots v userlistu) \t\t\t\t\n/showupload \t\t\t\t(zapne/vypne sloupec Upload v userlistu) \t\t\t\n/showisp \t\t\t\t(zapne/vypne sloupec ISP v userlistu) \t\t\t\t\n", m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), "pm") == 0) {
@@ -442,7 +442,6 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 		UserInfo* ui = i->second;
 
 		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) return NULL;
-		dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
 		return ctrlUsers.getSortPos(ui);
 	}
 	return ctrlUsers.findItem(aUser->getNick());
@@ -520,7 +519,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 							"\tSupports: " + ui->user->getSupports();
 						break;		
 					default:
-						dcdebug("DON'T GO HERE\n");
+						dcdebug("HUBFRAME DON'T GO HERE\n");
 						return 0;
 				}
 			}
@@ -644,14 +643,14 @@ bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
 	if(i == -1) {
 		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
 		userMap.insert(make_pair(u, ui));
-		ctrlUsers.insertItem(ui, getImage(u));
+		ctrlUsers.insertItem(ui, WinUtil::getImage(u));
 		return true;
 	} else {
 		UserInfo* ui = ctrlUsers.getItemData(i);
 		bool resort = (ui->getOp() != u->isSet(User::OP));
 		ctrlUsers.getItemData(i)->update();
 		ctrlUsers.updateItem(i);
-		ctrlUsers.SetItem(i, 0, LVIF_IMAGE, NULL, getImage(u), 0, 0, NULL);
+		ctrlUsers.SetItem(i, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
 		if(resort)
 			ctrlUsers.resort();		
 		return false;
@@ -771,28 +770,35 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 								addLine("*** " + STRING(JOINS) + u->getNick(), m_ChatTextSystem);
 							}
 						}
-						if(client->getOp() && Util::toString(u->getBytesShared()).find("000000") != -1)
-						{
-							string detectString = Util::formatBytes(u->getBytesShared())+" - the share size had too many zeroes in it";
-							u->setFakeSharing(true);
-							u->setCheatingString(Util::validateMessage(detectString, false));
-							if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-								PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
-							this->updateUser(u);
+						
+						if(client->getOp()) {
+							if(Util::toString(u->getBytesShared()).find("000000") != -1) {
+								string detectString = Util::formatBytes(u->getBytesShared())+" - the share size had too many zeroes in it";
+								u->setFakeSharing(true);
+								u->setCheatingString(Util::validateMessage(detectString, false));
+								if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+									PlaySound(SETTING(FAKERFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);								
+								this->updateUser(u);
 
-							CHARFORMAT2 cf;
-							memset(&cf, 0, sizeof(CHARFORMAT2));
-							cf.cbSize = sizeof(cf);
-							cf.dwReserved = 0;
-							cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-							cf.dwEffects = 0;
-							cf.crBackColor = SETTING(BACKGROUND_COLOR);
-							cf.crTextColor = SETTING(ERROR_COLOR);
+								CHARFORMAT2 cf;
+								memset(&cf, 0, sizeof(CHARFORMAT2));
+								cf.cbSize = sizeof(cf);
+								cf.dwReserved = 0;
+								cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
+								cf.dwEffects = 0;
+								cf.crBackColor = SETTING(BACKGROUND_COLOR);
+								cf.crTextColor = SETTING(ERROR_COLOR);
 
-							addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
-
+								addLine("*** "+STRING(USER)+" "+u->getNick()+": "+u->getCheatingString(),cf);
+							}
+						
+							if(BOOLSETTING(CHECK_NEW_USERS)) {
+								getUserResponses(u);
+								try {
+									QueueManager::getInstance()->addList(u, 0);
+								} catch(const Exception&) {}
+							}
 						}
-
 					} else {
 						resort = true;
 		}
@@ -1034,6 +1040,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			HubManager::getInstance()->save();
 		}
 		DestroyIcon(pmicon.hIcon);				
+		m_hMenu = NULL;
 		MDIDestroy(m_hWnd);
 	return 0;
 	}
@@ -2201,22 +2208,14 @@ LRESULT HubFrame::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	return 0;
 }
 
-void HubFrame::getUserResponses() {
-	QueueManager* queueManager = QueueManager::getInstance();
-	if(client->isConnected())
-	{
-		int i = -1;
-		User::Ptr user = NULL;
-		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			user = ((UserInfo*)ctrlUsers.getItemData(i))->user;
-			if( (user->getNick() != client->getNick()) )
-			{
+void HubFrame::getUserResponses(User::Ptr& u) {
+	if(client->isConnected()) {
+		if( (u->getNick() != client->getNick()) ) {
 				try {
-					queueManager->addTestSUR(user);
+					QueueManager::getInstance()->addTestSUR(u);
 				} catch(const Exception&) {
 					//continue;
 				}
-			}
 		}
 	}
 }
@@ -2232,7 +2231,6 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_ITEMPREPAINT:
 		{
-			//UserInfo* ii = (UserInfo*)cd->nmcd.lItemlParam;
 			UserInfo* ii = ctrlUsers.getStoredItemAt(cd->nmcd.lItemlParam); 
 			if(ii->user->getFakeSharing()) {
 				cd->clrText = RGB(204,0,0);

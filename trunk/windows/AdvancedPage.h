@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
 
@@ -36,7 +37,7 @@ public:
 	virtual ~AdvancedPage() { 
 	};
 
-	BEGIN_MSG_MAP(AdvancedPage)
+	BEGIN_MSG_MAP_EX(AdvancedPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 	END_MSG_MAP()
 
@@ -59,4 +60,3 @@ protected:
  * @file
  * $Id$
  */
-

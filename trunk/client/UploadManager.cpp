@@ -163,7 +163,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
 			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->getUser()->isSet(User::OP) || getFreeExtraSlots() > 0;
-			if(free && supportsFree && allowedFree) {
+			if((free && supportsFree && allowedFree) ||
+				((Util::stricmp(aFile.c_str(), "MyList.DcLst") == 0) && aSource->getUser()->isSet(User::OP))) {
 				extraSlot = true;
 		} else {
 			delete is;
@@ -494,18 +495,6 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 	}
 }
 
-void UploadManager::resetFireballStatus() { 
-  m_boFireball = false;
-  m_boFireballLast = false; 
-  boFireballSent = false;
-};
-
-void UploadManager::resetFileServerStatus() {
-  m_boFileServer = false;
-  m_boFileServerLast = false;
-  boFileServerSent = false;
-};
-
 size_t UploadManager::throttleGetSlice() {
 	if (mThrottleEnable) {
 		Lock l(cs);
@@ -521,8 +510,9 @@ size_t UploadManager::throttleGetSlice() {
 	} else {
 			return 16; // must send > 0 bytes or threadSendFile thinks the transfer is complete
 	}
-	} else
+	} else {
 		return (size_t)-1;
+}
 }
 
 size_t UploadManager::throttleCycleTime() {

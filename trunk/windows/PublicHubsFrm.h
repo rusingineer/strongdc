@@ -120,6 +120,7 @@ public:
 		} else {
 			WinUtil::saveHeaderOrder(ctrlHubs, SettingsManager::PUBLICHUBSFRAME_ORDER,
 				SettingsManager::PUBLICHUBSFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+			m_hMenu = NULL;
 			MDIDestroy(m_hWnd);
 		return 0;
 		}

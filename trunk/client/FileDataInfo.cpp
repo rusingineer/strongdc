@@ -149,7 +149,7 @@ __int64 FileDataInfo::GetUndlStart()
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 524287;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
 	if((SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) || (SETTING(NUMBER_OF_SEGMENTS) == 1))
-		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = (iFileSize-iDownloadedSize) / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
+		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = (iFileSize) / QueueManager::getInstance()->getMaxSegments(sFileName, iFileSize);
 
 	if((e - b) < SMALLEST_BLOCK_SIZE){
 		ReleaseMutex(hMutex);

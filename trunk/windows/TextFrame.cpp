@@ -56,6 +56,8 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		SetWindowText((Util::getFileName(file) + ": " + e.getError()).c_str());
 	}
 	
+	m_hMenu = WinUtil::mainMenu;
+
 	bHandled = FALSE;
 	return 1;
 }
@@ -71,6 +73,12 @@ void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 	rc.left +=1;
 	rc.right -=1;
 	ctrlPad.MoveWindow(rc);
+}
+
+LRESULT TextFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	m_hMenu = NULL;
+	MDIDestroy(m_hWnd);
+	return 0;
 }
 
 /**

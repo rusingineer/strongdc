@@ -185,6 +185,7 @@ void LimitPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE), state);
 	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE_SPIN), state);
 	::EnableWindow(GetDlgItem(IDC_REMOVE_IF_BELOW), state);
+	::EnableWindow(GetDlgItem(IDC_REMOVE_SPIN), state);	
 }
 
 LRESULT LimitPage::onChangeCont(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

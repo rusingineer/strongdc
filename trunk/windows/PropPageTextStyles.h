@@ -1,8 +1,7 @@
-// No license, No copyright... use it if you want ;-)
-
 #ifndef _PROP_PAGE_TEXT_STYLES_H_
 #define _PROP_PAGE_TEXT_STYLES_H_
 
+#include <atlcrack.h>
 #include "PropPage.h"
 #include "../client/ConnectionManager.h"
 #include "ChatCtrl.h"
@@ -20,7 +19,7 @@ public:
 	};
 	virtual ~PropPageTextStyles() { delete[] title;};
 
-	BEGIN_MSG_MAP(PropPageTextStyles)
+	BEGIN_MSG_MAP_EX(PropPageTextStyles)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_HANDLER(IDC_IMPORT, BN_CLICKED, onImport)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, onExport)
@@ -36,7 +35,7 @@ public:
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 	END_MSG_MAP()
 
-	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onImport(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onExport(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onEditBackColor(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

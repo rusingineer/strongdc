@@ -94,7 +94,7 @@ const string SettingsManager::settingTags[] =
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
-	"ReportFoundAlternates", "MemoryMappedFile",
+	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -386,6 +386,10 @@ SettingsManager::SettingsManager()
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
+	setDefault(CHECK_NEW_USERS, false);
+	setDefault(GARBAGE_COMMAND_INCOMING, false);
+	setDefault(GARBAGE_COMMAND_OUTGOING, false);
+	setDefault(ENABLE403FEATURES, false);	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

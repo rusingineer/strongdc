@@ -32,6 +32,10 @@
 * opraven memory leak v SearchFrame
 * pøidány ikonky online/offline/away do Oblíbených uživatelù
 * znovu pøidáno Mapování souboru v pamìti, standardnì vypnuto (RevConnect)
+* pøidáno nìkolik nových zvukových událostí
+* pøidána kontrola uživatele, který se pøipojí na hub
+* opraveno naèítání RAW pøíkazù
+* nìkolik novinek a zmìn z CZDC++
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

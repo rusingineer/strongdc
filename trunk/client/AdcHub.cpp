@@ -53,7 +53,7 @@ void Command::parse(const string& aLine, bool nmdc /* = false */) {
 
 	while(i < len) {
 		switch(buf[i]) {
-		case '\\': i++; cur += buf[i];
+		case '\\': i++; cur += buf[i]; break;
 		case ' ': 
 			// New parameter...
 			{

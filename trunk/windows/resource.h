@@ -654,6 +654,7 @@
 #define ID_GET_TTH                      10151
 #define IDC_COPY_LINK                   10152
 #define IDC_BITZI_LOOKUP                20000
+#define IDC_REBUILD_TOOLBAR             10162
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774
 #define ID_FILE_RECONNECT               32775

@@ -43,4 +43,3 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 #endif
 
 #endif
-

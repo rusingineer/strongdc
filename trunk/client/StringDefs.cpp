@@ -148,7 +148,7 @@ string ResourceManager::strings[] = {
 "Match queue", 
 "Matched %d file(s)", 
 "MB", 
-"MiB/s",
+"MB/s",
 "&File", 
 "ADL Search", 
 "&Download Queue\tCtrl+D", 
@@ -707,6 +707,11 @@ string ResourceManager::strings[] = {
 "PB", 
 "EB",
 "Check user on join",
+"Send garbage on incomming connection (to avoid ISP P2P throttling)", 
+"Send garbage on outgoing connection (to avoid ISP P2P throttling)", 
+"By TTH", 
+"By Name", 
+"Enable DC++ 0.403 Special Features",
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1414,4 +1419,9 @@ string ResourceManager::names[] = {
 "Pb", 
 "Eb",
 "CheckNewUser",
+"GarbageIncoming", 
+"GarbageOutgoing",
+"SearchForAlternatesTth", 
+"SearchForAlternatesName",
+"Enable403Features",
 };

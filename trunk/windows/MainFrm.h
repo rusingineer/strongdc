@@ -113,6 +113,7 @@ public:
 		MESSAGE_HANDLER(SERVER_SOCKET_MESSAGE, onServerSocket)
 		MESSAGE_HANDLER(WM_ACTIVATEAPP, onActivateApp)
 		MESSAGE_HANDLER(WM_APPCOMMAND, onAppCommand)
+		MESSAGE_HANDLER(IDC_REBUILD_TOOLBAR, OnCreateToolbar)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_FILE_CONNECT, OnFileConnect)
 		COMMAND_ID_HANDLER(ID_FILE_SETTINGS, OnFileSettings)
@@ -306,6 +307,10 @@ public:
 			tmpWnd = ::GetWindow(tmpWnd, GW_HWNDNEXT);
 		}
 		return 0;
+	}
+	LRESULT OnCreateToolbar(WORD /*wNotifyCode*/,WPARAM wParam, LPARAM, BOOL& /*bHandled*/) {
+		createToolbar();
+		return S_OK;
 	}
 	static void setShutDown(bool b) {
 		if (b)

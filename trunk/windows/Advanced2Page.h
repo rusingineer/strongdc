@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
 #include "PropPage.h"
 
 class Advanced2Page : public CPropertyPage<IDD_ADVANCED2PAGE>, public PropPage
@@ -35,7 +36,7 @@ public:
 
 	virtual ~Advanced2Page() { delete[] title; };
 
-	BEGIN_MSG_MAP(Advanced2Page)
+	BEGIN_MSG_MAP_EX(Advanced2Page)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_ID_HANDLER(IDC_BROWSE_LOG, onClickedBrowseDir)
 		COMMAND_ID_HANDLER(IDC_LOG_MAIN_CHAT, onUpdateEdits)

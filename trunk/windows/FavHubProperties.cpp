@@ -34,13 +34,11 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
 	SetDlgItemText(IDC_HUBUSERDESCR, entry->getUserDescription().c_str());
 	CheckDlgButton(IDC_STEALTH, entry->getStealth() ? BST_CHECKED : BST_UNCHECKED);
-	// CDM EXTENSION BEGINS FAVS
 	SetDlgItemText(IDC_RAW_ONE, entry->getRawOne().c_str());
 	SetDlgItemText(IDC_RAW_TWO, entry->getRawTwo().c_str());
 	SetDlgItemText(IDC_RAW_THREE, entry->getRawThree().c_str());
 	SetDlgItemText(IDC_RAW_FOUR, entry->getRawFour().c_str());
 	SetDlgItemText(IDC_RAW_FIVE, entry->getRawFive().c_str());
-	// CDM EXTENSION ENDS
 
 	CEdit tmp;
 	tmp.Attach(GetDlgItem(IDC_HUBNAME));
@@ -78,7 +76,6 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		GetDlgItemText(IDC_HUBUSERDESCR, buf, 256);
 		entry->setUserDescription(buf);
 		entry->setStealth(IsDlgButtonChecked(IDC_STEALTH));
-		// CDM EXTENSION BEGINS
 		GetDlgItemText(IDC_RAW_ONE, buf, 512);
 		entry->setRawOne(buf);
 		GetDlgItemText(IDC_RAW_TWO, buf, 512);
@@ -89,7 +86,6 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setRawFour(buf);
 		GetDlgItemText(IDC_RAW_FIVE, buf, 512);
 		entry->setRawFive(buf);
-		// CDM EXTENSION ENDS
 		HubManager::getInstance()->save();
 	}
 	EndDialog(wID);

@@ -79,7 +79,9 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
+	m_hMenu = WinUtil::mainMenu;
 	tabMenu.CreatePopupMenu();
+
 	if(BOOLSETTING(LOG_UPLOADS)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_UPLOAD_LOG, CSTRING(OPEN_UPLOAD_LOG));
 		tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -163,6 +165,7 @@ LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::FINISHED_UL_ORDER, 
 			SettingsManager::FINISHED_UL_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 		CZDCLib::setButtonPressed(IDC_FINISHED_UL, false);
+		m_hMenu = NULL;
 		MDIDestroy(m_hWnd);
 	return 0;
 	}

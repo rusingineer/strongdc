@@ -613,13 +613,13 @@ char *msgs[] = { "\r\n-- I'm a happy dc++ user. You could be happy too.\r\n" LIN
 #endif
 
 char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE3,
-"\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE3,
-"\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
 "\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n" LINE3,
 "\r\n-- Umim stahovat jeden soubor od vice lidi najednou, a proto dokazu vyuzit linku na maximum :-))\r\n" LINE3,
 "\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n" LINE3,
-"\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejit tak poskozeni souboru :-)\r\n" LINE3,
+"\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n" LINE3,
 "\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
+"\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE3,
+"\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
 };
 
 #define STRGMSGS 8
@@ -775,7 +775,7 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		}
 	} else if(Util::stricmp(cmd.c_str(), "uptime") == 0) {
 		char buf[128];
-		sprintf(buf, "CZDC++ %s[%s] Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
+		sprintf(buf, "StrongDC++ %s %s Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
 		string uptime = (string)buf;
 		long n, rest, i;
 		rest = Util::getUptime();
@@ -816,6 +816,31 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		uptime += "@ D: " + Util::formatBytes(Socket::getTotalDown()) + 
 			" " + "U: " + Util::formatBytes(Socket::getTotalUp());
 		message = uptime;
+	} else if(Util::stricmp(cmd.c_str(), "stats") == 0) {
+		char buf[128];
+		sprintf(buf, "-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
+		string uptime = (string)buf;
+		unsigned PPK_nHeaps;
+		HANDLE PPK_aHeaps[512];
+		long PPK_dwCurrentSize;
+		memset(PPK_aHeaps,0,sizeof(PPK_aHeaps));
+		PPK_nHeaps = GetProcessHeaps(sizeof(PPK_aHeaps)/sizeof(PPK_aHeaps[0]),PPK_aHeaps);
+		PROCESS_HEAP_ENTRY PPKEntry;
+		memset(&PPKEntry,0,sizeof(PROCESS_HEAP_ENTRY));
+		PPK_dwCurrentSize = 0;
+		for ( unsigned i=0; i < PPK_nHeaps; i++ ) {
+			PPKEntry.lpData = NULL;
+			while (HeapWalk(PPK_aHeaps[i], &PPKEntry )) {
+			if ((PROCESS_HEAP_ENTRY_BUSY & PPKEntry.wFlags) == PROCESS_HEAP_ENTRY_BUSY)
+				PPK_dwCurrentSize += PPKEntry.cbData;
+			}
+		}
+		delete[] *PPK_aHeaps;
+		uptime += formatTime(Util::getUptime()) + " ][ Memory usage: " + Util::toString(PPK_dwCurrentSize/1024) + 
+			" kB ]=-\r\n-=[ Downloaded: " + Util::formatBytes(Socket::getTotalDown()) + " ][ Uploaded: " + 
+			Util::formatBytes(Socket::getTotalUp()) + " ]=-\r\n-=[ Total download: " + Util::formatBytes(SETTING(TOTAL_DOWNLOAD)) + 
+			" ][ Total upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + " ]=-\r\n-=[ System Uptime: ";
+		message = uptime + formatTime(::GetTickCount() / 1000) + " ]=-";
 	} else if(Util::stricmp(cmd.c_str(), "tvtome") == 0) {
 		if(param.empty()) {
 			status = STRING(SPECIFY_SEARCH_STRING);
@@ -909,15 +934,17 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const string& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		string x = Util::toLower(Util::getFileExt(aFileName));
-		if(!x.empty()) {
+		memset(&fi, 0, sizeof(SHFILEINFO));
+		string x = Util::getFileName(aFileName);
+		string::size_type i = x.rfind('.');
+		if(i != string::npos) {
+			x = x.substr(i);
 			ImageIter j = fileIndexes.find(x);
 			if(j != fileIndexes.end())
 				return j->second;
 		}
-		string fn = Util::toLower(Util::getFileName(aFileName));
 
-		::SHGetFileInfo(fn.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+		::SHGetFileInfo(x.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		::DestroyIcon(fi.hIcon);
 
@@ -974,3 +1001,57 @@ void WinUtil::RunPreviewCommand(int index, string target){
 	}
 }
 
+string WinUtil::formatTime(long rest) {
+	char buf[128];
+	string formatedTime;
+	long n, i;
+	i = 0;
+	n = rest / (24*3600*7);
+	rest %= (24*3600*7);
+	if(n) {
+		if(n >= 2)
+			sprintf(buf, "%d weeks ", n);
+		else
+			sprintf(buf, "%d week ", n);
+		formatedTime += (string)buf;
+		i++;
+	}
+	n = rest / (24*3600);
+	rest %= (24*3600);
+	if(n) {
+		if(n >= 2)
+			sprintf(buf, "%d days ", n); 
+		else
+			sprintf(buf, "%d day ", n);
+		formatedTime += (string)buf;
+		i++;
+	}
+	n = rest / (3600);
+	rest %= (3600);
+	if(n) {
+		if(n >= 2)
+			sprintf(buf, "%d hours ", n);
+		else
+			sprintf(buf, "%d hour ", n);
+		formatedTime += (string)buf;
+		i++;
+	}
+	n = rest / (60);
+	rest %= (60);
+	if(n) {
+		sprintf(buf, "%d min ", n);
+		formatedTime += (string)buf;
+		i++;
+	}
+	n = rest;
+	if(++i <= 3) {
+		sprintf(buf, "%d sec ", n); 
+		formatedTime += (string)buf;
+	}
+	return formatedTime;
+}
+
+/**
+ * @file
+ * $Id$
+ */

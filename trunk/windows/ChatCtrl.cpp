@@ -326,6 +326,7 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	boAtTheEnd = ( lSelEndSaved >= ( lTextLength - 2 ) );
 
 	PARAFORMAT2 pf;
+	memset(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 

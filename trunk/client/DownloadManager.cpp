@@ -98,9 +98,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 				}
 			}
 		}
-
-//		if(!(*i)->finished)
-//			if((*i)->getQueueTotal() == (*i)->getSize()) handleEndData((*i)->getUserConnection());
 	}
 
 	if(tickList.size() > 0)
@@ -137,7 +134,7 @@ int DownloadManager::FileMover::run() {
 }
 
 void DownloadManager::removeConnection(UserConnection::Ptr aConn, bool reuse /* = false */, bool reconnect /* = false */) {
-	//dcassert(aConn->getDownload() == NULL);
+	dcassert(aConn->getDownload() == NULL);
 	aConn->removeListener(this);
 	ConnectionManager::getInstance()->putDownloadConnection(aConn, reuse, reconnect);
 }
@@ -248,7 +245,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		aConn->setState(UserConnection::STATE_FILELENGTH);
 			
 /*		
-		if((d->isSet(Download::FLAG_RESUME)) && (d->isSet(Download::FLAG_NOSEGMENTS))) {
+		if(d->isSet(Download::FLAG_RESUME)) {
 			dcassert(d->getSize() != -1);
 
 			const string& target = (d->getTempTarget().empty() ? d->getTarget() : d->getTempTarget());
@@ -560,6 +557,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
+	if(BOOLSETTING(ENABLE403FEATURES))
 	if(d->getPos() == 0) {
 		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
 			// We make a single node tree...
@@ -595,7 +593,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		try{
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 		} catch(const BlockDLException) {
-//			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
+			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			d->getFile()->flush();
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
@@ -808,6 +806,9 @@ noCRC:
 			if (*hash1 == *hash2) hashMatch = true; else hashMatch = false;
 
 			if(!hashMatch) {		
+				if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+					PlaySound(SETTING(SOUND_TTH).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+	
 				fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
 	
 				string target = d->getTarget();

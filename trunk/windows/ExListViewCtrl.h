@@ -46,8 +46,6 @@ public:
 	typedef ListViewArrows<ExListViewCtrl> arrowBase;
 
 	BEGIN_MSG_MAP(ExListViewCtrl)
-		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, onInfoTip)
-		DEFAULT_REFLECTION_HANDLER()
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP()
 
@@ -77,38 +75,6 @@ public:
 	int insert(StringList& aList, int iImage = 0, LPARAM lParam = NULL);
 	int insert(int nItem, const string& aString, int iImage = 0, LPARAM lParam = NULL) {
 		return InsertItem(LVIF_PARAM | LVIF_TEXT | LVIF_IMAGE, nItem, aString.c_str(), 0, 0, iImage, lParam);
-	}
-
-	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
-		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
-		string InfoTip("");
-		char Buffer[500];
-		LV_COLUMN lvCol;
-		LVITEM lvItem;
-
-		for (int i = 0; i < GetHeader().GetItemCount(); ++i)
-		{
-			if (!NoColumnHeader) {
-				lvCol.mask = LVCF_TEXT;
-				lvCol.pszText = Buffer;
-				lvCol.cchTextMax = sizeof(Buffer);
-
-				GetColumn(i, &lvCol);
-				InfoTip += lvCol.pszText;
-				InfoTip += ": ";
-			}
-			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, i, Buffer, 512);
-			InfoTip += Buffer;
-			InfoTip += "\r\n";
-		}
-
-		if (InfoTip.size() > 2)
-			InfoTip.erase(InfoTip.size() - 2);
-
-		strcpy(pInfoTip->pszText, InfoTip.c_str());
-		return 0;
 	}
 
 	int getItemImage(int aItem) {

@@ -38,7 +38,7 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER, WS_EX_CLIENTEDGE, IDC_HUBLIST);
 
-	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;;
+	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 	ctrlHubs.SetExtendedListViewStyle(styles);
@@ -103,6 +103,8 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 
 	nosave = false;
 
+	m_hMenu = WinUtil::mainMenu;
+
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -118,17 +120,17 @@ void FavoriteHubsFrame::openSelected() {
 		r.setName(entry->getName());
 		r.setDescription(entry->getDescription());
 		r.setUsers("*");
+		r.setShared("*");
 		r.setServer(entry->getServer());
 		HubManager::getInstance()->addRecent(r);
-		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
-			entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
+		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
 			, entry->getRawFour()
 			, entry->getRawFive()
-			);
+			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
 	}
 	return;
 }
@@ -148,15 +150,14 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 		r.setShared("*");
 		r.setServer(entry->getServer());
 		HubManager::getInstance()->addRecent(r);
-		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription(), 
-			entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState()
+		HubFrame::openWindow(entry->getServer(), entry->getNick(), entry->getPassword(), entry->getUserDescription()
 			, entry->getRawOne()
 			, entry->getRawTwo()
 			, entry->getRawThree()
 			, entry->getRawFour()
 			, entry->getRawFive()	
-			);
+			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
 	}
 
 	return 0;
@@ -304,6 +305,7 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 	HubManager::getInstance()->removeListener(this);
+
 		closed = true;		
 		CZDCLib::setButtonPressed(IDC_FAVORITES, false);
 		PostMessage(WM_CLOSE);
@@ -312,6 +314,7 @@ LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		WinUtil::saveHeaderOrder(ctrlHubs, SettingsManager::FAVORITESFRAME_ORDER, 
 		SettingsManager::FAVORITESFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
+		m_hMenu = NULL;
 		MDIDestroy(m_hWnd);
 	return 0;
 	}	
@@ -360,4 +363,3 @@ void FavoriteHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
  * @file
  * $Id$
  */
-

@@ -152,18 +152,13 @@ public:
 	void onSearchResult(const string& aLine) {
 		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
-	void onNMDCSearchResult(const string& aLine) {
-		onNMDCData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
-	}
 	
 private:
 	
 	Socket* socket;
 	short port;
 	bool stop;
-	bool isoponhub;
 	friend class Singleton<SearchManager>;
-	char* temp;
 
 	SearchManager() : socket(NULL), port(0), stop(false) {  };
 

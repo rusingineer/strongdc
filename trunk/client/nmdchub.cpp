@@ -100,6 +100,7 @@ void NmdcHub::clearUsers() {
 }
 
 void NmdcHub::onLine(const char *aLine) throw() {
+	char *temp;
 	lastActivity = GET_TICK();
 	
 	if(aLine[0] != '$') {
@@ -225,7 +226,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 		// New MyINFO received, delete all user variables... if is bad MyINFO is user problem not my ;-)
 		u->setBytesShared(0);
 		u->setDescription(Util::emptyString);
-		u->setStatus(1);
+		u->setcType(10);
 		u->setConnection(Util::emptyString);
 		u->setEmail(Util::emptyString);
 		u->setTag(Util::emptyString);
@@ -252,11 +253,55 @@ void NmdcHub::onLine(const char *aLine) throw() {
 				if((temp = strtok(NULL, "$")) != NULL) {
 					char status = temp[strlen(temp)-1];
 					u->setStatus(status);
+					if(status != 1) {
+						if(status == 2 || status == 3) {
+							u->setFlag(User::AWAY);
+							u->unsetFlag(User::SERVER);
+							u->unsetFlag(User::FIREBALL);
+						} else if(status == 4 || status == 5) {
+							u->setFlag(User::SERVER);
+							u->unsetFlag(User::AWAY);
+							u->unsetFlag(User::FIREBALL);
+						} else if(status == 6 || status == 7) {
+							u->setFlag(User::SERVER);
+							u->setFlag(User::AWAY);
+							u->unsetFlag(User::FIREBALL);
+						} else if(status == 8 || status == 9) {
+							u->setFlag(User::FIREBALL);
+							u->unsetFlag(User::AWAY);
+							u->unsetFlag(User::SERVER);
+						} else if(status == 10 || status == 11) {
+							u->setFlag(User::FIREBALL);
+							u->setFlag(User::AWAY);
+							u->unsetFlag(User::SERVER);
+						}
+					} else {
+						u->unsetFlag(User::AWAY);
+						u->unsetFlag(User::SERVER);
+						u->unsetFlag(User::FIREBALL);
+					}
 					temp[strlen(temp)-1] = '\0';
 					u->setConnection(temp);
+					if(strcmp(temp, "28.8Kbps") == 0 || strcmp(temp, "33.6Kbps") == 0 ||
+						strcmp(temp, "56Kbps") == 0 || strcmp(temp, "Modem") == 0) {
+						u->setcType(1);
+					} else if(strcmp(temp, "ISDN") == 0) {
+						u->setcType(2);
+					} else if(strcmp(temp, "Satellite") == 0 || strcmp(temp, "Microwave") == 0) {
+						u->setcType(3);
+					} else if(strcmp(temp, "Wireless") == 0) {
+						u->setcType(4);
+					} else if(strcmp(temp, "DSL") == 0) {
+						u->setcType(5);
+					} else if(strcmp(temp, "Cable") == 0) {
+						u->setcType(6);
+					} else if(strcmp(temp, "LAN(T1)") == 0 || strcmp(temp, "LAN(T3)") == 0) {
+						u->setcType(7);
+					} else
+						u->setcType(10);
 				}
 			} else {
-				u->setStatus(1);
+				u->setcType(10);
 				u->setConnection(Util::emptyString);
 			}
 		}
@@ -378,7 +423,7 @@ void NmdcHub::onLine(const char *aLine) throw() {
 				updated(u);
 		}
 	} else if(strncmp(aLine, "$SR ", 4) == 0) {
-		SearchManager::getInstance()->onNMDCSearchResult(aLine);
+		SearchManager::getInstance()->onSearchResult(aLine);
 	} else if(strncmp(aLine, "$HubName ", 9) == 0) {
 		if((temp = strtok((char*)aLine+9, "\0")) == NULL)
 			return;
@@ -619,14 +664,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 }
 
 bool nlfound;
-
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	char buf[256];
 	if (!handle)
 		return TRUE;// Not a window
 	SendMessageTimeout(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
 
-	if(strstr(buf,"NetLimiter") != 0) {
+	if(strnicmp(buf, "NetLimiter", 10) == 0 || strnicmp(buf, "DU Super Controler", 18) == 0) {
 		nlfound = true;
 		return false;
 	}
