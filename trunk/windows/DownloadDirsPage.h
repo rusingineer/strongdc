@@ -34,12 +34,13 @@ class DownloadDirsPage : public CPropertyPage<IDD_DOWNLOADDIRS>, public PropPage
 {
 public:
 	DownloadDirsPage(SettingsManager *s) : PropPage(s)  {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_DOWNLOADDIRS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_DOWNLOADDIRS)).c_str());
 		SetTitle(title);
 	};
 	virtual ~DownloadDirsPage()
 	{	ctrlCommands.Detach();
-		delete[] title; };
+		free(title);
+	};
 
 	BEGIN_MSG_MAP(ColorPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -68,7 +69,7 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	void addEntry(SettingsManager::DownloadDirectory* pa, int pos);
-	char* title;
+	TCHAR* title;
 };
 
 

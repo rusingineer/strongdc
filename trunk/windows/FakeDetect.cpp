@@ -53,12 +53,12 @@ LRESULT FakeDetect::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	CComboBox cRaw;
 
 #define ADDSTRINGS \
-	cRaw.AddString("No action"); \
-	cRaw.AddString("Raw 1"); \
-	cRaw.AddString("Raw 2"); \
-	cRaw.AddString("Raw 3"); \
-	cRaw.AddString("Raw 4"); \
-	cRaw.AddString("Raw 5");
+	cRaw.AddString(_T("No action")); \
+	cRaw.AddString(_T("Raw 1")); \
+	cRaw.AddString(_T("Raw 2")); \
+	cRaw.AddString(_T("Raw 3")); \
+	cRaw.AddString(_T("Raw 4")); \
+	cRaw.AddString(_T("Raw 5"));
 
 	cRaw.Attach(GetDlgItem(IDC_DISCONNECT_RAW));
 	ADDSTRINGS

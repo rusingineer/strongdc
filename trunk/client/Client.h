@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@ public:
 	virtual void kick(const User* user, const string& aMessage) = 0;
 	virtual void ban(const User* user, const string& aMessage, time_t seconds) = 0;
 	virtual void send(const string& aMessage) = 0;
+	virtual void sendUserCmd(const string& aUserCmd) = 0;
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage) = 0;
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false) = 0;
 	virtual void password(const string& pwd) = 0;
@@ -104,6 +105,7 @@ public:
 	virtual User::NickMap& lockUserList() = 0;
 	virtual void unlockUserList() = 0;
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
+	virtual string checkNick(const string& nick) = 0;
 
 	const string& getAddress() const { return address; }
 	const string& getAddressPort() const { return addressPort; }

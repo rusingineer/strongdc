@@ -33,8 +33,8 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlProfiles.Attach(GetDlgItem(IDC_CLIENT_ITEMS));
 	ctrlProfiles.GetClientRect(rc);
 
-	ctrlProfiles.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 2, 0);
-	ctrlProfiles.InsertColumn(1, "Comment", LVCFMT_LEFT, rc.Width() / 2, 1);
+	ctrlProfiles.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 2, 0);
+	ctrlProfiles.InsertColumn(1, _T("Comment"), LVCFMT_LEFT, rc.Width() / 2, 1);
 
 	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
@@ -89,8 +89,8 @@ LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 		dlg.currentProfileId = ctrlProfiles.GetItemData(sel);
 
 		if(dlg.DoModal() == IDOK) {
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, dlg.name.c_str());
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, dlg.version.c_str());
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, Text::toT(dlg.name).c_str());
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, Text::toT(dlg.version).c_str());
 			dlg.currentProfile.setName(dlg.name);
 			dlg.currentProfile.setVersion(dlg.version);
 			dlg.currentProfile.setTag(dlg.tag);
@@ -184,12 +184,12 @@ LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 
 		HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(item), cp);
 
-		string infoTip = "Name: " + cp.getName() +
+		tstring infoTip = Text::toT("Name: " + cp.getName() +
 			"\r\nComment: " + cp.getComment() +
-			"\r\nCheating description: " + cp.getCheatingDescription();
-			"\r\nRaw command: ";
+			"\r\nCheating description: " + cp.getCheatingDescription());
+		//	"\r\nRaw command: ");
 
-		strcpy(lpnmtdi->pszText, infoTip.c_str());
+		_tcscpy(lpnmtdi->pszText, infoTip.c_str());
 	}
 	return 0;
 }
@@ -217,10 +217,10 @@ void ClientsPage::reloadFromHttp() {
 }
 
 void ClientsPage::addEntry(const ClientProfile& cp, int pos) {
-	StringList lst;
+	TStringList lst;
 
-	lst.push_back(cp.getName());
-	lst.push_back(cp.getComment());
+	lst.push_back(Text::toT(cp.getName()));
+	lst.push_back(Text::toT(cp.getComment()));
 	ctrlProfiles.insert(pos, lst, 0, (LPARAM)cp.getId());
 }
 

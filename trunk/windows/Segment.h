@@ -30,11 +30,11 @@ class Segment : public CPropertyPage<IDD_SEGMENT>, public PropPage
 {
 public:
 	Segment(SettingsManager *s) : PropPage(s) { 
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_SEGMENT)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_SEGMENT)).c_str());
 		SetTitle(title);
 	};
 
-	virtual ~Segment() { delete[] title; };
+	virtual ~Segment() { free(title); };
 
 	BEGIN_MSG_MAP(Segment)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -54,7 +54,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 	CComboBox ctrlBlockSize;
 
 	void fixControls();

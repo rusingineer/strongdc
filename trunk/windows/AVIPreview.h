@@ -34,12 +34,12 @@ class AVIPreview : public CPropertyPage<IDD_AVIPREVIEW>, public PropPage
 {
 public:
 	AVIPreview(SettingsManager *s) : PropPage(s)  {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_AVIPREVIEW)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_AVIPREVIEW)).c_str());
 		SetTitle(title);
 	};
 	virtual ~AVIPreview() {
 		ctrlCommands.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP_EX(ColorPage)
@@ -65,7 +65,7 @@ public:
 protected:
 	ExListViewCtrl ctrlCommands;
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 	void addEntry(PreviewApplication* pa, int pos);
 };
 

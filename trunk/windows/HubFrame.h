@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB,
 	public UserInfoBaseHandler<HubFrame>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("HubFrame", IDR_HUB, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
 
 	typedef CSplitterImpl<HubFrame> splitBase;
 	CHorSplitterWindow splitChat;
@@ -177,20 +177,20 @@ public:
 	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
-	void addLine(const string& aLine);
-	void addClientLine(const string& aLine, bool inChat = true);
-	void addLine(const string& aLine, CHARFORMAT2& cf);
-	void addClientLine(const string& aLine, CHARFORMAT2& cf, bool inChat = true );
+	void addLine(const tstring& aLine);
+	void addClientLine(const tstring& aLine, bool inChat = true);
+	void addLine(const tstring& aLine, CHARFORMAT2& cf);
+	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
 	void onTab();
 	void runUserCommand(::UserCommand& uc);
 		
-	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString
-		, const string& rawOne = Util::emptyString
-		, const string& rawTwo = Util::emptyString
-		, const string& rawThree = Util::emptyString
-		, const string& rawFour = Util::emptyString
-		, const string& rawFive = Util::emptyString
+	static void openWindow(const tstring& server, const tstring& nick = Util::emptyStringT, const tstring& password = Util::emptyStringT, const tstring& description = Util::emptyStringT
+		, const tstring& rawOne = Util::emptyStringT
+		, const tstring& rawTwo = Util::emptyStringT
+		, const tstring& rawThree = Util::emptyStringT
+		, const tstring& rawFour = Util::emptyStringT
+		, const tstring& rawFive = Util::emptyStringT
 		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = false, bool userliststate = true
 		);		
 	static void closeDisconnected();
@@ -235,7 +235,7 @@ public:
 	void doReport(User::Ptr& u)
 	{
 		string param = u->getNick();
-		addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
+		addLine(Text::toT("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n"));
 	}
 	void getUserResponses(User::Ptr& u, bool checkList = false);
 	
@@ -292,11 +292,11 @@ public:
 	LRESULT onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if (sSelectedUser != "") {
+			if(sSelectedUser != _T("")) {
 				ignoreList.insert(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.insert((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick());
+					ignoreList.insert(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick()));
 				}
 			}
 		}
@@ -306,11 +306,11 @@ public:
 	LRESULT onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if (sSelectedUser != "") {
+			if(sSelectedUser != _T("")) {
 				ignoreList.erase(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick());
+					ignoreList.erase(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick()));
 				}
 			}
 		}
@@ -333,50 +333,51 @@ private:
 
 	class PMInfo {
 	public:
-		PMInfo(const User::Ptr& u, const string& m) : user(u), msg(m) { };
+		PMInfo(const User::Ptr& u, const string& m) : user(u), msg(Text::toT(m)) { };
 		User::Ptr user;
-		string msg;
+		tstring msg;
 	};
 
 	class CheatInfo {
 	public:
-		CheatInfo(const string& m) : msg(m) { };
-		string msg;
+		CheatInfo(const tstring& m) : msg(m) { };
+		tstring msg;
 	};
 
-	HubFrame(const string& aServer, const string& aNick, const string& aPassword, const string& aDescription
-		, const string& aRawOne
-		, const string& aRawTwo
-		, const string& aRawThree
-		, const string& aRawFour
-		, const string& aRawFive
+	HubFrame(const tstring& aServer, const tstring& aNick, const tstring& aPassword, const tstring& aDescription
+		, const tstring& aRawOne
+		, const tstring& aRawTwo
+		, const tstring& aRawThree
+		, const tstring& aRawFour
+		, const tstring& aRawFive
 		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate
 		) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
-		ctrlMessageContainer("edit", this, EDIT_MESSAGE_MAP), 
-		showUsersContainer("BUTTON", this, EDIT_MESSAGE_MAP),
-		clientContainer("edit", this, EDIT_MESSAGE_MAP),
-		ctrlFilterContainer("edit", this, FILTER_MESSAGE_MAP),
-		ctrlFilterSelContainer("COMBOBOX", this, FILTER_MESSAGE_MAP)
+		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
+		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
+		clientContainer(WC_EDIT, this, EDIT_MESSAGE_MAP),
+		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
+		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP)
 	{
-		client = ClientManager::getInstance()->getClient(aServer);
-		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : aNick, client, false)); 
-		client->setNick(aNick.empty() ? SETTING(NICK) : aNick);
-		if (!aDescription.empty())
-			client->setDescription(aDescription);
-		client->setPassword(aPassword);
+		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
+		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : Text::fromT(aNick), client, false)); 
+		client->setNick(aNick.empty() ? SETTING(NICK) : Text::fromT(aNick));
 
-		client->setRawOne(aRawOne);
-		client->setRawTwo(aRawTwo);
-		client->setRawThree(aRawThree);
-		client->setRawFour(aRawFour);
-		client->setRawFive(aRawFive);
+		if (!aDescription.empty())
+			client->setDescription(Text::fromT(aDescription));
+		client->setPassword(Text::fromT(aPassword));
+
+		client->setRawOne(Text::fromT(aRawOne));
+		client->setRawTwo(Text::fromT(aRawTwo));
+		client->setRawThree(Text::fromT(aRawThree));
+		client->setRawFour(Text::fromT(aRawFour));
+		client->setRawFive(Text::fromT(aRawFive));
 		client->addListener(this);
 		timeStamps = BOOLSETTING(TIME_STAMPS);
 		hubchatusersplit = chatusersplit;
 		client->setStealth(stealth);
-		if(HubManager::getInstance()->getFavoriteHubEntry(server) != NULL) {
+		if(HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			ShowUserList = userliststate;
 		} else {
 			ShowUserList = BOOLSETTING(GET_USER_INFO);
@@ -387,42 +388,42 @@ private:
 		ClientManager::getInstance()->putClient(client);
 	}
 
-	typedef HASH_MAP<string, HubFrame*> FrameMap;
+	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
 	typedef FrameMap::iterator FrameIter;
 	static FrameMap frames;
 
-	string redirect;
+	tstring redirect;
 	bool timeStamps;
 	bool showJoins;
 	bool favShowJoins;
-	string complete;
+	tstring complete;
 	
 	bool waitingForPW;
 	bool extraSort;
 	bool ShowUserList;
 
-	StringList prevCommands;
-	string currentCommand;
-	StringList::size_type curCommandPosition;
+	TStringList prevCommands;
+	tstring currentCommand;
+	TStringList::size_type curCommandPosition;
 
-	typedef hash_set<string> StringHash;
-	StringHash ignoreList;
+	typedef hash_set<tstring> TStringHash;
+	TStringHash ignoreList;
 
-	string currentNeedle;		// search in chat window
+	tstring currentNeedle;		// search in chat window
 	int currentNeedlePos;		// search in chat window
-	void findText(string const& needle) throw();
-	string findTextPopup();
+	void findText(tstring const& needle) throw();
+	tstring findTextPopup();
 
 	CFindReplaceDialog findDlg;
 
 	Client* client;
-	string server;
+	tstring server;
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow clientContainer;
 	CContainedWindow showUsersContainer;
 	CContainedWindow ctrlFilterContainer;
 	CContainedWindow ctrlFilterSelContainer;
-	string filter;
+	tstring filter;
 
 	OMenu copyMenu;
 	OMenu copyHubMenu;
@@ -442,7 +443,7 @@ private:
 	bool closed;
 
 	StringMap ucParams;
-	StringMap tabParams;
+	TStringMap tabParams;
 	bool tabMenuShown;
 	
 	typedef vector<pair<User::Ptr, Speakers> > UpdateList;
@@ -456,8 +457,8 @@ private:
 	bool updateUsers;
 
 	enum { MAX_CLIENT_LINES = 5 };
-	StringList lastLinesList;
-	string lastLines;
+	TStringList lastLinesList;
+	tstring lastLines;
 	CToolTipCtrl ctrlLastLines;
 
 	UserListColumns m_UserListColumns;
@@ -490,10 +491,10 @@ private:
 	CHARFORMAT2 m_ChatTextServer;
 	CHARFORMAT2 m_ChatTextSystem;
 	
-	LPCTSTR sMyNick;
+	LPCSTR sMyNick;
 	int hubchatusersplit;
 
-	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, string& sNick, OMenu *pMenu );
+	bool PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, tstring& sNick, OMenu *pMenu );
 
 	void updateStatusBar() {
 		if(m_hWnd)
@@ -515,13 +516,13 @@ private:
 	virtual void on(GetPassword, Client*) throw();
 	virtual void on(HubUpdated, Client*) throw();
 	virtual void on(Message, Client*, const string&) throw();
-	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw() ;
-	virtual void on(NickTaken, Client*) throw() ;
-	virtual void on(SearchFlood, Client*, const string&) throw() ;
-	virtual void on(CheatMessage, Client*, const string&) throw() ;	
+	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw();
+	virtual void on(NickTaken, Client*) throw();
+	virtual void on(SearchFlood, Client*, const string&) throw();
+	virtual void on(CheatMessage, Client*, const string&) throw();	
 
 	void speak(Speakers s) { PostMessage(WM_SPEAKER, (WPARAM)s); };
-	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new string(msg)); };
+	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new tstring(Text::toT(msg))); };
 	void speak(Speakers s, const User::Ptr& u) { 
 		Lock l(updateCS);
 		updateList.push_back(make_pair(u, s));

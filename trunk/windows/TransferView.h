@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -43,12 +43,7 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>
 {
 public:
-	TransferView() : PreviewAppsSize(0) {
-		searchFilter.push_back("the");
-		searchFilter.push_back("of");
-		searchFilter.push_back("divx");
-		searchFilter.push_back("frail");
-	};
+	TransferView() : PreviewAppsSize(0) { };
 	~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
@@ -211,8 +206,8 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
-			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0),
-			compressRatio(1.0), finished(false) { update(); };
+			dwnldStart(0), pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
+			compressRatio(1.0), finished(false), tth(NULL) { update(); };
 
 		Types type;
 		Status status;
@@ -225,21 +220,23 @@ private:
 		int64_t timeLeft;
 		int64_t stazenoCelkem;
 		int64_t dwnldStart;
-		string statusString;
-		string file;
-		string path;
-		string IP;
-		string country;		
+		tstring statusString;
+		tstring file;
+		tstring path;
+		tstring IP;
+		tstring country;		
 		QueueItem* qi;
 		ItemInfo* upper;
-		string Target;
+		tstring Target;
 		bool collapsed;
 		bool mainItem;
 		int pocetUseru;
-		string oldTarget;
 		double compressRatio;
-		string downloadTarget;
+		tstring oldTarget;
+		tstring downloadTarget;
 		bool finished;
+		TTHValue* tth;		
+
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -253,7 +250,7 @@ private:
 			MASK_IP = 1 << COLUMN_IP,
 			MASK_RATIO = 1 << COLUMN_RATIO,
 	};
-		string columns[COLUMN_LAST];
+		tstring columns[COLUMN_LAST];
 		u_int32_t updateMask;
 		void update();
 
@@ -269,7 +266,7 @@ private:
 			return (pos > 0) ? (double)actual / (double)pos : 1.0;
 		}
 
-		const string& getText(int col) const {
+		const tstring& getText(int col) const {
 			return columns[col];
 		}
 
@@ -374,7 +371,7 @@ private:
 	void setMainItem(ItemInfo* i);
 	void insertSubItem(ItemInfo* j, int idx);
 
-	ItemInfo* findMainItem(string Target);
+	ItemInfo* findMainItem(tstring Target);
 
 };
 

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,15 +25,16 @@
 
 #include <atlcrack.h>
 #include "PropPage.h"
-#include "atldlgs.h"
 
 class GeneralPage : public CPropertyPage<IDD_GENERALPAGE>, public PropPage
 {
 public:
 	GeneralPage(SettingsManager *s) : PropPage(s) { 
-		SetTitle(CSTRING(SETTINGS_GENERAL));
+		SetTitle(CTSTRING(SETTINGS_GENERAL));
 	};
-	virtual ~GeneralPage() { ConnTypes.Destroy(); };
+	virtual ~GeneralPage() {
+		ConnTypes.Destroy();
+	};
 
 	BEGIN_MSG_MAP_EX(GeneralPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

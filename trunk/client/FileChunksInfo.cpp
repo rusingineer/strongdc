@@ -158,7 +158,11 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) iSmallestBlockSize = (iFileSize / maxSegments) / 2;
 	if(maxSegments == 1) iSmallestBlockSize = iFileSize;
 
-	if((e - b) < iSmallestBlockSize){
+	if(iSmallestBlockSize < (64*1024)) {
+		iSmallestBlockSize = 64*1024;
+	}
+
+	if((e - b) < iSmallestBlockSize) {
 		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
 		return -1;
 	}

@@ -29,16 +29,16 @@ LRESULT DownloadDirDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 	ATTACH(IDC_DOWNLOADDIR_DIR, ctrlDir);
 	ATTACH(IDC_DOWNLOADDIR_EXT, ctrlExtensions);
 
-	ctrlName.SetWindowText(name.c_str());
-	ctrlDir.SetWindowText(dir.c_str());
-	ctrlExtensions.SetWindowText(extensions.c_str());
+	ctrlName.SetWindowText(Text::toT(name).c_str());
+	ctrlDir.SetWindowText(Text::toT(dir).c_str());
+	ctrlExtensions.SetWindowText(Text::toT(extensions).c_str());
 
 	return 0;
 }
 
 LRESULT DownloadDirDlg::OnBrowse(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 	
-	string target;
+	tstring target;
 	if(WinUtil::browseDirectory(target, (HWND) *this)) {
 		SetDlgItemText(IDC_DOWNLOADDIR_DIR, target.c_str());
 	}

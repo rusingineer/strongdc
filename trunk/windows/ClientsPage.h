@@ -18,13 +18,13 @@ public:
 	enum { WM_PROFILE = WM_APP + 53 };
 
 	ClientsPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_FAKEDETECT) + '\\' + STRING(SETTINGS_CLIENTS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_FAKEDETECT) + _T('\\') + TSTRING(SETTINGS_CLIENTS)).c_str());
 		SetTitle(title);
 	};
 
 	virtual ~ClientsPage() { 
 		ctrlProfiles.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP(ClientsPage)
@@ -65,7 +65,7 @@ protected:
 
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 	void addEntry(const ClientProfile& cp, int pos);
 private:
 	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
@@ -82,7 +82,7 @@ private:
 			File::deleteFile(fname);
 			File::renameFile(fname + ".tmp", fname);
 				reloadFromHttp();
-			MessageBox("Client profiles now updated.", "Updated", MB_OK);
+			MessageBox(_T("Client profiles now updated."), _T("Updated"), MB_OK);
 		}
 	}
 
@@ -90,7 +90,7 @@ private:
 		conn->removeListener(this);
 		{
 			string msg = "Client profiles download failed.\r\n" + aLine;
-			MessageBox(msg.c_str(), "Failed", MB_OK);
+			MessageBox(Text::toT(msg).c_str(), _T("Failed"), MB_OK);
 		}
 	}
 	void reload();

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,21 +26,21 @@
 #include "FlatTabCtrl.h"
 #include "WinUtil.h"
 
-class TextFrame : public MDITabChildWindowImpl<TextFrame, RGB(0, 0, 0), IDR_NOTEPAD>
+class TextFrame : public MDITabChildWindowImpl<TextFrame>
 {
 public:
-	static void openWindow(const string& aFileName);
+	static void openWindow(const tstring& aFileName);
 	
-	DECLARE_FRAME_WND_CLASS_EX("TextFrame", IDR_NOTEPAD, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("TextFrame"), IDR_NOTEPAD, 0, COLOR_3DFACE);
 
-	TextFrame(const string& fileName) : file(fileName) { }
+	TextFrame(const tstring& fileName) : file(fileName) { }
 	~TextFrame() { };
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
 	}
 
-	typedef MDITabChildWindowImpl<TextFrame, RGB(0, 0, 0), IDR_NOTEPAD> baseClass;
+	typedef MDITabChildWindowImpl<TextFrame> baseClass;
 	BEGIN_MSG_MAP(TextFrame)
 		MESSAGE_HANDLER(WM_SETFOCUS, OnFocus)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -74,7 +74,7 @@ public:
 	
 private:
 	
-	string file;
+	tstring file;
 	CEdit ctrlPad;
 };
 

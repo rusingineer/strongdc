@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,15 @@
 #include "FlatTabCtrl.h"
 #include "WinUtil.h"
 
+#define NOTEPAD_MESSAGE_MAP 13
+
 class NotepadFrame : public MDITabChildWindowImpl<NotepadFrame, RGB(0, 0, 0), IDR_NOTEPAD>, public StaticFrame<NotepadFrame, ResourceManager::NOTEPAD, IDC_NOTEPAD>
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX("NotepadFrame", IDR_NOTEPAD, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("NotepadFrame"), IDR_NOTEPAD, 0, COLOR_3DFACE);
 
-	NotepadFrame() : dirty(false), closed(false) { }
+	NotepadFrame() : dirty(false), closed(false), 
+		ctrlClientContainer(_T("edit"), this, NOTEPAD_MESSAGE_MAP) { }
 	~NotepadFrame() { };
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
@@ -46,10 +49,13 @@ public:
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
 		CHAIN_MSG_MAP(baseClass)
+	ALT_MSG_MAP(NOTEPAD_MESSAGE_MAP)
+		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, onLButton)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onLButton(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	
 	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -75,6 +81,7 @@ private:
 	bool dirty;
 	bool closed;
 	CEdit ctrlPad;
+	CContainedWindow ctrlClientContainer;
 };
 
 #endif // !defined(AFX_NOTEPADFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)

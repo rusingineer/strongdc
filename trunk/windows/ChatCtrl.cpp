@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
@@ -11,30 +29,25 @@
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
-static const char* Links[] = { "magnet:?", "dchub://", "irc://", "ed2k://" };
+static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
+	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://") };
 
 ChatCtrl::ChatCtrl() {
-	memset(&m_TextStyleGeneral, 0, sizeof(CHARFORMAT2));
-	memset(&m_TextStyleTimestamp, 0, sizeof(CHARFORMAT2));
-	memset(&m_TextStyleMyNick, 0, sizeof(CHARFORMAT2));
-	memset(&m_TextStyleBold, 0, sizeof(CHARFORMAT2));
-	memset(&m_TextStyleFavUsers, 0, sizeof(CHARFORMAT2));
-	memset(&m_TextStyleOPUsers, 0, sizeof(CHARFORMAT2));
 	ReadSettings();
 	m_boAutoScroll = true;
 	m_pUsers = NULL;
-	g_BufTemp = (char *) calloc(1024, sizeof(char)); 
+	g_BufTemp = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
 	g_BufTemplen = 1023;
-	beforeAppendText = (char *) calloc(1024, sizeof(char)); 
-	afterAppendText = (char *) calloc(1024, sizeof(char)); 
+	beforeAppendText = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
+	afterAppendText = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
 	AppendTextlen = 1023;
 }
 
 ChatCtrl::~ChatCtrl() {
 	m_pUsers = NULL;
-	delete[] g_BufTemp;
-	delete[] beforeAppendText;
-	delete[] afterAppendText;
+	free(g_BufTemp);
+	free(beforeAppendText);
+	free(afterAppendText);
 }
 
 void ChatCtrl::SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers ) {
@@ -110,17 +123,29 @@ void ChatCtrl::ReadSettings() {
 	if ( SETTING(TEXT_FAV_ITALIC) )
 		m_TextStyleFavUsers.dwEffects |= CFE_ITALIC;
 
-	memset(&m_TextStyleOPUsers, 0, sizeof(CHARFORMAT2));
-	m_TextStyleOPUsers.cbSize = sizeof(m_TextStyleOPUsers);
-	m_TextStyleOPUsers.dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_BACKCOLOR;
-	m_TextStyleOPUsers.dwReserved = 0;
-	m_TextStyleOPUsers.crBackColor = SETTING(TEXT_OP_BACK_COLOR);
-	m_TextStyleOPUsers.crTextColor = SETTING(TEXT_OP_FORE_COLOR);
-	m_TextStyleOPUsers.dwEffects = 0;
+	memset(&m_TextStyleOPs, 0, sizeof(CHARFORMAT2));
+	m_TextStyleOPs.cbSize = sizeof(m_TextStyleOPs);
+	m_TextStyleOPs.dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_BACKCOLOR;
+	m_TextStyleOPs.dwReserved = 0;
+	m_TextStyleOPs.crBackColor = SETTING(TEXT_OP_BACK_COLOR);
+	m_TextStyleOPs.crTextColor = SETTING(TEXT_OP_FORE_COLOR);
+	m_TextStyleOPs.dwEffects = 0;
 	if ( SETTING(TEXT_OP_BOLD) )
-		m_TextStyleOPUsers.dwEffects |= CFE_BOLD;
+		m_TextStyleOPs.dwEffects |= CFE_BOLD;
 	if ( SETTING(TEXT_OP_ITALIC) )
-		m_TextStyleOPUsers.dwEffects |= CFE_ITALIC;
+		m_TextStyleOPs.dwEffects |= CFE_ITALIC;
+
+	memset(&m_TextStyleURL, 0, sizeof(CHARFORMAT2));
+	m_TextStyleURL.cbSize = sizeof(m_TextStyleURL);
+	m_TextStyleURL.dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_BACKCOLOR | CFM_LINK | CFM_UNDERLINE;
+	m_TextStyleURL.dwReserved = 0;
+	m_TextStyleURL.crBackColor = SETTING(TEXT_URL_BACK_COLOR);
+	m_TextStyleURL.crTextColor = SETTING(TEXT_URL_FORE_COLOR);
+	m_TextStyleURL.dwEffects = CFE_LINK | CFE_UNDERLINE;
+	if(SETTING(TEXT_URL_BOLD))
+		m_TextStyleURL.dwEffects |= CFE_BOLD;
+	if(SETTING(TEXT_URL_ITALIC))
+		m_TextStyleURL.dwEffects |= CFE_ITALIC;
 }
 
 void ChatCtrl::AdjustTextSize( LPCTSTR lpstrTextToAdd ) {
@@ -131,21 +156,21 @@ void ChatCtrl::AdjustTextSize( LPCTSTR lpstrTextToAdd ) {
 		line = LineFromChar( 2000 );
 		iFindBegin = LineIndex( line );
 		SetSel( 0, iFindBegin );
-		ReplaceSel("");
+		ReplaceSel(_T(""));
 	}
 	SendMessage( EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS );
 }
 
-char *stristr(const char *str1, const char *str2, int *pnIdxFound = NULL) {
-	char *s1, *s2;
-	char *cp = (char *) str1;
+TCHAR *stristr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound = NULL) {
+	TCHAR *s1, *s2;
+	TCHAR *cp = (TCHAR *)str1;
 	if ( !*str2 )
-		return (char *) str1;
+		return (TCHAR *)str1;
 	int nIdx = 0;
 	while (*cp)
 	{
 		s1 = cp;
-		s2 = (char *) str2;
+		s2 = (TCHAR *) str2;
 		while ( *s1 && *s2 && ( !(*s1-*s2) ||
 			!(*s1-tolower(*s2)) || !(*s1-toupper(*s2)) ) )
 				s1++, s2++;
@@ -162,13 +187,13 @@ char *stristr(const char *str1, const char *str2, int *pnIdxFound = NULL) {
 	return NULL;
 }
 
-void strstp(const char *in, char *before, const char *txt, char *after) {
-	char *cmp = stristr(in, txt);
+void strstp(const TCHAR *in, TCHAR *before, const TCHAR *txt, TCHAR *after) {
+	TCHAR *cmp = stristr(in, txt);
 	if (!cmp) return;
-	strncpy(before, in, cmp - in);
+	_tcsncpy(before, in, cmp - in);
 	before[cmp - in] = 0;
-	char *out = cmp + strlen(txt); 
-	strcpy(after, out);
+	TCHAR *out = cmp + _tcslen(txt); 
+	_tcscpy(after, out);
 }
 
 
@@ -219,7 +244,7 @@ int strrpl(char *lpszBuf, const char *lpszOld, const char *lpszNew) {
 void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor ) {
 	myMess = false;
 	msg = sMsg;
-	sText = strchr(sMsg+_tcslen(sAuthor), ' ');
+	sText = _tcschr(sMsg+_tcslen(sAuthor), ' ');
 	msg = msg.substr(0, (msg.length()-sText.GetLength()));
 
 	SetRedraw( FALSE );
@@ -234,11 +259,11 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 
 	// Cachry machry, aby tam byly vzdy stejne oddelovace radku, 
 	//   nejlip se osvedcil pouze "\n", jinak ujizdi obarveni nicku
-	sText.Replace( "\r\n", "\n" );
-	sText.Replace( "\n\r", "\n" );
-	sText.Replace( "\r", "\n" );
+	sText.Replace(_T("\r\n"), _T("\n"));
+	sText.Replace(_T("\n\r"), _T("\n"));
+	sText.Replace(_T("\r"), _T("\n"));
 
-	iCRLF = sText.Find( "\n", 0 );
+	iCRLF = sText.Find(_T("\n"), 0 );
 	iCRLF_Len = 0;
 	if ( iCRLF >= 0 ) {
 		iCRLF_Len = 1;
@@ -254,8 +279,8 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 	sText += "\n";
 	len = sText.GetLength();
 	if(len > AppendTextlen) {
-		beforeAppendText = (char *) realloc(beforeAppendText, len+1);
-		afterAppendText = (char *) realloc(afterAppendText, len+1);
+		beforeAppendText = (TCHAR *) realloc(beforeAppendText, (len+1) * sizeof(TCHAR));
+		afterAppendText = (TCHAR *) realloc(afterAppendText, (len+1) * sizeof(TCHAR));
 		AppendTextlen = len;
 	}
 
@@ -270,19 +295,19 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 		maxsmiles = SETTING(MAX_EMOTICONS);
 		for (;;)
 		{
-			char Delimiter[1024] = { NULL };
-			char *rpl = NULL;
+			TCHAR Delimiter[1024] = { NULL };
+			TCHAR *rpl = NULL;
 			CAGEmotion::Ptr pFoundedEmotion = NULL;
 			len = sText.GetLength();
 			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 				nIdxFound = -1;
-				char *txt = stristr(sText, (*pEmotion)->GetEmotionText().c_str(), &nIdxFound);
+				TCHAR *txt = stristr(sText, Text::toT((*pEmotion)->GetEmotionText()).c_str(), &nIdxFound);
 				if ((txt < rpl && txt) || !rpl && txt)
 				{
 					if (len > nIdxFound) {
 						rpl = txt;
 						pFoundedEmotion = (*pEmotion);
-						strcpy(Delimiter, (*pEmotion)->GetEmotionText().c_str());
+						_tcscpy(Delimiter, Text::toT((*pEmotion)->GetEmotionText()).c_str());
 
 						len = nIdxFound;
 					}
@@ -292,7 +317,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			if(rpl && (smiles < maxsmiles)) {
 				bRedrawControl = true;
 				strstp(sText, beforeAppendText, Delimiter, afterAppendText);
-				AppendTextOnly(sMyNick, "", beforeAppendText, cf, sAuthor, !bRedrawControl);
+				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, _T(""), !bRedrawControl);
 
 				COLORREF clrBkColor = m_TextStyleGeneral.crBackColor;
 				if (bMyMessage)
@@ -302,8 +327,8 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 				sText = afterAppendText;
 				smiles++;
 			} else {
-				if (strlen(sText) > 0) {
-					AppendTextOnly(sMyNick, "", sText, cf, sAuthor, !bRedrawControl);
+				if(_tcslen(sText) > 0) {
+					AppendTextOnly(sMyNick, _T(""), sText, cf, _T(""), !bRedrawControl);
 				}
 				break;
 			}
@@ -312,17 +337,13 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			EndRedrawAppendTextOnly();
 		}
 	} else {
-		AppendTextOnly(sMyNick, "", sText, cf, sAuthor);
+		AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
 	}
 }
 
 void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor , bool bRedrawControlAtEnd) {
 	boOK = false;
 	boAtTheEnd = false;
-
-	CHARFORMAT2 cfSel;
-	memset(&cfSel, 0, sizeof(CHARFORMAT2));
-	cfSel.cbSize = sizeof(cfSel);
 
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	POINT cr;
@@ -388,9 +409,9 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 				lAuthorBegin = sMsgLower.Find( sAuthorNick, 0 );
     		if ( lAuthorBegin > 0 ) {
 					lAuthorEnd = lAuthorBegin + sAuthorNick.GetLength();
-				SetSel( lSelBegin + lAuthorBegin, lSelBegin + lAuthorEnd );
+					SetSel(lSelBegin + lAuthorBegin, lSelBegin + lAuthorEnd);
 					if(isOP)
-						boOK = SetSelectionCharFormat( m_TextStyleOPUsers );
+						boOK = SetSelectionCharFormat( m_TextStyleOPs );
 					else
 				boOK = SetSelectionCharFormat( m_TextStyleBold );
 			}
@@ -398,25 +419,47 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	}
 	}
 	
+	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
+	lSelEnd = GetTextLengthEx(GTL_PRECISE);
+	lSearchFrom = 0;
+	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
+		long linkStart = sMsgLower.Find(Links[i], lSearchFrom);
+		while(linkStart > 0) {
+			long linkEnd;
+			long linkEndSpace = sMsgLower.Find(_T(" "), linkStart);
+			long linkEndLine = sMsgLower.Find(_T("\n"), linkStart);
+			if((linkEndSpace <= linkStart && linkEndLine > linkStart) || (linkEndSpace > linkEndLine && linkEndLine > linkStart)) {
+				linkEnd = linkEndLine;
+			} else if(linkEndSpace > linkStart) {
+				linkEnd = linkEndSpace;
+			} else {
+				linkEnd = _tcslen(sMsgLower);
+			}
+			SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
+			boOK = SetSelectionCharFormat(m_TextStyleURL);
+			linkStart = sMsgLower.Find(Links[i], linkEnd);
+		}
+	}
+
 	// Zvyrazneni vsech vyskytu vlastniho nicku
 	lSelEnd = GetTextLengthEx( GTL_PRECISE );
 			lSearchFrom = 0;
 	sNick.MakeLower();
 
-	while ( true ) {
+	while(true) {
 		lMyNickStart = sMsgLower.Find( sNick, lSearchFrom );
 		if ( lMyNickStart < 0 ) 
 			break;
 
 		lMyNickEnd = lMyNickStart + sNick.GetLength();
-		SetSel( lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd );
-		boOK = SetSelectionCharFormat( m_TextStyleMyNick );
+		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
+		boOK = SetSelectionCharFormat(m_TextStyleMyNick);
 		lSearchFrom = lMyNickEnd;
 		CAtlString autor = sAuthor;
 		autor.MakeLower();
 		if( ( sNick != autor ) && (autor != "")) {	
 	        if ((!SETTING(CHATNAMEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-		        sndPlaySound(SETTING(CHATNAMEFILE).c_str(), SND_FILENAME | SND_ASYNC);	 	
+		        PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
         }
 	}
 
@@ -442,39 +485,6 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 			lSearchFrom = lMyNickEnd;
 		}
 	}
-
-	lSelEnd = GetTextLengthEx( GTL_PRECISE );
-	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
-		long linkStart = sMsgLower.Find(Links[i], lSearchFrom);
-		while(linkStart > 0) {
-			long linkEnd = sMsgLower.Find(" ", linkStart);
-			if(linkEnd <= linkStart)
-				linkEnd = sMsgLower.Find("\n", linkStart);
-			for(lPos = lSelBegin + linkStart; lPos < lSelBegin + linkEnd; lPos++) {
-			SetSel(lPos, lPos + 1);
-			GetSelectionCharFormat( cfSel );
-				cfSel.dwEffects |= CFE_LINK;
-			boOK = SetSelectionCharFormat( cfSel );
-		}
-			linkStart = sMsgLower.Find(Links[i], linkEnd);
-		}
-	}
-
-	// Uprava pozadi pro text s bitem CFE_LINK
-	lSelEnd = GetTextLengthEx( GTL_PRECISE );
-	for ( lPos = lSelBegin; lPos < lSelEnd; lPos++ ) {
-			SetSel( lPos, lPos + 1 );
-			GetSelectionCharFormat( cfSel );
-			if ( cfSel.dwEffects & CFE_LINK ) {
-				cfSel.crBackColor = SETTING(TEXT_URL_BACK_COLOR);
-				cfSel.crTextColor = SETTING(TEXT_URL_FORE_COLOR);
-				if ( SETTING(TEXT_URL_BOLD) )
-					cfSel.dwEffects |= CFE_BOLD;
-				if ( SETTING(TEXT_URL_ITALIC) )
-					cfSel.dwEffects |= CFE_ITALIC;
-				boOK = SetSelectionCharFormat( cfSel );
-			}
-		}
 
 		SetSel( lSelBeginSaved, lSelEndSaved );
 		SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
@@ -549,7 +559,7 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 			return false;
 
 	if(len > g_BufTemplen) {
-		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemp = (TCHAR *) realloc(g_BufTemp, (len+1) * sizeof(TCHAR));
 		g_BufTemplen = len;
 	}
 	iRet = GetTextRange( lSelBegin, lSelEnd, g_BufTemp);
@@ -576,7 +586,7 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 		if ( sN.GetLength() == 0 )
 			return false;
 
-		if ( m_pUsers->findItem( (string) sN) >= 0 ) {
+	if(m_pUsers->findItem((tstring)sN) >= 0) {
 			*sNick = sN;
 			if ( piBegin && piEnd ) {
 			*piBegin = lSelBegin + iLeft;
@@ -591,7 +601,7 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 		// A pak prvni i posledni :-)
 	if ( iCRLF > 1 ) {
 		sN = sText.Mid( iLeft, iCRLF - 1 );
-			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
+		if(m_pUsers->findItem((tstring)sN) >= 0) {
 				*sNick = sN;
         			if ( piBegin && piEnd ) {
        				*piBegin = lSelBegin + iLeft;
@@ -601,7 +611,7 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 			}
 
 		sN = sText.Mid( iLeft + 1, iCRLF - 1 );
-			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
+		if(m_pUsers->findItem((tstring)sN) >= 0) {
         			*sNick = sN;
         			if ( piBegin && piEnd ) {
 					*piBegin = lSelBegin + iLeft + 1;
@@ -611,7 +621,7 @@ bool ChatCtrl::HitNick( POINT p, CAtlString *sNick, int *piBegin, int *piEnd ) {
 			}
 
 		sN = sText.Mid( iLeft + 1, iCRLF - 2 );
-			if ( m_pUsers->findItem( (string) sN) >= 0 ) {
+		if(m_pUsers->findItem((tstring)sN) >= 0) {
 				*sNick = sN;
         			if ( piBegin && piEnd ) {
        				*piBegin = lSelBegin + iLeft + 1;
@@ -633,7 +643,7 @@ bool ChatCtrl::HitIP( POINT p, CAtlString *sIP, int *piBegin, int *piEnd ) {
 		DWORD lPosEnd = FindWordBreak( WB_RIGHTBREAK, iCharPos );
 		len = lPosEnd - lPosBegin;
 	if(len > g_BufTemplen) {
-		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemp = (TCHAR *) realloc(g_BufTemp, (len+1) * sizeof(TCHAR));
 		g_BufTemplen = len;
 	}
 	iRet = GetTextRange( lPosBegin, lPosEnd, g_BufTemp );
@@ -660,7 +670,7 @@ bool ChatCtrl::HitIP( POINT p, CAtlString *sIP, int *piBegin, int *piEnd ) {
 				boOK = false;
 				break;
 			}
-		iEnd2 = atoi( sText.Mid( iFindBegin ) );
+		iEnd2 = atoi(Text::fromT((tstring)sText.Mid(iFindBegin)).c_str());
 		if ( ( iEnd2 < 0 ) || ( iEnd2 > 255 ) ) {
         				boOK = false;
         				break;
@@ -696,16 +706,16 @@ string ChatCtrl::LineFromPos( POINT p ) {
 	iCharPos = CharFromPos( p );
 	line = LineFromChar( iCharPos );
 	len = LineLength( iCharPos ) + 1;
-	if ( len < 3 ) {
-		return _T("");
+	if(len < 3) {
+		return "";
 	}
 	if(len > g_BufTemplen) {
-		g_BufTemp = (char *) realloc(g_BufTemp, len+1);
+		g_BufTemp = (TCHAR *) realloc(g_BufTemp, (len+1) * sizeof(TCHAR));
 		g_BufTemplen = len;
 	}
-	GetLine( line, g_BufTemp, len );
-	string x(g_BufTemp, len-1);
-	return x;
+	GetLine(line, g_BufTemp, len);
+	tstring x(g_BufTemp, len-1);
+	return Text::fromT(x);
 }
 
 void ChatCtrl::GoToEnd() {
@@ -745,4 +755,3 @@ LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	}
 	return 1;
 }
-

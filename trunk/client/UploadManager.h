@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 		typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 		typedef UserMap::iterator UserMapIter;
 
-		const string& getText(int col) const {
+		const tstring& getText(int col) const {
 			return columns[col];
 		}
 		static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
@@ -127,7 +127,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 		int64_t pos;
 		int64_t size;
 		int64_t iTime;
-		string columns[COLUMN_LAST];
+		tstring columns[COLUMN_LAST];
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
@@ -270,7 +270,7 @@ private:
 	virtual void on(Command::GET, UserConnection*, const Command&) throw();
 
 	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
-	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool adc, bool utf8);
+	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool adc);
 };
 
 #endif // !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)

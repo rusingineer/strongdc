@@ -56,17 +56,17 @@ public:
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if(wID == IDOK) {
-			char buf[256];
+			TCHAR buf[256];
 
 			if((ctrlName.GetWindowTextLength() == 0) || (ctrlDir.GetWindowTextLength()== 0))
 			{
-				MessageBox("Name and dir must not be empty");
+				MessageBox(_T("Name and dir must not be empty"));
 				return 0;
 			}
 
 #define GET_TEXT(id, var) \
-	GetDlgItemText(id, buf, 256); \
-	var = buf;
+	GetDlgItemText(id, buf, 255); \
+	var = Text::fromT(buf);
 
 			GET_TEXT(IDC_DOWNLOADDIR_NAME, name);
 			GET_TEXT(IDC_DOWNLOADDIR_DIR, dir);

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
 
-#define FILE_LIST_NAME "File Lists"
+#define FILE_LIST_NAME _T("File Lists")
 
 int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
 COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH };
@@ -81,7 +81,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE|| j == COLUMN_SEGMENTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlQueue.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlQueue.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlQueue.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -95,7 +95,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlDirs.SetBkColor(WinUtil::bgColor);
 	ctrlDirs.SetTextColor(WinUtil::textColor);
 
-	ctrlShowTree.Create(ctrlStatus.m_hWnd, rcDefault, "+/-", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	ctrlShowTree.Create(ctrlStatus.m_hWnd, rcDefault, _T("+/-"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowTree.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlShowTree.SetCheck(showTree);
 	showTreeContainer.SubclassWindow(ctrlShowTree.m_hWnd);
@@ -112,51 +112,51 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	previewMenu.CreatePopupMenu();
 	segmentsMenu.CreatePopupMenu();
 	
-	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
-	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CSTRING(COPY_MAGNET_LINK));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
-	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)readdMenu, CSTRING(READD_SOURCE));
+	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+	singleMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));	
+	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CTSTRING(MOVE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CTSTRING(MAX_SEGMENTS_NUMBER));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CTSTRING(SET_PRIORITY));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)browseMenu, CTSTRING(GET_FILE_LIST));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)pmMenu, CTSTRING(SEND_PRIVATE_MESSAGE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)readdMenu, CTSTRING(READD_SOURCE));
 	singleMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeMenu, CSTRING(REMOVE_SOURCE));
-	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeAllMenu, CSTRING(REMOVE_FROM_ALL));
-	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
-	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeMenu, CTSTRING(REMOVE_SOURCE));
+	singleMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)removeAllMenu, CTSTRING(REMOVE_FROM_ALL));
+	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CTSTRING(REMOVE_OFFLINE));
+	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	
-	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CSTRING(MAX_SEGMENTS_NUMBER));
-	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
+	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)segmentsMenu, CTSTRING(MAX_SEGMENTS_NUMBER));
+	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CTSTRING(SET_PRIORITY));
+	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CTSTRING(MOVE));
 	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
-	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CTSTRING(REMOVE_OFFLINE));
+	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_PAUSED, CSTRING(PAUSED));
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOWEST, CSTRING(LOWEST));
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOW, CSTRING(LOW));
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_NORMAL, CSTRING(NORMAL));
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH, CSTRING(HIGH));
-	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CSTRING(HIGHEST));
-	priorityMenu.AppendMenu(MF_STRING, IDC_AUTOPRIORITY, CSTRING(AUTO));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_PAUSED, CTSTRING(PAUSED));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOWEST, CTSTRING(LOWEST));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_LOW, CTSTRING(LOW));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_NORMAL, CTSTRING(NORMAL));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH, CTSTRING(HIGH));
+	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CTSTRING(HIGHEST));
+	priorityMenu.AppendMenu(MF_STRING, IDC_AUTOPRIORITY, CTSTRING(AUTO));
 
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTONE, ("1 "+STRING(SEGMENT)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTWO, ("2 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTHREE, ("3 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFOUR, ("4 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFIVE, ("5 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSIX, ("6 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSEVEN, ("7 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTEIGHT, ("8 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTNINE, ("9 "+STRING(SEGMENTS)).c_str());
-	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, ("10 "+STRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTONE, (_T("1 ")+TSTRING(SEGMENT)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTWO, (_T("2 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTHREE, (_T("3 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFOUR, (_T("4 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTFIVE, (_T("5 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSIX, (_T("6 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTSEVEN, (_T("7 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTEIGHT, (_T("8 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTNINE, (_T("9 ")+TSTRING(SEGMENTS)).c_str());
+	segmentsMenu.AppendMenu(MF_STRING, IDC_SEGMENTTEN, (_T("10 ")+TSTRING(SEGMENTS)).c_str());
 
- 	dirMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
-	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
+ 	dirMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CTSTRING(SET_PRIORITY));
+	dirMenu.AppendMenu(MF_STRING, IDC_MOVE, CTSTRING(MOVE));
 	dirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	dirMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	dirMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
 	addQueueList(QueueManager::getInstance()->lockQueue());
 	QueueManager::getInstance()->unlockQueue();
@@ -179,90 +179,90 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
-		display->columns[COLUMN_SEGMENTS] = Util::toString((int)qi->getActiveSegments().size())+"/"+Util::toString(qi->getMaxSegments())+ " ";
+		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString((int)qi->getActiveSegments().size()))+_T("/")+Text::toT(Util::toString(qi->getMaxSegments()))+ _T(" ");
 
 		if(colMask & MASK_TARGET) {
 			display->columns[COLUMN_TARGET] = Util::getFileName(getTarget());
 		}
 		int online = 0;
 		if(colMask & MASK_USERS || colMask & MASK_STATUS) {
-		string tmp;
+		tstring tmp;
 	
 			SourceIter j;
 			for(j = getSources().begin(); j != getSources().end(); ++j) {
 				if(tmp.size() > 0)
-					tmp += ", ";
+					tmp += _T(", ");
 		
 				if(j->getUser()->isOnline())
 					online++;
 		
-				tmp += j->getUser()->getFullNick();
+				tmp += Text::toT(j->getUser()->getFullNick());
 			}
-			display->columns[COLUMN_USERS] = tmp.empty() ? STRING(NO_USERS) : tmp;
+			display->columns[COLUMN_USERS] = tmp.empty() ? TSTRING(NO_USERS) : tmp;
 		}
 		if(colMask & MASK_STATUS) {
 			if(getStatus() == QueueItem::STATUS_WAITING) {
 		
-				char buf[64];
+				TCHAR buf[64];
 				if(online > 0) {
 					if(getSources().size() == 1) {
-						display->columns[COLUMN_STATUS] = STRING(WAITING_USER_ONLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(WAITING_USER_ONLINE);
 					} else {
-						sprintf(buf, CSTRING(WAITING_USERS_ONLINE), online, getSources().size());
+						_stprintf(buf, CTSTRING(WAITING_USERS_ONLINE), online, getSources().size());
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				} else {
 					if(getSources().size() == 0) {
-						display->columns[COLUMN_STATUS] = STRING(NO_USERS_TO_DOWNLOAD_FROM);
+						display->columns[COLUMN_STATUS] = TSTRING(NO_USERS_TO_DOWNLOAD_FROM);
 					} else if(getSources().size() == 1) {
-						display->columns[COLUMN_STATUS] = STRING(USER_OFFLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(USER_OFFLINE);
 					} else if(getSources().size() == 2) {
-						display->columns[COLUMN_STATUS] = STRING(BOTH_USERS_OFFLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(BOTH_USERS_OFFLINE);
 					} else if(getSources().size() == 3) {
-						display->columns[COLUMN_STATUS] = STRING(ALL_3_USERS_OFFLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(ALL_3_USERS_OFFLINE);
 					} else if(getSources().size() == 4) {
-						display->columns[COLUMN_STATUS] = STRING(ALL_4_USERS_OFFLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(ALL_4_USERS_OFFLINE);
 					} else {
-						sprintf(buf, CSTRING(ALL_USERS_OFFLINE), getSources().size());
+						_stprintf(buf, CTSTRING(ALL_USERS_OFFLINE), getSources().size());
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				}
 			} else if(getStatus() == QueueItem::STATUS_RUNNING) {
-				char buf[64];
+				TCHAR buf[64];
 				if(online > 0) {
 					if(getSources().size() == 1) {
-						display->columns[COLUMN_STATUS] = STRING(USER_ONLINE);
+						display->columns[COLUMN_STATUS] = TSTRING(USER_ONLINE);
 					} else {
-						sprintf(buf, CSTRING(USERS_ONLINE), online, getSources().size());
+						_stprintf(buf, CTSTRING(USERS_ONLINE), online, getSources().size());
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				} else {
-					display->columns[COLUMN_STATUS] = STRING(RUNNING);
+					display->columns[COLUMN_STATUS] = TSTRING(RUNNING);
 				}
 			} 
 		}
 		if(colMask & MASK_SIZE) {
-			display->columns[COLUMN_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatBytes(getSize());
-			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? STRING(UNKNOWN) : Util::formatExactSize(getSize());
+			display->columns[COLUMN_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Text::toT(Util::formatBytes(getSize()));
+			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Text::toT(Util::formatExactSize(getSize()));
 			}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
-					display->columns[COLUMN_DOWNLOADED] = Util::formatBytes(getDownloadedBytes()) + " (" + Util::toString((double)getDownloadedBytes()*100.0/(double)getSize()) + "%)";
+				display->columns[COLUMN_DOWNLOADED] = Text::toT(Util::formatBytes(getDownloadedBytes()) + " (" + Util::toString((double)getDownloadedBytes()*100.0/(double)getSize()) + "%)");
 				else
 					display->columns[COLUMN_DOWNLOADED].clear();
 		}
 		if(colMask & MASK_PRIORITY) {
 			switch(getPriority()) {
-				case QueueItem::PAUSED: display->columns[COLUMN_PRIORITY] = STRING(PAUSED); break;
-				case QueueItem::LOWEST: display->columns[COLUMN_PRIORITY] = STRING(LOWEST); break;
-				case QueueItem::LOW: display->columns[COLUMN_PRIORITY] = STRING(LOW); break;
-				case QueueItem::NORMAL: display->columns[COLUMN_PRIORITY] = STRING(NORMAL); break;
-				case QueueItem::HIGH: display->columns[COLUMN_PRIORITY] = STRING(HIGH); break;
-				case QueueItem::HIGHEST: display->columns[COLUMN_PRIORITY] = STRING(HIGHEST); break;
+				case QueueItem::PAUSED: display->columns[COLUMN_PRIORITY] = TSTRING(PAUSED); break;
+				case QueueItem::LOWEST: display->columns[COLUMN_PRIORITY] = TSTRING(LOWEST); break;
+				case QueueItem::LOW: display->columns[COLUMN_PRIORITY] = TSTRING(LOW); break;
+				case QueueItem::NORMAL: display->columns[COLUMN_PRIORITY] = TSTRING(NORMAL); break;
+				case QueueItem::HIGH: display->columns[COLUMN_PRIORITY] = TSTRING(HIGH); break;
+				case QueueItem::HIGHEST: display->columns[COLUMN_PRIORITY] = TSTRING(HIGHEST); break;
 				default: dcasserta(0); break;
 			}
 			if(getAutoPriority()) {
-				display->columns[COLUMN_PRIORITY] += " (" + STRING(AUTO) + ")";
+				display->columns[COLUMN_PRIORITY] += _T(" (") + TSTRING(AUTO) + _T(")");
 			}
 		}
 
@@ -271,40 +271,40 @@ void QueueFrame::QueueItemInfo::update() {
 		}
 
 		if(colMask & MASK_ERRORS) {
-			string tmp;
+			tstring tmp;
 			SourceIter j;
 			for(j = getBadSources().begin(); j != getBadSources().end(); ++j) {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
-					tmp += ", ";
-					tmp += j->getUser()->getNick();
-					tmp += " (";
+					tmp += _T(", ");
+					tmp += Text::toT(j->getUser()->getNick());
+					tmp += _T(" (");
 					if(j->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
-						tmp += STRING(FILE_NOT_AVAILABLE);
+						tmp += TSTRING(FILE_NOT_AVAILABLE);
 					} else if(j->isSet(QueueItem::Source::FLAG_PASSIVE)) {
-						tmp += STRING(PASSIVE_USER);
+						tmp += TSTRING(PASSIVE_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY)) {
-						tmp += STRING(ROLLBACK_INCONSISTENCY);
+						tmp += TSTRING(ROLLBACK_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_CRC_FAILED)) {
-						tmp += STRING(SFV_INCONSISTENCY);
+						tmp += TSTRING(SFV_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY)) {
-						tmp += STRING(TTH_INCONSISTENCY);
+						tmp += TSTRING(TTH_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
-						tmp += STRING(INVALID_TREE);
+						tmp += TSTRING(INVALID_TREE);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
-						tmp += STRING(SLOW_USER);
+						tmp += TSTRING(SLOW_USER);
 					}
-					tmp += ')';
+					tmp += _T(')');
 				}
 			}
-			display->columns[COLUMN_ERRORS] = tmp.empty() ? STRING(NO_ERRORS) : tmp;
+			display->columns[COLUMN_ERRORS] = tmp.empty() ? TSTRING(NO_ERRORS) : tmp;
 		}
 	
 		if(colMask & MASK_ADDED) {
-			display->columns[COLUMN_ADDED] = Util::formatTime("%Y-%m-%d %H:%M", getAdded());
+			display->columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", getAdded()));
 		}
 		if(colMask & MASK_TTH && getTTH() != NULL) {
-			display->columns[COLUMN_TTH] = getTTH()->toBase32();
+			display->columns[COLUMN_TTH] = Text::toT(getTTH()->toBase32());
 		}
 	}
 }
@@ -327,7 +327,7 @@ void QueueFrame::addQueueItem(QueueItemInfo* ii, bool noSort) {
 	queueItems++;
 	dirty = true;
 	
-	const string& dir = ii->getPath();
+	const tstring& dir = ii->getPath();
 	
 	bool updateDir = (directories.find(dir) == directories.end());
 	directories.insert(make_pair(dir, ii));
@@ -360,7 +360,7 @@ void QueueFrame::addQueueList(const QueueItem::StringMap& li) {
 	ctrlDirs.Invalidate();
 }
 
-HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false */, HTREEITEM startAt /* = NULL */) {
+HTREEITEM QueueFrame::addDirectory(const tstring& dir, bool isFileList /* = false */, HTREEITEM startAt /* = NULL */) {
 	TVINSERTSTRUCT tvi;
 	tvi.hInsertAfter = TVI_SORT;
 	tvi.item.mask = TVIF_IMAGE | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_TEXT;
@@ -372,7 +372,7 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 		dcassert(fileLists == NULL);
 		tvi.hParent = NULL;
 		tvi.item.pszText = FILE_LIST_NAME;
-		tvi.item.lParam = (LPARAM) new string(dir);
+		tvi.item.lParam = (LPARAM) new tstring(dir);
 		fileLists = ctrlDirs.InsertItem(&tvi);
 		return fileLists;
 	} 
@@ -393,7 +393,7 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 
 		while(next != NULL) {
 			if(next != fileLists) {
-				string* stmp = (string*)ctrlDirs.GetItemData(next);
+				tstring* stmp = (tstring*)ctrlDirs.GetItemData(next);
 					if(Util::strnicmp(*stmp, dir, 3) == 0)
 						break;
 				}
@@ -403,29 +403,29 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 	if(next == NULL) {
 		// First addition, set commonStart to the dir minus the last part...
 		i = dir.rfind('\\', dir.length()-2);
-		if(i != string::npos) {
-				string name = dir.substr(0, i);
+			if(i != tstring::npos) {
+				tstring name = dir.substr(0, i);
 			tvi.hParent = NULL;
-			tvi.item.pszText = const_cast<char*>(name.c_str());
-				tvi.item.lParam = (LPARAM)new string(dir.substr(0, i+1));
+				tvi.item.pszText = const_cast<TCHAR*>(name.c_str());
+				tvi.item.lParam = (LPARAM)new tstring(dir.substr(0, i+1));
 				next = ctrlDirs.InsertItem(&tvi);
 		} else {
 				dcassert(dir.length() == 3);
 				tvi.hParent = NULL;
-				tvi.item.pszText = const_cast<char*>(dir.c_str());
-				tvi.item.lParam = (LPARAM)new string(dir);
+				tvi.item.pszText = const_cast<TCHAR*>(dir.c_str());
+				tvi.item.lParam = (LPARAM)new tstring(dir);
 				next = ctrlDirs.InsertItem(&tvi);
 			}
 		}
 		
 		// Ok, next now points to x:\... find how much is common
 
-		string* rootStr = (string*)ctrlDirs.GetItemData(next);
+		tstring* rootStr = (tstring*)ctrlDirs.GetItemData(next);
 		
 			i = 0;
 			
 			for(;;) {
-				j = safestring::SafeFind(dir,'\\', i);
+			j = dir.find('\\', i);
 				if(j == string::npos)
 					break;
 				if(Util::strnicmp(dir.c_str() + i, rootStr->c_str() + i, j - i + 1) != 0)
@@ -437,10 +437,10 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 			HTREEITEM oldRoot = next;
 
 			// Create a new root
-			string name = rootStr->substr(0, i-1);
-					tvi.hParent = NULL;
-					tvi.item.pszText = const_cast<char*>(name.c_str());
-			tvi.item.lParam = (LPARAM)new string(rootStr->substr(0, i));
+			tstring name = rootStr->substr(0, i-1);
+			tvi.hParent = NULL;
+			tvi.item.pszText = const_cast<TCHAR*>(name.c_str());
+			tvi.item.lParam = (LPARAM)new tstring(rootStr->substr(0, i));
 			HTREEITEM newRoot = ctrlDirs.InsertItem(&tvi);
 
 			parent = addDirectory(*rootStr, false, newRoot);
@@ -468,7 +468,7 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 	while( i < dir.length() ) {
 		while(next != NULL) {
 			if(next != fileLists) {
-			const string& n = getDir(next);
+			const tstring& n = getDir(next);
 			if(Util::strnicmp(n.c_str()+i, dir.c_str()+i, n.length()-i) == 0) {
 				// Found a part, we assume it's the best one we can find...
 				i = n.length();
@@ -483,12 +483,12 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 
 		if(next == NULL) {
 			// We didn't find it, add...
-			j = safestring::SafeFind(dir,'\\', i);
+			j = dir.find('\\', i);
 			dcassert(j != string::npos);
-			string name = dir.substr(i, j-i);
+			tstring name = dir.substr(i, j-i);
 			tvi.hParent = parent;
-			tvi.item.pszText = const_cast<char*>(name.c_str());
-			tvi.item.lParam = (LPARAM) new string(dir.substr(0, j+1));
+			tvi.item.pszText = const_cast<TCHAR*>(name.c_str());
+			tvi.item.lParam = (LPARAM) new tstring(dir.substr(0, j+1));
 			
 			parent = ctrlDirs.InsertItem(&tvi);
 			
@@ -500,7 +500,7 @@ HTREEITEM QueueFrame::addDirectory(const string& dir, bool isFileList /* = false
 	return parent;
 }
 
-void QueueFrame::removeDirectory(const string& dir, bool isFileList /* = false */) {
+void QueueFrame::removeDirectory(const tstring& dir, bool isFileList /* = false */) {
 
 	// First, find the last name available
 	string::size_type i = 0;
@@ -518,7 +518,7 @@ void QueueFrame::removeDirectory(const string& dir, bool isFileList /* = false *
 		while(i < dir.length()) {
 			while(next != NULL) {
 				if(next != fileLists) {
-				const string& n = getDir(next);
+				const tstring& n = getDir(next);
 				if(Util::strnicmp(n.c_str()+i, dir.c_str()+i, n.length()-i) == 0) {
 					// Match!
 					parent = next;
@@ -673,7 +673,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			if(directories.count(ii->getPath()) == 0) {
 				removeDirectory(ii->getPath(), ii->isSet(QueueItem::FLAG_USER_LIST));
 				if(isCurDir(ii->getPath()))
-					curDir = Util::emptyString;
+					curDir = Util::emptyStringT;
 			}
 			
 			delete ii;
@@ -703,26 +703,26 @@ void QueueFrame::moveSelected() {
 	if(n == 1) {
 		// Single file, get the full filename and move...
 		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-		string name = ii->getTarget();
-		string ext = Util::getFileExt(name);
-		string ext2;
+		tstring name = ii->getTarget();
+		tstring ext = Util::getFileExt(name);
+		tstring ext2;
 		if (!ext.empty())
 		{
 			ext = ext.substr(1); // remove leading dot so default extension works when browsing for file
-			ext2 = "*." + ext;
-			ext2 += (char)0;
-			ext2 += "*." + ext;
+			ext2 = _T("*.") + ext;
+			ext2 += (TCHAR)0;
+			ext2 += _T("*.") + ext;
 		}
-		ext2 += "*.*";
-		ext2 += (char)0;
-		ext2 += "*.*";
-		ext2 += (char)0;
+		ext2 += _T("*.*");
+		ext2 += (TCHAR)0;
+		ext2 += _T("*.*");
+		ext2 += (TCHAR)0;
 
 		if(WinUtil::browseFile(name, m_hWnd, true, ii->getPath(), ext2.c_str(), ext.empty() ? NULL : ext.c_str())) {
-			QueueManager::getInstance()->move(ii->getTarget(), name);
+			QueueManager::getInstance()->move(Text::fromT(ii->getTarget()), Text::fromT(name));
 		}
 	} else if(n > 1) {
-		string name;
+		tstring name;
 		if(showTree) {
 			name = curDir;
 		}
@@ -731,7 +731,7 @@ void QueueFrame::moveSelected() {
 			int i = -1;
 			while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 				QueueItemInfo* ii = ctrlQueue.getItemData(i);
-				QueueManager::getInstance()->move(ii->getTarget(), name + ii->getTargetFileName());
+				QueueManager::getInstance()->move(Text::fromT(ii->getTarget()), Text::fromT(name + ii->getTargetFileName()));
 			}			
 		}
 	}
@@ -742,55 +742,27 @@ void QueueFrame::moveSelectedDir() {
 		return;
 
 	dcassert(!curDir.empty());
-	string name = curDir;
+	tstring name = curDir;
 	
 	if(WinUtil::browseDirectory(name, m_hWnd)) {
 		moveDir(ctrlDirs.GetSelectedItem(), name);
 	}
 }
 
-void QueueFrame::moveDir(HTREEITEM ht, const string& target) {
+void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 	HTREEITEM next = ctrlDirs.GetChildItem(ht);
 	while(next != NULL) {
 		moveDir(next, target + Util::getLastDir(getDir(next)));
 		next = ctrlDirs.GetNextSiblingItem(next);
 	}
-	string* s = (string*)ctrlDirs.GetItemData(ht);
+	tstring* s = (tstring*)ctrlDirs.GetItemData(ht);
 	
 	DirectoryPair p = directories.equal_range(*s);
 	
 	for(DirectoryIter i = p.first; i != p.second; ++i) {
 		QueueItemInfo* qi = i->second;
-		QueueManager::getInstance()->move(qi->getTarget(), target + qi->getTargetFileName());
+		QueueManager::getInstance()->move(Text::fromT(qi->getTarget()), Text::fromT(target + qi->getTargetFileName()));
 	}			
-}
-
-bool QueueFrame::isItemCountAtLeast(HTREEITEM ht, unsigned int minItemCount) {
-	if (ht == NULL)
-		return false;
-
-	return isItemCountAtLeastRecursive(ht, minItemCount);
-}
-
-bool QueueFrame::isItemCountAtLeastRecursive(HTREEITEM ht, unsigned int& minItemCount) {
-	string* s = (string*)ctrlDirs.GetItemData(ht);
-	DirectoryPair p = directories.equal_range(*s);
-
-	for(DirectoryIter i = p.first; i != p.second && minItemCount; ++i, --minItemCount)
-		;
-
-	if (!minItemCount)
-		return true;
-
-	HTREEITEM next = ctrlDirs.GetChildItem(ht);
-	while(next != NULL) {
-		if (isItemCountAtLeastRecursive(next, minItemCount))
-			return true;
-
-		next = ctrlDirs.GetNextSiblingItem(next);
-	}
-
-	return false;
 }
 
 LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -827,7 +799,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 
 			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
-			string ext = Util::getFileExt(ii->getTargetFileName());
+				string ext = Util::getFileExt(Text::fromT(ii->getTargetFileName()));
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 				if(previewMenu.GetMenuItemCount() > 0) {
@@ -835,16 +807,16 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 				} else {
 					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
 				}
-			previewMenu.InsertSeparatorFirst(CSTRING(PREVIEW_MENU));
+			previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 			}
 
 			menuItems = 0;
 			QueueItemInfo::SourceIter i;
 			for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
-
+				tstring nick = Text::toT(i->getUser()->getNick());
 				mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 				mi.fType = MFT_STRING;
-				mi.dwTypeData = (LPSTR)i->getUser()->getNick().c_str();
+				mi.dwTypeData = (LPTSTR)nick.c_str();
 				mi.dwItemData = (ULONG_PTR)&(*i);
 				mi.wID = IDC_BROWSELIST + menuItems;
 				browseMenu.InsertMenuItem(menuItems, TRUE, &mi);
@@ -863,13 +835,14 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			}
 			if(ii->getBadSources().size()) { //at least one bad source exists
 				readdItems = 2;	//first two items are fixed
-				readdMenu.AppendMenu(MF_STRING, IDC_READD_ALL_SOURCES, CSTRING(READD_ALL_SOURCES));
+				readdMenu.AppendMenu(MF_STRING, IDC_READD_ALL_SOURCES, CTSTRING(READD_ALL_SOURCES));
 				readdMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
+					tstring nick = Text::toT(i->getUser()->getNick());
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
-					mi.dwTypeData = (LPSTR)i->getUser()->getNick().c_str();
+					mi.dwTypeData = (LPTSTR)nick.c_str();
 					mi.dwItemData = (ULONG_PTR)&(*i);
 					mi.wID = IDC_READD + readdItems;
 					readdMenu.InsertMenuItem(readdItems, TRUE, &mi);
@@ -965,7 +938,7 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		
 		if(ii->getTTH() != NULL) {
-			SearchFrame::openWindow(ii->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			SearchFrame::openWindow(Text::toT(ii->getTTH()->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
 		}
 	} 
 	
@@ -1015,9 +988,9 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
 		try {
-			QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
+			QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
 		} catch(const Exception& e) {
-			ctrlStatus.SetText(0, e.getError().c_str());
+			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
 	}
 	return 0;
@@ -1034,7 +1007,7 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		removeMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-		QueueManager::getInstance()->removeSource(ii->getTarget(), s->getUser(), QueueItem::Source::FLAG_REMOVED);
+		QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), s->getUser(), QueueItem::Source::FLAG_REMOVED);
 	}
 	return 0;
 }
@@ -1061,9 +1034,9 @@ LRESULT QueueFrame::onReaddAll(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 			QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*) j;
 		
 			try {
-				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
+				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
 			} catch(const Exception& e) {
-				ctrlStatus.SetText(0, e.getError().c_str());
+				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
 		}
 	}
@@ -1090,7 +1063,7 @@ LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 	} else {
 		int i = -1;
 		while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(),!ctrlQueue.getItemData(i)->getAutoPriority());
+			QueueManager::getInstance()->setAutoPriority(Text::fromT(ctrlQueue.getItemData(i)->getTarget()),!ctrlQueue.getItemData(i)->getAutoPriority());
 		}
 	}
 	return 0;
@@ -1126,8 +1099,8 @@ LRESULT QueueFrame::onPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	} else {
 		int i = -1;
 		while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(), false);
-			QueueManager::getInstance()->setPriority(ctrlQueue.getItemData(i)->getTarget(), p);
+			QueueManager::getInstance()->setAutoPriority(Text::fromT(ctrlQueue.getItemData(i)->getTarget()), false);
+			QueueManager::getInstance()->setPriority(Text::fromT(ctrlQueue.getItemData(i)->getTarget()), p);
 		}
 	}
 
@@ -1142,10 +1115,10 @@ void QueueFrame::removeDir(HTREEITEM ht) {
 		removeDir(child);
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
-	const string& name = getDir(ht);
+	const tstring& name = getDir(ht);
 	DirectoryPair dp = directories.equal_range(name);
 	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
-		QueueManager::getInstance()->remove(i->second->getTarget());
+		QueueManager::getInstance()->remove(Text::fromT(i->second->getTarget()));
 	}
 }
 
@@ -1172,7 +1145,7 @@ void QueueFrame::changePriority(bool inc){
 			case QueueItem::PAUSED:  p = QueueItem::LOWEST; break;
 		}
 
-		QueueManager::getInstance()->setPriority(ctrlQueue.getItemData(i)->getTarget(), p);
+		QueueManager::getInstance()->setPriority(Text::fromT(ctrlQueue.getItemData(i)->getTarget()), p);
 	}
 }
 
@@ -1184,10 +1157,10 @@ void QueueFrame::setPriority(HTREEITEM ht, const QueueItem::Priority& p) {
 		setPriority(child, p);
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
-	string name = getDir(ht);
+	const tstring& name = getDir(ht);
 	DirectoryPair dp = directories.equal_range(name);
 	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
-		QueueManager::getInstance()->setPriority(i->second->getTarget(), p);
+		QueueManager::getInstance()->setPriority(Text::fromT(i->second->getTarget()), p);
 	}
 }
 
@@ -1199,10 +1172,10 @@ void QueueFrame::setAutoPriority(HTREEITEM ht, const bool& ap) {
 		setAutoPriority(child, ap);
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
-	string name = getDir(ht);
+	const tstring& name = getDir(ht);
 	DirectoryPair dp = directories.equal_range(name);
 	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
-		QueueManager::getInstance()->setAutoPriority(i->second->getTarget(), ap);
+		QueueManager::getInstance()->setAutoPriority(Text::fromT(i->second->getTarget()), ap);
 	}
 }
 
@@ -1229,8 +1202,8 @@ void QueueFrame::updateStatus() {
 
 		}
 
-		string tmp1 = STRING(ITEMS) + ": " + Util::toString(cnt);
-		string tmp2 = STRING(SIZE) + ": " + Util::formatBytes(total);
+		tstring tmp1 = Text::toT(STRING(ITEMS) + ": " + Util::toString(cnt));
+		tstring tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(total));
 		bool u = false;
 
 		int w = WinUtil::getTextWidth(tmp1, ctrlStatus.m_hWnd);
@@ -1247,8 +1220,8 @@ void QueueFrame::updateStatus() {
 		ctrlStatus.SetText(3, tmp2.c_str());
 
 		if(dirty) {
-			tmp1 = STRING(FILES) + ": " + Util::toString(queueItems);
-			tmp2 = STRING(SIZE) + ": " + Util::formatBytes(queueSize);
+			tmp1 = Text::toT(STRING(FILES) + ": " + Util::toString(queueItems));
+			tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(queueSize));
 
 			w = WinUtil::getTextWidth(tmp2, ctrlStatus.m_hWnd);
 			if(statusSizes[3] < w) {
@@ -1373,7 +1346,7 @@ void QueueFrame::updateQueue() {
 }
 
 // Put it here to avoid a copy for each recursion...
-static char tmpBuf[1024];
+static TCHAR tmpBuf[1024];
 void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 	TVINSERTSTRUCT tvis;
 	memset(&tvis, 0, sizeof(tvis));
@@ -1397,6 +1370,7 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
 	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
 			bHandled = FALSE;
@@ -1411,8 +1385,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	case CDDS_ITEMPREPAINT:
 		{
 			QueueItemInfo *ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			
-			if(ii->getText(COLUMN_ERRORS) != (STRING(NO_ERRORS))){
+			if(ii->getText(COLUMN_ERRORS) != (TSTRING(NO_ERRORS))){
 				cd->clrText = SETTING(ERROR_COLOR);
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 			}				
@@ -1424,7 +1397,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		if(cd->iSubItem == COLUMN_DOWNLOADED) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
-			char buf[256];
+			TCHAR buf[256];
 			COLORREF barBase = SETTING(DOWNLOAD_BAR_COLOR);
 			COLORREF bgBase = WinUtil::bgColor;
 			int mod = (HLS_L(RGB2HLS(bgBase)) >= 128) ? -30 : 30;
@@ -1535,13 +1508,13 @@ afterexception:
 			LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
 			int textcolor = SETTING(PROGRESS_TEXT_COLOR_DOWN);
 			SetTextColor(cd->nmcd.hdc, textcolor);
-			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 			rc2.left = rc2.right;
 			rc2.right = right;
 
 			SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
-			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
+			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 			return CDRF_SKIPDEFAULT;
 		}
@@ -1559,14 +1532,14 @@ afterexception:
 			} else {
 				barva = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-				if(qi->getText(COLUMN_ERRORS) != (STRING(NO_ERRORS))) {
+				if(qi->getText(COLUMN_ERRORS) != (TSTRING(NO_ERRORS))) {
 					SetTextColor(cd->nmcd.hdc, SETTING(ERROR_COLOR));
 				} else {
 					SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
 				}
 			}
 						
-			char buf[256];
+			TCHAR buf[256];
 			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, buf, 255);
 			buf[255] = 0;
 			
@@ -1585,7 +1558,7 @@ afterexception:
 				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 			}
 			
-			::DrawText(cd->nmcd.hdc,buf, strlen(buf), rc, DT_RIGHT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+			::DrawText(cd->nmcd.hdc,buf, _tcslen(buf), rc, DT_RIGHT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 			return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
 		}
@@ -1596,7 +1569,7 @@ afterexception:
 
 LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	if(ctrlQueue.GetSelectedCount() == 1) {
-	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget());
+		WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, Text::fromT(ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget()));
 	}
 	return 0;
 }
@@ -1608,7 +1581,7 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 
 		for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end();) {
 			if(!i->getUser()->isOnline()) {
-				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
+				QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), i->getUser(), QueueItem::Source::FLAG_REMOVED);
 			} else {
 				i++;
 			}

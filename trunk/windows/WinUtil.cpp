@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include "../client/QueueManager.h"
 #include "../client/UploadManager.h"
 #include "../client/HashManager.h"
+#include "../client/LogManager.h"
 #include "HubFrame.h"
 #include "MagnetDlg.h"
 #include "winamp.h"
@@ -61,14 +62,14 @@ CMenu WinUtil::grantMenu;
 CImageList WinUtil::fileImages;
 CImageList WinUtil::userImages;
 int WinUtil::dirIconIndex = 0;
-StringList WinUtil::lastDirs;
+TStringList WinUtil::lastDirs;
 HWND WinUtil::mainWnd = NULL;
 HWND WinUtil::mdiClient = NULL;
 FlatTabCtrl* WinUtil::tabCtrl = NULL;
 HHOOK WinUtil::hook = NULL;
-string WinUtil::tth;
+tstring WinUtil::tth;
 StringPairList WinUtil::initialDirs;
-string WinUtil::exceptioninfo;
+tstring WinUtil::exceptioninfo;
 bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
 bool WinUtil::trayIcon = false;
@@ -247,7 +248,7 @@ static LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 
 void createImageList1(CImageList &imglst, string file) {
 	HBITMAP hBitmap = (HBITMAP)::LoadImage(
-		NULL, file.c_str(), IMAGE_BITMAP,
+		NULL, Text::toT(file).c_str(), IMAGE_BITMAP,
 		0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 	
 	if( !hBitmap )
@@ -267,87 +268,87 @@ void WinUtil::init(HWND hWnd) {
 	CMenuHandle file;
 	file.CreatePopupMenu();
 
-	file.AppendMenu(MF_STRING, IDC_OPEN_FILE_LIST, CSTRING(MENU_OPEN_FILE_LIST));
-	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CSTRING(MENU_REFRESH_FILE_LIST));
-	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CSTRING(MENU_OPEN_DOWNLOADS_DIR));
+	file.AppendMenu(MF_STRING, IDC_OPEN_FILE_LIST, CTSTRING(MENU_OPEN_FILE_LIST));
+	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
+	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	file.AppendMenu(MF_STRING, ID_FILE_QUICK_CONNECT, CSTRING(MENU_QUICK_CONNECT));
-	file.AppendMenu(MF_STRING, IDC_FOLLOW, CSTRING(MENU_FOLLOW_REDIRECT));
-	file.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CSTRING(MENU_RECONNECT));
+	file.AppendMenu(MF_STRING, ID_FILE_QUICK_CONNECT, CTSTRING(MENU_QUICK_CONNECT));
+	file.AppendMenu(MF_STRING, IDC_FOLLOW, CTSTRING(MENU_FOLLOW_REDIRECT));
+	file.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CTSTRING(MENU_RECONNECT));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	file.AppendMenu(MF_STRING, ID_FILE_SETTINGS, CSTRING(MENU_SETTINGS));
-	file.AppendMenu(MF_STRING, ID_GET_TTH, CSTRING(MENU_TTH));
-	file.AppendMenu(MF_STRING, IDC_UPDATE, CSTRING(UPDATE_CHECK));
+	file.AppendMenu(MF_STRING, ID_FILE_SETTINGS, CTSTRING(MENU_SETTINGS));
+	file.AppendMenu(MF_STRING, ID_GET_TTH, CTSTRING(MENU_TTH));
+	file.AppendMenu(MF_STRING, IDC_UPDATE, CTSTRING(UPDATE_CHECK));
 	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	file.AppendMenu(MF_STRING, ID_APP_EXIT, CSTRING(MENU_EXIT));
+	file.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)file, CSTRING(MENU_FILE));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)file, CTSTRING(MENU_FILE));
 
 	CMenuHandle view;
 	view.CreatePopupMenu();
 
-	view.AppendMenu(MF_STRING, ID_FILE_CONNECT, CSTRING(MENU_PUBLIC_HUBS));
+	view.AppendMenu(MF_STRING, ID_FILE_CONNECT, CTSTRING(MENU_PUBLIC_HUBS));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	view.AppendMenu(MF_STRING, IDC_RECENTS, CSTRING(MENU_FILE_RECENT_HUBS));
+	view.AppendMenu(MF_STRING, IDC_RECENTS, CTSTRING(MENU_FILE_RECENT_HUBS));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	view.AppendMenu(MF_STRING, IDC_FAVORITES, CSTRING(MENU_FAVORITE_HUBS));
-	view.AppendMenu(MF_STRING, IDC_FAVUSERS, CSTRING(MENU_FAVORITE_USERS));
+	view.AppendMenu(MF_STRING, IDC_FAVORITES, CTSTRING(MENU_FAVORITE_HUBS));
+	view.AppendMenu(MF_STRING, IDC_FAVUSERS, CTSTRING(MENU_FAVORITE_USERS));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	view.AppendMenu(MF_STRING, ID_FILE_SEARCH, CSTRING(MENU_SEARCH));
-	view.AppendMenu(MF_STRING, IDC_FILE_ADL_SEARCH, CSTRING(MENU_ADL_SEARCH));
-	view.AppendMenu(MF_STRING, IDC_SEARCH_SPY, CSTRING(MENU_SEARCH_SPY));
+	view.AppendMenu(MF_STRING, ID_FILE_SEARCH, CTSTRING(MENU_SEARCH));
+	view.AppendMenu(MF_STRING, IDC_FILE_ADL_SEARCH, CTSTRING(MENU_ADL_SEARCH));
+	view.AppendMenu(MF_STRING, IDC_SEARCH_SPY, CTSTRING(MENU_SEARCH_SPY));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	view.AppendMenu(MF_STRING, IDC_CDMDEBUG_WINDOW, CSTRING(MENU_CDMDEBUG_MESSAGES));
-	view.AppendMenu(MF_STRING, IDC_NOTEPAD, CSTRING(MENU_NOTEPAD));
+	view.AppendMenu(MF_STRING, IDC_CDMDEBUG_WINDOW, CTSTRING(MENU_CDMDEBUG_MESSAGES));
+	view.AppendMenu(MF_STRING, IDC_NOTEPAD, CTSTRING(MENU_NOTEPAD));
 	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CSTRING(MENU_TOOLBAR));
-	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CSTRING(MENU_STATUS_BAR));
-	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFER_VIEW, CSTRING(MENU_TRANSFER_VIEW));
+	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CTSTRING(MENU_TOOLBAR));
+	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CTSTRING(MENU_STATUS_BAR));
+	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFER_VIEW, CTSTRING(MENU_TRANSFER_VIEW));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)view, CSTRING(MENU_VIEW));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)view, CTSTRING(MENU_VIEW));
 
 	CMenuHandle transfers;
 	transfers.CreatePopupMenu();
 
-	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CSTRING(MENU_DOWNLOAD_QUEUE));
-	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CSTRING(FINISHED_DOWNLOADS));
-	transfers.AppendMenu(MF_STRING, IDC_FINISHEDMP3, CSTRING(FINISHED_MP3_DOWNLOADS));
+	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CTSTRING(MENU_DOWNLOAD_QUEUE));
+	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CTSTRING(FINISHED_DOWNLOADS));
+	transfers.AppendMenu(MF_STRING, IDC_FINISHEDMP3, CTSTRING(FINISHED_MP3_DOWNLOADS));
 	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CSTRING(UPLOAD_QUEUE));
-	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CSTRING(FINISHED_UPLOADS));
+	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(UPLOAD_QUEUE));
+	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CTSTRING(FINISHED_UPLOADS));
 	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CSTRING(MENU_NETWORK_STATISTICS));
+	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CTSTRING(MENU_NETWORK_STATISTICS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)transfers, CSTRING(MENU_TRANSFERS));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)transfers, CTSTRING(MENU_TRANSFERS));
 
 	CMenuHandle window;
 	window.CreatePopupMenu();
 
-	window.AppendMenu(MF_STRING, ID_WINDOW_CASCADE, CSTRING(MENU_CASCADE));
-	window.AppendMenu(MF_STRING, ID_WINDOW_TILE_HORZ, CSTRING(MENU_HORIZONTAL_TILE));
-	window.AppendMenu(MF_STRING, ID_WINDOW_TILE_VERT, CSTRING(MENU_VERTICAL_TILE));
-	window.AppendMenu(MF_STRING, ID_WINDOW_ARRANGE, CSTRING(MENU_ARRANGE));
-	window.AppendMenu(MF_STRING, ID_WINDOW_MINIMIZE_ALL, CSTRING(MENU_MINIMIZE_ALL));
+	window.AppendMenu(MF_STRING, ID_WINDOW_CASCADE, CTSTRING(MENU_CASCADE));
+	window.AppendMenu(MF_STRING, ID_WINDOW_TILE_HORZ, CTSTRING(MENU_HORIZONTAL_TILE));
+	window.AppendMenu(MF_STRING, ID_WINDOW_TILE_VERT, CTSTRING(MENU_VERTICAL_TILE));
+	window.AppendMenu(MF_STRING, ID_WINDOW_ARRANGE, CTSTRING(MENU_ARRANGE));
+	window.AppendMenu(MF_STRING, ID_WINDOW_MINIMIZE_ALL, CTSTRING(MENU_MINIMIZE_ALL));
 	window.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	window.AppendMenu(MF_STRING, IDC_CLOSE_DISCONNECTED, CSTRING(MENU_CLOSE_DISCONNECTED));
+	window.AppendMenu(MF_STRING, IDC_CLOSE_DISCONNECTED, CTSTRING(MENU_CLOSE_DISCONNECTED));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)window, CSTRING(MENU_WINDOW));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)window, CTSTRING(MENU_WINDOW));
 
 	CMenuHandle help;
 	help.CreatePopupMenu();
 
-	help.AppendMenu(MF_STRING, ID_APP_ABOUT, CSTRING(MENU_ABOUT));
+	help.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
 	help.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CSTRING(MENU_HOMEPAGE));
-	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CSTRING(MENU_DISCUSS));
+	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CTSTRING(MENU_HOMEPAGE));
+	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CTSTRING(MENU_DISCUSS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)help, CSTRING(MENU_HELP));
+	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)help, CTSTRING(MENU_HELP));
 
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
 		memset(&fi, 0, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
-		::SHGetFileInfo(".", FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+		::SHGetFileInfo(_T(""), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		::DestroyIcon(fi.hIcon);
 		dirIconIndex = fileImageCount++;	
@@ -362,8 +363,8 @@ void WinUtil::init(HWND hWnd) {
 		createImageList1(userImages, SETTING(USERLIST_IMAGE));
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, encodeFont(lf));
-	decodeFont(SETTING(TEXT_FONT), lf);
+	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, Text::fromT(encodeFont(lf)));
+	decodeFont(Text::toT(SETTING(TEXT_FONT)), lf);
 	::GetObject((HFONT)GetStockObject(ANSI_FIXED_FONT), sizeof(lf2), &lf2);
 	
 	lf2.lfHeight = lf.lfHeight;
@@ -396,12 +397,12 @@ void WinUtil::init(HWND hWnd) {
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
 	grantMenu.CreatePopupMenu();
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CSTRING(GRANT_EXTRA_SLOT));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CSTRING(GRANT_EXTRA_SLOT_HOUR));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CSTRING(GRANT_EXTRA_SLOT_DAY));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CSTRING(GRANT_EXTRA_SLOT_WEEK));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
+	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CSTRING(REMOVE_EXTRA_SLOT));
+	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
 }
 
 void WinUtil::uninit() {
@@ -421,23 +422,23 @@ void WinUtil::uninit() {
 	
 }
 
-void WinUtil::decodeFont(const string& setting, LOGFONT &dest) {
-	StringTokenizer st(setting, ',');
-	StringList &sl = st.getTokens();
+void WinUtil::decodeFont(const tstring& setting, LOGFONT &dest) {
+	StringTokenizer<tstring> st(setting, _T(','));
+	TStringList &sl = st.getTokens();
 	
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(dest), &dest);
-	string face;
+	tstring face;
 	if(sl.size() == 4)
 	{
 		face = sl[0];
-		dest.lfHeight = Util::toInt(sl[1]);
-		dest.lfWeight = Util::toInt(sl[2]);
-		dest.lfItalic = (BYTE)Util::toInt(sl[3]);
+		dest.lfHeight = Util::toInt(Text::fromT(sl[1]));
+		dest.lfWeight = Util::toInt(Text::fromT(sl[2]));
+		dest.lfItalic = (BYTE)Util::toInt(Text::fromT(sl[3]));
 	}
 	
 	if(!face.empty()) {
 		::ZeroMemory(dest.lfFaceName, LF_FACESIZE);
-		strcpy(dest.lfFaceName, face.c_str());
+		_tcscpy(dest.lfFaceName, face.c_str());
 	}
 }
 
@@ -450,8 +451,8 @@ int CALLBACK WinUtil::browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LP
 	return 0;
 }
 
-bool WinUtil::browseDirectory(string& target, HWND owner /* = NULL */) {
-	char buf[MAX_PATH];
+bool WinUtil::browseDirectory(tstring& target, HWND owner /* = NULL */) {
+	TCHAR buf[MAX_PATH];
 	BROWSEINFO bi;
 	LPMALLOC ma;
 	
@@ -459,7 +460,7 @@ bool WinUtil::browseDirectory(string& target, HWND owner /* = NULL */) {
 	
 	bi.hwndOwner = owner;
 	bi.pszDisplayName = buf;
-	bi.lpszTitle = CSTRING(CHOOSE_FOLDER);
+	bi.lpszTitle = CTSTRING(CHOOSE_FOLDER);
 	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 	bi.lParam = (LPARAM)target.c_str();
 	bi.lpfn = &browseCallbackProc;
@@ -468,8 +469,8 @@ bool WinUtil::browseDirectory(string& target, HWND owner /* = NULL */) {
 		SHGetPathFromIDList(pidl, buf);
 		target = buf;
 		
-		if(target.size() > 0 && target[target.size()-1] != '\\')
-			target+='\\';
+		if(target.size() > 0 && target[target.size()-1] != L'\\')
+			target+=L'\\';
 		
 		if(SHGetMalloc(&ma) != E_FAIL) {
 			ma->Free(pidl);
@@ -480,11 +481,11 @@ bool WinUtil::browseDirectory(string& target, HWND owner /* = NULL */) {
 	return false;
 }
 
-bool WinUtil::browseFile(string& target, HWND owner /* = NULL */, bool save /* = true */, const string& initialDir /* = Util::emptyString */, const char* types /* = NULL */, const char* defExt /* = NULL */) {
-	char buf[MAX_PATH];
+bool WinUtil::browseFile(tstring& target, HWND owner /* = NULL */, bool save /* = true */, const tstring& initialDir /* = Util::emptyString */, const TCHAR* types /* = NULL */, const TCHAR* defExt /* = NULL */) {
+	TCHAR buf[MAX_PATH];
 	OPENFILENAME ofn;       // common dialog box structure
-	target = Util::validateFileName(target);
-	memcpy(buf, target.c_str(), target.length() + 1);
+	target = Text::toT(Util::validateFileName(Text::fromT(target)));
+	_tcscpy(buf, target.c_str());
 	// Initialize OPENFILENAME
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
 	ofn.lStructSize = sizeof(OPENFILENAME);
@@ -508,7 +509,20 @@ bool WinUtil::browseFile(string& target, HWND owner /* = NULL */, bool save /* =
 	return false;
 }
 
-void WinUtil::setClipboard(const string& str) {
+tstring WinUtil::encodeFont(LOGFONT const& font)
+{
+	tstring res(font.lfFaceName);
+	res += L',';
+	res += Text::toT(Util::toString(font.lfHeight));
+	res += L',';
+	res += Text::toT(Util::toString(font.lfWeight));
+	res += L',';
+	res += Text::toT(Util::toString(font.lfItalic));
+	return res;
+}
+
+
+void WinUtil::setClipboard(const tstring& str) {
 	if(!::OpenClipboard(mainWnd)) {
 		return;
 	}
@@ -516,24 +530,37 @@ void WinUtil::setClipboard(const string& str) {
 	EmptyClipboard();
 
 	// Allocate a global memory object for the text. 
-	HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1)); 
+	HGLOBAL hglbCopy;
+	if (CZDCLib::isXp()) { 
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1) * sizeof(TCHAR)); 
+	} else {
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1));
+	}
 	if (hglbCopy == NULL) { 
 		CloseClipboard(); 
 		return; 
 	} 
 
 	// Lock the handle and copy the text to the buffer. 
-	char* lptstrCopy = (char*)GlobalLock(hglbCopy); 
-	memcpy(lptstrCopy, str.c_str(), str.length() + 1);
+	if (CZDCLib::isXp()) { 
+		TCHAR* lptstrCopy = (TCHAR*)GlobalLock(hglbCopy); 
+		_tcscpy(lptstrCopy, str.c_str());
+	} else {
+		char* lptstrCopy = (char*)GlobalLock(hglbCopy); 
+		memcpy(lptstrCopy, Text::fromT(str).c_str(), str.length() + 1);
+	}
 	GlobalUnlock(hglbCopy); 
-
 	// Place the handle on the clipboard. 
-	SetClipboardData(CF_TEXT, hglbCopy); 
+	if (CZDCLib::isXp()) { 
+		SetClipboardData(CF_UNICODETEXT, hglbCopy); 
+	} else {
+		SetClipboardData(CF_TEXT, hglbCopy); 
+	}
 	CloseClipboard();
 }
 
 void WinUtil::splitTokens(int* array, const string& tokens, int maxItems /* = -1 */) throw() {
-	StringTokenizer t(tokens, ',');
+	StringTokenizer<string> t(tokens, _T(','));
 	StringList& l = t.getTokens();
 	if(maxItems == -1)
 		maxItems = l.size();
@@ -548,21 +575,21 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 	string::size_type i = 0;
 	StringMap done;
 
-	while( (i = safestring::SafeFind(uc.getCommand(),"%[line:", i)) != string::npos) {
+	while( (i = uc.getCommand().find("%[line:", i)) != string::npos) {
 		i += 7;
-		string::size_type j = safestring::SafeFind(uc.getCommand(),']', i);
+		string::size_type j = uc.getCommand().find(']', i);
 		if(j == string::npos)
 			break;
 
 		string name = uc.getCommand().substr(i, j-i);
 		if(done.find(name) == done.end()) {
 			LineDlg dlg;
-			dlg.title = uc.getName();
-			dlg.description = name;
-			dlg.line = sm["line:" + name];
+			dlg.title = Text::toT(uc.getName());
+			dlg.description = Text::toT(name);
+			dlg.line = Text::toT(sm["line:" + name]);
 			if(dlg.DoModal(parent) == IDOK) {
-				sm["line:" + name] = Util::validateMessage(dlg.line, false);
-					done[name] = dlg.line;
+				sm["line:" + name] = Text::fromT(dlg.line);
+				done[name] = Text::fromT(dlg.line);
 			} else {
 				return false;
 			}
@@ -570,20 +597,20 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 		i = j + 1;
 	}
 	i = 0;
-	while( (i = safestring::SafeFind(uc.getCommand(),"%[kickline:", i)) != string::npos) {
+	while( (i = uc.getCommand().find("%[kickline:", i)) != string::npos) {
 		i += 11;
-		string::size_type j = safestring::SafeFind(uc.getCommand(),']', i);
+		string::size_type j = uc.getCommand().find(']', i);
 		if(j == string::npos)
 			break;
 
 		string name = uc.getCommand().substr(i, j-i);
 		if(done.find(name) == done.end()) {
 			KickDlg dlg;
-			dlg.title = uc.getName();
-			dlg.description = name;
+			dlg.title = Text::toT(uc.getName());
+			dlg.description = Text::toT(name);
 			if(dlg.DoModal(parent) == IDOK) {
-				sm["kickline:" + name] = Util::validateMessage(dlg.line, false);
-					done[name] = dlg.line;
+				sm["kickline:" + name] = Text::fromT(dlg.line);
+				done[name] = Text::fromT(dlg.line);
 			} else {
 				return false;
 			}
@@ -593,42 +620,42 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 	return true;
 }
 
-#define LINE2 "-- http://dcplusplus.sourceforge.net  <DC++ " DCVERSIONSTRING ">"
-char *msgs[] = { "\r\n-- I'm a happy dc++ user. You could be happy too.\r\n" LINE2,
-"\r\n-- Neo-...what? Nope...never heard of it...\r\n" LINE2,
-"\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: NMDC --> DC++\r\n" LINE2,
-"\r\n-- I share, therefore I am.\r\n" LINE2,
-"\r\n-- I came, I searched, I found...\r\n" LINE2,
-"\r\n-- I came, I shared, I sent...\r\n" LINE2,
-"\r\n-- I can set away mode, can't you?\r\n" LINE2,
-"\r\n-- I don't have to see any ads, do you?\r\n" LINE2,
-"\r\n-- I don't have to see those annoying kick messages, do you?\r\n" LINE2,
-"\r\n-- I can resume my files to a different filename, can you?\r\n" LINE2,
-"\r\n-- I can share huge amounts of files, can you?\r\n" LINE2,
-"\r\n-- My client doesn't spam the chat with useless debug messages, does yours?\r\n" LINE2,
-"\r\n-- I can add multiple users to the same download and have the client connect to another automatically when one goes offline, can you?\r\n" LINE2,
-"\r\n-- These addies are pretty annoying, aren't they? Get revenge by sending them yourself!\r\n" LINE2,
-"\r\n-- My client supports TTH hashes, does yours?\r\n" LINE2,
-"\r\n-- My client supports XML file lists, does yours?\r\n" LINE2
+#define LINE2 _T("-- http://dcplusplus.sourceforge.net  <DC++ ") _T(VERSIONSTRING) _T(">")
+TCHAR *msgs[] = { _T("\r\n-- I'm a happy dc++ user. You could be happy too.\r\n") LINE2,
+_T("\r\n-- Neo-...what? Nope...never heard of it...\r\n") LINE2,
+_T("\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: NMDC --> DC++\r\n") LINE2,
+_T("\r\n-- I share, therefore I am.\r\n") LINE2,
+_T("\r\n-- I came, I searched, I found...\r\n") LINE2,
+_T("\r\n-- I came, I shared, I sent...\r\n") LINE2,
+_T("\r\n-- I can set away mode, can't you?\r\n") LINE2,
+_T("\r\n-- I don't have to see any ads, do you?\r\n") LINE2,
+_T("\r\n-- I don't have to see those annoying kick messages, do you?\r\n") LINE2,
+_T("\r\n-- I can resume my files to a different filename, can you?\r\n") LINE2,
+_T("\r\n-- I can share huge amounts of files, can you?\r\n") LINE2,
+_T("\r\n-- My client doesn't spam the chat with useless debug messages, does yours?\r\n") LINE2,
+_T("\r\n-- I can add multiple users to the same download and have the client connect to another automatically when one goes offline, can you?\r\n") LINE2,
+_T("\r\n-- These addies are pretty annoying, aren't they? Get revenge by sending them yourself!\r\n") LINE2,
+_T("\r\n-- My client supports TTH hashes, does yours?\r\n") LINE2,
+_T("\r\n-- My client supports XML file lists, does yours?\r\n") LINE2
 };
 
 #define MSGS 16
 
 #ifdef isCVS
-#define LINE3 "-- http://snail.pc.cz/StrongDC  <StrongDC++ " VERSIONSTRING "" CZDCVERSIONSTRING "" CVSVERSION ">"
+#define LINE3 _T("-- http://snail.pc.cz/StrongDC  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
 #else
-#define LINE3 "-- http://snail.pc.cz/StrongDC  <StrongDC++ " VERSIONSTRING "" CZDCVERSIONSTRING">"
+#define LINE3 _T("-- http://snail.pc.cz/StrongDC  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
 #endif
 
-char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE3,
-"\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n" LINE3,
-"\r\n-- Umim stahovat jeden soubor od vice lidi najednou, a proto dokazu vyuzit linku na maximum :-))\r\n" LINE3,
-"\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n" LINE3,
-"\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n" LINE3,
-"\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
-"\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n" LINE3,
-"\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n" LINE3,
-"\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
+TCHAR *strgmsgs[] = { _T("\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n") LINE3,
+_T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n") LINE3,
+_T("\r\n-- Umim stahovat jeden soubor od vice lidi najednou, a proto dokazu vyuzit linku na maximum :-))\r\n") LINE3,
+_T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE3,
+_T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE3,
+_T("\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n") LINE3,
+_T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE3,
+_T("\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n") LINE3,
+_T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE3,
 };
 
 #define STRGMSGS 8
@@ -657,7 +684,7 @@ unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
 	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
 }
 
-bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& status) {
+bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstring& status) {
 	string::size_type i = cmd.find(' ');
 	if(i != string::npos) {
 		param = cmd.substr(i+1);
@@ -666,67 +693,67 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		cmd = cmd.substr(1);
 	}
 
-	if(Util::stricmp(cmd.c_str(), "refresh")==0) {
+	if(Util::stricmp(cmd.c_str(), _T("refresh"))==0) {
 		try {
 			ShareManager::getInstance()->setDirty();
 			ShareManager::getInstance()->refresh(true);
 		} catch(const ShareException& e) {
-			status = e.getError();
+			status = Text::toT(e.getError());
 		}
-	} else if(Util::stricmp(cmd.c_str(), "slots")==0) {
-		int j = Util::toInt(param);
+	} else if(Util::stricmp(cmd.c_str(), _T("slots"))==0) {
+		int j = Util::toInt(Text::fromT(param));
 		if(j > 0) {
 			SettingsManager::getInstance()->set(SettingsManager::SLOTS, j);
-			status = STRING(SLOTS_SET);
+			status = TSTRING(SLOTS_SET);
 			ClientManager::getInstance()->infoUpdated(false);
 		} else {
-			status = STRING(INVALID_NUMBER_OF_SLOTS);
+			status = TSTRING(INVALID_NUMBER_OF_SLOTS);
 		}
-	} else if(Util::stricmp(cmd.c_str(), "search") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("search")) == 0) {
 		if(!param.empty()) {
 			SearchFrame::openWindow(param);
 		} else {
-			status = STRING(SPECIFY_SEARCH_STRING);
+			status = TSTRING(SPECIFY_SEARCH_STRING);
 		}
-	} else if(Util::stricmp(cmd.c_str(), "dc++") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("dc++")) == 0) {
 		message = msgs[GET_TICK() % MSGS];
-	} else if(Util::stricmp(cmd.c_str(), "strongdc++") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("strongdc++")) == 0) {
 		message = strgmsgs[GET_TICK() % STRGMSGS];
-	} else if(Util::stricmp(cmd.c_str(), "away") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("away")) == 0) {
 		if(Util::getAway() && param.empty()) {
 			Util::setAway(false);
 			MainFrame::setAwayButton(false);
-			status = STRING(AWAY_MODE_OFF);
+			status = TSTRING(AWAY_MODE_OFF);
 		} else {
 			Util::setAway(true);
 			MainFrame::setAwayButton(true);
-			Util::setAwayMessage(param);
-			status = STRING(AWAY_MODE_ON) + Util::getAwayMessage();
+			Util::setAwayMessage(Text::fromT(param));
+			status = TSTRING(AWAY_MODE_ON) + Text::toT(Util::getAwayMessage());
 		}
 		ClientManager::getInstance()->infoUpdated(true);
-	} else if(Util::stricmp(cmd.c_str(), "g") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("g")) == 0) {
 		if(param.empty()) {
-			status = STRING(SPECIFY_SEARCH_STRING);
+			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else {
-			WinUtil::openLink("http://www.google.com/search?q="+Util::encodeURI(param));
+			WinUtil::openLink(_T("http://www.google.com/search?q=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 		}
-	} else if(Util::stricmp(cmd.c_str(), "imdb") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("imdb")) == 0) {
 		if(param.empty()) {
-			status = STRING(SPECIFY_SEARCH_STRING);
+			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else {
-			WinUtil::openLink("http://www.imdb.com/find?q="+Util::encodeURI(param));
+			WinUtil::openLink(_T("http://www.imdb.com/find?q=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 		}
-	 	} else if(Util::stricmp(cmd.c_str(), "rebuild") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("rebuild")) == 0) {
 		HashManager::getInstance()->rebuild();
-	} else if(Util::stricmp(cmd.c_str(), "shutdown") == 0) {
+	} else if(Util::stricmp(cmd.c_str(), _T("shutdown")) == 0) {
 		MainFrame::setShutDown(!(MainFrame::getShutDown()));
 		if (MainFrame::getShutDown()) {
-			status = STRING(SHUTDOWN_ON);
+			status = TSTRING(SHUTDOWN_ON);
 		} else {
-			status = STRING(SHUTDOWN_OFF);
+			status = TSTRING(SHUTDOWN_OFF);
 			}
-		} else if((Util::stricmp(cmd.c_str(), "winamp") == 0) || (Util::stricmp(cmd.c_str(), "w") == 0)) {
-		HWND hwndWinamp = FindWindow("Winamp v1.x", NULL);
+	} else if((Util::stricmp(cmd.c_str(), _T("winamp")) == 0) || (Util::stricmp(cmd.c_str(), _T("w")) == 0)) {
+		HWND hwndWinamp = FindWindow(_T("Winamp v1.x"), NULL);
 		if (hwndWinamp) {
 			StringMap params;
 			int waVersion = SendMessage(hwndWinamp,WM_USER, 0, IPC_GETVERSION),
@@ -746,17 +773,17 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 					break;
 				case 3: params["state"] = "paused";
 			};
-			char titleBuffer[2048];
+			TCHAR titleBuffer[2048];
 			int buffLength = sizeof(titleBuffer);
 			GetWindowText(hwndWinamp, titleBuffer, buffLength);
-			string title = titleBuffer;
-			params["rawtitle"] = title;
+			tstring title = titleBuffer;
+			params["rawtitle"] = Text::fromT(title);
 			// fix the title if scrolling is on, so need to put the stairs to the end of it
-			string titletmp=title.substr(title.find("***")+2, title.size());
+			tstring titletmp = title.substr(title.find(_T("***"))+2, title.size());
 			title = titletmp + title.substr(0, title.size()-titletmp.size());
-			title = title.substr(title.find(".")+2, title.size());
-			if (title.rfind("-") != string::npos) {
-				params["title"] = title.substr(0, title.rfind("-")-1);
+			title = title.substr(title.find(_T("."))+2, title.size());
+			if (title.rfind(_T("-")) != string::npos) {
+				params["title"] = Text::fromT(title.substr(0, title.rfind(_T('-')) - 1));
 			}
 			int curPos = SendMessage(hwndWinamp,WM_USER, 0, IPC_GETOUTPUTTIME);
 			int length = SendMessage(hwndWinamp,WM_USER, 1, IPC_GETOUTPUTTIME);
@@ -786,54 +813,11 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 			params["bitrate"] = Util::toString(waBitRate) + "kbps";
 			params["sample"] = Util::toString(waSampleRate) + "kHz";
 			params["channels"] = (waChannels==2?"stereo":"mono"); // 3+ channels? 0 channels?
-			message = Util::formatParams(SETTING(WINAMP_FORMAT), params);
+			message = Text::toT(Util::formatParams(SETTING(WINAMP_FORMAT), params));
 		} else {
-			status = "Supported version of Winamp is not running";
+			status = _T("Supported version of Winamp is not running");
 		}
-	} else if(Util::stricmp(cmd.c_str(), "uptime") == 0) {
-		char buf[128];
-		sprintf(buf, "StrongDC++ %s %s Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
-		string uptime = (string)buf;
-		long n, rest, i;
-		rest = Util::getUptime();
-		i = 0;
-		n = rest / (24*3600*7);
-		rest %= (24*3600*7);
-		if(n) {
-			sprintf(buf, "%d weeks ", n); 
-			uptime += (string)buf;
-			i++;
-		}
-		n = rest / (24*3600);
-		rest %= (24*3600);
-		if(n) {
-			sprintf(buf, "%d days ", n); 
-			uptime += (string)buf;
-			i++;
-		}
-		n = rest / (3600);
-		rest %= (3600);
-		if(n) {
-			sprintf(buf, "%d hours ", n); 
-			uptime += (string)buf;
-			i++;
-		}
-		n = rest / (60);
-		rest %= (60);
-		if(n) {
-			sprintf(buf, "%d min ", n); 
-			uptime += (string)buf;
-			i++;
-		}
-		n = rest;
-		if(++i <= 3) {
-			sprintf(buf, "%d sec ", n); 
-			uptime += (string)buf;
-		}
-		uptime += "@ D: " + Util::formatBytes(Socket::getTotalDown()) + 
-			" " + "U: " + Util::formatBytes(Socket::getTotalUp());
-		message = uptime;
-	} else if(Util::stricmp(cmd.c_str(), "stats") == 0) {
+	} /*else if(Util::stricmp(cmd.c_str(), _T("stats")) == 0) {
 		char buf[128];
 		sprintf(buf, "\r\n-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
 		string uptime = (string)buf;
@@ -858,11 +842,11 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 			" ][ Total upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + " ]=-\r\n-=[ System Uptime: ";
 		message = uptime + formatTime(::GetTickCount() / 1000) + " ]=-\r\n";		
 		message += "-=[ CPU Clock: "+Util::toString(ProcSpeedCalc())+" MHz ]=-";
-	} else if(Util::stricmp(cmd.c_str(), "tvtome") == 0) {
+	} */else if(Util::stricmp(cmd.c_str(), _T("tvtome")) == 0) {
 		if(param.empty()) {
-			status = STRING(SPECIFY_SEARCH_STRING);
+			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else
-			WinUtil::openLink("http://www.tvtome.com/tvtome/servlet/Search?searchType=all&searchString="+param);
+			WinUtil::openLink(_T("http://www.tvtome.com/tvtome/servlet/Search?searchType=all&searchString=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 	} else {
 		return false;
 	}
@@ -876,29 +860,29 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	// this data within DC++, we must identify the client/mod in the user agent, so abuse can be 
 	// tracked down and the code can be fixed
 	if(aHash != NULL) {
-		openLink("http://bitzi.com/lookup/tree:tiger:" + aHash->toBase32());
+		openLink(Text::toT("http://bitzi.com/lookup/tree:tiger:" + aHash->toBase32()));
 	}
 }
 
- void WinUtil::copyMagnet(TTHValue* aHash, const string& aFile, int64_t aSize) {
+ void WinUtil::copyMagnet(TTHValue* aHash, const tstring& aFile, int64_t aSize) {
 	if(aHash != NULL && !aFile.empty()) {
-		setClipboard("magnet:?xt=urn:tree:tiger:" + aHash->toBase32() + "&xl=" + Util::toString(aSize) + "&dn=" + Util::encodeURI(aFile));
+		setClipboard(Text::toT("magnet:?xt=urn:tree:tiger:" + aHash->toBase32() + "&xl=" + Util::toString(aSize) + "&dn=" + Util::encodeURI(Text::fromT(aFile))));
 	}
 }
 
- void WinUtil::searchHash(TTHValue* aHash) {
+void WinUtil::searchHash(TTHValue* aHash) {
 	 if(aHash != NULL) {
-		 SearchFrame::openWindow(aHash->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-	 }
- }
+		SearchFrame::openWindow(Text::toT(aHash->toBase32()), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+ 	}
+}
 
- void WinUtil::registerDchubHandler() {
+void WinUtil::registerDchubHandler() {
 	HKEY hk;
-	char Buf[512];
-	string app = "\"" + Util::getAppName() + "\" %1";
+	TCHAR Buf[512];
+	tstring app = _T("\"") + Text::toT(Util::getAppName()) + _T("\" %1");
 	Buf[0] = 0;
 
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
+	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, _T("dchub\\Shell\\Open\\Command"), 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
 		DWORD bufLen = sizeof(Buf);
 		DWORD type;
 		::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
@@ -906,92 +890,92 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	}
 
 	if(Util::stricmp(app.c_str(), Buf) != 0) {
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub", &hk);
-		char* tmp = "URL:Direct Connect Protocol";
-		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, strlen(tmp) + 1);
-		::RegSetValueEx(hk, "URL Protocol", 0, REG_SZ, (LPBYTE)"", 1);
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("dchub"), &hk);
+		TCHAR* tmp = _T("URL:Direct Connect Protocol");
+		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, _tcslen(tmp) + 1);
+		::RegSetValueEx(hk, _T("URL Protocol"), 0, REG_SZ, (LPBYTE)_T(""), sizeof(TCHAR));
 		::RegCloseKey(hk);
 
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\Shell\\Open\\Command", &hk);
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("dchub\\Shell\\Open\\Command"), &hk);
+		::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		::RegCloseKey(hk);
 
-		::RegCreateKey(HKEY_CLASSES_ROOT, "dchub\\DefaultIcon", &hk);
-		app = Util::getAppName();
-		::RegSetValueEx(hk, "", 0, REG_SZ, (LPBYTE)app.c_str(), app.length() + 1);
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("dchub\\DefaultIcon"), &hk);
+		app = Text::toT(Util::getAppName());
+		::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		::RegCloseKey(hk);
 	}
 }
 
- void WinUtil::registerMagnetHandler() {
+void WinUtil::registerMagnetHandler() {
 	HKEY hk;
-	char buf[512];
-	string openCmd, magnetLoc, magnetExe;
+	TCHAR buf[512];
+	tstring openCmd, magnetLoc, magnetExe;
 	buf[0] = 0;
 	bool haveMagnet = true;
 
 	// what command is set up to handle magnets right now?
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, "magnet\\shell\\open\\command", 0, KEY_READ, &hk) == ERROR_SUCCESS) {
-		DWORD bufLen = sizeof(buf);
+	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, _T("magnet\\shell\\open\\command"), 0, KEY_READ, &hk) == ERROR_SUCCESS) {
+		DWORD bufLen = sizeof(TCHAR) * sizeof(buf);
 		::RegQueryValueEx(hk, NULL, NULL, NULL, (LPBYTE)buf, &bufLen);
 		::RegCloseKey(hk);
 	}
 	openCmd = buf;
 	buf[0] = 0;
 	// read the location of magnet.exe
-	if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet", NULL, KEY_READ, &hk) == ERROR_SUCCESS) {
-		DWORD bufLen = sizeof(buf);
-		::RegQueryValueEx(hk, "Location", NULL, NULL, (LPBYTE)buf, &bufLen);
+	if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet"), NULL, KEY_READ, &hk) == ERROR_SUCCESS) {
+		DWORD bufLen = sizeof(buf) * sizeof(TCHAR);
+		::RegQueryValueEx(hk, _T("Location"), NULL, NULL, (LPBYTE)buf, &bufLen);
 		::RegCloseKey(hk);
 	}
 	magnetLoc = buf;
 	string::size_type i;
-	if (magnetLoc[0]=='"' && string::npos != (i = magnetLoc.find('"', 1))) {
+	if (magnetLoc[0]==_T('"') && string::npos != (i = magnetLoc.find(_T('"'), 1))) {
 		magnetExe = magnetLoc.substr(1, i-1);
 	}
 	// check for the existence of magnet.exe
-	if(File::getSize(magnetExe) == -1) {
-		magnetExe = Util::getAppPath() + "magnet.exe";
-		if(File::getSize(magnetExe) == -1) {
+	if(File::getSize(Text::fromT(magnetExe)) == -1) {
+		magnetExe = Text::toT(Util::getAppPath() + "magnet.exe");
+		if(File::getSize(Text::fromT(magnetExe)) == -1) {
 			// gracefully fall back to registering DC++ to handle magnets
-			magnetExe = Util::getAppName();
+			magnetExe = Text::toT(Util::getAppName());
 			haveMagnet = false;
 		} else {
 			// set Magnet\Location
-			::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet", &hk);
-			::RegSetValueEx(hk, "Location", NULL, REG_SZ, (LPBYTE)magnetExe.c_str(), magnetExe.length()+1);
+			::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet"), &hk);
+			::RegSetValueEx(hk, _T("Location"), NULL, REG_SZ, (LPBYTE)magnetExe.c_str(), sizeof(TCHAR) * (magnetExe.length()+1));
 			::RegCloseKey(hk);
 		}
-		magnetLoc = '"' + magnetExe + '"';
+		magnetLoc = _T('"') + magnetExe + _T('"');
 	}
 	// (re)register the handler if magnet.exe isn't the default, or if DC++ is handling it
 	if(BOOLSETTING(MAGNET_URI_HANDLER) && (Util::strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
-		SHDeleteKey(HKEY_CLASSES_ROOT, "magnet");
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet", &hk);
-		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_SHELL_DESC), STRING(MAGNET_SHELL_DESC).length()+1);
-		::RegSetValueEx(hk, "URL Protocol", NULL, REG_SZ, NULL, NULL);
+		SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet"), &hk);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_SHELL_DESC), sizeof(TCHAR)*(TSTRING(MAGNET_SHELL_DESC).length()+1));
+		::RegSetValueEx(hk, _T("URL Protocol"), NULL, REG_SZ, NULL, NULL);
 		::RegCloseKey(hk);
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\DefaultIcon", &hk);
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet\\DefaultIcon"), &hk);
 		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
 		::RegCloseKey(hk);
-		magnetLoc += " %1";
-		::RegCreateKey(HKEY_CLASSES_ROOT, "magnet\\shell\\open\\command", &hk);
+		magnetLoc += _T(" %1");
+		::RegCreateKey(HKEY_CLASSES_ROOT, _T("magnet\\shell\\open\\command"), &hk);
 		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), magnetLoc.length()+1);
 		::RegCloseKey(hk);
 	}
 	// magnet-handler specific code
 	// clean out the DC++ tree first
-	SHDeleteKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++");
+	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++"));
 	// add DC++ to magnet-handler's list of applications
-	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++", &hk);
-	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_ROOT), STRING(MAGNET_HANDLER_ROOT).size()+1);
-	::RegSetValueEx(hk, "Description", NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_DESC), STRING(MAGNET_HANDLER_DESC).size()+1);
+	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++"), &hk);
+	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_ROOT), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_ROOT).size()+1));
+	::RegSetValueEx(hk, _T("Description"), NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_DESC), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_DESC).size()+1));
 	// set ShellExecute
-	string app = "\"" + Util::getAppName() + "\" %URL";
-	::RegSetValueEx(hk, "ShellExecute", NULL, REG_SZ, (LPBYTE)app.c_str(), app.length()+1);
+	tstring app = Text::toT("\"" + Util::getAppName() + "\" %URL");
+	::RegSetValueEx(hk, _T("ShellExecute"), NULL, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length()+1));
 	// set DefaultIcon
-	app = '"' + Util::getAppName() + '"';
-	::RegSetValueEx(hk, "DefaultIcon", NULL, REG_SZ, (LPBYTE)app.c_str(), app.length()+1);
+	app = Text::toT('"' + Util::getAppName() + '"');
+	::RegSetValueEx(hk, _T("DefaultIcon"), NULL, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR)*(app.length()+1));
 	::RegCloseKey(hk);
 
 	// These two types contain a tth root, and are in common use.  The other two are variations picked up
@@ -999,71 +983,71 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	// Reference: http://forums.shareaza.com/showthread.php?threadid=23731
 	// Note: the three part hash types require magnethandler >= 1.0.0.3
 	DWORD nothing = 0;
-	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++\\Type", &hk);
-	::RegSetValueEx(hk, "urn:bitprint", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, "urn:tree:tiger", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, "urn:tree:tiger/", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, "urn:tree:tiger/1024", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++\\Type"), &hk);
+	::RegSetValueEx(hk, _T("urn:bitprint"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, _T("urn:tree:tiger"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, _T("urn:tree:tiger/"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, _T("urn:tree:tiger/1024"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegCloseKey(hk);
 }
 
-void WinUtil::openLink(const string& url) {
+void WinUtil::openLink(const tstring& url) {
 	CRegKey key;
-	char buf[MAX_PATH];
+	TCHAR regbuf[MAX_PATH];
 	ULONG len = MAX_PATH;
-	if(strnicmp(url.c_str(), "magnet:?", 8) == 0) {
+	if(strnicmp(Text::fromT(url).c_str(), "magnet:?", 8) == 0) {
 		parseMagnetUri(url);
 		return;
 	}
-	if(strnicmp(url.c_str(), "dchub://", 8) == 0) {
+	if(strnicmp(Text::fromT(url).c_str(), "dchub://", 8) == 0) {
 		parseDchubUrl(url);
 		return;
 	}
-	string x;
-	string::size_type i = url.find("://");
+	tstring x;
+	tstring::size_type i = url.find(_T("://"));
 	if(i != string::npos) {
 		x = url.substr(0, i);
 	} else {
-		x = "http";
+		x = _T("http");
 	}
-	x += "\\shell\\open\\command";
+	x += _T("\\shell\\open\\command");
 	if(key.Open(HKEY_CLASSES_ROOT, x.c_str(), KEY_READ) == ERROR_SUCCESS) {
-		if(key.QueryStringValue(NULL, buf, &len) == ERROR_SUCCESS) {
+		if(key.QueryStringValue(NULL, regbuf, &len) == ERROR_SUCCESS) {
 			/*
 			 * Various values (for http handlers):
 			 *  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1"
 			 *  "C:\Program Files\Internet Explorer\iexplore.exe" -nohome
 			 *  "C:\Apps\Opera7\opera.exe"
-			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1"
+			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1" <= to je mojeeeeeeee :-D
 			 *  C:\PROGRA~1\NETSCAPE\NETSCAPE\NETSCP.EXE -url "%1"
 			 */
-			string cmd(buf);
+			tstring cmd(regbuf); // otherwise you consistently get two trailing nulls
 			
-			if(!cmd.empty() && cmd.length() > 1) {
+			if(cmd.length() > 1) {
 				string::size_type start,end;
 				if(cmd[0] == '"') {
 					start = 1;
-					end = safestring::SafeFind(cmd, '"', 1);
+					end = cmd.find('"', 1);
 				} else {
 					start = 0;
-					end = safestring::SafeFind(cmd, ' ', 1);
+					end = cmd.find(' ', 1);
 				}
 				if(end == string::npos)
 					end = cmd.length();
 
-				string cmdLine(cmd);
+				tstring cmdLine(cmd);
 				cmd = cmd.substr(start, end-start);
 				size_t arg_pos;
-				if((arg_pos = cmdLine.find("%1")) != string::npos) {
+				if((arg_pos = cmdLine.find(_T("%1"))) != string::npos) {
 					cmdLine.replace(arg_pos, 2, url);
 				} else {
-					cmdLine.append(" \"" + url + '\"');
+					cmdLine.append(_T(" \"") + url + _T('\"'));
 				}
 
 				STARTUPINFO si = { sizeof(si), 0 };
 				PROCESS_INFORMATION pi = { 0 };
-				AutoArray<char> buf(cmdLine.length() + 1);
-				strcpy(buf, cmdLine.c_str());
+				AutoArray<TCHAR> buf(cmdLine.length() + 1);
+				_tcscpy(buf, cmdLine.c_str());
 				if(::CreateProcess(cmd.c_str(), buf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
 					::CloseHandle(pi.hThread);
 					::CloseHandle(pi.hProcess);
@@ -1076,12 +1060,12 @@ void WinUtil::openLink(const string& url) {
 	::ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 }
 
-void WinUtil::parseDchubUrl(const string& aUrl) {
+void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	string server, file;
 	short port = 411;
-	Util::decodeUrl(aUrl, server, port, file);
+	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty()) {
-		HubFrame::openWindow(server + ":" + Util::toString(port));
+		HubFrame::openWindow(Text::toT(server + ":" + Util::toString(port)));
 	}
 	if(!file.empty()) {
 		try {
@@ -1092,61 +1076,61 @@ void WinUtil::parseDchubUrl(const string& aUrl) {
 	}
 }
 
-void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
+void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 	// official types that are of interest to us
 	//  xt = exact topic
 	//  xs = exact substitute
 	//  as = acceptable substitute
 	//  dn = display name
 	//  xl = exact length
-	if (Util::strnicmp(aUrl.c_str(), "magnet:?", 8) == 0) {
-		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + aUrl, true);
-		StringTokenizer mag(aUrl.substr(8), '&');
-		typedef map<string, string> MagMap;
+	if (Util::strnicmp(aUrl.c_str(), _T("magnet:?"), 8) == 0) {
+		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + Text::fromT(aUrl), true);
+		StringTokenizer<tstring> mag(aUrl.substr(8), _T('&'));
+		typedef map<tstring, tstring> MagMap;
 		MagMap hashes;
-		string fname, fhash, type, param;
+		tstring fname, fhash, type, param;
 		int64_t fsize = 0;
-		for(StringList::iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
+		for(TStringList::iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
 			// break into pairs
-			string::size_type pos = idx->find("=");
+			string::size_type pos = idx->find(_T('='));
 			if(pos != string::npos) {
-				type = Util::toLower(Util::encodeURI(idx->substr(0, pos), true));
-				param = Util::encodeURI(idx->substr(pos+1), true);
+				type = Text::toT(Text::toLower(Util::encodeURI(Text::fromT(idx->substr(0, pos)), true)));
+				param = Text::toT(Util::encodeURI(Text::fromT(idx->substr(pos+1)), true));
 			} else {
-				type = Util::encodeURI(*idx, true);
+				type = Text::toT(Util::encodeURI(Text::fromT(*idx), true));
 				param.clear();
 			}
 			// extract what is of value
-			if(param.length() == 85 && Util::strnicmp(param.c_str(), "urn:bitprint:", 13) == 0) {
+			if(param.length() == 85 && Util::strnicmp(param.c_str(), _T("urn:bitprint:"), 13) == 0) {
 				hashes[type] = param.substr(46);
-			} else if(param.length() == 54 && Util::strnicmp(param.c_str(), "urn:tree:tiger:", 15) == 0) {
+			} else if(param.length() == 54 && Util::strnicmp(param.c_str(), _T("urn:tree:tiger:"), 15) == 0) {
 				hashes[type] = param.substr(15);
-			} else if(param.length() == 55 && Util::strnicmp(param.c_str(), "urn:tree:tiger/:", 16) == 0) {
+			} else if(param.length() == 55 && Util::strnicmp(param.c_str(), _T("urn:tree:tiger/:"), 16) == 0) {
 				hashes[type] = param.substr(16);
-			} else if(param.length() == 59 && Util::strnicmp(param.c_str(), "urn:tree:tiger/1024:", 20) == 0) {
+			} else if(param.length() == 59 && Util::strnicmp(param.c_str(), _T("urn:tree:tiger/1024:"), 20) == 0) {
 				hashes[type] = param.substr(20);
-			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), "dn", 2) == 0) {
+			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), _T("dn"), 2) == 0) {
 				fname = param;
-			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), "xl", 2) == 0) {
-				fsize = _atoi64(param.c_str());
+			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), _T("xl"), 2) == 0) {
+				fsize = _tstoi64(param.c_str());
 			}
 		}
 		// pick the most authoritative hash out of all of them.
-		if(hashes.find("as") != hashes.end()) {
-			fhash = hashes["as"];
+		if(hashes.find(_T("as")) != hashes.end()) {
+			fhash = hashes[_T("as")];
 		}
-		if(hashes.find("xs") != hashes.end()) {
-			fhash = hashes["xs"];
+		if(hashes.find(_T("xs")) != hashes.end()) {
+			fhash = hashes[_T("xs")];
 		}
-		if(hashes.find("xt") != hashes.end()) {
-			fhash = hashes["xt"];
+		if(hashes.find(_T("xt")) != hashes.end()) {
+			fhash = hashes[_T("xt")];
 		}
-		if(!fhash.empty() && Encoder::isBase32(fhash.c_str())){
+		if(!fhash.empty() && Encoder::isBase32(Text::fromT(fhash).c_str())){
 			// ok, we have a hash, and maybe a filename.
 			if(!BOOLSETTING(MAGNET_ASK) && fsize > 0 && fname.length() > 0) {
 				switch(SETTING(MAGNET_ACTION)) {
 					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
-						QueueManager::getInstance()->add(fname, fsize, fhash);
+						QueueManager::getInstance()->add(Text::fromT(fname), fsize, Text::fromT(fhash));
 						break;
 					case SettingsManager::MAGNET_AUTO_SEARCH:
 						SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
@@ -1158,9 +1142,53 @@ void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
 				dlg.DoModal(mainWnd);
 			}
 		} else {
-			MessageBox(mainWnd, CSTRING(MAGNET_DLG_TEXT_BAD), CSTRING(MAGNET_DLG_TITLE), MB_OK | MB_ICONEXCLAMATION);
+			MessageBox(mainWnd, CTSTRING(MAGNET_DLG_TEXT_BAD), CTSTRING(MAGNET_DLG_TITLE), MB_OK | MB_ICONEXCLAMATION);
 		}
 	}
+}
+
+int WinUtil::textUnderCursor(POINT p, CEdit& ctrl, tstring& x) {
+	
+	int i = ctrl.CharFromPos(p);
+	int line = ctrl.LineFromChar(i);
+	int c = LOWORD(i) - ctrl.LineIndex(line);
+	int len = ctrl.LineLength(i) + 1;
+	if(len < 3) {
+		return 0;
+	}
+
+	TCHAR* buf = new TCHAR[len];
+	ctrl.GetLine(line, buf, len);
+	x = tstring(buf, len-1);
+	delete[] buf;
+
+	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
+	if(start == string::npos)
+		start = 0;
+	else
+		start++;
+
+	return start;
+}
+
+bool WinUtil::parseDBLClick(const tstring& aString, string::size_type start, string::size_type end) {
+	if( (Util::strnicmp(aString.c_str() + start, _T("http://"), 7) == 0) || 
+		(Util::strnicmp(aString.c_str() + start, _T("www."), 4) == 0) ||
+		(Util::strnicmp(aString.c_str() + start, _T("ftp://"), 6) == 0) ||
+		(Util::strnicmp(aString.c_str() + start, _T("irc://"), 6) == 0) ||
+		(Util::strnicmp(aString.c_str() + start, _T("https://"), 8) == 0) )	
+	{
+
+		openLink(aString.substr(start, end-start));
+		return true;
+	} else if(Util::strnicmp(aString.c_str() + start, _T("dchub://"), 8) == 0) {
+		parseDchubUrl(aString.substr(start, end-start));
+		return true;
+	} else if(Util::strnicmp(aString.c_str() + start, _T("magnet:?"), 8) == 0) {
+		parseMagnetUri(aString.substr(start, end-start));
+		return true;
+	}
+	return false;
 }
 
 void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
@@ -1189,17 +1217,17 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 	SettingsManager::getInstance()->set(widths, tmp);
 }
 
-int WinUtil::getIconIndex(const string& aFileName) {
+int WinUtil::getIconIndex(const tstring& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
 		memset(&fi, 0, sizeof(SHFILEINFO));
-		string x = Util::toLower(Util::getFileExt(aFileName));
+		string x = Text::toLower(Util::getFileExt(Text::fromT(aFileName)));
 		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);
 			if(j != fileIndexes.end())
 				return j->second;
 		}
-		string fn = Util::toLower(Util::getFileName(aFileName));
+		tstring fn = Text::toT(Text::toLower(Util::getFileName(Text::fromT(aFileName))));
 		::SHGetFileInfo(fn.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		::DestroyIcon(fi.hIcon);
@@ -1223,7 +1251,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 	if(lst.size()>0){		
 		PreviewAppsSize = 0;
 		for(PreviewApplication::Iter i = lst.begin(); i != lst.end(); i++){
-			StringList tok = StringTokenizer((*i)->getExtension(), ';').getTokens();
+			StringList tok = StringTokenizer<string>((*i)->getExtension(), ';').getTokens();
 			bool add = false;
 			if(tok.size()==0)add = true;
 
@@ -1235,7 +1263,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 				}
 			}
 							
-			if (add) previewMenu.AppendMenu(MF_STRING, IDC_PREVIEW_APP + PreviewAppsSize, ((*i)->getName()).c_str());
+			if (add) previewMenu.AppendMenu(MF_STRING, IDC_PREVIEW_APP + PreviewAppsSize, Text::toT(((*i)->getName())).c_str());
 			PreviewAppsSize++;
 		}
 	}
@@ -1253,7 +1281,7 @@ void WinUtil::RunPreviewCommand(int index, string target){
 	ucParams["file"] = "\"" + target + "\"";
 	ucParams["dir"] = "\"" + Util::getFilePath(target) + "\"";
 
-	::ShellExecute(NULL, NULL, application.c_str(), Util::formatParams(arguments, ucParams).c_str(), ucParams["dir"].c_str(), SW_SHOWNORMAL);
+		::ShellExecute(NULL, NULL, Text::toT(application).c_str(), Text::toT(Util::formatParams(arguments, ucParams)).c_str(), Text::toT(ucParams["dir"]).c_str(), SW_SHOWNORMAL);
 	}
 }
 

@@ -1,3 +1,21 @@
+/* 
+ * 
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -11,69 +29,32 @@ UserInfo::UserInfo(const User::Ptr& u, const UserListColumns* pListColumns)
 	update();
 };
 
-const string& UserInfo::getText(int col) const {
+const tstring& UserInfo::getText(int col) const {
 	int nHardCol = col;
 	if (m_pListColumns)
 		nHardCol = m_pListColumns->RemapListColumnToDataColumn(col);
-	switch(nHardCol) {
-		case COLUMN_NICK: return user->getNick();
-		case COLUMN_SHARED: return shared;
-		case  COLUMN_EXACT_SHARED: return exactshare;
-		case COLUMN_DESCRIPTION: return user->getDescription();
-		case COLUMN_TAG: return user->getTag();
-		case COLUMN_CONNECTION: return user->getConnection();
-		case COLUMN_UPLOAD_SPEED: return uploadSpeed;
-		case COLUMN_EMAIL: return user->getEmail();
-		case COLUMN_CLIENTID: return user->getClientType();
-		case  COLUMN_VERSION: return user->getVersion();
-		case  COLUMN_MODE: return user->getMode();
-		case  COLUMN_HUBS: return user->getHubs();
-		case  COLUMN_SLOTS: return user->getSlots();
-		case  COLUMN_ISP: return user->getHost();		
-		case  COLUMN_IP: return user->getIp();
-		case  COLUMN_PK: return user->getPk();
-		case  COLUMN_LOCK: return user->getLock();
-		case  COLUMN_SUPPORTS: return user->getSupports();
-
-		default: return Util::emptyString;
-	}
+	return columns[nHardCol];
 }
 
 int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	if(a == NULL || b == NULL){
-		dcdebug("UserInfo::compareItems: pointer == NULL\n");
-		return 0;
+		dcdebug("UserInfo::compareItems NULL >:-[\n");
+		return NULL;
 	}
 	int nHardCol = col;
 	if (a->m_pListColumns)
 		nHardCol = a->m_pListColumns->RemapListColumnToDataColumn(col);
-	switch(nHardCol) {
-		case COLUMN_NICK:
+	if(nHardCol == COLUMN_NICK) {
 			if(a->getOp() && !b->getOp()) {
 				return -1;
 			} else if(!a->getOp() && b->getOp()) {
 				return 1;
 			}
-			return Util::stricmp(a->user->getNick(), b->user->getNick());	
-		case COLUMN_SHARED:	return compare(a->user->getBytesShared(), b->user->getBytesShared());
-		case COLUMN_EXACT_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
-		case COLUMN_DESCRIPTION: return Util::stricmp(a->user->getDescription(), b->user->getDescription());
-		case COLUMN_TAG: return Util::stricmp(a->user->getTag(), b->user->getTag());
-		case COLUMN_CONNECTION: return Util::stricmp(a->user->getConnection(), b->user->getConnection());
-		case COLUMN_UPLOAD_SPEED: return compare(a->uploadSpeed,b->uploadSpeed);
-		case COLUMN_EMAIL: return Util::stricmp(a->user->getEmail(), b->user->getEmail());
-		case COLUMN_CLIENTID: return Util::stricmp(a->user->getClientType(), b->user->getClientType());
-		case COLUMN_VERSION: return Util::stricmp(a->user->getVersion(), b->user->getVersion());
-		case COLUMN_MODE: return Util::stricmp(a->user->getMode(), b->user->getMode());
-		case COLUMN_HUBS: return compare(Util::toInt(a->user->getHubs()), Util::toInt(b->user->getHubs()));
-		case COLUMN_SLOTS: return compare(Util::toInt(a->user->getSlots()), Util::toInt(b->user->getSlots()));
-		case COLUMN_IP: return compare(Util::toInt(a->user->getIp()), Util::toInt(b->user->getIp()));
-		case COLUMN_ISP: return compare(a->user->getHost(),b->user->getHost());
-		case COLUMN_PK: return  compare(a->user->getPk(),b->user->getPk()); ;
-		case COLUMN_LOCK: return  compare(a->user->getLock(),b->user->getLock()); ;
-		case COLUMN_SUPPORTS: return compare(a->user->getSupports(),b->user->getSupports()); 
-		default: return 0;
 	}
+	if(nHardCol == COLUMN_SHARED) {
+		return compare(a->user->getBytesShared(), b->user->getBytesShared());
+	}
+	return Util::stricmp(a->columns[nHardCol], b->columns[nHardCol]);	
 }
 
 void UserInfo::update() {
@@ -83,21 +64,36 @@ void UserInfo::update() {
 		string Omezeni = user->getUpload();
 
 		if (!Omezeni.empty()) {
-			uploadSpeed = Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";
+			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
 		} else
-		if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = ">=100 kB/s"; }
-		else if(tmp == "28.8Kbps") { uploadSpeed = "*max. 2.1 kB/s"; }
-		else if(tmp == "33.6Kbps") { uploadSpeed = "*max. 3 kB/s"; }
-		else if(tmp == "56Kbps") { uploadSpeed = "*max. 4.2 kB/s"; }
-		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = "*max. 6 kB/s"; }
-		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = "*max. 10 kB/s"; }
-		else { uploadSpeed = "N/A"; }
-	} else uploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
+		if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = Text::toT(">=100 kB/s"); }
+		else if(tmp == "28.8Kbps") { uploadSpeed = Text::toT("*max. 2.1 kB/s"); }
+		else if(tmp == "33.6Kbps") { uploadSpeed = Text::toT("*max. 3 kB/s"); }
+		else if(tmp == "56Kbps") { uploadSpeed = Text::toT("*max. 4.2 kB/s"); }
+		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = Text::toT("*max. 6 kB/s"); }
+		else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = Text::toT("*max. 10 kB/s"); }
+		else { uploadSpeed = Text::toT("N/A"); }
+	} else uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
 
-	shared = Util::formatBytes(user->getBytesShared());
+	columns[COLUMN_NICK] = Text::toT(user->getNick());
+	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(user->getBytesShared()));
+	columns[COLUMN_EXACT_SHARED] = Text::toT(Util::formatExactSize(user->getBytesShared()));
+	columns[COLUMN_DESCRIPTION] = Text::toT(user->getDescription());
+	columns[COLUMN_TAG] = Text::toT(user->getTag());
+	columns[COLUMN_CONNECTION] = Text::toT(user->getConnection());
+	columns[COLUMN_UPLOAD_SPEED] = uploadSpeed;
+	columns[COLUMN_EMAIL] = Text::toT(user->getEmail());
+	columns[COLUMN_CLIENTID] = Text::toT(user->getClientType());
+	columns[COLUMN_VERSION] = Text::toT(user->getVersion());
+	columns[COLUMN_MODE] = Text::toT(user->getMode());
+	columns[COLUMN_HUBS] = Text::toT(user->getHubs());
+	columns[COLUMN_SLOTS] = Text::toT(user->getSlots());
+	columns[COLUMN_ISP] = Text::toT(user->getHost());		
+	columns[COLUMN_IP]= Text::toT(user->getIp());
+	columns[COLUMN_PK] = Text::toT(user->getPk());
+	columns[COLUMN_LOCK] = Text::toT(user->getLock());
+	columns[COLUMN_SUPPORTS] = Text::toT(user->getSupports());
 	op = user->isSet(User::OP);
-	exactshare = Util::formatExactSize(user->getBytesShared());
-	
 }
 
 static int def_columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 100, 175 };
@@ -202,7 +198,7 @@ void UserListColumns::SetToList(TypedListViewCtrl<UserInfo, IDC_USERS>& UserList
 			continue;
 		int fmt = ((j == UserInfo::COLUMN_SHARED) || (j == UserInfo::COLUMN_EXACT_SHARED) || (j == UserInfo::COLUMN_HUBS) || 
 			(j == UserInfo::COLUMN_SLOTS) || (j == UserInfo::COLUMN_UPLOAD_SPEED)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		UserList.InsertColumn(j, CSTRING_I(def_columnNames[j]), fmt, m_nColumnSizes[j], j);
+		UserList.InsertColumn(j, CTSTRING_I(def_columnNames[j]), fmt, m_nColumnSizes[j], j);
 	}
 }
 
@@ -234,7 +230,7 @@ void UserListColumns::SetColumnVisibility(int nHardColumn, TypedListViewCtrl<Use
 			m_nColumnSizes[nHardColumn] = def_columnSizes[nHardColumn];
 		int fmt = ((nListColumn == UserInfo::COLUMN_SHARED) || (nListColumn == UserInfo::COLUMN_EXACT_SHARED) || (nListColumn == UserInfo::COLUMN_HUBS) ||
 			 (nListColumn == UserInfo::COLUMN_SLOTS) || (nListColumn == UserInfo::COLUMN_UPLOAD_SPEED)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		UserList.InsertColumn(nListColumn, CSTRING_I(def_columnNames[nHardColumn]), fmt, m_nColumnSizes[nHardColumn], nListColumn);
+		UserList.InsertColumn(nListColumn, CTSTRING_I(def_columnNames[nHardColumn]), fmt, m_nColumnSizes[nHardColumn], nListColumn);
 	}
 	if (def_ColumnShowSettings[nHardColumn] != 0) { 
 		// Ma setup, tak sup s nastavenim do setupu

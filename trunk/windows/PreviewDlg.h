@@ -28,12 +28,12 @@ class PreviewDlg : public CDialogImpl<PreviewDlg> {
 	CEdit ctrlExtensions;
 
 public:
-	PreviewDlg() : argument("%[file]") {};
+	PreviewDlg() : argument(_T("%[file]")) {};
 
-	string name;
-	string application;
-	string argument;
-	string extensions;
+	tstring name;
+	tstring application;
+	tstring argument;
+	tstring extensions;
 
 	enum { IDD = IDD_PREVIEW };
 
@@ -56,10 +56,10 @@ public:
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if(wID == IDOK) {
-			char buf[256];
+			TCHAR buf[256];
 
 			if((ctrlName.GetWindowTextLength() == 0) || (ctrlApplication.GetWindowTextLength()== 0)){
-				MessageBox("Name and command must not be empty");
+				MessageBox(_T("Name and command must not be empty"));
 				return 0;
 			}
 

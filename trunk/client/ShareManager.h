@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,16 +53,15 @@ public:
 	 * @param aName Virtual name
 	 */
 	void addDirectory(const string& aDirectory, const string & aName) throw(ShareException);
-	void removeDirectory(const string& aName);	
+	void removeDirectory(const string& aName, bool duringRefresh = false);	
 	void removeDirectory1(const string& aName);	
-	string translateFileName(const string& aFile, bool adc, bool utf8) throw(ShareException);
+	string translateFileName(const string& aFile, bool adc) throw(ShareException);
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ShareException);
 	void setDirty() { xmlDirty = nmdcDirty = true; };
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
 	int64_t addExcludeFolder(const string &path);
-//	void clearExcludeFolders() { notShared.clear(); }
 
 	void search(SearchResult::List& l, const string& aString, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults);
 	void search(SearchResult::List& l, const StringList& params, Client* aClient, StringList::size_type maxResults);

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,9 +43,9 @@ class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255)
 	public UCHandler<SearchFrame>, public UserInfoBaseHandler<SearchFrame>
 {
 public:
-	static void openWindow(const string& str = Util::emptyString, LONGLONG size = 0, SearchManager::SizeModes mode = SearchManager::SIZE_ATLEAST, SearchManager::TypeModes type = SearchManager::TYPE_ANY);
+	static void openWindow(const tstring& str = Util::emptyStringW, LONGLONG size = 0, SearchManager::SizeModes mode = SearchManager::SIZE_ATLEAST, SearchManager::TypeModes type = SearchManager::TYPE_ANY);
 
-	DECLARE_FRAME_WND_CLASS_EX("SearchFrame", IDR_SEARCH, 0, COLOR_3DFACE)
+	DECLARE_FRAME_WND_CLASS_EX(_T("SearchFrame"), IDR_SEARCH, 0, COLOR_3DFACE)
 
 	typedef MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255), IDR_SEARCH> baseClass;
 	typedef UCHandler<SearchFrame> ucBase;
@@ -108,21 +108,21 @@ public:
 	END_MSG_MAP()
 
 	SearchFrame() : 
-	searchBoxContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
+	searchBoxContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
 		searchInProgress(false),
-		searchContainer("edit", this, SEARCH_MESSAGE_MAP), 
-		sizeContainer("edit", this, SEARCH_MESSAGE_MAP), 
-		modeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
-		sizeModeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
-		fileTypeContainer("COMBOBOX", this, SEARCH_MESSAGE_MAP),
-		showUIContainer("BUTTON", this, SHOWUI_MESSAGE_MAP),
-		slotsContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
-		tthContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
-		doSearchContainer("BUTTON", this, SEARCH_MESSAGE_MAP),
+		searchContainer(WC_EDIT, this, SEARCH_MESSAGE_MAP), 
+		sizeContainer(WC_EDIT, this, SEARCH_MESSAGE_MAP), 
+		modeContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		sizeModeContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		fileTypeContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		showUIContainer(WC_COMBOBOX, this, SHOWUI_MESSAGE_MAP),
+		slotsContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		tthContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
+		doSearchContainer(WC_COMBOBOX, this, SEARCH_MESSAGE_MAP),
 		resultsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
 		hubsContainer(WC_LISTVIEW, this, SEARCH_MESSAGE_MAP),
-		ctrlFilterContainer("edit", this, FILTER_MESSAGE_MAP),
-		ctrlFilterSelContainer("COMBOBOX", this, FILTER_MESSAGE_MAP),
+		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
+		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		lastSearch(0), initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), onlyTTH(false), exactSize1(false), exactSize2(0)
 	{	
@@ -180,10 +180,10 @@ public:
 				SearchInfo::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
 				if(n != s->main->subItems.end()) s->main->subItems.erase(n);
 				if(s->main->subItems.size() == 0) {
-					s->main->setHits("");
+					s->main->setHits(_T(""));
 					ctrlResults.SetItemState(ctrlResults.findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				} else {
-					s->main->setHits(Util::toString((int)s->main->subItems.size() + 1)+" "+STRING(HUB_USERS));
+					s->main->setHits(Text::toT(Util::toString((int)s->main->subItems.size() + 1)+" ")+TSTRING(HUB_USERS));
 				}
 			}
 
@@ -205,8 +205,8 @@ public:
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			SearchInfo* si = ctrlResults.getItemData(i);
-			string t = SettingsManager::getInstance()->getDownloadDir(Util::getFileExt(si->getFileName()));		
-			(SearchInfo::Download(t))(ctrlResults.getItemData(i));
+			string t = SettingsManager::getInstance()->getDownloadDir(Text::fromT(Util::getFileExt(si->getFileName())));		
+			(SearchInfo::Download(Text::toT(t)))(ctrlResults.getItemData(i));
 		}
 		return 0;
 	}
@@ -219,7 +219,7 @@ public:
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT onDownloadWhole(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadWhole(SETTING(DOWNLOAD_DIRECTORY)));
+		ctrlResults.forEachSelectedT(SearchInfo::DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 	
@@ -249,14 +249,14 @@ public:
 
 	void startSearch() {
 		searchInProgress = true;
-		ctrlDoSearch.SetWindowText(CSTRING(STOP_SEARCH));
+		ctrlDoSearch.SetWindowText(CTSTRING(STOP_SEARCH));
 	}
 
 	void stopSearch() {
 		search.clear();
 		searchInProgress = false;
-		ctrlDoSearch.SetWindowText(CSTRING(SEARCH));
-		ctrlStatus.SetText(1, CSTRING(SEARCH_STOPPED));
+		ctrlDoSearch.SetWindowText(CTSTRING(SEARCH));
+		ctrlStatus.SetText(1, CTSTRING(SEARCH_STOPPED));
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -281,7 +281,7 @@ public:
 		return 0;
 	}
 
-	void SearchFrame::setInitial(const string& str, LONGLONG size, SearchManager::SizeModes mode, SearchManager::TypeModes type) {
+	void SearchFrame::setInitial(const tstring& str, LONGLONG size, SearchManager::SizeModes mode, SearchManager::TypeModes type) {
 		initialString = str; initialSize = size; initialMode = mode; initialType = type;
 	}
 	
@@ -342,55 +342,55 @@ private:
 		void view();
 		void GetMP3Info();
 		struct Download {
-			Download(const string& aTarget) : tgt(aTarget) { };
+			Download(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
-			const string& tgt;
+			const tstring& tgt;
 		};
 		struct DownloadWhole {
-			DownloadWhole(const string& aTarget) : tgt(aTarget) { };
+			DownloadWhole(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
-			const string& tgt;
+			const tstring& tgt;
 		};
 		struct DownloadTarget {
-			DownloadTarget(const string& aTarget) : tgt(aTarget) { };
+			DownloadTarget(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
-			const string& tgt;
+			const tstring& tgt;
 		};
 		struct CheckSize {
 			CheckSize() : size(-1), op(true), oneHub(true), hasTTH(false), firstTTH(true) { };
 			void operator()(SearchInfo* si);
-			string ext;
+			tstring ext;
 			int64_t size;
 			bool oneHub;
-			string hub;
+			tstring hub;
 			bool op;
 			bool hasTTH;
 			bool firstTTH;
-			string tth;
+			tstring tth;
 		};
 
-		const string& getText(int col) const {
+		const tstring& getText(int col) const {
 			switch(col) {
-				case COLUMN_NICK: return sr->getUser()->getNick();
+				case COLUMN_NICK: return nick;
 				case COLUMN_FILENAME: return fileName;
 				case COLUMN_TYPE: return type;
 				case COLUMN_SIZE: return size;
 				case COLUMN_PATH: return path;
 				case COLUMN_SLOTS: return slots;
-				case COLUMN_CONNECTION: return sr->getUser()->getConnection();
-				case COLUMN_HUB: return sr->getHubName();
+				case COLUMN_CONNECTION: return connection;
+				case COLUMN_HUB: return hubName;
 				case COLUMN_EXACT_SIZE: return exactSize;
 				case COLUMN_UPLOAD: return uploadSpeed;
 				case COLUMN_IP: return ip;
 				case COLUMN_TTH: return tth;
 				case COLUMN_HITS: return hits;
-				default: return Util::emptyString;
+				default: return Util::emptyStringT;
 			}
 		}
 
 		static int doCompareItems(SearchInfo* a, SearchInfo* b, int col) {
 			switch(col) {
-				case COLUMN_NICK: return Util::stricmp(a->sr->getUser()->getNick(), b->sr->getUser()->getNick());
+				case COLUMN_NICK: return Util::stricmp(a->nick, b->nick);
 				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
@@ -405,7 +405,7 @@ private:
 						return compare(a->sr->getSlots(), b->sr->getSlots());
 					else
 						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
-				case COLUMN_CONNECTION: return Util::stricmp(a->sr->getUser()->getConnection(), b->sr->getUser()->getConnection());
+				case COLUMN_CONNECTION: return Util::stricmp(a->connection, b->connection);
 				case COLUMN_HUB: return Util::stricmp(a->sr->getHubName(), b->sr->getHubName());
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
 				case COLUMN_UPLOAD: return compare(a->uploadSpeed,b->uploadSpeed);
@@ -445,27 +445,30 @@ private:
 
 		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
-				if(sr->getFile().rfind('\\') == string::npos) {
-					fileName = sr->getFile();
+				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
+					fileName = Text::toT(sr->getFile());
 				} else {
-					fileName = Util::getFileName(sr->getFile());
-					path = Util::getFilePath(sr->getFile());
+					fileName = Text::toT(Util::getFileName(sr->getFile()));
+					path = Text::toT(Util::getFilePath(sr->getFile()));
 				}
 
-				type = Util::getFileExt(fileName);
-				if(!type.empty() && type[0] == '.')
+				type = Text::toT(Util::getFileExt(Text::fromT(fileName)));
+				if(!type.empty() && type[0] == _T('.'))
 					type.erase(0, 1);
-				size = Util::formatBytes(sr->getSize());
-				exactSize = Util::formatExactSize(sr->getSize());
+				size = Text::toT(Util::formatBytes(sr->getSize()));
+				exactSize = Text::toT(Util::formatExactSize(sr->getSize()));
 			} else {
-				fileName = sr->getFileName();
-				path = sr->getFile();
-				type = STRING(DIRECTORY);
+				fileName = Text::toT(sr->getFileName());
+				path = Text::toT(sr->getFile());
+				type = TSTRING(DIRECTORY);
 			}
-			slots = sr->getSlotString();
-			ip = sr->getIP();
+			nick = Text::toT(sr->getUser()->getNick());
+			connection = Text::toT(sr->getUser()->getConnection());
+			hubName = Text::toT(sr->getHubName());
+			slots = Text::toT(sr->getSlotString());
+			ip = Text::toT(sr->getIP());
 			if(sr->getTTH() != NULL)
-				setTTH(sr->getTTH()->toBase32());
+				setTTH(Text::toT(sr->getTTH()->toBase32()));
 
 			if(user->getDownloadSpeed()<1) {
 				const string& tmp = sr->getUser()->getConnection();
@@ -473,42 +476,45 @@ private:
 				string Omezeni = user->getUpload();
 
 				if (!Omezeni.empty()) {
-					uploadSpeed = Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s";
+					uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
 				} else			
-				if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = ">=100 kB/s"; }
-				else if(tmp == "28.8Kbps") { uploadSpeed = "*max. 2.1 kB/s"; }
-				else if(tmp == "33.6Kbps") { uploadSpeed = "*max. 3 kB/s"; }
-				else if(tmp == "56Kbps") { uploadSpeed = "*max. 4.2 kB/s"; }
-				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = "*max. 6 kB/s"; }
-				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = "*max. 10 kB/s"; }
-				else { uploadSpeed = "N/A"; }			
-			} else uploadSpeed = Util::formatBytes(user->getDownloadSpeed())+"/s";
+				if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) { uploadSpeed = Text::toT(">=100 kB/s"); }
+				else if(tmp == "28.8Kbps") { uploadSpeed = Text::toT("*max. 2.1 kB/s"); }
+				else if(tmp == "33.6Kbps") { uploadSpeed = Text::toT("*max. 3 kB/s"); }
+				else if(tmp == "56Kbps") { uploadSpeed = Text::toT("*max. 4.2 kB/s"); }
+				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) { uploadSpeed = Text::toT("*max. 6 kB/s"); }
+				else if(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) { uploadSpeed = Text::toT("*max. 10 kB/s"); }
+				else { uploadSpeed = Text::toT("N/A"); }
+			} else uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
 		}
 
-		GETSET(string, fileName, FileName);
-		GETSET(string, path, Path);
-		GETSET(string, type, Type);
-		GETSET(string, size, Size);
-		GETSET(string, slots, Slots);
-		GETSET(string, exactSize, ExactSize);
-		GETSET(string, ip, IP);
-		GETSET(string, tth, TTH);
-		GETSET(string, uploadSpeed, UploadSpeed);
-		GETSET(string, hits, Hits);
+		GETSET(tstring, nick, Nick);
+		GETSET(tstring, connection, Connection)
+		GETSET(tstring, fileName, FileName);
+		GETSET(tstring, path, Path);
+		GETSET(tstring, type, Type);
+		GETSET(tstring, hubName, HubName);
+		GETSET(tstring, size, Size);
+		GETSET(tstring, slots, Slots);
+		GETSET(tstring, exactSize, ExactSize);
+		GETSET(tstring, ip, IP);
+		GETSET(tstring, tth, TTH);
+		GETSET(tstring, uploadSpeed, UploadSpeed);
+		GETSET(tstring, hits, Hits);
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
-		HubInfo(const string& aIpPort, const string& aName, bool aOp) : ipPort(aIpPort),
+		HubInfo(const tstring& aIpPort, const tstring& aName, bool aOp) : ipPort(aIpPort),
 			name(aName), op(aOp) { };
 
-		const string& getText(int col) const {
-			return (col == 0) ? name : Util::emptyString;
+		const tstring& getText(int col) const {
+			return (col == 0) ? name : Util::emptyStringT;
 		}
 		static int compareItems(HubInfo* a, HubInfo* b, int col) {
 			return (col == 0) ? Util::stricmp(a->name, b->name) : 0;
 		}
-		string ipPort;
-		string name;
+		tstring ipPort;
+		tstring name;
 		bool op;
 	};
 
@@ -520,7 +526,7 @@ private:
 		HUB_REMOVED,
 	};
 
-	string initialString;
+	tstring initialString;
 	int64_t initialSize;
 	SearchManager::SizeModes initialMode;
 	SearchManager::TypeModes initialType;
@@ -569,7 +575,7 @@ private:
 	OMenu targetDirMenu;
 	OMenu copyMenu;
 	
-	StringList search;
+	TStringList search;
 	StringList targets;
 	StringList wholeTargets;
 
@@ -589,7 +595,7 @@ private:
 
 	CriticalSection cs;
 
-	static StringList lastSearches;
+	static TStringList lastSearches;
 
 	DWORD lastSearch;
 	bool closed;
@@ -597,12 +603,12 @@ private:
 	static int columnIndexes[];
 	static int columnSizes[];
 
-	void downloadSelected(const string& aDir, bool view = false); 
-	void downloadWholeSelected(const string& aDir);
+	void downloadSelected(const tstring& aDir, bool view = false); 
+	void downloadWholeSelected(const tstring& aDir);
 	void onEnter();
 	void onTab(bool shift);
 	
-	void download(SearchResult* aSR, const string& aDir, bool view);
+	void download(SearchResult* aSR, const tstring& aDir, bool view);
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 
@@ -625,7 +631,7 @@ private:
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	
 	void speak(Speakers s, Client* aClient) {
-		HubInfo* hubInfo = new HubInfo(aClient->getIpPort(), aClient->getName(), aClient->getOp());
+		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getIpPort()), Text::toT(aClient->getName()), aClient->getOp());
 		PostMessage(WM_SPEAKER, WPARAM(s), LPARAM(hubInfo)); 
 	};
 };

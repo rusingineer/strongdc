@@ -24,28 +24,28 @@
 
 LRESULT CMagnetDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	// zombies.
-	SetWindowText(CSTRING(MAGNET_DLG_TITLE));
+	SetWindowText(CTSTRING(MAGNET_DLG_TITLE));
 	CenterWindow(GetParent());
 
 	// fill in dialog bits
-	SetDlgItemText(IDC_MAGNET_HASH, CSTRING(MAGNET_DLG_HASH));
-	SetDlgItemText(IDC_MAGNET_NAME, CSTRING(MAGNET_DLG_FILE));
-	SetDlgItemText(IDC_MAGNET_SIZE, CSTRING(MAGNET_DLG_SIZE));
-	SetDlgItemText(IDC_MAGNET_QUEUE, CSTRING(MAGNET_DLG_QUEUE));
-	SetDlgItemText(IDC_MAGNET_SEARCH, CSTRING(MAGNET_DLG_SEARCH));
-	SetDlgItemText(IDC_MAGNET_NOTHING, CSTRING(MAGNET_DLG_NOTHING));
-	SetDlgItemText(IDC_MAGNET_REMEMBER, CSTRING(MAGNET_DLG_REMEMBER));
+	SetDlgItemText(IDC_MAGNET_HASH, CTSTRING(MAGNET_DLG_HASH));
+	SetDlgItemText(IDC_MAGNET_NAME, CTSTRING(MAGNET_DLG_FILE));
+	SetDlgItemText(IDC_MAGNET_SIZE, CTSTRING(MAGNET_DLG_SIZE));
+	SetDlgItemText(IDC_MAGNET_QUEUE, CTSTRING(MAGNET_DLG_QUEUE));
+	SetDlgItemText(IDC_MAGNET_SEARCH, CTSTRING(MAGNET_DLG_SEARCH));
+	SetDlgItemText(IDC_MAGNET_NOTHING, CTSTRING(MAGNET_DLG_NOTHING));
+	SetDlgItemText(IDC_MAGNET_REMEMBER, CTSTRING(MAGNET_DLG_REMEMBER));
 	if(mSize <= 0 || mFileName.length() <= 0) {
 		::ShowWindow(GetDlgItem(IDC_MAGNET_QUEUE), false);
 		::ShowWindow(GetDlgItem(IDC_MAGNET_REMEMBER), false);
 	}
-	SetDlgItemText(IDC_MAGNET_TEXT, CSTRING(MAGNET_DLG_TEXT_GOOD));
+	SetDlgItemText(IDC_MAGNET_TEXT, CTSTRING(MAGNET_DLG_TEXT_GOOD));
 
 	// file details
 	SetDlgItemText(IDC_MAGNET_DISP_HASH, mHash.c_str());
-	SetDlgItemText(IDC_MAGNET_DISP_NAME, mFileName.length() > 0 ? mFileName.c_str() : "N/A");
+	SetDlgItemText(IDC_MAGNET_DISP_NAME, mFileName.length() > 0 ? mFileName.c_str() : _T("N/A"));
 	char buf[32];
-	SetDlgItemText(IDC_MAGNET_DISP_SIZE, mSize > 0 ? _i64toa(mSize, buf, 10) : "N/A");
+	SetDlgItemText(IDC_MAGNET_DISP_SIZE, mSize > 0 ? Text::toT(_i64toa(mSize, buf, 10)).c_str() : _T("N/A"));
 		//search->minFileSize > 0 ? _i64toa(search->minFileSize, buf, 10) : ""
 
 	// radio button
@@ -70,10 +70,10 @@ LRESULT CMagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 		}
 
 		if(IsDlgButtonChecked(IDC_MAGNET_SEARCH)) {
-			TTHValue tmphash(mHash);
+			TTHValue tmphash(Text::fromT(mHash));
 			WinUtil::searchHash(&tmphash); 
 		} else if(IsDlgButtonChecked(IDC_MAGNET_QUEUE)) {
-			QueueManager::getInstance()->add(mFileName, mSize, mHash);
+			QueueManager::getInstance()->add(Text::fromT(mFileName), mSize, Text::fromT(mHash));
 		} 
 	}
 	EndDialog(wID);

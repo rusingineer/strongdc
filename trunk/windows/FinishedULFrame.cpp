@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -71,23 +71,23 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	FinishedManager::getInstance()->unlockList();
 	
 	ctxMenu.CreatePopupMenu();
-	ctxMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CSTRING(VIEW_AS_TEXT));
-	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FILE, CSTRING(OPEN));
-	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FOLDER, CSTRING(OPEN_FOLDER));
+	ctxMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
+	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FILE, CTSTRING(OPEN));
+	ctxMenu.AppendMenu(MF_STRING, IDC_OPEN_FOLDER, CTSTRING(OPEN_FOLDER));
 	ctxMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	ctxMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
-	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CSTRING(REMOVE_ALL));
+	ctxMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
 	tabMenu.CreatePopupMenu();
 
 	if(BOOLSETTING(LOG_UPLOADS)) {
-		tabMenu.AppendMenu(MF_STRING, IDC_UPLOAD_LOG, CSTRING(OPEN_UPLOAD_LOG));
+		tabMenu.AppendMenu(MF_STRING, IDC_UPLOAD_LOG, CTSTRING(OPEN_UPLOAD_LOG));
 		tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	}
-	tabMenu.AppendMenu(MF_STRING, IDC_TOTAL, CSTRING(REMOVE_ALL));
+	tabMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
 	tabMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CSTRING(CLOSE));
+	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 
 	bHandled = FALSE;
 	return TRUE;
@@ -99,7 +99,7 @@ LRESULT FinishedULFrame::onDoubleClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHa
 
 	if(item->iItem != -1) {
 		FinishedItem* entry = (FinishedItem*)ctrlList.GetItemData(item->iItem);
-		WinUtil::openFile(entry->getTarget());
+		WinUtil::openFile(Text::toT(entry->getTarget()));
 	}
 	return 0;
 }
@@ -109,7 +109,7 @@ LRESULT FinishedULFrame::onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	int i;
 	if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 		FinishedItem * const entry = (FinishedItem*)ctrlList.GetItemData(i);
-		TextFrame::openWindow(entry->getTarget());
+		TextFrame::openWindow(Text::toT(entry->getTarget()));
 	}
 	return 0;
 }
@@ -119,7 +119,7 @@ LRESULT FinishedULFrame::onOpenFile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	int i;
 	if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 		FinishedItem * const entry = (FinishedItem*)ctrlList.GetItemData(i);
-		WinUtil::openFile(entry->getTarget());
+		WinUtil::openFile(Text::toT(entry->getTarget()));
 	}
 	return 0;
 }
@@ -129,7 +129,7 @@ LRESULT FinishedULFrame::onOpenFolder(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	int i;
 	if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 		FinishedItem * const entry = (FinishedItem*)ctrlList.GetItemData(i);
-		::ShellExecute(NULL, NULL, Util::getFilePath(entry->getTarget()).c_str(), NULL, NULL, SW_SHOWNORMAL);
+		::ShellExecute(NULL, NULL, Text::toT(Util::getFilePath(entry->getTarget())).c_str(), NULL, NULL, SW_SHOWNORMAL);
 	}
 	return 0;
 }
@@ -154,7 +154,7 @@ LRESULT FinishedULFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 }
 
 LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	if(!closed){
+	if(!closed) {
 	FinishedManager::getInstance()->removeListener(this);
 	
 		closed = true;
@@ -187,20 +187,18 @@ LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 }
 
 void FinishedULFrame::addEntry(FinishedItem* entry) {
-	StringList l;
-
-	l.push_back(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime()));
-	l.push_back(Util::getFileName(entry->getTarget()));
-
-	l.push_back(Util::getFilePath(entry->getTarget()));
-	l.push_back(entry->getUser());
-	l.push_back(entry->getHub());
-	l.push_back(Util::formatBytes(entry->getSize()));
-	l.push_back(Util::formatBytes(entry->getAvgSpeed()) + "/s");
+	TStringList l;
+	l.push_back(Text::toT(Util::getFileName(entry->getTarget())));
+	l.push_back(Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
+	l.push_back(Text::toT(Util::getFilePath(entry->getTarget())));
+	l.push_back(Text::toT(entry->getUser()));
+	l.push_back(Text::toT(entry->getHub()));
+	l.push_back(Text::toT(Util::formatBytes(entry->getSize())));
+	l.push_back(Text::toT(Util::formatBytes(entry->getAvgSpeed()) + "/s"));
 	totalBytes += entry->getChunkSize();
 	totalTime += entry->getMilliSeconds();
 
-	int image = WinUtil::getIconIndex(entry->getTarget());
+	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
 	int loc = ctrlList.insert(l, image, (LPARAM)entry);
 	ctrlList.EnsureVisible(loc, FALSE);
 }
@@ -212,12 +210,12 @@ LRESULT FinishedULFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPAR
 }
 
 LRESULT FinishedULFrame::onUploadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string filename = SETTING(LOG_DIRECTORY) + "Uploads.log";
-	if(File::existsFile(filename)){
+	tstring filename = Text::toT(SETTING(LOG_DIRECTORY)) + _T("Uploads.log");
+	if(File::existsFile(Text::fromT(filename))){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 	} else {
-		MessageBox(CSTRING(NO_UPLOAD_LOG),CSTRING(NO_UPLOAD_LOG), MB_OK );	  
+		MessageBox(CTSTRING(NO_UPLOAD_LOG), CTSTRING(NO_UPLOAD_LOG), MB_OK );	  
 	}
 	return 0;
 }

@@ -26,10 +26,12 @@ class ToolbarPage : public CPropertyPage<IDD_TOOLBARPAGE>, public PropPage
 {
 public:
 	ToolbarPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_TOOLBAR)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TOOLBAR)).c_str());
 		SetTitle(title);
 	};
-	~ToolbarPage() { delete[] title;};
+	~ToolbarPage() {
+		free(title);
+	};
 
 	BEGIN_MSG_MAP(ToolbarPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -54,10 +56,10 @@ protected:
 	void BrowseForPic(int DLGITEM);
 	string filter(string s);
 	void makeItem(LPLVITEM lvi, int item);
-
+	tstring name;
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 };
 
 #endif //TOOLBARPAGE_H

@@ -49,7 +49,7 @@ public:
   : CWindowImpl< CDimEdit, CEdit >( ),
     m_getDlgCodeHandled( false ),
     m_isDim( true ),
-    m_dimText( "<Click here to enter value>" ),
+		m_dimText(_T("<Click here to enter value>")),
     m_dimColor( RGB( 128, 128, 128 ) ) {
   }
 

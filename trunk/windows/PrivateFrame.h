@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,15 +39,15 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>
 {
 public:
-	static void gotMessage(const User::Ptr& aUser, const string& aMessage);
-	static void openWindow(const User::Ptr& aUser, const string& aMessage = Util::emptyString);
+	static void gotMessage(const User::Ptr& aUser, const tstring& aMessage);
+	static void openWindow(const User::Ptr& aUser, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); };
 
 	enum {
 		USER_UPDATED
 	};
 
-	DECLARE_FRAME_WND_CLASS_EX("PrivateFrame", IDR_PRIVATE, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("PrivateFrame"), IDR_PRIVATE, 0, COLOR_3DFACE);
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -109,15 +109,14 @@ public:
 	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 
-	void addLine(const string& aLine);
-	void addLine(const string& aLine, CHARFORMAT2& cf);
+	void addLine(const tstring& aLine);
+	void addLine(const tstring& aLine, CHARFORMAT2& cf);
 	void onEnter();
 	void UpdateLayout(BOOL bResizeBars = TRUE);	
 	void runUserCommand(UserCommand& uc);
-	
-	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	
+		
 	LRESULT onSendMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		onEnter();
 		return 0;
@@ -150,22 +149,22 @@ public:
 		return 0;
 	}
 	
-	void addClientLine(const string& aLine) {
+	void addClientLine(const tstring& aLine) {
 		if(!created) {
 			CreateEx(WinUtil::mdiClient);
 		}
-		ctrlStatus.SetText(0, ("[" + Util::getShortTimeString() + "] " + aLine).c_str());
+		ctrlStatus.SetText(0, (_T("[") + Text::toT(Util::getShortTimeString()) + _T("] ") + aLine).c_str());
 		if (BOOLSETTING(TAB_DIRTY)) {
 			setDirty();
 		}
 	}
 	
 	void setUser(const User::Ptr& aUser) { user = aUser; };
-	void sendMessage(const string& msg) {
+	void sendMessage(const tstring& msg) {
 		if(user && user->isOnline()) {
-			string s = "<" + user->getClientNick() + "> " + msg;
-			user->privateMessage(s);
-			addLine(s);
+			user->privateMessage(Text::fromT(msg));
+			string s = "<" + user->getClientNick() + "> " + Text::fromT(msg);
+			addLine(Text::toT(s));
 		}
 	}
 	
@@ -173,7 +172,7 @@ public:
 private:
 	PrivateFrame(const User::Ptr& aUser) : user(aUser), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
-		ctrlMessageContainer("edit", this, PM_MESSAGE_MAP) {
+		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP) {
 		}
 	
 	~PrivateFrame() {
@@ -196,6 +195,7 @@ private:
 
 	User::Ptr user;	
 	CContainedWindow ctrlMessageContainer;
+	CContainedWindow ctrlClientContainer;
 
 	bool closed;
 	bool isoffline;
@@ -207,11 +207,11 @@ private:
 	CHARFORMAT2 m_ChatTextSystem;
 	CHARFORMAT2 m_ChatTextLog;
 	
-	LPCTSTR sMyNick;
+	LPCSTR sMyNick;
 
-	StringList prevCommands;
-	string currentCommand;
-	StringList::size_type curCommandPosition;
+	TStringList prevCommands;
+	tstring currentCommand;
+	TStringList::size_type curCommandPosition;
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {

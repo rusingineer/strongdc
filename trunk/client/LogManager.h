@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public:
 	void log(const string& area, const string& msg) throw() {
 		Lock l(cs);
 		try {
-			Util::ensureDirectory(SETTING(LOG_DIRECTORY) + area + ".log");
+			File::ensureDirectory(SETTING(LOG_DIRECTORY) + area + ".log");
 			File f(Util::validateFileName(SETTING(LOG_DIRECTORY) + area + ".log"), File::WRITE, File::OPEN | File::CREATE);
 			f.setEndPos(0);
 			f.write(msg + "\r\n");

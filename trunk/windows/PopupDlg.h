@@ -13,7 +13,7 @@
 class PopupWnd : public CWindowImpl<PopupWnd, CWindow>
 {
 public:
-	DECLARE_WND_CLASS("Popup");
+	DECLARE_WND_CLASS(_T("Popup"));
 
 	BEGIN_MSG_MAP(PopupWnd)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -33,7 +33,7 @@ public:
 
 		Create(NULL, rc, NULL, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW );
 
-		WinUtil::decodeFont(SETTING(TEXT_FONT)/*SETTING(POPUP_FONT)*/, logFont);
+		WinUtil::decodeFont(Text::toT(SETTING(TEXT_FONT))/*SETTING(POPUP_FONT)*/, logFont);
 		font = ::CreateFontIndirect(&logFont);
 
 	}
@@ -69,9 +69,9 @@ public:
 			SS_CENTER | SS_NOPREFIX);
 
 		label.SetFont(WinUtil::boldFont);
-		label.SetWindowText(title.c_str());
+		label.SetWindowText(Text::toT(title).c_str());
 		label1.SetFont(WinUtil::font);
-		label1.SetWindowText(msg.c_str());
+		label1.SetWindowText(Text::toT(msg).c_str());
 
 
 		bHandled = false;

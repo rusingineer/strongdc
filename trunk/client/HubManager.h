@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,36 +106,38 @@ public:
 	typedef vector<HubEntry> List;
 	typedef List::iterator Iter;
 	
-	// XML stuff
-	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers, 
-		const string& aShared, const string& aCountry, const string& aStatus, const string& aMinshare, const string& aMinslots, 
-		const string& aMaxhubs, const string& aMaxusers, const string& aReliability, const string& aRating, const string& aPort) throw() : 
-	name(aName), server(aServer), description(aDescription), users(aUsers), 
-		shared(aShared), country(aCountry), status(aStatus), minshare(aMinshare), minslots(aMinslots), 
-		maxhubs(aMaxhubs), maxusers(aMaxusers), reliability(aReliability), rating(aRating), port(aPort) { };
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
-	name(aName), server(aServer), description(aDescription), users(aUsers) { };
+	name(aName), server(aServer), description(aDescription), users(Util::toInt(aUsers)), country(Util::emptyString), 
+	rating(Util::emptyString), reliability(0.0), shared(0), minShare(0), minSlots(0), maxHubs(0), maxUsers(0) { };
+
+	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers, const string& aCountry,
+		const string& aShared, const string& aMinShare, const string& aMinSlots, const string& aMaxHubs, const string& aMaxUsers,
+		const string& aReliability, const string& aRating) : name(aName), server(aServer), description(aDescription), country(aCountry), 
+		rating(aRating), reliability((float)(Util::toFloat(aReliability) / 100.0)), shared(Util::toInt64(aShared)), minShare(Util::toInt64(aMinShare)),
+		users(Util::toInt(aUsers)), minSlots(Util::toInt(aMinSlots)), maxHubs(Util::toInt(aMaxHubs)), maxUsers(Util::toInt(aMaxUsers)) 
+	{
+
+	}
+
 	HubEntry() throw() { };
-	HubEntry(const HubEntry& rhs) throw() : name(rhs.name), server(rhs.server), description(rhs.description), users(rhs.users), 
-		shared(rhs.shared), country(rhs.country), status(rhs.status), minshare(rhs.minshare), minslots(rhs.minslots), 
-		maxhubs(rhs.maxhubs), maxusers(rhs.maxusers), reliability(rhs.reliability), rating(rhs.rating), port(rhs.port) { }
-	virtual ~HubEntry() throw() { };
+	HubEntry(const HubEntry& rhs) throw() : name(rhs.name), server(rhs.server), description(rhs.description), country(rhs.country), 
+		rating(rhs.rating), reliability(rhs.reliability), shared(rhs.shared), minShare(rhs.minShare), users(rhs.users), minSlots(rhs.minSlots),
+		maxHubs(rhs.maxHubs), maxUsers(rhs.maxUsers) { }
+
+	~HubEntry() throw() { };
 
 	GETSET(string, name, Name);
 	GETSET(string, server, Server);
 	GETSET(string, description, Description);
-	GETSET(string, users, Users);
-	// XML stuff
-	GETSET(string, shared, Shared);
 	GETSET(string, country, Country);
-	GETSET(string, status, Status);
-	GETSET(string, minshare, Minshare);
-	GETSET(string, minslots, Minslots);
-	GETSET(string, maxhubs, Maxhubs);
-	GETSET(string, maxusers, Maxusers);
-	GETSET(string, reliability, Reliability);
 	GETSET(string, rating, Rating);
-	GETSET(string, port, Port);
+	GETSET(float, reliability, Reliability);
+	GETSET(int64_t, shared, Shared);
+	GETSET(int64_t, minShare, MinShare);
+	GETSET(int, users, Users);
+	GETSET(int, minSlots, MinSlots);
+	GETSET(int, maxHubs, MaxHubs)
+	GETSET(int, maxUsers, MaxUsers);
 };
 
 class FavoriteHubEntry {
@@ -587,10 +589,7 @@ private:
 	
 	enum {
 		TYPE_NORMAL,
-		TYPE_BZIP2,
-		// XML addition
-		TYPE_XML,
-		TYPE_XMLBZIP2
+		TYPE_BZIP2
 	} listType;
 
 	HubEntry::List publicHubs;
@@ -642,6 +641,8 @@ private:
 		return favoriteHubs.end();
 	}
 
+	void loadXmlList(const string& xml);
+	
 	RecentHubEntry::Iter getRecentHub(const string& aServer) {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
 			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
@@ -657,8 +658,6 @@ private:
 	virtual void on(Redirected, HttpConnection*, const string&) throw();
 	virtual void on(TypeNormal, HttpConnection*) throw();
 	virtual void on(TypeBZ2, HttpConnection*) throw();
-	virtual void on(TypeXML, HttpConnection*) throw();
-	virtual void on(TypeXMLBZ2, HttpConnection*) throw();
 	
  	void onHttpFinished() throw();
 

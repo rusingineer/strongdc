@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@ class LineDlg : public CDialogImpl<LineDlg>
 	CEdit ctrlLine;
 	CStatic ctrlDescription;
 public:
-	string line;
-	string description;
-	string title;
+	tstring line;
+	tstring description;
+	tstring title;
 	bool password;
 
 	enum { IDD = IDD_LINE };
@@ -73,7 +73,7 @@ public:
 	{
 		if(wID == IDOK) {
 			int len = ctrlLine.GetWindowTextLength() + 1;
-			char* buf = new char[len];
+			TCHAR* buf = new TCHAR[len];
 			GetDlgItemText(IDC_LINE, buf, len);
 			line = buf;
 			delete[] buf;
@@ -88,10 +88,10 @@ class KickDlg : public CDialogImpl<KickDlg> {
 	CComboBox ctrlLine;
 	CStatic ctrlDescription;
 public:
-	string line;
-	static string m_sLastMsg;
-	string description;
-	string title;
+	tstring line;
+	static tstring m_sLastMsg;
+	tstring description;
+	tstring title;
 
 	enum { IDD = IDD_KICK };
 	
@@ -113,7 +113,7 @@ public:
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
-	string Msgs[20];
+	tstring Msgs[20];
 };
 
 #endif // !defined(AFX_LineDLG_H__A7EB85C3_1EEA_4FEC_8450_C090219B8619__INCLUDED_)

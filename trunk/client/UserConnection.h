@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -213,7 +213,7 @@ public:
 
 	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
 
-	void myNick(const string& aNick) { send("$MyNick " + aNick + '|'); }
+	void myNick(const string& aNick) { send("$MyNick " + Text::utf8ToAcp(aNick) + '|'); }
 	void lock(const string& aLock, const string& aPk) { send ("$Lock " + aLock + " Pk=" + aPk + '|'); }
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
@@ -227,7 +227,8 @@ public:
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); };
 	void maxedOut() { send("$MaxedOut|");	};
 	void fileNotAvail() { send("$Error File Not Available|"); }
-
+	void getListLen() { send("$GetListLen|"); };
+	
 	void send(const Command& c) {
 		send(c.toString(true));
 	}
@@ -262,14 +263,12 @@ public:
 
 	User::Ptr& getUser() { return user; };
 
-	string getRemoteIp() const { return socket->getRemoteIp(); }
-	void getListLen() { send("$GetListLen|"); };
-	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	GETSET(string, unknownCommand, UnknownCommand);
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; };
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; };
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; };
 	void setUpload(Upload* u) { dcassert(isSet(FLAG_UPLOAD)); upload = u; };
+
 	void reconnect() {
 		disconnect();
 		Thread::sleep(100);
@@ -294,6 +293,8 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
+	string getRemoteIp() const { return socket->getRemoteIp(); }
+	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	void garbageCommand() { 
 		string tmp;
 		tmp.reserve(20);

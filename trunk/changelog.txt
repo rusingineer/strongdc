@@ -1,5 +1,13 @@
 	-- StrongDC++ 1.00 --
 
+*** VAROVÁNÍ ***
+Tato verze zmìní všechny Vaše konfiguraèní soubory a frontu, a je
+velmi pravdìpodobné, že se po aktualizaci nebudete moci vrátit ke
+starší verzi!!!
+Pøed aktualizací dostahujte své soubory, jestliže jejich názvy
+obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
+*** VAROVÁNÍ ***
+
 * opraveno zobrazení progressbaru v uploadqueue
 * pøidána možnost odstranit offline uživatele pøi vybìru více položek
 * pøidán prùmìrný share na uživatele (THX Corvik)
@@ -7,6 +15,8 @@
 * opraven pád pøi spuštìní na starých Windows (THX Prologic)
 * vrácena historie zpráv pøi kopnutí
 * opraven pád pøi znovuvložení zdroje
+* aktualizováno na PCRE 5.0
+* pøevedeno do UTF-8 kvùli správné lokalizaci
 
 
 	-- StrongDC++ 1.00 RC8 --

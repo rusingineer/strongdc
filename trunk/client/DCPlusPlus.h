@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,6 +90,42 @@ typedef StringPairList::iterator StringPairIter;
 typedef HASH_MAP<string, string> StringMap;
 typedef StringMap::iterator StringMapIter;
 
+typedef vector<wstring> WStringList;
+typedef WStringList::iterator WStringIter;
+typedef WStringList::const_iterator WStringIterC;
+
+typedef pair<wstring, wstring> WStringPair;
+typedef vector<WStringPair> WStringPairList;
+typedef WStringPairList::iterator WStringPairIter;
+
+typedef HASH_MAP<wstring, wstring> WStringMap;
+typedef WStringMap::iterator WStringMapIter;
+
+#ifdef UNICODE
+
+typedef wstring tstring;
+typedef WStringList TStringList;
+typedef WStringIter TStringIter;
+
+typedef WStringPair TStringPair;
+typedef WStringPairIter TStringPairIter;
+typedef WStringPairList TStringPairList;
+
+typedef WStringMap TStringMap;
+typedef WStringMapIter TStringMapIter;
+#else
+typedef string tstring;
+typedef StringList TStringList;
+typedef StringIter TStringIter;
+
+typedef StringPair TStringPair;
+typedef StringPairIter TStringPairIter;
+typedef StringPairList TStringPairList;
+
+typedef StringMap TStringMap;
+typedef StringMapIter TStringMapIter;
+#endif
+
 #include "version.h"
 
 extern void startup(void (*f)(void*, const string&), void* p);
@@ -101,7 +137,6 @@ template<typename T, bool flag> struct ReferenceSelector {
 template<typename T> struct ReferenceSelector<T,true> {
 	typedef const T& ResultType;
 };
-
 template<typename T> struct TypeTraits {
 	typedef typename ReferenceSelector<T,(sizeof(T)>sizeof(char*))>::ResultType
 		ParameterType;

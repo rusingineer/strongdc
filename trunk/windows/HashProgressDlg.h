@@ -89,31 +89,31 @@ public:
 		}
 		double diff = tick - startTime;
 		if(diff < 1000 || files == 0 || bytes == 0) {
-			SetDlgItemText(IDC_FILES_PER_HOUR, ("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
-			SetDlgItemText(IDC_HASH_SPEED, ("-.-- B/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
-			SetDlgItemText(IDC_TIME_LEFT, ("-:--:-- " + STRING(LEFT)).c_str());
+			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
+			SetDlgItemText(IDC_HASH_SPEED, Text::toT("-.-- B/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
+			SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
 			progress.SetPos(0);
 		} else {
 			double filestat = (((double)(startFiles - files)) * 60 * 60 * 1000) / diff;
 			double speedStat = (((double)(startBytes - bytes)) * 1000) / diff;
 
-			SetDlgItemText(IDC_FILES_PER_HOUR, (Util::toString(filestat) + " " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
-			SetDlgItemText(IDC_HASH_SPEED, (Util::formatBytes((int64_t)speedStat) + "/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
+			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT(Util::toString(filestat) + " " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
+			SetDlgItemText(IDC_HASH_SPEED, Text::toT(Util::formatBytes((int64_t)speedStat) + "/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
 
 			if(filestat == 0 || speedStat == 0) {
-				SetDlgItemText(IDC_TIME_LEFT, ("-:--:-- " + STRING(LEFT)).c_str());
+				SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
 			} else {
 				double fs = files * 60 * 60 / filestat;
 				double ss = bytes / speedStat;
 
-				SetDlgItemText(IDC_TIME_LEFT, (Util::formatSeconds((int64_t)(fs + ss) / 2) + " " + STRING(LEFT)).c_str());
+				SetDlgItemText(IDC_TIME_LEFT, Text::toT(Util::formatSeconds((int64_t)(fs + ss) / 2) + " " + STRING(LEFT)).c_str());
 			}
 		}
 
 		if(files == 0) {
-			SetDlgItemText(IDC_CURRENT_FILE, CSTRING(DONE));
+			SetDlgItemText(IDC_CURRENT_FILE, CTSTRING(DONE));
 		} else {
-			SetDlgItemText(IDC_CURRENT_FILE, (file).c_str());
+			SetDlgItemText(IDC_CURRENT_FILE, Text::toT(file).c_str());
 		}
 
 		if(startFiles == 0 || startBytes == 0) {

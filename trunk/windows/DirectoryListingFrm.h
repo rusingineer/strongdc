@@ -41,7 +41,7 @@
 class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY>, public CSplitterImpl<DirectoryListingFrame>
 {
 public:
-	static void openWindow(const string& aFile, const User::Ptr& aUser);
+	static void openWindow(const tstring& aFile, const User::Ptr& aUser);
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
 
@@ -54,12 +54,12 @@ public:
 		COLUMN_LAST
 	};
 	
-	DirectoryListingFrame(const string& aFile, const User::Ptr& aUser);
+	DirectoryListingFrame(const tstring& aFile, const User::Ptr& aUser);
 	~DirectoryListingFrame() { 
 		delete dl; 
 	}
 
-	DECLARE_FRAME_WND_CLASS("DirectoryListingFrame", IDR_DIRECTORY)
+	DECLARE_FRAME_WND_CLASS(_T("DirectoryListingFrame"), IDR_DIRECTORY)
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -129,8 +129,8 @@ public:
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/); 
 
-	void downloadList(const string& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void downloadMP3List(const string& aTarget);
+	void downloadList(const tstring& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void downloadMP3List(const tstring& aTarget);
 	void updateTree(DirectoryListing::Directory* tree, HTREEITEM treeItem);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void findFile(bool findNext);
@@ -147,7 +147,7 @@ public:
 
 	void setWindowTitle() {
 		if(error.empty())
-			SetWindowText(dl->getUser()->getFullNick().c_str());
+			SetWindowText(Text::toT(dl->getUser()->getFullNick()).c_str());
 		else
 			SetWindowText(error.c_str());		
 	}
@@ -209,7 +209,7 @@ private:
 	void changeDir(DirectoryListing::Directory* d, BOOL enableRedraw);
 	HTREEITEM findFile(const StringSearch& str, HTREEITEM root, int &foundFile, int &skipHits);
 	void updateStatus();
-	void GoToDirectory(HTREEITEM hItem, StringList::iterator& iPath, const StringList::iterator& iPathEnd);
+	void GoToDirectory(HTREEITEM hItem, TStringList::iterator& iPath, const TStringList::iterator& iPathEnd);
 
 	class ItemInfo : public FastAlloc<ItemInfo> {
 	public:
@@ -224,27 +224,31 @@ private:
 		};
 
 		ItemInfo(DirectoryListing::File* f, bool utf8) : type(FILE), file(f) { 
-			columns[COLUMN_FILENAME] = f->getName();
-			if(utf8)
-				Util::toAcp(columns[COLUMN_FILENAME]);
+			if(utf8) {
+				columns[COLUMN_FILENAME] = Text::toT(f->getName());
+			} else {
+				columns[COLUMN_FILENAME] = Text::toT(Text::acpToUtf8(f->getName()));
+			}
 			columns[COLUMN_TYPE] = Util::getFileExt(columns[COLUMN_FILENAME]);
 			if(columns[COLUMN_TYPE].size() > 0 && columns[COLUMN_TYPE][0] == '.')
 				columns[COLUMN_TYPE].erase(0, 1);
 
-			columns[COLUMN_SIZE] = Util::formatBytes(f->getSize());
-			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(f->getSize());
+			columns[COLUMN_SIZE] =  Text::toT(Util::formatBytes(f->getSize()));
+			columns[COLUMN_EXACT_SIZE] =  Text::toT(Util::formatExactSize(f->getSize()));
 			if(f->getTTH() != NULL)
-                columns[COLUMN_TTH] = f->getTTH()->toBase32();
+				columns[COLUMN_TTH] = Text::toT(f->getTTH()->toBase32());
 		};
 		ItemInfo(DirectoryListing::Directory* d, bool utf8) : type(DIRECTORY), dir(d) { 
-			columns[COLUMN_FILENAME] = d->getName();
-			if(utf8 && Util::needsAcp(columns[COLUMN_FILENAME]))
-				Util::toAcp(columns[COLUMN_FILENAME]);
-			columns[COLUMN_SIZE] = Util::formatBytes(d->getTotalSize());
-			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(d->getTotalSize());
+			if(utf8) {
+				columns[COLUMN_FILENAME] = Text::toT(d->getName());
+			} else {
+				columns[COLUMN_FILENAME] = Text::toT(Text::acpToUtf8(d->getName()));
+			}
+			columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(d->getTotalSize()));
+			columns[COLUMN_EXACT_SIZE] = Text::toT(Util::formatExactSize(d->getTotalSize()));
 		};
 
-		const string& getText(int col) {
+		const tstring& getText(int col) {
 			return columns[col];
 		}
 		
@@ -279,7 +283,7 @@ private:
 		}
 
 	private:
-		string columns[COLUMN_LAST];
+		tstring columns[COLUMN_LAST];
 	};
 	
 	CMenu targetMenu;
@@ -304,10 +308,10 @@ private:
 	CButton ctrlMatchQueue;
 
 	string findStr;
-	string error;
+	tstring error;
 	string size;
 
-	string start;
+	tstring start;
 
 	int skipHits;
 

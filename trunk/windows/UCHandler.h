@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -49,17 +49,17 @@ public:
 		return 0;
 	}
 
-	void prepareMenu(OMenu& menu, int ctx, const string& server, bool op) {
-		userCommands = HubManager::getInstance()->getUserCommands(ctx, server, op);
+	void prepareMenu(OMenu& menu, int ctx, const tstring& server, bool op) {
+		userCommands = HubManager::getInstance()->getUserCommands(ctx, Text::fromT(server), op);
 		int n = 0;
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
 			if(op) {
 				menu.AppendMenu(MF_SEPARATOR);
-				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CSTRING(GET_USER_RESPONSES));
-				menu.AppendMenu(MF_STRING, IDC_REPORT, CSTRING(REPORT));
-				menu.AppendMenu(MF_STRING, IDC_CHECKLIST, CSTRING(CHECK_FILELIST));
+				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
+				menu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
+				menu.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
 				extraItems = 5;
 			} else {
 				extraItems = 1;
@@ -77,13 +77,13 @@ public:
 					}
 				} else if(uc.getType() == UserCommand::TYPE_RAW || uc.getType() == UserCommand::TYPE_RAW_ONCE) {
 					cur = menu.m_hMenu;
-					StringTokenizer t(uc.getName(), '\\');
-					for(StringIter i = t.getTokens().begin(); i != t.getTokens().end(); ++i) {
+					StringTokenizer<tstring> t(Text::toT(uc.getName()), _T('\\'));
+					for(TStringIter i = t.getTokens().begin(); i != t.getTokens().end(); ++i) {
 						if(i+1 == t.getTokens().end()) {
 							cur.AppendMenu(MF_STRING, IDC_USER_COMMAND+n, i->c_str());
 						} else {
 							bool found = false;
-							char buf[1024];
+							TCHAR buf[1024];
 							// Let's see if we find an existing item...
 							for(int k = 0; k < cur.GetMenuItemCount(); k++) {
 								if(cur.GetMenuState(k, MF_BYPOSITION) & MF_POPUP) {
@@ -123,3 +123,7 @@ private:
 
 #endif
 
+/**
+* @file
+* $Id$
+*/

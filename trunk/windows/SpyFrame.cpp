@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,9 +45,10 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlSearches.SetTextBkColor(WinUtil::bgColor);
 	ctrlSearches.SetTextColor(WinUtil::textColor);
 
-	ctrlSearches.AddColumn(CSTRING(SEARCH_STRING), COLUMN_STRING, COLUMN_STRING);
-	ctrlSearches.AddColumn(CSTRING(COUNT), COLUMN_COUNT, COLUMN_COUNT);
-	ctrlSearches.AddColumn(CSTRING(USERS), COLUMN_USERS, COLUMN_USERS);
+	ctrlSearches.AddColumn(CTSTRING(SEARCH_STRING), COLUMN_STRING, COLUMN_STRING);
+	ctrlSearches.AddColumn(CTSTRING(COUNT), COLUMN_COUNT, COLUMN_COUNT);
+	ctrlSearches.AddColumn(CTSTRING(USERS), COLUMN_USERS, COLUMN_USERS);
+	ctrlSearches.AddColumn(CTSTRING(TIME), COLUMN_TIME, COLUMN_TIME);
 
 	ctrlSearches.setSort(COLUMN_COUNT, ExListViewCtrl::SORT_INT, false);
 
@@ -99,7 +100,7 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 
 		for (int k = 0; k < 3; ++k)
 			if (x->seeker == (searches[x->s].seekers)[k])
-				break;		//that user's searchfng for file already noted
+				break;		//that user's searching for file already noted
 
 		{
 			Lock l(cs);
@@ -117,33 +118,38 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		// Not thread safe, but who cares really...
 		perSecond[cur]++;
 
-		int j = ctrlSearches.find(x->s);
+		int j = ctrlSearches.find(Text::toT(x->s));
 		if(j == -1) {
-			StringList a;
-			a.push_back(x->s);
-			a.push_back(Util::toString(1));
-			a.push_back(temp);
+			TStringList a;
+			a.push_back(Text::toT(x->s));
+			a.push_back(Text::toT(Util::toString(1)));
+			a.push_back(Text::toT(temp));
+			a.push_back(Text::toT(Util::getTimeString()));			
 			ctrlSearches.insert(a);
 			if(ctrlSearches.GetItemCount() > 500) {
 				ctrlSearches.DeleteItem(ctrlSearches.GetItemCount() - 1);
 			}
 		} else {
-			char tmp[32];
+			TCHAR tmp[32];
 			ctrlSearches.GetItemText(j, COLUMN_COUNT, tmp, 32);
-			ctrlSearches.SetItemText(j, COLUMN_COUNT, Util::toString(Util::toInt(tmp)+1).c_str());
-			ctrlSearches.SetItemText(j, COLUMN_USERS, temp.c_str());
+			ctrlSearches.SetItemText(j, COLUMN_COUNT, Text::toT(Util::toString(Util::toInt(Text::fromT(tmp))+1)).c_str());
+			ctrlSearches.SetItemText(j, COLUMN_USERS, Text::toT(temp).c_str());
+			ctrlSearches.GetItemText(j, COLUMN_TIME, tmp, 32);
+			ctrlSearches.SetItemText(j, COLUMN_TIME, Text::toT(Util::getTimeString()).c_str());
 			if(ctrlSearches.getSortColumn() == COLUMN_COUNT )
+				ctrlSearches.resort();
+			if(ctrlSearches.getSortColumn() == COLUMN_TIME )
 				ctrlSearches.resort();
 		}
 		delete x;
 
-		ctrlStatus.SetText(1, (STRING(TOTAL) + Util::toString(total)).c_str());
-		ctrlStatus.SetText(3, (STRING(HITS) + Util::toString(ShareManager::getInstance()->getHits())).c_str());
+		ctrlStatus.SetText(1, Text::toT(STRING(TOTAL) + Util::toString(total)).c_str());
+		ctrlStatus.SetText(3, Text::toT(STRING(HITS) + Util::toString(ShareManager::getInstance()->getHits())).c_str());
 		double ratio = total > 0 ? ((double)ShareManager::getInstance()->getHits()) / (double)total : 0.0;
-		ctrlStatus.SetText(4, (STRING(HIT_RATIO) + Util::toString(ratio)).c_str());
+		ctrlStatus.SetText(4, Text::toT(STRING(HIT_RATIO) + Util::toString(ratio)).c_str());
 	} else if(wParam == TICK_AVG) {
 		float* x = (float*)lParam;
-		ctrlStatus.SetText(2, (STRING(AVERAGE) + Util::toString(*x)).c_str());
+		ctrlStatus.SetText(2, Text::toT(STRING(AVERAGE) + Util::toString(*x)).c_str());
 		delete x;
 	}
 
@@ -163,11 +169,11 @@ LRESULT SpyFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 		CMenu mnu;
 		mnu.CreatePopupMenu();
-		mnu.AppendMenu(MF_STRING, IDC_SEARCH, CSTRING(SEARCH));
-		char* buf = new char[256];
+		mnu.AppendMenu(MF_STRING, IDC_SEARCH, CTSTRING(SEARCH));
+		TCHAR* buf = new TCHAR[256];
 		ctrlSearches.GetItemText(i, COLUMN_STRING, buf, 256);
 		searchString = buf;
-		delete buf;
+		delete[] buf;
 
 		ctrlSearches.ClientToScreen(&pt);
 		mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -179,8 +185,8 @@ LRESULT SpyFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 }
 
 LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(searchString.compare(0, 4, "TTH:") == 0) {		
-		TTHValue* tth = new TTHValue(searchString.substr(4));
+	if(searchString.compare(0, 4, _T("TTH:")) == 0) {		
+		TTHValue* tth = new TTHValue(Text::fromT(searchString).substr(4));
 		WinUtil::searchHash(tth);
 		delete tth;
 	} else {
@@ -191,7 +197,7 @@ LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 
 void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& user, const string& s) throw() {
 	SearchInfo *x = new SearchInfo(user, s);
-	int i = -1;
+	string::size_type i = 0;
 	while( (i=(x->s).find('$')) != string::npos) {
 		(x->s)[i] = ' ';
 			}

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_TIMELEFT || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlTransfers.InsertColumn(j, CSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlTransfers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 
 	ctrlTransfers.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -77,36 +77,36 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	transferMenu.CreatePopupMenu();
 	appendUserItems(transferMenu);
-	transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CSTRING(FORCE_ATTEMPT));
+	transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CTSTRING(FORCE_ATTEMPT));
 	transferMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
+	transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 
 	previewMenu.CreatePopupMenu();
-	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));
+	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
 	previewMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
 
 	usercmdsMenu.CreatePopupMenu();
-	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CSTRING(SETTINGS_USER_COMMANDS));
+	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
 
 	transferMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CSTRING(SETCZDC_DISCONNECTING_ENABLE));
-	transferMenu.AppendMenu(MF_STRING, IDC_OFFCOMPRESS, CSTRING(DISABLE_COMPRESSION));
+	transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
+	transferMenu.AppendMenu(MF_STRING, IDC_OFFCOMPRESS, CTSTRING(DISABLE_COMPRESSION));
 	transferMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	transferMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(CLOSE_CONNECTION));
+	transferMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(CLOSE_CONNECTION));
 	transferMenu.SetMenuDefaultItem(IDC_PRIVATEMESSAGE);
 
 	segmentedMenu.CreatePopupMenu();
-	segmentedMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
-	segmentedMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CSTRING(SETCZDC_DISCONNECTING_ENABLE));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+	segmentedMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
 	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CSTRING(CONNECT_ALL));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CSTRING(DISCONNECT_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CTSTRING(CONNECT_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CTSTRING(DISCONNECT_ALL));
 	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_EXPAND_ALL, CSTRING(EXPAND_ALL));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CSTRING(COLLAPSE_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_EXPAND_ALL, CTSTRING(EXPAND_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CTSTRING(COLLAPSE_ALL));
 	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CSTRING(REMOVE_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_ALL));
 
 	hIconCompressed = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TRANSFER_COMPRESSED), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 
@@ -114,11 +114,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	DownloadManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
 	HashManager::getInstance()->addListener(this);
-#if 0
-	ItemInfo* ii = new ItemInfo(ClientManager::getInstance()->getUser("test"), 
-		ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_RUNNING, 75, 100, 25, 50);
-	ctrlTransfers.insert(0, string("Test"), 0, (LPARAM)ii);
-#endif
+
 	return 0;
 }
 
@@ -156,10 +152,10 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 			itemI = ctrlTransfers.getItemData(i);
 			bCustomMenu = true;
 	
-			usercmdsMenu.InsertSeparatorFirst(CSTRING(SETTINGS_USER_COMMANDS));
+			usercmdsMenu.InsertSeparatorFirst(STRING(SETTINGS_USER_COMMANDS));
 	
 			if(itemI->user != (User::Ptr)NULL)
-			prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, itemI->user->getClientAddressPort(), itemI->user->isClientOp());
+			prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, Text::toT(itemI->user->getClientAddressPort()), itemI->user->isClientOp());
 	}
 		ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
 		WinUtil::ClearPreviewMenu(previewMenu);
@@ -167,8 +163,8 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 		segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 		transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 
-		if(ii->type == ItemInfo::TYPE_DOWNLOAD && ii->file != "") {
-			string ext = Util::getFileExt(ii->file);
+		if(ii->type == ItemInfo::TYPE_DOWNLOAD && ii->file != Util::emptyStringT) {
+			string ext = Util::getFileExt(Text::fromT(ii->file));
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 			QueueItem* qi = ii->qi;
@@ -186,15 +182,15 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 			transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
 		}
 
-		previewMenu.InsertSeparatorFirst(CSTRING(PREVIEW_MENU));
+		previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 		ctrlTransfers.ClientToScreen(&pt);
 		
 		if(ii->pocetUseru <= 1) {
-			transferMenu.InsertSeparatorFirst(CSTRING(MENU_TRANSFERS));
+			transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
 			transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			transferMenu.RemoveFirstItem();
 		} else {
-			segmentedMenu.InsertSeparatorFirst(CSTRING(SETTINGS_SEGMENT));
+			segmentedMenu.InsertSeparatorFirst(STRING(SETTINGS_SEGMENT));
 			segmentedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			segmentedMenu.RemoveFirstItem();
 		}
@@ -221,7 +217,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 		StringMap tmp = ucParams;
 		itemI->user->getParams(tmp);
 		itemI->user->clientEscapeParams(tmp);
-		itemI->user->send(Util::formatParams(uc.getCommand(), tmp));
+		itemI->user->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 	}
 	return;
 };
@@ -230,7 +226,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CSTRING(CONNECTING_FORCED));
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 		ctrlTransfers.getItemData(i)->user->connect();
 	}
 	return 0;
@@ -240,8 +236,8 @@ void TransferView::ItemInfo::removeAll() {
 	if(pocetUseru == 1) {
 		QueueManager::getInstance()->removeSources(user, QueueItem::Source::FLAG_REMOVED);
 	} else {
-		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, "Do you really want to remove this item?", APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-			QueueManager::getInstance()->remove(Target);
+		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, _T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
+			QueueManager::getInstance()->remove(Text::fromT(Target));
 	}
 }
 
@@ -249,7 +245,7 @@ LRESULT TransferView::onOffCompress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	int i = -1;
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ctrlTransfers.getItemData(i)->disconnect();
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, "Vypínám kompresi...");	
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, _T("Vypínám kompresi..."));	
 		
 		ctrlTransfers.getItemData(i)->user->setFlag(User::FORCEZOFF);
 		ctrlTransfers.getItemData(i)->user->connect();
@@ -302,7 +298,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					GetSysColor(COLOR_HIGHLIGHT);
 
 				// Get the text to draw
-				char buf[256];
+				TCHAR buf[256];
 				ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_STATUS, buf, 255);
 				buf[255] = 0;
 				
@@ -338,8 +334,8 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				bih.biClrUsed = 32;
 				bih.biClrImportant = 0;
 				HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-				if (hBmp == NULL)
-					MessageBox(Util::translateError(GetLastError()).c_str(), "ERROR", MB_OK);
+//				if (hBmp == NULL)
+//					MessageBox(Text::toT(Util::translateError(GetLastError())).c_str(), _T("ERROR"), MB_OK);
 				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 				HDC& dc = cdc.m_hDC;
 
@@ -375,7 +371,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				// Draw the text over the entire item
                 COLORREF oldcol = ::SetTextColor(dc, hTextDefColor);
-				::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				// Draw the background and border of the bar
 				if(ii->size == 0)
@@ -409,7 +405,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				// Draw the text only over the bar and with correct color
 				rc2.right = rc.right + 1;
 				::SetTextColor(dc, OperaColors::TextFromBackground(clr));
-                ::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+                ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 		
 				if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 					DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
@@ -421,7 +417,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 						SETTING(PROGRESS_TEXT_COLOR_UP)) : 
 					OperaColors::TextFromBackground(clr); //GetSysColor(COLOR_HIGHLIGHT);
 				::SetTextColor(dc, textcolor);
-                ::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+                ::DrawText(dc, buf, _tcslen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				SelectObject(dc, oldFont);
 				::SetTextColor(dc, oldcol);
@@ -472,7 +468,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		dcdebug(("****** TransferView: Removing "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 		ctrlTransfers.deleteItem(i);
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
@@ -520,13 +515,13 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 }
 
 bool TransferView::ItemInfo::canDisplayUpper() {
-	if((statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
-		(statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
-   		(statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
-   		(statusString == STRING(TTH_INCONSISTENCY)) ||
-   		(statusString == STRING(CHECKING_TTH)) ||
-   		(statusString == STRING(DISCONNECTED)) ||
-   		(statusString == STRING(SFV_INCONSISTENCY)))
+	if((statusString == TSTRING(DOWNLOAD_FINISHED_IDLE)) ||
+		(statusString == TSTRING(UPLOAD_FINISHED_IDLE)) ||
+   		(statusString.substr(1,10) == TSTRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
+   		(statusString == TSTRING(TTH_INCONSISTENCY)) ||
+   		(statusString == TSTRING(CHECKING_TTH)) ||
+   		(statusString == TSTRING(DISCONNECTED)) ||
+   		(statusString == TSTRING(SFV_INCONSISTENCY)))
 			return true;
 
 	if(qi) {
@@ -541,25 +536,25 @@ void TransferView::ItemInfo::update() {
 	updateMask = 0;
 	
 	if(colMask & MASK_USER) {
-		if(!mainItem || type == TYPE_UPLOAD) columns[COLUMN_USER] = user->getNick();
-			else columns[COLUMN_USER] = Util::toString(pocetUseru)+" "+STRING(HUB_USERS);
+		if(!mainItem || type == TYPE_UPLOAD) columns[COLUMN_USER] = Text::toT(user->getNick());
+			else columns[COLUMN_USER] = Text::toT(Util::toString(pocetUseru)+" "+STRING(HUB_USERS));
 		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
 			upper->user = user;
 			if(upper->pocetUseru > 1) {
-				upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
+				upper->columns[COLUMN_USER] = Text::toT(Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS));
 			} else {
-				upper->columns[COLUMN_USER] = user->getNick();
+				upper->columns[COLUMN_USER] = Text::toT(user->getNick());
 			}
 		}
 	}
 	if(colMask & MASK_HUB) {
-		if(!mainItem || type == TYPE_UPLOAD) columns[COLUMN_HUB] = user->getClientName();
+		if(!mainItem || type == TYPE_UPLOAD) columns[COLUMN_HUB] = Text::toT(user->getClientName());
 
 		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
 			if(upper->pocetUseru > 1) {
-				upper->columns[COLUMN_HUB] = Util::toString((int)qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
+				upper->columns[COLUMN_HUB] = Text::toT(Util::toString((int)qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS));
 			} else {
-				upper->columns[COLUMN_HUB] = user->getClientName();
+				upper->columns[COLUMN_HUB] = Text::toT(user->getClientName());
 			}
 		}			
 	}
@@ -567,7 +562,7 @@ void TransferView::ItemInfo::update() {
 		columns[COLUMN_STATUS] = statusString;
 		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
 			if(!upper->finished) {
-				if((statusString != STRING(ALL_SEGMENTS_TAKEN)) && (statusString != STRING(NO_FREE_BLOCK)))
+				if((statusString != TSTRING(ALL_SEGMENTS_TAKEN)) && (statusString != TSTRING(NO_FREE_BLOCK)))
 					upper->columns[COLUMN_STATUS] = upper->statusString;
 			} else if(canDisplayUpper()) {
 				upper->columns[COLUMN_STATUS] = upper->statusString;
@@ -579,15 +574,15 @@ void TransferView::ItemInfo::update() {
 			if(upper != NULL) upper->status = ItemInfo::STATUS_RUNNING;
 		}
 		if(colMask & MASK_TIMELEFT) {
-			columns[COLUMN_TIMELEFT] = Util::formatSeconds(timeLeft);
+			columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-				upper->columns[COLUMN_TIMELEFT] = Util::formatSeconds(timeLeft);
+				upper->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
 			}
 		}
 		if(colMask & MASK_SPEED) {
-			columns[COLUMN_SPEED] = Util::formatBytes(speed) + "/s";;
+			columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(speed) + "/s");
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-				upper->columns[COLUMN_SPEED] = Util::formatBytes(celkovaRychlost) + "/s";
+				upper->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(celkovaRychlost) + "/s");
 				upper->speed = celkovaRychlost;
 				if(qi != NULL) {
 					qi->setSpeed(celkovaRychlost);
@@ -601,9 +596,9 @@ void TransferView::ItemInfo::update() {
 			}
 		}
 		if(colMask & MASK_SIZE) {
-			columns[COLUMN_SIZE] = Util::formatBytes(size);
+			columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-				upper->columns[COLUMN_SIZE] = Util::formatBytes(size);
+				upper->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
 			}
 		}
 		if(colMask & MASK_PATH) {
@@ -613,26 +608,30 @@ void TransferView::ItemInfo::update() {
 			}
 		}
 		if(colMask & MASK_IP) {
-			if (country == "") columns[COLUMN_IP] = IP;
-			else columns[COLUMN_IP] = country + " (" + IP + ")";
+			if (country == _T(""))
+				columns[COLUMN_IP] = IP;
+			else if (IP == _T(""))
+				columns[COLUMN_IP] = country;
+			else
+				columns[COLUMN_IP] = country + _T(" (") + IP + _T(")");
 		}
 		if(colMask & MASK_RATIO) {
-			columns[COLUMN_RATIO] = Util::toString(getRatio());
+			columns[COLUMN_RATIO] = Text::toT(Util::toString(getRatio()));
 			if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
-				upper->columns[COLUMN_RATIO] = Util::toString(upper->compressRatio);
+				upper->columns[COLUMN_RATIO] = Text::toT(Util::toString(upper->compressRatio));
 			}
 		}
 	} else {
-		columns[COLUMN_TIMELEFT] = "";
-		columns[COLUMN_SPEED] = "";
-		columns[COLUMN_RATIO] = "";
+		columns[COLUMN_TIMELEFT] = Util::emptyStringT;
+		columns[COLUMN_SPEED] = Util::emptyStringT;
+		columns[COLUMN_RATIO] = Util::emptyStringT;
 		if((upper != NULL) && (upper->status != STATUS_RUNNING)) {
-			upper->columns[COLUMN_TIMELEFT] = "";
-			upper->columns[COLUMN_SPEED] = "";
-			upper->columns[COLUMN_RATIO] = "";
-			if(file != "") upper->columns[COLUMN_FILE] = file;
-			if(size != -1) upper->columns[COLUMN_SIZE] = Util::formatBytes(size);
-			if(path != "") upper->columns[COLUMN_PATH] = path;
+			upper->columns[COLUMN_TIMELEFT] = Util::emptyStringT;
+			upper->columns[COLUMN_SPEED] = Util::emptyStringT;
+			upper->columns[COLUMN_RATIO] = Util::emptyStringT;
+			if(file != _T("")) upper->columns[COLUMN_FILE] = file;
+			if(size != -1) upper->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
+			if(path != _T("")) upper->columns[COLUMN_PATH] = path;
 		}
 	}
 }
@@ -645,20 +644,20 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) == transferItems.end());
 		transferItems.insert(make_pair(aCqi, i));
-		i->columns[COLUMN_STATUS] = i->statusString = STRING(CONNECTING);
+		i->columns[COLUMN_STATUS] = i->statusString = TSTRING(CONNECTING);
 		if (t == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 			if (qi) {
-				i->columns[COLUMN_FILE] = Util::getFileName(qi->getTarget());
-				i->columns[COLUMN_PATH] = Util::getFilePath(qi->getTarget());
-				i->columns[COLUMN_SIZE] = Util::formatBytes(qi->getSize());
+				i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(qi->getTarget()));
+				i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(qi->getTarget()));
+				i->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(qi->getSize()));
 				i->size = qi->getSize();
-				i->Target = qi->getTarget();
+				i->Target = Text::toT(qi->getTarget());
 				i->qi = qi;
  			}
 		}
 	}
-	dcdebug(("****** TransferView: ConnectionAdded "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+
 	PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)i);
 }
 
@@ -668,23 +667,23 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
-		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? STRING(CONNECTING) : STRING(WAITING_TO_RETRY);
-		if(i->statusString == STRING(CONNECTING)) i->status = ItemInfo::STATUS_WAITING;
+		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? TSTRING(CONNECTING) : TSTRING(WAITING_TO_RETRY);
+		if(i->statusString == TSTRING(CONNECTING)) i->status = ItemInfo::STATUS_WAITING;
 		else i->status = ItemInfo::STATUS_RUNNING;
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 			if (qi) {
-				i->columns[COLUMN_FILE] = Util::getFileName(qi->getTarget());
-				i->columns[COLUMN_PATH] = Util::getFilePath(qi->getTarget());
-				i->columns[COLUMN_SIZE] = Util::formatBytes(qi->getSize());
-				i->file = Util::getFileName(qi->getTarget());
-				i->path = Util::getFilePath(qi->getTarget());
+				i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(qi->getTarget()));
+				i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(qi->getTarget()));
+				i->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(qi->getSize()));
+				i->file = Text::toT(Util::getFileName(qi->getTarget()));
+				i->path = Text::toT(Util::getFilePath(qi->getTarget()));
 				i->size = qi->getSize();				
 				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
-				i->Target = qi->getTarget();
+				i->Target = Text::toT(qi->getTarget());
 				i->qi = qi;
-
+				i->tth = qi->getTTH();
 			}
 	
 			dcdebug("OnConnectionStatus\n");
@@ -695,18 +694,17 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 				if(i->qi && i->qi->getActiveSegments().size() < 1) {
 					i->upper->statusString = i->statusString;
 				}
-				i->upper->columns[COLUMN_FILE] = Util::getFileName(i->qi->getTarget());
-				i->upper->columns[COLUMN_PATH] = Util::getFilePath(i->qi->getTarget());
+				i->upper->columns[COLUMN_FILE] = Text::toT(Util::getFileName(i->qi->getTarget()));
+				i->upper->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(i->qi->getTarget()));
 				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
-				i->upper->file = Util::getFileName(i->qi->getTarget());
-				i->upper->path = Util::getFilePath(i->qi->getTarget());
+				i->upper->file = Text::toT(Util::getFileName(i->qi->getTarget()));
+				i->upper->path = Text::toT(Util::getFilePath(i->qi->getTarget()));
 				i->upper->size = i->qi->getSize();				
 				i->upper->Target = i->Target;
 			}
 		}
 	}
 
-	dcdebug(("****** TransferView: StatusChanged "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());	
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -725,23 +723,21 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 		transferItems.erase(ii);
 
 		if((isDownload) && (h != NULL)) {
-			dcdebug(("****** TransferView: PocetUseru "+ Util::toString(h->pocetUseru)+" -- "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 			h->pocetUseru -= 1;
 
 			if(h->pocetUseru <= 0) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
 				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			} else {
-				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
+				h->columns[COLUMN_USER] = Text::toT(Util::toString(h->pocetUseru))+_T(" ")+TSTRING(HUB_USERS);
 				if(h->qi)
-					h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
+					h->columns[COLUMN_HUB] = Text::toT(Util::toString((int)h->qi->getActiveSegments().size()))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
 				h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 				PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 			}
 		}
 	}
 
-	dcdebug(("****** TransferView: ConnectionRemoved "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
 }
 
@@ -751,20 +747,20 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
-		i->statusString = aReason;
+		i->statusString = Text::toT(aReason);
 
 		if(i->type != ItemInfo::TYPE_DOWNLOAD) {
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
 
 			if((i->upper != NULL) && (i->qi->getActiveSegments().size() < 1)) {
-				i->upper->statusString = aReason;
+				i->upper->statusString = Text::toT(aReason);
 			}
 		}
 			
 		i->updateMask |= (ItemInfo::MASK_HUB | ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
 	}
-	dcdebug(("****** TransferView: ConnectionFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -780,15 +776,14 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->start = aDownload->getPos();
 		i->actual = i->start;
 		i->size = aDownload->getSize();
-		i->file = Util::getFileName(aDownload->getTarget());
-		i->path = Util::getFilePath(aDownload->getTarget());
+		i->file = Text::toT(Util::getFileName(aDownload->getTarget()));
+		i->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
 		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
 		if(qi) {
 			i->qi = qi;
 		}
-		i->Target = aDownload->getTarget();
+		i->Target = Text::toT(aDownload->getTarget());
 
-		dcdebug(("OnDownloadStarting: " + aDownload->getTarget() +"\n").c_str());
 		if(i->Target != i->oldTarget) setMainItem(i);
 		i->oldTarget = i->Target;
 
@@ -798,20 +793,20 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 				i->upper->status = ItemInfo::STATUS_RUNNING;
 				i->upper->size = aDownload->getSize();
 				string x = Util::getFileName(aDownload->getTarget());
-				i->upper->file = x;
-				i->upper->path = Util::getFilePath(aDownload->getTarget());
-				i->upper->Target = aDownload->getTarget();
+				i->upper->file = Text::toT(x);
+				i->upper->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
+				i->upper->Target = Text::toT(aDownload->getTarget());
 				i->upper->actual = aDownload->getQueueTotal();
-				i->upper->downloadTarget = aDownload->getDownloadTarget();
+				i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 				i->upper->finished = false;
 				if(i->qi->getActiveSegments().size() <= 1)
-					i->upper->statusString = STRING(DOWNLOAD_STARTING);
+					i->upper->statusString = TSTRING(DOWNLOAD_STARTING);
 		}
 				
-		i->downloadTarget = aDownload->getDownloadTarget();
-		i->statusString = STRING(DOWNLOAD_STARTING);
-		i->IP = aDownload->getUserConnection()->getRemoteIp();
-		i->country = Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp());
+		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
+		i->statusString = TSTRING(DOWNLOAD_STARTING);
+		i->IP = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+		i->country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
@@ -819,16 +814,16 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 
 	if(!aDownload->isSet(Download::FLAG_USER_LIST)) {
 		if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-			PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+			PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
-	if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-		MainFrame::getMainFrame()->ShowBalloonTip((
-			STRING(FILE)+": "+i->file+"\n"+
-			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(DOWNLOAD_STARTING));
+		if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+			MainFrame::getMainFrame()->ShowBalloonTip((
+				TSTRING(FILE)+_T(": ")+i->file+_T("\n")+
+				TSTRING(USER)+_T(": ")+Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
+		}
+
 	}
 
-	}
-	dcdebug(("****** TransferView: DownStarting "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -836,15 +831,15 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	vector<ItemInfo*>* v = new vector<ItemInfo*>();
 	v->reserve(dl.size());
 
-	char* buf = new char[STRING(DOWNLOADED_BYTES).size() + 64];
+	TCHAR* buf = new TCHAR[STRING(DOWNLOADED_BYTES).size() + 64];
 
 	{
 		Lock l(cs);
 		for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 			Download* d = *j;
 			int64_t total = d->getQueueTotal();
-			sprintf(buf, CSTRING(DOWNLOADED_BYTES), Util::formatBytes(total).c_str(), 
-				(double)total*100.0/(double)d->getSize(), Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
+			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
+				(double)total*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
 
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
 			ItemInfo* i = transferItems[aCqi];
@@ -899,7 +894,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				i->statusString = buf;
 			} else {
 				if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
-					i->statusString = "* " + string(buf);
+				i->statusString = _T("* ") + tstring(buf);
 				} else {
 					i->statusString = buf;
 				}
@@ -928,12 +923,12 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->status = ItemInfo::STATUS_WAITING;
 		i->pos = 0;
 
-		i->statusString = aReason;
+		i->statusString = Text::toT(aReason);
 		i->size = aDownload->getSize();
-		i->file = Util::getFileName(aDownload->getTarget());
-		i->path = Util::getFilePath(aDownload->getTarget());
-		i->Target = aDownload->getTarget();
-		i->downloadTarget = aDownload->getDownloadTarget();
+		i->file = Text::toT(Util::getFileName(aDownload->getTarget()));
+		i->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
+		i->Target = Text::toT(aDownload->getTarget());
+		i->downloadTarget = Text::toT(aDownload->getDownloadTarget());
 		QueueItem* qi = QueueManager::getInstance()->getRunning(aCqi->getUser());
 		if(qi) i->qi = qi;
 
@@ -942,24 +937,24 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->oldTarget = i->Target;
 
 		if(i->upper) {
-			i->upper->downloadTarget = aDownload->getDownloadTarget();
-			i->upper->file = Util::getFileName(aDownload->getTarget());
-			i->upper->path = Util::getFilePath(aDownload->getTarget());
+			i->upper->downloadTarget = Text::toT(aDownload->getDownloadTarget());
+			i->upper->file = Text::toT(Util::getFileName(aDownload->getTarget()));
+			i->upper->path = Text::toT(Util::getFilePath(aDownload->getTarget()));
 			i->upper->size = aDownload->getSize();
 
 			if(i->qi) {
 				i->upper->qi = i->qi;
 				if(i->qi->getCurrents().size() <= 1) {
 					i->upper->status = ItemInfo::STATUS_WAITING;
-					i->upper->statusString = aReason;
+					i->upper->statusString = Text::toT(aReason);
 				}
 				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)
 					&& (aReason != STRING(DOWNLOADING_TTHL) && (aReason != STRING(CHECKING_TTH)))
 					) {
 					MainFrame::getMainFrame()->ShowBalloonTip((
-						STRING(FILE)+": "+i->file+"\n"+
-						STRING(USER)+": "+i->user->getNick()+"\n"+
-						STRING(REASON)+": "+aReason).c_str(), CSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
+						TSTRING(FILE)+_T(": ")+i->file+_T("\n")+
+						TSTRING(USER)+_T(": ")+Text::toT(i->user->getNick())+_T("\n")+
+						TSTRING(REASON)+_T(": ")+Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
 				}
 			}
 		}
@@ -967,7 +962,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
 		ItemInfo::MASK_PATH;	
 	}
-	dcdebug(("****** TransferView: DownFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -978,7 +973,7 @@ void TransferView::on(HashManagerListener::Verifying, const string& fileName, in
 		Lock l(cs);
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
-			if((m->downloadTarget == fileName) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			if((m->downloadTarget == Text::toT(fileName)) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				i = m;
 				break;
 			}
@@ -989,7 +984,7 @@ void TransferView::on(HashManagerListener::Verifying, const string& fileName, in
 
 		int64_t hashedSize = i->size - remainingBytes;
 
-		i->statusString = STRING(CHECKING_TTH) + Util::toString(hashedSize * 100 / i->size) + "%";
+		i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(hashedSize * 100 / i->size) + "%");
 		i->upper->statusString = i->statusString;
 		i->updateMask |= ItemInfo::MASK_STATUS;
 	}
@@ -1010,12 +1005,12 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->status = ItemInfo::STATUS_RUNNING;
 		i->speed = 0;
 		i->timeLeft = 0;
+		i->file = Text::toT(Util::getFileName(aUpload->getLocalFileName()));
+		i->path = Text::toT(Util::getFilePath(aUpload->getLocalFileName()));
+		i->statusString = TSTRING(UPLOAD_STARTING);
 
-		i->file = Util::getFileName(aUpload->getLocalFileName());
-		i->path = Util::getFilePath(aUpload->getLocalFileName());
-		i->statusString = STRING(UPLOAD_STARTING);
-		i->IP = aUpload->getUserConnection()->getRemoteIp();
-		i->country = Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp());
+		i->IP = Text::toT(aUpload->getUserConnection()->getRemoteIp());
+		i->country = Text::toT(Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp()));
 		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH |
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 	}
@@ -1027,7 +1022,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 	vector<ItemInfo*>* v = new vector<ItemInfo*>();
 	v->reserve(ul.size());
 
-	char* buf = new char[STRING(UPLOADED_BYTES).size() + 64];
+	TCHAR* buf = new TCHAR[STRING(UPLOADED_BYTES).size() + 64];
 
 	{
 		Lock l(cs);
@@ -1042,15 +1037,15 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 			i->speed = u->getRunningAverage();
 
 			if (u->getPos() >= 0) {
-				sprintf(buf, CSTRING(UPLOADED_BYTES), Util::formatBytes(u->getPos()).c_str(), 
-				(double)u->getPos()*100.0/(double)u->getSize(), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
-            } else sprintf(buf, CSTRING(UPLOAD_STARTING));
+				_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 
+				(double)u->getPos()*100.0/(double)u->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
+            } else _stprintf(buf, CTSTRING(UPLOAD_STARTING));
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				u->isSet(Upload::FLAG_ZUPLOAD) ? i->setFlag(ItemInfo::FLAG_COMPRESSED) : i->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 				i->statusString = buf;
 			} else {
 				if(u->isSet(Upload::FLAG_ZUPLOAD)) {
-					i->statusString = "* " + string(buf);
+				i->statusString = _T("* ") + tstring(buf);
 				} else {
 					i->statusString = buf;
 				}
@@ -1079,31 +1074,31 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 			i->oldTarget = i->Target;
 			if(i->upper != NULL) {	
 				i->upper->status = ItemInfo::STATUS_WAITING;
-				i->upper->statusString = STRING(DOWNLOAD_FINISHED_IDLE);
+				i->upper->statusString = TSTRING(DOWNLOAD_FINISHED_IDLE);
 				i->upper->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_HUB | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 				i->upper->finished = true;
 			}
 
 			if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED)) {
 				MainFrame::getMainFrame()->ShowBalloonTip((
-			STRING(FILE)+": "+i->file+"\n"+
-			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(DOWNLOAD_FINISHED_IDLE));
+			TSTRING(FILE)+_T(": ")+i->file+_T("\n")+
+			TSTRING(USER)+_T(": ")+Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
 			}
 		} else {
 			if(BOOLSETTING(POPUP_UPLOAD_FINISHED)) {
 				MainFrame::getMainFrame()->ShowBalloonTip((
-			STRING(FILE)+": "+i->file+"\n"+
-			STRING(USER)+": "+i->user->getNick()).c_str(), CSTRING(UPLOAD_FINISHED_IDLE));
+			TSTRING(FILE)+_T(": ")+i->file+_T("\n")+
+			TSTRING(USER)+_T(": ")+Text::toT(i->user->getNick())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
 			}
 		}
 
 		i->status = ItemInfo::STATUS_WAITING;
 		i->pos = 0;
 
-		i->statusString = isUpload ? STRING(UPLOAD_FINISHED_IDLE) : STRING(DOWNLOAD_FINISHED_IDLE);
+		i->statusString = isUpload ? TSTRING(UPLOAD_FINISHED_IDLE) : TSTRING(DOWNLOAD_FINISHED_IDLE);
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 	}
-	dcdebug(("****** TransferView: Complete "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);	
 }
 
@@ -1116,45 +1111,19 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		string tmp;
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
-		if(ii->qi != NULL) {
-			if(ii->qi->getTTH() != NULL)
-				SearchFrame::openWindow(ii->qi->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-		} else {
-			string searchString = SearchManager::clean(ii->file);
-			StringList tok = StringTokenizer(searchString, ' ').getTokens();
-		
-			for(StringIter si = tok.begin(); si != tok.end(); ++si) {
-				bool found = false;
-			
-				for(StringIter j = searchFilter.begin(); j != searchFilter.end(); ++j) {
-					if(Util::stricmp(si->c_str(), j->c_str()) == 0) {
-						found = true;
-					}
-				}
-			
-				if(!found && !si->empty()) {
-					tmp += *si + ' ';
-				}
-			}
-			if(!tmp.empty()) {
-				if(ii->size > 10*1024*1024) {
-					SearchFrame::openWindow(tmp, ii->size-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->file));
-				} else {
-					SearchFrame::openWindow(tmp, ii->size+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->file));
-				}
-			}
-		}
+		if(ii->tth != NULL)
+			WinUtil::searchHash(ii->tth);
 	}
 	return 0;
 }
-
+			
 LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
-	string target = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED))->downloadTarget;
-	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, target);
+	tstring target = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED))->downloadTarget;
+	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, Text::fromT(target));
 	return 0;
 }
 
-TransferView::ItemInfo* TransferView::findMainItem(string Target) {
+TransferView::ItemInfo* TransferView::findMainItem(tstring Target) {
 	Lock l(cs);
 	if(!mainItems.empty()) {
 		int q = 0;
@@ -1171,45 +1140,41 @@ TransferView::ItemInfo* TransferView::findMainItem(string Target) {
 
 void TransferView::InsertItem(ItemInfo* i) {
 
-	ItemInfo* main = findMainItem(i->Target);
+	Lock l(cs);
+	ItemInfo* mainItem = findMainItem(i->Target);
 
-	{
-		Lock l(cs);
+	if(!mainItem) {
+	  	ItemInfo* h = new ItemInfo(i->user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
+		h->Target = i->Target;
+		h->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
+		h->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
+		h->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
+		h->file = i->columns[COLUMN_FILE];
+		h->path = i->columns[COLUMN_PATH];
+		h->size = i->size;
+		h->mainItem = true;
+		h->upper = NULL;
+		h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
+		h->qi = i->qi;
+		i->upper = h;
+		mainItems.push_back(h);
 
-		if(main == NULL) {
-		  	ItemInfo* h = new ItemInfo(i->user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
-			h->Target = i->Target;
-			h->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
-			h->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
-			h->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
-			h->file = i->columns[COLUMN_FILE];
-			h->path = i->columns[COLUMN_PATH];
-			h->size = i->size;
-			h->mainItem = true;
-			h->upper = NULL;
-			h->columns[COLUMN_STATUS] = h->statusString = STRING(CONNECTING);
-			h->qi = i->qi;
-			i->upper = main;
-			mainItems.push_back(h);
+		PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
+	} else {
+		i->upper = mainItem;
+		i->upper->pocetUseru += 1;			
 
-			PostMessage(WM_SPEAKER, SET_STATE, (LPARAM)h);
+		if(i->upper->pocetUseru == 1) {
+			i->upper->columns[COLUMN_USER] = Text::toT(i->user->getNick());
+			i->upper->columns[COLUMN_HUB] = Text::toT(i->user->getClientName());
 		} else {
-			i->upper = main;
-			i->upper->pocetUseru += 1;
+			i->upper->columns[COLUMN_USER] = Text::toT(Util::toString(mainItem->pocetUseru))+_T(" ")+TSTRING(HUB_USERS);
+			if(mainItem->qi)
+				i->upper->columns[COLUMN_HUB] = Text::toT(Util::toString((int)mainItem->qi->getActiveSegments().size()))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
+		}
 
-			if(i->upper->pocetUseru == 1) {
-				i->upper->columns[COLUMN_USER] = i->user->getNick();
-				i->upper->columns[COLUMN_HUB] = i->user->getClientName();
-			} else {
-				i->upper->columns[COLUMN_USER] = Util::toString(main->pocetUseru)+" "+STRING(HUB_USERS);
-
-				if(main->qi)
-					i->upper->columns[COLUMN_HUB] = Util::toString((int)main->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
-			}
-
-			if(!main->collapsed) {
-				PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
-			}
+		if(!i->upper->collapsed) {
+			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
 		}
 	}
 }
@@ -1247,8 +1212,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 			h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 
-			dcdebug(("****** TransferView: UpdateOldMainItem "+Util::getFileName(h->Target)+" from user "+h->user->getNick()+"\n").c_str());
-
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 
 			i->upper = newMainItem;
@@ -1258,7 +1221,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 			if(h->pocetUseru <= 0) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
-				dcdebug(("****** TransferView: RemoveOldMainItem "+Util::getFileName(h->Target)+" from user "+h->user->getNick()+"\n").c_str());
 				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			} else PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 		}
@@ -1310,6 +1272,8 @@ void TransferView::Expand(ItemInfo* i, int a) {
 		}
 	}
 
+	i->pocetUseru = q;
+
 	if(q == 0) {
 		mainItems.erase(find(mainItems.begin(), mainItems.end(), i));
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
@@ -1340,13 +1304,13 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	if(ctrlTransfers.GetSelectedCount() == 1) {
 		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CSTRING(CONNECTING_FORCED));
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
 			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				int h = ctrlTransfers.findItem(m);
 				if(h != -1)
-					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(CONNECTING_FORCED));
+					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 				m->user->connect();
 			}
 		}
@@ -1358,13 +1322,13 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	if(ctrlTransfers.GetSelectedCount() == 1) {
 		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CSTRING(DISCONNECTED));
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
 			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				int h = ctrlTransfers.findItem(m);
 				if(h != -1)
-					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(DISCONNECTED));
+					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 				m->disconnect();
 			}
 		}

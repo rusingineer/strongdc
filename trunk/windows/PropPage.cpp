@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "PropPage.h"
 
 #include "../client/SettingsManager.h"
+#include "WinUtil.h"
 
 #define SETTING_STR_MAXLEN 1024
 
@@ -53,7 +54,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 					throw;
 				}
 				::SetDlgItemText(page, i->itemID,
-					settings->get((SettingsManager::StrSetting)i->setting, useDef).c_str());
+				Text::toT(settings->get((SettingsManager::StrSetting)i->setting, useDef)).c_str());
 			break;
 		case T_INT:
 			if (((SettingsManager::IntSetting)i->setting) != SettingsManager::IN_PORT) {
@@ -72,7 +73,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 			break;
 		case T_INT64:
 			if(!SettingsManager::getInstance()->isDefault(i->setting)) {
-				string s = Util::toString(settings->get((SettingsManager::Int64Setting)i->setting, useDef));
+				tstring s = Text::toT(Util::toString(settings->get((SettingsManager::Int64Setting)i->setting, useDef)));
 				::SetDlgItemText(page, i->itemID, s.c_str());
 			}
 			break;
@@ -95,7 +96,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 		CRect rc;
 		ctrl.GetClientRect(rc);
 		ctrl.SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
-		ctrl.InsertColumn(0, "Dummy", LVCFMT_LEFT, rc.Width(), 0);
+		ctrl.InsertColumn(0, _T("Dummy"), LVCFMT_LEFT, rc.Width(), 0);
 
 		LVITEM lvi;
 		lvi.mask = LVIF_TEXT;
@@ -103,7 +104,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 
 		for(int i = 0; listItems[i].setting != 0; i++) {
 			lvi.iItem = i;
-			lvi.pszText = const_cast<char*>(ResourceManager::getInstance()->getString(listItems[i].desc).c_str());
+			lvi.pszText = const_cast<TCHAR*>(CTSTRING_I(listItems[i].desc));
 			ctrl.InsertItem(&lvi);
 			ctrl.SetCheckState(i, SettingsManager::getInstance()->getBool(SettingsManager::IntSetting(listItems[i].setting), true));
 		}
@@ -116,7 +117,7 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 {
 	dcassert(page != NULL);
 
-	char *buf = new char[SETTING_STR_MAXLEN];
+	TCHAR *buf = new TCHAR[SETTING_STR_MAXLEN];
 	for(Item const* i = items; i->type != T_END; i++)
 	{
 		switch(i->type)
@@ -128,7 +129,7 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					throw;
 				}
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::StrSetting)i->setting, buf);
+				settings->set((SettingsManager::StrSetting)i->setting, Text::fromT(buf));
 #if DIM_EDIT_EXPERIMENT
 				if (ctrlMap[i->itemID]) {
 					ctrlMap[i->itemID]->UnsubclassWindow();
@@ -145,13 +146,13 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					throw;
 				}
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::IntSetting)i->setting, string(buf));
+				settings->set((SettingsManager::IntSetting)i->setting, Text::fromT(buf));
 				break;
 			}
 		case T_INT64:
 			{
 				::GetDlgItemText(page, i->itemID, buf, SETTING_STR_MAXLEN);
-				settings->set((SettingsManager::Int64Setting)i->setting, string(buf));
+				settings->set((SettingsManager::Int64Setting)i->setting, Text::fromT(buf));
 				break;
 			}
 		case T_BOOL:
@@ -187,7 +188,7 @@ void PropPage::translate(HWND page, TextItem* textItems)
 	if (textItems != NULL) {
 		for(int i = 0; textItems[i].itemID != 0; i++) {
 			::SetDlgItemText(page, textItems[i].itemID,
-				ResourceManager::getInstance()->getString(textItems[i].translatedString).c_str());
+				CTSTRING_I(textItems[i].translatedString));
 		}
 	}
 }

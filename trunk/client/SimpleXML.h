@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,8 @@ public:
 			}
 		}
 	};
-	SimpleXMLReader(CallBack* callback) : cb(callback) { }
+
+	SimpleXMLReader(CallBack* callback) : cb(callback), utf8(true) { }
 	virtual ~SimpleXMLReader() { }
 
 	string::size_type fromXML(const string& tmp, const string& n = Util::emptyString, string::size_type start = 0, bool inTag = false) throw(SimpleXMLException);
@@ -66,6 +67,7 @@ private:
 	string data;
 
 	CallBack* cb;
+	bool utf8;
 
 	string::size_type loadAttribs(const string& name, const string& tmp, string::size_type start) throw(SimpleXMLException);
 
@@ -176,24 +178,23 @@ public:
 	string toXML() { StringOutputStream os; toXML(&os); return os.getString(); };
 	void toXML(OutputStream* f) throw(FileException) { if(!root.children.empty()) root.children[0]->toXML(0, f); };
 	
-	static const string& escape(const string& str, string& tmp, bool aAttrib, bool aLoading = false) {
-		if(needsEscape(str, aAttrib, aLoading)) {
+	static const string& escape(const string& str, string& tmp, bool aAttrib, bool aLoading = false, bool utf8 = true) {
+		if(needsEscape(str, aAttrib, aLoading, utf8)) {
 			tmp = str;
-			return escape(tmp, aAttrib, aLoading);
+			return escape(tmp, aAttrib, aLoading, utf8);
 		}
 		return str;
 	}	
-	static string& escape(string& aString, bool aAttrib, bool aLoading = false);
+	static string& escape(string& aString, bool aAttrib, bool aLoading = false, bool utf8 = true);
 	/** 
 	 * This is a heurestic for whether escape needs to be called or not. The results are
 	 * only guaranteed for false, i e sometimes true might be returned even though escape
 	 * was not needed...
 	 */
-	static bool needsEscape(const string& aString, bool aAttrib, bool aLoading = false) {
-		return ((aLoading) ? aString.find('&') : aString.find_first_of(aAttrib ? "<&>'\"" : "<&>")) != string::npos;
+	static bool needsEscape(const string& aString, bool aAttrib, bool aLoading = false, bool utf8 = true) {
+		return !utf8 || (((aLoading) ? aString.find('&') : aString.find_first_of(aAttrib ? "<&>'\"" : "<&>")) != string::npos);
 	}
 	static const string utf8Header;
-	static const string w1252Header;
 private:
 	class Tag {
 	public:

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,12 +30,10 @@ class DownloadPage : public CPropertyPage<IDD_DOWNLOADPAGE>, public PropPage
 {
 public:
 	DownloadPage(SettingsManager *s) : PropPage(s) { 
-		m_psp.dwFlags |= PSP_USETITLE;
-		m_psp.pszTitle = CSTRING(SETTINGS_DOWNLOADS);
-		title = strdup((STRING(SETTINGS_GENERAL) + '\\' + STRING(SETTINGS_DOWNLOADS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_DOWNLOADS)).c_str());
 		SetTitle(title);
 	};
-	virtual ~DownloadPage() { delete title;};
+	virtual ~DownloadPage() { free(title); };
 
 	BEGIN_MSG_MAP_EX(DownloadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -54,7 +52,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 };
 
 #endif //DOWNLOADPAGE_H

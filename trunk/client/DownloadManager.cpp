@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 		if(qi->isSet(QueueItem::FLAG_RESUME))
 			setFlag(Download::FLAG_RESUME);
 	}
-		if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
-			setFlag(Download::FLAG_UTF8);
+	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
+		setFlag(Download::FLAG_UTF8);
 };
 
 void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
@@ -195,7 +195,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 	bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
-
 	if( slotsFull || speedFull ) {
 		bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloads() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 		if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
@@ -205,15 +204,15 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	}
 	
 	// this happen when download finished, we need reconnect.	
-		if(reconn){
-			if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
-		removeConnection(aConn, false, true);
-			else
-				removeConnection(aConn, false);
+	if(reconn){
+		if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
+			removeConnection(aConn, false, true);
+		else
+			removeConnection(aConn, false);
 		return;
 	}
 
-		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
+	d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
 
 	if(d == NULL) {
 			removeConnection(aConn, true);
@@ -224,12 +223,13 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			Lock l(cs);
 			downloads.push_back(d);
 		}
+
 		if(d->isSet(Download::FLAG_TESTSUR)) {
 			aConn->getListLen();
 		}
 		d->setUserConnection(aConn);
 		aConn->setDownload(d);
-		}
+	}
 
 	if(firstTry && !d->getTreeValid() && 
 		!d->isSet(Download::FLAG_USER_LIST) && d->getTTH() != NULL && !d->isSet(Download::FLAG_MP3_INFO))
@@ -241,57 +241,33 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL)) 
 		{
 			dcdebug("Try to get tree from user\n");
-				// So, we need to download the tree...
-				Download* tthd = new Download();
-				tthd->setOldDownload(d);
-				tthd->setFlag(Download::FLAG_TREE_DOWNLOAD);
-				tthd->setTarget(d->getTarget());
+			// So, we need to download the tree...
+			Download* tthd = new Download();
+			tthd->setOldDownload(d);
+			tthd->setFlag(Download::FLAG_TREE_DOWNLOAD);
+			tthd->setTarget(d->getTarget());
 			tthd->setSource(d->getSource());
 
-				tthd->setUserConnection(aConn);
-				aConn->setDownload(tthd);
+			tthd->setUserConnection(aConn);
+			aConn->setDownload(tthd);
 
-				aConn->setState(UserConnection::STATE_TREE);
+			aConn->setState(UserConnection::STATE_TREE);
 			// Hack to get by TTH if possible
 			tthd->setTTH(d->getTTH());
 			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOADING_TTHL));
 			aConn->send(tthd->getCommand(false, aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF)));
 			tthd->setTTH(NULL);
-				return;
-			}
+			return;
 		}
+	}
 
-		aConn->setState(UserConnection::STATE_FILELENGTH);
+	aConn->setState(UserConnection::STATE_FILELENGTH);
 
-/*		if(d->isSet(Download::FLAG_RESUME)) {
-			dcassert(d->getSize() != -1);
 
-			const string& target = (d->getTempTarget().empty() ? d->getTarget() : d->getTempTarget());
-			int64_t start = File::getSize(target);
 
-			// Only use antifrag if we don't have a previous non-antifrag part
-			if( BOOLSETTING(ANTI_FRAG) && (start == -1) && (d->getSize() != -1) ) {
-				int64_t aSize = File::getSize(target + Download::ANTI_FRAG_EXT);
 
-				if(aSize == d->getSize())
-					start = d->getPos();
-				else
-					start = 0;
 
-				d->setFlag(Download::FLAG_ANTI_FRAG);
-			}
-		
-			int rollback = SETTING(ROLLBACK);
-			if(rollback > start) {
-				d->setStartPos(0);
-			} else {
-				d->setStartPos(start - rollback);
-				d->setFlag(Download::FLAG_ROLLBACK);
-			}
-		} else {
-			d->setStartPos(0);
-		}
-*/
+
 
 		if(d->isSet(Download::FLAG_USER_LIST)) {
 			if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
@@ -316,7 +292,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			aConn->getZBlock(d->getSource(), d->getPos(), d->getBytesLeft(), d->isSet(Download::FLAG_UTF8));
 		} else if(d->isSet(Download::FLAG_UTF8)) {
 			aConn->getBlock(d->getSource(), d->getPos(), d->getBytesLeft(), true);
-		} else{
+		} else {
 			aConn->get(d->getSource(), d->getPos());
 		}
 		aConn->getUser()->unsetFlag(User::FORCEZOFF);
@@ -402,49 +378,11 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 	}
 }
 
-/*class RollbackException : public FileException {
-public:
-	RollbackException (const string& aError) : FileException(aError) { };
-	virtual ~RollbackException() { };
-};
 
-template<bool managed>
-class RollbackOutputStream : public OutputStream {
-public:
-	RollbackOutputStream(File* f, OutputStream* aStream, size_t bytes) : s(aStream), pos(0), bufSize(bytes), buf(new u_int8_t[bytes]) {
-		size_t n = bytes;
-		f->read(buf, n);
-		f->movePos(-((int64_t)bytes));
-	}
-	virtual ~RollbackOutputStream() { delete[] buf; if(managed) delete s; };
 
-	virtual size_t flush() throw(FileException) {
-		return s->flush();
-	}
 
-	virtual size_t write(const void* b, size_t len) throw(FileException) {
-		u_int8_t* wb = (u_int8_t*)b;
-		if(buf != NULL) {
-			size_t n = len < (bufSize - pos) ? len : bufSize - pos;
 
-			if(memcmp(buf + pos, wb, n) != 0) {
-				throw RollbackException(STRING(ROLLBACK_INCONSISTENCY));
-			}
-			pos += n;
-			if(pos == bufSize) {
-				delete buf;
-				buf = NULL;
-			}
-		}
-		return s->write(wb, len);
-	}
 
-private:
-	OutputStream* s;
-	size_t pos;
-	size_t bufSize;
-	u_int8_t* buf;
-};*/
 
 template<bool managed>
 class TigerCheckOutputStream : public OutputStream {
@@ -467,14 +405,7 @@ public:
 	virtual ~TigerCheckOutputStream() { if(managed) delete s; };
 
 	virtual size_t flush() throw(FileException) {
-/*
-		if (bufPos != 0)
-			cur.update(buf, bufPos);
-		bufPos = 0;
 
-		cur.finalize();
-		checkTrees();
-*/
 		return s->flush();
 	}
 
@@ -555,7 +486,6 @@ private:
 };
 
 bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = -1 */) {
-
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 	
@@ -567,7 +497,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 			removeConnection(aSource);
 			return false;
 		}
-	q->addActiveSegment(aSource->getUser());
+		q->addActiveSegment(aSource->getUser());
 	}
 
 	if(newSize != -1) {
@@ -584,7 +514,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	dcassert(d->getSize() != -1);
 
 	string target = d->getDownloadTarget();
-	Util::ensureDirectory(target);
+	File::ensureDirectory(target);
 	if(d->isSet(Download::FLAG_USER_LIST)) {
 		if(aSource->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
 			target += ".xml.bz2";
@@ -625,9 +555,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 
 	d->setFile(file);
 	
-	//if(d->isSet(Download::FLAG_ROLLBACK)) {
-	//	d->setFile(new RollbackOutputStream<true>(file, d->getFile(), (size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())));
-	//}
 
 	if(SETTING(BUFFER_SIZE) != 0) {
 		d->setFile(new BufferedOutputStream<true>(d->getFile()));
@@ -646,20 +573,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
 	}
 
-	//if(d->getPos() ==00 0) {
-	//	if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
-	//		// We make a single node tree...
-	//		d->getTigerTree().setFileSize(d->getSize());
-	//		d->getTigerTree().setBlockSize((size_t)d->getSize());
-
-	//		d->getTigerTree().getLeaves().push_back(*d->getTTH());
-	//		d->getTigerTree().calcRoot();
-	//		d->setTreeValid(true);
-	//	}
-	//	if(d->getTreeValid()) {
-	//		d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile()));
-	//	}
-	//}
 
 	if(d->getTreeValid() && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile(), d->getStartPos(), d->getTempTarget()));
@@ -734,16 +647,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				handleEndData(aSource);
 			aSource->setLineMode();
 		}
-/*	} catch(const RollbackException& e) {
-		string target = d->getTarget();
-		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);
-		fire(DownloadManagerListener::Failed(), d, e.getError());
 
-		d->resetPos();
-		aSource->setDownload(NULL);
-		removeDownload(d, true);
-		removeConnection(aSource);
-		return;*/
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 
@@ -848,7 +752,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		return;
 	}
 
-	//dcassert(d->getPos() == d->getSize());
+
 	dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
 	// Check if we have some crc:s...
@@ -880,7 +784,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			}
 
 			if(!crcMatch) {
-				//File::deleteFile(tgt);
+				File::deleteFile(tgt);
 				dcdebug("DownloadManager: CRC32 mismatch for %s\n", d->getTarget().c_str());
 				LogManager::getInstance()->message(STRING(SFV_INCONSISTENCY) + " (" + STRING(FILE) + ": " + d->getTarget() + ")", true);
 				fire(DownloadManagerListener::Failed(), d, STRING(SFV_INCONSISTENCY));
@@ -897,7 +801,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				
 				FileChunksInfo::Free(d->getTempTarget());
 				removeDownload(d, true);
-				//delete FileChunksInfo::Get(d->getTempTarget());
 
 				new FileChunksInfo(tempTarget, size, &v);
 
@@ -925,7 +828,7 @@ noCRC:
 
 			if(!hashMatch) {		
 				if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-					PlaySound(SETTING(SOUND_TTH).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+					PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	
 				QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
 
@@ -978,9 +881,9 @@ noCRC:
 				checkDownloads(aSource, true);
 				return;
 			}
-		d->setFlag(Download::FLAG_TTH_OK);
+			d->setFlag(Download::FLAG_TTH_OK);
 		}
-	delete FileTigerRoot;
+		delete FileTigerRoot;
 	}
 
 	if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !d->isSet(Download::FLAG_USER_LIST))) {
@@ -1005,7 +908,7 @@ noCRC:
 	// Check if we need to move the file
 	if( !d->getTempTarget().empty() && (Util::stricmp(d->getTarget().c_str(), d->getTempTarget().c_str()) != 0) ) {
 		try {
-			Util::ensureDirectory(d->getTarget());
+			File::ensureDirectory(d->getTarget());
 			if(File::getSize(d->getTempTarget()) > MOVER_LIMIT) {
 				mover.moveFile(d->getTempTarget(), d->getTarget());
 			} else {
@@ -1028,7 +931,6 @@ noCRC:
 			}
 		}
 	}
-
 	fire(DownloadManagerListener::Complete(), d);
 
 	aSource->setDownload(NULL);
@@ -1146,7 +1048,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 				d->unsetFlag(Download::FLAG_ANTI_FRAG);
 			} 
 		}
-
 		Download* old = d;
 		d = d->getOldDownload();
 		if(!full) {
@@ -1177,7 +1078,7 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 			// Ok, set the pos to whereever it was last writing and hope for the best...
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
-	}else{
+	} else {
 		FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
 		if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 			lpFileDataInfo->PutUndlStart(d->getStartPos());

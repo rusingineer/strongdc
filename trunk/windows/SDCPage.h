@@ -30,13 +30,13 @@ class SDCPage : public CPropertyPage<IDD_SDCPAGE>, public PropPage
 {
 public:
 	SDCPage(SettingsManager *s) : PropPage(s) { 
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(SETTINGS_ADVANCED)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_ADVANCED)).c_str());
 		SetTitle(title);
 	};
 
 	virtual ~SDCPage() {
 		ctrlShutdownAction.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP(SDCPage)
@@ -52,7 +52,7 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 
 	CComboBox ctrlShutdownAction;
 	CComboBox cClientEmu;

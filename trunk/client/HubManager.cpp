@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -115,30 +115,31 @@ void HubManager::onHttpFinished() throw() {
 	string::size_type i, j;
 	string* x;
 	string bzlist;
-	string xmlstr;
 
-	// XML addition
-	if((listType == TYPE_BZIP2) || (listType == TYPE_XMLBZIP2)) {
+	if(listType == TYPE_BZIP2) {
 		try {
 			CryptoManager::getInstance()->decodeBZ2((u_int8_t*)downloadBuf.data(), downloadBuf.size(), bzlist);
 		} catch(const CryptoException&) {
 			bzlist.clear();
 		}
 		x = &bzlist;
-		xmlstr = bzlist;
 	} else {
 		x = &downloadBuf;
-		xmlstr = downloadBuf;
 	}
 
-	if((listType == TYPE_NORMAL) || (listType == TYPE_BZIP2)) {
 	{
 		Lock l(cs);
 		publicHubs.clear();
+
+		if(x->compare(0, 5, "<?xml") == 0) {
+			loadXmlList(*x);
+		} else {
 		i = 0;
 		
-		while( (i < x->size()) && ((j=x->find("\r\n", i)) != string::npos)) {
-			StringTokenizer tok(x->substr(i, j-i), '|');
+			string utfText = Text::acpToUtf8(*x);
+
+			while( (i < utfText.size()) && ((j=utfText.find("\r\n", i)) != string::npos)) {
+				StringTokenizer<string> tok(utfText.substr(i, j-i), '|');
 			i = j + 2;
 			if(tok.getTokens().size() < 4)
 				continue;
@@ -151,73 +152,45 @@ void HubManager::onHttpFinished() throw() {
 			publicHubs.push_back(HubEntry(name, server, desc, usersOnline));
 		}
 	}
-	} else {
-		// XML hublist
-		{
-			Lock l(cs);
-			publicHubs.clear();
-
-			try {
-				SimpleXML xml;
-				xml.fromXML(xmlstr);
-		
-				xml.resetCurrentChild();
-				
-				if(xml.findChild("Hublist"))
-				{
-					xml.stepIn();
-			
-						if(xml.findChild("Hubs"))
-						{
-							xml.stepIn();
-							if(xml.findChild("Columns"))
-							{
-								xml.stepIn();
-								/* Get column headers, not used this time
-								while(xml.findChild("Column")) {
-									const string& name = xml.getChildAttrib("Name");
-									const string& width = xml.getChildAttrib("Width");
-									const string& type = xml.getChildAttrib("Type");
-									const string& align = xml.getChildAttrib("Align");
-								} */
-								xml.stepOut();
 							}
-							while(xml.findChild("Hub")) {
-								const string& name = xml.getChildAttrib("Name");
-								const string& server = xml.getChildAttrib("Address");
-								const string& desc = xml.getChildAttrib("Description");
-								const string& users = xml.getChildAttrib("Users");
-								//additional columns
-								const string& shared = xml.getChildAttrib("Shared");
-								const string& country = xml.getChildAttrib("Country");
-								const string& status = xml.getChildAttrib("Status");
-								const string& minshare = xml.getChildAttrib("Minshare");
-								const string& minslots = xml.getChildAttrib("Minslots");
-								const string& maxhubs = xml.getChildAttrib("Maxhubs");
-								const string& maxusers = xml.getChildAttrib("Maxusers");
-								const string& reliability = xml.getChildAttrib("Reliability");
-								const string& rating = xml.getChildAttrib("Rating");
-								const string& port = xml.getChildAttrib("Port");
-								publicHubs.push_back(HubEntry(name, server, desc, users, 
-									shared, country, status, minshare, minslots, 
-									maxhubs, maxusers, reliability, rating, port));
+	downloadBuf = Util::emptyString;
+}
 
-							}
-
-							//Get hubs
-							xml.stepOut();
-						}
-
-					xml.stepOut();
-				}
-
-				xml.stepOut();
-			} catch(const Exception&) {
-				// Shouldn't happen
-			}
+class XmlListLoader : public SimpleXMLReader::CallBack {
+public:
+	XmlListLoader(HubEntry::List& lst) : publicHubs(lst) { };
+	virtual ~XmlListLoader() { }
+	virtual void startTag(const string& name, StringPairList& attribs, bool) {
+		if(name == "Hub") {
+			const string& name = getAttrib(attribs, "Name", 0);
+			const string& server = getAttrib(attribs, "Address", 1);
+			const string& description = getAttrib(attribs, "Description", 2);
+			const string& users = getAttrib(attribs, "Users", 3);
+			const string& country = getAttrib(attribs, "Country", 4);
+			const string& shared = getAttrib(attribs, "Shared", 5);
+			const string& minShare = getAttrib(attribs, "Minshare", 5);
+			const string& minSlots = getAttrib(attribs, "Minslots", 5);
+			const string& maxHubs = getAttrib(attribs, "Maxhubs", 5);
+			const string& maxUsers = getAttrib(attribs, "Maxusers", 5);
+			const string& reliability = getAttrib(attribs, "Reliability", 5);
+			const string& rating = getAttrib(attribs, "Rating", 5);
+			publicHubs.push_back(HubEntry(name, server, description, users, country, shared, minShare, minSlots, maxHubs, maxUsers, reliability, rating));
 		}
 	}
-	downloadBuf = Util::emptyString;
+	virtual void endTag(const string&, const string&) {
+
+	}
+private:
+	HubEntry::List& publicHubs;
+};
+
+void HubManager::loadXmlList(const string& xml) {
+	try {
+		XmlListLoader loader(publicHubs);
+		SimpleXMLReader(&loader).fromXML(xml);
+	} catch(const SimpleXMLException&) {
+
+	}
 }
 
 void HubManager::save() {
@@ -289,7 +262,7 @@ void HubManager::save() {
 		string fname = Util::getAppPath() + FAVORITES_FILE;
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write(SimpleXML::w1252Header);
+		f.write(SimpleXML::utf8Header);
 		f.write(xml.toXML());
 		f.close();
 		File::deleteFile(fname);
@@ -338,7 +311,7 @@ void HubManager::saveClientProfiles() {
 		string fname = Util::getAppPath() + SETTINGS_DIR + "Profiles.xml";
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write(SimpleXML::w1252Header);
+		f.write(SimpleXML::utf8Header);
 		f.write(xml.toXML());
 		f.close();
 		File::deleteFile(fname);
@@ -375,7 +348,7 @@ void HubManager::recentsave() {
 		string fname = Util::getAppPath() + RECENTS_FILE;
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write(SimpleXML::w1252Header);
+		f.write(SimpleXML::utf8Header);
 		f.write(xml.toXML());
 		f.close();
 		File::deleteFile(fname);
@@ -621,7 +594,6 @@ void HubManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
-
 	dontSave = false;
 }
 
@@ -643,7 +615,7 @@ void HubManager::recentload(SimpleXML* aXml) {
 }
 
 void HubManager::refresh() {
-	StringList sl = StringTokenizer(SETTING(HUBLIST_SERVERS), ';').getTokens();
+	StringList sl = StringTokenizer<string>(SETTING(HUBLIST_SERVERS), ';').getTokens();
 	if(sl.empty())
 		return;
 	const string& server = sl[(lastServer) % sl.size()];
@@ -710,12 +682,7 @@ void HubManager::on(TypeNormal, HttpConnection*) throw() {
 void HubManager::on(TypeBZ2, HttpConnection*) throw() { 
 	listType = TYPE_BZIP2; 
 }
-void HubManager::on(TypeXML, HttpConnection*) throw() { 
-	listType = TYPE_XML; 
-}
-void HubManager::on(TypeXMLBZ2, HttpConnection*) throw() { 
-	listType = TYPE_XMLBZIP2; 
-}
+
 void HubManager::previewload(SimpleXML* aXml){
 	WLock l(rwcs);
 

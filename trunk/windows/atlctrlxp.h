@@ -1090,7 +1090,7 @@ public:
                }
                // Finally draw the icon above
                ImageList_Draw(hImageList, tbi.iImage, dc, point.x, point.y, ILD_TRANSPARENT);
-            }else {
+            } else {
                // Draw normal icon 
                ImageList_DrawEx(hImageList, tbi.iImage, dc, point.x, point.y, 0, 0, CLR_NONE, CLR_NONE, ILD_TRANSPARENT);
             }

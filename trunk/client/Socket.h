@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,12 +228,13 @@ public:
 	/** When socks settings are updated, this has to be called... */
 	static void socksUpdated();
 	
-	string getRemoteIp() const; 
-	string getRemoteHost(const string& aIp) const;
 	GETSET(string, ip, Ip);
 	GETSET(short, port, Port);
 	
 	GETSET(bool, noproxy, Noproxy);	
+
+	string getRemoteIp() const; 
+	string getRemoteHost(const string& aIp) const;
 protected:
 	socket_t sock;
 	bool connected;

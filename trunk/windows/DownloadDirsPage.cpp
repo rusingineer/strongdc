@@ -45,9 +45,9 @@ LRESULT DownloadDirsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ctrlCommands.Attach(GetDlgItem(IDC_MENU_ITEMS));
 	ctrlCommands.GetClientRect(rc);
 
-	ctrlCommands.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/4, 0);
-	ctrlCommands.InsertColumn(1, CSTRING(DIRECTORY), LVCFMT_LEFT, rc.Width()*2 / 4, 1);	
-	ctrlCommands.InsertColumn(3, CSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 4, 2);
+	ctrlCommands.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width()/4, 0);
+	ctrlCommands.InsertColumn(1, CTSTRING(DIRECTORY), LVCFMT_LEFT, rc.Width()*2 / 4, 1);	
+	ctrlCommands.InsertColumn(3, CTSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 4, 2);
 
 	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
@@ -63,10 +63,10 @@ void DownloadDirsPage::write(){
 }
 
 void DownloadDirsPage::addEntry(SettingsManager::DownloadDirectory *pa, int pos) {
-	StringList lst;
-	lst.push_back(pa->name);
-	lst.push_back(pa->dir); 
-	lst.push_back(pa->ext);
+	TStringList lst;
+	lst.push_back(Text::toT(pa->name));
+	lst.push_back(Text::toT(pa->dir)); 
+	lst.push_back(Text::toT(pa->ext));
 	ctrlCommands.insert(pos, lst, 0, 0);
 }
 
@@ -76,7 +76,7 @@ LRESULT DownloadDirsPage::onAddMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	if(dlg.DoModal() == IDOK){
 		SettingsManager::DownloadDirectory d = SettingsManager::getInstance()->addDownloadDir(dlg.dir, dlg.extensions, dlg.name);
 		addEntry(&d, ctrlCommands.GetItemCount());
-		WinUtil::addLastDir(dlg.dir);
+		WinUtil::addLastDir(Text::toT(dlg.dir));
 	}
 	return 0;
 }
@@ -98,9 +98,9 @@ LRESULT DownloadDirsPage::onChangeMenu(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 
 			SettingsManager::getInstance()->updateDownloadDir(sel, pa);
 
-			ctrlCommands.SetItemText(sel, 0, dlg.name.c_str());
-			ctrlCommands.SetItemText(sel, 1, dlg.dir.c_str());
-			ctrlCommands.SetItemText(sel, 2, dlg.extensions.c_str());
+			ctrlCommands.SetItemText(sel, 0, Text::toT(dlg.name).c_str());
+			ctrlCommands.SetItemText(sel, 1, Text::toT(dlg.dir).c_str());
+			ctrlCommands.SetItemText(sel, 2, Text::toT(dlg.extensions).c_str());
 		}
 	}
 	return 0;

@@ -21,6 +21,7 @@
 
 #include "../client/DCPlusPlus.h"
 #include "../client/File.h"
+#include "WinUtil.h"
 
 #include <tchar.h>
 #include <DbgHelp.h>
@@ -290,14 +291,14 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 		callStack.AddrStack.Mode   = AddrModeFlat;
 		callStack.AddrFrame.Mode   = AddrModeFlat;
 
-		f.write(lpszMessage, strlen(lpszMessage));
+		f.write(Text::fromT(lpszMessage));
 
 		GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
 		GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
-		f.write(srcInfo, strlen(srcInfo));
+		f.write(Text::fromT(srcInfo));
 		f.write(LIT(": "));
-		f.write(symInfo, strlen(symInfo));
+		f.write(Text::fromT(symInfo));
 		f.write(LIT("\r\n"));
 
 		// Max 100 stack lines...
@@ -323,9 +324,9 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 			GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
 			GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
-			f.write(srcInfo, strlen(srcInfo));
+			f.write(Text::fromT(srcInfo));
 			f.write(LIT(": "));
-			f.write(symInfo, strlen(symInfo));
+			f.write(Text::fromT(symInfo));
 			f.write(LIT("\r\n"));
 
 		}
@@ -341,15 +342,15 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
 	HANDLE         hProcess = GetCurrentProcess();
 
-	string	vypis;
+	tstring	vypis;
 
 	// If it's not this thread, let's suspend it, and resume it at the end
 	if ( hThread != GetCurrentThread() )
 		if ( SuspendThread( hThread ) == -1 )
 		{
 			// whaaat ?!
-			vypis = LIT("No call stack\r\n");
-			return vypis;
+			vypis = LIT(_T("No call stack\r\n"));
+			return Text::fromT(vypis);
 		}
 
 		::ZeroMemory( &callStack, sizeof(callStack) );
@@ -366,9 +367,9 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 		GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
 		vypis += srcInfo;
-		vypis += LIT(": ");
+		vypis += LIT(_T(": "));
 		vypis += symInfo;
-		vypis += LIT("\r\n");
+		vypis += LIT(_T("\r\n"));
 
 		// Max 100 stack lines...
 		for( ULONG index = 0; index < 100; index++ ) 
@@ -394,13 +395,18 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 			GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
 			vypis += srcInfo;
-			vypis += LIT(": ");
+			vypis += LIT(_T(": "));
 			vypis += symInfo;
-			vypis += LIT("\r\n");
+			vypis += LIT(_T("\r\n"));
 		}
 		if ( hThread != GetCurrentThread() )
 			ResumeThread( hThread );
-		return vypis;
+		return Text::fromT(vypis);
 }
 
 #endif //_DEBUG && _WIN32
+
+/**
+* @file
+* $Id$
+*/

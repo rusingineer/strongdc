@@ -59,9 +59,9 @@ LRESULT ToolbarPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlCommands.Attach(GetDlgItem(IDC_TOOLBAR_POSSIBLE));
 	CRect rc;
 	ctrlCommands.GetClientRect(rc);
-	ctrlCommands.InsertColumn(0, "Dummy", LVCFMT_LEFT, rc.Width(), 0);
+	ctrlCommands.InsertColumn(0, _T("Dummy"), LVCFMT_LEFT, rc.Width(), 0);
 
-	ctrlCommands.SetImageList(MainFrame::getMainFrame()->largeImages,LVSIL_SMALL );
+	ctrlCommands.SetImageList(MainFrame::getMainFrame()->largeImagesHot,LVSIL_SMALL );
 		
 
 	LVITEM lvi;
@@ -78,10 +78,10 @@ LRESULT ToolbarPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	ctrlToolbar.Attach(GetDlgItem(IDC_TOOLBAR_ACTUAL));
 	ctrlToolbar.GetClientRect(rc);
-	ctrlToolbar.InsertColumn(0, "Dummy", LVCFMT_LEFT, rc.Width(), 0);
+	ctrlToolbar.InsertColumn(0, _T("Dummy"), LVCFMT_LEFT, rc.Width(), 0);
 	ctrlToolbar.SetImageList(MainFrame::getMainFrame()->largeImagesHot, LVSIL_SMALL);
 	
-	StringTokenizer t(SETTING(TOOLBAR), ',');
+	StringTokenizer<string> t(SETTING(TOOLBAR), ',');
 	StringList& l = t.getTokens();
 
 	int n = 0;
@@ -113,10 +113,10 @@ void ToolbarPage::write()
 }
 
 void ToolbarPage::BrowseForPic(int DLGITEM) {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 
 	GetDlgItemText(DLGITEM, buf, MAX_PATH);
-	string x = buf;
+	tstring x = buf;
 
 	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
 		SetDlgItemText(DLGITEM, x.c_str());
@@ -137,12 +137,12 @@ string name;
 void ToolbarPage::makeItem(LPLVITEM lvi, int item){
 	if(item!=-1) {
 		lvi->iImage = WinUtil::ToolbarButtons[item].image;
-		name = string(filter(ResourceManager::getInstance()->getString(WinUtil::ToolbarButtons[item].tooltip)));			
+		name = Text::toT(filter(ResourceManager::getInstance()->getString(WinUtil::ToolbarButtons[item].tooltip)));			
 	} else {
-		name = STRING(SEPARATOR);
+		name = TSTRING(SEPARATOR);
 		lvi->iImage = -1;
 	}	
-	lvi->pszText = const_cast<char*>(name.c_str());	
+	lvi->pszText = const_cast<TCHAR*>(name.c_str());	
 }
 
 LRESULT ToolbarPage::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

@@ -48,11 +48,11 @@ public:
 	typedef MDITabChildWindowImpl<ADLSearchFrame, RGB(0, 0, 0), IDR_ADLSEARCH> baseClass;
 
 	// Constructor/destructor
-	ADLSearchFrame() : listContainer("list", this, ADLLIST_MESSAGE_MAP), closed(false) {}
+	ADLSearchFrame() : closed(false), listContainer(WC_LISTBOX, this, ADLLIST_MESSAGE_MAP) { }
 	virtual ~ADLSearchFrame() { };
 
 	// Frame window declaration
-	DECLARE_FRAME_WND_CLASS_EX("ADLSearchFrame", IDR_ADLSEARCH, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("ADLSearchFrame"), IDR_ADLSEARCH, 0, COLOR_3DFACE);
 
 	// Inline message map
 	BEGIN_MSG_MAP(ADLSearchFrame)

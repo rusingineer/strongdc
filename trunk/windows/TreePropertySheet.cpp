@@ -1,5 +1,5 @@
 /* 
-* Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include "TreePropertySheet.h"
 #include "CZDCLib.h"
 
-static const char SEPARATOR = '\\';
+static const TCHAR SEPARATOR = _T('\\');
 
 int TreePropertySheet::PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam) {
 	if(uMsg == PSCB_INITIALIZED) {
@@ -83,7 +83,7 @@ void TreePropertySheet::fillTree() {
 	CTabCtrl tab = GetTabControl();
 	int pages = tab.GetItemCount();
 
-	char buf[MAX_NAME_LENGTH];
+	TCHAR buf[MAX_NAME_LENGTH];
 	TCITEM item;
 	item.mask = TCIF_TEXT;
 	item.pszText = buf;
@@ -100,7 +100,7 @@ void TreePropertySheet::fillTree() {
 	ctrlTree.SelectItem(first);
 }
 
-HTREEITEM TreePropertySheet::createTree(const string& str, HTREEITEM parent, int page) {
+HTREEITEM TreePropertySheet::createTree(const tstring& str, HTREEITEM parent, int page) {
 	TVINSERTSTRUCT tvi;
 	tvi.hInsertAfter = TVI_LAST;
 	tvi.hParent = parent;
@@ -114,7 +114,7 @@ HTREEITEM TreePropertySheet::createTree(const string& str, HTREEITEM parent, int
 		if(item == NULL) {
 			// Doesn't exist, add
 			tvi.item.mask = TVIF_PARAM | TVIF_TEXT;
-			tvi.item.pszText = const_cast<LPSTR>(str.c_str());
+			tvi.item.pszText = const_cast<LPTSTR>(str.c_str());
 			tvi.item.lParam = page;
 			item = ctrlTree.InsertItem(&tvi);
 			ctrlTree.SetItemImage(item, page, page);
@@ -127,13 +127,13 @@ HTREEITEM TreePropertySheet::createTree(const string& str, HTREEITEM parent, int
 			return item;
 		}
 	} else {
-		string name = str.substr(0, i);
+		tstring name = str.substr(0, i);
 		HTREEITEM item = findItem(name, first);
 		if(item == NULL) {
 			// Doesn't exist, add...
 			tvi.item.mask = TVIF_PARAM | TVIF_TEXT;
 			tvi.item.lParam = -1;
-			tvi.item.pszText = const_cast<LPSTR>(name.c_str());
+			tvi.item.pszText = const_cast<LPTSTR>(name.c_str());
 			item = ctrlTree.InsertItem(&tvi);
 			ctrlTree.SetItemImage(item, page, page);
 		} 
@@ -143,8 +143,8 @@ HTREEITEM TreePropertySheet::createTree(const string& str, HTREEITEM parent, int
 	}	
 }
 
-HTREEITEM TreePropertySheet::findItem(const string& str, HTREEITEM start) {
-	char buf[MAX_NAME_LENGTH];
+HTREEITEM TreePropertySheet::findItem(const tstring& str, HTREEITEM start) {
+	TCHAR buf[MAX_NAME_LENGTH];
 
 	while(start != NULL) {
 		ctrlTree.GetItemText(start, buf, MAX_NAME_LENGTH-1);

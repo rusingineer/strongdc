@@ -25,10 +25,11 @@
 class AdcHub;
 class ClientManager;
 
-class AdcHub : public Client, public CommandHandler<AdcHub> {
+class AdcHub : public Client, CommandHandler<AdcHub> {
 public:
 
 	virtual void connect(const User* user);
+	virtual void disconnect();
 	
 	virtual void hubMessage(const string& aMessage);
 	virtual void privateMessage(const User* user, const string& aMessage);
@@ -36,6 +37,7 @@ public:
 	virtual void ban(const User* user, const string& aMessage, time_t aSeconds);
 	virtual void sendRaw(const string& aRaw) { send(aRaw); }
 	virtual void send(const string& aMessage) { socket->write(aMessage); };
+	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage);
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
 	virtual void password(const string& pwd);
@@ -67,6 +69,13 @@ public:
 
 private:
 	friend class ClientManager;
+
+	enum States {
+		STATE_PROTOCOL,
+		STATE_IDENTIFY,
+		STATE_VERIFY,
+		STATE_NORMAL
+	} state;
 
 	AdcHub(const string& aHubURL);
 

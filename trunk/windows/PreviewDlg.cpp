@@ -39,12 +39,12 @@ LRESULT PreviewDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 }
 
 LRESULT PreviewDlg::OnBrowse(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
-	char buf[MAX_PATH];
+	TCHAR buf[MAX_PATH];
 
 	GetDlgItemText(IDC_PREVIEW_APPLICATION, buf, MAX_PATH);
-	string x = buf;
+	tstring x = buf;
 
-	if(WinUtil::browseFile(x, m_hWnd, false,  Util::emptyString, "Programs\0*.exe") == IDOK) {
+	if(WinUtil::browseFile(x, m_hWnd, false,  Util::emptyStringT, _T("Programs\0*.exe")) == IDOK) {
 		SetDlgItemText(IDC_PREVIEW_APPLICATION, x.c_str());
 	}
 

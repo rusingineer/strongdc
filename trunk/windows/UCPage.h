@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,13 +33,13 @@ class UCPage : public CPropertyPage<IDD_UCPAGE>, public PropPage
 {
 public:
 	UCPage(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_ADVANCED) + '\\' + STRING(SETTINGS_USER_COMMANDS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_USER_COMMANDS)).c_str());
 		SetTitle(title);
 	};
 
 	virtual ~UCPage() { 
 		ctrlCommands.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP_EX(UCPage)
@@ -73,10 +73,14 @@ protected:
 
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 
 	void addEntry(const UserCommand& uc, int pos);
 };
 
 #endif //ADVANCEDPAGE_H
 
+/**
+ * @file
+ * $Id$
+ */

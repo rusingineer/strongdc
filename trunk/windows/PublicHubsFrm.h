@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
-#include "CZDCLib.h"
 #include "Resource.h"
 
 #include "../client/HubManager.h"
@@ -40,14 +39,14 @@ class PublicHubsFrame : public MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 
 {
 public:
 	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(""),
-		ctrlHubContainer("edit", this, SERVER_MESSAGE_MAP), 
-		filterContainer("edit", this, FILTER_MESSAGE_MAP) {
+		ctrlHubContainer(WC_EDIT, this, SERVER_MESSAGE_MAP), 
+		filterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP) {
 	};
 
 	virtual ~PublicHubsFrame() {
 	};
 
-	DECLARE_FRAME_WND_CLASS_EX("PublicHubsFrame", IDR_PUBLICHUBS, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("PublicHubsFrame"), IDR_PUBLICHUBS, 0, COLOR_3DFACE);
 		
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
@@ -119,8 +118,11 @@ public:
 			else
 				ctrlHubs.setSortDirection(false);
 		} else {
-			if((l->iSubItem == 2) || (l->iSubItem == 4) || (l->iSubItem == 7) || (l->iSubItem == 8) || (l->iSubItem == 9) || (l->iSubItem == 10) || (l->iSubItem == 11) || (l->iSubItem == 13)) {
+			// BAH, sorting on bytes will break of course...oh well...later...
+			if(l->iSubItem == COLUMN_USERS || l->iSubItem == COLUMN_MINSLOTS ||l->iSubItem == COLUMN_MAXHUBS || l->iSubItem == COLUMN_MAXUSERS) {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_INT);
+			} else if(l->iSubItem == COLUMN_SHARED || l->iSubItem == COLUMN_MINSHARE || l->iSubItem == COLUMN_RELIABILITY) {
+				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_FLOAT);
 			} else {
 				ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
 			}
@@ -135,17 +137,14 @@ private:
 		COLUMN_DESCRIPTION,
 		COLUMN_USERS,
 		COLUMN_SERVER,
-		// XML
-		COLUMN_SHARED,
 		COLUMN_COUNTRY,
-		COLUMN_STATUS,
+		COLUMN_SHARED,
 		COLUMN_MINSHARE,
 		COLUMN_MINSLOTS,
 		COLUMN_MAXHUBS,
 		COLUMN_MAXUSERS,
 		COLUMN_RELIABILITY,
 		COLUMN_RATING,
-		COLUMN_PORT,
 		COLUMN_LAST
 	};
 
@@ -163,7 +162,7 @@ private:
 	CButton ctrlAddress;
 	CButton ctrlFilterDesc;
 	CEdit ctrlFilter;
-	OMenu hubsMenu;
+	CMenu hubsMenu;
 	
 	CContainedWindow ctrlHubContainer;
 	CContainedWindow filterContainer;	
@@ -176,7 +175,6 @@ private:
 	bool closed;
 	
 	static int columnIndexes[];
-	static bool columnTypes[];
 	static int columnSizes[];
 	
 	virtual void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
@@ -184,7 +182,7 @@ private:
 	virtual void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
 
 	void speak(int x, const string& l) {
-		PostMessage(WM_SPEAKER, x, (LPARAM)new string(l));
+		PostMessage(WM_SPEAKER, x, (LPARAM)new tstring(Text::toT(l)));
 	}
 	
 	void updateStatus();

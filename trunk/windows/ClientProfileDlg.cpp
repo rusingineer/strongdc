@@ -44,24 +44,24 @@ LRESULT ClientProfileDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ATTACH(IDC_COMMENT, ctrlComment);
 
 	ATTACH(IDC_CLIENT_PROFILE_RAW, ctrlRaw);
-	ctrlRaw.AddString("No action");
-	ctrlRaw.AddString("RAW 1");
-	ctrlRaw.AddString("RAW 2");
-	ctrlRaw.AddString("RAW 3");
-	ctrlRaw.AddString("RAW 4");
-	ctrlRaw.AddString("RAW 5");
+	ctrlRaw.AddString(_T("No action"));
+	ctrlRaw.AddString(_T("RAW 1"));
+	ctrlRaw.AddString(_T("RAW 2"));
+	ctrlRaw.AddString(_T("RAW 3"));
+	ctrlRaw.AddString(_T("RAW 4"));
+	ctrlRaw.AddString(_T("RAW 5"));
 
 	ATTACH(IDC_REGEXP_TESTER_COMBO, ctrlRegExpCombo);
-	ctrlRegExpCombo.AddString("Version");
-	ctrlRegExpCombo.AddString("Tag");
-	ctrlRegExpCombo.AddString("Description");
-	ctrlRegExpCombo.AddString("Lock");
-	ctrlRegExpCombo.AddString("Pk");
-	ctrlRegExpCombo.AddString("Supports");
-	ctrlRegExpCombo.AddString("TestSUR");
-	ctrlRegExpCombo.AddString("Commands");
-	ctrlRegExpCombo.AddString("Status");
-	ctrlRegExpCombo.AddString("Connection");
+	ctrlRegExpCombo.AddString(_T("Version"));
+	ctrlRegExpCombo.AddString(_T("Tag"));
+	ctrlRegExpCombo.AddString(_T("Description"));
+	ctrlRegExpCombo.AddString(_T("Lock"));
+	ctrlRegExpCombo.AddString(_T("Pk"));
+	ctrlRegExpCombo.AddString(_T("Supports"));
+	ctrlRegExpCombo.AddString(_T("TestSUR"));
+	ctrlRegExpCombo.AddString(_T("Commands"));
+	ctrlRegExpCombo.AddString(_T("Status"));
+	ctrlRegExpCombo.AddString(_T("Connection"));
 	ctrlRegExpCombo.SetCurSel(0);
 
 	updateControls();
@@ -76,13 +76,13 @@ LRESULT ClientProfileDlg::onChange(WORD , WORD , HWND , BOOL& ) {
 }
 
 void ClientProfileDlg::updateAddLine() {
-	addLine = Util::emptyString;
-	char buf[BUF_LEN];
+	addLine = Util::emptyStringT;
+	TCHAR buf[BUF_LEN];
 
 #define UPDATE \
 	GetWindowText(buf, BUF_LEN-1); \
 	addLine += buf; \
-	addLine += ';';
+	addLine += _T(';');
 	
 	ctrlName.UPDATE;
 	ctrlVersion.UPDATE;
@@ -124,21 +124,21 @@ void ClientProfileDlg::getProfile() {
 }
 
 void ClientProfileDlg::updateVars() {
-	char buf[1024];
+	TCHAR buf[1024];
 
-	GET_TEXT(IDC_CLIENT_NAME, name);
-	GET_TEXT(IDC_CLIENT_VERSION, version);
-	GET_TEXT(IDC_CLIENT_TAG, tag);
-	GET_TEXT(IDC_CLIENT_EXTENDED_TAG, extendedTag);
-	GET_TEXT(IDC_CLIENT_LOCK, lock);
-	GET_TEXT(IDC_CLIENT_PK, pk);
-	GET_TEXT(IDC_CLIENT_SUPPORTS, supports);
-	GET_TEXT(IDC_CLIENT_TESTSUR_RESPONSE, testSUR);
-	GET_TEXT(IDC_CLIENT_USER_CON_COM, userConCom);
-	GET_TEXT(IDC_CLIENT_STATUS, status);
-	GET_TEXT(IDC_CLIENT_CHEATING_DESCRIPTION, cheatingDescription);
-	GET_TEXT(IDC_CLIENT_CONNECTION, connection);
-	GET_TEXT(IDC_COMMENT, comment);
+	GET_TEXT(IDC_CLIENT_NAME, Text::toT(name));
+	GET_TEXT(IDC_CLIENT_VERSION, Text::toT(version));
+	GET_TEXT(IDC_CLIENT_TAG, Text::toT(tag));
+	GET_TEXT(IDC_CLIENT_EXTENDED_TAG, Text::toT(extendedTag));
+	GET_TEXT(IDC_CLIENT_LOCK, Text::toT(lock));
+	GET_TEXT(IDC_CLIENT_PK, Text::toT(pk));
+	GET_TEXT(IDC_CLIENT_SUPPORTS, Text::toT(supports));
+	GET_TEXT(IDC_CLIENT_TESTSUR_RESPONSE, Text::toT(testSUR));
+	GET_TEXT(IDC_CLIENT_USER_CON_COM, Text::toT(userConCom));
+	GET_TEXT(IDC_CLIENT_STATUS, Text::toT(status));
+	GET_TEXT(IDC_CLIENT_CHEATING_DESCRIPTION, Text::toT(cheatingDescription));
+	GET_TEXT(IDC_CLIENT_CONNECTION, Text::toT(connection));
+	GET_TEXT(IDC_COMMENT, Text::toT(comment));
 	tagVersion = 0;//(ctrlTagVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
 	useExtraVersion = (ctrlUseExtraVersion.GetCheck() == BST_CHECKED) ? 1 : 0;
 	checkMismatch = (ctrlCheckMismatch.GetCheck() == BST_CHECKED) ? 1 : 0;
@@ -146,20 +146,20 @@ void ClientProfileDlg::updateVars() {
 }
 
 void ClientProfileDlg::updateControls() {
-	ctrlName.SetWindowText(name.c_str());
-	ctrlVersion.SetWindowText(version.c_str());
-	ctrlTag.SetWindowText(tag.c_str());
-	ctrlExtendedTag.SetWindowText(extendedTag.c_str());
-	ctrlLock.SetWindowText(lock.c_str());
-	ctrlPk.SetWindowText(pk.c_str());
-	ctrlSupports.SetWindowText(supports.c_str());
-	ctrlTestSUR.SetWindowText(testSUR.c_str());
-	ctrlUserConCom.SetWindowText(userConCom.c_str());
-	ctrlStatus.SetWindowText(status.c_str());
-	ctrlCheatingDescription.SetWindowText(cheatingDescription.c_str());
+	ctrlName.SetWindowText(Text::toT(name).c_str());
+	ctrlVersion.SetWindowText(Text::toT(version).c_str());
+	ctrlTag.SetWindowText(Text::toT(tag).c_str());
+	ctrlExtendedTag.SetWindowText(Text::toT(extendedTag).c_str());
+	ctrlLock.SetWindowText(Text::toT(lock).c_str());
+	ctrlPk.SetWindowText(Text::toT(pk).c_str());
+	ctrlSupports.SetWindowText(Text::toT(supports).c_str());
+	ctrlTestSUR.SetWindowText(Text::toT(testSUR).c_str());
+	ctrlUserConCom.SetWindowText(Text::toT(userConCom).c_str());
+	ctrlStatus.SetWindowText(Text::toT(status).c_str());
+	ctrlCheatingDescription.SetWindowText(Text::toT(cheatingDescription).c_str());
 	ctrlAddLine.SetWindowText(addLine.c_str());
-	ctrlConnection.SetWindowText(connection.c_str());
-	ctrlComment.SetWindowText(comment.c_str());
+	ctrlConnection.SetWindowText(Text::toT(connection).c_str());
+	ctrlComment.SetWindowText(Text::toT(comment).c_str());
 
 	//ctrlTagVersion.SetCheck((tagVersion) ? BST_CHECKED : BST_UNCHECKED);
 	ctrlUseExtraVersion.SetCheck((useExtraVersion) ? BST_CHECKED : BST_UNCHECKED);
@@ -201,74 +201,74 @@ LRESULT ClientProfileDlg::onNext(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 }
 
 LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	char buf[1024];
-	string exp, text;
+	TCHAR buf[1024];
+	tstring exp, text;
 	GET_TEXT(IDC_REGEXP_TESTER_TEXT, text);
 	switch(ctrlRegExpCombo.GetCurSel()) {
 		case 0: GET_TEXT(IDC_CLIENT_VERSION, exp); break;
 		case 1: 
 			{
-				string version = "";
-				string versionExp = "";
+				tstring version = _T("");
+				tstring versionExp = _T("");
 				GET_TEXT(IDC_CLIENT_TAG, exp); 
-				string formattedExp = exp;
-				string::size_type j = exp.find("%[version]");
+				tstring formattedExp = exp;
+				tstring::size_type j = exp.find(_T("%[version]"));
 				if(j != string::npos) {
-					formattedExp.replace(j, 10, ".*");
-					version = getVersion(exp, text);
+					formattedExp.replace(j, 10, _T(".*"));
+					version = Text::toT(getVersion(Text::fromT(exp), Text::fromT(text)));
 					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
 				}
-				switch(matchExp(formattedExp, text)) {
+				switch(matchExp(Text::fromT(formattedExp), Text::fromT(text))) {
 					case MATCH:		break;
-					case MISMATCH:	MessageBox("No match for tag.", "RegExp Tester", MB_OK); return 0;
-					case INVALID:	MessageBox("Invalid tag RegExp.", "RegExp Tester", MB_OK); return 0;
+					case MISMATCH:	MessageBox(_T("No match for tag."), _T("RegExp Tester"), MB_OK); return 0;
+					case INVALID:	MessageBox(_T("Invalid tag RegExp."), _T("RegExp Tester"), MB_OK); return 0;
 				}
 				if(version.empty()) {
-					MessageBox("It's a match!", "RegExp Tester", MB_OK);
+					MessageBox(_T("It's a match!"), _T("RegExp Tester"), MB_OK);
 					return 0;
 				} else {
-					switch(matchExp(versionExp, version)) {
-						case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK);  return 0;
-						case MISMATCH:	MessageBox("No match for version.", "RegExp Tester", MB_OK); return 0;
-						case INVALID:	MessageBox("Invalid version RegExp.", "RegExp Tester", MB_OK); return 0;
+					switch(matchExp(Text::fromT(versionExp), Text::fromT(version))) {
+						case MATCH:		MessageBox(_T("It's a match!"), _T("RegExp Tester"), MB_OK);  return 0;
+						case MISMATCH:	MessageBox(_T("No match for version."), _T("RegExp Tester"), MB_OK); return 0;
+						case INVALID:	MessageBox(_T("Invalid version RegExp."), _T("RegExp Tester"), MB_OK); return 0;
 					}
 				}
 			}
 		case 2: 
 			{
 				GET_TEXT(IDC_CLIENT_EXTENDED_TAG, exp);
-				string::size_type j = exp.find("%[version2]");
+				string::size_type j = exp.find(_T("%[version2]"));
 				if(j != string::npos) {
-					exp.replace(j, 11, ".*");
+					exp.replace(j, 11, _T(".*"));
 				}
 				break;
 			}
 		case 3: GET_TEXT(IDC_CLIENT_LOCK, exp); break;
 		case 4: 
 			{
-				string version = "";
-				string versionExp = "";
+				tstring version = _T("");
+				tstring versionExp = _T("");
 				GET_TEXT(IDC_CLIENT_PK, exp);
-				string formattedExp = exp;
-				string::size_type j = exp.find("%[version]");
+				tstring formattedExp = exp;
+				tstring::size_type j = exp.find(_T("%[version]"));
 				if(j != string::npos) {
-					formattedExp.replace(j, 10, ".*");
-					version = getVersion(exp, text);
+					formattedExp.replace(j, 10, _T(".*"));
+					version = Text::toT(getVersion(Text::fromT(exp), Text::fromT(text)));
 					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
 				}
-				switch(matchExp(formattedExp, text)) {
+				switch(matchExp(Text::fromT(formattedExp), Text::fromT(text))) {
 					case MATCH:		break;
-					case MISMATCH:	MessageBox("No match for Pk.", "RegExp Tester", MB_OK); return 0;
-					case INVALID:	MessageBox("Invalid Pk RegExp.", "RegExp Tester", MB_OK); return 0;
+					case MISMATCH:	MessageBox(_T("No match for Pk."), _T("RegExp Tester"), MB_OK); return 0;
+					case INVALID:	MessageBox(_T("Invalid Pk RegExp."), _T("RegExp Tester"), MB_OK); return 0;
 				}
 				if(version.empty()) {
-					MessageBox("It's a match!", "RegExp Tester", MB_OK);
+					MessageBox(_T("It's a match!"), _T("RegExp Tester"), MB_OK);
 					return 0;
 				} else {
-					switch(matchExp(versionExp, version)) {
-						case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK);  return 0;
-						case MISMATCH:	MessageBox("No match for version.", "RegExp Tester", MB_OK); return 0;
-						case INVALID:	MessageBox("Invalid version RegExp.", "RegExp Tester", MB_OK); return 0;
+					switch(matchExp(Text::fromT(versionExp), Text::fromT(version))) {
+						case MATCH:		MessageBox(_T("It's a match!"), _T("RegExp Tester"), MB_OK);  return 0;
+						case MISMATCH:	MessageBox(_T("No match for version."), _T("RegExp Tester"), MB_OK); return 0;
+						case INVALID:	MessageBox(_T("Invalid version RegExp."), _T("RegExp Tester"), MB_OK); return 0;
 					}
 				}
 			}
@@ -279,10 +279,10 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		case 9: GET_TEXT(IDC_CLIENT_CONNECTION, exp); break;
 		default: dcdebug("We shouldn't be here!\n");
 	}
-	switch(matchExp(exp, text)) {
-		case MATCH:		MessageBox("It's a match!", "RegExp Tester", MB_OK); break;
-		case MISMATCH:	MessageBox("No match.", "RegExp Tester", MB_OK); break;
-		case INVALID:	MessageBox("Invalid RegExp.", "RegExp Tester", MB_OK); break;
+	switch(matchExp(Text::fromT(exp), Text::fromT(text))) {
+		case MATCH:		MessageBox(_T("It's a match!"), _T("RegExp Tester"), MB_OK); break;
+		case MISMATCH:	MessageBox(_T("No match."), _T("RegExp Tester"), MB_OK); break;
+		case INVALID:	MessageBox(_T("Invalid RegExp."), _T("RegExp Tester"), MB_OK); break;
 	}
 	return 0;
 }

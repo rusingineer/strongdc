@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+ * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include "BufferedSocket.h"
 #include "User.h"
 #include "CriticalSection.h"
+#include "Text.h"
 #include "ConnectionManager.h"
 #include "UploadManager.h"
 
@@ -91,9 +92,10 @@ public:
 		search_queue.clear();
 	}
 
+	int32_t last_search_time;
+
 private:
 	deque<Search> search_queue;
-	int32_t last_search_time;
 	CriticalSection cs;
 };
 
@@ -172,21 +174,53 @@ public:
 		SUPPORTS_USERIP2 = 0x04,
 	};
 
-	User::NickMap& lockUserList() throw() { cs.enter(); return users; };
-	void unlockUserList() throw() { cs.leave(); };
+#define checkstate() if(state != STATE_CONNECTED) return
+
+	virtual void connect(const User* aUser);
+	virtual void hubMessage(const string& aMessage) {
+		checkstate();
+		char buf[256];
+		sprintf(buf, "<%s> ", getNick().c_str());
+		send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
+	}
+	virtual void privateMessage(const User* aUser, const string& aMessage) { privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage); }
+	virtual void kick(const User* aUser, const string& aMsg);
+	virtual void ban(const User*, const string&, time_t) { /*Unimplemented...*/ }
+	virtual void send(const string& a) throw() {
+		lastActivity = GET_TICK();
+		//dcdebug("Sending %d to %s: %.40s\n", a.size(), getName().c_str(), a.c_str());
+		sendDebugMessage("  >> " + a);
+		socket->write(a);
+	}
+	virtual void sendUserCmd(const string& aUserCmd) throw() {
+		send(toNmdc(aUserCmd));
+	}
+	virtual void redirect(const User* aUser, const string& aServer, const string& aMsg);
+	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
+	void doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString);
+	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
+	virtual void info() { myInfo(); }
+	
+	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
+	virtual int64_t getAvailable() const;
+	virtual const string& getName() const { return name; };
+	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
+	
+	virtual User::NickMap& lockUserList() { cs.enter(); return users; };
+	virtual void unlockUserList() { cs.leave(); };
+
+	virtual string checkNick(const string& aNick);
+
+	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	void disconnect() throw();
 	void myInfo();
 	
 	void refreshUserList(bool unknownOnly = false);
 
-#define checkstate() if(state != STATE_CONNECTED) return
-
-	void sendRaw(const string& aRaw) { send(aRaw); }
-
 	void validateNick(const string& aNick) {
 		if (validatenicksent != true) {
-			send("$ValidateNick " + aNick + "|");
+			send("$ValidateNick " + toNmdc(aNick) + "|");
 			validatenicksent = true;
 		}
 	};
@@ -197,58 +231,39 @@ public:
 			send("$GetNickList|");
 		}
 	};
-	void password(const string& aPass) { send("$MyPass " + aPass + "|"); };
 	void getInfo(User::Ptr aUser) {
 		 checkstate();
 		 char buf[256];
-		 sprintf(buf, "$GetINFO %s %s|", aUser->getNick().c_str(), getNick().c_str());
+		 sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
 		 send(buf);
 	};
 	void getInfo(User* aUser) {
 		checkstate();
 		char buf[256];
-		sprintf(buf, "$GetINFO %s %s|", aUser->getNick().c_str(), getNick().c_str());
+		sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
 		send(buf);
 	};
-	void hubMessage(const string& aMessage) { checkstate(); send("<" + getNick() + "> " + Util::validateChatMessage(aMessage) + "|"); }
 	void sendMeMessage(const string& aMessage) { checkstate(); send(Util::validateChatMessage(aMessage) + "|"); }
+	void sendRaw(const string& aRaw) { send(aRaw); }
 
-	void info() { myInfo(); }
-
-	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
-	void doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString);
 	
 	void connectToMe(const User::Ptr& aUser) {
 		checkstate(); 
 		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
 		char buf[256];
-		sprintf(buf, "$ConnectToMe %s %s:%d|", aUser->getNick().c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
+		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
 		send(buf);
 		ConnectionManager::iConnToMeCount++;
 	}
-	void connect(const User* aUser) {
-		checkstate(); 
-		dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
-		char buf[256];
-		if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-			sprintf(buf, "$ConnectToMe %s %s:%d|", aUser->getNick().c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
-			ConnectionManager::iConnToMeCount++;
-		} else {
-			sprintf(buf, "$RevConnectToMe %s %s|", getNick().c_str(), aUser->getNick().c_str());
-		}
-		send(buf);
-	}
+
 	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), aMessage);
-	}
-	void privateMessage(const User* aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), aMessage);
+		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
 	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
 		char buf[512];
-		sprintf(buf, "$To: %s From: %s $", aNick.c_str(), getNick().c_str());
-		send(string(buf)+Util::validateChatMessage(aMessage)+"|");
+		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getNick()).c_str());
+		send(string(buf)+toNmdc(Util::validateChatMessage(aMessage))+"|");
 	}
 	void supports(const StringList& feat) { 
 		string x;
@@ -261,18 +276,11 @@ public:
 		checkstate(); 
 		dcdebug("NmdcHub::revConnectToMe %s\n", aUser->getNick().c_str());
 		char buf[256];
-		sprintf(buf, "$RevConnectToMe %s %s|", getNick().c_str(), aUser->getNick().c_str());
+		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
 		send(buf);
 	}
 
 	void sendDebugMessage(const string& aLine);
-
-	void send(const string& a) throw() {
-		lastActivity = GET_TICK();
-		//dcdebug("Sending %d to %s: %.40s\n", a.size(), getName().c_str(), a.c_str());
-		sendDebugMessage("  >> " + a);
-		socket->write(a);
-	}
 	void send(const char* aBuf, int aLen) throw() {
 		lastActivity = GET_TICK();
 		sendDebugMessage("  >> aBuf ??");
@@ -280,40 +288,6 @@ public:
 	}
 
 	void kick(const User::Ptr& aUser, const string& aMsg);
-	void kick(const User* aUser, const string& aMsg);
-
-	virtual void ban(const User*, const string&, time_t) { /*Unimplemented...*/ }
-
-	void opForceMove(const User::Ptr& aUser, const string& aServer, const string& aMsg) {
-		checkstate(); 
-		dcdebug("NmdcHub::opForceMove\n");
-		send("$OpForceMove $Who:" + aUser->getNick() + "$Where:" + aServer + "$Msg:" + aMsg + "|");
-	}
-
-	void redirect(const User* aUser, const string& aServer, const string& aMsg) {
-		checkstate(); 
-		dcdebug("NmdcHub::opForceMove\n");
-		send("$OpForceMove $Who:" + aUser->getNick() + "$Where:" + aServer + "$Msg:" + aMsg + "|");
-	}
-
-	size_t getUserCount() const {
-		Lock l(cs);
-		return users.size();
-	}
-
-	int64_t getAvailable() const {
-		Lock l(cs);
-		int64_t x = 0;
-		for(User::NickMap::const_iterator i = users.begin(); i != users.end(); ++i) {
-			x+=i->second->getBytesShared();
-		}
-		return x;
-	}
-
-	const string& getName() const { return name; };
-	bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
-
-	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	GETSET(int, supportFlags, SupportFlags);
 private:
@@ -365,8 +339,6 @@ private:
 	SearchQueue searchQueue;	
 	bool validatenicksent;
 	int64_t lastbytesshared;
-	char *dscrptn;
-	int dscrptnlen;
 	
 	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::iterator FloodIter;
@@ -384,6 +356,9 @@ private:
 
 	void clearUsers();
 	void onLine(const char* aLine) throw();
+	
+	string fromNmdc(const string& str) const { return Text::acpToUtf8(str); }
+	string toNmdc(const string& str) const { return Text::utf8ToAcp(str); }
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
@@ -404,4 +379,3 @@ private:
  * @file
  * $Id$
  */
-

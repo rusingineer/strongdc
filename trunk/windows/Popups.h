@@ -31,13 +31,13 @@ class Popups : public CPropertyPage<IDD_POPUPS>, public PropPage
 {
 public:
 	Popups(SettingsManager *s) : PropPage(s) {
-		title = strdup((STRING(SETTINGS_CZDC) + '\\' + STRING(BALLOON_POPUPS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(BALLOON_POPUPS)).c_str());
 		SetTitle(title);
 	};
 
 	~Popups() {
 		ctrlPopupType.Detach();
-		delete[] title;
+		free(title);
 	};
 
 	BEGIN_MSG_MAP(Sounds)
@@ -56,7 +56,7 @@ protected:
 	static ListItem listItems[];
 	static Item items[];
 	static TextItem texts[];
-	char* title;
+	TCHAR* title;
 
 	ExListViewCtrl ctrlPopups;
 	CComboBox ctrlPopupType;
