@@ -51,6 +51,7 @@ public:
 	}
 	
 private:
+	BitOutputStream& operator=(const BitOutputStream&);
 	string& is;
 	int bitPos;
 	u_int8_t next;

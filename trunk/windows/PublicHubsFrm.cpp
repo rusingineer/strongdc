@@ -93,6 +93,7 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlHubs.SetTextColor(WinUtil::textColor);
 	
 	ctrlHubs.setSort(COLUMN_USERS, ExListViewCtrl::SORT_INT, false);
+	ctrlHubs.SetImageList(WinUtil::flagImages, LVSIL_SMALL);
 	ctrlHubs.SetFocus();
 
 	ctrlConfigure.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
@@ -397,7 +398,7 @@ void PublicHubsFrame::updateList() {
 			l[COLUMN_MAXUSERS] = Text::toT(Util::toString(i->getMaxUsers()));
 			l[COLUMN_RELIABILITY] = Text::toT(Util::toString(i->getReliability()));
 			l[COLUMN_RATING] = Text::toT(i->getRating());
-			ctrlHubs.insert(ctrlHubs.GetItemCount(), l);
+			ctrlHubs.insert(ctrlHubs.GetItemCount(), l, WinUtil::getFlagImage(i->getCountry().c_str(), true));
 			visibleHubs++;
 			users += i->getUsers();
 		}

@@ -37,14 +37,14 @@ User::~User() throw() {
 }
 
 void User::connect() {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->connect(this);
 	}
 }
 
 const string& User::getClientNick() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		return client->getNick();
 	} else {
@@ -53,7 +53,7 @@ const string& User::getClientNick() const {
 }
 
 CID User::getClientCID() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		return client->getMe()->getCID();
 	} else {
@@ -62,14 +62,14 @@ CID User::getClientCID() const {
 }
 
 void User::updated(User::Ptr& aUser) {
-	RLock l(aUser->cs);
+	RLock<> l(aUser->cs);
 	if(aUser->client) {
 		aUser->client->updated(aUser);
 	}
 }
 
 const string& User::getClientName() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		return client->getName();
 	} else if(!getLastHubName().empty()) {
@@ -80,7 +80,7 @@ const string& User::getClientName() const {
 }
 
 string User::getClientAddressPort() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		return client->getAddressPort();
 	} else {
@@ -89,14 +89,14 @@ string User::getClientAddressPort() const {
 }
 
 void User::privateMessage(const string& aMsg) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->privateMessage(this, aMsg);
 	}
 }
 
 bool User::isClientOp() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		return client->getOp();
 	}
@@ -104,34 +104,35 @@ bool User::isClientOp() const {
 }
 
 void User::send(const string& aMsg) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->send(aMsg);
 	}
 }
 
 void User::sendUserCmd(const string& aUserCmd) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->sendUserCmd(aUserCmd);
 	}
 }
 
 void User::clientMessage(const string& aMsg) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->hubMessage(aMsg);
 	}
 }
 
 void User::setClient(Client* aClient) { 
-	WLock l(cs); 
+	WLock<> l(cs); 
 	client = aClient; 
 	if(client == NULL) {
 		if (isSet(ONLINE) && isFavoriteUser())
 			setFavoriteLastSeen();
 		unsetFlag(ONLINE);
-	} else {
+	}
+	else {
 		setLastHubAddress(aClient->getIpPort());
 		setLastHubName(aClient->getName());
 		setFlag(ONLINE);
@@ -159,25 +160,25 @@ void User::getParams(StringMap& ucParams, bool myNick /* = false */) {
 	ucParams["clientinfo"] = getReport();
 	ucParams["nl"] = "\r\n";
 	if(myNick && client) {
-		RLock l(cs);
+		RLock<> l(cs);
 		ucParams["mynick"] = client->getNick();
 	}
 }
 
 // favorite user stuff
 void User::setFavoriteUser(FavoriteUser* aUser) {
-	WLock l(cs);
+	WLock<> l(cs);
 	delete favoriteUser;
 	favoriteUser = aUser;
 }
 
 bool User::isFavoriteUser() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	return (favoriteUser != NULL);
 }
 
 void User::setFavoriteLastSeen(u_int32_t anOfflineTime) {
-	WLock l(cs);
+	WLock<> l(cs);
 	if (favoriteUser != NULL) {
 		if (anOfflineTime != 0)
 			favoriteUser->setLastSeen(anOfflineTime);
@@ -187,7 +188,7 @@ void User::setFavoriteLastSeen(u_int32_t anOfflineTime) {
 }
 
 u_int32_t User::getFavoriteLastSeen() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if (favoriteUser != NULL)
 		return favoriteUser->getLastSeen();
 	else
@@ -195,7 +196,7 @@ u_int32_t User::getFavoriteLastSeen() const {
 }
 
 const string& User::getUserDescription() const {
-	RLock l(cs);
+	RLock<> l(cs);
 	if (favoriteUser != NULL)
 		return favoriteUser->getDescription();
 	else
@@ -203,7 +204,7 @@ const string& User::getUserDescription() const {
 }
 
 void User::setUserDescription(const string& aDescription) {
-	WLock l(cs);
+	WLock<> l(cs);
 	if (favoriteUser != NULL)
 		favoriteUser->setDescription(aDescription);
 }
@@ -409,7 +410,7 @@ string User::splitVersion(const string& aExp, const string& aTag, const int part
 }
 
 void User::sendRawCommand(const int aRawCommand) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		if(!client->getOp()) return;
 		string rawCommand = client->getRawCommand(aRawCommand);
@@ -440,7 +441,7 @@ void User::sendRawCommand(const int aRawCommand) {
 }
 
 void User::updated() {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		User::Ptr user = this;
 		client->updated(user);
@@ -488,7 +489,7 @@ StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
 	return fakeShareParams;
 }
 void User::addLine(const string& aLine) {
-	RLock l(cs);
+	RLock<> l(cs);
 	if(client) {
 		client->addLine(aLine);
 	}

@@ -16,14 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _FAST_ALLOC
-#define _FAST_ALLOC
-
-#include "CriticalSection.h"
+#ifndef FASTALLOC_H
+#define FASTALLOC_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+
+#include "CriticalSection.h"
 
 #ifndef _DEBUG
 struct FastAllocBase {
@@ -97,7 +97,8 @@ template<class T> void* FastAlloc<T>::freeList = NULL;
 template<class T> struct FastAlloc { };
 #endif
 
-#endif // _FAST_ALLOC
+#endif // FASTALLOC_H
+
 /**
  * @file
  * $Id$

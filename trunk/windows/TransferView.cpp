@@ -525,26 +525,22 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.deleteItem(i);
 	} else if(wParam == INSERT_SUBITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		int r = -1;
-
-		if(i->upper != NULL)
-			r = ctrlTransfers.findItem(i->upper);
-
-		if(r != -1) {
-			if(!i->upper->collapsed) {
-				int position = 0;
-				if(i->qi) {
-					position = i->qi->getActiveSegments().size();
-				}
-				insertSubItem(i,r + position + 1);
-				if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
-					ctrlTransfers.resort();
+		int r = ctrlTransfers.findItem(i->upper);
+		dcassert(r != -1);
+		if(!i->upper->collapsed) {
+			int position = 0;
+			if(i->qi) {
+				position = i->qi->getActiveSegments().size();
 			}
-
-			if(i->upper->pocetUseru > 1) {
-				ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
-			}
+			insertSubItem(i,r + position + 1);
+			if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+				ctrlTransfers.resort();
 		}
+
+		if(i->upper->pocetUseru > 1) {
+			ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
+		}
+		ctrlTransfers.updateItem(i->upper);
 	}
 
 	return 0;
@@ -705,11 +701,11 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		dcassert(transferItems.find(aCqi) != transferItems.end());
 		i = transferItems[aCqi];		
 		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? TSTRING(CONNECTING) : TSTRING(WAITING_TO_RETRY);
-/*		if(i->statusString == TSTRING(CONNECTING)) {
+		if(i->statusString == TSTRING(CONNECTING)) {
 			i->status = ItemInfo::STATUS_WAITING;
 		} else {
 			i->status = ItemInfo::STATUS_RUNNING;			
-		}*/
+		}
 		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
@@ -941,6 +937,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			if(i->upper != NULL) {
 				if(i->qi != NULL)
 					i->upper->qi = i->qi;
+				i->upper->status = ItemInfo::STATUS_RUNNING;
 				i->upper->compressRatio = pomerKomprese;
 				i->upper->speed = tmp;
 				i->upper->celkovaRychlost = tmp;
@@ -1207,7 +1204,6 @@ TransferView::ItemInfo* TransferView::findMainItem(tstring Target) {
 }
 
 void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
-	//Lock l(cs);
 	ItemInfo* mainItem = findMainItem(i->Target);
 
 	if(!mainItem) {
@@ -1242,14 +1238,12 @@ void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
 			i->upper->columns[COLUMN_HUB] = Text::toT(i->user->getClientName());
 		} else {
 			i->upper->columns[COLUMN_USER] = Text::toT(Util::toString(mainItem->pocetUseru))+_T(" ")+TSTRING(HUB_USERS);
-			if(mainItem->qi)
-				i->upper->columns[COLUMN_HUB] = Text::toT(Util::toString((int)mainItem->qi->getActiveSegments().size()))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
-			else
-				i->upper->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
+			int pocetSegmentu = mainItem->qi ? mainItem->qi->getActiveSegments().size() : 0;
+			i->upper->columns[COLUMN_HUB] = Text::toT(Util::toString(pocetSegmentu))+_T(" ")+TSTRING(NUMBER_OF_SEGMENTS);
 		}
 
 		if(mainThread) {
-			int r = ctrlTransfers.findItem(mainItem);
+			int r = ctrlTransfers.findItem(i->upper);
 
 			if(r != -1) {
 				if(!i->upper->collapsed) {
@@ -1265,6 +1259,7 @@ void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
 				if(i->upper->pocetUseru > 1) {
 					ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
 				}
+				ctrlTransfers.updateItem(i->upper);
 			}
 		} else {
 			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);

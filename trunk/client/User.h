@@ -223,8 +223,8 @@ public:
 	bool connectionTimeout();
 	void setPassive();
 private:
-	mutable RWLock cs;
-	
+	mutable RWLock<> cs;
+
 	User(const User&);
 	User& operator=(const User&);
 

@@ -732,7 +732,7 @@ void HubManager::on(TypeBZ2, HttpConnection*) throw() {
 }
 
 void HubManager::previewload(SimpleXML* aXml){
-	WLock l(rwcs);
+	WLock<> l(rwcs);
 
 	aXml->resetCurrentChild();
 	if(aXml->findChild("PreviewApps")) {
@@ -746,7 +746,7 @@ void HubManager::previewload(SimpleXML* aXml){
 }
 
 void HubManager::previewsave(SimpleXML* aXml){
-	RLock l(rwcs);
+	RLock<> l(rwcs);
 	aXml->addTag("PreviewApps");
 	aXml->stepIn();
 	for(PreviewApplication::Iter i = previewApplications.begin(); i != previewApplications.end(); ++i) {

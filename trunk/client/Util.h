@@ -37,6 +37,34 @@
 #define SETTINGS_DIR "settings/"
 #endif
 
+template<typename T, bool flag> struct ReferenceSelector {
+	typedef T ResultType;
+};
+template<typename T> struct ReferenceSelector<T,true> {
+	typedef const T& ResultType;
+};
+
+template<typename T> class IsOfClassType {
+public:
+	template<typename U> static char check(int U::*);
+	template<typename U> static float check(...);
+public:
+	enum { Result = sizeof(check<T>(0)) };
+};
+
+template<typename T> struct TypeTraits {
+	typedef IsOfClassType<T> ClassType;
+	typedef ReferenceSelector<T, ((ClassType::Result == 1) || (sizeof(T) > sizeof(char*)) ) > Selector;
+	typedef typename Selector::ResultType ParameterType;
+};
+
+#define GETSET(type, name, name2) \
+private: type name; \
+public: TypeTraits<type>::ParameterType get##name2() const { return name; }; \
+	void set##name2(TypeTraits<type>::ParameterType a##name2) { name = a##name2; };
+
+#define LIT(x) x, (sizeof(x)-1)
+
 /** Evaluates op(pair<T1, T2>.first, compareTo) */
 template<class T1, class T2, class op = equal_to<T1> >
 class CompareFirst {
@@ -44,6 +72,7 @@ public:
 	CompareFirst(const T1& compareTo) : a(compareTo) { };
 	bool operator()(const pair<T1, T2>& p) { return op()(p.first, a); };
 private:
+	CompareFirst& operator=(const CompareFirst&);
 	const T1& a;
 };
 
@@ -54,14 +83,15 @@ public:
 	CompareSecond(const T2& compareTo) : a(compareTo) { };
 	bool operator()(const pair<T1, T2>& p) { return op()(p.second, a); };
 private:
+	CompareSecond& operator=(const CompareSecond&);
 	const T2& a;
 };
 
 template<class T>
 struct PointerHash {
 #if _MSC_VER >= 1300 
-	static const size_t bucket_size = 4;
-	static const size_t min_buckets = 8;
+	static const size_t bucket_size = 4; 
+	static const size_t min_buckets = 8; 
 #endif 
 	size_t operator()(const T* a) const { return ((size_t)a)/sizeof(T); };
 	bool operator()(const T* a, const T* b) { return a < b; };
@@ -87,7 +117,7 @@ class Flags {
 		Flags(MaskType f) : flags(f) { };
 		bool isSet(MaskType aFlag) const { return (flags & aFlag) == aFlag; };
 		bool isAnySet(MaskType aFlag) const { return (flags & aFlag) != 0; };
- 		void setFlag(MaskType aFlag) { flags |= aFlag; };
+		void setFlag(MaskType aFlag) { flags |= aFlag; };
 		void unsetFlag(MaskType aFlag) { flags &= ~aFlag; };
 		Flags& operator=(const Flags& rhs) { flags = rhs.flags; return *this; };
 	private:
@@ -137,8 +167,8 @@ public:
 		int n;
 		n = readlink("/proc/self/exe", buf, PATH_MAX);
 		if (n == -1) {
-		return emptyString;
-			}
+			return emptyString;
+		}
 		buf[n] = '\0';
 		return string(buf);
 #endif // _WIN32
@@ -203,9 +233,9 @@ public:
 		string tmp = Text::fromT((LPCTSTR)lpMsgBuf);
 		// Free the buffer.
 		LocalFree( lpMsgBuf );
-		string::size_type i;
+		string::size_type i = 0;
 
-		while( (i = tmp.find_last_of("\r\n")) != string::npos) {
+		while( (i = tmp.find_first_of("\r\n", i)) != string::npos) {
 			tmp.erase(i, 1);
 		}
 		return tmp;
@@ -241,7 +271,7 @@ public:
 		string::size_type j = path.rfind(PATH_SEPARATOR, i-1);
 		return (j != string::npos) ? path.substr(j+1, i-j-1) : path;
 	}
-	
+
 	static wstring getFilePath(const wstring& path) {
 		wstring::size_type i = path.rfind(PATH_SEPARATOR);
 		return (i != wstring::npos) ? path.substr(0, i + 1) : path;
@@ -261,7 +291,7 @@ public:
 		wstring::size_type j = path.rfind(PATH_SEPARATOR, i-1);
 		return (j != wstring::npos) ? path.substr(j+1, i-j-1) : path;
 	}
-	
+
 	static void decodeUrl(const string& aUrl, string& aServer, short& aPort, string& aFile);
 	static string validateFileName(string aFile);
 	static string formatStatus(int iStatus) {
@@ -303,7 +333,7 @@ public:
 		}
 		return buf;
 	}
-	
+
 	static string toAdcFile(const string& file) {
 		string ret;
 		ret.reserve(file.length() + 1);
@@ -332,7 +362,7 @@ public:
 	static string formatBytes(int64_t aBytes);
 
 	static string formatExactSize(int64_t aBytes);
-	
+
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
 		char buf[64];
 #ifdef _WIN32
@@ -374,10 +404,11 @@ public:
 
 	static double toDouble(const string& aString) {
 		// Work-around for atof and locales...
-		string::size_type i = aString.rfind(',');
-		if(i != string::npos) {
+		lconv* lv = localeconv();
+		string::size_type i = aString.find_last_of(".,");
+		if(aString[i] != lv->decimal_point[0]) {
 			string tmp(aString);
-			tmp[i] = '.';
+			tmp[i] = lv->decimal_point[0];
 			return atof(tmp.c_str());
 		}
 		return atof(aString.c_str());
@@ -425,7 +456,7 @@ public:
 	}
 	static string toString(long long val) {
 		char buf[32];
-#ifdef WIN32
+#ifdef _MSC_VER
 		_snprintf(buf, 31, "%I64d", val);
 #else
 		_snprintf(buf, 31, "%lld", val);
@@ -435,7 +466,7 @@ public:
 	}
 	static string toString(unsigned long long val) {
 		char buf[32];
-#ifdef WIN32
+#ifdef _MSC_VER
 		_snprintf(buf, 31, "%I64u", val);
 #else
 		_snprintf(buf, 31, "%llu", val);
@@ -641,7 +672,7 @@ struct noCaseStringLess {
 	}
 };
 
-#endif // !defined(AFX_UTIL_H__1758F242_8D16_4C50_B40D_E59B3DD63913__INCLUDED_)
+#endif // UTIL_H
 
 /**
  * @file

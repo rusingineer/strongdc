@@ -339,7 +339,7 @@ public:
 	GETSET(Download*, tempDownload, TempDownload);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	string getRemoteIp() const { return socket->getRemoteIp(); }
+	string getRemoteIp() const { return socket->getIp(); }
 	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	void garbageCommand() { 
 		string tmp;

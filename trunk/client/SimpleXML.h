@@ -56,6 +56,8 @@ public:
 				return i->second;
 			}
 		}
+	private:
+		CallBack& operator=(const CallBack&);
 	};
 
 	SimpleXMLReader(CallBack* callback) : cb(callback), utf8(true) { }

@@ -427,7 +427,7 @@ void SearchFrame::onEnter() {
 
 	mainItems.clear();
 	ctrlResults.DeleteAllItems();
-
+	
 	{
 		Lock l(cs);
 		search = StringTokenizer<tstring>(s, ' ').getTokens();
@@ -436,9 +436,9 @@ void SearchFrame::onEnter() {
 	//strip out terms beginning with -
 	s.clear();
 	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
-		if ((*si)[0] != _T('-') || si->size() != 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
+		if ((*si)[0] != _T('-') && si->size() != 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
 	s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
-		
+
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
 		mode = SearchManager::SIZE_DONTCARE;

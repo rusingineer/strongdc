@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_SINGLETON_H__3B62D311_53B4_42E9_8522_D890E70BDFE3__INCLUDED_)
-#define AFX_SINGLETON_H__3B62D311_53B4_42E9_8522_D890E70BDFE3__INCLUDED_
+#ifndef SINGLETON_H
+#define SINGLETON_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -26,8 +26,8 @@
 template<typename T>
 class Singleton {
 public:
-	Singleton() { };
-	virtual ~Singleton() { };
+	Singleton() { }
+	virtual ~Singleton() { }
 
 	static T* getInstance() {
 		dcassert(instance);
@@ -53,9 +53,10 @@ private:
 	Singleton& operator=(const Singleton&);
 
 };
-template<typename T> T* Singleton<T>::instance = NULL;
 
-#endif // !defined(AFX_SINGLETON_H__3B62D311_53B4_42E9_8522_D890E70BDFE3__INCLUDED_)
+template<class T> T* Singleton<T>::instance = NULL;
+
+#endif // SINGLETON_H
 
 /**
  * @file

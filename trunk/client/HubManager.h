@@ -310,7 +310,7 @@ private:
 
 	User::List users;
 
-	RWLock rwcs;
+	RWLock<> rwcs;
 	CriticalSection cs;
 
 	// Public Hubs
