@@ -40,6 +40,7 @@ public:
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
 	virtual void password(const string& pwd);
 	virtual void info();
+	virtual string checkNick(const string& nick);
 	virtual void sendMeMessage(const string& aMessage);
 
 	virtual size_t getUserCount() const { return 0;};
@@ -74,7 +75,7 @@ private:
 
 	User::NickMap nickMap;
 	User::Ptr hub;
-	string lastInfo;
+	StringMap lastInfoMap;
 
 	string salt;
 

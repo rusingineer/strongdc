@@ -26,12 +26,6 @@
 #include "../client/SettingsManager.h"
 #include "../client/HubManager.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem UCPage::texts[] = {
 	{ IDC_MOVE_UP, ResourceManager::MOVE_UP },
 	{ IDC_MOVE_DOWN, ResourceManager::MOVE_DOWN },

@@ -49,7 +49,7 @@ const string SettingsManager::settingTags[] =
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
 	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
-	"BackgroundImage",
+	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass",
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -103,7 +103,7 @@ const string SettingsManager::settingTags[] =
 	"AddFinishedInstantly", "Away", "UseUPnP",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
-	"PopupType",
+	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -158,7 +158,7 @@ SettingsManager::SettingsManager()
 	setDefault(CONFIRM_EXIT, false);
 	setDefault(IGNORE_OFFLINE, false);
 	setDefault(POPUP_OFFLINE, false);
-	setDefault(LIST_DUPES, false);
+	setDefault(LIST_DUPES, true);
 	setDefault(BUFFER_SIZE, 64);
 	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
@@ -242,6 +242,12 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,10,-1,11,12,13,-1,-1,14,-1,15,-1,16,-1,17,19,-1,18,19,20,21,22");
 	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
+	setDefault(WEBSERVER, false);
+	setDefault(WEBSERVER_PORT, 80);
+	setDefault(WEBSERVER_FORMAT,"%Y-%m-%d %H:%M: %[ip] tried getting %[file]");
+	setDefault(LOG_WEBSERVER, true);
+	setDefault(WEBSERVER_USER, "strongdc");
+	setDefault(WEBSERVER_PASS, "strongdc");
 	setDefault(AUTO_PRIORITY_DEFAULT, false);
 	setDefault(TOOLBARIMAGE,"");
 	setDefault(TOOLBARHOTIMAGE,"");
@@ -438,6 +444,7 @@ SettingsManager::SettingsManager()
 	setDefault(POPUP_NEW_PM, true);
 	setDefault(POPUP_TYPE, 0);
 	setDefault(AWAY, false);
+	setDefault(SHUTDOWN_ACTION, 0);
 
 	setDefault(BACKGROUND_IMAGE, "");
 #ifdef _WIN32

@@ -60,6 +60,8 @@
 #include "../client/StringTokenizer.h"
 #include "../client/SimpleXML.h"
 #include "../client/ShareManager.h"
+#include "../client/cvsversion.h"
+#include "../client/WebServerManager.h"
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
@@ -126,19 +128,25 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	TimerManager::getInstance()->addListener(this);
 	QueueManager::getInstance()->addListener(this);
 	LogManager::getInstance()->addListener(this);
+	WebServerManager::getInstance()->addListener(this);
 
 	WinUtil::init(m_hWnd);
 
 	// Register server socket message
 	WSAAsyncSelect(ConnectionManager::getInstance()->getServerSocket().getSocket(),
 		m_hWnd, SERVER_SOCKET_MESSAGE, FD_ACCEPT);
+ 	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSocket(),m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
 
 	trayMessage = RegisterWindowMessage("TaskbarCreated");
 
 	TimerManager::getInstance()->start();
 
 	// Set window name
+#ifdef isCVS
+	SetWindowText(APPNAME " " VERSIONSTRING "" CZDCVERSIONSTRING CVSVERSION);
+#else
 	SetWindowText(APPNAME " " VERSIONSTRING "" CZDCVERSIONSTRING);
+#endif
 
 	// Load images
 	// create command bar window
@@ -498,7 +506,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					ctrlStatus.SetText(9, string(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
-						bDidShutDown = CZDCLib::shutDown();
+						bDidShutDown = CZDCLib::shutDown(SETTING(SHUTDOWN_ACTION));
 						if (bDidShutDown) {
 							// Should we go faster here and force termination?
 							// We "could" do a manual shutdown of this app...
@@ -707,6 +715,11 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 	}
 }
 
+LRESULT MainFrame::onWebServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	WebServerManager::getInstance()->getServerSocket().incoming();
+	return 0;
+}
+
 LRESULT MainFrame::onServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	ConnectionManager::getInstance()->getServerSocket().incoming();
 	return 0;
@@ -882,6 +895,8 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	if(!closing) {
 		if( oldshutdown ||(!BOOLSETTING(CONFIRM_EXIT)) || (MessageBox(CSTRING(REALLY_EXIT), APPNAME " " VERSIONSTRING, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) ) {
 			updateTray(false);
+
+			WebServerManager::getInstance()->removeListener(this);
 			string tmp1;
 			string tmp2;
 
@@ -1362,6 +1377,13 @@ LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
+void MainFrame::on(WebServerListener::Setup) throw() {
+	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSocket(),m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
+}
+
+void MainFrame::on(WebServerListener::ShutdownPC, int action) throw() {
+	CZDCLib::shutDown(action);
+}
 /**
  * @file
  * $Id: MainFrm.cpp,v 1.20 2004/07/21 13:15:15 bigmuscle Exp

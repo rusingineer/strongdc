@@ -24,12 +24,6 @@
 #include "../client/SettingsManager.h"
 #include "WinUtil.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem FakeDetect::texts[] = {
 	{ INFORMACE, ResourceManager::TEXT_FAKEINFO },
 	{ AAA, ResourceManager::TEXT_JUNK },

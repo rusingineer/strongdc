@@ -398,7 +398,7 @@ QueueManager::~QueueManager() {
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
 		
-		hFind = FindFirstFile((path + "\\*.bz2").c_str(), &data);
+		hFind = FindFirstFile((path + "\\*.xml.bz2").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
 				File::deleteFile(path + data.cFileName);			
@@ -420,7 +420,7 @@ QueueManager::~QueueManager() {
 		DIR* dir = opendir(path.c_str());
 		if (dir) {
 			while (struct dirent* ent = readdir(dir)) {
-				if (fnmatch("*.bz2", ent->d_name, 0) == 0 ||
+				if (fnmatch("*.xml.bz2", ent->d_name, 0) == 0 ||
 					fnmatch("*.DcLst", ent->d_name, 0) == 0) {
 					File::deleteFile(path + ent->d_name);	
 				}
@@ -919,18 +919,17 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		QueueItem* q = fileQueue.find(aDownload->getTarget());
 
 		if(q != NULL) {
+			if(aDownload->isSet(Download::FLAG_USER_LIST)) {
+				if(aDownload->getSource() == "files.xml.bz2") {
+					q->setFlag(QueueItem::FLAG_XML_BZLIST);
+			} else {
+				q->unsetFlag(QueueItem::FLAG_XML_BZLIST);
+				}
+			}
 
 			if(finished) {
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
-
 				userQueue.remove(q);
-				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
-					if(aDownload->getSource() == "files.xml.bz2") {
-						q->setFlag(QueueItem::FLAG_XML_BZLIST);
-					} else if(aDownload->getSource() == "MyList.bz2") {
-						q->setFlag(QueueItem::FLAG_BZLIST);
-					}
-				}
 				fire(QueueManagerListener::Finished(), q);
 				fire(QueueManagerListener::Removed(), q);
 				// Now, let's see if this was a directory download filelist...

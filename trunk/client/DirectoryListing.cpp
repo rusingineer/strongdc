@@ -41,7 +41,7 @@ void DirectoryListing::loadFile(const string& name, bool doAdl) {
 		size_t len = (size_t)::File::getSize(name);
 		AutoArray<u_int8_t> buf(len);
 		::File(name, ::File::READ, ::File::OPEN).read(buf, len);
-		CryptoManager::getInstance()->decodeHuffman(buf, txt);
+		CryptoManager::getInstance()->decodeHuffman(buf, txt, len);
 		load(txt, doAdl);
 	} else if(Util::stricmp(ext, ".bz2") == 0) {
 		::File ff(name, ::File::READ, ::File::OPEN);

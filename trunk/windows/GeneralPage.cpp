@@ -27,12 +27,6 @@
 #include "../client/BufferedSocket.h"
 #include <winsock2.h>
 
-#ifdef _DEBUG
-#define new1 DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
 PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_PERSONAL_INFORMATION, ResourceManager::SETTINGS_PERSONAL_INFORMATION },
 	{ IDC_SETTINGS_NICK, ResourceManager::NICK },

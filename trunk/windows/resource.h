@@ -110,6 +110,7 @@
 #define IDR_TREE_YES                    285
 #define IDR_TREE_NO                     286
 #define IDD_POPUPS                      287
+#define IDD_SDCPAGE                     288
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -486,7 +487,6 @@
 #define IDC_USERLIST_IMAGE              1267
 #define IDC_USERLIST                    1268
 #define IDC_IMPORT                      1269
-#define IDC_USERLIST_IMAGE2             1269
 #define IDC_BACKGROUND_IMAGE            1269
 #define IDC_EXPORT                      1270
 #define IDC_BACK_IMAGE                  1270
@@ -502,7 +502,12 @@
 #define IDC_PLAY                        1282
 #define IDC_POPUPLIST                   1283
 #define IDC_COMBO1                      1284
+#define IDC_EDIT2                       1285
+#define IDC_EDIT3                       1286
+#define IDC_STATIC1                     1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
+#define IDC_SECOND                      1288
+#define IDC_SECOND1                     1289
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
@@ -527,6 +532,7 @@
 #define IDC_SELECT_TAB_COLOR            1523
 #define IDC_SAMPLE_TAB_COLOR            1524
 #define IDC_RESET_TAB_COLOR             1525
+#define WEBSERVER_SOCKET_MESSAGE        1543
 #define IDC_AUTOPRIORITY                1572
 #define IDC_SETTINGS_ODC_MENUBAR        1612
 #define IDC_SETTINGS_ODC_MENUBAR_USETWO 1613
@@ -753,9 +759,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        288
+#define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         1285
-#define _APS_NEXT_SYMED_VALUE           123
+#define _APS_NEXT_CONTROL_VALUE         1290
+#define _APS_NEXT_SYMED_VALUE           124
 #endif
 #endif

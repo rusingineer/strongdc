@@ -131,6 +131,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	multiMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	multiMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
 	multiMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
 	multiMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
 	
 	priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_PAUSED, CSTRING(PAUSED));
@@ -1601,14 +1602,16 @@ LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 }
 
 LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlQueue.GetSelectedCount() == 1) {
-		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+	int i = -1;
+	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end();) {
-			if(!i->getUser()->isOnline())
+			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
-			else
+			} else {
 				i++;
+			}
 		}
 	}
 	return 0;
