@@ -293,14 +293,14 @@ void DirectoryListing::download(File* aFile, const string& aTarget, bool view /*
 	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
 		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
-		aFile->getTTH(), Util::emptyString, flags, prio);
+		aFile->getTTH(), flags, prio);
 }
 
 void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
 	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
 
 	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
-		NULL, Util::emptyString, flags, QueueItem::Priority::HIGHEST);
+		NULL, flags, QueueItem::Priority::HIGHEST);
 }
 
 bool DirectoryListing::File::isJunkFile() {

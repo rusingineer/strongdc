@@ -32,8 +32,8 @@
 #include "LineDlg.h"
 #include "PrivateFrame.h"
 
-void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUser, const string& start) {
-	DirectoryListingFrame* frame = new DirectoryListingFrame(aFile, aUser, start);
+void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUser) {
+	DirectoryListingFrame* frame = new DirectoryListingFrame(aFile, aUser);
 	if(BOOLSETTING(POPUNDER_FILELIST))
 		WinUtil::hiddenCreateEx(frame);
 	else
@@ -41,9 +41,9 @@ void DirectoryListingFrame::openWindow(const string& aFile, const User::Ptr& aUs
 
 }
 
-DirectoryListingFrame::DirectoryListingFrame(const string& aFile, const User::Ptr& aUser, const string& s) :
+DirectoryListingFrame::DirectoryListingFrame(const string& aFile, const User::Ptr& aUser) :
 	statusContainer(STATUSCLASSNAME, this, STATUS_MESSAGE_MAP),
-	treeRoot(NULL), skipHits(0), updating(false), dl(NULL), searching(false), start(s)
+	treeRoot(NULL), skipHits(0), updating(false), dl(NULL), searching(false), start(WinUtil::getInitialDir(aUser))
 {
 	string tmp;
 	if(aFile.size() < 4) {

@@ -67,6 +67,7 @@ HWND WinUtil::mdiClient = NULL;
 FlatTabCtrl* WinUtil::tabCtrl = NULL;
 HHOOK WinUtil::hook = NULL;
 string WinUtil::tth;
+StringPairList WinUtil::initialDirs;
 string WinUtil::exceptioninfo;
 bool WinUtil::isPM = false;
 bool WinUtil::isAppActive = false;
