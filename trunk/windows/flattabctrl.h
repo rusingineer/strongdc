@@ -746,6 +746,10 @@ public:
 #else //!(_ATL_VER >= 0x0700)
 			m_hMenu = ::LoadMenu(_Module.GetResourceInstance(), MAKEINTRESOURCE(nMenuID));
 #endif //!(_ATL_VER >= 0x0700)
+
+		if(m_hMenu == NULL)
+			m_hMenu = WinUtil::mainMenu;
+
 		dwStyle = T::GetWndStyle(dwStyle);
 		dwExStyle = T::GetWndExStyle(dwExStyle);
 
@@ -830,6 +834,8 @@ public:
 		bHandled = FALSE;
 		dcassert(getTab());
 			getTab()->removeTab(m_hWnd);
+		if(m_hMenu == WinUtil::mainMenu)
+			m_hMenu = NULL;
 
 		BOOL bMaximized = FALSE;
 		if(::SendMessage(m_hWndMDIClient, WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized) != NULL)

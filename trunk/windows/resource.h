@@ -335,6 +335,7 @@
 #define IDC_SETTINGS_SEGMENT_BAR_COLOR  1216
 #define IDC_COPY_TTH                    1217
 #define IDC_SETTINGS_FORMAT1            1217
+#define IDC_DONTBEGIN                   1217
 #define IDC_EDIT1                       1218
 #define IDC_CLIENT_NAME                 1218
 #define IDC_SETTINGS_FORMAT2            1218
@@ -381,6 +382,7 @@
 #define IDC_SEGMENT4_MAX                1229
 #define IDC_TOOLBAR_IMAGE_BOX           1229
 #define IDC_VERSION_MISMATCH            1229
+#define IDC_SETTINGS_LOG_SEGMENT        1229
 #define IDC_SEGMENT6_MIN                1230
 #define IDC_DOWNLOADDIR_DIR             1230
 #define IDC_USE_EXTRA_VERSION           1230
@@ -440,7 +442,9 @@
 #define CAA                             1258
 #define IDC_SEARCH_SPIN                 1258
 #define DAA                             1259
+#define IDC_BEGIN_EDIT                  1259
 #define FAKE_SET                        1260
+#define IDC_BEGIN_SPIN                  1260
 #define INFORMACE                       1261
 #define AAA                             1262
 #define IDC_SOUNDLIST                   1263
@@ -461,12 +465,8 @@
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_MINUTES                     1279
-#define IDC_CLIPBOARD_ONE               1282
+#define IDC_KBPS                        1280
 #define IDC_CLIPBOARD_TWO               1283
-#define IDC_CLIPBOARD_THREE             1284
-#define IDC_CLIPBOARD_FOUR              1285
-#define IDC_CLIPBOARD_FIVE              1286
-#define IDC_CLIPBOARD_SIX               1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296

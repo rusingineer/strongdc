@@ -38,10 +38,14 @@ public:
 
 	BEGIN_MSG_MAP(Segment)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
+		COMMAND_ID_HANDLER(IDC_RADIO1, onClickedRadio)
+		COMMAND_ID_HANDLER(IDC_RADIO2, onClickedRadio)
+		COMMAND_ID_HANDLER(IDC_RADIO3, onClickedRadio)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT onBrowse(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT onClickedRadio(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
@@ -52,6 +56,8 @@ protected:
 	static TextItem texts[];
 	char* title;
 	CComboBox ctrlBlockSize;
+
+	void fixControls();
 };
 
 #endif //Segment_H

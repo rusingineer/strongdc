@@ -79,7 +79,6 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
-	m_hMenu = WinUtil::mainMenu;
 	tabMenu.CreatePopupMenu();
 
 	if(BOOLSETTING(LOG_DOWNLOADS)) {
@@ -166,7 +165,6 @@ LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::FINISHED_ORDER, 
 			SettingsManager::FINISHED_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 	
-		m_hMenu = NULL;
 		bHandled = FALSE;
 	return 0;
 	}

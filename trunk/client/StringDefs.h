@@ -575,7 +575,7 @@ enum Strings { // @DontAdd
 	SEGMENT4_TEXT, // "4 segments if file size is between                 and                  MB"
 	SEGMENT6_TEXT, // "6 segments if file size is between                 and                  MB"
 	SEGMENT8_TEXT, // "8 segments if file size is greater than                  MB"
-	DONT_ADD_SEGMENT_TEXT, // "Don't add any other segment if speed is above"
+	DONT_ADD_SEGMENT_TEXT, // "Don't begin new segment is overall file speed is over"
 	WARN_SEGMENT_TEXT, // "(Too low or too high settings can decrease download speed!)"
 	DISABLE_COMPRESSION, // "Disable safe && compressed transfer"
 	SETTINGS_MAX_COMPRESS, // "Max compression level"
@@ -722,5 +722,6 @@ enum Strings { // @DontAdd
 	DISABLED, // "Disabled"
 	DOWNLOADING_TTHL, // "Downloading TTH leaf..."
 	NO_FREE_BLOCK, // "No free block"
+	LOG_SEGMENTS, // "Log segmented downloading"
 	LAST // @DontAdd
 };

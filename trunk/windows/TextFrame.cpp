@@ -56,17 +56,15 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		SetWindowText((Util::getFileName(file) + ": " + e.getError()).c_str());
 	}
 	
-	m_hMenu = WinUtil::mainMenu;
-
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT TextFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	m_hMenu = NULL;
 	bHandled = FALSE;
 	return 0;
 }
+
 void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 {
 	CRect rc;

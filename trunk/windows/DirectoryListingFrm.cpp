@@ -196,7 +196,6 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 
 	closed = false;
 	
-	m_hMenu = WinUtil::mainMenu;
 	setWindowTitle();
 
 	bHandled = FALSE;

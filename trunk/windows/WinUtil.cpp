@@ -619,7 +619,7 @@ char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :
 "\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n" LINE3,
 "\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
 "\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n" LINE3,
-"\r\n-- Podporuju magnet-linky, takže mùžu zaruèit, že nestáhnu žádné falešné soubory :-))\r\n" LINE3,
+"\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesné soubory :-))\r\n" LINE3,
 "\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
 };
 
@@ -637,6 +637,34 @@ char *czmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)
 
 string WinUtil::commands = "\t\t\t\t\t HELP \t\t\t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/refresh \t\t\t\t(obnoveni share) \t\t\t\t\t\t\n/savequeue \t\t\t\t(ulozi Download Queue) \t\t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/search <string> \t\t\t(hledat neco...) \t\t\t\t\t\t\t\n/g <searchstring> \t\t\t(hledat Googlem) \t\t\t\t\t\t\n/imdb <imdbquery> \t\t\t(hledat film v IMDB databazi) \t\t\t\t\t\n/whois [IP] \t\t\t\t(hledat podrobnosti o IP) \t\t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/slots # \t\t\t\t(upload sloty) \t\t\t\t\t\t\t\n/extraslots # \t\t\t\t(extra sloty pro male soubory) \t\t\t\t\t\n/smallfilesize # \t\t\t\t(maximalni velikost malych souboru) \t\t\t\t\n/ts \t\t\t\t\t(zobrazi datum a cas u zprav v mainchatu) \t\t\t\n/connection \t\t\t\t(zobrazi IP a port prez ktery jste pripojen) \t\t\t\t\n/showjoins \t\t\t\t(zapne/vypne zobrazovani a odpojovani useru v mainchatu) \t\n/showblockedipports \t\t\t(zobrazi zablokovane porty-mozna:)) \t\t\t\t\n/shutdown \t\t\t\t(vypne pocitac po urcitem timeoutu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/dc++ \t\t\t\t\t(zobrazi verzi DC++ v mainchatu) \t\t\t\t\t\n/czdc++ \t\t\t\t(zobrazi verzi CZDC++ v mainchatu) \t\t\t\t\n/strongdc++ \t\t\t\t(zobrazi verzi StrongDC++ v mainchatu) \t\t\t\t\n------------------------------------------------------------------------------------------------------------------------------------------------------------\n/away <msg> \t\t\t\t(zapne/vypne away mod) \t\t\t\t\t\n/winamp \t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/w \t\t\t\t\t(Winamp spam v mainchatu) \t\t\t\t\t\n/clear,/c \t\t\t\t(smazat obsah mainchatu) \t\t\t\t\t\n/ignorelist \t\t\t\t(zobrazi ignorelist v mainchatu) \t\t\t\t\t\n";
 
+float ProcSpeedCalc() {
+#define RdTSC __asm _emit 0x0f __asm _emit 0x31
+__int64 cyclesStart = 0, cyclesStop = 0;
+unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
+
+    if(!QueryPerformanceFrequency((LARGE_INTEGER *) &nFreq)) return 0;
+    QueryPerformanceCounter((LARGE_INTEGER *) &nCtrStop);
+
+    nCtrStop += nFreq;
+    _asm
+        {
+            RdTSC
+            mov DWORD PTR cyclesStart, eax
+            mov DWORD PTR [cyclesStart + 4], edx
+        }
+
+        do{
+             QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
+          }while (nCtr < nCtrStop);
+
+    _asm
+        {
+            RdTSC
+            mov DWORD PTR cyclesStop, eax
+            mov DWORD PTR [cyclesStop + 4], edx
+        }
+	return    ((float)cyclesStop-(float)cyclesStart) / 1000000;
+}
 
 bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& status) {
 	string::size_type i = cmd.find(' ');
@@ -819,7 +847,7 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 		message = uptime;
 	} else if(Util::stricmp(cmd.c_str(), "stats") == 0) {
 		char buf[128];
-		sprintf(buf, "-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
+		sprintf(buf, "\r\n-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: ",VERSIONSTRING, CZDCVERSIONSTRING);
 		string uptime = (string)buf;
 		unsigned PPK_nHeaps;
 		HANDLE PPK_aHeaps[512];
@@ -836,12 +864,13 @@ bool WinUtil::checkCommand(string& cmd, string& param, string& message, string& 
 				PPK_dwCurrentSize += PPKEntry.cbData;
 			}
 		}
-		delete[] *PPK_aHeaps;
+//		delete[] *PPK_aHeaps;
 		uptime += formatTime(Util::getUptime()) + " ][ Memory usage: " + Util::toString(PPK_dwCurrentSize/1024) + 
 			" kB ]=-\r\n-=[ Downloaded: " + Util::formatBytes(Socket::getTotalDown()) + " ][ Uploaded: " + 
 			Util::formatBytes(Socket::getTotalUp()) + " ]=-\r\n-=[ Total download: " + Util::formatBytes(SETTING(TOTAL_DOWNLOAD)) + 
 			" ][ Total upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + " ]=-\r\n-=[ System Uptime: ";
-		message = uptime + formatTime(::GetTickCount() / 1000) + " ]=-";
+		message = uptime + formatTime(::GetTickCount() / 1000) + " ]=-\r\n";		
+		message += "-=[ CPU Clock: "+Util::toString(ProcSpeedCalc())+" MHz ]=-";
 	} else if(Util::stricmp(cmd.c_str(), "tvtome") == 0) {
 		if(param.empty()) {
 			status = STRING(SPECIFY_SEARCH_STRING);

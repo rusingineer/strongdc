@@ -369,26 +369,26 @@ bool Util::isPrivateIp(string const& ip) {
 	return false;
 }
 
-static void cToUtf8(wchar_t c, string& str) {
-	if(c >= 0x0800) {
-		str += (char)(0x80 | 0x40 | 0x20 & (c >> 12));
-		str += (char)(0x80 & ((c >> 6) & 0x3f));
-		str += (char)(0x80 & (c & 0x3f));
-	} else if(c >= 0x0080) {
-		str += (char)(0x80 | 0x40 | (c >> 6));
-		str += (char)(0x80 | (c & 0x3f)); 
-	} else {
-		str += (char)c;
-	}
+static void cToUtf8(wchar_t c, string& str) { 
+   if(c >= 0x0800) { 
+      str += (char)(0x80 | 0x40 | 0x20  | (c >> 12)); 
+      str += (char)(0x80 | ((c >> 6) & 0x3f)); 
+      str += (char)(0x80 | (c & 0x3f)); 
+   } else if(c >= 0x0080) { 
+      str += (char)(0x80 | 0x40 | (c >> 6)); 
+      str += (char)(0x80 | (c & 0x3f)); 
+   } else { 
+      str += (char)c; 
+   } 
 }
 
-static int utf8ToC(const char* str, wchar_t& c) {
-	int l = 0;
-	if(str[0] & 0x80) {
-		if(str[0] & 0x40) {
-			if(str[0] & 0x20) {
-				if(str[1] == 0 || str[2] ||
-					!((((unsigned char)str[1]) & ~0x3f) == 0x80) ||
+static int utf8ToC(const char* str, wchar_t& c) { 
+   int l = 0; 
+   if(str[0] & 0x80) { 
+      if(str[0] & 0x40) { 
+         if(str[0] & 0x20) { 
+            if(str[1] == 0 || str[2] == 0||
+				!((((unsigned char)str[1]) & ~0x3f) == 0x80) ||
 					!((((unsigned char)str[2]) & ~0x3f) == 0x80))
 				{
 					return -1;

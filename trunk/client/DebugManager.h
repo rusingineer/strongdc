@@ -25,12 +25,7 @@
 
 #include "DCPlusPlus.h"
 #include "Singleton.h"
-//#include "User.h"
-//#include "DownloadManager.h"
-//#include "Socket.h"
-//#include "ClientManager.h"
 #include "TimerManager.h"
-//#include "SearchManager.h"
 
 
 class DebugManagerListener {
@@ -43,35 +38,13 @@ template<int I>	struct X { enum { TYPE = I };  };
 };
 
 class DebugManager : public Singleton<DebugManager>, public Speaker<DebugManagerListener>
-		//, private DownloadManagerListener, private ClientManagerListener//, private ClientListener, private TimerManagerListener
 {
 	CriticalSection cs;
-	//Socket s;
-
-	//lua_State* L;
 	friend class Singleton<DebugManager>;
 	DebugManager();
 public:
-	/*bool onHubFrameEnter(const string& aLine);
-	bool onClientMessage(Client* aClient, const string& aLine);
-	bool onUserConnectionMessageIn(UserConnection* aConn, const string& aLine);
-	bool onUserConnectionMessageOut(UserConnection* aConn, const string& aLine);
-	string formatChatMessage(Client* aClient, string aLine);
-	void EvaluateFile(const string& fn);
-	void EvaluateChunk(const string& chunk);*/
 	void SendDebugMessage(const string& s);
 	~DebugManager();
-private:
-	//friend struct LuaManager;
-
-	/*bool MakeCall(lua_State* L, int args, int ret) throw();
-	bool GetLuaBool(lua_State* L);
-
-	void onAction(DownloadManagerListener::Types type, Download* u) throw();
-	void onAction(ClientManagerListener::Types, Client*) throw();
-	void onAction(ClientListener::Types, Client*) throw();
-	void onAction(ClientListener::Types, Client*, const string&) throw();
-	void onAction(TimerManagerListener::Types type, u_int32_t ticks);*/
 };
 
 #endif // !defined(AFX_SCRIPTMANAGER_H__730F7CF5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_)

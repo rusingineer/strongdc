@@ -96,7 +96,7 @@ const string SettingsManager::settingTags[] =
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "MemoryMappedFile", "CheckNewUsers", "GarbageIn", "GarbageOut", "Enable403Features",
-	"SearchTime",
+	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "LogSegment",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -376,7 +376,7 @@ SettingsManager::SettingsManager()
 	setDefault(JUNK_BIN_FILE_SIZE, (int64_t)(1610612736));
 	setDefault(JUNK_VOB_FILE_SIZE, (int64_t)(1610612736));
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
-	setDefault(MAX_SOURCES, 40);
+	setDefault(MAX_SOURCES, 80);
 	setDefault(CLIENT_EMULATION, CLIENT_STRONGDC);
 	setDefault(USE_EMOTICONS, true);
 	setDefault(MAX_EMOTICONS, 256);
@@ -391,7 +391,10 @@ SettingsManager::SettingsManager()
 	setDefault(CHECK_NEW_USERS, false);
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
-	setDefault(ENABLE403FEATURES, true);	
+	setDefault(ENABLE403FEATURES, true);
+	setDefault(DONT_BEGIN_SEGMENT, true);
+	setDefault(DONT_BEGIN_SEGMENT_SPEED, 100);
+	setDefault(LOG_SEGMENT, true);
 	
 	setDefault(SEARCH_TIME, 10);	
 #ifdef _WIN32

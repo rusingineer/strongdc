@@ -71,13 +71,15 @@ public:
 
 	virtual ~Download() {
 
-		if(isSet(Download::FLAG_SEGMENT_STARTED)) {
-			string log = Util::toString(getStartPos())+" => ";
+		if(isSet(Download::FLAG_SEGMENT_STARTED) && !isSet(Download::FLAG_USER_LIST) && BOOLSETTING(LOG_SEGMENT)) {
+			string log = "*** "+Util::toString(getStartPos())+" => ";
 				log += Util::toString(getCurrPos())+" - ";
-				log += userNick+" @ ";
+				log += getUserNick()+" @ ";
 				log += Util::formatBytes(getRunningAverage())+"/s ";
-				log += isSet(Download::FLAG_TREE_DOWNLOAD) ? "TTH Tree, " : "";
+				log += isSet(Download::FLAG_TREE_DOWNLOAD) ? "TreeDownload, " : "";
+				log += isSet(Download::FLAG_TREE_TRIED) ? "TreeTried, " : "";
 				log += isSet(Download::FLAG_ZDOWNLOAD) ? "GetZBlock, " : "";
+				log += isSet(Download::FLAG_UTF8) ? "Utf8, " : "";
 				log += treeValid ? "TTHL, " : "";
 				log += getTTH() ? "TTH: "+getTTH()->toBase32() : "TTH: None";
 			LogManager::getInstance()->log(getTargetFileName()+".segment",log);
@@ -218,7 +220,18 @@ public:
 		}
 		return avg;
 	}
-	
+
+	int getWholeFileSpeed(string Target) {
+		Lock l(cs);
+		int whole = 0;
+		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+			Download* d = *i;
+			if(d->getTarget() == Target)
+				whole += (int)d->getRunningAverage();
+		}
+		return whole;
+	}
+
 	Download::List getStahovani() {
 		Lock l(cs);
 		return downloads;

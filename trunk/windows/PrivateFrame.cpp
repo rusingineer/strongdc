@@ -127,8 +127,6 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ClientManager::getInstance()->addListener(this);
 
-	m_hMenu = WinUtil::mainMenu;
-	
 	if(BOOLSETTING(SHOW_PM_LOG)){
 		if(user->isOnline()) {
 			sMyNick = user->getClient()->getNick().c_str();
@@ -382,7 +380,6 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	Lock l(cs);
 	frames.erase(user);
 
-		m_hMenu = NULL;
 		bHandled = FALSE;
 		return 0;
 	}
