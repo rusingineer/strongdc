@@ -269,7 +269,7 @@ private:
 	
 	bool checkRollback(Download* aDownload, const u_int8_t* aBuf, int aLen) throw(FileException);
 	void removeConnection(UserConnection::Ptr aConn, bool reuse = false, bool ntd = false, bool reconn = false);
-	void removeDownload(Download* aDown, bool removeSegment = true);
+	void removeDownload(Download* aDown);
 	void fileNotAvailable(UserConnection* aSource);
 	void noSlots(UserConnection* aSource);
 	

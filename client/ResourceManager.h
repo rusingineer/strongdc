@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "dcplusplus.h"
 #include "Singleton.h"
 
 class ResourceManager : public Singleton<ResourceManager> {
@@ -31,8 +32,8 @@ public:
 #include "StringDefs.h"
 
 	void loadLanguage(const string& aFile);
-	const string& getString(Strings x) const { dcassert(x >= 0 && x < LAST); return strings[x]; };
-	const wstring& getStringW(Strings x) const { dcassert(x >= 0 && x < LAST); return wstrings[x]; };
+	const string& getString(Strings x) const { /*dcassert(x >= 0 && x < LAST);*/ return strings[x]; };
+	const wstring& getStringW(Strings x) const { /*dcassert(x >= 0 && x < LAST);*/ return wstrings[x]; };
 
 private:
 	friend class Singleton<ResourceManager>;

@@ -587,58 +587,7 @@
 				RelativePath=".\windows\AppearancePage.h">
 			</File>
 			<File
-				RelativePath="atlapp.h">
-			</File>
-			<File
-				RelativePath="atlcrack.h">
-			</File>
-			<File
-				RelativePath="atlctrls.h">
-			</File>
-			<File
-				RelativePath="atlctrlw.h">
-			</File>
-			<File
-				RelativePath="atlctrlx.h">
-			</File>
-			<File
 				RelativePath=".\windows\atlctrlxp.h">
-			</File>
-			<File
-				RelativePath=".\windows\atlctrlxp2.h">
-			</File>
-			<File
-				RelativePath="atlddx.h">
-			</File>
-			<File
-				RelativePath="atldlgs.h">
-			</File>
-			<File
-				RelativePath="atlframe.h">
-			</File>
-			<File
-				RelativePath="atlgdi.h">
-			</File>
-			<File
-				RelativePath="atlmisc.h">
-			</File>
-			<File
-				RelativePath="atlprint.h">
-			</File>
-			<File
-				RelativePath="atlres.h">
-			</File>
-			<File
-				RelativePath="atlscrl.h">
-			</File>
-			<File
-				RelativePath="atlsplit.h">
-			</File>
-			<File
-				RelativePath="atltheme.h">
-			</File>
-			<File
-				RelativePath="atluser.h">
 			</File>
 			<File
 				RelativePath=".\windows\AVIPreview.h">

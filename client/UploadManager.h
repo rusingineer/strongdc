@@ -87,7 +87,7 @@ public:
 class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 	public:
 		UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, int64_t itime) :
-			User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime) { };
+			User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { };
 		virtual ~UploadQueueItem() throw() { };
 		typedef UploadQueueItem* Ptr;
 		typedef vector<Ptr> List;
@@ -125,7 +125,9 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 			COLUMN_LAST
 		};
 		
-		int imageIndex[COLUMN_LAST];
+		int imageIndex() {
+			return icon;
+		}
 		void update();
 
 		User::Ptr User;
@@ -136,6 +138,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 		int64_t size;
 		int64_t iTime;
 		tstring columns[COLUMN_LAST];
+		int icon;
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>

@@ -105,7 +105,6 @@ public:
 
 	virtual User::NickMap& lockUserList() = 0;
 	virtual void unlockUserList() = 0;
-	virtual void refreshUserList(bool unknownOnly = false) = 0;
 
 	const string& getAddress() const { return address; }
 	const string& getAddressPort() const { return addressPort; }

@@ -122,7 +122,7 @@ LRESULT PropPageTextStyles::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARA
 	cmdSetTabColor.Attach(GetDlgItem(IDC_SELECT_TAB_COLOR));
 	ctrlTabExample.Attach(GetDlgItem(IDC_SAMPLE_TAB_COLOR));
 
-	ctrlTabList.Clear();
+	ctrlTabList.ResetContent();
 	for(int i=0; i < sizeof(colours) / sizeof(clrs); i++){				
 		ctrlTabList.AddString(Text::toT(ResourceManager::getInstance()->getString(colours[i].name)).c_str());
 		onResetColor(i);

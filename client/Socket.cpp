@@ -259,6 +259,9 @@ void Socket::write(const char* aBuffer, size_t aLen) throw(SocketException) {
 	bool blockAgain = false;
 
 	while(pos < aLen) {
+		if(wait(30000, WAIT_WRITE) == 0) {
+			throw SocketException(STRING(CONNECTION_TIMEOUT));
+		}
 		int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);
 		if(i == SOCKET_ERROR) {
 			if(errno == EWOULDBLOCK) {
@@ -563,8 +566,7 @@ void Socket::socksUpdated() {
 
 void Socket::disconnect() throw() {
 	if(sock != INVALID_SOCKET) {
-		::WSAAsyncSelect(sock, NULL, 0, FD_CLOSE);
-		::shutdown(sock, SD_BOTH); // Make sure we send FIN (SD_SEND shutdown type...)
+		::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
 		closesocket(sock);
 	}
 	connected = false;

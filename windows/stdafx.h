@@ -21,6 +21,7 @@
 #define AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_
 
 #include "../client/stdinc.h"
+#include "../client/ResourceManager.h"
 
 #ifdef _WIN32
 
@@ -47,6 +48,7 @@
 
 extern CAppModule _Module;
 
+#define _WTL_MDIWINDOWMENU_TEXT CTSTRING(MENU_WINDOW)
 #include <atlwin.h>
 #include <atlframe.h>
 #include <atlctrls.h>

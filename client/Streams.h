@@ -42,7 +42,7 @@ public:
 	 * and the last flush might actually throw). Note that some implementations
 	 * might not need it...
 	 */
-	virtual size_t flush(bool finished = true) throw(Exception) = 0;
+	virtual size_t flush() throw(Exception) = 0;
 
 	size_t write(const string& str) throw(Exception) { return write(str.c_str(), str.size()); };
 private:
@@ -123,17 +123,17 @@ public:
 		try {
 			// We must do this in order not to lose bytes when a download
 			// is disconnected prematurely
-			flush(false);
+			flush();
 		} catch(const Exception&) {
 		}
 		if(managed) delete s;
 	}
 
-	virtual size_t flush(bool finished = true) throw(Exception) {
+	virtual size_t flush() throw(Exception) {
 		if(pos > 0)
 			s->write(buf, pos);
 		pos = 0;
-		s->flush(finished);
+		s->flush();
 		return 0;
 	}
 
@@ -170,7 +170,7 @@ public:
 	virtual ~StringOutputStream() throw() { }
 	using OutputStream::write;
 
-	virtual size_t flush(bool finished = true) throw(Exception) { return 0; }
+	virtual size_t flush() throw(Exception) { return 0; }
 	virtual size_t write(const void* buf, size_t len) throw(Exception) {
 		str.append((char*)buf, len);
 		return len;

@@ -29,6 +29,9 @@
 * vylepšeno nastavení režimu pøipojení zavislé na hubech
 * koneènì opraveno odebrat zdroj(e) a znovuvložení, snad :)
 * pøidána zkratka Ctrl+A pro vybrání všech položek v seznamu
+* opraveno zdvojování položek v nastavení barev
+* pøíkaz na odesílání bordelu zmìnìn na formát protokolu NMDC, už by to nemìlo timeoutovat
+* odstranìna položka Obnovit seznam uživatelù
 
 
 	-- StrongDC++ 1.00 RC9 --

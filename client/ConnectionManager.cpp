@@ -202,7 +202,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	ConnectionQueueItem::List failPassive;
 	ConnectionQueueItem::List connecting;
 	ConnectionQueueItem::List removed;
-	UserConnection::List needRemoveListener;
+	//UserConnection::List needRemoveListener;
 	User::List getDown;
 	{
 		Lock l(cs);
@@ -219,8 +219,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					active.push_back(cqi);
 					dcassert(cqi->getConnection());
 					dcassert(cqi->getConnection()->getCQI() == cqi);
-					//cqi->getConnection()->removeListener(this);
-					needRemoveListener.push_back(cqi->getConnection());
+					cqi->getConnection()->removeListener(this);
+					//needRemoveListener.push_back(cqi->getConnection());
 					DownloadManager::getInstance()->addConnection(cqi->getConnection());
 				}
 			}
@@ -292,9 +292,9 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		}
 	}
 
-	for(UserConnection::Iter u = needRemoveListener.begin(); u != needRemoveListener.end(); ++u) {
+	/*for(UserConnection::Iter u = needRemoveListener.begin(); u != needRemoveListener.end(); ++u) {
 		(*u)->removeListener(this);
-	}
+	}*/
 
 	ConnectionQueueItem::Iter m;
 	for(m = removed.begin(); m != removed.end(); ++m) {

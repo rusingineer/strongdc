@@ -327,7 +327,9 @@ private:
 			return 0;
 		}
 
-		int imageIndex[COLUMN_LAST];
+		int imageIndex() {
+			return (type == TYPE_UPLOAD) ? IMAGE_UPLOAD : (mainItem ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
+		}
 
 		bool canDisplayUpper();
 	};

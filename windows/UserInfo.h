@@ -58,7 +58,9 @@ public:
 	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
-	int imageIndex[COLUMN_LAST];
+	int imageIndex() {
+		return WinUtil::getImage(user);
+	}
 
 	void update();
 

@@ -62,6 +62,9 @@ void Client::reloadSettings() {
 }
 
 int Client::getMode() {
+	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5)
+		return SettingsManager::CONNECTION_SOCKS5;
+
 	int mode = 0;
 	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
 	if(hub) {

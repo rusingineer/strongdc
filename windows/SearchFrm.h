@@ -459,7 +459,32 @@ private:
 			dcassert(0);
 			return 0;
 		}
-		int imageIndex[COLUMN_LAST];
+		int imageIndex() {
+			int image = 0;
+			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
+				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
+			} else {
+				const string& tmp = sr->getUser()->getConnection();
+				if( (tmp == "28.8Kbps") ||
+					(tmp == "33.6Kbps") ||
+					(tmp == "56Kbps") ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) ) {
+					image = 1;
+				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) ) {
+					image = 2;
+				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
+					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
+					image = 3;
+				}
+				if(sr->getType() == SearchResult::TYPE_FILE)
+					image+=4;
+			}
+			return image;
+		}
 
 		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
@@ -550,7 +575,9 @@ private:
 		static int compareItems(HubInfo* a, HubInfo* b, int col) {
 			return (col == 0) ? Util::stricmp(a->name, b->name) : 0;
 		}
-		int imageIndex[1];
+		int imageIndex() {
+			return 0;
+		}
 
 		tstring ipPort;
 		tstring name;
