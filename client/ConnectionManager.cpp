@@ -633,7 +633,7 @@ void ConnectionManager::shutdown() {
 				break;
 			}
 		}
-		Thread::sleep(50);
+		Thread::sleep(20);
 	}
 }		
 

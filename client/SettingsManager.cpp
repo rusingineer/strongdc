@@ -93,7 +93,8 @@ const string SettingsManager::settingTags[] =
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
-	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour",
+	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
+	"ReportFoundAlternates",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -183,7 +184,7 @@ SettingsManager::SettingsManager()
 	setDefault(KEEP_LISTS, false);
 	setDefault(AUTO_KICK, false);
 	setDefault(QUEUEFRAME_SHOW_TREE, true);
-	setDefault(COMPRESS_TRANSFERS, false);
+	setDefault(COMPRESS_TRANSFERS, true);
 	setDefault(SHOW_PROGRESS_BARS, true);
 	setDefault(SFV_CHECK, false);
 	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. I might answer later if you're lucky.");
@@ -376,10 +377,12 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_EMOTICONS, 256);
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(MAGNET_URI_HANDLER, true);
+	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(AUTOSAVE_QUEUE, 30);
 	setDefault(SHOW_SEGMENT_COLOR, true);
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
+	setDefault(SOUNDS_DISABLED, false);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

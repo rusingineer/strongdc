@@ -91,6 +91,7 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
 	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
 	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
+	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS},
 	{0, 0, false, ResourceManager::MENU_NOTEPAD}};
 
 HLSCOLOR RGB2HLS (COLORREF rgb) {
@@ -603,17 +604,16 @@ char *msgs[] = { "\r\n-- I'm a happy dc++ user. You could be happy too.\r\n" LIN
 
 #define LINE3 "-- http://snail.pc.cz/StrongDC  <StrongDC++ " VERSIONSTRING "" CZDCVERSIONSTRING">"
 char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE3,
-"\r\n-- Nekdo ma a nekdo nema....ja mam :-D\r\n" LINE3,
-"\r\n-- Proc mit par osklivejch ikonek kdyz jich muze byt hafo peknejch ? :)\r\n" LINE3,
-"\r\n-- Je to sice porad slusnej buglist ale proti original dc++ ci neo-modusu je to zlaty :o)\r\n" LINE3,
 "\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE3,
-"\r\n-- Jsem prilis sexy pro normalni dc klienty :)\r\n" LINE3,
 "\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
-"\r\n-- I kdyz sem tele..tak to nemusi byt poznat :-D\r\n" LINE3,
-"\r\n-- My dick grows larger for every MB I download! Does yours?\r\n" LINE3,
+"\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)\r\n" LINE3,
+"\r\n-- Umim stahovat jeden soubor od vice lidi najednou, a proto dokazu vyuzit linku na maximum :-))\r\n" LINE3,
+"\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n" LINE3,
+"\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejit tak poskozeni souboru :-)\r\n" LINE3,
+"\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n" LINE3,
 };
 
-#define STRGMSGS 9
+#define STRGMSGS 8
 
 #define LINE4 "-- http://czdcplusplus.no-ip.org  <CZDC++ " DCVERSIONSTRING "[A]>"
 char *czmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE4,

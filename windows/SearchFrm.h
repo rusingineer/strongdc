@@ -279,6 +279,7 @@ private:
 	enum {
 		COLUMN_FIRST,
 		COLUMN_FILENAME = COLUMN_FIRST,
+		COLUMN_HITS,
 		COLUMN_NICK,
 		COLUMN_TYPE,
 		COLUMN_SIZE,
@@ -310,7 +311,7 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL) { 
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL), hits("") { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
@@ -351,7 +352,7 @@ private:
 
 		const string& getText(int col) const {
 			switch(col) {
-				case COLUMN_NICK: return hits;
+				case COLUMN_NICK: return sr->getUser()->getNick();
 				case COLUMN_FILENAME: return fileName;
 				case COLUMN_TYPE: return type;
 				case COLUMN_SIZE: return size;
@@ -363,6 +364,7 @@ private:
 				case COLUMN_UPLOAD: return uuploadSpeed;
 				case COLUMN_IP: return ip;
 				case COLUMN_TTH: return getTTH();
+				case COLUMN_HITS: return hits;
 				default: return Util::emptyString;
 			}
 		}
@@ -379,13 +381,7 @@ private:
 
 			if(canBeSorted){
 			switch(col) {
-				case COLUMN_NICK:
-					
-					if( (a->getHits() == Util::toString((int)a->subItems.size()+1)+" "+STRING(HUB_USERS)) &&
-						(b->getHits() == Util::toString((int)b->subItems.size()+1)+" "+STRING(HUB_USERS)))
-							return compare(a->subItems.size()+1, b->subItems.size()+1);
-					else
-						return Util::stricmp(a->getHits(), b->getHits());
+				case COLUMN_NICK: return Util::stricmp(a->sr->getUser()->getNick(), b->sr->getUser()->getNick());
 				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
@@ -393,6 +389,7 @@ private:
 					else
 						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
 				case COLUMN_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
+				case COLUMN_HITS: return compare(Util::toInt(a->getHits()) , Util::toInt(b->getHits()));
 				case COLUMN_PATH: return Util::stricmp(a->path, b->path);
 				case COLUMN_SLOTS: 
 					if(a->sr->getFreeSlots() == b->sr->getFreeSlots())

@@ -112,7 +112,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	removeAllMenu.CreatePopupMenu();
 	pmMenu.CreatePopupMenu();
 	readdMenu.CreatePopupMenu();
-
 	previewMenu.CreatePopupMenu();
 
 	singleMenu.InsertSeparatorFirst(STRING(FILE));
@@ -120,9 +119,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_BY_TTH, CSTRING(SEARCH_BY_TTH));
 	singleMenu.AppendMenu(MF_STRING, IDC_SEARCH_STRING, CSTRING(ENTER_SEARCH_STRING));
 	singleMenu.AppendMenu(MF_STRING, IDC_MOVE, CSTRING(MOVE));
-//PDC {
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));	
-//PDC }
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CSTRING(SET_PRIORITY));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)browseMenu, CSTRING(GET_FILE_LIST));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)pmMenu, CSTRING(SEND_PRIVATE_MESSAGE));
@@ -131,6 +128,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeMenu, CSTRING(REMOVE_SOURCE));
 	singleMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)removeAllMenu, CSTRING(REMOVE_FROM_ALL));
 	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE, CSTRING(REMOVE));
+	singleMenu.AppendMenu(MF_STRING, IDC_REMOVE_OFFLINE, CSTRING(REMOVE_OFFLINE));
 
 	multiMenu.InsertSeparatorFirst(STRING(FILES));	
     multiMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
@@ -919,19 +917,18 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		}
 
 
-//PDC {
 		WinUtil::ClearPreviewMenu(previewMenu);
-//PDC }
+		singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_GRAYED);	
+
 		ctrlQueue.ClientToScreen(&pt);
 		
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
-//PDC {
+
 			string ext = Util::getFileExt(ii->getTargetFileName());
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 			previewMenu.InsertSeparatorFirst(CSTRING(PREVIEW_MENU));
-//PDC }
 
 			menuItems = 0;
 			QueueItemInfo::SourceIter i;
@@ -973,6 +970,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			else { //no bad sources for this item
 				singleMenu.EnableMenuItem((UINT)(HMENU)readdMenu, MF_GRAYED);
 			}
+			if(ii->getTTH()) {
+                singleMenu.EnableMenuItem(IDC_SEARCH_BY_TTH, MF_ENABLED);
+            }
 
 			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
 			removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
@@ -1170,6 +1170,20 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	return 0;
 }
 
+LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlQueue.GetSelectedCount() == 1) {
+		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+
+		QueueItemInfo::SourceIter i;
+		for(i = ii->getSources().begin(); i != ii->getSources().end();) {
+			if(!i->getUser()->isOnline())
+				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
+			else ++i;
+		}
+	}
+	return 0;
+}
+
 LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		CMenuItemInfo mi;
@@ -1182,7 +1196,6 @@ LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL&
 	}
 	return 0;
 }
-
 
 LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 
@@ -1197,6 +1210,7 @@ LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 	}
 	return 0;
 }
+
 LRESULT QueueFrame::onPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	QueueItem::Priority p;
 
@@ -1268,6 +1282,7 @@ void QueueFrame::setAutoPriority(HTREEITEM ht, const bool& ap) {
 //		QueueManager::getInstance()->setPriority(i->second->getTarget(), i->second->calculateAutoPriority());
 	}
 }
+
 void QueueFrame::updateStatus() {
 	if(ctrlStatus.IsWindow()) {
 		int64_t total = 0;
@@ -1513,74 +1528,71 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			int64_t w = rc.Width();
 			// draw start part
 			double percent = (qi->getSize() > 0) ? (double)((double)qi->getDownloadedBytes()) / ((double)qi->getSize()) : 0;
-
 			rc.right = left + (int) (w * percent);
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
 			DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 			
 
-	//		::Rectangle(cd->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom);
-
 			FileDataInfo* filedatainfo = FileDataInfo::GetFileDataInfo(qi->getDownloadTarget());
 			
 			if(filedatainfo) {
-			int Pleft, Pright;
-			double p;
+				int Pleft, Pright;
+				double p;
 
-			vector<int64_t> v;
+				vector<int64_t> v;
 
-			if(filedatainfo->vecFreeBlocks.size() != NULL)
-				copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
-			if(filedatainfo->vecRunBlocks.size() != NULL)
-				copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
+				if(filedatainfo->vecFreeBlocks.size() != NULL)
+					copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
+				if(filedatainfo->vecRunBlocks.size() != NULL)
+					copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
 
-			if(v.size() > 0) {
-				sort(v.begin(), v.end());
+				if(v.size() > 0) {
+					sort(v.begin(), v.end());
 			
-				p  = (qi->getSize() > 0) ? (double)((double)(*(v.begin()))) / ((double)qi->getSize()) : 0;
-				Pright = rc.left + (w * p);
-				Pleft = rc.left;
-				::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
+					p  = (qi->getSize() > 0) ? (double)((double)(*(v.begin()))) / ((double)qi->getSize()) : 0;
+					Pright = rc.left + (w * p);
+					Pleft = rc.left;
+					::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
 
-				if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-				}
+					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+						::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+						::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+					}
 
-				for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
-					if(((*(i+2))< qi->getSize()) && ((*(i+1))< qi->getSize()) && ((*(i))< qi->getSize())) {
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+					for(vector<__int64>::iterator i = v.begin(); i < v.end(); i++, i++) {
+						if(((*(i+2))< qi->getSize()) && ((*(i+1))< qi->getSize()) && ((*(i))< qi->getSize())) {
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
 
-						p  = (qi->getSize() > 0) ? (double)(((double)(*(i+1))) / ((double)qi->getSize())) : 0;
-						Pleft = rc.left + (w * p);
-						p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
-						Pright = rc.left + (w * p);
-						::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-						if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-							DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-
-							::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-							::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+							p  = (qi->getSize() > 0) ? (double)(((double)(*(i+1))) / ((double)qi->getSize())) : 0;
+							Pleft = rc.left + (w * p);
+							p  = (qi->getSize() > 0) ? (double)((double)(*(i+2))) / ((double)qi->getSize()) : 0;
+							Pright = rc.left + (w * p);
+							::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+							if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+								DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+	
+								::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+								::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+							}
 						}
 					}
+
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
+					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
+
+					p  = (qi->getSize() > 0) ? (double)((double)(*(v.end()-1))) / ((double)qi->getSize()) : 0;
+					Pright = rc.left + w;
+					Pleft = rc.left + (w * p);
+					::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
+
+					if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
+						DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
+						::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
+						::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
+					}
 				}
-
-				DeleteObject(SelectObject(cd->nmcd.hdc, CreateSolidBrush(barPal[0])));
-				DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0,barPal[0])));
-
-				p  = (qi->getSize() > 0) ? (double)((double)(*(v.end()-1))) / ((double)qi->getSize()) : 0;
-				Pright = rc.left + w;
-				Pleft = rc.left + (w * p);
-				::Rectangle(cd->nmcd.hdc, Pleft, rc.top, Pright, rc.bottom);
-
-				if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
-					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
-					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
-					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
-				}
-			}
 			}
 			
 			// draw status text
@@ -1603,21 +1615,19 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			return CDRF_SKIPDEFAULT;
 		}
-
 	default:
 		return CDRF_DODEFAULT;
 	}
 }			
 
-//PDC {
-LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/){	
-	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP,ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget());
+LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
+	if(ctrlQueue.GetSelectedCount() == 1) {
+	WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED))->getDownloadTarget());
+	}
 	return 0;
 }
-//PDC }
+
 /**
  * @file
  * $Id$
  */
-
-

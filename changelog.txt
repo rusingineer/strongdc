@@ -17,7 +17,15 @@
 * zmìnìn vzhled dialogu O programu (oDC++)
 * vylepšena aktualizace nových verzí (oDC++)
 * vylepšeny profily klientù (DCDM++)
-* opraveno nekoneènì pøipojování k uživateli, který je ve frontì vícekrát, pøi stahování na max segmentù
+* opraveno nekoneèné pøipojování k uživateli, který je ve frontì vícekrát, pøi stahování na max segmentù
+* opraveno away pøi minimalizaci
+* pøidána položka pro odstranìní offline uživatelù z fronty
+* na lištu pøidáno tlaèítko pro zapnutí/vypnutí zvukù
+* opraven zvuk pøi zobrazení vlastního nicku
+* provizornì opraveno zaseknutí dotažených souborù na 100%
+* komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
+* pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
+* pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

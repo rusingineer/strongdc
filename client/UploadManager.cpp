@@ -170,6 +170,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				extraSlot = true;
 		} else {
 			delete is;
+
 			aSource->maxedOut();
 			addFailedUpload(aSource, aFile, aStartPos, File::getSize(file));
 			aSource->disconnect();

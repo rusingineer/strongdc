@@ -6,10 +6,16 @@
 #define IDC_FILETYPES                   101
 #define IDC_TRAY_SHOW                   103
 #define IDC_COPY_HUB                    104
+#define IDC_REMOVE_OFFLINE              104
+#define IDC_DISABLE_SOUNDS              105
 #define IDC_CDMDEBUG_WINDOW             106
+#define IDC_CONNECT_ALL                 106
 #define IDD_GENERALPAGE                 107
+#define IDC_DISCONNECT_ALL              107
 #define IDD_EXCEPTION                   108
+#define IDC_COLLAPSE_ALL                108
 #define IDC_EXCEPTION_DETAILS           109
+#define IDC_EXPAND_ALL                  109
 #define IDC_COPY_EXCEPTION              110
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
@@ -668,6 +674,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        277
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1278
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

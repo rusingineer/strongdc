@@ -68,6 +68,10 @@ public:
 		COMMAND_ID_HANDLER(IDC_OFFCOMPRESS, onOffCompress)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
+		COMMAND_ID_HANDLER(IDC_CONNECT_ALL, onConnectAll)
+		COMMAND_ID_HANDLER(IDC_DISCONNECT_ALL, onDisconnectAll)
+		COMMAND_ID_HANDLER(IDC_COLLAPSE_ALL, onCollapseAll)
+		COMMAND_ID_HANDLER(IDC_EXPAND_ALL, onExpandAll)
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
@@ -89,12 +93,24 @@ public:
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
+	LRESULT onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void runUserCommand(UserCommand& uc);
 //PDC {
 	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 //PDC }
 	void prepareClose();
+
+	LRESULT onCollapseAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		CollapseAll();
+		return 0;
+	}
+
+	LRESULT onExpandAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		ExpandAll();
+		return 0;
+	}
 
 	LRESULT onKeyDownTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
@@ -291,6 +307,7 @@ private:
 	void InsertItem(ItemInfo* i);
 	void Collapse(ItemInfo* i, int a);
 	void CollapseAll();
+	void ExpandAll();
 	void Expand(ItemInfo* i, int a);
 	void setMainItem(ItemInfo* i);
 

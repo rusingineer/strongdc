@@ -27,9 +27,9 @@ class QueueManager;
 class Download;
 
 #include "User.h"
-#include "FileDataInfo.h"
 #include "FastAlloc.h"
 #include "MerkleTree.h"
+#include "FileDataInfo.h"
 
 class QueueItem : public Flags, public FastAlloc<QueueItem> {
 public:
@@ -88,9 +88,7 @@ public:
 		FLAG_XML_BZLIST = 0x200,
 		/** MP3 Info */
 		FLAG_MP3_INFO = 0x400,
-		FLAG_TESTSUR = 0x800,
-		FLAG_NOSEGMENTS = 0x1000
-
+		FLAG_TESTSUR = 0x800
 	};
 
 	class Source : public Flags, public FastAlloc<Source> {

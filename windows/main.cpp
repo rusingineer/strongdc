@@ -100,13 +100,12 @@ BOOL CALLBACK ExceptionFilterFunctionDlgProc(
 	{
 		case WM_INITDIALOG:
 			{
-		
 				CenterWindow(hwndDlg);
 				SetDlgItemText(hwndDlg, IDC_EXCEPTION_DETAILS, exceptioninfo.c_str());
 				SetFocus(GetDlgItem(hwndDlg, IDC_EXCEPTION_DETAILS));
 			}
 			break;
-		case WM_COMMAND:
+	case WM_COMMAND:
 			wNotifyCode = HIWORD(wParam); // notification code 
 			wID = LOWORD(wParam);         // item, control, or accelerator identifier 
 			if (wNotifyCode == BN_CLICKED)
@@ -119,10 +118,8 @@ BOOL CALLBACK ExceptionFilterFunctionDlgProc(
 
 
 			}
-
 			break;
 	}
-
 	return FALSE;
 }
 
@@ -232,9 +229,9 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 	
-	PlaySound("DeviceFail", NULL, SND_ASYNC);
+	if(!BOOLSETTING(SOUNDS_DISABLED)) PlaySound("DeviceFail", NULL, SND_ASYNC);
 
-	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), hlavni, ExceptionFilterFunctionDlgProc, 0);
+	iLastExceptionDlgResult = DialogBox(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), 0, ExceptionFilterFunctionDlgProc);
 	ExceptionFunction();
 
 #ifndef _DEBUG

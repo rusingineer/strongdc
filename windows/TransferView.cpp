@@ -97,6 +97,12 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	segmentedMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CSTRING(SEARCH_FOR_ALTERNATES));
 	segmentedMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CSTRING(PREVIEW_MENU));
 	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
+	segmentedMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CSTRING(CONNECT_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CSTRING(DISCONNECT_ALL));
+	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
+	segmentedMenu.AppendMenu(MF_STRING, IDC_EXPAND_ALL, CSTRING(EXPAND_ALL));
+	segmentedMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CSTRING(COLLAPSE_ALL));
+	segmentedMenu.AppendMenu(MF_SEPARATOR, 0, (LPTSTR)NULL);
 	segmentedMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CSTRING(REMOVE_ALL));
 
 	hIconCompressed = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TRANSFER_COMPRESSED), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
@@ -669,6 +675,14 @@ void TransferView::CollapseAll() {
 	}
 }
 
+void TransferView::ExpandAll() {
+	for(int q = mainItems.size()-1; q != -1; --q) {
+	  ItemInfo* m = mainItems[q];
+	  int i = ctrlTransfers.findItem(m);
+	  Expand(m,i);
+	}
+}
+
 void TransferView::Collapse(ItemInfo* i, int a) {
 	for(int q = ctrlTransfers.GetItemCount()-1; q != -1; --q) {
 	  ItemInfo* m = (ItemInfo*)ctrlTransfers.getItemData(q);
@@ -789,7 +803,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 		}
 
 //		if((*h) != (*i->upper)) {
-		dcdebug((h->Target+"\n"+h->qi->getTarget()+"\n"+i->upper->Target+"\n"+i->Target+"\n").c_str());
 		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
 
@@ -871,9 +884,14 @@ void TransferView::ItemInfo::update() {
 			if(fdi) {
 				if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
 					upper->columns[COLUMN_STATUS] = upper->statusString;
-				} else if((upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) || (upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
-					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) || (upper->statusString == STRING(TTH_INCONSISTENCY))) {
-					upper->columns[COLUMN_STATUS] = upper->statusString;
+				} else if(
+					(upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
+					(upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
+					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
+					(upper->statusString == STRING(TTH_INCONSISTENCY)) ||
+					(upper->statusString == STRING(CHECKING_TTH)) ||
+					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
+						upper->columns[COLUMN_STATUS] = upper->statusString;
 				} 
 			} else upper->columns[COLUMN_STATUS] = upper->statusString;
 		}
@@ -1151,7 +1169,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 	}
 
 	if(!aDownload->isSet(Download::FLAG_USER_LIST))	
-	{	if (!SETTING(BEGINFILE).empty())
+	{	if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
 
@@ -1423,6 +1441,43 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	}
 	return 0;
 }
+
+LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlTransfers.GetSelectedCount() == 1) {
+		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
+		ItemInfo* ii = ctrlTransfers.getItemData(i);
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CSTRING(CONNECTING_FORCED));
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+				int h = ctrlTransfers.findItem(m);
+				if(h != -1)
+					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(CONNECTING_FORCED));
+				m->user->connect();
+			}
+		}
+	}
+	return 0;
+}
+
+LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(ctrlTransfers.GetSelectedCount() == 1) {
+		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
+		ItemInfo* ii = ctrlTransfers.getItemData(i);
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CSTRING(DISCONNECTED));
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+				int h = ctrlTransfers.findItem(m);
+				//if(h != -1)
+					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CSTRING(DISCONNECTED));
+				m->disconnect();
+			}
+		}
+	}
+	return 0;
+}
+
 /**
  * @file
  * $Id$

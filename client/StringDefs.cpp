@@ -113,6 +113,7 @@ string ResourceManager::strings[] = {
 "High", 
 "Highest", 
 "Hit Ratio: ", 
+"Hits", 
 "Hits: ", 
 "Host unreachable", 
 "Hub", 
@@ -263,7 +264,7 @@ string ResourceManager::strings[] = {
 "Auto-away on minimize (and back on restore)", 
 "Automatically follow redirects", 
 "Automatically disconnect users who leave the hub (does not disconnect when hub goes down / you leave it)", 
-"Automatically search for alternative download locations", 
+"Automatically search for alternative TTH source every 5 minutes", 
 "Automatically match queue for auto search hits", 
 "Use default search strings in auto search when no string is specified", 
 "Automatically refresh share list every hour", 
@@ -688,7 +689,15 @@ string ResourceManager::strings[] = {
 "Connecting to server",
 "Retrieving data",
 "Connection error",
-"Data retrieved"
+"Data retrieved",
+"Remove offline users",
+"Disable sounds",
+"Connect to all users",
+"Disconnect all users",
+"Report auto search for alternates in status bar", 
+"Searching TTH alternates for: ",
+"Collapse All",
+"Expand All"
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -802,6 +811,7 @@ string ResourceManager::names[] = {
 "High", 
 "Highest", 
 "HitRatio", 
+"HitCount", 
 "Hits", 
 "HostUnreachable", 
 "Hub", 
@@ -1377,5 +1387,13 @@ string ResourceManager::names[] = {
 "ConnectingToServer",
 "RetrievingData",
 "ConnectionError",
-"DataRetrieved"
+"DataRetrieved",
+"RemoveOffline",
+"DisableSounds",
+"ConnectAll",
+"DisconnectAll",
+"ReportAlternates", 
+"AlternatesSend",
+"CollapseAll",
+"ExpandAll"
 };
