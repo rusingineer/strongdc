@@ -112,7 +112,6 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);
 	}
@@ -783,7 +782,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	string myInfoA = 
 		"$MyINFO $ALL " + toNmdc(getNick()) + " " + toNmdc(Util::validateMessage(speedDescription+getDescription(), false)) + 
 		extendedtag +
-		">$ $" + SETTING(CONNECTION) + "\x01$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
+		">$ $" + SETTING(CONNECTION) + StatusMode + "$" + toNmdc(Util::validateMessage(SETTING(EMAIL), false)) + '$';
 	string myInfoB = ShareManager::getInstance()->getShareSizeString() + "$|";
 
  	if(lastMyInfoA != myInfoA || alwaysSend || (lastMyInfoB != myInfoB && lastUpdate + 15*60*1000 < GET_TICK()) ){

@@ -143,6 +143,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 				f.write("echo send d:\\projekty\\rmdc++\\rmdc.rc >> ftp.txt\r\n");
 				f.write("echo send d:\\projekty\\rmdc++\\rmdc.vcproj >> ftp.txt\r\n");
 				f.write("echo send d:\\projekty\\rmdc++\\client.vcproj >> ftp.txt\r\n");
+				//f.write("echo get extension.inc");
 				f.write("echo bye >> ftp.txt\r\n");
 				f.write("ftp -n -s:ftp.txt\r\n");
 				f.write("del win.bat\r\n");
@@ -1063,7 +1064,9 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	tstring file;
 	
 	if(wID == IDC_OPEN_MY_LIST){
-		DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getUser(SETTING(NICK)));
+		if(!ShareManager::getInstance()->getOwnListFile().empty()){
+			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getUser(SETTING(NICK)));
+		}
 		return 0;
 	}
 

@@ -51,6 +51,7 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * vylepšeno odpojování pomalých stahování (sekundy; pouze pøi segm. stahování)
 * opraveno pøesouvání podsložek ve frontì
 * pøidána podpora protokolu file:// do chatu
+* opraven Žádný volný blok, když se objevila chyba bìhem dekomprese
 
 
 	-- StrongDC++ 1.00 RC8 --

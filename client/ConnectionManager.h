@@ -92,7 +92,7 @@ public:
 
 	StringList getBlockedIpPorts() throw() { Lock l(cs); return failedIpPorts; }
 	static int iConnToMeCount;
-	 
+
 private:
 	CriticalSection cs;
 	short port;
@@ -104,10 +104,11 @@ private:
 	/** Connections that are currently being used by the Up/DownloadManager */
 	ConnectionQueueItem::List active;
 
-	User::List pendingAdd;
-	UserConnection::List pendingDelete;
 	/** All active connections */
 	UserConnection::List userConnections;
+
+	User::List pendingAdd;
+	UserConnection::List pendingDelete;
 
 	ServerSocket socket;
 	StringList features;

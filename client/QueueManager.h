@@ -197,6 +197,9 @@ public:
 			if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
 				lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
+			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR))
+				FileChunksInfo::Free(qi->getTempTarget());
+			
 			delete qi;
 		}
 
