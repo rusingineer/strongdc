@@ -308,6 +308,7 @@ string ResourceManager::strings[] = {
 "Logs and Sound", 
 "Max hash speed", 
 "Max tab rows", 
+"Use memory mapped file", 
 "Minimize to tray", 
 "Name", 
 "Don't send the away message to bots", 
@@ -705,6 +706,7 @@ string ResourceManager::strings[] = {
 "Expand All",
 "PB", 
 "EB",
+"Check user on join",
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1013,6 +1015,7 @@ string ResourceManager::names[] = {
 "SettingsLogs", 
 "SettingsMaxHashSpeed", 
 "SettingsMaxTabRows", 
+"SettingsMemoryMappedFile", 
 "SettingsMinimizeTray", 
 "SettingsName", 
 "SettingsNoAwaymsgToBots", 
@@ -1410,4 +1413,5 @@ string ResourceManager::names[] = {
 "ExpandAll",
 "Pb", 
 "Eb",
+"CheckNewUser",
 };

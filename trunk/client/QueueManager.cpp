@@ -888,6 +888,11 @@ again:
 	fire(QueueManagerListener::StatusUpdated(), q);
 	
 	d = new Download(q, aUser);
+/*
+	if( BOOLSETTING(ANTI_FRAG) ) {
+		d->setPos(q->getDownloadedBytes());
+	}
+*/
 	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
 		d->setStartPos(freeBlock);
 	}

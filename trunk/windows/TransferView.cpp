@@ -875,7 +875,15 @@ void TransferView::ItemInfo::update() {
 					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
 						upper->columns[COLUMN_STATUS] = upper->statusString;
 				} 
-			}// else upper->columns[COLUMN_STATUS] = upper->statusString;
+			} else if(
+					(upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) ||
+					(upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
+					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10)) ||
+					(upper->statusString == STRING(TTH_INCONSISTENCY)) ||
+					(upper->statusString == STRING(CHECKING_TTH)) ||
+					(upper->statusString == STRING(SFV_INCONSISTENCY))) {
+						upper->columns[COLUMN_STATUS] = upper->statusString;
+			}
 		}
 	}
 

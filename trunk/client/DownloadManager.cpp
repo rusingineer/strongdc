@@ -516,7 +516,11 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	try {
 		// Let's check if we can find this file in a any .SFV...
 		int trunc = d->isSet(Download::FLAG_RESUME) ? 0 : File::TRUNCATE;
+		if(!d->isSet(Download::FLAG_USER_LIST) && BOOLSETTING(MEMORY_MAPPED_FILE)){
+			file = new MappedFile(target, d->getSize(), File::RW, File::OPEN | File::CREATE | trunc);			
+		} else {
 		file = new File(target, File::RW, File::OPEN | File::CREATE | trunc);
+		}
 /*		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 						file->setSize(d->getSize());
 		}*/

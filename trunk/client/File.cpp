@@ -3,7 +3,7 @@
 #include "File.h"
 #include "TraceManager.h"
 
-u_int32_t MappedFile::write(const void* aBuf, u_int32_t len) throw(FileException) {
+size_t MappedFile::write(const void* aBuf, size_t len) throw(Exception) {
 
     dcassert(iPos + len <= iFileSize);
     
@@ -11,7 +11,7 @@ u_int32_t MappedFile::write(const void* aBuf, u_int32_t len) throw(FileException
 		if(lpMapAddr == NULL){
 			iMapPos = (iPos / dwSysGran) * dwSysGran;
 			dwMapSize = MAX(dwBuffSize, (DWORD)(len + iPos - iMapPos));
-			dwMapSize = MIN(dwMapSize , (DWORD)(iFileSize - iMapPos));
+			dwMapSize = (DWORD)MIN(dwMapSize , (iFileSize - iMapPos));
 
 			dcassert(dwMapSize - (iPos - iMapPos) >= len);
 			
@@ -47,5 +47,7 @@ u_int32_t MappedFile::write(const void* aBuf, u_int32_t len) throw(FileException
 	}
 
 	iPos += len;
-  return 0;  
+
+	return len;
+    
 }

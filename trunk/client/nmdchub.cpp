@@ -684,13 +684,12 @@ void NmdcHub::myInfo() {
 		tmp0 = "<StrgDC++";
 
 #ifdef isCVS
-	VERZE = VERSIONSTRING CVSVERSION;
-		}
+	VERZE = VERSIONSTRING CZDCVERSIONSTRING CVSVERSION;
 #else
 	VERZE = VERSIONSTRING CZDCVERSIONSTRING;
-		}
 #endif
 
+	}
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
 	string connection = SETTING(CONNECTION);

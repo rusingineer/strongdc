@@ -42,7 +42,10 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 	ctrlUsers.SetExtendedListViewStyle(styles);
-	
+
+	images.CreateFromImage(IDB_FAVSTATES, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	ctrlUsers.SetImageList(images, LVSIL_SMALL);
+
 	ctrlUsers.SetBkColor(WinUtil::bgColor);
 	ctrlUsers.SetTextBkColor(WinUtil::bgColor);
 	ctrlUsers.SetTextColor(WinUtil::textColor);
@@ -152,9 +155,10 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 }
 
 void UsersFrame::addUser(const User::Ptr& aUser) {
-	int i = ctrlUsers.insertItem(new UserInfo(aUser), 0);
+	int i = ctrlUsers.insertItem(new UserInfo(aUser), 2);
 	bool b = aUser->getAutoExtraSlot();
 	ctrlUsers.SetCheckState(i, b);
+	updateUser(aUser);
 }
 
 void UsersFrame::updateUser(const User::Ptr& aUser) {
@@ -163,6 +167,12 @@ void UsersFrame::updateUser(const User::Ptr& aUser) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
 		if(ui->user == aUser) {
 			ui->update();
+			if(aUser->isOnline()) {
+				if((aUser->getStatus() == 2) || (aUser->getStatus() == 3) || (aUser->getStatus() == 6) || (aUser->getStatus() == 7) || (aUser->getStatus() == 10) || (aUser->getStatus() == 11))
+					ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 1, 0, 0, NULL);
+				else ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 0, 0, 0, NULL);
+			}
+			else ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 2, 0, 0, NULL);
 			ctrlUsers.updateItem(i);
 		}
 	}

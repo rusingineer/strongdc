@@ -41,6 +41,7 @@
 #include <control.h>
 #include <Windows.h>
 #include "../client/PluginManager.h"
+#include "../client/cvsversion.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
 int WinUtil::fileImageCount;
@@ -605,7 +606,12 @@ char *msgs[] = { "\r\n-- I'm a happy dc++ user. You could be happy too.\r\n" LIN
 
 #define MSGS 16
 
+#ifdef isCVS
+#define LINE3 "-- http://snail.pc.cz/StrongDC  <StrongDC++ " VERSIONSTRING "" CZDCVERSIONSTRING "" CVSVERSION ">"
+#else
 #define LINE3 "-- http://snail.pc.cz/StrongDC  <StrongDC++ " VERSIONSTRING "" CZDCVERSIONSTRING">"
+#endif
+
 char *strgmsgs[] = { "\r\n-- To mrne je docela sikovny ale porad ho je co ucit :-)\r\n" LINE3,
 "\r\n-- Je to pekny ale bude jeste hezci :-)\r\n" LINE3,
 "\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n" LINE3,
