@@ -49,7 +49,8 @@ const string SettingsManager::settingTags[] =
 	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
 	"MinBlockSize", "UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline",
-	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass",
+	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
+	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", 
 	"SENTRY", 
 	// Ints
 	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
@@ -189,6 +190,11 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FORMAT_POST_UPLOAD, "%Y-%m-%d %H:%M: %[source]" + STRING(UPLOADED_TO) + "%[user], %[size] (%[chunksize]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_MAIN_CHAT, "[%Y-%m-%d %H:%M] %[message]");
 	setDefault(LOG_FORMAT_PRIVATE_CHAT, "[%Y-%m-%d %H:%M] %[message]");
+	setDefault(LOG_FILE_MAIN_CHAT, "%[hubaddr].log");
+	setDefault(LOG_FILE_STATUS, "%[hubaddr]_status.log");
+	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[user].log");
+	setDefault(LOG_FILE_UPLOAD, "Uploads.log");
+	setDefault(LOG_FILE_DOWNLOAD, "Downloads.log");
 	setDefault(GET_USER_INFO, true);
 	setDefault(URL_HANDLER, false);
 	setDefault(AUTO_AWAY, false);

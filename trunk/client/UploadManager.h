@@ -252,6 +252,8 @@ public:
 	UploadQueueItem::UserMap getQueue() const;
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
+
+	CriticalSection cs;
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
@@ -264,7 +266,6 @@ private:
 		   mByteSlice;
 
 	Upload::List uploads;
-	CriticalSection cs;
 
 	typedef HASH_MAP<User::Ptr, u_int32_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;

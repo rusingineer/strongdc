@@ -112,6 +112,7 @@ public:
 	}
 	
 protected:
+	Speaker& operator=(const Speaker&);
 	ListenerList listeners;
 	ListenerList tmp;
 	CriticalSection listenerCS;

@@ -519,7 +519,7 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			UploadQueueItem* UQI = ctrlList.getItemData(i); 
 			UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
 			ctrlList.updateItem(i);
-	}
+		}
 	}
 	ctrlList.SetRedraw(TRUE);
 	return 0;

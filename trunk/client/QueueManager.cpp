@@ -896,14 +896,14 @@ again:
 
 	int64_t freeBlock = 0;
 
-	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
+	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)) {
+		message = STRING(ALL_FILE_SLOTS_TAKEN);		
+		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+		if(q == NULL) reuse = false;
+		goto again;
+	}
 
-		if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)) {
-			message = STRING(ALL_FILE_SLOTS_TAKEN);		
-			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			if(q == NULL) reuse = false;
-			goto again;
-		}
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
 
 		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
 			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		

@@ -802,8 +802,10 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			i->oldTarget = i->Target;
 
 			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-			if((i->upper != NULL) && (pocetSegmentu < 1)  && (!i->upper->finished)) {
-				i->upper->statusString = Text::toT(aReason);
+			if((i->upper != NULL) && (pocetSegmentu < 1)) {
+				i->upper->status = ItemInfo::STATUS_WAITING;
+				if(!i->upper->finished)
+					i->upper->statusString = Text::toT(aReason);
 			}
 		}
 			
@@ -1011,10 +1013,6 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 			if(i->qi) {
 				i->upper->qi = i->qi;
-				if((i->qi->getCurrents().size() <= 1) && (!i->upper->finished)) {
-					i->upper->status = ItemInfo::STATUS_WAITING;
-					i->upper->statusString = Text::toT(aReason);
-				}
 				if(BOOLSETTING(POPUP_DOWNLOAD_FAILED) && !i->qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)
 					&& (aReason != STRING(DOWNLOADING_TTHL) && (aReason != STRING(CHECKING_TTH)))
 					) {
@@ -1024,6 +1022,14 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 						TSTRING(REASON)+_T(": ")+Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
 				}
 			}
+
+			int pocetSegmentu = i->qi ? i->qi->getCurrents().size() : 0;
+			if(pocetSegmentu <= 1) {
+				i->upper->status = ItemInfo::STATUS_WAITING;
+				if(!i->upper->finished)
+					i->upper->statusString = Text::toT(aReason);
+			}
+
 		}
 
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |

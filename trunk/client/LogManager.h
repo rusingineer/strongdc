@@ -42,8 +42,9 @@ public:
 	void log(const string& area, const string& msg) throw() {
 		Lock l(cs);
 		try {
-			File::ensureDirectory(SETTING(LOG_DIRECTORY) + area + ".log");
-			File f(Util::validateFileName(SETTING(LOG_DIRECTORY) + area + ".log"), File::WRITE, File::OPEN | File::CREATE);
+			string aArea = Util::validateFileName(SETTING(LOG_DIRECTORY) + area);
+			File::ensureDirectory(aArea);
+			File f(aArea, File::WRITE, File::OPEN | File::CREATE);
 			f.setEndPos(0);
 			f.write(msg + "\r\n");
 		} catch (const FileException&) {
@@ -64,7 +65,7 @@ public:
 
 	string logTail(const string& area, const int lines) throw(){
 		try{
-			string file = File(Util::validateFileName(SETTING(LOG_DIRECTORY) + area + ".log"), File::READ, File::OPEN).read();
+			string file = File(Util::validateFileName(SETTING(LOG_DIRECTORY) + area), File::READ, File::OPEN).read();
 			string::size_type i = -1;
 			int c = 0;
 
