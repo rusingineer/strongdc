@@ -57,6 +57,7 @@ public:
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
 		MESSAGE_HANDLER(WM_MENUCOMMAND, onHeaderMenu)
 		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
+		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
 
@@ -399,6 +400,26 @@ public:
 	void setFlickerFree(HBRUSH flickerBrush) {
 		hBrBg = flickerBrush;
 	}
+
+	LRESULT onContextMenu(UINT /*msg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		//make sure we're not handling the context menu if it's invoked from the
+		//keyboard
+		if(pt.x == -1 && pt.y == -1) {
+			bHandled = FALSE;
+			return 0;
+		}
+
+		CRect rc;
+		GetHeader().GetWindowRect(&rc);
+
+		if (PtInRect(&rc, pt)) {
+			showMenu(pt);
+			return 0;
+		}
+		bHandled = FALSE;
+		return 0;
+	}
 	
 	LRESULT onHeaderMenu(UINT /*msg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ColumnInfo * ci = columnList[wParam];
@@ -437,51 +458,15 @@ public:
 	}
 
 	void saveHeaderOrder(SettingsManager::StrSetting order, SettingsManager::StrSetting widths, 
-		SettingsManager::StrSetting visible) throw() {
+		SettingsManager::StrSetting visible) {
 		string tmp, tmp2, tmp3;
-		TCHAR *buf = new TCHAR[128];
-		int size = GetHeader().GetItemCount();
-		for(int i = 0; i < size; ++i){
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
-			lvc.cchTextMax = 128;
-			lvc.pszText = buf;
-			GetColumn(i, &lvc);
-			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
-				if(Util::stricmp(buf, (*j)->name.c_str()) == 0){
-					(*j)->pos = lvc.iOrder;
-					(*j)->width = lvc.cx;
-				}
-			}
-		}
-
-		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
-			ColumnInfo* ci = *i;
-
-			if(ci->visible){
-				tmp3 += "1,";
-			} else {
-				ci->pos = size++;
-				tmp3 += "0,";
-			}
-
-			tmp += Util::toString(ci->pos);
-			tmp += ',';
-
-			tmp2 += Util::toString(ci->width);
-			tmp2 += ',';
-		}
-
-		tmp.erase(tmp.size()-1, 1);
-		tmp2.erase(tmp2.size()-1, 1);
-		tmp3.erase(tmp3.size()-1, 1);
+			saveHeaderOrder(tmp, tmp2, tmp3);
 		SettingsManager::getInstance()->set(order, tmp);
 		SettingsManager::getInstance()->set(widths, tmp2);
 		SettingsManager::getInstance()->set(visible, tmp3);
 	}
 
-	void saveFavoriteHeaderOrder(FavoriteHubEntry* Entry) throw() {
-		string tmp, tmp2, tmp3;
+	void saveHeaderOrder(string& order, string& widths, string& visible) throw() {
 		TCHAR *buf = new TCHAR[128];
 		int size = GetHeader().GetItemCount();
 		for(int i = 0; i < size; ++i){
@@ -498,30 +483,29 @@ public:
 			}
 		}
 
+		delete[] buf;
+
 		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
 			ColumnInfo* ci = *i;
 
 			if(ci->visible){
-				tmp3 += "1,";
+				visible += "1,";
 			} else {
 				ci->pos = size++;
-				tmp3 += "0,";
+				visible += "0,";
 			}
 
-			tmp += Util::toString(ci->pos);
-			tmp += ',';
+			order += Util::toString(ci->pos);
+			order += ',';
 
-			tmp2 += Util::toString(ci->width);
-			tmp2 += ',';
+			widths += Util::toString(ci->width);
+			widths += ',';
 		}
 
-		tmp.erase(tmp.size()-1, 1);
-		tmp2.erase(tmp2.size()-1, 1);
-		tmp3.erase(tmp3.size()-1, 1);
-		Entry->setColumsOrder(tmp);
-		Entry->setColumsWidth(tmp2);
-		Entry->setColumsVisible(tmp3);
-		HubManager::getInstance()->save();
+		order.erase(order.size()-1, 1);
+		widths.erase(widths.size()-1, 1);
+		visible.erase(visible.size()-1, 1);
+
 	}
 	
 	void setVisible(string vis){

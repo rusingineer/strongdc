@@ -950,7 +950,7 @@ void QueueManager::getTargetsByRoot(StringList& sl, const TTHValue& tth) {
 	}
 }
 
-Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q) throw() {
+Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget) throw() {
 	Lock l(cs);
 
 	// First check PFS's...
@@ -963,11 +963,11 @@ Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool su
 		return d;
 	}
 	
-	bool useOld = false;
 	reuse = true;
+	QueueItem* q = NULL;
 
-	if(q != NULL) {
-		useOld = true;
+	if(!aTarget.empty()) {
+		q = fileQueue.find(aTarget);
 		goto next;
 	} else {
 		q = userQueue.getNext(aUser);
@@ -1031,24 +1031,26 @@ next:
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
 		int64_t freeBlock = 0;
 
-		if(chunksInfo != (FileChunksInfo::Ptr)NULL) {
+		//if(chunksInfo != (FileChunksInfo::Ptr)NULL) {
 			freeBlock = chunksInfo->GetUndlStart();
 
 			if(freeBlock == -1) {
+				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
 				delete d;
 
 				message = STRING(NO_FREE_BLOCK);
 				q->setNoFreeBlocks(true);
-				if(useOld) {
-					useOld = false;
+				if(!aTarget.empty()) {
+					aTarget = Util::emptyString;
 					q->removeActiveSegment(aUser);
 					q = userQueue.getNext(aUser);
-				} else
+				} else {
 					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+				}
 				if(q == NULL) reuse = true;
 				goto again;
 			}
-		} else {
+		/*} else {
 			delete d;
 			if(useOld) {
 				useOld = false;
@@ -1058,18 +1060,18 @@ next:
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			if(q == NULL) reuse = true;
 			goto again;
-		}
+		}*/
 
 		d->setStartPos(freeBlock);
 
-		int64_t blockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
+		int64_t freeBlockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
 
-		if(supportsChunks && aUser->getClient() && !aUser->getClient()->getStealth()) {
+		if(supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth())) {
 			int64_t needToDownload = min((int64_t)chunksInfo->iSmallestBlockSize,(int64_t)(d->getSize() - d->getPos()));
-			d->setSegmentSize(min(blockSize, needToDownload));
+			d->setSegmentSize(min(freeBlockSize, needToDownload));
 			d->setFlag(Download::FLAG_CHUNK_TRANSFER);
 		} else {
-			d->setSegmentSize(blockSize);
+			d->setSegmentSize(freeBlockSize);
 		}
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {

@@ -757,7 +757,7 @@ void NmdcHub::myInfo() {
 
 	int NetLimit = Util::getNetLimiterLimit();
 	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(CONNECTION);
-	string speedDescription = "";
+	string speedDescription = Util::emptyString;
 
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
 		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
@@ -794,10 +794,9 @@ void NmdcHub::myInfo() {
 	else
 		description = Util::emptyString;
 
-	description = speedDescription + description;
 
 	char myinfo[512];
-	sprintf(myinfo, "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toNmdc(getNick()).c_str(), 
+	sprintf(myinfo, "$MyINFO $ALL %s %s%s%s$ $%s%c$%s$", toNmdc(getNick()).c_str(), speedDescription.c_str(),
 		toNmdc(Util::validateMessage(description, false)).c_str(), tag, connection.c_str(), StatusMode, 
 		toNmdc(Util::validateMessage(SETTING(EMAIL), false)).c_str());
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();

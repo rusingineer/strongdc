@@ -54,12 +54,9 @@ UploadManager::~UploadManager() throw() {
 	while(true) {
 		{
 			Lock l(cs);
-			if(uploads.empty())
-				break;
 			// wait for 15 seconds then empty uploads because there are any deadlocked
-			if(::GetTickCount() - start > 15000){
-				uploads.clear();
-			} 
+			if(uploads.empty() || (::GetTickCount() - start > 15000))
+				break;			
 		}
 		Thread::sleep(100);
 	}
@@ -369,6 +366,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
+			delete *i;
 		}
 		UploadQueueItems.erase(ii);
 		fire(UploadManagerListener::QueueRemove(), source);
@@ -630,8 +628,21 @@ void UploadManager::throttleSetup() {
 		}
 }
 
-UploadQueueItem::UserMap UploadManager::getQueue() const {
+UploadQueueItem::UserMap UploadManager::getQueue() {
+	Lock l(cs);
 	return UploadQueueItems;
+}
+
+bool UploadManager::isInUploadQueue(UploadQueueItem* UQI) {
+	Lock l(cs);
+	for(UploadQueueItem::UserMapIter j = UploadQueueItems.begin(); j != UploadQueueItems.end(); ++j) {
+		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
+			if(*i == UQI) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 /**

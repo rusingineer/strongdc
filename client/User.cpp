@@ -32,6 +32,8 @@
 #include "ClientProfileManager.h"
 #include "QueueManager.h"
 #include "../pme-1.0.4/pme.h"
+#include "Socket.h"
+
 User::~User() throw() {
 	delete favoriteUser;
 }
@@ -261,7 +263,7 @@ string User::getReport()
 	}
 	report += "\r\nDownspeed:	" + temp;
 	report += "\r\nIP:		" + ip;
-	report += "\r\nHost:		" + host;
+	report += "\r\nHost:		" + Socket::getRemoteHost(ip);
 	report += "\r\nDescription:	" + description;
 	report += "\r\nEmail:		" + email;
 	report += "\r\nConnection:	" + connection;
@@ -269,7 +271,7 @@ string User::getReport()
 	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A";
 	report += "\r\nFilelist size:	" + temp;
 	if ( listLength != -1 ) {
-		temp = Util::formatBytes(listLength) + "  (" + Util::toString(listLength) + " B)";
+		temp = Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )";
 	} else {
 		temp = "N/A";
 	}
@@ -531,6 +533,7 @@ void User::setPassive() {
 		QueueManager::getInstance()->removeTestSUR(this);
 	}
 }
+
 // CDM EXTENSION ENDS
 
 /**

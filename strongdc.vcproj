@@ -90,7 +90,7 @@
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
 			CharacterSet="1"
-			WholeProgramOptimization="TRUE">
+			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
@@ -294,6 +294,9 @@
 				RelativePath=".\StrongDC.rc">
 			</File>
 			<File
+				RelativePath=".\compiled\EmoPacks\Images\sweetplus_3.bmp">
+			</File>
+			<File
 				RelativePath=".\res\toolbar.bmp">
 			</File>
 			<File
@@ -389,6 +392,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\DownloadPage.cpp">
+			</File>
+			<File
+				RelativePath=".\windows\EmoticonsDlg.cpp">
 			</File>
 			<File
 				RelativePath=".\windows\ExListViewCtrl.cpp">
@@ -630,6 +636,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\DownloadPage.h">
+			</File>
+			<File
+				RelativePath=".\windows\EmoticonsDlg.h">
 			</File>
 			<File
 				RelativePath=".\windows\ExceptionDlg.h">

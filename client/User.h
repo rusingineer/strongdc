@@ -154,7 +154,6 @@ public:
 	GETSET(string, lastHubName, LastHubName);
 	GETSET(string, ip, Ip);
 	GETSET(CID, cid, CID);
-	GETSET(string, host, Host);
 	GETSET(string, supports, Supports);
 	GETSET(string, lock, Lock);
 	GETSET(string, pk, Pk);
@@ -181,7 +180,7 @@ public:
 	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
 	StringMap& clientEscapeParams(StringMap& sm) const;
 
-	void setCheat(const string& aCheatDescription, bool aBadClient) {
+	void setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat = true) {
 		if(isSet(User::OP) || !isClientOp()) return;
 
 		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -190,7 +189,8 @@ public:
 		StringMap ucParams;
 		getParams(ucParams);
 		string cheat = Util::formatParams(aCheatDescription, ucParams);
-		addLine("*** "+STRING(USER)+" "+nick+" - "+cheat);
+		if(postToChat)
+			addLine("*** "+STRING(USER)+" "+nick+" - "+cheat);
 		cheatingString = cheat;
 		badClient = aBadClient;
 	}
@@ -223,7 +223,6 @@ public:
 		filelistComplete = false;
 		pk = Util::emptyString;
 		lock = Util::emptyString;
-		host = Util::emptyString;
 		supports = Util::emptyString;
 		clientType = Util::emptyString;
 		generator = Util::emptyString;

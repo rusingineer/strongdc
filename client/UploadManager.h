@@ -258,9 +258,10 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
 
-	UploadQueueItem::UserMap getQueue() const;
+	UploadQueueItem::UserMap getQueue();
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
+	bool isInUploadQueue(UploadQueueItem* UQI);
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
 	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }

@@ -179,16 +179,34 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 }
 
 void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+
+	{
+		Lock l(cs_failedConnections);
+		for(UserConnection::Iter i = failedConnections.begin(); i != failedConnections.end(); ++i) {
+			UserConnection* aSource = *i;
+			if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
+				Lock l(cs);
+			
+				ConnectionQueueItem* cqi = aSource->getCQI();
+				dcassert(cqi->getState() == ConnectionQueueItem::IDLE);
+				cqi->setState(ConnectionQueueItem::WAITING);
+				cqi->setLastAttempt(GET_TICK());
+				cqi->setConnection(NULL);
+				aSource->setCQI(NULL);
+			}
+			putConnection(aSource);
+		}
+		failedConnections.clear();
+	}
+
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
-	UserConnection::List added;	
 	UserConnection::List penDel;
 
 	bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 	bool tooFast = ((SETTING(MAX_DOWNLOAD_SPEED) != 0 && DownloadManager::getInstance()->getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024)));
 		
 	{
-		Lock l_deadlock_fix(cs_deadlock_fix);
 		Lock l(cs);
 
 		int attempts = 0;
@@ -205,8 +223,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					dcassert(cqi->getConnection()->getCQI() == cqi);
 					cqi->setState(ConnectionQueueItem::ACTIVE);
 					cqi->getConnection()->removeListener(this);
-					added.push_back(cqi->getConnection());
-
+					DownloadManager::getInstance()->addConnection(cqi->getConnection());
 					pendingAdd.erase(it);
 				}
 			} else {
@@ -217,7 +234,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				} 
 				
-				if(cqi->getUser()->isSet(User::PASSIVE) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)) {
+				if(cqi->getUser()->isSet(User::PASSIVE) && (cqi->getUser()->getClient()->getMode() != SettingsManager::CONNECTION_ACTIVE)) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
@@ -279,10 +296,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	for(User::Iter ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
 		QueueManager::getInstance()->removeSources(*ui, QueueItem::Source::FLAG_PASSIVE);
 	}
-
-	for(UserConnection::Iter i = added.begin(); i != added.end(); ++i) {
-		DownloadManager::getInstance()->addConnection(*i);
-	}
 }
 
 void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
@@ -296,7 +309,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 }
 
 static const u_int32_t FLOOD_TRIGGER = 20000;
-static const u_int32_t FLOOD_ADD = 500;
+static const u_int32_t FLOOD_ADD = 2000;
 
 /**
  * Someone's connecting, accept the connection and wait for identification...
@@ -472,19 +485,10 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 			putConnection(aSource);
 			return;
 		}
-
 		if (aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {		
-			string ip = aSource->getRemoteIp();
-			if(ip != Util::emptyString) {
-				string host = Util::emptyString;
-				try {
-					host = aSource->getRemoteHost(ip);
-				} catch (Exception e) {
-					host = e.getError();
-				} catch (...) {
-				}
-				ClientManager::getInstance()->setIPNick(ip, aSource->getUser());
-				aSource->getUser()->setHost(host);
+			string address = aSource->getRemoteIp();
+			if(aSource->getUser()->getIp() != address) {
+				ClientManager::getInstance()->setIPNick(address, aSource->getUser());
 				User::updated(aSource->getUser());
 			}
 		}
@@ -504,7 +508,10 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		dcdebug("CM::onLock %p received lock twice, ignoring\n", aSource);
 		return;
 	}
-	
+
+	aSource->getUser()->setPk(aPk);
+	aSource->getUser()->setLock(aLock);
+
 	if( CryptoManager::getInstance()->isExtended(aLock) ) {
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
@@ -522,9 +529,6 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 
 	aSource->setState(UserConnection::STATE_DIRECTION);
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
-	aSource->getUser()->setPk(aPk);
-	aSource->getUser()->setLock(aLock);
-	User::updated(aSource->getUser());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
 }
 
@@ -675,8 +679,10 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::on(UserConnectionListener::Failed_deadlock_fix, UserConnection* aSource, const string& /*aError*/) throw() {
-	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
+void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
+	Lock l(cs_failedConnections);
+	failedConnections.push_back(aSource);
+/*	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
 		{
 			Lock l(cs);
 			
@@ -688,7 +694,7 @@ void ConnectionManager::on(UserConnectionListener::Failed_deadlock_fix, UserConn
 			aSource->setCQI(NULL);
 		}
 	}
-	putConnection(aSource);
+	putConnection(aSource);*/
 }
 
 void ConnectionManager::removeConnection(const User::Ptr& aUser, int isDownload) {
@@ -696,8 +702,6 @@ void ConnectionManager::removeConnection(const User::Ptr& aUser, int isDownload)
 	for(UserConnection::Iter i = userConnections.begin(); i != userConnections.end(); ++i) {
 		UserConnection* uc = *i;
 		if(uc->getUser() == aUser && uc->isSet(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD)) {
-			if(isDownload && uc->getDownload()) 
-				uc->getDownload()->finished = true;
 			uc->disconnect();
 			break;
 		}
@@ -720,13 +724,10 @@ void ConnectionManager::shutdown() {
 	while(true) {
 		{
 			Lock l(cs);
-			if(userConnections.empty()) {
+			// wait for 15 seconds then empty userConnections because there are any deadlocked
+			if(userConnections.empty() || (::GetTickCount() - start > 15000)) {
 				break;
 			}
-			// wait for 15 seconds then empty userConnections because there are any deadlocked
-			if(::GetTickCount() - start > 15000){
-				userConnections.clear();
-			} 
 		}
 		Thread::sleep(50);
 	}

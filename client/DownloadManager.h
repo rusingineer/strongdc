@@ -109,7 +109,6 @@ public:
 	GETSET(int64_t, segmentSize, SegmentSize);
 	GETSET(QueueItem*, item, Item);
 	int64_t quickTick;
-	bool finished;
 	
 private:
 	Download(const Download&);
@@ -299,7 +298,7 @@ private:
 		}
 	};
 	
-	void checkDownloads(UserConnection* aConn, bool reconn = false, QueueItem* q = NULL);
+	void checkDownloads(UserConnection* aConn, bool reconn = false, string aTarget = Util::emptyString);
 	void handleEndData(UserConnection* aSource);
 	void userSpeed(UserConnection* aSource);
 

@@ -354,9 +354,9 @@ void HubManager::save() {
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
 			xml.addChildAttrib("UserListState", (*i)->getUserListState());
-			xml.addChildAttrib("ColumsOrder", (*i)->getColumsOrder());
-			xml.addChildAttrib("ColumsWidth", (*i)->getColumsWidth());
-			xml.addChildAttrib("ColumsVisible", (*i)->getColumsVisible());
+			xml.addChildAttrib("HeaderOrder",		(*i)->getHeaderOrder());
+			xml.addChildAttrib("HeaderWidths",		(*i)->getHeaderWidths());
+			xml.addChildAttrib("HeaderVisible",		(*i)->getHeaderVisible());
 			xml.addChildAttrib("RawOne", (*i)->getRawOne());
 			xml.addChildAttrib("RawTwo", (*i)->getRawTwo());
 			xml.addChildAttrib("RawThree", (*i)->getRawThree());
@@ -582,9 +582,9 @@ void HubManager::load(SimpleXML* aXml) {
 			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
 			e->setUserListState(aXml->getBoolChildAttrib("UserListState"));
-			e->setColumsOrder(aXml->getChildAttrib("ColumsOrder"));
-			e->setColumsWidth(aXml->getChildAttrib("ColumsWidth"));
-			e->setColumsVisible(aXml->getChildAttrib("ColumsVisible"));
+			e->setHeaderOrder(aXml->getChildAttrib("HeaderOrder", SETTING(HUBFRAME_ORDER)));
+			e->setHeaderWidths(aXml->getChildAttrib("HeaderWidths", SETTING(HUBFRAME_WIDTHS)));
+			e->setHeaderVisible(aXml->getChildAttrib("HeaderVisible", SETTING(HUBFRAME_VISIBLE)));
 			e->setRawOne(aXml->getChildAttrib("RawOne"));
 			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
 			e->setRawThree(aXml->getChildAttrib("RawThree"));

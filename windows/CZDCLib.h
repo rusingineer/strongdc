@@ -50,20 +50,24 @@ public:
 			);
 	}
 	static inline COLORREF brightenColor(const COLORREF& c, double brightness = 0) {
-		if (brightness == 0)
+		if (brightness == 0) {
 			return c;
-		else if (brightness > 0)
+		} else if (brightness > 0) {
+			BYTE r = getRValue(c);
+			BYTE g = getGValue(c);
+			BYTE b = getBValue(c);
 			return RGB(
-				(getRValue(c)+((255-getRValue(c))*brightness)),
-				(getGValue(c)+((255-getGValue(c))*brightness)),
-				(getBValue(c)+((255-getBValue(c))*brightness))
+				(r+((255-r)*brightness)),
+				(g+((255-g)*brightness)),
+				(b+((255-b)*brightness))
 				);
-		else
+		} else {
 			return RGB(
 				(getRValue(c)*(1+brightness)),
 				(getGValue(c)*(1+brightness)),
 				(getBValue(c)*(1+brightness))
 				);
+		}
 	}
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = false);
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c);

@@ -96,7 +96,6 @@ string ResourceManager::strings[] = {
 "Copy Exact Share", 
 "Copy address to clipboard", 
 "Copy IP", 
-"Copy ISP", 
 "Copy actual line", 
 "Copy magnet link to clipboard", 
 "Copy nick", 
@@ -256,7 +255,6 @@ string ResourceManager::strings[] = {
 "Downloaded tree does not match TTH root", 
 "Ip: ", 
 "Ip", 
-"ISP", 
 "Items", 
 "Join/part showing off", 
 "Join/part showing on", 
@@ -844,6 +842,7 @@ string ResourceManager::strings[] = {
 "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many \"rollback inconsistency\" errors.  Please uninstall it and use an alternate product.  ", 
 "Accepted Timeouts", 
 "Accepted Disconnects", 
+"Checking client...", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -940,7 +939,6 @@ string ResourceManager::names[] = {
 "CopyExactShare", 
 "CopyHub", 
 "CopyIp", 
-"CopyIsp", 
 "CopyLine", 
 "CopyMagnetLink", 
 "CopyNick", 
@@ -1100,7 +1098,6 @@ string ResourceManager::names[] = {
 "InvalidTree", 
 "Ip", 
 "IpBare", 
-"Isp", 
 "Items", 
 "JoinShowingOff", 
 "JoinShowingOn", 
@@ -1688,4 +1685,5 @@ string ResourceManager::names[] = {
 "ZonealarmWarning", 
 "AcceptedTimeouts", 
 "AcceptedDisconnects", 
+"CheckingClient", 
 };

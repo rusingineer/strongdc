@@ -27,6 +27,7 @@
 #include "TypedListViewCtrl.h"
 #include "ChatCtrl.h"
 #include "MainFrm.h"
+#include "EmoticonsDlg.h"
 
 #include "../client/Client.h"
 #include "../client/User.h"
@@ -100,10 +101,11 @@ public:
 		COMMAND_ID_HANDLER(IDC_OPEN_HUB_LOG, onOpenHubLog)
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_WHOIS_IP, onWhoisIP)
+		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
+		COMMAND_RANGE_HANDLER(IDC_PM, IDC_PM + menuItems, onEmoPackChange);
 		NOTIFY_HANDLER(IDC_USERS, NM_CUSTOMDRAW, onCustomDraw)
 		COMMAND_ID_HANDLER(IDC_COPY_IP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK_IP, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_ISP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_ALL, onCopyUserInfo)
 		
 		COMMAND_ID_HANDLER(IDC_COPY_HUBNAME, onCopyHubInfo)
@@ -173,6 +175,28 @@ public:
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
+	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
+		if (hWndCtl != ctrlEmoticons.m_hWnd) {
+			bHandled = false;
+			return 0;
+		}
+
+		EmoticonsDlg dlg;
+		ctrlEmoticons.GetWindowRect(dlg.pos);
+		dlg.DoModal(m_hWnd);
+		if (!dlg.result.empty()) {
+			TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
+			ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
+			tstring s(message, ctrlMessage.GetWindowTextLength());
+			delete[] message;
+			ctrlMessage.SetWindowText(Text::toT(Text::fromT(s)+dlg.result).c_str());
+			ctrlMessage.SetFocus();
+			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
+		}
+		return 0;
+	}
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
@@ -210,7 +234,7 @@ public:
 
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
-		ctrlClient.GoToEnd();
+		//ctrlClient.GoToEnd();
 		return 0;
 	}
 
@@ -304,7 +328,7 @@ private:
 		COLUMN_HUBS, 
 		COLUMN_SLOTS,
 		COLUMN_UPLOAD_SPEED, 
-		COLUMN_IP, COLUMN_ISP, 
+		COLUMN_IP, 
 		COLUMN_PK, 
 		COLUMN_LOCK, 
 		COLUMN_SUPPORTS,
@@ -338,18 +362,15 @@ private:
 		, const tstring& aRawThree
 		, const tstring& aRawFour
 		, const tstring& aRawFive
-		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate,
-        string scolumsorder, string scolumswidth, string scolumsvisible) : 
-	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
+		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) : 
+		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		ShowUserList(BOOLSETTING(GET_USER_INFO)), updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
-		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), 
+		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), menuItems(0),
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
 		clientContainer(WC_EDIT, this, EDIT_MESSAGE_MAP),
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
-		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
-		sColumsOrder(scolumsorder), sColumsWidth(scolumswidth), sColumsVisible(scolumsvisible)
-	{
+		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP) {
 		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
 
 		client->setRawOne(Text::fromT(aRawOne));
@@ -380,7 +401,8 @@ private:
 	bool showJoins;
 	bool favShowJoins;
 	tstring complete;
-	
+	int menuItems;
+
 	bool waitingForPW;
 	bool extraSort;
 
@@ -411,8 +433,10 @@ private:
 	OMenu grantMenu;
 	OMenu userMenu;
 	OMenu tabMenu;
+	OMenu emoMenu;
 	
 	CButton ctrlShowUsers;
+	CButton ctrlEmoticons;
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;
 	CEdit ctrlFilter;
@@ -420,7 +444,8 @@ private:
 	typedef TypedListViewCtrl<UserInfo, IDC_USERS> CtrlUsers;
 	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
-
+	
+	HBITMAP hEmoticonBmp;
 	bool closed;
 
 	StringMap ucParams;

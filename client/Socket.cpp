@@ -82,8 +82,7 @@ string SocketException::errorToString(int aError) throw() {
 	default:
 		{
 			char tmp[64];
-			_snprintf(tmp, 63, CSTRING(UNKNOWN_ERROR), aError);
-			tmp[63] = 0;
+			sprintf(tmp, CSTRING(UNKNOWN_ERROR), aError);
 			return tmp;
 		}
 	}
@@ -585,7 +584,9 @@ void Socket::disconnect() throw() {
 	sock = INVALID_SOCKET;
 }
 
-string Socket::getRemoteHost(const string& aIp) const {
+string Socket::getRemoteHost(const string& aIp) {
+	if(aIp.empty())
+		return Util::emptyString;
 	hostent *h = NULL;
 	unsigned int addr;
 	addr = inet_addr(aIp.c_str());

@@ -210,7 +210,7 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 LRESULT SpyFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	if (GetFocus() == ctrlSearches && ctrlSearches.GetSelectedCount() == 1) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlSearches.ClientToScreen(&pt);
 		}

@@ -141,7 +141,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q = NULL) throw();
+	Download* getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {

@@ -27,15 +27,13 @@
 #include "../client/pointer.h"
 #include <math.h>
 
-#define AGEMOTIONSETUP_FILE "Emoticons.xml"
-
 HBITMAP AGLoadImage(HINSTANCE hIns, LPCTSTR BmpPath, unsigned int nFlags, int x, int y, unsigned int nLoadFlags) {
 	HBITMAP hBmp = (HBITMAP) ::LoadImage(hIns, BmpPath, nFlags, x, y, nLoadFlags);
 	if (!hBmp) {
-		char buf[512];
-		_snprintf(buf, 511, "Unable to load '%s'. The program is unable to function without this file", BmpPath);
+		TCHAR buf[512];
+		_sntprintf(buf, 511, _T("Unable to load '%s'. The program is unable to function without this file"), BmpPath);
 		buf[511] = 0;
-		MessageBox(NULL, Text::toT(buf).c_str(), _T("Unable to load file"), MB_ICONSTOP | MB_OK);
+		MessageBox(NULL, buf, _T("Unable to load file"), MB_ICONSTOP | MB_OK);
 	}
 	return hBmp;
 }
@@ -82,6 +80,10 @@ const string& CAGEmotion::GetEmotionText() {
 
 HBITMAP CAGEmotion::GetEmotionBmp() {
 	return m_EmotionBmp;
+}
+
+const string& CAGEmotion::GetEmotionBmpPath() {
+	return m_EmotionBmpPath;
 }
 
 const long&	CAGEmotion::GetImagePos() {
@@ -157,7 +159,7 @@ bool CAGEmotionSetup::Create() {
 	}
 	m_nEmotionsCnt = 0;
 
-	if (!Util::fileExists(Util::getAppPath() + AGEMOTIONSETUP_FILE))
+	if (!Util::fileExists(Util::getAppPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
 		return true;
 
 	int nMaxSizeCX = 0;
@@ -165,26 +167,27 @@ bool CAGEmotionSetup::Create() {
 	
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + AGEMOTIONSETUP_FILE, File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getAppPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());
 		
-		if(xml.findChild("Emotions")) {
+		if(xml.findChild("Emoticons")) {
 			xml.stepIn();
 
 			string strEmotionText;
 			string strEmotionBmpPath;
-			while(xml.findChild("Emotion")) {
-				strEmotionText = xml.getChildAttrib("ReplacedText");
-				strEmotionBmpPath = xml.getChildAttrib("BitmapPath");
+			while(xml.findChild("Emoticon")) {
+				strEmotionText = xml.getChildAttrib("PasteText");
+				if (strEmotionText.empty()) strEmotionText = xml.getChildAttrib("Expression");
+				strEmotionBmpPath = xml.getChildAttrib("Bitmap");
 				if (strEmotionBmpPath.size() > 0) {
 					if (strEmotionBmpPath[0] == '.') {
 						// Relativni cesta - dame od applikace
-						strEmotionBmpPath = Util::getAppPath() + strEmotionBmpPath;
+						strEmotionBmpPath = Util::getAppPath() + "EmoPacks\\" + strEmotionBmpPath;
 					}
+					else strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 				}
 
 				CAGEmotion* pEmotion = new CAGEmotion();
 				if (!pEmotion->Create(strEmotionText, strEmotionBmpPath)) {
-					dcassert(false);
 					continue;
 				}
 

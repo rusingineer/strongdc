@@ -166,11 +166,13 @@ int Util::getNetLimiterLimit() {
 				buf2[255] = 0;
 				string a2 = buf2;
 
-				string limit_hex = "0x" + a2 + a1;
+				char* limit_hex = strdup(("0x" + a2 + a1).c_str());
 
 				NetLimiter_UploadLimit = 0;
 
-				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
+				NetLimiter_UploadLimit = hexstr2int(limit_hex) / 4;
+				delete limit_hex;
+
 				NetLimiter_UploadOn = u_int8_t(txt[16]);
 				buf[255] = 0;
 
@@ -184,18 +186,18 @@ int Util::getNetLimiterLimit() {
 					NetLimiter_UploadLimit = -1;
 					NetLimiter_UploadOn = 0;
 				}
-				delete[] w1;
+				delete w1;
 				break;
 			}
 
-			delete[] w1;
+			delete w1;
 
 			if(len < BUF_SIZE)
 				break;
 		}
 	
 		f.close();
-		delete[] w2;
+		delete w2;
 	} catch(...) {
 	}
 

@@ -105,7 +105,6 @@ void shutdown() {
 	WebServerManager::deleteInstance();
 	ClientProfileManager::deleteInstance();	
 	PopupManager::deleteInstance();
-	DebugManager::deleteInstance();
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();
@@ -121,6 +120,7 @@ void shutdown() {
 	LogManager::deleteInstance();
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
+	DebugManager::deleteInstance();
 	ResourceManager::deleteInstance();
 }
 

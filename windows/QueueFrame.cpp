@@ -789,14 +789,7 @@ void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 
 LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if((HWND)wParam == ctrlQueue) {
-		RECT rc;                    // client area of window 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-	
-		ctrlQueue.GetHeader().GetWindowRect(&rc);
-		if(PtInRect(&rc, pt)){
-			ctrlQueue.showMenu(pt);
-			return TRUE;
-		}
 	
 		for(int i=0;i<10;i++) {
 			segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
@@ -806,7 +799,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		for(int i=0;i<7;i++)
 			priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 			
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlQueue.ClientToScreen(&pt);
 		}
@@ -852,14 +845,14 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			}
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 				string ext = Util::getFileExt(Text::fromT(ii->getTargetFileName()));
-			if(ext.size()>1) ext = ext.substr(1);
-			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
-			if(previewMenu.GetMenuItemCount() > 0) {
-				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
-			} else {
-				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
-			}
-			previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
+				if(ext.size()>1) ext = ext.substr(1);
+				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+				if(previewMenu.GetMenuItemCount() > 0) {
+					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
+				} else {
+					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
+				}
+				previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 			}
 
 			menuItems = 0;
@@ -998,7 +991,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		}
 	} else if ((HWND)wParam == ctrlDirs && ctrlDirs.GetSelectedItem() != NULL) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlDirs.ClientToScreen(&pt);
 		} else {
@@ -1509,20 +1502,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
-			BITMAPINFOHEADER bih;
-			bih.biSize = sizeof(BITMAPINFOHEADER);
-			bih.biWidth = real_rc.Width();
-			bih.biHeight = -real_rc.Height(); // kanske minus
-			bih.biPlanes = 1;
-			bih.biBitCount = 32;
-			bih.biCompression = BI_RGB;
-			bih.biSizeImage = 0;
-			bih.biXPelsPerMeter = 0;
-			bih.biYPelsPerMeter = 0;
-			bih.biClrUsed = 32;
-			bih.biClrImportant = 0;
-			HBITMAP hBmp = CreateDIBitmap(cd->nmcd.hdc, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
-
+			HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
 			HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
 			HDC& dc = cdc.m_hDC;
 

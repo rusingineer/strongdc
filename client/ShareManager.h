@@ -109,6 +109,7 @@ public:
 	GETSET(u_int32_t, hits, Hits);
 	GETSET(string, listFile, ListFile);
 	GETSET(string, bzXmlFile, BZXmlFile);
+	GETSET(int64_t, sharedSize, SharedSize);
 
 	void generateXmlList(bool force = false);
 private:

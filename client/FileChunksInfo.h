@@ -264,6 +264,16 @@ public:
 	virtual void setPos(int64_t _pos) 
 	{ pos = _pos; }
 
+	virtual int64_t getSize() throw() {
+		DWORD x;
+		DWORD l = ::GetFileSize(shared_handle_ptr->handle, &x);
+
+		if( (l == INVALID_FILE_SIZE) && (GetLastError() != NO_ERROR))
+			return -1;
+
+		return (int64_t)l | ((int64_t)x)<<32;
+	}
+
     static CriticalSection critical_section;
 	static SharedFileHandleMap file_handle_pool;
 

@@ -133,7 +133,7 @@ void FavoriteHubsFrame::openSelected() {
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState(), entry->getColumsOrder(), entry->getColumsWidth(), entry->getColumsVisible());
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
 	}
 	return;
 }
@@ -160,7 +160,7 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 
 	if((HWND)wParam == ctrlHubs) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		if(pt.x < 0 || pt.y < 0) {
+		if(pt.x == -1 && pt.y == -1) {
 			pt.x = pt.y = 0;
 			ctrlHubs.ClientToScreen(&pt);
 		}
@@ -215,7 +215,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())	
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState(), entry->getColumsOrder(), entry->getColumsWidth(), entry->getColumsVisible());
+			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
 	}
 
 	return 0;

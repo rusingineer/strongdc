@@ -40,7 +40,9 @@
 #define IDC_PUB_LIST_DROPDOWN           130
 #define IDC_SEARCH_PAUSE                130
 #define IDC_HUBLIST                     131
+#define IDC_EMOT                        131
 #define IDC_OPEN_MY_LIST                132
+#define IDC_ENABLE_EMOTICONS            132
 #define IDC_SERVER                      133
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
@@ -82,7 +84,6 @@
 #define IDD_SEGMENT                     243
 #define IDB_O_SETTINGS_DLG              245
 #define IDR_TRANSFER_COMPRESSED         246
-#define IDR_TRANSFER_SEGMENTED          247
 #define IDD_FAKEDETECT                  248
 #define IDD_OPERACOLORS                 249
 #define IDD_AVIPREVIEW                  250
@@ -114,6 +115,9 @@
 #define IDD_HUB_LIST                    290
 #define IDB_FLAGS                       291
 #define IDD_WINDOWSPAGE                 292
+#define IDD_EMOTICONS_DLG               293
+#define IDB_BITMAP1                     295
+#define IDB_EMOTICON                    295
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -751,9 +755,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        293
+#define _APS_NEXT_RESOURCE_VALUE        296
 #define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1298
-#define _APS_NEXT_SYMED_VALUE           131
+#define _APS_NEXT_SYMED_VALUE           133
 #endif
 #endif
