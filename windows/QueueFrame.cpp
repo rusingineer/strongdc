@@ -892,7 +892,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 	
 	// Get the bounding rectangle of the client area. 
 	ctrlQueue.GetClientRect(&rc);
-	ctrlQueue.ScreenToClient(&pt); 
+	ctrlQueue.ScreenToClient(&pt);
+
+	for(int i=1;i<8;i++) priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
+
 	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
 		usingDirMenu = false;
 		CMenuItemInfo mi;
@@ -984,9 +987,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			case QueueItem::HIGHEST: pos = 5; break;
 			default: dcassert(0); break;
 		}
-		priorityMenu.CheckMenuItem(pos, MF_BYPOSITION | MF_CHECKED);
+		priorityMenu.CheckMenuItem(pos+1, MF_BYPOSITION | MF_CHECKED);
 		if(ii->getAutoPriority())
-			priorityMenu.CheckMenuItem(6, MF_BYPOSITION | MF_CHECKED);
+			priorityMenu.CheckMenuItem(7, MF_BYPOSITION | MF_CHECKED);
 
 			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 

@@ -125,8 +125,8 @@ public:
 private:
 	// SettingsManagerListener
 //	virtual void onAction(SettingsManagerListener::Types type, SimpleXML* xml) throw();
-	virtual void on(SettingsManagerListener::Load(), SimpleXML* xml) throw();
-	virtual void on(SettingsManagerListener::Save(), SimpleXML* xml) throw();
+	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() { load(xml); }
+	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() { save(xml); }
 	void load(SimpleXML* aXml);
 	void save(SimpleXML* aXml);
 

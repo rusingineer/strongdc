@@ -153,23 +153,6 @@ void PluginManager::onDestroyWindow(HWND hWnd){
 	FOREACH(onDestroy(hWnd));
 }
 
-
-// SettingsManagerListener
-/*void PluginManager::onAction(SettingsManagerListener::Types type, SimpleXML* xml) throw() {
-	switch(type) {
-	case SettingsManagerListener::LOAD: load(xml); break;
-	case SettingsManagerListener::SAVE: save(xml); break;
-	}
-}*/
-
-void PluginManager::on(SettingsManagerListener::Load(), SimpleXML* xml) throw() {
-	load(xml);
-}
-void PluginManager::on(SettingsManagerListener::Save(), SimpleXML* xml) throw() {
-	save(xml);
-}
-
-
 void PluginManager::load(SimpleXML* aXml){
 	WLock l(rwcs);
 

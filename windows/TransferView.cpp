@@ -519,6 +519,8 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
     NMITEMACTIVATE* item = (NMITEMACTIVATE*)pnmh;
 	if (item->iItem != -1) {
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
+		string m  = i->Target+"\n"+i->qi->getTarget();
+		MessageBox(m.c_str());
 		if (!i->mainItem) i->pm();
 	}
 	return 0;
@@ -672,7 +674,7 @@ void TransferView::Expand(ItemInfo* i, int a) {
 	int b = 0;
 	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 	 ItemInfo* m = j->second;
-	 if(m->Target == i->Target)
+	 if((m->Target == i->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD))
 	 {	
 		 b++;
 		 int l = ctrlTransfers.insertItem(a+1,m,IMAGE_SEGMENT);
@@ -771,14 +773,18 @@ void TransferView::setMainItem(ItemInfo* i) {
 		}
 
 //		if((*h) != (*i->upper)) {
+		dcdebug((h->Target+"\n"+h->qi->getTarget()+"\n"+i->upper->Target+"\n"+i->Target+"\n").c_str());
+		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
 			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
 			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
+
 
 			dcdebug("3. cyklus\n");
 			ctrlTransfers.deleteItem(i, false);	
 			dcdebug("4. cyklus\n");
 			InsertItem(i);
+
 			if(!mainItems.empty()) {
 				int q = 0;
 				dcdebug("5. cyklus\n");
@@ -787,7 +793,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 					existuje = false;
 					for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 						ItemInfo* n = j->second;
-						if(m->Target == n->Target)
+						if((m->Target == n->Target)  && (n->type == ItemInfo::TYPE_DOWNLOAD))
 						{
 							existuje = true;
 							break;
@@ -805,7 +811,7 @@ void TransferView::setMainItem(ItemInfo* i) {
 				}
 	
 			}	
-	//	}
+		}
 	}
 	dcdebug("6. setMainItem finished\n");
 }
@@ -853,6 +859,10 @@ void TransferView::ItemInfo::update() {
 				if((upper->pocetUseru > 1) || (upper->user == (User::Ptr)NULL)) {
 					upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
 					if(pocetSegmentu>0) upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+					else upper->columns[COLUMN_HUB] = "";
+				} else {
+					upper->columns[COLUMN_USER] = user->getNick();
+					upper->columns[COLUMN_HUB] = user->getClientName();
 				}
 			}
 		}
@@ -954,13 +964,16 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 		i->statusString = aCqi->getState() == ConnectionQueueItem::CONNECTING ? STRING(CONNECTING) : STRING(WAITING_TO_RETRY);
 		if(i->statusString == STRING(CONNECTING)) i->status = ItemInfo::STATUS_WAITING;
 		else i->status = ItemInfo::STATUS_RUNNING;
-		i->updateMask |= ItemInfo::MASK_STATUS;		
+		i->updateMask |= ItemInfo::MASK_STATUS;
 		if (i->type == ItemInfo::TYPE_DOWNLOAD) {
 			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
 			if (qi) {
 				i->columns[COLUMN_FILE] = Util::getFileName(qi->getTarget());
 				i->columns[COLUMN_PATH] = Util::getFilePath(qi->getTarget());
-				i->columns[COLUMN_SIZE] = Util::formatBytes(qi->getSize());				
+				i->columns[COLUMN_SIZE] = Util::formatBytes(qi->getSize());
+				i->file = Util::getFileName(qi->getTarget());
+				i->path = Util::getFilePath(qi->getTarget());
+				i->size = qi->getSize();				
 				i->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 				i->Target = qi->getTarget();
 				i->qi = qi;
@@ -973,13 +986,24 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
-
-				if(i->qi)		
-				if(i->qi->getCurrents().size() <= 1)
-					if(i->upper != NULL) {
-						if(IsBadStringPtr(i->upper->statusString.c_str(), 1) == 0)
+	
+			if(i->upper != NULL) {
+				if(i->qi) {
+					if(i->qi->getCurrents().size() <= 1) {
+						if(IsBadStringPtr(i->upper->statusString.c_str(), 1) == 0) {
 							i->upper->statusString = i->statusString;
+						}
 					}
+				}
+				i->upper->columns[COLUMN_FILE] = i->columns[COLUMN_FILE];
+				i->upper->columns[COLUMN_PATH] = i->columns[COLUMN_PATH];
+				i->upper->columns[COLUMN_SIZE] = i->columns[COLUMN_SIZE];
+				i->upper->file = Util::getFileName(i->qi->getTarget());
+				i->upper->path = Util::getFilePath(i->qi->getTarget());
+				i->upper->size = i->qi->getSize();				
+
+				i->upper->Target = i->Target;
+			}
 	
 		
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1067,9 +1091,10 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->size = aDownload->getSize();
 		i->file = Util::getFileName(aDownload->getTarget());
 		i->path = Util::getFilePath(aDownload->getTarget());
+
 		i->Target = aDownload->getTarget();
 	}
-		dcdebug("OnDownloadStarting\n");
+	dcdebug(("OnDownloadStarting: " + aDownload->getTarget() +"\n").c_str());
 		if((i->Target != i->oldTarget) || (i->upper->Target == Util::emptyString)) setMainItem(i);
 		i->oldTarget = i->Target;
 	{
@@ -1316,7 +1341,7 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 		i->pos = 0;
 
 		i->statusString = isUpload ? STRING(UPLOAD_FINISHED_IDLE) : STRING(DOWNLOAD_FINISHED_IDLE);
-		i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
+		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);	
 }
@@ -1334,26 +1359,38 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 }
 
 LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	
 	int i = -1;
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		string tmp;
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
+		if(ii->qi->getTTH() != NULL) {
+			SearchFrame::openWindow(ii->qi->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+		} else {
+			string searchString = SearchManager::clean(ii->file);
+			StringList tok = StringTokenizer(searchString, ' ').getTokens();
 		
-		string searchString = SearchManager::clean(ii->file);
-		StringList tok = StringTokenizer(searchString, ' ').getTokens();
-		
-		tmp = ii->file;
-		if(!tmp.empty()) {
-			bool bigFile = (ii->size > 10*1024*1024);
-			if(bigFile) {
-				SearchFrame::openWindow(tmp, ii->size-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->file));
-			} else {
-				SearchFrame::openWindow(tmp, ii->size+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->file));
+			for(StringIter si = tok.begin(); si != tok.end(); ++si) {
+				bool found = false;
+			
+				for(StringIter j = searchFilter.begin(); j != searchFilter.end(); ++j) {
+					if(Util::stricmp(si->c_str(), j->c_str()) == 0) {
+						found = true;
+					}
+				}
+			
+				if(!found && !si->empty()) {
+					tmp += *si + ' ';
+				}
+			}
+			if(!tmp.empty()) {
+				if(ii->size > 10*1024*1024) {
+					SearchFrame::openWindow(tmp, ii->size-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->file));
+				} else {
+					SearchFrame::openWindow(tmp, ii->size+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->file));
+				}
 			}
 		}
-	} 
-	
+	}
 	return 0;
 }
 /**
