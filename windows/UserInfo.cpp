@@ -51,10 +51,8 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)
 		nHardCol = a->m_pListColumns->RemapListColumnToDataColumn(col);
 	switch(nHardCol) {
 		case COLUMN_NICK:
-			//if(a->user->isSet(User::OP) && !b->user->isSet(User::OP)) {
 			if(a->getOp() && !b->getOp()) {
 				return -1;
-			//} else if(!a->user->isSet(User::OP) && b->user->isSet(User::OP)) {
 			} else if(!a->getOp() && b->getOp()) {
 				return 1;
 			}
@@ -71,7 +69,6 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)
 		case COLUMN_MODE: return Util::stricmp(a->user->getMode(), b->user->getMode());
 		case COLUMN_HUBS: return compare(Util::toInt(a->user->getHubs()), Util::toInt(b->user->getHubs()));
 		case COLUMN_SLOTS: return compare(Util::toInt(a->user->getSlots()), Util::toInt(b->user->getSlots()));
-		//case COLUMN_LIMITER: return compare(Util::toInt(a->user->getUpload()), Util::toInt(b->user->getUpload()));
 		case COLUMN_IP: return compare(Util::toInt(a->user->getIp()), Util::toInt(b->user->getIp()));
 		case COLUMN_ISP: return compare(a->user->getHost(),b->user->getHost());
 		case COLUMN_PK: return  compare(a->user->getPk(),b->user->getPk()); ;

@@ -174,9 +174,10 @@ private:
 
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
-			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), seznam(0),
+			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
-			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString)
+			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString), celkovaRychlost(0), pocetSegmentu(0),
+			compressRatio(1.0)
 			{ update(); };
 
 		Types type;
@@ -186,6 +187,7 @@ private:
 		int64_t start;
 		int64_t actual;
 		int64_t speed;
+		int64_t celkovaRychlost;
 		int64_t timeLeft;
 		int64_t stazenoCelkem;
 		int64_t dwnldStart;
@@ -197,12 +199,12 @@ private:
 		QueueItem* qi;
 		ItemInfo* upper;
 		string Target;
-		Download::List seznam;
 		bool collapsed;
 		bool mainItem;
 		int pocetUseru;
-		ItemInfo::Map subItems;
+		int pocetSegmentu;
 		string oldTarget;
+		double compressRatio;
 
 //PDC {
 		string downloadTarget;
@@ -228,7 +230,10 @@ private:
 		void removeAll();
 		void deleteSelf() { delete this; }	
 
-		double getRatio() { return (pos > 0) ? (double)actual / (double)pos : 1.0;	}
+		double getRatio() {
+			if(mainItem) return compressRatio;
+			return (pos > 0) ? (double)actual / (double)pos : 1.0;
+		}
 
 		const string& getText(int col) const {
 			return columns[col];
