@@ -641,6 +641,7 @@ void ConnectionManager::shutdown() {
 		Lock l(cs);
 		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
 			(*j)->disconnect();
+//			putConnection(*j);
 		}
 	}
 	// Wait until all connections have died out...
@@ -651,7 +652,7 @@ void ConnectionManager::shutdown() {
 				break;
 			}
 		}
-		Thread::sleep(20);
+		Thread::sleep(50);
 	}
 }		
 

@@ -94,6 +94,7 @@ public:
 	void setClient(Client* aClient);
 	void connect();
 	const string& getClientNick() const;
+	const CID getClientCID() const;
 	const string& getClientName() const;
 	string getClientAddressPort() const;
 	void privateMessage(const string& aMsg);
@@ -169,6 +170,8 @@ public:
 	GETSET(int, fileListDisconnects, FileListDisconnects);
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
 
+	StringMap& clientEscapeParams(StringMap& sm) const;
+	
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
 		if(isSet(User::OP) || !isClientOp()) return;
 		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))

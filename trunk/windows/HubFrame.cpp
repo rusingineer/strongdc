@@ -958,31 +958,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 		else
 			start++;
 					
-		if(Util::strnicmp(x.c_str() + start, "dchub://", 8) == 0) {
 
-			bHandled = true;
-
-			string server, file;
-			short port = 411;
-			Util::decodeUrl((x.c_str() + start), server, port, file);
-			HubFrame::openWindow(server + ":" + Util::toString(port));
-		}else if(Util::strnicmp(x.c_str() + start, "magnet:?", 8) == 0) {
-			string::size_type i = 0;
-			i = start + 8;
-			string tth;
-			if( (start = x.find("xt=urn:tree:tiger:", i)) != string::npos) {
-				tth = x.substr(start + 18, 39);
-				if(Encoder::isBase32(tth.c_str()))
-					SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-			} else if( (start = x.find("xt=urn:bitprint:", i)) != string::npos) {
-				i = start + 16;
-				if( (start = x.find(".", i)) != string::npos) {
-					tth = x.substr(start + 1, 39);
-					if(Encoder::isBase32(tth.c_str()))
-						SearchFrame::openWindow(tth, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-				}
-			}
-		} else {
 			string::size_type end = x.find_first_of(" >\t", start+1);
 
 			if(end == string::npos) // get EOL as well
@@ -1013,7 +989,6 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 				}
 			}
 		}
-	}
 	return 0;
 }
 
@@ -1046,7 +1021,9 @@ void HubFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	} else {
 		ctrlClient.AppendText(sMyNick, "", sTmp.c_str(), cf, sAuthor.c_str() );
 	}
-	setDirty();
+	if (BOOLSETTING(TAB_DIRTY)) {
+		setDirty();
+	}
 }
 
 LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -1494,7 +1471,9 @@ void HubFrame::addClientLine(const string& aLine, bool inChat /* = true */) {
 		lastLinesList.erase(lastLinesList.begin());
 	lastLinesList.push_back(line);
 
-	setDirty();
+	if (BOOLSETTING(TAB_DIRTY)) {
+		setDirty();
+	}
 	
 	if(BOOLSETTING(STATUS_IN_CHAT) && inChat) {
 		addLine("*** " + aLine, m_ChatTextSystem);
@@ -1585,19 +1564,19 @@ void HubFrame::on(Message, Client*, const string& line) throw() {
 		if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
 			// Do nothing...
 		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
-			speak(ADD_SILENT_STATUS_LINE, line);
+			speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
 		} else {
-			speak(ADD_CHAT_LINE, line);
+			speak(ADD_CHAT_LINE, Util::toDOS(line));
 		}
 	} else if((strstr(line.c_str(), "is kicking") != NULL) && (strstr(line.c_str(), "because:") != NULL) || 
 		(strstr(line.c_str(), "Hub-Security") != NULL) && (strstr(line.c_str(), "was kicked by") != NULL)) {
 		HubFrame::addLine(line, m_ChatTextServer);
 	} else {
-		speak(ADD_CHAT_LINE, line);
+		speak(ADD_CHAT_LINE, Util::toDOS(line));
 	}
 }
 void HubFrame::on(PrivateMessage, Client*, const User::Ptr& user, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, user, line);
+	speak(PRIVATE_MESSAGE, user, Util::toDOS(line));
 }
 void HubFrame::on(NickTaken, Client*) throw() { 
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));

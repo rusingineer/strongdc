@@ -93,8 +93,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchAlternates)
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + max(targets.size(), WinUtil::lastDirs.size()), onDownloadTarget)
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET_DIR, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onDownloadWithPrio)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED+90, IDC_PRIORITY_HIGHEST+90, onDownloadDirWithPrio)
 		CHAIN_MSG_MAP(baseClass)
@@ -262,7 +262,7 @@ private:
 					switch(col) {
 					case COLUMN_SIZE:
 					case COLUMN_EXACT_SIZE:
-						return compare(a->dir->getSize(), b->dir->getSize());
+						return compare(a->dir->getTotalSize(), b->dir->getTotalSize());
 					default: return Util::stricmp(a->columns[col], b->columns[col]);
 					}
 				} else {

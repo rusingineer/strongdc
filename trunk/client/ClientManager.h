@@ -112,6 +112,9 @@ public:
 	}
 
 	void setIPNick(const string& IP, const string& Nick) {
+		if(IP == Util::emptyString)
+			return;
+
 		ipList[IP] = Nick;
 		getUser(Nick)->setIp(IP);
 	}

@@ -405,8 +405,13 @@ void DownloadManager::on(Command::SND, UserConnection* aSource, const Command& c
 	}
 }
 
+/*class RollbackException : public FileException {
+public:
+	RollbackException (const string& aError) : FileException(aError) { };
+	virtual ~RollbackException() { };
+};
 
-/*template<bool managed>
+template<bool managed>
 class RollbackOutputStream : public OutputStream {
 public:
 	RollbackOutputStream(File* f, OutputStream* aStream, size_t bytes) : s(aStream), pos(0), bufSize(bytes), buf(new u_int8_t[bytes]) {
@@ -426,7 +431,7 @@ public:
 			size_t n = len < (bufSize - pos) ? len : bufSize - pos;
 
 			if(memcmp(buf + pos, wb, n) != 0) {
-				throw FileException(STRING(ROLLBACK_INCONSISTENCY), ResourceManager::ROLLBACK_INCONSISTENCY);
+				throw RollbackException(STRING(ROLLBACK_INCONSISTENCY));
 			}
 			pos += n;
 			if(pos == bufSize) {
@@ -442,8 +447,8 @@ private:
 	size_t pos;
 	size_t bufSize;
 	u_int8_t* buf;
-};
-*/
+};*/
+
 template<bool managed>
 class TigerCheckOutputStream : public OutputStream {
 public:
@@ -733,14 +738,18 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			handleEndData(aSource);
 			aSource->setLineMode();
 		}
+/*	} catch(const RollbackException& e) {
+		string target = d->getTarget();
+		QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);
+		fire(DownloadManagerListener::Failed(), d, e.getError());
 
-
+		d->resetPos();
+		aSource->setDownload(NULL);
+		removeDownload(d, true);
+		removeConnection(aSource);
+		return;*/
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
-/*		if(e.getErrorId() == ResourceManager::ROLLBACK_INCONSISTENCY) {
-			string target = d->getTarget();
-			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY);
-		}*/
 
 		d->resetPos();
 		aSource->setDownload(NULL);
@@ -1008,9 +1017,22 @@ noCRC:
 			}
 			d->setTempTarget(Util::emptyString);
 		} catch(const FileException&) {
-			// Huh??? Now what??? Oh well...let it be...
+			try {
+				if(!SETTING(DOWNLOAD_DIRECTORY).empty()) {
+					File::renameFile(d->getTempTarget(), SETTING(DOWNLOAD_DIRECTORY) + d->getTargetFileName());
+				} else {
+					File::renameFile(d->getTempTarget(), Util::getFilePath(d->getTempTarget()) + d->getTargetFileName());
+		}
+			} catch(const FileException&) {
+				try {
+					File::renameFile(d->getTempTarget(), Util::getFilePath(d->getTempTarget()) + d->getTargetFileName());
+				} catch(const FileException&) {
+					// Ignore...
+	}
+			}
 		}
 	}
+
 	fire(DownloadManagerListener::Complete(), d);
 
 	aSource->setDownload(NULL);
@@ -1131,7 +1153,6 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 
 		Download* old = d;
 		d = d->getOldDownload();
-
 		if(!full) {
 		old->getUserConnection()->setDownload(d);
 		}
@@ -1145,10 +1166,12 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 	}
 
 	if(d->getFile()) {
-		try {
-			d->getFile()->flush();
-		} catch(const Exception&) {
-			finished = false;
+		if(d->getActual() > 0) {
+			try {
+				d->getFile()->flush();
+			} catch(const Exception&) {
+				finished = false;
+			}
 		}
 		delete d->getFile();
 		d->setFile(NULL);

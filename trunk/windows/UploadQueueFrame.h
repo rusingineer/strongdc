@@ -10,6 +10,8 @@
 #include "WinUtil.h"
 #include "../client/UploadManager.h"
 
+#include <atltime.h>
+
 #define UPLOADQUEUE_MESSAGE_MAP 666
 #define SHOWTREE_MESSAGE_MAP 12
 
@@ -130,6 +132,8 @@ private:
 		COLUMN_HUB,
 		COLUMN_TRANSFERRED,
 		COLUMN_SIZE,
+		COLUMN_ADDED,
+		COLUMN_WAITING,
 		COLUMN_LAST
 	};
 
@@ -180,15 +184,15 @@ private:
 	OMenu contextMenu;
 	
 	void onRemoveUser(const string&);
-	void onAddFile(const string&, const string&, const string&, const int, const int);
+	void onAddFile(const string&, const string&, const string&, const int64_t, const int64_t, const int64_t);
 	void onAddFile(const string& /*aNick*/, const string &/*aFile*/);
 
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
 
 	// UploadManagerListener
-	virtual void on(UploadManagerListener::QueueAdd, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size) throw() {
-		onAddFile(aNick, filename, path, pos, size);
+	virtual void on(UploadManagerListener::QueueAdd, const string& aNick, const string& filename, const string& path, const int64_t pos, const int64_t size, const int64_t time) throw() {
+		onAddFile(aNick, filename, path, pos, size, time);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const string& aNick) throw() {
 		onRemoveUser(aNick);

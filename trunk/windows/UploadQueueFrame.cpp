@@ -8,10 +8,10 @@
 #include "UploadQueueFrame.h"
 #include "PrivateFrame.h"
 
-int UploadQueueFrame::columnSizes[] = { 250, 100, 75, 75, 75, 75 };
-int UploadQueueFrame::columnIndexes[] = { COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_TRANSFERRED, COLUMN_SIZE };
+int UploadQueueFrame::columnSizes[] = { 250, 100, 75, 75, 75, 75, 100, 100 };
+int UploadQueueFrame::columnIndexes[] = { COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_TRANSFERRED, COLUMN_SIZE, COLUMN_ADDED, COLUMN_WAITING };
 ResourceManager::Strings UploadQueueFrame::columnNames[] = { ResourceManager::FILENAME, ResourceManager::PATH, ResourceManager::NICK, 
-	ResourceManager::HUB, ResourceManager::TRANSFERRED, ResourceManager::SIZE };
+	ResourceManager::HUB, ResourceManager::TRANSFERRED, ResourceManager::SIZE, ResourceManager::ADDED, ResourceManager::WAITING_TIME };
 
 // Frame creation
 LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -104,7 +104,7 @@ LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::UPLOADQUEUEFRAME_ORDER, 
 			SettingsManager::UPLOADQUEUEFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 
-		MDIDestroy(m_hWnd);
+		bHandled = FALSE;
 		return 0;
 	}
 }
@@ -179,21 +179,30 @@ LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	}
 	// Hit-test
 	if(PtInRect(&rc, pt)) {
-		if(showTree)
+		if(showTree && ctrlQueued.GetSelectedItem() != NULL) {
+			UINT a = 0;
+			HTREEITEM ht = ctrlQueued.HitTest(pt, &a);
+			if(ht != NULL && ht != ctrlQueued.GetSelectedItem())
+				ctrlQueued.SelectItem(ht);
+			else if (ht == NULL)
+				return FALSE;
 			ctrlQueued.ClientToScreen(&pt);
-		else
+			contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			return TRUE;
+		} else if (ctrlList.GetSelectedCount() > 0) {
 			ctrlList.ClientToScreen(&pt);
-	string x = getSelectedNick();
+		string x = getSelectedNick();
 	
-	if(!x.empty())
-		contextMenu.InsertSeparatorFirst(x);
+		if(!x.empty())
+			contextMenu.InsertSeparatorFirst(x);
 
-		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+	
+		if(!x.empty())
+			contextMenu.RemoveFirstItem();
 
-	if(!x.empty())
-		contextMenu.RemoveFirstItem();
-
-		return TRUE; 
+			return TRUE; 
+		}
 	}
 	
 	return FALSE; 
@@ -334,8 +343,21 @@ void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile) {
 	i = j + 1;
 	j = aFile.find('|', i);
 	string size = aFile.substr(i, j-i);
+	i = j + 1;
+	int64_t time = Util::toInt64(aFile.substr(i, aFile.length()-i));
 	entry.push_back(Util::formatBytes(pos)+" ("+Util::toString((double)Util::toInt(pos)*100.0/(double)Util::toInt(size))+"%)");
 	entry.push_back(Util::formatBytes(size));
+	char buf[256];
+	if(ctrlList.GetItemText(n, COLUMN_ADDED, buf, 256) == NULL) {
+		entry.push_back(Util::formatTime("%Y-%m-%d %H:%M:%S", time));
+		entry.push_back(Util::formatSeconds(GET_TIME() - time));
+	} else {
+		entry.push_back(buf);
+		int m, d, Y, H, M, S;
+		sscanf(buf, "%d-%d-%d %d:%d:%d", &Y, &m, &d, &H, &M, &S);
+		CTime t(Y, m, d, H, M, S);
+		entry.push_back(Util::formatSeconds(GET_TIME() - t.GetTime()));
+	}
 	Lock l(cs);
 	ctrlList.SetRedraw(false);
 	if (newEntry) {
@@ -350,7 +372,7 @@ void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile) {
 	ctrlList.SetRedraw(true);
 }
 
-void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile, const string& aPath, const int pos, const int size) {
+void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile, const string& aPath, const int64_t pos, const int64_t size, const int64_t time) {
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
 
 	HTREEITEM selNode = ctrlQueued.GetSelectedItem();
@@ -380,6 +402,17 @@ void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile, const
 				entry.push_back(ClientManager::getInstance()->getUser(aNick)->getLastHubName());
 				entry.push_back(Util::formatBytes(Util::toString(pos))+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");
 				entry.push_back(Util::formatBytes(size));
+				char buf[256];
+				if(ctrlList.GetItemText(n, COLUMN_ADDED, buf, 256) == NULL) {
+					entry.push_back(Util::formatTime("%Y-%m-%d %H:%M:%S", time));
+					entry.push_back(Util::formatSeconds(GET_TIME() - time));
+				} else {
+					entry.push_back(buf);
+					int m, d, Y, H, M, S;
+					sscanf(buf, "%d-%d-%d %d:%d:%d", &Y, &m, &d, &H, &M, &S);
+					CTime t(Y, m, d, H, M, S);
+					entry.push_back(Util::formatSeconds(GET_TIME() - t.GetTime()));
+				}
 				Lock l(cs);
 				ctrlList.SetRedraw(false);
 				if (newEntry) {
@@ -409,6 +442,8 @@ void UploadQueueFrame::onAddFile(const string& aNick, const string& aFile, const
 			entry.push_back(ClientManager::getInstance()->getUser(aNick)->getLastHubName());
 			entry.push_back(Util::formatBytes(Util::toString(pos))+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");
 			entry.push_back(Util::formatBytes(size));
+			entry.push_back(Util::formatTime("%Y-%m-%d %H:%M:%S", time));
+			entry.push_back(Util::formatSeconds(GET_TIME() - time));
 			Lock l(cs);
 			ctrlList.SetRedraw(false);
 			ctrlList.insert(NULL, entry, WinUtil::getIconIndex(aFile), NULL);

@@ -25,7 +25,7 @@
 class AdcHub;
 class ClientManager;
 
-class AdcHub : public Client, CommandHandler<AdcHub> {
+class AdcHub : public Client, public CommandHandler<AdcHub> {
 public:
 
 	virtual void connect(const User* user);
@@ -45,7 +45,7 @@ public:
 	virtual int getUserCount() const { return 0;};
 	virtual int64_t getAvailable() const { return 0; };
 	virtual const string& getName() const { return (hub ? hub->getNick() : getAddressPort()); };
-	virtual bool getOp() const { return false;};
+	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
 
 	virtual User::NickMap& lockUserList() { return nickMap; };
 	virtual void unlockUserList() { };
@@ -60,6 +60,7 @@ public:
 	void handle(Command::GPA, Command& c) throw();
 	void handle(Command::QUI, Command& c) throw();
 
+	virtual string escape(string const& str) const { return Command::escape(str); };
 	void refreshUserList(bool unknownOnly /* = false */) {
 	}
 

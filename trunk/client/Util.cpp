@@ -24,6 +24,7 @@
 #include "SettingsManager.h"
 #include "ResourceManager.h"
 #include "StringTokenizer.h"
+#include "SettingsManager.h"
 
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -225,6 +226,18 @@ string Util::validateFileName(string tmp) {
 		i += 2;
 	}
 	return tmp;
+}
+
+string Util::getShortTimeString() {
+	char buf[255];
+	time_t _tt = time(NULL);
+	tm* _tm = localtime(&_tt);
+	if(_tm == NULL) {
+		strcpy(buf, "xx:xx");
+	} else {
+		strftime(buf, 254, SETTING(TIME_STAMPS_FORMAT).c_str(), _tm);
+	}
+	return buf;
 }
 
 /**
@@ -798,6 +811,29 @@ string Util::getIpCountry (string IP) {
 	}
 
 	return Util::emptyString; //if doesn't returned anything already, something is wrong...
+}
+
+string Util::toDOS(const string& tmp) {
+	if(tmp.empty())
+		return Util::emptyString;
+
+	string tmp2(tmp);
+
+	if(tmp2[0] == '\r' && (tmp2.size() == 1 || tmp2[1] != '\n')) {
+		tmp2.insert(1, "\n");
+	}
+	for(string::size_type i = 1; i < tmp2.size() - 1; ++i) {
+		if(tmp2[i] == '\r' && tmp2[i+1] != '\n') {
+			// Mac ending
+			tmp2.insert(i+1, "\n");
+			i++;
+		} else if(tmp2[i] == '\n' && tmp2[i-1] != '\r') {
+			// Unix encoding
+			tmp2.insert(i, "\r");
+			i++;
+		}
+	}
+	return tmp2;
 }
 
 bool safestring::_CorrectFindPos(const string &InStr, string::size_type &pos)

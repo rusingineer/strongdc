@@ -433,7 +433,9 @@ void PrivateFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	}
 	addClientLine(CSTRING(LAST_CHANGE) + Util::getTimeString());
 
-	setDirty();
+	if (BOOLSETTING(TAB_DIRTY)) {
+		setDirty();
+	}
 }
 
 LRESULT PrivateFrame::onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

@@ -423,6 +423,9 @@
 				RelativePath=".\windows\LineDlg.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\MagnetDlg.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\main.cpp">
 			</File>
 			<File

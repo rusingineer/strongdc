@@ -69,7 +69,7 @@ public:
 	virtual void on(Tick, const Upload::List&) throw() { };
 	virtual void on(Complete, Upload*) throw() { };
 	virtual void on(Failed, Upload*, const string&) throw() { };
-	virtual void on(QueueAdd, const string&, const string &, const string &, const int64_t, const int64_t) throw() { };
+	virtual void on(QueueAdd, const string&, const string &, const string &, const int64_t, const int64_t, const int64_t) throw() { };
 	virtual void on(QueueRemove, const string&) throw() { };
 
 };
