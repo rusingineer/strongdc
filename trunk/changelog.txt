@@ -5,6 +5,8 @@
 * pøidán prùmìrný share na uživatele (THX Corvik)
 * pøidán webserver (PhantomDC++, THX Chmelic za rozhraní)
 * opraven pád pøi spuštìní na starých Windows (THX Prologic)
+* vrácena historie zpráv pøi kopnutí
+* opraven pád pøi znovuvložení zdroje
 
 
 	-- StrongDC++ 1.00 RC8 --

@@ -102,7 +102,6 @@ private:
 	typedef hash_map <const char *, WebPageInfo*, hash<const char *>, eqstr> WebPages;
 	WebPages pages;
 
-	string getPages();
 	string getDLQueue();
 	string getULQueue();
 	string getFinished(bool);

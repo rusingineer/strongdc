@@ -190,8 +190,8 @@ public:
 			value = 10;
 		}
 
-		if((key == MAX_SOURCES) && (value > 100)) {
-			value = 100;
+		if((key == MAX_SOURCES) && (value > 500)) {
+			value = 500;
 		}
 
 		if((key == MAX_UPLOAD_SPEED_LIMIT_NORMAL) && (value > 0)) {

@@ -152,7 +152,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		PlaySound(SETTING(SOUND_EXC).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	CExceptionDlg dlg;
-	iLastExceptionDlgResult = dlg.DoModal(WinUtil::mainWnd);
+	iLastExceptionDlgResult = dlg.DoModal(NULL);
 	ExceptionFunction();
 
 #ifndef _DEBUG
