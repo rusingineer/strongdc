@@ -42,12 +42,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO /NODEFAULTLIB:MSVCRTD /SAFESEH:NO"
+				AdditionalOptions="/FIXED:NO /SAFESEH:NO /NODEFAULTLIB:MSVCRTD /NODEFAULTLIB:LIBCMT"
 				AdditionalDependencies="comctl32.lib Ws2_32.lib winmm.lib"
 				OutputFile=".\Compiled/StrongDC.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="LIBCMT.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Compiled/StrongDC.pdb"
 				SubSystem="2"
@@ -114,7 +113,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
+				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
 				AdditionalDependencies="comctl32.lib Ws2_32.lib shlwapi.lib delayimp.lib winmm.lib"
 				OutputFile="./Compiled/StrongDC.exe"
 				Version=""

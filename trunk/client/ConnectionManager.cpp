@@ -236,6 +236,10 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					cqi->setState(ConnectionQueueItem::WAITING);
 				}
 			} else if(((cqi->getLastAttempt() + 50*1000) < aTick) && (cqi->getState() == ConnectionQueueItem::CONNECTING)) {
+				User::Ptr& user = cqi->getUser();
+				if (user) {
+					user->connectionTimeout();
+				}			
 				fire(ConnectionManagerListener::Failed(), cqi, STRING(CONNECTION_TIMEOUT));
 				cqi->setState(ConnectionQueueItem::WAITING);
 			}

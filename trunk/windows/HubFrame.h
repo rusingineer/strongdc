@@ -43,8 +43,9 @@
 #endif
 
 #define EDIT_MESSAGE_MAP 10		// This could be any number, really...
-#define EDIT_FILTER_MAP 11		//oDC: This could be any number, really...
-
+// CDM EXTENSION BEGINS (fulDC)
+#define FILTER_MESSAGE_MAP 8
+// CDM EXTENSION ENDS
 struct CompareItems;
 
 class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF>, private ClientListener, 
@@ -120,15 +121,10 @@ public:
 		MESSAGE_HANDLER(WM_KEYUP, onChar)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowUsers)
 		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, onLButton)
-	ALT_MSG_MAP(EDIT_FILTER_MAP)
+	ALT_MSG_MAP(FILTER_MESSAGE_MAP)
 		MESSAGE_HANDLER(WM_CTLCOLORLISTBOX, onCtlColor)
 		MESSAGE_HANDLER(WM_KEYUP, onFilterChar)
-		MESSAGE_HANDLER(WM_KEYDOWN, onFilterCharDown)
-		COMMAND_CODE_HANDLER(CBN_SELCHANGE, onFilterByChange)
-		MESSAGE_HANDLER(WM_CLEAR, onFilterClipboard)
-		MESSAGE_HANDLER(WM_COPY, onFilterClipboard)
-		MESSAGE_HANDLER(WM_CUT, onFilterClipboard)
-		MESSAGE_HANDLER(WM_PASTE, onFilterClipboard)
+		COMMAND_CODE_HANDLER(CBN_SELCHANGE, onSelChange)
 	END_MSG_MAP()
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
@@ -172,12 +168,8 @@ public:
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
-	LRESULT onFilterChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
-	LRESULT onFilterCharDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
-	LRESULT onFilterByChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled);
-	LRESULT onFilterClipboard(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	bool findListChild(const vector<string>& sl, const string& s);
-	bool findListChild(const vector<string>& sl, const int64_t& inr);
+	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const string& aLine);
 	void addClientLine(const string& aLine, bool inChat = true);
@@ -187,7 +179,6 @@ public:
 	void onTab();
 	void runUserCommand(::UserCommand& uc);
 
-	void updateEntireUserList();
 		
 	static void openWindow(const string& server, const string& nick = Util::emptyString, const string& password = Util::emptyString, const string& description = Util::emptyString
 		, const string& rawOne = Util::emptyString
@@ -241,7 +232,7 @@ public:
 		string param = u->getNick();
 			addLine("*** Info on " + param + " ***" + "\r\n" + u->getReport() + "\r\n" );
 	}
-	void getUserResponses(User::Ptr& u);
+	void getUserResponses(User::Ptr& u, bool checkList = false);
 	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
@@ -324,12 +315,10 @@ public:
 	NOTIFYICONDATA pmicon;
 
 public:
-	TypedListViewCtrlCleanup<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
+	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
 
 	friend class PrivateFrame;
-	StringTokenizer stFilter;
-	int iFilterBySel;
 	
 	enum Speakers { UPDATE_USER, UPDATE_USERS, REMOVE_USER, ADD_CHAT_LINE,
 		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
@@ -361,11 +350,10 @@ private:
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
 		ctrlMessageContainer("edit", this, EDIT_MESSAGE_MAP), 
-		ctrlFilterContainer("edit", this, EDIT_FILTER_MAP),  //oDC
-		ctrlFilterByContainer("COMBOBOX", this, EDIT_FILTER_MAP),  //oDC
 		showUsersContainer("BUTTON", this, EDIT_MESSAGE_MAP),
-		clientContainer("edit", this, EDIT_MESSAGE_MAP)
-		, stFilter("")
+		clientContainer("edit", this, EDIT_MESSAGE_MAP),
+		ctrlFilterContainer("edit", this, FILTER_MESSAGE_MAP),
+		ctrlFilterSelContainer("COMBOBOX", this, FILTER_MESSAGE_MAP)
 	{
 		client = ClientManager::getInstance()->getClient(aServer);
 		client->setMe(ClientManager::getInstance()->getUser(aNick.empty() ? SETTING(NICK) : aNick, client, false)); 
@@ -426,10 +414,39 @@ private:
 	Client* client;
 	string server;
 	CContainedWindow ctrlMessageContainer;
-	CContainedWindow ctrlFilterContainer;  //oDC
-	CContainedWindow ctrlFilterByContainer;  //oDC
 	CContainedWindow clientContainer;
 	CContainedWindow showUsersContainer;
+	// CDM EXTENSION BEGINS (fulDC)
+//	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
+//	typedef UserMap::iterator UserMapIter;
+//	UserMap userMap;
+
+	CContainedWindow ctrlFilterContainer;
+	CContainedWindow ctrlFilterSelContainer;
+	string filter;
+	//typedef list< UserInfo* > FilterList;
+	typedef multimap< string, UserInfo* > UserMap;
+	typedef pair< string, UserInfo* > UserPair;
+	UserMap usermap; //save all userinfo items that don't match the filter here
+	CEdit ctrlFilter;
+	CComboBox ctrlFilterSel;
+	void removeUser(const User::Ptr& u);
+	void updateUserList();
+
+	void clearUserList() {
+		{
+			Lock l(updateCS);
+			updateList.clear();
+		}
+
+		UserMap::iterator i = usermap.begin();
+		for(; i != usermap.end(); ++i)
+			delete i->second;
+
+		usermap.clear();
+		ctrlUsers.DeleteAllItems();
+	}
+	// CDM EXTENSION ENDS
 
 	OMenu copyMenu;
 	OMenu grantMenu;
@@ -439,9 +456,7 @@ private:
 	CButton ctrlShowUsers;
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;
-	CEdit ctrlFilter;  //oDC
-	CComboBox ctrlFilterBy;  //oDC
-	typedef TypedListViewCtrlCleanup<UserInfo, IDC_USERS> CtrlUsers;
+	typedef TypedListViewCtrl<UserInfo, IDC_USERS> CtrlUsers;
 	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
 
@@ -453,10 +468,7 @@ private:
 	
 	typedef vector<pair<User::Ptr, Speakers> > UpdateList;
 	typedef UpdateList::iterator UpdateIter;
-	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
-	typedef UserMap::iterator UserMapIter;
 
-	UserMap userMap;
 	UpdateList updateList;
 	CriticalSection updateCS;
 	bool updateUsers;
@@ -485,15 +497,6 @@ private:
 	void addAsFavorite();
 
 	bool getUserInfo() { return ShowUserList;/*ctrlShowUsers.GetCheck() == BST_CHECKED;*/ }
-
-	void clearUserList() {
-		{
-			Lock l(updateCS);
-			updateList.clear();
-		}
-		userMap.clear();
-		ctrlUsers.DeleteAll();
-	}
 
 	void updateStatusBar() {
 		if(m_hWnd)

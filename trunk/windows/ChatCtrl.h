@@ -47,7 +47,7 @@ public:
 
 	void GoToEnd();
 	void SetAutoScroll( bool boAutoScroll );
-	void SetUsers( TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *pUsers = NULL );
+	void SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL );
 	void SetTextStyleMyNick( CHARFORMAT2 ts ) { m_TextStyleMyNick = ts; };
 
 protected:
@@ -64,7 +64,7 @@ protected:
 	CHARFORMAT2 m_TextStyleFavUsers;
 	CHARFORMAT2 m_TextStyleOPUsers;
 	
-	TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *m_pUsers;
+	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
 	bool m_boAutoScroll, bMyMessage, boOK, boAtTheEnd, bRedrawControl, isOP, myMess;
 	char *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen, line, iFindBegin, iBegin, iEnd1, iEnd2, iCRLF, iCRLF_Len, len, smiles, maxsmiles, 

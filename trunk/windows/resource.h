@@ -403,6 +403,7 @@
 #define IDC_SEGMENT4                    1236
 #define IDC_CLIENT_RAW_5                1236
 #define IDC_MOVE_CLIENT_DOWN            1236
+#define IDC_CLIENT_CONNECTION           1236
 #define IDC_SEGMENT6                    1237
 #define IDC_REMOVE_CLIENT               1237
 #define IDC_SEGMENT8                    1238
@@ -413,6 +414,7 @@
 #define IDC_MAX_SEGMENT_SPEED           1242
 #define IDC_CLIENT_CHEATING_DESCRIPTION 1243
 #define IDC_SEGMENT6_MAX                1244
+#define IDC_COMMENT                     1244
 #define IDC_STATIC8                     1245
 #define IDC_MAXCOMPRESS                 1246
 #define IDC_MAX_COMPRESSION             1247
@@ -444,6 +446,7 @@
 #define IDC_SOUNDLIST                   1263
 #define IDC_EMULATION                   1264
 #define IDC_UPDATE_URL                  1264
+#define IDC_REGEXP_TESTER_TEXT          1264
 #define IDC_CLIENT_EMU                  1265
 #define IDC_GETIP                       1266
 #define IDC_USERLIST_IMAGE              1267
@@ -458,6 +461,15 @@
 #define IDC_ALTERNATE_COLOR             1277
 #define IDC_FAKE_BOOLEANS               1278
 #define IDC_MINUTES                     1279
+#define IDC_CLIPBOARD_ONE               1282
+#define IDC_CLIPBOARD_TWO               1283
+#define IDC_CLIPBOARD_THREE             1284
+#define IDC_CLIPBOARD_FOUR              1285
+#define IDC_CLIPBOARD_FIVE              1286
+#define IDC_CLIPBOARD_SIX               1287
+#define IDC_REGEXP_TESTER_BUTTON        1288
+#define IDC_CLIENT_PROFILE_RAW          1295
+#define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447

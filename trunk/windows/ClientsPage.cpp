@@ -25,6 +25,7 @@ PropPage::TextItem ClientsPage::texts[] = {
 };
 
 PropPage::Item ClientsPage::items[] = {
+	{ IDC_UPDATE_URL, SettingsManager::UPDATE_URL, PropPage::T_STR }, 
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -39,17 +40,15 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlProfiles.GetClientRect(rc);
 
 	ctrlProfiles.InsertColumn(0, CSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 2, 0);
-	ctrlProfiles.InsertColumn(1, CSTRING(SETTINGS_CLIENT_VER), LVCFMT_LEFT, rc.Width() / 2, 1);
+	ctrlProfiles.InsertColumn(1, "Comment", LVCFMT_LEFT, rc.Width() / 2, 1);
 
 	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-
-	SetDlgItemText(IDC_UPDATE_URL, SETTING(UPDATE_URL).c_str());
 
 	c.addListener(this);
 
 	// Do specialized reading here
 	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
-	//StringList cols;
+
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
@@ -60,6 +59,7 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 	ClientProfileDlg dlg;
+	dlg.currentProfileId = -1;
 
 	if(dlg.DoModal() == IDOK) {
 		addEntry(HubManager::getInstance()->addClientProfile(
@@ -77,7 +77,9 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 			dlg.rawToSend, 
 			dlg.tagVersion, 
 			dlg.useExtraVersion,
-			dlg.checkMismatch
+			dlg.checkMismatch,
+			dlg.connection,
+			dlg.comment
 			), ctrlProfiles.GetItemCount());
 		
 	}
@@ -87,47 +89,42 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 	if(ctrlProfiles.GetSelectedCount() == 1) {
 		int sel = ctrlProfiles.GetSelectedIndex();
-		ClientProfile cp;
-		HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(sel), cp);
 		
 		ClientProfileDlg dlg;
-		
-		dlg.name = cp.getName();
-		dlg.version = cp.getVersion();
-		dlg.tag = cp.getTag();
-		dlg.extendedTag = cp.getExtendedTag();
-		dlg.lock = cp.getLock();
-		dlg.pk = cp.getPk();
-		dlg.supports = cp.getSupports();
-		dlg.testSUR = cp.getTestSUR();
-		dlg.userConCom = cp.getUserConCom();
-		dlg.status = cp.getStatus();
-		dlg.cheatingDescription = cp.getCheatingDescription();
-		dlg.rawToSend = cp.getRawToSend();
-		dlg.tagVersion = cp.getTagVersion();
-		dlg.useExtraVersion = cp.getUseExtraVersion();
-		dlg.checkMismatch = cp.getCheckMismatch();
+
+		dlg.currentProfileId = ctrlProfiles.GetItemData(sel);
 
 		if(dlg.DoModal() == IDOK) {
-			ctrlProfiles.SetItemText(sel, 0, dlg.name.c_str());
-			ctrlProfiles.SetItemText(sel, 1, dlg.version.c_str());
-			cp.setName(dlg.name);
-			cp.setVersion(dlg.version);
-			cp.setTag(dlg.tag);
-			cp.setExtendedTag(dlg.extendedTag);
-			cp.setLock(dlg.lock);
-			cp.setPk(dlg.pk);
-			cp.setSupports(dlg.supports);
-			cp.setTestSUR(dlg.testSUR);
-			cp.setUserConCom(dlg.userConCom);
-			cp.setStatus(dlg.status);
-			cp.setCheatingDescription(dlg.cheatingDescription);
-			cp.setRawToSend(dlg.rawToSend);
-			cp.setTagVersion(dlg.tagVersion);
-			cp.setUseExtraVersion(dlg.useExtraVersion);
-			cp.setCheckMismatch(dlg.checkMismatch);
-			HubManager::getInstance()->updateClientProfile(cp);
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, dlg.name.c_str());
+			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, dlg.version.c_str());
+			dlg.currentProfile.setName(dlg.name);
+			dlg.currentProfile.setVersion(dlg.version);
+			dlg.currentProfile.setTag(dlg.tag);
+			dlg.currentProfile.setExtendedTag(dlg.extendedTag);
+			dlg.currentProfile.setLock(dlg.lock);
+			dlg.currentProfile.setPk(dlg.pk);
+			dlg.currentProfile.setSupports(dlg.supports);
+			dlg.currentProfile.setTestSUR(dlg.testSUR);
+			dlg.currentProfile.setUserConCom(dlg.userConCom);
+			dlg.currentProfile.setStatus(dlg.status);
+			dlg.currentProfile.setCheatingDescription(dlg.cheatingDescription);
+			dlg.currentProfile.setRawToSend(dlg.rawToSend);
+			dlg.currentProfile.setTagVersion(dlg.tagVersion);
+			dlg.currentProfile.setUseExtraVersion(dlg.useExtraVersion);
+			dlg.currentProfile.setCheckMismatch(dlg.checkMismatch);
+			dlg.currentProfile.setConnection(dlg.connection);
+			dlg.currentProfile.setComment(dlg.comment);
+			HubManager::getInstance()->updateClientProfile(dlg.currentProfile);
 		}
+		ctrlProfiles.SetRedraw(FALSE);
+		ctrlProfiles.DeleteAllItems();
+		ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
+		for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
+			ClientProfile& cp = *j;	
+			addEntry(cp, ctrlProfiles.GetItemCount());
+		}
+		ctrlProfiles.SelectItem(sel);
+		ctrlProfiles.SetRedraw(TRUE);
 	}
 	return 0;
 }
@@ -185,17 +182,43 @@ LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
-LRESULT ClientsPage::onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+//LRESULT ClientsPage::onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+//	return 0;
+//}
+
+LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	int item = ctrlProfiles.GetHotItem();
+	if(item != -1) {
+		NMLVGETINFOTIP* lpnmtdi = (NMLVGETINFOTIP*) pnmh;
+		ClientProfile cp;
+
+		HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(item), cp);
+
+		string infoTip = "Name: " + cp.getName() +
+			"\r\nComment: " + cp.getComment() +
+			"\r\nCheating description: " + cp.getCheatingDescription();
+			"\r\nRaw command: ";
+
+		strcpy(lpnmtdi->pszText, infoTip.c_str());
+	}
 	return 0;
 }
 
 void ClientsPage::reload() {
 	ctrlProfiles.SetRedraw(FALSE);
-	int s = HubManager::getInstance()->getProfileListSize();
-	for(int i = 0; i < s; i++) {
-		ctrlProfiles.DeleteItem(0);
-	}
+	ctrlProfiles.DeleteAllItems();
 	ClientProfile::List lst = HubManager::getInstance()->reloadClientProfiles();
+	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
+		ClientProfile& cp = *j;	
+		addEntry(cp, ctrlProfiles.GetItemCount());
+	}
+	ctrlProfiles.SetRedraw(TRUE);
+}
+
+void ClientsPage::reloadFromHttp() {
+	ctrlProfiles.SetRedraw(FALSE);
+	ctrlProfiles.DeleteAllItems();
+	ClientProfile::List lst = HubManager::getInstance()->reloadClientProfilesFromHttp();
 	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
 		ClientProfile& cp = *j;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
@@ -207,15 +230,12 @@ void ClientsPage::addEntry(const ClientProfile& cp, int pos) {
 	StringList lst;
 
 	lst.push_back(cp.getName());
-	lst.push_back(cp.getVersion());
+	lst.push_back(cp.getComment());
 	ctrlProfiles.insert(pos, lst, 0, (LPARAM)cp.getId());
 }
 
 void ClientsPage::write() {
-	char buf[512];
-	GetDlgItemText(IDC_UPDATE_URL, buf, 512);
-	SettingsManager::getInstance()->set(SettingsManager::UPDATE_URL, buf);
-	HubManager::getInstance()->save();
+	HubManager::getInstance()->saveClientProfiles();
 	PropPage::write((HWND)*this, items);
 }
 /**

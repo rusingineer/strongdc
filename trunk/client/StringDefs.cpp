@@ -717,7 +717,7 @@ string ResourceManager::strings[] = {
 "Segment", 
 "Max number of segments", 
 "Disabled",
-"Downloading TTH leaf..."
+"Downloading TTH tree..."
 "No free block",
 };
 string ResourceManager::names[] = {

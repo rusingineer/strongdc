@@ -88,7 +88,8 @@ public:
 		FLAG_XML_BZLIST = 0x200,
 		/** MP3 Info */
 		FLAG_MP3_INFO = 0x400,
-		FLAG_TESTSUR = 0x800
+		FLAG_TESTSUR = 0x800,
+		FLAG_CHECK_FILE_LIST = 0x1000
 	};
 
 	class Source : public Flags, public FastAlloc<Source> {
@@ -192,7 +193,7 @@ public:
 	}
 
 	void addActiveSegment(const User::Ptr& aUser) {
-		dcassert(isSource(aUser));
+		if(!isSource(aUser)) return;
 		activeSegments.push_back(*getSource(aUser));
 	}
 

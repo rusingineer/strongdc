@@ -36,8 +36,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_MOVE_CLIENT_DOWN, onMoveClientDown)
 		COMMAND_ID_HANDLER(IDC_RELOAD_CLIENTS, onReload)
 		COMMAND_ID_HANDLER(IDC_UPDATE, onUpdate)
-		MESSAGE_HANDLER(WM_PROFILE, onProfileData)
 		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, BN_DOUBLECLICKED, onDblClick)
+		NOTIFY_HANDLER(IDC_CLIENT_ITEMS, LVN_GETINFOTIP, onInfoTip)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
@@ -49,12 +49,12 @@ public:
 	LRESULT onMoveClientDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onReload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	//LRESULT onProfileData(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 
-	LRESULT onDblClick(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& bHandled) {
+	LRESULT onDblClick(int idCtrl, LPNMHDR /* pnmh */, BOOL& bHandled) {
 		return onChangeClient(0, 0, 0, bHandled);
 	}
-
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	virtual void write();
@@ -80,7 +80,7 @@ private:
 			f.close();
 			File::deleteFile(fname);
 			File::renameFile(fname + ".tmp", fname);
-			reload();
+				reloadFromHttp();
 			MessageBox("Client profiles now updated.", "Updated", MB_OK);
 		}
 	}
@@ -92,8 +92,8 @@ private:
 			MessageBox(msg.c_str(), "Failed", MB_OK);
 		}
 	}
-
 	void reload();
+	void reloadFromHttp();
 
 	HttpConnection c;
 	string downBuf;

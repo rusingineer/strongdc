@@ -198,7 +198,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 						User::NickIter ni = users.find(strtok(seeker+4, "\0"));
 						if(ni != users.end() && !ni->second->isSet(User::PASSIVE)) {
 							u = ni->second;
-							u->setFlag(User::PASSIVE);
+							u->setPassive();
+							//u->setFlag(User::PASSIVE);
 					}
 				}
 
@@ -405,7 +406,8 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 			u = i->second;
 			if(!u->isSet(User::PASSIVE)) {
-				u->setFlag(User::PASSIVE);
+				//u->setFlag(User::PASSIVE);
+				u->setPassive();
 				up = true;
 			}
 		}

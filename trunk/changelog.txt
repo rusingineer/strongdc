@@ -37,6 +37,8 @@
 * opraveno naèítání RAW pøíkazù
 * nìkolik novinek a zmìn z CZDC++
 * pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
+* opraveno importování tématu
+* pøedìlán userfilter (fulDC)
 
 
 	-- StrongDC++ 1.00 RC6 Pre-final --

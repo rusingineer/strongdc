@@ -35,7 +35,7 @@ ChatCtrl::~ChatCtrl() {
 	delete[] afterAppendText;
 }
 
-void ChatCtrl::SetUsers( TypedListViewCtrlCleanup<UserInfo, IDC_USERS> *pUsers ) {
+void ChatCtrl::SetUsers( TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers ) {
 	m_pUsers = pUsers;
 }
 

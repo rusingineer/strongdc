@@ -96,13 +96,33 @@ public:
 			Util::emptyString, true);
 	}
 
-	void addTestSUR(User::Ptr aUser) throw(QueueException, FileException) {
+	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR"+aUser->getNick();
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
-		add(fileName, -1, aUser, file, NULL, Util::emptyString, QueueItem::FLAG_TESTSUR);
-		//aUser->uncacheClientInfo();
+		add(fileName, -1, aUser, file, NULL, Util::emptyString, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR, QueueItem::HIGHEST);
+		//aUser->unCacheClientInfo();
 	}
 
+/*	void removeOfflineChecks() {
+		Lock l(cs);
+		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
+			if( i->second->getTargetFileName().find("TestSUR") != string::npos || i->second->isSet(QueueItem::FLAG_CHECK_FILE_LIST) ) {
+				if( !(i->second->hasOnlineUsers()) ) {
+					remove(i->second->getTarget());
+				}
+			}
+		}
+	}*/
+	void removeTestSUR(const string& aNick) {
+		Lock l(cs);
+		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
+			if( i->second->getTargetFileName().find("TestSUR" + aNick) != string::npos ) {
+				remove(i->second->getTarget());
+				return;
+			}
+		}
+		return;
+	}
 	/** Readd a source that was removed */
 	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
 

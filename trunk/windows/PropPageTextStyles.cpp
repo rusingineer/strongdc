@@ -560,18 +560,17 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	xml.resetCurrentChild();
 	if(xml.findChild("TextSearchItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SEARCH_ITALIC,xml.getChildData());}
 	xml.resetCurrentChild();*/
-
-	PostMessage(WM_DESTROY,0,0);
-	SettingsManager::getInstance()->save();
-	PropertiesDlg::needUpdate = true;
-	PostMessage(WM_INITDIALOG,0,0);
-
 		}
 	xml.resetCurrentChild();
 	xml.stepOut();
 	}
 
-	RefreshPreview();
+	SendMessage(WM_DESTROY,0,0);
+	SettingsManager::getInstance()->save();
+	PropertiesDlg::needUpdate = true;
+	SendMessage(WM_INITDIALOG,0,0);
+
+//	RefreshPreview();
 	return 0;
 }
 

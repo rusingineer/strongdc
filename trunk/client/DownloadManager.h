@@ -32,6 +32,8 @@
 #include "ZUtils.h"
 #include "MerkleTree.h"
 
+#include "LogManager.h"
+
 class QueueItem;
 class ConnectionQueueItem;
 
@@ -60,13 +62,27 @@ public:
 		FLAG_TESTSUR = 0x400,
 		FLAG_TTH_OK = 0x800,
 		FLAG_MP3_INFO = 0x1000,
-		FLAG_NOSEGMENTS = 0x2000
+		FLAG_CHECK_FILE_LIST = 0x2000,
+		FLAG_SEGMENT_STARTED = 0x4000
 	};
 
 	Download() throw();
 	Download(QueueItem* qi, User::Ptr& aUser) throw();
 
 	virtual ~Download() {
+
+		if(isSet(Download::FLAG_SEGMENT_STARTED)) {
+			string log = Util::toString(getStartPos())+" => ";
+				log += Util::toString(getCurrPos())+" - ";
+				log += userNick+" @ ";
+				log += Util::formatBytes(getRunningAverage())+"/s ";
+				log += isSet(Download::FLAG_TREE_DOWNLOAD) ? "TTH Tree, " : "";
+				log += isSet(Download::FLAG_ZDOWNLOAD) ? "GetZBlock, " : "";
+				log += treeValid ? "TTHL, " : "";
+				log += getTTH() ? "TTH: "+getTTH()->toBase32() : "TTH: None";
+			LogManager::getInstance()->log(getTargetFileName()+".segment",log);
+		}
+
 		FileDataInfo* lpFileDataInfo = FileDataInfo::GetFileDataInfo(tempTarget);
 		if(lpFileDataInfo)
 			lpFileDataInfo->PutUndlStart(getPos());
@@ -82,7 +98,7 @@ public:
 	};
 
 	void addPos(int64_t aPos, int64_t actual) {
-
+		setFlag(Download::FLAG_SEGMENT_STARTED);
 		FileDataInfo* lpFileDataInfo = FileDataInfo::GetFileDataInfo(tempTarget);
 		if(lpFileDataInfo){
 			int iRet = lpFileDataInfo->ValidBlock(getPos(), NULL, aPos);
@@ -138,6 +154,7 @@ public:
 	}
 
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
+	GETSET(string, userNick, UserNick);
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
@@ -147,6 +164,7 @@ public:
 	GETSET(Download*, oldDownload, OldDownload);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(int, maxSegmentsInitial, MaxSegmentsInitial);
+	GETSET(int64_t, currPos, CurrPos);
 	int64_t bytesLeft;
 	int64_t quickTick;
 	bool finished;

@@ -26,6 +26,8 @@
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
 #include "HubManager.h"
+#include "QueueManager.h"
+
 int64_t ClientManager::quickTick = 0;
 
 #include "AdcHub.h"
@@ -244,6 +246,8 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 		aUser->unsetFlag(User::AWAY);
 		aUser->unsetFlag(User::SERVER);
 		aUser->unsetFlag(User::FIREBALL);
+		QueueManager::getInstance()->removeTestSUR(aUser->getNick());
+		aUser->unCacheClientInfo();
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);
 		aUser->setClient(NULL);
