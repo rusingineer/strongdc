@@ -273,13 +273,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 
 			}
 			CloseHandle(hFile);
-			string MP3infotag;
-			MP3infotag = 
-				"Verze MP3 : "+MPEGVer+" Verze "+Util::toString(m_nMPEGLayer)+"\n"+
-				"Frekvence : "+Util::toString(m_nSampleRate)+" Hz" +"\n"+
-				"Bitrate   : "+Util::toString(m_nBitRate)+" kbps"+"\n"+
-				"Kanály    : "+m_enChannelMode;
-			//MessageBox(MP3infotag.c_str(),"Informace o MP3",MB_OK);
+	
 			FinishedMP3Item *item = new FinishedMP3Item(
 					d->getTarget(), d->getUserConnection()->getUser()->getNick(),
 					d->getUserConnection()->getUser()->getLastHubName(),
@@ -299,7 +293,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 					d->getUserConnection()->getUser()->getLastHubName(),
 					d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->isSet(Download::FLAG_TTH_OK));
 
-					int64_t totalBytes = item->getChunkSize();
+					int64_t totalBytes = item->getSize();
 					int64_t totalTime = item->getMilliSeconds();
 					d->getUserConnection()->getUser()->setDownloadSpeed((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0 );
 					User::updated(d->getUserConnection()->getUser());

@@ -74,11 +74,11 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)		
 		COMMAND_ID_HANDLER(IDC_READD_ALL_SOURCES,onReaddAll)
+		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnet)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVE_OFFLINE, onRemoveOffline)
 		COMMAND_ID_HANDLER(IDC_MOVE, onMove)
 		COMMAND_ID_HANDLER(IDC_SEARCH_STRING, onSearchString)
-		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnetLink)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onPriority)
 		COMMAND_RANGE_HANDLER(IDC_SEGMENTONE, IDC_SEGMENTTEN, onSegments)
 		COMMAND_RANGE_HANDLER(IDC_BROWSELIST, IDC_BROWSELIST + menuItems, onBrowseList)
@@ -105,6 +105,7 @@ public:
 	LRESULT onReaddAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
@@ -114,7 +115,6 @@ public:
 	LRESULT onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
-	LRESULT onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
@@ -288,11 +288,10 @@ private:
 		}
 		static int compareItems(QueueItemInfo* a, QueueItemInfo* b, int col) {
 			switch(col) {
-				case COLUMN_SIZE: return compare(a->getSize(), b->getSize());
+				case COLUMN_SIZE: case COLUMN_EXACT_SIZE: return compare(a->getSize(), b->getSize());
 				case COLUMN_PRIORITY: return compare((int)a->getPriority(), (int)b->getPriority());
 				case COLUMN_DOWNLOADED: return compare(a->getDownloadedBytes(), b->getDownloadedBytes());
 				case COLUMN_ADDED: return compare(a->getAdded(), b->getAdded());
-				case COLUMN_EXACT_SIZE: return compare(a->getSize(), b->getSize());
 				default: return Util::stricmp(a->getDisplay()->columns[col], b->getDisplay()->columns[col]);
 			}
 		}

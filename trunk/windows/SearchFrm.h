@@ -86,7 +86,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_FREESLOTS, onFreeSlots)
 		COMMAND_ID_HANDLER(IDC_TTHONLY, onTTHOnly)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
-		COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
+		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchByTTH)
+				COMMAND_ID_HANDLER(IDC_BITZI_LOOKUP, onBitziLookup)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
@@ -148,6 +149,7 @@ public:
 	LRESULT onDownloadWholeTarget(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadWholeTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
+	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 

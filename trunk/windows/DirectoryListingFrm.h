@@ -84,15 +84,15 @@ public:
 		COMMAND_ID_HANDLER(IDC_DOWNLOADTO, onDownloadTo)
 		COMMAND_ID_HANDLER(IDC_GO_TO_DIRECTORY, onGoToDirectory)
 		COMMAND_ID_HANDLER(IDC_VIEW_AS_TEXT, onViewAsText)
+		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchAlternates)
+		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
-		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
-		COMMAND_ID_HANDLER(IDC_SEARCH_BY_TTH, onSearchAlternates)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET_DIR, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onDownloadWithPrio)
@@ -123,7 +123,8 @@ public:
 	LRESULT onSelChangedDirectories(int idCtrl, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-			
+	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	
 	void downloadList(const string& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3List(const string& aTarget);
 	void updateTree(DirectoryListing::Directory* tree, HTREEITEM treeItem);
@@ -135,24 +136,11 @@ public:
 		return 0;
 	}
 
-	LRESULT onSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /* bHandled */) {
+	LRESULT onSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlList.SetFocus();
 		return 0;
 	}
 
-	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-		if(!closed) {
-		ctrlList.SetRedraw(FALSE);
-		clearList();
-			closed = true;
-			PostMessage(WM_CLOSE);
-			return 0;
-		} else {
-			bHandled = FALSE;
-			return 0;
-		}
-	}
-	
 	void setWindowTitle() {
 		if(error.empty())
 			SetWindowText(dl->getUser()->getFullNick().c_str());
@@ -234,16 +222,16 @@ private:
 				columns[COLUMN_TYPE].erase(0, 1);
 
 			columns[COLUMN_SIZE] = Util::formatBytes(f->getSize());
-			columns[COLUMN_EXACT_SIZE] = Util::formatNumber(f->getSize());
+			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(f->getSize());
 			if(f->getTTH() != NULL)
                 columns[COLUMN_TTH] = f->getTTH()->toBase32();
 		};
 		ItemInfo(DirectoryListing::Directory* d, bool utf8) : type(DIRECTORY), dir(d) { 
 			columns[COLUMN_FILENAME] = d->getName();
 			if(utf8 && Util::needsAcp(columns[COLUMN_FILENAME]))
-							Util::toAcp(columns[COLUMN_FILENAME]);
+				Util::toAcp(columns[COLUMN_FILENAME]);
 			columns[COLUMN_SIZE] = Util::formatBytes(d->getTotalSize());
-			columns[COLUMN_EXACT_SIZE] = Util::formatNumber(d->getTotalSize());
+			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(d->getTotalSize());
 		};
 
 		const string& getText(int col) {

@@ -889,7 +889,9 @@ again:
 			}
 		}
 
-		dcassert(!q->getTempTarget().empty());
+		if(q->getTempTarget().empty())
+			return NULL;
+
 		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
 
 		if(freeBlock == -1){

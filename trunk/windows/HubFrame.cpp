@@ -806,10 +806,8 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
 	rc.left +=2;
-	// CDM EXTENSION BEGINS (fulDC)
-	//rc.right -=2;
+
 	rc.right -=202;
-	// CDM EXTENSION ENDS
 	ctrlMessage.MoveWindow(rc);
 
 		rc.left = rc.right + 4;
@@ -839,9 +837,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		client->disconnect();
 	
 		closed = true;
-		// CDM EXTENSION BEGINS (fulDC)	
 		clearUserList();
-		// CDM EXTENSION ENDS
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
@@ -2002,6 +1998,12 @@ LRESULT HubFrame::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 	if ( sSelectedIP != "" ) {
  		WinUtil::openLink("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext="+sSelectedIP);
  	}
+	return 0;
+}
+
+LRESULT HubFrame::onSizeMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	bHandled = FALSE;
+	ctrlClient.GoToEnd();
 	return 0;
 }
 

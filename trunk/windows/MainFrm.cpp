@@ -89,10 +89,18 @@ DWORD WINAPI MainFrame::stopper(void* p) {
 	MainFrame* mf = (MainFrame*)p;
 	HWND wnd, wnd2 = NULL;
 
+	DWORD start = ::GetTickCount();
+
 	while( (wnd=::GetWindow(mf->m_hWndMDIClient, GW_CHILD)) != NULL) {
-		if(wnd == wnd2) 
+		if(wnd == wnd2) {
+
+			// if after 30 seconds, it still in memory, it must deadlock, donno why
+			if(::GetTickCount() - start > 60000){
+				dcassert(0);
+				ExitProcess(1);
+			} 
 			Sleep(100);
-		else { 
+		} else { 
 			::PostMessage(wnd, WM_CLOSE, 0, 0);
 			wnd2 = wnd;
 		}
@@ -801,7 +809,7 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		}
 		bHandled = TRUE;
 	} else {
-		// This should end immideately, as it only should be the stopper that sends another WM_CLOSE
+		// This should end immediately, as it only should be the stopper that sends another WM_CLOSE
 		WaitForSingleObject(stopperThread, 60*1000);
 		CloseHandle(stopperThread);
 		stopperThread = NULL;
@@ -977,6 +985,21 @@ LRESULT MainFrame::onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	return 0;
 }
 
+LRESULT MainFrame::onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	UploadQueueFrame::openWindow();
+	return 0;
+}
+
+LRESULT MainFrame::onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+ 	FinishedULFrame::openWindow();
+	return 0;
+}
+
+LRESULT MainFrame::onCloseDisconnected(WORD , WORD , HWND , BOOL& ) {
+	HubFrame::closeDisconnected();
+	return 0;
+}
+
 LRESULT MainFrame::onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	FinishedMP3Frame::openWindow();
 	return 0;
@@ -1006,21 +1029,6 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 		HubFrame::openWindow(tmp);
 	}
-	return 0;
-}
-
-LRESULT MainFrame::onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadQueueFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
- 	FinishedULFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onCloseDisconnected(WORD , WORD , HWND , BOOL& ) {
-	HubFrame::closeDisconnected();
 	return 0;
 }
 
@@ -1101,27 +1109,26 @@ void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const
 }
 
 void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
-		if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
-			if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
-				// This is a file listing, show it...
+	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
+		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
+			// This is a file listing, show it...
 
-				DirectoryListInfo* i = new DirectoryListInfo();
-				i->file = qi->getListName();
-				i->user = qi->getCurrents()[0]->getUser(); 
-				i->start = qi->getSearchString();
+			DirectoryListInfo* i = new DirectoryListInfo();
+			i->file = qi->getListName();
+			i->user = qi->getCurrents()[0]->getUser(); 
+			i->start = qi->getSearchString();
 
-				PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
-			} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
-				PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new string(qi->getTarget()));
-			}
-			} else if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
-				DirectoryListInfo* i = new DirectoryListInfo();
-				i->file = qi->getListName();
-				i->user = qi->getCurrents()[0]->getUser(); 
-				i->start = qi->getSearchString();
-
-				PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
-		}	
+			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
+		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
+			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new string(qi->getTarget()));
+		}
+	} else if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
+		DirectoryListInfo* i = new DirectoryListInfo();
+		i->file = qi->getListName();
+		i->user = qi->getCurrents()[0]->getUser(); 
+		i->start = qi->getSearchString();
+		PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
+	}	
 }
 
 LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -1257,6 +1264,7 @@ LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	SettingsManager::getInstance()->set(SettingsManager::SOUNDS_DISABLED, !BOOLSETTING(SOUNDS_DISABLED));
 	return 0;
 }
+
 /**
  * @file
  * $Id: MainFrm.cpp,v 1.20 2004/07/21 13:15:15 bigmuscle Exp

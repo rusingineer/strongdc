@@ -241,7 +241,7 @@ public:
 		int yPos = GET_Y_LPARAM(lParam); 
 		int row = getRows() - ((yPos / getTabHeight()) + 1);
 
-			bool moveLast = true;
+		bool moveLast = true;
 
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* t = *i;
@@ -257,12 +257,12 @@ public:
 						moveTabs(t, xPos > (t->xpos + (t->getWidth()/2)));
 					}
 				}
-					moveLast = false;
+				moveLast = false;
 				break;
 			}
 		}		
-			if(moveLast)
-				moveTabs(tabs.back(), true);
+		if(moveLast)
+			moveTabs(tabs.back(), true);
 		moving = NULL;	
 		}
 		return 0;

@@ -27,20 +27,18 @@ class Exception
 {
 public:
 	Exception() { };
-	Exception(const string& aError, const int aId = -1) throw() : error(aError), errorId(aId) { dcdrun(if(error.size()>0)) dcdebug("Thrown: %s\n", error.c_str()); };
+	Exception(const string& aError) throw() : error(aError) { dcdrun(if(error.size()>0)) dcdebug("Thrown: %s\n", error.c_str()); };
 	virtual ~Exception() { };
 	virtual const string& getError() const { return error; };
-	virtual const int getErrorId() const { return errorId; };
 protected:
 	string error;
-	int errorId;
 };
 
 #ifdef _DEBUG
 
 #define STANDARD_EXCEPTION(name) class name : public Exception { \
 public:\
-	name(const string& aError, const int aId = -1) throw() : Exception(#name ": " + aError, aId) { }; \
+	name(const string& aError) throw() : Exception(#name ": " + aError) { }; \
 	virtual ~name() { }; \
 }
 
@@ -48,7 +46,7 @@ public:\
 
 #define STANDARD_EXCEPTION(name) class name : public Exception { \
 public:\
-	name(const string& aError, const int aId = -1) throw() : Exception(aError, aId) { }; \
+	name(const string& aError) throw() : Exception(aError) { }; \
 	virtual ~name() { }; \
 }
 #endif

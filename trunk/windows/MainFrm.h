@@ -298,11 +298,6 @@ public:
 		if (b)
 			iCurrentShutdownTime = (unsigned long) (TimerManager::getTick() / 1000);
 		bShutdown = b;
-/*		if (anyMF != NULL) {
-			if (b) { if(!anyMF->ctrlToolbar.IsButtonChecked(IDC_SHUTDOWN)) { anyMF->ctrlToolbar.CheckButton(IDC_SHUTDOWN,true); } }
-			else { if(anyMF->ctrlToolbar.IsButtonChecked(IDC_SHUTDOWN)) {  anyMF->ctrlToolbar.CheckButton(IDC_SHUTDOWN,false); } }
-			anyMF->UpdateLayout();
-		}*/
 	}
 	static bool getShutDown() {
 		return bShutdown;

@@ -29,6 +29,7 @@
 
 #include "../client/ClientManager.h"
 #include "../client/HubManager.h"
+#include "../client/File.h"
 
 class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_USERS>, public StaticFrame<UsersFrame, ResourceManager::FAVORITE_USERS, IDC_FAVUSERS>,
 	private HubManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame> {
@@ -59,6 +60,7 @@ public:
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_EDIT, onEdit)
+		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		CHAIN_MSG_MAP(uibBase)
 		CHAIN_MSG_MAP(baseClass)
 	END_MSG_MAP()
@@ -69,6 +71,7 @@ public:
 	LRESULT onEdit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
+	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(wParam == USER_UPDATED) {
