@@ -44,7 +44,7 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 }
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
-	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL),
+	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
 	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()) { 
 	
 	setSize(qi->getSize());
@@ -76,7 +76,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	throttleZeroCounters();
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-		if((*i)->getTotal() > 0) {
+		if(((*i)->getTotal() > 0) && (!(*i)->finished)) {
 			tickList.push_back(*i);
 		}
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
@@ -622,6 +622,8 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	dcassert(aSource->getState() == UserConnection::STATE_DONE);
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
+	
+	d->finished = true;
 
 	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->getFile()->flush();
@@ -787,16 +789,33 @@ noCRC:
 
 		if(!hashMatch) {		
 		//	File::deleteFile(d->getDownloadTarget());
-			LogManager::getInstance()->message(STRING(DOWNLOAD_CORRUPTED) + " (" + d->getTarget() + ")", true);
+		//	LogManager::getInstance()->message(STRING(DOWNLOAD_CORRUPTED) + " (" + d->getTarget() + ")", true);
 
 			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOAD_CORRUPTED));
 
 			string target = d->getTarget();
-			
+			Download* old = d->getOldDownload();			
+
 			aSource->setDownload(NULL);
-			removeDownload(d);				
 			
-			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+			//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
+
+			for(int i = 10; i>0; --i) {
+				char buf[64];
+				sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
+				fire(DownloadManagerListener::Failed(), d, buf);
+				Sleep(1000);
+			}
+
+			delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
+
+			vector<int64_t> v;
+			v.push_back(0);
+			v.push_back(d->getSize());
+			new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
+
+			removeDownload(d);
+			aSource->setDownload(old);
 			checkDownloads(aSource, true);
 			return;
 		}

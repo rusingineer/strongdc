@@ -2,7 +2,6 @@
 
 * záložky podle CZDC++
 * opraveno zobrazení náhledu v nastavení
-* pøidána volba pro nastavení maximální rychlosti hashování (DC++ 0.402 CVS)
 * automaticky jsou každých 20 sekund odstraòovány pouze zdroje pomalejší než 1kB/s
 * opraven pád pøi pøijímání $MyInfo od RoboCopa
 * zmìna v segmentovém stahování
@@ -43,6 +42,7 @@
 * aktualizováno na WTL 7.5
 * pøidána volba pro zobrazování rychlosti v popisu
 * aktualizováno na STLPort 4.6.2
+* pøi poškozeném souboru je stažení opakováno za 10 sekund
 
 
 	-- StrongDC++ 1.00 RC5 --

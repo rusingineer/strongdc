@@ -24,6 +24,7 @@
 #include "../client/QueueManager.h"
 #include "../client/ConnectionManager.h"
 #include "../client/QueueItem.h"
+#include "../client/FileDataInfo.h"
 
 #include "WinUtil.h"
 #include "TransferView.h"
@@ -447,7 +448,11 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					ii->size = 1;
 
 				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
-					rc.right = rc.left + (int) (((int64_t)rc.Width()) * ii->actual / ii->size);
+					int64_t w = rc.Width();
+
+					if(ii->mainItem)
+						w = rc.Width() * ii->getRatio() + 0.5;
+					rc.right = rc.left + (int) (w * ii->actual / ii->size);
                 
 					COLORREF a, b;
 					OperaColors::EnlightenFlood(clr, a, b);
@@ -579,6 +584,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 			}
 			else {
 				i->upper->columns[COLUMN_USER] = Util::toString(i->upper->pocetUseru)+" "+STRING(HUB_USERS);
+				i->upper->columns[COLUMN_HUB] = Util::toString(i->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
 			}
 		}
 }
@@ -783,7 +789,15 @@ void TransferView::setMainItem(ItemInfo* i) {
 		dcdebug((h->Target+"\n"+h->qi->getTarget()+"\n"+i->upper->Target+"\n"+i->Target+"\n").c_str());
 		if((h->Target) != (i->Target)) {
 			h->pocetUseru -= 1;
-			h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
+
+			if(h->pocetUseru > 1) {
+				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
+				h->columns[COLUMN_HUB] = Util::toString(h->pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
+			} else {
+				h->columns[COLUMN_USER] = h->user->getNick();
+				h->columns[COLUMN_HUB] = h->user->getClientName();
+			}
+
 			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 
 
@@ -841,27 +855,30 @@ void TransferView::ItemInfo::update() {
 		}
 	}
 	if(colMask & MASK_HUB) {
-		if(user != (User::Ptr)NULL) {
-			columns[COLUMN_HUB] = user->getClientName();
-			if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
-				if(upper->pocetUseru == 1) upper->columns[COLUMN_HUB] = user->getClientName();
-					else upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
-			}
+		if(user != (User::Ptr)NULL) columns[COLUMN_HUB] = user->getClientName();
+		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
+			if(upper->pocetUseru == 1) upper->columns[COLUMN_HUB] = user->getClientName();
+				else upper->columns[COLUMN_HUB] = Util::toString(pocetSegmentu)+" "+STRING(NUMBER_OF_SEGMENTS);
 		}
 	}
 	if(colMask & MASK_STATUS) {
 		columns[COLUMN_STATUS] = statusString;
-		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL))
-			upper->columns[COLUMN_STATUS] = upper->statusString;
+		if((type == TYPE_DOWNLOAD) && (!mainItem) && (upper != NULL)) {
+			FileDataInfo* fdi = FileDataInfo::GetFileDataInfo(qi->getTempTarget());
+			if(fdi) {
+				if((!fdi->vecFreeBlocks.empty()) || (!fdi->vecRunBlocks.empty())) {
+					upper->columns[COLUMN_STATUS] = upper->statusString;
+				} else if((upper->statusString == STRING(DOWNLOAD_FINISHED_IDLE)) || (upper->statusString == STRING(UPLOAD_FINISHED_IDLE)) ||
+					(upper->statusString.substr(1,10) == STRING(DOWNLOAD_CORRUPTED).substr(1,10))) {
+					upper->columns[COLUMN_STATUS] = upper->statusString;
+				} 
+			} else upper->columns[COLUMN_STATUS] = upper->statusString;
+		}
 	}
 
 	if (status == STATUS_RUNNING) {
 		if(type == TYPE_DOWNLOAD) {
-			if (pocetSegmentu>=1) {
-				int64_t ZbyvajiciCas;
-				ZbyvajiciCas = (celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0;
-				zc = Util::formatSeconds(ZbyvajiciCas);
-			}
+			zc = Util::formatSeconds((celkovaRychlost > 0) ? ((size - stazenoCelkem) / celkovaRychlost) : 0);
 
 			if(upper != NULL) {
 				upper->status = ItemInfo::STATUS_RUNNING;
@@ -1371,8 +1388,9 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	while( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		string tmp;
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
-		if(ii->qi->getTTH() != NULL) {
-			SearchFrame::openWindow(ii->qi->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+		if(ii->qi != NULL) {
+			if(ii->qi->getTTH() != NULL)
+				SearchFrame::openWindow(ii->qi->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
 		} else {
 			string searchString = SearchManager::clean(ii->file);
 			StringList tok = StringTokenizer(searchString, ' ').getTokens();

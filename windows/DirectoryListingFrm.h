@@ -254,7 +254,9 @@ private:
 			if(a->type == DIRECTORY) {
 				if(b->type == DIRECTORY) {
 					switch(col) {
-					case COLUMN_SIZE: return compare(a->dir->getSize(), b->dir->getSize());
+					case COLUMN_SIZE:
+					case COLUMN_EXACT_SIZE:
+						return compare(a->dir->getSize(), b->dir->getSize());
 					default: return Util::stricmp(a->columns[col], b->columns[col]);
 					}
 				} else {

@@ -633,7 +633,7 @@ string ResourceManager::strings[] = {
 "Get MP3 Info",
 "Check File List",
 "Exactly",
-"Downloaded file was corrupted",
+"File was corrupted, redownloading in %d seconds",
 "Segment Block Finished, waiting...",
 "Stop Search",
 "Search stopped",

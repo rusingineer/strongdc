@@ -838,7 +838,7 @@ Download* QueueManager::getDownload(User::Ptr& aUser) throw() {
 
 	if(k<getMaxSegments(q->getTargetFileName(),q->getSize()))
 	{
- 
+
 	Download *d;
 
 again:

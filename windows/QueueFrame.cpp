@@ -1536,14 +1536,15 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			if(filedatainfo->vecRunBlocks.size() != NULL)
 				copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
 
-			sort(v.begin(), v.end());
+			if(v.size() > 0) {
+				sort(v.begin(), v.end());
 			
 				p  = (qi->getSize() > 0) ? (double)((double)(*(v.begin()))) / ((double)qi->getSize()) : 0;
 				Pright = rc.left + (w * p);
 				Pleft = rc.left;
 				::Rectangle(cd->nmcd.hdc, rc.left, rc.top, Pright, rc.bottom);
 
-				if(rc.Width()>2) {
+				if((rc.Width()>2) && ((Pright - Pleft) > 2)) {
 					DeleteObject(SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,1,barPal[2])));
 					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
 					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
@@ -1581,6 +1582,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 					::MoveToEx(cd->nmcd.hdc,Pleft+1,rc.top+2,(LPPOINT)NULL);
 					::LineTo(cd->nmcd.hdc,Pright-2,rc.top+2);
 				}
+			}
 			}
 			
 			// draw status text
