@@ -337,9 +337,7 @@ public:
 	static string toAdcFile(const string& file) {
 		string ret;
 		ret.reserve(file.length() + 1);
-		if((file != "MyList.DcLst") && (file != "files.xml.bz2")) {
-			ret += '/';
-		}
+		ret += '/';
 		ret += file;
 		for(string::size_type i = 0; i < ret.length(); ++i) {
 			if(ret[i] == '\\') {
@@ -581,7 +579,7 @@ public:
 		return buf;
 	}
 	static bool nlfound;
-	static string nlspeed;
+	static int nlspeed;
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 private:
 	static string appPath;

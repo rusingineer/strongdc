@@ -1472,9 +1472,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			SetBkMode(dc, TRANSPARENT);
 		
-			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
-			statusBar.SetFileSize(qi->getSize());
-			statusBar.Fill(RGB(0, 150, 0));
+			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, RGB(0, 150, 0), qi->getSize());
+			//statusBar.SetFileSize(qi->getSize());
+			//statusBar.Fill(RGB(0, 150, 0));
 
 			FileChunksInfo::Ptr filedatainfo = qi->FDI;
 			for(int smycka = 0; smycka < 2; smycka++) {

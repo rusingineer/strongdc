@@ -338,6 +338,13 @@ void createImageList1(CImageList &imglst, string file) {
 	imglst.Create(16, 16, ILC_MASK | ILC_COLOR32, 0, 0);
 	imglst.Add(b, RGB(255,0,255)); 
 }
+void WinUtil::reLoadImages(){
+	userImages.Destroy();
+	if(SETTING(USERLIST_IMAGE) == "")
+		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	else 
+		createImageList1(userImages, SETTING(USERLIST_IMAGE));
+}// User Icon End
 
 void WinUtil::init(HWND hWnd) {
 	mainWnd = hWnd;
@@ -1559,19 +1566,18 @@ int WinUtil::getImage(const User::Ptr& u) {
 	if(u->isSet(User::OP)) {
 		image = 0;
 	} else if(u->isSet(User::FIREBALL)) {
-		image = 9;
+		image = 9; // 8
 	} else if(u->isSet(User::SERVER)) {
-		image = 8;
+		image = 8; // 7
 	}
 	if(u->isSet(User::AWAY)) {
-		image+=11;
+		image+=11; // 10
 	}
 	if(u->isSet(User::DCPLUSPLUS)) {
-		image+=22;
+		image+=22; // 20
 	}
-	if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5") ||
-		((u->getDescription().substr(0,1) == "P") && ((u->getDescription().substr(1,1) == "") || (u->getDescription().substr(1,1) == " ")))) {
-		image+=44;
+	if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5")) {
+		image+=44; // 40
 	}
 	return image;	
 }

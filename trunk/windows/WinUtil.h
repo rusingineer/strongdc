@@ -337,6 +337,8 @@ public:
 	static CHARFORMAT2 m_ChatTextLog;
 	static bool mutesounds;
 
+	static void reLoadImages(); // User Icon Begin / User Icon End
+
 	static void init(HWND hWnd);
 	static void uninit();
 

@@ -52,6 +52,7 @@ void ClientManager::putClient(Client* aClient) {
 	aClient->disconnect();
 	fire(ClientManagerListener::ClientDisconnected(), aClient);
 	aClient->removeListeners();
+	//aClient->getSocket()->removeListeners();
 
 	{
 		Lock l(cs);

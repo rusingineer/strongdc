@@ -2237,6 +2237,8 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 }
 
 void HubFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
+	ctrlUsers.Invalidate();
 	bool refresh = false;
 	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
 		ctrlClient.SetBackgroundColor(WinUtil::bgColor);

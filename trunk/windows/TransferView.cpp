@@ -352,9 +352,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				if(ii->size == 0)
 					ii->size = 1;
 
-				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
-				statusBar.SetFileSize(ii->size);
-				statusBar.Fill(SETTING(PROGRESS_BACK_COLOR));
+				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), ii->size);
 
 				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
 					rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
@@ -477,6 +475,8 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 }
 
 LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	ctrlTransfers.SetRedraw(FALSE);
+
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
@@ -497,7 +497,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
-		ctrlTransfers.SetRedraw(FALSE);
 		for(vector<ItemInfo*>::iterator j = v->begin(); j != v->end(); ++j) {
 			ItemInfo* i = *j;
 			i->update();
@@ -511,7 +510,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		  (ctrlTransfers.getSortColumn() == COLUMN_RATIO)) {
 			ctrlTransfers.resort();
 		}
-		ctrlTransfers.SetRedraw(TRUE);
 		
 		delete v;
 	} else if(wParam == SET_STATE) {
@@ -543,6 +541,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.updateItem(i->upper);
 	}
 
+	ctrlTransfers.SetRedraw(TRUE);
 	return 0;
 }
 
@@ -801,11 +800,15 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			if(i->Target != i->oldTarget) setMainItem(i);
 			i->oldTarget = i->Target;
 
-			int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
-			if((i->upper != NULL) && (pocetSegmentu < 1)) {
-				i->upper->status = ItemInfo::STATUS_WAITING;
-				if(!i->upper->finished)
-					i->upper->statusString = Text::toT(aReason);
+			QueueItem* qi = QueueManager::getInstance()->lookupNext(aCqi->getUser());
+			if(qi) {
+				i->qi = qi;
+				int pocetSegmentu = i->qi ? i->qi->getActiveSegments().size() : 0;
+				if((i->upper != NULL) && (pocetSegmentu < 1)) {
+					i->upper->status = ItemInfo::STATUS_WAITING;
+					if(!i->upper->finished)
+						i->upper->statusString = Text::toT(aReason);
+				}
 			}
 		}
 			
@@ -1077,8 +1080,9 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->status = ItemInfo::STATUS_RUNNING;
 		i->speed = 0;
 		i->timeLeft = 0;
-		i->file = Text::toT(Util::getFileName(aUpload->getLocalFileName()));
-		i->path = Text::toT(Util::getFilePath(aUpload->getLocalFileName()));
+
+		i->file = Text::toT(Util::getFileName(aUpload->getFileName()));
+		i->path = Text::toT(Util::getFilePath(aUpload->getFileName()));
 		i->statusString = TSTRING(UPLOAD_STARTING);
 		if(i->user->isClientOp())
 			i->IP = Text::toT(aUpload->getUserConnection()->getRemoteIp());

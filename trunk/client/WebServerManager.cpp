@@ -357,116 +357,65 @@ StringMap WebServerSocket::getArgs(string arguments) {
 
 int WebServerSocket::run(){
 	char buff[512];
-    int test = 0;
+	int test = 0;
 	ZeroMemory(&buff, sizeof(buff));
 	while(true) {
 
-		test++;
-		if(test >= 1000)
-			break;
-
-		int size = recv(sock,buff,sizeof(buff),0);
-
-		string header = buff;
-		header = header.substr(0,size);
-
-		int start = 0, end = 0;
-
-		string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
-
-	    printf("%s\n", header.c_str());	
-
-		if(((start = header.find("GET ")) != string::npos) && (end = header.substr(start+4).find(" ")) != string::npos ){
-			if(BOOLSETTING(LOG_WEBSERVER)) {
-				StringMap params;
-				params["file"] = header.substr(start+4,end);
-				params["ip"] = IP;
-				LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
-			}
-			header = header.substr(start+4,end);
-
-			if((start = header.find("?")) != string::npos) {
-				string arguments = header.substr(start+1);
-				header = header.substr(0, start);
-				StringMap m = getArgs(arguments);
-
-				if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
-					WebServerManager::getInstance()->login(IP);
-			}
-
-			string toSend1;
-		
-			if(!WebServerManager::getInstance()->isloggedin(IP)) {
-				toSend1 = WebServerManager::getInstance()->getLoginPage();
-			} else {
-				toSend1 = WebServerManager::getInstance()->getPage(header);
-			}
-	
-		const char* aBuffer = toSend1.c_str();
-		size_t aLen = toSend1.size();
-		
-		if(aLen == 0){
-			return 0;
-		}
-
-		size_t pos = 0;
-		size_t sendSize = min(aLen, (size_t)64 * 1024);
-
-		bool blockAgain = false;
-
-		while(pos < aLen) {
-			int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);
-			if(i == SOCKET_ERROR) {
-				if(errno == EWOULDBLOCK) {
-					if(blockAgain) {
-						// Uhm, two blocks in a row...try making the send window smaller...
-						if(sendSize >= 256) {
-							sendSize /= 2;
-							dcdebug("Reducing send window size to %d\n", sendSize);
-						} else {
-							Thread::sleep(10);
-						}
-						blockAgain = false;
-					} else {
-						blockAgain = true;
-					}
-
-				} else if(errno == ENOBUFS) {
-					if(sendSize > 32) {
-						sendSize /= 2;
-						dcdebug("Reducing send window size to %d\n", sendSize);
-					} else {
-						throw SocketException("Out of buffer");
-					}
-				} else {
-					int a = WSAGetLastError(); ::closesocket(sock); throw SocketException(a);
-				}
-			} else {
-				dcassert(i != 0);
-				pos+=i;
-
-				blockAgain = false;
-			}
-		}
+	test++;
+	if(test >= 1000)
 		break;
-	} /*else {
+
+	Thread::sleep(10);
+	int size = recv(sock,buff,sizeof(buff),0);
+
+	string header = buff;
+	header = header.substr(0,size);
+
+	int start = 0, end = 0;
+
+	string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
+
+	printf("%s\n", header.c_str());	
+
+	if(((start = header.find("GET ")) != string::npos) && (end = header.substr(start+4).find(" ")) != string::npos ){
+		if(BOOLSETTING(LOG_WEBSERVER)) {
+			StringMap params;
+			params["file"] = header.substr(start+4,end);
+			params["ip"] = IP;
+			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
+		}
+		header = header.substr(start+4,end);
+
+		if((start = header.find("?")) != string::npos) {
+			string arguments = header.substr(start+1);
+			header = header.substr(0, start);
+			StringMap m = getArgs(arguments);
+
+			if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
+				WebServerManager::getInstance()->login(IP);
+		}
+
+		string toSend;
+		
+		if(!WebServerManager::getInstance()->isloggedin(IP)) {
+			toSend = WebServerManager::getInstance()->getLoginPage();
+		} else {
+			toSend = WebServerManager::getInstance()->getPage(header);
+		}
+	
+		::send(sock, toSend.c_str(), toSend.size(), 0);
+		break;
+	}/* else {
 		if(BOOLSETTING(LOG_WEBSERVER)) {
 			StringMap params;
 			params["file"] = "Unknown request type";
 			params["ip"] = IP;
 			LOG(WEBSERVER_AREA,Util::formatParams(SETTING(WEBSERVER_FORMAT), params));
 		}
-		string toSend = "";
-		toSend = "HTTP/1.0 400 Bad Request\r\n";
-		toSend += "Content-Type: text/html\r\n";
-		toSend += "Connection: close\r\n";
-		toSend += "Content-Length: 35\r\n";
-		toSend += "Pragma: nocache\r\n";
-		toSend += "\r\n";
-		toSend += "<h1>WTF: You can't do this to me!</h1>";
-		::send(sock, toSend.c_str(), toSend.size(), 0);*/
+	}*/
 	}
 	::closesocket(sock);
 	delete this;
 	return 0;
+
 }

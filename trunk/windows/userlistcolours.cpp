@@ -141,6 +141,9 @@ void UserListColours::write() {
 	SettingsManager::getInstance()->set(SettingsManager::FULL_CHECKED_COLOUR, fullCheckedColour);
 	SettingsManager::getInstance()->set(SettingsManager::BAD_CLIENT_COLOUR, badClientColour);
 	SettingsManager::getInstance()->set(SettingsManager::BAD_FILELIST_COLOUR, badFilelistColour);
+
+	WinUtil::reLoadImages(); // User Icon Begin / End
+
 }
 
 void UserListColours::BrowseForPic(int DLGITEM) {

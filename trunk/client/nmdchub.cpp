@@ -114,8 +114,10 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
-		ClientManager::getInstance()->putUserOffline(i->second);
+	if(ClientManager::getInstance() != NULL) {
+		for(User::NickIter i = users.begin(); i != users.end(); ++i) {
+			ClientManager::getInstance()->putUserOffline(i->second);
+		}
 	}
 	users.clear();
 }
@@ -751,7 +753,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	}
 	string extendedtag = tmp0 + tmp1 + VERZE + tmp2 + modeChar + tmp3 + getCounts() + tmp4 + Util::toString(UploadManager::getInstance()->getSlots());
 
-	string connection = Util::nlfound ? "NetLimiter [" + Util::nlspeed + " kB/s]" : SETTING(CONNECTION);
+	string connection = Util::nlfound ? "NetLimiter [" + Util::toString(Util::nlspeed) + " kB/s]" : SETTING(CONNECTION);
 	string speedDescription = "";
 
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
@@ -783,15 +785,12 @@ void NmdcHub::myInfo(bool alwaysSend) {
 
 	string description = getDescription();
 
-	string::size_type mezera = 0;
-	while((mezera = description.rfind(" ")) == (description.size() - 1)) {
-		description = description.substr(0, description.size() - 1);
-	}
-
-	mezera = 0;
-	while((mezera = description.find(" ")) == 0) {
-		description = description.substr(1, description.size());
-	}
+	string::size_type m = description.find_first_not_of(' ');
+	string::size_type n = description.find_last_not_of(' ');
+	if(m != string::npos)
+		description = description.substr(m, n-m+1);
+	else
+		description = Util::emptyString;
 
 	description = speedDescription + description;
 

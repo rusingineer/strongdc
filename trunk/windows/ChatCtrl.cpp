@@ -261,7 +261,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 
 	// Zvyrazneni vsech vyskytu vlastniho nicku
 	lSelEnd = GetTextLengthEx(GTL_PRECISE);
-			lSearchFrom = 0;
+	lSearchFrom = 0;
 	sNick.MakeLower();
 
 	while(true) {

@@ -601,9 +601,7 @@ LRESULT UploadQueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHand
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 
-				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left);
-				statusBar.SetFileSize(ii->size);
-				statusBar.Fill(RGB(150, 0, 0));
+				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, RGB(150, 0, 0), ii->size);
 				statusBar.FillRange(0, ii->pos, RGB(222, 160, 0));
 				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 

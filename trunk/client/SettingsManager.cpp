@@ -62,7 +62,7 @@ const string SettingsManager::settingTags[] =
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway", 
 	"SmallSendBuffer", "SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
 	"CompressTransfers", "ShowProgressBars", "SFVCheck", "MaxTabRows", "AutoUpdateList", 
-	"MaxCompression", "FinishedDirty", "QueueDirty", "TabDirty", "AntiFrag", "MDIMaxmimized", "NoAwayMsgToBots", 
+	"MaxCompression", "FinishedDirty", "QueueDirty", "TabDirty", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", "OpenFavoriteHubs", "OpenFinishedDownloads", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
 	"LogFilelistTransfers", "EmptyWorkingSet",
