@@ -70,7 +70,7 @@ private:
 #endif
 	};
 	
-	virtual ~TimerManager() {
+	virtual ~TimerManager() throw() {
 		dcassert(listeners.empty());
 		s.signal();
 		join();

@@ -37,10 +37,7 @@
 
 #include "WinUtil.h"
 #include "UCHandler.h"
-
-#ifndef USERINFO_H
-	#include "UserInfo.h"
-#endif
+#include "UserInfo.h"
 
 #define EDIT_MESSAGE_MAP 10		// This could be any number, really...
 #define FILTER_MESSAGE_MAP 8

@@ -261,7 +261,8 @@ void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
 		}
 		(*f) /= AVG_TIME;
 		
-		perSecond[++cur] = 0;
+	cur = (cur + 1) % AVG_TIME;
+	perSecond[cur] = 0;
 		PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
 }
 

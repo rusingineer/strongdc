@@ -34,7 +34,10 @@ public:
 		SetTitle(title);
 	};
 
-	virtual ~Segment() { free(title); };
+	virtual ~Segment() { 
+		ctrlMultiSource.Detach();
+		free(title);
+	};
 
 	BEGIN_MSG_MAP(Segment)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -55,8 +58,8 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	TCHAR* title;
-	CComboBox ctrlBlockSize;
-
+	CComboBox ctrlMultiSource;
+		
 	void fixControls();
 };
 

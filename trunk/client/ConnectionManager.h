@@ -65,11 +65,11 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 	public Singleton<ConnectionManager>
 {
 public:
-	void connect(const string& aServer, short aPort, const string& aNick);
-	void connect(const string& aServer, short aPort, const CID& cid, const string& aToken);
+	void nmdcConnect(const string& aServer, short aPort, const string& aNick);
+	void adcConnect(const string& aServer, short aPort, const string& aToken);
 	void getDownloadConnection(const User::Ptr& aUser);
-	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool reconn = false);
-	void putUploadConnection(UserConnection* aSource);
+	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool ntd = false, bool reconn = false);
+	void putUploadConnection(UserConnection* aSource, bool ntd);
 	
 	void removeConnection(const User::Ptr& aUser, int isDownload);
 	void shutdown();	
@@ -92,7 +92,6 @@ public:
 		return socket;
 	}
 
-	StringList getBlockedIpPorts() throw() { Lock l(cs); return failedIpPorts; }
 	static int iConnToMeCount;
 
 private:
@@ -122,7 +121,7 @@ private:
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
 
-	virtual ~ConnectionManager() { shutdown(); };
+	virtual ~ConnectionManager() throw() { shutdown(); };
 	
 	UserConnection* getConnection(bool aNmdc) throw(SocketException) {
 		UserConnection* uc = new UserConnection();
@@ -137,12 +136,6 @@ private:
 	}
 	void putConnection(UserConnection* aConn);
 
-	// DDoS avoid lists
-	StringList failedIpPorts, suspectIpPorts;
-	bool ipPortHasFailed(const string& aServer, short aPort) const throw();
-	void addFailedIpPort(const string& aServer, short aPort) throw();
-	void addSuspectIpPort(const string& aServer, short aPort) throw();
- 
 	// ServerSocketListener
 	virtual void on(ServerSocketListener::IncomingConnection) throw();
 
@@ -154,12 +147,11 @@ private:
 	virtual void on(Direction, UserConnection*, const string&, const string&) throw();
 	virtual void on(MyNick, UserConnection*, const string&) throw();
 	virtual void on(Supports, UserConnection*, const StringList&) throw();
-	virtual void on(Unknown, UserConnection*, const string& aLine) throw();
 
-	virtual void on(Command::SUP, UserConnection*, const Command&) throw();
-	virtual void on(Command::INF, UserConnection*, const Command&) throw();
-	virtual void on(Command::NTD, UserConnection*, const Command&) throw();
-	virtual void on(Command::STA, UserConnection*, const Command&) throw();
+	virtual void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::INF, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::NTD, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();	

@@ -27,7 +27,7 @@
 #include "../client/SimpleXML.h"
 
 static const TCHAR thanks[] = 
-_T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, Ice, King Wenceslas, Liny, ProLogic, Testament, xAyiDe a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
+_T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman, Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, Ice, King Wenceslas, Liny, Naga, popKorn, ProLogic, Testament, xAyiDe a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
 
 class AboutDlg : public CDialogImpl<AboutDlg>, private HttpConnectionListener
 {
@@ -46,7 +46,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(CZDCVERSIONSTRING) _T(" (c) Copyright 2004 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2004 Jacek Sieka\n\nhttp://strongdc.berlios.de"));
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING) _T(" (c) Copyright 2004 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2004 Jacek Sieka\n\nhttp://strongdc.berlios.de"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);

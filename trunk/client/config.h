@@ -74,10 +74,14 @@ typedef unsigned __int64 u_int64_t;
 
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #define _LL(x) x##ll
 #define _ULL(x) x##ull
 #define I64_FMT "%I64d"
+#elif defined(SIZEOF_LONG) && SIZEOF_LONG == 8
+#define _LL(x) x##l
+#define _ULL(x) x##ul
+#define I64_FMT "%ld"
 #else
 #define _LL(x) x##ll
 #define _ULL(x) x##ull

@@ -52,7 +52,6 @@ void ClientManager::putClient(Client* aClient) {
 	aClient->disconnect();
 	fire(ClientManagerListener::ClientDisconnected(), aClient);
 	aClient->removeListeners();
-	//aClient->getSocket()->removeListeners();
 
 	{
 		Lock l(cs);
@@ -114,7 +113,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 		} else {
 			try {
 				string ip, file;
-				short port = 0;
+				u_int16_t port = 0;
 				Util::decodeUrl(aSeeker, ip, port, file);
 				ip = Socket::resolve(ip);
 				if(port == 0) port = 412;
@@ -229,12 +228,12 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	return i->second;
 }
 
-void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto) {
+void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) {
 	Lock l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
-			(*i)->search(aSizeMode, aSize, aFileType, aString, _auto);
+			(*i)->search(aSizeMode, aSize, aFileType, aString);
 		}
 	}
 }
@@ -253,52 +252,26 @@ void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aF
 	}
 }
 
-u_int32_t ClientManager::getMinimumSearchInterval(StringList& who, const string& aString, u_int32_t& casNavic) {
-	Lock l(cs);
-
-	u_int32_t last_search_time = 0;
-	int navic = 0;
-	casNavic = 0;
-
-	for(StringIter it = who.begin(); it != who.end(); ++it) {
-		string& client = *it;
-		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-			Client* c = *j;
-			if(c->isConnected() && c->getIpPort() == client) {
-				if((c->getLastSearchTime() < last_search_time) || (j == clients.begin())) {
-					last_search_time = c->getLastSearchTime();
-				}
-				navic = c->getSearchQueueNumber(aString);
-				if((navic < casNavic) || (j == clients.begin())) {
-					casNavic = navic;
-				}
-			}
-		}
-	}
-	return last_search_time;
-}
-
 void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	{
 		Lock l(cs);
 
-		aUser->setIp(Util::emptyString);
-		aUser->setHost(Util::emptyString);
 		aUser->unsetFlag(User::PASSIVE);
 		aUser->unsetFlag(User::OP);
 		aUser->unsetFlag(User::DCPLUSPLUS);
 		aUser->unsetFlag(User::AWAY);
 		aUser->unsetFlag(User::SERVER);
 		aUser->unsetFlag(User::FIREBALL);
+
 		QueueManager::getInstance()->removeTestSUR(aUser->getNick());
 		aUser->unCacheClientInfo();
+
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);
 		aUser->setClient(NULL);
 	}
 	fire(ClientManagerListener::UserUpdated(), aUser);
 }
-
 
 User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
 	Lock l(cs);

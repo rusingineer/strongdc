@@ -125,6 +125,8 @@ public:
 
 		if (InfoTip.size() > 2)
 			InfoTip.erase(InfoTip.size() - 2);
+		
+		pInfoTip->cchTextMax = InfoTip.size();
 
 		_tcscpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;

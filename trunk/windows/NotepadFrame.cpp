@@ -50,7 +50,6 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlPad.SetWindowText(Text::toT(tmp).c_str());
 	ctrlPad.EmptyUndoBuffer();
 	ctrlClientContainer.SubclassWindow(ctrlPad.m_hWnd);
-	SettingsManager::getInstance()->addListener(this);
 	
 	bHandled = FALSE;
 	return 1;

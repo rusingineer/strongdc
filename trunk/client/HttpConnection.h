@@ -51,7 +51,7 @@ class HttpConnection : BufferedSocketListener, public Speaker<HttpConnectionList
 public:
 	void downloadFile(const string& aUrl);
 	HttpConnection() : ok(false), port(80), size(-1), moved302(false), socket(NULL) { };
-	virtual ~HttpConnection() { 
+	virtual ~HttpConnection() throw() { 
 		if(socket) {
 			socket->removeListener(this); 
 			BufferedSocket::putSocket(socket);
@@ -67,7 +67,7 @@ private:
 	string file;
 	string server;
 	bool ok;
-	short port;
+	u_int16_t port;
 	int64_t size;
 	bool moved302;
 

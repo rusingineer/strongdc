@@ -22,6 +22,7 @@
 
 #define COMPILE_MULTIMON_STUBS 1
 #include <MultiMon.h>
+#include <psapi.h>
 
 #include "WinUtil.h"
 #include "PrivateFrame.h"
@@ -358,15 +359,15 @@ void WinUtil::init(HWND hWnd) {
 	file.AppendMenu(MF_STRING, IDC_OPEN_MY_LIST, CTSTRING(MENU_OPEN_OWN_LIST));
 	file.AppendMenu(MF_STRING, IDC_REFRESH_FILE_LIST, CTSTRING(MENU_REFRESH_FILE_LIST));
 	file.AppendMenu(MF_STRING, IDC_OPEN_DOWNLOADS, CTSTRING(MENU_OPEN_DOWNLOADS_DIR));
-	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	file.AppendMenu(MF_SEPARATOR);
 	file.AppendMenu(MF_STRING, ID_FILE_QUICK_CONNECT, CTSTRING(MENU_QUICK_CONNECT));
 	file.AppendMenu(MF_STRING, IDC_FOLLOW, CTSTRING(MENU_FOLLOW_REDIRECT));
 	file.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CTSTRING(MENU_RECONNECT));
-	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	file.AppendMenu(MF_SEPARATOR);
 	file.AppendMenu(MF_STRING, ID_FILE_SETTINGS, CTSTRING(MENU_SETTINGS));
 	file.AppendMenu(MF_STRING, ID_GET_TTH, CTSTRING(MENU_TTH));
 	file.AppendMenu(MF_STRING, IDC_UPDATE, CTSTRING(UPDATE_CHECK));
-	file.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	file.AppendMenu(MF_SEPARATOR);
 	file.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)file, CTSTRING(MENU_FILE));
@@ -375,20 +376,20 @@ void WinUtil::init(HWND hWnd) {
 	view.CreatePopupMenu();
 
 	view.AppendMenu(MF_STRING, ID_FILE_CONNECT, CTSTRING(MENU_PUBLIC_HUBS));
-	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	view.AppendMenu(MF_SEPARATOR);
 	view.AppendMenu(MF_STRING, IDC_RECENTS, CTSTRING(MENU_FILE_RECENT_HUBS));
-	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	view.AppendMenu(MF_SEPARATOR);
 	view.AppendMenu(MF_STRING, IDC_FAVORITES, CTSTRING(MENU_FAVORITE_HUBS));
 	view.AppendMenu(MF_STRING, IDC_FAVUSERS, CTSTRING(MENU_FAVORITE_USERS));
-	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	view.AppendMenu(MF_SEPARATOR);
 	view.AppendMenu(MF_STRING, ID_FILE_SEARCH, CTSTRING(MENU_SEARCH));
 	view.AppendMenu(MF_STRING, IDC_FILE_ADL_SEARCH, CTSTRING(MENU_ADL_SEARCH));
 	view.AppendMenu(MF_STRING, IDC_SEARCH_SPY, CTSTRING(MENU_SEARCH_SPY));
-	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	view.AppendMenu(MF_SEPARATOR);
 	view.AppendMenu(MF_STRING, IDC_CDMDEBUG_WINDOW, CTSTRING(MENU_CDMDEBUG_MESSAGES));
 	view.AppendMenu(MF_STRING, IDC_NOTEPAD, CTSTRING(MENU_NOTEPAD));
 	view.AppendMenu(MF_STRING, IDC_HASH_PROGRESS, CTSTRING(MENU_HASH_PROGRESS));
-	view.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	view.AppendMenu(MF_SEPARATOR);
 	view.AppendMenu(MF_STRING, ID_VIEW_TOOLBAR, CTSTRING(MENU_TOOLBAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_STATUS_BAR, CTSTRING(MENU_STATUS_BAR));
 	view.AppendMenu(MF_STRING, ID_VIEW_TRANSFER_VIEW, CTSTRING(MENU_TRANSFER_VIEW));
@@ -401,10 +402,10 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CTSTRING(MENU_DOWNLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CTSTRING(FINISHED_DOWNLOADS));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHEDMP3, CTSTRING(FINISHED_MP3_DOWNLOADS));
-	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	transfers.AppendMenu(MF_SEPARATOR);
 	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(UPLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CTSTRING(FINISHED_UPLOADS));
-	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	transfers.AppendMenu(MF_SEPARATOR);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CTSTRING(MENU_NETWORK_STATISTICS));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)transfers, CTSTRING(MENU_TRANSFERS));
@@ -418,7 +419,7 @@ void WinUtil::init(HWND hWnd) {
 	window.AppendMenu(MF_STRING, ID_WINDOW_ARRANGE, CTSTRING(MENU_ARRANGE));
 	window.AppendMenu(MF_STRING, ID_WINDOW_MINIMIZE_ALL, CTSTRING(MENU_MINIMIZE_ALL));
 	window.AppendMenu(MF_STRING, ID_WINDOW_RESTORE_ALL, CTSTRING(MENU_RESTORE_ALL));
-	window.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	window.AppendMenu(MF_SEPARATOR);
 	window.AppendMenu(MF_STRING, IDC_CLOSE_DISCONNECTED, CTSTRING(MENU_CLOSE_DISCONNECTED));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)window, CTSTRING(MENU_WINDOW));
@@ -427,7 +428,7 @@ void WinUtil::init(HWND hWnd) {
 	help.CreatePopupMenu();
 
 	help.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
-	help.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	help.AppendMenu(MF_SEPARATOR);
 	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CTSTRING(MENU_HOMEPAGE));
 	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CTSTRING(MENU_DISCUSS));
 
@@ -493,7 +494,7 @@ void WinUtil::init(HWND hWnd) {
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+	grantMenu.AppendMenu(MF_SEPARATOR);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
 
 	initColors();
@@ -842,9 +843,9 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 }
 
 #ifdef isCVS
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(">")
 #else
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(CZDCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(">")
 #endif
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- Neo-...what? Nope...never heard of it...\r\n") LINE2,
@@ -867,7 +868,7 @@ _T("\r\n-- Nepodporuju klienty bez TTH proto jim nedam extra slot na filelist ;)
 _T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
 _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE2,
 _T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,
-_T("\r\n-- Po stazeni souboru zkontroluju TTH, abych zjistil jestli je soubor v poradku :-D\r\n") LINE2,
+_T("\r\n-- Kontroluji data behem prenosu a zarucim spravnou integritu dat :)\r\n") LINE2,
 _T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE2,
 _T("\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n") LINE2,
 _T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE2
@@ -1190,7 +1191,7 @@ void WinUtil::registerMagnetHandler() {
 	// Reference: http://forums.shareaza.com/showthread.php?threadid=23731
 	// Note: the three part hash types require magnethandler >= 1.0.0.3
 	DWORD nothing = 0;
-	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\CZDC++\\Type"), &hk);
+	::RegCreateKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\StrongDC++\\Type"), &hk);
 	::RegSetValueEx(hk, _T("urn:bitprint"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegSetValueEx(hk, _T("urn:tree:tiger"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegSetValueEx(hk, _T("urn:tree:tiger/"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
@@ -1270,7 +1271,7 @@ void WinUtil::openLink(const tstring& url) {
 
 void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	string server, file;
-	short port = 411;
+	u_int16_t port = 411;
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty()) {
 		HubFrame::openWindow(Text::toT(server + ":" + Util::toString(port)));
@@ -1288,7 +1289,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 
 void WinUtil::parseADChubUrl(const tstring& aUrl) {
 	string server, file;
-	short port = -1; //make sure we get a port since adc doesn't have a standard one
+	u_int16_t port = 0; //make sure we get a port since adc doesn't have a standard one
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty() && port > 0) {
 		HubFrame::openWindow(Text::toT("adc://" + server + ":" + Util::toString(port)));
@@ -1462,6 +1463,31 @@ int WinUtil::getIconIndex(const tstring& aFileName) {
 	}
 }
 
+int WinUtil::getOsMajor() {
+	OSVERSIONINFOEX ver;
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
+	{
+		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	}
+	GetVersionEx((OSVERSIONINFO*)&ver);
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	return ver.dwMajorVersion;
+}
+
+int WinUtil::getOsMinor() 
+{
+	OSVERSIONINFOEX ver;
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
+	{
+		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	}
+	GetVersionEx((OSVERSIONINFO*)&ver);
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	return ver.dwMinorVersion;
+}
+
 void WinUtil::ClearPreviewMenu(OMenu &previewMenu){
 	while(previewMenu.GetMenuItemCount() > 0) {
 		previewMenu.RemoveMenu(0, MF_BYPOSITION);
@@ -1602,6 +1628,24 @@ int WinUtil::getFlagImage(const char* country, bool fullname) {
 }
 
 
+string WinUtil::generateStats() {
+	char buf[1024];
+	PROCESS_MEMORY_COUNTERS pmc;
+	pmc.cb = sizeof(pmc);
+	GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+	FILETIME tmpa, tmpb, kernelTimeFT, userTimeFT;
+	GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
+	int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
+	int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
+	sprintf(buf, "\n-=[ StrongDC++ %s %s ]=-\r\n-=[ Uptime: %s ][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s ]=-", 
+		VERSIONSTRING, STRONGDCVERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
+		Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
+		Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
+		Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
+		Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
+		formatTime(::GetTickCount()/1000).c_str());
+	return buf;
+} 
 
 /**
  * @file

@@ -27,6 +27,8 @@
 #include "../client/QueueManager.h"
 #include "../client/StringTokenizer.h"
 #include "../client/ClientManager.h"
+#include "../client/TimerManager.h"
+#include "../client/SearchManager.h"
 
 #include "../pme-1.0.4/pme.h"
 
@@ -288,9 +290,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	UpdateLayout();
 
-	lastSearchTime = -1;
-	TimerManager::getInstance()->addListener(this);
-
 	if(!initialString.empty()) {
 		lastSearches.push_back(initialString);
 		ctrlSearchBox.InsertString(0, initialString.c_str());
@@ -382,8 +381,9 @@ BOOL SearchFrame::ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis) {
 void SearchFrame::onEnter() {
 	StringList clients;
 	
-	if(!(ctrlSearch.GetWindowTextLength() > 0 && lastSearch + 10000 < TimerManager::getInstance()->getTick()))
-		return;
+	// Start the countdown timer...
+	// Can this be done in a better way?
+	TimerManager::getInstance()->addListener(this);
 
 	int n = ctrlHubs.GetItemCount();
 	for(int i = 0; i < n; i++) {
@@ -415,28 +415,13 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
-	for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	    SearchInfo* si = mainItems[i];
-		int q = 0;
-		if(si->subItems.size() > 0) {
-			while(q<si->subItems.size()) {
-				SearchInfo* j = si->subItems[q];
-				delete j;
-				q++;
-			}
-		}
-		delete si;
-	}
-
-	mainItems.clear();
-	ctrlResults.DeleteAllItems();
-	
 	{
 		Lock l(cs);
 		search = StringTokenizer<tstring>(s, ' ').getTokens();
 	}
 
 	//strip out terms beginning with -
+	tstring fullSearch = s;
 	s.clear();
 	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
 		if ((*si)[0] != _T('-') || si->size() == 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
@@ -452,8 +437,6 @@ void SearchFrame::onEnter() {
 
 	if(BOOLSETTING(CLEAR_SEARCH)){
 		ctrlSearch.SetWindowText(_T(""));
-	} else {
-		lastSearch = TimerManager::getInstance()->getTick();
 	}
 
 	// Add new searches to the last-search dropdown list
@@ -468,9 +451,6 @@ void SearchFrame::onEnter() {
 		lastSearches.push_back(s);
 	}
 		
-	droppedResults = 0;
-	isHash = (ftype == SearchManager::TYPE_TTH);
-
 	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
 		delete *i;
 	}
@@ -478,13 +458,10 @@ void SearchFrame::onEnter() {
 	bPaused = false;
 	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
 	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
-
-	SearchString = s;
+			
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
-		(SearchManager::TypeModes)ftype, mode);
-
-	navic = 0;
-	lastSearchTime = ClientManager::getInstance()->getMinimumSearchInterval(clients, Text::fromT(s), navic);
+		(SearchManager::TypeModes)ftype, mode, (int*)this, fullSearch);
+	searches++;
 }
 
 void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
@@ -509,7 +486,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 					) 
 				{
 					droppedResults++;
-					PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
+					PostMessage(WM_SPEAKER, FILTER_RESULT, NULL);
 					return;
 				}
 			}
@@ -524,14 +501,62 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	)
 	{
 		droppedResults++;
-		PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
+		PostMessage(WM_SPEAKER, FILTER_RESULT, NULL);
 		return;
 	}
+
 
 	SearchInfo* i = new SearchInfo(aResult);
 	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
 }
-	
+
+void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw() {
+	if(aSearch->getWindow() == (int*)this) {
+		searches--;
+		dcassert(searches >= 0);
+
+		for(int i = 0, j = mainItems.size(); i < j; ++i) {
+			SearchInfo* si = mainItems[i];
+			int q = 0;
+			if(si->subItems.size() > 0) {
+				while(q<si->subItems.size()) {
+					SearchInfo* j = si->subItems[q];
+					delete j;
+					q++;
+				}
+			}
+			delete si;
+		}
+
+		mainItems.clear();
+		ctrlResults.DeleteAllItems();
+
+		{
+			Lock l(cs);
+			search = StringTokenizer<tstring>(aSearch->getSearch(), ' ').getTokens();
+		}
+		isHash = (aSearch->getTypeMode() == SearchManager::TYPE_TTH);
+
+		// Turn off the countdown timer if no more manual searches left
+		if(searches == 0)
+			TimerManager::getInstance()->removeListener(this);
+
+		// Update the status bar
+		PostMessage(WM_SPEAKER, SEARCH_START, (LPARAM)new tstring(Text::toT(aSearch->getTarget())));
+
+		droppedResults = 0;
+	}
+}
+
+void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+	if(searches > 0) {
+		int32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
+		TCHAR buf[64];
+		_stprintf(buf, CTSTRING(WAITING_FOR), waitFor);
+		PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));
+	}
+}
+
 void SearchFrame::SearchInfo::view() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
@@ -557,15 +582,17 @@ void SearchFrame::SearchInfo::GetMP3Info() {
 void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
+			
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				Text::fromT(tgt + si->fileName), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
+				Text::fromT(tgt + si->fileName), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
 				(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
+			
 			if(si->subItems.size()>0) {
 				int q = 0;
 				while(q<si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
 					QueueManager::getInstance()->add(j->sr->getFile(), j->sr->getSize(), j->sr->getUser(), 
-						Text::fromT(tgt + si->fileName), j->sr->getTTH(), QueueItem::FLAG_RESUME | (j->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
+						Text::fromT(tgt + si->fileName), j->sr->getTTH(), QueueItem::FLAG_RESUME | (j->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
 						(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 					q++;
 				}
@@ -579,7 +606,7 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 }
 
 void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
-		try {
+	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->addDirectory(Text::fromT(si->path), si->sr->getUser(), Text::fromT(tgt),
 			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
@@ -592,10 +619,10 @@ void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
 }
 
 void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
-		try {
+	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(si->sr->getFile(), si->sr->getSize(), si->sr->getUser(), 
-				Text::fromT(tgt), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0),
+				Text::fromT(tgt), si->sr->getTTH(), QueueItem::FLAG_RESUME | (si->sr->getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (multiSource ? QueueItem::FLAG_MULTI_SOURCE : 0),
 			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), Text::fromT(tgt),
@@ -653,30 +680,31 @@ void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
 }
 
 LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		dcassert(i != -1);
 		SearchInfo* si = ctrlResults.getItemData(i);
 		SearchResult* sr = si->sr;
 	
-			if(sr->getType() == SearchResult::TYPE_FILE) {
+		if(sr->getType() == SearchResult::TYPE_FILE) {
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->getFileName();
 			if(WinUtil::browseFile(target, m_hWnd)) {
 				WinUtil::addLastDir(Util::getFilePath(target));
-				ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(target));
+				ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(target, multiSource));
 			}
-			} else {
+		} else {
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 			if(WinUtil::browseDirectory(target, m_hWnd)) {
 				WinUtil::addLastDir(target);
-				ctrlResults.forEachSelectedT(SearchInfo::Download(target));
+				ctrlResults.forEachSelectedT(SearchInfo::Download(target, multiSource));
 			}
-			}
+		}
 	} else {
 		tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 		if(WinUtil::browseDirectory(target, m_hWnd)) {
 			WinUtil::addLastDir(target);
-			ctrlResults.forEachSelectedT(SearchInfo::Download(target));
+			ctrlResults.forEachSelectedT(SearchInfo::Download(target, multiSource));
 		}
 	}
 	return 0;
@@ -694,12 +722,13 @@ LRESULT SearchFrame::onDownloadWholeTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 LRESULT SearchFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	dcassert(wID >= IDC_DOWNLOAD_TARGET);
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_TARGET;
-	
+
+	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	if(newId < WinUtil::lastDirs.size()) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(WinUtil::lastDirs[newId]));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(WinUtil::lastDirs[newId], multiSource));
 	} else {
 		dcassert((newId - WinUtil::lastDirs.size()) < targets.size());
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - WinUtil::lastDirs.size()])));
+		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - WinUtil::lastDirs.size()]), multiSource));
 	}
 	return 0;
 }
@@ -714,12 +743,13 @@ LRESULT SearchFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND
 	dcassert(wID >= IDC_DOWNLOAD_FAVORITE_DIRS);
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_FAVORITE_DIRS;
 
+	bool multiSource = QueueManager::getInstance()->useMultiSource();
 	StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
 	if(newId < spl.size()) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(spl[newId].first)));
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(spl[newId].first), multiSource));
 	} else {
 		dcassert((newId - spl.size()) < targets.size());
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - spl.size()])));
+		ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(Text::toT(targets[newId - spl.size()]), multiSource));
 	}
 	return 0;
 }
@@ -742,7 +772,8 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 		if (item->ptAction.x < rect.left)
 			return 0;
 
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		bool multiSource = QueueManager::getInstance()->useMultiSource();
+		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), multiSource));
 	}
 	return 0;
 }
@@ -750,8 +781,8 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-		TimerManager::getInstance()->removeListener(this);
 		SearchManager::getInstance()->removeListener(this);
+		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();
  		clientMgr->removeListener(this);
@@ -1135,6 +1166,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			}
 		}
 		break;
+	case FILTER_RESULT:
+		ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
+		break;
  	case HUB_ADDED:
  			onHubAdded((HubInfo*)(lParam));
 		break;
@@ -1144,34 +1178,27 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
  	case HUB_REMOVED:
  			onHubRemoved((HubInfo*)(lParam));
  		break;
-	case FILTERED_TEXT:
+	case QUEUE_STATS:
 		{
 			tstring* t = (tstring*)(lParam);
-			ctrlStatus.SetText(3, (*t).c_str());
+			ctrlStatus.SetText(1, (*t).c_str());
+			ctrlStatus.SetText(2, _T(""));
+			ctrlStatus.SetText(3, _T(""));
+			SetWindowText((*t).c_str());
 			delete t;
 		}
 		break;
-	case STATS:
+	case SEARCH_START:
 		{
-		tstring* buf = (tstring*)(lParam);
-		ctrlStatus.SetText(1, (*buf).c_str());
-		//ctrlStatus.SetText(2, _T(""));
-		//ctrlStatus.SetText(3, _T(""));
-		SetWindowText((*buf).c_str());
-		delete buf;
-		}
-		break;
-	case START_SEARCH:
-		{
-//			TimerManager::getInstance()->removeListener(this);
-			ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + SearchString + _T("...")).c_str());
+			tstring* t = (tstring*)(lParam);
+			ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + (*t) + _T("...")).c_str());
 			ctrlStatus.SetText(2, _T(""));
 			ctrlStatus.SetText(3, _T(""));
-
-			SetWindowText((TSTRING(SEARCH) + _T(" - ") + SearchString).c_str());
+	
+			SetWindowText((TSTRING(SEARCH) + _T(" - ") + (*t)).c_str());
 		}
 		break;
- 	}
+	}
 
 	return 0;
 }
@@ -1204,7 +1231,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 				targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
 				n++;
 			}
-			targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			targetMenu.AppendMenu(MF_SEPARATOR);
 		}
 
 		n = 0;
@@ -1245,7 +1272,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
 				n++;
 			}
-			targetDirMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+			targetDirMenu.AppendMenu(MF_SEPARATOR);
 		}
 
 		n = 0;
@@ -1682,20 +1709,6 @@ void SearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() 
 	}
 }
 
-void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	if(lastSearchTime >= 0) {
-		int32_t waitFor = SETTING(MINIMUM_SEARCH_INTERVAL) - ((GET_TICK() - lastSearchTime) / 1000) + (navic * SETTING(MINIMUM_SEARCH_INTERVAL));
-		TCHAR buf[64];
-		_stprintf(buf, CTSTRING(SEARCHING_WAIT), waitFor);
-		PostMessage(WM_SPEAKER, STATS, (LPARAM)new tstring(buf));
-
-		if(waitFor <= 0) {
-			lastSearchTime = -1;
-			PostMessage(WM_SPEAKER, START_SEARCH);
-		}
-	} else 
-		lastSearchTime = -1;
-}
 /**
  * @file
  * $Id$

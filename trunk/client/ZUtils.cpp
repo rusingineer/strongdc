@@ -24,7 +24,9 @@
 #include "ResourceManager.h"
 #include "SettingsManager.h"
 
-ZFilter::ZFilter() {
+const double ZFilter::MIN_COMPRESSION_LEVEL = 0.9;
+
+ZFilter::ZFilter() : totalIn(0), totalOut(0), compressing(true) {
 	memset(&zs, 0, sizeof(zs));
 
 	if(deflateInit(&zs, /*Z_DEFAULT_COMPRESSION*/ SETTING(MAX_COMPRESSION)) != Z_OK) {
@@ -53,6 +55,8 @@ bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outs
 
 		outsize = outsize - zs.avail_out;
 		insize = insize - zs.avail_in;
+		totalOut += outsize;
+		totalIn += insize;
 		return err == Z_OK;
 	} else {
 		int err = ::deflate(&zs, Z_NO_FLUSH);
@@ -61,6 +65,8 @@ bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outs
 
 		outsize = outsize - zs.avail_out;
 		insize = insize - zs.avail_in;
+		totalOut += outsize;
+		totalIn += insize;
 		return true;
 	}
 }
@@ -95,11 +101,10 @@ bool UnZFilter::operator()(const void* in, size_t& insize, void* out, size_t& ou
 		return 0;
 	}
 
-	// No more input data, and inflate didn't think it has reached the end...
-	if(insize == 0 && zs.avail_out != 0 && err != Z_STREAM_END)
-		throw Exception(STRING(DECOMPRESSION_ERROR));
-
-	if(err != Z_OK && err != Z_STREAM_END)
+	// see zlib/contrib/minizip/unzip.c, Z_BUF_ERROR means we should have padded
+	// with a dummy byte if at end of stream - since we don't do this it's not a real
+	// error
+	if(!(err == Z_OK || err == Z_STREAM_END || (err == Z_BUF_ERROR && in == NULL)))
 		throw Exception(STRING(DECOMPRESSION_ERROR));
 
 	outsize = outsize - zs.avail_out;

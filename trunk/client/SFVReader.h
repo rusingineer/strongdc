@@ -38,8 +38,8 @@ public:
 	 */
 	void load(const string& fileName) throw();
 
-	bool hasCRC() throw() { return crcFound; };
-	u_int32_t getCRC() throw() { return crc32; };
+	bool hasCRC() const throw() { return crcFound; };
+	u_int32_t getCRC() const throw() { return crc32; };
 	
 private:
 

@@ -35,6 +35,7 @@
 
 #include "SearchManagerListener.h"
 #include "TimerManager.h"
+#include "AdcCommand.h"
 
 class SearchManager;
 
@@ -68,7 +69,7 @@ public:
 
 	string getFileName() const;
 	string toSR() const;
-	string toRES() const;
+	AdcCommand toRES(char type) const;
 
 	User::Ptr& getUser() { return user; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
@@ -121,9 +122,33 @@ private:
 	}
 };
 
+class SearchQueueItem {
+public:
+	SearchQueueItem() { }
+	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch) : 
+	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch) { }
+	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch) : 
+	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch) { }
+
+	GETSET(string, target, Target);
+	GETSET(tstring, search, Search);
+	GETSET(int64_t, size, Size);
+	GETSET(int, typeMode, TypeMode);
+	GETSET(int, sizeMode, SizeMode);
+	GETSET(int*, window, Window);
+	StringList& getHubs() { return hubs; };
+	void setHubs(StringList aHubs) { hubs = aHubs; };
+
+private:
+	StringList hubs;
+};
+
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
 public:
+	typedef list<SearchQueueItem> SearchQueueItemList;
+	typedef SearchQueueItemList::iterator SearchQueueIter;
+
 	enum SizeModes {
 		SIZE_DONTCARE = 0x00,
 		SIZE_ATLEAST = 0x01,
@@ -143,15 +168,16 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool _auto = false);
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, bool _auto = false) {
-		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, _auto);
+	void search(const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T(""));
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T("")) {
+		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aWindow, aSearch);
 	}
-	
-	void search(StringList& who, const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST);
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST) {
-		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode);
-	}
+
+	void search(StringList& who, const string& aName, int64_t aSize = 0, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T(""));
+	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode = TYPE_ANY, SizeModes aSizeMode = SIZE_ATLEAST, int *aWindow = NULL, tstring aSearch = _T("")) {
+		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aWindow, aSearch);
+ 	}
+
 	static string clean(const string& aSearchString);
 
 	short getPort()
@@ -164,7 +190,10 @@ public:
 	void onSearchResult(const string& aLine) {
 		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
-	
+
+	u_int32_t getLastSearch();
+	int getSearchQueueNumber(int* aWindow);
+
 private:
 	
 	Socket* socket;
@@ -174,14 +203,15 @@ private:
 	SearchResult::List seznam;
 	CriticalSection cs;
 
-	SearchManager() : socket(NULL), port(0), stop(false) {
+	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
 		TimerManager::getInstance()->addListener(this);
 	};
 
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+
 	virtual int run();
 
-	virtual ~SearchManager() {
-		TimerManager::getInstance()->removeListener(this);
+	virtual ~SearchManager() throw() {
 		if(socket) {
 			stop = true;
 			socket->disconnect();
@@ -190,11 +220,15 @@ private:
 #endif
 			delete socket;
 		}
+		TimerManager::getInstance()->removeListener(this);
 	};
 
+	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
 	void onData(const u_int8_t* buf, size_t aLen, const string& address);
 	void onNMDCData(const u_int8_t* buf, size_t aLen, const string& address);
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	SearchQueueItemList searchQueue;
+	u_int32_t lastSearch;
+
 };
 
 #endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)

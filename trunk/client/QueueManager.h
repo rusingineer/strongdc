@@ -113,6 +113,23 @@ public:
 		}
 		return;
 	}
+
+	bool useMultiSource() {
+		bool multiChunk = false;
+		switch(SETTING(MULTI_CHUNK)) {
+			case 0:
+				multiChunk = (MessageBox(0, CTSTRING(ASK_MULTISOURCE), CTSTRING(ENABLE_MULTI_SOURCE), MB_YESNO | MB_ICONQUESTION) == IDYES);
+				break;
+			case 1:
+				multiChunk = true;
+				break;
+			case 2:
+				multiChunk = false;
+				break;
+		}
+		return multiChunk;
+	}
+
 	/** Readd a source that was removed */
 	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
 
@@ -131,30 +148,14 @@ public:
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
 
-	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
-		Lock l(cs);
-		QueueItem::List ql;
-		fileQueue.find(ql, aSize, suffix);
-		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
-			sl.push_back((*i)->getTarget());
-		}
-	}
-
-	void getTargetsByRoot(StringList& sl, const TTHValue& tth) {
-		Lock l(cs);
-		QueueItem::List ql;
-		fileQueue.find(ql, &tth);
-		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
-			sl.push_back((*i)->getTarget());
-		}
-	}
-
+	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw();
+	void getTargetsByRoot(StringList& sl, const TTHValue& tth);
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr& aUser, string &message, bool &reuse) throw();
-	void putDownload(Download* aDownload, bool finished = false) throw();
+	Download* getDownload(User::Ptr& aUser, bool supportsTrees, string &message, bool &reuse, QueueItem* q = NULL) throw();
+	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
@@ -209,7 +210,8 @@ public:
 			if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
 				lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
-			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR))
+
+			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 				FileChunksInfo::Free(qi->getTempTarget());
 			
 			qi = NULL;
@@ -234,7 +236,7 @@ private:
 		QueueItem* getNext(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST, QueueItem* pNext = NULL);
 		QueueItem* getRunning(const User::Ptr& aUser);
 		void setRunning(QueueItem* qi, const User::Ptr& aUser);
-		void setWaiting(QueueItem* qi, const User::Ptr& aUser);
+		void setWaiting(QueueItem* qi, const User::Ptr& aUser, bool removeSegment = true);
 		QueueItem::UserListMap& getList(int p) { return userQueue[p]; };
 		void remove(QueueItem* qi);
 		void remove(QueueItem* qi, const User::Ptr& aUser);
@@ -254,7 +256,7 @@ private:
 	friend class Singleton<QueueManager>;
 	
 	QueueManager();
-	virtual ~QueueManager();
+	virtual ~QueueManager() throw();
 	
 	CriticalSection cs;
 	
@@ -277,8 +279,8 @@ private:
 	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, Flags::MaskType addBad, bool utf8) throw(QueueException, FileException);
 
 	int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw();
+	void processList(const string& name, User::Ptr& user, int flags);
 	
-	void removeAll(QueueItem* q);
 	void load(SimpleXML* aXml);
 
 	void setDirty() {

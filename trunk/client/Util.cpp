@@ -61,6 +61,31 @@ bool Util::nlfound = false;
 int Util::nlspeed;
 static void sgenrand(unsigned long seed);
 
+int arrayutf[96] = {-61, -127, -60, -116, -60, -114, -61, -119, -60, -102, -61, -115, -60, -67, -59, -121, -61, -109, -59, -104, -59, -96, -59, -92, -61, -102, -59, -82, -61, -99, -59, -67, -61, -95, -60, -115, -60, -113, -61, -87, -60, -101, -61, -83, -60, -66, -59, -120, -61, -77, -59, -103, -59, -95, -59, -91, -61, -70, -59, -81, -61, -67, -59, -66, -61, -124, -61, -117, -61, -106, -61, -100, -61, -92, -61, -85, -61, -74, -61, -68, -61, -76, -61, -108, -60, -71, -60, -70, -60, -67, -60, -66, -59, -108, -59, -107}; 
+int arraywin[48] = {65, 67, 68, 69, 69, 73, 76, 78, 79, 82, 83, 84, 85, 85, 89, 90, 97, 99, 100, 101, 101, 105, 108, 110, 111, 114, 115, 116, 117, 117, 121, 122, 65, 69, 79, 85, 97, 101, 111, 117, 111, 111, 76, 108, 76, 108, 82, 114}; 
+
+string disableCzChars(string message) { 
+   string s = ""; 
+
+   for(int j = 0; j < message.length(); j++) { 
+      int zn = (int)message[j]; 
+      int zzz = -1; 
+      for(int l = 0; l < 96; l+=2) { 
+         int zn2 = (int)message[j+1]; 
+         if ((zn == arrayutf[l])&&(zn2 == arrayutf[l+1])) { 
+            zzz = (int)(l/2); 
+            break; 
+         } 
+      } 
+      if (zzz >= 0) { 
+         s += (char)(arraywin[zzz]); 
+      } else { 
+         s += message[j]; 
+      } 
+   } 
+
+   return s; 
+}
 
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	TCHAR buf[256];
@@ -239,6 +264,9 @@ string Util::getConfigPath() {
 string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
 	string::size_type i = 0;
 
+	if(BOOLSETTING(CZCHARS_DISABLE))
+		tmp = disableCzChars( tmp );
+
 	if(reverse) {
 		while( (i = tmp.find("&#36;", i)) != string::npos) {
 			tmp.replace(i, 5, "$");
@@ -279,6 +307,9 @@ string Util::validateMessage(string tmp, bool reverse, bool checkNewLines) {
 
 string Util::validateChatMessage(string tmp) {
 	string::size_type i = 0;
+
+	if(BOOLSETTING(CZCHARS_DISABLE))
+		tmp = disableCzChars( tmp );
 
 	i = 0;
 	while( (i = tmp.find('|', i)) != string::npos) {
@@ -375,7 +406,7 @@ string Util::getShortTimeString() {
 	} else {
 		strftime(buf, 254, SETTING(TIME_STAMPS_FORMAT).c_str(), _tm);
 	}
-	return buf;
+	return Text::acpToUtf8(buf);
 }
 
 /**
@@ -384,7 +415,7 @@ string Util::getShortTimeString() {
  * http:// -> port 80
  * dchub:// -> port 411
  */
-void Util::decodeUrl(const string& url, string& aServer, short& aPort, string& aFile) {
+void Util::decodeUrl(const string& url, string& aServer, u_int16_t& aPort, string& aFile) {
 	// First, check for a protocol: xxxx://
 	string::size_type i = 0, j, k;
 	
@@ -737,7 +768,7 @@ string fixedftime(const string& format, struct tm* t) {
 
 	StringMap sm;
 	AutoArray<char> buf(1024);
-	for(int i = 0; i < sizeof(codes); ++i) {
+	for(size_t i = 0; i < sizeof(codes); ++i) {
 		tmp[1] = codes[i];
 		tmp[2] = 0;
 		strftime(buf, 1024-1, tmp, t);
@@ -1049,36 +1080,6 @@ string Util::toDOS(const string& tmp) {
 		}
 	}
 	return tmp2;
-}
-
-int Util::getOsMajor() 
-{
-#ifdef _WIN32
-	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
-	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
-	{
-		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	}
-	GetVersionEx((OSVERSIONINFO*)&ver);
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	return ver.dwMajorVersion;
-#endif //_WIN32
-}
-
-int Util::getOsMinor() 
-{
-#ifdef _WIN32
-	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
-	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
-	{
-		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	}
-	GetVersionEx((OSVERSIONINFO*)&ver);
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	return ver.dwMinorVersion;
-#endif //_WIN32
 }
 
 TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {

@@ -84,8 +84,8 @@ public:
 		List directories;
 		File::List files;
 		
-		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false) 
-			: name(aName), parent(aParent), adls(_adls), rmDC403D1detected(false) { };
+		Directory(Directory* aParent = NULL, const string& aName = Util::emptyString, bool _adls = false, bool aComplete = true) 
+			: name(aName), parent(aParent), adls(_adls), rmDC403D1detected(false), complete(aComplete) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction<Directory*>());
@@ -101,7 +101,6 @@ public:
 			int64_t x = 0;
 			for(File::Iter i = files.begin(); i != files.end(); ++i) {
 				x+=(*i)->getSize();
-
 			}
 			return x;
 		}
@@ -110,6 +109,7 @@ public:
 		GETSET(Directory*, parent, Parent);		
 		GETSET(bool, rmDC403D1detected, RMDC403D1detected);
 		GETSET(bool, adls, Adls);		
+		GETSET(bool, complete, Complete);
 
 	private:
 		Directory(const Directory&);
@@ -130,14 +130,14 @@ public:
 		delete root;
 	};
 
-	void loadFile(const string& name, bool doAdl);
+	void loadFile(const string& name);
 
-	void load(const string& i, bool doAdl);
-	void loadXML(const string& xml, bool doAdl);
+	void load(const string& i);
+	void loadXML(const string& xml);
 
-	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
+	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
+	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
+	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT, bool multiSource = false);
 	void downloadMP3(File* aFile, const string& aTarget);
 
 	string getPath(Directory* d);	

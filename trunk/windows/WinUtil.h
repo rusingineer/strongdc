@@ -452,6 +452,9 @@ public:
 		return dirIconIndex;
 	}
 	
+	static int getOsMajor();
+	static int getOsMinor();
+	
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
 	static void splitTokens(int* array, const string& tokens, int maxItems = -1) throw();
@@ -494,6 +497,7 @@ public:
 	static string formatTime(long rest);
 	static int getImage(const User::Ptr& u);
 	static int getFlagImage(const char* country, bool fullname = false);
+	static string generateStats();
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };

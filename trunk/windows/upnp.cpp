@@ -43,7 +43,6 @@ UPnP::UPnP( const string theIPAddress, const string theProtocol, const string th
 // Opens the UPnP ports defined when the object was created
 HRESULT UPnP::OpenPorts()
 {
-	CoInitialize(NULL);
     HRESULT hr = CoCreateInstance (__uuidof(UPnPNAT),
                                    NULL,
                                    CLSCTX_INPROC_SERVER,
@@ -87,7 +86,6 @@ HRESULT UPnP::ClosePorts()
 		SysFreeString (bstrInternalClient);
 		SysFreeString (bstrDescription);
 		SysFreeString (bstrExternalIP);
-		CoUninitialize();
 	}
 
 	return hr;

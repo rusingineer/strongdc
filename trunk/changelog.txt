@@ -1,3 +1,21 @@
+	-- StrongDC++ next version --
+
+* opraven problém s mezinárodními pøezdívkami
+* opraven problém s unicode znaky v èasových známkách
+* pøidána volba akce pro dvojklik v seznamu uživatelù, v chatu a v pøenosech (CZDC++)
+* pøidána volba pro automatické pøepnutí na rychlejšího uživatele na konci stahování
+* opraven uplynulý èas stahování
+* opraveno zobrazení progressbarù pro soubory > 2GB
+* pøidána podpora segmentù pro GetZBlock
+* opraven pád v kritické sekci QueueManageru
+* pøepsána fronta hledání (THX Naga)
+* vráceno odstraòování diakritiky v chatu (THX popKorn)
+* pøidáno seskupování dokonèených segmentù v Dokonèených uploadech
+* odstranìna globální emulace; je-li to nutné použijte lokální pro jednotlivé huby
+* pøidána volba pro vypnutí segmentového stahování a použití standardního zpùsobu s rollbackem
+* pøidána volba pro zobrazení informací o segmentu na progressbarech
+* pøidáno více barev do seznamu uživatelù (CZDC++)
+
 	-- StrongDC++ 1.00 RC9 --
 
 *** VAROVÁNÍ ***

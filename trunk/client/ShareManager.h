@@ -46,7 +46,6 @@ class OutputStream;
 class MemoryInputStream;
 
 struct ShareLoader;
-
 class ShareManager : public Singleton<ShareManager>, private SettingsManagerListener, private Thread, private TimerManagerListener,
 	private HashManagerListener, private DownloadManagerListener
 {
@@ -73,11 +72,15 @@ public:
 
 	StringPairList getDirectories() const { RLock<> l(cs); return virtualMap; }
 
-	MemoryInputStream* generatePartialList(const string& dir);
+	MemoryInputStream* generatePartialList(const string& dir, bool recurse);
 	MemoryInputStream* getTree(const string& aFile);
+
+	AdcCommand getFileInfo(const string& aFile) throw(ShareException);
 
 	int64_t getShareSize() throw();
 	int64_t getShareSize(const string& aDir) throw();
+
+	size_t getSharedFiles() throw();
 
 	string getShareSizeString() { return Util::toString(getShareSize()); };
 	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); };
@@ -126,7 +129,7 @@ private:
 			typedef set<File, FileLess> Set;
 			typedef Set::iterator Iter;
 
-			File() : size(0), parent(NULL), tth(NULL) { };
+			File() : size(0), parent(NULL) { };
 			File(const string& aName, int64_t aSize, Directory* aParent, const TTHValue& aRoot) : 
 			name(aName), tth(aRoot), size(aSize), parent(aParent) { };
 			File(const File& rhs) : 
@@ -172,9 +175,15 @@ private:
 
 		int64_t getSize() {
 			int64_t tmp = size;
-			for(MapIter i = directories.begin(); i != directories.end(); ++i) {
+			for(MapIter i = directories.begin(); i != directories.end(); ++i)
 				tmp+=i->second->getSize();
-			}
+			return tmp;
+		}
+
+		size_t countFiles() {
+			size_t tmp = files.size();
+			for(MapIter i = directories.begin(); i != directories.end(); ++i)
+				tmp+=i->second->countFiles();
 			return tmp;
 		}
 
@@ -299,7 +308,6 @@ private:
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
 	virtual void on(HashManagerListener::Finished) throw();
-	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw() { }
 
 	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {

@@ -81,7 +81,7 @@ public:
 	typedef List::iterator Iter;
 
 	Client(const string& hubURL, char separator, bool usesEscapes = false);
-	virtual ~Client();
+	virtual ~Client() throw();
 
 	virtual void connect(const User* user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
@@ -91,7 +91,7 @@ public:
 	virtual void send(const string& aMessage) = 0;
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage) = 0;
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false) = 0;
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) = 0;
 	virtual void password(const string& pwd) = 0;
 	virtual void info(bool alwaysSend) = 0;
 	virtual void sendMeMessage(const string& aMessage) = 0;
@@ -165,8 +165,6 @@ public:
 		return sm;
 	}
 
-	virtual int getSearchQueueNumber(const string& aString) = 0;
-
 protected:
 	struct Counts {
 		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
@@ -194,8 +192,8 @@ protected:
 
 	GETSET(string, nick, Nick);
 	GETSET(string, defpassword, Password);
-	GETSET(bool, registered, Registered);
 	GETSET(u_int32_t, reconnDelay, ReconnDelay);
+	GETSET(bool, registered, Registered);
 	GETSET(bool, stealth, Stealth);
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
@@ -204,7 +202,6 @@ protected:
 	GETSET(string, rawFive, RawFive);
 	GETSET(int, mode, Mode);
 	GETSET(string, ip, IP);
-	GETSET(u_int32_t, last_search_time, LastSearchTime);
 
 private:
 
@@ -222,7 +219,7 @@ private:
 	
 	string address;
 	string addressPort;
-	short port;
+	u_int16_t port;
 
 	CountType countType;
 

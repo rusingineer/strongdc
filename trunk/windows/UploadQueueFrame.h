@@ -170,6 +170,7 @@ private:
 		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
 			UploadManager::getInstance()->clearUserFiles(*i);
 		}
+		updateStatus();
 	}
 	
 	void removeSelectedUser() {
@@ -177,6 +178,7 @@ private:
 		if(User) {
 			UploadManager::getInstance()->clearUserFiles(User);
 		}
+		updateStatus();
 	}
 
 	// Communication with manager

@@ -63,7 +63,6 @@ void NmdcHub::connect() {
  	lastMyInfoB.clear();
 	lastUpdate = 0;
 	validatenicksent = false;
-	setLastSearchTime(GET_TICK());
 
 	if(socket->isConnected()) {
 		disconnect();
@@ -402,7 +401,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		if(state != STATE_CONNECTED || (temp = strtok((char*)aLine+13, " ")) == NULL)
 			return;
 
-		if(strcmp(temp, getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+		if(strcmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
 			return;
 
 		if((temp = strtok(NULL, ":")) == NULL)
@@ -412,7 +411,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		if((temp = strtok(NULL, " ")) == NULL)
 			return;
 
-		ConnectionManager::getInstance()->connect(server, (short)atoi(temp), getNick()); 
+		ConnectionManager::getInstance()->nmdcConnect(server, (short)atoi(temp), getNick()); 
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::ConnectToMe(), this, fromNmdc(server), (short)atoi(temp));
 	} else if(strncmp(aLine+1, "RevConnectToMe ", 15) == 0) {
 		if(state != STATE_CONNECTED) {
@@ -429,7 +428,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if((temp = strtok(NULL, "\0")) == NULL)
 				return;
 
-			if(strcmp(temp, getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
+			if(strcmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
 				return;
 
 			if(i == users.end()) {
@@ -536,7 +535,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			feat.push_back("UserIP2");
 			feat.push_back("TTHSearch");
 
-			if ((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC))
+			if (getStealth() == false)
 				feat.push_back("QuickList");
 
 			if(BOOLSETTING(COMPRESS_TRANSFERS))
@@ -741,13 +740,13 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		modeChar = '5';
 	
 	string VERZE = DCVERSIONSTRING;	
-	if ((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_CZDC)) {
+	if (getStealth() == false) {
 		tmp0 = "<StrgDC++";
 
 #ifdef isCVS
-	VERZE = VERSIONSTRING CZDCVERSIONSTRING CVSVERSION;
+	VERZE = VERSIONSTRING STRONGDCVERSIONSTRING CVSVERSION;
 #else
-	VERZE = VERSIONSTRING CZDCVERSIONSTRING;
+	VERZE = VERSIONSTRING STRONGDCVERSIONSTRING;
 #endif
 
 	}
@@ -759,12 +758,13 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
 		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
 
-	if((getStealth() == false) && (SETTING(CLIENT_EMULATION) != SettingsManager::CLIENT_DC)) {
-		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			int tag = 0;
-			tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
-			extendedtag += tmp5 + Util::toString(tag);
-		}
+	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+		int tag = 0;
+		tag = SETTING(MAX_UPLOAD_SPEED_LIMIT);
+		extendedtag += tmp5 + Util::toString(tag);
+	}
+
+	if(getStealth() == false) {
 		if (UploadManager::getFireballStatus()) {
 			StatusMode += 8;
 		} else if (UploadManager::getFileServerStatus()) {
@@ -777,10 +777,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	} else {
 		if (connection == "Modem") { connection = "56Kbps"; }
 		if (connection == "Wireless") { connection = "Satellite"; }
-
-		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-			speedDescription = "["+ Util::toString(SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*8) + "K/"+ Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*8) +"K]";
-		}
 	}
 
 	string description = getDescription();
@@ -817,19 +813,7 @@ void NmdcHub::disconnect() throw() {
 	}
 }
 
-void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, bool _auto){
-	checkstate();
-	dcdebug("search %s\n", aString);
-	Search s;
-	s.aFileType = aFileType;
-	s.aSize = aSize;
-	s.aString = aString;
-	s.aSizeType = aSizeType;
-	s.autoSearch = _auto;
-	searchQueue.add(s, _auto);
-}
-
-void NmdcHub::doSearch(int aSizeType, int64_t aSize, int aFileType, const string& aString){
+void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString){
 	checkstate(); 
 	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
@@ -900,8 +884,6 @@ void NmdcHub::redirect(const User* aUser, const string& aServer, const string& a
 
 // TimerManagerListener
 void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	setLastSearchTime(searchQueue.last_search_time);
-			
 	if(socket && (lastActivity + getReconnDelay() * 1000) < aTick) {
 		// Nothing's happened for ~120 seconds, check if we're connected, if not, try to connect...
 		lastActivity = aTick;
@@ -924,16 +906,6 @@ void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		
 		while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
 			flooders.pop_front();
-		}
-	}
-
-	if(state != STATE_CONNECTED){
-		searchQueue.clearAll();
-	}else{
-		Search s;
-		
-		if(searchQueue.getSearch(s)){
-			doSearch(s.aSizeType, s.aSize, s.aFileType , s.aString);
 		}
 	}
 }

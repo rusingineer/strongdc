@@ -22,8 +22,7 @@
 #include "FinishedManager.h"
 #include "Client.h"
 
-FinishedManager::~FinishedManager()
-{
+FinishedManager::~FinishedManager() throw() {
 	Lock l(cs);
 	for_each(downloads.begin(), downloads.end(), DeleteFunction<FinishedItem*>());
 	for_each(uploads.begin(), uploads.end(), DeleteFunction<FinishedItem*>());
@@ -157,7 +156,7 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 		fire(FinishedManagerListener::RemovedAllUl());
 }
 
-void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
+void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) throw()
 {
 		if(!d->isSet(Download::FLAG_USER_LIST))	
 		{	if((!SETTING(FINISHFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -321,7 +320,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d) throw()
 
 		} else
 		
-		if(!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) {
+			if((!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 				FinishedItem *item = new FinishedItem(
 					d->getTarget(), d->getUserConnection()->getUser()->getNick(),
 					d->getUserConnection()->getUser()->getLastHubName(),

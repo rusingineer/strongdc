@@ -44,12 +44,16 @@ private:
 	int favoriteColour;
 	int reservedSlotColour;
 	int ignoredColour;
+	int fastColour;
+	int serverColour;
+	int activeColour;
+	int pasiveColour;
+	int opColour; 
 	int clientCheckedColour;
 	int fileListCheckedColour;
 	int fullCheckedColour;
 	int badClientColour;
 	int badFilelistColour;
-
 
 protected:
 	static Item items[];

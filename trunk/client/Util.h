@@ -292,7 +292,7 @@ public:
 		return (j != wstring::npos) ? path.substr(j+1, i-j-1) : path;
 	}
 
-	static void decodeUrl(const string& aUrl, string& aServer, short& aPort, string& aFile);
+	static void decodeUrl(const string& aUrl, string& aServer, u_int16_t& aPort, string& aFile);
 	static string validateFileName(string aFile);
 	static string formatStatus(int iStatus) {
 		string tmp = emptyString;
@@ -531,9 +531,6 @@ public:
 	static string getOsVersion();
 
 	static string getIpCountry (string IP);
-
-	static int getOsMinor();
-	static int getOsMajor(); 
 
 	static bool getAway() { return away; };
 	static void setAway(bool aAway);

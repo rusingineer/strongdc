@@ -139,12 +139,6 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
 {
 public:
-	static bool m_boFireball;
-	static bool m_boFireballLast;
-	static bool m_boFileServer;
-	static bool m_boFileServerLast;
-	static bool getFireballStatus() { return m_boFireball; };
-	static bool getFileServerStatus() { return m_boFileServer; };
 
 	/** @return Number of uploads. */ 
 	size_t getUploadCount() { Lock l(cs); return uploads.size(); };
@@ -187,18 +181,21 @@ public:
 
 	/** @internal */
 	bool getAutoSlot() {
+		/** A 0 in settings means disable */
 		if(SETTING(MIN_UPLOAD_SPEED) == 0)
 			return false;
-		if(getLastGrant() + 30*1000 < GET_TICK())
+		/** Only grant one slot per 30 sec */
+		if(GET_TICK() < getLastGrant() + 30*1000)
 			return false;
-		return (SETTING(MIN_UPLOAD_SPEED)*1024) < UploadManager::getInstance()->getAverageSpeed();
+		/** Grant if uploadspeed is less than the threshold speed */
+		return UploadManager::getInstance()->getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
 	}
 
 	/** @internal */
 	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
 	int hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.count(aUser); }
 		
-	/** @param aUser Reserve an upload slot for this user. */
+	/** @param aUser Reserve an upload slot for this user and connect. */
 	void reserveSlot(User::Ptr& aUser) {
 		{
 			Lock l(cs);
@@ -258,6 +255,8 @@ public:
 	UploadQueueItem::UserMap getQueue() const;
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
+	static bool getFireballStatus() { return m_boFireball; };
+	static bool getFileServerStatus() { return m_boFileServer; };
 
 private:
 	void throttleZeroCounters();
@@ -270,6 +269,18 @@ private:
 		   mCycleTime,
 		   mByteSlice;
 
+	static bool m_boFireball;
+	static bool m_boFileServer;
+	
+	// Variables for Fireball detecting
+	bool m_boLastTickHighSpeed;
+	u_int32_t m_iHighSpeedStartTick;
+	bool boFireballSent;
+
+	// Main fileserver flag
+	bool boFileServerSent;
+
+	
 	Upload::List uploads;
 	CriticalSection cs;
 
@@ -283,7 +294,7 @@ private:
 	UploadManager() throw();
 	virtual ~UploadManager() throw();
 
-	void removeConnection(UserConnection::Ptr aConn);
+	void removeConnection(UserConnection::Ptr aConn, bool ntd);
 	void removeUpload(Upload* aUpload) {
 		Lock l(cs);
 		dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
@@ -303,17 +314,19 @@ private:
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();
-	virtual void on(Get, UserConnection*, const string&, int64_t) throw();
+	virtual void on(Get, UserConnection*, const string&, int64_t, int64_t) throw();
 	virtual void on(GetBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, false); }
 	virtual void on(GetZBlock, UserConnection* conn, const string& line, int64_t resume, int64_t bytes) throw() { onGetBlock(conn, line, resume, bytes, true); }
 	virtual void on(Send, UserConnection*) throw();
 	virtual void on(GetListLength, UserConnection* conn) throw();
 	virtual void on(TransmitDone, UserConnection*) throw();
 
-	virtual void on(Command::GET, UserConnection*, const Command&) throw();
+	virtual void on(AdcCommand::GET, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) throw();
+	virtual void on(AdcCommand::NTD, UserConnection*, const AdcCommand&) throw();
 
 	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
-	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes);
+	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool listRecursive = false);
 };
 
 #endif // !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)

@@ -86,7 +86,7 @@ int __cdecl main(int argc, char* argv[])
 		ex.addTag("Language");
 		ex.addChildAttrib("Name", string("Example Language"));
 		ex.addChildAttrib("Author", string("BigMuscle"));
-		ex.addChildAttrib("Version", string(VERSIONSTRING CZDCVERSIONSTRING));
+		ex.addChildAttrib("Version", string(VERSIONSTRING STRONGDCVERSIONSTRING));
 		ex.addChildAttrib("Revision", string("1"));
 		ex.stepIn();
 		ex.addTag("Strings");

@@ -61,6 +61,7 @@ public:
 		NOTIFY_HANDLER(IDC_FINISHED_UL, LVN_COLUMNCLICK, onColumnClickFinished)
 		NOTIFY_HANDLER(IDC_FINISHED_UL, LVN_KEYDOWN, onKeyDown)
 		NOTIFY_HANDLER(IDC_FINISHED_UL, NM_DBLCLK, onDoubleClick)
+		NOTIFY_HANDLER(IDC_FINISHED_UL, NM_CLICK, onLButton)
 		CHAIN_MSG_MAP(baseClass)
 	END_MSG_MAP()
 		
@@ -74,6 +75,7 @@ public:
 	LRESULT onOpenFolder(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onUploadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	
 	LRESULT onSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /* bHandled */) {
 		ctrlList.SetFocus();
@@ -192,7 +194,8 @@ private:
 	OMenu tabMenu;
 	
 	ExListViewCtrl ctrlList;
-	
+	CImageList stateImages;
+
 	int64_t totalBytes;
 	int64_t totalTime;
 
@@ -210,14 +213,42 @@ private:
 	void updateList(const FinishedItem::List& fl) {
 		ctrlList.SetRedraw(FALSE);
 		for(FinishedItem::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
-			addEntry(*i);
+			bool add = true;
+			(*i)->subItems.clear();
+			for(int k = 0, j = ctrlList.GetItemCount(); k < j; ++k) {
+				FinishedItem* fi = (FinishedItem*)ctrlList.GetItemData(k);
+				
+				if(!fi->mainitem) continue;
+	
+				if((fi->getUser() == (*i)->getUser()) && (fi->getTarget() == (*i)->getTarget())) {
+					fi->subItems.push_back((*i));
+					(*i)->main = fi;
+					(*i)->mainitem = false;
+
+					if(fi->subItems.size() == 1){
+						ctrlList.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+					}else if(!fi->collapsed){
+						addEntry((*i), k + 1);
+					}
+					add = false;
+					break;
+				}
+			}
+			if(add) {
+				(*i)->mainitem = true;
+				(*i)->collapsed = true;
+
+				addEntry(*i);
+			}
 		}
 		ctrlList.SetRedraw(TRUE);
 		ctrlList.Invalidate();
 		updateStatus();
 	}
 
-	void addEntry(FinishedItem* entry);
+	void addEntry(FinishedItem* entry, int pos = -1);
+	void Collapse(FinishedItem* i, int a);
+	void Expand(FinishedItem* i, int a);
 	
 	virtual void on(AddedUl, FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);

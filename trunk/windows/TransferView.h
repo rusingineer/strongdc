@@ -39,7 +39,6 @@
 
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
-	private HashManagerListener,
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>,
 	private SettingsManagerListener	
 {
@@ -66,7 +65,6 @@ public:
 		MESSAGE_HANDLER(WM_NOTIFYFORMAT, onNotifyFormat)
 		COMMAND_ID_HANDLER(IDC_FORCE, onForce)
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
-		COMMAND_ID_HANDLER(IDC_OFFCOMPRESS, onOffCompress)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
 		COMMAND_ID_HANDLER(IDC_CONNECT_ALL, onConnectAll)
@@ -88,7 +86,6 @@ public:
 	LRESULT onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);			
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onOffCompress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
@@ -166,7 +163,7 @@ private:
 		REMOVE_ITEM,
 		UPDATE_ITEM,
 		UPDATE_ITEMS,
-		SET_STATE,
+		INSERT_MAIN_ITEM,
 		UNSET_STATE,
 		REMOVE_ITEM_BUT_NOT_FREE,
 		INSERT_SUBITEM
@@ -218,8 +215,8 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
-			pocetUseru(1), celkovaRychlost(0), oldTarget(Util::emptyStringT),
-			compressRatio(1.0), finished(false), tth(NULL), flagImage(0) { update(); };
+			pocetUseru(1), Target(Util::emptyStringT), file(Util::emptyStringT),
+			compressRatio(1.0), finished(false), flagImage(0) { update(); };
 
 		Types type;
 		Status status;
@@ -228,11 +225,9 @@ private:
 		int64_t start;
 		int64_t actual;
 		int64_t speed;
-		int64_t celkovaRychlost;
 		int64_t timeLeft;
 		tstring statusString;
 		tstring file;
-		tstring path;
 		tstring IP;
 		tstring country;		
 		QueueItem* qi;
@@ -242,10 +237,7 @@ private:
 		bool mainItem;
 		int pocetUseru;
 		double compressRatio;
-		tstring oldTarget;
-		tstring downloadTarget;
 		bool finished;
-		TTHValue* tth;		
 		int flagImage;
 		
 
@@ -360,22 +352,20 @@ private:
 	virtual void on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) throw();
 
-	virtual void on(DownloadManagerListener::Complete, Download* aDownload) throw() { onTransferComplete(aDownload, false);}
+	virtual void on(DownloadManagerListener::Complete, Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, isTree);}
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
-	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
+	virtual void on(DownloadManagerListener::Starting, Download* aDownload, bool isActiveSegment) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
+	virtual void on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi, const string& aMessage) throw();
+	virtual void on(DownloadManagerListener::Verifying, const string& fileName, int64_t) throw();
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
-	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true); }
+	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
-	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw() { }
-	virtual void on(HashManagerListener::Finished) throw() { }
-	virtual void on(HashManagerListener::Verifying, const string& fileName, int64_t remainingBytes) throw();
-
-	void onTransferComplete(Transfer* aTransfer, bool isUpload);
+	void onTransferComplete(Transfer* aTransfer, bool isUpload, bool isTree);
 
 	void InsertItem(ItemInfo* i, bool mainThread = false);
 	void Collapse(ItemInfo* i, int a);

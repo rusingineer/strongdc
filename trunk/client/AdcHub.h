@@ -17,12 +17,8 @@
  */
 
 #include "Client.h"
-#include "BufferedSocket.h"
-#include "CID.h"
 #include "AdcCommand.h"
-#include "TigerHash.h"
 
-class AdcHub;
 class ClientManager;
 
 class AdcHub : public Client, public CommandHandler<AdcHub> {
@@ -40,7 +36,7 @@ public:
 	virtual void send(const string& aMessage) { socket->write(aMessage); };
 	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage);
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString);
 	virtual void password(const string& pwd);
 	virtual void info(bool alwaysSend);
 	virtual void sendMeMessage(const string& aMessage);
@@ -52,23 +48,22 @@ public:
 
 	virtual User::NickMap& lockUserList() { return nickMap; };
 	virtual void unlockUserList() { };
-	virtual int getSearchQueueNumber(const string& aString) { return 0; };
 
-	template<typename T> void handle(T, Command&) { 
+	template<typename T> void handle(T, AdcCommand&) { 
 		//Speaker<AdcHubListener>::fire(t, this, c);
 	}
 
-	void send(const Command& cmd) { socket->write(cmd.toString(false)); };
+	void send(const AdcCommand& cmd) { socket->write(cmd.toString(false)); };
 
-	void handle(Command::SUP, Command& c) throw();
-	void handle(Command::MSG, Command& c) throw();
-	void handle(Command::INF, Command& c) throw();
-	void handle(Command::GPA, Command& c) throw();
-	void handle(Command::QUI, Command& c) throw();
-	void handle(Command::CTM, Command& c) throw();
-	void handle(Command::RCM, Command& c) throw();
+	void handle(AdcCommand::SUP, AdcCommand& c) throw();
+	void handle(AdcCommand::MSG, AdcCommand& c) throw();
+	void handle(AdcCommand::INF, AdcCommand& c) throw();
+	void handle(AdcCommand::GPA, AdcCommand& c) throw();
+	void handle(AdcCommand::QUI, AdcCommand& c) throw();
+	void handle(AdcCommand::CTM, AdcCommand& c) throw();
+	void handle(AdcCommand::RCM, AdcCommand& c) throw();
 
-	virtual string escape(string const& str) const { return Command::escape(str); };
+	virtual string escape(string const& str) const { return AdcCommand::escape(str); };
 	void refreshUserList(bool unknownOnly /* = false */) {
 	}
 
@@ -86,7 +81,7 @@ private:
 
 	AdcHub(const AdcHub&);
 	AdcHub& operator=(const AdcHub&);
-
+	virtual ~AdcHub() throw() { }
 	User::NickMap nickMap;
 	User::Ptr hub;
 	StringMap lastInfoMap;
@@ -100,10 +95,7 @@ private:
 
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
 	virtual void on(Connected) throw();
-	virtual void on(Line, const string& aLine) throw() { 
-		fire(ClientListener::Message(), this, "<ADC>" + aLine + "</ADC>");
-		dispatch(aLine); 
-	}
+	virtual void on(Line, const string& aLine) throw();
 	virtual void on(Failed, const string& aLine) throw();
 };
 

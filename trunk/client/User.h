@@ -48,7 +48,6 @@ public:
 		HIDDEN_BIT,
 		HUB_BIT,
 		BOT_BIT,
-		FORCEZOFF_BIT,
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
@@ -64,7 +63,6 @@ public:
 		HIDDEN = 1<<HIDDEN_BIT,
 		HUB = 1<<HUB_BIT,
 		BOT = 1<<BOT_BIT,
-		FORCEZOFF = 1<<FORCEZOFF_BIT,
 		AWAY = 1<<AWAY_BIT,
 		SERVER = 1<<SERVER_BIT,
 		FIREBALL = 1<<FIREBALL_BIT,
@@ -85,11 +83,10 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); };
 	};
 
-	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { }
+	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			/*checked(false), */realBytesShared(-1), fakeShareBytesShared(-1), ctype(10), status(1)
+			ctype(10), status(1), ip(Util::emptyString) { unCacheClientInfo(); };
 
-			 { unCacheClientInfo(); };
 	virtual ~User() throw();
 
 	void setClient(Client* aClient);
@@ -159,9 +156,6 @@ public:
 	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(bool, autoextraslot, AutoExtraSlot);
 	GETSET(string, testSUR, TestSUR);
-	//GETSET(bool, hasTestSURinQueue, HasTestSURinQueue); 
-	//GETSET(bool, checked, Checked); 
-	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
 	GETSET(int64_t, realBytesShared, RealBytesShared);
 	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
@@ -173,7 +167,6 @@ public:
 	GETSET(bool, badFilelist, BadFilelist);	
 	GETSET(int, fileListDisconnects, FileListDisconnects);
 	GETSET(int, connectionTimeouts, ConnectionTimeouts);
-
 	StringMap& clientEscapeParams(StringMap& sm) const;
 
 	void setCheat(const string& aCheatDescription, bool aBadClient) {
@@ -196,6 +189,25 @@ public:
 	string getReport();
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
+		if(!isFavoriteUser()) {
+			lastHubAddress = Util::emptyString;
+			lastHubName = Util::emptyString;
+			description = Util::emptyString;
+		}
+		connection = Util::emptyString;
+		email = Util::emptyString;
+		tag = Util::emptyString;
+		version = Util::emptyString;
+		mode = Util::emptyString;
+		hubs = Util::emptyString;
+		slots = Util::emptyString;
+		upload = Util::emptyString;
+		ip = Util::emptyString;
+		supports = Util::emptyString;
+		bytesShared = -1;
+		realBytesShared = -1;
+		fakeShareBytesShared = -1;
+
 		testSURComplete = false;
 		filelistComplete = false;
 		pk = Util::emptyString;
@@ -203,15 +215,11 @@ public:
 		host = Util::emptyString;
 		supports = Util::emptyString;
 		clientType = Util::emptyString;
-		downloadSpeed = -1;
-		fileListSize = -1;
-		//ctype = 10;
-		//status = 0;
 		generator = Util::emptyString;
 		testSUR = Util::emptyString;
-		//hasTestSURinQueue = false;
-		unknownCommand = Util::emptyString;
 		cheatingString = Util::emptyString;
+		comment = Util::emptyString;
+		fileListSize = -1;
 		listLength = -1;
 		badClient = false;
 		badFilelist = false;
