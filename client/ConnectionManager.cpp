@@ -412,7 +412,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 			return;
 		}
 
-		aSource->getUser()->setFakeSharing(false);
+		//aSource->getUser()->setBadClient(false);
 
 		if (/*aSource->getUser()->getClient()->getOp() &&*/ aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {
 			string host = Util::emptyString;
@@ -674,7 +674,9 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 		else if(*i == UserConnection::FEATURE_TTHF)
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
 	}
-	conn->getUser()->setSupports(sup); 
+	if(conn->getUser() != (User::Ptr)NULL) {
+		conn->getUser()->setSupports(sup); 
+	}
 }
 
 /**

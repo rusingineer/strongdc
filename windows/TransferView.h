@@ -156,6 +156,7 @@ private:
 		UPDATE_ITEM,
 		UPDATE_ITEMS,
 		SET_STATE,
+		UNSET_STATE,
 		REMOVE_ITEM_BUT_NOT_FREE,
 		INSERT_SUBITEM
 	};
@@ -372,6 +373,7 @@ private:
 	void insertSubItem(ItemInfo* j, int idx);
 
 	ItemInfo* findMainItem(tstring Target);
+	ItemInfo* findLastUserItem(tstring Target);
 
 };
 

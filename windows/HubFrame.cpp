@@ -444,10 +444,13 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 	if(ctrlUsers.getSortColumn() == UserInfo::COLUMN_NICK) {
 		// Sort order of the other columns changes too late when the user's updated
 		UserInfo* ui = i->second;
-		for(int j = 0; j < ctrlUsers.GetItemCount(); ++j) {
-			if(ctrlUsers.getItemData(j) == ui)
-				return j;
+
+		if(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) != ui) {
+			return ctrlUsers.findItem(Text::toT(aUser->getNick()));
 		}
+		//dcassert(ctrlUsers.getItemData(ctrlUsers.getSortPos(ui)) == ui);
+
+		return ctrlUsers.getSortPos(ui);
 	}
 	return ctrlUsers.findItem(Text::toT(aUser->getNick()));
 }
@@ -586,8 +589,11 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	return 0;
 }
 
-bool HubFrame::updateUser(const User::Ptr& u) {
-	int i = findUser(u);
+bool HubFrame::updateUser(const User::Ptr& u, bool searchinlist /* = true */) {
+	int i = -1;
+	if(searchinlist)
+		i = findUser(u);
+
 	if(i == -1) {
 		UserInfo* ui = new UserInfo(u, &m_UserListColumns);
 		userMap.insert(make_pair(u, ui));
@@ -645,8 +651,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						}
 						if(client->getOp() && !u->isSet(User::OP)) {
 							if(Util::toString(u->getBytesShared()).find("000000") != -1) {
-								string detectString = Util::formatNumber(u->getBytesShared())+" - the share size had too many zeroes in it";
-								u->setFakeSharing(true);
+								string detectString = Util::formatExactSize(u->getBytesShared())+" - the share size had too many zeroes in it";
+								u->setBadFilelist(true);
 								u->setCheat(Util::validateMessage(detectString, false), false);
 								u->sendRawCommand(SETTING(FAKESHARE_RAW));
 								this->updateUser(u);
@@ -691,7 +697,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			ctrlUsers.resort();
 		ctrlUsers.SetRedraw(TRUE);
 	} else if(wParam == CHEATING_USER) {
-		string* x = (string*)lParam;
+		tstring* x = (tstring*)lParam;
 
 		CHARFORMAT2 cf;
 		memset(&cf, 0, sizeof(CHARFORMAT2));
@@ -703,10 +709,10 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		cf.crTextColor = SETTING(ERROR_COLOR);
 
 		if(BOOLSETTING(POPUP_CHEATING_USER)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(*x).c_str(), CTSTRING(CHEATING_USER));
+			MainFrame::getMainFrame()->ShowBalloonTip((*x).c_str(), CTSTRING(CHEATING_USER));
 		}
 
-		addLine(_T("*** ")+Text::toT(*x),cf);
+		addLine(_T("*** ") + *x,cf);
 		delete x;
 	} else if(wParam == DISCONNECTED) {
 		clearUserList();
@@ -1210,16 +1216,34 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);
-		client->send(Util::formatParams(uc.getCommand(), ucParams));
+
+		client->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams));
 	} else {
-		int sel = -1;
-		while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
-			UserInfo* u = (UserInfo*) ctrlUsers.GetItemData(sel);
-			if(u->user->isOnline()) {
-				StringMap tmp = ucParams;
-				u->user->getParams(tmp);
-				client->escapeParams(tmp);
-				client->send(Util::formatParams(uc.getCommand(), tmp));
+		int sel;
+		UserInfo* u = NULL;
+		if (sSelectedUser != _T("")) {
+			sel = ctrlUsers.findItem(sSelectedUser);
+			if ( sel >= 0 ) { 
+				u = (UserInfo*)ctrlUsers.getItemData(sel);
+				if(u->user->isOnline()) {
+					StringMap tmp = ucParams;
+					u->user->getParams(tmp);
+					client->escapeParams(tmp); 
+
+					client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
+				}
+			}
+		} else {
+			sel = -1;
+			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
+				u = (UserInfo*)ctrlUsers.getItemData(sel);
+				if(u->user->isOnline()) {
+					StringMap tmp = ucParams;
+					u->user->getParams(tmp);
+					client->escapeParams(tmp);
+
+					client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
+				}
 			}
 		}
 	}
@@ -1691,7 +1715,6 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				junkSize = dl->getJunkSize();
 				realSize -= junkSize;
 			}	
-			user->setChecked(true);
 			double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
 			int64_t sizeTolerated = (int64_t)(realSize*multiplier);
 			string detectString = "";
@@ -1709,7 +1732,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 			}
 
 			if(isFakeSharing) {
-				user->setFakeSharing(true);
+				user->setBadFilelist(true);
 				detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
 				if(realSize == 0) {
 					detectString += STRING(CHECK_0BYTE_SHARE);
@@ -1717,7 +1740,8 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 					double qwe = (double)((double)statedSize / (double)realSize);
 					string str = Util::toString(qwe);
 					char buf[128];
-					sprintf(buf, CSTRING(CHECK_INFLATED), str);
+					_snprintf(buf, 127, CSTRING(CHECK_INFLATED), str);
+					buf[127] = 0;
 					inflationString = buf;
 					detectString += inflationString;
 				}
@@ -1729,7 +1753,7 @@ BOOL HubFrame::checkCheating(User::Ptr &user, DirectoryListing* dl) {
 				user->setCheat(Util::validateMessage(detectString, false), false);
 				user->sendRawCommand(SETTING(FAKESHARE_RAW));
 			}     
-			//this->updateUser(user);
+			user->setFilelistComplete(true);
 			user->updated();
 			if(isFakeSharing) return true;
 		}
@@ -1847,7 +1871,7 @@ bool HubFrame::PreparePopupMenu( CWindow *pCtrl, bool boCopyOnly, tstring& sNick
 	} else {
 		if(sNick != _T("")) {
 			// Jediny nick
-			tstring sTmp = _T("User ") + sNick;
+			tstring sTmp = TSTRING(USER) + _T(" ") + sNick;
 			pMenu->InsertSeparator(0, TRUE, Text::fromT(sTmp));
 			if ( pCtrl == ((CWindow*) &ctrlClient )) {
 				if(!BOOLSETTING(LOG_PRIVATE_CHAT)) {
@@ -2086,34 +2110,6 @@ void HubFrame::getUserResponses(User::Ptr& u, bool checkList) {
 	}
 }
 
-LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-
-	CRect rc;
-	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
-
-	switch(cd->nmcd.dwDrawStage) {
-	case CDDS_PREPAINT:
-		return CDRF_NOTIFYITEMDRAW;
-
-	case CDDS_ITEMPREPAINT:
-		{
-			UserInfo* ii = (UserInfo*)cd->nmcd.lItemlParam;
-
-			if(ii->user->getFakeSharing()) {
-				cd->clrText = RGB(204,0,0);
-				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-			} else if(/*(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) &&*/ (ii->user->getChecked())) {
-				cd->clrText = RGB(0, 160, 0);
-				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-			}
-		}
-		return CDRF_NOTIFYSUBITEMDRAW;
-
-	default:
-		return CDRF_DODEFAULT;
-	}
-}
-
 LRESULT HubFrame::onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	TCHAR *buf = new TCHAR[ctrlFilter.GetWindowTextLength()+1];
 	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
@@ -2171,6 +2167,60 @@ void HubFrame::updateUserList() {
 	}
 
 	ctrlUsers.SetRedraw(TRUE);
+}
+
+LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
+
+	case CDDS_ITEMPREPAINT:
+		{
+			UserInfo* ii = (UserInfo*)cd->nmcd.lItemlParam;
+			try
+			{
+				if (ii->user->isFavoriteUser()) {
+					cd->clrText = SETTING(FAVORITE_COLOR);
+				}
+				if (UploadManager::getInstance()->hasReservedSlot(ii->user)) {
+					cd->clrText = SETTING(RESERVED_SLOT_COLOR);
+				}
+				if (ignoreList.count(Text::toT(ii->user->getNick()))) {
+					cd->clrText = SETTING(IGNORED_COLOR);
+				}
+				if (client->getOp()) {				
+					if (ii->user->getBadClient()) {
+						cd->clrText = SETTING(BAD_CLIENT_COLOUR);
+					} else if(ii->user->getBadFilelist()) {
+						cd->clrText = SETTING(BAD_FILELIST_COLOUR);
+					} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) {
+						bool cClient = ii->user->getTestSURComplete();
+						bool cFilelist = ii->user->getFilelistComplete();
+						if(cClient && cFilelist) {
+							cd->clrText = SETTING(FULL_CHECKED_COLOUR);
+						} else if(cClient) {
+							cd->clrText = SETTING(CLIENT_CHECKED_COLOUR);
+						} else if(cFilelist) {
+							cd->clrText = SETTING(FILELIST_CHECKED_COLOUR);
+						}
+					}
+				}
+				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
+			}
+			catch(const Exception&)
+			{	
+			}
+			catch(...)
+			{
+			}
+		}
+		return CDRF_NOTIFYSUBITEMDRAW;
+
+	default:
+		return CDRF_DODEFAULT;
+	}
 }
 
 /**

@@ -37,6 +37,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fnmatch.h>
 #endif
 
 #include <limits>

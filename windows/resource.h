@@ -30,6 +30,7 @@
 #define IDC_COPY_HUBNAME                120
 #define IDC_COPY_HUBADDRESS             121
 #define IDC_MENU_SLOWDISCONNECT         122
+#define IDC_DEBUG_FILTER_TEXT           124
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAMEICON               128
 #define IDR_HUB                         129
@@ -111,6 +112,7 @@
 #define IDR_TREE_NO                     286
 #define IDD_POPUPS                      287
 #define IDD_SDCPAGE                     288
+#define IDD_USERLIST_COLOURS            289
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -243,6 +245,7 @@
 #define IDC_SAVEQUEUE                   1106
 #define IDC_DEFAULT_AWAY_MESSAGE        1107
 #define IDC_MAX_TAB_ROWS                1107
+#define IDC_INTERVAL                    1107
 #define IDC_CLOSE_DISCONNECTED          1108
 #define IDC_OPEN_FOLDER                 1109
 #define IDC_OPEN_FILE                   1110
@@ -315,6 +318,12 @@
 #define IDC_SETTINGS_B                  1173
 #define IDC_SETTINGS_KBPS               1174
 #define IDC_ADD_AS_FAVORITE             1175
+#define IDC_ADLSP_SEARCH                1184
+#define IDC_ADLSP_TYPE                  1185
+#define IDC_ADLSP_SIZE_MIN              1186
+#define IDC_ADLSP_SIZE_MAX              1187
+#define IDC_ADLSP_UNITS                 1188
+#define IDC_ADLSP_DESTINATION           1189
 #define IDC_SETTINGS_SEPARATOR          1194
 #define IDC_SETTINGS_RAW                1195
 #define IDC_SETTINGS_CHAT               1196
@@ -410,6 +419,7 @@
 #define IDC_CLIENT_RAW_2                1233
 #define IDC_ADD_CLIENT                  1233
 #define IDC_MAGNET_SEARCH               1233
+#define IDC_CLIENT_FORMATTED_TAG        1233
 #define IDC_SEGMENT2                    1234
 #define IDC_CLIENT_RAW_3                1234
 #define IDC_CHANGE_CLIENT               1234
@@ -439,22 +449,30 @@
 #define IDC_TIME_STAMPS_FORMAT          1242
 #define IDC_CLIENT_CHEATING_DESCRIPTION 1243
 #define IDC_SETTINGS_ONLY_HASHED        1243
+#define IDC_FH_HUB                      1243
 #define IDC_SEGMENT6_MAX                1244
 #define IDC_COMMENT                     1244
+#define IDC_FH_IDENT                    1244
 #define IDC_STATIC8                     1245
+#define IDC_FH_NAME                     1245
 #define IDC_MAXCOMPRESS                 1246
 #define IDC_HASH_PROGRESS               1246
+#define IDC_FH_ADDRESS                  1246
 #define IDC_MAX_COMPRESSION             1247
 #define IDC_HASH_INDEXING               1247
+#define IDC_FH_HUB_DESC                 1247
 #define IDC_MAX_COMP_SPIN               1248
 #define IDC_FILES_PER_HOUR              1248
+#define IDC_FH_NICK                     1248
 #define IDC_RADIO1                      1249
 #define IDC_MAX_SOURCES                 1249
 #define IDC_RELOAD_CLIENTS              1249
 #define IDC_HASH_SPEED                  1249
+#define IDC_FH_PASSWORD                 1249
 #define IDC_MAX_COMP_SPIN2              1250
 #define IDC_RADIO2                      1250
 #define IDC_MAX_SOURCES_SPIN            1250
+#define IDC_FH_USER_DESC                1250
 #define IDC_RADIO3                      1251
 #define IDC_MAXSOURCES                  1251
 #define IDC_TIME_LEFT                   1251
@@ -468,6 +486,7 @@
 #define IDC_SAVEQUEUE_SPIN              1255
 #define IDC_CURRENT_FILE                1255
 #define IDC_SEG_NUMBER_SPIN             1256
+#define IDC_INTERVAL_SPIN               1256
 #define BAA                             1257
 #define IDC_SEARCH_EDIT                 1257
 #define CAA                             1258
@@ -484,6 +503,7 @@
 #define IDC_REGEXP_TESTER_TEXT          1264
 #define IDC_CLIENT_EMU                  1265
 #define IDC_GETIP                       1266
+#define IDC_CHANGE_COLOR                1266
 #define IDC_USERLIST_IMAGE              1267
 #define IDC_USERLIST                    1268
 #define IDC_IMPORT                      1269
@@ -508,6 +528,7 @@
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_SECOND                      1288
 #define IDC_SECOND1                     1289
+#define IDC_SECOND2                     1290
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
@@ -525,6 +546,7 @@
 #define IDC_JUNK_VOB_FILE_SIZE          1502
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TF_OPEN                     1517
+#define IDC_USERLIST_COLORS             1517
 #define IDC_TF_OPEN_FOLDER              1518
 #define IDC_TF_OPEN_TMP_FOLDER          1519
 #define IDC_TF_REMOVE                   1520
@@ -698,6 +720,7 @@
 #define IDC_ZDC_PROGRESS_TEXT           10117
 #define IDC_SETCZDC_MAX_EMOTICONS2      10117
 #define IDC_SAVEQUEUE_TEXT              10117
+#define IDC_INTERVAL_TEXT               10118
 #define IDC_CZDC_WINAMP                 10120
 #define IDC_SETCZDC_PM_LINES            10121
 #define IDC_CZDC_AVAILABLE_STYLES       10122
@@ -759,9 +782,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        289
+#define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1290
-#define _APS_NEXT_SYMED_VALUE           124
+#define _APS_NEXT_SYMED_VALUE           125
 #endif
 #endif

@@ -31,75 +31,7 @@
 #include "UserCommand.h"
 #include "FavoriteUser.h"
 #include "Singleton.h"
-class ClientProfile {
-	public:
-	typedef vector<ClientProfile> List;
-	typedef List::iterator Iter;
 
-	ClientProfile() : id(0), priority(0), rawToSend(0) { };
-
-	ClientProfile(int aId, const string& aName, const string& aVersion, const string& aTag, 
-		const string& aExtendedTag, const string& aLock, const string& aPk, const string& aSupports,
-		const string& aTestSUR, const string& aUserConCom, const string& aStatus, const string& aCheatingDescription, 
-		int aRawToSend, int aTagVersion, int aUseExtraVersion, int aCheckMismatch,
-		const string& aConnection, const string& aComment) 
-		throw() : id(aId), name(aName), version(aVersion), tag(aTag), extendedTag(aExtendedTag), 
-		lock(aLock), pk(aPk), supports(aSupports), testSUR(aTestSUR), userConCom(aUserConCom),  status(aStatus),
-		cheatingDescription(aCheatingDescription), rawToSend(aRawToSend), tagVersion(aTagVersion),
-		useExtraVersion(aUseExtraVersion), checkMismatch(aCheckMismatch), 
-		connection(aConnection), comment(aComment) { };
-
-	ClientProfile(const ClientProfile& rhs) : id(rhs.id), name(rhs.name), version(rhs.version), tag(rhs.tag), 
-		extendedTag(rhs.extendedTag), lock(rhs.lock), pk(rhs.pk), supports(rhs.supports), testSUR(rhs.testSUR), 
-		userConCom(rhs.userConCom), status(rhs.status), cheatingDescription(rhs.cheatingDescription), rawToSend(rhs.rawToSend),
-		tagVersion(rhs.tagVersion), useExtraVersion(rhs.useExtraVersion), checkMismatch(rhs.checkMismatch),
-		connection(rhs.connection), comment(rhs.comment)
-	{
-
-	}
-
-	ClientProfile& operator=(const ClientProfile& rhs) {
-		id = rhs.id;
-		name = rhs.name;
-		version = rhs.version;
-		tag = rhs.tag;
-		extendedTag = rhs.extendedTag;
-		lock = rhs.lock;
-		pk = rhs.pk;
-		supports = rhs.supports;
-		testSUR = rhs.testSUR;
-		userConCom = rhs.userConCom;
-		status = rhs.status;
-		rawToSend = rhs.rawToSend;
-		cheatingDescription = rhs.cheatingDescription;
-		tagVersion = rhs.tagVersion;
-		useExtraVersion = rhs.useExtraVersion;
-		checkMismatch = rhs.checkMismatch;
-		connection = rhs.connection;
-		comment = rhs.comment;
-		return *this;
-	}
-
-		GETSET(int, id, Id);
-		GETSET(string, name, Name);
-		GETSET(string, version, Version);
-		GETSET(string, tag, Tag);
-		GETSET(string, extendedTag, ExtendedTag);
-		GETSET(string, lock, Lock);
-		GETSET(string, pk, Pk);
-		GETSET(string, supports, Supports);
-		GETSET(string, testSUR, TestSUR);
-		GETSET(string, userConCom, UserConCom);
-		GETSET(string, status, Status);
-		GETSET(string, cheatingDescription, CheatingDescription);
-		GETSET(string, connection, Connection);
-		GETSET(string, comment, Comment);
-		GETSET(int, priority, Priority);
-		GETSET(int, rawToSend, RawToSend);
-		GETSET(int, tagVersion, TagVersion);
-		GETSET(int, useExtraVersion, UseExtraVersion);
-		GETSET(int, checkMismatch, CheckMismatch);
-};
 
 class HubEntry {
 public:
@@ -324,165 +256,7 @@ public:
 		return NULL;
 	}
 
-	ClientProfile::List& getClientProfiles() {
-		Lock l(cs);
-		return clientProfiles;
-	}
-	
-	ClientProfile addClientProfile(
-		const string& name, 
-		const string& version, 
-		const string& tag, 
-		const string& extendedTag, 
-		const string& lock, 
-		const string& pk, 
-		const string& supports, 
-		const string& testSUR, 
-		const string& userConCom, 
-		const string& status,
-		const string& cheatingdescription, 
-		int rawToSend,
-		int tagVersion, 
-		int useExtraVersion, 
-		int checkMismatch,
-		const string& connection,
-		const string& comment
-		) 
-	{
-		Lock l(cs);
-		clientProfiles.push_back(
-			ClientProfile(
-			lastProfile++, 
-			name, 
-			version, 
-			tag, 
-			extendedTag, 
-			lock, 
-			pk, 
-			supports, 
-			testSUR, 
-			userConCom, 
-			status, 
-			cheatingdescription,
-			rawToSend, 
-			tagVersion, 
-			useExtraVersion, 
-			checkMismatch,
-			connection,
-			comment
-			)
-		);
-		return clientProfiles.back();
-	}
 
-	void addClientProfile( const StringList& sl ) {
-		Lock l(cs);
-		clientProfiles.push_back(
-			ClientProfile(
-			lastProfile++, 
-			sl[0], 
-			sl[1], 
-			sl[2], 
-			sl[3], 
-			sl[4], 
-			sl[5], 
-			sl[6], 
-			sl[7], 
-			sl[8], 
-			sl[9], 
-			"", 
-			0, 
-			0, 
-			0, 
-			0
-			// FIXME
-			, "", ""
-			)
-		);
-		save();
-	}
-
-	int getProfileListSize() {
-		return clientProfiles.size();
-	}
-
-	bool getClientProfile(int id, ClientProfile& cp) {
-		Lock l(cs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			if(i->getId() == id) {
-				cp = *i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool getClientProfileByPosition(int pos, ClientProfile& cp) {
-		Lock l(cs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			if(i->getPriority() == pos) {
-				cp = *i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void removeClientProfile(int id) {
-		Lock l(cs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			if(i->getId() == id) {
-				clientProfiles.erase(i);
-				break;
-			}
-		}
-	}
-
-	void updateClientProfile(const ClientProfile& cp) {
-		Lock l(cs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			if(i->getId() == cp.getId()) {
-				*i = cp;
-				break;
-			}
-		}
-	}
-
-	bool moveClientProfile(int id, int pos, int position) {
-		dcassert(pos == -1 || pos == 1);
-		Lock l(cs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
-			if(i->getId() == id) {
-				swap(*i, *(i + pos));
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void loadClientProfiles();
-
-	ClientProfile::List& reloadClientProfiles() { 
-		Lock l(cs);
-		clientProfiles.clear();
-		loadClientProfiles();
-		return clientProfiles;
-	}
-	ClientProfile::List& reloadClientProfilesFromHttp() { 
-		Lock l(cs);
-		ClientProfile::List oldProfiles = clientProfiles;
-		clientProfiles.clear();
-		loadClientProfiles();
-		for(ClientProfile::Iter j = clientProfiles.begin(); j != clientProfiles.end(); ++j) {
-			for(ClientProfile::Iter k = oldProfiles.begin(); k != oldProfiles.end(); ++k) {
-				if((*k).getName().compare((*j).getName()) == 0) {
-					(*j).setRawToSend((*k).getRawToSend());
-					(*j).setCheatingDescription((*k).getCheatingDescription());
-				}
-			}
-		}
-		return clientProfiles;
-	}
 
 	void removeallRecent() {
 		recentHubs.clear();
@@ -584,7 +358,6 @@ public:
 	void load();
 	void save();
 	void recentsave();
-	void saveClientProfiles();
 private:
 	
 	enum {
@@ -598,8 +371,6 @@ private:
 	PreviewApplication::List previewApplications;
 	UserCommand::List userCommands;
 	User::List users;
-	ClientProfile::List clientProfiles;
-	int lastProfile;
 
 	RWLock rwcs;
 	CriticalSection cs;
@@ -613,7 +384,7 @@ private:
 
 	friend class Singleton<HubManager>;
 	
-	HubManager() : running(false), c(NULL), lastServer(0), lastId(0), dontSave(false), lastProfile(0) {
+	HubManager() : running(false), c(NULL), lastServer(0), lastId(0), dontSave(false) {
 		SettingsManager::getInstance()->addListener(this);
 	}
 
@@ -676,7 +447,6 @@ private:
 	void recentload(SimpleXML* aXml);
 	void previewload(SimpleXML* aXml);
 	void previewsave(SimpleXML* aXml);
-	void loadClientProfiles(SimpleXML* aXml);
 };
 
 #endif // !defined(AFX_HUBMANAGER_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)

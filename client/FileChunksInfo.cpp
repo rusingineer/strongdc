@@ -57,7 +57,13 @@ FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<in
         iDownloadedSize -= ((*(i+1)) - (*i));
 
 	iBlockSize = max(TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
-	iSmallestBlockSize = SMALLEST_BLOCK_SIZE;
+
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) iSmallestBlockSize = 128*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) iSmallestBlockSize = 256*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) iSmallestBlockSize = 512*1024;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) iSmallestBlockSize = 1024*1024;
+//	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) iSmallestBlockSize = (iFileSize / maxSegments) / 2;
 
 	iVerifiedSize = 0;
 }
@@ -149,17 +155,8 @@ int64_t FileChunksInfo::GetUndlStart(int maxSegments)
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
-
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) iSmallestBlockSize = 64*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) iSmallestBlockSize = 128*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) iSmallestBlockSize = 256*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) iSmallestBlockSize = 512*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) iSmallestBlockSize = 1024*1024;
-	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) iSmallestBlockSize = (iFileSize / maxSegments) / 2;
-	if(maxSegments == 1) iSmallestBlockSize = iFileSize;
-
-	if(iSmallestBlockSize < (64*1024)) {
-		iSmallestBlockSize = 64*1024;
+	if(maxSegments == 1) {
+		iSmallestBlockSize = iFileSize;
 	}
 
 	if((e - b) < iSmallestBlockSize) {

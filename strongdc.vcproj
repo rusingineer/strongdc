@@ -30,7 +30,7 @@
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="1"
-				BufferSecurityCheck="TRUE"
+				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="FALSE"
@@ -546,6 +546,9 @@
 				RelativePath=".\windows\UserInfo.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\UserListColours.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\UsersFrame.cpp">
 			</File>
 			<File
@@ -842,6 +845,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\UserInfo.h">
+			</File>
+			<File
+				RelativePath=".\windows\UserListColours.h">
 			</File>
 			<File
 				RelativePath=".\windows\UsersFrame.h">

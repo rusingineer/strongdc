@@ -317,7 +317,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 			if(rpl && (smiles < maxsmiles)) {
 				bRedrawControl = true;
 				strstp(sText, beforeAppendText, Delimiter, afterAppendText);
-				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, _T(""), !bRedrawControl);
+				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, sAuthor, !bRedrawControl);
 
 				COLORREF clrBkColor = m_TextStyleGeneral.crBackColor;
 				if (bMyMessage)
@@ -328,7 +328,7 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, _T(""), sText, cf, _T(""), !bRedrawControl);
+					AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor, !bRedrawControl);
 				}
 				break;
 			}
@@ -457,7 +457,7 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 		lSearchFrom = lMyNickEnd;
 		CAtlString autor = sAuthor;
 		autor.MakeLower();
-		if( ( sNick != autor ) && (autor != "")) {	
+		if( ( sNick != autor ) && (autor != "")) {
 	        if ((!SETTING(CHATNAMEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		        PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
         }

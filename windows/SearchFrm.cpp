@@ -416,8 +416,18 @@ void SearchFrame::onEnter() {
 	}
 
 	mainItems.clear();
-	dcassert(mainItems.size() == 0);
 	ctrlResults.DeleteAllItems();
+
+	{
+		Lock l(cs);
+		search = StringTokenizer<tstring>(s, ' ').getTokens();
+	}
+
+	//strip out terms beginning with -
+	s.clear();
+	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
+		if ((*si)[0] != _T('-') || si->size() != 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
+	s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
 
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
@@ -447,11 +457,9 @@ void SearchFrame::onEnter() {
 		
 	ctrlStatus.SetText(1, (TSTRING(SEARCHING_FOR) + s + _T("...")).c_str());
 	ctrlStatus.SetText(2, _T(""));
-	{
-		Lock l(cs);
-		search = StringTokenizer<tstring>(s, _T(' ')).getTokens();
-		isHash = (ftype == SearchManager::TYPE_HASH);
-	}
+	ctrlStatus.SetText(3, _T(""));
+	droppedResults = 0;
+	isHash = (ftype == SearchManager::TYPE_HASH);
 
 	SetWindowText((TSTRING(SEARCH) + _T(" - ") + s).c_str());
 
@@ -478,8 +486,13 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 			if(Util::stricmp(Text::toT(aResult->getTTH()->toBase32()), search[0]) != 0)
 				return;
 		} else {
+			// match all here
 			for(TStringIter j = search.begin(); j != search.end(); ++j) {
-				if(Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) {
+				if((*j->begin() != _T('-') && Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) ||
+					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
+					) {
+					droppedResults++;
+					ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
 					return;
 				}
 			}
@@ -913,6 +926,10 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		ucParams["file"] = sr->getFile();
 		ucParams["filesize"] = Util::toString(sr->getSize());
 		ucParams["filesizeshort"] = Util::formatBytes(sr->getSize());
+		TTHValue *hash = sr->getTTH();
+		if(hash != NULL) {
+			ucParams["tth"] = hash->toBase32();
+		}
 
 		StringMap tmp = ucParams;
 		sr->getUser()->getParams(tmp);

@@ -30,7 +30,7 @@
 
 int FinishedULFrame::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED };
 int FinishedULFrame::columnSizes[] = { 100, 110, 290, 125, 80, 80, 80 };
-static ResourceManager::Strings columnNames[] = { ResourceManager::TIME, ResourceManager::FILENAME, ResourceManager::PATH, 
+static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
 ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED
 };
 

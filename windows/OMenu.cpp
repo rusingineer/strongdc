@@ -185,7 +185,8 @@ LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 				dc.SetBkMode(TRANSPARENT);
 				dc.SetTextColor(OperaColors::TextFromBackground(SETTING(MENUBAR_LEFT_COLOR)));
 				HFONT oldFont = dc.SelectFont(WinUtil::boldFont);
-				dc.DrawText(Text::toT(mi->text).c_str(), mi->text.size(), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				tstring buf = Text::toT(mi->text);
+				dc.DrawText(buf.c_str(), _tcslen(buf.c_str()), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 				dc.SelectFont(oldFont);
 
 				dc.Detach();

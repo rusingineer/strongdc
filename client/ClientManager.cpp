@@ -70,6 +70,7 @@ void ClientManager::putClient(Client* aClient) {
 			}
 		}
 	}
+
 	aClient->scheduleDestruction();
 }
 
@@ -185,7 +186,8 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 	dcassert(aClient != NULL);
-	dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
+	if(find(clients.begin(), clients.end(), aClient) == clients.end())
+		return NULL;
 
 	UserPair p = users.equal_range(aNick);
 	UserIter i;
@@ -249,7 +251,6 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 	}
 	fire(ClientManagerListener::UserUpdated(), aUser);
 }
-
 
 User::Ptr ClientManager::getUser(const CID& cid, bool createUser) {
 	Lock l(cs);

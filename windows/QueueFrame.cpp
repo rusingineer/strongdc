@@ -465,6 +465,8 @@ HTREEITEM QueueFrame::addDirectory(const tstring& dir, bool isFileList /* = fals
 		dcassert(Util::strnicmp(getDir(parent), dir, getDir(parent).length()) == 0);
 	}
 
+	HTREEITEM firstParent = parent;
+
 	while( i < dir.length() ) {
 		while(next != NULL) {
 			if(next != fileLists) {
@@ -492,11 +494,13 @@ HTREEITEM QueueFrame::addDirectory(const tstring& dir, bool isFileList /* = fals
 			
 			parent = ctrlDirs.InsertItem(&tvi);
 			
-			if(BOOLSETTING(EXPAND_QUEUE))
-				ctrlDirs.Expand(ctrlDirs.GetParentItem(parent), TVE_EXPAND);
 			i = j + 1;
 		}
 	}
+	
+	if(BOOLSETTING(EXPAND_QUEUE) && (firstParent != NULL))
+		ctrlDirs.Expand(firstParent);
+
 	return parent;
 }
 
@@ -566,12 +570,6 @@ void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
 		qi = i->second;
 		queue.erase(i);
 
-		if(!aQI->isSet(QueueItem::FLAG_USER_LIST)) {
-			queueSize-=aQI->getSize();
-			dcassert(queueSize >= 0);
-		}
-		queueItems--;
-		dcassert(queueItems >= 0);
 		dirty = true;
 	}
 
@@ -662,6 +660,13 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 				ctrlQueue.deleteItem(ii);
 			}
 			
+		if(!ii->isSet(QueueItem::FLAG_USER_LIST)) {
+			queueSize-=ii->getSize();
+			dcassert(queueSize >= 0);
+		}
+		queueItems--;
+		dcassert(queueItems >= 0);
+
 			pair<DirectoryIter, DirectoryIter> i = directories.equal_range(ii->getPath());
 			DirectoryIter j;
 			for(j = i.first; j != i.second; ++j) {

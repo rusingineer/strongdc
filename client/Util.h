@@ -317,32 +317,23 @@ public:
 		char buf[64];
 #ifdef _WIN32
 		if (!supressHours)
-		sprintf(buf, "%01I64d:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
+			_snprintf(buf, 63, "%01I64d:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
 		else
-			sprintf(buf, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
+			_snprintf(buf, 63, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
 #else
 		if (!supressHours)
-		sprintf(buf, "%01lld:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
+			_snprintf(buf, 63, "%01lld:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
 		else
-			sprintf(buf, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
+			_snprintf(buf, 63, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
 #endif		
+		buf[63] = 0;
 		return buf;
 	}
 
 	static string formatParams(const string& msg, StringMap& params);
 	static string formatTime(const string &msg, const time_t t);
+	static string formatRegExp(const string& msg, StringMap& params);
 
-	static string formatNumber(int64_t aNumber) {
-		char buf[64];
-#ifdef _WIN32
-		char number[64];
-		sprintf(number, "%I64d", aNumber);
-		GetNumberFormatA(LOCALE_USER_DEFAULT, 0, number, NULL, buf, sizeof(buf)/sizeof(buf[0]));
-#else
-		sprintf(buf, "%'lld", aNumber);
-#endif		
-		return buf;
-	}
 	static int64_t toInt64(const string& aString) {
 #ifdef _WIN32
 		return _atoi64(aString.c_str());
@@ -378,23 +369,26 @@ public:
 #ifdef _WIN32
 		return _i64toa(val, buf, 10);
 #else
-		sprintf(buf, "%lld", val);
+		_snprintf(buf, 31, "%lld", val);
+		buf[31] = 0;
 		return buf;
 #endif
 	}
 
 	static string toString(u_int32_t val) {
 		char buf[16];
-		sprintf(buf, "%lu", (unsigned long)val);
+		_snprintf(buf, 15, "%lu", (unsigned long)val);
+		buf[15] = 0; 
 		return buf;
 	}
 	static string toString(size_t val) {
 		// TODO A better conversion the day we hit 64 bits
 		return toString((u_int32_t)val);
 	}
-	static string toString(int32_t val) {
+	static string toString(int val) {
 		char buf[16];
-		sprintf(buf, "%d", val);
+		_snprintf(buf, 15, "%d", val);
+		buf[15] = 0; 
 		return buf;
 	}
 	static string toString(int16_t val) {
@@ -403,19 +397,16 @@ public:
 	static string toString(u_int16_t val) {
 		return toString((u_int32_t)val);
 	}
-	static string toString(int val) {
-		char buf[16];
-		sprintf(buf, "%d", val);
-		return buf;
-	}
 	static string toString(double val) {
 		char buf[16];
-		sprintf(buf, "%0.2f", val);
+		_snprintf(buf, 15, "%0.2f", val);
+		buf[15] = 0; 
 		return buf;
 	}
 	static string toHexEscape(char val) {
 		char buf[sizeof(int)*2+1+1];
-		sprintf(buf, "%%%X", val&0x0FF);
+		_snprintf(buf, sizeof(int)*2+1, "%%%X", val&0x0FF);
+		buf[sizeof(int)*2+1] = 0;
 		return buf;
 	}
 	static char fromHexEscape(const string aString) {
@@ -423,6 +414,7 @@ public:
 		sscanf(aString.c_str(), "%X", &res);
 		return static_cast<char>(res);
 	}
+
 	static string encodeURI(const string& /*aString*/, bool reverse = false);
 	static string getLocalIp();
 	static bool isPrivateIp(string const& ip);
@@ -496,19 +488,20 @@ public:
 		char buf[64];
 		if (i > 60*60) {
 #ifdef _WIN32
-			sprintf(buf, "%01I64d:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
+			_snprintf(buf, 63, "%01I64d:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
 #else
-			sprintf(buf, "%01lld:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
+			_snprintf(buf, 63, "%01lld:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
 #endif
 		} else if (i > 60) {
 #ifdef _WIN32
-			sprintf(buf, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
+			_snprintf(buf, 63, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
 #else
-			sprintf(buf, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
+			_snprintf(buf, 63, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
 #endif
 		} else {
 			return Util::toString(i);
 		}
+		buf[63] = 0;
 		return buf;
 	}
 private:

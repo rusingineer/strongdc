@@ -45,6 +45,7 @@ FakeDetect::ListItem FakeDetect::listItems[] = {
 	{ SettingsManager::CHECK_NEW_USERS, ResourceManager::CHECK_ON_CONNECT },
 	{ SettingsManager::IGNORE_JUNK_FILES, ResourceManager::TEXT_IGNORE_JUNK },
 	{ SettingsManager::DISPLAY_CHEATS_IN_MAIN_CHAT, ResourceManager::SETTINGS_DISPLAY_CHEATS_IN_MAIN_CHAT },
+	{ SettingsManager::SHOW_SHARE_CHECKED_USERS, ResourceManager::SETTINGS_ADVANCED_SHOW_SHARE_CHECKED_USERS },
 		{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

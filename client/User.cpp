@@ -29,7 +29,7 @@
 #include "FavoriteUser.h"
 
 #include "DebugManager.h"
-#include "HubManager.h"
+#include "ClientProfileManager.h"
 #include "QueueManager.h"
 #include "../pme-1.0.4/pme.h"
 User::~User() throw() {
@@ -111,8 +111,12 @@ void User::send(const string& aMsg) {
 }
 
 void User::sendUserCmd(const string& aUserCmd) {
-	send(aUserCmd);
+	RLock l(cs);
+	if(client) {
+		client->send(aUserCmd);
+	}
 }
+
 void User::clientMessage(const string& aMsg) {
 	RLock l(cs);
 	if(client) {
@@ -259,7 +263,7 @@ string User::getReport()
 	report += "\r\nDisconnects:	" + Util::toString(fileListDisconnects);
 	report += "\r\nTimeouts:		" + Util::toString(connectionTimeouts);
 	temp = Util::formatBytes(getDownloadSpeed());
-	if (temp == "0 B") {
+	if (temp == "-1 B") {
 		temp = "N/A";
 	} else {
 		temp += "/s";
@@ -285,15 +289,15 @@ string User::getReport()
 		temp = "N/A";
 	}
 	report += "\r\nListLen:		" + temp;
-	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatNumber(bytesShared) + " B)";
+	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatExactSize(bytesShared) + " B)";
 	if ( getRealBytesShared() > -1 ) {
-		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatNumber(getRealBytesShared()) + " B)";
+		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatExactSize(getRealBytesShared()) + " B)";
 	} else {
 		temp = "N/A";
 	}
 	report += "\r\nReal Share:	" + temp;
 	if ( getJunkBytesShared() > -1 ) {
-		temp = Util::formatBytes(getJunkBytesShared()) + "  (" + Util::formatNumber(getJunkBytesShared()) + " B)";
+		temp = Util::formatBytes(getJunkBytesShared()) + "  (" + Util::formatExactSize(getJunkBytesShared()) + " B)";
 	} else {
 		temp = "N/A";
 	}
@@ -309,23 +313,28 @@ void User::updateClientType() {
 	if ( isSet(User::DCPLUSPLUS) && (listLength == 11) && (bytesShared > 0) ) {
 		setCheat("Fake file list - ListLen = 11" , true);
 		clientType = "DC++ Stealth";
-		setHasTestSURinQueue(false);
+		badClient = true;
+		badFilelist = true;
 		sendRawCommand(SETTING(LISTLEN_MISMATCH));
 		return;
 	}
 	int64_t tick = GET_TICK();
-	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
+
+	StringMap params;
+	ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
 
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
-		string version, pkVersion, extraVersion;
-		string tagExp = cp.getTag();
+		string version, pkVersion, extraVersion, formattedTagExp, verTagExp;
 
-		string formattedTagExp = tagExp;
-		string::size_type j = tagExp.find("%[version]");
+		verTagExp = Util::formatRegExp(cp.getTag(), params);
+
+		formattedTagExp = verTagExp;
+		string::size_type j = formattedTagExp.find("%[version]");
 		if(j != string::npos) {
 			formattedTagExp.replace(j, 10, ".*");
 		}
+
 		string pkExp = cp.getPk();
 		string formattedPkExp = pkExp;
 		j = pkExp.find("%[version]");
@@ -339,8 +348,7 @@ void User::updateClientType() {
 			formattedExtTagExp.replace(j, 11, ".*");
 		}
 
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			DebugManager::getInstance()->SendDebugMessage("Checking profile: " + cp.getName());
+		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
 
 		if (!matchProfile(lock, cp.getLock())) { continue; }
 		if (!matchProfile(tag, formattedTagExp))									{ continue; } 
@@ -352,16 +360,13 @@ void User::updateClientType() {
 		if (!matchProfile(description, formattedExtTagExp))							{ continue; }
 		if (!matchProfile(connection, cp.getConnection()))							{ continue; }
 
-
-		if (tagExp.find("%[version]") != string::npos) { version = getVersion(tagExp, tag); }
+		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, tag); }
 		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, description); }
 		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, getPk()); }
 
 		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
 
-		if (BOOLSETTING(DEBUG_COMMANDS))
-			DebugManager::getInstance()->SendDebugMessage("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
-
+		DETECTION_DEBUG("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
 		if (cp.getUseExtraVersion()) {
 			setClientType(cp.getName() + " " + extraVersion );
 		} else {
@@ -375,9 +380,8 @@ void User::updateClientType() {
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
 			badClient = true;
-			setCheat(cheatingString, true);
 			updated();
-			setHasTestSURinQueue(false);
+			setCheat(cheatingString, true);
 			return;
 		}
 		if(badClient) setCheat(cheatingString, true);
@@ -385,21 +389,16 @@ void User::updateClientType() {
 		if(cp.getRawToSend() > 0) {
 			sendRawCommand(cp.getRawToSend());
 		}
-		setHasTestSURinQueue(false);
 		return;
 	}
 	setClientType("Unknown");
 	cheatingString = Util::emptyString;
 	badClient = false;
-	setHasTestSURinQueue(false);
 	updated();
 }
 
 bool User::matchProfile(const string& aString, const string& aProfile) {
-	if (BOOLSETTING(DEBUG_COMMANDS)) {
-		string temp = "String: " + aString + " to Profile: " + aProfile;
-		DebugManager::getInstance()->SendDebugMessage("Matching " + temp);
-	}
+	DETECTION_DEBUG("\t\tMatching String: " + aString + " to Profile: " + aProfile);
 	PME reg(aProfile);
 	return reg.IsValid() ? reg.match(aString) : false;
 }

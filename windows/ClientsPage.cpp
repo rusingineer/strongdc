@@ -7,7 +7,7 @@
 #include "ClientProfileDlg.h"
 
 #include "../client/SettingsManager.h"
-#include "../client/HubManager.h"
+#include "../client/ClientProfileManager.h"
 
 PropPage::TextItem ClientsPage::texts[] = {
 	{ IDC_MOVE_CLIENT_UP, ResourceManager::MOVE_UP },
@@ -41,7 +41,7 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	c.addListener(this);
 
 	// Do specialized reading here
-	ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
+	ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
 
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = *i;	
@@ -56,7 +56,7 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 	dlg.currentProfileId = -1;
 
 	if(dlg.DoModal() == IDOK) {
-		addEntry(HubManager::getInstance()->addClientProfile(
+		addEntry(ClientProfileManager::getInstance()->addClientProfile(
 			dlg.name, 
 			dlg.version, 
 			dlg.tag, 
@@ -69,11 +69,13 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 			dlg.status,
 			dlg.cheatingDescription,
 			dlg.rawToSend, 
-			dlg.tagVersion, 
+//			dlg.tagVersion, 
 			dlg.useExtraVersion,
 			dlg.checkMismatch,
 			dlg.connection,
-			dlg.comment
+			dlg.comment,
+			false,
+			false
 			), ctrlProfiles.GetItemCount());
 		
 	}
@@ -103,16 +105,18 @@ LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 			dlg.currentProfile.setStatus(dlg.status);
 			dlg.currentProfile.setCheatingDescription(dlg.cheatingDescription);
 			dlg.currentProfile.setRawToSend(dlg.rawToSend);
-			dlg.currentProfile.setTagVersion(dlg.tagVersion);
+//			dlg.currentProfile.setTagVersion(dlg.tagVersion);
 			dlg.currentProfile.setUseExtraVersion(dlg.useExtraVersion);
 			dlg.currentProfile.setCheckMismatch(dlg.checkMismatch);
 			dlg.currentProfile.setConnection(dlg.connection);
 			dlg.currentProfile.setComment(dlg.comment);
-			HubManager::getInstance()->updateClientProfile(dlg.currentProfile);
+//			dlg.currentProfile.setRecheck(dlg.recheck);
+//			dlg.currentProfile.setSkipExtended(dlg.skipExtended);
+			ClientProfileManager::getInstance()->updateClientProfile(dlg.currentProfile);
 		}
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteAllItems();
-		ClientProfile::List lst = HubManager::getInstance()->getClientProfiles();
+		ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
 		for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
 			ClientProfile& cp = *j;	
 			addEntry(cp, ctrlProfiles.GetItemCount());
@@ -126,7 +130,7 @@ LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 LRESULT ClientsPage::onRemoveClient(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlProfiles.GetSelectedCount() == 1) {
 		int i = ctrlProfiles.GetNextItem(-1, LVNI_SELECTED);
-		HubManager::getInstance()->removeClientProfile(ctrlProfiles.GetItemData(i));
+		ClientProfileManager::getInstance()->removeClientProfile(ctrlProfiles.GetItemData(i));
 		ctrlProfiles.DeleteItem(i);
 	}
 	return 0;
@@ -136,11 +140,11 @@ LRESULT ClientsPage::onMoveClientUp(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != 0) {
 		int n = ctrlProfiles.GetItemData(i);
-		HubManager::getInstance()->moveClientProfile(n, -1, i);
+		ClientProfileManager::getInstance()->moveClientProfile(n, -1, i);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
 		ClientProfile cp;
-		HubManager::getInstance()->getClientProfile(n, cp);
+		ClientProfileManager::getInstance()->getClientProfile(n, cp);
 		addEntry(cp, i-1);
 		ctrlProfiles.SelectItem(i-1);
 		ctrlProfiles.EnsureVisible(i-1, FALSE);
@@ -153,11 +157,11 @@ LRESULT ClientsPage::onMoveClientDown(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != (ctrlProfiles.GetItemCount()-1) ) {
 		int n = ctrlProfiles.GetItemData(i);
-		HubManager::getInstance()->moveClientProfile(n, 1, i);
+		ClientProfileManager::getInstance()->moveClientProfile(n, 1, i);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
 		ClientProfile cp;
-		HubManager::getInstance()->getClientProfile(n, cp);
+		ClientProfileManager::getInstance()->getClientProfile(n, cp);
 		addEntry(cp, i+1);
 		ctrlProfiles.SelectItem(i+1);
 		ctrlProfiles.EnsureVisible(i+1, FALSE);
@@ -182,7 +186,7 @@ LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 		NMLVGETINFOTIP* lpnmtdi = (NMLVGETINFOTIP*) pnmh;
 		ClientProfile cp;
 
-		HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(item), cp);
+		ClientProfileManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(item), cp);
 
 		tstring infoTip = Text::toT("Name: " + cp.getName() +
 			"\r\nComment: " + cp.getComment() +
@@ -197,7 +201,7 @@ LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 void ClientsPage::reload() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
-	ClientProfile::List lst = HubManager::getInstance()->reloadClientProfiles();
+	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfiles();
 	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
 		ClientProfile& cp = *j;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
@@ -208,7 +212,7 @@ void ClientsPage::reload() {
 void ClientsPage::reloadFromHttp() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
-	ClientProfile::List lst = HubManager::getInstance()->reloadClientProfilesFromHttp();
+	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfilesFromHttp();
 	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
 		ClientProfile& cp = *j;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
@@ -225,7 +229,7 @@ void ClientsPage::addEntry(const ClientProfile& cp, int pos) {
 }
 
 void ClientsPage::write() {
-	HubManager::getInstance()->saveClientProfiles();
+	ClientProfileManager::getInstance()->saveClientProfiles();
 	PropPage::write((HWND)*this, items);
 }
 // iDC++
@@ -240,7 +244,7 @@ LRESULT ClientsPage::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 		{
 			try	{
 				ClientProfile cp;
-				HubManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), cp);
+				ClientProfileManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), cp);
 				if (!cp.getCheatingDescription().empty()) {
 					cd->clrText = SETTING(ERROR_COLOR);
 				}

@@ -67,7 +67,13 @@ bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
 		case 2: { action = EWX_REBOOT; break; }
 		case 3: { SetSuspendState(false, false, false); return true; }
 		case 4: { SetSuspendState(true, false, false); return true; }
-		case 5: { LockWorkStation(); return true; }
+		case 5: { 
+					if(LOBYTE(LOWORD(GetVersion())) >= 5) {
+						typedef bool (CALLBACK* LPLockWorkStation)(void);
+						LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
+						_d_LockWorkStation();
+					}
+				}
 	}
 	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
 //		throw ShutdownException("OperaLib::shutDown()::ExitWindowsEx() failed.\r\nGetLastError returned: " + Util::toString((int)GetLastError()));
@@ -226,7 +232,7 @@ const int blend_vector[MAX_SHADE] = {0, 4, 8, 10, 5, 2, 0, -1, -2, -3, -5, -6, -
 
 inline string printHex(long l) {
 	char buf[256];
-	sprintf(buf, "%X", l);
+	_snprintf(buf, 255, "%X", l);
 	buf[255] = 0;
 	return buf;
 }

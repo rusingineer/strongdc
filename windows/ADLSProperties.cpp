@@ -25,40 +25,36 @@
 #include "../client/HubManager.h"
 #include "WinUtil.h"
 
-WinUtil::TextItem ADLSProperties::texts[] = {
-	{ IDD_ADLS_PROPERTIES, ResourceManager::ADLSEARCH_PROPERTIES },
-	{ IDC_ADLSEARCH_SEARCH_STRING, ResourceManager::ADLSEARCH_SEARCH_STRING },
-	{ IDC_ADLSEARCH_SOURCE_TYPE, ResourceManager::ADLSEARCH_SOURCE_TYPE },
-	{ IDC_ADLSEARCH_DESTINATION_DIRECTORY, ResourceManager::ADLSEARCH_DESTINATION_DIRECTORY },
-	{ IDC_ADLSEARCH_MIN_SIZE, ResourceManager::ADLSEARCH_MIN_SIZE },
-	{ IDC_ADLSEARCH_MAX_SIZE, ResourceManager::ADLSEARCH_MAX_SIZE }, 
-	{ IDC_IS_ACTIVE, ResourceManager::ADLSEARCH_ACTIVE_SEARCH },
-	{ IDC_ADLSEARCH_SIZE_TYPE, ResourceManager::ADLSEARCH_SIZE_TYPE },
-	{ IDOK, ResourceManager::OK },
-	{ IDCANCEL, ResourceManager::CANCEL },
-	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
-};
-
 // Initialize dialog
 LRESULT ADLSProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
-	WinUtil::translate(*this, texts);
+	// Translate the texts
+	SetWindowText(CTSTRING(ADLS_PROPERTIES));
+	SetDlgItemText(IDC_ADLSP_SEARCH, CTSTRING(ADLS_SEARCH_STRING));
+	SetDlgItemText(IDC_ADLSP_TYPE, CTSTRING(ADLS_TYPE));
+	SetDlgItemText(IDC_ADLSP_SIZE_MIN, CTSTRING(ADLS_SIZE_MIN));
+	SetDlgItemText(IDC_ADLSP_SIZE_MAX, CTSTRING(ADLS_SIZE_MAX));
+	SetDlgItemText(IDC_ADLSP_UNITS, CTSTRING(ADLS_UNITS));
+	SetDlgItemText(IDC_ADLSP_DESTINATION, CTSTRING(ADLS_DESTINATION));
+	SetDlgItemText(IDC_IS_ACTIVE, CTSTRING(ADLS_ENABLED));
+	SetDlgItemText(IDC_AUTOQUEUE, CTSTRING(ADLS_DOWNLOAD));
+
 	// Initialize combo boxes
 	::SendMessage(GetDlgItem(IDC_SOURCE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SourceTypeToString(ADLSearch::OnlyFile).c_str());
+		(LPARAM)search->SourceTypeToDisplayString(ADLSearch::OnlyFile).c_str());
 	::SendMessage(GetDlgItem(IDC_SOURCE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SourceTypeToString(ADLSearch::OnlyDirectory).c_str());
+		(LPARAM)search->SourceTypeToDisplayString(ADLSearch::OnlyDirectory).c_str());
 	::SendMessage(GetDlgItem(IDC_SOURCE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SourceTypeToString(ADLSearch::FullPath).c_str());
+		(LPARAM)search->SourceTypeToDisplayString(ADLSearch::FullPath).c_str());
 
 	::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SizeTypeToStringInternational(ADLSearch::SizeBytes).c_str());
+		(LPARAM)search->SizeTypeToDisplayString(ADLSearch::SizeBytes).c_str());
 	::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SizeTypeToStringInternational(ADLSearch::SizeKiloBytes).c_str());
+		(LPARAM)search->SizeTypeToDisplayString(ADLSearch::SizeKiloBytes).c_str());
 	::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SizeTypeToStringInternational(ADLSearch::SizeMegaBytes).c_str());
+		(LPARAM)search->SizeTypeToDisplayString(ADLSearch::SizeMegaBytes).c_str());
 	::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_ADDSTRING, 0, 
-		(LPARAM)search->SizeTypeToStringInternational(ADLSearch::SizeGigaBytes).c_str());
+		(LPARAM)search->SizeTypeToDisplayString(ADLSearch::SizeGigaBytes).c_str());
 
 	// Load search data
 	SetDlgItemText(IDC_SEARCH_STRING, Text::toT(search->searchString).c_str());

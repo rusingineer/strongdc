@@ -17,6 +17,14 @@ obsahují mezinárodní znaky - ty nemusí být správnì pøevedeny.
 * opraven pád pøi znovuvložení zdroje
 * aktualizováno na PCRE 5.0
 * pøevedeno do UTF-8 kvùli správné lokalizaci
+* opraveno 100% využití CPU pøi stahování velkých souborù
+* opraveny sloupce v Dokonèených uploadech
+* snad opraveno pøeteèení buferu
+* uložený strom TTH je naèten ihned po spuštìní
+* položky s 1 uživatelem jsou zobrazeny bez [+]
+* pøidána volba pro nastavení minimálního intervalu hledání
+* pøidáno nastavení barev v seznamu uživatelù (iDC++)
+* vylepšeny ladící pøíkazy (DCDM++)
 
 
 	-- StrongDC++ 1.00 RC8 --

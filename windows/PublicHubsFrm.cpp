@@ -307,6 +307,7 @@ LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	if(!closed) {
 		HubManager::getInstance()->removeListener(this);
 		closed = true;
+		CZDCLib::setButtonPressed(ID_FILE_CONNECT, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

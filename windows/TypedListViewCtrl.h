@@ -120,7 +120,9 @@ public:
 				InfoTip += _T(": ");
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 512);
+			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 500);
+			Buffer[499] = NULL;
+
 			InfoTip += Buffer;
 			InfoTip += _T("\r\n");
 		}
@@ -433,7 +435,9 @@ public:
 				InfoTip += ": ";
 			}
 			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 512);
+			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 500);
+			Buffer[499] = NULL;
+
 			InfoTip += Buffer;
 			InfoTip += "\r\n";
 		}

@@ -243,6 +243,7 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 	if ( SymGetLineFromAddr( GetCurrentProcess(), address, &dwDisp, &lineInfo ) )
 	{
 	   // Got it. Let's use "sourcefile(linenumber)" format
+
 		PCSTR2LPTSTR( lineInfo.FileName, lpszFileName );
 		_stprintf( lpszSourceInfo, _T("%s(%d)"), lpszFileName, lineInfo.LineNumber );
 		ret = TRUE;
@@ -328,10 +329,11 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 			f.write(LIT(": "));
 			f.write(Text::fromT(symInfo));
 			f.write(LIT("\r\n"));
-
 		}
+
 		if ( hThread != GetCurrentThread() )
 			ResumeThread( hThread );
+
 }
 
 string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DWORD ebp )

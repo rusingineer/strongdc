@@ -34,6 +34,7 @@
 #include "FinishedManager.h"
 #include "ADLSearch.h"
 #include "DebugManager.h"
+#include "ClientProfileManager.h"
 
 #include "StringTokenizer.h"
 #include "WebServerManager.h"
@@ -63,6 +64,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
 	DebugManager::newInstance();
+	ClientProfileManager::newInstance();	
 	PopupManager::newInstance();
 	SettingsManager::getInstance()->load();	
 
@@ -71,6 +73,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	}
 
 	HubManager::getInstance()->load();
+	ClientProfileManager::getInstance()->load();	
 	WebServerManager::newInstance();
 	int i;
 	for(i = 0; i < SettingsManager::SPEED_LAST; i++) {
@@ -118,6 +121,7 @@ void shutdown() {
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
+	ClientProfileManager::deleteInstance();
 	DebugManager::deleteInstance();
 }
 
