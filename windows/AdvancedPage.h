@@ -25,7 +25,6 @@
 
 #include <atlcrack.h>
 #include "PropPage.h"
-#include "ExListViewCtrl.h"
 
 class AdvancedPage : public CPropertyPage<IDD_ADVANCEDPAGE>, public PropPage
 {

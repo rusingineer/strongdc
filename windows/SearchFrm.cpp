@@ -437,7 +437,8 @@ void SearchFrame::onEnter() {
 	// Add new searches to the last-search dropdown list
 	if(find(lastSearches.begin(), lastSearches.end(), s) == lastSearches.end()) 
 	{
-		int i = SETTING(SEARCH_HISTORY)-1;
+		int i = max(SETTING(SEARCH_HISTORY)-1, 0);
+
 		if(ctrlSearchBox.GetCount() > i) 
 			ctrlSearchBox.DeleteString(i);
 		ctrlSearchBox.InsertString(0, s.c_str());
@@ -1217,131 +1218,134 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
-LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if((HWND)wParam == ctrlResults) {
+		RECT rc;                    // client area of window 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 	
-	ctrlResults.GetHeader().GetWindowRect(&rc);
-	if(PtInRect(&rc, pt)){
-		ctrlResults.showMenu(pt);
-		return TRUE;
-	}
-
-	// Get the bounding rectangle of the client area. 
-	ctrlResults.GetClientRect(&rc);
-	ctrlResults.ScreenToClient(&pt); 
-
-	if (PtInRect(&rc, pt) && ctrlResults.GetSelectedCount() > 0) {
-		ctrlResults.ClientToScreen(&pt);
-
-		while(targetMenu.GetMenuItemCount() > 0) {
-			targetMenu.DeleteMenu(0, MF_BYPOSITION);
-		}
-		while(targetDirMenu.GetMenuItemCount() > 0) {
-			targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
+		ctrlResults.GetHeader().GetWindowRect(&rc);
+		if(PtInRect(&rc, pt)){
+			ctrlResults.showMenu(pt);
+			return TRUE;
 		}
 
-		int n = 0;
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlResults.ClientToScreen(&pt);
+		}
+		
+		if(ctrlResults.GetSelectedCount() > 0) {
 
-		targetMenu.InsertSeparatorFirst(STRING(DOWNLOAD_TO));
-		//Append favorite download dirs
-		StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
-		if (spl.size() > 0) {
-			for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
-				targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
-				n++;
+			while(targetMenu.GetMenuItemCount() > 0) {
+				targetMenu.DeleteMenu(0, MF_BYPOSITION);
 			}
-			targetMenu.AppendMenu(MF_SEPARATOR);
-		}
-
-		n = 0;
-		targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
-		if(WinUtil::lastDirs.size() > 0) {
-			targetMenu.InsertSeparatorLast(STRING(PREVIOUS_FOLDERS));
-			for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
-				targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, i->c_str());
-				n++;
+			while(targetDirMenu.GetMenuItemCount() > 0) {
+				targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
 			}
-		}
 
-		SearchInfo::CheckSize cs = ctrlResults.forEachSelectedT(SearchInfo::CheckSize());
+			int n = 0;
 
-		if(cs.size != -1 || cs.hasTTH) {
-			targets.clear();
-			if(cs.hasTTH) {
-				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(Text::fromT(cs.tth)));
-			} else if(BOOLSETTING(USE_EXTENSION_DOWNTO)) { 
-				QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Text::fromT(cs.ext));
-				} else {
-					QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Util::emptyString);
+			targetMenu.InsertSeparatorFirst(STRING(DOWNLOAD_TO));
+			//Append favorite download dirs
+			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			if (spl.size() > 0) {
+				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+					n++;
 				}
-			if(targets.size() > 0) {
-				targetMenu.InsertSeparatorLast(STRING(ADD_AS_SOURCE));
+				targetMenu.AppendMenu(MF_SEPARATOR);
+			}
+
+			n = 0;
+			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
+			if(WinUtil::lastDirs.size() > 0) {
+				targetMenu.InsertSeparatorLast(STRING(PREVIOUS_FOLDERS));
+				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, i->c_str());
+					n++;
+				}
+			}
+
+			SearchInfo::CheckSize cs = ctrlResults.forEachSelectedT(SearchInfo::CheckSize());
+
+			if(cs.size != -1 || cs.hasTTH) {
+				targets.clear();
+				if(cs.hasTTH) {
+					QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(Text::fromT(cs.tth)));
+				} else if(BOOLSETTING(USE_EXTENSION_DOWNTO)) { 
+					QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Text::fromT(cs.ext));
+					} else {
+						QueueManager::getInstance()->getTargetsBySize(targets, cs.size, Util::emptyString);
+					}
+
+				if(targets.size() > 0) {
+					targetMenu.InsertSeparatorLast(STRING(ADD_AS_SOURCE));
 					for(StringIter i = targets.begin(); i != targets.end(); ++i) {
-					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, Text::toT(*i).c_str());
+						targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, Text::toT(*i).c_str());
 						n++;
 					}
 				}
 			}
 
-		n = 0;
-		targetDirMenu.InsertSeparatorFirst(STRING(DOWNLOAD_WHOLE_DIR_TO));
-		//Append favorite download dirs
-		if (spl.size() > 0) {
-			for(StringPairIter i = spl.begin(); i != spl.end(); ++i) {
-				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
-				n++;
+			n = 0;
+			targetDirMenu.InsertSeparatorFirst(STRING(DOWNLOAD_WHOLE_DIR_TO));
+			//Append favorite download dirs
+			if (spl.size() > 0) {
+				for(StringPairIter i = spl.begin(); i != spl.end(); ++i) {
+					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+					n++;
+				}
+				targetDirMenu.AppendMenu(MF_SEPARATOR);
 			}
-			targetDirMenu.AppendMenu(MF_SEPARATOR);
-		}
 
-		n = 0;
-		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
+			n = 0;
+			targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
-			targetDirMenu.AppendMenu(MF_SEPARATOR);
-			for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
-				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_TARGET + n, i->c_str());
+				targetDirMenu.AppendMenu(MF_SEPARATOR);
+				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
+					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_TARGET + n, i->c_str());
 						n++;
 					}
 				}		
 
-		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-		SearchResult* sr = ctrlResults.getItemData(i)->sr;
-		if(sr) {
-			if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
-				resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
-				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
-			} else {
-				resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_GRAYED);
-				resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MF_GRAYED);
-				resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
-				resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);
-			}
+			int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
+			SearchResult* sr = ctrlResults.getItemData(i)->sr;
+			if(sr) {
+				if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
+					resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_ENABLED);
+					resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MFS_ENABLED);
+					resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_ENABLED);
+					resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_ENABLED);
+				} else {
+					resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_DISABLED);
+					resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MFS_DISABLED);
+					resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_DISABLED);
+					resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_DISABLED);
+				}
 	
-			if(ctrlResults.GetSelectedCount() == 1 && ((Util::getFileExt(sr->getFileName()) == ".mp3") || (Util::getFileExt(sr->getFileName()) == ".MP3"))) {
-				resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_ENABLED);
-			} else {
-				resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MF_GRAYED);
+				if(ctrlResults.GetSelectedCount() == 1 && ((Util::getFileExt(sr->getFileName()) == ".mp3") || (Util::getFileExt(sr->getFileName()) == ".MP3"))) {
+					resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MFS_ENABLED);
+				} else {
+					resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MFS_DISABLED);
+				}					
 			}
-				
-		}
 
-		prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
-		if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-			resultsMenu.AppendMenu(MF_SEPARATOR);
+			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
+			if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
+				resultsMenu.AppendMenu(MF_SEPARATOR);
+			}
+			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+			checkAdcItems(resultsMenu);
+			resultsMenu.InsertSeparatorFirst(sr->getFileName());
+			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			resultsMenu.RemoveFirstItem();
+			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
+			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
+			cleanMenu(resultsMenu);
+			return TRUE; 
 		}
-		resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
-		checkAdcItems(resultsMenu);
-		resultsMenu.InsertSeparatorFirst(sr->getFileName());
-		resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-		resultsMenu.RemoveFirstItem();
-		resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
-		resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
-		cleanMenu(resultsMenu);
-		return TRUE; 
 	}
+	bHandled = FALSE;
 	return FALSE; 
 }
 

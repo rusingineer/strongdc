@@ -137,75 +137,81 @@ LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	return 0;
 }
 
-LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc, rc2;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if((HWND)wParam == ctrlTransfers) {
+		RECT rc;                    // client area of window 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-	// Get the bounding rectangle of the client area. 
-	ctrlTransfers.GetWindowRect(&rc);
-	ctrlTransfers.GetHeader().GetWindowRect(&rc2);
-	if(PtInRect(&rc2, pt)){
-		ctrlTransfers.showMenu(pt);
-		return TRUE;
-	}
-
-	if (PtInRect(&rc, pt) && ctrlTransfers.GetSelectedCount() > 0) 
-	{ 
-		int i = -1;
-		ItemInfo* itemI;
-		bool bCustomMenu = false;
-		if( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			itemI = ctrlTransfers.getItemData(i);
-			bCustomMenu = true;
-	
-			usercmdsMenu.InsertSeparatorFirst(STRING(SETTINGS_USER_COMMANDS));
-	
-			if(itemI->user != (User::Ptr)NULL)
-				prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, Text::toT(itemI->user->getClientAddressPort()), itemI->user->isClientOp());
+		ctrlTransfers.GetHeader().GetWindowRect(&rc);
+		if(PtInRect(&rc, pt)){
+			ctrlTransfers.showMenu(pt);
+			return TRUE;
 		}
-		ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
-		WinUtil::ClearPreviewMenu(previewMenu);
 
-		segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
-		transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlTransfers.ClientToScreen(&pt);
+		}
+		
+		if(ctrlTransfers.GetSelectedCount() > 0) { 
 
-		if(ii->type == ItemInfo::TYPE_DOWNLOAD && ii->Target != Util::emptyStringT) {
-			string ext = Util::getFileExt(Text::fromT(ii->Target));
-			if(ext.size()>1) ext = ext.substr(1);
-			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
-			QueueItem* qi = ii->qi;
-			if(qi && qi->getSlowDisconnect()) {
-				segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
-				transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+			int i = -1;
+			ItemInfo* itemI;
+			bool bCustomMenu = false;
+			if( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+				itemI = ctrlTransfers.getItemData(i);
+				bCustomMenu = true;
+	
+				usercmdsMenu.InsertSeparatorFirst(STRING(SETTINGS_USER_COMMANDS));
+	
+				if(itemI->user != (User::Ptr)NULL)
+					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, Text::toT(itemI->user->getClientAddressPort()), itemI->user->isClientOp());
 			}
-		}
+			ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
+			WinUtil::ClearPreviewMenu(previewMenu);
 
-		if(previewMenu.GetMenuItemCount() > 0) {
-			segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_ENABLED);
-			transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_ENABLED);
-		} else {
-			segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
-			transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
-		}
+			segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
+			transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 
-		previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
+			if(ii->type == ItemInfo::TYPE_DOWNLOAD && ii->Target != Util::emptyStringT) {
+				string ext = Util::getFileExt(Text::fromT(ii->Target));
+				if(ext.size()>1) ext = ext.substr(1);
+				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+				QueueItem* qi = ii->qi;
+				if(qi && qi->getSlowDisconnect()) {
+					segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+					transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+				}
+			}
+
+			if(previewMenu.GetMenuItemCount() > 0) {
+				segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
+				transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
+			} else {
+				segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
+				transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
+			}
+
+			previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 				
-		if(ii->pocetUseru <= 1) {
-			checkAdcItems(transferMenu);
-			transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
-			transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-			transferMenu.RemoveFirstItem();
-		} else {
-			segmentedMenu.InsertSeparatorFirst(STRING(SETTINGS_SEGMENT));
-			segmentedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-			segmentedMenu.RemoveFirstItem();
-		}
+			if(ii->pocetUseru <= 1) {
+				checkAdcItems(transferMenu);
+				transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
+				transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+				transferMenu.RemoveFirstItem();
+			} else {
+				segmentedMenu.InsertSeparatorFirst(STRING(SETTINGS_SEGMENT));
+				segmentedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+				segmentedMenu.RemoveFirstItem();
+			}
 
-		if ( bCustomMenu ) {
-			WinUtil::ClearPreviewMenu(usercmdsMenu);
+			if ( bCustomMenu ) {
+				WinUtil::ClearPreviewMenu(usercmdsMenu);
+			}
+			return TRUE; 
 		}
-		return TRUE; 
 	}
+	bHandled = FALSE;
 	return FALSE; 
 }
 
@@ -947,6 +953,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			i->qi = d->getItem();
 
 			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) || (i->qi->getActiveSegments().size() <= 1)) {
+				i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
 				if(!i->upper->upperUpdated) {
 					i->upper->upperUpdated = true;
 					int NS = 0;
@@ -960,7 +967,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 						ItemInfo* ch = transferItems[cqi];
 						if (e->getTarget() == d->getTarget()) {
 							tmp += e->getRunningAverage();
-							if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
+							if(e->isSet(Download::FLAG_ZDOWNLOAD)) {
 								komprese = true;
 							}
 							pomerKomprese += ch->getRatio();
@@ -969,8 +976,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					}
 	
 					if(NS>0) pomerKomprese = pomerKomprese / NS; else pomerKomprese = 1.0;
-					i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && BOOLSETTING(SHOW_CHUNK_INFO) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
-	
 					i->qi->setSpeed(tmp);
 	
 					if(!i->upper->finished) {
@@ -1044,7 +1049,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 		i->statusString = Text::toT(aReason);
 		i->qi = aDownload->getItem();
-		i->size = i->qi->getSize();
+		i->size = aDownload->getSize();
 		i->Target = Text::toT(aDownload->getTarget());
 
 		setMainItem(i);

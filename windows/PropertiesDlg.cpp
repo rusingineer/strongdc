@@ -43,30 +43,33 @@
 #include "Popups.h"
 #include "SDCPage.h"
 #include "UserListColours.h"
+#include "WindowsPage.h"
 
 bool PropertiesDlg::needUpdate = false;
 PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS)) {
-	pages[0] = new GeneralPage(s);
-	pages[1] = new UploadPage(s);
-	pages[2] = new DownloadPage(s);	
-	pages[3] = new AppearancePage(s);
-	pages[4] = new AdvancedPage(s);
-	pages[5] = new LogPage(s);
-	pages[6] = new UCPage(s);
-	pages[7] = new CZDCPage(s);
-	pages[8] = new SDCPage(s);
-	pages[9] = new FavoriteDirsPage(s);
-	pages[10] = new Popups(s);
-	pages[11] = new PropPageTextStyles(s);
-	pages[12] = new OperaColorsPage(s);
-	pages[13] = new FakeDetect(s);	
-	pages[14] = new LimitPage(s);
-	pages[15] = new AVIPreview(s);	
-	pages[16] = new Segment(s);
-	pages[17] = new Sounds(s);
-	pages[18] = new ToolbarPage(s);
-	pages[19] = new ClientsPage(s);	
-	pages[20] = new UserListColours(s);	
+	int n = 0;
+	pages[n++] = new GeneralPage(s);
+	pages[n++] = new UploadPage(s);
+	pages[n++] = new DownloadPage(s);	
+	pages[n++] = new AppearancePage(s);
+	pages[n++] = new WindowsPage(s);
+	pages[n++] = new AdvancedPage(s);
+	pages[n++] = new LogPage(s);
+	pages[n++] = new UCPage(s);
+	pages[n++] = new CZDCPage(s);
+	pages[n++] = new SDCPage(s);
+	pages[n++] = new FavoriteDirsPage(s);
+	pages[n++] = new Popups(s);
+	pages[n++] = new PropPageTextStyles(s);
+	pages[n++] = new OperaColorsPage(s);
+	pages[n++] = new FakeDetect(s);	
+	pages[n++] = new LimitPage(s);
+	pages[n++] = new AVIPreview(s);	
+	pages[n++] = new Segment(s);
+	pages[n++] = new Sounds(s);
+	pages[n++] = new ToolbarPage(s);
+	pages[n++] = new ClientsPage(s);	
+	pages[n++] = new UserListColours(s);	
 
 	for(int i=0; i<numPages; i++) {
 		AddPage(pages[i]->getPSP());

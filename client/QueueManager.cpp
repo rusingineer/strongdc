@@ -509,8 +509,8 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	}
 }
 
-void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw() {
-	if(!aUser->isOnline())
+void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {
+	if(!aUser->isOnline() || aUser->getCID().isZero())
 		return;
 
 	{
@@ -950,7 +950,7 @@ void QueueManager::getTargetsByRoot(StringList& sl, const TTHValue& tth) {
 	}
 }
 
-Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q) throw() {
+Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, QueueItem* q) throw() {
 	Lock l(cs);
 
 	// First check PFS's...
@@ -1718,7 +1718,6 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 			// ...
 		}
 	}
-
 	if(added && sr->getUser()->isOnline() && wantConnection)
 		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser());
 

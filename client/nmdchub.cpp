@@ -38,9 +38,10 @@
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
 	adapter(this), state(STATE_CONNECT), lastActivity(GET_TICK()), reconnect(true),
-	lastbytesshared(0), validatenicksent(false), bFirstOpList(true) {
+	lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
+    YnHub(false), lock(Util::emptyString) {
 	TimerManager::getInstance()->addListener(this);
-};
+}
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
@@ -49,7 +50,7 @@ NmdcHub::~NmdcHub() throw() {
 
 	Lock l(cs);
 	clearUsers();
-};
+}
 
 void NmdcHub::connect() {
 	setRegistered(false);
@@ -60,6 +61,9 @@ void NmdcHub::connect() {
 	lastbytesshared = 0;
 	validatenicksent = false;
 	bFirstOpList = true;
+	PtokaX = false;
+    YnHub = false;
+    lock.clear();
 
 	if(socket->isConnected()) {
 		disconnect();
@@ -446,7 +450,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		name = fromNmdc(aLine);
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::HubName(), this);
 	} else if(strncmp(aLine+1, "Supports", 8) == 0) {
-		bool QuickList = false;
 		StringList sl;
 		aLine += 10;
 		if((temp = strtok((char*)aLine, " ")) == NULL) {
@@ -466,16 +469,19 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				if(state == STATE_HELLO) {
 					state = STATE_MYINFO;
 					updateCounts(false);
+					if(PtokaX == false && lock.empty() == false) key(CryptoManager::getInstance()->makeKey(lock));
 					myInfo();
 					getNickList();
-					QuickList = true;
+					supportFlags |= SUPPORTS_QUICKLIST;
 				}
 			}
 			temp = strtok(NULL, " ");
 		}
-		if (!QuickList) {
+		if(!(getSupportFlags() & SUPPORTS_QUICKLIST)) {
+			if(lock.empty() == false) key(CryptoManager::getInstance()->makeKey(lock));
 			validateNick(getNick());
 		}
+		lock.clear();
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Supports(), this, sl);
 	} else if(strncmp(aLine+1, "UserCommand ", 12) == 0) {
 		temp = (char*)aLine+13;
@@ -512,6 +518,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		if(aLine == NULL) return;
 
 		if(CryptoManager::getInstance()->isExtended(aLine)) {
+			lock = aLine;
 			StringList feat;
 			feat.push_back("UserCommand");
 			feat.push_back("NoGetINFO");
@@ -525,16 +532,22 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(BOOLSETTING(COMPRESS_TRANSFERS))
 				feat.push_back("GetZBlock");
 			supports(feat);
-			key(CryptoManager::getInstance()->makeKey(aLine));
 		} else {
 			key(CryptoManager::getInstance()->makeKey(aLine));
 			validateNick(getNick());
 		}
-		if(temp != NULL)
+		if(temp != NULL) {
+			if(stricmp(temp+3, "YnHub") == 0) {
+				YnHub = true;
+			} else if(strcmp(temp+3, "PtokaX") == 0) {
+				PtokaX = true;
+			}
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::CLock(), this, aLine, temp);
-		else
+		} else {
 			Speaker<NmdcHubListener>::fire(NmdcHubListener::CLock(), this, aLine, Util::emptyString);
+        }
 	} else if(strncmp(aLine+1, "Hello ", 6) == 0) {
+		if(getSupportFlags() & SUPPORTS_QUICKLIST) return;
 		aLine += 7;
 		if(aLine == NULL) return;
 
@@ -560,8 +573,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			updateCounts(false);
 
 			version();
-			myInfo();
-			getNickList();
+			if(YnHub == false) {
+				myInfo();
+				getNickList();
+            } else {
+				getNickList();
+				myInfo();
+            }
 		}
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::Hello(), this, u);
 	} else if(strncmp(aLine+1, "ForceMove ", 10) == 0) {

@@ -787,53 +787,56 @@ void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 	}			
 }
 
-LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if((HWND)wParam == ctrlQueue) {
+		RECT rc;                    // client area of window 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 	
-	ctrlQueue.GetHeader().GetWindowRect(&rc);
-	if(PtInRect(&rc, pt)){
-		ctrlQueue.showMenu(pt);
-		return TRUE;
-	}
+		ctrlQueue.GetHeader().GetWindowRect(&rc);
+		if(PtInRect(&rc, pt)){
+			ctrlQueue.showMenu(pt);
+			return TRUE;
+		}
 	
-	// Get the bounding rectangle of the client area. 
-	ctrlQueue.GetClientRect(&rc);
-	ctrlQueue.ScreenToClient(&pt); 
-	for(int i=0;i<10;i++) {
-		segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
-		segmentsMenu.EnableMenuItem(i + 110, MF_ENABLED);		
-	}
+		for(int i=0;i<10;i++) {
+			segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
+			segmentsMenu.EnableMenuItem(i + 110, MF_ENABLED);		
+		}
 
-	for(int i=0;i<7;i++)
-		priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
-	if (PtInRect(&rc, pt) && ctrlQueue.GetSelectedCount() > 0) { 
-		usingDirMenu = false;
-		CMenuItemInfo mi;
+		for(int i=0;i<7;i++)
+			priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
+			
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlQueue.ClientToScreen(&pt);
+		}
+			
+		if(ctrlQueue.GetSelectedCount() > 0) { 
+			usingDirMenu = false;
+			CMenuItemInfo mi;
 		
-		while(browseMenu.GetMenuItemCount() > 0) {
-			browseMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(removeMenu.GetMenuItemCount() > 2) {
-			removeMenu.RemoveMenu(2, MF_BYPOSITION);
-		}
-		while(removeAllMenu.GetMenuItemCount() > 0) {
-			removeAllMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(pmMenu.GetMenuItemCount() > 0) {
-			pmMenu.RemoveMenu(0, MF_BYPOSITION);
-		}
-		while(readdMenu.GetMenuItemCount() > 2) {
-			readdMenu.RemoveMenu(2, MF_BYPOSITION);
-		}
-		while(previewMenu.GetMenuItemCount() > 0) {
-			previewMenu.RemoveMenu(0, MF_BYPOSITION);
-		}		
+			while(browseMenu.GetMenuItemCount() > 0) {
+				browseMenu.RemoveMenu(0, MF_BYPOSITION);
+			}
+			while(removeMenu.GetMenuItemCount() > 2) {
+				removeMenu.RemoveMenu(2, MF_BYPOSITION);
+			}
+			while(removeAllMenu.GetMenuItemCount() > 0) {
+				removeAllMenu.RemoveMenu(0, MF_BYPOSITION);
+			}
+			while(pmMenu.GetMenuItemCount() > 0) {
+				pmMenu.RemoveMenu(0, MF_BYPOSITION);
+			}
+			while(readdMenu.GetMenuItemCount() > 2) {
+				readdMenu.RemoveMenu(2, MF_BYPOSITION);
+			}
+
+			while(previewMenu.GetMenuItemCount() > 0) {
+				previewMenu.RemoveMenu(0, MF_BYPOSITION);
+			}		
 
 		singleMenu.InsertSeparatorFirst(STRING(FILE));
 		multiMenu.InsertSeparatorFirst(STRING(FILES));			
-
-		ctrlQueue.ClientToScreen(&pt);
 		
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
@@ -841,10 +844,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			segmentsMenu.CheckMenuItem(ii->qi->getMaxSegments()-1, MF_BYPOSITION | MF_CHECKED);
 
 			if(ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				segmentsMenu.EnableMenuItem(110, MF_GRAYED);
+				segmentsMenu.EnableMenuItem(110, MFS_DISABLED);
 			} else {
 				for(int i=1;i<10;i++) {
-					segmentsMenu.EnableMenuItem(i + 110, MF_GRAYED);		
+					segmentsMenu.EnableMenuItem(i + 110, MFS_DISABLED);		
 				}
 			}
 			if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
@@ -852,9 +855,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			if(ext.size()>1) ext = ext.substr(1);
 			PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 			if(previewMenu.GetMenuItemCount() > 0) {
-				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
 			} else {
-				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 			}
 			previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
 			}
@@ -916,34 +919,34 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			}
 
 			if(menuItems == 0) {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_GRAYED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_GRAYED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MFS_DISABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MFS_DISABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MFS_DISABLED);
 			}
 			else {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MF_ENABLED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MF_ENABLED);
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)browseMenu, MFS_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeMenu, MFS_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)removeAllMenu, MFS_ENABLED);
 			}
 
 			if(pmItems == 0) {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MFS_DISABLED);
 			}
 			else {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)pmMenu, MFS_ENABLED);
 			}
 
 			if(readdItems == 0) {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MF_GRAYED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MFS_DISABLED);
 			}
 			else {
-				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MF_ENABLED);
+				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MFS_ENABLED);
  			}
 
 			if(ii->getTTH() == NULL) {
-				singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_GRAYED);
+				singleMenu.EnableMenuItem(IDC_COPY_LINK, MFS_DISABLED);
             } else {
-                singleMenu.EnableMenuItem(IDC_COPY_LINK, MF_ENABLED);
+                singleMenu.EnableMenuItem(IDC_COPY_LINK, MFS_ENABLED);
             }
 
 			UINT pos = 0;
@@ -960,49 +963,55 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 			if(ii->getAutoPriority())
 				priorityMenu.CheckMenuItem(6, MF_BYPOSITION | MF_CHECKED);
 
-			browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
-			removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
-			removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
-			pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
-			readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
-			segmentsMenu.InsertSeparatorFirst(STRING(MAX_SEGMENTS_NUMBER));
-			priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
+				browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
+				removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
+				removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
+				pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
+				readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
+				segmentsMenu.InsertSeparatorFirst(STRING(MAX_SEGMENTS_NUMBER));
+				priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 
-			singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+				singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
-			segmentsMenu.RemoveFirstItem();
-			priorityMenu.RemoveFirstItem();
-			browseMenu.RemoveFirstItem();
-			removeMenu.RemoveFirstItem();
-			removeAllMenu.RemoveFirstItem();
-			pmMenu.RemoveFirstItem();
-			readdMenu.RemoveFirstItem();
-		} else {
-			priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
-			multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-			priorityMenu.RemoveFirstItem();
+				segmentsMenu.RemoveFirstItem();
+				priorityMenu.RemoveFirstItem();
+				browseMenu.RemoveFirstItem();
+				removeMenu.RemoveFirstItem();
+				removeAllMenu.RemoveFirstItem();
+				pmMenu.RemoveFirstItem();
+				readdMenu.RemoveFirstItem();
+			} else {
+				priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
+				multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+				priorityMenu.RemoveFirstItem();
+			}
+		
+			singleMenu.RemoveFirstItem();
+			multiMenu.RemoveFirstItem();
+
+			return TRUE; 
+
+
+
+
+	
 		}
-		
-		singleMenu.RemoveFirstItem();
-		multiMenu.RemoveFirstItem();
-
-		return TRUE; 
-	}
-
-	ctrlQueue.ClientToScreen(&pt);
-
-	ctrlDirs.GetClientRect(&rc);
-	ctrlDirs.ScreenToClient(&pt);
-
-	if (PtInRect(&rc, pt) && ctrlDirs.GetSelectedItem() != NULL) { 
+	} else if ((HWND)wParam == ctrlDirs && ctrlDirs.GetSelectedItem() != NULL) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlDirs.ClientToScreen(&pt);
+		} else {
+			// Strange, windows doesn't change the selection on right-click... (!)
+			UINT a = 0;
+			ctrlDirs.ScreenToClient(&pt);
+			HTREEITEM ht = ctrlDirs.HitTest(pt, &a);
+			if(ht != NULL && ht != ctrlDirs.GetSelectedItem())
+				ctrlDirs.SelectItem(ht);
+			ctrlDirs.ClientToScreen(&pt);
+		}
 		usingDirMenu = true;
-		// Strange, windows doesn't change the selection on right-click... (!)
-		UINT a = 0;
-		HTREEITEM ht = ctrlDirs.HitTest(pt, &a);
-		if(ht != NULL && ht != ctrlDirs.GetSelectedItem())
-			ctrlDirs.SelectItem(ht);
 		
-		ctrlDirs.ClientToScreen(&pt);
 		priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
 		dirMenu.InsertSeparatorFirst(STRING(FOLDER));
 		dirMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -1012,6 +1021,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 		return TRUE;
 	}
 
+	bHandled = FALSE;
 	return FALSE; 
 }
 
@@ -1380,21 +1390,21 @@ LRESULT QueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			ht = ctrlDirs.GetNextSiblingItem(ht);
 		}
 
-	SettingsManager::getInstance()->set(SettingsManager::QUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
-	{
-		Lock l(cs);
-		for(QueueIter i = queue.begin(); i != queue.end(); ++i) {
-			delete i->second;
+		SettingsManager::getInstance()->set(SettingsManager::QUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
+		{
+			Lock l(cs);
+			for(QueueIter i = queue.begin(); i != queue.end(); ++i) {
+				delete i->second;
+			}
+			queue.clear();
 		}
-		queue.clear();
-	}
-	ctrlQueue.DeleteAllItems();
+		ctrlQueue.DeleteAllItems();
 
 		ctrlQueue.saveHeaderOrder(SettingsManager::QUEUEFRAME_ORDER, 
 			SettingsManager::QUEUEFRAME_WIDTHS, SettingsManager::QUEUEFRAME_VISIBLE);
 
-	bHandled = FALSE;
-	return 0;
+		bHandled = FALSE;
+		return 0;
 	}
 }
 

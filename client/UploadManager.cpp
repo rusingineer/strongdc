@@ -49,11 +49,17 @@ UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUp
 UploadManager::~UploadManager() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
+
+	DWORD start = ::GetTickCount();
 	while(true) {
 		{
 			Lock l(cs);
 			if(uploads.empty())
 				break;
+			// wait for 15 seconds then empty uploads because there are any deadlocked
+			if(::GetTickCount() - start > 15000){
+				uploads.clear();
+			} 
 		}
 		Thread::sleep(100);
 	}
@@ -374,6 +380,16 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
 			running--;
+
+			User::Ptr aUser = (User::Ptr)NULL;
+			{
+				Lock l(cs);
+				if(!UploadQueueItems.empty())
+					aUser = UploadQueueItems.begin()->first;
+			}
+			if((aUser != (User::Ptr)NULL) && aUser->isOnline())
+				aUser->connect();
+
 		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 	} 
 	if(aConn->isSet(UserConnection::FLAG_HASEXTRASLOT)) {

@@ -826,11 +826,12 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		if(filter.empty() == false && AllUsers != ShownUsers) {
 			ctrlStatus.SetText(1, Text::toT(Util::toString(ShownUsers) + "/" + Util::toString(AllUsers) + " " + STRING(HUB_USERS)).c_str());
 		} else {
-			ctrlStatus.SetText(1, Text::toT(Util::toString(client->getUserCount()) + " " + STRING(HUB_USERS)).c_str());
+			ctrlStatus.SetText(1, Text::toT(Util::toString(AllUsers) + " " + STRING(HUB_USERS)).c_str());
 		}
-		ctrlStatus.SetText(2, Text::toT(Util::formatBytes(client->getAvailable())).c_str());
+		int64_t available = client->getAvailable();
+		ctrlStatus.SetText(2, Text::toT(Util::formatBytes(available)).c_str());
 		if(client->getUserCount() > 0)
-			ctrlStatus.SetText(3, Text::toT((Util::formatBytes(client->getAvailable() / client->getUserCount()) + "/" + STRING(USER))).c_str());
+			ctrlStatus.SetText(3, Text::toT((Util::formatBytes(available / AllUsers) + "/" + STRING(USER))).c_str());
 		else
 			ctrlStatus.SetText(3, _T(""));
 	} else if(wParam == GET_PASSWORD) {

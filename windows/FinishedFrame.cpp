@@ -94,22 +94,19 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	return TRUE;
 }
 
-LRESULT FinishedFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-		
-	// Get the bounding rectangle of the client area. 
-	ctrlList.GetClientRect(&rc);
-	ctrlList.ScreenToClient(&pt); 
-		
-	if (ctrlList.GetSelectedCount() > 0 && PtInRect(&rc, pt)) 
-	{ 
+LRESULT FinishedFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if ((HWND)wParam == ctrlList && ctrlList.GetSelectedCount() > 0) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
 		ctrlList.ClientToScreen(&pt);
+	}
 		ctxMenu.InsertSeparatorFirst(STRING(FILE));
 		ctxMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
 		ctxMenu.RemoveFirstItem();
 		return TRUE; 
 	}
+	bHandled = FALSE;
 	return FALSE; 
 }
 	

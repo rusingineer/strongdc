@@ -341,7 +341,8 @@ private:
 		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate,
         string scolumsorder, string scolumswidth, string scolumsvisible) : 
 	waitingForPW(false), extraSort(false), server(aServer), closed(false), 
-		updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
+		ShowUserList(BOOLSETTING(GET_USER_INFO)), updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
+		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), 
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
 		clientContainer(WC_EDIT, this, EDIT_MESSAGE_MAP),
@@ -357,8 +358,6 @@ private:
 		client->setRawFour(Text::fromT(aRawFour));
 		client->setRawFive(Text::fromT(aRawFive));
 		client->addListener(this);
-		timeStamps = BOOLSETTING(TIME_STAMPS);
-		hubchatusersplit = chatusersplit;
 		if(HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			ShowUserList = userliststate;
 		} else {

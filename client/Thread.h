@@ -36,22 +36,6 @@
 #include <asm/atomic.h>
 #endif
 
-#if defined (_MT)
-	#include <process.h>
-#endif
-
-typedef unsigned (__stdcall *PTHREAD_START) (void *);
-
-#define chBEGINTHREADEX(psa, cbStack, pfnStartAddr, \
-     pvParam, fdwCreate, pdwThreadID)				\
-       ((HANDLE) _beginthreadex(					\
-          (void *) (psa),							\
-          (unsigned) (cbStack),						\
-          (PTHREAD_START) (pfnStartAddr),			\
-          (void *) (pvParam),						\
-          (unsigned) (fdwCreate),					\
-          (unsigned *) (pdwThreadID)))
-
 #include "Exception.h"
 STANDARD_EXCEPTION(ThreadException);
 
@@ -156,7 +140,7 @@ private:
 #ifdef _WIN32
 	HANDLE threadHandle;
 	DWORD threadId;
-	static DWORD WINAPI starter(void* p) {
+	static unsigned int  WINAPI starter(void* p) {
 		Thread* t = (Thread*)p;
 		t->run();
 		return 0;

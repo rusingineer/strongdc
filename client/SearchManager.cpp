@@ -158,7 +158,7 @@ void SearchManager::setPort(short aPort) throw(SocketException) {
 		socket = new Socket();
 	}
 
-	socket->create(Socket::TYPE_UDP);
+	socket->create(Socket::TYPE_UDP, true);
 	socket->bind(aPort);
 	start();
 }
@@ -196,7 +196,7 @@ int SearchManager::run() {
 
 		try {
 			socket->disconnect();
-			socket->create(Socket::TYPE_UDP);
+			socket->create(Socket::TYPE_UDP, true);
 			socket->bind(port);
 		} catch(const SocketException& e) {
 			// Oops, fatal this time...

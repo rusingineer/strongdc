@@ -408,6 +408,8 @@ private:
 		}
 
 		static int doCompareItems(SearchInfo* a, SearchInfo* b, int col) {
+			if(!a->sr || !b->sr)
+				return 0;
 
 			switch(col) {
 				case COLUMN_NICK: return Util::stricmp(a->nick, b->nick);

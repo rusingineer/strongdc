@@ -93,6 +93,8 @@ void DirectoryListingFrame::loadFile(const tstring& name) {
 	} catch(const Exception& e) {
 		error = Text::toT(dl->getUser()->getFullNick() + ": " + e.getError());
 	}
+
+	initStatus();
 }
 
 void DirectoryListingFrame::loadXML(const string& txt) {
@@ -101,6 +103,8 @@ void DirectoryListingFrame::loadXML(const string& txt) {
 	} catch(const Exception& e) {
 		error = Text::toT(dl->getUser()->getFullNick() + ": " + e.getError());
 	}
+
+	initStatus();
 }
 
 LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -159,21 +163,12 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	
 	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(dl->getUser()->getNick()).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);;
 
-	files = dl->getTotalFileCount();
-	size = Util::formatBytes(dl->getTotalSize());
-
 	memset(statusSizes, 0, sizeof(statusSizes));	
-	tstring tmp1 = Text::toT(STRING(FILES) + ": " + Util::toString(dl->getTotalFileCount(true)));
-	tstring tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(dl->getTotalSize(true)));
-	statusSizes[2] = WinUtil::getTextWidth(tmp1, m_hWnd);
-	statusSizes[3] = WinUtil::getTextWidth(tmp2, m_hWnd);
 	statusSizes[4] = WinUtil::getTextWidth(TSTRING(MATCH_QUEUE), m_hWnd) + 8;
 	statusSizes[5] = WinUtil::getTextWidth(TSTRING(FIND), m_hWnd) + 8;
 	statusSizes[6] = WinUtil::getTextWidth(TSTRING(NEXT), m_hWnd) + 8;
 
 	ctrlStatus.SetParts(8, statusSizes);
-	ctrlStatus.SetText(3, tmp1.c_str());
-	ctrlStatus.SetText(4, tmp2.c_str());
 
 	fileMenu.CreatePopupMenu();
 	targetMenu.CreatePopupMenu();
@@ -269,6 +264,8 @@ void DirectoryListingFrame::refreshTree(const tstring& root) {
 
 	updateTree(d, ht);
 
+	ctrlTree.Expand(treeRoot);
+
 	int index = d->getComplete() ? WinUtil::getDirIconIndex() : WinUtil::getDirMaskedIndex();
 	ctrlTree.SetItemImage(ht, index, index);
 
@@ -309,6 +306,22 @@ void DirectoryListingFrame::updateStatus() {
 		if(u)
 			UpdateLayout(TRUE);
 	}
+}
+
+void DirectoryListingFrame::initStatus() {
+	files = dl->getTotalFileCount();
+	size = Util::formatBytes(dl->getTotalSize());
+
+	tstring tmp1 = Text::toT(STRING(FILES) + ": " + Util::toString(dl->getTotalFileCount(true)));
+	tstring tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(dl->getTotalSize(true)));
+	statusSizes[2] = WinUtil::getTextWidth(tmp1, m_hWnd);
+	statusSizes[3] = WinUtil::getTextWidth(tmp2, m_hWnd);
+
+	ctrlStatus.SetParts(8, statusSizes);
+	ctrlStatus.SetText(3, tmp1.c_str());
+	ctrlStatus.SetText(4, tmp2.c_str());
+
+	UpdateLayout(FALSE);
 }
 
 LRESULT DirectoryListingFrame::onSelChangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -614,19 +627,17 @@ void DirectoryListingFrame::selectItem(const tstring& name) {
 	}
 }
 
-HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc;                    // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	
+HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	fileMenu.RemoveMenu(IDC_GO_TO_DIRECTORY, MF_BYCOMMAND);
 
-	// Get the bounding rectangle of the client area. 
-	ctrlList.GetClientRect(&rc);
-	ctrlList.ScreenToClient(&pt); 
+	if ((HWND)wParam == ctrlList && ctrlList.GetSelectedCount() > 0) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlList.ClientToScreen(&pt);
+		}
 
-	if (PtInRect(&rc, pt) && ctrlList.GetSelectedCount() > 0) {
 		int n = 0;
-		ctrlList.ClientToScreen(&pt);
 
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
 
@@ -656,35 +667,35 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 			if(targets.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
 				for(StringIter i = targets.begin(); i != targets.end(); ++i) {
-					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), Text::toT(*i).c_str());
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (++n), Text::toT(*i).c_str());
 				}
 			}
 			if(ii->file->getTTH()) {
-				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_ENABLED);
-				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_ENABLED);
-				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MF_ENABLED);
+				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_ENABLED);
+				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_ENABLED);
+				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_ENABLED);
 			} else {
-				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MF_GRAYED);
-				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MF_GRAYED);
-				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MF_GRAYED);
+				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_DISABLED);
+				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_DISABLED);
+				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_DISABLED);
 			}
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
 				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
-					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), i->c_str());
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (++n), i->c_str());
 				}
 			}
 
 			if(ii->file->getAdls())			{
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CTSTRING(GO_TO_DIRECTORY));
 			}
-			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MF_ENABLED);
+			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MFS_ENABLED);
 			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, Text::toT(dl->getUser()->getClientAddressPort()), dl->getUser()->isClientOp());
 			fileMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			cleanMenu(fileMenu);
 		} else {
-			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MF_GRAYED);
-			fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MF_GRAYED);
+			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MFS_DISABLED);
+			fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_DISABLED);
 			//Append Favorite download dirs
 			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
 			if (spl.size() > 0) {
@@ -700,7 +711,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
 				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
-					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (n++), i->c_str());
+					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (++n), i->c_str());
 				}
 			}
 			if(ii->type == ItemInfo::DIRECTORY && ii->type == ItemInfo::DIRECTORY && 
@@ -713,52 +724,53 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 		}
 		
 		return TRUE; 
-	} else { 
-		
-		ctrlList.ClientToScreen(&pt);
-		
-		ctrlTree.GetClientRect(&rc);
-		ctrlTree.ScreenToClient(&pt); 
-		
-		if (PtInRect(&rc, pt) && ctrlTree.GetSelectedItem() != NULL) 		{ 
-			// Strange, windows doesn't change the selection on right-click... (!)
+	} else if((HWND)wParam == ctrlTree && ctrlTree.GetSelectedItem() != NULL) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		if(pt.x < 0 || pt.y < 0) {
+			pt.x = pt.y = 0;
+			ctrlTree.ClientToScreen(&pt);
+		} else {
+			ctrlTree.ScreenToClient(&pt);
 			UINT a = 0;
 			HTREEITEM ht = ctrlTree.HitTest(pt, &a);
 			if(ht != NULL && ht != ctrlTree.GetSelectedItem())
 				ctrlTree.SelectItem(ht);
-			
-			while(targetDirMenu.GetMenuItemCount() > 0) {
-				targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
-			}
-
-			int n = 0;
-			//Append Favorite download dirs
-			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
-			if (spl.size() > 0) {
-				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
-					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
-					n++;
-				}
-				targetDirMenu.AppendMenu(MF_SEPARATOR);
-			}
-
-			n = 0;
-			targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
-
-			if(WinUtil::lastDirs.size() > 0) {
-				targetDirMenu.AppendMenu(MF_SEPARATOR);
-				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
-					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET_DIR + (n++), i->c_str());
-				}
-			}
-			
 			ctrlTree.ClientToScreen(&pt);
-			directoryMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		}
+
+		// Strange, windows doesn't change the selection on right-click... (!)
 			
-			return TRUE; 
-		} 
-	}
+		while(targetDirMenu.GetMenuItemCount() > 0) {
+			targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
+		}
+
+		int n = 0;
+		//Append Favorite download dirs
+		StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+		if (spl.size() > 0) {
+			for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
+				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
+				n++;
+			}
+			targetDirMenu.AppendMenu(MF_SEPARATOR);
+		}
+
+		n = 0;
+		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
+
+		if(WinUtil::lastDirs.size() > 0) {
+			targetDirMenu.AppendMenu(MF_SEPARATOR);
+			for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
+				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET_DIR + (++n), i->c_str());
+			}
+		}
+			
+		directoryMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+			
+		return TRUE; 
+	} 
 	
+	bHandled = FALSE;
 	return FALSE; 
 }
 
