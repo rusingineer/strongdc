@@ -8,7 +8,7 @@
 * zmìna v segmentovém stahování
 * opraveno ukládání a naèítání barvy OPù
 * hashování má Idle prioritu
-* položky segmentového stahování jsou seskupovány pod jednu [+] položku (problém s øazením :-( )
+* položky segmentového stahování jsou seskupovány pod jednu [+] položku (experimentální)
 * pøidána volba pro hledání souborù pouze s TTH
 * opraveno zatuhnutí na Tukanovi
 * doplnìna chybìjící položka Kopírovat TTH pøi hledání
@@ -27,6 +27,8 @@
 * volba pro automatické ukládání fronty v urèitém èasovém intervalu
 * pøi uložení fronty je vytvoøena záloha
 * komprese povolena pouze s klienty >= 0.307
+* zmìny podle poslední CVS DC++ 0.402
+* opraveno zobrazování nabídky v chatu pøi zavøeném userlistu
 
 
 
