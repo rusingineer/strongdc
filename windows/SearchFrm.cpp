@@ -672,19 +672,20 @@ LRESULT SearchFrame::onDownloadWholeTarget(WORD /*wNotifyCode*/, WORD wID, HWND 
 LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
 	
-	// if double click on state icon, ignore...
 	if (item->iItem != -1) {
 		CRect rect;
 		ctrlResults.GetItemRect(item->iItem, rect, LVIR_ICON);
 
+		// if double click on state icon, ignore...
 		if (item->ptAction.x < rect.left)
 			return 0;
-	}
-	int i = -1;
-	while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		SearchInfo* si = ctrlResults.getItemData(i);
-		string t = SettingsManager::getInstance()->getDownloadDir(Util::getFileExt(si->getFileName()));		
-		(SearchInfo::Download(t))(ctrlResults.getItemData(i));
+
+		int i = -1;
+		while( (i = ctrlResults.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			SearchInfo* si = ctrlResults.getItemData(i);
+			string t = SettingsManager::getInstance()->getDownloadDir(Util::getFileExt(si->getFileName()));		
+			(SearchInfo::Download(t))(ctrlResults.getItemData(i));
+		}
 	}
 	return 0;
 }

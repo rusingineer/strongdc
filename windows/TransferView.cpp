@@ -366,34 +366,44 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				// Draw the background and border of the bar
-				if(ii->size == 0)
+				if(ii->size <= 0)
 					ii->size = 1;
 
-				if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
-					int64_t w = rc.Width();
+				{
+					Lock l(cs);
 
-					if(ii->mainItem)
-						w = rc.Width() * ii->getRatio() + 0.5;
-					rc.right = rc.left + (int) (w * ii->actual / ii->size);
+					if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
+						int64_t w = rc2.Width();
+
+						double ratio = ii->getRatio();
+	
+						if(ii->mainItem)
+							w = w * ratio + 0.5;
+	
+						int64_t start = ii->start;
+						int64_t size = ii->size;
+
+						rc.right = rc.left + (int) (w * ii->actual / ii->size);
                 
-					COLORREF a, b;
-					OperaColors::EnlightenFlood(clr, a, b);
-					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
-				} else {
-					LONG left = rc.left;
-					int64_t w = rc.Width(); 
-                
-					rc.right = left + (int) (w * ii->start / ii->size); 
-					COLORREF a, b;
-					OperaColors::EnlightenFlood(SETTING(SEGMENT_BAR_COLOR), a, b);
-					
-					if(BOOLSETTING(SHOW_SEGMENT_COLOR))
+						COLORREF a, b;
+						OperaColors::EnlightenFlood(clr, a, b);
 						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+					} else {
+						LONG left = rc.left;
+						int64_t w = rc.Width(); 						
 
-					rc.left = rc.right;
-					rc.right = left + (int) (w * ii->actual / ii->size); 
-					OperaColors::EnlightenFlood(clr, a, b);
-					OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+						rc.right = left + (int) (w * ii->start / ii->size); 
+						COLORREF a, b;
+						OperaColors::EnlightenFlood(SETTING(SEGMENT_BAR_COLOR), a, b);
+					
+						if(BOOLSETTING(SHOW_SEGMENT_COLOR))
+							OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+
+						rc.left = rc.right;
+						rc.right = rc.left + (int) (w * ii->actual / ii->size); 
+						OperaColors::EnlightenFlood(clr, a, b);
+						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
+					}
 				}
 				
 				// Draw the text only over the bar and with correct color
@@ -438,7 +448,14 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
     NMITEMACTIVATE* item = (NMITEMACTIVATE*)pnmh;
-	if (item->iItem != -1) {
+	if (item->iItem != -1) {		
+		CRect rect;
+		ctrlTransfers.GetItemRect(item->iItem, rect, LVIR_ICON);
+
+		// if double click on state icon, ignore...
+		if (item->ptAction.x < rect.left)
+			return 0;
+
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
 		if(i->pocetUseru == 1)
 			i->pm();
@@ -456,10 +473,12 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 	} else if(wParam == REMOVE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
+		dcdebug(("****** TransferView: Removing "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 		ctrlTransfers.deleteItem(i);
 		delete i;
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
+		dcassert(i != NULL);
 		i->update();
 		if((i->upper != NULL) && (i->type == ItemInfo::TYPE_DOWNLOAD))
 			ctrlTransfers.updateItem(i->upper);
@@ -524,6 +543,7 @@ void TransferView::ItemInfo::update() {
 		if(!mainItem || type == TYPE_UPLOAD) columns[COLUMN_USER] = user->getNick();
 			else columns[COLUMN_USER] = Util::toString(pocetUseru)+" "+STRING(HUB_USERS);
 		if((type == TYPE_DOWNLOAD) && (upper != NULL)) {
+			upper->user = user;
 			if(upper->pocetUseru > 1) {
 				upper->columns[COLUMN_USER] = Util::toString(upper->pocetUseru)+" "+STRING(HUB_USERS);
 			} else {
@@ -608,7 +628,7 @@ void TransferView::ItemInfo::update() {
 			upper->columns[COLUMN_SPEED] = "";
 			upper->columns[COLUMN_RATIO] = "";
 			if(file != "") upper->columns[COLUMN_FILE] = file;
-			upper->columns[COLUMN_SIZE] = Util::formatBytes(size);
+			if(size != -1) upper->columns[COLUMN_SIZE] = Util::formatBytes(size);
 			if(path != "") upper->columns[COLUMN_PATH] = path;
 		}
 	}
@@ -635,7 +655,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 			}
 		}
 	}
-
+	dcdebug(("****** TransferView: ConnectionAdded "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)i);
 }
 
@@ -682,7 +702,8 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 			}
 		}
 	}
-		
+
+	dcdebug(("****** TransferView: StatusChanged "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());	
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -690,7 +711,6 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 	ItemInfo* i;
 	ItemInfo* h; 
 	bool isDownload = true;
-	bool removeMainItem = false;
 	{
 		Lock l(cs);
 		dcdebug("onConnectionRemoved\n");
@@ -702,25 +722,23 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 		transferItems.erase(ii);
 
 		if((isDownload) && (h != NULL)) {
-			if(h->pocetUseru > 0) 
-				h->pocetUseru -= 1;
+			dcdebug(("****** TransferView: PocetUseru "+ Util::toString(h->pocetUseru)+" -- "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
+			h->pocetUseru -= 1;
 
-			if(h->pocetUseru == 0) {
+			if(h->pocetUseru <= 0) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
-				removeMainItem = true;
+				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
 			} else {
 				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
 				if(h->qi)
 					h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 				h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
-				removeMainItem = false;
+				PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 			}
 		}
 	}
 
-	if(isDownload) {
-		removeMainItem ? PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h) : PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
-	}
+	dcdebug(("****** TransferView: ConnectionRemoved "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
 }
 
@@ -743,6 +761,7 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 			
 		i->updateMask |= (ItemInfo::MASK_HUB | ItemInfo::MASK_USER | ItemInfo::MASK_STATUS);
 	}
+	dcdebug(("****** TransferView: ConnectionFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -797,7 +816,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(BEGINFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
-
+	dcdebug(("****** TransferView: DownStarting "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -856,6 +875,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				i->upper->actual = total;
 				i->upper->stazenoCelkem = d->getQueueTotal();
 				i->upper->pos = total;
+				i->upper->size = d->getSize();
 				(pomerKomprese < 1) ? i->upper->setFlag(ItemInfo::FLAG_COMPRESSED) : i->upper->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 			}	
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
@@ -923,6 +943,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE |
 		ItemInfo::MASK_PATH;
 	}
+	dcdebug(("****** TransferView: DownFailed "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }
 
@@ -1020,6 +1041,7 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload) {
 		i->statusString = isUpload ? STRING(UPLOAD_FINISHED_IDLE) : STRING(DOWNLOAD_FINISHED_IDLE);
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SPEED | ItemInfo::MASK_TIMELEFT;
 	}
+	dcdebug(("****** TransferView: Complete "+Util::getFileName(i->Target)+" from user "+i->user->getNick()+"\n").c_str());
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);	
 }
 
@@ -1085,6 +1107,8 @@ TransferView::ItemInfo* TransferView::findMainItem(string Target) {
 }
 
 void TransferView::InsertItem(ItemInfo* i) {
+
+	Lock lck(cs);
 	ItemInfo* l = findMainItem(i->Target);
 
 	if(!l) {
@@ -1152,30 +1176,32 @@ void TransferView::setMainItem(ItemInfo* i) {
 
 		if(h->Target != i->Target) {
 			dcdebug("3. cyklus\n");
-			i->upper = newMainItem;
 			h->pocetUseru -= 1;
 
-			if(h->pocetUseru > 1) {
+/*			if(h->pocetUseru > 1) {
 				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
 				h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
 			} else {
 				h->columns[COLUMN_USER] = h->user->getNick();
 				h->columns[COLUMN_HUB] = h->user->getClientName();
-			}
+			}*/
 
 			h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
-			PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
+
+			dcdebug(("****** TransferView: UpdateOldMainItem "+Util::getFileName(h->Target)+" from user "+h->user->getNick()+"\n").c_str());
+
 			PostMessage(WM_SPEAKER, REMOVE_ITEM_BUT_NOT_FREE, (LPARAM)i);
 
+			i->upper = newMainItem;
 			InsertItem(i);
 
 			dcdebug("4. cyklus\n");
 
 			if(h->pocetUseru <= 0) {
 				mainItems.erase(find(mainItems.begin(), mainItems.end(), h));
-				dcdebug("5. cyklus\n");
+				dcdebug(("****** TransferView: RemoveOldMainItem "+Util::getFileName(h->Target)+" from user "+h->user->getNick()+"\n").c_str());
 				PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)h);
-			}
+			} else PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)h);
 		}
 	}
 	dcdebug("6. setMainItem finished\n");
@@ -1216,15 +1242,22 @@ void TransferView::Collapse(ItemInfo* i, int a) {
 }
 
 void TransferView::Expand(ItemInfo* i, int a) {
+	int q = 0;
 	for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 		ItemInfo* m = j->second;
 		if((m->Target == i->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			q++;
 			insertSubItem(m,a+1);
 		}
 	}
 
-	i->collapsed = false;
-	ctrlTransfers.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+	if(q == 0) {
+		mainItems.erase(find(mainItems.begin(), mainItems.end(), i));
+		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)i);
+	} else {
+		i->collapsed = false;
+		ctrlTransfers.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+	}
 }
 
 LRESULT TransferView::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {

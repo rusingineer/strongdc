@@ -695,6 +695,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource, false, true);
+			aSource->getUser()->connect();
 			return;
 
 		} catch(const FileDLException) {			
