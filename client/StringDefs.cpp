@@ -657,7 +657,7 @@ string ResourceManager::strings[] = {
 "Check TTH after downloading file",
 "segment(s)",
 "Only files with TTH",
-"Add alternative sources with TTH only",
+"Search only files with TTH by default",
 "TTH Inconsistency",
 "Verifying TTH...",
 "Max Emoticons in one chat message",

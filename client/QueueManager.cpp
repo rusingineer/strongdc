@@ -1455,66 +1455,36 @@ void QueueManager::importNMQueue(const string& aFile) throw(FileException) {
 
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
-
 	if(BOOLSETTING(AUTO_SEARCH)) {
-		string fileName = Util::toLower(sr->getFileName());
-		StringTokenizer t(SearchManager::clean(fileName), ' ');
-		StringList& tok = t.getTokens();
-		StringList l;
-		getTargetsBySize(l, sr->getSize(), Util::getFileExt(sr->getFile()));
+		Lock l(cs); // maybe, remove
+		QueueItem::List matches;
+
+		fileQueue.find(matches, sr->getSize(), Util::getFileExt(sr->getFile()));
 		
-		for(StringIter i = l.begin(); i != l.end(); ++i) {
-			bool found = true;
+		if(sr->getTTH() != NULL) {
+			fileQueue.find(matches, sr->getTTH());
+			}
 
-			string target = Util::toLower(Util::getFileName(*i));
-
-			QueueItem* QuI = fileQueue.find(*i);
-
-			if(QuI != NULL)
-			if (QuI->getSources().size()>=SETTING(MAX_SOURCES))
+		for(QueueItem::Iter i = matches.begin(); i != matches.end(); ++i) {
+			QueueItem* qi = *i;
+			bool found = false;
 			
-			{
+			if (qi->getSources().size()>=SETTING(MAX_SOURCES)) {
 				found = false;
 				break;
-			}
-
-			if((sr->getTTH() == NULL) && BOOLSETTING(SEARCH_TTH_ONLY))
-				{
-					found = false;
-					break;
-				}
-
-			if(BOOLSETTING(AUTO_SEARCH_EXACT)) {
-				found = (Util::stricmp(target, fileName) == 0);
+			}			
+			if(qi->getTTH()) {
+				found = sr->getTTH() && (*qi->getTTH() == *sr->getTTH());
 			} else {
-			if (target.size() >= fileName.size()) {
-				for(StringIter j = tok.begin(); j != tok.end(); ++j) {
-					if(Util::findSubStringCaseSensitive(target, *j) == string::npos) {
-						found = false;
-						break;
-					}
-				}
-			} else {
-				StringTokenizer t2(SearchManager::clean(target), ' ');
-				StringList& tok2 = t2.getTokens();
-
-			for(StringIter k = tok2.begin(); k != tok2.end(); ++k) {
-					if(Util::findSubStringCaseSensitive(fileName, *k) == string::npos) {
-						found = false;
-						break;
-					}
-				}
-			}
+				found = (Util::stricmp(qi->getTargetFileName(), sr->getFileName()) == 0);
 			}
 
 			if(found) {
-				// Wow! found a new source that seems to match...add it...
 				try {
-					add(sr->getFile(), sr->getSize(), sr->getUser(), *i, sr->getTTH(), Util::emptyString, QueueItem::FLAG_RESUME, 
+					add(sr->getFile(), sr->getSize(), sr->getUser(), qi->getTarget(), sr->getTTH(), Util::emptyString, QueueItem::FLAG_RESUME, 
 						QueueItem::DEFAULT, Util::emptyString, false);
-					dcdebug("QueueManager::onAction New source %s for target %s found\n", sr->getUser()->getNick().c_str(), i->c_str());
-					// Only download list for exact matches
-					if(BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (Util::stricmp(target, fileName) == 0) )
+
+					if(BOOLSETTING(AUTO_SEARCH_AUTO_MATCH))
 						addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
 				} catch(const Exception&) {
 					// ...
