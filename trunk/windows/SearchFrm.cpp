@@ -748,6 +748,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
+		TimerManager::getInstance()->removeListener(this);
 		SearchManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();
@@ -1684,7 +1685,7 @@ void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		int32_t waitFor = SETTING(MINIMUM_SEARCH_INTERVAL) - ((GET_TICK() - lastSearchTime) / 1000) + (navic * SETTING(MINIMUM_SEARCH_INTERVAL));
 	//	MessageBoxA(0,(Util::toString(GET_TICK()) + "\n" +Util::toString(lastSearchTime)).c_str(),"",MB_OK);
 		TCHAR buf[64];
-		_stprintf(buf, _T("Waiting for %i seconds before searching..."), waitFor);
+		_stprintf(buf, CTSTRING(SEARCHING_WAIT), waitFor);
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)new tstring(buf));
 
 		if(waitFor <= 0) {

@@ -311,6 +311,7 @@ enum Strings { // @DontAdd
 	SEARCH_STRING, // "Search String"
 	SEARCH_STRING_INEFFICIENT, // "Specifying the same search string for more than 5 files for a passive connection or 10 files for an active connection is inefficient. Would you like to continue with the operation?"
 	SEARCHING_FOR, // "Searching for "
+	SEARCHING_WAIT, // "Searching too soon, next search in %i seconds"
 	SEEK_BEYOND_END, // "Request to seek beyond the end of data"
 	SEND_PRIVATE_MESSAGE, // "Send private message"
 	SEPARATOR, // "Separator"
@@ -867,6 +868,7 @@ enum Strings { // @DontAdd
 	PROGRESS_SEGMENT, // "Transfer progressbar - actual segment"
 	SETTINGS_SB_MAX_SOURCES, // "Max sources for match queue"
 	DEFAULT, // "Default"
-	SETTINGS_USE_VERTICAL_VIEW, // "Use vertical view by default"	
+	SETTINGS_USE_VERTICAL_VIEW, // "Use vertical view by default"
+	IGNORE_TTH_SEARCHES, // "Ignore TTH searches"
 	LAST // @DontAdd
 };

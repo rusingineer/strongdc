@@ -49,7 +49,8 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlSearches.SetTextBkColor(WinUtil::bgColor);
 	ctrlSearches.SetTextColor(WinUtil::textColor);
 
-	ctrlIgnoretth.Create(ctrlStatus.m_hWnd, rcDefault, _T("Ignore TTH searches"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	ctrlIgnoretth.Create(ctrlStatus.m_hWnd, rcDefault, _T("+/-"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	//ctrlIgnoretth.SetFont(WinUtil::font);
 	ctrlIgnoretth.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlIgnoretth.SetCheck(0);
 	ignoretthContainer.SubclassWindow(ctrlIgnoretth.m_hWnd);
@@ -112,21 +113,23 @@ void SpyFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[5];
+		int w[6];
 		ctrlStatus.GetClientRect(sr);
 
 		int tmp = (sr.Width()) > 616 ? 516 : ((sr.Width() > 116) ? sr.Width()-100 : 16);
 
-		w[0] = sr.right - tmp;
-		w[1] = w[0] + (tmp-16)*1/4;
-		w[2] = w[0] + (tmp-16)*2/4;
-		w[3] = w[0] + (tmp-16)*3/4;
-		w[4] = w[0] + (tmp-16)*4/4;
+		w[0] = 15;
+		w[1] = sr.right - tmp - 15;
+		w[2] = w[1] + (tmp-16)*1/4;
+		w[3] = w[1] + (tmp-16)*2/4;
+		w[4] = w[1] + (tmp-16)*3/4;
+		w[5] = w[1] + (tmp-16)*4/4;
 
-		ctrlStatus.SetParts(5, w);
+		ctrlStatus.SetParts(6, w);
 
 		ctrlStatus.GetRect(0, sr);
 		ctrlIgnoretth.MoveWindow(sr);
+		ctrlStatus.SetText(1, CTSTRING(IGNORE_TTH_SEARCHES));
 	}
 
 	ctrlSearches.MoveWindow(&rect);
@@ -192,13 +195,13 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 		delete x;
 
-		ctrlStatus.SetText(1, Text::toT(STRING(TOTAL) + Util::toString(total)).c_str());
-		ctrlStatus.SetText(3, Text::toT(STRING(HITS) + Util::toString(ShareManager::getInstance()->getHits())).c_str());
+		ctrlStatus.SetText(2, Text::toT(STRING(TOTAL) + Util::toString(total)).c_str());
+		ctrlStatus.SetText(4, Text::toT(STRING(HITS) + Util::toString(ShareManager::getInstance()->getHits())).c_str());
 		double ratio = total > 0 ? ((double)ShareManager::getInstance()->getHits()) / (double)total : 0.0;
-		ctrlStatus.SetText(4, Text::toT(STRING(HIT_RATIO) + Util::toString(ratio)).c_str());
+		ctrlStatus.SetText(5, Text::toT(STRING(HIT_RATIO) + Util::toString(ratio)).c_str());
 	} else if(wParam == TICK_AVG) {
 		float* x = (float*)lParam;
-		ctrlStatus.SetText(2, Text::toT(STRING(AVERAGE) + Util::toString(*x)).c_str());
+		ctrlStatus.SetText(3, Text::toT(STRING(AVERAGE) + Util::toString(*x)).c_str());
 		delete x;
 	}
 

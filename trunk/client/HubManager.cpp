@@ -710,15 +710,15 @@ void HubManager::on(Data, HttpConnection*, const u_int8_t* buf, size_t len) thro
 }
 
 void HubManager::on(Failed, HttpConnection*, const string& aLine) throw() { 
-		c->removeListener(this);
+	c->removeListener(this);
 	lastServer++;
-		running = false;
+	running = false;
 	fire(HubManagerListener::DownloadFailed(), aLine);
 }
 void HubManager::on(Complete, HttpConnection*, const string& aLine) throw() {
-		c->removeListener(this);
+	c->removeListener(this);
 	onHttpFinished();
-		running = false;
+	running = false;
 	fire(HubManagerListener::DownloadFinished(), aLine);
 }
 void HubManager::on(Redirected, HttpConnection*, const string& aLine) throw() { 
