@@ -44,9 +44,9 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 }
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
-	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
-	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()), 
-	maxSegmentsInitial(qi->getMaxSegmentsInitial()), userNick(aUser->getNick()) { 
+	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL),
+	crcCalc(NULL), treeValid(false), oldDownload(false), tth(qi->getTTH()), 
+	quickTick(GET_TICK()), maxSegmentsInitial(qi->getMaxSegmentsInitial()), finished(false) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -265,8 +265,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 		aConn->setState(UserConnection::STATE_FILELENGTH);
 
-		/*
-		if(d->isSet(Download::FLAG_RESUME)) {
+/*		if(d->isSet(Download::FLAG_RESUME)) {
 			dcassert(d->getSize() != -1);
 
 			const string& target = (d->getTempTarget().empty() ? d->getTarget() : d->getTempTarget());

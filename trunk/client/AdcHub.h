@@ -37,7 +37,7 @@ public:
 	virtual void sendRaw(const string& aRaw) { send(aRaw); }
 	virtual void send(const string& aMessage) { socket->write(aMessage); };
 	virtual void redirect(const User* user, const string& aHub, const string& aMessage);
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, bool _auto = false);
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString);
 	virtual void password(const string& pwd);
 	virtual void info();
 	virtual void sendMeMessage(const string& aMessage);

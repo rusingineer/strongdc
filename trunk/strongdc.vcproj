@@ -88,11 +88,11 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="4"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
-				FavorSizeOrSpeed="1"
+				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
@@ -811,6 +811,9 @@
 		<Filter
 			Name="Documentation"
 			Filter="txt">
+			<File
+				RelativePath=".\changelog.txt">
+			</File>
 			<File
 				RelativePath=".\Compile.txt">
 			</File>

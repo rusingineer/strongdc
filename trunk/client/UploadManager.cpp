@@ -319,6 +319,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 
 void UploadManager::addFailedUpload(UserConnection::Ptr source, string filename, int64_t pos, int64_t size)
 {
+	Lock l(cs);
 	SlotQueue::iterator userPos = find(waitingUsers.begin(), waitingUsers.end(), source->getUser());
 	if (userPos == waitingUsers.end()) waitingUsers.push_back(source->getUser());
 	string path = Util::getFilePath(filename);

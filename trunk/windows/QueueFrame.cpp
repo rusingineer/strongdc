@@ -63,10 +63,9 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+	if (CZDCLib::isXp()) {
 		ctrlQueue.setLeftEraseBackgroundMargin(3);
 	} else {
-		//#define LVS_EX_DOUBLEBUFFER     0x00010000
 		styles |= 0x00010000;
 	}
 	ctrlQueue.SetExtendedListViewStyle(styles);
@@ -96,6 +95,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlQueue.SetBkColor(WinUtil::bgColor);
 	ctrlQueue.SetTextBkColor(WinUtil::bgColor);
 	ctrlQueue.SetTextColor(WinUtil::textColor);
+	ctrlQueue.setFlickerFree(WinUtil::bgBrush);
 
 	ctrlDirs.SetBkColor(WinUtil::bgColor);
 	ctrlDirs.SetTextColor(WinUtil::textColor);

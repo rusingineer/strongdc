@@ -54,7 +54,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-	if(Util::getOsVersion().substr(0, 5) != "WinXP"){
+	if (CZDCLib::isXp()) {
 		ctrlTransfers.setLeftEraseBackgroundMargin(40);
 	}else{
 		styles |= 0x00010000;
@@ -75,6 +75,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlTransfers.SetBkColor(WinUtil::bgColor);
 	ctrlTransfers.SetTextBkColor(WinUtil::bgColor);
 	ctrlTransfers.SetTextColor(WinUtil::textColor);
+	ctrlTransfers.setFlickerFree(WinUtil::bgBrush);
 
 	ctrlTransfers.SetImageList(states, LVSIL_STATE); 
 	ctrlTransfers.SetImageList(arrows, LVSIL_SMALL);
@@ -1097,6 +1098,7 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 }
 
 TransferView::ItemInfo* TransferView::findMainItem(string Target) {
+	Lock l(cs);
 	if(!mainItems.empty()) {
 		int q = 0;
 		while(q<mainItems.size()) {

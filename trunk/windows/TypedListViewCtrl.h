@@ -34,7 +34,7 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, C
 	ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
-	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), leftMargin(0) { };
+	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(NULL), leftMargin(0) { };
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;
@@ -130,57 +130,6 @@ public:
 
 		strcpy(pInfoTip->pszText, InfoTip.c_str());
 		return 0;
-	}
-
-	void setLeftEraseBackgroundMargin(int _leftMargin)
-	{
-		leftMargin = _leftMargin;
-	}
-
-	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-		bHandled = FALSE;
-		if(!leftMargin) 
-			return 0;
-
-		HBRUSH hBrBg = (HBRUSH)GetClassLong(m_hWnd, GCL_HBRBACKGROUND);
-		dcassert(hBrBg);
-		if(!hBrBg) return 0;
-
-		bHandled = TRUE;
-		HDC dc = (HDC)wParam;
-		int n = GetItemCount();
-		RECT r = {0, 0, 0, 0}, full;
-		GetClientRect(&full);
-
-
-
-		if (n > 0) {
-			GetItemRect(0, &r, LVIR_BOUNDS);
-			r.bottom = r.top + ((r.bottom - r.top) * n);
-		}
-
-		RECT full2 = full; // Keep a backup
-
-
-		full.bottom = r.top;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.right = r.left + leftMargin; // state image
-		//full.left = 0;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.left = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.top = r.bottom;
-		full.right = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		
-		return S_OK;
 	}
 
 	// Sorting
@@ -330,11 +279,63 @@ public:
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
 
+	void setLeftEraseBackgroundMargin(int _leftMargin) {
+		leftMargin = _leftMargin;
+	}
+
+	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+		bHandled = FALSE;
+		if(!leftMargin || !hBrBg) 
+			return 0;
+
+		dcassert(hBrBg);
+		if(!hBrBg) return 0;
+
+		bHandled = TRUE;
+		HDC dc = (HDC)wParam;
+		int n = GetItemCount();
+		RECT r = {0, 0, 0, 0}, full;
+		GetClientRect(&full);
+
+
+
+		if (n > 0) {
+			GetItemRect(0, &r, LVIR_BOUNDS);
+			r.bottom = r.top + ((r.bottom - r.top) * n);
+		}
+
+		RECT full2 = full; // Keep a backup
+
+
+		full.bottom = r.top;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.right = r.left + leftMargin; // state image
+		//full.left = 0;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.left = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.top = r.bottom;
+		full.right = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		
+		return S_OK;
+	}
+	void setFlickerFree(HBRUSH flickerBrush) {
+		hBrBg = flickerBrush;
+	}
 private:
 
 	int sortColumn;
 	bool sortAscending;
 	int leftMargin;
+	HBRUSH hBrBg;
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
@@ -354,7 +355,7 @@ class TypedListViewCtrlCleanup : public CWindowImpl<TypedListViewCtrlCleanup, CL
 	ListViewArrows<TypedListViewCtrlCleanup<T, ctrlId> >
 {
 public:
-	TypedListViewCtrlCleanup() : sortColumn(-1), sortAscending(true), hBrBg(NULL) { };
+	TypedListViewCtrlCleanup() : sortColumn(-1), sortAscending(true), hBrBg(NULL), leftMargin(0) { };
 
 	typedef TypedListViewCtrlCleanup<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;
@@ -410,44 +411,6 @@ public:
 		int cur;
 		int cnt;
 	};
-
-	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-		if (!hBrBg) {
-			bHandled = FALSE;
-			return S_OK;
-		}
-		bHandled = TRUE;
-		HDC dc = (HDC)wParam;
-		int n = GetItemCount();
-		RECT r = {0, 0, 0, 0}, full;
-		GetClientRect(&full);
-
-		if (n > 0) {
-			GetItemRect(0, &r, LVIR_BOUNDS);
-			r.bottom = r.top + ((r.bottom - r.top) * n);
-		}
-
-		RECT full2 = full; // Keep a backup
-
-		full.right = 3;
-		full.left = 0;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.left = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		full = full2; // Revert from backup
-		full.top = r.bottom;
-		full.right = r.right;
-		FillRect(dc, &full, hBrBg);
-
-		return S_OK;
-	}
-
-	void setFlickerFree(HBRUSH flickerBrush) {
-		hBrBg = flickerBrush;
-	}
 
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
@@ -519,11 +482,7 @@ public:
 	}
 
 	int insertItem(int i, T* item, int image) {
-		int nFound = ArrayFindItemIdx(item);
-		int nDataPos = -1;
-		if (nFound > -1) {
-			nDataPos = nFound;
-		} else nDataPos = ArrayInsertItem(item);
+		int nDataPos = ArrayInsertItem(item);
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)nDataPos);
 	}
@@ -601,17 +560,15 @@ public:
 			SetItemText(i, j, LPSTR_TEXTCALLBACK);
 	}
 	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); };
-	void deleteItem(T* item, bool memFree = true) 
+	void deleteItem(T* item) 
 	{ 
 		int i = findItem(item); 
-		if(i != -1) DeleteItem(i, memFree); else {
-			if(memFree) delete item;
-		}
+		if(i != -1) DeleteItem(i); 
 	}
 
-	void deleteItem(int nListPos, bool memFree = true) 
+	void deleteItem(int nListPos) 
 	{ 
-		DeleteItem(nListPos, memFree); 
+		DeleteItem(nListPos); 
 	}
 
 	void DeleteAll()
@@ -667,13 +624,64 @@ public:
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
 
+	void setLeftEraseBackgroundMargin(int _leftMargin) {
+		leftMargin = _leftMargin;
+	}
+
+	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+		bHandled = FALSE;
+		if(!leftMargin || !hBrBg)
+			return 0;
+
+		dcassert(hBrBg);
+		if(!hBrBg) return 0;
+
+		bHandled = TRUE;
+		HDC dc = (HDC)wParam;
+		int n = GetItemCount();
+		RECT r = {0, 0, 0, 0}, full;
+		GetClientRect(&full);
+
+
+
+		if (n > 0) {
+			GetItemRect(0, &r, LVIR_BOUNDS);
+			r.bottom = r.top + ((r.bottom - r.top) * n);
+		}
+
+		RECT full2 = full; // Keep a backup
+
+
+		full.bottom = r.top;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.right = r.left + leftMargin; // state image
+		//full.left = 0;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.left = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		full = full2; // Revert from backup
+		full.top = r.bottom;
+		full.right = r.right;
+		FillRect(dc, &full, hBrBg);
+
+		
+		return S_OK;
+	}
+	void setFlickerFree(HBRUSH flickerBrush) {
+		hBrBg = flickerBrush;
+	}
 protected:
 	// Zakazeme pouzivani techto metod zvenku
-	BOOL DeleteItem(int nItem, bool memFree)
+	BOOL DeleteItem(int nItem)
 	{
 		int nDataPos = GetItemData(nItem);
 		BOOL bRet = baseClass::DeleteItem(nItem);
-		if(memFree) ArrayDeleteItemAt(nDataPos);
+		ArrayDeleteItemAt(nDataPos);
 		return bRet;
 	}
 
@@ -700,7 +708,7 @@ protected:
 		int nFound = ArrayFindItemIdx(item);
 		if (nFound > -1) {
 			// Vicenasobne pouziti jedne instance ? Na tohle nejsme zarizeni !
-//			dcassert(FALSE);
+			dcassert(FALSE);
 			return -1;
 		}
 #endif
@@ -741,11 +749,11 @@ protected:
 	{
 		m_ItemsPtrArray.RemoveAll();
 	}
-
 private:
 
 	int sortColumn;
 	bool sortAscending;
+	int leftMargin;
 	HBRUSH hBrBg;
 
 	CAGDestroyTypedPtrArray<T> m_ItemsPtrArray;

@@ -86,8 +86,8 @@ string SearchResult::toRES() const {
 	return tmp;
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, bool _auto) {
-	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, aName, _auto);
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */) {
+	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, aName);
 }
 
 void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */) {
@@ -310,8 +310,7 @@ void SearchManager::onNMDCData(const u_int8_t* buf, int aLen, const string& addr
 	}
 
 	sr = new SearchResult(user, type, slots, freeSlots, size,
-	file, hubName, hubIpPort, Country);
-
+		file, hubName, hubIpPort, Country);
 	fire(SearchManagerListener::SR(), sr);
 		sr->decRef();
 }

@@ -742,5 +742,6 @@ enum Strings { // @DontAdd
 	SEARCH_IN_RESULTS, // "Search in results"
 	WAITING_TIME, // "Waiting time"
 	MAGNET_DLG_SIZE, // "File Size:"
+	SETTINGS_USE_OLD_SHARING_UI, // "Use old sharing user interface"
 	LAST // @DontAdd
 };

@@ -245,7 +245,7 @@ void AdcHub::redirect(const User* user, const string& aHub, const string& aMessa
 	string strtmp;
 	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + Command::escape(Util::toUtf8(aMessage, strtmp)) + "\n"); 
 }
-void AdcHub::search(int aSizeMode, int64_t aSize, int /* aFileType */, const string& aString, bool) { 
+void AdcHub::search(int aSizeMode, int64_t aSize, int /* aFileType */, const string& aString) { 
 	string strtmp;
 	strtmp += "BSCH " + getMe()->getCID().toBase32() + " ";
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {

@@ -42,7 +42,7 @@ PropPage::TextItem UploadPage::texts[] = {
 	{ IDC_SETTINGS_UPLOADS_MIN_SPEED, ResourceManager::SETTINGS_UPLOADS_MIN_SPEED },
 	{ IDC_SETTINGS_KBPS, ResourceManager::KBPS }, 
 	{ IDC_SETTINGS_UPLOADS_SLOTS, ResourceManager::SETTINGS_UPLOADS_SLOTS },
-//	{ IDC_SETTINGS_ONLY_HASHED, ResourceManager::SETTINGS_ONLY_HASHED },
+	{ IDC_SETTINGS_ONLY_HASHED, ResourceManager::SETTINGS_ONLY_HASHED },
 	{ IDC_CZDC_SMALL_SLOTS, ResourceManager::SETCZDC_SMALL_UP_SLOTS },
 	{ IDC_CZDC_SMALL_SIZE, ResourceManager::SETCZDC_SMALL_FILES },
 	{ IDC_CZDC_NOTE_SMALL, ResourceManager::SETCZDC_NOTE_SMALL_UP },
@@ -78,8 +78,8 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 	if(BOOLSETTING(USE_OLD_SHARING_UI)) {
 		// Prepare shared dir list
-		ctrlDirectories.InsertColumn(0, CSTRING(DIRECTORY), LVCFMT_LEFT, 277, 0);
-		ctrlDirectories.InsertColumn(1, CSTRING(SIZE), LVCFMT_RIGHT, 90, 1);
+		ctrlDirectories.InsertColumn(0, CSTRING(DIRECTORY), LVCFMT_LEFT, 200, 0);
+		ctrlDirectories.InsertColumn(1, CSTRING(SIZE), LVCFMT_RIGHT, 85, 1);
 		StringList directories = ShareManager::getInstance()->getDirectories();
 		for(StringIter j = directories.begin(); j != directories.end(); j++)
 		{
@@ -169,6 +169,7 @@ void UploadPage::write()
 		}
 	}
 
+	ShareManager::getInstance()->refresh();
 	if(!BOOLSETTING(USE_OLD_SHARING_UI) && ft.IsDirty())
 	{
 		ShareManager::getInstance()->setDirty();

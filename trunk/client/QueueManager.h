@@ -173,7 +173,7 @@ public:
 	void saveQueue() throw();
 	
 	void autoDropSource(User::Ptr& aUser);
-	void sendAutoSearch(Client*);
+	string getTopAutoSearchString();
 	
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
