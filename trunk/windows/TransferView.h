@@ -39,7 +39,12 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>
 {
 public:
-	TransferView() { };
+	TransferView() {
+		searchFilter.push_back("the");
+		searchFilter.push_back("of");
+		searchFilter.push_back("divx");
+		searchFilter.push_back("frail");
+	};
 	~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
@@ -261,6 +266,7 @@ private:
 
 	HDC hDCDB; // Double buffer DC
 	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC
+	StringList searchFilter;
 
 	virtual void on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) throw();

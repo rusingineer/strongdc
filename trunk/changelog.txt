@@ -38,6 +38,7 @@
 * pøidáno nastavení progressbarù pro segmenty
 * pøidán sloupec Nick do vyhledávacího špiona (BCDC++)
 * stromová struktura pro výbìr adresáøù ke sdílení (PossumMod)
+* v transferviewu jsou zdroje vyhledávány podle TTH
 
 
 	-- StrongDC++ 1.00 RC5 --

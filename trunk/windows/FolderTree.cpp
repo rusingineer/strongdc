@@ -1542,7 +1542,7 @@ void FolderTree::ShareParentButNotSiblings(HTREEITEM hItem)
 		m_nShareSizeDiff += ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath);
 
 		ShareParentButNotSiblings(hParent);
-
+		
 		HTREEITEM hChild = GetChildItem(hParent);
 		while(hChild)
 		{
@@ -1550,10 +1550,12 @@ void FolderTree::ShareParentButNotSiblings(HTREEITEM hItem)
 			if(!GetChecked(hChild))
 			{
 				pItem = (FolderTreeItemInfo*) GetItemData(hChild);
-				m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
+				if(hChild != hItem)
+					m_nShareSizeDiff -= ShareManager::getInstance()->addExcludeFolder(pItem->m_sFQPath);
 			}
 			hChild = hNextItem;
 		}
+
 	}
 	else
 	{
