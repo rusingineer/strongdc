@@ -666,15 +666,37 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	char buf[256];
 	if (!handle)
 		return TRUE;// Not a window
-	//SendMessage(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf);
-	//GetWindowText(handle,buf,256);
-	
-	if(FindWindowEx(handle, 0, NULL, "NLInfoPane") > 0) nlfound = true;
-	//if(strstr(buf,"NetLimiter") != 0) nlfound = true;
+	SendMessageTimeout(handle,WM_GETTEXT,sizeof(buf),(LPARAM)buf, SMTO_ABORTIFHUNG, 2000, NULL);
+
+	//if(FindWindowEx(handle, 0, NULL, "NLInfoPane") > 0) nlfound = true;
+
+	if(strstr(buf,"NetLimiter") != 0) {
+		nlfound = true;
+		return false;
+	}
 	return true;
 }
 
+
+
+unsigned char HEX_2_INT_TABLE[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
+            6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int hexstr2int(char *hexstr) {
+    register unsigned int length, i, value, shift;
+    for (length = 0; length < 9; length++) if (!hexstr[length]) break;
+    shift = (length - 1) * 4;
+    for (i = value = 0; i < length; i++, shift -= 4)
+        value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
+    return value;
+}
 void NmdcHub::myInfo() {
+	
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
@@ -760,10 +782,11 @@ void NmdcHub::myInfo() {
 		GetEnvironmentVariable("APPDATA",promenna,255);
 		File f(strcat(promenna,"\\LockTime\\NetLimiter\\history\\apphist.dat"), File::RW, File::OPEN);
 
+
 		int NetLimiter_UploadLimit = 0;
 		int NetLimiter_UploadOn = 0;
 		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName();
+		string cesta = Util::getAppName()+"/";
 		char buf[BUF_SIZE];
 		u_int32_t len;
 
@@ -777,7 +800,48 @@ void NmdcHub::myInfo() {
 				txt += buf[i];
 			}
 			if(strstr(strupr(strdup(txt.c_str())),strupr(strdup(cesta.c_str()))) != NULL) {
-				NetLimiter_UploadLimit = u_int8_t(txt[5]) / 4;
+				char buf1[256];
+				char buf2[256];
+
+				sprintf(buf1, "%X", u_int8_t(buf[5]));
+				buf1[255] = 0;
+				string a1 = buf1;
+
+				sprintf(buf2, "%X", u_int8_t(buf[6]));
+				buf2[255] = 0;
+				string a2 = buf2;
+
+				string limit_hex = "0x" + a2 + a1;
+
+
+//				int sizeIn = sizeof(in);
+				NetLimiter_UploadLimit = 0;
+	/*			char ch;
+				for (int i = sizeof(limit_hex)-2, j=0; i >= 0; i--,j++)
+				{
+					ch = toupper( limit_hex[i] );
+					switch (ch)
+					{
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+						case '8':
+						case '9':
+							NetLimiter_UploadLimit += ( (int( pow(16, j))) * (int(ch)-48) );
+							break;
+						default:
+							NetLimiter_UploadLimit += ((int(pow(16, j)))*(int(ch)-55));
+							break;
+					} 
+				}*/
+
+
+				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
 				NetLimiter_UploadOn = u_int8_t(txt[16]);
 				buf[255] = 0;
 

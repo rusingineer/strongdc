@@ -44,34 +44,27 @@ void Command::parse(const string& aLine, bool nmdc /* = false */) {
 		memcpy(cmd, &aLine[1], 3);
 	}
 
-	string::size_type len = aLine.length();
-	const char* buf = aLine.c_str();
-	string cur;
-	cur.reserve(128);
+	string::size_type k = i;
 
-	bool first = true;
-	while(i < len) {
-		switch(buf[i]) {
-		case '\\': i++; cur += buf[i];
-		case ' ': 
-			// New parameter...
-			{
-				if(type == TYPE_DIRECT && first) {
-					to = CID(cur);
-				} else {
-					parameters.push_back(cur);
+	while(k < aLine.length() && i < aLine.length()) {
+		string::size_type j = aLine.find(' ', k);
+		if(j == string::npos)
+			j = aLine.length();
+		if((j > i) && (aLine[j-1] != '\\')) {
+			if(type == TYPE_DIRECT && to.isZero()) {
+				to = CID(aLine.substr(i, j-i));
+			} else {
+				parameters.push_back(aLine.substr(i, j-i));
+				string::size_type l = 0;
+				string& s = parameters.back();
+				while( (l = s.find('\\', l)) != string::npos) {
+					s.erase(l++, 1);
 				}
-				cur.clear();
-				first = false;
-				}
-		default:
-			cur += buf[i];
 			}
-
-		i++;
+			k = i = j + 1;
+		} else {
+			k = j + 1;
 		}
-	if(!first && !cur.empty()) {
-		parameters.push_back(cur);
 	}
 }
 
@@ -218,7 +211,7 @@ void AdcHub::redirect(const User* user, const string& aHub, const string& aMessa
 	string strtmp;
 	send("HDSC " + user->getCID().toBase32() + " RD RD " + getMe()->getCID().toBase32() + " " + aHub + " " + Command::escape(Util::toUtf8(aMessage, strtmp)) + "\n"); 
 }
-void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString) { 
+void AdcHub::search(int aSizeMode, int64_t aSize, int /*aFileType*/, const string& aString) { 
 	string strtmp;
 	strtmp += "BSCH " + getMe()->getCID().toBase32() + " ";
 	if(aSizeMode == SearchManager::SIZE_ATLEAST) {
@@ -243,7 +236,6 @@ void AdcHub::password(const string& pwd) {
 		string tmp;
 		const string& x = Util::toUtf8(pwd, tmp);
 		TigerHash th;
-		th.update(getMe()->getCID().getData(), CID::SIZE);
 		th.update(x.data(), x.length());
 		th.update(buf, SALT_SIZE);
 		send("HPAS " + Encoder::toBase32(th.finalize(), TigerHash::HASH_SIZE) + "\n");

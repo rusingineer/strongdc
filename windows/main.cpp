@@ -38,7 +38,106 @@ static bool firstException = true;
 
 static char buf[DEBUG_BUFSIZE];
 
+EXCEPTION_RECORD CurrExceptionRecord;
+CONTEXT CurrContext;
+string exceptioninfo;
+int iLastExceptionDlgResult;
+HINSTANCE hCurrInstance;
+
+void SetCurrInstance(HINSTANCE hInst)
+{
+	hCurrInstance = hInst;
+}
+
+HINSTANCE GetCurrInstance()
+{
+	return hCurrInstance;
+}
+
+
+void CopyEditToClipboard(HWND hWnd)
+{
+	SendMessage(hWnd, EM_SETSEL, 0, 65535L);
+	SendMessage(hWnd, WM_COPY, 0 , 0);
+	SendMessage(hWnd, EM_SETSEL, 0, 0);
+}
+
+void GetScreenSize(int *pWidth, int *pHeight)
+{
+	HDC hDC;
+	hDC = GetDC(0);
+	if (pWidth != NULL) *pWidth = GetDeviceCaps(hDC, HORZRES);
+	if (pHeight != NULL ) *pHeight = GetDeviceCaps(hDC, VERTRES);
+	ReleaseDC(0, hDC);
+}
+
+void CenterWindow(HWND hwndDlg)
+{
+	int nWidth, nHeight, nLeft, nTop;
+	RECT rcWin;
+
+	GetScreenSize(&nWidth, &nHeight);
+	GetWindowRect(hwndDlg, &rcWin);
+	
+	nLeft = (nWidth - (rcWin.right - rcWin.left + 1)) / 2;
+	nTop = (nHeight - (rcWin.bottom - rcWin.top + 1)) / 2;
+
+	MoveWindow(hwndDlg, nLeft, nTop, rcWin.right - rcWin.left + 1, rcWin.bottom - rcWin.top + 1, TRUE);
+}
+
+
+BOOL CALLBACK ExceptionFilterFunctionDlgProc(
+  HWND hwndDlg,  // handle to dialog box
+  UINT uMsg,     // message
+  WPARAM wParam, // first message parameter
+  LPARAM lParam  // second message parameter
+)
+{
+	WORD wNotifyCode, wID;
+	
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+			{
+				CenterWindow(hwndDlg);
+				SetDlgItemText(hwndDlg, IDC_EXCEPTION_DETAILS, exceptioninfo.c_str());
+				SetFocus(GetDlgItem(hwndDlg, IDC_EXCEPTION_DETAILS));
+
+			}
+			break;
+	
+		case WM_COMMAND:
+			wNotifyCode = HIWORD(wParam); // notification code 
+			wID = LOWORD(wParam);         // item, control, or accelerator identifier 
+			if (wNotifyCode == BN_CLICKED)
+			{
+				if (wID == IDOK || wID == IDCANCEL)
+					EndDialog(hwndDlg, wID);
+
+				if (wID == IDC_COPY_EXCEPTION)
+					CopyEditToClipboard(GetDlgItem(hwndDlg, IDC_EXCEPTION_DETAILS));
+
+
+			}
+
+			break;
+	}
+
+	return FALSE;
+}
+
+void ExceptionFunction()
+{
+	if (iLastExceptionDlgResult == IDCANCEL)
+	{
+		//If the user selects "Terminate Application", exit from the program.
+		ExitProcess(1);
+	}
+}
+
+
 #ifndef _DEBUG
+
 
 FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
 	MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old).", "Unhandled Exception", MB_OK | MB_ICONERROR);
@@ -73,7 +172,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		firstException = false;
 	}
 
-	if(File::getSize(Util::getAppPath() + "DCPlusPlus.pdb") == -1) {
+	if(File::getSize(Util::getAppPath() + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
 		::MessageBox(NULL, "DC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution...", "DC++ has crashed", MB_OK);
 #ifndef _DEBUG
@@ -93,6 +192,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	f.write(buf, strlen(buf));
 
+	exceptioninfo = buf;
+
 	OSVERSIONINFOEX ver;
 	WinUtil::getVersionInfo(ver);
 
@@ -100,12 +201,19 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		(DWORD)ver.dwMajorVersion, (DWORD)ver.dwMinorVersion, (DWORD)ver.dwBuildNumber,
 		(DWORD)ver.wServicePackMajor, (DWORD)ver.wProductType);
 
+	exceptioninfo += buf;
 	f.write(buf, strlen(buf));
 	time_t now;
 	time(&now);
 	strftime(buf, DEBUG_BUFSIZE, "Time: %Y-%m-%d %H:%M:%S\r\n", localtime(&now));
 
+	exceptioninfo += buf;
 	f.write(buf, strlen(buf));
+
+	exceptioninfo += LIT("TTH: ");
+	exceptioninfo += tth;
+	exceptioninfo += LIT("\r\n");
+	exceptioninfo += LIT("\r\n");
 
 	f.write(LIT("TTH: "));
 	f.write(tth, strlen(tth));
@@ -117,12 +225,21 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	f.close();
 
-	MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. If you plan on reporting this bug to the bug report forum, make sure you have downloaded the debug information (DCPlusPlus.pdb) for your version of DC++. A file named \"exceptioninfo.txt\" has been generated in the same directory as DC++. Please include this file in the report or it'll be removed / ignored. If the file contains a lot of lines that end with '?', it means that the debug information is not correctly installed or your Windows doesn't support the functionality needed, and therefore, again, your report will be ignored/removed.", "DC++ Has Crashed", MB_OK | MB_ICONERROR);
+	//MessageBox(NULL, "StrongDC++ just encountered an unhandled exception and will terminate. If you plan on reporting this bug to the bug report forum, make sure you have downloaded the debug information (DCPlusPlus.pdb) for your version of DC++. A file named \"exceptioninfo.txt\" has been generated in the same directory as DC++. Please include this file in the report or it'll be removed / ignored. If the file contains a lot of lines that end with '?', it means that the debug information is not correctly installed or your Windows doesn't support the functionality needed, and therefore, again, your report will be ignored/removed.", "DC++ Has Crashed", MB_OK | MB_ICONERROR);
+	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
+	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
+
+	exceptioninfo += StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+
+	iLastExceptionDlgResult = DialogBoxParam(GetCurrInstance(), MAKEINTRESOURCE(IDD_EXCEPTION), 0, ExceptionFilterFunctionDlgProc, 0);
+	ExceptionFunction();
 
 #ifndef _DEBUG
 	EXTENDEDTRACEUNINITIALIZE();
 	
-	exit(-1);
+	//exit(-1);
+	//return 1;
+	return EXCEPTION_CONTINUE_EXECUTION;
 #else
 	return EXCEPTION_CONTINUE_SEARCH;
 #endif

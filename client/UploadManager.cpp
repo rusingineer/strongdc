@@ -92,6 +92,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	bool leaves = false;
 
 	string file;
+
 	try {
 		file = ShareManager::getInstance()->translateFileName(aFile);
 	} catch(const ShareException&) {
@@ -113,12 +114,11 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 			size = f->getSize();
 
-			free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
+			free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024) );
 
 			if(aBytes == -1) {
 				aBytes = size - aStartPos;
 	}
-
 
 			if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
 					aSource->fileNotAvail();
@@ -181,7 +181,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 
 	clearUserFiles(aSource->getUser());
-
 	Upload* u = new Upload();
 	u->setUserConnection(aSource);
 	u->setFile(is);
@@ -394,7 +393,7 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 		cmd.addParam(c.getParam(0));
 		cmd.addParam(c.getParam(1));
 		cmd.addParam(c.getParam(2));
-		cmd.addParam(Util::toString(u->getSize()));
+		cmd.addParam(Util::toString(aBytes));
 
 		if(c.hasFlag("ZL", 4)) {
 			u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));
@@ -525,9 +524,9 @@ size_t UploadManager::throttleGetSlice() {
 				mBytesSpokenFor += left;
 				return left;
 			}
-		} else {
+	} else {
 			return 16; // must send > 0 bytes or threadSendFile thinks the transfer is complete
-		}
+	}
 	} else
 		return (size_t)-1;
 }

@@ -267,6 +267,12 @@
 				RelativePath=".\res\state.bmp">
 			</File>
 			<File
+				RelativePath=".\res\stop.ico">
+			</File>
+			<File
+				RelativePath=".\res\stop_ikona.ico">
+			</File>
+			<File
 				RelativePath=".\StrongDC.rc">
 			</File>
 			<File

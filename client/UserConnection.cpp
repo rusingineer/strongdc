@@ -60,9 +60,6 @@ void Transfer::updateRunningAverage() {
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 
-	if(aLine.length() == 0)
-		return;
-
 	string cmd;
 	string param;
 

@@ -556,7 +556,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 				FileDataInfo* fi = FileDataInfo::GetFileDataInfo(q->getTempTarget());
 				if(fi){
 					fi->SetFileSize(aSize);
-					q->setSize(aSize);
+				//	q->setSize(aSize);
 				}
 			}
 

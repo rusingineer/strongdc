@@ -333,5 +333,78 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 			ResumeThread( hThread );
 }
 
+string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DWORD ebp )
+{
+	STACKFRAME     callStack;
+	BOOL           bResult;
+	TCHAR          symInfo[BUFFERSIZE] = _T("?");
+	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
+	HANDLE         hProcess = GetCurrentProcess();
+
+	string	vypis;
+
+	// If it's not this thread, let's suspend it, and resume it at the end
+	if ( hThread != GetCurrentThread() )
+		if ( SuspendThread( hThread ) == -1 )
+		{
+			// whaaat ?!
+			vypis = LIT("No call stack\r\n");
+			return vypis;
+		}
+
+		::ZeroMemory( &callStack, sizeof(callStack) );
+		callStack.AddrPC.Offset    = eip;
+		callStack.AddrStack.Offset = esp;
+		callStack.AddrFrame.Offset = ebp;
+		callStack.AddrPC.Mode      = AddrModeFlat;
+		callStack.AddrStack.Mode   = AddrModeFlat;
+		callStack.AddrFrame.Mode   = AddrModeFlat;
+
+		vypis = lpszMessage;
+
+		GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
+		GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
+
+		vypis += srcInfo;
+		vypis += LIT(": ");
+		vypis += symInfo;
+		vypis += LIT("\r\n");
+
+		// Max 100 stack lines...
+		for( ULONG index = 0; index < 100; index++ ) 
+		{
+			bResult = StackWalk(
+				IMAGE_FILE_MACHINE_I386,
+				hProcess,
+				hThread,
+				&callStack,
+				NULL, 
+				NULL,
+				SymFunctionTableAccess,
+				SymGetModuleBase,
+				NULL);
+
+			if ( index == 0 )
+				continue;
+
+			if( !bResult || callStack.AddrFrame.Offset == 0 ) 
+				break;
+
+			GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
+			GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
+
+			vypis += srcInfo;
+			vypis += LIT(": ");
+			vypis += symInfo;
+			vypis += LIT("\r\n");
+
+		}
+		if ( hThread != GetCurrentThread() )
+			ResumeThread( hThread );
+
+		return vypis;
+
+}
+
 #endif //_DEBUG && _WIN32
 
