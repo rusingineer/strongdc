@@ -102,13 +102,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	if(aType == "file") {
 		userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
 
-		File* f;
 		try {
-			f = new File(file, File::READ, File::OPEN);
-		} catch(const FileException&) {
-			aSource->fileNotAvail();
-			return false;
-		}
+			File* f = new File(file, File::READ, File::OPEN);
 
 			size = f->getSize();
 
@@ -131,6 +126,12 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			if((aStartPos + aBytes) < size) {
 				is = new LimitedInputStream<true>(is, aBytes);
 			}
+		
+		} catch(const Exception&) {
+			aSource->fileNotAvail();
+			return false;
+		}
+		
 	} else if(aType == "tthl") {
 		// TTH Leaves...
 		TigerTree tree;
@@ -144,7 +145,9 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 		is = new TreeInputStream<TigerHash>(tree);	
 		leaves = true;
-			
+		
+		free = true;
+
 	} else {
 		aSource->fileNotAvail();
 				return false;
@@ -164,7 +167,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->getUser()->isSet(User::OP) || getFreeExtraSlots() > 0;
 			if((free && supportsFree && allowedFree) ||
-				((Util::stricmp(aFile.c_str(), "MyList.DcLst") == 0) && aSource->getUser()->isSet(User::OP))) {
+				(strcmp(aFile.c_str(), "MyList.DcLst") == 0 && aSource->getUser()->isSet(User::OP))) {
 				extraSlot = true;
 		} else {
 			delete is;
@@ -185,7 +188,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	u->setFile(is);
 	u->setSize(size);
 	u->setStartPos(aStartPos);
-	u->setFileName(aFile);
+	u->setFileName(file);
 	u->setLocalFileName(file);
 
 	if(userlist)
@@ -293,7 +296,9 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setUpload(NULL);
 	aSource->setState(UserConnection::STATE_GET);
 
-	if(BOOLSETTING(LOG_UPLOADS)  && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST))) {
+	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
+
+		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
 		params["source"] = u->getLocalFileName();
 		params["user"] = aSource->getUser()->getNick();
@@ -398,6 +403,9 @@ void UploadManager::on(Command::GET, UserConnection* aSource, const Command& c) 
 
 		aSource->send(cmd);
 		aSource->setState(UserConnection::STATE_DONE);
+		if(u->isSet(Upload::FLAG_TTH_LEAVES))
+			aSource->transmitFile(u->getFile(), true);
+		else
 		aSource->transmitFile(u->getFile());
 		fire(UploadManagerListener::Starting(), u);
 	}

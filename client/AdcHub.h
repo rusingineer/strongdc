@@ -25,7 +25,7 @@
 class AdcHub;
 class ClientManager;
 
-class AdcHub : public Client, public CommandHandler<AdcHub> {
+class AdcHub : public Client, CommandHandler<AdcHub> {
 public:
 
 	virtual void connect(const User* user);

@@ -62,6 +62,11 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	return 1;
 }
 
+LRESULT TextFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	m_hMenu = NULL;
+	MDIDestroy(m_hWnd);
+	return 0;
+}
 void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 {
 	CRect rc;
@@ -73,12 +78,6 @@ void TextFrame::UpdateLayout(BOOL /*bResizeBars*/ /* = TRUE */)
 	rc.left +=1;
 	rc.right -=1;
 	ctrlPad.MoveWindow(rc);
-}
-
-LRESULT TextFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	m_hMenu = NULL;
-	MDIDestroy(m_hWnd);
-	return 0;
 }
 
 /**

@@ -684,6 +684,7 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		}
  		mainItems.clear();
 		ctrlResults.DeleteAll();
+
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -997,6 +998,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 						int m = ctrlResults.findItem(si2);
 						dcassert(m != -1);
 						if(!si2->collapsed) {
+							si->needDelete = false;
 							ctrlResults.insertItem(m+1, si, image);
 							ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 						} else ctrlResults.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
@@ -1253,15 +1255,17 @@ LRESULT SearchFrame::onCopyMagnetLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 LRESULT SearchFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	bHandled = false;
 	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
+	
+	if (item->iItem != -1) {
+		CRect rect;
+		ctrlResults.GetItemRect(item->iItem, rect, LVIR_ICON);
 
-	CRect rect;
-	ctrlResults.GetItemRect(item->iItem, rect, LVIR_ICON);
-
-	if (item->ptAction.x < rect.left)
-	{
-		SearchInfo* i = (SearchInfo*)ctrlResults.getItemData(item->iItem);
-		if(i->subItems.size() > 0)
-			if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
+		if (item->ptAction.x < rect.left)
+		{
+			SearchInfo* i = (SearchInfo*)ctrlResults.getItemData(item->iItem);
+			if(i->subItems.size() > 0)
+				if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
+		}
 	}
 	return 0;
 } 

@@ -92,16 +92,16 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 			copy(istream_iterator<int64_t>(is),
 				istream_iterator<int64_t>(),
 				back_inserter(v)); 
-			new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v, qi->getMaxSegments());
+			new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v);
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
 				vector<int64_t> v;
 				v.push_back(tmpSize);
 				v.push_back(qi->getSize());
-				new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v, qi->getMaxSegments());
+				new FileDataInfo(qi->getTempTarget(), qi->getSize(), &v);
 			}else
-				new FileDataInfo(qi->getTempTarget(), qi->getSize(), NULL, qi->getMaxSegments());
+				new FileDataInfo(qi->getTempTarget(), qi->getSize(), NULL);
 			
 		}
 	}
@@ -853,16 +853,18 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) throw() {
 	Lock l(cs);
 
-	string message = STRING(DOWNLOAD_FINISHED_IDLE);
+	string message = "";
 
 	QueueItem* q = userQueue.getNext(aUser);
 
 znovu:
 	if(q == NULL) {
-		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
+		if(message != "")
+			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
 		return NULL;
 	}
 
+	//int k = q->getCurrents().size();
 	int k = q->getActiveSegments().size();
 	if(k >= q->getMaxSegments()) {
 		message = STRING(ALL_SEGMENTS_TAKEN);		
@@ -875,7 +877,8 @@ znovu:
 again:
 
 	if(q == NULL) {
-		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
+		if(message != "")
+			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
 		return NULL;
 	}
 
@@ -883,10 +886,10 @@ again:
 
 	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
 		dcassert(!q->getTempTarget().empty());
-		freeBlock = FileDataInfo::GetFileDataInfo(q->getTempTarget())->GetUndlStart();
+		freeBlock = FileDataInfo::GetFileDataInfo(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
 
 		if(freeBlock == -1){
-			message = "No free block";
+			message = STRING(NO_FREE_BLOCK);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
@@ -896,6 +899,7 @@ again:
 
 	userQueue.setRunning(q, aUser);
 
+	dcdebug(("Pocet segmentu: " +Util::toString((int)q->getActiveSegments().size())+"\n").c_str());
 	fire(QueueManagerListener::StatusUpdated(), q);
 	
 	d = new Download(q, aUser);

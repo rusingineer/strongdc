@@ -25,7 +25,7 @@ __int64 FileDataInfo::GetBlockEnd(__int64 begin)
 }
 
 
-FileDataInfo::FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks, int maxS) : sFileName(name), iFileSize(size), maxSegments(maxS)
+FileDataInfo::FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks) : sFileName(name), iFileSize(size)
 {
 	WaitForSingleObject(hMutexMapList, INFINITE);
 	vecAllFileDataInfo.push_back(this);
@@ -98,7 +98,7 @@ int FileDataInfo::ValidBlock(__int64 start, const void* buf, __int64 len)
 	return WRONG_POS;
 }
 
-__int64 FileDataInfo::GetUndlStart()
+__int64 FileDataInfo::GetUndlStart(int maxSegments)
 {
 	WaitForSingleObject(hMutex, INFINITE);
 
@@ -142,21 +142,26 @@ __int64 FileDataInfo::GetUndlStart()
 	__int64 e = (* (birr+1));
 
 	int64_t SMALLEST_BLOCK_SIZE = 65535;
-
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_64]) SMALLEST_BLOCK_SIZE = 65535;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_128]) SMALLEST_BLOCK_SIZE = 131071;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_256]) SMALLEST_BLOCK_SIZE = 262143;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_512]) SMALLEST_BLOCK_SIZE = 524287;
 	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_1024]) SMALLEST_BLOCK_SIZE = 1048575;
-	if((SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) || (maxSegments == 1))
-		SMALLEST_BLOCK_SIZE = SMALLEST_BLOCK_SIZE = iFileSize / maxSegments;
+	if(SETTING(MIN_BLOCK_SIZE) == SettingsManager::blockSizes[SettingsManager::SIZE_AUTO]) SMALLEST_BLOCK_SIZE = iFileSize / maxSegments;
+	if(maxSegments == 1) SMALLEST_BLOCK_SIZE = iFileSize;
+	__int64 n = 0;
 
 	if((e - b) < SMALLEST_BLOCK_SIZE){
-		ReleaseMutex(hMutex);
-		return -1;
-	}
+			ReleaseMutex(hMutex);
+			return -1;
+		}
 
-	__int64 n = b + (e - b) / 2;
+	n = b + (e - b) / 2;
+
+	if(maxSegments == 1) {
+		vecRunBlocks.clear();
+		n = b;
+	}
 
 	(* (birr+1)) = n;
 

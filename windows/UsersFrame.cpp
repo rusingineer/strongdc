@@ -36,7 +36,7 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlStatus.Attach(m_hWndStatusBar);
 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS , WS_EX_CLIENTEDGE, IDC_USERS);
+		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 
 	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT;
 	if (BOOLSETTING(SHOW_INFOTIPS))
@@ -211,3 +211,38 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 }
 
+LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	CRect rc;
+	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
+
+	case CDDS_ITEMPREPAINT:
+		return CDRF_NOTIFYSUBITEMDRAW;
+
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+		// Let's draw a box if needed...
+		if(cd->iSubItem == COLUMN_STATUS) {
+			UserInfo *ui = ctrlUsers.getStoredItemAt(cd->nmcd.lItemlParam);
+			if(ui->user->isOnline()) {
+				cd->clrText = RGB(0, 255, 0);
+			} else {
+				cd->clrText = RGB(255, 0, 0);
+			}
+			return CDRF_NEWFONT;
+		} else {
+			cd->clrText = WinUtil::textColor;
+			return CDRF_NEWFONT;
+		}
+
+	default:
+		return CDRF_DODEFAULT;
+	}
+}
+
+/**
+ * @file
+ * $Id$
+ */

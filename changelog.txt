@@ -36,7 +36,6 @@
 * pøidána kontrola uživatele, který se pøipojí na hub
 * opraveno naèítání RAW pøíkazù
 * nìkolik novinek a zmìn z CZDC++
-* vylepšeno znovupøipojení po dokonèeném downloadu
 * pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
 
 

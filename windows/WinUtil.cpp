@@ -315,7 +315,7 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CSTRING(MENU_NETWORK_STATISTICS));
 
-	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)transfers, CSTRING(MENU_TRANSFER_VIEW));
+	mainMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)transfers, CSTRING(MENU_TRANSFERS));
 
 	CMenuHandle window;
 	window.CreatePopupMenu();

@@ -14,7 +14,6 @@ public:
 
 	string sFileName;
 	__int64 iFileSize;
-	int maxSegments;
 
 	HANDLE hMutex;
 
@@ -25,7 +24,7 @@ public:
         return iDownloadedSize;
     }
 
-	FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks = NULL, int maxS = 1);
+	FileDataInfo(const string& name, __int64 size, const vector<__int64>* blocks = NULL);
 
 	~FileDataInfo()
 	{
@@ -53,7 +52,7 @@ public:
 
 	static FileDataInfo* GetFileDataInfo(string name);
 
-	__int64 GetUndlStart();
+	__int64 GetUndlStart(int);
 
 	void PutUndlStart(__int64);
 

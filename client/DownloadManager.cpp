@@ -45,7 +45,8 @@ crcCalc(NULL), treeValid(false), oldDownload(false), tth(NULL) {
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), finished(false),
-	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()) { 
+	crcCalc(NULL), treeValid(false), oldDownload(false), quickTick(GET_TICK()), tth(qi->getTTH()), 
+	maxSegmentsInitial(qi->getMaxSegmentsInitial()) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -203,9 +204,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
 
 	if(d == NULL) {
-			removeConnection(aConn, false);
-			return;
-		}
+		removeConnection(aConn, false);
+		return;
+	}
 
 		{
 			Lock l(cs);
@@ -237,6 +238,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				aConn->setState(UserConnection::STATE_TREE);
 			// Hack to get by TTH if possible
 			tthd->setTTH(d->getTTH());
+			fire(DownloadManagerListener::Failed(), d, STRING(DOWNLOADING_TTHL));
 			aConn->send(tthd->getCommand(false, aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF)));
 			tthd->setTTH(NULL);
 				return;
@@ -244,13 +246,14 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		}
 
 		aConn->setState(UserConnection::STATE_FILELENGTH);
-			
-/*		
-		if(d->isSet(Download::FLAG_RESUME)) {
+	dcdebug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!2\n");		
+		/*QueueItem* q = QueueManager::getInstance()->fileQueue.find(d->getTarget());
+		if(d->isSet(Download::FLAG_RESUME) && (q->getMaxSegmentsInitial() == 1)) {
 			dcassert(d->getSize() != -1);
 
 			const string& target = (d->getTempTarget().empty() ? d->getTarget() : d->getTempTarget());
-			int64_t start = File::getSize(target);
+			//int64_t start = File::getSize(target);
+			int64_t start = d->getPos();
 
 			// Only use antifrag if we don't have a previous non-antifrag part
 			if( BOOLSETTING(ANTI_FRAG) && (start == -1) && (d->getSize() != -1) ) {
@@ -273,8 +276,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			}
 		} else {
 			d->setStartPos(0);
-		}
-*/
+		}*/
+
 
 		if(d->isSet(Download::FLAG_USER_LIST)) {
 			if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
@@ -486,6 +489,18 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 	
+	QueueItem* q = QueueManager::getInstance()->getRunning(aSource->getUser());
+	if(q != NULL) {
+		if(q->getMaxSegments() <= q->getActiveSegments().size()) {
+			aSource->setDownload(NULL);
+			removeDownload(d, true);
+			removeConnection(aSource);
+			return false;
+		}
+	q->addActiveSegment(aSource->getUser());
+	dcdebug(("Active segments : "+Util::toString((int)q->getActiveSegments().size())).c_str());
+	}
+
 	if(newSize != -1) {
 		d->setSize(newSize);
 	}
@@ -541,9 +556,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 
 	d->setFile(file);
 	
-//	if(d->isSet(Download::FLAG_ROLLBACK)) {
-//		d->setFile(new RollbackOutputStream<true>(file, d->getFile(), SETTING(ROLLBACK)/*(size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())*/));
-//	}
+	if(d->isSet(Download::FLAG_ROLLBACK)) {
+		d->setFile(new RollbackOutputStream<true>(file, d->getFile(), SETTING(ROLLBACK)/*(size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())*/));
+	}
 
 	if(SETTING(BUFFER_SIZE) != 0) {
 		d->setFile(new BufferedOutputStream<true>(d->getFile()));
@@ -558,8 +573,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 		d->setFile(crc);
 	}
 	
-//	if(BOOLSETTING(ENABLE403FEATURES))
-	if((d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
+	if((BOOLSETTING(ENABLE403FEATURES)) && (d->getPos() == 0) && (!d->isSet(Download::FLAG_MP3_INFO))) {
 		if(!d->getTreeValid() && d->getTTH() != NULL && d->getSize() < numeric_limits<size_t>::max()) {
 			// We make a single node tree...
 			d->getTigerTree().setFileSize(d->getSize());
@@ -580,9 +594,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	dcassert(d->getPos() != -1);
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
-
-	QueueItem* q = QueueManager::getInstance()->getRunning(aSource->getUser());
-	q->addActiveSegment(aSource->getUser());
 
 	fire(DownloadManagerListener::Starting(), d);
 	
@@ -765,7 +776,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				vector<int64_t> v;
 				v.push_back(0);
 				v.push_back(d->getSize());
-				new FileDataInfo(d->getTempTarget(), d->getSize(), &v, q->getMaxSegments());
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
 				removeDownload(d, true);				
 				QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
@@ -826,7 +837,7 @@ noCRC:
 					char buf[64];
 					sprintf(buf, CSTRING(DOWNLOAD_CORRUPTED), i);
 					fire(DownloadManagerListener::Failed(), d, buf);
-					Sleep(1000);
+					Thread::sleep(1000);
 				}
 
 				delete FileDataInfo::GetFileDataInfo(d->getTempTarget());
@@ -835,7 +846,7 @@ noCRC:
 				vector<int64_t> v;
 				v.push_back(0);
 				v.push_back(d->getSize());
-				new FileDataInfo(d->getTempTarget(), d->getSize(), &v, q->getMaxSegments());
+				new FileDataInfo(d->getTempTarget(), d->getSize(), &v);
 
 				removeDownload(d, true);
 				//QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY, false);
@@ -936,6 +947,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = false */) {
+	bool isTestSUR = d->isSet(Download::FLAG_TESTSUR);
 	User::Ptr uzivatel = d->getUserConnection()->getUser();
 	if(d->getOldDownload() != NULL) {
 		if(d->getFile()) {
@@ -1001,7 +1013,7 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		}
 	}
 	QueueManager::getInstance()->putDownload(d, finished);
-	if(QueueManager::getInstance()->lookupNext(uzivatel) != NULL) {
+	if(isTestSUR && (QueueManager::getInstance()->lookupNext(uzivatel) != NULL)) {
 		uzivatel->connect();
 	}
 }

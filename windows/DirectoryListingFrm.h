@@ -144,7 +144,6 @@ public:
 		if(!closed) {
 		ctrlList.SetRedraw(FALSE);
 		clearList();
-
 			closed = true;
 			PostMessage(WM_CLOSE);
 			return 0;
