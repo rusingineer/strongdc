@@ -72,6 +72,7 @@ public:
 //PDC }		
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_COMMANDS(uibBase)
+		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
 
 	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -175,7 +176,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), seznam(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL), stazenoCelkem(0),
-			dwnldStart(0), pocetUseru(0), oldTarget(Util::emptyString), Target(Util::emptyString)
+			dwnldStart(0), pocetUseru(1), oldTarget(Util::emptyString)
 			{ update(); };
 
 		Types type;
@@ -192,6 +193,7 @@ private:
 		string file;
 		string path;
 		string IP;
+		string country;		
 		QueueItem* qi;
 		ItemInfo* upper;
 		string Target;
@@ -247,9 +249,7 @@ private:
 	OMenu transferMenu;
 	OMenu segmentedMenu;
 	OMenu usercmdsMenu;
-//PDC {
 	OMenu previewMenu;
-//PDC {
 	CImageList arrows;
 	CImageList states;
 	HICON hIconCompressed;

@@ -357,6 +357,7 @@ enum Strings { // @DontAdd
 	SETTINGS_USER_COMMANDS, // "User Commands"
 	SETTINGS_USER_MENU, // "User Menu Items"
 	SETTINGS_WRITE_BUFFER, // "Write buffer size"
+	SETTINGS_GET_USER_COUNTRY, // "Get User Country"
 	SETTINGS, // "Settings"
 	SFV_INCONSISTENCY, // "CRC32 inconsistency (SFV-Check)"
 	SHARED, // "Shared"

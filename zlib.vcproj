@@ -179,6 +179,9 @@
 				RelativePath=".\zlib\inffixed.h">
 			</File>
 			<File
+				RelativePath=".\zlib\inflate.h">
+			</File>
+			<File
 				RelativePath=".\zlib\inftrees.h">
 			</File>
 			<File

@@ -20,6 +20,7 @@
 #include "DCPlusPlus.h"
 
 #include "UploadManager.h"
+
 #include "ConnectionManager.h"
 #include "LogManager.h"
 #include "ShareManager.h"

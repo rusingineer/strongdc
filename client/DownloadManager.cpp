@@ -89,7 +89,7 @@ void DownloadManager::onTimerSecond(u_int32_t /*aTick*/) {
 				dcassert(d->getUserConnection() != NULL);
 				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
 					QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
-					if(q) {		
+					if(q != NULL) {		
 						if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() >= 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
 							if(((GET_TICK() - d->quickTick)/1000) > iTime){
 								d->getUserConnection()->disconnect();
@@ -357,7 +357,6 @@ private:
 };
 
 bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = -1 */) {
-
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
@@ -385,7 +384,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 			target += ".DcLst";
 		}
 	}
-
 	File* file = NULL;
 	try {
 		// Let's check if we can find this file in a any .SFV...
@@ -417,8 +415,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 //		d->setFile(new RollbackOutputStream<true>(file, d->getFile(), SETTING(ROLLBACK)/*(size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())*/));
 //	}
 
-	if(SETTING(BUFFER_SIZE) != 0)
+	if(SETTING(BUFFER_SIZE) != 0) {
 		d->setFile(new BufferedOutputStream<true>(d->getFile()));
+	}
 
 	bool sfvcheck = BOOLSETTING(SFV_CHECK) && (d->getPos() == 0) && (SFVReader(d->getTarget()).hasCRC());
 
@@ -440,7 +439,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	dcassert(d->getPos() != -1);
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
-	throttleSetup();	
 	
 	fire(DownloadManagerListener::STARTING, d);
 	
@@ -451,8 +449,7 @@ void DownloadManager::onData(UserConnection* aSource, const u_int8_t* aData, siz
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 	
-	throttleBytesTransferred(aLen);
-				try {
+	try {
 		try{
 			d->addPos(d->getFile()->write(aData, aLen));
 		} catch(const BlockDLException) {
@@ -467,15 +464,11 @@ void DownloadManager::onData(UserConnection* aSource, const u_int8_t* aData, siz
 			handleEndData(aSource);
 			return;	
 		}
-
-
 		d->addActual(aLen);
 		if(d->getPos() == d->getSize()) {
 			handleEndData(aSource);
 			aSource->setLineMode();
 		}
-
-
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::FAILED, d, e.getError());
 		//d->setPos(d->getPos() - d->getTotal());
@@ -501,7 +494,6 @@ void DownloadManager::onModeChange(UserConnection* aSource, int /*aNewMode*/) {
 
 	if(d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_NOSEGMENTS))
 	handleEndData(aSource);
-
 }
 
 /** Download finished! */
@@ -684,7 +676,6 @@ noCRC:
 	aSource->setDownload(NULL);
 	removeDownload(d, true);	
 	checkDownloads(aSource, true);
-
 }
 
 void DownloadManager::onMaxedOut(UserConnection* aSource) { 
@@ -882,6 +873,7 @@ void DownloadManager::onAction(UserConnectionListener::Types type, UserConnectio
 	default: break;
 	}
 }
+
 void DownloadManager::onAction(UserConnectionListener::Types type, UserConnection* conn, const string& line) throw() {
 	switch(type) {
 	case UserConnectionListener::FILE_LENGTH:
@@ -892,10 +884,12 @@ void DownloadManager::onAction(UserConnectionListener::Types type, UserConnectio
 		break;
 	}
 }
+
 void DownloadManager::onAction(UserConnectionListener::Types type, UserConnection* conn, int64_t bytes) throw() {
 	if(type == UserConnectionListener::SENDING)
 		onSending(conn, bytes);
 }
+
 void DownloadManager::onAction(UserConnectionListener::Types type, UserConnection* conn, const u_int8_t* data, int len) throw() {
 	switch(type) {
 	case UserConnectionListener::DATA:
@@ -926,9 +920,6 @@ void DownloadManager::onAction(TimerManagerListener::Types type, u_int32_t aTick
 
 void DownloadManager::throttleReturnBytes(u_int32_t b) {
 	Lock l(cs);
-#ifdef _DEBUG
-	dcdebug("DownloadManager::throttleReturnBytes - Called with %d\n", b);
-#endif
 	if (b > 0 && b < 2*mByteSlice) {
 		mBytesSpokenFor -= b;
 		if (mBytesSpokenFor < 0)
@@ -936,13 +927,10 @@ void DownloadManager::throttleReturnBytes(u_int32_t b) {
 	}
 }
 
-int32_t DownloadManager::throttleGetSlice() {
+size_t DownloadManager::throttleGetSlice() {
 	if (mThrottleEnable) {
 		Lock l(cs);
-		u_int32_t left = mDownloadLimit - mBytesSpokenFor;
-#ifdef _DEBUG
-		//dcdebug("DownloadManager::throttleGetSlice - Limit: %d  Read: %d  Left: %d\n", mDownloadLimit, mBytesSent, left);
-#endif
+		size_t left = mDownloadLimit - mBytesSpokenFor;
 		if (left > 0) {
 			if (left > 2*mByteSlice) {
 				mBytesSpokenFor += mByteSlice;
@@ -957,7 +945,7 @@ int32_t DownloadManager::throttleGetSlice() {
 		return -1;
 }
 
-u_int32_t DownloadManager::throttleCycleTime() {
+size_t DownloadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -975,29 +963,25 @@ void DownloadManager::throttleBytesTransferred(u_int32_t i) {
 }
 
 void DownloadManager::throttleSetup() {
-	// called once a second, plus when a download starts
+// called once a second, plus when a download starts
+// from the constructor to BufferedSocket
+// with 64k, a few people get winsock error 0x2747
 #define INBUFSIZE 64*1024
 	Lock l(cs);
 	unsigned int num_transfers = getDownloads();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-		if (num_transfers > 0) {
 			if (mDownloadLimit <= (INBUFSIZE * 10 * num_transfers)) {
 				mByteSlice = mDownloadLimit / (7 * num_transfers);
 				if (mByteSlice > INBUFSIZE)
 					mByteSlice = INBUFSIZE;
 				mCycleTime = 1000 / 10;
-				}
-			else {
+				} else {
 				mByteSlice = INBUFSIZE;
 				mCycleTime = 1000 * INBUFSIZE / mDownloadLimit;
 			}
 		}
-#ifdef _DEBUG
-		dcdebug("DownloadManager::throttleSetup - byte slice: %d  cycle time: %d\n", mByteSlice, mCycleTime);
-#endif
-	}
 }
 
 /**

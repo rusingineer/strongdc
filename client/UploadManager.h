@@ -97,7 +97,6 @@ public:
 			Upload* u = *i;
 			avg += (int)u->getRunningAverage();
 		}
-
 		return avg;
 	}
 	

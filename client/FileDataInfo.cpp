@@ -74,7 +74,7 @@ int FileDataInfo::ValidBlock(__int64 start, const void* buf, __int64 len)
 			iDownloadedSize += len;
 
 			// block over
-			if( (*i) >= (*(i+1))) {
+			if((*i) >= (*(i+1))){
 			//			if( ((*i) > (*(i+1))) || ((*i) >= iFileSize)){  
 
 				iDownloadedSize -= ((*i) - (*(i+1)));

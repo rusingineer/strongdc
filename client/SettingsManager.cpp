@@ -90,7 +90,7 @@ const string SettingsManager::settingTags[] =
 	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed", "FloodCache", "AutoSearchExact",
 	"SegmentsType", "NumberOfSegments", "MinBlockSize", "PercentFakeShareTolerated", "IgnoreJunkFiles", "MaxSources",
 	"ClientEmulation", "ShowPK", "ShowLock", "ShowSupports", "UseEmoticons", "SendUnknownCommands", "Disconnect",
-	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler",
+	"AutoUpdateIP", "CheckTTH", "MaxHashSpeed", "SearchTTHOnly", "MagnetHandler", "GetUserCountry",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload", "JunkFileSize", "JunkBINFileSize", "JunkVOBFileSize",
@@ -201,6 +201,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
+	setDefault(GET_USER_COUNTRY, true);	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SEND_EXTENDED_INFO, true);

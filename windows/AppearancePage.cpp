@@ -38,6 +38,7 @@ PropPage::TextItem AppearancePage::texts[] = {
 	{ IDC_SETTINGS_LANGUAGE_FILE, ResourceManager::SETTINGS_LANGUAGE_FILE },
 	{ IDC_BROWSE, ResourceManager::BROWSE_ACCEL },
 	{ IDC_SETTINGS_REQUIRES_RESTART, ResourceManager::SETTINGS_REQUIRES_RESTART },
+	{ IDC_SETTINGS_GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY }, 
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -78,6 +79,7 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_PK , ResourceManager::SHOW_PK },
 	{ SettingsManager::SHOW_LOCK , ResourceManager::SHOW_LOCK },
 	{ SettingsManager::SHOW_SUPPORTS , ResourceManager::SHOW_SUPPORTS },
+	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

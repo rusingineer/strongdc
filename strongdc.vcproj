@@ -95,7 +95,7 @@
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
