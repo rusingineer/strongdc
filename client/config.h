@@ -89,7 +89,7 @@
 
 
 // These are defined by the C99 standard, but vc 6.0/7.0/7.1 doesn't understand them
-#if _MSC_VER == 1200 || _MSC_VER == 1300 || _MSC_VER == 1310
+#if _MSC_VER == 1200 || _MSC_VER == 1300 || _MSC_VER == 1310 || _MSC_VER == 1400
 typedef signed char int8_t;
 typedef signed short int16_t;
 typedef signed long int32_t;

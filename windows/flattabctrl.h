@@ -236,9 +236,12 @@ public:
 	}
 
 	LRESULT onLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+		if (moving) {
 		int xPos = GET_X_LPARAM(lParam); 
 		int yPos = GET_Y_LPARAM(lParam); 
 		int row = getRows() - ((yPos / getTabHeight()) + 1);
+
+			bool moveLast = true;
 
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* t = *i;
@@ -254,10 +257,14 @@ public:
 						moveTabs(t, xPos > (t->xpos + (t->getWidth()/2)));
 					}
 				}
+					moveLast = false;
 				break;
 			}
 		}		
+			if(moveLast)
+				moveTabs(tabs.back(), true);
 		moving = NULL;	
+		}
 		return 0;
 	}
 
@@ -719,7 +726,7 @@ public:
 
  	typedef MDITabChildWindowImpl<T, C, I, I_state, TBase, TWinTraits> thisClass;
 	typedef CMDIChildWindowImpl<T, TBase, TWinTraits> baseClass;
-	BEGIN_MSG_MAP(thisClass>)
+	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_SYSCOMMAND, onSysCommand)
 		MESSAGE_HANDLER(WM_FORWARDMSG, onForwardMsg)
@@ -882,9 +889,7 @@ public:
 
 	void setDirty() {
 		dcassert(getTab());
-		if (BOOLSETTING(TAB_DIRTY)) {
-			getTab()->setDirty(m_hWnd);
-		}
+		getTab()->setDirty(m_hWnd);
 	}
 	void setTabColor(COLORREF color) {
 		dcassert(getTab());

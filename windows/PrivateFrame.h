@@ -155,7 +155,9 @@ public:
 			CreateEx(WinUtil::mdiClient);
 		}
 		ctrlStatus.SetText(0, ("[" + Util::getShortTimeString() + "] " + aLine).c_str());
-		setDirty();
+		if (BOOLSETTING(TAB_DIRTY)) {
+			setDirty();
+		}
 	}
 	
 	void setUser(const User::Ptr& aUser) { user = aUser; };

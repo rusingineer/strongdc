@@ -36,14 +36,13 @@
 #include "../client/QueueManager.h"
 #include "../client/UploadManager.h"
 #include "../client/HashManager.h"
+#include "HubFrame.h"
+#include "MagnetDlg.h"
 #include "winamp.h"
 #include <strmif.h>
 #include <control.h>
 #include <Windows.h>
-
 #include "../client/cvsversion.h"
-#include "HubFrame.h"
-#include "MagnetDlg.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
 int WinUtil::fileImageCount;
@@ -83,20 +82,21 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
 	{IDC_QUEUE, 6, true, ResourceManager::MENU_DOWNLOAD_QUEUE},
 	{IDC_FINISHED, 7, true, ResourceManager::FINISHED_DOWNLOADS},
-	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::UPLOAD_QUEUE},
-	{IDC_FINISHED_UL, 9, true, ResourceManager::FINISHED_UPLOADS},
-	{ID_FILE_SEARCH, 10, false, ResourceManager::MENU_SEARCH},
-	{IDC_FILE_ADL_SEARCH, 11, true, ResourceManager::MENU_ADL_SEARCH},
-	{IDC_SEARCH_SPY, 12, true, ResourceManager::MENU_SEARCH_SPY},
-	{IDC_NET_STATS, 13, true, ResourceManager::NETWORK_STATISTICS},
-	{IDC_OPEN_FILE_LIST, 14, false, ResourceManager::MENU_OPEN_FILE_LIST},
-	{ID_FILE_SETTINGS, 15, false, ResourceManager::MENU_SETTINGS},
-	{IDC_NOTEPAD, 16, true, ResourceManager::MENU_NOTEPAD},
-	{IDC_AWAY, 17, true, ResourceManager::AWAY},
-	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
-	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
-	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
-	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS},
+	{IDC_FINISHEDMP3, 8, true, ResourceManager::FINISHED_MP3_DOWNLOADS},
+	{IDC_UPLOAD_QUEUE, 9, true, ResourceManager::UPLOAD_QUEUE},
+	{IDC_FINISHED_UL, 10, true, ResourceManager::FINISHED_UPLOADS},
+	{ID_FILE_SEARCH, 11, false, ResourceManager::MENU_SEARCH},
+	{IDC_FILE_ADL_SEARCH, 12, true, ResourceManager::MENU_ADL_SEARCH},
+	{IDC_SEARCH_SPY, 13, true, ResourceManager::MENU_SEARCH_SPY},
+	{IDC_NET_STATS, 14, true, ResourceManager::NETWORK_STATISTICS},
+	{IDC_OPEN_FILE_LIST, 15, false, ResourceManager::MENU_OPEN_FILE_LIST},
+	{ID_FILE_SETTINGS, 16, false, ResourceManager::MENU_SETTINGS},
+	{IDC_NOTEPAD, 17, true, ResourceManager::MENU_NOTEPAD},
+	{IDC_AWAY, 18, true, ResourceManager::AWAY},
+	{IDC_SHUTDOWN, 19, true, ResourceManager::SHUTDOWN},
+	{IDC_LIMITER, 20, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
+	{IDC_UPDATE, 21, false, ResourceManager::UPDATE_CHECK},
+	{IDC_DISABLE_SOUNDS, 22, true, ResourceManager::DISABLE_SOUNDS},
 	{0, 0, false, ResourceManager::MENU_NOTEPAD}
 };
 
@@ -938,12 +938,6 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 }
 
  void WinUtil::registerMagnetHandler() {
-	// @ = DC++
-	// Description = Download files from the Direct Connect network
-	// DefaultIcon = \"getAppName()\"
-	// ShellExecute = \"getAppName()\" "%URL"
-	//  Type\urn:bitprint = DWORD:0000
-	//  Type\urn:tree:tiger = DWORD:0000
 	HKEY hk;
 	char buf[512];
 	string openCmd, magnetLoc, magnetExe;
@@ -974,7 +968,6 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 		magnetExe = Util::getAppPath() + "magnet.exe";
 		if(File::getSize(magnetExe) == -1) {
 			// gracefully fall back to registering DC++ to handle magnets
-		//	LogManager::getInstance()->message(STRING(MAGNET_HANDLER_NOT_FOUND), true);
 			magnetExe = Util::getAppName();
 			haveMagnet = false;
 		} else {
@@ -1002,9 +995,9 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	}
 	// magnet-handler specific code
 	// clean out the DC++ tree first
-	SHDeleteKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++");
+	SHDeleteKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++");
 	// add DC++ to magnet-handler's list of applications
-	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++", &hk);
+	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++", &hk);
 	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_ROOT), STRING(MAGNET_HANDLER_ROOT).size()+1);
 	::RegSetValueEx(hk, "Description", NULL, REG_SZ, (LPBYTE)CSTRING(MAGNET_HANDLER_DESC), STRING(MAGNET_HANDLER_DESC).size()+1);
 	// set ShellExecute
@@ -1015,21 +1008,32 @@ void WinUtil::bitziLink(TTHValue* aHash) {
 	::RegSetValueEx(hk, "DefaultIcon", NULL, REG_SZ, (LPBYTE)app.c_str(), app.length()+1);
 	::RegCloseKey(hk);
 
-	// these two types contain a tth root, and are in common use.  Shareaza's source has a couple more
-	// but I have never actually seen them.  thus, they don't exist.  -GargoyleMT
+	// These two types contain a tth root, and are in common use.  The other two are variations picked up
+	// from Shareaza's source, which come second hand from Gordon Mohr.  -GargoyleMT
+	// Reference: http://forums.shareaza.com/showthread.php?threadid=23731
+	// Note: the three part hash types require magnethandler >= 1.0.0.3
 	DWORD nothing = 0;
-	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\DC++\\Type", &hk);
-	::RegSetValueEx(hk, "urn:tree:tiger", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Magnet\\Handlers\\StrongDC++\\Type", &hk);
 	::RegSetValueEx(hk, "urn:bitprint", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, "urn:tree:tiger", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, "urn:tree:tiger/", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
+	::RegSetValueEx(hk, "urn:tree:tiger/1024", NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
 	::RegCloseKey(hk);
 }
 
 void WinUtil::openLink(const string& url) {
 	CRegKey key;
-	char regbuf[MAX_PATH];
+	char buf[MAX_PATH];
 	ULONG len = MAX_PATH;
+	if(strnicmp(url.c_str(), "magnet:?", 8) == 0) {
+		parseMagnetUri(url);
+		return;
+	}
+	if(strnicmp(url.c_str(), "dchub://", 8) == 0) {
+		parseDchubUrl(url);
+		return;
+	}
 	string x;
-
 	string::size_type i = url.find("://");
 	if(i != string::npos) {
 		x = url.substr(0, i);
@@ -1038,16 +1042,16 @@ void WinUtil::openLink(const string& url) {
 	}
 	x += "\\shell\\open\\command";
 	if(key.Open(HKEY_CLASSES_ROOT, x.c_str(), KEY_READ) == ERROR_SUCCESS) {
-		if(key.QueryStringValue(NULL, regbuf, &len) == ERROR_SUCCESS) {
+		if(key.QueryStringValue(NULL, buf, &len) == ERROR_SUCCESS) {
 			/*
-			 * Various values:
+			 * Various values (for http handlers):
 			 *  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1"
 			 *  "C:\Program Files\Internet Explorer\iexplore.exe" -nohome
 			 *  "C:\Apps\Opera7\opera.exe"
 			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1"
 			 *  C:\PROGRA~1\NETSCAPE\NETSCAPE\NETSCP.EXE -url "%1"
 			 */
-			string cmd(regbuf); // otherwise you consistently get two trailing nulls
+			string cmd(buf);
 			
 			if(!cmd.empty() && cmd.length() > 1) {
 				string::size_type start,end;
@@ -1108,12 +1112,14 @@ void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
 	//  xs = exact substitute
 	//  as = acceptable substitute
 	//  dn = display name
+	//  xl = exact length
 	if (Util::strnicmp(aUrl.c_str(), "magnet:?", 8) == 0) {
 		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + aUrl, true);
 		StringTokenizer mag(aUrl.substr(8), '&');
 		typedef map<string, string> MagMap;
 		MagMap hashes;
 		string fname, fhash, type, param;
+		int64_t fsize = 0;
 		for(StringList::iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
 			// break into pairs
 			string::size_type pos = idx->find("=");
@@ -1129,8 +1135,14 @@ void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
 				hashes[type] = param.substr(46);
 			} else if(param.length() == 54 && Util::strnicmp(param.c_str(), "urn:tree:tiger:", 15) == 0) {
 				hashes[type] = param.substr(15);
+			} else if(param.length() == 55 && Util::strnicmp(param.c_str(), "urn:tree:tiger/:", 16) == 0) {
+				hashes[type] = param.substr(16);
+			} else if(param.length() == 59 && Util::strnicmp(param.c_str(), "urn:tree:tiger/1024:", 20) == 0) {
+				hashes[type] = param.substr(20);
 			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), "dn", 2) == 0) {
 				fname = param;
+			} else if(type.length() == 2 && Util::strnicmp(type.c_str(), "xl", 2) == 0) {
+				fsize = _atoi64(param.c_str());
 			}
 		}
 		// pick the most authoritative hash out of all of them.
@@ -1143,21 +1155,22 @@ void WinUtil::parseMagnetUri(const string& aUrl, bool /*aOverride*/) {
 		if(hashes.find("xt") != hashes.end()) {
 			fhash = hashes["xt"];
 		}
-		if(!fhash.empty()){
+		if(!fhash.empty() && Encoder::isBase32(fhash.c_str())){
 			// ok, we have a hash, and maybe a filename.
-			//if(!BOOLSETTING(MAGNET_ASK)) {
-			//	switch(SETTING(MAGNET_ACTION)) {
-			//		case SettingsManager::MAGNET_AUTO_DOWNLOAD:
-			//			break;
-			//		case SettingsManager::MAGNET_AUTO_SEARCH:
-			//			SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
-			//			break;
-			//	};
-			//} else {
+			if(!BOOLSETTING(MAGNET_ASK) && fsize > 0 && fname.length() > 0) {
+				switch(SETTING(MAGNET_ACTION)) {
+					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
+						QueueManager::getInstance()->add(fname, fsize, fhash);
+						break;
+					case SettingsManager::MAGNET_AUTO_SEARCH:
+						SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+						break;
+				};
+			} else {
 			// use aOverride to force the display of the dialog.  used for auto-updating
-				CMagnetDlg dlg(fhash, fname);
+				CMagnetDlg dlg(fhash, fname, fsize);
 				dlg.DoModal(mainWnd);
-			//}
+			}
 		} else {
 			MessageBox(mainWnd, CSTRING(MAGNET_DLG_TEXT_BAD), CSTRING(MAGNET_DLG_TITLE), MB_OK | MB_ICONEXCLAMATION);
 		}
@@ -1193,6 +1206,7 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const string& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
+		memset(&fi, 0, sizeof(SHFILEINFO));
 		string x = Util::toLower(Util::getFileExt(aFileName));
 		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);

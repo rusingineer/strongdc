@@ -11,6 +11,8 @@
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
+static const char* Links[] = { "magnet:?", "dchub://", "irc://", "ed2k://" };
+
 ChatCtrl::ChatCtrl() {
 	memset(&m_TextStyleGeneral, 0, sizeof(CHARFORMAT2));
 	memset(&m_TextStyleTimestamp, 0, sizeof(CHARFORMAT2));
@@ -317,6 +319,11 @@ void ChatCtrl::AppendText( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFOR
 void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor , bool bRedrawControlAtEnd) {
 	boOK = false;
 	boAtTheEnd = false;
+
+	CHARFORMAT2 cfSel;
+	memset(&cfSel, 0, sizeof(CHARFORMAT2));
+	cfSel.cbSize = sizeof(cfSel);
+
 	GetSel( lSelBeginSaved, lSelEndSaved );
 	POINT cr;
 	SendMessage(EM_GETSCROLLPOS, 0, (LPARAM)&cr);
@@ -437,31 +444,24 @@ void ChatCtrl::AppendTextOnly( LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CH
 	}
 
 	lSelEnd = GetTextLengthEx( GTL_PRECISE );
-	CHARFORMAT2 cfSel;
-	memset(&cfSel, 0, sizeof(CHARFORMAT2));
-	cfSel.cbSize = sizeof( cfSel );
-	long magnetStart = sMsgLower.Find("magnet:?", lSearchFrom);
-	if(magnetStart > 0) {
-		for ( lPos = lSelBegin + magnetStart; lPos < lSelEnd; lPos++ ) {
+	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
+		long linkStart = sMsgLower.Find(Links[i], lSearchFrom);
+		while(linkStart > 0) {
+			long linkEnd = sMsgLower.Find(" ", linkStart);
+			if(linkEnd <= linkStart)
+				linkEnd = sMsgLower.Find("\n", linkStart);
+			for(lPos = lSelBegin + linkStart; lPos < lSelBegin + linkEnd; lPos++) {
 			SetSel(lPos, lPos + 1);
 			GetSelectionCharFormat( cfSel );
-			cfSel.crBackColor = SETTING(TEXT_URL_BACK_COLOR);
-			cfSel.crTextColor = SETTING(TEXT_URL_FORE_COLOR);
-			cfSel.dwEffects |= CFE_UNDERLINE;
-			if ( SETTING(TEXT_URL_BOLD) )
-				cfSel.dwEffects |= CFE_BOLD;
-			if ( SETTING(TEXT_URL_ITALIC) )
-				cfSel.dwEffects |= CFE_ITALIC;
+				cfSel.dwEffects |= CFE_LINK;
 			boOK = SetSelectionCharFormat( cfSel );
+		}
+			linkStart = sMsgLower.Find(Links[i], linkEnd);
 		}
 	}
 
 	// Uprava pozadi pro text s bitem CFE_LINK
 	lSelEnd = GetTextLengthEx( GTL_PRECISE );
-	//CHARFORMAT2 cfSel;
-	memset(&cfSel, 0, sizeof(CHARFORMAT2));
-	cfSel.cbSize = sizeof( cfSel );
-
 	for ( lPos = lSelBegin; lPos < lSelEnd; lPos++ ) {
 			SetSel( lPos, lPos + 1 );
 			GetSelectionCharFormat( cfSel );

@@ -40,7 +40,7 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	ctrlPad.SetFont(WinUtil::monoFont);
 	string tmp;
 	try {
-		tmp = File(file, File::READ, File::OPEN).read(MAX_TEXT_LEN);
+		tmp = Util::toDOS(File(file, File::READ, File::OPEN).read(MAX_TEXT_LEN));
 		string::size_type i = 0;
 		while((i = safestring::SafeFind(tmp,'\n', i)) != string::npos) {
 			if(i == 0 || tmp[i-1] != '\r') {

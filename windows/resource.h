@@ -423,8 +423,11 @@
 #define IDC_SEGMENTWARN                 1240
 #define IDC_MAGNET_TEXT                 1240
 #define IDC_DONTSEGMENT                 1241
+#define IDC_SETTINGS_TIME_STAMPS_FORMAT 1241
 #define IDC_MAX_SEGMENT_SPEED           1242
+#define IDC_TIME_STAMPS_FORMAT          1242
 #define IDC_CLIENT_CHEATING_DESCRIPTION 1243
+#define IDC_SETTINGS_ONLY_HASHED        1243
 #define IDC_SEGMENT6_MAX                1244
 #define IDC_COMMENT                     1244
 #define IDC_STATIC8                     1245
@@ -694,6 +697,8 @@
 #define ID_GET_TTH                      10151
 #define IDC_COPY_LINK                   10152
 #define IDC_REBUILD_TOOLBAR             10162
+#define IDC_MAGNET_SIZE                 10164
+#define IDC_MAGNET_DISP_SIZE            10165
 #define IDC_BITZI_LOOKUP                20000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774

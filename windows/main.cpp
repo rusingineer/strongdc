@@ -381,21 +381,25 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		}
 
 		if(multiple == false) {
-		HWND hOther = NULL;
-		EnumWindows(searchOtherInstance, (LPARAM)&hOther);
+			HWND hOther = NULL;
+			EnumWindows(searchOtherInstance, (LPARAM)&hOther);
 
-		if( hOther != NULL ) {
-			// pop up
-			::SetForegroundWindow(hOther);
+#ifndef _DEBUG
+			if( hOther != NULL ) {
+#else
+			if( hOther != NULL && strlen(lpstrCmdLine) > 0 ) {
+#endif
+				// pop up
+				::SetForegroundWindow(hOther);
 
-			if( IsIconic(hOther)) {
-				// restore
-				::ShowWindow(hOther, SW_RESTORE);
+				if( IsIconic(hOther)) {
+					// restore
+					::ShowWindow(hOther, SW_RESTORE);
+				}
+				sendCmdLine(hOther, lpstrCmdLine);
 			}
-			sendCmdLine(hOther, lpstrCmdLine);
-		}
-		return FALSE;
 
+		return FALSE;
 		}
 	}
 	

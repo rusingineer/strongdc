@@ -269,17 +269,9 @@ public:
 		return formatBytes(toInt64(aString));
 	}
 
-	static string getShortTimeString() {
-		char buf[11];
-		time_t _tt = time(NULL);
-		tm* _tm = localtime(&_tt);
-		if(_tm == NULL) {
-			strcpy(buf, "xx:xx");
-		} else {
-			strftime(buf, 11, "%H:%M:%S", _tm);
-		}
-		return buf;
-	}
+	static string toDOS(const string& tmp);
+
+	static string getShortTimeString();
 
 	static string getTimeString() {
 		char buf[64];

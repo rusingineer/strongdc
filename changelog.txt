@@ -2,6 +2,11 @@
 
 * optimalizováno seskupování položek v Pøenosech
 * opraven náhodný pád pøi odstraòování TestSUR po odpojení
+* pøidáno jak dlouho èeká uživatel v upload queue a kdy byl poslední požadavek (CZDC++)
+* pøidána možnost vložit magnet link do fronty (CZDC++)
+* synchronizace s CVS DC++ 0.4033
+* pøidáno chybìjící tlaèítko Stažené informace o MP3 na lištu
+* aktualizováno na WTL 7.5.4196
 
 
 	-- StrongDC++ 1.00 RC7 --

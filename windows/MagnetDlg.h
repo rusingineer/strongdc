@@ -23,6 +23,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "../client/QueueManager.h"
+
 // (Modders) Enjoy my liberally commented out source code.  The plan is to enable the
 // magnet link add an entry to the download queue, with just the hash (if that is the
 // only information the magnet contains).  DC++ has to find sources for the file anyway,
@@ -33,7 +35,7 @@ class CMagnetDlg : public CDialogImpl<CMagnetDlg > {
 public:
 	enum { IDD = IDD_MAGNET };
 
-	CMagnetDlg(const string& aHash, const string& aFileName) : mHash(aHash), mFileName(aFileName) { };
+	CMagnetDlg(const string& aHash, const string& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { };
 	virtual ~CMagnetDlg() { };
 
 	BEGIN_MSG_MAP(CMagnetDlg)
@@ -45,76 +47,12 @@ public:
 		COMMAND_ID_HANDLER(IDC_MAGNET_SEARCH, onRadioButton)
 	END_MSG_MAP();
 
-	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		// zombies.
-		SetWindowText(CSTRING(MAGNET_DLG_TITLE));
-		CenterWindow(GetParent());
-
-		// fill in dialog bits
-		SetDlgItemText(IDC_MAGNET_HASH, CSTRING(MAGNET_DLG_HASH));
-		SetDlgItemText(IDC_MAGNET_NAME, CSTRING(MAGNET_DLG_FILE));
-		SetDlgItemText(IDC_MAGNET_QUEUE, CSTRING(MAGNET_DLG_QUEUE));
-		::ShowWindow(GetDlgItem(IDC_MAGNET_QUEUE), false);
-		SetDlgItemText(IDC_MAGNET_SEARCH, CSTRING(MAGNET_DLG_SEARCH));
-		SetDlgItemText(IDC_MAGNET_NOTHING, CSTRING(MAGNET_DLG_NOTHING));
-		SetDlgItemText(IDC_MAGNET_REMEMBER, CSTRING(MAGNET_DLG_REMEMBER));
-		::ShowWindow(GetDlgItem(IDC_MAGNET_REMEMBER), false);
-		SetDlgItemText(IDC_MAGNET_TEXT, CSTRING(MAGNET_DLG_TEXT_GOOD));
-
-		// file details
-		SetDlgItemText(IDC_MAGNET_DISP_HASH, mHash.c_str());
-		SetDlgItemText(IDC_MAGNET_DISP_NAME, mFileName.c_str());
-
-		// radio button
-		CheckRadioButton(IDC_MAGNET_QUEUE, IDC_MAGNET_NOTHING, IDC_MAGNET_SEARCH);
-
-		// focus
-		CEdit focusThis;
-		focusThis.Attach(GetDlgItem(IDC_MAGNET_SEARCH));
-		focusThis.SetFocus();
-
-		return 0;
-	}
-
-	LRESULT onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(wID == IDOK) {
-			//if(IsDlgButtonChecked(IDC_MAGNET_REMEMBER) == BST_CHECKED) {
-			//	SettingsManager::getInstance()->set(SettingsManager::MAGNET_ASK,  false);
-			//	if(IsDlgButtonChecked(IDC_MAGNET_QUEUE))
-			//		SettingsManager::getInstance()->set(SettingsManager::MAGNET_ACTION, SettingsManager::MAGNET_AUTO_DOWNLOAD);
-			//	else if(IsDlgButtonChecked(IDC_MAGNET_SEARCH))
-			//		SettingsManager::getInstance()->set(SettingsManager::MAGNET_ACTION, SettingsManager::MAGNET_AUTO_SEARCH);
-			//}
-
-			if(IsDlgButtonChecked(IDC_MAGNET_SEARCH)) {
-				TTHValue tmphash(mHash);
-				WinUtil::searchHash(&tmphash);
-			} //else if(IsDlgButtonChecked(IDC_MAGNET_QUEUE)) {
-				// FIXME: Write this code when the queue is more tth-centric
-			//} 
-		}
-		EndDialog(wID);
-		return 0;
-	}
-
-	LRESULT onRadioButton(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		switch(wID){
-			case IDC_MAGNET_QUEUE:
-            case IDC_MAGNET_SEARCH:
-				//::EnableWindow(GetDlgItem(IDC_MAGNET_REMEMBER), true);
-				break;
-			case IDC_MAGNET_NOTHING:
-				//if(IsDlgButtonChecked(IDC_MAGNET_REMEMBER) == BST_CHECKED) {
-					//::CheckDlgButton(m_hWnd, IDC_MAGNET_REMEMBER, false);
-				//}
-				//::EnableWindow(GetDlgItem(IDC_MAGNET_REMEMBER), false);
-				break;
-		};
-		return 0;
-	}
-
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onRadioButton(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 private:
 	string mHash, mFileName;
+	int64_t mSize;
 };
 
 #endif // MAGNETDLG_H

@@ -471,26 +471,6 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 
 }
 
-/*enum { TEMP_LENGTH = 8 };
-string QueueManager::getTempName(const string& aFileName) {
-	string tmp;
-	tmp.reserve(aFileName.length() + TEMP_LENGTH);
-	string::size_type j = aFileName.rfind('.');
-	
-	if(j == string::npos) {
-		tmp.append(aFileName);
-	} else {
-		tmp.append(aFileName.data(), j);
-	}
-	for(int i = 0; i < TEMP_LENGTH; i++) {
-		tmp.append(1, (char)Util::rand('a', 'z'));
-	}
-	if(j != string::npos) {
-		tmp.append(aFileName.data() + j, aFileName.length() - j);
-	}
-	return tmp;
-}*/
-
 string QueueManager::getTempName(const string& aFileName, const TTHValue* aRoot) {
 	string tmp;
 	tmp.clear();

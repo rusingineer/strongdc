@@ -366,23 +366,22 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::DrawText(dc, buf, strlen(buf), rc2, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 
 				// Draw the background and border of the bar
-				if(ii->size <= 0)
-					ii->size = 1;
-
 				{
 					Lock l(cs);
 
-					if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
-						int64_t w = rc2.Width();
+					if(ii->size == 0)
+						ii->size = 1;
 
+					if((ii->mainItem) || (ii->type == ItemInfo::TYPE_UPLOAD)) {
+						int w = rc.Width();
 						double ratio = ii->getRatio();
+
+						if(ratio > 1) ratio = 1;
+						if(ratio < 0) ratio = 0;
 	
 						if(ii->mainItem)
 							w = w * ratio + 0.5;
 	
-						int64_t start = ii->start;
-						int64_t size = ii->size;
-
 						rc.right = rc.left + (int) (w * ii->actual / ii->size);
                 
 						COLORREF a, b;
@@ -390,7 +389,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
 					} else {
 						LONG left = rc.left;
-						int64_t w = rc.Width(); 						
+						int w = rc.Width(); 						
 
 						rc.right = left + (int) (w * ii->start / ii->size); 
 						COLORREF a, b;
@@ -400,7 +399,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 							OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
 
 						rc.left = rc.right;
-						rc.right = rc.left + (int) (w * ii->actual / ii->size); 
+						rc.right = left + (int) (w * ii->actual / ii->size); 
 						OperaColors::EnlightenFlood(clr, a, b);
 						OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b, BOOLSETTING(PROGRESS_BUMPED));
 					}
@@ -503,14 +502,19 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		delete v;
 	} else if(wParam == SET_STATE) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		int m = ctrlTransfers.insertItem(0,i, IMAGE_DOWNLOAD);
+		int m = ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), i, IMAGE_DOWNLOAD);
 		if(!i->qi || (!i->qi->isSet(QueueItem::FLAG_USER_LIST)) && ((!i->qi->isSet(QueueItem::FLAG_TESTSUR)))) {
 			ctrlTransfers.SetItemState(m, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 		}
 	} else if(wParam == REMOVE_ITEM_BUT_NOT_FREE) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		ctrlTransfers.deleteItem(i);
+	} else if(wParam == INSERT_SUBITEM) {
+		ItemInfo* i = (ItemInfo*)lParam;
+		int r = ctrlTransfers.findItem(i->upper);
+		insertSubItem(i,r+i->qi->getActiveSegments().size()+1);
 	}
+
 
 	return 0;
 }
@@ -1141,8 +1145,7 @@ void TransferView::InsertItem(ItemInfo* i) {
 		}
 
 		if(!i->upper->collapsed) {
-			int r = ctrlTransfers.findItem(i->upper);
-			insertSubItem(i,r+i->qi->getActiveSegments().size()+1);
+			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
 		}
 	}
 }
@@ -1177,14 +1180,6 @@ void TransferView::setMainItem(ItemInfo* i) {
 		if(h->Target != i->Target) {
 			dcdebug("3. cyklus\n");
 			h->pocetUseru -= 1;
-
-/*			if(h->pocetUseru > 1) {
-				h->columns[COLUMN_USER] = Util::toString(h->pocetUseru)+" "+STRING(HUB_USERS);
-				h->columns[COLUMN_HUB] = Util::toString((int)h->qi->getActiveSegments().size())+" "+STRING(NUMBER_OF_SEGMENTS);
-			} else {
-				h->columns[COLUMN_USER] = h->user->getNick();
-				h->columns[COLUMN_HUB] = h->user->getClientName();
-			}*/
 
 			h->updateMask |= (ItemInfo::MASK_USER | ItemInfo::MASK_HUB);
 

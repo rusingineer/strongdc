@@ -91,7 +91,6 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-//	Lock l(cs);
 	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);		
 	}
@@ -430,11 +429,13 @@ void NmdcHub::onLine(const char *aLine) throw() {
 
 		name = temp;
 		Speaker<NmdcHubListener>::fire(NmdcHubListener::HubName(), this);
-	} else if(strncmp(aLine, "$Supports ", 10) == 0) {
+	} else if(strncmp(aLine, "$Supports", 9) == 0) {
 		bool QuickList = false;
 		StringList sl;
-		if((temp = strtok((char*)aLine+10, " ")) == NULL)
+		if((temp = strtok((char*)aLine+10, " ")) == NULL) {
+			validateNick(getNick());
 			return;
+		}
 
 		while(temp != NULL) {
 			sl.push_back(temp);
