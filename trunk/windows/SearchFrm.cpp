@@ -379,12 +379,12 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
-    for(int i = 0, j = mainItems.size(); i < j; ++i) {
+	for(int i = 0, j = mainItems.size(); i < j; ++i) {
 	    SearchInfo* si = ctrlResults.getItemData(i);
 		int q = 0;
 			while(q<si->subItems.size()) {
 				SearchInfo* j = si->subItems[q];
-				if(ctrlResults.findItem(j) == -1)
+				if((ctrlResults.findItem(j) == -1) && (j->needDelete))
 					delete j;
 				q++;
 			}
@@ -677,7 +677,7 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		    int q = 0;
 			while(q<si->subItems.size()) {
 				SearchInfo* j = si->subItems[q];
-				if(ctrlResults.findItem(j) == -1)
+				if((ctrlResults.findItem(j) == -1) && (j->needDelete))
 					delete j;
 				q++;
 			}
@@ -1283,6 +1283,7 @@ void SearchFrame::Expand(SearchInfo* i, int a) {
 	while(q<i->subItems.size()) {
 		SearchInfo* j = i->subItems[q];
 		int image = j->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(j->sr->getFile()) : WinUtil::getDirIconIndex();
+		j->needDelete = false;
 		ctrlResults.insertItem(a+1,j, image);
 		q++;
 	}
