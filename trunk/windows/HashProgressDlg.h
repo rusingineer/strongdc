@@ -75,10 +75,10 @@ public:
 
 		HashManager::getInstance()->getStats(file, bytes, files);
 		if(bytes > startBytes)
-			bytes = startBytes;
+			 startBytes = bytes;
 
 		if(files > startFiles)
-			files = startFiles;
+			 startFiles = files;
 
 		if(autoClose && files == 0) {
 			PostMessage(WM_CLOSE);

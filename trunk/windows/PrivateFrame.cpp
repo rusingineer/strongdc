@@ -133,7 +133,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		} else {
 			sMyNick = SETTING(NICK).c_str();
 		}
-		string lastsession = LOGTAIL(user->getNick(), SETTING(PM_LOG_LINES));
+		string lastsession = LOGTAIL("PM\\" + user->getNick(), SETTING(PM_LOG_LINES));
 		lastsession = lastsession.substr(0,lastsession.size()-2);
 		if(lastsession.length() > 0)
 			ctrlClient.AppendText(sMyNick, "", lastsession.c_str(), m_ChatTextLog, "");
@@ -419,7 +419,7 @@ void PrivateFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
 		params["message"] = sTmp;
-		LOG(user->getNick(), Util::formatParams(SETTING(LOG_FORMAT_PRIVATE_CHAT), params));
+		LOG("PM\\" + user->getNick(), Util::formatParams(SETTING(LOG_FORMAT_PRIVATE_CHAT), params));
 	}
 
 	if(user->isOnline()) {
@@ -702,7 +702,7 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	string file = Util::emptyString;
-	file = Util::validateFileName(SETTING(LOG_DIRECTORY) + user->getNick() + ".log");
+	file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + user->getNick() + ".log");
 	if(File::existsFile(file)) {
 		ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	} else {

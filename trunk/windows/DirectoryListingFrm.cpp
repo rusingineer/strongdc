@@ -582,7 +582,11 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, L
 		if(ctrlList.GetSelectedCount() == 1 && ii->type == ItemInfo::FILE) {
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CSTRING(BROWSE));
 			targets.clear();
-			QueueManager::getInstance()->getTargetsBySize(targets, ii->file->getSize(), Util::getFileExt(ii->file->getName()));
+			if(ii->file->getTTH() != NULL) {
+				QueueManager::getInstance()->getTargetsByRoot(targets, *ii->file->getTTH());
+			} else {
+				QueueManager::getInstance()->getTargetsBySize(targets, ii->file->getSize(), Util::getFileExt(ii->file->getName()));
+			}
 			if(targets.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
 				for(StringIter i = targets.begin(); i != targets.end(); ++i) {

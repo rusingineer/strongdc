@@ -303,6 +303,12 @@
 				RelativePath=".\res\transfer_tree.ico">
 			</File>
 			<File
+				RelativePath=".\res\TreeNo.ico">
+			</File>
+			<File
+				RelativePath=".\res\TreeYes.ico">
+			</File>
+			<File
 				RelativePath=".\res\Update.ico">
 			</File>
 			<File

@@ -29,6 +29,8 @@
 * kód Fronty odesílání pøesunut do hlavního threadu (x deadlock)
 * opraven memory leak pøi hashování staženého souboru (THX PPK)
 * opraveno nìkolik možných deadlockù
+* logy chatu/PM jsou øazeny do podsložek
+* pøidány ikonky do fronty, které znaèí, zda je k dispozici strom TTH
 
 
 	-- StrongDC++ 1.00 RC7 --

@@ -32,7 +32,7 @@
 #include "CryptoManager.h"
 #include "User.h"
 
-void DirectoryListing::loadFile(const string& name, bool doAdl) {
+void DirectoryListing::loadFile(const string& name, bool doAdl) throw(){
 	string txt;
 
 	// For now, we detect type by ending...
@@ -289,6 +289,20 @@ void DirectoryListing::download(const string& aDir, const string& aTarget, Queue
 		download(d, aTarget, prio);
 }
 
+void DirectoryListing::download(File* aFile, const string& aTarget, bool view /* = false */, QueueItem::Priority prio) {
+	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
+		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
+	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
+		aFile->getTTH(), Util::emptyString, flags, prio);
+}
+
+void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
+	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
+
+	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
+		NULL, Util::emptyString, flags, QueueItem::Priority::HIGHEST);
+}
+
 bool DirectoryListing::File::isJunkFile() {
 	int64_t junkFileSize = SETTING(JUNK_FILE_SIZE);
 	int64_t junkBinFileSize = SETTING(JUNK_BIN_FILE_SIZE);
@@ -337,20 +351,6 @@ size_t DirectoryListing::Directory::getTotalFileCount(bool adl) {
 			x += (*i)->getTotalFileCount(adls);
 	}
 	return x;
-}
-
-void DirectoryListing::download(File* aFile, const string& aTarget, bool view /* = false */, QueueItem::Priority prio) {
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) |
-		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
-	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
-		aFile->getTTH(), Util::emptyString, flags, prio);
-}
-
-void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
-
-	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
-		NULL, Util::emptyString, flags, QueueItem::Priority::HIGHEST);
 }
 
 /**

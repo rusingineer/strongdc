@@ -357,13 +357,16 @@ private:
 			const string& tgt;
 		};
 		struct CheckSize {
-			CheckSize() : size(-1), op(true), oneHub(true) { };
+			CheckSize() : size(-1), op(true), oneHub(true), hasTTH(false), firstTTH(true) { };
 			void operator()(SearchInfo* si);
 			string ext;
 			int64_t size;
 			bool oneHub;
 			string hub;
 			bool op;
+			bool hasTTH;
+			bool firstTTH;
+			string tth;
 		};
 
 		const string& getText(int col) const {
@@ -379,7 +382,7 @@ private:
 				case COLUMN_EXACT_SIZE: return exactSize;
 				case COLUMN_UPLOAD: return uploadSpeed;
 				case COLUMN_IP: return ip;
-				case COLUMN_TTH: return getTTH();
+				case COLUMN_TTH: return tth;
 				case COLUMN_HITS: return hits;
 				default: return Util::emptyString;
 			}

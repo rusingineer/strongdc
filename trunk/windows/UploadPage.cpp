@@ -23,6 +23,7 @@
 #include "UploadPage.h"
 #include "WinUtil.h"
 #include "HashProgressDlg.h"
+#include "LineDlg.h"
 
 #include "../client/Util.h"
 #include "../client/ShareManager.h"
@@ -219,7 +220,7 @@ LRESULT UploadPage::onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 
 LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	// Save the checkbox state so that ShareManager knows to include/disclude hidden files
+	// Save the checkbox state so that ShareManager knows to include/exclude hidden files
 	Item i = items[1]; // The checkbox. Explicit index used - bad!
 	if(::IsDlgButtonChecked((HWND)* this, i.itemID) == BST_CHECKED){
 		settings->set((SettingsManager::IntSetting)i.setting, true);
@@ -250,10 +251,16 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 void UploadPage::addDirectory(string path){
 	try {
-		ShareManager::getInstance()->addDirectory(path, Util::getLastDir(path));
-		int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), path);
-		ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(path)).c_str());
-		ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());
+		LineDlg virt;
+		virt.title = STRING(VIRTUAL_NAME);
+		virt.description = STRING(VIRTUAL_NAME_LONG);
+		virt.line = Util::getLastDir(path);
+		if(virt.DoModal() == IDOK) {
+			ShareManager::getInstance()->addDirectory(path, Util::getLastDir(virt.line));
+			int i = ctrlDirectories.insert(ctrlDirectories.GetItemCount(), path);
+			ctrlDirectories.SetItemText(i, 1, Util::formatBytes(ShareManager::getInstance()->getShareSize(path)).c_str());
+			ctrlTotal.SetWindowText(Util::formatBytes(ShareManager::getInstance()->getShareSize()).c_str());
+		}
 	} catch(const ShareException& e) {
 		MessageBox(e.getError().c_str(), APPNAME " " VERSIONSTRING, MB_ICONSTOP | MB_OK);
 	}

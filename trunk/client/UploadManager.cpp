@@ -180,8 +180,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		setLastGrant(GET_TICK());
 	}
 
-	clearUserFiles(aSource->getUser());
-
 	Upload* u = new Upload();
 	u->setUserConnection(aSource);
 	u->setFile(is);
@@ -198,6 +196,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	dcassert(aSource->getUpload() == NULL);
 	aSource->setUpload(u);
 	uploads.push_back(u);
+
 	throttleSetup();
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
@@ -214,6 +213,13 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			running++;
 	}
 	}
+	if(aSource->isSet(UserConnection::FLAG_HASSLOT)) {
+		// this user is using a full slot, nix them from the queue.
+		clearUserFiles(aSource->getUser());
+	} else {
+		waitingFiles[aSource->getUser()].erase(file);
+	}
+
 	
 	return true;
 }
@@ -326,7 +332,7 @@ void UploadManager::addFailedUpload(UserConnection::Ptr source, string filename,
 
 	time_t now;	
 	int64_t itime = time(&now);
-	waitingFiles[source->getUser()].insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+Util::toString(itime));		//maintain list of files the user's searched for
+	waitingFiles[source->getUser()].insert(filename+"|"+path+"|"+Util::toString(pos)+"|"+Util::toString(size)+"|"+Util::toString(itime));		//maintain list of files the user's asked for
 
 	fire(UploadManagerListener::QueueAdd(), source->getUser()->getNick(), filename, path, pos, size, itime);
 }

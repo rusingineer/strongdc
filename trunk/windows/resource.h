@@ -107,6 +107,9 @@
 #define IDI_MAGNET                      283
 #define IDD_DIALOG1                     284
 #define IDD_HASH_PROGRESS               284
+#define IDR_TREE_YES                    285
+#define IDI_TREE_NO                     286
+#define IDR_TREE_NO                     286
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -743,7 +746,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        285
+#define _APS_NEXT_RESOURCE_VALUE        287
 #define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1283
 #define _APS_NEXT_SYMED_VALUE           123

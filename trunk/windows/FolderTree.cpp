@@ -15,6 +15,7 @@ Copyright (c) 1999 - 2003 by PJ Naughter.  (Web: www.naughter.com, Email: pjna@n
 #include "../client/ShareManager.h"
 #include "Resource.h"
 #include "HashProgressDlg.h"
+#include "LineDlg.h"
 
 #include "foldertree.h"
 
@@ -1402,8 +1403,14 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 	else
 	{
         // if no parent folder is checked then this is a new root dir
-		try {		
-			ShareManager::getInstance()->addDirectory(pItem->m_sFQPath  + PATH_SEPARATOR, Util::getLastDir(pItem->m_sFQPath + PATH_SEPARATOR));
+		try {
+			LineDlg virt;
+			virt.title = STRING(VIRTUAL_NAME);
+			virt.description = STRING(VIRTUAL_NAME_LONG);
+			virt.line = Util::getLastDir(pItem->m_sFQPath + PATH_SEPARATOR);
+			if(virt.DoModal() == IDOK) {
+				ShareManager::getInstance()->addDirectory(pItem->m_sFQPath  + PATH_SEPARATOR, virt.line);
+			}
 			HashProgressDlg(true).DoModal();
 			UpdateParentItems(hItem);
 		} catch(const ShareException& e) {
@@ -1426,7 +1433,7 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
 	// if no parent is checked remove this root folder from share
 	if(hSharedParent == NULL)
 	{
-		int64_t temp = ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
+		/*int64_t temp =*/ ShareManager::getInstance()->removeExcludeFolder(pItem->m_sFQPath + PATH_SEPARATOR);
 		/* fun with math
 		futureShareSize = currentShareSize + currentOffsetSize - (sizeOfDirToBeRemoved - sizeOfSubDirsWhichWhereAlreadyExcluded) */
 		//int64_t futureShareSize = ShareManager::getInstance()->getShareSize();/* + m_nShareSizeDiff - (Util::getDirSize(pItem->m_sFQPath) - temp); */

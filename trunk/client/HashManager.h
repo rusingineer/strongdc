@@ -130,7 +130,7 @@ public:
 		}
 
 	private:
-		typedef set<string, noCaseStringLess> WorkSet;
+		typedef set<string> WorkSet;
 		typedef WorkSet::iterator WorkIter;
 
 		WorkSet w;

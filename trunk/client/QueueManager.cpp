@@ -50,7 +50,6 @@
 
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
 const string QueueManager::TEMP_EXTENSION = ".dctmp";
-static u_int32_t iLastSearch = 0;
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, const string& aSearchString, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
@@ -104,6 +103,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 			}else
 				new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+
 		}
 
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
@@ -124,12 +124,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, co
 
 	dcassert(find(aTarget) == NULL);
 	add(qi);
-
-// auto search
-	if(root && ::GetTickCount() - iLastSearch > 500){
-		SearchManager::getInstance()->search("TTH:" + TTHValue(*root).toBase32(), 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
-		iLastSearch = ::GetTickCount();
-	}
 
 	return qi;
 }
@@ -157,7 +151,7 @@ void QueueManager::FileQueue::find(QueueItem::List& sl, int64_t aSize, const str
 	}
 }
 
-void QueueManager::FileQueue::find(QueueItem::List& ql, TTHValue* tth) {
+void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue* tth) {
 	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
 		QueueItem* qi = i->second;
 		if(qi->getTTH() != NULL && *qi->getTTH() == *tth) {
@@ -469,13 +463,12 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 }
 
 string QueueManager::getTempName(const string& aFileName, const TTHValue* aRoot) {
-	string tmp;
-	tmp.clear();
+	string tmp(aFileName);
 	if(aRoot != NULL) {
 		TTHValue tmpRoot(*aRoot);
-		tmp = tmpRoot.toBase32() + ".";
+		tmp += "." + tmpRoot.toBase32();
 	}
-	tmp += aFileName + TEMP_EXTENSION;
+	tmp += TEMP_EXTENSION;
 	return tmp;
 }
 
@@ -485,6 +478,8 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 					   const string& aTempTarget /* = Util::emptyString */, bool addBad /* = true */) throw(QueueException, FileException) 
 {
 	bool wantConnection = true;
+	bool newItem = false;
+
 	dcassert((aFile != USER_LIST_NAME) || (aFlags &QueueItem::FLAG_USER_LIST));
 
 	// Check that we're not downloading from ourselves...
@@ -512,6 +507,8 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aSearchString, aFlags, p, aTempTarget, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
+
+			newItem = true;
 		} else {
 			// first source set length
 			if(q->getSize() == 0 && root && q->getTTH() && (*root == *q->getTTH())){
@@ -544,6 +541,12 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 
 	if(wantConnection && aUser->isOnline())
 	ConnectionManager::getInstance()->getDownloadConnection(aUser);
+
+	// auto search, prevent DEADLOCK
+	if(newItem && root){
+		SearchManager::getInstance()->search("TTH:" + TTHValue(*root).toBase32(), 0, SearchManager::TYPE_HASH, SearchManager::SIZE_DONTCARE);
+	}
+	
 }
 
 string QueueManager::getTopAutoSearchString()
@@ -623,13 +626,11 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(aUser->isSet(User::PASSIVE) && (SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE) ) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
-	} else {//if((getMaxSegments(qi->getTargetFileName(), qi->getSize()) > qi->getCurrents().size()) && (qi->getStatus() != QueueItem::STATUS_RUNNING)) {
+	} else {
 		if ((!SETTING(SOURCEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(SETTING(SOURCEFILE).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		userQueue.add(qi, aUser);
-	} /*else {
-		wantConnection = false;
-	}*/
+	} 
 
 	fire(QueueManagerListener::SourcesUpdated(), qi);
 	setDirty();
@@ -813,12 +814,6 @@ QueueItem* QueueManager::lookupNext(User::Ptr& aUser) throw() {
     return userQueue.getNext(aUser);
 }
 
-bool QueueManager::FileQueue::matchExtension(const string& aString, const string& aExt) {
-	PME reg(aExt,"i");
-	if(reg.match(aString)) { return true; }
-	return false;
-}
-
 int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	int MaxSegments = 1;
 
@@ -851,7 +846,8 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		MaxSegments = SETTING(NUMBER_OF_SEGMENTS);
 	} 
 
-	if(matchExtension(s1,SETTING(DONT_EXTENSIONS))) {  MaxSegments = 1; }
+	PME reg(SETTING(DONT_EXTENSIONS),"i");
+	if(reg.match(s1)) { MaxSegments = 1; }
 
  return MaxSegments;
 }
@@ -866,7 +862,6 @@ Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) thr
 again:
 
 	if(q == NULL) {
-		dcdebug(("Message : "+message+"\n").c_str());
 		if(message != "")
 			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
 		return NULL;
@@ -932,6 +927,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished /* = false */)
 		QueueItem* q = fileQueue.find(aDownload->getTarget());
 
 		if(q != NULL) {
+
 			if(finished) {
 				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
 
@@ -1549,7 +1545,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	{
 		Lock l(cs);
 		QueueItem::List matches;
-				TTHValue root(tth);
+		TTHValue root(tth);
 
 		fileQueue.find(matches, aSize, Util::getFileExt(aFile));
 

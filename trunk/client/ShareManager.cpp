@@ -127,8 +127,8 @@ string ShareManager::translateFileName(const string& aFile, bool adc, bool utf8)
 					throw ShareException("File Not Available");
 				}
 			} else if(aFile.compare(0, 1, "/") == 0) {
-				if(!utf8) {
-					file = Util::toUtf8(aFile, file);
+				if(utf8) {
+					file = Util::toAcp(aFile, file);
 				} else {
 					file = aFile;
 				}
@@ -145,8 +145,8 @@ string ShareManager::translateFileName(const string& aFile, bool adc, bool utf8)
 				}
 			}
 			// Ok, we now should have an adc equivalent name
-		} else if(!utf8) {
-			file = Util::toUtf8(aFile, file);
+		} else if(utf8) {
+			file = Util::toAcp(aFile, file);
 		} else {
 			file = aFile;
 		}
@@ -433,8 +433,6 @@ public:
 
 	struct DirData : public WIN32_FIND_DATA {
 		string getFileName() {
-			//string s(cFileName);
-			//return Util::toUtf8(s);
 			return cFileName;
 		}
 
@@ -483,6 +481,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 	Directory* dir = new Directory(Util::getLastDir(aName), aParent);
 	dir->addType(SearchManager::TYPE_DIRECTORY); // needed since we match our own name in directory searches
 	dir->addSearchType(getMask(dir->getName()));
+
 	Directory::File::Iter lastFileIter = dir->files.begin();
 	
 	FileFindIter end;
@@ -542,13 +541,9 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 void ShareManager::addTree(const string& fullName, Directory* dir) {
 	bloom.add(Util::toLower(dir->getName()));
 
-	string fullName1 = fullName;
-	if(fullName1[fullName1.length() - 1] != PATH_SEPARATOR)
-		fullName1 += PATH_SEPARATOR;
-
 	for(Directory::MapIter i = dir->directories.begin(); i != dir->directories.end(); ++i) {
 		Directory* d = i->second;
-		addTree(fullName1 /*+ PATH_SEPARATOR*/ + d->getName(), d);
+		addTree(fullName + d->getName() + PATH_SEPARATOR, d);
 	}
 
 	for(Directory::File::Iter i = dir->files.begin(); i != dir->files.end(); ) {
@@ -556,8 +551,9 @@ void ShareManager::addTree(const string& fullName, Directory* dir) {
 
 		// We're not changing anything cruical...
 		Directory::File& f = const_cast<Directory::File&>(f2);
-		string fileName = fullName1 + f.getName();
-		f.setTTH(HashManager::getInstance()->getTTH(fullName1 + f.getName()));
+		string fileName = fullName + f.getName();
+
+		f.setTTH(HashManager::getInstance()->getTTH(fileName));
 
 		if(f.getTTH() != NULL) {
 			addFile(dir, i++);
@@ -638,12 +634,6 @@ int ShareManager::run() {
 				for(Directory::MapIter i = newDirs.begin(); i != newDirs.end(); ++i) {
 					addTree(i->first, i->second);
 					directories.insert(*i);
-				}
-			}
-            for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
-				try {
-					addDirectory(i->second, i->first);
-				} catch(...) {
 				}
 			}
 			refreshDirs = false;
@@ -743,9 +733,9 @@ static const string& escaper(const string& n, string& tmp) {
 
 #define LITERAL(n) n, sizeof(n)-1
 void ShareManager::Directory::toNmdc(string& nmdc, string& indent, string& tmp2) {
-
+	tmp2.clear();
 	nmdc.append(indent);
-	nmdc.append(Util::toAcp(name, tmp2));
+	nmdc.append(name);
 	nmdc.append(LITERAL("\r\n"));
 
 	indent += '\t';
@@ -757,7 +747,8 @@ void ShareManager::Directory::toNmdc(string& nmdc, string& indent, string& tmp2)
 	for(Directory::File::Iter i = files.begin(); i != files.end(); ++i) {
 		const Directory::File& f = *i;
 		nmdc.append(indent);
-		nmdc.append(Util::toAcp(f.getName(), tmp2));
+		tmp2.clear();		
+		nmdc.append(f.getName());
 		nmdc.append(LITERAL("|"));
 		nmdc.append(Util::toString(f.getSize()));
 		nmdc.append(LITERAL("\r\n"));

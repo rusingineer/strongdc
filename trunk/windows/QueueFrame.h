@@ -395,7 +395,9 @@ private:
 	CriticalSection cs;
 	TypedListViewCtrl<QueueItemInfo, IDC_QUEUE> ctrlQueue;
 	CTreeViewCtrl ctrlDirs;
-	
+	HICON hIconTree, hIconNotTree;
+	COLORREF barva;
+
 	CStatusBarCtrl ctrlStatus;
 	int statusSizes[6];
 	

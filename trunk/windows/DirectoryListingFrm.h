@@ -95,6 +95,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
+		COMMAND_ID_HANDLER(IDC_CLOSE_WINDOW, onCloseWindow)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET_DIR, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onDownloadWithPrio)
@@ -199,6 +200,12 @@ public:
 			ctrlTree.SetFocus();
 		}
 	}
+	
+	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		PostMessage(WM_CLOSE);
+		return 0;
+	}
+
 private:
 	void changeDir(DirectoryListing::Directory* d, BOOL enableRedraw);
 	HTREEITEM findFile(const StringSearch& str, HTREEITEM root, int &foundFile, int &skipHits);
