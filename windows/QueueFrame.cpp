@@ -59,15 +59,10 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlQueue.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_QUEUE);
 
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
 
-//	if (CZDCLib::isXp()) {
-//		ctrlQueue.setLeftEraseBackgroundMargin(3);
-//	} else {
-		styles |= 0x00010000;
-//	}
 	ctrlQueue.SetExtendedListViewStyle(styles);
 
 	ctrlDirs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
@@ -170,6 +165,9 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	QueueManager::getInstance()->unlockQueue();
 	QueueManager::getInstance()->addListener(this);
 
+	hIconTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_YES), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
+	hIconNotTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_NO), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
+
 	memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
@@ -184,7 +182,7 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
-		display->columns[COLUMN_SEGMENTS] = Util::toString((int)qi->getActiveSegments().size())+"/"+Util::toString(qi->getMaxSegments());
+		display->columns[COLUMN_SEGMENTS] = Util::toString((int)qi->getActiveSegments().size())+"/"+Util::toString(qi->getMaxSegments())+ " ";
 
 		if(colMask & MASK_TARGET) {
 			display->columns[COLUMN_TARGET] = Util::getFileName(getTarget());
@@ -963,8 +961,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPara
 
 LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
-		string tmp;
-
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		
@@ -973,9 +969,9 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		if(!searchString.empty()) {
 			bool bigFile = (ii->getSize() > 10*1024*1024);
 			if(bigFile) {
-				SearchFrame::openWindow(tmp, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
+				SearchFrame::openWindow(searchString, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
 			} else {
-				SearchFrame::openWindow(tmp, ii->getSize()+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
+				SearchFrame::openWindow(searchString, ii->getSize()+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(ii->getTargetFileName()));
 			}
 		}
 	} 
@@ -989,10 +985,9 @@ LRESULT QueueFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		if(ii->getTTH() != NULL) {
-			SearchFrame::openWindow(ii->getTTH()->toBase32(), 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_HASH);
+			WinUtil::searchHash(ii->getTTH());
 		}
-		}
-
+	}
 	return 0;
 	} 
 
@@ -1421,7 +1416,6 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
-
 	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
 			bHandled = FALSE;
@@ -1436,6 +1430,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	case CDDS_ITEMPREPAINT:
 		{
 			QueueItemInfo *ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			
 			if(ii->getText(COLUMN_ERRORS) != (STRING(NO_ERRORS))){
 				cd->clrText = SETTING(ERROR_COLOR);
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
@@ -1568,6 +1563,47 @@ afterexception:
 			::ExtTextOut(cd->nmcd.hdc, left, top, ETO_CLIPPED, rc2, buf, strlen(buf), NULL);
 
 			return CDRF_SKIPDEFAULT;
+		}
+		else if(cd->iSubItem == COLUMN_SEGMENTS) {
+			
+			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
+				if(ctrlQueue.m_hWnd == ::GetFocus()) {
+					barva = GetSysColor(COLOR_HIGHLIGHT);
+					SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
+					SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				} else {
+					barva = GetBkColor(cd->nmcd.hdc);
+					SetBkColor(cd->nmcd.hdc, barva);
+				}				
+			} else {
+				barva = WinUtil::bgColor;
+				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
+				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+			}
+			
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			char buf[256];
+			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, buf, 255);
+			buf[255] = 0;
+			
+			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, LVIR_BOUNDS, rc);			
+	
+			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
+			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
+			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
+
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+			if(qi->qi->getTiger().getLeaves().size() == 0) {
+				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
+			} else {
+				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
+			}
+			
+			::DrawText(cd->nmcd.hdc,buf, strlen(buf), rc, DT_RIGHT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+
+			return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
 		}
 	default:
 		return CDRF_DODEFAULT;

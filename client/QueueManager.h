@@ -153,10 +153,10 @@ public:
 		}
 	}
 
-	void getTargetsByTTH(StringList& sl, TTHValue* tth) throw() {
+	void getTargetsByRoot(StringList& sl, const TTHValue& tth) {
 		Lock l(cs);
 		QueueItem::List ql;
-		fileQueue.find(ql, tth);
+		fileQueue.find(ql, &tth);
 		for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
 			sl.push_back((*i)->getTarget());
 		}
@@ -172,7 +172,7 @@ public:
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
 		return (userQueue.getNext(aUser, minPrio) != NULL);
-	};
+	}
 	
 	void loadQueue() throw();
 	void saveQueue() throw();
@@ -197,7 +197,6 @@ public:
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
 				delete i->second;
 			}
-//		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, const string& aSearchString, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
@@ -205,10 +204,8 @@ public:
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
 		int getMaxSegments(string filename, int64_t filesize);
-		bool matchExtension(const string& aString, const string& aExt);
 		void find(StringList& sl, int64_t aSize, const string& ext);
-		void find(QueueItem::List& ql, TTHValue* tth);
-		QueueItem* findByHash(const string& hash);
+		void find(QueueItem::List& ql, const TTHValue* tth);
 
 		QueueItem* findAutoSearch(StringList& recent);
 		QueueItem* findHighest();
@@ -220,20 +217,15 @@ public:
 				lastInsert = queue.end();
 			queue.erase(qi->getTarget());
 
-		/*	for(QueueItem::Source::Iter i = qi->getSources().begin(); i != qi->getSources().end(); ++i) {
-				if(!getInstance()->hasDownload((*i)->getUser()))
-					ConnectionManager::getInstance()->removeConnection((*i)->getUser(), true);
-			}*/
-
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 				FileChunksInfo::Free(qi->getTempTarget());
 			}
 
 			delete qi;
-		};
+		}
 
 	private:
-	void add(QueueItem* qi);
+		void add(QueueItem* qi);
 		QueueItem::StringMap queue;
 		/** A hint where to insert an item... */
 		QueueItem::StringIter lastInsert;

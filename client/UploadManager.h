@@ -150,6 +150,7 @@ public:
 	void clearUserFiles(const User::Ptr&);
 	const SlotQueue& getQueueVec() const;
 	const FileSet& getQueuedUserFiles(const User::Ptr &) const;
+
 	void addConnection(UserConnection::Ptr conn) {
 		conn->addListener(this);
 		conn->setState(UserConnection::STATE_GET);
@@ -163,7 +164,6 @@ public:
 	// Upload throttling
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
-
 private:
 	int running;
 	void throttleZeroCounters();
@@ -185,7 +185,7 @@ private:
 
 	//functions for manipulating waitingFiles and waitingUsers
 	SlotQueue waitingUsers;		//this one merely lists the users waiting for slots
-	FilesMap waitingFiles;		//set of files which this user's searched for
+	FilesMap waitingFiles;		//set of files which this user has asked for
 	void addFailedUpload(UserConnection::Ptr source, string filename, int64_t pos, int64_t size);
 	
 	friend class Singleton<UploadManager>;

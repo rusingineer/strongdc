@@ -622,6 +622,18 @@ void SearchFrame::SearchInfo::getList() {
 }
 
 void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
+
+	if(!si->getTTH().empty()) {
+		if(tth.empty()) {
+			tth = si->getTTH();
+			hasTTH = true;
+		} else if(hasTTH) {
+			if(tth != si->getTTH()) {
+				hasTTH = false;
+			}
+		} 
+	}
+
 	if(si->sr->getType() == SearchResult::TYPE_FILE) {
 		if(ext.empty()) {
 			ext = Util::getFileExt(si->fileName);
@@ -1127,11 +1139,8 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 
 		if(cs.size != -1) {
 			targets.clear();
-
-			int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-			SearchResult* sr = ctrlResults.getItemData(i)->sr;
-			if(sr && sr->getTTH()) {
-				QueueManager::getInstance()->getTargetsByTTH(targets, sr->getTTH());
+			if(cs.hasTTH) {
+				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(cs.tth));
 			} else {
 				if(BOOLSETTING(USE_EXTENSION_DOWNTO)) { 
 					QueueManager::getInstance()->getTargetsBySize(targets, cs.size, cs.ext);
@@ -1397,7 +1406,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 				targets.clear();
 				COLORREF barva = WinUtil::textColor;
 				if(sr->getTTH()) {
-					QueueManager::getInstance()->getTargetsByTTH(targets,sr->getTTH());
+					QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(sr->getTTH()->toBase32()));
 					if(sr->getType() == SearchResult::TYPE_FILE && targets.size()>0){		
 						barva = SETTING(SEARCH_ALTERNATE_COLOUR);				
 					}

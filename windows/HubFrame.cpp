@@ -126,14 +126,10 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 	
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
+	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;;
 	if (BOOLSETTING(SHOW_INFOTIPS))
 		styles |= LVS_EX_INFOTIP;
-//	if (CZDCLib::isXp()) {
-//		ctrlUsers.setLeftEraseBackgroundMargin(3);
-//	} else {
-		styles |= 0x00010000;
-//	}
+
 	ctrlUsers.SetExtendedListViewStyle(styles);
 
 	splitChat.Create( m_hWnd );
@@ -790,6 +786,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		HubFrame::addLine(*x, m_ChatTextServer);
 		delete x;
 	}
+
 	return 0;
 };
 
@@ -839,10 +836,10 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= 2;
 	rc.top = rc.bottom - h - 5;
 	rc.left +=2;
-
-	rc.right -=202;
+	rc.right -= ShowUserList ? 202 : 2;
 	ctrlMessage.MoveWindow(rc);
 
+	if(ShowUserList){
 		rc.left = rc.right + 4;
 		rc.right = rc.left + 116;
 		ctrlFilter.MoveWindow(rc);
@@ -852,6 +849,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.top = rc.top + 0;
 		rc.bottom = rc.bottom + 120;
 		ctrlFilterSel.MoveWindow(rc);
+	}
 }
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -944,18 +942,18 @@ void HubFrame::findText(string const& needle) throw() {
 		ctrlClient.SendMessage(EM_EXSETSEL, 0, (LPARAM)&ft);
 	} else {
 		addClientLine(CSTRING(STRING_NOT_FOUND)+needle);
-		currentNeedle="";
+		currentNeedle = "";
 	}
 }
 
 string HubFrame::findTextPopup() {
 	LineDlg *finddlg;
-	string param="";
-		finddlg=new LineDlg;
-		finddlg->title=CSTRING(SEARCH);
-		finddlg->description=CSTRING(SPECIFY_SEARCH_STRING);
-		if(finddlg->DoModal()== IDOK) {
-		param=finddlg->line;
+	string param = "";
+		finddlg = new LineDlg;
+		finddlg->title = CSTRING(SEARCH);
+		finddlg->description = CSTRING(SPECIFY_SEARCH_STRING);
+		if(finddlg->DoModal() == IDOK) {
+		param = finddlg->line;
 	}
 	delete[] finddlg;
 	return param;
@@ -1043,7 +1041,7 @@ void HubFrame::addLine(const string& aLine, CHARFORMAT2& cf) {
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
 		StringMap params;
 		params["message"] = sTmp;
-		LOG(client->getAddressPort(), Util::formatParams(SETTING(LOG_FORMAT_MAIN_CHAT), params));
+		LOG("MainChat\\" + client->getAddressPort(), Util::formatParams(SETTING(LOG_FORMAT_MAIN_CHAT), params));
 	}
 	if(timeStamps) {
 		ctrlClient.AppendText(sMyNick, ("[" + Util::getShortTimeString() + "] ").c_str(), sTmp.c_str(), cf, sAuthor.c_str() );
@@ -1430,10 +1428,20 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 
 LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	bHandled = FALSE;
-	if(wParam == BST_CHECKED)
+	if(wParam == BST_CHECKED) {
 		ShowUserList = true;
-	else
+		User::NickMap& lst = client->lockUserList();
+		ctrlUsers.SetRedraw(FALSE);
+		for(User::NickIter i = lst.begin(); i != lst.end(); ++i) {
+			updateUser(i->second);
+		}
+		client->unlockUserList();
+		ctrlUsers.SetRedraw(TRUE);
+		ctrlUsers.resort();
+	} else {
 		ShowUserList = false;
+		clearUserList();
+	}
 
 	UpdateLayout(FALSE);
 	return 0;
@@ -1522,7 +1530,7 @@ void HubFrame::addClientLine(const string& aLine, bool inChat /* = true */) {
 		addLine("*** " + aLine, m_ChatTextSystem);
 	}
 	if(BOOLSETTING(LOG_STATUS_MESSAGES) && inChat) {
-		LOGDT(client->getAddressPort() + "_Status", aLine);
+		LOGDT("MainChat\\" + client->getAddressPort() + "_Status", aLine);
 	}
 }
 
@@ -2011,7 +2019,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		}
 	}
 	if (xNick != "") {
-		file = Util::validateFileName(SETTING(LOG_DIRECTORY) + xNick + ".log");
+		file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + xNick + ".log");
 	}
 	if(File::existsFile(file)) {
 		ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
@@ -2023,7 +2031,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 }
 
 LRESULT HubFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string filename  = Util::validateFileName(SETTING(LOG_DIRECTORY) + client->getAddressPort() + ".log");
+	string filename  = Util::validateFileName(SETTING(LOG_DIRECTORY) + "MainChat\\" + client->getAddressPort() + ".log");
 	if(File::existsFile(filename)){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
@@ -2115,8 +2123,19 @@ LRESULT HubFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 void HubFrame::updateUserList() {
 	Lock l(updateCS);
 
+	ctrlUsers.SetRedraw(FALSE);
 	ctrlUsers.DeleteAllItems();
 
+	if(filter.empty()) {
+		UserMap::iterator i = userMap.begin();
+		for(; i != userMap.end(); ++i){
+			if(i->second != NULL)
+				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));	
+		}
+		ctrlUsers.SetRedraw(TRUE);
+		return;
+	}
+	
 	int sel = ctrlFilterSel.GetCurSel();
 
 	UserMap::iterator i = userMap.begin();
@@ -2130,6 +2149,8 @@ void HubFrame::updateUserList() {
 			}
 		}
 	}
+
+	ctrlUsers.SetRedraw(TRUE);
 }
 
 /**
