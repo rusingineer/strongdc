@@ -1,49 +1,51 @@
-	-- StrongDC++ 1.00 RC7 ??? --
+	-- StrongDC++ 1.00 RC7 --
 
-* NetLimiter je detekován pouze pokud se omezuje StrongDC++
-* pøidáno hledání alternativ položek s nejvyšší prioritou pøi pøipojení k hubu (RevConnect)
-* automatické hledání alternativ podle RevConnectu
-* automatické odstraòování pomalých zdrojù lze vypnout
-* zmìnìn vzhled dialogu pøi pádu programu
-* zmìnìn styl nabídek na XP (zDC++)
-* pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
-* vylepšeno pøijímání pøíkazù od klientù (CZDC++)
-* opraven problém se stejnými pøezdívkami na Toomaxxu
-* pøi hledání jsou položky se stejným TTH seskupovány pod jednu [+] položku
-* pøi hledání jsou zvýraznìny soubory, které jsou již ve frontì (PhantomDC++)
-* opraveno øazení uploadù
-* zmìnìn vzhled dialogu O programu (oDC++)
-* vylepšena aktualizace nových verzí (oDC++)
-* vylepšeny profily klientù (DCDM++)
-* opraveno nekoneèné pøipojování k uživateli, který je ve frontì vícekrát, pøi stahování na max segmentù
-* opraveno away pøi minimalizaci
-* pøidána položka pro odstranìní offline uživatelù z fronty
-* na lištu pøidáno tlaèítko pro zapnutí/vypnutí zvukù
-* opraven zvuk pøi zobrazení vlastního nicku
-* komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
-* pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
-* pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
-* synchronizace s CVS DC++ 0.404
-* opraven bug v DC++ emulaci (THX PPK)
-* opravena nemožnost stahovat od klientù založených na DC++ 0.402 CVS a vyšších
-* spouštìcí logo není Vždy na vrchu
-* opraven memory leak v SearchFrame
-* pøidány ikonky online/offline/away do Oblíbených uživatelù
-* pøidáno nìkolik nových zvukových událostí
-* pøidána kontrola uživatele, který se pøipojí na hub
-* opraveno naèítání RAW pøíkazù
-* nìkolik novinek a zmìn z CZDC++
-* pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
-* opraveno importování tématu
-* pøedìlán userfilter + regulérní pøíkazy
-* pøidán filtr do hledání (podporuje regulérní pøíkazy)
 * když je k dispozici Tiger Tree, jsou pøi poškozeném soubor staženy pouze chybné bloky
-* odstranìna volba pro neposílání tagu
-* vylepšeno segmentováné stahování, které zaruèí dobrou integritu souboru (THX Liny)
+* na lištu pøidáno tlaèítko pro zapnutí/vypnutí zvukù
+* pøi hledání jsou položky se stejným TTH seskupovány pod jednu [+] položku
+* pøidán filtr do hledání (podporuje regulérní pøíkazy)
+* pøidána kontrola uživatele, který se pøipojí na hub
+* pøidána položka pro odstranìní offline uživatelù z fronty
+* pøidáno nìkolik nových zvukových událostí
+* pøidáno nìkolik položek do popupmenu pøi segmentovém stahování
+* pøidány ikonky online/offline/away do Oblíbených uživatelù
+
+* automatické hledání alternativ podle RevConnectu
 * fronta hledání proti searchspamu s prodlevou 15 sekund (RevConnect)
-* vylepšeno odchytávání magnetù (BCDC++)
+* nìkolik novinek a zmìn z CZDC++
+* pøi hledání jsou zvýraznìny soubory, které jsou již ve frontì (PhantomDC++)
+* pøidán pokus o znovupøipojení, když download dosáhne 0 B/s (DCDM++)
+* pøidána volba Hlásit hledání alternativ ve statusbaru (CZDC++)
+* pøidána volba pro naètení nìkolika posledních øádkù soukromé zprávy (CZDC++)
+* synchronizace s CVS DC++ 0.404
+* vylepšeno pøijímání pøíkazù od klientù (CZDC++)
+
+* automatické odstraòování pomalých zdrojù lze vypnout
+* komprese je standardnì povolena a mìla by být funkèní i se segmentovým stahováním
+* NetLimiter je detekován pouze pokud se omezuje StrongDC++
 * odstranìna Flood cache pro progressbary
+* odstranìna volba pro neposílání tagu
+* pøedìlán userfilter + regulérní pøíkazy
+* spouštìcí logo není Vždy na vrchu
+* vylepšena aktualizace nových verzí (oDC++)
+* vylepšeno odchytávání magnetù (BCDC++)
+* vylepšeno segmentové stahování, které zaruèí dobrou integritu souboru (THX Liny)
+* vylepšeny profily klientù (DCDM++)
+* zmìnìn styl nabídek na XP (zDC++)
+* zmìnìn vzhled dialogu O programu (oDC++)
+* zmìnìn vzhled dialogu pøi pádu programu
+
+* opraven bug v DC++ emulaci (THX PPK)
 * opraven bug v nastavení sdílení
+* opraven memory leak v SearchFrame
+* opraven problém se stejnými pøezdívkami na Toomaxxu
+* opraven zvuk pøi zobrazení vlastního nicku
+* opravena nemožnost stahovat od klientù založených na DC++ 0.402 CVS a vyšších
+* opraveno away pøi minimalizaci
+* opraveno importování tématu
+* opraveno naèítání RAW pøíkazù
+* opraveno nekoneèné pøipojování k uživateli, který je ve frontì vícekrát, pøi stahování na max segmentù
+* opraveno øazení uploadù
 
 
 	-- StrongDC++ 1.00 RC6 --
