@@ -341,7 +341,8 @@ private:
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
-		COMMAND_DEBUG(aString, DebugManager::CLIENT_OUT, getRemoteIp());
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			COMMAND_DEBUG(aString, DebugManager::CLIENT_OUT, getRemoteIp());
 		socket->write(aString);
 	}
 
@@ -350,7 +351,8 @@ private:
         fire(UserConnectionListener::Connected(), this); 
     }
 	virtual void on(Line, const string& line) throw() {
-		COMMAND_DEBUG(line, DebugManager::CLIENT_IN, getRemoteIp());
+		if (BOOLSETTING(DEBUG_COMMANDS))
+			COMMAND_DEBUG(line, DebugManager::CLIENT_IN, getRemoteIp());
 		onLine(line.c_str());
 	}
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 

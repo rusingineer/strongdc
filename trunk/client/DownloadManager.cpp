@@ -251,10 +251,15 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			return;
 		}
 
-		d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn);
+		bool reuse = true;
+		string message = "";
+		
+		d = QueueManager::getInstance()->getDownload(aConn->getUser(), message, reuse);
 
 		if(d == NULL) {
-			removeConnection(aConn, false);
+			if(!message.empty())
+				ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
+			removeConnection(aConn, reuse);
 			return;
 		}
 
@@ -301,7 +306,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	aConn->setState(UserConnection::STATE_FILELENGTH);
 
 	if(d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_MP3_INFO)) {
-		if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {			
+		if(d->isSet(Download::FLAG_USER_LIST) && aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {			
 			d->setSource("files.xml.bz2");
 		}
 		d->setStartPos(0);
@@ -309,7 +314,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	}
 
 	// Download::FLAG_UTF8 is not trustful: auto search always set it false, searchframe always set it true
-	// Ensure to use TTHF, it is used by kademlia too, Added by RevConnect
+	// Ensure to use TTHF, Added by RevConnect
 	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) && d->getTTH() != NULL) {
 		aConn->send(d->getCommand(
 			aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET),
@@ -519,13 +524,13 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize /* = 
 	dcassert(d != NULL);
 	QueueItem* q = QueueManager::getInstance()->getRunning(aSource->getUser());
 	if(q != NULL) {
-		if(q->getMaxSegments() <= q->getActiveSegments().size()) {
+/*		if(q->getMaxSegments() <= q->getActiveSegments().size()) {
 			fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
 			aSource->setDownload(NULL);
 			removeDownload(d, true);
 			removeConnection(aSource);			
 			return false;
-		}
+		}*/
 		q->addActiveSegment(aSource->getUser());
 	}
 
@@ -1151,7 +1156,7 @@ void DownloadManager::removeDownload(Download* d, bool full, bool finished /* = 
 		Download* old = d;
 		d = d->getOldDownload();
 		if(!full) {
-		old->getUserConnection()->setDownload(d);
+			old->getUserConnection()->setDownload(d);
 		}
 
 		old->setUserConnection(NULL);

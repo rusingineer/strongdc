@@ -153,7 +153,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	QueueItem* lookupNext(User::Ptr& aUser) throw();
-	Download* getDownload(User::Ptr& aUser, UserConnection* aConn) throw();
+	Download* getDownload(User::Ptr& aUser, string &message, bool &reuse) throw();
 	void putDownload(Download* aDownload, bool finished = false) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {

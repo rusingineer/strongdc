@@ -875,28 +875,24 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 	return MaxSegments;
 }
 
-Download* QueueManager::getDownload(User::Ptr& aUser, UserConnection* aConn) throw() {
+Download* QueueManager::getDownload(User::Ptr& aUser, string &message, bool &reuse) throw() {
 	Lock l(cs);
 
-	string message = "";
 	QueueItem* q = userQueue.getNext(aUser);
 	Download *d;
+	reuse = true;
 
 again:
-
-	if(q == NULL) {
-		if(message != "") {
-			ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), message);
-		}
+	if(q == NULL)
 		return NULL;
-	}
 
 	int64_t freeBlock = 0;
 
 	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
-		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
+		if(q->getCurrents().size() >= q->getMaxSegments()) {
 			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			if(q == NULL) reuse = false;
 			goto again;
 		}
 
@@ -905,6 +901,7 @@ again:
 			if(q->getSpeed() > speed) {
 				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);		
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+				if(q == NULL) reuse = false;
 				goto again;
 			}
 		}
@@ -915,6 +912,7 @@ again:
 			message = STRING(NO_FREE_BLOCK);
 			q->setNoFreeBlocks(true);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			if(q == NULL) reuse = true;
 			goto again;
 		}
 
@@ -926,11 +924,7 @@ again:
 	fire(QueueManagerListener::StatusUpdated(), q);
 
 	d = new Download(q, aUser);
-/*
-	if( BOOLSETTING(ANTI_FRAG) ) {
-		d->setStartPos(q->getDownloadedBytes());
-	}
-*/
+
 	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
 		d->setStartPos(freeBlock);
 	}
