@@ -336,10 +336,7 @@ public:
 	static StringPairList initialDirs;	
 	static tstring exceptioninfo;
 	static DWORD helpCookie;	
-	static bool isPM;
 	static bool isAppActive;
-	static bool isMinimized;
-	static bool trayIcon;
 	static CHARFORMAT2 m_TextStyleTimestamp;
 	static CHARFORMAT2 m_ChatTextGeneral;
 	static CHARFORMAT2 m_TextStyleMyNick;

@@ -549,28 +549,34 @@ void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
 
 LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-	long lSelBegin = 0, lSelEnd = 0;
+	long lSelBegin = 0, lSelEnd = 0; CAtlString sSel;
 
-	// Po kliku dovnitr oznaceneho textu nedelat nic
 	sSelectedLine = Text::toT(LineFromPos(pt));
 	sTempSelectedUser = _T("");
 	sSelectedIP = _T("");
 
+	// Po kliku dovnitr oznaceneho textu si zkusime poznamenat pripadnej nick ci ip...
+	// jinak by nam to neuznalo napriklad druhej klik na uz oznaceny nick =)
 	GetSel(lSelBegin, lSelEnd);
-	int iCharPos = CharFromPos(pt), iBegin = 0, iEnd1 = 0;
+	int iCharPos = CharFromPos(pt), iBegin = 0, iEnd = 0;
 	if((lSelEnd > lSelBegin) && (iCharPos >= lSelBegin) && (iCharPos <= lSelEnd)) {
+		if(HitIP(pt, &sSel, &iBegin, &iEnd)) {
+			sSelectedIP = sSel;
+		} else if(HitNick(pt, &sSel, &iBegin, &iEnd)) {
+			sTempSelectedUser = sSel;
+		}
 		return 1;
 	}
 
 	// Po kliku do IP oznacit IP
-	CAtlString sSel;
-	if(HitIP(pt, &sSel, &iBegin, &iEnd1)) {
+	if(HitIP(pt, &sSel, &iBegin, &iEnd)) {
 		sSelectedIP = sSel;
-		SetSel(iBegin, iEnd1);
+		SetSel(iBegin, iEnd);
 		InvalidateRect(NULL);
-	} else if(HitNick(pt, &sSel, &iBegin, &iEnd1)) {
+	// Po kliku na Nick oznacit Nick
+	} else if(HitNick(pt, &sSel, &iBegin, &iEnd)) {
 		sTempSelectedUser = sSel;
-		SetSel(iBegin, iEnd1);
+		SetSel(iBegin, iEnd);
 		InvalidateRect(NULL);
 	}
 	return 1;

@@ -131,7 +131,7 @@ private:
 	};
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
-	static ResourceManager::Strings columnNames[COLUMN_LAST];
+	//static ResourceManager::Strings columnNames[COLUMN_LAST];
 	
 	User::Ptr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();

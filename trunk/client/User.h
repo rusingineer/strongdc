@@ -85,7 +85,7 @@ public:
 
 	User(const CID& aCID) : cid(aCID), bytesShared(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1), hasTestSURinQueue(false) {
+			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1), hasTestSURinQueue(false), cid(NULL) {
 		unCacheClientInfo();
 		unsetFlag(User::OP);
 		unsetFlag(User::PASSIVE);

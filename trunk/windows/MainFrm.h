@@ -35,6 +35,7 @@
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
 #include "../client/WebServerManager.h"
+#include "PopupManager.h"
 
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
@@ -76,7 +77,9 @@ public:
 		STATUS_MESSAGE,
 		CHECK_LISTING,
 		UPDATE_SHUTDOWN,
-		SHOW_POPUP
+		SHOW_POPUP,
+		SET_NORMAL_TRAY_ICON,
+		SET_PM_TRAY_ICON
 	};
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -229,7 +232,7 @@ public:
 	}
 
 	LRESULT onTray(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) { 
-		WinUtil::trayIcon = false;
+		bTrayIcon = false;
 		updateTray(true); 
 		return 0;
 	};
@@ -254,9 +257,8 @@ public:
 		return 0;
 	}
 	
-	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-	{
-		if(WinUtil::trayIcon) {
+	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+		if(bTrayIcon) {
 			updateTray(false);
 		}
 		bHandled = FALSE;
@@ -315,6 +317,7 @@ public:
 		}
 		return 0;
 	}	
+
 	LRESULT onShutDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		setShutDown(!getShutDown());
 		return S_OK;
@@ -356,8 +359,10 @@ public:
 	static MainFrame* anyMF;
 private:
 	friend int CZDCLib::setButtonPressed(int iPos, bool bPressed);
+	friend void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon);
 
 	NOTIFYICONDATA normalicon;
+	NOTIFYICONDATA pmicon;
 	
 	class DirectoryListInfo {
 	public:
@@ -385,6 +390,9 @@ private:
 
 	bool tbarcreated;
 	bool awaybyminimize;
+	bool bTrayIcon;
+	bool bAppMinimized;
+	bool bIsPM;
 	
 	static bool bShutdown;
 	static u_int32_t iCurrentShutdownTime;
@@ -417,7 +425,9 @@ private:
 	HWND createToolbar();
 	void buildMenu();
 	void updateTray(bool add = true);
-	void setNormalTrayIcon();
+	void setNormalTrayIcon() {
+		PostMessage(WM_SPEAKER, SET_NORMAL_TRAY_ICON);
+	}
 
 	LRESULT onAppShow(WORD /*wNotifyCode*/,WORD /*wParam*/, HWND, BOOL& /*bHandled*/) {
 		if (::IsIconic(m_hWnd)) {

@@ -58,9 +58,6 @@ time_t Util::awayTime;
 Util::CountryList Util::countries;
 string Util::appPath;
 
-bool Util::nlfound = false;
-int Util::nlspeed;
-
 static void sgenrand(unsigned long seed);
 
 int arrayutf[96] = {-61, -127, -60, -116, -60, -114, -61, -119, -60, -102, -61, -115, -60, -67, -59, -121, -61, -109, -59, -104, -59, -96, -59, -92, -61, -102, -59, -82, -61, -99, -59, -67, -61, -95, -60, -115, -60, -113, -61, -87, -60, -101, -61, -83, -60, -66, -59, -120, -61, -77, -59, -103, -59, -95, -59, -91, -61, -70, -59, -81, -61, -67, -59, -66, -61, -124, -61, -117, -61, -106, -61, -100, -61, -92, -61, -85, -61, -74, -61, -68, -61, -76, -61, -108, -60, -71, -60, -70, -60, -67, -60, -66, -59, -108, -59, -107}; 
@@ -89,11 +86,12 @@ string Util::disableCzChars(string message) {
    return s; 
 }
 
+bool nlfound = false;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 	TCHAR buf[256];
 	buf[0] = NULL;
 	if (!handle) {
-		Util::nlfound = false;
+		nlfound = false;
 		return TRUE;// Not a window
 	}
 	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
@@ -101,12 +99,12 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 
 	if(buf[0] != NULL) {
 		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
-			Util::nlfound = true;
+			nlfound = true;
 			return false;
 		}
 	}
 
-	Util::nlfound = false;
+	nlfound = false;
 	return true;
 }
 
@@ -125,6 +123,79 @@ int hexstr2int(char *hexstr) {
     for (i = value = 0; i < length; i++, shift -= 4)
         value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
     return value;
+}
+
+int Util::getNetLimiterLimit() {
+	int NetLimiter_UploadLimit = -1;
+	int NetLimiter_UploadOn = 0;
+
+	try {
+		TCHAR AppData[256];
+		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
+
+		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
+
+		const size_t BUF_SIZE = 800;
+		string cesta = Util::getAppName()+"/";
+		char buf[BUF_SIZE];
+		u_int32_t len;
+		char* w2 = strdup(cesta.c_str());
+
+		for(;;) {
+			size_t n = BUF_SIZE;
+			len = f.read(buf, n);
+			string txt = "";
+			for(int i = 0; i<len; ++i) {
+				if (buf[i]== 0) 
+				txt += "/"; else
+				txt += buf[i];
+			}
+			char* w1 = strdup(txt.c_str());
+
+			if(::strstr(strupr(w1),strupr(w2)) != NULL) {
+				char buf1[256];
+				char buf2[256];
+
+				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
+				buf1[255] = 0;
+				string a1 = buf1;
+
+				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
+				buf2[255] = 0;
+				string a2 = buf2;
+
+				string limit_hex = "0x" + a2 + a1;
+
+				NetLimiter_UploadLimit = 0;
+
+				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
+				NetLimiter_UploadOn = u_int8_t(txt[16]);
+				buf[255] = 0;
+
+				if(NetLimiter_UploadOn == 1) {
+					EnumWindows(GetWOkna,NULL);
+					if(!nlfound) {
+						NetLimiter_UploadLimit = -1;
+						NetLimiter_UploadOn = 0;
+					}
+				}
+
+				delete[] w1;
+				break;
+			}
+
+			delete[] w1;
+
+			if(len < BUF_SIZE)
+				break;
+		}
+	
+		f.close();
+		delete[] w2;
+	} catch(...) {
+	}
+
+	return NetLimiter_UploadLimit;
 }
 
 void Util::initialize() {
@@ -175,74 +246,6 @@ void Util::initialize() {
 		}
 	} catch(const FileException&) {
 	}
-
-	try {
-		TCHAR AppData[256];
-		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
-
-		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
-
-		int NetLimiter_UploadLimit = 0;
-		int NetLimiter_UploadOn = 0;
-		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName()+"/";
-		char buf[BUF_SIZE];
-		u_int32_t len;
-		char* w2 = strdup(cesta.c_str());
-
-		for(;;) {
-			size_t n = BUF_SIZE;
-			len = f.read(buf, n);
-			string txt = "";
-			for(int i = 0; i<len; ++i) {
-				if (buf[i]== 0) 
-				txt += "/"; else
-				txt += buf[i];
-			}
-			char* w1 = strdup(txt.c_str());
-
-			if(::strstr(strupr(w1),strupr(w2)) != NULL) {
-				char buf1[256];
-				char buf2[256];
-
-				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
-				buf1[255] = 0;
-				string a1 = buf1;
-
-				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
-				buf2[255] = 0;
-				string a2 = buf2;
-
-				string limit_hex = "0x" + a2 + a1;
-
-				NetLimiter_UploadLimit = 0;
-
-				NetLimiter_UploadLimit = hexstr2int(strdup(limit_hex.c_str())) / 4;
-				NetLimiter_UploadOn = u_int8_t(txt[16]);
-				buf[255] = 0;
-
-				if(NetLimiter_UploadOn == 1) {
-					EnumWindows(GetWOkna,NULL);
-					if(nlfound) {
-						nlspeed = NetLimiter_UploadLimit;
-					}
-				}
-
-				delete[] w1;
-				break;
-			}
-
-			delete[] w1;
-
-			if(len < BUF_SIZE)
-				break;
-		}
-	
-		f.close();
-		delete[] w2;
-	} catch(...) {
-	}
-
 	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
 }
 

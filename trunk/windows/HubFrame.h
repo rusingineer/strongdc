@@ -287,7 +287,6 @@ public:
 		return 0;
 	}
 
-	NOTIFYICONDATA pmicon;
 	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
 private:
 	enum {

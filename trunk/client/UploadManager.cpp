@@ -188,10 +188,10 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	else
 		u->setSize(aStartPos + aBytes);
 
+	u->setFullSize(size);
 	u->setStartPos(aStartPos);
 	u->setFileName(file);
 	u->setLocalFileName(file);
-	u->setEndOnEndFile(u->getSize() == size);
 
 	if(userlist)
 		u->setFlag(Upload::FLAG_USER_LIST);
@@ -301,7 +301,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setState(UserConnection::STATE_GET);
 
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-		!u->isSet(Upload::FLAG_TTH_LEAVES) && u->getEndOnEndFile()) {
+		!u->isSet(Upload::FLAG_TTH_LEAVES) && (u->getSize() == u->getFullSize())) {
 		StringMap params;
 		params["source"] = u->getLocalFileName();
 		params["user"] = aSource->getUser()->getNick();
