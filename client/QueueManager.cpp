@@ -27,7 +27,6 @@
 
 #include "QueueManager.h"
 
-#include "ConnectionManager.h"
 #include "SearchManager.h"
 #include "ClientManager.h"
 #include "DownloadManager.h"
@@ -893,24 +892,23 @@ again:
 		return NULL;
 	}
 
-	if(((q->getActiveSegments().size() + q->getCurrents().size()) / 2) >= q->getMaxSegments()) {
-		message = STRING(ALL_SEGMENTS_TAKEN);		
-		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-		goto again;
-	}
+	int64_t freeBlock = 0;
 
-	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) &&
-		BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
-		if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
+		if(q->getCurrents().size() >= q->getMaxSegments()) {
 			message = STRING(ALL_SEGMENTS_TAKEN);		
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
 		}
-	}
 
-	int64_t freeBlock = 0;
+		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
+			if(DownloadManager::getInstance()->getWholeFileSpeed(q->getTarget()) > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
+				message = STRING(ALL_SEGMENTS_TAKEN);		
+				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+				goto again;
+			}
+		}
 
-	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)){
 		dcassert(!q->getTempTarget().empty());
 		freeBlock = FileChunksInfo::Get(q->getTempTarget())->GetUndlStart(q->getMaxSegments());
 
@@ -933,7 +931,7 @@ again:
 		d->setStartPos(q->getDownloadedBytes());
 	}
 */
-	if(!q->isSet(QueueItem::FLAG_USER_LIST)){
+	if(!q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO)) {
 		d->setStartPos(freeBlock);
 	}
 
@@ -1475,7 +1473,7 @@ void QueueLoader::endTag(const string& name, const string&) {
 
 // SearchManagerListener
 void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
-	//bool found = false;
+
 	string target;
 	if(BOOLSETTING(AUTO_SEARCH) && sr->getTTH()) {
 		Lock l(cs);

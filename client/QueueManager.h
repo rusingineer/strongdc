@@ -34,6 +34,8 @@
 #include "DirectoryListing.h"
 #include "MerkleTree.h"
 
+#include "ConnectionManager.h"
+
 #include "QueueManagerListener.h"
 #include "SearchManagerListener.h"
 #include "ClientManagerListener.h"
@@ -218,6 +220,10 @@ public:
 			if(lastInsert != queue.end() && lastInsert->first == qi->getTarget())
 				lastInsert = queue.end();
 			queue.erase(qi->getTarget());
+
+			for(QueueItem::Source::Iter i = qi->getSources().begin(); i != qi->getSources().end(); ++i) {
+				ConnectionManager::getInstance()->removeConnection((*i)->getUser(), true);
+			}
 
 			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_MP3_INFO) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 				FileChunksInfo::Free(qi->getTempTarget());

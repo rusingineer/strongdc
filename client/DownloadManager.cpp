@@ -301,7 +301,10 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				d->setSource("files.xml.bz2");
 			}
 			d->setStartPos(0);
+		}
 
+		if(d->isSet(QueueItem::FLAG_MP3_INFO)) {
+			d->setStartPos(0);
 		}
 
 	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) && d->isSet(Download::FLAG_UTF8)) {
