@@ -307,8 +307,8 @@ public:
 	{
 		if(pos == -1) return 0;
 
-    	int iRet = file_chunks_info_ptr->ValidBlock(pos, len);
 		size_t size = os->write(buf, len);
+		int iRet = file_chunks_info_ptr->ValidBlock(pos, len);		
 
 		if (iRet == FileChunksInfo::BLOCK_OVER){
 			int64_t oldPos = pos;
@@ -316,7 +316,7 @@ public:
 			os->flush();
 			throw BlockDLException(Util::emptyString, oldPos + len);
 
-		}else if(iRet == FileChunksInfo::FILE_OVER){
+		}else if(iRet == FileChunksInfo::FILE_OVER){			
 			int64_t oldPos = pos;
             pos = -1;
    			os->flush();

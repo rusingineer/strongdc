@@ -108,9 +108,10 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
-				tmpSize -= 65535;
-				if(tmpSize < 0)
+				if(tmpSize < 65535)
 					tmpSize = 0;
+				else
+					tmpSize -= 65535;
 				vector<int64_t> v;
 				v.push_back(tmpSize);
 				v.push_back(qi->getSize());
@@ -914,18 +915,11 @@ again:
 
 	}
 
-	d = new Download(q, aUser);
-
-	if(d->getSource() == Util::emptyString) {
-		dcdebug("Source for downloading not found\n");
-		delete d;
-		ConnectionManager::getInstance()->fire(ConnectionManagerListener::Failed(), aConn->getCQI(), "Source for downloading not found");
-		return NULL;
-	}
-
 	userQueue.setRunning(q, aUser);
 
 	fire(QueueManagerListener::StatusUpdated(), q);
+
+	d = new Download(q, aUser);
 /*
 	if( BOOLSETTING(ANTI_FRAG) ) {
 		d->setStartPos(q->getDownloadedBytes());
@@ -1464,7 +1458,7 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		for(QueueItem::Iter i = matches.begin(); i != matches.end(); ++i) {
 			QueueItem* qi = *i;
 			bool found = false;
-			found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize() && (qi->getSources().size() < SETTING(MAX_SOURCES)));
+			found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize()) && (qi->getSources().size() <= SETTING(MAX_SOURCES));
 
 			if(found) {
 				try {

@@ -682,7 +682,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const FileException& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 
-		//d->resetPos();
+		d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -690,7 +690,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const Exception& e) {
 		fire(DownloadManagerListener::Failed(), d, e.getError());
 		// Nuke the bytes we have written, this is probably a compression error
-		//d->resetPos();
+		d->resetPos();
 		aSource->setDownload(NULL);
 		removeDownload(d, true);
 		removeConnection(aSource);
@@ -1161,6 +1161,7 @@ void DownloadManager::abortDownload(const string& aTarget) {
 		Download* d = *i;
 		if(d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
+			//ConnectionManager::getInstance()->putDownloadConnection(d->getUserConnection());
 			d->getUserConnection()->disconnect();
 		}
 	}
