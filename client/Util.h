@@ -337,7 +337,9 @@ public:
 	static string toAdcFile(const string& file) {
 		string ret;
 		ret.reserve(file.length() + 1);
-		ret += '/';
+		if((file != "MyList.DcLst") && (file != "files.xml.bz2")) {
+			ret += '/';
+		}
 		ret += file;
 		for(string::size_type i = 0; i < ret.length(); ++i) {
 			if(ret[i] == '\\') {

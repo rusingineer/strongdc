@@ -515,21 +515,15 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	}
 
 	// Reject results without free slots if selected
-	if(onlyFree && aResult->getFreeSlots() < 1)
-		return;
-
-	if(onlyTTH && aResult->getTTH() == NULL) {
+	// but always show directories
+	if( (onlyFree && aResult->getFreeSlots() < 1) ||
+	((onlyTTH && aResult->getTTH() == NULL) && (aResult->getType() != SearchResult::TYPE_DIRECTORY)) ||
+	(exactSize1 && (aResult->getSize() != exactSize2))
+	)
+	{
 		droppedResults++;
 		PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
 		return;
-	}
-
-	if(exactSize1) {			
-		if(aResult->getSize() != exactSize2) {
-			droppedResults++;
-			PostMessage(WM_SPEAKER, FILTERED_TEXT, (LPARAM)new tstring(Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED))));
-			return;
-		}
 	}
 
 	SearchInfo* i = new SearchInfo(aResult);
@@ -973,9 +967,8 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		ucParams["file"] = sr->getFile();
 		ucParams["filesize"] = Util::toString(sr->getSize());
 		ucParams["filesizeshort"] = Util::formatBytes(sr->getSize());
-		TTHValue *hash = sr->getTTH();
-		if(hash != NULL) {
-			ucParams["tth"] = hash->toBase32();
+		if(sr->getTTH() != NULL) {
+			ucParams["tth"] = sr->getTTH()->toBase32();
 		}
 
 		StringMap tmp = ucParams;

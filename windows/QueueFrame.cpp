@@ -187,6 +187,8 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
+		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(target));
+
 		int PocetSegmentu = qi ? qi->getActiveSegments().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;
 		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString(PocetSegmentu))+_T("/")+Text::toT(Util::toString(MaxSegmentu))+ _T(" ");

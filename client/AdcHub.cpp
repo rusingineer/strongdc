@@ -346,7 +346,7 @@ void AdcHub::on(Connected) throw() {
 	dcassert(state == STATE_PROTOCOL);
 	setMe(ClientManager::getInstance()->getUser(CID(SETTING(CLIENT_ID)), this, false));
 	lastInfoMap.clear();
-	send(Command(Command::SUP(), Command::TYPE_HUB).addParam("BAS0"));
+	send(Command(Command::SUP(), Command::TYPE_HUB).addParam("+BAS0"));
 	
 	fire(ClientListener::Connected(), this);
 }

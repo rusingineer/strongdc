@@ -263,7 +263,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	if(firstTry && !d->getTreeValid() && 
 		!d->isSet(Download::FLAG_USER_LIST) && d->getTTH() != NULL && !d->isSet(Download::FLAG_MP3_INFO))
 	{
-		if(HashManager::getInstance()->getTree(d->getTarget(), d->getTTH(), d->getTigerTree())) {
+		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
 		} else if(!d->isSet(Download::FLAG_TREE_TRIED) && 
 			aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL)) 
@@ -640,7 +640,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(!d->getTreeValid() && d->getTTH() != NULL)
 			{
-				if(HashManager::getInstance()->getTree(d->getTarget(), d->getTTH(), d->getTigerTree()))
+				if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree()))
 					d->setTreeValid(true);
 			}
 
@@ -753,7 +753,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 				if(d != old && d->getFile() != NULL && false == d->isSet(Download::FLAG_USER_LIST) && d->isSet(Download::FLAG_TREE_DOWNLOAD) == false 
 					&& d->getTarget() == old->getTarget() && d->getTreeValid() == false){
 
-					HashManager::getInstance()->getTree(d->getTarget(), d->getTTH(), d->getTigerTree());
+					HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree());
 					d->setTreeValid(true);
 
 					if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
