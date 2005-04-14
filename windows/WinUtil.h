@@ -499,6 +499,13 @@ public:
 	static int getOsMajor();
 	static int getOsMinor();
 	
+	//returns the position where the context menu should be
+	//opened if it was invoked from the keyboard.
+	//aPt is relative to the screen not the control.
+	static void getContextMenuPos(CListViewCtrl& aList, POINT& aPt);
+	static void getContextMenuPos(CTreeViewCtrl& aTree, POINT& aPt);
+	static void getContextMenuPos(CEdit& aEdit,			POINT& aPt);
+	
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
 	static void splitTokens(int* array, const string& tokens, int maxItems = -1) throw();

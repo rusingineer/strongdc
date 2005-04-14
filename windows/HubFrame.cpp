@@ -31,7 +31,7 @@
 #include "../client/ShareManager.h"
 #include "../client/Util.h"
 #include "../client/StringTokenizer.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/LogManager.h"
 #include "../client/AdcCommand.h"
 #include "../client/SettingsManager.h"
@@ -97,12 +97,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
-	
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-
-	ctrlUsers.SetExtendedListViewStyle(styles);
+	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 
 	splitChat.Create( m_hWnd );
 	splitChat.SetSplitterPanes(ctrlClient.m_hWnd, ctrlMessage.m_hWnd, true);
@@ -129,7 +124,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlShowUsers.SetCheck(ShowUserList ? BST_CHECKED : BST_UNCHECKED);
 	showUsersContainer.SubclassWindow(ctrlShowUsers.m_hWnd);
 
-	FavoriteHubEntry *fhe = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
+	FavoriteHubEntry *fhe = FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
 
 	if(fhe) {
 		WinUtil::splitTokens(columnIndexes, fhe->getHeaderOrder(), COLUMN_LAST);
@@ -165,6 +160,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 	
 	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
+	ctrlLastLines.SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	ctrlLastLines.AddTool(&ti);
 
 	copyHubMenu.CreatePopupMenu();
@@ -470,7 +466,7 @@ void HubFrame::addAsFavorite() {
 	aEntry.setNick(client->getNick());
 	aEntry.setPassword(client->getPassword());
 	aEntry.setConnect(false);
-	HubManager::getInstance()->addFavorite(aEntry);
+	FavoriteManager::getInstance()->addFavorite(aEntry);
 	addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );
 }
 
@@ -918,7 +914,6 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		ctrlStatus.SetParts(5, w);
 
 		ctrlLastLines.SetMaxTipWidth(w[0]);
-		ctrlLastLines.SetWindowPos(HWND_TOPMOST, sr.left, sr.top, sr.Width(), sr.Height(), SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
 		// Strange, can't get the correct width of the last field...
 		ctrlStatus.GetRect(3, sr);
@@ -965,14 +960,14 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		RecentHubEntry* r = HubManager::getInstance()->getRecentHubEntry(Text::fromT(server));
+		RecentHubEntry* r = FavoriteManager::getInstance()->getRecentHubEntry(Text::fromT(server));
 		if(r) {
 			TCHAR buf[256];
 			this->GetWindowText(buf, 255);
 			r->setName(Text::fromT(buf));
 			r->setUsers(Util::toString(client->getUserCount()));
 			r->setShared(Util::toString(client->getAvailable()));
-			HubManager::getInstance()->updateRecent(r);
+			FavoriteManager::getInstance()->updateRecent(r);
 		}
 		DeleteObject(hEmoticonBmp);
 
@@ -987,7 +982,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		return 0;
 	} else {
 		SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, ShowUserList);
-		HubManager::getInstance()->removeUserCommand(Text::fromT(server));
+		FavoriteManager::getInstance()->removeUserCommand(Text::fromT(server));
 
 		int i = 0;
 		int j = ctrlUsers.GetItemCount();
@@ -999,7 +994,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		string tmp, tmp2, tmp3;
 		ctrlUsers.saveHeaderOrder(tmp, tmp2, tmp3);
 
-		FavoriteHubEntry *fhe = HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
+		FavoriteHubEntry *fhe = FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
 		if(fhe != NULL){
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(wp);
@@ -1023,7 +1018,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			fhe->setHeaderWidths(tmp2);
 			fhe->setHeaderVisible(tmp3);
 			
-			HubManager::getInstance()->save();
+			FavoriteManager::getInstance()->save();
 		} else {
 			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_ORDER, tmp);
 			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_WIDTHS, tmp2);
@@ -1261,21 +1256,28 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	return TRUE;
 }
 
-LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
-	RECT rc; CRect rc2;                 // client area of window 
+LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	CRect rc;            // client area of window 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
-	POINT ptCl;
 	tabMenuShown = false;
 	OMenu Mnu;
 	sSelectedUser = _T("");
 
-	ctrlUsers.GetClientRect(&rc);
-	ptCl = pt;
-	ctrlUsers.ScreenToClient(&ptCl);
-	ctrlUsers.GetHeader().GetWindowRect(&rc2);
+	ctrlUsers.GetHeader().GetWindowRect(&rc);
 		
-	if (PtInRect(&rc, ptCl) && ShowUserList) { 
+	if(PtInRect(&rc, pt) && ShowUserList) {
+		ctrlUsers.showMenu(pt);
+		return TRUE;
+	}
+		
+	if(reinterpret_cast<HWND>(wParam) == ctrlUsers && ShowUserList) { 
 		if ( ctrlUsers.GetSelectedCount() == 1 ) {
+			if(pt.x == -1 && pt.y == -1) {
+				WinUtil::getContextMenuPos(ctrlUsers, pt);
+	
+	
+	
+			}
 			int i = -1;
 			i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
 			if ( i >= 0 ) {
@@ -1299,10 +1301,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		}
 	}
 
-	ctrlEmoticons.GetClientRect(&rc);
-	ptCl = pt;
-	ctrlEmoticons.ScreenToClient(&ptCl);
-	if (PtInRect(&rc, ptCl)) {
+	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) { 
 		if(emoMenu != NULL) emoMenu.DestroyMenu();
 		emoMenu.CreatePopupMenu();
 		menuItems = 0;
@@ -1311,14 +1310,16 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
-		PME regex("(.+)\.xml", "i");
 		hFind = FindFirstFile(Text::toT(Util::getAppPath()+"EmoPacks\\*.xml").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
-				regex.match(Text::fromT(data.cFileName));
+				tstring name = data.cFileName;
+				tstring::size_type i = name.rfind('.');
+				name = name.substr(0, i);
+
 				menuItems++;
-				emoMenu.AppendMenu(MF_STRING, IDC_PM + menuItems, Text::toT(regex[1]).c_str());
-				if(regex[1]==SETTING(EMOTICONS_FILE)) emoMenu.CheckMenuItem( IDC_PM + menuItems, MF_BYCOMMAND | MF_CHECKED );
+				emoMenu.AppendMenu(MF_STRING, IDC_PM + menuItems, name.c_str());
+				if(name == Text::toT(SETTING(EMOTICONS_FILE))) emoMenu.CheckMenuItem( IDC_PM + menuItems, MF_BYCOMMAND | MF_CHECKED );
 			} while(FindNextFile(hFind, &data));
 			FindClose(hFind);
 		}
@@ -1327,15 +1328,18 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		emoMenu.RemoveFirstItem();
 		return TRUE;
 	}
-
-
 	sSelectedUser = ChatCtrl::sTempSelectedUser;
-	// Get the bounding rectangle of the client area. 
-	ctrlClient.GetClientRect(&rc);
-	ptCl = pt;
-	ctrlClient.ScreenToClient(&ptCl); 
-	
-	if (PtInRect(&rc, ptCl)) { 
+
+	if(reinterpret_cast<HWND>(wParam) == ctrlClient) { 
+		if(pt.x == -1 && pt.y == -1) {
+			CRect erc;
+			ctrlClient.GetRect(&erc);
+			pt.x = erc.Width() / 2;
+			pt.y = erc.Height() / 2;
+			ctrlClient.ClientToScreen(&pt);
+		}
+		POINT ptCl = pt;
+		ctrlClient.ScreenToClient(&ptCl); 
 		bool boHitURL = ctrlClient.HitURL(ptCl);
 		if (!boHitURL)
 			sSelectedURL = _T("");
@@ -1497,26 +1501,30 @@ void HubFrame::onTab() {
 	}
 }
 
-LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if(!complete.empty() && wParam != VK_TAB && uMsg == WM_KEYDOWN)
 		complete.clear();
 
 	if (uMsg != WM_KEYDOWN) {
-	switch(wParam) {
+		switch(wParam) {
 			case VK_RETURN:
 				if( (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) ) {
 					bHandled = FALSE;
 				}
 				break;
-		case VK_TAB:
+			case VK_TAB:
 				bHandled = TRUE;
   				break;
   			default:
   				bHandled = FALSE;
 				break;
-			}
+		}
+		if ((uMsg == WM_CHAR) && (GetFocus() == ctrlMessage.m_hWnd) && (wParam != VK_RETURN) && (wParam != VK_TAB) && (wParam != VK_BACK)) {
+			if ((!SETTING(SOUND_TYPING_NOTIFY).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+				PlaySound(Text::toT(SETTING(SOUND_TYPING_NOTIFY)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+		}
 		return 0;
-			}
+	}
 
 	if(wParam == VK_TAB) {
 		onTab();
@@ -1542,9 +1550,6 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 		bHandled = FALSE;
 		return 0;
 	}
-
-	if ((!SETTING(SOUND_TYPING_NOTIFY).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-		PlaySound(Text::toT(SETTING(SOUND_TYPING_NOTIFY)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	switch(wParam) {
 		case VK_RETURN:
@@ -1686,7 +1691,7 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		r.setUsers("*");
 		r.setShared("*");
 		r.setServer(Text::fromT(redirect));
-		HubManager::getInstance()->addRecent(r);
+		FavoriteManager::getInstance()->addRecent(r);
 
 		client->addListener(this);
 		client->connect();

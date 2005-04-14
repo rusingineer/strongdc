@@ -22,7 +22,7 @@
 
 #include "ADLSProperties.h"
 #include "../client/ADLSearch.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "WinUtil.h"
 
 // Initialize dialog

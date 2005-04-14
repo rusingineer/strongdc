@@ -107,8 +107,8 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET_DIR, IDC_DOWNLOAD_TARGET_DIR + WinUtil::lastDirs.size(), onDownloadTargetDir)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED, IDC_PRIORITY_HIGHEST, onDownloadWithPrio)
 		COMMAND_RANGE_HANDLER(IDC_PRIORITY_PAUSED+90, IDC_PRIORITY_HIGHEST+90, onDownloadDirWithPrio)
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		CHAIN_MSG_MAP(CSplitterImpl<DirectoryListingFrame>)
@@ -284,7 +284,7 @@ private:
 					switch(col) {
 					case COLUMN_EXACTSIZE: return compare(a->dir->getTotalSize(), b->dir->getTotalSize());
 					case COLUMN_SIZE: return compare(a->dir->getTotalSize(), b->dir->getTotalSize());
-					default: return Util::stricmp(a->columns[col], b->columns[col]);
+					default: return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 					}
 				} else {
 					return -1;
@@ -295,7 +295,7 @@ private:
 				switch(col) {
 				case COLUMN_EXACTSIZE: return compare(a->file->getSize(), b->file->getSize());
 				case COLUMN_SIZE: return compare(a->file->getSize(), b->file->getSize());
-				default: return Util::stricmp(a->columns[col], b->columns[col]);
+				default: return lstrcmp(a->columns[col].c_str(), b->columns[col].c_str());
 				}
 			}
 		}

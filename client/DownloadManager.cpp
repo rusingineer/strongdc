@@ -135,23 +135,28 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		d->setItem(q);
 
-     	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->speedUsers.size() > 0) && (q->getActiveSegments().size() == 1)) {
-			int TryToSwitchToUser = -1;
-			if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
-				(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
-				TryToSwitchToUser = 0;
-			} else if((q->speedUsers.size() > 1) && (q->speedUsers[1] != NULL) && (q->speedUsers[1]->getUser() != (User::Ptr)NULL) && (q->speedUsers[1]->getUser()->isOnline()) &&
-				(d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
-				TryToSwitchToUser = 1;
-			} else if((q->speedUsers.size() > 2) && (q->speedUsers[2] != NULL) && (q->speedUsers[2]->getUser() != (User::Ptr)NULL) && (q->speedUsers[2]->getUser()->isOnline()) &&
-				(d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
-				TryToSwitchToUser = 2;
-			}
-			if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
- 				d->getUserConnection()->disconnect();
-				q->setFastUser(true);
-				q->speedUsers[TryToSwitchToUser]->getUser()->connect();
-				continue;
+     	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->getActiveSegments().size() == 1)) {
+			u_int count = q->speedUsers.size();
+			 
+			if(count > 0) {
+				int TryToSwitchToUser = -1;
+
+				if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
+					TryToSwitchToUser = 0;
+				} else if((count > 1) && (q->speedUsers[1] != NULL) && (q->speedUsers[1]->getUser() != (User::Ptr)NULL) && (q->speedUsers[1]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
+					TryToSwitchToUser = 1;
+				} else if((count > 2) && (q->speedUsers[2] != NULL) && (q->speedUsers[2]->getUser() != (User::Ptr)NULL) && (q->speedUsers[2]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
+					TryToSwitchToUser = 2;
+				}
+				if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
+	 				d->getUserConnection()->disconnect();
+					q->setFastUser(true);
+					q->speedUsers[TryToSwitchToUser]->getUser()->connect();
+					continue;
+				}
 			}
 		}
 
@@ -544,108 +549,6 @@ private:
 	u_int8_t* buf;
 };
 
-template<bool managed>
-class TigerCheckOutputStream : public OutputStream {
-public:
-	TigerCheckOutputStream(const TigerTree& aTree, OutputStream* aStream, int64_t pos, const string& file_temp_name) 
-		: s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0) 
-	{
-		bufPos = 0;
-		ignored_bytes = (size_t)(pos % aTree.getBlockSize());
-		if(ignored_bytes > 0)
-			ignored_bytes = aTree.getBlockSize() - ignored_bytes;
-
-		ignored = (size_t)(pos / aTree.getBlockSize() + (ignored_bytes ? 1 : 0));
-
-		file_chunks_info = FileChunksInfo::Get(file_temp_name);
-
-		_ASSERT(!(file_chunks_info == (FileChunksInfo*)NULL));
-	}
-	virtual ~TigerCheckOutputStream() { if(managed) delete s; };
-
-	virtual size_t flush() throw(FileException) {
-
-		return s->flush();
-	}
-
-	virtual size_t write(const void* b, size_t len) throw(FileException) {
-		u_int8_t* xb = (u_int8_t*)b;
-		size_t pos = 0;
-
-		// Ingore bytes
-		if(ignored_bytes > 0)
-		{
-			if(ignored_bytes >= len)
-			{
-				ignored_bytes -= len;
-				return s->write(b, len);
-	        }else{
-				pos = ignored_bytes;
-				ignored_bytes = 0;
-			}
-		}
-
-		if(bufPos != 0) {
-			size_t bytes = min(TigerTree::BASE_BLOCK_SIZE - bufPos, len);
-			memcpy(buf + bufPos, xb, bytes);
-			pos = bytes;
-			bufPos += bytes;
-
-			if(bufPos == TigerTree::BASE_BLOCK_SIZE) {
-				cur.update(buf, TigerTree::BASE_BLOCK_SIZE);
-				bufPos = 0;
-			}
-		}
-
-		if(pos < len) {
-			dcassert(bufPos == 0);
-			size_t left = len - pos;
-			size_t part = left - (left %  TigerTree::BASE_BLOCK_SIZE);
-			if(part > 0) {
-				cur.update(xb + pos, part);
-				pos += part;
-			}
-			left = len - pos;
-			memcpy(buf, xb + pos, left);
-			bufPos = left;
-		}
-
-		checkTrees();
-		return s->write(b, len);
-	}
-	
-	virtual int64_t verifiedBytes() {
-		return min(real.getFileSize(), (int64_t)(cur.getBlockSize() * cur.getLeaves().size()));
-	}
-private:
-	OutputStream* s;
-	const TigerTree& real;
-	TigerTree cur;
-	size_t verified;
-	size_t ignored;				// the blocks count that are ignored
-	size_t ignored_bytes;		// the bytes that are ignored
-	FileChunksInfo::Ptr file_chunks_info;
-
-	u_int8_t buf[TigerTree::BASE_BLOCK_SIZE];
-	size_t bufPos;
-
-	void checkTrees() throw(FileException) {
-		while(cur.getLeaves().size() > verified) {
-			if(cur.getLeaves().size() + ignored > real.getLeaves().size() ||
-				!(cur.getLeaves()[verified] == real.getLeaves()[verified + ignored])) 
-			{
-				throw FileException(STRING(TTH_INCONSISTENCY));
-			}
-
-			if(file_chunks_info != (FileChunksInfo*)NULL) {
-				int64_t start = (verified + ignored) * cur.getBlockSize();
-				file_chunks_info->MarkVerifiedBlock(start, start + cur.getBlockSize());
-			}
-			verified++;
-		}
-	}
-};
-
 bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool z) {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
@@ -778,7 +681,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			
 		if(d->getTreeValid()) {
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new TigerCheckOutputStream<true>(d->getTigerTree(), d->getFile(), d->getStartPos(), d->getTempTarget()));
+				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
 			} else if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
 			}
@@ -837,7 +740,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 				if(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					dcdebug(("ChunkFinished....."+aSource->getUser()->getNick()+"\n").c_str());
 					userSpeed(aSource);
 					aSource->setDownload(NULL);
 					string aTarget = d->getTarget();
@@ -849,7 +751,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				}
 			}
 		} catch(const BlockDLException e) {
-			dcdebug(("BlockDLException....."+aSource->getUser()->getNick()+"\n").c_str());
+			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			userSpeed(aSource);
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
@@ -859,7 +761,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setLineMode();
 				checkDownloads(aSource, false);
 			}else{
-				fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
@@ -957,6 +858,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	dcassert(aSource->getState() == UserConnection::STATE_DONE);
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
+
 	bool reconn = false;
 
 	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
@@ -988,34 +890,37 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		}
 		d->setTreeValid(true);
 		d->getItem()->setHasTree(true);
-		// set the tree to other downloads
+
+		// Added by set the tree to other downloads
 		if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 			Lock l(cs);
 
 			dcdebug("Begin set tree to other downloads\n");
 			// Tick each ongoing download
 			for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-				Download* e = *i;
+				Download* download = *i;
 
-				if(e != d && e->getFile() != NULL && false == e->isSet(Download::FLAG_USER_LIST) && e->isSet(Download::FLAG_TREE_DOWNLOAD) == false 
-					&& e->getTarget() == d->getTarget() && e->getTreeValid() == false){
+				if(download != d && download->getFile() != NULL && false == download->isSet(Download::FLAG_USER_LIST) && download->isSet(Download::FLAG_TREE_DOWNLOAD) == false 
+					&& download->getTarget() == download->getTarget() && download->getTreeValid() == false){
 
-					HashManager::getInstance()->getTree(*e->getTTH(), e->getTigerTree());
-					e->setTreeValid(true);
+					download->getTigerTree() = d->getTigerTree();
+					download->setTreeValid(true);
 
-					if(e->isSet(Download::FLAG_ZDOWNLOAD)) {
-						dcdebug("  Set tree to ZDownload %s \n", e->getSource().c_str());
-						FilteredOutputStream<UnZFilter, true>* unZFilter = (FilteredOutputStream<UnZFilter, true>*)e->getFile();
+					if(download->isSet(Download::FLAG_ZDOWNLOAD)) {
+						dcdebug("  Set tree to ZDownload %s \n", download->getSource().c_str());
+						FilteredOutputStream<UnZFilter, true>* unZFilter = (FilteredOutputStream<UnZFilter, true>*)download->getFile();
 						ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)unZFilter->getOutputStream();
-						unZFilter->setOutputStream(new TigerCheckOutputStream<true>(e->getTigerTree(), f, f->getPos(), e->getTempTarget()));
+						unZFilter->setOutputStream(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
 					}else{
-						dcdebug("  Set tree to %s \n", e->getSource().c_str());
-						ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)e->getFile();
-						e->setFile(new TigerCheckOutputStream<true>(e->getTigerTree(), f, f->getPos(), e->getTempTarget()));
+						dcdebug("  Set tree to %s \n", download->getSource().c_str());
+						ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)download->getFile();
+						d->setFile(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
 					}
 				}
 			}
 		}
+
+
 	}else{
 
 		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
@@ -1069,7 +974,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		// Check if we need to move the file
 		if( !d->getTempTarget().empty() && (Util::stricmp(d->getTarget().c_str(), d->getTempTarget().c_str()) != 0) ) {
 			moveFile(d->getTempTarget(), d->getTarget());
-			d->setTempTarget(Util::emptyString);
 		}
 	}
 
@@ -1282,9 +1186,9 @@ void DownloadManager::removeDownload(Download* d) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
 	} else if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-		if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
-			lpFileDataInfo->PutUndlStart(d->getStartPos());
+		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTempTarget());
+		if(!(fileChunks == (FileChunksInfo*)NULL))
+			fileChunks->PutUndlStart(d->getStartPos());
 	}
 
 	{

@@ -36,11 +36,7 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_RECENTS);
 	
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-	ctrlHubs.SetExtendedListViewStyle(styles);
-	
+	ctrlHubs.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));	
 	ctrlHubs.SetBkColor(WinUtil::bgColor);
 	ctrlHubs.SetTextBkColor(WinUtil::bgColor);
 	ctrlHubs.SetTextColor(WinUtil::textColor);
@@ -71,9 +67,9 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlRemoveAll.SetWindowText(CTSTRING(REMOVE_ALL));
 	ctrlRemoveAll.SetFont(WinUtil::font);
 
-	HubManager::getInstance()->addListener(this);
+	FavoriteManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
-	updateList(HubManager::getInstance()->getRecentHubs());
+	updateList(FavoriteManager::getInstance()->getRecentHubs());
 	
 	hubsMenu.CreatePopupMenu();
 	hubsMenu.AppendMenu(MF_STRING, IDC_CONNECT, CTSTRING(CONNECT));
@@ -129,7 +125,7 @@ LRESULT RecentHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 		e.setDescription(Text::fromT(buf));
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 		e.setServer(Text::fromT(buf));
-		HubManager::getInstance()->addFavorite(e);
+		FavoriteManager::getInstance()->addFavorite(e);
 	}
 	return 0;
 }
@@ -137,20 +133,20 @@ LRESULT RecentHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT RecentHubsFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-		HubManager::getInstance()->removeRecent((RecentHubEntry*)ctrlHubs.GetItemData(i));
+		FavoriteManager::getInstance()->removeRecent((RecentHubEntry*)ctrlHubs.GetItemData(i));
 	}
 	return 0;
 }
 
 LRESULT RecentHubsFrame::onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ctrlHubs.DeleteAllItems();
-	HubManager::getInstance()->removeallRecent();
+	FavoriteManager::getInstance()->removeallRecent();
 	return 0;
 }
 
 LRESULT RecentHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		HubManager::getInstance()->removeListener(this);
+		FavoriteManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_RECENTS, false);
@@ -206,7 +202,7 @@ LRESULT RecentHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 		if(dlg.DoModal(m_hWnd) == IDOK) {
 			r->setDescription(Text::fromT(dlg.line));
 			ctrlHubs.SetItemText(i, COLUMN_DESCRIPTION, Text::toT(r->getDescription()).c_str());
-			HubManager::getInstance()->recentsave();
+			FavoriteManager::getInstance()->recentsave();
 		}
 	}
 	return 0;

@@ -24,7 +24,7 @@
 #include "BufferedSocket.h"
 #include "DebugManager.h"
 
-#include "HubManager.h"
+#include "FavoriteManager.h"
 
 Client::Counts Client::counts;
 
@@ -44,7 +44,7 @@ Client::~Client() throw() {
 }
 
 void Client::reloadSettings() {
-	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubURL());
 	if(hub) {
 		setNick(checkNick(hub->getNick(true)));
 		setDescription(hub->getUserDescription());
@@ -66,7 +66,7 @@ int Client::getMode() {
 		return SettingsManager::CONNECTION_SOCKS5;
 
 	int mode = 0;
-	FavoriteHubEntry* hub = HubManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubURL());
 	if(hub) {
 		switch(hub->getMode()) {
 			case 1 :

@@ -58,7 +58,6 @@
 const string QueueManager::USER_LIST_NAME = "MyList.DcLst";
 
 namespace {
-	const char* badChars = "$|.[]()-_+";
 	const string TEMP_EXTENSION = ".dctmp";
 
 	string getTempName(const string& aFileName, const TTHValue* aRoot) {
@@ -107,7 +106,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		}
 	}
 
-	// create filedatainfo for this item
+	// Create FileChunksInfo for this item
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		FileChunksInfo* pChunksInfo = NULL;
 
@@ -133,19 +132,18 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 			}else
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
-
 		}
 		qi->setFileChunksInfo(pChunksInfo);
 		
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
-			vector<int64_t> v;
+			vector<u_int16_t> v;
 			istringstream is(verifiedBlocks);
-			copy(istream_iterator<int64_t>(is), 
-				istream_iterator<int64_t>(), 
+			copy(istream_iterator<u_int16_t>(is), 
+				istream_iterator<u_int16_t>(), 
 				back_inserter(v)); 
 
-			for(vector<int64_t>::iterator i = v.begin(); i + 1< v.end(); i++, i++)
-				pChunksInfo->MarkVerifiedBlock(*i, *(i+1));
+			for(vector<u_int16_t>::iterator i = v.begin(); i + 1 < v.end(); i++, i++)
+				pChunksInfo->markVerifiedBlock(*i, *(i+1));
 		}
 	}
 
@@ -263,13 +261,28 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
+	bool first = true;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
 		if(i != userQueue[p].end()) {
 			dcassert(!i->second.empty());
-			if(pNext == NULL || fNext){
-				return i->second.front();
+			QueueItem* found = i->second.front();
+
+			bool freeSegments = !found->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
+				((found->getActiveSegments().size() < found->getMaxSegments()) &&
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= found->getSpeed())) &&
+				(!found->getNoFreeBlocks()));
+
+			if(!freeSegments) {
+				if(!first || (pNext == NULL)) {
+					pNext = found;
+				}
+				first = false;
+			}
+
+			if(freeSegments && (pNext == NULL || fNext)) {
+				return found;
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
@@ -347,6 +360,12 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 		if(removeSegment)
 			qi->setStart(0);
 	}
+
+	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->getNoFreeBlocks()) {
+		FileChunksInfo::Ptr filedatainfo = qi->getFileChunksInfo();
+		if(filedatainfo->hasFreeBlock())
+			qi->setNoFreeBlocks(false);
+	}
     
 	// Add to the userQueue
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
@@ -362,6 +381,7 @@ QueueItem* QueueManager::UserQueue::getRunning(const User::Ptr& aUser) {
 }
 
 QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
+	Lock l(cs);
 	return userQueue.getRunning(aUser);
 }
 
@@ -509,6 +529,12 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	}
 }
 
+void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
+	string target = Util::getAppPath() + "FileLists\\" + Util::validateFileName(aUser->getNick());
+
+	add(target, -1, NULL, aUser, USER_LIST_NAME, true, QueueItem::FLAG_USER_LIST | aFlags);
+}
+
 void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {
 	if(!aUser->isOnline() || aUser->getCID().isZero())
 		return;
@@ -517,7 +543,6 @@ void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {
 		Lock l(cs);
 		pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aUser->getCID());
 		if(find_if(range.first, range.second, CompareSecond<CID, string>(aDir)) == range.second) {
-
 			pfsQueue.insert(make_pair(aUser->getCID(), aDir));
 		}
 	}
@@ -525,15 +550,12 @@ void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {
 	ConnectionManager::getInstance()->getDownloadConnection(aUser);
 }
 
-void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, const string& aTarget, 
-					   const TTHValue* root,
-					   int aFlags /* = QueueItem::FLAG_RESUME */, QueueItem::Priority p /* = QueueItem::DEFAULT */,
-					   bool addBad /* = true */) throw(QueueException, FileException) 
+void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* root, User::Ptr aUser, const string& aSourceFile,
+					   bool utf8, int aFlags /* = QueueItem::FLAG_RESUME */, bool addBad /* = true */) throw(QueueException, FileException) 
 {
 	bool wantConnection = true;
 	bool newItem = false;
-
-	dcassert((aFile != USER_LIST_NAME) || (aFlags &QueueItem::FLAG_USER_LIST));
+	dcassert((aSourceFile != USER_LIST_NAME) || (aFlags &QueueItem::FLAG_USER_LIST));
 
 	// Check that we're not downloading from ourselves...
 	if(aUser->getClientNick() == aUser->getNick()) {
@@ -547,9 +569,6 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 		}
 	}
     
-	bool utf8 = (aFlags & QueueItem::FLAG_SOURCE_UTF8) > 0;
-	aFlags &= ~QueueItem::FLAG_SOURCE_UTF8;
-
 	string target = checkTarget(aTarget, aSize, aFlags);
 
 	// Check if it's a zero-byte file, if so, create and return...
@@ -579,7 +598,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 			q = fileQueue.find(target);
 
 		if(q == NULL) {
-			q = fileQueue.add(target, aSize, aFlags, p, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
+			q = fileQueue.add(target, aSize, aFlags, QueueItem::NORMAL, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
 			newItem = true;
@@ -617,7 +636,7 @@ void QueueManager::add(const string& aFile, int64_t aSize, User::Ptr aUser, cons
 				return;
 		}
 
-		wantConnection = addSource(q, aFile, aUser, addBad ? QueueItem::Source::FLAG_MASK : 0, utf8);
+		wantConnection = addSource(q, aSourceFile, aUser, addBad ? QueueItem::Source::FLAG_MASK : 0, utf8);
 	}
 
 	if(wantConnection && aUser->isOnline())
@@ -682,11 +701,11 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	QueueItem::Source* s = NULL;
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED);
 
-	if(qi->isSource(aUser, aFile)) {
+	if(qi->isSource(aUser)) {
 		throw QueueException(STRING(DUPLICATE_SOURCE));
 	}
 
-	if(qi->isBadSourceExcept(aUser, aFile, addBad)) {
+	if(qi->isBadSourceExcept(aUser, addBad)) {
 		throw QueueException(STRING(DUPLICATE_SOURCE));
 	}
 
@@ -768,18 +787,18 @@ typedef pair<SizeIter, SizeIter> SizePair;
 // Lock(cs) makes sure that there's only one thread accessing these,
 // I put them here to avoid growing a huge stack...
 
-static DirectoryListing* curDl = NULL;
+static const DirectoryListing* curDl = NULL;
 static SizeMap sizeMap;
 
-int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw() {
+int QueueManager::matchFiles(const DirectoryListing::Directory* dir) throw() {
 	int matches = 0;
-	for(DirectoryListing::Directory::Iter j = dir->directories.begin(); j != dir->directories.end(); ++j) {
+	for(DirectoryListing::Directory::List::const_iterator j = dir->directories.begin(); j != dir->directories.end(); ++j) {
 		if(!(*j)->getAdls())
 			matches += matchFiles(*j);
 	}
 
-	for(DirectoryListing::File::Iter i = dir->files.begin(); i != dir->files.end(); ++i) {
-		DirectoryListing::File* df = *i;
+	for(DirectoryListing::File::List::const_iterator i = dir->files.begin(); i != dir->files.end(); ++i) {
+		const DirectoryListing::File* df = *i;
 
 		SizePair files = sizeMap.equal_range(adjustSize((u_int32_t)df->getSize(), df->getName()));
 		for(SizeIter j = files.first; j != files.second; ++j) {
@@ -800,13 +819,13 @@ int QueueManager::matchFiles(DirectoryListing::Directory* dir) throw() {
 	return matches;
 }
 
-int QueueManager::matchListing(DirectoryListing* dl) throw() {
+int QueueManager::matchListing(const DirectoryListing& dl) throw() {
 	int matches = 0;
 	{
 		Lock l(cs);
 		sizeMap.clear();
 		matches = 0;
-		curDl = dl;
+		curDl = &dl;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 			QueueItem* qi = i->second;
 			if(qi->getSize() != -1) {
@@ -814,10 +833,10 @@ int QueueManager::matchListing(DirectoryListing* dl) throw() {
 			}
 		}
 
-		matches = matchFiles(dl->getRoot());
+		matches = matchFiles(dl.getRoot());
 	}
 	if(matches > 0)
-	ConnectionManager::getInstance()->getDownloadConnection(dl->getUser());
+		ConnectionManager::getInstance()->getDownloadConnection(dl.getUser());
 		return matches;
 }
 
@@ -996,8 +1015,7 @@ again:
 		}
 
 		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
-			int64_t speed = SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024;
-			if(q->getSpeed() > speed) {
+			if(q->getSpeed() > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
 				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 				if(q == NULL) reuse = false;
@@ -1067,7 +1085,7 @@ next:
 		int64_t freeBlockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
 
 		if(supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth())) {
-			int64_t needToDownload = min((int64_t)chunksInfo->iSmallestBlockSize,(int64_t)(d->getSize() - d->getPos()));
+			int64_t needToDownload = min((int64_t)chunksInfo->minChunkSize,(int64_t)(d->getSize() - d->getPos()));
 			d->setSegmentSize(min(freeBlockSize, needToDownload));
 			d->setFlag(Download::FLAG_CHUNK_TRANSFER);
 		} else {
@@ -1165,7 +1183,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 						}
 					}
 
-					if(q->getPriority() != QueueItem::PAUSED) {
+					if(removeSegment && (q->getPriority() != QueueItem::PAUSED)) {
 						for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
 							if((*j)->getUser()->isOnline()) {
 								getConn.push_back((*j)->getUser());
@@ -1247,7 +1265,7 @@ void QueueManager::processList(const string& name, User::Ptr& user, int flags) {
 	}
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
 			AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
-		sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(&dirList));
+		sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(dirList));
 		LogManager::getInstance()->message(user->getNick() + ": " + string(tmp), true);			
 	}
 }
@@ -1472,7 +1490,7 @@ void QueueManager::saveQueue() throw() {
 					f.write(STRINGLEN("\" FreeBlocks=\""));
 					FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(qi->getTempTarget());
 					f.write(fileChunksInfo ? fileChunksInfo->getFreeBlocksString() : "");
-					f.write(STRINGLEN("\" VerifiedBlocks=\""));
+					f.write(STRINGLEN("\" VerifiedParts=\""));
 					f.write(fileChunksInfo ? fileChunksInfo->getVerifiedBlocksString() : "");
 				}
 				f.write(STRINGLEN("\" Added=\""));
@@ -1512,19 +1530,6 @@ void QueueManager::saveQueue() throw() {
 			}
 		}
 
-		for(DirectoryItem::DirectoryIter j = directories.begin(); j != directories.end(); ++j) {
-			DirectoryItem::Ptr d = j->second;
-			f.write(STRINGLEN("\t<Directory Target=\""));
-			f.write(CHECKESCAPE(d->getTarget()));
-			f.write(STRINGLEN("\" Nick=\""));
-			f.write(CHECKESCAPE(d->getUser()->getNick()));
-			f.write(STRINGLEN("\" Priority=\""));
-			f.write(Util::toString((int)d->getPriority()));
-			f.write(STRINGLEN("\" Source=\""));
-			f.write(CHECKESCAPE(d->getName()));
-			f.write(STRINGLEN("\"/>\r\n"));
-		}
-		
 		f.write("</Downloads>\r\n");
 		f.flush();
 		ff.close();
@@ -1581,7 +1586,7 @@ static const string sAdded = "Added";
 static const string sUtf8 = "Utf8";
 static const string sTTH = "TTH";
 static const string sFreeBlocks = "FreeBlocks";
-static const string sVerifiedBlocks = "VerifiedBlocks";
+static const string sVerifiedBlocks = "VerifiedParts";
 static const string sAutoPriority = "AutoPriority";
 static const string sMaxSegments = "MaxSegments";
 
@@ -1654,19 +1659,6 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			} catch(const Exception&) {
 				return;
 			}
-		} else if(cur == NULL && name == sDirectory) {
-			const string& targetd = getAttrib(attribs, sTarget, 0);
-			if(targetd.empty())
-				return;
-			const string& nick = getAttrib(attribs, sNick, 1);
-			if(nick.empty())
-				return;
-			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 2));
-			const string& source = getAttrib(attribs, sSource, 3);
-			if(source.empty())
-				return;
-			
-			qm->addDirectory(source, ClientManager::getInstance()->getUser(nick), targetd, p);
 		}
 	}
 }

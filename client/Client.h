@@ -71,7 +71,7 @@ public:
 	virtual void on(HubFull, Client*) throw() { }
 	virtual void on(NickTaken, Client*) throw() { }
 	virtual void on(SearchFlood, Client*, const string&) throw() { }
-	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&) throw() { }
+	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&, bool) throw() { }
 	virtual void on(AdcSearch, Client*, const AdcCommand&) throw() { }
 	virtual void on(CheatMessage, Client*, const string&) throw() { }
 };
@@ -182,7 +182,7 @@ protected:
 
 	void setPort(short aPort) { port = aPort; }
 
-	// reload nick from settings, other details from hubmanager
+	// reload nick from settings, other details from FavoriteManager
 	void reloadSettings();
 
 	virtual string checkNick(const string& nick) = 0;

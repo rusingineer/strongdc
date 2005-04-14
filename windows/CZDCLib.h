@@ -70,8 +70,8 @@ public:
 		}
 	}
 	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = false);
-	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c);
-	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2);
+	//static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c);
+	//static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2);
 	static void EnlightenFlood(const COLORREF& clr, COLORREF& a, COLORREF& b);
 	static COLORREF TextFromBackground(COLORREF bg);
 

@@ -25,10 +25,10 @@
 
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 
 class RecentHubsFrame : public MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS>, public StaticFrame<RecentHubsFrame, ResourceManager::RECENT_HUBS, IDC_RECENTS>, 
-	private HubManagerListener, private SettingsManagerListener
+	private FavoriteManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS> baseClass;
@@ -70,22 +70,16 @@ public:
 	LRESULT onEdit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	
-	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-		RECT rc;                    // client area of window 
+	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+		if(reinterpret_cast<HWND>(wParam) == ctrlHubs && ctrlHubs.GetSelectedCount() > 0) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+	        if(pt.x == -1 && pt.y == -1) {
+			    WinUtil::getContextMenuPos(ctrlHubs, pt);
+            }	
 		
-		if(ctrlHubs.GetSelectedCount() > 0) {
-			// Get the bounding rectangle of the client area. 
-			ctrlHubs.GetClientRect(&rc);
-			ctrlHubs.ScreenToClient(&pt); 
+			hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
-			if (PtInRect(&rc, pt)) 
-			{ 
-				ctrlHubs.ClientToScreen(&pt);
-				hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-
-				return TRUE; 
-			}
+			return TRUE; 
 		}
 		
 		return FALSE; 
@@ -160,7 +154,7 @@ private:
 		if(kd->wVKey == VK_DELETE) {
 			int i = -1;
 			while( (i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-				HubManager::getInstance()->removeRecent((RecentHubEntry*)ctrlHubs.GetItemData(i));
+				FavoriteManager::getInstance()->removeRecent((RecentHubEntry*)ctrlHubs.GetItemData(i));
 			}
 		}
 		return 0;

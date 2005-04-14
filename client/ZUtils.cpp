@@ -93,12 +93,6 @@ bool UnZFilter::operator()(const void* in, size_t& insize, void* out, size_t& ou
 
 	int err = ::inflate(&zs, Z_NO_FLUSH);
 
-	// Added by RevConnect
-	if(insize == 0 && err == Z_BUF_ERROR){
-		outsize = 0;
-		return 0;
-	}
-
 	// see zlib/contrib/minizip/unzip.c, Z_BUF_ERROR means we should have padded
 	// with a dummy byte if at end of stream - since we don't do this it's not a real
 	// error

@@ -27,14 +27,14 @@
 #include "ExListViewCtrl.h"
 #include "Resource.h"
 
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/StringSearch.h"
 
 #include "WinUtil.h"
 
 #define FILTER_MESSAGE_MAP 8
 class PublicHubsFrame : public MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 0), IDR_PUBLICHUBS>, public StaticFrame<PublicHubsFrame, ResourceManager::PUBLIC_HUBS, ID_FILE_CONNECT>, 
-	private HubManagerListener, private SettingsManagerListener
+	private FavoriteManagerListener, private SettingsManagerListener
 {
 public:
 	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(""),

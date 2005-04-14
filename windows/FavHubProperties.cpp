@@ -23,7 +23,7 @@
 
 #include "FavHubProperties.h"
 
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/ResourceManager.h"
 
 LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -124,7 +124,7 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 
 		entry->setMode(ct);
 
-		HubManager::getInstance()->save();
+		FavoriteManager::getInstance()->save();
 	}
 	EndDialog(wID);
 	return 0;

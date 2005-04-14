@@ -98,6 +98,8 @@ public:
 		return true;
 	}
 
+	static bool validateUtf8(const string& str) throw();
+
 	static char asciiToLower(char c) { dcassert((((u_int8_t)c) & 0x80) == 0); return asciiLower[(u_int8_t)c]; }
 
 	static wchar_t toLower(wchar_t c) { return lower[(u_int16_t)c]; }

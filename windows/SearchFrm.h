@@ -31,7 +31,7 @@
 #include "../client/SearchManager.h"
 #include "../client/CriticalSection.h"
 #include "../client/ClientManagerListener.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/QueueManager.h"
 
 #include "UCHandler.h"
@@ -97,8 +97,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
 		COMMAND_ID_HANDLER(IDC_PURGE, onPurge)		
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
-		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + HubManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
+		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_TARGET, IDC_DOWNLOAD_TARGET + targets.size() + WinUtil::lastDirs.size(), onDownloadTarget)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_TARGET, IDC_DOWNLOAD_WHOLE_TARGET + WinUtil::lastDirs.size(), onDownloadWholeTarget)
 		CHAIN_COMMANDS(ucBase)
@@ -412,28 +412,21 @@ private:
 				return 0;
 
 			switch(col) {
-				case COLUMN_NICK: return Util::stricmp(a->nick, b->nick);
-				case COLUMN_FILENAME: return Util::stricmp(a->fileName, b->fileName);
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
-						return Util::stricmp(a->type, b->type);
+						return lstrcmpi(a->type.c_str(), b->type.c_str());
 					else
 						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
-				case COLUMN_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
 				case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
-				case COLUMN_PATH: return Util::stricmp(a->path, b->path);
 				case COLUMN_SLOTS: 
 					if(a->sr->getFreeSlots() == b->sr->getFreeSlots())
 						return compare(a->sr->getSlots(), b->sr->getSlots());
 					else
 						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
-				case COLUMN_CONNECTION: return Util::stricmp(a->connection, b->connection);
-				case COLUMN_HUB: return Util::stricmp(a->sr->getHubName(), b->sr->getHubName());
+				case COLUMN_SIZE:
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
 				case COLUMN_UPLOAD: return compare(a->uploadSpeed,b->uploadSpeed);
-				case COLUMN_IP: return Util::stricmp(a->getIP(), b->getIP());			
-				case COLUMN_TTH: return Util::stricmp(a->getTTH(), b->getTTH());
-				default: return 0;
+				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}
 

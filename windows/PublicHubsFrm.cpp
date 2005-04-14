@@ -72,11 +72,8 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_HUBLIST);
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-	ctrlHubs.SetExtendedListViewStyle(styles);
-	
+	ctrlHubs.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));	
+
 	// Create listview columns
 	WinUtil::splitTokens(columnIndexes, SETTING(PUBLICHUBSFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(PUBLICHUBSFRAME_WIDTHS), COLUMN_LAST);
@@ -127,15 +124,15 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlFilterDesc.SetWindowText(CTSTRING(FILTER));
 	ctrlFilterDesc.SetFont(WinUtil::systemFont);
 
-	HubManager::getInstance()->addListener(this);
+	FavoriteManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	hubs = HubManager::getInstance()->getPublicHubs();
-	if(HubManager::getInstance()->isDownloading()) 
+	hubs = FavoriteManager::getInstance()->getPublicHubs();
+	if(FavoriteManager::getInstance()->isDownloading()) 
 		ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
 	else {
 		if(hubs.empty())
-			HubManager::getInstance()->refresh();
+			FavoriteManager::getInstance()->refresh();
 	}
 
 	updateList();
@@ -190,7 +187,7 @@ LRESULT PublicHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL
 		r.setShared(Text::fromT(buf));
 		ctrlHubs.GetItemText(item->iItem, COLUMN_SERVER, buf, 256);
 		r.setServer(Text::fromT(buf));
-		HubManager::getInstance()->addRecent(r);
+		FavoriteManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(buf);
 	}
 
@@ -245,7 +242,7 @@ LRESULT PublicHubsFrame::onClickedConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		r.setShared(Text::fromT(buf));
 		ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 		r.setServer(Text::fromT(buf));
-		HubManager::getInstance()->addRecent(r);
+		FavoriteManager::getInstance()->addRecent(r);
 				
 		HubFrame::openWindow(buf);
 	}
@@ -274,14 +271,14 @@ LRESULT PublicHubsFrame::onAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 		e.setDescription(Text::fromT(buf));
 			ctrlHubs.GetItemText(i, COLUMN_SERVER, buf, 256);
 		e.setServer(Text::fromT(buf));
-			HubManager::getInstance()->addFavorite(e);
+			FavoriteManager::getInstance()->addFavorite(e);
 		}
 	return 0;
 }
 
 LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		HubManager::getInstance()->removeListener(this);
+		FavoriteManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(ID_FILE_CONNECT, false);
@@ -296,8 +293,8 @@ LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 }
 	
 LRESULT PublicHubsFrame::onListSelChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
-	HubManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
-	hubs = HubManager::getInstance()->getPublicHubs();
+	FavoriteManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
+	hubs = FavoriteManager::getInstance()->getPublicHubs();
 	updateList();
 	bHandled = FALSE;
 	return 0;
@@ -426,7 +423,7 @@ void PublicHubsFrame::updateStatus() {
 
 LRESULT PublicHubsFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == FINISHED) {
-		hubs = HubManager::getInstance()->getPublicHubs();
+		hubs = FavoriteManager::getInstance()->getPublicHubs();
 		updateList();
 		tstring* x = (tstring*)lParam;
 		ctrlStatus.SetText(0, (TSTRING(HUB_LIST_DOWNLOADED) + _T(" (") + (*x) + _T(")")).c_str());
@@ -456,12 +453,13 @@ LRESULT PublicHubsFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lPa
 }
 
 LRESULT PublicHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	if((HWND)wParam == ctrlHubs && ctrlHubs.GetSelectedCount() == 1) {
+	if(reinterpret_cast<HWND>(wParam) == ctrlHubs && ctrlHubs.GetSelectedCount() == 1) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlHubs.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlHubs, pt);
 		}
+
 		hubsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE; 
 	}
@@ -482,13 +480,13 @@ LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 
 void PublicHubsFrame::updateDropDown() {
 	ctrlPubLists.ResetContent();
-	StringList lists(HubManager::getInstance()->getHubLists());
+	StringList lists(FavoriteManager::getInstance()->getHubLists());
 	for(StringList::iterator idx = lists.begin(); idx != lists.end(); ++idx) {
 		ctrlPubLists.AddString(Text::toT(*idx).c_str());
 	}
-	ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
-	if(HubManager::getInstance()->getSelectedHubList() < lists.size()) {
-		ctrlPubLists.SetCurSel(HubManager::getInstance()->getSelectedHubList());
+	ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
+	if(FavoriteManager::getInstance()->getSelectedHubList() < lists.size()) {
+		ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
 	} else {
 		ctrlPubLists.SetCurSel(lists.size()-1);
 	}
@@ -516,8 +514,8 @@ void PublicHubsFrame::Refresh() throw() {
 	users = 0;
 	visibleHubs = 0;
 	ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
-	HubManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
-	HubManager::getInstance()->refresh();
+	FavoriteManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
+	FavoriteManager::getInstance()->refresh();
 }
 
 /**

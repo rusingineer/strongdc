@@ -25,7 +25,7 @@
 
 #include "../client/TimerManager.h"
 #include "../client/HttpConnection.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/QueueManagerListener.h"
 #include "../client/Util.h"
 #include "../client/LogManager.h"
@@ -147,6 +147,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_NET_STATS, onNetStats)
 		COMMAND_ID_HANDLER(IDC_CDMDEBUG_WINDOW, onCDMDebugWindow)
 		COMMAND_ID_HANDLER(IDC_HELP_HOMEPAGE, onLink)
+		COMMAND_ID_HANDLER(IDC_HELP_GEOIPFILE, onLink)
 		COMMAND_ID_HANDLER(IDC_HELP_DISCUSS, onLink)
 		COMMAND_ID_HANDLER(IDC_OPEN_FILE_LIST, onOpenFileList)
 		COMMAND_ID_HANDLER(IDC_OPEN_MY_LIST, onOpenFileList)
@@ -310,9 +311,14 @@ public:
 	}
 	LRESULT onWindowRestoreAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		HWND tmpWnd = GetWindow(GW_CHILD); //getting client window
+		HWND ClientWnd = tmpWnd; //saving client window handle
 		tmpWnd = ::GetWindow(tmpWnd, GW_CHILD); //getting first child window
+		BOOL bmax;
 		while (tmpWnd!=NULL) {
 			::ShowWindow(tmpWnd, SW_RESTORE);
+			::SendMessage(ClientWnd,WM_MDIGETACTIVE,NULL,(LPARAM)&bmax);
+			if(bmax)break; //bmax will be true if active child 
+					//window is maximized, so if bmax then break
 			tmpWnd = ::GetWindow(tmpWnd, GW_HWNDNEXT);
 		}
 		return 0;
@@ -349,7 +355,7 @@ public:
 		}
 	}
 
-	void SendCheatMessage(Client* client, User::Ptr u);
+	//void SendCheatMessage(Client* client, User::Ptr u);
 	
 	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
 

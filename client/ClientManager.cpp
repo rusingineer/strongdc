@@ -25,7 +25,7 @@
 #include "SearchManager.h"
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
-#include "HubManager.h"
+#include "FavoriteManager.h"
 #include "QueueManager.h"
 
 #include "AdcHub.h"
@@ -84,11 +84,10 @@ void ClientManager::infoUpdated(bool antispam) {
 }
 
 void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
-									int aFileType, const string& aString) throw() 
+									int aFileType, const string& aString, bool isPassive) throw() 
 {
 	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
 
-	bool isPassive = (aSeeker.compare(0, 4, "Hub:") == 0);
 	SearchResult::List l;
 	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
 	if(l.size() > 0) {
@@ -134,7 +133,7 @@ void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc) throw() {
 
 User::Ptr ClientManager::getUser(const string& aNick, const string& aHint /* = Util::emptyString */) {
 	Lock l(cs);
-	dcassert(aNick.size() > 0);
+//	dcassert(aNick.size() > 0);
 	UserPair p = users.equal_range(aNick);
 
 	if(p.first == p.second) {
@@ -265,9 +264,7 @@ void ClientManager::putUserOffline(User::Ptr& aUser, bool quitHub /*= false*/) {
 		aUser->unsetFlag(User::AWAY);
 		aUser->unsetFlag(User::SERVER);
 		aUser->unsetFlag(User::FIREBALL);
-
 		aUser->unCacheClientInfo();
-		//QueueManager::getInstance()->removeTestSUR(aUser->getNick());
 
 		if(quitHub)
 			aUser->setFlag(User::QUIT_HUB);
@@ -348,16 +345,16 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 }
 
 void ClientManager::on(Failed, Client* client, const string&) throw() { 
-		HubManager::getInstance()->removeUserCommand(client->getAddressPort());
+		FavoriteManager::getInstance()->removeUserCommand(client->getAddressPort());
 	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 
 void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
 		if(BOOLSETTING(HUB_USER_COMMANDS)) {		
  		if(aType == ::UserCommand::TYPE_CLEAR) {
- 			HubManager::getInstance()->removeHubUserCommands(ctx, client->getAddressPort());
+ 			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getAddressPort());
  		} else {
-			HubManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getAddressPort());
+			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getAddressPort());
 	}
 	}
 }

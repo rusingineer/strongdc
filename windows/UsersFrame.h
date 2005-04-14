@@ -28,11 +28,11 @@
 #include "WinUtil.h"
 
 #include "../client/ClientManager.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/File.h"
 
 class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_USERS>, public StaticFrame<UsersFrame, ResourceManager::FAVORITE_USERS, IDC_FAVUSERS>,
-	private HubManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame>, private SettingsManagerListener {
+	private FavoriteManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame>, private SettingsManagerListener {
 public:
 	
 	UsersFrame() : closed(false), startup(true) { };
@@ -120,13 +120,14 @@ private:
 		}
 
 		static int compareItems(UserInfo* a, UserInfo* b, int col) {
-			return Util::stricmp(a->columns[col], b->columns[col]);
+			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 		}
+		
 		int imageIndex() {
 			return 2;
 		}
 
-		void remove() { HubManager::getInstance()->removeFavoriteUser(user); }
+		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(user); }
 
 		void update() {
 			columns[COLUMN_STATUS] = user->isOnline() ? TSTRING(ONLINE) : TSTRING(OFFLINE);
@@ -153,7 +154,7 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
 
-	// HubManagerListener
+	// FavoriteManagerListener
 	virtual void on(UserAdded, const User::Ptr& aUser) throw() { addUser(aUser); }
 	virtual void on(UserRemoved, const User::Ptr& aUser) throw() { removeUser(aUser); }
 

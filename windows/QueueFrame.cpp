@@ -52,12 +52,8 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	ctrlQueue.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_QUEUE);
+	ctrlQueue.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-
-	ctrlQueue.SetExtendedListViewStyle(styles);
 
 	ctrlDirs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, 
@@ -788,7 +784,7 @@ void QueueFrame::moveDir(HTREEITEM ht, const tstring& target) {
 }
 
 LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	if((HWND)wParam == ctrlQueue) {
+	if (reinterpret_cast<HWND>(wParam) == ctrlQueue && ctrlQueue.GetSelectedCount() > 0) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 	
 		for(int i=0;i<10;i++) {
@@ -800,8 +796,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			priorityMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 			
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlQueue.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlQueue, pt);
 		}
 			
 		if(ctrlQueue.GetSelectedCount() > 0) { 
@@ -989,11 +984,11 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 
 	
 		}
-	} else if ((HWND)wParam == ctrlDirs && ctrlDirs.GetSelectedItem() != NULL) { 
+	} else if (reinterpret_cast<HWND>(wParam) == ctrlDirs && ctrlDirs.GetSelectedItem() != NULL) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlDirs.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlDirs, pt);
 		} else {
 			// Strange, windows doesn't change the selection on right-click... (!)
 			UINT a = 0;
@@ -1524,9 +1519,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 						if(filedatainfo->vecRunBlocks.size() != NULL)
 							copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
 					} else {
-						for(map<int64_t, int64_t>::iterator i =filedatainfo->mapVerifiedBlocks.begin(); i != filedatainfo->mapVerifiedBlocks.end(); i++) {
-							v.push_back(i->first);
-							v.push_back(i->second);
+						for(map<u_int16_t, u_int16_t>::iterator i = filedatainfo->verifiedBlocks.begin(); i != filedatainfo->verifiedBlocks.end(); i++) {
+							v.push_back(i->first * filedatainfo->tthBlockSize);
+							v.push_back(i->second * filedatainfo->tthBlockSize);
 						}
 						if(v.empty())
 							continue;

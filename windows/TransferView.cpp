@@ -49,12 +49,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	states.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	ctrlTransfers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_TRANSFERS);
-
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-
-	ctrlTransfers.SetExtendedListViewStyle(styles);
+	ctrlTransfers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 
 	WinUtil::splitTokens(columnIndexes, SETTING(MAINFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(MAINFRAME_WIDTHS), COLUMN_LAST);
@@ -138,12 +133,11 @@ LRESULT TransferView::onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 }
 
 LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	if((HWND)wParam == ctrlTransfers) {
+	if (reinterpret_cast<HWND>(wParam) == ctrlTransfers && ctrlTransfers.GetSelectedCount() > 0) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlTransfers.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlTransfers, pt);
 		}
 		
 		if(ctrlTransfers.GetSelectedCount() > 0) { 
@@ -514,7 +508,6 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 }
 
 LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	ctrlTransfers.SetRedraw(FALSE);
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
@@ -529,13 +522,14 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		i->update();
-		if(i->upper != NULL)
+		if(i->upper)
 			ctrlTransfers.updateItem(i->upper);
 		ctrlTransfers.updateItem(i);
 		if(ctrlTransfers.getSortColumn() != COLUMN_USER)
 			ctrlTransfers.resort();
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
+		ctrlTransfers.SetRedraw(FALSE);
 		for(vector<ItemInfo*>::iterator j = v->begin(); j != v->end(); ++j) {
 			ItemInfo* i = *j;
 			i->update();
@@ -544,6 +538,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 
 		if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
 			ctrlTransfers.resort();
+		ctrlTransfers.SetRedraw(TRUE);
 
 		delete v;
 	} else if(wParam == INSERT_MAIN_ITEM) {
@@ -575,7 +570,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlTransfers.updateItem(i->upper);
 	}
 
-	ctrlTransfers.SetRedraw(TRUE);
 	return 0;
 }
 
@@ -626,7 +620,7 @@ void TransferView::ItemInfo::update() {
 		}
 	}
 	if(colMask & MASK_STATUS) {
-		if(!mainItem || !finished || (finished && canDisplayUpper()))
+		if(!mainItem || !finished || (pocetUseru == 1) || (finished && canDisplayUpper()))
 			columns[COLUMN_STATUS] = statusString;
 	}
 	if (status == STATUS_RUNNING) {
@@ -1288,22 +1282,21 @@ void TransferView::InsertItem(ItemInfo* i, bool mainThread) {
 		if(mainThread) {
 			int r = ctrlTransfers.findItem(i->upper);
 
-			if(r != -1) {
-				if(!i->upper->collapsed) {
-					int position = 0;
-					if(i->qi) {
-						position = i->qi->getActiveSegments().size();
-					}
-					insertSubItem(i,r + position + 1);
-					if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
-						ctrlTransfers.resort();
+			dcassert(r != -1);
+			if(!i->upper->collapsed) {
+				int position = 0;
+				if(i->qi) {
+					position = i->qi->getActiveSegments().size();
 				}
-
-				if(i->upper->pocetUseru > 1) {
-					ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
-				}
-				ctrlTransfers.updateItem(i->upper);
+				insertSubItem(i,r + position + 1);
+				if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+					ctrlTransfers.resort();
 			}
+
+			if(i->upper->pocetUseru > 1) {
+				ctrlTransfers.SetItemState(r, INDEXTOSTATEIMAGEMASK((i->upper->collapsed) ? 1 : 2), LVIS_STATEIMAGEMASK);
+			}
+			ctrlTransfers.updateItem(i->upper);
 		} else {
 			PostMessage(WM_SPEAKER, INSERT_SUBITEM, (LPARAM)i);
 		}
@@ -1429,6 +1422,7 @@ LRESULT TransferView::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 		if (item->ptAction.x < rect.left)
 		{
+			Lock l(cs);
 			ItemInfo* i = (ItemInfo*)ctrlTransfers.getItemData(item->iItem);
 			if((i->type == ItemInfo::TYPE_DOWNLOAD) && (i->mainItem)) {
 				if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);

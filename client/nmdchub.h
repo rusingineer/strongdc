@@ -89,7 +89,7 @@ public:
 	virtual void on(NickTaken, NmdcHub*) throw() { }
 	virtual void on(SearchFlood, NmdcHub*, const string&) throw() { }
 	virtual void on(ValidateDenied, NmdcHub*) throw() { }
-	virtual void on(Search, NmdcHub*, const string&, int, int64_t, int, const string&) throw() { }
+	virtual void on(Search, NmdcHub*, const string&, int, int64_t, int, const string&, bool) throw() { }
 	virtual void on(ConnectToMe, NmdcHub*, const string&, short) throw() { }
 	virtual void on(RevConnectToMe, NmdcHub*, const User::Ptr&) throw() { }
 	virtual void on(Supports, NmdcHub*, const StringList&) throw() { }
@@ -248,7 +248,7 @@ private:
 		virtual void on(SearchFlood, NmdcHub*, const string& aLine) throw() { c->fire(ClientListener::SearchFlood(), c, aLine); }
 		virtual void on(ValidateDenied, NmdcHub*) throw() { c->fire(ClientListener::NickTaken(), c); }
 		virtual void on(Hello, NmdcHub*, const User::Ptr& u) throw() { c->fire(ClientListener::UserUpdated(), c, u); }
-		virtual void on(Search, NmdcHub*, const string& a, int b, int64_t d, int e, const string& f) throw() { c->fire(ClientListener::NmdcSearch(), c, a, b, d, e, f); }
+		virtual void on(Search, NmdcHub*, const string& a, int b, int64_t d, int e, const string& f, bool g) throw() { c->fire(ClientListener::NmdcSearch(), c, a, b, d, e, f, g); }
 		virtual void on(CheatMessage, NmdcHub*, const string& aLine) throw() { c->fire(ClientListener::CheatMessage(), c, aLine); }
 	} adapter;
 
@@ -269,7 +269,7 @@ private:
 	User::NickMap users;
 
 	bool reconnect;
-	string lastmyinfo, lock;
+	string lastmyinfo;
 	bool validatenicksent, bFirstOpList;
 	int64_t lastbytesshared;
 	bool PtokaX, YnHub;
