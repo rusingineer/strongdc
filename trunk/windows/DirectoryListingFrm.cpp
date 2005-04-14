@@ -23,7 +23,7 @@
 #include "../client/QueueManager.h"
 #include "../client/StringTokenizer.h"
 #include "../client/ADLSearch.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 
 #include "Resource.h"
 
@@ -116,11 +116,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	ctrlTree.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
 	ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_FILES);
 
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-	ctrlList.SetExtendedListViewStyle(styles);
-	
+	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));	
 	ctrlList.SetBkColor(WinUtil::bgColor);
 	ctrlList.SetTextBkColor(WinUtil::bgColor);
 	ctrlList.SetTextColor(WinUtil::textColor);
@@ -559,7 +555,7 @@ LRESULT DirectoryListingFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID
 	if(dl != NULL) {
 		User::Ptr pUser = dl->getUser();
 		if(pUser != (User*) NULL)
-			HubManager::getInstance()->addFavoriteUser(pUser);
+			FavoriteManager::getInstance()->addFavoriteUser(pUser);
 	}
 	return 0;
 }
@@ -573,7 +569,7 @@ LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	return 0;
 }
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int x = QueueManager::getInstance()->matchListing(dl);
+	int x = QueueManager::getInstance()->matchListing(*dl);
 	AutoArray<TCHAR> buf(STRING(MATCHED_FILES).length() + 32);
 	_stprintf(buf, CTSTRING(MATCHED_FILES), x);
 	ctrlStatus.SetText(0, buf);
@@ -628,18 +624,13 @@ void DirectoryListingFrame::selectItem(const tstring& name) {
 }
 
 HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	RECT rc;
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-
 	fileMenu.RemoveMenu(IDC_GO_TO_DIRECTORY, MF_BYCOMMAND);
 
-	// Get the bounding rectangle of the client area. 
-	ctrlList.GetClientRect(&rc);
+	if (reinterpret_cast<HWND>(wParam) == ctrlList && ctrlList.GetSelectedCount() > 0) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-	if ((HWND)wParam == ctrlList && ctrlList.GetSelectedCount() > 0) {
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlList.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlList, pt);
 		}
 
 		int n = 0;
@@ -652,7 +643,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 
 		if(ctrlList.GetSelectedCount() == 1 && ii->type == ItemInfo::FILE) {
 			//Append Favorite download dirs
-			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			if (spl.size() > 0) {
 				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
@@ -702,7 +693,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MFS_DISABLED);
 			fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_DISABLED);
 			//Append Favorite download dirs
-			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			if (spl.size() > 0) {
 				for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
@@ -729,11 +720,11 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		}
 		
 		return TRUE; 
-	} else if((HWND)wParam == ctrlTree && ctrlTree.GetSelectedItem() != NULL) { 
+	} else if(reinterpret_cast<HWND>(wParam) == ctrlTree && ctrlTree.GetSelectedItem() != NULL) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlTree.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlTree, pt);
 		} else {
 			ctrlTree.ScreenToClient(&pt);
 			UINT a = 0;
@@ -751,7 +742,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 
 		int n = 0;
 		//Append Favorite download dirs
-		StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+		StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 		if (spl.size() > 0) {
 			for(StringPairIter i = spl.begin(); i != spl.end(); i++) {
 				targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + n, Text::toT(i->second).c_str());
@@ -829,7 +820,7 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS;
 	dcassert(newId >= 0);
-	StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+	StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 	
 	if(ctrlList.GetSelectedCount() == 1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
@@ -866,7 +857,7 @@ LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/,
 		DirectoryListing::Directory* dir = (DirectoryListing::Directory*)ctrlTree.GetItemData(t);
 		string target = SETTING(DOWNLOAD_DIRECTORY);
 		try {
-			StringPairList spl = HubManager::getInstance()->getFavoriteDirs();
+			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			dcassert(newId < (int)spl.size());
 			dl->download(dir, spl[newId].first, (GetKeyState(VK_SHIFT) & 0x8000) > 0, QueueItem::Priority::DEFAULT);
 		} catch(const Exception& e) {

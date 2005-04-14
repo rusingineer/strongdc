@@ -49,7 +49,7 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		case COLUMN_SLOTS: return compare(a->user->getSlots(), b->user->getSlots());
 		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->user->getUpload()), Util::toInt(b->user->getUpload()));
 	}
-	return Util::stricmp(a->columns[col], b->columns[col]);	
+	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
 }
 
 void UserInfo::update() {

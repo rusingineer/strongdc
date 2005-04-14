@@ -43,6 +43,8 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 	private SettingsManagerListener, private QueueManagerListener
 {
 public:
+	DECLARE_WND_CLASS(_T("TransferView"))
+
 	TransferView() : PreviewAppsSize(0) {
 		headerBuf = new TCHAR[128];
 	};
@@ -312,20 +314,16 @@ private:
 			switch(col) {
 				case COLUMN_USER: 
 					if((a->pocetUseru == 1) || (b->pocetUseru == 1))
-						return Util::stricmp(a->columns[COLUMN_USER], b->columns[COLUMN_USER]);
+						return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
 			
 					return compare(a->pocetUseru, b->pocetUseru);
-				case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
 				case COLUMN_STATUS: return 0;
 				case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
 				case COLUMN_SPEED: return compare(a->speed, b->speed);
-				case COLUMN_FILE: return Util::stricmp(a->columns[COLUMN_FILE], b->columns[COLUMN_FILE]);
 				case COLUMN_SIZE: return compare(a->size, b->size);
-				case COLUMN_PATH: return Util::stricmp(a->columns[COLUMN_PATH], b->columns[COLUMN_PATH]);
-				case COLUMN_IP: return Util::stricmp(a->columns[COLUMN_IP], b->columns[COLUMN_IP]);
 				case COLUMN_RATIO: return compare(a->getRatio(), b->getRatio());
+				default: return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 			}
-			return 0;
 		}
 
 		int imageIndex() {

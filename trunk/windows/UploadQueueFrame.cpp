@@ -21,7 +21,7 @@
 #include "../client/DCPlusPlus.h"
 #include "../client/Client.h"
 #include "../client/ClientManager.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/QueueManager.h"
 #include "UploadQueueFrame.h"
 #include "PrivateFrame.h"
@@ -43,12 +43,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_UPLOAD_QUEUE);
 
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-
-	ctrlList.SetExtendedListViewStyle(styles);
-
+	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 	ctrlQueued.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, 
 		 WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
@@ -131,7 +126,6 @@ LRESULT UploadQueueFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		ctrlList.DeleteAllItems();
 		ctrlQueued.DeleteAllItems();
 		UQFUsers.clear();
-
 		SettingsManager::getInstance()->set(SettingsManager::UPLOADQUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
 	    ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
 			SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
@@ -212,34 +206,35 @@ LRESULT UploadQueueFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
-LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	RECT rc, rc2;
+LRESULT UploadQueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	RECT rc;
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-	ctrlList.GetHeader().GetWindowRect(&rc2);
-	if(PtInRect(&rc2, pt)){
+	ctrlList.GetHeader().GetWindowRect(&rc);
+	if(PtInRect(&rc, pt)){
 		ctrlList.showMenu(pt);
 		return TRUE;
 	}
-		ctrlList.GetClientRect(&rc);
-		ctrlList.ScreenToClient(&pt); 
-	if(PtInRect(&rc, pt) && ctrlList.GetSelectedCount() > 0) {
+		
+	if(reinterpret_cast<HWND>(wParam) == ctrlList && ctrlList.GetSelectedCount() > 0) {
+     	if(pt.x == -1 && pt.y == -1) {
+    		WinUtil::getContextMenuPos(ctrlList, pt);
+    	}
 		usingUserMenu = false;
-		ctrlList.ClientToScreen(&pt);
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE;
-	}
-	ctrlList.ClientToScreen(&pt);
-	ctrlQueued.GetClientRect(&rc);
-	ctrlQueued.ScreenToClient(&pt); 
-	if(PtInRect(&rc, pt) && ctrlQueued.GetSelectedItem() != NULL) {
-		usingUserMenu = true;
+	} else if(reinterpret_cast<HWND>(wParam) == ctrlQueued && ctrlQueued.GetSelectedItem() != NULL) {
+     	if(pt.x == -1 && pt.y == -1) {
+    		WinUtil::getContextMenuPos(ctrlQueued, pt);
+    	} else {
 			UINT a = 0;
+    		ctrlQueued.ScreenToClient(&pt);
 			HTREEITEM ht = ctrlQueued.HitTest(pt, &a);
 			if(ht != NULL && ht != ctrlQueued.GetSelectedItem())
 				ctrlQueued.SelectItem(ht);
-			else if (ht == NULL)
-				return FALSE;
+    
 			ctrlQueued.ClientToScreen(&pt);
+        }
+        usingUserMenu = true;
 			contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			return TRUE;
 	}	
@@ -340,12 +335,12 @@ LRESULT UploadQueueFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			HubManager::getInstance()->addFavoriteUser(User);
+			FavoriteManager::getInstance()->addFavoriteUser(User);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			HubManager::getInstance()->addFavoriteUser(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			FavoriteManager::getInstance()->addFavoriteUser(((UploadQueueItem*)ctrlList.getItemData(i))->User);
 		}
 	}
 	return 0;

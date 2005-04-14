@@ -14,6 +14,7 @@
 SettingsManager* Singleton<SettingsManager>::instance = 0;
 
 string ResourceManager::strings[];
+wstring ResourceManager::wstrings[];
 ResourceManager* Singleton<ResourceManager>::instance;
 
 /*

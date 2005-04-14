@@ -22,28 +22,47 @@
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
-	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
+	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, const string& tempTarget = Util::emptyString) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
+		if(!tempTarget.empty()) {
+			skippingBytes = (size_t)(start % aTree.getBlockSize());
+			if(skippingBytes > 0)
+				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
+
+			fileChunks = FileChunksInfo::Get(tempTarget);
+			_ASSERT(!(fileChunks == (FileChunksInfo*)NULL));
+			bufPos = 0;
+			start = start + skippingBytes;
+			multiSourceChecking = true;
+			
+		} else {
+			multiSourceChecking = false;
+		}
 		// Only start at block boundaries
 		dcassert(start % aTree.getBlockSize() == 0);
 		// Sanity check
-		dcassert(aTree.getLeaves().size() > (size_t)(start / aTree.getBlockSize()));
+		dcassert(aTree.getLeaves().size() >= (size_t)(start / aTree.getBlockSize()));
 		cur.setFileSize(start);
 		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + (size_t)(start / aTree.getBlockSize()));
+		
+		if(multiSourceChecking)
+			verified = cur.getLeaves().size();
 	}
 
 	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; };
 
 	virtual size_t flush() throw(FileException) {
-		if (bufPos != 0)
-			cur.update(buf, bufPos);
-		bufPos = 0;
+		if(!multiSourceChecking) {
+			if (bufPos != 0)
+				cur.update(buf, bufPos);
+			bufPos = 0;
 
-		cur.finalize();
-		if(cur.getLeaves().size() == real.getLeaves().size()) {
-			if(cur.getRoot() != real.getRoot())
-				throw FileException(STRING(TTH_INCONSISTENCY));
-		} else  {
-			checkTrees();
+			cur.finalize();
+			if(cur.getLeaves().size() == real.getLeaves().size()) {
+				if(cur.getRoot() != real.getRoot())
+					throw FileException(STRING(TTH_INCONSISTENCY));
+			} else  {
+				checkTrees();
+			}
 		}
 		return s->flush();
 	}
@@ -52,6 +71,19 @@ public:
 		u_int8_t* xb = (u_int8_t*)b;
 		size_t pos = 0;
 
+		
+		if(multiSourceChecking && (skippingBytes > 0))
+		{
+			if(skippingBytes >= len)
+			{
+				skippingBytes -= len;
+				return s->write(b, len);
+	        }else{
+				pos = skippingBytes;
+				skippingBytes = 0;
+			}
+		}
+		
 		if(bufPos != 0) {
 			size_t bytes = min(TreeType::BASE_BLOCK_SIZE - bufPos, len);
 			memcpy(buf + bufPos, xb, bytes);
@@ -89,6 +121,9 @@ private:
 	const TreeType& real;
 	TreeType cur;
 	size_t verified;
+	size_t skippingBytes;					// the bytes that will be skipped
+	FileChunksInfo::Ptr fileChunks;
+	bool multiSourceChecking;
 
 	u_int8_t buf[TreeType::BASE_BLOCK_SIZE];
 	size_t bufPos;
@@ -100,6 +135,10 @@ private:
 			{
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
+
+			if(multiSourceChecking)
+				fileChunks->markVerifiedBlock((u_int16_t)verified, (u_int16_t)verified + 1);
+			
 			verified++;
 		}
 	}

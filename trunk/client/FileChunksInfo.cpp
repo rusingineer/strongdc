@@ -23,6 +23,8 @@
 #include "FileChunksInfo.h"
 #include "DownloadManager.h"
 #include "SettingsManager.h"
+#include "Winioctl.h"
+
 
 CriticalSection SharedFileStream::critical_section;
 SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
@@ -33,12 +35,15 @@ CriticalSection FileChunksInfo::hMutexMapList;
 typedef BOOL (__stdcall *SetFileValidDataFunc) (HANDLE, LONGLONG); 
 static SetFileValidDataFunc setFileValidData = NULL;
 
+// NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
+enum { MIN_BLOCK_SIZE = 65536 };
+
 FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 {
     Lock l(hMutexMapList);
 
 	for(vector<Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->sFilename == name){
+		if((*i)->tempTargetName == name){
 			return (*i);
 		}
 	}
@@ -51,44 +56,53 @@ void FileChunksInfo::Free(const string& name)
     Lock l(hMutexMapList);
 
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->sFilename == name ){
+		if((*i)->tempTargetName == name ){
 			vecAllFileChunksInfo.erase(i);
 			return;
 		}
 	}
 
-	_ASSERT(0);
+	dcassert(0);
 }
 
 FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
-	: sFilename(name), iFileSize(size)
+	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
 	hMutexMapList.leave();
 
-	if(blocks == NULL){
-		vecFreeBlocks.push_back(0);
-		vecFreeBlocks.push_back(size);
-	}else{
-		dcdebug("Freeblocks %d\n", blocks->size());
-		copy(blocks->begin(), blocks->end(), back_inserter(vecFreeBlocks));
+	SetFileSize(size);
+
+	if(blocks){
+		vecFreeBlocks = *blocks;
+		sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
 	}
+
     iDownloadedSize = iFileSize;
     for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i < vecFreeBlocks.end(); i++, i++)
         iDownloadedSize -= ((*(i+1)) - (*i));
+}
 
-	iBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)SMALLEST_BLOCK_SIZE);
+void FileChunksInfo::SetFileSize(const int64_t& size)
+{
+	dcassert(iFileSize == 0);
+	dcassert(vecFreeBlocks.empty());
 
-	iSmallestBlockSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
-	iSmallestBlockSize = iSmallestBlockSize - (iSmallestBlockSize % iBlockSize);
+	if(size > 0){
+		iFileSize = size;
+		vecFreeBlocks.push_back(0);
+		vecFreeBlocks.push_back(size);
 
-	iVerifiedSize = 0;
+		tthBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)MIN_BLOCK_SIZE);
+		minChunkSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
+		minChunkSize = minChunkSize - (minChunkSize % tthBlockSize);
+	}
 }
 
 int64_t FileChunksInfo::GetBlockEnd(int64_t begin)
 {
-	Lock l(hMutex);
+	Lock l(cs);
 
 	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i++, i++){
 		if((*i) == begin){
@@ -102,7 +116,7 @@ int64_t FileChunksInfo::GetBlockEnd(int64_t begin)
 
 int FileChunksInfo::ValidBlock(int64_t start, size_t& len)
 {
-	Lock l(hMutex);
+	Lock l(cs);
 
 	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i++, i++){
 		if((*i) == start){
@@ -113,8 +127,7 @@ int FileChunksInfo::ValidBlock(int64_t start, size_t& len)
 			if((*i) >= (*(i+1))){
 
 				iDownloadedSize -= ((*i) - (*(i+1)));
-				vecRunBlocks.erase(i + 1);
-				vecRunBlocks.erase(i);
+				vecRunBlocks.erase(i, i + 2);
 
 				if(vecFreeBlocks.empty() && vecRunBlocks.empty()){
 					return FILE_OVER;
@@ -133,15 +146,14 @@ int FileChunksInfo::ValidBlock(int64_t start, size_t& len)
 int64_t FileChunksInfo::GetUndlStart()
 {
 	dcdebug("GetUndlStart running = %d free = %d\n", vecRunBlocks.size(), vecFreeBlocks.size());
-	Lock l(hMutex);
+	Lock l(cs);
 
 	// if have free blocks, return first one
 	if(vecFreeBlocks.size() > 1){
 		int64_t e = vecFreeBlocks[1];
 		int64_t b = vecFreeBlocks[0];
 
-		vecFreeBlocks.erase(vecFreeBlocks.begin());
-		vecFreeBlocks.erase(vecFreeBlocks.begin());
+		vecFreeBlocks.erase(vecFreeBlocks.begin(), vecFreeBlocks.begin() + 2);
 
 		vecRunBlocks.push_back(b);
 		vecRunBlocks.push_back(e);
@@ -173,16 +185,16 @@ int64_t FileChunksInfo::GetUndlStart()
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
-	if((e - b) < (iSmallestBlockSize * 2)){
-		dcdebug("GetUndlStart return -1 (%I64d)\n", iSmallestBlockSize);
+	if((e - b) < (minChunkSize * 2)){
+		dcdebug("GetUndlStart return -1 (%I64d)\n", minChunkSize);
 		return -1;
 	}
 
 	int64_t n = b + (e - b) / 2;
 
 	// align to tiger tree block size
-	if(n - b > iBlockSize)
-		n = n - (n % iBlockSize);
+	if(n - b > tthBlockSize)
+		n = n - (n % tthBlockSize);
 
 	(* (birr+1)) = n;
 
@@ -194,41 +206,84 @@ int64_t FileChunksInfo::GetUndlStart()
 	return n;
 }
 
+bool FileChunksInfo::hasFreeBlock() {
+	Lock l(cs);
+	if(vecFreeBlocks.size() > 0)
+		return true;
+
+	int64_t blen = 0;
+	vector<int64_t>::iterator birr = vecRunBlocks.begin();
+
+	// find the biggest block
+	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i < vecRunBlocks.end(); i++, i++)
+	{
+		if((*(i+1)) - (*i) > blen){
+			blen = (*(i+1)) - (*i);
+			birr = i;
+		}
+	}
+
+	int64_t b = (*birr);
+	int64_t e = (* (birr+1));
+
+	if((e - b) < (minChunkSize * 2)){
+		return false;
+	}
+
+	return true;
+}
+
 void FileChunksInfo::PutUndlStart(int64_t start)
 {
 
-	Lock l(hMutex);
+	Lock l(cs);
 
 	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i < vecRunBlocks.end(); i++, i++)
 	{
 		if((*i) == start){
             if(i != vecRunBlocks.begin() && (*(i-1)) == start){ // continous blocks, concatenate it
 				*(i-1) = *(i+1);
-				vecRunBlocks.erase(i+1);
-				vecRunBlocks.erase(i);
+				vecRunBlocks.erase(i, i + 2);
 			}else{
-				vecFreeBlocks.push_back(*i);
-				vecFreeBlocks.push_back(*(i+1));
-
-				sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
-
-				vecRunBlocks.erase(i+1);
-				vecRunBlocks.erase(i);
+				addFreeChunk(make_pair(*i, *(i+1)));
+				vecRunBlocks.erase(i, i + 2);
 			}
+
+
 			return;
 		}
 	}
 
-	_ASSERT(0);
+	dcassert(vecRunBlocks.empty() && vecFreeBlocks.empty());
 }
 
 string FileChunksInfo::getFreeBlocksString()
 {
-	Lock l(hMutex);
-
 	ostringstream os;
-	copy(vecFreeBlocks.begin(), vecFreeBlocks.end(), ostream_iterator<int64_t>(os, " "));
-	copy(vecRunBlocks.begin(), vecRunBlocks.end(), ostream_iterator<int64_t>(os, " "));
+
+	Lock l(cs);
+	vector<int64_t> tmp = vecFreeBlocks;
+	copy(vecRunBlocks.begin(), vecRunBlocks.end(), back_inserter(tmp));
+	sort(tmp.begin(), tmp.end());
+
+	// merge
+	dcdebug("Before merge : %d\n", tmp.size());
+	if(tmp.size() > 2){
+		vector<int64_t>::iterator prev = tmp.begin() + 1;
+		vector<int64_t>::iterator i = prev + 1;
+		while(i < tmp.end()){
+			if(*i == *prev){
+				*prev = *(i + 1);
+				i = tmp.erase(i, i + 1);
+			}else{
+				prev = i + 1;
+				i = i + 2;
+			}
+		}
+	}
+	dcdebug("After merge : %d\n", tmp.size());
+
+	copy(tmp.begin(), tmp.end(), ostream_iterator<int64_t>(os, " "));
 
 	return os.str();
 
@@ -236,11 +291,11 @@ string FileChunksInfo::getFreeBlocksString()
 
 string FileChunksInfo::getVerifiedBlocksString()
 {
-	Lock l(hMutex);
+	Lock l(cs);
 
 	ostringstream os;
 
-	for(map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin(); i != mapVerifiedBlocks.end(); i++)
+	for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); i++)
 		os << i->first << " " << i->second << " ";
 
 	return os.str();
@@ -249,38 +304,41 @@ string FileChunksInfo::getVerifiedBlocksString()
 
 bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 {
-	if(iBlockSize != aTree.getBlockSize())
+	if(tthBlockSize != aTree.getBlockSize())
 		return true;
 
 	dcdebug("DoLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
-	dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
+	dcdebug("VerifiedBlocks size = %d\n", verifiedBlocks.size());
 
 	// Convert to unverified blocks
 	vector<int64_t> CorruptedBlocks;
 	int64_t start = 0;
 
 	{
-		Lock l(hMutex);
+		Lock l(cs);
 
 		// This is only called when download finish
 		// Because buffer is used during download, the disk data maybe incorrect
   		_ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());
 
-		mapVerifiedBlocks.clear();
+		verifiedBlocks.clear();
 	}
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// Open file
 	char buf[512*1024];
 
-	SharedFileStream file(sFilename, 0, 0);
-	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)iBlockSize));
+	SharedFileStream file(tempTargetName, 0, 0);
+	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
 	size_t n = 0;
 	size_t n2 = 512*1024;
+	int64_t hashed = 0;
 	while( (n = file.read(buf, n2)) > 0) {
 		tth.update(buf, n);
 		n2 = 512*1024;
+		hashed = hashed + n;
+		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), tempTargetName, hashed);
 	}
 	tth.finalize();
 
@@ -296,47 +354,45 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 	        }
 			iDownloadedSize -= (end - start);
         } else {
-        	MarkVerifiedBlock(start, end);
+			u_int16_t s = (u_int16_t)(start / tthBlockSize);
+			u_int16_t e = (u_int16_t)((end - 1) / tthBlockSize + 1);
+        	markVerifiedBlock(s, e);
 		}
-		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), sFilename, end);
 		start = end;
 	}
 
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
 	if(CorruptedBlocks.empty()){
-		dcdebug("VerifiedBlocks size = %d\n", mapVerifiedBlocks.size());
+		dcdebug("VerifiedBlocks size = %d\n", verifiedBlocks.size());
 
 
-		dcassert(mapVerifiedBlocks.size() == 1 && 
-			    mapVerifiedBlocks.begin()->first == 0 &&
-			    mapVerifiedBlocks.begin()->second == iFileSize);
+		dcassert(verifiedBlocks.size() == 1 && 
+			    verifiedBlocks.begin()->first == 0 &&
+			    verifiedBlocks.begin()->second == (iFileSize - 1) / tthBlockSize + 1);
 
         return true;
     }
 
-	Lock l(hMutex);
+	Lock l(cs);
 	copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
 
 	// double smallest size when last verify failed
-	iSmallestBlockSize = min<int64_t>(iSmallestBlockSize * 2, iBlockSize);
+	minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
 
 	return false;
 }
 
-void FileChunksInfo::MarkVerifiedBlock(int64_t start, int64_t end)
+void FileChunksInfo::markVerifiedBlock(u_int16_t start, u_int16_t end)
 {
+	dcassert(start < end);
 
-    dcassert( ( end - start) % 1024 == 0 || end == iFileSize);
+	dcdebug("markVerifiedBlock(%hu, %hu)\n", start, end);
+	Lock l(cs);
 
-	dcdebug("MarkVerifiedBlock %I64d, %I64d\n", start, end);
-	Lock l(hMutex);
+	BlockMap::iterator i = verifiedBlocks.begin();
 
-	map<int64_t, int64_t>::iterator i = mapVerifiedBlocks.begin();
-
-	for(;
-		i != mapVerifiedBlocks.end();
-        i++)
+	for(; i != verifiedBlocks.end(); i++)
 	{
         if(i->second == start){
             i->second = end;
@@ -344,22 +400,22 @@ void FileChunksInfo::MarkVerifiedBlock(int64_t start, int64_t end)
         }
     }
 
-	if(i == mapVerifiedBlocks.end())
-		i = mapVerifiedBlocks.insert(make_pair(start, end)).first;
+	if(i == verifiedBlocks.end())
+		i = verifiedBlocks.insert(make_pair(start, end)).first;
 
-	for(map<int64_t, int64_t>::iterator j = mapVerifiedBlocks.begin();
-        								j != mapVerifiedBlocks.end();
-                                        j++)
+	BlockMap::iterator j = verifiedBlocks.begin();
+	for(; j != verifiedBlocks.end(); j++)
 	{
         if(j->first == end)
         {
             i->second = j->second;
-            mapVerifiedBlocks.erase(j);
+            verifiedBlocks.erase(j);
             break;
         }
     }
 
-	iVerifiedSize += (end - start);
+	iVerifiedSize += (end - start) * tthBlockSize;
+
 }
 
 SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t size) 
@@ -471,5 +527,53 @@ void ensurePrivilege()
 	dcdebug("ensurePrivilege done.\n");
 cleanup:
 	CloseHandle(hToken);
+}
 
+void FileChunksInfo::addFreeChunk(const Chunk& chunk){
+	
+	dcassert(chunk.first < chunk.second);
+	
+	vector<int64_t>::iterator i = vecFreeBlocks.begin();
+
+	while(i < vecFreeBlocks.end() && *i < chunk.first){
+		dcassert(chunk.first >= *(i+1));
+		i = i + 2;
+	}
+
+	dcassert(i == vecFreeBlocks.end() || *i >= chunk.second);
+	
+	// Todo: Merge with running chunks...
+
+	// *** merge ***
+	if(i != vecFreeBlocks.end() && i != vecFreeBlocks.begin() && chunk.first == *(i-1) && chunk.second == *i){
+		*i = *(i-2);
+		vecFreeBlocks.erase(i-2, i);
+	}else if(i != vecFreeBlocks.end() && chunk.second == *i){
+		*i = chunk.first;
+	}else if(i != vecFreeBlocks.begin() && chunk.first == *(i-1)){
+		*(i-1) = chunk.second;
+	}else{
+		i = vecFreeBlocks.insert(i, chunk.second);
+		vecFreeBlocks.insert(i, chunk.first);
+	}
+}
+
+SharedFileHandle::SharedFileHandle(const string& name)
+{
+	handle = ::CreateFile(Text::utf8ToWide(name).c_str(), 
+					GENERIC_WRITE | GENERIC_READ, 
+					FILE_SHARE_READ, 
+					NULL, 
+					OPEN_ALWAYS, 
+					0,
+					NULL);
+	
+	if(handle == INVALID_HANDLE_VALUE) {
+		throw FileException(Util::translateError(GetLastError()));
+	}
+
+	if(!SETTING(ANTI_FRAG)){
+		DWORD bytesReturned;
+		DeviceIoControl(handle, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &bytesReturned, NULL);
+	}
 }

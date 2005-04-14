@@ -33,9 +33,7 @@
 class Client;
 class FavoriteUser;
 
-/**
- * A user connected to a hubs.
- */
+/** A user connected to one or more hubs. */
 class User : public PointerBase, public Flags
 {
 public:
@@ -253,7 +251,30 @@ private:
 	StringMap getPreparedFormatedStringMap(Client* aClient = NULL); 
 	string getVersion(const string& aExp, const string& aTag);
 	string splitVersion(const string& aExp, const string& aTag, const int part);
+};
 
+/** One of possibly many identities of a user, mainly for UI purposes */
+class Identity : public Flags {
+public:
+	Identity(const User::Ptr& ptr) : user(ptr) { }
+	Identity(const Identity& rhs) : user(rhs.user), hubURL(rhs.hubURL), info(rhs.info) { }
+	Identity& operator=(const Identity& rhs) { user = rhs.user; hubURL = rhs.hubURL; info = rhs.info; }
+
+	const string& getNick() { return get("NI"); }
+	const string& getDescription() { return get("DE"); }
+
+	const string& get(const char* name) {
+		InfIter i = info.find(*(short*)name);
+		return i == info.end() ? Util::emptyString : i->second;
+	}
+
+	GETSET(User::Ptr, user, User);
+	GETSET(string, hubURL, HubURL);
+private:
+	typedef map<short, string> InfMap;
+	typedef InfMap::iterator InfIter;
+
+	InfMap info;
 };
 
 #endif // !defined(AFX_USER_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_)

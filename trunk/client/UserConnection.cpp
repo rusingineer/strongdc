@@ -79,104 +79,161 @@ again:
 			goto again;
 	}
 	char *temp;
-	if(strncmp(aLine+1, "MyNick ", 7) == 0) {
-		aLine += 8;
-		if(aLine+8 != NULL)
-			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine));
-	} else if(strncmp(aLine+1, "Direction ", 10) == 0) {
-		aLine += 11;
-		if(aLine == NULL) return;
-
-		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
-			temp[0] = NULL, temp += 1;
-			if(aLine == NULL || temp == NULL) return;
-
-			fire(UserConnectionListener::Direction(), this, aLine, temp);
-		}
-	} else if(strncmp(aLine+1, "Error ", 6) == 0) {
-		aLine += 7;
-		if(aLine == NULL) return;
-
-		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
-			strstr(aLine, /*path/file*/" no more exists") != 0) {
-			fire(UserConnectionListener::FileNotAvailable(), this);
-		} else {
-			fire(UserConnectionListener::Failed(), this, aLine);
-		}
-	} else if(strncmp(aLine+1, "FileLength ", 11) == 0) {
-		aLine += 12;
-		if(aLine != NULL) {
-			fire(UserConnectionListener::FileLength(), this, _atoi64(aLine));
-		}
-	} else if(strcmp(aLine+1, "GetListLen") == 0) {
-		fire(UserConnectionListener::GetListLength(), this);
-	} else if(strncmp(aLine+1, "Get ", 4) == 0) {
-		aLine += 5;
-		if(aLine == NULL) return;
-
-		if((temp = strchr(aLine, '$')) != NULL && temp+1 != NULL)  {
-			temp[0] = NULL; temp += 1;
-			if(aLine == NULL || temp == NULL) return;
-
-			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
-		}
-	} else if(strncmp(aLine+1, "GetZBlock ", 10) == 0) {
-		aLine += 11;
-		if(aLine != NULL) {
-			processBlock(aLine, 1);
-		}
-	} else if(strncmp(aLine+1, "UGetZBlock ", 11) == 0) {
-		aLine += 12;
-		if(aLine != NULL) {
-			processBlock(aLine, 2);
-		}
-	} else if(strncmp(aLine+1, "UGetBlock ", 10) == 0) {
-		aLine += 11;
-		if(aLine != NULL) {
-			processBlock(aLine, 3);
-		}
-	} else if(strncmp(aLine+1, "Key ", 4) == 0) {
-		aLine += 5;
-		if(aLine != NULL) {
-			fire(UserConnectionListener::Key(), this, aLine);
-		}
-	} else if(strncmp(aLine+1, "Lock ", 5) == 0) {
-		aLine += 6;
-		if(aLine == NULL) return;
-
-		if((temp = strchr(aLine, ' ')) != NULL && temp+4 != NULL) {
-			temp[0] = NULL; temp += 4;
-			if(aLine == NULL || temp == NULL) return; 
-
-			fire(UserConnectionListener::CLock(), this, aLine, temp);
-		} else {
-			fire(UserConnectionListener::CLock(), this, aLine, Util::emptyString);
-		}
-	} else if(strcmp(aLine+1, "Send") == 0) {
-		fire(UserConnectionListener::Send(), this);
-	} else if(strncmp(aLine+1, "Sending ", 8) == 0) {
-		aLine += 9;
-		if(aLine != NULL) {
-			fire(UserConnectionListener::Sending(), this, _atoi64(aLine));
-		}
-	} else if(strcmp(aLine+1, "MaxedOut") == 0) {
-		fire(UserConnectionListener::MaxedOut(), this);
-	} else if(strncmp(aLine+1, "Supports ", 9) == 0) {
-		aLine += 10;
-		if(aLine != NULL) {
-			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine, ' ').getTokens());
-		}
-	} else if(strncmp(aLine+1, "ListLen ", 8) == 0) {
-		aLine += 9;
-		if(aLine != NULL) {
-			fire(UserConnectionListener::ListLength(), this, aLine);
-		}
-	} else if(strncmp(aLine+1, "ADC", 3) == 0) {
-		dispatch(aLine, true);
+	if(aLine[1] == 'M') {
+    	// $MyNick
+    	if(strncmp(aLine+2, "yNick ", 6) == 0) {
+    		aLine += 8;
+    		if(aLine+8 != NULL) {
+    			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine));
+            }
+            return;
+       }
+       
+    	if(strcmp(aLine+2, "axedOut") == 0) {
+    		fire(UserConnectionListener::MaxedOut(), this);
+    		return;
+        }
+	} else if(aLine[1] == 'D') {
+        // $Direction
+        if(strncmp(aLine+2, "irection ", 9) == 0) {
+    		aLine += 11;
+    		if(aLine == NULL) return;
+    
+    		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
+    			temp[0] = NULL, temp += 1;
+    			if(aLine == NULL || temp == NULL) return;
+    
+    			fire(UserConnectionListener::Direction(), this, aLine, temp);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'E') {
+		// $Error
+        if(strncmp(aLine+2, "rror ", 5) == 0) {
+    		aLine += 7;
+    		if(aLine == NULL) return;
+    
+    		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
+    			strstr(aLine, /*path/file*/" no more exists") != 0) {
+    			fire(UserConnectionListener::FileNotAvailable(), this);
+    		} else {
+    			fire(UserConnectionListener::Failed(), this, aLine);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'F') {
+		// $FileLength
+        if(strncmp(aLine+2, "ileLength ", 10) == 0) {
+    		aLine += 12;
+    		if(aLine != NULL) {
+    			fire(UserConnectionListener::FileLength(), this, _atoi64(aLine));
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'G') {
+        // $Get
+    	if(strncmp(aLine+2, "et ", 3) == 0) {
+    		aLine += 5;
+    		if(aLine == NULL) return;
+    
+    		if((temp = strchr(aLine, '$')) != NULL && temp+1 != NULL)  {
+    			temp[0] = NULL; temp += 1;
+    			if(aLine == NULL || temp == NULL) return;
+    
+    			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
+    		}
+    		return;
+        }
+        
+        // $GetListLen
+        if(strcmp(aLine+2, "etListLen") == 0) {
+    		fire(UserConnectionListener::GetListLength(), this);
+    		return;
+        }
+        
+        // GetZBlock
+    	if(strncmp(aLine+2, "etZBlock ", 9) == 0) {
+    		aLine += 11;
+    		if(aLine != NULL) {
+    			processBlock(aLine, 1);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'U') {
+        // $UGetZBLock
+        if(strncmp(aLine+2, "GetZBlock ", 10) == 0) {
+    		aLine += 12;
+    		if(aLine != NULL) {
+    			processBlock(aLine, 2);
+    		}
+    		return;
+        }
+        
+        // $UGetBlock
+    	if(strncmp(aLine+2, "GetBlock ", 9) == 0) {
+    		aLine += 11;
+    		if(aLine != NULL) {
+    			processBlock(aLine, 3);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'K') {
+        // $Key
+        if(strncmp(aLine+2, "ey ", 3) == 0) {
+    		aLine += 5;
+    		if(aLine != NULL) {
+    			fire(UserConnectionListener::Key(), this, aLine);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'L') {
+        // $Lock
+        if(strncmp(aLine+2, "ock ", 4) == 0) {
+    		aLine += 6;
+    		if(aLine == NULL) return;
+     
+    		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
+    			temp[0] = NULL; temp += 1;
+    			if(aLine == NULL || temp == NULL) return; 
+                
+    			fire(UserConnectionListener::CLock(), this, aLine, temp);
+    		} else {
+    			fire(UserConnectionListener::CLock(), this, aLine, Util::emptyString);
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'S') {
+        // $Send
+        if(strcmp(aLine+2, "end") == 0) {
+    		fire(UserConnectionListener::Send(), this);
+    		return;
+        }
+        
+        // $Sending
+    	if(strncmp(aLine+2, "ending ", 7) == 0) {
+    		aLine += 9;
+    		if(aLine != NULL) {
+    			fire(UserConnectionListener::Sending(), this, _atoi64(aLine));
+    		}
+    		return;
+        }
+        
+        // $Supports
+    	if(strncmp(aLine+2, "upports ", 8) == 0) {
+    		aLine += 10;
+    		if(aLine != NULL) {
+    			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine, ' ').getTokens());
+    		}
+    		return;
+        }
+	} else if(aLine[1] == 'A') {
+        if(strncmp(aLine+2, "DC", 2) == 0) {
+    		dispatch(aLine, true);
+    		return;
+        }
 	} else {
-		if(getUser())
-			getUser()->setUnknownCommand(aLine);
 		dcdebug("Unknown NMDC command: %.50s\n", aLine);
+		return;
 	}
 }
 

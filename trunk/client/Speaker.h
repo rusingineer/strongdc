@@ -93,6 +93,15 @@ public:
 		}
 	}
 
+	template<typename T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5, const T6& p6, const T7& p7) throw() {
+		Lock l(listenerCS);
+		tmp = listeners;
+		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
+			(*i)->on(type, p1, p2, p3, p4, p5, p6, p7);
+		}
+	}
+
 	void addListener(Listener* aListener) {
 		Lock l(listenerCS);
 		if(find(listeners.begin(), listeners.end(), aListener) == listeners.end())

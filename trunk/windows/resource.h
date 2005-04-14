@@ -571,6 +571,7 @@
 #define IDC_TOOLBAR_HOT_IMAGE           2224
 #define IDC_LIMITER                     2225
 #define IDC_STEALTH                     2226
+#define IDC_HELP_GEOIPFILE              2227
 #define IDC_BROWSELIST                  3000
 #define IDC_REMOVE_SOURCE               3500
 #define IDC_PM                          4000

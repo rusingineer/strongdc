@@ -208,6 +208,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
 	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
+	ctrlLastLines.SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	ctrlLastLines.AddTool(&ti);
 
 	CreateMDIClient();
@@ -265,6 +266,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(BOOLSETTING(OPEN_FINISHED_DOWNLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED);
 	if(BOOLSETTING(OPEN_FINISHED_UPLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED_UL);
 	if(BOOLSETTING(OPEN_SEARCH_SPY)) PostMessage(WM_COMMAND, IDC_SEARCH_SPY);
+	if(BOOLSETTING(OPEN_NETWORK_STATISTICS)) PostMessage(WM_COMMAND, IDC_NET_STATS);
 	if(BOOLSETTING(OPEN_NOTEPAD)) PostMessage(WM_COMMAND, IDC_NOTEPAD);
 
 	if(!BOOLSETTING(SHOW_STATUSBAR)) PostMessage(WM_COMMAND, ID_VIEW_STATUS_BAR);
@@ -552,7 +554,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			}
 		}
 	} else if(wParam == AUTO_CONNECT) {
-		autoConnect(HubManager::getInstance()->getFavoriteHubs());
+		autoConnect(FavoriteManager::getInstance()->getFavoriteHubs());
 	} else if(wParam == PARSE_COMMAND_LINE) {
 		parseCommandLine(GetCommandLine());
 	} else if(wParam == STATUS_MESSAGE) {
@@ -852,7 +854,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 				r.setUsers("*");
 				r.setShared("*");
 				r.setServer(entry->getServer());
-				HubManager::getInstance()->addRecent(r);
+				FavoriteManager::getInstance()->addRecent(r);
 				HubFrame::openWindow(Text::toT(entry->getServer())
 					, Text::toT(entry->getRawOne())
 					, Text::toT(entry->getRawTwo())
@@ -1054,6 +1056,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	switch(wID) {
 	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
 	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
+	case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
 	default: dcassert(0);
 	}
 
@@ -1120,7 +1123,6 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 
 		ctrlStatus.SetParts(10, w);
 		ctrlLastLines.SetMaxTipWidth(w[0]);
-		ctrlLastLines.SetWindowPos(HWND_TOPMOST, sr.left, sr.top, sr.Width(), sr.Height(), SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
 	CRect rc = rect;
 	rc.top = rc.bottom - ctrlTab.getHeight();
@@ -1299,7 +1301,7 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		r.setUsers("*");
 		r.setShared("*");
 		r.setServer(Text::fromT(tmp));
-		HubManager::getInstance()->addRecent(r);
+		FavoriteManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(tmp);
 	}
 	return 0;
@@ -1449,17 +1451,15 @@ void MainFrame::checkFileList(tstring file, User::Ptr u) {
 			DirectoryListing* dl = new DirectoryListing(u);
 			try {
 				dl->loadFile(Text::fromT(file));
+				hubFrame->checkCheating(u, dl);
 			} catch(...) {
-				delete dl;
-				return;
 			}
-			hubFrame->checkCheating(u, dl);
 			delete dl;
 		}
 	}
 }
 
-void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
+/*void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
 	if(client) {
 		HubFrame* hubFrame = HubFrame::getHub(client);
 	
@@ -1474,7 +1474,7 @@ void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
 
 		hubFrame->addLine(_T("*** ")+TSTRING(USER)+_T(" ")+Text::toT(u->getNick())+_T(": ")+Text::toT(u->getCheatingString()),cf);
 	}
-}
+}*/
 
 LRESULT MainFrame::onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	UpdateDlg dlg;

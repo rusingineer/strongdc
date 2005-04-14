@@ -26,12 +26,12 @@
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
 
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 
 #define SERVER_MESSAGE_MAP 7
 
 class FavoriteHubsFrame : public MDITabChildWindowImpl<FavoriteHubsFrame, RGB(0, 0, 0), IDR_FAVORITES>, public StaticFrame<FavoriteHubsFrame, ResourceManager::FAVORITE_HUBS, IDC_FAVORITES>,
-	private HubManagerListener, private SettingsManagerListener
+	private FavoriteManagerListener, private SettingsManagerListener
 {
 public:
 	typedef MDITabChildWindowImpl<FavoriteHubsFrame, RGB(0, 0, 0), IDR_FAVORITES> baseClass;

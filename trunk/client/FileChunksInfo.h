@@ -23,7 +23,9 @@
 #include "File.h"
 #include "MerkleTree.h"
 
+typedef map<u_int16_t, u_int16_t> BlockMap;
 
+// For SetFileValidData() - antifrag purpose
 extern void ensurePrivilege();
 
 class BlockDLException : public Exception {
@@ -41,7 +43,8 @@ public:
 };
 
 /**
- * Hold chunks information of download target
+ * Holds multi-sources downloading file information
+ * including downloaded chunks and verified parts/blocks
  */
 
 class FileChunksInfo : public PointerBase
@@ -55,9 +58,6 @@ public:
 		FILE_OVER,
         WRONG_POS
 	} VALID_RESULT;
-
-	// NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
-	enum { SMALLEST_BLOCK_SIZE = 64*1024 };
 
 	/**
      * Get file chunks information by file name
@@ -89,6 +89,11 @@ public:
 	int64_t GetUndlStart();
 
 	/**
+	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
+	 */
+	bool hasFreeBlock();
+
+	/**
      * Release the chunk with start offset
      */
 	void PutUndlStart(int64_t);
@@ -113,15 +118,7 @@ public:
 	/**
      * Because magnet link maybe not contain size information...
      */
-	void SetFileSize(int64_t size)
-	{
-		if(!iFileSize){
-			iFileSize = size;
-			vecFreeBlocks.clear();
-			vecFreeBlocks.push_back(0);
-			vecFreeBlocks.push_back(size);
-		}
-	}
+	void SetFileSize(const int64_t& size);
 
     int64_t GetDownloadedSize()
     {
@@ -138,7 +135,8 @@ public:
      */
 	bool DoLastVerify(const TigerTree& aTree);
 
-	void MarkVerifiedBlock(int64_t start, int64_t end);
+	void markVerifiedBlock(u_int16_t start, u_int16_t end);
+
 
 
 //private:
@@ -148,17 +146,23 @@ public:
 
 	vector<int64_t> vecFreeBlocks;
 	vector<int64_t> vecRunBlocks;
-    map<int64_t, int64_t> mapVerifiedBlocks;
+    BlockMap verifiedBlocks;
 
-    size_t	iBlockSize;						// TigerTree block size
-	string  sFilename;						// Temp target file name
+    size_t	tthBlockSize;					// tiger tree hash block size
+	string  tempTargetName;					// temp target file name
 
 	int64_t iFileSize;
     int64_t iDownloadedSize;
     int64_t iVerifiedSize;
-	int64_t iSmallestBlockSize;				// it'll be doubled when last verifying fail
+	int64_t minChunkSize;					// it'll be doubled when last verifying fail
 
-	CriticalSection hMutex;
+	CriticalSection cs;
+
+private:
+	typedef pair<int64_t, int64_t> Chunk;
+
+	void addFreeChunk(const Chunk& chunk);	// Merge free chunks when a running chunk becomes free
+
 };
 
 /******************************************************************************/
@@ -168,20 +172,7 @@ struct SharedFileHandle : CriticalSection
     HANDLE 				handle;
     int					ref_cnt;
 
-	SharedFileHandle(const string& name)
-    {
-		handle = ::CreateFile(Text::utf8ToWide(name).c_str(), 
-						GENERIC_WRITE | GENERIC_READ, 
-						FILE_SHARE_READ, 
-						NULL, 
-						OPEN_ALWAYS, 
-						0,
-						NULL);
-		
-		if(handle == INVALID_HANDLE_VALUE) {
-			throw FileException(Util::translateError(GetLastError()));
-		}
-    }
+	SharedFileHandle(const string& name);
 
 	~SharedFileHandle()
     {
@@ -256,6 +247,7 @@ public:
 	virtual size_t flush() throw(Exception) 
 	{
 		Lock l(*shared_handle_ptr);
+
 		if(!FlushFileBuffers(shared_handle_ptr->handle))
 			throw FileException(Util::translateError(GetLastError()));
 		return 0;

@@ -40,7 +40,7 @@ public:
 	UploadQueueFrame() : showTree(true), closed(false), usingUserMenu(false), 
 		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP)
 	{
-			headerBuf = new TCHAR[128];
+		headerBuf = new TCHAR[128];
 	}
 	virtual ~UploadQueueFrame() {
 		delete[] headerBuf;
@@ -131,7 +131,6 @@ private:
 	};
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
-	//static ResourceManager::Strings columnNames[COLUMN_LAST];
 	
 	User::Ptr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();
@@ -226,7 +225,6 @@ private:
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
-
 	virtual void on(UploadManagerListener::QueueUpdate) throw() {
 		PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL);
 	}

@@ -21,7 +21,7 @@
 #include "../client/DCPlusPlus.h"
 #include "ChatCtrl.h"
 #include "atlstr.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "AGEmotionSetup.h"
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
@@ -111,7 +111,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 			boOK = SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		} else {
 			bool isFavorite = false;
-			User::List ul = HubManager::getInstance()->getFavoriteUsers();
+			User::List ul = FavoriteManager::getInstance()->getFavoriteUsers();
 			for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
 				User::Ptr pUser = *i;
 				if(_tcsicmp(Text::toT(pUser->getNick()).c_str(), sAuthor) == 0) {
@@ -310,7 +310,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 
 	// Zvyrazneni vsech vyskytu nicku Favorite useru
 	lSelEnd = GetTextLengthEx(GTL_PRECISE);
-	User::List ul = HubManager::getInstance()->getFavoriteUsers();
+	User::List ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
 		User::Ptr pUser = *i;
 		string sU = "";

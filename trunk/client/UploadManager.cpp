@@ -24,7 +24,7 @@
 #include "ConnectionManager.h"
 #include "LogManager.h"
 #include "ShareManager.h"
-#include "HubManager.h"
+#include "FavoriteManager.h"
 #include "ClientManager.h"
 #include "FilteredFile.h"
 #include "ZUtils.h"
@@ -483,7 +483,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 
 // TimerManagerListener
 void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
-	int iAvgSpeed = 0;
+	int64_t iAvgSpeed = 0;
 
 	{
 		Lock l(cs);
@@ -502,7 +502,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 		if(m_boFireball == false) {		
 			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 				Upload* u = *i;
-				iAvgSpeed += (int)u->getRunningAverage();
+				iAvgSpeed += u->getRunningAverage();
 			}
 			if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
 		}
@@ -534,14 +534,11 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 		}
 
 		if(m_boFileServer == false) {
-			int64_t iUpload = Socket::getTotalUp();
-			int64_t iUpTime = Util::getUptime();
-			int64_t iShareSize = ShareManager::getInstance()->getShareSize();
-			if((iUpTime > 7200) && 
-				(iShareSize > 2147483648) && 
-				(iUpload > 209715200)) {
+			if(	(Util::getUptime() > 7200) && 
+				(Socket::getTotalUp() > 209715200) &&
+				(ShareManager::getInstance()->getShareSize() > 2147483648)) {
 					m_boFileServer = true;
-				if(boFireballSent == false && boFileServerSent == false) {
+				if((boFireballSent == false) && (boFileServerSent == false)) {
 					ClientManager::getInstance()->infoUpdated(true);
 					boFileServerSent = true;
 				}

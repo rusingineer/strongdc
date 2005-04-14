@@ -60,7 +60,7 @@ void ClientProfileManager::saveClientProfiles() {
 		File::renameFile(fname + ".tmp", fname);
 
 	} catch(const Exception& e) {
-		dcdebug("HubManager::saveClientProfiles: %s\n", e.getError().c_str());
+		dcdebug("FavoriteManager::saveClientProfiles: %s\n", e.getError().c_str());
 	}
 }
 
@@ -120,7 +120,7 @@ void ClientProfileManager::loadClientProfiles() {
 			xml.stepOut();
 		}
 	} catch(const Exception& e) {
-		dcdebug("HubManager::loadClientProfiles: %s\n", e.getError().c_str());
+		dcdebug("FavoriteManager::loadClientProfiles: %s\n", e.getError().c_str());
 	}
 }
 

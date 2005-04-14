@@ -120,8 +120,8 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 			cqi->setConnection(NULL);
 			if(hasDown) {
 				cqi->setLastAttempt(reconnect ? 0 : GET_TICK());
-			cqi->setState(ConnectionQueueItem::WAITING);
-		} else {
+				cqi->setState(ConnectionQueueItem::WAITING);
+			} else {
 				putCQI(cqi);
 			}
 		}
@@ -152,7 +152,7 @@ void ConnectionManager::putUploadConnection(UserConnection* aSource, bool ntd) {
 		Lock l(cs);
 		putCQI(cqi);
 	}
-	}
+}
 
 UserConnection* ConnectionManager::getConnection(bool aNmdc) throw(SocketException) {
 	UserConnection* uc = new UserConnection();

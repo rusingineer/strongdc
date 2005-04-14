@@ -143,11 +143,11 @@ public:
 		if(result == SORT_STRING) {
 			p->GetItemText(na, p->sortColumn, buf, 128);
 			p->GetItemText(nb, p->sortColumn, buf2, 128);
-			result = _tcscmp(buf, buf2);			
+			result = lstrcmp(buf, buf2);			
 		} else if(result == SORT_STRING_NOCASE) {
 			p->GetItemText(na, p->sortColumn, buf, 128);
 			p->GetItemText(nb, p->sortColumn, buf2, 128);
-			result = Util::stricmp(buf, buf2);			
+			result = lstrcmpi(buf, buf2);			
 		} else if(result == SORT_INT) {
 			p->GetItemText(na, p->sortColumn, buf, 128);
 			p->GetItemText(nb, p->sortColumn, buf2, 128);

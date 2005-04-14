@@ -35,7 +35,7 @@
 #include "../client/ShareManager.h"
 #include "../client/ClientManager.h"
 #include "../client/TimerManager.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "../client/ResourceManager.h"
 #include "../client/QueueManager.h"
 #include "../client/UploadManager.h"
@@ -284,7 +284,7 @@ void UserInfoBase::checkList() {
 	}
 }
 void UserInfoBase::addFav() {
-	HubManager::getInstance()->addFavoriteUser(user);
+	FavoriteManager::getInstance()->addFavoriteUser(user);
 }
 void UserInfoBase::pm() {
 	PrivateFrame::openWindow(user);
@@ -429,6 +429,7 @@ void WinUtil::init(HWND hWnd) {
 	help.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
 	help.AppendMenu(MF_SEPARATOR);
 	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CTSTRING(MENU_HOMEPAGE));
+	help.AppendMenu(MF_STRING, IDC_HELP_GEOIPFILE, CTSTRING(MENU_HELP_GEOIPFILE));
 	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CTSTRING(MENU_DISCUSS));
 
 	mainMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)help, CTSTRING(MENU_HELP));
@@ -1074,7 +1075,7 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 	if(Util::stricmp(app.c_str(), Buf) != 0) {
 		::RegCreateKey(HKEY_CLASSES_ROOT, _T("dchub"), &hk);
 		TCHAR* tmp = _T("URL:Direct Connect Protocol");
-		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, _tcslen(tmp) + 1);
+		::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, sizeof(TCHAR) * (_tcslen(tmp) + 1));
 		::RegSetValueEx(hk, _T("URL Protocol"), 0, REG_SZ, (LPBYTE)_T(""), sizeof(TCHAR));
 		::RegCloseKey(hk);
 
@@ -1109,7 +1110,7 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 	 if(Util::stricmp(app.c_str(), Buf) != 0) {
 		 ::RegCreateKey(HKEY_CLASSES_ROOT, _T("adc"), &hk);
 		 TCHAR* tmp = _T("URL:Direct Connect Protocol");
-		 ::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, _tcslen(tmp) + 1);
+		 ::RegSetValueEx(hk, NULL, 0, REG_SZ, (LPBYTE)tmp, sizeof(TCHAR) * (_tcslen(tmp) + 1));
 		 ::RegSetValueEx(hk, _T("URL Protocol"), 0, REG_SZ, (LPBYTE)_T(""), sizeof(TCHAR));
 		 ::RegCloseKey(hk);
 
@@ -1506,6 +1507,39 @@ int WinUtil::getOsMinor()
 	return ver.dwMinorVersion;
 }
 
+void WinUtil::getContextMenuPos(CListViewCtrl& aList, POINT& aPt) {
+	int pos = aList.GetNextItem(-1, LVNI_SELECTED | LVNI_FOCUSED);
+	if(pos >= 0) {
+		CRect lrc;
+		aList.GetItemRect(pos, &lrc, LVIR_LABEL);
+		aPt.x = lrc.left;
+		aPt.y = lrc.top + (lrc.Height() / 2);
+	} else {
+		aPt.x = aPt.y = 0;
+	}
+	aList.ClientToScreen(&aPt);
+}
+
+void WinUtil::getContextMenuPos(CTreeViewCtrl& aTree, POINT& aPt) {
+	CRect trc;
+	HTREEITEM ht = aTree.GetSelectedItem();
+	if(ht) {
+		aTree.GetItemRect(ht, &trc, TRUE);
+		aPt.x = trc.left;
+		aPt.y = trc.top + (trc.Height() / 2);
+	} else {
+		aPt.x = aPt.y = 0;
+	}
+	aTree.ClientToScreen(&aPt);
+}
+void WinUtil::getContextMenuPos(CEdit& aEdit, POINT& aPt) {
+	CRect erc;
+	aEdit.GetRect(&erc);
+	aPt.x = erc.Width() / 2;
+	aPt.y = erc.Height() / 2;
+	aEdit.ClientToScreen(&aPt);
+}
+
 void WinUtil::ClearPreviewMenu(OMenu &previewMenu){
 	while(previewMenu.GetMenuItemCount() > 0) {
 		previewMenu.RemoveMenu(0, MF_BYPOSITION);
@@ -1514,7 +1548,7 @@ void WinUtil::ClearPreviewMenu(OMenu &previewMenu){
 
 int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 	int PreviewAppsSize = 0;
-	PreviewApplication::List lst = HubManager::getInstance()->getPreviewApps();
+	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();
 	if(lst.size()>0){		
 		PreviewAppsSize = 0;
 		for(PreviewApplication::Iter i = lst.begin(); i != lst.end(); i++){
@@ -1538,7 +1572,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 }
 
 void WinUtil::RunPreviewCommand(int index, string target){
-	PreviewApplication::List lst = HubManager::getInstance()->getPreviewApps();
+	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();
 
 	if(index <= lst.size()) {
 	string application = lst[index]->getApplication();

@@ -617,10 +617,11 @@ struct noCaseStringHash {
 		for(const char* str = s.data(); str < end; ) {
 			wchar_t c = 0;
 			int n = Text::utf8ToWc(str, c);
-			if(n == -1) {
-				str++;
+			if(n < 0) {
+				x = x*32 - x + '_';
+				str += abs(n);
 			} else {
-				x = x*31 + (size_t)Text::toLower(c);
+				x = x*32 - x + (size_t)Text::toLower(c);
 				str += n;
 			}
 		}

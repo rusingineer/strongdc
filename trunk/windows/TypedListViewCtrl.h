@@ -24,7 +24,7 @@
 #endif // _MSC_VER > 1000
 
 #include "../Client/SettingsManager.h"
-#include "../client/HubManager.h"
+#include "../client/FavoriteManager.h"
 #include "ListViewArrows.h"
 class ColumnInfo {
 public:

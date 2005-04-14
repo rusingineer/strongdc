@@ -37,12 +37,7 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
-
-	DWORD styles = LVS_EX_HEADERDRAGDROP | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-	ctrlUsers.SetExtendedListViewStyle(styles);
-
+	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 	images.CreateFromImage(IDB_FAVSTATES, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	ctrlUsers.SetImageList(images, LVSIL_SMALL);
 
@@ -69,11 +64,11 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	usersMenu.AppendMenu(MF_SEPARATOR);
 	usersMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
-	HubManager::getInstance()->addListener(this);
+	FavoriteManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	User::List ul = HubManager::getInstance()->getFavoriteUsers();
+	User::List ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	ctrlUsers.SetRedraw(FALSE);
 	for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
 		addUser(*i);
@@ -88,11 +83,11 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 }
 
 LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	if ((HWND)wParam == ctrlUsers && ctrlUsers.GetSelectedCount() > 0 ) { 
+	if (reinterpret_cast<HWND>(wParam) == ctrlUsers && ctrlUsers.GetSelectedCount() > 0 ) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlUsers.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlUsers, pt);
 		}
 	
 		checkAdcItems(usersMenu);
@@ -159,7 +154,7 @@ LRESULT UsersFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 			ui->user->setUserDescription(Text::fromT(dlg.line));
 			ui->update();
 			ctrlUsers.updateItem(i);
-				HubManager::getInstance()->save();
+				FavoriteManager::getInstance()->save();
 			}	
 	}
 	return 0;
@@ -169,7 +164,7 @@ LRESULT UsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 	NMITEMACTIVATE* l = (NMITEMACTIVATE*)pnmh;
 	if(!startup && l->iItem != -1 && ((l->uNewState & LVIS_STATEIMAGEMASK) != (l->uOldState & LVIS_STATEIMAGEMASK))) {
 		ctrlUsers.getItemData(l->iItem)->user->setAutoExtraSlot(ctrlUsers.GetCheckState(l->iItem) != FALSE);
-		HubManager::getInstance()->save();
+		FavoriteManager::getInstance()->save();
  	}
   	return 0;
 }
@@ -212,7 +207,7 @@ void UsersFrame::removeUser(const User::Ptr& aUser) {
 
 LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	HubManager::getInstance()->removeListener(this);
+	FavoriteManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;

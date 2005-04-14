@@ -254,7 +254,7 @@ void ListLoader::endTag(const string& name, const string&) {
 	}
 }
 
-string DirectoryListing::getPath(Directory* d) {
+string DirectoryListing::getPath(const Directory* d) const {
 	if(d == root)
 		return "";
 
@@ -309,18 +309,23 @@ void DirectoryListing::download(const string& aDir, const string& aTarget, bool 
 
 void DirectoryListing::download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio) {
 
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) |
+	int flags = (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) |
 		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 
-	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), aFile->getSize(), user, aTarget, 
-		aFile->getTTH(), flags, highPrio || view ? QueueItem::HIGHEST : prio);
+	QueueManager::getInstance()->add(aTarget, aFile->getSize(), aFile->getTTH(), getUser(), 
+		getPath(aFile) + aFile->getName(), getUtf8(), flags);
+
+	if(highPrio || (prio != QueueItem::Priority::DEFAULT))
+		QueueManager::getInstance()->setPriority(aTarget, highPrio ? QueueItem::HIGHEST : prio);
 }
 
 void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
-	int flags = (getUtf8() ? QueueItem::FLAG_SOURCE_UTF8 : 0) | QueueItem::FLAG_MP3_INFO;
+	int flags = QueueItem::FLAG_MP3_INFO;
 
-	QueueManager::getInstance()->add(getPath(aFile) + aFile->getName(), 2100, user, aTarget, 
-		NULL, flags, QueueItem::Priority::HIGHEST);
+	QueueManager::getInstance()->add(aTarget, 2100, NULL, getUser(),
+		getPath(aFile) + aFile->getName(), flags);
+		
+	QueueManager::getInstance()->setPriority(aTarget, QueueItem::HIGHEST);
 }
 
 DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directory* current) {

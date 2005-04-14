@@ -123,6 +123,7 @@ public:
 		MESSAGE_HANDLER(WM_KEYUP, onChar)
 		MESSAGE_HANDLER(BM_SETCHECK, onShowUsers)
 		MESSAGE_HANDLER(WM_LBUTTONDBLCLK, onLButton)
+		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 	ALT_MSG_MAP(FILTER_MESSAGE_MAP)
 		MESSAGE_HANDLER(WM_CTLCOLORLISTBOX, onCtlColor)
 		MESSAGE_HANDLER(WM_KEYUP, onFilterChar)
@@ -379,7 +380,7 @@ private:
 		client->setRawFour(Text::fromT(aRawFour));
 		client->setRawFive(Text::fromT(aRawFive));
 		client->addListener(this);
-		if(HubManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
+		if(FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			ShowUserList = userliststate;
 		} else {
 			ShowUserList = BOOLSETTING(GET_USER_INFO);

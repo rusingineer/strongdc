@@ -210,6 +210,9 @@
 				RelativePath=".\res\Directory.ico">
 			</File>
 			<File
+				RelativePath=".\res\emoticon.bmp">
+			</File>
+			<File
 				RelativePath=".\res\fav.bmp">
 			</File>
 			<File
@@ -292,9 +295,6 @@
 			</File>
 			<File
 				RelativePath=".\StrongDC.rc">
-			</File>
-			<File
-				RelativePath=".\res\emoticon.bmp">
 			</File>
 			<File
 				RelativePath=".\res\toolbar.bmp">

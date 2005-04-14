@@ -66,10 +66,7 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	listContainer.SubclassWindow(ctrlList.m_hWnd);
 
 	// Ev. set full row select
-	DWORD styles = LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT;
-	if (BOOLSETTING(SHOW_INFOTIPS))
-		styles |= LVS_EX_INFOTIP;
-	ctrlList.SetExtendedListViewStyle(styles);
+	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
 
 	// Set background color
 	ctrlList.SetBkColor(WinUtil::bgColor);
@@ -229,15 +226,15 @@ LRESULT ADLSearchFrame::onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, 
 	return 0;
 }
 	
-LRESULT ADLSearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
-{
-	if((HWND)wParam == ctrlList) { 
+LRESULT ADLSearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if(reinterpret_cast<HWND>(wParam) == ctrlList) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		
 		if(pt.x == -1 && pt.y == -1) {
-			pt.x = pt.y = 0;
-			ctrlList.ClientToScreen(&pt);
+			WinUtil::getContextMenuPos(ctrlList, pt);
 		}
-		int status = ctrlList.GetSelectedCount() > 0 ? MFS_ENABLED : MFS_DISABLED;
+
+		int status = ctrlList.GetSelectedCount() > 0 ? MFS_ENABLED : MFS_GRAYED;
 		contextMenu.EnableMenuItem(IDC_EDIT, status);
 		contextMenu.EnableMenuItem(IDC_REMOVE, status);
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

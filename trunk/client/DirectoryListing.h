@@ -118,18 +118,18 @@ public:
 
 	class AdlDirectory : public Directory {
 	public:
-		AdlDirectory(const string& aFullPath, Directory* aParent, const string& aName) : Directory(aParent, aName, true, true), fullPath(aFullPath) { };
+		AdlDirectory(const string& aFullPath, Directory* aParent, const string& aName) : Directory(aParent, aName, true, true), fullPath(aFullPath) { }
 
 		GETSET(string, fullPath, FullPath);
 	};
 
 	DirectoryListing(const User::Ptr& aUser) : user(aUser), utf8(false), root(new Directory(NULL, Util::emptyString, false, false)) {
-	};
+	}
 	
 	~DirectoryListing() {
 		delete root;
-	};
-
+	}
+	
 	void loadFile(const string& name);
 
 	void load(const string& i);
@@ -140,12 +140,14 @@ public:
 	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
 	void downloadMP3(File* aFile, const string& aTarget);
 
-	string getPath(Directory* d);	
-	string getPath(File* f) { return getPath(f->getParent()); };
+	string getPath(const Directory* d) const;
+	string getPath(const File* f) const { return getPath(f->getParent()); }
 
 	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
 	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
-	Directory* getRoot() { return root; };
+
+	const Directory* getRoot() const { return root; }
+	Directory* getRoot() { return root; }
 
 	bool detectRMDC403D1() {
 		return root->getRMDC403D1detected();

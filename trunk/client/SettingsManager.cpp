@@ -25,7 +25,7 @@
 #include "SimpleXML.h"
 #include "Util.h"
 #include "File.h"
-#include "HubManager.h"
+#include "FavoriteManager.h"
 #include "version.h"
 #include "CID.h"
 
@@ -118,7 +118,7 @@ const string SettingsManager::settingTags[] =
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
-	"OpenFinishedUploads", "OpenSearchSpy", "OpenNotepad",
+	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -263,6 +263,7 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_FINISHED_DOWNLOADS, false);
 	setDefault(OPEN_FINISHED_UPLOADS, false);
 	setDefault(OPEN_SEARCH_SPY, false);
+	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
 
 	setDefault(EXTRA_SLOTS, 3);
@@ -517,14 +518,14 @@ void SettingsManager::load(string const& aFileName)
 		xmltext = f.read();		
 	} catch(const FileException&) {
 		// ...
-		HubManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
+		FavoriteManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
 		setTemp();
 		return;
 	}
 
 	if(xmltext.empty()) {
 		// Nothing to load...
-		HubManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
+		FavoriteManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
 		setTemp();
 		return;
 	}
