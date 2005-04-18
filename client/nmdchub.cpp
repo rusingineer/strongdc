@@ -36,8 +36,8 @@
 
 #include "cvsversion.h"
 
-NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),  
-	adapter(this), state(STATE_CONNECT), lastActivity(GET_TICK()), reconnect(true),
+NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0), state(STATE_CONNECT),
+	reconnect(true),
 	lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
     YnHub(false) {
 	TimerManager::getInstance()->addListener(this);
@@ -45,16 +45,10 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0),
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
-	socket->removeListener(this);		// Added by RevConnect
-	Speaker<NmdcHubListener>::removeListeners();
-
-	Lock l(cs);
 	clearUsers();
 }
 
 void NmdcHub::connect() {
-	setRegistered(false);
-	setReconnDelay(120 + Util::rand(0, 60));
 	reconnect = true;
 	supportFlags = 0;
 	lastmyinfo.clear();
@@ -64,30 +58,23 @@ void NmdcHub::connect() {
 	PtokaX = false;
     YnHub = false;
 
-	if(socket->isConnected()) {
-		disconnect();
-	}
-
-	reloadSettings();
-
 	state = STATE_LOCK;
 
 	if(getPort() == 0) {
 		setPort(411);
 	}
-	socket->connect(getAddress(), getPort());
+	Client::connect();
 }
 
 void NmdcHub::connect(const User* aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
 	char buf[256];
-	if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
-		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(IN_PORT));
+	if(ClientManager::getInstance()->isActive(this)) {
+		sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(TCP_PORT));
 		ConnectionManager::iConnToMeCount++;
 	} else {
 		sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
-
 	}
 	send(buf); 
 }
@@ -102,8 +89,8 @@ int64_t NmdcHub::getAvailable() const {
 }
 
 void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
-	Lock l(cs);
 	if(unknownOnly) {
+		Lock l(cs);
 		for(User::NickIter i = users.begin(); i != users.end(); ++i) {
 			if(i->second->getConnection().empty()) {
 				getInfo(i->second);
@@ -116,15 +103,22 @@ void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 }
 
 void NmdcHub::clearUsers() {
-	for(User::NickIter i = users.begin(); i != users.end(); ++i) {
+	User::NickMap u2;
+	
+	{
+		Lock l(cs);
+		u2 = users;
+		users.clear();
+	}
+	
+	for(User::NickIter i = u2.begin(); i != u2.end(); ++i) {
 		ClientManager::getInstance()->putUserOffline(i->second);
 	}
-	users.clear();
 }
 
 void NmdcHub::onLine(const char* aLine) throw() {
 	char *temp, *temp1;
-	lastActivity = GET_TICK();
+	updateActivity();
 	
 	if(aLine[0] != '$') {
 		if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!getOp())) {
@@ -137,7 +131,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				reconnect = false;
 			}
 		}
-		Speaker<NmdcHubListener>::fire(NmdcHubListener::Message(), this, Util::validateMessage(fromNmdc(aLine), true));
+		fire(ClientListener::Message(), this, Util::validateMessage(fromNmdc(aLine), true));
 		return;
 	}
 
@@ -152,14 +146,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
 
 			string seeker = fromNmdc(aLine);
 			bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
+			bool isActive = ClientManager::getInstance()->isActive(this);
 
-			int mode = getMode();
 			// We don't wan't to answer passive searches if we're in passive mode...
-			if(bPassive == true && mode != SettingsManager::CONNECTION_ACTIVE) {
+			if((bPassive == true) && !isActive) {
 				return;
 			}
 			// Filter own searches
-			if((mode == SettingsManager::CONNECTION_ACTIVE) && bPassive == false) {
+			if(isActive && bPassive == false) {
 				if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(UDP_PORT))).c_str())) == 0) {
 					return;
 				}
@@ -188,9 +182,9 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					    // BFU don't need to know search spammers ;)
 					    if(getOp()) {
 							if(bPassive == true && strlen(seeker.c_str()) > 4) {
-								Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker.c_str()+4);
+								fire(ClientListener::SearchFlood(), this, seeker.c_str()+4);
 							} else {
-								Speaker<NmdcHubListener>::fire(NmdcHubListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
+								fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
 							}
 						}				
 						flooders.push_back(make_pair(seeker, tick));
@@ -217,7 +211,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			int64_t size = _atoi64(temp);
 			int type = atoi(temp1+1) - 1; temp1 += 3;
 			if(temp1 != NULL) {
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::Search(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
+				fire(ClientListener::NmdcSearch(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
 				if(bPassive == true && strlen(seeker.c_str()) > 4) {
 					User::Ptr u;
 					Lock l(cs);
@@ -271,7 +265,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(!(getSupportFlags() & SUPPORTS_QUICKLIST)) {
 				validateNick(getNick());
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::Supports(), this, sl);
    			return;
         }
 	} else if(aLine[1] == 'M') {
@@ -405,13 +398,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					state = STATE_CONNECTED;
 					updateCounts(false);
 					u->setFlag(User::DCPLUSPLUS);
-					if(getMode() != SettingsManager::CONNECTION_ACTIVE)
+					if(!ClientManager::getInstance()->isActive(this))
 						u->setFlag(User::PASSIVE);
 					else
 						u->unsetFlag(User::PASSIVE);
 				}
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::MyInfo(), this, u);
+			fire(ClientListener::UserUpdated(), this, u);
 	    	return;
     	   }
     } else if(aLine[1] == 'Q') {
@@ -434,7 +427,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			users.erase(i);
 		}
 		
-		Speaker<NmdcHubListener>::fire(NmdcHubListener::Quit(), this, u);
+		fire(ClientListener::UserRemoved(), this, u);
 		ClientManager::getInstance()->putUserOffline(u, true);
     		return;
         }
@@ -456,7 +449,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(temp == NULL || temp1 == NULL) return;
 
 			ConnectionManager::getInstance()->nmdcConnect(temp, (short)atoi(temp1), getNick()); 
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::ConnectToMe(), this, fromNmdc(temp), (short)atoi(temp1));
     		return;
         }
     } else if(aLine[1] == 'R') {
@@ -491,9 +483,8 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			}
 
 			if(u) {
-				if(getMode() == SettingsManager::CONNECTION_ACTIVE) {
+				if(ClientManager::getInstance()->isActive(this)) {
 					connectToMe(u);
-					Speaker<NmdcHubListener>::fire(NmdcHubListener::RevConnectToMe(), this, u);
 				} else {
 					// Notify the user that we're passive too...
 					if(up)
@@ -512,7 +503,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(aLine == NULL) return;
 	
 			name = fromNmdc(aLine);
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::HubName(), this);
+			fire(ClientListener::HubUpdated(), this);
 			return;
 		}
         
@@ -533,7 +524,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				setMe(u);
 		
 				u->setFlag(User::DCPLUSPLUS);
-				if(getMode() != SettingsManager::CONNECTION_ACTIVE)
+				if(!ClientManager::getInstance()->isActive(this))
 					u->setFlag(User::PASSIVE);
 				else
 					u->unsetFlag(User::PASSIVE);
@@ -552,13 +543,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					myInfo();
             	}
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::Hello(), this, u);
+			fire(ClientListener::UserUpdated(), this, u);
 			return;
 		}
         
         // $HubIsFull
        	if(strcmp(aLine+2, "ubIsFull") == 0) {
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::HubFull(), this);
+			fire(ClientListener::HubFull(), this);
 			return;
 		}
     } else if(aLine[1] == 'U') {
@@ -578,14 +569,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(temp == NULL) return;
 
 			if(type == UserCommand::TYPE_SEPARATOR || type == UserCommand::TYPE_CLEAR) {
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::UserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
+				fire(ClientListener::UserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
 			} else if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
 				if((temp1 = strchr(temp, '$')) == NULL || temp1+1 == NULL) return;
 
 				temp1[0] = NULL; temp1 += 1;
 				if(temp == NULL || temp1 == NULL) return;
 
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(temp), true, false), Util::validateMessage(fromNmdc(temp1), true, false));
+				fire(ClientListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(temp), true, false), Util::validateMessage(fromNmdc(temp1), true, false));
 			}
 			return;
 		}
@@ -615,7 +606,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				ClientManager::getInstance()->setIPNick(temp, u);
 				aLine = temp1+2;
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::UserIp(), this, v);
+			fire(ClientListener::UsersUpdated(), this, v);
 			return;
 		}
     } else if(aLine[1] == 'L') {
@@ -658,21 +649,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				validateNick(getNick());
 			}
 			if(temp != NULL) {
-			if(stricmp(temp+3, "YnHub") == 0) {
-				YnHub = true;
-			} else if(strcmp(temp+3, "PtokaX") == 0) {
-				PtokaX = true;
-			}
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::CLock(), this, aLine, temp);
-			} else {
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::CLock(), this, aLine, Util::emptyString);
+				if(stricmp(temp+3, "YnHub") == 0) {
+					YnHub = true;
+				} else if(strcmp(temp+3, "PtokaX") == 0) {
+					PtokaX = true;
+				}
         	}
         	return;
-        }
-		
-		// $LogedIn
-		if(strncmp(aLine+2, "ogedIn", 6) == 0) {
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::LoggedIn(), this);
         }
 	} else if(aLine[1] == 'F') {
     	if(strncmp(aLine+2, "orceMove ", 9) == 0) {
@@ -680,14 +663,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			if(aLine == NULL) return;
 
 			disconnect();
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::Redirect(), this, fromNmdc(aLine));
+			fire(ClientListener::Redirect(), this, fromNmdc(aLine));
     		return;
         }
     } else if(aLine[1] == 'V') {
     	// $ValidateDenide
     	if(strncmp(aLine+2, "alidateDenide", 13) == 0) {
 			disconnect();
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::ValidateDenied(), this);
+			fire(ClientListener::NickTaken(), this);
     		return;
         }
     } else if(aLine[1] == 'N') {
@@ -726,7 +709,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					send(tmp);
 				}
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::NickList(), this, v);
+			fire(ClientListener::UsersUpdated(), this, v);
     		return;
         }
     } else if(aLine[1] == 'O') {
@@ -751,7 +734,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					users[(*it2)->getNick()] = *it2;
 				}
 			}
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::OpList(), this, v);
+			fire(ClientListener::UsersUpdated(), this, v);
 			updateCounts(false);
 			if(bFirstOpList == true) {
 				if(getRegistered() == true) {
@@ -770,7 +753,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				temp1 += 6; *(temp-1) = NULL; temp += 1;
 				if(temp1 == NULL || temp == NULL) return;
 
-				Speaker<NmdcHubListener>::fire(NmdcHubListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(temp1), this, false), Util::validateMessage(fromNmdc(temp), true));
+				fire(ClientListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(temp1), this, false), Util::validateMessage(fromNmdc(temp), true));
 			}
     		return;
         }
@@ -778,13 +761,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
     	// $GetPass
     	if(strcmp(aLine+2, "etPass") == 0) {
 			setRegistered(true);
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::GetPassword(), this);
+			fire(ClientListener::GetPassword(), this);
     		return;
         }
     } else if(aLine[1] == 'B') {
     	// $BadPass
     	if(strcmp(aLine+2, "adPass") == 0) {
-			Speaker<NmdcHubListener>::fire(NmdcHubListener::BadPassword(), this);
+			fire(ClientListener::BadPassword(), this);
     		return;
         }
 	} else {
@@ -802,8 +785,21 @@ string NmdcHub::checkNick(const string& aNick) {
 	return tmp;
 }
 
-string NmdcHub::getHubURL() {
-	return getAddressPort();
+void NmdcHub::connectToMe(const User::Ptr& aUser) {
+	checkstate(); 
+	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
+	char buf[256];
+	sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(TCP_PORT));
+	send(buf);
+	ConnectionManager::iConnToMeCount++;
+}
+
+void NmdcHub::revConnectToMe(const User::Ptr& aUser) {
+	checkstate(); 
+	dcdebug("NmdcHub::revConnectToMe %s\n", aUser->getNick().c_str());
+	char buf[256];
+	sprintf(buf, "$RevConnectToMe %s %s|", toNmdc(getNick()).c_str(), toNmdc(aUser->getNick()).c_str());
+	send(buf);
 }
 
 void NmdcHub::myInfo() {
@@ -825,13 +821,12 @@ void NmdcHub::myInfo() {
 		tmp1[i]++;tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
 	}
 	char modeChar = '?';
-	int mode = getMode();
-	if(mode == SettingsManager::CONNECTION_ACTIVE)
-		modeChar = 'A';
-	else if(mode == SettingsManager::CONNECTION_PASSIVE)
-		modeChar = 'P';
-	else if(mode == SettingsManager::CONNECTION_SOCKS5)
+	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
 		modeChar = '5';
+	else if(ClientManager::getInstance()->isActive(this))
+		modeChar = 'A';
+	else 
+		modeChar = 'P';
 	
 	char tag[256];
 	string VERZE = DCVERSIONSTRING;	
@@ -904,10 +899,7 @@ void NmdcHub::myInfo() {
 void NmdcHub::disconnect() throw() {	
 	state = STATE_CONNECT;
 	Client::disconnect();
-	{ 
-		Lock l(cs);
-		clearUsers();
-	}
+	clearUsers();
 }
 
 void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string&){
@@ -921,7 +913,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 		tmp[i] = '$';
 	}
 	int chars = 0;
-	if((getMode() == SettingsManager::CONNECTION_ACTIVE) && (!BOOLSETTING(SEARCH_PASSIVE))) {
+	if(ClientManager::getInstance()->isActive(this) && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
 		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(UDP_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
@@ -934,13 +926,12 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 
 // TimerManagerListener
 void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	if(socket && (lastActivity + getReconnDelay() * 1000) < aTick) {
+	if(socket && (getLastActivity() + getReconnDelay() * 1000) < aTick) {
 		// Nothing's happened for ~120 seconds, check if we're connected, if not, try to connect...
-		lastActivity = aTick;
-		// Try to send something for the fun of it...
 		if(isConnected()) {
+			// Try to send something for the fun of it...
 			dcdebug("Testing writing...\n");
-			socket->write("|", 1);
+			send("|", 1);
 		} else {
 			// Try to reconnect...
 			if(reconnect && !getAddress().empty())
@@ -962,13 +953,12 @@ void NmdcHub::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 // BufferedSocketListener
 void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
-	{
-		Lock l(cs);
-		clearUsers();
-	}
+	clearUsers();
+
 	if(state == STATE_CONNECTED)
 		state = STATE_CONNECT;
-	Speaker<NmdcHubListener>::fire(NmdcHubListener::Failed(), this, aLine); 
+
+	fire(ClientListener::Failed(), this, aLine); 
 	updateCounts(true);
 }
 

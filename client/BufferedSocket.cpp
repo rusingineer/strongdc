@@ -174,7 +174,7 @@ void BufferedSocket::threadConnect() {
 		setBlocking(false);
 		Socket::create();
 
-		if( !getNoproxy() && SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5) {
+		if( !getNoproxy() && SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5) {
 			if(!BOOLSETTING(SOCKS_RESOLVE)) {
 				s = resolve(s);
 			}
@@ -200,7 +200,7 @@ void BufferedSocket::threadConnect() {
 		}
 
 		// Hm, let's see if we're socksified...
-		if( !getNoproxy() && SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5) {
+		if( !getNoproxy() && SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5) {
 			if(SETTING(SOCKS_USER).empty() && SETTING(SOCKS_PASSWORD).empty()) {
 				// No username and pw, easier...=)
 				char connStr[3];
@@ -297,7 +297,7 @@ void BufferedSocket::threadConnect() {
 
 		fire(BufferedSocketListener::Connected());
 	} catch(const SocketException& e) {
-		if(!getNoproxy() && SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5) {
+		if(!getNoproxy() && SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5) {
 			fail("Socks5: " + e.getError());
 		} else {
 			fail(e.getError());

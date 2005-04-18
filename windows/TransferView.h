@@ -40,7 +40,7 @@
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
 	private UploadManagerListener, private ConnectionManagerListener,
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>,
-	private SettingsManagerListener, private QueueManagerListener
+	private SettingsManagerListener
 {
 public:
 	DECLARE_WND_CLASS(_T("TransferView"))
@@ -168,11 +168,7 @@ private:
 		ADD_ITEM,
 		REMOVE_ITEM,
 		UPDATE_ITEM,
-		UPDATE_ITEMS,
-		INSERT_MAIN_ITEM,
-		UNSET_STATE,
-		REMOVE_ITEM_BUT_NOT_FREE,
-		INSERT_SUBITEM
+		UPDATE_ITEMS
 	};
 
 	enum {
@@ -219,9 +215,9 @@ private:
 
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
-			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0), qi(NULL),
+			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
-			pocetUseru(1), Target(Util::emptyStringT), file(Util::emptyStringT),
+			pocetUseru(1), Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
 			compressRatio(1.0), finished(false), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
@@ -236,12 +232,12 @@ private:
 		tstring file;
 		tstring IP;
 		tstring country;		
-		QueueItem* qi;
 		ItemInfo* upper;
-		tstring Target;
+		string Target;
 		bool collapsed;
 		bool mainItem;
-		int pocetUseru;
+		u_int32_t pocetUseru;
+		u_int16_t numberOfSegments;
 		double compressRatio;
 		bool finished;
 		bool upperUpdated;
@@ -361,7 +357,7 @@ private:
 
 	virtual void on(DownloadManagerListener::Complete, Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, isTree);}
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
-	virtual void on(DownloadManagerListener::Starting, Download* aDownload, bool isActiveSegment) throw();
+	virtual void on(DownloadManagerListener::Starting, Download* aDownload, bool isActiveSegment, u_int16_t) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
 	virtual void on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi, const string& aMessage) throw();
 	virtual void on(DownloadManagerListener::Verifying, const string& fileName, int64_t) throw();
@@ -371,20 +367,54 @@ private:
 	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
-	virtual void on(QueueManagerListener::Removed, QueueItem* aQI) throw();
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload, bool isTree);
 
-	void InsertItem(ItemInfo* i, bool mainThread = false);
+	void InsertItem(ItemInfo* i);
+	bool RemoveItem(ItemInfo* i);
 	void Collapse(ItemInfo* i, int a);
 	void CollapseAll();
 	void ExpandAll();
 	void Expand(ItemInfo* i, int a);
-	void setMainItem(ItemInfo* i);
 	void insertSubItem(ItemInfo* j, int idx);
 
-	ItemInfo* findMainItem(tstring Target);
-	ItemInfo* findLastUserItem(tstring Target);
+	inline void setMainItem(ItemInfo* i) {
+		if(i->upper != NULL) {
+			ItemInfo* h = i->upper;		
+			if(h->Target != i->Target) {
+				h->pocetUseru -= 1;
+				ctrlTransfers.deleteItem(i);
+
+				InsertItem(i);
+				RemoveItem(h);
+			}
+		} else {
+			i->upper = findMainItem(i->Target);
+		}
+	}
+	inline ItemInfo* findMainItem(string Target) {
+		if(!mainItems.empty()) {
+			int q = 0;
+			while(q<mainItems.size()) {
+				ItemInfo* m = mainItems[q];
+				if(m->Target == Target) {
+					return m;
+				}
+				q++;
+			}
+		}
+		return NULL;
+	}
+	inline ItemInfo* findLastUserItem(ItemInfo* i) {
+		Lock l(cs);
+		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
+			ItemInfo* m = j->second;
+			if(m->upper == i) {	
+				return m;
+			}
+		}
+		return NULL;
+	}
 
 };
 

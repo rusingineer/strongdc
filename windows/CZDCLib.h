@@ -1,4 +1,5 @@
 #include "../client/Util.h"
+#include <math.h>
 
 #ifndef __CZDCLIB_H
 #define __CZDCLIB_H
@@ -24,6 +25,12 @@ private:
 	static bool bGotXP;
 	static int iWinVerMajor;
 };
+
+const MAX_SHADE = 44;
+const SHADE_LEVEL = 90;
+const int blend_vector[MAX_SHADE] = {0, 4, 8, 10, 5, 2, 0, -1, -2, -3, -5, -6, -7, -8, -7, -6, -5, -4, -3, -2, -1, 0, 
+1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 3, 2, 1, 0, -2, -5, -10, -8, -4, 0};
+
 class OperaColors {
 public:
 	static inline BYTE getRValue(const COLORREF& cr) { return (BYTE)(cr & 0xFF); }
@@ -69,9 +76,35 @@ public:
 				);
 		}
 	}
-	static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = false);
-	//static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c);
-	//static void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2);
+	static inline void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = true) {
+		if (x2 <= x1 || y2 <= y1)
+			return;
+
+		if (!light) {
+			for (int _x = x1; _x <= x2; ++_x) {
+				CRect r(_x, y1, _x + 1, y2);
+				hDC.FillSolidRect(&r, blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1)));
+			}
+		} else {
+			int height = y2 - y1;
+			size_t ci_1;
+			// Allocate shade-constants
+			double* c = new double[height];
+			// Calculate constants
+			for (int i = 0; i < height; ++i) {
+				ci_1 = (size_t)floor(((double)(i + 1) / height) * MAX_SHADE - 1);
+				c[i] = (double)(blend_vector[ci_1] + blend_vector[ci_1]) / (double)(SHADE_LEVEL);
+			}
+			int delta_x = x2 - x1;
+			for (int _x = x1; _x <= x2; ++_x) {
+				COLORREF cr = blendColors(c2, c1, (double)(_x - x1) / (double)(delta_x));
+				for (int _y = y1; _y < y2; ++_y) {
+					hDC.SetPixelV(_x, _y, brightenColor(cr, c[_y - y1]));
+				}
+			}
+			delete[] c;
+		}
+	}
 	static void EnlightenFlood(const COLORREF& clr, COLORREF& a, COLORREF& b);
 	static COLORREF TextFromBackground(COLORREF bg);
 

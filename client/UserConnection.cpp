@@ -192,8 +192,8 @@ again:
     		aLine += 6;
     		if(aLine == NULL) return;
      
-    		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
-    			temp[0] = NULL; temp += 1;
+    		if((temp = strchr(aLine, ' ')) != NULL && temp+4 != NULL) {
+    			temp[0] = NULL; temp += 4;
     			if(aLine == NULL || temp == NULL) return; 
                 
     			fire(UserConnectionListener::CLock(), this, aLine, temp);
@@ -201,6 +201,15 @@ again:
     			fire(UserConnectionListener::CLock(), this, aLine, Util::emptyString);
     		}
     		return;
+        }
+
+		// $ListLen
+		if(strncmp(aLine+2, "istLen ", 7) == 0) {	                 	
+			aLine += 9;	 	
+            if(aLine != NULL) {	 	
+				fire(UserConnectionListener::ListLength(), this, aLine);	
+			}
+			return;
         }
 	} else if(aLine[1] == 'S') {
         // $Send
@@ -232,6 +241,8 @@ again:
     		return;
         }
 	} else {
+		if(getUser())	 	
+			getUser()->setUnknownCommand(aLine);
 		dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;
 	}

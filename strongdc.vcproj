@@ -93,11 +93,11 @@
 			WholeProgramOptimization="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="4"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
-				FavorSizeOrSpeed="1"
+				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
@@ -111,7 +111,7 @@
 				TreatWChar_tAsBuiltInType="TRUE"
 				UsePrecompiledHeader="3"
 				PrecompiledHeaderThrough="stdafx.h"
-				AssemblerOutput="4"
+				AssemblerOutput="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 				CallingConvention="1"
@@ -457,6 +457,9 @@
 				RelativePath=".\windows\MainFrm.cpp">
 			</File>
 			<File
+				RelativePath=".\windows\NetworkPage.cpp">
+			</File>
+			<File
 				RelativePath=".\windows\NotepadFrame.cpp">
 			</File>
 			<File
@@ -708,6 +711,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\MainFrm.h">
+			</File>
+			<File
+				RelativePath=".\windows\NetworkPage.h">
 			</File>
 			<File
 				RelativePath=".\windows\NotepadFrame.h">

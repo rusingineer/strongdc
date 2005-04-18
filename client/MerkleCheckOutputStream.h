@@ -33,7 +33,6 @@ public:
 			bufPos = 0;
 			start = start + skippingBytes;
 			multiSourceChecking = true;
-			
 		} else {
 			multiSourceChecking = false;
 		}

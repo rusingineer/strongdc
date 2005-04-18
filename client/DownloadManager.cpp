@@ -48,14 +48,14 @@
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
-Download::Download() throw() : file(NULL), item(NULL),
+Download::Download() throw() : file(NULL),
 crcCalc(NULL), tth(NULL), treeValid(false) { 
 }
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
-	quickTick(GET_TICK()), segmentSize(1048576), item(qi) { 
+	quickTick(GET_TICK()), segmentSize(1048576) { 
 	
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
@@ -115,9 +115,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	Lock l(cs);
 
 	Download::List tickList;
-	int iSpeed = SETTING(I_DOWN_SPEED);
-	int iHighSpeed = SETTING(H_DOWN_SPEED);
-	int iTime = SETTING(DOWN_TIME)/* * 60*/;
 	throttleSetup();
 	throttleZeroCounters();
 	// Tick each ongoing download
@@ -128,66 +125,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		if(d->getUserConnection() == NULL)
 			continue;
 
-		QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
-
-		if(q == NULL)
+		if(!QueueManager::getInstance()->autoDropSource(d))
 			continue;
-
-		d->setItem(q);
-
-     	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (q->getActiveSegments().size() == 1)) {
-			u_int count = q->speedUsers.size();
-			 
-			if(count > 0) {
-				int TryToSwitchToUser = -1;
-
-				if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
-					TryToSwitchToUser = 0;
-				} else if((count > 1) && (q->speedUsers[1] != NULL) && (q->speedUsers[1]->getUser() != (User::Ptr)NULL) && (q->speedUsers[1]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
-					TryToSwitchToUser = 1;
-				} else if((count > 2) && (q->speedUsers[2] != NULL) && (q->speedUsers[2]->getUser() != (User::Ptr)NULL) && (q->speedUsers[2]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
-					TryToSwitchToUser = 2;
-				}
-				if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
-	 				d->getUserConnection()->disconnect();
-					q->setFastUser(true);
-					q->speedUsers[TryToSwitchToUser]->getUser()->connect();
-					continue;
-				}
-			}
-		}
-
-		if(q->getSlowDisconnect() && !(SETTING(AUTO_DROP_SOURCE) && (q->getActiveSegments().size() < 2))) {
-			if(q->getSpeed() > (iHighSpeed*1024)) {
-				dcassert(d->getUserConnection() != NULL);
-				if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
-					if(d->getRunningAverage() < (iSpeed*1024) && (q->countOnlineUsers() > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
-						if(((GET_TICK() - d->quickTick)/1000) > iTime) {
-							if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-								QueueManager::getInstance()->removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
-							}
-							d->getUserConnection()->disconnect();
-			                continue;
-						}
-					} else {
-						d->quickTick = GET_TICK();
-					}
-				}
-			}
-		}
-
-		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) // check every 20 sec
-        {
-            if(d->getRunningAverage() < 1230) {
-				if(q->getActiveSegments().size() > 2) {
-					d->getUserConnection()->disconnect();
-					continue;
-				}
-            }
-        }
 
 		if((*i)->getTotal() > 0) {
 			tickList.push_back(*i);
@@ -553,30 +492,19 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
-	QueueItem* q = QueueManager::getInstance()->getRunning(d->getUserConnection()->getUser());
+	bool isActiveSegment;
+	u_int16_t activeSegments;
 
-	if(q == NULL) {
-		aSource->setDownload(NULL);
-		removeDownload(d);
-		QueueManager::getInstance()->putDownload(d, false, false);
-		removeConnection(aSource);			
-		return false;
-	}
-
-	bool isActiveSegment = find(q->getActiveSegments().begin(), q->getActiveSegments().end(), *q->getSource(aSource->getUser())) != q->getActiveSegments().end();
-
-	if(q && !isActiveSegment && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		if(d->isSet(Download::FLAG_MULTI_CHUNK) && (q->getMaxSegments() <= q->getActiveSegments().size())) {	
+	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		if(!QueueManager::getInstance()->setActiveSegment(d->getUserConnection()->getUser(), isActiveSegment, activeSegments)) {
 			fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
 			aSource->setDownload(NULL);
 			removeDownload(d);
 			QueueManager::getInstance()->putDownload(d, false, false);
 			removeConnection(aSource);			
 			return false;
-		}
-		q->addActiveSegment(aSource->getUser());
+		}		
 	}
-	dcassert(q->getActiveSegments().size() <= q->getMaxSegments());
 
 	if(newSize != -1) {
 		d->setSize(newSize);
@@ -700,11 +628,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_DONE);
 
-	if(!isActiveSegment && (q->getActiveSegments().size() == 1)) {
-		q->setStart(GET_TICK());
-	}
-
-	fire(DownloadManagerListener::Starting(), d, isActiveSegment);
+	fire(DownloadManagerListener::Starting(), d, isActiveSegment, activeSegments);
 
 	return true;
 }	
@@ -784,7 +708,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
-					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree())) {
+					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree(), d->getTarget())) {
 						dcdebug("last verifiy failed .....\n");
 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -889,7 +813,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 		d->setTreeValid(true);
-		d->getItem()->setHasTree(true);
+// @todo: setHasTree to download's queue item		d->getItem()->setHasTree(true);
 
 		// Added by set the tree to other downloads
 		if(d->isSet(Download::FLAG_MULTI_CHUNK)) {

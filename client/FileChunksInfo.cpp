@@ -302,7 +302,7 @@ string FileChunksInfo::getVerifiedBlocksString()
 }
 
 
-bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
+bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 {
 	if(tthBlockSize != aTree.getBlockSize())
 		return true;
@@ -338,7 +338,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree)
 		tth.update(buf, n);
 		n2 = 512*1024;
 		hashed = hashed + n;
-		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), tempTargetName, hashed);
+		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), aTarget, hashed);
 	}
 	tth.finalize();
 

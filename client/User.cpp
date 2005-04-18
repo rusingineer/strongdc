@@ -84,7 +84,7 @@ const string& User::getClientName() const {
 string User::getClientAddressPort() const {
 	RLock<> l(cs);
 	if(client) {
-		return client->getAddressPort();
+		return client->getHubUrl();
 	} else {
 		return Util::emptyString;
 	}

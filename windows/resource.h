@@ -44,6 +44,7 @@
 #define IDC_OPEN_MY_LIST                132
 #define IDC_ENABLE_EMOTICONS            132
 #define IDC_SERVER                      133
+#define IDC_EXTERNAL_IP                 133
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
 #define IDB_ARROWS                      208
@@ -118,6 +119,8 @@
 #define IDD_EMOTICONS_DLG               293
 #define IDB_BITMAP1                     295
 #define IDB_EMOTICON                    295
+#define IDD_DIALOG1                     296
+#define IDD_NETWORKPAGE                 296
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -128,6 +131,7 @@
 #define IDC_PASSIVE                     1007
 #define IDC_PORT                        1008
 #define IDC_DIRECTORIES                 1009
+#define IDC_PORT_TCP                    1009
 #define IDC_REMOVE_ALL                  1010
 #define IDC_ADD                         1011
 #define IDC_REMOVE                      1012
@@ -211,7 +215,6 @@
 #define IDC_PROGRESS_BUMPED             1086
 #define IDC_REMOVEALL                   1087
 #define IDC_FINISHEDMP3                 1088
-#define IDC_SOCKS5                      1089
 #define IDC_SOCKS_SERVER                1090
 #define IDC_SOCKS_PORT                  1091
 #define IDC_SOCKS_USER                  1092
@@ -280,8 +283,10 @@
 #define IDC_SETTINGS_SOCKS5_USERNAME    1142
 #define IDC_SETTINGS_SOCKS5_PASSWORD    1143
 #define IDC_SETTINGS_DIRECTORIES        1144
+#define IDC_SETTINGS_INCOMING           1144
 #define IDC_SETTINGS_DOWNLOAD_DIRECTORY 1145
 #define IDC_SETTINGS_UNFINISHED_DOWNLOAD_DIRECTORY 1146
+#define IDC_SETTINGS_PORT_TCP           1146
 #define IDC_SETTINGS_DOWNLOAD_LIMITS    1147
 #define IDC_SETTINGS_DOWNLOADS_MAX      1148
 #define IDC_SETTINGS_DOWNLOADS_SPEED_PAUSE 1149
@@ -479,8 +484,10 @@
 #define IDC_LIST_EDIT                   1264
 #define IDC_GETIP                       1266
 #define IDC_CHANGE_COLOR                1266
+#define IDC_PORT_UDP                    1266
 #define IDC_USERLIST_IMAGE              1267
 #define IDC_SETTINGS_UDP_PORT           1267
+#define IDC_SETTINGS_PORT_UDP           1267
 #define IDC_USERLIST                    1268
 #define IDC_UDP_PORT                    1268
 #define IDC_IMPORT                      1269
@@ -509,9 +516,10 @@
 #define IDC_EDIT3                       1286
 #define IDC_BIND_ADDRESS                1286
 #define IDC_STATIC1                     1287
-#define IDC_SETTINGS_BIND_ADDRESS       1287
+#define IDC_SETTINGS_BIND_ADDRESS_HELP  1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_SECOND                      1288
+#define IDC_SETTINGS_BIND_ADDRESS1      1288
 #define IDC_SECOND1                     1289
 #define IDC_SECOND2                     1290
 #define IDC_FLAT                        1291
@@ -520,15 +528,25 @@
 #define IDC_CONN_BORDER                 1294
 #define IDC_CLIENT_PROFILE_RAW          1295
 #define IDC_MULTISOURCE                 1295
+#define IDC_SETTINGS_OUTGOING           1295
 #define IDC_REGEXP_TESTER_COMBO         1296
 #define IDC_LISTLEN                     1296
 #define IDC_MULTISOURCE_COMBO           1296
 #define IDC_PUB_LIST_CONFIG             1297
 #define IDC_ODC_STYLE                   1297
+#define IDC_OVERRIDE                    1297
 #define IDC_WINDOWS_STARTUP             1298
+#define IDC_SETTINGS_PORTS              1298
 #define IDC_SETTINGS_AUTO_OPEN          1299
+#define IDC_SETTINGS_BIND_ADDRESS       1299
 #define IDC_SETTINGS_WINDOWS_OPTIONS    1300
 #define IDC_WINDOWS_OPTIONS             1301
+#define IDC_DIRECT                      1302
+#define IDC_FIREWALL_UPNP               1303
+#define IDC_FIREWALL_NAT                1304
+#define IDC_FIREWALL_PASSIVE            1305
+#define IDC_DIRECT_OUT                  1306
+#define IDC_SOCKS5                      1307
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445
@@ -756,9 +774,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        296
+#define _APS_NEXT_RESOURCE_VALUE        297
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1298
+#define _APS_NEXT_CONTROL_VALUE         1300
 #define _APS_NEXT_SYMED_VALUE           133
 #endif
 #endif

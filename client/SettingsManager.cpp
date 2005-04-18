@@ -32,7 +32,7 @@
 const string SettingsManager::settingTags[] =
 {
 	// Strings
-	"Connection", "Description", "DownloadDirectory", "EMail", "Nick", "Server",
+	"Connection", "Description", "DownloadDirectory", "EMail", "Nick", "ExternalIp",
 	"Font", "MainFrameOrder", "MainFrameWidths", "HubFrameOrder", "HubFrameWidths", 
 	"RecentFrameOrder", "RecentFrameWidths", "FinishedMP3Order", "FinishedMP3Widths",
 	"LanguageFile", "SearchFrameOrder", "SearchFrameWidths", "FavoritesFrameOrder", "FavoritesFrameWidths", 
@@ -57,7 +57,7 @@ const string SettingsManager::settingTags[] =
 	"EmoticonsFile",
 	"SENTRY", 
 	// Ints
-	"ConnectionType", "InPort", "Slots", "Rollforward", "AutoFollow", "ClearSearch",
+	"IncomingConnections", "InPort", "Slots", "Rollback", "AutoFollow", "ClearSearch",
 	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray", 
 	"AutoSearch", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline", 
 	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat", 
@@ -103,7 +103,7 @@ const string SettingsManager::settingTags[] =
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
 	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction", "MagnetRegister",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
-	"AddFinishedInstantly", "Away", "UseUPnP", "UseCTRLForLineHistory",
+	"AddFinishedInstantly", "Away", "UseCTRLForLineHistory",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
 	"PopupDownloadFailed", "PopupDownloadFinished", "PopupUploadFinished", "PopupPm", "PopupNewPM", 
 	"PopupType", "WebServer", "WebServerPort", "WebServerLog", "ShutdownAction", "MinimumSearchInterval",
@@ -118,7 +118,8 @@ const string SettingsManager::settingTags[] =
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
-	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad",
+	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
+	"NoIPOverride",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -148,8 +149,10 @@ SettingsManager::SettingsManager()
 	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
 	//setDefault(SERVER, Util::getLocalIp());
-	setDefault(IN_PORT, Util::rand(1025, 32000));
+	setDefault(TCP_PORT, Util::rand(1025, 32000));
 	setDefault(UDP_PORT, Util::rand(1025, 31999)+1);
+	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
+	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);
 	setDefault(EMPTY_WORKING_SET, true);
 	setDefault(DONT_EXTENSIONS, "");
@@ -246,7 +249,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_ASK, true);
 	setDefault(MAGNET_ACTION, MAGNET_AUTO_SEARCH);
 	setDefault(ADD_FINISHED_INSTANTLY, false);
-	setDefault(SETTINGS_USE_UPNP, false);
 	setDefault(DONT_DL_ALREADY_SHARED, false);
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
@@ -265,6 +267,7 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_SEARCH_SPY, false);
 	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
+	setDefault(NO_IP_OVERRIDE, false);
 
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
@@ -577,18 +580,15 @@ void SettingsManager::load(string const& aFileName)
 
 		double v = Util::toDouble(SETTING(CONFIG_VERSION));
 		// if(v < 0.x) { // Fix old settings here }
-		if(v < 0.668 && isSet[IN_PORT]) {
-			set(UDP_PORT, SETTING(IN_PORT));
-		}
 
-		if(CID(SETTING(CLIENT_ID)).isZero())
+		if(v <= 0.674 || CID(SETTING(CLIENT_ID)).isZero())
 			set(CLIENT_ID, CID::generate().toBase32());
 
 #ifdef _DEBUG
 		set(CLIENT_ID, CID::generate().toBase32());
 #endif
-		setDefault(UDP_PORT, SETTING(IN_PORT));
-
+		setDefault(UDP_PORT, SETTING(TCP_PORT));
+		
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
