@@ -43,12 +43,14 @@
 #include "Popups.h"
 #include "SDCPage.h"
 #include "UserListColours.h"
+#include "NetworkPage.h"
 #include "WindowsPage.h"
 
 bool PropertiesDlg::needUpdate = false;
 PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS)) {
 	int n = 0;
 	pages[n++] = new GeneralPage(s);
+	pages[n++] = new NetworkPage(s);
 	pages[n++] = new UploadPage(s);
 	pages[n++] = new DownloadPage(s);	
 	pages[n++] = new AppearancePage(s);

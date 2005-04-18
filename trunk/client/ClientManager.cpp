@@ -200,7 +200,7 @@ User::Ptr ClientManager::getUser(const string& aNick, Client* aClient, bool putO
 	// Check for an offline user that was on that hub that we can put online again
 	for(i = p.first; i != p.second; ++i) {
 		if( (!i->second->isOnline()) && 
-			((i->second->getLastHubAddress() == aClient->getAddressPort()) || (i->second->getLastHubAddress() == aClient->getIpPort())) )
+			((i->second->getLastHubAddress() == aClient->getHubUrl()) || (i->second->getLastHubAddress() == aClient->getIpPort())) )
 		{
 			if(putOnline) {
 				i->second->setClient(aClient);
@@ -345,17 +345,17 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 }
 
 void ClientManager::on(Failed, Client* client, const string&) throw() { 
-		FavoriteManager::getInstance()->removeUserCommand(client->getAddressPort());
+	FavoriteManager::getInstance()->removeUserCommand(client->getHubUrl());
 	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 
 void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
-		if(BOOLSETTING(HUB_USER_COMMANDS)) {		
+	if(BOOLSETTING(HUB_USER_COMMANDS)) {		
  		if(aType == ::UserCommand::TYPE_CLEAR) {
- 			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getAddressPort());
+ 			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
  		} else {
-			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getAddressPort());
-	}
+			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
+		}
 	}
 }
 

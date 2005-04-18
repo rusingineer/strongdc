@@ -89,7 +89,7 @@ public:
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
-		add(file, -1, NULL, aUser, fileName, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
+		add(file, -1, NULL, aUser, fileName, true, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
 		aUser->setHasTestSURinQueue(true);
 	}
 
@@ -126,7 +126,7 @@ public:
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
-	QueueItem* lookupNext(User::Ptr& aUser) throw();
+	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
@@ -139,7 +139,10 @@ public:
 	void saveQueue() throw();
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	void autoDropSource(User::Ptr& aUser, QueueItem* q);
+	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount);
+	u_int16_t getActiveSourcesCount(const string& aTarget, u_int16_t& currentsCount, int64_t& size);
+	bool autoDropSource(Download* d);
+	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
 	QueueItem::List getRunningFiles() throw() {
 		QueueItem::List ql;

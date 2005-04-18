@@ -133,7 +133,7 @@ public:
 	/**
      * Perform last verifying against TigerTree
      */
-	bool DoLastVerify(const TigerTree& aTree);
+	bool DoLastVerify(const TigerTree& aTree, string aTarget);
 
 	void markVerifiedBlock(u_int16_t start, u_int16_t end);
 

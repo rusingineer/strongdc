@@ -107,7 +107,6 @@ public:
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(int64_t, segmentSize, SegmentSize);
-	GETSET(QueueItem*, item, Item);
 	int64_t quickTick;
 	
 private:
@@ -148,7 +147,7 @@ public:
 	 * This is the first message sent before a download starts. 
 	 * No other messages will be sent before.
 	 */
-	virtual void on(Starting, Download*, bool) throw() { };
+	virtual void on(Starting, Download*, bool, u_int16_t) throw() { };
 
 	/**
 	 * Sent once a second if something has actually been downloaded.

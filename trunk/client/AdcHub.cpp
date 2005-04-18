@@ -27,6 +27,7 @@
 #include "ConnectionManager.h"
 #include "version.h"
 #include "Util.h"
+
 const string AdcHub::CLIENT_PROTOCOL("ADC/0.9");
 
 AdcHub::AdcHub(const string& aHubURL) : Client(aHubURL, '\n'), state(STATE_PROTOCOL) {
@@ -206,7 +207,7 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 }
 
 void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
-	if(SETTING(CONNECTION_TYPE) != SettingsManager::CONNECTION_ACTIVE)
+	if(!ClientManager::getInstance()->isActive(this))
 		return;
 	User::Ptr p = cidMap[c.getFrom()];
 	if(!p || p == getMe())
@@ -258,8 +259,8 @@ void AdcHub::connect(const User* user, string const& token) {
 	if(state != STATE_NORMAL)
 		return;
 
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		send(AdcCommand(AdcCommand::CMD_CTM, user->getCID()).addParam(CLIENT_PROTOCOL).addParam(Util::toString(SETTING(IN_PORT))).addParam(token));
+	if(ClientManager::getInstance()->isActive(this)) {
+		send(AdcCommand(AdcCommand::CMD_CTM, user->getCID()).addParam(CLIENT_PROTOCOL).addParam(Util::toString(SETTING(TCP_PORT))).addParam(token));
 	} else {
 		send(AdcCommand(AdcCommand::CMD_RCM, user->getCID()).addParam(CLIENT_PROTOCOL));
 	}
@@ -312,7 +313,7 @@ void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& a
 
 	sendUDP(c);
 
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
+	if(ClientManager::getInstance()->isActive(this)) {
 		c.setType(AdcCommand::TYPE_PASSIVE);
 		send(c);
 	}
@@ -369,10 +370,15 @@ void AdcHub::info() {
 	ADDPARAM("HR", Util::toString(counts.registered));
 	ADDPARAM("HO", Util::toString(counts.op));
 	ADDPARAM("VE", "++ " VERSIONSTRING);
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE) {
-		ADDPARAM("I4", "0.0.0.0");
+	if(ClientManager::getInstance()->isActive(this)) {
+		if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
+			ADDPARAM("I4", Socket::resolve(SETTING(EXTERNAL_IP)));
+		} else {
+			ADDPARAM("I4", "0.0.0.0");
+		}
 		ADDPARAM("U4", Util::toString(SETTING(UDP_PORT)));
 	} else {
+		ADDPARAM("I4", "");
 		ADDPARAM("U4", "");
 	}
 
@@ -390,10 +396,6 @@ string AdcHub::checkNick(const string& aNick) {
 		tmp[i++]='_';
 	}
 	return tmp;
-}
-
-string AdcHub::getHubURL() {
-	return getAddressPort();
 }
 
 void AdcHub::clearUsers() {

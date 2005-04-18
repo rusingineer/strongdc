@@ -179,7 +179,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			CRect rc(dis->rcItem);
 			if (dis->CtlID == IDC_SETTINGS_ODC_MENUBAR_COLOR) {
 				if (getCheckbox(IDC_SETTINGS_ODC_MENUBAR_USETWO))
-					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, crMenubarLeft, crMenubarRight, getCheckbox(IDC_SETTINGS_ODC_MENUBAR_BUMPED));
+					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, crMenubarLeft, crMenubarRight);
 				else
 					dc.FillSolidRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, crMenubarLeft);
 				dc.SetTextColor(OperaColors::TextFromBackground(crMenubarLeft));
@@ -188,7 +188,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				if(odcStyle) {
 					COLORREF a, b;
 					OperaColors::EnlightenFlood(clr, a, b);
-					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, a, b, true);
+					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, a, b);
 					int textcolor = getCheckbox(IDC_PROGRESS_OVERRIDE2) ? ((dis->CtlID == IDC_PROGRESS_COLOR_DOWN_SHOW) ? crProgressTextDown : crProgressTextUp) : OperaColors::TextFromBackground(clr);
 					dc.SetTextColor(textcolor);
 				} else {

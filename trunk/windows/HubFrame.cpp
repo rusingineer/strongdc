@@ -48,7 +48,7 @@ int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARE
 static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
 ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL, 
 ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
-ResourceManager::AVERAGE_UPLOAD, ResourceManager::SETTINGS_IP, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
+ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
 
 tstring sSelectedURL = Util::emptyStringT;
 long lURLBegin = 0;
@@ -306,7 +306,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(ShowUserList ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
-				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(IN_PORT)) + "/" + Util::toString(SETTING(UDP_PORT)))), WinUtil::m_ChatTextSystem);
+				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(TCP_PORT)) + "/" + Util::toString(SETTING(UDP_PORT)))), WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){
@@ -319,7 +319,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
 				params["hub"] = client->getName();
-				params["hubaddr"] = client->getAddressPort();
+				params["hubaddr"] = client->getHubUrl();
 				params["mynick"] = client->getNick(); 
 				if(param.empty()) {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params))));
@@ -359,7 +359,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
 				params["hub"] = client->getName();
-				params["hubaddr"] = client->getAddressPort();
+				params["hubaddr"] = client->getHubUrl();
 				params["mynick"] = client->getNick(); 
 				if(param.empty()) {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params))));
@@ -479,7 +479,7 @@ LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 				sCopy += client->getName();
 				break;
 			case IDC_COPY_HUBADDRESS:
-				sCopy += client->getAddressPort();
+				sCopy += client->getHubUrl();
 				break;
 		}
 
@@ -723,7 +723,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							}
 						
 							if(BOOLSETTING(CHECK_NEW_USERS)) {
-								if(u->getMode() == "A" || !u->isSet(User::PASSIVE) || client->getMode() == SettingsManager::CONNECTION_ACTIVE) {
+								if(u->getMode() == "A" || !u->isSet(User::PASSIVE) || ClientManager::getInstance()->isActive(u->getClient())) {
 									try {
 										QueueManager::getInstance()->addTestSUR(u, true);
 									} catch(const Exception&) {
@@ -954,6 +954,11 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		rc.right = rc.left + 76;
 		rc.top = rc.top + 0;
 		rc.bottom = rc.bottom + 120;
+		ctrlFilterSel.MoveWindow(rc);
+	} else {
+		rc.left = 0;
+		rc.right = 0;
+		ctrlFilter.MoveWindow(rc);
 		ctrlFilterSel.MoveWindow(rc);
 	}
 }
@@ -1211,7 +1216,7 @@ void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = t
 		StringMap params;
 		params["message"] = Text::fromT(sTmp);
 		params["hub"] = client->getName();
-		params["hubaddr"] = client->getAddressPort();
+		params["hubaddr"] = client->getHubUrl();
 		params["mynick"] = client->getNick(); 
 		LOG(LogManager::CHAT, params);
 	}
@@ -1230,7 +1235,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	tabMenuShown = true;
 	CMenu hSysMenu;
-	tabMenu.InsertSeparatorFirst((client->getName() != "") ? (client->getName().size() > 50 ? client->getName().substr(0, 50) : client->getName()) : client->getAddressPort());	
+	tabMenu.InsertSeparatorFirst((client->getName() != "") ? (client->getName().size() > 50 ? client->getName().substr(0, 50) : client->getName()) : client->getHubUrl());	
 	copyHubMenu.InsertSeparatorFirst(STRING(COPY));
 	
 	if(!client->isConnected())
@@ -1238,7 +1243,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	else
 		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_ENABLED);
 
-	prepareMenu(tabMenu, ::UserCommand::CONTEXT_HUB, Text::toT(client->getAddressPort()), client->getOp());
+	prepareMenu(tabMenu, ::UserCommand::CONTEXT_HUB, Text::toT(client->getHubUrl()), client->getOp());
 	hSysMenu.Attach((wParam == NULL) ? (HMENU)tabMenu : (HMENU)wParam);
 	if (wParam != NULL) {
 		hSysMenu.InsertMenu(hSysMenu.GetMenuItemCount() - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)(HMENU)tabMenu, /*CTSTRING(USER_COMMANDS)*/ _T("User Commands"));
@@ -1286,7 +1291,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 
 		if(PreparePopupMenu(&ctrlUsers, sSelectedUser, &Mnu)) {
-			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getAddressPort()), client->getOp());
+			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getHubUrl()), client->getOp());
 			if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 				Mnu.AppendMenu(MF_SEPARATOR);
 			}
@@ -1352,7 +1357,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				if(Mnu != NULL) Mnu.DestroyMenu();
 				return TRUE;
 			} else {
-				prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getAddressPort()), client->getOp());
+				prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getHubUrl()), client->getOp());
 				if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 					Mnu.AppendMenu(MF_SEPARATOR);
 				}
@@ -1743,7 +1748,7 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	if(BOOLSETTING(LOG_STATUS_MESSAGES)) {
 		StringMap params;
 		params["hub"] = client->getName();
-		params["hubaddr"] = client->getAddressPort();
+		params["hubaddr"] = client->getHubUrl();
 		params["message"] = Text::fromT(aLine);
 		LOG(LogManager::STATUS, params);
 	}
@@ -1765,12 +1770,12 @@ void HubFrame::on(TimerManagerListener::Second, DWORD /*aTick*/) throw() {
 		}
 }
 
-void HubFrame::on(Connecting, Client*) throw() { 
-	if(BOOLSETTING(SEARCH_PASSIVE) && (SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_ACTIVE)) {
+void HubFrame::on(Connecting, Client* c) throw() { 
+	if(BOOLSETTING(SEARCH_PASSIVE) && ClientManager::getInstance()->isActive(c)) {
 		addLine(TSTRING(ANTI_PASSIVE_SEARCH), WinUtil::m_ChatTextSystem);
 	}
-	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + client->getAddressPort() + "...");
-	speak(SET_WINDOW_TITLE, client->getAddressPort());
+	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + client->getHubUrl() + "...");
+	speak(SET_WINDOW_TITLE, client->getHubUrl());
 }
 void HubFrame::on(Connected, Client*) throw() { 
 	speak(CONNECTED);
@@ -1823,7 +1828,7 @@ void HubFrame::on(GetPassword, Client*) throw() {
 	speak(GET_PASSWORD);
 }
 void HubFrame::on(HubUpdated, Client*) throw() { 
-	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getName(), true, false) + " (" + client->getAddressPort() + ")");
+	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getName(), true, false) + " (" + client->getHubUrl() + ")");
 }
 void HubFrame::on(Message, Client*, const string& line) throw() { 
 	if(SETTING(FILTER_MESSAGES)) {
@@ -2275,7 +2280,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	params["mynick"] = ui->user->getClientNick();
 	params["mycid"] = ui->user->getClientCID().toBase32();
 	params["cid"] = ui->user->getCID().toBase32();
-	params["hubaddr"] = client->getAddressPort();
+	params["hubaddr"] = client->getHubUrl();
 	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params)));
 	if(Util::fileExists(Text::fromT(file))) {
 		ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
@@ -2288,7 +2293,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 LRESULT HubFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	StringMap params;
 	params["hub"] = client->getName();
-	params["hubaddr"] = client->getAddressPort();
+	params["hubaddr"] = client->getHubUrl();
 	params["mynick"] = client->getNick(); 
 	tstring filename = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params)));
 	if(Util::fileExists(Text::fromT(filename))){

@@ -54,7 +54,7 @@
 # pragma warning(disable: 4786) // identifier was truncated to '255' characters in the debug information
 # pragma warning(disable: 4290) // C++ Exception Specification ignored
 # pragma warning(disable: 4127) // constant expression
-# pragma warning(disable: 4710) // function not inlined
+//# pragma warning(disable: 4710) // function not inlined
 # pragma warning(disable: 4512) // can't generate assignment operator
 # pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 

@@ -96,6 +96,9 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	if(p == QueueItem::DEFAULT)
 		p = (aSize <= 64*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
 
+	if(aFlags & QueueItem::FLAG_USER_LIST) 
+		p = QueueItem::HIGHEST;
+
 	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aDownloadedBytes, aAdded, root);
 
 	qi->setMaxSegments(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ? getMaxSegments(qi->getTargetFileName(), qi->getSize()) : 1);
@@ -385,6 +388,57 @@ QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
 	return userQueue.getRunning(aUser);
 }
 
+bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount) {
+	Lock l(cs);
+	QueueItem* qi = userQueue.getRunning(aUser);
+
+	if(qi == NULL) {
+		SegmentsCount = 0;
+		return false;
+	}
+
+	SegmentsCount = qi->getActiveSegments().size();
+
+	isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
+	
+	if(!isAlreadyActive) {
+		if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && (qi->getMaxSegments() <= SegmentsCount)) {
+			return false;
+		}
+
+		qi->addActiveSegment(aUser);
+		SegmentsCount += 1;
+		if(SegmentsCount == 1) {
+			qi->setStart(GET_TICK());
+		}
+	}
+	return true;
+}
+
+u_int16_t QueueManager::getActiveSourcesCount(const string& aTarget, u_int16_t& currentsCount, int64_t& size) {
+	Lock l(cs);
+	QueueItem* qi = fileQueue.find(aTarget);
+	currentsCount = 0;
+	size = -1;
+
+	if(!qi)
+		return 0;
+
+	currentsCount = qi->getCurrents().size();
+	size = qi->getSize();
+	return qi->getActiveSegments().size();
+}
+
+int64_t QueueManager::setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments) {
+	Lock l(cs);
+	QueueItem* qi = userQueue.getRunning(aUser);
+
+	qi->setSpeed(speed);
+	activeSegments = qi->getActiveSegments().size();
+
+	return qi->getStart();
+}
+
 void QueueManager::UserQueue::remove(QueueItem* qi) {
  	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && (qi->getStatus() == QueueItem::STATUS_RUNNING)) {
 		dcassert(qi->getCurrents()[0] != NULL);
@@ -532,7 +586,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
 	string target = Util::getAppPath() + "FileLists\\" + Util::validateFileName(aUser->getNick());
 
-	add(target, -1, NULL, aUser, USER_LIST_NAME, true, QueueItem::FLAG_USER_LIST | aFlags);
+	add(target, -1, NULL, aUser, USER_LIST_NAME, false, QueueItem::FLAG_USER_LIST | aFlags);
 }
 
 void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {
@@ -713,7 +767,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(utf8)
 		s->setFlag(QueueItem::Source::FLAG_UTF8);
 
-	if(aUser->isSet(User::PASSIVE) && (aUser->getClient()->getMode() != SettingsManager::CONNECTION_ACTIVE) ) {
+	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(aUser->getClient()) ) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) || (qi->getStatus() != QueueItem::STATUS_RUNNING)) {
@@ -722,7 +776,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 		userQueue.add(qi, aUser);
 	} else {
 		wantConnection = false;
-	} 
+	}
 
 	fire(QueueManagerListener::SourcesUpdated(), qi);
 	setDirty();
@@ -886,9 +940,17 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-QueueItem* QueueManager::lookupNext(User::Ptr& aUser) throw() {
+bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw() {
     Lock l(cs);
-    return userQueue.getNext(aUser);
+    QueueItem* qi = userQueue.getNext(aUser);
+	if(qi == NULL)
+		return false;
+
+	aTarget = qi->getTarget();
+	aSize = qi->getSize();
+	aFlags = qi->getFlags();
+
+	return true;
 }
 
 int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
@@ -1027,7 +1089,7 @@ again:
 next:
 	Download* d = new Download(q, aUser);
 
-	if(d->getSize() != -1 && d->getTTH()) {
+	if((d->getSize() != -1) && d->getTTH()) {
 		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
 			q->setHasTree(true);
@@ -1816,20 +1878,82 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
-void QueueManager::autoDropSource(User::Ptr& aUser, QueueItem* q)
-{
-    Lock l(cs);
+bool QueueManager::autoDropSource(Download* d) {
+	int iSpeed = SETTING(I_DOWN_SPEED);
+	int iHighSpeed = SETTING(H_DOWN_SPEED);
+	int iTime = SETTING(DOWN_TIME)/* * 60*/;
+	u_int16_t activeSegments, onlineUsers;
+	int64_t overallSpeed;
+	bool enabledSlowDisconnecting;
 
-    if(!q) return;
+	{
+	    Lock l(cs);
 
-    userQueue.setWaiting(q, aUser);
-    userQueue.remove(q, aUser);
+		QueueItem* q = userQueue.getRunning(d->getUserConnection()->getUser());
 
-	q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
+		if(q == NULL)
+			return false;
 
-	fire(QueueManagerListener::StatusUpdated(), q);
-    setDirty();
-}
+		activeSegments = q->getActiveSegments().size();
+		onlineUsers = q->countOnlineUsers();
+		overallSpeed = q->getSpeed();
+		enabledSlowDisconnecting = q->getSlowDisconnect();
+
+	   	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (activeSegments == 1)) {
+			u_int count = q->speedUsers.size();
+			 
+			if(count > 0) {
+				int TryToSwitchToUser = -1;
+
+				if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
+					TryToSwitchToUser = 0;
+				} else if((count > 1) && (q->speedUsers[1] != NULL) && (q->speedUsers[1]->getUser() != (User::Ptr)NULL) && (q->speedUsers[1]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
+					TryToSwitchToUser = 1;
+				} else if((count > 2) && (q->speedUsers[2] != NULL) && (q->speedUsers[2]->getUser() != (User::Ptr)NULL) && (q->speedUsers[2]->getUser()->isOnline()) &&
+					(d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
+					TryToSwitchToUser = 2;
+				}
+				if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
+ 					d->getUserConnection()->disconnect();
+					q->setFastUser(true);
+					q->speedUsers[TryToSwitchToUser]->getUser()->connect();
+					return false;
+				}
+			}
+		}
+	}
+
+	if(enabledSlowDisconnecting && !(SETTING(AUTO_DROP_SOURCE) && (activeSegments < 2))) {
+		if(overallSpeed > (iHighSpeed*1024)) {
+			dcassert(d->getUserConnection() != NULL);
+			if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
+				if(d->getRunningAverage() < (iSpeed*1024) && (onlineUsers > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
+					if(((GET_TICK() - d->quickTick)/1000) > iTime) {
+						if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
+							removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
+						}
+						d->getUserConnection()->disconnect();
+						return false;
+					}
+				} else {
+					d->quickTick = GET_TICK();
+				}
+			}
+		}
+	}
+
+	if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
+		if(d->getRunningAverage() < 1230) {
+			if(activeSegments > 2) {
+				d->getUserConnection()->disconnect();
+				return false;
+			}
+		}
+	}
+	return true;
+ }
 /**
  * @file
  * $Id$

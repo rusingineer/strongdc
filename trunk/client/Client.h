@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _CLIENT_H
-#define _CLIENT_H
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -34,7 +34,7 @@ class ClientListener
 {
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
-	
+
 	typedef X<0> Connecting;
 	typedef X<1> Connected;
 	typedef X<2> BadPassword;
@@ -86,10 +86,13 @@ public:
 	Client(const string& hubURL, char separator);
 	virtual ~Client() throw();
 
+	virtual void connect();
+	bool isConnected() const { return socket->isConnected(); }
+	void disconnect() { socket->disconnect(); }
+
 	virtual void connect(const User* user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
 	virtual void privateMessage(const User* user, const string& aMessage) = 0;
-	virtual void send(const string& aMessage) = 0;
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
 	virtual void password(const string& pwd) = 0;
@@ -106,18 +109,14 @@ public:
 	virtual void unlockUserList() = 0;
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
 
-	const string& getAddress() const { return address; }
-	const string& getAddressPort() const { return addressPort; }
 	short getPort() const { return port; }
+	void setPort(u_int16_t aPort) { port = aPort; }
+	const string& getAddress() const { return address; }
 
-	const string& getIp() const {	return socket->getIp().empty() ? getAddress() : socket->getIp(); };
-	string getIpPort() const { return port == 411 ? getIp() : getIp() + ':' + Util::toString(port); };
+	const string& getIp() const { return socket->getIp().empty() ? getAddress() : socket->getIp(); };
+	string getIpPort() const { return getIp() + ':' + Util::toString(port); };
 	string getLocalIp() const;
 
-	virtual void connect();
-	bool isConnected() const { return socket->isConnected(); }
-	void disconnect() { socket->disconnect(); }
-	
 	void updated(User::Ptr& aUser) {
 		fire(ClientListener::UserUpdated(), this, aUser);
 	}
@@ -162,6 +161,27 @@ public:
 	}
 
 	int getMode();
+	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
+	void send(const char* aMessage, size_t aLen) {
+		updateActivity();
+		socket->write(aMessage, aLen);
+	}
+
+	const string& getHubUrl() const { return hubUrl; }
+
+	GETSET(string, nick, Nick);
+
+	GETSET(string, defpassword, Password);
+	GETSET(u_int32_t, reconnDelay, ReconnDelay);
+	GETSET(u_int32_t, lastActivity, LastActivity);
+	GETSET(bool, registered, Registered);
+	GETSET(bool, stealth, Stealth);
+	GETSET(string, rawOne, RawOne);
+	GETSET(string, rawTwo, RawTwo);
+	GETSET(string, rawThree, RawThree);
+	GETSET(string, rawFour, RawFour);
+	GETSET(string, rawFive, RawFive);
+	GETSET(string, ip, IP);
 
 protected:
 	struct Counts {
@@ -179,26 +199,12 @@ protected:
 	Counts lastCounts;
 
 	void updateCounts(bool aRemove);
-
-	void setPort(short aPort) { port = aPort; }
+	void updateActivity();
 
 	// reload nick from settings, other details from FavoriteManager
 	void reloadSettings();
 
 	virtual string checkNick(const string& nick) = 0;
-	virtual string getHubURL() = 0;
-
-	GETSET(string, nick, Nick);
-	GETSET(string, defpassword, Password);
-	GETSET(u_int32_t, reconnDelay, ReconnDelay);
-	GETSET(bool, registered, Registered);
-	GETSET(bool, stealth, Stealth);
-	GETSET(string, rawOne, RawOne);
-	GETSET(string, rawTwo, RawTwo);
-	GETSET(string, rawThree, RawThree);
-	GETSET(string, rawFour, RawFour);
-	GETSET(string, rawFive, RawFive);
-	GETSET(string, ip, IP);
 
 private:
 
@@ -212,16 +218,17 @@ private:
 	Client(const Client&);
 	Client& operator=(const Client&);
 
-	string description;
-	
+	string hubUrl;
 	string address;
-	string addressPort;
 	u_int16_t port;
+	string description;
 
 	CountType countType;
 
 	// BufferedSocketListener
-	virtual void on(BufferedSocketListener::Shutdown) throw() {
+	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
+	virtual void on(Connected) throw() { updateActivity(); fire(ClientListener::Connected(), this); }
+	virtual void on(Shutdown) throw() {
 		removeListeners();
 		delete this;
 	}

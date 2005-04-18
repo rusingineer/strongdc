@@ -41,7 +41,7 @@ public:
 
 	virtual size_t getUserCount() const { return 0;};
 	virtual int64_t getAvailable() const { return 0; };
-	virtual const string& getName() const { return (hub ? hub->getNick() : getAddressPort()); };
+	virtual const string& getName() const { return (hub ? hub->getNick() : getHubUrl()); };
 	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
 
 	virtual User::NickMap& lockUserList() { return nickMap; };
@@ -86,14 +86,13 @@ private:
 	User::CIDMap cidMap;
 	User::Ptr hub;
 	StringMap lastInfoMap;
-	CriticalSection cs;
+	mutable CriticalSection cs;
 
 	string salt;
 
 	static const string CLIENT_PROTOCOL;
 	 
 	virtual string checkNick(const string& nick);
-	virtual string getHubURL();
 
 	void clearUsers();
 

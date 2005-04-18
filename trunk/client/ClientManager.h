@@ -110,7 +110,10 @@ public:
 	 * @param quitHub The user went offline because (s)he disconnected from the hub.
 	 */
 	void putUserOffline(User::Ptr& aUser, bool quitHub = false);
-	
+	bool isActive(Client* aClient) {
+		return aClient->getMode() != SettingsManager::INCOMING_FIREWALL_PASSIVE;
+	}
+
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 

@@ -17,16 +17,12 @@
  */
 
 #include "stdafx.h"
-
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 
 #include "GeneralPage.h"
 #include "../client/SettingsManager.h"
 #include "../client/Socket.h"
-#include "../client/BufferedSocket.h"
-#include "../client/Client.h"
-#include <winsock2.h>
 #include "WinUtil.h"
 
 PropPage::TextItem GeneralPage::texts[] = {
@@ -35,23 +31,8 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_EMAIL, ResourceManager::EMAIL },
 	{ IDC_SETTINGS_DESCRIPTION, ResourceManager::DESCRIPTION },
 	{ IDC_SETTINGS_CONNECTION_TYPE, ResourceManager::SETTINGS_CONNECTION_TYPE },
-	{ IDC_SETTINGS_CONNECTION_SETTINGS, ResourceManager::SETTINGS_CONNECTION_SETTINGS },
-	{ IDC_ACTIVE, ResourceManager::ACTIVE },
-	{ IDC_PASSIVE, ResourceManager::SETTINGS_PASSIVE },
-	{ IDC_SOCKS5, ResourceManager::SETTINGS_SOCKS5 }, 
-	{ IDC_SETTINGS_IP, ResourceManager::SETTINGS_IP },
-	{ IDC_SETTINGS_PORT, ResourceManager::SETTINGS_TCP_PORT },
-	{ IDC_SETTINGS_UDP_PORT, ResourceManager::SETTINGS_UDP_PORT },
-	{ IDC_SETTINGS_SOCKS5_IP, ResourceManager::SETTINGS_SOCKS5_IP },
-	{ IDC_SETTINGS_SOCKS5_PORT, ResourceManager::SETTINGS_SOCKS5_PORT },
-	{ IDC_SETTINGS_SOCKS5_USERNAME, ResourceManager::SETTINGS_SOCKS5_USERNAME },
-	{ IDC_SETTINGS_SOCKS5_PASSWORD, ResourceManager::PASSWORD },
-	{ IDC_SOCKS_RESOLVE, ResourceManager::SETTINGS_SOCKS5_RESOLVE },
-	{ IDC_GETIP, ResourceManager::GET_IP },
-	{ IDC_UPDATEIP, ResourceManager::UPDATE_IP },
 	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
 	{ IDC_DU, ResourceManager::DU },
-	{ IDC_SETTINGS_BIND_ADDRESS, ResourceManager::SETTINGS_BIND_ADDRESS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -62,54 +43,12 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_DOWN_COMBO,	SettingsManager::DOWN_SPEED,	PropPage::T_STR },  
 	{ IDC_UP_COMBO,		SettingsManager::UP_SPEED,		PropPage::T_STR },  
 	{ IDC_SHOW_SPEED_CHECK, SettingsManager::SHOW_DESCRIPTION_SPEED, PropPage::T_BOOL },
-	{ IDC_SERVER,		SettingsManager::SERVER,		PropPage::T_STR }, 
-	{ IDC_PORT,			SettingsManager::IN_PORT,		PropPage::T_INT }, 
-	{ IDC_UDP_PORT,		SettingsManager::UDP_PORT,		PropPage::T_INT }, 
-	{ IDC_SOCKS_SERVER, SettingsManager::SOCKS_SERVER,	PropPage::T_STR },
-	{ IDC_SOCKS_PORT,	SettingsManager::SOCKS_PORT,	PropPage::T_INT },
-	{ IDC_SOCKS_USER,	SettingsManager::SOCKS_USER,	PropPage::T_STR },
-	{ IDC_SOCKS_PASSWORD, SettingsManager::SOCKS_PASSWORD, PropPage::T_STR },
-	{ IDC_SOCKS_RESOLVE, SettingsManager::SOCKS_RESOLVE, PropPage::T_BOOL },
-	{ IDC_UPDATEIP, SettingsManager::IPUPDATE, PropPage::T_BOOL },
-	{ IDC_BIND_ADDRESS, SettingsManager::BIND_ADDRESS, PropPage::T_STR },
 	{ 0, 0, PropPage::T_END }
 };
 
 void GeneralPage::write()
 {
-	TCHAR tmp[1024];
-	GetDlgItemText(IDC_SOCKS_SERVER, tmp, 1024);
-	tstring x = tmp;
-	tstring::size_type i;
-
-	while((i = x.find(' ')) != string::npos)
-		x.erase(i, 1);
-	SetDlgItemText(IDC_SOCKS_SERVER, x.c_str());
-
-	GetDlgItemText(IDC_SERVER, tmp, 1024);
-	x = tmp;
-
-	while((i = x.find(' ')) != string::npos)
-		x.erase(i, 1);
-
-	SetDlgItemText(IDC_SERVER, x.c_str());
-	
 	PropPage::write((HWND)(*this), items);
-
-	// Set connection active/passive
-	int ct = -1;
-	if(IsDlgButtonChecked(IDC_ACTIVE))
-		ct = SettingsManager::CONNECTION_ACTIVE;
-	else if(IsDlgButtonChecked(IDC_PASSIVE))
-		ct = SettingsManager::CONNECTION_PASSIVE;
-	else if(IsDlgButtonChecked(IDC_SOCKS5))
-		ct = SettingsManager::CONNECTION_SOCKS5;
-
-	if(SETTING(CONNECTION_TYPE) != ct) {
-		settings->set(SettingsManager::CONNECTION_TYPE, ct);
-		Socket::socksUpdated();
-	}
-		
 	settings->set(SettingsManager::CONNECTION, SettingsManager::connectionSpeeds[ctrlConnection.GetCurSel()]);
 }
 
@@ -157,17 +96,7 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	}
 
-	int const connType = settings->get(SettingsManager::CONNECTION_TYPE);
-	if(connType == SettingsManager::CONNECTION_ACTIVE)
-		CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_ACTIVE);
-	else if(connType == SettingsManager::CONNECTION_PASSIVE)
-		CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_PASSIVE);
-	else if(connType == SettingsManager::CONNECTION_SOCKS5)
-		CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_SOCKS5);
-
 	PropPage::read((HWND)(*this), items);
-
-	fixControls();
 
 	int m = 0;
 	for (m = 0; m<8; m++) {
@@ -184,44 +113,8 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	desc.Attach(GetDlgItem(IDC_SETTINGS_EMAIL));
 	desc.LimitText(64);
 	desc.Detach();
-	desc.Attach(GetDlgItem(IDC_SOCKS_SERVER));
-	desc.LimitText(250);
-	desc.Detach();
-	desc.Attach(GetDlgItem(IDC_SOCKS_PORT));
-	desc.LimitText(5);
-	desc.Detach();
-	desc.Attach(GetDlgItem(IDC_SOCKS_USER));
-	desc.LimitText(250);
-	desc.Detach();
-	desc.Attach(GetDlgItem(IDC_SOCKS_PASSWORD));
-	desc.LimitText(250);
 	desc.Detach();
 	return TRUE;
-}
-
-void GeneralPage::fixControls() {
-	BOOL checked = IsDlgButtonChecked(IDC_ACTIVE);
-	::EnableWindow(GetDlgItem(IDC_SERVER), checked);
-	::EnableWindow(GetDlgItem(IDC_PORT), checked);
-	::EnableWindow(GetDlgItem(IDC_UDP_PORT), checked);
-
-	checked = IsDlgButtonChecked(IDC_SOCKS5);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_PORT), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_USER), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_PASSWORD), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_RESOLVE), checked);
-
-	checked = IsDlgButtonChecked(IDC_SHOW_SPEED_CHECK);
-	::EnableWindow(GetDlgItem(IDC_DOWN_COMBO), checked);
-	::EnableWindow(GetDlgItem(IDC_UP_COMBO), checked);
-	::EnableWindow(GetDlgItem(IDC_DU), checked);
-	::EnableWindow(GetDlgItem(IDC_SLASH), checked);
-}
-
-LRESULT GeneralPage::onClickedActive(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	fixControls();
-	return 0;
 }
 
 LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
@@ -258,49 +151,7 @@ LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl,
 	return TRUE;
 }
 
-/*string GeneralPage::getMyIP()
-{
-     WORD wVersionRequested;
-     WSADATA wsaData;
-     struct hostent * hent ;
-     char * addr ;
-     char * hostnm = new char[256];
-     int err; 
-     wVersionRequested = MAKEWORD( 2, 2 ); 
-     err = WSAStartup( wVersionRequested, &wsaData );
-     if ( err != 0 ) {return "";} 
-     if ( LOBYTE( wsaData.wVersion ) != 2 ||
-                     HIBYTE( wsaData.wVersion ) != 2 ) {
-          WSACleanup();
-          return "";
-     }
-     gethostname(hostnm,256);
 
-     hent=gethostbyname (hostnm);
-	 addr=inet_ntoa (*(struct in_addr *) *hent->h_addr_list); 
-	 delete[] hostnm;
-     WSACleanup();
-     return addr;
-}*/
-
-LRESULT GeneralPage::onGetIP(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
-	string IPAdresa = /*getMyIP();*/ Util::getLocalIp();
-
-   if((IPAdresa.compare(0,3,"10.")==0) ||
-	  (IPAdresa.compare(0,8,"192.168.")==0) ||
-	  (IPAdresa.compare(0,8,"169.254.")==0) ||
-	  ((IPAdresa.compare(0,4,"172.")==0) && (Util::toInt(IPAdresa.substr(4,2))>=16 && Util::toInt(IPAdresa.substr(4,2))<=31))
-
-	  ) {
-		  CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_PASSIVE);
-	  } else {
-		  CheckRadioButton(IDC_ACTIVE, IDC_SOCKS5, IDC_ACTIVE);
-	  }
-	
-	fixControls();
-	SetDlgItemText(IDC_SERVER,Text::toT(IPAdresa).c_str());
-	return 0;
-}
 /**
  * @file
  * $Id$

@@ -29,11 +29,12 @@
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator) : 
-	socket(BufferedSocket::getSocket(separator)), reconnDelay(120), registered(false), port(0), countType(COUNT_UNCOUNTED), me(NULL)
+	socket(BufferedSocket::getSocket(separator)), reconnDelay(120), me(NULL),
+	lastActivity(0), registered(false), hubUrl(hubURL), port(0), 
+	countType(COUNT_UNCOUNTED)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
-	addressPort = hubURL;
 	socket->addListener(this);
 }
 
@@ -44,7 +45,7 @@ Client::~Client() throw() {
 }
 
 void Client::reloadSettings() {
-	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	if(hub) {
 		setNick(checkNick(hub->getNick(true)));
 		setDescription(hub->getUserDescription());
@@ -52,50 +53,58 @@ void Client::reloadSettings() {
 		setStealth(hub->getStealth());
 		switch(hub->getMode()) {
 			case 1 : setIP(hub->getIP()); break;
-			default: setIP(SETTING(SERVER));
+			default: setIP(SETTING(EXTERNAL_IP));
 		}
 	} else {
 		setNick(checkNick(SETTING(NICK)));
 		setStealth(true);
-		setIP(SETTING(SERVER));
+		setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
 	}
 }
 
 int Client::getMode() {
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5)
-		return SettingsManager::CONNECTION_SOCKS5;
-
 	int mode = 0;
-	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubURL());
+	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	if(hub) {
 		switch(hub->getMode()) {
 			case 1 :
 			{
-				mode = SettingsManager::CONNECTION_ACTIVE;
+				mode = SettingsManager::INCOMING_DIRECT;
 				setIP(hub->getIP());
 				break;
 			}
 			case 2 :
 			{
-				mode = SettingsManager::CONNECTION_PASSIVE;
+				mode = SettingsManager::INCOMING_FIREWALL_PASSIVE;
 				break;
 			}
 			default:
 			{
-				mode = SETTING(CONNECTION_TYPE);
-				setIP(SETTING(SERVER));
+				mode = SETTING(INCOMING_CONNECTIONS);
+				setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
 			}
 		}
 	} else {
-		mode = SETTING(CONNECTION_TYPE);
-		setIP(SETTING(SERVER));
+		mode = SETTING(INCOMING_CONNECTIONS);
+		setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
 	}
 	return mode;
 }
 
 void Client::connect() {
+	socket->disconnect();
+
+	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings();
+	setRegistered(false);
+
 	socket->connect(address, port);
+
+	updateActivity();
+}
+
+void Client::updateActivity() {
+	lastActivity = GET_TICK();
 }
 
 void Client::updateCounts(bool aRemove) {
@@ -107,6 +116,7 @@ void Client::updateCounts(bool aRemove) {
 	} else if(countType == COUNT_OP) {
 		Thread::safeDec(counts.op);
 	}
+
 	countType = COUNT_UNCOUNTED;
 
 	if(!aRemove) {
@@ -124,15 +134,17 @@ void Client::updateCounts(bool aRemove) {
 }
 
 string Client::getLocalIp() const { 
-	if(!getIP().empty()) {
-		return Socket::resolve(getIP());
+	// Best case - the server detected it
+	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty()) && !getIP().empty()) {
+		return getIP();
 	}
-	if(getMe() && !getMe()->getIp().empty())
-		return getMe()->getIp();
 
-	if(socket == NULL)
-		return Util::getLocalIp();
+	if(!SETTING(EXTERNAL_IP).empty()) {
+		return Socket::resolve(SETTING(EXTERNAL_IP));
+	}
+
 	string lip = socket->getLocalIp();
+
 	if(lip.empty())
 		return Util::getLocalIp();
 	return lip;

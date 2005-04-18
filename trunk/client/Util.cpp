@@ -493,18 +493,18 @@ string Util::formatBytes(int64_t aBytes) {
 	char buf[128];
 	if(aBytes < 1024) {
 		_snprintf(buf, 127, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
-	} else if(aBytes < 1024*1024) {
+	} else if(aBytes < 1048576) {
 		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
-	} else if(aBytes < 1024*1024*1024) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0), CSTRING(MB));
-	} else if(aBytes < (int64_t)1024*1024*1024*1024) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0), CSTRING(GB));
-	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0), CSTRING(TB));
-	} else if(aBytes < (int64_t)1024*1024*1024*1024*1024*1024)  {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(PB));
+	} else if(aBytes < 1073741824) {
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1048576.0), CSTRING(MB));
+	} else if(aBytes < (int64_t)1099511627776) {
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1073741824.0), CSTRING(GB));
+	} else if(aBytes < (int64_t)1125899906842624) {
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1099511627776.0), CSTRING(TB));
+	} else if(aBytes < (int64_t)1152921504606846976)  {
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1125899906842624.0), CSTRING(PB));
 	} else {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0*1024.0*1024.0*1024.0*1024.0*1024.0), CSTRING(EB));
+		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1152921504606846976.0), CSTRING(EB));
 	}
 	buf[127] = 0;
 	return buf;

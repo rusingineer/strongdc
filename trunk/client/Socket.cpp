@@ -334,7 +334,7 @@ void Socket::writeTo(const string& aIp, short aPort, const char* aBuffer, size_t
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5 && !noproxy) {
+	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5 && !noproxy) {
 
 		if(udpServer.empty() || udpPort == 0) {
 			throw SocketException(STRING(SOCKS_SETUP_ERROR));
@@ -484,7 +484,7 @@ void Socket::socksUpdated() {
 	udpServer.clear();
 	udpPort = 0;
 	
-	if(SETTING(CONNECTION_TYPE) == SettingsManager::CONNECTION_SOCKS5) {
+	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5) {
 		try {
 			Socket s(SETTING(SOCKS_SERVER), (short)SETTING(SOCKS_PORT));
 			
@@ -576,7 +576,11 @@ void Socket::socksUpdated() {
 
 void Socket::disconnect() throw() {
 	if(sock != INVALID_SOCKET) {
-		::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
+		try {
+			::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
+		} catch(...) {
+			// ??? NetLimiter crash "fix"
+		}
 		closesocket(sock);
 	}
 	connected = false;
