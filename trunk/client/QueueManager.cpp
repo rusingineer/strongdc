@@ -389,54 +389,45 @@ QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
 }
 
 bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount) {
-	Lock l(cs);
-	QueueItem* qi = userQueue.getRunning(aUser);
+	{
+		Lock l(cs);
+		QueueItem* qi = userQueue.getRunning(aUser);
 
-	if(qi == NULL) {
-		SegmentsCount = 0;
-		return false;
-	}
-
-	SegmentsCount = qi->getActiveSegments().size();
-
-	isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
-	
-	if(!isAlreadyActive) {
-		if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && (qi->getMaxSegments() <= SegmentsCount)) {
+		if(qi == NULL) {
+			SegmentsCount = 0;
 			return false;
 		}
 
-		qi->addActiveSegment(aUser);
-		SegmentsCount += 1;
-		if(SegmentsCount == 1) {
-			qi->setStart(GET_TICK());
+		SegmentsCount = qi->getActiveSegments().size();
+
+		isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
+	
+		if(!isAlreadyActive) {
+			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && (qi->getMaxSegments() <= SegmentsCount)) {
+				return false;
+			}
+	
+			qi->addActiveSegment(aUser);
+			SegmentsCount += 1;
+			if(SegmentsCount == 1) {
+				qi->setStart(GET_TICK());
+			}
 		}
 	}
 	return true;
 }
 
-u_int16_t QueueManager::getActiveSourcesCount(const string& aTarget, u_int16_t& currentsCount, int64_t& size) {
-	Lock l(cs);
-	QueueItem* qi = fileQueue.find(aTarget);
-	currentsCount = 0;
-	size = -1;
-
-	if(!qi)
-		return 0;
-
-	currentsCount = qi->getCurrents().size();
-	size = qi->getSize();
-	return qi->getActiveSegments().size();
-}
-
 int64_t QueueManager::setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments) {
-	Lock l(cs);
-	QueueItem* qi = userQueue.getRunning(aUser);
+	int64_t start;
+	{
+		Lock l(cs);
+		QueueItem* qi = userQueue.getRunning(aUser);
 
-	qi->setSpeed(speed);
-	activeSegments = qi->getActiveSegments().size();
-
-	return qi->getStart();
+		qi->setSpeed(speed);
+		start = qi->getStart();
+		activeSegments = qi->getActiveSegments().size();
+	}
+	return start;
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi) {
@@ -639,12 +630,11 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 		QueueItem* q = NULL;
 		
 		if(root) {
-			for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
-				QueueItem* qi = i->second;
-				if(qi->getTTH() != NULL && *qi->getTTH() == *root) {
-					q = qi;
-					break;
-				}
+			QueueItem::List ql;
+			fileQueue.find(ql, *root);
+			if(!ql.empty()){
+				dcassert(ql.size() == 1);
+				q = ql[0];
 			}
 		}
 
@@ -1247,7 +1237,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 
 					if(removeSegment && (q->getPriority() != QueueItem::PAUSED)) {
 						for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
-							if((*j)->getUser()->isOnline()) {
+							if((*j)->getUser()->isOnline() && false == q->isCurrent((*j)->getUser())) {
 								getConn.push_back((*j)->getUser());
 							}
 						}

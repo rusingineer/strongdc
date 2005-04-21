@@ -1395,7 +1395,7 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
-	} else if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
+	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
 		DirectoryListInfo* i = new DirectoryListInfo();
 		i->file = Text::toT(qi->getListName());
 		i->user = qi->getCurrents()[0]->getUser(); 

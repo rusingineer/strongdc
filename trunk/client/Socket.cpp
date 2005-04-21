@@ -74,7 +74,7 @@ string SocketException::errorToString(int aError) throw() {
 	case ECONNRESET:
 		return STRING(CONNECTION_RESET);
 	case ENOTSOCK:
-		return STRING(NOT_SOCKET);
+		return STRING(/*NOT_SOCKET*/DISCONNECTED);
 	case ENOTCONN:
 		return STRING(NOT_CONNECTED);
 	case ENETUNREACH:
@@ -578,10 +578,10 @@ void Socket::disconnect() throw() {
 	if(sock != INVALID_SOCKET) {
 		try {
 			::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
+			closesocket(sock);
 		} catch(...) {
 			// ??? NetLimiter crash "fix"
 		}
-		closesocket(sock);
 	}
 	connected = false;
 

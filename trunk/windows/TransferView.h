@@ -218,7 +218,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
 			pocetUseru(1), Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
-			compressRatio(1.0), finished(false), flagImage(0), upperUpdated(false) { update(); };
+			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
 		Status status;
@@ -239,7 +239,6 @@ private:
 		u_int32_t pocetUseru;
 		u_int16_t numberOfSegments;
 		double compressRatio;
-		bool finished;
 		bool upperUpdated;
 		int flagImage;
 		
@@ -325,8 +324,6 @@ private:
 		int imageIndex() {
 			return (type == TYPE_UPLOAD) ? IMAGE_UPLOAD : (mainItem ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
 		}
-
-		bool canDisplayUpper();
 	};
 
 	CriticalSection cs;

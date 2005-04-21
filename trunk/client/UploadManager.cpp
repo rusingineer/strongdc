@@ -50,22 +50,21 @@ UploadManager::~UploadManager() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
 
-	DWORD start = ::GetTickCount();
-	while(true) {
-		{
-			Lock l(cs);
-			// wait for 15 seconds then empty uploads because there are any deadlocked
-			if(uploads.empty() || (::GetTickCount() - start > 15000))
-				break;			
-		}
-		Thread::sleep(100);
-	}
 	{
 		Lock l(cs);
 		for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
 			for_each(ii->second.begin(), ii->second.end(), DeleteFunction<UploadQueueItem*>());
 		}
 		UploadQueueItems.clear();
+	}
+	
+	while(true) {
+		{
+			Lock l(cs);
+			if(uploads.empty())
+				break;			
+		}
+		Thread::sleep(100);
 	}
 }
 

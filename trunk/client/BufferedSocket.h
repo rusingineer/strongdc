@@ -101,9 +101,19 @@ public:
 
 	virtual void disconnect() throw() {
 		Lock l(cs);
+
+		if(sock != INVALID_SOCKET) {
+			::shutdown(sock, SD_BOTH);
+			closesocket(sock);
+		}
 		addTask(DISCONNECT);
 	}
-	
+
+	void disconnectThread() throw() {
+		threadDisconnect();
+		fire(BufferedSocketListener::Failed(), "Odpojeno xxxx");
+	}
+
 	/**
 	 * Sets data mode for aBytes bytes long. Must be called within an action method...
 	 */
@@ -187,8 +197,9 @@ private:
 	void threadRead();
 	bool threadSendFile();
 	void threadSendData();
+	void threadWrite(const char* aBuffer, size_t aLen) throw(SocketException);
 	void threadDisconnect();
-	
+
 	void fail(const string& aError) {
 		Socket::disconnect();
 		fire(BufferedSocketListener::Failed(), aError);

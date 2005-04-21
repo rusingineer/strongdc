@@ -719,13 +719,10 @@ void ConnectionManager::shutdown() {
 		}
 	}
 	// Wait until all connections have died out...
-
-	DWORD start = ::GetTickCount();
 	while(true) {
 		{
 			Lock l(cs);
-			// wait for 15 seconds then empty userConnections because there are any deadlocked
-			if(userConnections.empty() || (::GetTickCount() - start > 15000)) {
+			if(userConnections.empty()) {
 				break;
 			}
 		}

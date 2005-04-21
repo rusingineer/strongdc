@@ -264,25 +264,25 @@ void FavoriteManager::onHttpFinished() throw() {
 		if(x->compare(0, 5, "<?xml") == 0 || x->compare(0, 8, "\xEF\xBB\xBF<?xml") == 0) {
 			loadXmlList(*x);
 		} else {
-		i = 0;
+			i = 0;
 
 			string utfText = Text::acpToUtf8(*x);
 
 			while( (i < utfText.size()) && ((j=utfText.find("\r\n", i)) != string::npos)) {
 				StringTokenizer<string> tok(utfText.substr(i, j-i), '|');
-			i = j + 2;
-			if(tok.getTokens().size() < 4)
-				continue;
+				i = j + 2;
+				if(tok.getTokens().size() < 4)
+					continue;
 
-			StringList::const_iterator k = tok.getTokens().begin();
-			const string& name = *k++;
-			const string& server = *k++;
-			const string& desc = *k++;
-			const string& usersOnline = *k++;
+				StringList::const_iterator k = tok.getTokens().begin();
+				const string& name = *k++;
+				const string& server = *k++;
+				const string& desc = *k++;
+				const string& usersOnline = *k++;
 				publicListMatrix[publicListServer].push_back(HubEntry(name, server, desc, usersOnline));
+			}
 		}
 	}
-							}
 	downloadBuf = Util::emptyString;
 }
 
@@ -467,7 +467,7 @@ void FavoriteManager::load() {
 		"$OpForceMove $Who:%[nick]$Where:%[line:Target Server]$Msg:%[line:Message]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(REDIRECT_USER), redirstr, "op");
-		
+
 	// Add ADC standard op commands
 	static const char adc_disconnectstr[] =
 		"HDSC %[mycid] %[cid] DI ND Friendly\\ disconnect\n";
@@ -516,7 +516,7 @@ void FavoriteManager::load() {
 
 void FavoriteManager::load(SimpleXML* aXml) {
 	dontSave = true;
-	
+
 	// Old names...load for compatibility.
 	aXml->resetCurrentChild();
 	if(aXml->findChild("Favorites")) {
@@ -632,6 +632,7 @@ void FavoriteManager::load(SimpleXML* aXml) {
 		}
 		aXml->stepOut();
 	}
+
 	dontSave = false;
 }
 

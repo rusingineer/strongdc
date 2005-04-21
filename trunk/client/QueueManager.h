@@ -140,9 +140,29 @@ public:
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
 	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount);
-	u_int16_t getActiveSourcesCount(const string& aTarget, u_int16_t& currentsCount, int64_t& size);
 	bool autoDropSource(Download* d);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
+
+	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size) {
+		u_int16_t value;
+		{
+			Lock l(cs);
+			QueueItem* qi = currents ? fileQueue.find(aTarget) : userQueue.getRunning(aUser);
+			size = -1;
+
+			if(!qi)
+				return 0;
+
+			size = qi->getSize();
+			value  = qi->getActiveSegments().size();
+			if(currents) {
+				if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
+					value -= 1;
+				}
+			}
+		}
+		return value;
+	}
 
 	QueueItem::List getRunningFiles() throw() {
 		QueueItem::List ql;
@@ -189,9 +209,10 @@ public:
 				lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
-			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
+			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 				FileChunksInfo::Free(qi->getTempTarget());
-			
+			}
+
 			delete qi;
 		}
 
