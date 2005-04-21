@@ -393,7 +393,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			}
 
 			if(state == STATE_MYINFO) {
-				if (u->getNick() == getNick()) {
+				if (stricmp(u->getNick().c_str(), getNick().c_str()) == 0) {
 					setMe(u);
 					state = STATE_CONNECTED;
 					updateCounts(false);
@@ -440,7 +440,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			temp[0] = NULL; temp += 1;
 			if(aLine == NULL || temp == NULL) return;
 
-			if(strcmp(fromNmdc(aLine).c_str(), getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+			if(stricmp(fromNmdc(aLine).c_str(), getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
 				return;
 	
 			if((temp1 = strchr(temp, ':')) == NULL || temp1+1 == NULL) return;
@@ -468,7 +468,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 
 				User::NickIter i = users.find(fromNmdc(aLine));
 
-				if(strcmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
+				if(stricmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
 					return;
 
 				if(i == users.end()) {
@@ -520,7 +520,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				users[nick] = u;
 			}
 		
-			if(getNick() == nick) {
+			if(stricmp(getNick().c_str(), nick.c_str()) == 0) {
 				setMe(u);
 		
 				u->setFlag(User::DCPLUSPLUS);

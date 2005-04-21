@@ -845,7 +845,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		}
 
 
-	}else{
+	} else {
 
 		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
 		u_int32_t crc = 0;
@@ -877,7 +877,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		
 			aSource->setDownload(NULL);
 			QueueManager::getInstance()->putDownload(d, false);
-			removeConnection(aSource, false, false, true);
+			removeConnection(aSource);
 			return;
 		}
 

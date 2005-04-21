@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_FavoriteManager_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)
-#define AFX_FavoriteManager_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_
+#ifndef FAVORITE_MANAGER_H
+#define FAVORITE_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -91,9 +91,8 @@ public:
 		, rawTwo(rhs.rawTwo)
 		, rawThree(rhs.rawThree)
 		, rawFour(rhs.rawFour)
-		, rawFive(rhs.rawFive)
-		 { };
-	~FavoriteHubEntry() throw() { };
+		, rawFive(rhs.rawFive) { };
+	~FavoriteHubEntry() throw() { }
 	
 	const string& getNick(bool useDefault = true) const { 
 		return (!nick.empty() || !useDefault) ? nick : SETTING(NICK);
@@ -306,7 +305,7 @@ public:
 	
 private:
 	FavoriteHubEntry::List favoriteHubs;
-	StringPairList favoriteDirs;	
+	StringPairList favoriteDirs;
 	RecentHubEntry::List recentHubs;
 	PreviewApplication::List previewApplications;
 	UserCommand::List userCommands;
@@ -326,7 +325,7 @@ private:
 	int lastServer;
 	HubTypes listType;
 	string downloadBuf;
-
+	
 	/** Used during loading to prevent saving. */
 	bool dontSave;
 
@@ -348,7 +347,7 @@ private:
 		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction<RecentHubEntry*>());
 		for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction<PreviewApplication*>());
 	}
-		
+	
 	FavoriteHubEntry::Iter getFavoriteHub(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
 			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
@@ -359,7 +358,7 @@ private:
 	}
 
 	void loadXmlList(const string& xml);
-	
+
 	RecentHubEntry::Iter getRecentHub(const string& aServer) {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
 			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
@@ -375,8 +374,8 @@ private:
 	virtual void on(Redirected, HttpConnection*, const string&) throw();
 	virtual void on(TypeNormal, HttpConnection*) throw();
 	virtual void on(TypeBZ2, HttpConnection*) throw();
-	
- 	void onHttpFinished() throw();
+
+	void onHttpFinished() throw();
 
 	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() {
@@ -393,6 +392,7 @@ private:
 	void recentload(SimpleXML* aXml);
 	void previewload(SimpleXML* aXml);
 	void previewsave(SimpleXML* aXml);
+	
 };
 
 #endif // !defined(AFX_FavoriteManager_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)

@@ -96,7 +96,7 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
 		nlfound = false;
 		return TRUE;// Not a window
 	}
-	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 500, NULL);
+	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, NULL);
 	buf[255] = NULL;
 
 	if(buf[0] != NULL) {
