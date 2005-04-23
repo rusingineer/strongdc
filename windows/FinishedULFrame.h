@@ -36,7 +36,9 @@ class FinishedULFrame : public MDITabChildWindowImpl<FinishedULFrame, RGB(0, 0, 
 public:
 	typedef MDITabChildWindowImpl<FinishedULFrame, RGB(0, 0, 0), IDR_FINISHED_UL> baseClass;
 	FinishedULFrame() : totalBytes(0), totalTime(0), closed(false) { };
-	virtual ~FinishedULFrame() { };
+	virtual ~FinishedULFrame() {
+		stateImages.Destroy();
+	};
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedULFrame"), IDR_FINISHED_UL, 0, COLOR_3DFACE);
 		

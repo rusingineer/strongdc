@@ -26,6 +26,7 @@
 #include "../Client/SettingsManager.h"
 #include "../client/FavoriteManager.h"
 #include "ListViewArrows.h"
+
 class ColumnInfo {
 public:
 	ColumnInfo(const tstring &aName, int aPos, int aFormat, int aWidth): name(aName), pos(aPos), width(aWidth), 
@@ -39,7 +40,7 @@ public:
 
 template<class T, int ctrlId>
 class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, CControlWinTraits>,
-	ListViewArrows<TypedListViewCtrl<T, ctrlId> >
+	public ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
 	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { };
@@ -290,16 +291,6 @@ public:
 				high = mid - 1;
 			} else if(comp > 0) {
 					low = mid + 1;
-			} else if(comp == 2){
-				if(sortAscending)
-					low = mid + 1;
-				else
-					high = mid -1;
-			} else if(comp == -2){
-				if(!sortAscending)
-					low = mid + 1;
-				else
-					high = mid -1;
 			}
 		}
 
@@ -319,7 +310,7 @@ public:
 	int getSortColumn() { return sortColumn; }
 	int getRealSortColumn() { return findColumn(sortColumn); }
 	bool isAscending() { return sortAscending; }
-	void setAscending(bool s) {sortAscending = s;}
+	void setAscending(bool s) { sortAscending = s; }
 
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
@@ -582,12 +573,6 @@ private:
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
 		int result = T::compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
-
-		if(result == 2)
-			result = (t->sortAscending ? 1 : -1);
-		else if(result == -2)
-			result = (t->sortAscending ? -1 : 1);
-
 		return (t->sortAscending ? result : -result);
 	}
 
@@ -654,6 +639,283 @@ private:
 
 		return result;
 	}
+};
+
+template<class T, int ctrlId>
+class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
+{
+public:
+
+	TypedTreeListViewCtrl() { };
+	~TypedTreeListViewCtrl() {
+		states.Destroy();
+	}
+
+	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
+	typedef TypedListViewCtrl<T, ctrlId> baseClass;
+
+	BEGIN_MSG_MAP(thisClass)
+		MESSAGE_HANDLER(WM_CREATE, onCreate)
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButton)
+		CHAIN_MSG_MAP(baseClass)
+	END_MSG_MAP();
+
+
+	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+		states.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+		SetImageList(states, LVSIL_STATE); 
+
+		bHandled = FALSE;
+		return 0;
+	}
+
+	LRESULT onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+		CPoint pt;
+		pt.x = GET_X_LPARAM(lParam);
+		pt.y = GET_Y_LPARAM(lParam);
+
+		LVHITTESTINFO lvhti;
+		lvhti.pt = pt;
+
+		int pos = SubItemHitTest(&lvhti);
+		if (pos != -1) {
+			CRect rect;
+			GetItemRect(pos, rect, LVIR_ICON);
+			
+			if (pt.x < rect.left) {
+				T* i = (T*)getItemData(pos);
+				if(i->subItems.size() > 0)
+					if(i->collapsed) {
+						Expand(i, pos);
+					} else {
+						Collapse(i, pos);
+					}
+			}
+		}
+
+		bHandled = false;
+		return 0;
+	} 
+
+	void Collapse(T* i, int a) {
+		size_t q = 0;
+		while(q < i->subItems.size()) {
+			deleteItem(i->subItems[q]);
+			q++;
+		}
+		i->collapsed = true;
+		SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+	}
+
+	void Expand(T* i, int a) {
+		size_t q = 0;
+		while(q < i->subItems.size()) {
+			insertSubItem(i->subItems[q], a + 1);
+			q++;
+		}
+		i->collapsed = false;
+		SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+	}
+
+	void insertSubItem(T* i, int idx) {
+		LV_ITEM lvi;
+		lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
+		lvi.iItem = idx;
+		lvi.iSubItem = 0;
+		lvi.iIndent = 1;
+		lvi.pszText = LPSTR_TEXTCALLBACK;
+		lvi.iImage = i->imageIndex();
+		lvi.lParam = (LPARAM)i;
+		lvi.state = 0;
+		lvi.stateMask = 0;
+		InsertItem(&lvi);
+	}
+
+	T* findMainItem(string groupingString) {
+		return mainItems.find(groupingString)->second;
+	}
+
+	void insertGroupedItem(T* item, string groupingString, bool autoExpand) {
+		T* mainItem = findMainItem(groupingString);
+		
+		if(mainItem == NULL) {
+			mainItems.insert(make_pair(groupingString, item));
+			item->mainItem = true;
+			insertItem(getSortPos(item), item, item->imageIndex());
+		} else {
+			mainItem->subItems.push_back(item);
+			mainItem->update(true); // needs to make function parameter to update only subitems number column to save some CPU time
+			item->main = mainItem;
+			item->mainItem = false;
+
+			int pos = findItem(mainItem);
+
+			if(pos != -1) {
+				if(mainItem->subItems.size() == 1){
+					if(autoExpand){
+						SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+						mainItem->collapsed = false;
+						insertSubItem(item, pos+1);
+					} else {
+						SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+					}
+				} else if(!mainItem->collapsed) {
+					insertSubItem(item, pos + 1);
+				}
+			}
+			if(pos != -1)
+				updateItem(pos);
+		}
+	}
+
+	void removeGroupedItem(int i) {
+		T* s = (T*)getItemData(i);
+		if(s->subItems.size() > 0) {
+			int q = 0;
+			while(q < s->subItems.size()) {
+				T* j = s->subItems[q];
+				DeleteItem(findItem(j));
+				delete j;
+				q++;
+			}
+			s->subItems.clear();
+		}
+		
+		if(s->main != NULL) {
+			T::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
+			if(n != s->main->subItems.end()) {
+				s->main->subItems.erase(n);
+			}
+			if(s->main->subItems.size() == 0) {
+				SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+			}
+			updateItem(s->main);
+		}
+
+		for(map<string, T*>::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			if(i->second == s) {
+				mainItems.erase(i);
+			}
+		}
+		DeleteItem(findItem(s));
+		delete s;
+	}
+
+	void deleteAllItems() {
+		for(map<string, T*>::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			T* si =  i->second;
+			int q = 0;
+			if(si->subItems.size() > 0) {
+				while(q < si->subItems.size()) {
+					T* j = si->subItems[q];
+					delete j;
+					q++;
+				}
+			}
+			delete si;
+		}
+
+ 		mainItems.clear();
+		DeleteAllItems();
+	}
+
+	void resort() {
+		if(getSortColumn() != -1) {
+			SortItems(&compareFunc, (LPARAM)this);
+		}
+	}
+
+	int getSortPos(T* a) {
+		int high = GetItemCount();
+		if((getSortColumn() == -1) || (high == 0))
+			return high;
+
+		high--;
+
+		int low = 0;
+		int mid = 0;
+		T* b = NULL;
+		int comp = 0;
+		while( low <= high ) {
+			mid = (low + high) / 2;
+			b = getItemData(mid);
+			comp = compareItems(a, b, getSortColumn());
+			
+			if(!isAscending())
+				comp = -comp;
+
+			if(comp == 0) {
+				return mid;
+			} else if(comp < 0) {
+				high = mid - 1;
+			} else if(comp > 0) {
+					low = mid + 1;
+			} else if(comp == 2){
+				if(isAscending())
+					low = mid + 1;
+				else
+					high = mid -1;
+			} else if(comp == -2){
+				if(!isAscending())
+					low = mid + 1;
+				else
+					high = mid -1;
+			}
+		}
+
+		comp = compareItems(a, b, getSortColumn());
+		if(!isAscending())
+			comp = -comp;
+		if(comp > 0)
+			mid++;
+
+		return mid;
+	}
+
+	map<string, T*>  mainItems;
+private:
+	
+	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
+		thisClass* t = (thisClass*)lParamSort;
+		int result = compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
+
+		if(result == 2)
+			result = (t->isAscending() ? 1 : -1);
+		else if(result == -2)
+			result = (t->isAscending() ? -1 : 1);
+
+		return (t->isAscending() ? result : -result);
+	}
+
+	static int compareItems(T* a, T* b, int col) {
+		if(a->mainItem == b->mainItem){
+
+			// both are children with diffent mother, compare their monther
+			if(a->mainItem == false && a->main != b->main)
+				return T::compareItems(a->main, b->main, col);
+			else
+				return T::compareItems(a, b, col);
+		}
+
+
+		if(a->mainItem == false && a->main == b)
+			return 2; // ? Decided by sort order, any better way?
+
+		if(b->mainItem == false && b->main == a)
+			return -2; // b should be displayed below a
+
+		if(a->mainItem == false && a->main != b)
+			return T::compareItems(a->main, b, col);
+
+		if(b->mainItem == false && b->main != a)
+			return T::compareItems(a, b->main, col);
+
+		dcassert(0);
+		return 0;
+	}
+
+	CImageList states;
+
 };
 
 #endif

@@ -854,5 +854,6 @@ enum Strings { // @DontAdd
 	ACCEPTED_TIMEOUTS, // "Accepted Timeouts"
 	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
 	CHECKING_CLIENT, // "Checking client..."
+	GROUP_SEARCH_RESULTS, // "Group search results by TTH"
 	LAST // @DontAdd
 };

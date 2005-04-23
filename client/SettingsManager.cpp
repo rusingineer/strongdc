@@ -119,7 +119,7 @@ const string SettingsManager::settingTags[] =
 	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
-	"NoIPOverride",
+	"NoIPOverride", "GroupSearchResults",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -498,6 +498,8 @@ SettingsManager::SettingsManager()
 	setDefault(ACCEPTED_DISCONNECTS, 5);
 	setDefault(ACCEPTED_TIMEOUTS, 10);
 	setDefault(EMOTICONS_FILE, "Chat (Large)");
+	setDefault(GROUP_SEARCH_RESULTS, true);
+
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

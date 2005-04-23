@@ -125,8 +125,26 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		if(d->getUserConnection() == NULL)
 			continue;
 
-		if(!QueueManager::getInstance()->autoDropSource(d))
-			continue;
+		if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
+			if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024) && !d->isSet(Download::FLAG_USER_LIST)) {
+				if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
+					if(!QueueManager::getInstance()->dropSource(d)) {
+						continue;
+					}
+				}
+			} else {
+				d->quickTick = GET_TICK();
+			}
+		}
+
+		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
+			if(d->getRunningAverage() < 1230) {
+				if(QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser())) {
+					d->getUserConnection()->disconnect();
+					continue;
+				}
+			}
+		}
 
 		if((*i)->getTotal() > 0) {
 			tickList.push_back(*i);
@@ -633,26 +651,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	return true;
 }	
 
-void DownloadManager::userSpeed(UserConnection* aSource) {
-	User::Ptr u = aSource->getUser();
-	u->setDownloadSpeed(aSource->getDownload()->getAverageSpeed());
-	if(SETTING(SPEED_USERS)) {
-		QueueItem* qi = QueueManager::getInstance()->getRunning(u);
-		if(qi != NULL) {
-			int j = 0;
-			for(QueueItem::Source::Iter i = qi->speedUsers.begin(); j < 3; ++i) {
-				if((*i == NULL) || (u->getDownloadSpeed() > (*i)->getUser()->getDownloadSpeed())) {
-					if((*i) && (*i)->getUser() == u)
-						break;
-					qi->speedUsers.insert(i, *qi->getSource(u));
-					break;
-				}
-				j++;
-			}
-		}
-	}
-}
-
 void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, const u_int8_t* aData, size_t aLen) throw() {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
@@ -664,7 +662,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 				if(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					userSpeed(aSource);
+					aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 					aSource->setDownload(NULL);
 					string aTarget = d->getTarget();
 					removeDownload(d);
@@ -676,7 +674,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 		} catch(const BlockDLException e) {
 			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
-			userSpeed(aSource);
+			aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
 				aSource->setDownload(NULL);
