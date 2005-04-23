@@ -129,7 +129,7 @@ public:
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
-	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded), fastUser(false),
+	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0), noFreeBlocks(false)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
@@ -142,17 +142,13 @@ public:
 			TigerTree tree;
 			hasTree = HashManager::getInstance()->getTree(*tth, tree);
 		}
-
-		speedUsers.push_back(NULL);
-		speedUsers.push_back(NULL);
-		speedUsers.push_back(NULL);
 	};
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL),
-		start(rhs.start), fastUser(rhs.fastUser), speedUsers(rhs.speedUsers), noFreeBlocks(rhs.noFreeBlocks), currentDownload(rhs.currentDownload)
+		start(rhs.start), noFreeBlocks(rhs.noFreeBlocks), currentDownload(rhs.currentDownload)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -266,7 +262,6 @@ public:
 	}
 
 	string getSearchString() const;
-	Source::List speedUsers;
 
 	const string& getTempTarget();
 	void setTempTarget(const string& aTempTarget) {
@@ -288,7 +283,6 @@ public:
 	GETSET(bool, hasTree, HasTree);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
 	GETSET(bool, noFreeBlocks, NoFreeBlocks);
-	GETSET(bool, fastUser, FastUser);
 	GETSET(int64_t, speed, Speed);
 	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 	GETSET(u_int32_t, start, Start);

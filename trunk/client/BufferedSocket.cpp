@@ -100,7 +100,9 @@ bool BufferedSocket::threadSendFile() {
 			}
 			size_t actual = file->read(inbuf, s);
 			if(actual > 0) {
+				Socket::sending = true;
 				Socket::write((char*)inbuf, actual);
+				Socket::sending = false;
 				fire(BufferedSocketListener::BytesSent(), s, actual);
 				if (throttling) {
 					int32_t cycle_time = um->throttleCycleTime();
@@ -111,11 +113,12 @@ bool BufferedSocket::threadSendFile() {
 					}
 				}
    } else {
-    fire(BufferedSocketListener::TransmitDone());
-    return true;
+		fire(BufferedSocketListener::TransmitDone());
+		return true;
 			}
 		}
 	} catch(const Exception& e) {
+		Socket::sending = false;
 		fail(e.getError());
 		return true;
 	}

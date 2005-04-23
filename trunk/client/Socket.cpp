@@ -74,7 +74,7 @@ string SocketException::errorToString(int aError) throw() {
 	case ECONNRESET:
 		return STRING(CONNECTION_RESET);
 	case ENOTSOCK:
-		return STRING(/*NOT_SOCKET*/DISCONNECTED);
+		return STRING(NOT_SOCKET);
 	case ENOTCONN:
 		return STRING(NOT_CONNECTED);
 	case ENETUNREACH:

@@ -851,6 +851,7 @@ string ResourceManager::strings[] = {
 "Accepted Timeouts", 
 "Accepted Disconnects", 
 "Checking client...", 
+"Group search results by TTH", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1702,4 +1703,5 @@ string ResourceManager::names[] = {
 "AcceptedTimeouts", 
 "AcceptedDisconnects", 
 "CheckingClient", 
+"GroupSearchResults", 
 };

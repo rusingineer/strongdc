@@ -61,7 +61,6 @@ public:
 		NOTIFY_HANDLER(IDC_HUB, LVN_GETDISPINFO, ctrlHubs.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_RESULTS, NM_DBLCLK, onDoubleClickResults)
 		NOTIFY_HANDLER(IDC_RESULTS, LVN_KEYDOWN, onKeyDown)
-		NOTIFY_HANDLER(IDC_RESULTS, NM_CLICK, onLButton)
 		NOTIFY_HANDLER(IDC_HUB, LVN_ITEMCHANGED, onItemChangedHub)
 		NOTIFY_HANDLER(IDC_RESULTS, NM_CUSTOMDRAW, onCustomDraw)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -139,12 +138,12 @@ public:
 	{	
 		SearchManager::getInstance()->addListener(this);
 		headerBuf = new TCHAR[128];
+		useGrouping = BOOLSETTING(GROUP_SEARCH_RESULTS);
 	}
 
 	virtual ~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
-		states.Destroy();
 		delete[] headerBuf;
 	}
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
@@ -167,7 +166,6 @@ public:
 	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onFilterChar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -181,38 +179,8 @@ public:
 	void removeSelected() {
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			SearchInfo* s = (SearchInfo*)ctrlResults.getItemData(i);
-			if(s->subItems.size() > 0) {
-				int q = 0;
-				while(q<s->subItems.size()) {
-					SearchInfo* j = s->subItems[q];
-					int k = ctrlResults.findItem(j);
-					delete j;
-					ctrlResults.DeleteItem(k);
-					q++;
-				}
-				s->subItems.clear();
-			}
-			
-			if(s->main != NULL) {
-				SearchInfo::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
-				if(n != s->main->subItems.end()) s->main->subItems.erase(n);
-				if(s->main->subItems.size() == 0) {
-					s->main->setHits(_T(""));
-					ctrlResults.SetItemState(ctrlResults.findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else {
-					s->main->setHits(Text::toT(Util::toString((int)s->main->subItems.size() + 1)+" ")+TSTRING(HUB_USERS));
-				}
-				ctrlResults.updateItem(s->main);
-			}
-
-			SearchInfo::List::iterator k = find(mainItems.begin(), mainItems.end(), s);
-			if(k != mainItems.end()) mainItems.erase(k);
-			int l = ctrlResults.findItem(s);
-			delete s;
-			ctrlResults.DeleteItem(l);
+			ctrlResults.removeGroupedItem(i);
 		}
-		//ctrlResults.resort();
 	}
 	
 	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -306,7 +274,7 @@ private:
 	class SearchInfo;
 	TCHAR * headerBuf;
 public:
-	TypedListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
+	TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 
 private:
 	enum {
@@ -344,7 +312,7 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainitem(false), main(NULL) { 
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainItem(false), main(NULL) { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
@@ -352,7 +320,7 @@ private:
 		};
 
 		bool collapsed;
-		bool mainitem;
+		bool mainItem;
 		SearchInfo* main;
 
 		void getList();
@@ -387,7 +355,7 @@ private:
 			bool firstTTH;
 			tstring tth;
 		};
-
+        
 		const tstring& getText(int col) const {
 			switch(col) {
 				case COLUMN_NICK: return nick;
@@ -402,12 +370,12 @@ private:
 				case COLUMN_UPLOAD: return uploadSpeed;
 				case COLUMN_IP: return ip;
 				case COLUMN_TTH: return tth;
-				case COLUMN_HITS: return hits;
+				case COLUMN_HITS: return totalUsers;
 				default: return Util::emptyStringT;
 			}
 		}
 
-		static int doCompareItems(SearchInfo* a, SearchInfo* b, int col) {
+		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
 			if(!a->sr || !b->sr)
 				return 0;
 
@@ -430,33 +398,6 @@ private:
 			}
 		}
 
-		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
-			if(a->mainitem == b->mainitem){
-
-				// both are children with diffent mother, compare their monther
-				if(a->mainitem == false && a->main != b->main)
-					return doCompareItems(a->main, b->main, col);
-				
-				else
-					return doCompareItems(a, b, col);
-			}
-
-
-			if(a->mainitem == false && a->main == b)
-				return 2; // ? Decided by sort order, any better way?
-
-			if(b->mainitem == false && b->main == a)
-				return -2; // b should be displayed below a
-
-			if(a->mainitem == false && a->main != b)
-				return doCompareItems(a->main, b, col);
-
-			if(b->mainitem == false && b->main != a)
-				return doCompareItems(a, b->main, col);
-
-			dcassert(0);
-			return 0;
-		}
 		int imageIndex() {
 			int image = 0;
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
@@ -484,7 +425,20 @@ private:
 			return image;
 		}
 
-		void update() { 
+		void update(bool onlyHits = false) { 
+			
+			if(mainItem && (subItems.size() != 0)) {
+				TCHAR buf[256];
+				_sntprintf(buf, 255, _T("%d %s"), subItems.size() + 1, TSTRING(USERS));
+				buf[255] = NULL;
+				totalUsers = buf;
+			} else {
+				totalUsers = Util::emptyStringT;
+			}
+
+			if(onlyHits)
+				return;
+
 			if(sr->getType() == SearchResult::TYPE_FILE) {
 				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
 					fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
@@ -507,7 +461,7 @@ private:
 			connection = Text::toT(sr->getUser()->getConnection());
 			hubName = Text::toT(sr->getHubName());
 			slots = Text::toT(sr->getSlotString());
-	
+
 			if(sr->getIP() != "") {
 				tstring country = Text::toT(Util::getIpCountry(sr->getIP().c_str()));
 				ip = Text::toT(sr->getIP());
@@ -515,7 +469,6 @@ private:
 					ip =  country + _T(" (") + ip + _T(")");
 				}
 			}
-
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
 			
@@ -552,7 +505,7 @@ private:
 		GETSET(tstring, tth, TTH);
 		GETSET(int, flagimage, flagImage);
 		GETSET(tstring, uploadSpeed, UploadSpeed);
-		GETSET(tstring, hits, Hits);
+		tstring totalUsers;
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
@@ -563,7 +516,7 @@ private:
 			return (col == 0) ? name : Util::emptyStringT;
 		}
 		static int compareItems(HubInfo* a, HubInfo* b, int col) {
-			return (col == 0) ? Util::stricmp(a->name, b->name) : 0;
+			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;
 		}
 		int imageIndex() {
 			return 0;
@@ -629,8 +582,7 @@ private:
 	bool showUI;
 
 	CImageList images;
-	CImageList states;
-	TypedListViewCtrl<SearchInfo, IDC_RESULTS> ctrlResults;
+	TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS> ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
 	OMenu grantMenu;
@@ -643,7 +595,6 @@ private:
 	StringList targets;
 	StringList wholeTargets;
 	SearchInfo::List PausedResults;
-	SearchInfo::List mainItems;
 
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
@@ -657,6 +608,7 @@ private:
 	bool isHash;
 	bool bPaused;
 	bool exactSize1;
+	bool useGrouping;
 	int64_t exactSize2;
 
 	CriticalSection cs;
@@ -696,12 +648,8 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
-	void insertItem(int pos, SearchInfo* item);
+	void addEntry(SearchInfo* item, int pos);
 	void updateSearchList();
-
-	void Collapse(SearchInfo* i, int a);
-	void Expand(SearchInfo* i, int a);
-	void insertSubItem(SearchInfo* j, int idx);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 

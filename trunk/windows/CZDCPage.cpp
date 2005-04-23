@@ -54,6 +54,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
 	{ SettingsManager::DETECT_ZONEALARM, ResourceManager::SETTINGS_ZONE_ALARM },
+	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

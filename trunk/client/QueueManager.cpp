@@ -423,6 +423,9 @@ int64_t QueueManager::setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u
 		Lock l(cs);
 		QueueItem* qi = userQueue.getRunning(aUser);
 
+		if(!qi)
+			return -1;
+
 		qi->setSpeed(speed);
 		start = qi->getStart();
 		activeSegments = qi->getActiveSegments().size();
@@ -1868,10 +1871,9 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
-bool QueueManager::autoDropSource(Download* d) {
-	int iSpeed = SETTING(I_DOWN_SPEED);
+bool QueueManager::dropSource(Download* d) {
 	int iHighSpeed = SETTING(H_DOWN_SPEED);
-	int iTime = SETTING(DOWN_TIME)/* * 60*/;
+
 	u_int16_t activeSegments, onlineUsers;
 	int64_t overallSpeed;
 	bool enabledSlowDisconnecting;
@@ -1888,62 +1890,47 @@ bool QueueManager::autoDropSource(Download* d) {
 		onlineUsers = q->countOnlineUsers();
 		overallSpeed = q->getSpeed();
 		enabledSlowDisconnecting = q->getSlowDisconnect();
-
-	   	if(SETTING(SPEED_USERS) && !q->getFastUser() && q->getNoFreeBlocks() && (activeSegments == 1)) {
-			u_int count = q->speedUsers.size();
-			 
-			if(count > 0) {
-				int TryToSwitchToUser = -1;
-
-				if((q->speedUsers[0] != NULL) && (q->speedUsers[0]->getUser() != (User::Ptr)NULL) && (q->speedUsers[0]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[0]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[0]->getUser()) == NULL)) {
-					TryToSwitchToUser = 0;
-				} else if((count > 1) && (q->speedUsers[1] != NULL) && (q->speedUsers[1]->getUser() != (User::Ptr)NULL) && (q->speedUsers[1]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[1]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[1]->getUser()) == NULL)) {
-					TryToSwitchToUser = 1;
-				} else if((count > 2) && (q->speedUsers[2] != NULL) && (q->speedUsers[2]->getUser() != (User::Ptr)NULL) && (q->speedUsers[2]->getUser()->isOnline()) &&
-					(d->getRunningAverage() < (q->speedUsers[2]->getUser()->getDownloadSpeed() / 2)) && (QueueManager::getInstance()->getRunning(q->speedUsers[2]->getUser()) == NULL)) {
-					TryToSwitchToUser = 2;
-				}
-				if((TryToSwitchToUser > -1) && (d->getUserConnection()->getUser() != q->speedUsers[TryToSwitchToUser]->getUser())) {
- 					d->getUserConnection()->disconnect();
-					q->setFastUser(true);
-					q->speedUsers[TryToSwitchToUser]->getUser()->connect();
-					return false;
-				}
-			}
-		}
 	}
 
 	if(enabledSlowDisconnecting && !(SETTING(AUTO_DROP_SOURCE) && (activeSegments < 2))) {
-		if(overallSpeed > (iHighSpeed*1024)) {
-			dcassert(d->getUserConnection() != NULL);
-			if (d->getSize() > (SETTING(MIN_FILE_SIZE) * (1024*1024))) {
-				if(d->getRunningAverage() < (iSpeed*1024) && (onlineUsers > 2) && (!d->isSet(Download::FLAG_USER_LIST))) {
-					if(((GET_TICK() - d->quickTick)/1000) > iTime) {
-						if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-							removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
-						}
-						d->getUserConnection()->disconnect();
-						return false;
-					}
-				} else {
-					d->quickTick = GET_TICK();
+		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
+			if(onlineUsers > 2) {
+				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
+					removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
 				}
-			}
-		}
-	}
-
-	if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
-		if(d->getRunningAverage() < 1230) {
-			if(activeSegments > 2) {
 				d->getUserConnection()->disconnect();
-				return false;
 			}
+			return false;
 		}
 	}
 	return true;
  }
+
+bool QueueManager::autoDropSource(User::Ptr aUser) {
+    Lock l(cs);
+
+    QueueItem* q = userQueue.getRunning(aUser);
+
+    if(!q)
+		return false;
+
+    dcassert(q->isSource(aUser));
+
+    // Don't drop only downloading source
+    if(q->currents.size() < 2)
+		return false;
+
+    userQueue.setWaiting(q, aUser);
+    userQueue.remove(q, aUser);
+
+    q->removeSource(aUser, QueueItem::Source::FLAG_REMOVED);
+
+	fire(QueueManagerListener::StatusUpdated(), q);
+    setDirty();
+
+	return true;
+}
+
 /**
  * @file
  * $Id$

@@ -136,9 +136,9 @@ public:
 		TYPE_UDP
 	};
 
-	Socket() throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(Util::emptyString) { }
-	Socket(const string& aIp, const string& aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp) { connect(aIp, aPort); }
-	Socket(const string& aIp, short aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp) { connect(aIp, aPort); }
+	Socket() throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(Util::emptyString), sending(false) { }
+	Socket(const string& aIp, const string& aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp), sending(false) { connect(aIp, aPort); }
+	Socket(const string& aIp, short aPort) throw(SocketException) : noproxy(false), sock(INVALID_SOCKET), connected(false), ip(aIp), sending(false) { connect(aIp, aPort); }
 	virtual ~Socket() throw() { Socket::disconnect(); };
 
 	virtual void create(int aType = TYPE_TCP, bool server = false) throw(SocketException);
@@ -210,6 +210,7 @@ protected:
 	socket_t sock;
 	int type;
 	bool connected;
+	bool sending;
 
 	static string udpServer;
 	static short udpPort;

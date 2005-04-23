@@ -140,7 +140,8 @@ public:
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
 	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount);
-	bool autoDropSource(Download* d);
+	bool dropSource(Download* d);
+	bool autoDropSource(User::Ptr aUser);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
 	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size) {

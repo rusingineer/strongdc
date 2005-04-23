@@ -136,11 +136,8 @@ public:
 			delete i->second;
 		}
 
-		int q = 0;
-		while(q<mainItems.size()) {
-			ItemInfo* m = mainItems[q];
-			delete m;
-			q++;
+		for(map<string, ItemInfo*>::iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); i++) {
+			delete i->second;
 		}
 
 		return 0;
@@ -162,7 +159,7 @@ private:
 	class ItemInfo;	
 	int PreviewAppsSize;
 public:
-	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
+	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
 private:
 	enum {
 		ADD_ITEM,
@@ -201,6 +198,8 @@ private:
 		typedef vector<Ptr> List;
 		typedef List::iterator Iter;
 
+		ItemInfo::List subItems;
+
 		enum Flags {
 			FLAG_COMPRESSED = 0x01
 		};
@@ -216,8 +215,8 @@ private:
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
-			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), upper(NULL),
-			pocetUseru(1), Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
+			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
+			totalUsers(1), Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
 			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
@@ -232,16 +231,19 @@ private:
 		tstring file;
 		tstring IP;
 		tstring country;		
-		ItemInfo* upper;
+		ItemInfo* main;
 		string Target;
 		bool collapsed;
 		bool mainItem;
-		u_int32_t pocetUseru;
+		u_int32_t totalUsers;
 		u_int16_t numberOfSegments;
 		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
-		
+
+		void setTotalUsers(u_int32_t t) {
+			totalUsers = t;
+		}
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -275,7 +277,7 @@ private:
 			return columns[col];
 		}
 
-		static bool canBeSorted(ItemInfo* a, ItemInfo* b) {
+/*		static bool canBeSorted(ItemInfo* a, ItemInfo* b) {
 			if((a->Target == b->Target) && (!a->mainItem) && (!b->mainItem))
 				return true;
 
@@ -292,11 +294,11 @@ private:
 				return true;
 
 			return false;
-		}
+		}*/
 
 		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
-			if(!canBeSorted(a,b)) 
-				return 0;
+			//if(!canBeSorted(a,b)) 
+			//	return 0;
 
 			if(a->status == b->status) {
 				if(a->type != b->type) {
@@ -308,10 +310,10 @@ private:
 
 			switch(col) {
 				case COLUMN_USER: 
-					if((a->pocetUseru == 1) || (b->pocetUseru == 1))
+					if((a->totalUsers == 1) || (b->totalUsers == 1))
 						return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
 			
-					return compare(a->pocetUseru, b->pocetUseru);
+					return compare(a->totalUsers, b->totalUsers);
 				case COLUMN_STATUS: return 0;
 				case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
 				case COLUMN_SPEED: return compare(a->speed, b->speed);
@@ -328,9 +330,8 @@ private:
 
 	CriticalSection cs;
 	ItemInfo::Map transferItems;
-	ItemInfo::List mainItems;
 
-	TypedListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
+	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
 	static int columnSizes[];
 
@@ -339,7 +340,6 @@ private:
 	OMenu usercmdsMenu;
 	OMenu previewMenu;
 	CImageList arrows;
-	CImageList states;
 	HICON hIconCompressed;
 	COLORREF barva;
 
@@ -373,40 +373,27 @@ private:
 	void CollapseAll();
 	void ExpandAll();
 	void Expand(ItemInfo* i, int a);
-	void insertSubItem(ItemInfo* j, int idx);
 
 	inline void setMainItem(ItemInfo* i) {
-		if(i->upper != NULL) {
-			ItemInfo* h = i->upper;		
+		if(i->main != NULL) {
+			ItemInfo* h = i->main;		
 			if(h->Target != i->Target) {
-				h->pocetUseru -= 1;
+				h->totalUsers -= 1;
 				ctrlTransfers.deleteItem(i);
 
 				InsertItem(i);
 				RemoveItem(h);
 			}
 		} else {
-			i->upper = findMainItem(i->Target);
+			i->main = ctrlTransfers.findMainItem(i->Target);
 		}
 	}
-	inline ItemInfo* findMainItem(string Target) {
-		if(!mainItems.empty()) {
-			int q = 0;
-			while(q<mainItems.size()) {
-				ItemInfo* m = mainItems[q];
-				if(m->Target == Target) {
-					return m;
-				}
-				q++;
-			}
-		}
-		return NULL;
-	}
+
 	inline ItemInfo* findLastUserItem(ItemInfo* i) {
 		Lock l(cs);
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
-			if(m->upper == i) {	
+			if(m->main == i) {	
 				return m;
 			}
 		}

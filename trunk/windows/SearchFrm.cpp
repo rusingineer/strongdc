@@ -53,8 +53,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
-	states.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-
 	ctrlSearchBox.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL, 0);
 	for(TStringIter i = lastSearches.begin(); i != lastSearches.end(); ++i) {
@@ -103,7 +101,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		images.CreateFromImage(IDB_SPEEDS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 		ctrlResults.SetImageList(images, LVSIL_SMALL);
 	}
-	ctrlResults.SetImageList(states, LVSIL_STATE); 
 
 	ctrlHubs.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_NOCOLUMNHEADER, WS_EX_CLIENTEDGE, IDC_HUB);
@@ -766,21 +763,8 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		return 0;
 	} else {
 
-		for(int i = 0, j = mainItems.size(); i < j; ++i) {
-			SearchInfo* si =  mainItems[i];
-			int q = 0;
-			if(si->subItems.size() > 0) {
-				while(q<si->subItems.size()) {
-					SearchInfo* j = si->subItems[q];
-					delete j;
-					q++;
-				}
-			}
-			delete si;
-		}
+		ctrlResults.deleteAllItems();
 
- 		mainItems.clear();
-		ctrlResults.DeleteAllItems();
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -1080,63 +1064,23 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 	case ADD_RESULT:
 		{
 			SearchInfo* si = (SearchInfo*)lParam;
-			if(bPaused == false) {
-				SearchResult* sr = si->sr;
-				// Check previous search results for dupes
-				for(int i = 0, j = mainItems.size(); i < j; ++i) {
-					SearchInfo* si2 = mainItems[i];
-					SearchResult* sr2 = si2->sr;
-
-
-					if(!si->getTTH().empty()) {
-						if((!si2->getTTH().empty()) && (si2->getTTH() == si->getTTH()) && (sr2->getSize() == sr->getSize())){
-							if(sr->getUser()->getNick() == sr2->getUser()->getNick()){
-								delete si;
-								return 0;
-							}
-
-							for(SearchInfo::Iter k = si2->subItems.begin(); k != si2->subItems.end(); k++){
-								if(sr->getUser()->getNick() == (*k)->getUser()->getNick()){
-									delete si;
-									return 0;
-								}
-							}
-
-							si2->subItems.push_back(si);
-							si->main = si2;
-							si->mainitem = false;
-
-							int pos = ctrlResults.findItem(si2);
-
-							if(pos != -1) {
-								if(si2->subItems.size() == 1){
-									if(expandSR){
-										ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-										si2->collapsed = false;
-										insertSubItem(si, pos+1);
-									} else {
-										ctrlResults.SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-									}
-								}else if(!si2->collapsed){
-									insertSubItem(si, pos + 1);
-								}
-							}
-							si2->setHits(Text::toT(Util::toString((u_int32_t)si2->subItems.size() + 1) + " "  + CSTRING(USERS)));
-							if(pos != -1)
-								ctrlResults.updateItem(pos);
-							return 0;
-                	    }
-
-						continue;
-					} else if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
-						delete si;
-						return 0;
-					}
+			SearchResult* sr = si->sr;
+			// Check previous search results for dupes
+			for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
+				SearchInfo* si2 = ctrlResults.getItemData(i);
+				SearchResult* sr2 = si2->sr;
+				if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
+					delete si;
+					return 0;
 				}
-
-				mainItems.push_back(si);
-				si->mainitem = true;
-				insertItem(0, si);
+			}
+			if(bPaused == false) {
+				if(!si->getTTH().empty() && useGrouping) {
+					ctrlResults.insertGroupedItem(si, Text::fromT(si->getTTH()), expandSR);
+				} else {
+					si->mainItem = true;
+					addEntry(si, 0);
+				}
 				setDirty();
 				ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());
 			} else {
@@ -1171,21 +1115,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 		{
 			SearchQueueItem* aSearch = (SearchQueueItem*)(lParam);
 
-			for(int i = 0, j = mainItems.size(); i < j; ++i) {
-				SearchInfo* si = mainItems[i];
-				int q = 0;
-				if(si->subItems.size() > 0) {
-					while(q<si->subItems.size()) {
-						SearchInfo* j = si->subItems[q];
-						delete j;
-						q++;
-					}
-				}
-				delete si;
-			}
-
-			mainItems.clear();
-			ctrlResults.DeleteAllItems();
+			ctrlResults.deleteAllItems();
 
 			{
 				Lock l(cs);
@@ -1477,64 +1407,6 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	return S_OK;
 }
 
-LRESULT SearchFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-	bHandled = false;
-	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
-	
-	if (item->iItem != -1) {
-		CRect rect;
-		ctrlResults.GetItemRect(item->iItem, rect, LVIR_ICON);
-
-		if (item->ptAction.x < rect.left)
-		{
-			SearchInfo* i = (SearchInfo*)ctrlResults.getItemData(item->iItem);
-			if(i->subItems.size() > 0)
-				if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
-		}
-	}
-	return 0;
-} 
-
-void SearchFrame::Collapse(SearchInfo* i, int a) {
-	size_t q = 0;
-	while(q<i->subItems.size()) {
-		SearchInfo* j = i->subItems[q];
-		ctrlResults.deleteItem(j);
-		q++;
-	}
-
-	i->collapsed = true;
-	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-}
-
-void SearchFrame::Expand(SearchInfo* i, int a) {
-	size_t q = 0;
-	while(q<i->subItems.size()) {
-
-		insertSubItem(i->subItems[q], a + 1);
-
-		q++;
-	}
-
-	i->collapsed = false;
-	ctrlResults.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-}
-
-void SearchFrame::insertSubItem(SearchInfo* j, int idx)
-{
-	LV_ITEM lvi;
-	lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
-	lvi.iItem = idx;
-	lvi.iSubItem = 0;
-	lvi.iIndent = 1;
-	lvi.pszText = LPSTR_TEXTCALLBACK;
-	lvi.iImage = WinUtil::getIconIndex(Text::toT(j->sr->getFile()));
-	lvi.lParam = (LPARAM)j;
-	lvi.state = 0;
-	lvi.stateMask = 0;
-	ctrlResults.InsertItem(&lvi);
-}
-
 LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
@@ -1617,7 +1489,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) 
 	return CDRF_DODEFAULT;
 }
 
-void SearchFrame::insertItem(int pos, SearchInfo* item) {
+void SearchFrame::addEntry(SearchInfo* item, int pos) {
 	PME reg(filter,"i");
 	bool match = true;
 	int sel = ctrlFilterSel.GetCurSel();
@@ -1691,22 +1563,15 @@ LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*
 void SearchFrame::updateSearchList() {
 	Lock l(cs);
 
-	for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	    SearchInfo* si = mainItems[i];
-		si->collapsed = true;
-	}
-
 	while(ctrlResults.GetItemCount() > 0) {
 		ctrlResults.DeleteItem(0);
 	}
 
-	for(int i = 0, j = mainItems.size(); i < j; ++i) {
-	    SearchInfo* si = mainItems[i];
+	for(map<string, SearchInfo*>::iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); i++) {
+	    SearchInfo* si = i->second;
 		si->collapsed = true;
-		insertItem(0, si);
+		addEntry(si, 0);
 	}
-
-
 }
 
 LRESULT SearchFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
