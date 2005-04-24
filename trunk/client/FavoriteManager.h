@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef FAVORITE_MANAGER_H
+#if !defined(FAVORITE_MANAGER_H)
 #define FAVORITE_MANAGER_H
 
 #if _MSC_VER > 1000
@@ -218,7 +218,17 @@ public:
 	PreviewApplication::List& getPreviewApps() { return previewApplications; };
 	
 	void addFavoriteUser(User::Ptr& aUser);
+	bool isFavoriteUser(const User::Ptr& aUser) const {
+		return find(users.begin(), users.end(), aUser) != users.end();
+	}
 	void removeFavoriteUser(User::Ptr& aUser);
+
+	bool hasSlot(const User::Ptr& aUser) const { 
+		User::List::const_iterator i = find(users.begin(), users.end(), aUser);
+		if(i == users.end())
+			return false;
+		return aUser->getAutoExtraSlot();
+	}
 
 // Favorite Hubs
 	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; };
@@ -395,7 +405,7 @@ private:
 	
 };
 
-#endif // !defined(AFX_FavoriteManager_H__75858D5D_F12F_40D0_B127_5DDED226C098__INCLUDED_)
+#endif // !defined(FAVORITE_MANAGER_H)
 
 /**
  * @file

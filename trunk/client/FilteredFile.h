@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _FILTERED_FILE
-#define _FILTERED_FILE
+#if !defined(FILTERED_FILE_H)
+#define FILTERED_FILE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -42,14 +42,14 @@ public:
 		return s->write(buf, len);
 	}
 
-
 	const Filter& getFilter() const { return filter; }
+	Filter& getFilter() { return filter; }
 private:
 	OutputStream* s;
 	Filter filter;
 };
 
-template<class Filter, bool managed> 
+template<class Filter, bool managed>
 class CalcInputStream : public InputStream {
 public:
 	CalcInputStream(InputStream* aStream) : s(aStream) { }
@@ -85,7 +85,7 @@ public:
 		for(;;) {
 			size_t n = BUF_SIZE;
 			size_t zero = 0;
-            bool more = filter(NULL, zero, buf, n);
+			bool more = filter(NULL, zero, buf, n);
 
 			written += f->write(buf, n);
 
@@ -108,7 +108,7 @@ public:
 			bool more = filter(wb, m, buf, n);
 			wb += m;
 			len -= m;
-			
+
 			written += f->write(buf, n);
 
 			if(!more) {
@@ -186,7 +186,7 @@ private:
 	bool more;
 };
 
-#endif // _FILTERED_FILE
+#endif // !defined(FILTERED_FILE_H)
 
 /**
 * @file

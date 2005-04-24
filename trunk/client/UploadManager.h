@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)
-#define AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_
+#if !defined(UPLOAD_MANAGER_H)
+#define UPLOAD_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -50,7 +50,7 @@ public:
 		delete file;
 		delete tth;
 	};
-
+	
 	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); };
 	
 	GETSET(string, fileName, FileName);
@@ -63,7 +63,7 @@ class UploadManagerListener {
 	friend class UploadQueueItem; 
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
-
+	
 	typedef X<0> Complete;
 	typedef X<1> Failed;
 	typedef X<2> Starting;
@@ -144,7 +144,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
 {
 public:
-
+	
 	/** @return Number of uploads. */ 
 	size_t getUploadCount() { Lock l(cs); return uploads.size(); };
 
@@ -165,7 +165,6 @@ public:
 	}
 	
 	int getSlots() {
-		//return SETTING(SLOTS) + (max(SETTING(HUB_SLOTS),0) * (Client::getTotalCounts() - 1)) ;
 		int slots = 0;
 		if (SETTING(HUB_SLOTS) * Client::getTotalCounts() <= SETTING(SLOTS)) {
 			slots = SETTING(SLOTS);
@@ -177,7 +176,7 @@ public:
 
 	/** @return Number of free slots. */
 	int getFreeSlots() { return max((getSlots() - running), 0); }
-
+	
 	/** @internal */
 	bool getAutoSlot() {
 		/** A 0 in settings means disable */
@@ -191,8 +190,8 @@ public:
 	}
 
 	/** @internal */
-	int getFreeExtraSlots()	{ return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
-		
+	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
+	
 	/** @param aUser Reserve an upload slot for this user and connect. */
 	void reserveSlot(User::Ptr& aUser) {
 		{
@@ -201,14 +200,6 @@ public:
 		}
 		if(aUser->isOnline())
 			aUser->connect();	
-	}
-
-	/** @param aUser Reserve an upload slot for this user. */
-	void reserveSlot(const User::Ptr& aUser) {
-		{
-			Lock l(cs);
-			reservedSlots[aUser] = GET_TICK();
-		}
 	}
 	
 	void reserveSlotHour(User::Ptr& aUser) {
@@ -327,7 +318,7 @@ private:
 	virtual void on(Send, UserConnection*) throw();
 	virtual void on(GetListLength, UserConnection* conn) throw();
 	virtual void on(TransmitDone, UserConnection*) throw();
-
+	
 	virtual void on(AdcCommand::GET, UserConnection*, const AdcCommand&) throw();
 	virtual void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) throw();
 	virtual void on(AdcCommand::NTD, UserConnection*, const AdcCommand&) throw();
@@ -336,7 +327,7 @@ private:
 	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool listRecursive = false);
 };
 
-#endif // !defined(AFX_UPLOADMANAGER_H__B0C67119_3445_4208_B5AA_938D4A019703__INCLUDED_)
+#endif // !defined(UPLOAD_MANAGER_H)
 
 /**
  * @file

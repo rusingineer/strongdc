@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
  * Henrik Engström, henrikengstrom@home.se
  */
 
-#if !defined(__ADL_SEARCH_FRAME_H__)
-#define __ADL_SEARCH_FRAME_H__
+#if !defined(ADL_SEARCH_FRAME_H)
+#define ADL_SEARCH_FRAME_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,6 +31,7 @@
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
 #include "WinUtil.h"
+
 #include "../client/ADLSearch.h"
 
 #define ADLLIST_MESSAGE_MAP 6
@@ -49,8 +50,8 @@ public:
 	typedef MDITabChildWindowImpl<ADLSearchFrame, RGB(0, 0, 0), IDR_ADLSEARCH> baseClass;
 
 	// Constructor/destructor
-	ADLSearchFrame() : closed(false), listContainer(WC_LISTBOX, this, ADLLIST_MESSAGE_MAP) { }
-	virtual ~ADLSearchFrame() { };
+	ADLSearchFrame() : closed(false), listContainer(WC_LISTBOX, this, ADLLIST_MESSAGE_MAP) {}
+	virtual ~ADLSearchFrame() { }
 
 	// Frame window declaration
 	DECLARE_FRAME_WND_CLASS_EX(_T("ADLSearchFrame"), IDR_ADLSEARCH, 0, COLOR_3DFACE);
@@ -151,7 +152,7 @@ private:
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
-#endif
+#endif // !defined(ADL_SEARCH_FRAME_H)
 
 /**
  * @file

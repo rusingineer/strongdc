@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)
-#define AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_
+#if !defined(SEARCH_MANAGER_H)
+#define SEARCH_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -74,7 +74,7 @@ public:
 
 	User::Ptr& getUser() { return user; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
-	
+
 	const string& getFile() const { return file; }
 	const string& getHubIpPort() const { return hubIpPort; }
 	const string& getHubName() const { return hubName.empty() ? user->getClientName() : hubName; }
@@ -94,7 +94,7 @@ public:
 
 private:
 	friend class SearchManager;
-	
+
 	SearchResult();
 	~SearchResult() { delete tth; };
 
@@ -110,7 +110,7 @@ private:
 	int freeSlots;
 	string IP;
 	TTHValue* tth;
-
+	
 	bool utf8;
 	volatile long ref;
 
@@ -176,7 +176,7 @@ public:
 		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
  	}
 	static string clean(const string& aSearchString);
-
+	
 	void respond(const AdcCommand& cmd);
 
 	short getPort()
@@ -198,7 +198,9 @@ private:
 	Socket* socket;
 	short port;
 	bool stop;
+	u_int32_t lastSearch;
 	friend class Singleton<SearchManager>;
+	SearchQueueItemList searchQueue;
 	SearchResult::List seznam;
 	CriticalSection cs;
 
@@ -223,13 +225,10 @@ private:
 	};
 
 	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
-	void onData(const u_int8_t* buf, size_t aLen, const string& address);
-	SearchQueueItemList searchQueue;
-	u_int32_t lastSearch;
-
+	void onData(const u_int8_t* buf, size_t aLen, const string& address);	
 };
 
-#endif // !defined(AFX_SEARCHMANAGER_H__E8F009DF_D216_4F8F_8C81_07D2FA0BFB7F__INCLUDED_)
+#endif // !defined(SEARCH_MANAGER_H)
 
 /**
  * @file

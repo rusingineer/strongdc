@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_LOGMANAGER_H__73C7E0F5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_)
-#define AFX_LOGMANAGER_H__73C7E0F5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_
+#if !defined(LOG_MANAGER_H)
+#define LOG_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -108,12 +108,12 @@ private:
 		logOptions[WEBSERVER][FORMAT]	= SettingsManager::WEBSERVER_FORMAT;
 	};
 	virtual ~LogManager() throw() { };
-	
+
 };
 
 #define LOG(area, msg) LogManager::getInstance()->log(area, msg)
 
-#endif // !defined(AFX_LOGMANAGER_H__73C7E0F5_5C7D_4A2A_827B_53267D0EF4C5__INCLUDED_)
+#endif // !defined(LOG_MANAGER_H)
 
 /**
  * @file

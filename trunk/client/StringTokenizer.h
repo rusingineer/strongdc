@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_STRINGTOKENIZER_H__E9B493AC_97A7_4A18_AF7C_06BFE1926A52__INCLUDED_)
-#define AFX_STRINGTOKENIZER_H__E9B493AC_97A7_4A18_AF7C_06BFE1926A52__INCLUDED_
+#if !defined(STRING_TOKENIZER_H)
+#define STRING_TOKENIZER_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
 template<class T>
-class StringTokenizer  
+class StringTokenizer
 {
 private:
 	vector<T> tokens;
@@ -58,7 +58,7 @@ public:
 
 };
 
-#endif // !defined(AFX_STRINGTOKENIZER_H__E9B493AC_97A7_4A18_AF7C_06BFE1926A52__INCLUDED_)
+#endif // !defined(STRING_TOKENIZER_H)
 
 /**
  * @file

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef FAVORITEDIRSPAGE_H
-#define FAVORITEDIRSPAGE_H
+#if !defined(FAVORITE_DIRS_PAGE_H)
+#define FAVORITE_DIRS_PAGE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,7 +31,7 @@
 class FavoriteDirsPage : public CPropertyPage<IDD_FAVORITE_DIRSPAGE>, public PropPage
 {
 public:
-	FavoriteDirsPage(SettingsManager *s) : PropPage(s) { 
+	FavoriteDirsPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_DOWNLOADS) + _T('\\') + TSTRING(SETTINGS_FAVORITE_DIRS_PAGE)).c_str());
 		SetTitle(title);
 		//m_psp.dwFlags |= PSP_HASHELP;
@@ -69,7 +69,7 @@ protected:
 	void addDirectory(const tstring& aPath);
 };
 
-#endif //FAVORITEDIRSPAGE_H
+#endif // !defined(FAVORITE_DIR_SPAGE_H)
 
 /**
  * @file

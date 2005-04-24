@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,23 +271,19 @@ void CryptoManager::walkTree(list<Node*>& aTree) {
 	}
 }
 
-/**
- * @todo Make more effective in terms of memory allocations and copies...
- */
 void CryptoManager::recurseLookup(vector<u_int8_t>* table, Node* node, vector<u_int8_t>& u_int8_ts) {
 	if(node->chr != -1) {
 		table[node->chr] = u_int8_ts;
 		return;
 	}
 
-	vector<u_int8_t> left = u_int8_ts;
-	vector<u_int8_t> right = u_int8_ts;
-	
-	left.push_back(0);
-	right.push_back(1);
+	u_int8_ts.push_back(0);
+	recurseLookup(table, node->left, u_int8_ts);
+	u_int8_ts.pop_back();
 
-	recurseLookup(table, node->left, left);
-	recurseLookup(table, node->right, right);
+	u_int8_ts.push_back(1);
+	recurseLookup(table, node->right, u_int8_ts);
+	u_int8_ts.pop_back();
 }
 
 /**

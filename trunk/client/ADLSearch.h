@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
  * Henrik Engström, henrikengstrom at home se
  */
 
-#if !defined(__ADLSEARCH_H__)
-#define __ADLSEARCH_H__
+#if !defined(ADL_SEARCH_H)
+#define ADL_SEARCH_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -51,21 +51,21 @@ public:
 		minFileSize(-1), maxFileSize(-1), typeFileSize(SizeBytes), destDir("ADLSearch"), ddIndex(0) {}
 
 	// Prepare search
-		void Prepare(StringMap& params) {
+	void Prepare(StringMap& params) {
 		// Prepare quick search of substrings
-			stringSearchList.clear();
+		stringSearchList.clear();
 
-			// Replace parameters such as %[nick]
-			string stringParams = Util::formatParams(searchString, params);
+		// Replace parameters such as %[nick]
+		string stringParams = Util::formatParams(searchString, params);
 
-			// Split into substrings
-			StringTokenizer<string> st(stringParams, ' ');
-			for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-				if(i->size() > 0) {
-					// Add substring search
-					stringSearchList.push_back(StringSearch(*i));
-				}
+		// Split into substrings
+		StringTokenizer<string> st(stringParams, ' ');
+		for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
+			if(i->size() > 0) {
+				// Add substring search
+				stringSearchList.push_back(StringSearch(*i));
 			}
+		}
 	}
 
 	// The search string
@@ -100,10 +100,10 @@ public:
 
 	string SourceTypeToString(SourceType t) {
 		switch(t) {
-			default:
-			case OnlyFile:		return "Filename";
-			case OnlyDirectory:	return "Directory";
-			case FullPath:		return "Full Path";
+		default:
+		case OnlyFile:		return "Filename";
+		case OnlyDirectory:	return "Directory";
+		case FullPath:		return "Full Path";
 		}
 	}
 
@@ -142,16 +142,16 @@ public:
 	}
 	string SizeTypeToString(SizeType t) {
 		switch(t) {
-			default:
-			case SizeBytes:		return "B";
-			case SizeKiloBytes:	return "kB";
-			case SizeMegaBytes:	return "MB";
-			case SizeGigaBytes:	return "GB";
+		default:
+		case SizeBytes:		return "B";
+		case SizeKiloBytes:	return "kB";
+		case SizeMegaBytes:	return "MB";
+		case SizeGigaBytes:	return "GB";
 		}
 	}
 	tstring SizeTypeToDisplayString(SizeType t) {
 		switch(t) {
-			default:
+		default:
 		case SizeBytes:		return CTSTRING(B);
 		case SizeKiloBytes:	return CTSTRING(KB);
 		case SizeMegaBytes:	return CTSTRING(MB);
@@ -160,11 +160,11 @@ public:
 	}
 	int64_t GetSizeBase() {
 		switch(typeFileSize) {
-			default:
-			case SizeBytes:		return (int64_t)1;
-			case SizeKiloBytes:	return (int64_t)1024;
-			case SizeMegaBytes:	return (int64_t)1024 * (int64_t)1024;
-			case SizeGigaBytes:	return (int64_t)1024 * (int64_t)1024 * (int64_t)1024;
+		default:
+		case SizeBytes:		return (int64_t)1;
+		case SizeKiloBytes:	return (int64_t)1024;
+		case SizeMegaBytes:	return (int64_t)1024 * (int64_t)1024;
+		case SizeGigaBytes:	return (int64_t)1024 * (int64_t)1024 * (int64_t)1024;
 		}
 	}
 
@@ -193,10 +193,10 @@ public:
 
 		// Do search
 		switch(sourceType) {
-			default:
-			case OnlyDirectory:	return false;
-			case OnlyFile:		return SearchAll(f);
-			case FullPath:		return SearchAll(fp);
+		default:
+		case OnlyDirectory:	return false;
+		case OnlyFile:		return SearchAll(f);
+		case FullPath:		return SearchAll(fp);
 		}
 	}
 
@@ -261,7 +261,7 @@ public:
 	void Save();
 
 	// Settings
-	GETSET(bool, breakOnFirst, BreakOnFirst)		
+	GETSET(bool, breakOnFirst, BreakOnFirst)
 	GETSET(User::Ptr, user, User)
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing
@@ -305,7 +305,7 @@ private:
 	}
 };
 
-#endif
+#endif // !defined(ADL_SEARCH_H)
 
 /**
  * @file

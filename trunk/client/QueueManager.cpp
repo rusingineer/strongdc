@@ -1574,10 +1574,12 @@ void QueueManager::saveQueue() throw() {
 					QueueItem::Source* s = *j;
 					f.write(STRINGLEN("\t\t<Source Nick=\""));
 					f.write(CHECKESCAPE(s->getUser()->getNick()));
-					f.write(STRINGLEN("\" Path=\""));
-					f.write(CHECKESCAPE(s->getPath()));
-					f.write(STRINGLEN("\" Utf8=\""));
-					f.write(s->isSet(QueueItem::Source::FLAG_UTF8) ? "1" : "0", 1);
+					if(!s->getPath().empty() || (!s->getUser()->isSet(User::TTH_GET) && qi->getTTH())) {
+						f.write(STRINGLEN("\" Path=\""));
+						f.write(CHECKESCAPE(s->getPath()));
+						f.write(STRINGLEN("\" Utf8=\""));
+						f.write(s->isSet(QueueItem::Source::FLAG_UTF8) ? "1" : "0", 1);
+					}
 					f.write(STRINGLEN("\"/>\r\n"));
 				}
 

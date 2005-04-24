@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONFIG_H
+#if !defined(CONFIG_H)
 #define CONFIG_H
 
 #if _MSC_VER > 1000
@@ -54,7 +54,7 @@
 # pragma warning(disable: 4786) // identifier was truncated to '255' characters in the debug information
 # pragma warning(disable: 4290) // C++ Exception Specification ignored
 # pragma warning(disable: 4127) // constant expression
-//# pragma warning(disable: 4710) // function not inlined
+# pragma warning(disable: 4710) // function not inlined
 # pragma warning(disable: 4512) // can't generate assignment operator
 # pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 
@@ -118,10 +118,10 @@ typedef unsigned __int64 u_int64_t;
 
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0501
-# define _WIN32_IE	0x0501
+# define _WIN32_IE	0x0500
 #endif
 
-#endif // CONFIG_H
+#endif // !defined(CONFIG_H)
 
 /**
  * @file

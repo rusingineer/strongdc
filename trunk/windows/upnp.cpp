@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -45,16 +45,16 @@ UPnP::UPnP( const string theIPAddress, const string theProtocol, const string th
 // Opens the UPnP ports defined when the object was created
 HRESULT UPnP::OpenPorts()
 {
-    HRESULT hr = CoCreateInstance (__uuidof(UPnPNAT),
-                                   NULL,
-                                   CLSCTX_INPROC_SERVER,
-                                   __uuidof(IUPnPNAT),
-                                   (void**)&pUN);
+	HRESULT hr = CoCreateInstance (__uuidof(UPnPNAT),
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		__uuidof(IUPnPNAT),
+		(void**)&pUN);
 
 	if ( SUCCEEDED(hr) )
 	{
-        IStaticPortMappingCollection * pSPMC = NULL;
-        hr = pUN->get_StaticPortMappingCollection (&pSPMC);
+		IStaticPortMappingCollection * pSPMC = NULL;
+		hr = pUN->get_StaticPortMappingCollection (&pSPMC);
 
 		if( SUCCEEDED(hr) && pSPMC )
 		{ // see comment in "else"
@@ -78,16 +78,16 @@ HRESULT UPnP::OpenPorts()
 			}
 			else
 			{
-                hr = E_OUTOFMEMORY;
-            }
+				hr = E_OUTOFMEMORY;
+			}
 		}
 		else
 		{
-            hr = E_FAIL;    // work around a known bug here:  in some error 
-			                // conditions, get_SPMC NULLs out the pointer, but incorrectly returns a success code.
-        }
-    }
-    return hr;
+			hr = E_FAIL;    // work around a known bug here:  in some error 
+			// conditions, get_SPMC NULLs out the pointer, but incorrectly returns a success code.
+		}
+	}
+	return hr;
 }
 
 // Closes the UPnP ports defined when the object was created
@@ -108,7 +108,7 @@ HRESULT UPnP::ClosePorts()
 
 		if( SUCCEEDED(hr2) && pSPMC)
 		{
-			hr = pSPMC->Remove (PortNumber,bstrProtocol);
+			hr = pSPMC->Remove(PortNumber, bstrProtocol);
 			pSPMC->Release();
 		}
 
@@ -123,22 +123,22 @@ HRESULT UPnP::ClosePorts()
 // Returns the current external IP address
 string UPnP::GetExternalIP()
 {
-	USES_CONVERSION;
+  	USES_CONVERSION;
  	HRESULT hr;
-
+  
  	// Check if we opened the desired port, 'cause we use it for getting the IP
  	// This shouldn't be a problem because we only try to get the external IP when
  	// we opened the mapping
 	// This function is not used somewhere else, hence it is "save" to do it like this
  	if (!PortsAreOpen)
 	{
-		return Util::emptyString;
-	}
-
+  		return Util::emptyString;
+  	}
+  
  	// Get the Collection
-	IStaticPortMappingCollection *pIMaps=NULL;
+ 	IStaticPortMappingCollection *pIMaps = NULL;
  	hr = pUN->get_StaticPortMappingCollection(&pIMaps);
-	
+ 
  	// Check it
  	// We also check against that bug mentioned in OpenPorts()
  	if( !SUCCEEDED(hr) || !pIMaps )
@@ -146,11 +146,11 @@ string UPnP::GetExternalIP()
          // Only release when OK
  		if (pIMaps != NULL)
  		{
-		pIMaps->Release();
+ 			pIMaps->Release();
  		}
-		return Util::emptyString;
-	}
-
+ 		return Util::emptyString;
+ 	}
+ 
  	// Lets Query our mapping
  	IStaticPortMapping *pISM;
  	hr = pIMaps->get_Item(
@@ -158,28 +158,28 @@ string UPnP::GetExternalIP()
 		bstrProtocol,
 		&pISM
  	);
-
+ 
  	// Query failed!
  	if(!SUCCEEDED(hr))
  	{
-		pIMaps->Release();
-		return Util::emptyString;
-	}
-
+  		pIMaps->Release();
+  		return Util::emptyString;
+  	}
+  
  	// Get the External IP from our mapping
  	BSTR bstrExternal = NULL;
  	hr = pISM->get_ExternalIPAddress(&bstrExternal);
-
+ 
  	// D'OH. Failed
  	if(!SUCCEEDED(hr))
  	{
-		pIMaps->Release();
+  		pIMaps->Release();
  		pISM->Release();
-		return Util::emptyString;
-	}
-
+  		return Util::emptyString;
+  	}
+  
  	// Check and convert the result
-	string tmp;
+ 	string tmp;
  	if(bstrExternal != NULL)
  	{
  		tmp = OLE2A(bstrExternal);
@@ -188,15 +188,15 @@ string UPnP::GetExternalIP()
  	{
  		tmp = Util::emptyString;
   	}
-
+  
  	// no longer needed
  	SysFreeString(bstrExternal);
-
+  
  	// no longer needed
-	pIMaps->Release();
+  	pIMaps->Release();
  	pISM->Release();
-
-	return tmp;
+  
+  	return tmp;
 }
 
 UPnP::~UPnP()

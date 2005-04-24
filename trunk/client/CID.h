@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_CID_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_)
-#define AFX_CID_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_
+#if !defined(CID_H)
+#define CID_H
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
 
 #include "Encoder.h"
 #include "Util.h"
@@ -42,8 +46,8 @@ public:
 
 	string toBase32() const { return Encoder::toBase32((u_int8_t*)&cid, sizeof(cid)); }
 	string& toBase32(string& tmp) const { return Encoder::toBase32((u_int8_t*)&cid, sizeof(cid), tmp); }
-
-	size_t toHash() const { size_t* p = (size_t*)&cid; return *p ^ *(p+1); }
+	
+	size_t toHash() const { return (size_t)cid; }
 	const u_int8_t* getData() const { return (u_int8_t*)&cid; }
 
 	bool isZero() const { return cid == 0; }
@@ -59,9 +63,10 @@ public:
 	static const u_int64_t zero = 0;
 private:
 	u_int64_t cid;
+
 };
 
-#endif
+#endif // !defined(CID_H)
 
 /**
 * @file

@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_EXLISTVIEWCTRL_H__45847002_68C2_4C8A_9C2D_C4D8F65DA841__INCLUDED_)
-#define AFX_EXLISTVIEWCTRL_H__45847002_68C2_4C8A_9C2D_C4D8F65DA841__INCLUDED_
+#if !defined(EX_LIST_VIEW_CTRL_H)
+#define EX_LIST_VIEW_CTRL_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -37,7 +37,7 @@ class ExListViewCtrl : public CWindowImpl<ExListViewCtrl, CListViewCtrl, CContro
 public:
 	enum {	
 		SORT_FUNC = 2,
-		SORT_STRING,
+ 		SORT_STRING,
 		SORT_STRING_NOCASE,
 		SORT_INT,
 		SORT_FLOAT
@@ -171,7 +171,7 @@ public:
 	virtual ~ExListViewCtrl() { };
 };
 
-#endif // !defined(AFX_EXLISTVIEWCTRL_H__45847002_68C2_4C8A_9C2D_C4D8F65DA841__INCLUDED_)
+#endif // !defined(EX_LIST_VIEW_CTRL_H)
 
 /**
  * @file

@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_HASH_PROGRESSDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)
-#define AFX_HASH_PROGESSDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_
+#if !defined(HASH_PROGRESS_DLG_H)
+#define HASH_PROGESS_DLG_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,8 +31,8 @@ public:
 	enum { IDD = IDD_HASH_PROGRESS };
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
-	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) { 
-		
+	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) {
+
 	};
 	virtual ~HashProgressDlg() { };
 
@@ -58,7 +58,7 @@ public:
 		progress.Attach(GetDlgItem(IDC_HASH_PROGRESS));
 		progress.SetRange(0, 10000);
 		updateStats();
-		
+
 		HashManager::getInstance()->setPriority(Thread::NORMAL);
 		
 		SetTimer(1, 1000);
@@ -84,10 +84,10 @@ public:
 
 		HashManager::getInstance()->getStats(file, bytes, files);
 		if(bytes > startBytes)
-			 startBytes = bytes;
+			startBytes = bytes;
 
 		if(files > startFiles)
-			 startFiles = files;
+			startFiles = files;
 
 		if(autoClose && files == 0) {
 			PostMessage(WM_CLOSE);
@@ -130,7 +130,7 @@ public:
 	}
 
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		EndDialog(wID);	
+		EndDialog(wID);
 		return 0;
 	}
 
@@ -145,7 +145,7 @@ private:
 	
 };
 
-#endif // !defined(AFX_HASH_PROGRESSDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)
+#endif // !defined(HASH_PROGRESS_DLG_H)
 
 /**
  * @file

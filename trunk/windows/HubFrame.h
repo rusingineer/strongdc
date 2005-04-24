@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)
-#define AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_
+#if !defined(HUB_FRAME_H)
+#define HUB_FRAME_H
 
 #if _MSC_VER >= 1000
 #pragma once
@@ -351,12 +351,6 @@ private:
 		tstring msg;
 	};
 
-	class CheatInfo {
-	public:
-		CheatInfo(const tstring& m) : msg(m) { };
-		tstring msg;
-	};
-
 	HubFrame(const tstring& aServer
 		, const tstring& aRawOne
 		, const tstring& aRawTwo
@@ -365,7 +359,7 @@ private:
 		, const tstring& aRawFive
 		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) : 
 		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
-		ShowUserList(BOOLSETTING(GET_USER_INFO)), updateUsers(false), curCommandPosition(0), currentNeedlePos(-1),
+		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false), curCommandPosition(0), currentNeedlePos(-1),
 		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), menuItems(0),
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
@@ -381,9 +375,9 @@ private:
 		client->setRawFive(Text::fromT(aRawFive));
 		client->addListener(this);
 		if(FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
-			ShowUserList = userliststate;
+			showUsers = userliststate;
 		} else {
-			ShowUserList = BOOLSETTING(GET_USER_INFO);
+			showUsers = BOOLSETTING(GET_USER_INFO);
 		}
 		headerBuf = new TCHAR[128];
 	}
@@ -462,17 +456,24 @@ private:
 	UpdateList updateList;
 	CriticalSection updateCS;
 	bool updateUsers;
+	bool resort;
 
 	enum { MAX_CLIENT_LINES = 5 };
 	TStringList lastLinesList;
 	tstring lastLines;
 	CToolTipCtrl ctrlLastLines;
-
+	
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];
+	
 	int findUser(const User::Ptr& aUser);
+
 	bool updateUser(const User::Ptr& u);
+	void removeUser(const User::Ptr& aUser);
+
 	void addAsFavorite();
+
+	void clearUserList();
 
 	LPCSTR sMyNick;
 	int hubchatusersplit;
@@ -481,24 +482,11 @@ private:
 	bool filterUser(UserInfo* ui);
 
 	bool PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu);
-	bool ShowUserList;
+	bool showUsers;
 	TCHAR * headerBuf;
 	string sColumsOrder;
     string sColumsWidth;
     string sColumsVisible;
-
-	void clearUserList() {
-		{
-			Lock l(updateCS);
-			updateList.clear();
-		}
-		userMap.clear();
-		int j = ctrlUsers.GetItemCount();
-		for(int i = 0; i < j; i++) {
-			delete (UserInfo*) ctrlUsers.GetItemData(i);
-		}
-		ctrlUsers.DeleteAllItems();
-	}
 
 	void updateStatusBar() {
 		if(m_hWnd)
@@ -536,12 +524,8 @@ private:
 	void speak(Speakers s, const User::Ptr& u, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new PMInfo(u, line)); };
 
 };
-/////////////////////////////////////////////////////////////////////////////
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)
+#endif // !defined(HUB_FRAME_H)
 
 /**
  * @file

@@ -1,23 +1,23 @@
-/* 
-* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
-#if !defined(AFX_TYPEDLISTVIEWCTRL_H__45847002_68C2_4C8A_9C2D_C4D8F65DA841__INCLUDED_)
-#define AFX_TYPEDLISTVIEWCTRL_H__45847002_68C2_4C8A_9C2D_C4D8F65DA841__INCLUDED_
+#if !defined(TYPED_LIST_VIEW_CTRL_H)
+#define TYPED_LIST_VIEW_CTRL_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -710,6 +710,7 @@ public:
 	void Expand(T* i, int a) {
 		size_t q = 0;
 		while(q < i->subItems.size()) {
+			i->subItems[q]->update();
 			insertSubItem(i->subItems[q], a + 1);
 			q++;
 		}
@@ -732,21 +733,31 @@ public:
 	}
 
 	T* findMainItem(string groupingString) {
-		return mainItems.find(groupingString)->second;
+		map<string, T*>::iterator i = mainItems.find(groupingString);
+		if(i != mainItems.end())
+			return i->second;
+		else
+			return NULL;
 	}
 
-	void insertGroupedItem(T* item, string groupingString, bool autoExpand) {
+	void insertGroupedItem(T* item, string groupingString, bool autoExpand, int p = -1) {
 		T* mainItem = findMainItem(groupingString);
-		
+again:
 		if(mainItem == NULL) {
-			mainItems.insert(make_pair(groupingString, item));
-			item->mainItem = true;
-			insertItem(getSortPos(item), item, item->imageIndex());
+			T* newItem = item->createMainItem();
+			mainItems.insert(make_pair(groupingString, newItem));
+			newItem->mainItem = true;
+			insertItem(getSortPos(newItem), newItem, newItem->imageIndex());
+
+			if(newItem != item) {
+				mainItem = newItem;
+				goto again;
+			}
 		} else {
 			mainItem->subItems.push_back(item);
-			mainItem->update(true); // needs to make function parameter to update only subitems number column to save some CPU time
 			item->main = mainItem;
 			item->mainItem = false;
+			item->updateMainItem();
 
 			int pos = findItem(mainItem);
 
@@ -768,37 +779,61 @@ public:
 		}
 	}
 
-	void removeGroupedItem(int i) {
-		T* s = (T*)getItemData(i);
+	void removeMainItem(T* s) {
 		if(s->subItems.size() > 0) {
 			int q = 0;
 			while(q < s->subItems.size()) {
 				T* j = s->subItems[q];
-				DeleteItem(findItem(j));
+				int p = findItem(j);
+				if(p != -1)
+					DeleteItem(p);
 				delete j;
 				q++;
 			}
 			s->subItems.clear();
 		}
-		
-		if(s->main != NULL) {
-			T::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
-			if(n != s->main->subItems.end()) {
-				s->main->subItems.erase(n);
-			}
-			if(s->main->subItems.size() == 0) {
-				SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-			}
-			updateItem(s->main);
-		}
-
 		for(map<string, T*>::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
 			if(i->second == s) {
 				mainItems.erase(i);
 			}
 		}
-		DeleteItem(findItem(s));
-		delete s;
+	}
+
+	void removeGroupedItem(T* s, bool removeFromMemory = true) {
+		if(s->mainItem) {
+			removeMainItem(s);
+		} else {
+			T::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
+			if(n != s->main->subItems.end()) {
+				s->main->subItems.erase(n);
+			}
+			s->updateMainItem();
+			updateItem(s->main);
+			if(uniqueMainItem) {
+				if(s->main->subItems.size() == 1) {
+					if(!s->main->collapsed) {
+						s->main->collapsed = true;
+						deleteItem(s->main->subItems.front());
+					}
+					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				} else if(s->main->subItems.size() == 0) {
+					removeMainItem(s->main);
+					DeleteItem(findItem(s->main));
+					delete s->main;
+				}
+			} else {
+				if(s->main->subItems.size() == 0) {
+					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				}
+			}
+		}
+
+		int p = findItem(s);
+		if(p != -1)
+			DeleteItem(p);
+
+		if(removeFromMemory)
+			delete s;
 	}
 
 	void deleteAllItems() {
@@ -819,12 +854,25 @@ public:
 		DeleteAllItems();
 	}
 
+	LRESULT onColumnClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		NMLISTVIEW* l = (NMLISTVIEW*)pnmh;
+		if(l->iSubItem != getSortColumn()) {
+			setAscending(true);
+			setSortColumn(l->iSubItem);
+		} else if(isAscending()) {
+			setAscending(false);
+			updateArrow();
+		} else {
+			setSortColumn(-1);
+		}		
+		resort();
+		return 0;
+	}
 	void resort() {
 		if(getSortColumn() != -1) {
 			SortItems(&compareFunc, (LPARAM)this);
 		}
 	}
-
 	int getSortPos(T* a) {
 		int high = GetItemCount();
 		if((getSortColumn() == -1) || (high == 0))
@@ -871,6 +919,13 @@ public:
 
 		return mid;
 	}
+	
+	void setUnique(bool unique) {
+		uniqueMainItem = unique;
+	}
+	bool getUnique() {
+		return uniqueMainItem;
+	}
 
 	map<string, T*>  mainItems;
 private:
@@ -915,12 +970,13 @@ private:
 	}
 
 	CImageList states;
+	bool uniqueMainItem;
 
 };
 
-#endif
+#endif // !defined(TYPED_LIST_VIEW_CTRL_H)
 
 /**
-* @file
-* $Id$
-*/
+ * @file
+ * $Id$
+ */

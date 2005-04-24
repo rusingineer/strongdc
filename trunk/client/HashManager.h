@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _HASH_MANAGER
-#define _HASH_MANAGER
+#if !defined(HASH_MANAGER_H)
+#define HASH_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -155,7 +155,7 @@ private:
 				total = 0;
 			bytesLeft = total;
 		}
-		void shutdown() {			
+		void shutdown() {
 			stop = true;
 			s.signal();
 		}
@@ -275,12 +275,12 @@ private:
 		store.rebuild();
 	}
 	virtual void on(TimerManagerListener::Minute, u_int32_t) throw() {
-			Lock l(cs);
-			store.save();
-		}
+		Lock l(cs);
+		store.save();
+	}
 };
 
-#endif // _HASH_MANAGER
+#endif // !defined(HASH_MANAGER_H)
 
 /**
  * @file

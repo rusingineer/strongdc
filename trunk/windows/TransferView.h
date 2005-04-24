@@ -1,23 +1,23 @@
-/* 
-* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
-#ifndef __TRANSFERVIEW_H
-#define __TRANSFERVIEW_H
+#if !defined(TRANSFER_VIEW_H)
+#define TRANSFER_VIEW_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -60,7 +60,6 @@ public:
 		NOTIFY_HANDLER(IDC_TRANSFERS, LVN_KEYDOWN, onKeyDownTransfers)
 		NOTIFY_HANDLER(IDC_TRANSFERS, NM_CUSTOMDRAW, onCustomDraw)
 		NOTIFY_HANDLER(IDC_TRANSFERS, NM_DBLCLK, onDoubleClickTransfers)
-		NOTIFY_HANDLER(IDC_TRANSFERS, NM_CLICK, onLButton)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_DESTROY, onDestroy)
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
@@ -92,7 +91,6 @@ public:
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
-	LRESULT onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled); 
 	LRESULT onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -216,7 +214,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
-			totalUsers(1), Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
+			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
 			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
@@ -235,15 +233,10 @@ private:
 		string Target;
 		bool collapsed;
 		bool mainItem;
-		u_int32_t totalUsers;
 		u_int16_t numberOfSegments;
 		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
-
-		void setTotalUsers(u_int32_t t) {
-			totalUsers = t;
-		}
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -277,29 +270,7 @@ private:
 			return columns[col];
 		}
 
-/*		static bool canBeSorted(ItemInfo* a, ItemInfo* b) {
-			if((a->Target == b->Target) && (!a->mainItem) && (!b->mainItem))
-				return true;
-
-			if((a->type == ItemInfo::TYPE_UPLOAD) && (b->type == ItemInfo::TYPE_UPLOAD))
-				return true;
-
-			if((a->type == ItemInfo::TYPE_UPLOAD) && (b->mainItem) && (b->collapsed))
-				return true;
-
-			if((b->type == ItemInfo::TYPE_UPLOAD) && (a->mainItem) && (a->collapsed))
-				return true;
-
-			if(a->mainItem && b->mainItem && a->collapsed && b->collapsed)
-				return true;
-
-			return false;
-		}*/
-
 		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
-			//if(!canBeSorted(a,b)) 
-			//	return 0;
-
 			if(a->status == b->status) {
 				if(a->type != b->type) {
 					return (a->type == ItemInfo::TYPE_DOWNLOAD) ? -1 : 1;					
@@ -309,11 +280,15 @@ private:
 			}
 
 			switch(col) {
-				case COLUMN_USER: 
-					if((a->totalUsers == 1) || (b->totalUsers == 1))
-						return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
-			
-					return compare(a->totalUsers, b->totalUsers);
+				case COLUMN_USER:
+					{
+						dcassert(a->mainItem == b->mainItem);
+
+						if(a->subItems.size() == b->subItems.size())
+							return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
+
+						return compare(a->subItems.size(), b->subItems.size());						
+					}
 				case COLUMN_STATUS: return 0;
 				case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
 				case COLUMN_SPEED: return compare(a->speed, b->speed);
@@ -325,6 +300,25 @@ private:
 
 		int imageIndex() {
 			return (type == TYPE_UPLOAD) ? IMAGE_UPLOAD : (mainItem ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
+		}
+
+		ItemInfo* createMainItem() {
+	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
+			h->Target = Target;
+			h->size = size;
+			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
+			h->numberOfSegments = 0;
+			h->updateMask |= ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE;
+			h->update();
+
+			return h;
+		}
+		void updateMainItem() {
+			if(main->subItems.size() == 1) {
+				main->user = main->subItems.front()->user;
+			}
+			main->updateMask |= ItemInfo::MASK_USER;
+			main->update();
 		}
 	};
 
@@ -367,42 +361,23 @@ private:
 
 	void onTransferComplete(Transfer* aTransfer, bool isUpload, bool isTree);
 
-	void InsertItem(ItemInfo* i);
-	bool RemoveItem(ItemInfo* i);
-	void Collapse(ItemInfo* i, int a);
 	void CollapseAll();
 	void ExpandAll();
-	void Expand(ItemInfo* i, int a);
 
 	inline void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
 			if(h->Target != i->Target) {
-				h->totalUsers -= 1;
-				ctrlTransfers.deleteItem(i);
-
-				InsertItem(i);
-				RemoveItem(h);
+				ctrlTransfers.removeGroupedItem(i, false);
+				ctrlTransfers.insertGroupedItem(i, i->Target, false);
 			}
 		} else {
 			i->main = ctrlTransfers.findMainItem(i->Target);
 		}
 	}
-
-	inline ItemInfo* findLastUserItem(ItemInfo* i) {
-		Lock l(cs);
-		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
-			ItemInfo* m = j->second;
-			if(m->main == i) {	
-				return m;
-			}
-		}
-		return NULL;
-	}
-
 };
 
-#endif // __TRANSFERVIEW_H
+#endif // !defined(TRANSFER_VIEW_H)
 
 /**
  * @file

@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+#if !defined(ADC_HUB_H)
+#define ADC_HUB_H
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
 
 #include "Client.h"
 #include "AdcCommand.h"
@@ -101,6 +108,8 @@ private:
 	virtual void on(Line, const string& aLine) throw();
 	virtual void on(Failed, const string& aLine) throw();
 };
+
+#endif // !defined(ADC_HUB_H)
 
 /**
  * @file
