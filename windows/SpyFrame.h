@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_SPYFRAME_H__19A67830_B811_4672_BBC2_3D793E0342E8__INCLUDED_)
-#define AFX_SPYFRAME_H__19A67830_B811_4672_BBC2_3D793E0342E8__INCLUDED_
+#if !defined(SPY_FRAME_H)
+#define SPY_FRAME_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,13 +31,13 @@
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"
 
-#define ignoreTth_MESSAGE_MAP 7
+#define IGNORETTH_MESSAGE_MAP 7
 
 class SpyFrame : public MDITabChildWindowImpl<SpyFrame, RGB(0, 0, 0), IDR_SPY>, public StaticFrame<SpyFrame, ResourceManager::SEARCH_SPY, IDC_SEARCH_SPY>,
 	private ClientManagerListener, private TimerManagerListener, private SettingsManagerListener
 {
 public:
-	SpyFrame() : total(0), cur(0), closed(false), ignoreTth(false), ignoreTthContainer(WC_BUTTON, this, ignoreTth_MESSAGE_MAP) {
+	SpyFrame() : total(0), cur(0), closed(false), ignoreTth(false), ignoreTthContainer(WC_BUTTON, this, IGNORETTH_MESSAGE_MAP) {
 		ZeroMemory(perSecond, sizeof(perSecond));
 		ClientManager::getInstance()->addListener(this);
 		TimerManager::getInstance()->addListener(this);
@@ -72,8 +72,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH, onSearch)
 		NOTIFY_HANDLER(IDC_RESULTS, LVN_COLUMNCLICK, onColumnClickResults)
 		CHAIN_MSG_MAP(baseClass)
-	ALT_MSG_MAP(ignoreTth_MESSAGE_MAP)
-		MESSAGE_HANDLER(BM_SETCHECK, onignoreTth)
+	ALT_MSG_MAP(IGNORETTH_MESSAGE_MAP)
+		MESSAGE_HANDLER(BM_SETCHECK, onIgnoreTth)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
@@ -85,7 +85,7 @@ public:
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 
-	LRESULT onignoreTth(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	LRESULT onIgnoreTth(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
 		ignoreTth = (wParam == BST_CHECKED);
 		return 0;
@@ -150,7 +150,7 @@ private:
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
-#endif // !defined(AFX_SPYFRAME_H__19A67830_B811_4672_BBC2_3D793E0342E8__INCLUDED_)
+#endif // !defined(SPY_FRAME_H)
 
 /**
  * @file

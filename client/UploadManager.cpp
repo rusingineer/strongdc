@@ -24,14 +24,13 @@
 #include "ConnectionManager.h"
 #include "LogManager.h"
 #include "ShareManager.h"
-#include "FavoriteManager.h"
 #include "ClientManager.h"
 #include "FilteredFile.h"
 #include "ZUtils.h"
 #include "ResourceManager.h"
 #include "HashManager.h"
 #include "AdcCommand.h"
-
+#include "FavoriteManager.h"
 #define INBUFSIZE 64*1024
 bool UploadManager::m_boFireball = false;
 bool UploadManager::m_boFileServer = false;
@@ -49,7 +48,6 @@ UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUp
 UploadManager::~UploadManager() throw() {
 	TimerManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
-
 	{
 		Lock l(cs);
 		for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
@@ -57,12 +55,12 @@ UploadManager::~UploadManager() throw() {
 		}
 		UploadQueueItems.clear();
 	}
-	
+
 	while(true) {
 		{
 			Lock l(cs);
 			if(uploads.empty())
-				break;			
+				break;
 		}
 		Thread::sleep(100);
 	}
@@ -75,7 +73,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 	
 	dcassert(aFile.size() > 0);
-	
+
 	InputStream* is = NULL;
 	int64_t size = 0;
 
@@ -89,8 +87,10 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		if(aType == "file") {
 			file = ShareManager::getInstance()->translateFileName(aFile);
 			userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
+
 			try {
 				File* f = new File(file, File::READ, File::OPEN);
+
 				size = f->getSize();
 
 				free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
@@ -106,16 +106,18 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				}
 
 				f->setPos(aStartPos);
-			
+
 				is = f;
 
 				if((aStartPos + aBytes) < size) {
 					is = new LimitedInputStream<true>(is, aBytes);
-				}	
+				}
+
 			} catch(const Exception&) {
 				aSource->fileNotAvail();
 				return false;
 			}
+
 		} else if(aType == "tthl") {
 			// TTH Leaves...
 			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
@@ -128,7 +130,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			size = mis->getSize();
 			aStartPos = 0;
 			is = mis;
-			leaves = true;		
+			leaves = true;
 			free = true;
 		} else if(aType == "list") {
 			// Partial file list
@@ -160,9 +162,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		bool hasReserved = (reservedSlots.find(aSource->getUser()) != reservedSlots.end());
-		bool isFavorite = false;
-		if (aSource->getUser()->isFavoriteUser())
-			isFavorite = aSource->getUser()->getAutoExtraSlot();
+		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource->getUser());
 
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
 			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS) || !aSource->isSet(UserConnection::FLAG_NMDC);
@@ -177,7 +177,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				return false;
 			}
 		}
-	
+
 		setLastGrant(GET_TICK());
 	}
 	clearUserFiles(aSource->getUser());
@@ -206,22 +206,23 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	aSource->setUpload(u);
 	uploads.push_back(u);
 	throttleSetup();
+
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
-				if(!aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
-					aSource->setFlag(UserConnection::FLAG_HASEXTRASLOT);
-					extra++;
-				}
-			} else {
+			if(!aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
+				aSource->setFlag(UserConnection::FLAG_HASEXTRASLOT);
+				extra++;
+			}
+		} else {
 			if(aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
 				aSource->unsetFlag(UserConnection::FLAG_HASEXTRASLOT);
 				extra--;
-		}
+			}
 			aSource->setFlag(UserConnection::FLAG_HASSLOT);
 			running++;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -241,12 +242,12 @@ void UploadManager::onGetBlock(UserConnection* aSource, const string& aFile, int
 				aBytes = u->getSize() - aStartPos;
 
 			dcassert(aBytes >= 0);
-		
+
 			u->setStart(GET_TICK());
 
 			if(z) {
 				u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));
-			u->setFlag(Upload::FLAG_ZUPLOAD);
+				u->setFlag(Upload::FLAG_ZUPLOAD);
 			}
 
 			aSource->sending(aBytes);
@@ -376,16 +377,16 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 	dcassert(aConn->getUpload() == NULL);
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
-			running--;
+		running--;
 
-			User::Ptr aUser = (User::Ptr)NULL;
-			{
-				Lock l(cs);
-				if(!UploadQueueItems.empty())
-					aUser = UploadQueueItems.begin()->first;
-			}
-			if((aUser != (User::Ptr)NULL) && aUser->isOnline())
-				aUser->connect();
+		User::Ptr aUser = (User::Ptr)NULL;
+		{
+			Lock l(cs);
+			if(!UploadQueueItems.empty())
+				aUser = UploadQueueItems.begin()->first;
+		}
+		if((aUser != (User::Ptr)NULL) && aUser->isOnline())
+			aUser->connect();
 
 		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 	} 
@@ -405,7 +406,7 @@ void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 			++j;
 		}
 	}
-}	
+}
 
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
 	conn->listLen(ShareManager::getInstance()->getListLenString()); 
@@ -486,10 +487,10 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 
 	{
 		Lock l(cs);
-		Upload::List ticks;
-
 		throttleSetup();
 		throttleZeroCounters();
+
+		Upload::List ticks;
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			ticks.push_back(*i);
 		}
@@ -559,7 +560,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				u->getUserConnection()->disconnect();
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(aUser);
+					reserveSlot(u->getUser());
 				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
 			}
 		}

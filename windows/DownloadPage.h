@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOWNLOADPAGE_H
-#define DOWNLOADPAGE_H
+#if !defined(DOWNLOAD_PAGE_H)
+#define DOWNLOAD_PAGE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -29,7 +29,7 @@
 class DownloadPage : public CPropertyPage<IDD_DOWNLOADPAGE>, public PropPage
 {
 public:
-	DownloadPage(SettingsManager *s) : PropPage(s) { 
+	DownloadPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_DOWNLOADS)).c_str());
 		SetTitle(title);
 	};
@@ -57,7 +57,7 @@ protected:
 	TCHAR* title;
 };
 
-#endif //DOWNLOADPAGE_H
+#endif //  !defined(DOWNLOAD_PAGE_H)
 
 /**
  * @file

@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ADC_COMMAND_H
+#if !defined(ADC_COMMAND_H)
 #define ADC_COMMAND_H
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
 
 #include "CID.h"
 #include "SettingsManager.h"
@@ -93,7 +97,10 @@ public:
 
 	explicit AdcCommand(u_int32_t aCmd, char aType = TYPE_CLIENT) : cmdInt(aCmd), from(SETTING(CLIENT_ID)), type(aType) { }
 	explicit AdcCommand(u_int32_t aCmd, const CID& aTarget) : cmdInt(aCmd), from(SETTING(CLIENT_ID)), to(aTarget), type(TYPE_DIRECT) { }
-
+	explicit AdcCommand(Severity sev, Error err, const string& desc, char aType = TYPE_CLIENT) : cmdInt(CMD_STA), from(SETTING(CLIENT_ID)), type(aType) {
+		addParam(Util::toString(sev) + Util::toString(err));
+		addParam(desc);
+	}
 	explicit AdcCommand(const string& aLine, bool nmdc = false) throw(ParseException) : cmdInt(0), type(TYPE_CLIENT) {
 		parse(aLine, nmdc);
 	}
@@ -146,7 +153,7 @@ public:
 		return tmp;
 	}
 	const CID& getTo() const { return to; }
-	void setTo(const CID& cid) { to = cid; }
+	AdcCommand& setTo(const CID& cid) { to = cid; return *this; }
 	const CID& getFrom() const { return from; }
 
 private:
@@ -167,32 +174,32 @@ class CommandHandler {
 public:
 	void dispatch(const string& aLine, bool nmdc = false) {
 		try {
-		AdcCommand c(aLine, nmdc);
+			AdcCommand c(aLine, nmdc);
 
 #define CMD(n) case AdcCommand::CMD_##n: ((T*)this)->handle(AdcCommand::n(), c); break;
-		switch(c.getCommand()) {
-			CMD(SUP);
-			CMD(STA);
-			CMD(INF);
-			CMD(MSG);
-			CMD(SCH);
-			CMD(RES);
-			CMD(CTM);
-			CMD(RCM);
-			CMD(GPA);
-			CMD(PAS);
-			CMD(QUI);
-			CMD(DSC);
-			CMD(GET);
-			CMD(GFI);
-			CMD(SND);
-			CMD(NTD);
-		default: 
-			dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
-			break;
+			switch(c.getCommand()) {
+				CMD(SUP);
+				CMD(STA);
+				CMD(INF);
+				CMD(MSG);
+				CMD(SCH);
+				CMD(RES);
+				CMD(CTM);
+				CMD(RCM);
+				CMD(GPA);
+				CMD(PAS);
+				CMD(QUI);
+				CMD(DSC);
+				CMD(GET);
+				CMD(GFI);
+				CMD(SND);
+				CMD(NTD);
+			default: 
+				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
+				break;
 #undef CMD
 
-		}
+			}
 		} catch(const ParseException&) {
 			dcdebug("Invalid ADC command: %.50s\n", aLine.c_str());
 			return;
@@ -200,7 +207,8 @@ public:
 	}
 };
 
-#endif // ADC_COMMAND_H
+#endif // !defined(ADC_COMMAND_H)
+
 /**
 * @file
 * $Id$

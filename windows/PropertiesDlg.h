@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_PROPERTIESDLG_H__9B8B3ABC_D165_47D8_AA4B_AF695F7A7D54__INCLUDED_)
-#define AFX_PROPERTIESDLG_H__9B8B3ABC_D165_47D8_AA4B_AF695F7A7D54__INCLUDED_
+#if !defined(PROPERTIES_DLG_H)
+#define PROPERTIES_DLG_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -50,7 +50,7 @@ protected:
 	PropPage *pages[numPages];
 };
 
-#endif // !defined(AFX_PROPERTIESDLG_H__9B8B3ABC_D165_47D8_AA4B_AF695F7A7D54__INCLUDED_)
+#endif // !defined(PROPERTIES_DLG_H)
 
 /**
  * @file

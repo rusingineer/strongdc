@@ -1,25 +1,25 @@
-/* 
-* Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 /*
-* Automatic Directory Listing Search
-* Henrik Engström, henrikengstrom at home se
-*/
+ * Automatic Directory Listing Search
+ * Henrik Engström, henrikengstrom at home se
+ */
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
@@ -46,7 +46,7 @@ void ADLSearchManager::Load()
 	try {
 		SimpleXML xml;
 		xml.fromXML(File(Util::getAppPath() + ADLS_STORE_FILENAME, File::READ, File::OPEN).read());
-	
+
 		if(xml.findChild("ADLSearch")) {
 			xml.stepIn();
 
@@ -56,7 +56,7 @@ void ADLSearchManager::Load()
 				xml.stepIn();
 
 				// Loop until no more searches found
-				while(xml.findChild("Search"))	{
+				while(xml.findChild("Search")) {
 					xml.stepIn();
 
 					// Found another search, load it
@@ -118,49 +118,49 @@ void ADLSearchManager::Save()
 		xml.addTag("ADLSearch");
 		xml.stepIn();
 
-			// Predicted several groups of searches to be differentiated
-			// in multiple categories. Not implemented yet.
-			xml.addTag("SearchGroup");
+		// Predicted several groups of searches to be differentiated
+		// in multiple categories. Not implemented yet.
+		xml.addTag("SearchGroup");
+		xml.stepIn();
+
+		// Save all	searches
+		for(SearchCollection::iterator i = collection.begin(); i != collection.end(); ++i) {
+			ADLSearch& search = *i;
+			if(search.searchString.size() == 0) {
+				continue;
+			}
+			string type = "type";
+			xml.addTag("Search");
 			xml.stepIn();
 
-				// Save all	searches
-		for(SearchCollection::iterator i = collection.begin(); i != collection.end(); ++i) {
-					ADLSearch& search = *i;
-			if(search.searchString.size() == 0) {
-						continue;
-					}
-					string type = "type";
-					xml.addTag("Search");
-					xml.stepIn();
+			xml.addTag("SearchString", search.searchString);
+			xml.addChildAttrib(type, string("string"));
 
-					xml.addTag("SearchString", search.searchString);
-					xml.addChildAttrib(type, string("string"));
+			xml.addTag("SourceType", search.SourceTypeToString(search.sourceType));
+			xml.addChildAttrib(type, string("string"));
 
-					xml.addTag("SourceType", search.SourceTypeToString(search.sourceType));
-					xml.addChildAttrib(type, string("string"));
+			xml.addTag("DestDirectory", search.destDir);
+			xml.addChildAttrib(type, string("string"));
 
-					xml.addTag("DestDirectory", search.destDir);
-					xml.addChildAttrib(type, string("string"));
+			xml.addTag("IsActive", search.isActive);
+			xml.addChildAttrib(type, string("int"));
 
-					xml.addTag("IsActive", search.isActive);
-					xml.addChildAttrib(type, string("int"));
+			xml.addTag("MaxSize", search.maxFileSize);
+			xml.addChildAttrib(type, string("int64"));
 
-					xml.addTag("MaxSize", search.maxFileSize);
-					xml.addChildAttrib(type, string("int64"));
+			xml.addTag("MinSize", search.minFileSize);
+			xml.addChildAttrib(type, string("int64"));
 
-					xml.addTag("MinSize", search.minFileSize);
-					xml.addChildAttrib(type, string("int64"));
-
-					xml.addTag("SizeType", search.SizeTypeToString(search.typeFileSize));
-					xml.addChildAttrib(type, string("string"));
+			xml.addTag("SizeType", search.SizeTypeToString(search.typeFileSize));
+			xml.addChildAttrib(type, string("string"));
 
 			xml.addTag("IsAutoQueue", search.isAutoQueue);
 			xml.addChildAttrib(type, string("int"));
 
-					xml.stepOut();
-				}
-
 			xml.stepOut();
+		}
+
+		xml.stepOut();
 
 		xml.stepOut();
 
@@ -322,7 +322,6 @@ void ADLSearchManager::matchRecurse(DestDirList &aDestList, DirectoryListing::Di
 }
 
 /**
-* @file
-* $Id$
-*/
-
+ * @file
+ * $Id$
+ */

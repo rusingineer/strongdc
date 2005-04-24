@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef FINISHEDFRAME_H
-#define FINISHEDFRAME_H
+#if !defined(FINISHED_FRAME_H)
+#define FINISHED_FRAME_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -95,7 +95,7 @@ public:
 		FinishedItem* d = (FinishedItem*)b;
 		return compare(c->getAvgSpeed(), d->getAvgSpeed());
 	}
-	
+
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 		NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 		
@@ -134,7 +134,7 @@ private:
 	
 	int64_t totalBytes;
 	int64_t totalTime;
-	
+
 	bool closed;
 
 	static int columnSizes[COLUMN_LAST];
@@ -179,7 +179,7 @@ private:
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 
-#endif // FINISHEDFRAME_H
+#endif // !defined(FINISHED_FRAME_H)
 
 /**
  * @file

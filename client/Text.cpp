@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 char Text::asciiLower[128];
 wchar_t Text::lower[65536];
 
-// When using GNU C library; setlocale should be called before Text::initialize 
+// When using GNU C library; setlocale should be called before Text::initialize
 
 void Text::initialize() {
 	for(size_t i = 0; i < 65536; ++i) {
@@ -53,8 +53,8 @@ int Text::utf8ToWc(const char* str, wchar_t& c) {
 						n = -5;
 						if(c0 & 0x04) {				// 1111 11xx
 							if(c0 & 0x02) {			// 1111 111x
-					return -1;
-				}
+								return -1;
+							}
 							n = -6;
 						}
 					}
@@ -97,7 +97,7 @@ int Text::utf8ToWc(const char* str, wchar_t& c) {
 				c = (((wchar_t)c0 & 0x1f) << 6) |
 					((wchar_t)c1 & 0x3f);
 				return 2;
-				}
+			}
 		} else {					// 10xxxxxx
 			return -1;
 		}
@@ -153,7 +153,7 @@ wstring& Text::acpToWide(const string& str, wstring& tmp) throw() {
 	if (n < 1) {
 		tmp.clear();
 		return tmp;
-	} 
+	}
 	return tmp;
 #endif
 }
@@ -225,7 +225,7 @@ wstring& Text::utf8ToWide(const string& str, wstring& tgt) throw() {
 			tgt += '_';
 			i += abs(x);
 		} else {
-			i+=x;
+			i += x;
 			tgt += c;
 		}
 	}

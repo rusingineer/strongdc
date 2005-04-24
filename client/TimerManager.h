@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_TIMERMANAGER_H__2172C2AD_D4FD_4B46_A1B2_7959D7359CCD__INCLUDED_)
-#define AFX_TIMERMANAGER_H__2172C2AD_D4FD_4B46_A1B2_7959D7359CCD__INCLUDED_
+#if !defined(TIMER_MANAGER_H)
+#define TIMER_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -71,7 +71,7 @@ private:
 	};
 	
 	virtual ~TimerManager() throw() {
-		//dcassert(listeners.empty());
+		dcassert(listeners.empty());
 		s.signal();
 		join();
 	};
@@ -86,7 +86,7 @@ private:
 #define GET_TICK() TimerManager::getTick()
 #define GET_TIME() TimerManager::getTime()
 
-#endif // !defined(AFX_TIMERMANAGER_H__2172C2AD_D4FD_4B46_A1B2_7959D7359CCD__INCLUDED_)
+#endif // !defined(TIMER_MANAGER_H)
 
 /**
  * @file

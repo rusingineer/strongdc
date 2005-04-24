@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _MERKLE_TREE
-#define _MERKLE_TREE
+#if !defined(MERKLE_TREE_H)
+#define MERKLE_TREE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -217,15 +217,16 @@ private:
 typedef MerkleTree<TigerHash> TigerTree;
 typedef TigerTree::MerkleValue TTHValue;
 
+template<int64_t aBlockSize>
 struct TTFilter {
-	TTFilter(int64_t aBlockSize) : tt(aBlockSize) { };
+	TTFilter() : tt(aBlockSize) { };
 	void operator()(const void* data, size_t len) { tt.update(data, len); }
-	TigerTree& getTree() { tt.finalize(); return tt; }
+	TigerTree& getTree() { return tt; }
 private:
 	TigerTree tt;
 };
 
-#endif // _MERKLE_TREE
+#endif // !defined(MERKLE_TREE_H)
 
 /**
  * @file

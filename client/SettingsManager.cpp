@@ -216,7 +216,7 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_PROGRESS_BARS, true);
 	setDefault(SFV_CHECK, false);
 	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. I might answer later if you're lucky.");
-	setDefault(TIME_STAMPS_FORMAT, "%H:%M");
+	setDefault(TIME_STAMPS_FORMAT, "%H:%M:%S");
 	setDefault(MAX_TAB_ROWS, 2);
 	setDefault(AUTO_UPDATE_LIST, true);
 	setDefault(MAX_COMPRESSION, 3);

@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_SEARCHFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)
-#define AFX_SEARCHFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_
+#if !defined(SEARCH_FRM_H)
+#define SEARCH_FRM_H
 
 #if _MSC_VER >= 1000
 #pragma once
@@ -179,7 +179,7 @@ public:
 	void removeSelected() {
 		int i = -1;
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ctrlResults.removeGroupedItem(i);
+			ctrlResults.removeGroupedItem(ctrlResults.getItemData(i));
 		}
 	}
 	
@@ -425,20 +425,7 @@ private:
 			return image;
 		}
 
-		void update(bool onlyHits = false) { 
-			
-			if(mainItem && (subItems.size() != 0)) {
-				TCHAR buf[256];
-				_sntprintf(buf, 255, _T("%d %s"), subItems.size() + 1, TSTRING(USERS));
-				buf[255] = NULL;
-				totalUsers = buf;
-			} else {
-				totalUsers = Util::emptyStringT;
-			}
-
-			if(onlyHits)
-				return;
-
+		void update() { 
 			if(sr->getType() == SearchResult::TYPE_FILE) {
 				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
 					fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
@@ -490,6 +477,21 @@ private:
 			} else
 				uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
 
+		}
+
+		SearchInfo* createMainItem() {
+			return this;
+		}
+		void updateMainItem() {
+			u_int32_t total = main->subItems.size();
+			if(total != 0) {
+				TCHAR buf[256];
+				_sntprintf(buf, 255, _T("%d %s"), total + 1, TSTRING(USERS));
+				buf[255] = NULL;
+				main->totalUsers = buf;
+			} else {
+				main->totalUsers = Util::emptyStringT;
+			}
 		}
 
 		GETSET(tstring, nick, Nick);
@@ -629,7 +631,7 @@ private:
 	void downloadWholeSelected(const tstring& aDir);
 	void onEnter();
 	void onTab(bool shift);
-	
+
 	void download(SearchResult* aSR, const tstring& aDir, bool view);
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
@@ -659,12 +661,7 @@ private:
 	};
 };
 
-/////////////////////////////////////////////////////////////////////////////
-
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_CHILDFRM_H__A7078724_FD85_4F39_8463_5A08A5F45E33__INCLUDED_)
+#endif // !defined(SEARCH_FRM_H)
 
 /**
  * @file

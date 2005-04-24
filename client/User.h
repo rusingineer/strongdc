@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_USER_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_)
-#define AFX_USER_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_
+#if !defined(USER_H)
+#define USER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -27,6 +27,7 @@
 #include "Pointer.h"
 #include "CriticalSection.h"
 #include "CID.h"
+#include "FastAlloc.h"
 #include "SettingsManager.h"
 #include "ResourceManager.h"
 
@@ -34,33 +35,36 @@ class Client;
 class FavoriteUser;
 
 /** A user connected to one or more hubs. */
-class User : public PointerBase, public Flags
+class User : public FastAlloc<User>, public PointerBase, public Flags
 {
 public:
-	enum {
+	enum Bits {
 		OP_BIT,
 		ONLINE_BIT,
 		DCPLUSPLUS_BIT,
 		PASSIVE_BIT,
+		BOT_BIT,
+		HUB_BIT,
+		TTH_GET_BIT,
 		QUIT_HUB_BIT,
 		HIDDEN_BIT,
-		HUB_BIT,
-		BOT_BIT,
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
 
 	};
 
-	enum {
+	/** Each flag is set if it's true in at least one hub */
+	enum UserFlags {
 		OP = 1<<OP_BIT,
 		ONLINE = 1<<ONLINE_BIT,
 		DCPLUSPLUS = 1<<DCPLUSPLUS_BIT,
 		PASSIVE = 1<<PASSIVE_BIT,
+		BOT = 1<<BOT_BIT,
+		HUB = 1<<HUB_BIT,
+		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
 		QUIT_HUB = 1<<QUIT_HUB_BIT,
 		HIDDEN = 1<<HIDDEN_BIT,
-		HUB = 1<<HUB_BIT,
-		BOT = 1<<BOT_BIT,
 		AWAY = 1<<AWAY_BIT,
 		SERVER = 1<<SERVER_BIT,
 		FIREBALL = 1<<FIREBALL_BIT,
@@ -277,7 +281,7 @@ private:
 	InfMap info;
 };
 
-#endif // !defined(AFX_USER_H__26AA222C_500B_4AD2_A5AA_A594E1A6D639__INCLUDED_)
+#endif // !defined(USER_H)
 
 /**
  * @file

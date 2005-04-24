@@ -63,7 +63,7 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 		SetSel(0, iFindBegin);
 		ReplaceSel(_T(""));
 	}
-	SendMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
+	PostMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
 }
 
 void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor, int iAuthorLen, bool isMe, bool bUseEmo/* = true*/) {
@@ -536,7 +536,7 @@ string ChatCtrl::LineFromPos(POINT p) {
 
 void ChatCtrl::GoToEnd() {
 	if(m_boAutoScroll) {
-		this->CRichEditCtrl::SendMessage(EM_SCROLL, SB_BOTTOM, 0);
+		this->CRichEditCtrl::PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 	}
 }
 

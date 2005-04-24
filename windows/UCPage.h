@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef UCPAGE_H
-#define UCPAGE_H
+#if !defined(UC_PAGE_H)
+#define UC_PAGE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -37,7 +37,7 @@ public:
 		SetTitle(title);
 	};
 
-	virtual ~UCPage() { 
+	virtual ~UCPage() {
 		ctrlCommands.Detach();
 		free(title);
 	};
@@ -78,7 +78,7 @@ protected:
 	void addEntry(const UserCommand& uc, int pos);
 };
 
-#endif //ADVANCEDPAGE_H
+#endif // !defined(UC_PAGE_H)
 
 /**
  * @file

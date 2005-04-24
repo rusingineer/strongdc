@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_StatsFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)
-#define AFX_StatsFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_
+#if !defined(STATS_FRAME_H)
+#define STATS_FRAME_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -121,7 +121,7 @@ private:
 	void addTick(int64_t bdiff, int64_t tdiff, StatList& lst, AvgList& avg, int scroll);
 };
 
-#endif // !defined(AFX_StatsFRAME_H__8F6D05EC_ADCF_4987_8881_6DF3C0E355FA__INCLUDED_)
+#endif // !defined(STATS_FRAME_H)
 
 /**
  * @file

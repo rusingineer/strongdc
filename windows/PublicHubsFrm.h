@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_PUBLICHUBSFRM_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_)
-#define AFX_PUBLICHUBSFRM_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_
+#if !defined(PUBLIC_HUBS_FRM_H)
+#define PUBLIC_HUBS_FRM_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -143,8 +143,8 @@ private:
 	CButton ctrlFilterDesc;
 	CEdit ctrlFilter;
 	CMenu hubsMenu;
-	
-	CContainedWindow filterContainer;	
+
+	CContainedWindow filterContainer;
 	CComboBox ctrlPubLists;
 	ExListViewCtrl ctrlHubs;
 
@@ -171,7 +171,7 @@ private:
 	void Refresh();
 };
 
-#endif // !defined(AFX_PUBLICHUBSFRM_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_)
+#endif // !defined(PUBLIC_HUBS_FRM_H)
 
 /**
  * @file

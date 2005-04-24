@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_DOWNLOADMANAGER_H__D6409156_58C2_44E9_B63C_B58C884E36A3__INCLUDED_)
-#define AFX_DOWNLOADMANAGER_H__D6409156_58C2_44E9_B63C_B58C884E36A3__INCLUDED_
+#if !defined(DOWNLOAD_MANAGER_H)
+#define DOWNLOAD_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -318,7 +318,7 @@ private:
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 };
 
-#endif // !defined(AFX_DOWNLOADMANAGER_H__D6409156_58C2_44E9_B63C_B58C884E36A3__INCLUDED_)
+#endif // !defined(DOWNLOAD_MANAGER_H)
 
 /**
  * @file

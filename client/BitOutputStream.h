@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_BITOUTPUTSTREAM_H__EAF695A9_6D5C_4791_88A2_3FA0D47697AF__INCLUDED_)
-#define AFX_BITOUTPUTSTREAM_H__EAF695A9_6D5C_4791_88A2_3FA0D47697AF__INCLUDED_
+#if !defined(BIT_OUTPUT_STREAM_H)
+#define BIT_OUTPUT_STREAM_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
-class BitOutputStream  
+class BitOutputStream
 {
 public:
 	BitOutputStream(string& aStream) : is(aStream), bitPos(0), next(0) { };
@@ -57,7 +57,7 @@ private:
 	u_int8_t next;
 };
 
-#endif // !defined(AFX_BITINPUTSTREAM_H__EAF695A9_6D5C_4791_88A2_3FA0D47697AF__INCLUDED_)
+#endif // !defined(BIT_OUTPUT_STREAM_H)
 
 /**
  * @file

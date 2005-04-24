@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef TEXT_H
+#if !defined(TEXT_H)
 #define TEXT_H
 
-/** 
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+
+/**
  * Text handling routines for DC++. DC++ internally uses UTF-8 for
  * (almost) all string:s, hence all foreign text must be converted
  * appropriately...
@@ -36,7 +40,7 @@ public:
 	static void initialize();
 
 	static string& acpToUtf8(const string& str, string& tmp) throw();
-	static string acpToUtf8(const string& str) throw() { 
+	static string acpToUtf8(const string& str) throw() {
 		string tmp;
 		return acpToUtf8(str, tmp);
 	}
@@ -119,7 +123,7 @@ private:
 
 };
 
-#endif
+#endif // !defined(TEXT_H)
 
 /**
  * @file

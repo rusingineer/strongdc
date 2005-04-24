@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_QUEUEMANAGER_H__07D44A33_1277_482D_AFB4_05E3473B4379__INCLUDED_)
-#define AFX_QUEUEMANAGER_H__07D44A33_1277_482D_AFB4_05E3473B4379__INCLUDED_
+#if !defined(QUEUE_MANAGER_H)
+#define QUEUE_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -246,7 +246,7 @@ private:
 		};
 	private:
 		/** QueueItems by priority and user (this is where the download order is determined) */
-		QueueItem::UserListMap userQueue[QueueItem::LAST];	
+		QueueItem::UserListMap userQueue[QueueItem::LAST];
 		/** Currently running downloads, a QueueItem is always either here or in the userQueue */
 		QueueItem::UserMap running;
 	};
@@ -271,9 +271,9 @@ private:
 	bool dirty;
 	/** Next search */
 	u_int32_t nextSearch;
-
-	static const string USER_LIST_NAME;
 	
+	static const string USER_LIST_NAME;
+
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
@@ -281,7 +281,7 @@ private:
 
 	int matchFiles(const DirectoryListing::Directory* dir) throw();
 	void processList(const string& name, User::Ptr& user, int flags);
-	
+
 	void load(const SimpleXML& aXml);
 
 	void setDirty() {
@@ -302,7 +302,7 @@ private:
 	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
 };
 
-#endif // !defined(AFX_QUEUEMANAGER_H__07D44A33_1277_482D_AFB4_05E3473B4379__INCLUDED_)
+#endif // !defined(QUEUE_MANAGER_H)
 
 /**
  * @file

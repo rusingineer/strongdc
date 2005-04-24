@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@ public:
 	string GetExternalIP();
 private:
 	bool PortsAreOpen;
-	int PortNumber; // The Port number required to be opened
-	BSTR bstrInternalClient; // Local IP Address
+	int PortNumber;				// The Port number required to be opened
+	BSTR bstrInternalClient;	// Local IP Address
 	BSTR bstrDescription;		// name shown in UPnP interface details
-	BSTR bstrProtocol; // protocol (TCP or UDP)
-	BSTR bstrExternalIP; // external IP address
-	IUPnPNAT* pUN;  // pointer to the UPnPNAT interface
+	BSTR bstrProtocol;			// protocol (TCP or UDP)
+	BSTR bstrExternalIP;		// external IP address
+	IUPnPNAT* pUN;				// pointer to the UPnPNAT interface
 	IStaticPortMappingCollection* pSPMC; // pointer to the collection
-	IStaticPortMapping * pSPM; // pointer to the port map
+	IStaticPortMapping * pSPM;	// pointer to the port map
 };
 
 #endif // UPNP_H

@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_NmdcHub_H__089CBD05_4833_4E30_9A57_BB636231D78E__INCLUDED_)
-#define AFX_NmdcHub_H__089CBD05_4833_4E30_9A57_BB636231D78E__INCLUDED_
+#if !defined(NMDC_HUB_H)
+#define NMDC_HUB_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -32,6 +32,7 @@
 #include "User.h"
 #include "CriticalSection.h"
 #include "Text.h"
+#include "Client.h"
 #include "ConnectionManager.h"
 #include "UploadManager.h"
 
@@ -186,7 +187,7 @@ private:
 
 };
 
-#endif // !defined(AFX_NmdcHub_H__089CBD05_4833_4E30_9A57_BB636231D78E__INCLUDED_)
+#endif // !defined(NMDC_HUB_H)
 
 /**
  * @file

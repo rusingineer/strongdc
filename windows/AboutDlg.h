@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_ABOUTDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)
-#define AFX_ABOUTDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_
+#if !defined(ABOUT_DLG_H)
+#define ABOUT_DLG_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -92,30 +92,30 @@ private:
 	}
 
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
-			if(!downBuf.empty()) {
-				SimpleXML xml;
-				xml.fromXML(downBuf);
-				if(xml.findChild("DCUpdate")) {
-					xml.stepIn();
-					if(xml.findChild("Version")) {
+		if(!downBuf.empty()) {
+			SimpleXML xml;
+			xml.fromXML(downBuf);
+			if(xml.findChild("DCUpdate")) {
+				xml.stepIn();
+				if(xml.findChild("Version")) {
 					tstring* x = new tstring(Text::toT(xml.getChildData()));
-						PostMessage(WM_VERSIONDATA, (WPARAM) x);
-					}
+					PostMessage(WM_VERSIONDATA, (WPARAM) x);
 				}
 			}
+		}
 		conn->removeListener(this);
 	}
 
 	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
-				tstring* x = new tstring(Text::toT(aLine));
-				PostMessage(WM_VERSIONDATA, (WPARAM) x);
+		tstring* x = new tstring(Text::toT(aLine));
+		PostMessage(WM_VERSIONDATA, (WPARAM) x);
 		conn->removeListener(this);
 	}
 
 	string downBuf;
 };
 
-#endif // !defined(AFX_ABOUTDLG_H__D12815FA_21C0_4C20_9718_892C9F8CD196__INCLUDED_)
+#endif // !defined(ABOUT_DLG_H)
 
 /**
  * @file

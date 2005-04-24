@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_H
-#define DCPLUSPLUS_H
+#if !defined(DC_PLUS_PLUS_H)
+#define DC_PLUS_PLUS_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -62,7 +62,7 @@ _CrtDbgBreak(); } } while(false)
 #define dcasserta(exp)
 #endif // _WIN32
 #define dcdebug if (false) printf
-#define dcassert(exp) 
+#define dcassert(exp)
 #define dcdrun(exp)
 #endif //_DEBUG
 
@@ -124,7 +124,7 @@ typedef StringMapIter TStringMapIter;
 extern void startup(void (*f)(void*, const string&), void* p);
 extern void shutdown();
 
-#endif // DCPLUSPLUS_H
+#endif // !defined(DC_PLUS_PLUS_H)
 
 /**
  * @file
