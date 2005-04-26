@@ -261,10 +261,16 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
+inline bool hasFreeSegments(QueueItem* qi) {
+	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
+				((qi->getActiveSegments().size() < qi->getMaxSegments()) &&
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getSpeed())) &&
+				(!qi->getNoFreeBlocks()));
+}
+
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
-	bool first = true;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
@@ -272,16 +278,12 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = !found->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
-				((found->getActiveSegments().size() < found->getMaxSegments()) &&
-				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= found->getSpeed())) &&
-				(!found->getNoFreeBlocks()));
+			bool freeSegments = hasFreeSegments(found);
 
 			if(!freeSegments) {
-				if(!first || (pNext == NULL)) {
+				if((p != (QueueItem::LAST - 1)) || (pNext == NULL)) {
 					pNext = found;
 				}
-				first = false;
 			}
 
 			if(freeSegments && (pNext == NULL || fNext)) {
@@ -289,11 +291,11 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			}else{
 				QueueItem::Iter iQi = find(i->second.begin(), i->second.end(), pNext);
 
-                if(iQi != i->second.end()){
-                    fNext = true;   // found, next is target
-
+				while(iQi != i->second.end()) {
+	                fNext = true;   // found, next is target
+	
 					iQi++;
-                    if(iQi != i->second.end())
+		            if((iQi != i->second.end()) && hasFreeSegments(*iQi))
 						return *iQi;
 				}
 			}
@@ -1024,7 +1026,7 @@ void QueueManager::getTargetsByRoot(StringList& sl, const TTHValue& tth) {
 	}
 }
 
-Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget) throw() {
+Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget) throw() {
 	Lock l(cs);
 
 	// First check PFS's...
@@ -1042,44 +1044,45 @@ Download* QueueManager::getDownload(User::Ptr aUser, bool supportsTrees, bool su
 
 	if(!aTarget.empty()) {
 		q = fileQueue.find(aTarget);
-		goto next;
 	} else {
 		q = userQueue.getNext(aUser);
-	}
 
 again:
 
-	if(q == NULL)
-		return NULL;
+		if(q == NULL)
+			return NULL;
 
-	if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)
-		&& !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) && !q->isSet(QueueItem::FLAG_USER_LIST)) {
-		message = STRING(ALL_FILE_SLOTS_TAKEN);
-		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-		if(q == NULL) reuse = false;
-		goto again;
-	}
-
-	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-
-		if(q->getActiveSegments().size() >= q->getMaxSegments()) {
-			message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);
+		if((SETTING(FILE_SLOTS) != 0) && (getRunningFiles().size() >= SETTING(FILE_SLOTS)) && (q->getStatus() == QueueItem::STATUS_WAITING)
+			&& !q->isSet(QueueItem::FLAG_TESTSUR) && !q->isSet(QueueItem::FLAG_MP3_INFO) && !q->isSet(QueueItem::FLAG_USER_LIST)) {
+			message = STRING(ALL_FILE_SLOTS_TAKEN);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-			if(q == NULL) reuse = false;
+			if(q == NULL)
+				reuse = false;
 			goto again;
 		}
 
-		if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
-			if(q->getSpeed() > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
-				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);
+		if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+
+			if(q->getActiveSegments().size() >= q->getMaxSegments()) {
+				message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT);
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-				if(q == NULL) reuse = false;
+				if(q == NULL)
+					reuse = false;
 				goto again;
+			}
+
+			if(BOOLSETTING(DONT_BEGIN_SEGMENT) && (SETTING(DONT_BEGIN_SEGMENT_SPEED) > 0)) {
+				if(q->getSpeed() > SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) {
+					message = STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SPEED);
+					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+					if(q == NULL)
+						reuse = false;
+					goto again;
+				}
 			}
 		}
 	}
 
-next:
 	Download* d = new Download(q, aUser);
 
 	if((d->getSize() != -1) && d->getTTH()) {
@@ -1102,38 +1105,24 @@ next:
 	
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
-		int64_t freeBlock = 0;
+		int64_t freeBlock = chunksInfo->GetUndlStart();
 
-		//if(chunksInfo != (FileChunksInfo::Ptr)NULL) {
-			freeBlock = chunksInfo->GetUndlStart();
-
-			if(freeBlock == -1) {
-				dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
-				delete d;
-
-				message = STRING(NO_FREE_BLOCK);
-				q->setNoFreeBlocks(true);
-				if(!aTarget.empty()) {
-					aTarget = Util::emptyString;
-					q->removeActiveSegment(aUser);
-					q = userQueue.getNext(aUser);
-				} else {
-					q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-				}
-				if(q == NULL) reuse = true;
-				goto again;
-			}
-		/*} else {
+		if(freeBlock == -1) {
+			dcassert(q->getStatus() == QueueItem::STATUS_RUNNING);
 			delete d;
-			if(useOld) {
-				useOld = false;
+
+			message = STRING(NO_FREE_BLOCK);
+			q->setNoFreeBlocks(true);
+			if(!aTarget.empty()) {
+				aTarget = Util::emptyString;
 				q->removeActiveSegment(aUser);
 				q = userQueue.getNext(aUser);
-			} else
+			} else {
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
+			}
 			if(q == NULL) reuse = true;
 			goto again;
-		}*/
+		}
 
 		d->setStartPos(freeBlock);
 
@@ -1294,12 +1283,12 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 
 void QueueManager::processList(const string& name, User::Ptr& user, int flags) {
 	DirectoryListing dirList(user);
-		try {
+	try {
 		dirList.loadFile(name);
-		} catch(const Exception&) {
+	} catch(const Exception&) {
 		/** @todo Log this */
-			return;
-		}
+		return;
+	}
 
 	if(flags & QueueItem::FLAG_DIRECTORY_DOWNLOAD) {
 		DirectoryItem::List dl;
@@ -1873,7 +1862,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return false;
 }
 
-bool QueueManager::dropSource(Download* d) {
+bool QueueManager::dropSource(Download* d, const User::Ptr& aUser) {
 	int iHighSpeed = SETTING(H_DOWN_SPEED);
 
 	u_int16_t activeSegments, onlineUsers;
@@ -1883,7 +1872,7 @@ bool QueueManager::dropSource(Download* d) {
 	{
 	    Lock l(cs);
 
-		QueueItem* q = userQueue.getRunning(d->getUserConnection()->getUser());
+		QueueItem* q = userQueue.getRunning(aUser);
 
 		if(q == NULL)
 			return false;
@@ -1898,7 +1887,7 @@ bool QueueManager::dropSource(Download* d) {
 		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
 			if(onlineUsers > 2) {
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-					removeSources(d->getUserConnection()->getUser(), QueueItem::Source::FLAG_SLOW);
+					removeSources(aUser, QueueItem::Source::FLAG_SLOW);
 				}
 				d->getUserConnection()->disconnect();
 			}
@@ -1908,7 +1897,7 @@ bool QueueManager::dropSource(Download* d) {
 	return true;
  }
 
-bool QueueManager::autoDropSource(User::Ptr aUser) {
+bool QueueManager::autoDropSource(const User::Ptr& aUser) {
     Lock l(cs);
 
     QueueItem* q = userQueue.getRunning(aUser);

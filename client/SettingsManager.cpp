@@ -590,7 +590,12 @@ void SettingsManager::load(string const& aFileName)
 		set(CLIENT_ID, CID::generate().toBase32());
 #endif
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
-		
+
+		if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
+			set(TCP_PORT, (int)Util::rand(1025, 32000));
+			set(UDP_PORT, (int)Util::rand(1025, 32000));
+		}
+
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();

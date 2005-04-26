@@ -567,7 +567,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				((j->numberOfSegments == 1) && (i->status == ItemInfo::STATUS_RUNNING)))
 			{
 				if((i->file.empty() || !(i->updateMask & ItemInfo::MASK_HUB)) && !(i->updateMask & ItemInfo::MASK_IP)) {
-					//(i->statusString.substr(0,5) != TSTRING(DOWNLOADED_BYTES).substr(0,5)))
 					j->statusString = i->statusString;
 				} else if(i->updateMask & ItemInfo::MASK_IP) {
 					if(i->statusString == TSTRING(DOWNLOAD_STARTING))

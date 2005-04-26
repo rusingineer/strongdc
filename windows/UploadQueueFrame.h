@@ -110,6 +110,7 @@ public:
 		bHandled = FALSE;
 		showTree = (wParam == BST_CHECKED);
 		UpdateLayout(FALSE);
+		LoadAll();
 		return 0;
 	}
 	

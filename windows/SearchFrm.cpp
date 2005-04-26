@@ -1074,6 +1074,12 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					delete si;
 					return 0;
 				}
+				for(SearchInfo::Iter k = si2->subItems.begin(); k != si2->subItems.end(); k++){
+					if((sr->getUser()->getNick() == (*k)->getUser()->getNick()) && (sr->getFile() == (*k)->sr->getFile())) {
+						delete si;
+						return 0;
+					}								
+				}
 			}
 			if(bPaused == false) {
 				if(!si->getTTH().empty() && useGrouping) {

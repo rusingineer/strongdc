@@ -576,12 +576,8 @@ void Socket::socksUpdated() {
 
 void Socket::disconnect() throw() {
 	if(sock != INVALID_SOCKET) {
-		try {
-			::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
-			closesocket(sock);
-		} catch(...) {
-			// ??? NetLimiter crash "fix"
-		}
+		::shutdown(sock, 1); // Make sure we send FIN (SD_SEND shutdown type...)
+		closesocket(sock);
 	}
 	connected = false;
 

@@ -127,7 +127,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
-	Download* getDownload(User::Ptr aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget = Util::emptyString) throw();
+	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
@@ -140,8 +140,8 @@ public:
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
 	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount);
-	bool dropSource(Download* d);
-	bool autoDropSource(User::Ptr aUser);
+	bool dropSource(Download* d, const User::Ptr& aUser);
+	bool autoDropSource(const User::Ptr& aUser);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
 	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size) {

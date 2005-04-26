@@ -191,7 +191,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 				dcassert(cqi->getState() == ConnectionQueueItem::IDLE);
 				cqi->setState(ConnectionQueueItem::WAITING);
 				cqi->setLastAttempt(GET_TICK());
-				cqi->setConnection(NULL);
+//				cqi->setConnection(NULL);
 				aSource->setCQI(NULL);
 			}
 			putConnection(aSource);
@@ -228,7 +228,16 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					pendingAdd.erase(it);
 				}
 			} else {
-				
+
+				if(cqi->getState() == ConnectionQueueItem::WAITING) {
+					UserConnection::List::iterator it = find(pendingDelete.begin(), pendingDelete.end(), cqi->getConnection());
+					if(it != pendingDelete.end()) {
+						cqi->setConnection(NULL);
+						removed.push_back(cqi);
+						continue;
+					}
+				} 
+		
 				if(!cqi->getUser()->isOnline()) {
 					// Not online anymore...remove it from the pending...
 					removed.push_back(cqi);
@@ -241,14 +250,13 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + 60*1000) < aTick) && (attempts < 2) ) {
+				if( ((cqi->getLastAttempt() + 120*1000) < aTick) && (attempts < 4) ) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
 						removed.push_back(cqi);
 						continue;
 					}
-
 					// Always start high-priority downloads unless we have 3 more than maxdownslots already...
 					bool startDown = !tooMany && !tooFast;
 
@@ -287,9 +295,9 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		for(ConnectionQueueItem::Iter m = removed.begin(); m != removed.end(); ++m) {
 			putCQI(*m);
 		}
-
 		penDel = pendingDelete;
 		pendingDelete.clear();
+
 	}
 
 	for_each(penDel.begin(), penDel.end(), DeleteFunction<UserConnection*>());
@@ -680,7 +688,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
+void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
 	Lock l(cs_failedConnections);
 	failedConnections.push_back(aSource);
 }

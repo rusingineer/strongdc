@@ -128,7 +128,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
 			if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024) && !d->isSet(Download::FLAG_USER_LIST)) {
 				if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
-					if(!QueueManager::getInstance()->dropSource(d)) {
+					if(!QueueManager::getInstance()->dropSource(d, d->getUserConnection()->getUser())) {
 						continue;
 					}
 				}
