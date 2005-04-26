@@ -165,7 +165,6 @@ void UploadQueueFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 			SetSinglePaneMode(SPLIT_PANE_RIGHT);
 		}
 	}
-	LoadAll();
 	CRect rc = rect;
 	SetSplitterRect(rc);
 }

@@ -63,7 +63,7 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 		SetSel(0, iFindBegin);
 		ReplaceSel(_T(""));
 	}
-	PostMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
+	SendMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
 }
 
 void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor, int iAuthorLen, bool isMe, bool bUseEmo/* = true*/) {

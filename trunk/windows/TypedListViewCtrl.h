@@ -716,6 +716,7 @@ public:
 		}
 		i->collapsed = false;
 		SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+		resort();
 	}
 
 	void insertSubItem(T* i, int idx) {
@@ -742,7 +743,7 @@ public:
 
 	void insertGroupedItem(T* item, string groupingString, bool autoExpand, int p = -1) {
 		T* mainItem = findMainItem(groupingString);
-again:
+
 		if(mainItem == NULL) {
 			T* newItem = item->createMainItem();
 			mainItems.insert(make_pair(groupingString, newItem));
@@ -751,32 +752,34 @@ again:
 
 			if(newItem != item) {
 				mainItem = newItem;
-				goto again;
+			} else {
+				return;
 			}
-		} else {
-			mainItem->subItems.push_back(item);
-			item->main = mainItem;
-			item->mainItem = false;
-			item->updateMainItem();
-
-			int pos = findItem(mainItem);
-
-			if(pos != -1) {
-				if(mainItem->subItems.size() == 1){
-					if(autoExpand){
-						SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-						mainItem->collapsed = false;
-						insertSubItem(item, pos+1);
-					} else {
-						SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-					}
-				} else if(!mainItem->collapsed) {
-					insertSubItem(item, pos + 1);
-				}
-			}
-			if(pos != -1)
-				updateItem(pos);
 		}
+
+		mainItem->subItems.push_back(item);
+		item->main = mainItem;
+		item->mainItem = false;
+		item->updateMainItem();
+
+		int pos = findItem(mainItem);
+
+		if(pos != -1) {
+			u_int32_t totalSubItems = mainItem->subItems.size();
+			if((!uniqueMainItem && (totalSubItems == 1)) || (uniqueMainItem && (totalSubItems == 2))) {
+				if(autoExpand){
+					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+					mainItem->collapsed = false;
+					insertSubItem(item, pos + totalSubItems + 1);
+				} else {
+					SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+				}
+			} else if(!mainItem->collapsed) {
+				insertSubItem(item, pos + totalSubItems + 1);
+			}
+		}
+		if(pos != -1)
+			updateItem(pos);
 	}
 
 	void removeMainItem(T* s) {

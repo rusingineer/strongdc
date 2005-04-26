@@ -103,12 +103,8 @@ public:
 		Lock l(cs);
 
 		if(sending && (sock != INVALID_SOCKET)) {
-			try {
-				::shutdown(sock, SD_BOTH);
-				closesocket(sock);
-			} catch(...) {
-			// ??? NetLimiter crash "fix"
-			}
+			::shutdown(sock, SD_BOTH);
+			closesocket(sock);
 		}
 		addTask(DISCONNECT);
 	}
