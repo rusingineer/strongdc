@@ -211,7 +211,11 @@ void User::setUserDescription(const string& aDescription) {
 }
 
 StringMap& User::clientEscapeParams(StringMap& sm) const {
-	return client->escapeParams(sm);
+	RLock<> l(cs);
+	if(client) {
+		return client->escapeParams(sm);
+	} else
+		return sm;
 }
 
 void User::TagParts() {

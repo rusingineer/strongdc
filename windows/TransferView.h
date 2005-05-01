@@ -368,6 +368,7 @@ private:
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
 			if(h->Target != i->Target) {
+				Lock l(cs);
 				ctrlTransfers.removeGroupedItem(i, false);
 				ctrlTransfers.insertGroupedItem(i, i->Target, false);
 			}

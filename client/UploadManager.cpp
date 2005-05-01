@@ -483,33 +483,25 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 
 // TimerManagerListener
 void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
-	int64_t iAvgSpeed = 0;
+	//Upload::List ticks;
 
 	{
 		Lock l(cs);
 		throttleSetup();
 		throttleZeroCounters();
 
-		Upload::List ticks;
-		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+		//ticks = uploads;
+		/*for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			ticks.push_back(*i);
-		}
-			
-		if(ticks.size() > 0)
-			fire(UploadManagerListener::Tick(), ticks);
+		}*/
+
+		if(uploads.size() > 0)
+			fire(UploadManagerListener::Tick(), uploads);
 
 		fire(UploadManagerListener::QueueUpdate());
-		if(m_boFireball == false) {		
-			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-				Upload* u = *i;
-				iAvgSpeed += u->getRunningAverage();
-			}
-			if ( iAvgSpeed < 0 ) iAvgSpeed = 0;
-		}
 	}
-
-	if(m_boFireball == false) {
-		if(iAvgSpeed >= 102400) {
+	if(!m_boFireball) {
+		if(getAverageSpeed() >= 102400) {
 			u_int32_t iActTicks = TimerManager::getTick();
 			if ( m_boLastTickHighSpeed ) {
 				u_int32_t iHighSpeedTicks = 0;
@@ -518,7 +510,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			else
 				iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
 
-			if ( iHighSpeedTicks > 60*1000 ) {
+			if ( iHighSpeedTicks > 60000 ) {
 				m_boFireball = true;
 					if(boFireballSent == false) {
 						ClientManager::getInstance()->infoUpdated(true);
@@ -533,12 +525,12 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			m_boLastTickHighSpeed = false;
 		}
 
-		if(m_boFileServer == false) {
+		if(!m_boFileServer) {
 			if(	(Util::getUptime() > 7200) && 
 				(Socket::getTotalUp() > 209715200) &&
 				(ShareManager::getInstance()->getShareSize() > 2147483648)) {
 					m_boFileServer = true;
-				if((boFireballSent == false) && (boFileServerSent == false)) {
+				if(!boFireballSent && !boFileServerSent) {
 					ClientManager::getInstance()->infoUpdated(true);
 					boFileServerSent = true;
 				}
@@ -565,14 +557,13 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 			}
 		}
 	}
-	if(aUser->isOnline() == false) {
+	if(!aUser->isOnline()) {
 		clearUserFiles(aUser);
 	}
 }
 
 size_t UploadManager::throttleGetSlice() {
 	if (mThrottleEnable) {
-		Lock l(cs);
 		size_t left = mUploadLimit - mBytesSpokenFor;
 		if (left > 0) {
 			if (left > 2*mByteSlice) {
@@ -604,7 +595,6 @@ void UploadManager::throttleZeroCounters()  {
 }
 
 void UploadManager::throttleBytesTransferred(u_int32_t i)  {
-	Lock l(cs);
 	mBytesSent += i;
 }
 

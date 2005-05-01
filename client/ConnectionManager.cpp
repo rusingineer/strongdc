@@ -490,7 +490,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 	if(aSource->getUser()->isOnline()) {
 		// We don't want connections from people claiming to be us
-		if(aNick == aSource->getUser()->getClientNick() && (aSource->getUser()->getClient()->getStealth() == false)) {
+		if(!aSource->getUser()->getClient()->getStealth() && (aNick == aSource->getUser()->getClientNick())) {
 			putConnection(aSource);
 			return;
 		}

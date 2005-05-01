@@ -150,7 +150,7 @@ SettingsManager::SettingsManager()
 	setDefault(SLOTS, 1);
 	//setDefault(SERVER, Util::getLocalIp());
 	setDefault(TCP_PORT, Util::rand(1025, 32000));
-	setDefault(UDP_PORT, Util::rand(1025, 31999)+1);
+	setDefault(UDP_PORT, Util::rand(1025, 32000));
 	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);

@@ -264,14 +264,10 @@ private:
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
 			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority())
 		{ 
-			FDI = aQI->getFileChunksInfo();			
+			// @todo: fix possible deadlock
+			FDI = FileChunksInfo::Get(aQI->getTempTarget());
 			if(FDI)
 				setDownloadedBytes(FDI->GetDownloadedSize());
-			else {
-				FDI = FileChunksInfo::Get(aQI->getTempTarget());
-				if(FDI)
-					setDownloadedBytes(FDI->GetDownloadedSize());
-			}
 
 			for(QueueItem::Source::Iter i = aQI->getSources().begin(); i != aQI->getSources().end(); ++i) {
 				sources.push_back(SourceInfo(*(*i)));

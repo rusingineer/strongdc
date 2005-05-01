@@ -93,7 +93,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_RESULTS);
 	}
 	ctrlResults.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
-	ctrlResults.setUnique(false);
 	resultsContainer.SubclassWindow(ctrlResults.m_hWnd);
 	
 	if (BOOLSETTING(USE_SYSTEM_ICONS)) {
@@ -535,7 +534,7 @@ void SearchFrame::SearchInfo::view() {
 void SearchFrame::SearchInfo::GetMP3Info() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
-			QueueManager::getInstance()->add(Util::getTempPath() + Text::fromT(fileName), 2100, NULL, sr->getUser(), 
+			QueueManager::getInstance()->add(Util::getAppPath() + "MP3Info\\" + Text::fromT(fileName), 2100, NULL, sr->getUser(), 
 				sr->getFile(), sr->getUtf8(), QueueItem::FLAG_MP3_INFO);
 		}
 	} catch(const Exception&) {

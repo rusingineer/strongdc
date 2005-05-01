@@ -55,7 +55,7 @@ LRESULT UpdateDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctrlDownload.SetWindowText(CTSTRING(DOWNLOAD));
 	ctrlDownload.EnableWindow(FALSE);
 	ctrlClose.SetWindowText(CTSTRING(CLOSE));
-	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(CONNECTING_TO_SERVER) + _T("...")));
+	ctrlStatus.SetWindowText((TSTRING(CONNECTING_TO_SERVER) + _T("...")).c_str());
 
 	::SetWindowText(GetDlgItem(IDC_UPDATE_VERSION), CTSTRING(VERSION));
 	::SetWindowText(GetDlgItem(IDC_UPDATE_HISTORY), CTSTRING(HISTORY));

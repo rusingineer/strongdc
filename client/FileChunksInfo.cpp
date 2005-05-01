@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2003-2004 RevConnect, http://www.revconnect.com
+ * Copyright (C) 2003-2005 RevConnect, http://www.revconnect.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -374,11 +374,13 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
         return true;
     }
 
-	Lock l(cs);
-	copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
+	{
+		Lock l(cs);
+		copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
 
-	// double smallest size when last verify failed
-	minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
+		// double smallest size when last verify failed
+		minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
+	}
 
 	return false;
 }

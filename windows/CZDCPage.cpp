@@ -49,7 +49,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
 	{ SettingsManager::REALTIME_QUEUE_UPDATE, ResourceManager::QUEUE_UPDATING },
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
-	{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
+	//{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
 	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },

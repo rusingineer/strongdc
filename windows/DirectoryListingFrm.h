@@ -143,7 +143,7 @@ public:
 	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/); 
 
 	void downloadList(const tstring& aTarget, bool view = false,  QueueItem::Priority prio = QueueItem::Priority::DEFAULT);
-	void downloadMP3List(const tstring& aTarget);
+	void downloadMP3List();
 	void updateTree(DirectoryListing::Directory* tree, HTREEITEM treeItem);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void findFile(bool findNext);

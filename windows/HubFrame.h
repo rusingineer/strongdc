@@ -479,7 +479,7 @@ private:
 	int hubchatusersplit;
 	tstring filter;
 	void updateUserList();
-	bool filterUser(UserInfo* ui);
+	void filterUser(UserInfo* ui);
 
 	bool PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu);
 	bool showUsers;

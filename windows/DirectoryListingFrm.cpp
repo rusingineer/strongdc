@@ -462,17 +462,17 @@ void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = 
 	}
 }
 
-void DirectoryListingFrame::downloadMP3List(const tstring& aTarget) {
+void DirectoryListingFrame::downloadMP3List() {
 	int i=-1;
 	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(i);
 
-		tstring target = aTarget.empty() ? Text::toT(SETTING(DOWNLOAD_DIRECTORY)) : aTarget;
-
 		try {
 			if(ii->type == ItemInfo::FILE) {
-				File::deleteFile(Text::fromT(target) + Util::validateFileName(ii->file->getName()));
-				dl->downloadMP3(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)));
+				string target = Util::getAppPath() + "MP3Info\\";
+				File::ensureDirectory(target);
+				File::deleteFile(target + Util::validateFileName(ii->file->getName()));
+				dl->downloadMP3(ii->file, target + Text::fromT(ii->getText(COLUMN_FILENAME)));
 			} 
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
@@ -547,7 +547,7 @@ LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/,
 }
 
 LRESULT DirectoryListingFrame::onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	downloadMP3List(Text::toT(Util::getTempPath()));
+	downloadMP3List();
 	return 0;
 }
 

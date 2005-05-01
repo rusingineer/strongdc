@@ -62,7 +62,7 @@ public:
 		return WinUtil::getImage(user);
 	}
 
-	void update();
+	bool update(int sortCol);
 
 	tstring columns[COLUMN_LAST];
 	GETSET(bool, op, Op);
