@@ -22,7 +22,7 @@
 #include "UserInfo.h"
 
 UserInfo::UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) { 
-	update();
+	update(-1);
 };
 
 const tstring& UserInfo::getText(int col) const {
@@ -52,7 +52,12 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
 }
 
-void UserInfo::update() {
+bool UserInfo::update(int sortCol) {
+	bool needsSort = (op != user->isSet(User::OP));
+	tstring old;
+	if(sortCol != -1)
+		old = columns[sortCol];
+
 	tstring uploadSpeed;
 
 	if(user->getDownloadSpeed()<1) {
@@ -85,5 +90,11 @@ void UserInfo::update() {
 	columns[COLUMN_PK] = Text::toT(user->getPk());
 	columns[COLUMN_LOCK] = Text::toT(user->getLock());
 	columns[COLUMN_SUPPORTS] = Text::toT(user->getSupports());
+
 	op = user->isSet(User::OP);
+
+	if(sortCol != -1) {
+		needsSort = needsSort || (old != columns[sortCol]);
+	}
+	return needsSort;
 }

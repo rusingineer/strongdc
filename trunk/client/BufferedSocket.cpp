@@ -81,11 +81,12 @@ bool BufferedSocket::threadSendFile() {
 			if (throttling) { 
 				start = TimerManager::getTick();
 			}
-  {
-    Lock l(cs);
-    if(!tasks.empty())
-     return false;
-   }
+
+			{
+				Lock l(cs);
+				if(!tasks.empty())
+					return false;
+			}
 	
 			size_t s;
 			if (throttling) {
@@ -112,9 +113,9 @@ bool BufferedSocket::threadSendFile() {
 						Thread::sleep(sleep_time);
 					}
 				}
-   } else {
-		fire(BufferedSocketListener::TransmitDone());
-		return true;
+			} else {
+				fire(BufferedSocketListener::TransmitDone());
+				return true;
 			}
 		}
 	} catch(const Exception& e) {

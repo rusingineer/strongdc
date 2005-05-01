@@ -178,7 +178,6 @@ public:
 	GETSET(bool, filelistComplete, FilelistComplete);
 	GETSET(bool, badClient, BadClient);	
 	GETSET(bool, badFilelist, BadFilelist);
-	GETSET(bool, isInList, IsInList);
 	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
 	StringMap& clientEscapeParams(StringMap& sm) const;
 
@@ -220,7 +219,6 @@ public:
 		bytesShared = 0;
 		realBytesShared = -1;
 		fakeShareBytesShared = -1;
-		isInList = false;
 		testSURComplete = false;
 		filelistComplete = false;
 		pk = Util::emptyString;

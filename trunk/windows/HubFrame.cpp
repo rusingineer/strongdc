@@ -629,30 +629,25 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 }
 
 bool HubFrame::updateUser(const User::Ptr& u) {
-	int i = -1;
-	if(u->getIsInList()) {
-		i = findUser(u);
-	}
-	if(i == -1) {
+	UserMapIter i = userMap.find(u);
+	if(i == userMap.end()) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u, ui));
-		
-		bool adduser = false;
-		if(filter.empty()) {
-			adduser = true;
-		} else if(filterUser(ui)) {
-			adduser = true;
-		}	
-		if(adduser == true){
-			ctrlUsers.insertItem(ui, WinUtil::getImage(u));
-		}		
+		if(showUsers) {
+			filterUser(ui);
+		}
 		return true;
 	} else {
-		UserInfo* ui = ctrlUsers.getItemData(i);
-		resort = (ui->getOp() != u->isSet(User::OP)) || resort;
-		ctrlUsers.getItemData(i)->update();
-		ctrlUsers.updateItem(i);
-		ctrlUsers.SetItem(i, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
+		UserInfo* ui = i->second;
+
+		resort = ui->update(ctrlUsers.getSortColumn()) || resort;
+		if(showUsers) {
+			int pos = ctrlUsers.findItem(ui);
+			dcassert(pos != -1);
+			ctrlUsers.updateItem(pos);
+			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
+		}
+
 		return false;
 	}
 }
@@ -687,7 +682,6 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				case UPDATE_USER:
 					if(updateUser(u)) {
 						bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u);
-						u->setIsInList(true);
 						if (isFavorite && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 							PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
@@ -747,11 +741,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							}
 						}
 					}
-					u->setIsInList(true);
 					break;
 				case UPDATE_USERS:
 					updateUser(u);
-					u->setIsInList(true);
 					break;
 				case REMOVE_USER:
 					removeUser(u);
@@ -1037,12 +1029,12 @@ void HubFrame::clearUserList() {
 		Lock l(updateCS);
 		updateList.clear();
 	}
-	userMap.clear();
-	int j = ctrlUsers.GetItemCount();
-	for(int i = 0; i < j; i++) {
-		delete (UserInfo*) ctrlUsers.GetItemData(i);
+
+	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+		delete i->second;
 	}
 	ctrlUsers.DeleteAllItems();
+	userMap.clear();
 }
 	
 void HubFrame::findText(tstring const& needle) throw() {
@@ -1659,19 +1651,20 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 	bHandled = FALSE;
 	if(wParam == BST_CHECKED) {
 		showUsers = true;
-		User::NickMap& lst = client->lockUserList();
 		ctrlUsers.SetRedraw(FALSE);
-		for(User::NickIter i = lst.begin(); i != lst.end(); ++i) {
-			updateUser(i->second);
-			i->second->setIsInList(true);
+		ctrlUsers.DeleteAllItems();
+		
+		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+			filterUser(i->second);
 		}
-		client->unlockUserList();
+
 		ctrlUsers.SetRedraw(TRUE);
 		ctrlUsers.resort();
 	} else {
 		showUsers = false;
-		clearUserList();
 	}
+
+	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);
 
 	UpdateLayout(FALSE);
 	return 0;
@@ -2367,36 +2360,28 @@ void HubFrame::updateUserList() {
 	ctrlUsers.SetRedraw(FALSE);
 	ctrlUsers.DeleteAllItems();
 
-	if(filter.empty()) {
-		for(UserMap::iterator i = userMap.begin(); i != userMap.end(); ++i){
-			if(i->second != NULL) {
-				i->second->update();
-				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));	
-		}
-		}
-		ctrlUsers.SetRedraw(TRUE);
-		return;
+	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+		filterUser(i->second);
 	}
-	
-	for(UserMap::iterator i = userMap.begin(); i != userMap.end(); ++i){
-		if( i->second != NULL ) {
-			if(filterUser(i->second) == true) {
-				ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->user));
-			}
-		}
-	}
+	//ctrlUsers.resort();
 	ctrlUsers.SetRedraw(TRUE);
-	ctrlUsers.resort();
 }
 
-bool HubFrame::filterUser(UserInfo* ui) {
-	PME reg(Text::fromT(filter),"i");
-	if(!reg.IsValid()) { 
-		return true;
-	} else if(reg.match(Text::fromT(ui->getText(ctrlFilterSel.GetCurSel())))) {
-		return true;
+void HubFrame::filterUser(UserInfo* ui) {
+	bool adduser = false;
+	if(filter.empty()) {
+		adduser = true;
+	} else {
+		PME reg(Text::fromT(filter),"i");
+		if(!reg.IsValid()) { 
+			adduser = true;
+		} else if(reg.match(Text::fromT(ui->getText(ctrlFilterSel.GetCurSel())))) {
+			adduser = true;
+		}
 	}
-	return false;
+	if(adduser == true){
+		ctrlUsers.insertItem(ui, WinUtil::getImage(ui->user));
+	}
 }
 
 void HubFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {

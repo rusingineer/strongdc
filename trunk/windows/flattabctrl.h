@@ -846,7 +846,7 @@ public:
 	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
 		dcassert(getTab());
-			getTab()->removeTab(m_hWnd);
+		getTab()->removeTab(m_hWnd);
 		if(m_hMenu == WinUtil::mainMenu)
 			m_hMenu = NULL;
 

@@ -104,7 +104,7 @@ public:
 	}
 
 	/** Readd a source that was removed */
-	void readd(const string& target, User::Ptr aUser) throw(QueueException);
+	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
 
 	/** Add a directory to the queue (downloads filelist and matches the directory). */
 	void addDirectory(const string& aDir, const User::Ptr& aUser, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();
@@ -127,8 +127,9 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
-	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, bool &reuse, string aTarget = Util::emptyString) throw();
+	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
+	void addTreeToSegments(Download* d, Download::List downloads) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
@@ -144,18 +145,20 @@ public:
 	bool autoDropSource(const User::Ptr& aUser);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
-	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size) {
+	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size, QueueItem::Status& status) {
 		u_int16_t value;
 		{
 			Lock l(cs);
 			QueueItem* qi = currents ? fileQueue.find(aTarget) : userQueue.getRunning(aUser);
 			size = -1;
+			status = QueueItem::STATUS_WAITING;
 
 			if(!qi)
 				return 0;
 
 			size = qi->getSize();
 			value  = qi->getActiveSegments().size();
+			status = qi->getStatus();
 			if(currents) {
 				if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
 					value -= 1;

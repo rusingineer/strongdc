@@ -322,8 +322,9 @@ void DirectoryListing::download(File* aFile, const string& aTarget, bool view, b
 void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
 	int flags = QueueItem::FLAG_MP3_INFO;
 
+	::File::ensureDirectory(aTarget);
 	QueueManager::getInstance()->add(aTarget, 2100, NULL, getUser(),
-		getPath(aFile) + aFile->getName(), flags);
+		getPath(aFile) + aFile->getName(), getUtf8(), flags);
 		
 	QueueManager::getInstance()->setPriority(aTarget, QueueItem::HIGHEST);
 }

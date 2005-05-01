@@ -110,7 +110,7 @@ public:
 			FLAG_NO_TREE = 0x200,
 			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
-				| FLAG_SLOW | FLAG_NO_TREE			
+				| FLAG_SLOW | FLAG_NO_TREE
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -130,7 +130,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0), noFreeBlocks(false)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0)
 	{ 
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		
@@ -147,8 +147,8 @@ public:
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
-		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), fileChunksInfo(NULL),
-		start(rhs.start), noFreeBlocks(rhs.noFreeBlocks), currentDownload(rhs.currentDownload)
+		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
+		start(rhs.start), currentDownload(rhs.currentDownload)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -177,7 +177,7 @@ public:
 	}
 	bool hasOnlineUsers() const { return countOnlineUsers() > 0; };
 
-	const string& getSourcePath(const User::Ptr& aUser) { 
+	const string getSourcePath(const User::Ptr& aUser) { 
 		dcassert(isSource(aUser));
 		return (*getSource(aUser, sources))->getPath();
 	}
@@ -282,9 +282,7 @@ public:
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
 	GETSET(bool, slowDisconnect, SlowDisconnect);
-	GETSET(bool, noFreeBlocks, NoFreeBlocks);
 	GETSET(int64_t, speed, Speed);
-	GETSET(FileChunksInfo::Ptr, fileChunksInfo, FileChunksInfo);
 	GETSET(u_int32_t, start, Start);
 
 	QueueItem::Priority calculateAutoPriority(){

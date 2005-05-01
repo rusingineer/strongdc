@@ -310,7 +310,10 @@ public:
 	int getSortColumn() { return sortColumn; }
 	int getRealSortColumn() { return findColumn(sortColumn); }
 	bool isAscending() { return sortAscending; }
-	void setAscending(bool s) { sortAscending = s; }
+	void setAscending(bool s) {
+		sortAscending = s;
+		updateArrow();
+	}
 
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
@@ -641,6 +644,7 @@ private:
 	}
 };
 
+// Copyright (C) 2005 Big Muscle, StrongDC++
 template<class T, int ctrlId>
 class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
 {
@@ -752,7 +756,9 @@ public:
 
 			if(newItem != item) {
 				mainItem = newItem;
+				uniqueMainItem = true;
 			} else {
+				uniqueMainItem = false;
 				return;
 			}
 		}
@@ -823,6 +829,7 @@ public:
 					removeMainItem(s->main);
 					DeleteItem(findItem(s->main));
 					delete s->main;
+					s->main = NULL;
 				}
 			} else {
 				if(s->main->subItems.size() == 0) {
@@ -864,7 +871,6 @@ public:
 			setSortColumn(l->iSubItem);
 		} else if(isAscending()) {
 			setAscending(false);
-			updateArrow();
 		} else {
 			setSortColumn(-1);
 		}		
@@ -923,13 +929,6 @@ public:
 		return mid;
 	}
 	
-	void setUnique(bool unique) {
-		uniqueMainItem = unique;
-	}
-	bool getUnique() {
-		return uniqueMainItem;
-	}
-
 	map<string, T*>  mainItems;
 private:
 	
@@ -946,6 +945,7 @@ private:
 	}
 
 	static int compareItems(T* a, T* b, int col) {
+		// Copyright (C) Liny, RevConnect
 		if(a->mainItem == b->mainItem){
 
 			// both are children with diffent mother, compare their monther

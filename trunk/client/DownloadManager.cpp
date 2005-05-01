@@ -112,9 +112,9 @@ AdcCommand Download::getCommand(bool zlib, bool tthf) {
 }
 
 void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
+	Download::List tickList;
 	Lock l(cs);
 
-	Download::List tickList;
 	throttleSetup();
 	throttleZeroCounters();
 	// Tick each ongoing download
@@ -122,26 +122,25 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		Download* d = *i;
 
-		if(d->getUserConnection() == NULL)
-			continue;
+		if(d->getUserConnection() != NULL) {
+			if (!d->isSet(Download::FLAG_USER_LIST) && (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576))) {
+				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
+					if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
+						if(!QueueManager::getInstance()->dropSource(d, d->getUserConnection()->getUser())) {
+							continue;
+						}
+					}
+				} else {
+					d->quickTick = GET_TICK();
+				}
+			}
 
-		if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
-			if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024) && !d->isSet(Download::FLAG_USER_LIST)) {
-				if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
-					if(!QueueManager::getInstance()->dropSource(d, d->getUserConnection()->getUser())) {
+			if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
+				if(d->getRunningAverage() < 1230) {
+					if(QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser())) {
+						d->getUserConnection()->disconnect();
 						continue;
 					}
-				}
-			} else {
-				d->quickTick = GET_TICK();
-			}
-		}
-
-		if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
-			if(d->getRunningAverage() < 1230) {
-				if(QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser())) {
-					d->getUserConnection()->disconnect();
-					continue;
 				}
 			}
 		}
@@ -150,7 +149,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			tickList.push_back(*i);
 		}
 	}
-
 	if(tickList.size() > 0)
 		fire(DownloadManagerListener::Tick(), tickList);
 }
@@ -245,21 +243,19 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
 			removeConnection(aConn, false, false, true);
 		else
-			removeConnection(aConn, false);
+			removeConnection(aConn);
 		return;
 	}
 
-	bool reuse = true;
-	string message = "";
-		
+	string message = Util::emptyString;
 	Download* d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL), 
 		aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST),
-		message, reuse, aTarget);
+		message, aTarget);
 
 	if(d == NULL) {
 		if(!message.empty() && aConn->getCQI())
 			fire(DownloadManagerListener::Status(), aConn->getCQI(), message);
-		removeConnection(aConn, reuse);
+		removeConnection(aConn, true);
 		return;
 	}
 
@@ -811,38 +807,12 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 		d->setTreeValid(true);
-// @todo: setHasTree to download's queue item		d->getItem()->setHasTree(true);
 
 		// Added by set the tree to other downloads
 		if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 			Lock l(cs);
-
-			dcdebug("Begin set tree to other downloads\n");
-			// Tick each ongoing download
-			for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-				Download* download = *i;
-
-				if(download != d && download->getFile() != NULL && false == download->isSet(Download::FLAG_USER_LIST) && download->isSet(Download::FLAG_TREE_DOWNLOAD) == false 
-					&& download->getTarget() == download->getTarget() && download->getTreeValid() == false){
-
-					download->getTigerTree() = d->getTigerTree();
-					download->setTreeValid(true);
-
-					if(download->isSet(Download::FLAG_ZDOWNLOAD)) {
-						dcdebug("  Set tree to ZDownload %s \n", download->getSource().c_str());
-						FilteredOutputStream<UnZFilter, true>* unZFilter = (FilteredOutputStream<UnZFilter, true>*)download->getFile();
-						ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)unZFilter->getOutputStream();
-						unZFilter->setOutputStream(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
-					}else{
-						dcdebug("  Set tree to %s \n", download->getSource().c_str());
-						ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)download->getFile();
-						d->setFile(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
-					}
-				}
-			}
+			QueueManager::getInstance()->addTreeToSegments(d, downloads);
 		}
-
-
 	} else {
 
 		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
