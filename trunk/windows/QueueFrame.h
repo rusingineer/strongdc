@@ -258,14 +258,14 @@ private:
 			MASK_TYPE = 1 << COLUMN_TYPE
 		};
 
-		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(Text::toT(aQI->getTarget())),
+		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), targetInf(aQI->getTargetInf()),
 			path(Text::toT(Util::getFilePath(aQI->getTarget()))),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
 			updateMask((u_int32_t)-1), display(NULL), autoPriority(aQI->getAutoPriority())
 		{ 
 			// @todo: fix possible deadlock
-			FDI = FileChunksInfo::Get(aQI->getTempTarget());
+			FDI = FileChunksInfo::Get(targetInf);
 			if(FDI)
 				setDownloadedBytes(FDI->GetDownloadedSize());
 
@@ -297,7 +297,7 @@ private:
 			}
 		}
 		int imageIndex() {
-			return WinUtil::getIconIndex(target);
+			return WinUtil::getIconIndex(getTarget());
 		}
 
 		const tstring& getTargetFileName() { return getDisplay()->columns[COLUMN_TARGET]; }
@@ -327,8 +327,12 @@ private:
 			}
 			return false;
 		}
+
+		const tstring getTarget() {
+			return Text::toT(targetInf->getTarget());
+		}
 		
-		GETSET(tstring, target, Target);
+		GETSET(TargetInfo::Ptr, targetInf, TargetInf);
 		GETSET(tstring, path, Path);
 		GETSET(int64_t, size, Size);
 		GETSET(int64_t, downloadedBytes, DownloadedBytes);

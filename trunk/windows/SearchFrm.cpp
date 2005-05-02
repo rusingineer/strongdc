@@ -493,6 +493,20 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 		return;
 	}
 
+	// Check previous search results for dupes
+	for(map<string, SearchInfo*>::iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); s++) {
+		SearchInfo* si = s->second;
+		SearchResult* sr = si->sr;
+
+		if((sr->getUser()->getNick() == aResult->getUser()->getNick()) && (sr->getFile() == aResult->getFile())) {
+			return;
+		}
+		for(SearchInfo::Iter k = si->subItems.begin(); k != si->subItems.end(); k++){
+			if((aResult->getUser()->getNick() == (*k)->getUser()->getNick()) && (aResult->getFile() == (*k)->sr->getFile())) {
+				return;
+			}								
+		}
+	}
 
 	SearchInfo* i = new SearchInfo(aResult);
 	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
@@ -1064,22 +1078,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 	case ADD_RESULT:
 		{
 			SearchInfo* si = (SearchInfo*)lParam;
-			SearchResult* sr = si->sr;
-			// Check previous search results for dupes
-			for(int i = 0, j = ctrlResults.GetItemCount(); i < j; ++i) {
-				SearchInfo* si2 = ctrlResults.getItemData(i);
-				SearchResult* sr2 = si2->sr;
-				if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {
-					delete si;
-					return 0;
-				}
-				for(SearchInfo::Iter k = si2->subItems.begin(); k != si2->subItems.end(); k++){
-					if((sr->getUser()->getNick() == (*k)->getUser()->getNick()) && (sr->getFile() == (*k)->sr->getFile())) {
-						delete si;
-						return 0;
-					}								
-				}
-			}
+
 			if(bPaused == false) {
 				if(!si->getTTH().empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(si, Text::fromT(si->getTTH()), expandSR);

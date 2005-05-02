@@ -267,8 +267,8 @@ void ShareManager::load(SimpleXML* aXml) {
 			if(d[d.length() - 1] != PATH_SEPARATOR)
 				d += PATH_SEPARATOR;
 
-			if(!Util::fileExists(d))
-				continue;
+			/*if(!Util::fileExists(d))
+				continue;*/
 
 			if(!virt.empty()) {
 				newVirt = virt;
@@ -393,6 +393,16 @@ void ShareManager::save(SimpleXML* aXml) {
 	}
 	aXml->stepOut();
 }
+
+/*StringList ShareManager::nonexistingFolders() {
+	StringList folders;
+	for(StringPairIter i = virtualMap.begin(); i != virtualMap.end(); ++i) {
+		string d = i->second;
+		if(!Util::fileExists(d))
+			folders.push_back(d);
+	}
+	return folders;
+}*/
 
 void ShareManager::addDirectory(const string& aDirectory, const string& aName) throw(ShareException) {
 	if(!Util::fileExists(aDirectory))

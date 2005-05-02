@@ -24,7 +24,7 @@
 #include "DownloadManager.h"
 #include "SettingsManager.h"
 #include "Winioctl.h"
-
+#include "QueueItem.h"
 
 CriticalSection SharedFileStream::critical_section;
 SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
@@ -38,12 +38,12 @@ static SetFileValidDataFunc setFileValidData = NULL;
 // NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
 enum { MIN_BLOCK_SIZE = 65536 };
 
-FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
+FileChunksInfo::Ptr FileChunksInfo::Get(const TargetInfo::Ptr& ti)
 {
     Lock l(hMutexMapList);
 
 	for(vector<Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tempTargetName == name){
+		if((*i)->tInfo->getTempTarget() == ti->getTempTarget()){
 			return (*i);
 		}
 	}
@@ -51,12 +51,12 @@ FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 	return NULL;
 }
 
-void FileChunksInfo::Free(const string& name)
+void FileChunksInfo::Free(const TargetInfo::Ptr& ti)
 {
     Lock l(hMutexMapList);
 
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tempTargetName == name ){
+		if((*i)->tInfo->getTempTarget() == ti->getTempTarget() ){
 			vecAllFileChunksInfo.erase(i);
 			return;
 		}
@@ -65,8 +65,8 @@ void FileChunksInfo::Free(const string& name)
 	dcassert(0);
 }
 
-FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
-	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
+FileChunksInfo::FileChunksInfo(const TargetInfo::Ptr& ti, int64_t size, const vector<int64_t>* blocks) 
+	: tInfo(ti), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
@@ -328,7 +328,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 	// Open file
 	char buf[512*1024];
 
-	SharedFileStream file(tempTargetName, 0, 0);
+	SharedFileStream file(tInfo->getTempTarget(), 0, 0);
 	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
 	size_t n = 0;

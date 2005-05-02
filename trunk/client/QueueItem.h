@@ -128,10 +128,14 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
+	Flags(aFlag), start(0), currentDownload(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0)
 	{ 
+		string aTempTarget = getTempTarget(aTarget);
+		TargetInfo* TI = new TargetInfo(aTarget, aTempTarget);
+		setTargetInf(TI);
+
 		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		
 		if(isSet(FLAG_USER_LIST) || isSet(FLAG_MP3_INFO) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
@@ -145,7 +149,7 @@ public:
 	};
 
 	QueueItem(const QueueItem& rhs) : 
-	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
+	Flags(rhs), targetInf(rhs.targetInf),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
 		start(rhs.start), currentDownload(rhs.currentDownload)
@@ -191,7 +195,7 @@ public:
 				l.push_back((*i)->getUser());
 	}
 
-	string getTargetFileName() const { return Util::getFileName(getTarget()); };
+	string getTargetFileName() const { return Util::getFileName(targetInf->getTarget()); };
 
 	Source::Iter getSource(const User::Ptr& aUser) { return getSource(aUser, sources); };
 	Source::Iter getBadSource(const User::Ptr& aUser) { return getSource(aUser, badSources); };
@@ -240,7 +244,7 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(isSet(FLAG_MULTI_SOURCE)){
-			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
+			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(targetInf);
 			if(filedatainfo)
 				return filedatainfo->GetDownloadedSize();
 		}
@@ -263,12 +267,19 @@ public:
 
 	string getSearchString() const;
 
-	const string& getTempTarget();
+	const string getTempTarget(string aTarget = Util::emptyString);
 	void setTempTarget(const string& aTempTarget) {
-		tempTarget = aTempTarget;
+		targetInf->setTempTarget(aTempTarget);
 	}
-	GETSET(string, target, Target);
-	string tempTarget;
+	const string& getTarget() {
+		return targetInf->getTarget();
+	}
+	void setTarget(const string& aTarget) {
+		targetInf->setTarget(aTarget);
+	}
+
+	GETSET(TargetInfo::Ptr, targetInf, TargetInf);
+	//string tempTarget;
 	int64_t downloadedBytes;
 	GETSET(int64_t, size, Size);
 	GETSET(Status, status, Status);

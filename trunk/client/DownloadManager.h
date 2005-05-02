@@ -31,6 +31,7 @@
 #include "ZUtils.h"
 #include "MerkleTree.h"
 #include "LogManager.h"
+#include "QueueItem.h"
 
 class QueueItem;
 class ConnectionQueueItem;
@@ -100,14 +101,29 @@ public:
 
 	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
 	GETSET(string, source, Source);
-	GETSET(string, target, Target);
-	GETSET(string, tempTarget, TempTarget);
+//	GETSET(string, target, Target);
+//	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
 	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(int64_t, segmentSize, SegmentSize);
 	int64_t quickTick;
+
+	const string& getTempTarget() {
+		return targetInf->getTempTarget();
+	}
+	void setTempTarget(const string& aTempTarget) {
+		targetInf->setTempTarget(aTempTarget);
+	}
+	const string& getTarget() {
+		return targetInf->getTarget();
+	}
+	void setTarget(const string& aTarget) {
+		targetInf->setTarget(aTarget);
+	}
+
+	GETSET(TargetInfo::Ptr, targetInf, TargetInf);
 	
 private:
 	Download(const Download&);

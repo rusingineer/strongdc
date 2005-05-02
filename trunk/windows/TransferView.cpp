@@ -155,14 +155,14 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 			transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 
-			if((ii->type == ItemInfo::TYPE_DOWNLOAD) && (ii->Target != Util::emptyString)) {
-				string ext = Util::getFileExt(ii->Target);
+			if((ii->type == ItemInfo::TYPE_DOWNLOAD) && (ii->getTarget() != Util::emptyString)) {
+				string ext = Util::getFileExt(ii->getTarget());
 				if(ext.size()>1) ext = ext.substr(1);
 				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 
 				QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-				string tmp = ii->Target;
+				string tmp = ii->getTarget();
 				QueueItem::StringIter qi = queue.find(&tmp);
 
 				bool slowDisconnect = false;
@@ -220,7 +220,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 
 		ucParams["mynick"] = itemI->user->getClientNick();
 		ucParams["mycid"] = itemI->user->getClientCID().toBase32();
-		ucParams["file"] = itemI->Target;
+		ucParams["file"] = itemI->getTarget();
 
 		StringMap tmp = ucParams;
 		itemI->user->getParams(tmp);
@@ -248,13 +248,13 @@ void TransferView::ItemInfo::removeAll() {
 		QueueManager::getInstance()->removeSources(user, QueueItem::Source::FLAG_REMOVED);
 	} else {
 		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, _T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-			QueueManager::getInstance()->remove(Target);
+			QueueManager::getInstance()->remove(getTarget());
 	}
 }
 
 LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
-	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
+	NMLVCUSTOMDRAW* cd = (NMLVCUSTOMDRAW*)pnmh;
 
 	switch(cd->nmcd.dwDrawStage) {
 	case CDDS_PREPAINT:
@@ -517,7 +517,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
-			ctrlTransfers.insertGroupedItem(i, i->Target, false);
+			ctrlTransfers.insertGroupedItem(i, i->getTarget(), false);
 		} else {
 			i->mainItem = true;
 			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), i, IMAGE_UPLOAD);
@@ -551,7 +551,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 						j->file = Util::emptyStringT;
 					}
 				} else {
-					j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target, true, j->size, status);
+					j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->getTarget(), true, j->size, status);
 					j->file = Util::emptyStringT;
 				}
 				if(j->size == -1)
@@ -656,13 +656,13 @@ void TransferView::ItemInfo::update() {
 		columns[COLUMN_RATIO] = Util::emptyStringT;
 	}
 	if(colMask & MASK_FILE) {
-		columns[COLUMN_FILE] = !file.empty() ? file : Text::toT(Util::getFileName(Target));
+		columns[COLUMN_FILE] = !file.empty() ? file : Text::toT(Util::getFileName(getTarget()));
 	}
 	if(colMask & MASK_SIZE) {
 		columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
 	}
 	if(colMask & MASK_PATH) {
-		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(Target));
+		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(getTarget()));
 	}
 	if(colMask & MASK_IP) {
 		tstring countryIP;
@@ -684,13 +684,13 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 	ItemInfo::Types t = aCqi->getDownload() ? ItemInfo::TYPE_DOWNLOAD : ItemInfo::TYPE_UPLOAD;
 	ItemInfo* i = new ItemInfo(aCqi->getUser(), t, ItemInfo::STATUS_WAITING);
 
-	string aTarget = Util::emptyString;
+	TargetInfo::Ptr ti;
 	int64_t aSize = 0;
 	int aFlags;
 
 	bool hasInfo = false;
 	if(t == ItemInfo::TYPE_DOWNLOAD) {
-		hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags);
+		hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), ti, aSize, aFlags);
 	}
 
 	{
@@ -700,10 +700,10 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 		i->columns[COLUMN_STATUS] = i->statusString = TSTRING(CONNECTING);
 
 		if(hasInfo) {
-			i->Target = aTarget;
+			i->ti = ti;
 			i->size = aSize;
-			i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(aTarget));
-			i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(aTarget));
+			i->columns[COLUMN_FILE] = Text::toT(Util::getFileName(ti->getTarget()));
+			i->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(ti->getTarget()));
 			i->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(aSize));
 		}
 	}
@@ -714,11 +714,11 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) {
 	ItemInfo* i;
 
-	string aTarget;
+	TargetInfo::Ptr ti;
 	int64_t aSize;
 	int aFlags;
 
-	bool hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags);
+	bool hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), ti, aSize, aFlags);
 	{
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) != transferItems.end());
@@ -730,7 +730,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 			} else {
 				i->statusString = TSTRING(CONNECTING);
 			}
-			i->Target = aTarget;
+			i->ti = ti;
 			i->size = aSize;
 			i->updateMask |= (ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE);
 		} else
@@ -783,7 +783,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 		i->size = chunkInfo ? aDownload->getSegmentSize() : aDownload->getSize();
 
 		i->actual = i->start;
-		i->Target = aDownload->getTarget();
+		i->ti = aDownload->getTargetInf();
 		i->numberOfSegments = activeSegments;
 
 		if(!isActiveSegment) {
@@ -795,7 +795,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 				if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
 					MainFrame::getMainFrame()->ShowBalloonTip((
-						TSTRING(FILE) + _T(": ")+ Text::toT(Util::getFileName(i->Target)) + _T("\n")+
+						TSTRING(FILE) + _T(": ")+ Text::toT(Util::getFileName(i->getTarget())) + _T("\n")+
 						TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
 				}
 			}			
@@ -810,7 +810,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->getTarget()));
 		} else {
 			i->file = Util::emptyStringT;
 		}
@@ -939,11 +939,11 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 		i->statusString = Text::toT(aReason);
 		i->size = aDownload->getSize();
-		i->Target = aDownload->getTarget();
+		i->ti = aDownload->getTargetInf();
 
 		if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
-				TSTRING(FILE)+_T(": ") + Text::toT(Util::getFileName(i->Target)) + _T("\n")+
+				TSTRING(FILE)+_T(": ") + Text::toT(Util::getFileName(i->getTarget())) + _T("\n")+
 				TSTRING(USER)+_T(": ") + Text::toT(i->user->getNick()) + _T("\n")+
 				TSTRING(REASON)+_T(": ") + Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
 		}
@@ -951,7 +951,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH;
 		
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->getTarget()));
 		} else {
 			i->file = Util::emptyStringT;
 		}			
@@ -1010,7 +1010,8 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		i->status = ItemInfo::STATUS_RUNNING;
 		i->speed = 0;
 		i->timeLeft = 0;
-		i->Target = aUpload->getFileName();
+		TargetInfo* ti = new TargetInfo(aUpload->getFileName(), Util::emptyString);
+		i->ti = ti;
 		i->statusString = TSTRING(UPLOAD_STARTING);
 		string ip = aUpload->getUserConnection()->getRemoteIp();
 		string country = Util::getIpCountry(ip);
@@ -1021,7 +1022,7 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 			ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 
 		if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
-			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->getTarget()));
 		} else {
 			i->file = Util::emptyStringT;
 		}
@@ -1095,13 +1096,13 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 			}
 			if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED) && !isTree) {
 				MainFrame::getMainFrame()->ShowBalloonTip((
-					TSTRING(FILE) + _T(": ") + Text::toT(Util::getFileName(i->Target)) + _T("\n")+
+					TSTRING(FILE) + _T(": ") + Text::toT(Util::getFileName(i->getTarget())) + _T("\n")+
 					TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
 			}
 		} else {
 			if(BOOLSETTING(POPUP_UPLOAD_FINISHED)) {
 				MainFrame::getMainFrame()->ShowBalloonTip((
-					TSTRING(FILE) + _T(": ") + Text::toT(Util::getFileName(i->Target)) + _T("\n")+
+					TSTRING(FILE) + _T(": ") + Text::toT(Util::getFileName(i->getTarget())) + _T("\n")+
 					TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
 			}
 		}
@@ -1127,7 +1128,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-		string tmp = ii->Target;
+		string tmp = ii->getTarget();
 		QueueItem::StringIter qi = queue.find(&tmp);
 
 		//create a copy of the tth to avoid holding the filequeue lock while calling
@@ -1153,19 +1154,7 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 
 	if(i != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
-
-		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
-
-		string tmp = ii->Target;
-		QueueItem::StringIter qi = queue.find(&tmp);
-
-		string aTempTarget;
-		if(qi != queue.end())
-			aTempTarget = qi->second->getTempTarget();
-
-		QueueManager::getInstance()->unlockQueue();
-
-		WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, aTempTarget);
+		WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, ii->ti->getTempTarget());
 	}
 
 	return 0;
@@ -1200,7 +1189,7 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
-			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			if((m->getTarget() == ii->getTarget()) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				int h = ctrlTransfers.findItem(m);
 				if(h != -1)
 					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
@@ -1218,7 +1207,7 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
 			ItemInfo* m = j->second;
-			if((m->Target == ii->Target) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
+			if((m->getTarget() == ii->getTarget()) && (m->type == ItemInfo::TYPE_DOWNLOAD)) {	
 				int h = ctrlTransfers.findItem(m);
 				if(h != -1)
 					ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(DISCONNECTED));
@@ -1237,7 +1226,7 @@ LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-		string tmp = ii->Target;
+		string tmp = ii->getTarget();
 		QueueItem::StringIter qi = queue.find(&tmp);
 
 		if(qi != queue.end())
