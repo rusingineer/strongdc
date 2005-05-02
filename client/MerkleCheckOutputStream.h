@@ -29,13 +29,13 @@
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
-	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, const string& tempTarget = Util::emptyString) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
-		if(!tempTarget.empty()) {
+	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, const TargetInfo::Ptr& TargetInf = NULL) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
+		if(TargetInf != (TargetInfo::Ptr)NULL) {
 			skippingBytes = (size_t)(start % aTree.getBlockSize());
 			if(skippingBytes > 0)
 				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
-			fileChunks = FileChunksInfo::Get(tempTarget);
+			fileChunks = FileChunksInfo::Get(TargetInf);
 			_ASSERT(!(fileChunks == (FileChunksInfo*)NULL));
 			bufPos = 0;
 			start = start + skippingBytes;

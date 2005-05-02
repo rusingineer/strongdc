@@ -339,6 +339,24 @@ void FolderTree::Refresh()
 			//Add it to the tree control
 			m_hMyComputerRoot = InsertFileItem(TVI_ROOT, pItem, false, nIcon, nSelIcon, false);
 			SetHasSharedChildren(m_hMyComputerRoot);
+
+			/*StringList deleted = ShareManager::getInstance()->nonexistingFolders();
+			for(int i = 0; i < deleted.size(); i++) {
+				TV_INSERTSTRUCT tvis;
+				ZeroMemory(&tvis, sizeof(TV_INSERTSTRUCT));
+				tvis.hParent = m_hMyComputerRoot;
+				tvis.hInsertAfter = TVI_LAST;
+				tvis.item.mask = TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM;
+				tvis.item.iImage = nIcon;
+				tvis.item.iSelectedImage = nSelIcon;
+
+				tvis.item.lParam = (LPARAM) m_hMyComputerRoot;
+				tvis.item.pszText = (LPWSTR)Text::toT(deleted[i]).c_str();
+				tvis.item.mask |= TVIF_STATE;
+				tvis.item.stateMask |= TVIS_OVERLAYMASK;
+				tvis.item.state |= INDEXTOOVERLAYMASK(1); //1 is the index for the shared overlay image	
+				InsertItem(&tvis);
+			}*/
 		}
 
 		//Display all the drives

@@ -28,6 +28,18 @@ typedef map<u_int16_t, u_int16_t> BlockMap;
 // For SetFileValidData() - antifrag purpose
 extern void ensurePrivilege();
 
+class TargetInfo : public PointerBase
+{
+public:
+	typedef Pointer<TargetInfo> Ptr;
+	
+	TargetInfo(string aTarget, string aTempTarget) : target(aTarget), temptarget(aTempTarget) { }
+	virtual ~TargetInfo() { }
+
+	GETSET(string, target, Target);
+	GETSET(string, temptarget, TempTarget);
+};
+
 class BlockDLException : public Exception {
 public:
 	BlockDLException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
@@ -62,18 +74,18 @@ public:
 	/**
      * Get file chunks information by file name
      */
-	static Ptr Get(const string& name);
+	static Ptr Get(const TargetInfo::Ptr& ti);
 
 	/**
      * Free the file chunks information, this is called when target is removed from download queue
      * See also ~FileChunksInfo()
      */
-    static void Free(const string& name);
+    static void Free(const TargetInfo::Ptr& ti);
 
 	/**
      * Create file chunks infromation with name, size and chunks detail
      */
-	FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks = NULL);
+	FileChunksInfo(const TargetInfo::Ptr& ti, int64_t size, const vector<int64_t>* blocks = NULL);
 
 	/**
      * Smart pointer based destructor
@@ -149,7 +161,8 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-	string  tempTargetName;					// temp target file name
+//	string  tempTargetName;					// temp target file name
+	TargetInfo::Ptr tInfo;
 
 	int64_t iFileSize;
     int64_t iDownloadedSize;
@@ -285,11 +298,10 @@ class ChunkOutputStream : public OutputStream
 
 public:
 
-	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _pos) 
+	ChunkOutputStream(OutputStream* _os, const TargetInfo::Ptr& name, int64_t _pos) 
 		: os(_os), pos(_pos)
     {
 		file_chunks_info_ptr = FileChunksInfo::Get(name);
-		dcdebug(name.c_str());
 		if(file_chunks_info_ptr == (FileChunksInfo*)NULL)
         {
 			throw FileException("No chunks data");

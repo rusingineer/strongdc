@@ -214,7 +214,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
-			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
+			file(Util::emptyStringT), numberOfSegments(0),
 			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
@@ -230,13 +230,20 @@ private:
 		tstring IP;
 		tstring country;		
 		ItemInfo* main;
-		string Target;
+		TargetInfo::Ptr ti;
 		bool collapsed;
 		bool mainItem;
 		u_int16_t numberOfSegments;
 		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
+
+		const string& getTarget() {
+			if(ti != (TargetInfo::Ptr)NULL)
+				return ti->getTarget();
+			else
+				return Util::emptyString;
+		}
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -304,7 +311,7 @@ private:
 
 		ItemInfo* createMainItem() {
 	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
-			h->Target = Target;
+			h->ti = ti;
 			h->size = size;
 			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
 			h->numberOfSegments = 0;
@@ -367,13 +374,13 @@ private:
 	inline void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
-			if(h->Target != i->Target) {
+			if(h->getTarget() != i->getTarget()) {
 				Lock l(cs);
 				ctrlTransfers.removeGroupedItem(i, false);
-				ctrlTransfers.insertGroupedItem(i, i->Target, false);
+				ctrlTransfers.insertGroupedItem(i, i->getTarget(), false);
 			}
 		} else {
-			i->main = ctrlTransfers.findMainItem(i->Target);
+			i->main = ctrlTransfers.findMainItem(i->getTarget());
 		}
 	}
 };

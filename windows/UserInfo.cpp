@@ -22,7 +22,7 @@
 #include "UserInfo.h"
 
 UserInfo::UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) { 
-	update(-1);
+	update();
 };
 
 const tstring& UserInfo::getText(int col) const {
@@ -52,11 +52,8 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
 }
 
-bool UserInfo::update(int sortCol) {
+bool UserInfo::update() {
 	bool needsSort = (op != user->isSet(User::OP));
-	tstring old;
-	if(sortCol != -1)
-		old = columns[sortCol];
 
 	tstring uploadSpeed;
 
@@ -64,14 +61,14 @@ bool UserInfo::update(int sortCol) {
 		int status = user->getStatus();
 		string Omezeni = user->getUpload();
 		if (!Omezeni.empty()) {
-			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
+			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)) + _T("/s");
 		} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) {
-			uploadSpeed = Text::toT(">=100 kB/s");
+			uploadSpeed = _T(">= 100 kB/s");
 		} else {
-			uploadSpeed = Text::toT("N/A");
+			uploadSpeed = _T("N/A");
 		}
 	} else
-		uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
+		uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())) + _T("/s");
 
 	columns[COLUMN_NICK] = Text::toT(user->getNick());
 	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(user->getBytesShared()));
@@ -93,8 +90,5 @@ bool UserInfo::update(int sortCol) {
 
 	op = user->isSet(User::OP);
 
-	if(sortCol != -1) {
-		needsSort = needsSort || (old != columns[sortCol]);
-	}
 	return needsSort;
 }

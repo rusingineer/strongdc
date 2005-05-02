@@ -180,7 +180,7 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
-		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(target));
+		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(getTarget()));
 
 		int PocetSegmentu = qi ? qi->getActiveSegments().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;
@@ -1451,7 +1451,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 
-	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+	if(!BOOLSETTING(SHOW_PROGRESS_BARS) || !BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
 		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
 			bHandled = FALSE;
 			return 0;
@@ -1537,9 +1537,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 						}
 
 						for(vector<int64_t>::iterator i = v.begin(); i+2-smycka < v.end(); i++, i++) {
-							//if((i != NULL) && ((*i) < size) && ((*(i+1)) < size)) {
-								statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
-							//}
+							statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
 						}
 						if(smycka == 0) {		
 							statusBar.FillRange((int64_t)v.back(), size, RGB(255, 255, 100));

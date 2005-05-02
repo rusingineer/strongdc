@@ -640,12 +640,13 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 	} else {
 		UserInfo* ui = i->second;
 
-		resort = ui->update(ctrlUsers.getSortColumn()) || resort;
+		resort = ui->update() || resort; // @todo: this will be finished when that ugly stuff from DC++ is merged
 		if(showUsers) {
 			int pos = ctrlUsers.findItem(ui);
-			dcassert(pos != -1);
-			ctrlUsers.updateItem(pos);
-			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
+			if(pos != -1) {
+				ctrlUsers.updateItem(pos);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u), 0, 0, NULL);
+			}
 		}
 
 		return false;
@@ -653,20 +654,15 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 }
 
 void HubFrame::removeUser(const User::Ptr& aUser) {
-	int j = findUser(aUser);
-	if( j != -1 ) {
-		UserInfo* ui = ctrlUsers.getItemData(j);
-		ctrlUsers.SetItemState(j, 0, LVIS_SELECTED);
-		ctrlUsers.DeleteItem(j);
-		delete ui;
-		userMap.erase(aUser);
-	} else {
-		UserMapIter i = userMap.find(aUser);
-		if(i != userMap.end()) {
-			delete i->second;
-			userMap.erase(aUser);
-		}
-	}
+	UserMapIter i = userMap.find(aUser);
+	dcassert(i != userMap.end());
+
+	UserInfo* ui = i->second;
+	if(showUsers)
+		ctrlUsers.deleteItem(ui);
+
+	userMap.erase(i);
+	delete ui;
 }
 
 static const char* sSameNumbers[] = { "000000", "111111", "222222", "333333", "444444", "555555", "666666", "777777", "888888", "999999" };

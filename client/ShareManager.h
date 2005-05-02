@@ -64,6 +64,7 @@ public:
 	void setDirty() { xmlDirty = nmdcDirty = true; };
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
+	//StringList nonexistingFolders();
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
 	int64_t addExcludeFolder(const string &path);
 

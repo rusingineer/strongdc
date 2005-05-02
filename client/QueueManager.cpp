@@ -73,22 +73,31 @@ namespace {
 	}
 }
 
-const string& QueueItem::getTempTarget() {
-	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
-		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(getTarget()) == -1)) {
+const string QueueItem::getTempTarget(string aTarget) {
+	if(targetInf != (TargetInfo::Ptr)NULL) {
+		if(targetInf->getTempTarget().empty()) {
+			aTarget = targetInf->getTarget();
+		} else {
+			aTarget.clear();
+		}
+	}
+
+	if(!isSet(QueueItem::FLAG_USER_LIST) && !aTarget.empty()) {
+		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(aTarget) == -1)) {
 #ifdef _WIN32
 			::StringMap sm;
-			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
-				sm["targetdrive"] = target.substr(0, 3);
+			if(aTarget.length() >= 3 && aTarget[1] == ':' && aTarget[2] == '\\')
+				sm["targetdrive"] = aTarget.substr(0, 3);
 			else
 				sm["targetdrive"] = Util::getAppPath().substr(0, 3);
-			setTempTarget(Util::formatParams(SETTING(TEMP_DOWNLOAD_DIRECTORY), sm) + getTempName(getTargetFileName(), getTTH()));
+			aTarget = Util::formatParams(SETTING(TEMP_DOWNLOAD_DIRECTORY), sm) + getTempName(Util::getFileName(aTarget), getTTH());
+			return aTarget;
 #else //_WIN32
-			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
+			return SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(Util::getFileName(aTarget), getTTH());
 #endif //_WIN32
 		}
 	}
-	return tempTarget;
+	return (targetInf != (TargetInfo::Ptr)NULL) ? targetInf->getTempTarget() : Util::emptyString;
 }
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
@@ -122,16 +131,16 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			copy(istream_iterator<int64_t>(is), 
 				istream_iterator<int64_t>(), 
 				back_inserter(v)); 
-			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
+			pChunksInfo = new FileChunksInfo(qi->getTargetInf(), qi->getSize(), &v);
 		}else{
 			int64_t tmpSize = File::getSize(qi->getTempTarget());
 			if(tmpSize > 0){
 				vector<int64_t> v;
 				v.push_back(max((int64_t)0, (int64_t)(tmpSize - 65535)));
 				v.push_back(qi->getSize());
-				new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
+				new FileChunksInfo(qi->getTargetInf(), qi->getSize(), &v);
 			}else
-				new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+				new FileChunksInfo(qi->getTargetInf(), qi->getSize(), NULL);
 		}
 
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
@@ -646,7 +655,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 
 			// first source set length
 			if(q->getSize() == 0 && root && q->getTTH() && (*root == *q->getTTH())){
-				FileChunksInfo::Ptr fi = FileChunksInfo::Get(q->getTempTarget());
+				FileChunksInfo::Ptr fi = FileChunksInfo::Get(q->getTargetInf());
 				if(fi){
 					fi->SetFileSize(aSize);
 					q->setSize(aSize);
@@ -922,13 +931,13 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw() {
+bool QueueManager::getQueueInfo(User::Ptr& aUser, TargetInfo::Ptr& aTarget, int64_t& aSize, int& aFlags) throw() {
     Lock l(cs);
     QueueItem* qi = userQueue.getNext(aUser);
 	if(qi == NULL)
 		return false;
 
-	aTarget = qi->getTarget();
+	aTarget = qi->getTargetInf();
 	aSize = qi->getSize();
 	aFlags = qi->getFlags();
 
@@ -1100,7 +1109,7 @@ again:
 	}
 	
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTargetInf());
 		int64_t freeBlock = chunksInfo->GetUndlStart();
 
 		if(freeBlock == -1) {
@@ -1173,11 +1182,11 @@ void QueueManager::addTreeToSegments(Download* d, Download::List downloads) thro
 					dcdebug("  Set tree to ZDownload %s \n", download->getSource().c_str());
 					FilteredOutputStream<UnZFilter, true>* unZFilter = (FilteredOutputStream<UnZFilter, true>*)download->getFile();
 					ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)unZFilter->getOutputStream();
-					unZFilter->setOutputStream(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
+					unZFilter->setOutputStream(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTargetInf()));
 				}else{
 					dcdebug("  Set tree to %s \n", download->getSource().c_str());
 					ChunkOutputStream<true>* f = (ChunkOutputStream<true>*)download->getFile();
-					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTempTarget()));
+					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(download->getTigerTree(), f, f->getPos(), download->getTargetInf()));
 				}
 			}
 		}
@@ -1564,7 +1573,7 @@ void QueueManager::saveQueue() throw() {
 					f.write(Util::toString((int)qi->getPriority()));
 					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 						f.write(STRINGLEN("\" FreeBlocks=\""));
-						FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(qi->getTempTarget());
+						FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(qi->getTargetInf());
 						f.write(fileChunksInfo ? fileChunksInfo->getFreeBlocksString() : "");
 						f.write(STRINGLEN("\" VerifiedParts=\""));
 						f.write(fileChunksInfo ? fileChunksInfo->getVerifiedBlocksString() : "");

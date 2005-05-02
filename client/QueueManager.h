@@ -126,7 +126,7 @@ public:
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
-	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
+	bool getQueueInfo(User::Ptr& aUser, TargetInfo::Ptr& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 	void addTreeToSegments(Download* d, Download::List downloads) throw();
@@ -214,7 +214,7 @@ public:
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				FileChunksInfo::Free(qi->getTempTarget());
+				FileChunksInfo::Free(qi->getTargetInf());
 			}
 
 			delete qi;

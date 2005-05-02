@@ -53,7 +53,7 @@ crcCalc(NULL), tth(NULL), treeValid(false) {
 }
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
-	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
+	targetInf(qi->getTargetInf()), file(NULL), 
 	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
 	
@@ -76,7 +76,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 }
 
 int64_t Download::getQueueTotal() {
-	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
+	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(targetInf);
 	if(chunksInfo != (FileChunksInfo*)NULL)
 		return chunksInfo->GetDownloadedSize();
 	return getTotal();
@@ -335,7 +335,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		} else {
 			if(d->isSet(Download::FLAG_CHUNK_TRANSFER)) {
 				d->unsetFlag(Download::FLAG_CHUNK_TRANSFER);
-				d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->GetBlockEnd(d->getStartPos()) - d->getStartPos());
+				d->setSegmentSize(FileChunksInfo::Get(d->getTargetInf())->GetBlockEnd(d->getStartPos()) - d->getStartPos());
 			}
 			aConn->get(d->getSource(), d->getPos());
 		}
@@ -608,7 +608,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 		if(d->isSet(Download::FLAG_MULTI_CHUNK) && (false == d->isSet(Download::FLAG_USER_LIST)) && (d->isSet(Download::FLAG_TREE_DOWNLOAD) == false) && !d->isSet(Download::FLAG_MP3_INFO) && !d->isSet(Download::FLAG_TESTSUR)){
 			try {
-				d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
+				d->setFile(new ChunkOutputStream<true>(d->getFile(), d->getTargetInf(), d->getStartPos()));
 			} catch(const FileException& e) {
 				d->setFile(NULL);
 				delete file;
@@ -623,7 +623,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			
 		if(d->getTreeValid()) {
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
+				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTargetInf()));
 			} else if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
 			}
@@ -698,7 +698,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->getTreeValid()) {
 
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTargetInf());
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
@@ -1078,7 +1078,7 @@ void DownloadManager::removeDownload(Download* d) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
 	} else if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTempTarget());
+		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTargetInf());
 		if(!(fileChunks == (FileChunksInfo*)NULL))
 			fileChunks->PutUndlStart(d->getStartPos());
 	}
