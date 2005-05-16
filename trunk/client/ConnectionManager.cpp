@@ -201,6 +201,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
+	UserConnection::List added;
 	UserConnection::List penDel;
 
 	bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
@@ -223,12 +224,11 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					dcassert(cqi->getConnection()->getCQI() == cqi);
 					cqi->setState(ConnectionQueueItem::ACTIVE);
 					cqi->getConnection()->removeListener(this);
-					DownloadManager::getInstance()->addConnection(cqi->getConnection());
+					added.push_back(cqi->getConnection());
 
 					pendingAdd.erase(it);
 				}
 			} else {
-
 				if(cqi->getState() == ConnectionQueueItem::WAITING) {
 					UserConnection::List::iterator it = find(pendingDelete.begin(), pendingDelete.end(), cqi->getConnection());
 					if(it != pendingDelete.end()) {
@@ -257,6 +257,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 						removed.push_back(cqi);
 						continue;
 					}
+
 					// Always start high-priority downloads unless we have 3 more than maxdownslots already...
 					bool startDown = !tooMany && !tooFast;
 
@@ -295,15 +296,19 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		for(ConnectionQueueItem::Iter m = removed.begin(); m != removed.end(); ++m) {
 			putCQI(*m);
 		}
+
 		penDel = pendingDelete;
 		pendingDelete.clear();
-
 	}
 
 	for_each(penDel.begin(), penDel.end(), DeleteFunction<UserConnection*>());
 
 	for(User::Iter ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
-		QueueManager::getInstance()->removeSources(*ui, QueueItem::Source::FLAG_PASSIVE);
+		QueueManager::getInstance()->removeSource(*ui, QueueItem::Source::FLAG_PASSIVE);
+	}
+
+	for(UserConnection::Iter i = added.begin(); i != added.end(); ++i) {
+		DownloadManager::getInstance()->addConnection(*i);
 	}
 }
 
@@ -690,6 +695,10 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 
 void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
 	Lock l(cs_failedConnections);
+#ifdef _DEBUG
+	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI())
+		dcassert(aSource->getCQI()->getState() == ConnectionQueueItem::IDLE);
+#endif
 	failedConnections.push_back(aSource);
 }
 

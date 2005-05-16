@@ -25,6 +25,8 @@
 #include "ClientManager.h"
 #include "ShareManager.h"
 #include "AdcCommand.h"
+#include "FileChunksInfo.h"
+#include "QueueManager.h"
 
 #include "../pme-1.0.4/pme.h"
 
@@ -320,6 +322,68 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		try {
 			respond(AdcCommand(x.substr(0, x.length()-1)));
 		} catch(ParseException& ) {
+		}
+	} else if(x.compare(0, 5, "$PSR ") == 0) {
+		string::size_type i, j;
+		// Syntax: $PSR <nick>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
+		i = 5;
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		string nick = Text::acpToUtf8(x.substr(i, j-i));
+		i = j + 1;
+
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		u_int16_t UdpPort = Util::toInt(x.substr(i, j-i));
+		i = j + 1;
+
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		string hubIpPort = x.substr(i, j-i);
+		i = j + 1;
+
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		string tth = x.substr(i, j-i);
+		i = j + 1;
+
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		u_int32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
+		i = j + 1;
+
+		if( (j = x.find('$', i)) == string::npos) {
+			return;
+		}
+		string partialInfoBlocks = x.substr(i, j-i);
+
+		PartsInfo partialInfo;
+		i = 0; j = 0;
+		while(j != string::npos) {
+			j = partialInfoBlocks.find(',', i);
+			u_int16_t block = Util::toInt(partialInfoBlocks.substr(i, j-i));			
+			partialInfo.push_back(block);
+			i = j + 1;
+		}
+		dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
+		dcassert(partialInfo.size() == partialCount);
+
+		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
+		PartsInfo outPartialInfo;
+		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
+
+		if(UdpPort > 0) {
+			char buf[1024];
+			Client* aClient = user->getClient();
+			string me = Text::utf8ToAcp(aClient->getMe()->getNick());
+			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", me.c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo));
+			buf[1023] = NULL;
+			Socket s; s.writeTo(Socket::resolve(address), UdpPort, buf);
 		}
 	}
 }

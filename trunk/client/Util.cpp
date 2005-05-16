@@ -470,10 +470,11 @@ void Util::decodeUrl(const string& url, string& aServer, u_int16_t& aPort, strin
 		k = j;
 	}
 
-	if(k == string::npos)
-		aServer = url;
-	else
-	aServer = url.substr(i, k-i);
+	if(k == string::npos) {
+		aServer = url.substr(i);
+		if(i==0) aPort = 411;
+	} else
+		aServer = url.substr(i, k-i);
 }
 
 void Util::setAway(bool aAway) {
@@ -820,7 +821,7 @@ string fixedftime(const string& format, struct tm* t) {
 
 	StringMap sm;
 	AutoArray<char> buf(1024);
-	for(size_t i = 0; i < sizeof(codes); ++i) {
+	for(size_t i = 0; i < strlen(codes); ++i) {
 		tmp[1] = codes[i];
 		tmp[2] = 0;
 		strftime(buf, 1024-1, tmp, t);

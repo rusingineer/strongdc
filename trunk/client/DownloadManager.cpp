@@ -35,6 +35,7 @@
 #include "MerkleCheckOutputStream.h"
 #include "FileChunksInfo.h"
 #include "Client.h"
+#include "UploadManager.h"
 
 #include <limits>
 
@@ -53,7 +54,7 @@ crcCalc(NULL), tth(NULL), treeValid(false) {
 }
 
 Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
-	targetInf(qi->getTargetInf()), file(NULL), 
+	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
 	
@@ -76,7 +77,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 }
 
 int64_t Download::getQueueTotal() {
-	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(targetInf);
+	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
 	if(chunksInfo != (FileChunksInfo*)NULL)
 		return chunksInfo->GetDownloadedSize();
 	return getTotal();
@@ -262,13 +263,14 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	{
 		Lock l(cs);
 		downloads.push_back(d);
+
+		d->setUserConnection(aConn);
+		aConn->setDownload(d);
 	}
 
 	if(d->isSet(Download::FLAG_TESTSUR)) {
 		aConn->getListLen();
 	}
-	d->setUserConnection(aConn);
-	aConn->setDownload(d);
 
 	aConn->setState(UserConnection::STATE_FILELENGTH);
 
@@ -335,7 +337,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		} else {
 			if(d->isSet(Download::FLAG_CHUNK_TRANSFER)) {
 				d->unsetFlag(Download::FLAG_CHUNK_TRANSFER);
-				d->setSegmentSize(FileChunksInfo::Get(d->getTargetInf())->GetBlockEnd(d->getStartPos()) - d->getStartPos());
+				d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->GetBlockEnd(d->getStartPos()) - d->getStartPos());
 			}
 			aConn->get(d->getSource(), d->getPos());
 		}
@@ -608,7 +610,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 		if(d->isSet(Download::FLAG_MULTI_CHUNK) && (false == d->isSet(Download::FLAG_USER_LIST)) && (d->isSet(Download::FLAG_TREE_DOWNLOAD) == false) && !d->isSet(Download::FLAG_MP3_INFO) && !d->isSet(Download::FLAG_TESTSUR)){
 			try {
-				d->setFile(new ChunkOutputStream<true>(d->getFile(), d->getTargetInf(), d->getStartPos()));
+				d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
 			} catch(const FileException& e) {
 				d->setFile(NULL);
 				delete file;
@@ -623,7 +625,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			
 		if(d->getTreeValid()) {
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTargetInf()));
+				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
 			} else if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
 			}
@@ -669,16 +671,17 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				}
 			}
 		} catch(const BlockDLException e) {
-			fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 			aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
 				aSource->setDownload(NULL);
+				string aTarget = d->getTarget();
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false);
+				QueueManager::getInstance()->putDownload(d, false, false);
 				aSource->setLineMode();
-				checkDownloads(aSource, false);
+				checkDownloads(aSource, false, aTarget);
 			}else{
+				fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
@@ -698,12 +701,12 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->getTreeValid()) {
 
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTargetInf());
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
 					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree(), d->getTarget())) {
-						dcdebug("last verifiy failed .....\n");
+						dcdebug("last verify failed .....\n");
 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -807,12 +810,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 		d->setTreeValid(true);
-
-		// Added by set the tree to other downloads
-		if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-			Lock l(cs);
-			QueueManager::getInstance()->addTreeToSegments(d, downloads);
-		}
 	} else {
 
 		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
@@ -827,6 +824,8 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			d->setFile(NULL);
 			d->setCrcCalc(NULL);
 
+			// For partial file sharing, abort upload first to move file correctly
+			UploadManager::getInstance()->abortUpload(d->getTempTarget());
 			// Check if we're anti-fragging...
 			if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 				// Ok, rename the file to what we expect it to be...
@@ -1078,7 +1077,7 @@ void DownloadManager::removeDownload(Download* d) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
 	} else if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTargetInf());
+		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTempTarget());
 		if(!(fileChunks == (FileChunksInfo*)NULL))
 			fileChunks->PutUndlStart(d->getStartPos());
 	}

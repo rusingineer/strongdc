@@ -24,7 +24,7 @@
 #include "DownloadManager.h"
 #include "SettingsManager.h"
 #include "Winioctl.h"
-#include "QueueItem.h"
+
 
 CriticalSection SharedFileStream::critical_section;
 SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
@@ -38,12 +38,12 @@ static SetFileValidDataFunc setFileValidData = NULL;
 // NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
 enum { MIN_BLOCK_SIZE = 65536 };
 
-FileChunksInfo::Ptr FileChunksInfo::Get(const TargetInfo::Ptr& ti)
+FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 {
     Lock l(hMutexMapList);
 
 	for(vector<Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tInfo->getTempTarget() == ti->getTempTarget()){
+		if((*i)->tempTargetName == name){
 			return (*i);
 		}
 	}
@@ -51,12 +51,12 @@ FileChunksInfo::Ptr FileChunksInfo::Get(const TargetInfo::Ptr& ti)
 	return NULL;
 }
 
-void FileChunksInfo::Free(const TargetInfo::Ptr& ti)
+void FileChunksInfo::Free(const string& name)
 {
     Lock l(hMutexMapList);
 
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tInfo->getTempTarget() == ti->getTempTarget() ){
+		if((*i)->tempTargetName == name ){
 			vecAllFileChunksInfo.erase(i);
 			return;
 		}
@@ -65,8 +65,8 @@ void FileChunksInfo::Free(const TargetInfo::Ptr& ti)
 	dcassert(0);
 }
 
-FileChunksInfo::FileChunksInfo(const TargetInfo::Ptr& ti, int64_t size, const vector<int64_t>* blocks) 
-	: tInfo(ti), iFileSize(0), iVerifiedSize(0)
+FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
+	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
@@ -185,7 +185,7 @@ int64_t FileChunksInfo::GetUndlStart()
 	int64_t b = (*birr);
 	int64_t e = (* (birr+1));
 
-	if((e - b) < (minChunkSize * 2)){
+	if((e - b) < (minChunkSize*2)){
 		dcdebug("GetUndlStart return -1 (%I64d)\n", minChunkSize);
 		return -1;
 	}
@@ -328,7 +328,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 	// Open file
 	char buf[512*1024];
 
-	SharedFileStream file(tInfo->getTempTarget(), 0, 0);
+	SharedFileStream file(tempTargetName, 0, 0);
 	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
 	size_t n = 0;
@@ -529,6 +529,137 @@ void ensurePrivilege()
 	dcdebug("ensurePrivilege done.\n");
 cleanup:
 	CloseHandle(hToken);
+
+}
+
+bool FileChunksInfo::isSource(const PartsInfo& partsInfo)
+{
+	Lock l(cs);
+
+	dcassert(partsInfo.size() % 2 == 0);
+	
+	BlockMap::iterator i  = verifiedBlocks.begin();
+	for(PartsInfo::const_iterator j = partsInfo.begin(); j != partsInfo.end(); j+=2){
+		while(i != verifiedBlocks.end() && i->second <= *j)
+			i++;
+
+		if(i == verifiedBlocks.end() || !(i->first <= *j && i->second >= *(j+1)))
+			return true;
+	}
+	
+	return false;
+
+}
+
+void FileChunksInfo::getPartialInfo(PartsInfo& partialInfo){
+	Lock l(cs);
+
+	size_t maxSize = min(verifiedBlocks.size() * 2, (size_t)510);
+	partialInfo.reserve(maxSize);
+
+	BlockMap::iterator i = verifiedBlocks.begin();
+	for(; i != verifiedBlocks.end() && partialInfo.size() < maxSize; i++){
+		partialInfo.push_back(i->first);
+		partialInfo.push_back(i->second);
+	}
+}
+
+int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
+	if(partialInfo.empty()){
+		return GetUndlStart();
+	}
+
+	Lock l(cs);
+
+	// Convert block index to file position
+	vector<int64_t> posArray;
+	posArray.reserve(partialInfo.size());
+
+	for(PartsInfo::const_iterator i = partialInfo.begin(); i != partialInfo.end(); i++)
+		posArray.push_back(min(iFileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
+
+	// Check free blocks
+	for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i != vecFreeBlocks.end(); i+=2){
+		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
+			if( (*j <= *i && *i < *(j+1)) || (*i <= *j && *j < *(i+1)) ){
+				int64_t b = max(*i, *j);
+				int64_t e = min(*(i+1), *(j+1));
+
+				if(*i != b && *(i+1) != e){
+					int64_t tmp = *(i+1); 
+					*(i+1) = b;
+					vecFreeBlocks.push_back(e);
+					vecFreeBlocks.push_back(tmp);
+
+					sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
+				}else if(*(i+1) != e){
+					*i = e;
+				}else if(*i != b){
+					*(i+1) = b;
+				}else{
+					vecFreeBlocks.erase(i, i + 2);
+				}
+
+				vecRunBlocks.push_back(b);
+				vecRunBlocks.push_back(e);
+
+				sort(vecRunBlocks.begin(), vecRunBlocks.end());
+
+				return b;
+			}
+		}
+	}
+
+	// Check running blocks
+	vector<int64_t>::iterator maxBlockIter = vecRunBlocks.end();
+	int64_t maxBlockStart = 0;
+    int64_t maxBlockEnd   = 0;
+
+	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i+=2){
+		int64_t b = *i;
+		int64_t e = *(i+1);
+		int64_t block = minChunkSize * 2;
+		
+		if(e - b < block * 3) continue;
+
+        b = b + (e - b) / 2;
+		b = b - (b % block);
+
+		dcassert(b > *i);
+
+		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
+			if(*j <= b  && *(j+1) > b ){
+				int64_t e = min(*(i+1), e);
+
+				if(e - b > maxBlockEnd - maxBlockStart){
+					maxBlockStart = b;
+					maxBlockEnd   = e;
+					maxBlockIter  = i;
+				}
+			}
+		}
+	}
+
+	if(maxBlockEnd > 0){
+		int64_t tmp = *(maxBlockIter+1);
+		*(maxBlockIter+1) = maxBlockStart;
+
+		vecRunBlocks.push_back(maxBlockStart);
+		vecRunBlocks.push_back(maxBlockEnd);
+
+		sort(vecRunBlocks.begin(), vecRunBlocks.end());
+
+		if(tmp > maxBlockEnd){
+			vecFreeBlocks.push_back(maxBlockEnd);
+			vecFreeBlocks.push_back(tmp);
+			sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
+		}
+
+		return maxBlockStart;
+	}
+
+	return -2;
+
 }
 
 void FileChunksInfo::addFreeChunk(const Chunk& chunk){
@@ -578,4 +709,16 @@ SharedFileHandle::SharedFileHandle(const string& name)
 		DWORD bytesReturned;
 		DeviceIoControl(handle, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &bytesReturned, NULL);
 	}
+}
+
+string GetPartsString(const PartsInfo& partsInfo)
+{
+	ostringstream ret;
+
+	for(PartsInfo::const_iterator i = partsInfo.begin(); i < partsInfo.end(); i+=2){
+		ret << *i << "," << *(i+1) << ",";
+	}
+
+	string tmp = ret.str();
+	return tmp.substr(0, tmp.size()-1);
 }

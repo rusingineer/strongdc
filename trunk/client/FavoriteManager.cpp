@@ -517,51 +517,6 @@ void FavoriteManager::load() {
 void FavoriteManager::load(SimpleXML* aXml) {
 	dontSave = true;
 
-	// Old names...load for compatibility.
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Favorites")) {
-		aXml->stepIn();
-		while(aXml->findChild("Favorite")) {
-			FavoriteHubEntry* e = new FavoriteHubEntry();
-			e->setName(aXml->getChildAttrib("Name"));
-			e->setConnect(aXml->getBoolChildAttrib("Connect"));
-			e->setDescription(aXml->getChildAttrib("Description"));
-			e->setNick(aXml->getChildAttrib("Nick"));
-			e->setPassword(aXml->getChildAttrib("Password"));
-			e->setServer(aXml->getChildAttrib("Server"));
-			e->setUserDescription(aXml->getChildAttrib("UserDescription"));
-			e->setRawOne(aXml->getChildAttrib("RawOne"));
-			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
-			e->setRawThree(aXml->getChildAttrib("RawThree"));
-			e->setRawFour(aXml->getChildAttrib("RawFour"));
-			e->setRawFive(aXml->getChildAttrib("RawFive"));
-			e->setMode(Util::toInt(aXml->getChildAttrib("Mode")));
-			e->setIP(aXml->getChildAttrib("IP"));
-			favoriteHubs.push_back(e);
-		}
-		aXml->stepOut();
-	}
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Commands")) {
-		aXml->stepIn();
-		while(aXml->findChild("Command")) {
-			const string& name = aXml->getChildAttrib("Name");
-			const string& command = aXml->getChildAttrib("Command");
-			const string& hub = aXml->getChildAttrib("Hub");
-			const string& nick = aXml->getChildAttrib("Nick");
-			if(nick.empty()) {
-				// Old mainchat style command
-				addUserCommand(UserCommand::TYPE_RAW, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, 
-					0, name, "<%[mynick]> " + command + "|", hub);
-			} else {
-				addUserCommand(UserCommand::TYPE_RAW, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH,
-					0, name, "$To: " + nick + " From: %[mynick] $" + command + "|", hub);
-			}
-		}
-		aXml->stepOut();
-	}
-	// End old names
-
 	aXml->resetCurrentChild();
 	if(aXml->findChild("Hubs")) {
 		aXml->stepIn();

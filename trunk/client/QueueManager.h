@@ -116,7 +116,7 @@ public:
 
 	void remove(const string& aTarget) throw();
 	void removeSource(const string& aTarget, User::Ptr aUser, int reason, bool removeConn = true) throw();
-	void removeSources(User::Ptr aUser, int reason) throw();
+	void removeSource(User::Ptr aUser, int reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
@@ -126,10 +126,9 @@ public:
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
-	bool getQueueInfo(User::Ptr& aUser, TargetInfo::Ptr& aTarget, int64_t& aSize, int& aFlags) throw();
+	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
-	void addTreeToSegments(Download* d, Download::List downloads) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
@@ -138,6 +137,9 @@ public:
 	
 	void loadQueue() throw();
 	void saveQueue() throw();
+
+	bool handlePartialSearch(const string& aSearchString, int64_t aSize, const TTHValue& tth, PartsInfo& _outPartsInfo);
+	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
 	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount);
@@ -179,6 +181,19 @@ public:
 		return ql;
 	}
 
+	bool getTargetByRoot(const TTHValue& tth, string& target, string& tempTarget) {
+		Lock l(cs);
+		QueueItem::List ql;
+		fileQueue.find(ql, tth);
+
+		if(ql.empty()) return false;
+
+		target = ql.front()->getTarget();
+		tempTarget = ql.front()->getTempTarget();
+		return true;
+		
+	}
+	
 	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
@@ -214,7 +229,7 @@ public:
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				FileChunksInfo::Free(qi->getTargetInf());
+				FileChunksInfo::Free(qi->getTempTarget());
 			}
 
 			delete qi;

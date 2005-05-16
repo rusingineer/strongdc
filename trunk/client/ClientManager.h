@@ -173,7 +173,7 @@ private:
 	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 };
 
-#endif // !defined(AFX_CLIENTMANAGER_H__8EF173E1_F7DC_40B5_B2F3_F92297701034__INCLUDED_)
+#endif // !defined(CLIENT_MANAGER_H)
 
 /**
  * @file

@@ -101,9 +101,7 @@ bool BufferedSocket::threadSendFile() {
 			}
 			size_t actual = file->read(inbuf, s);
 			if(actual > 0) {
-				Socket::sending = true;
-				Socket::write((char*)inbuf, actual);
-				Socket::sending = false;
+				threadWrite((char*)inbuf, actual);
 				fire(BufferedSocketListener::BytesSent(), s, actual);
 				if (throttling) {
 					int32_t cycle_time = um->throttleCycleTime();
@@ -119,7 +117,6 @@ bool BufferedSocket::threadSendFile() {
 			}
 		}
 	} catch(const Exception& e) {
-		Socket::sending = false;
 		fail(e.getError());
 		return true;
 	}
@@ -477,6 +474,7 @@ int BufferedSocket::run() {
 
 			// Now check if there's any activity on the socket
 			if(isConnected()) {
+				setBlocking(false);
 				int waitFor = wait(POLL_TIMEOUT, sendingFile ? WAIT_READ | WAIT_WRITE : WAIT_READ);
 				if(waitFor & WAIT_WRITE) {
 					dcassert(sendingFile);
@@ -486,12 +484,78 @@ int BufferedSocket::run() {
 				if(waitFor & WAIT_READ) {
 					threadRead();
 				}
+				setBlocking(true);
 			}
 		} catch(const SocketException& e) {
 			fail(e.getError());
 		}
 	}
 	return 0;
+}
+
+/**
+ * Sends data, will block until all data has been sent or an exception occurs
+ * @param aBuffer Buffer with data
+ * @param aLen Data length
+ * @throw SocketExcpetion Send failed.
+ */
+void BufferedSocket::threadWrite(const char* aBuffer, size_t aLen) throw(SocketException) {
+	if(!isConnected()) throw SocketException(STRING(NOT_CONNECTED));
+        
+    if(aLen == 0){
+		return;
+    }
+
+	size_t pos = 0;
+	size_t sendSize = min(aLen, (size_t)64 * 1024);
+
+	bool blockAgain = false;
+
+	while(pos < aLen) {
+		int i = ::send(sock, aBuffer+pos, (int)min(aLen-pos, sendSize), 0);
+		if(i == SOCKET_ERROR) {
+			if(errno == EWOULDBLOCK) {
+				dcdebug("Socket 0x%x EWOULDBLOCK\n", this);
+				if(blockAgain) {
+					// Uhm, two blocks in a row...try making the send window smaller...
+					if(sendSize >= 256) {
+						sendSize /= 2;
+						dcdebug("Reducing send window size to %lu\n", sendSize);
+					} else {
+						Thread::sleep(10);
+					}
+					blockAgain = false;
+				} else {
+					blockAgain = true;
+				}
+
+				int waitFor = wait(2000, WAIT_WRITE);
+				if(waitFor == WAIT_NONE){
+					Lock l(cs);
+					if(!tasks.empty()){
+						dcdebug("threadWrite is interrupted\n");
+						throw SocketException(STRING(DISCONNECTED));
+					}
+				}
+
+			} else if(errno == ENOBUFS) {
+				if(sendSize > 32) {
+					sendSize /= 2;
+					dcdebug("Reducing send window size to %lu\n", sendSize);
+				} else {
+					throw SocketException(STRING(OUT_OF_BUFFER_SPACE));
+				}
+			} else {
+				checksockerr(SOCKET_ERROR);
+			}
+		} else {
+			dcassert(i != 0);
+			pos+=i;
+
+			stats.totalUp += i;
+			blockAgain = false;
+		}
+	}
 }
 
 /**

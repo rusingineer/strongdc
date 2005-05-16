@@ -87,7 +87,8 @@ public:
 		FLAG_MP3_INFO = 0x400,
 		FLAG_TESTSUR = 0x800,
 		FLAG_CHECK_FILE_LIST = 0x1000,
-		FLAG_MULTI_SOURCE = 0x2000
+		FLAG_MULTI_SOURCE = 0x2000,
+		FLAG_AUTODROP = 0x4000
 	};
 
 	class Source : public Flags, public FastAlloc<Source> {
@@ -108,19 +109,28 @@ public:
 			FLAG_BAD_TREE = 0x80,
 			FLAG_SLOW = 0x100,
 			FLAG_NO_TREE = 0x200,
+			FLAG_NO_NEED_PARTS = 0x400,
+			FLAG_PARTIAL = 0x800,
 			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
 				| FLAG_SLOW | FLAG_NO_TREE
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
-		Source(const Source& aSource) : Flags(aSource), path(aSource.path), user(aSource.user) { }
+		Source(const Source& aSource) : Flags(aSource), path(aSource.path), user(aSource.user), partialInfo(aSource.partialInfo) { }
 
 		User::Ptr& getUser() { return user; };
 		const User::Ptr& getUser() const { return user; };
 		void setUser(const User::Ptr& aUser) { user = aUser; };
 		string getFileName() { return Util::getFileName(path); };
 
+
+		/**
+		 * Source parts info
+		 * Meaningful only when FLAG_PARTIAL is set
+		 * If this source is not bad source, empty parts info means full file
+		 */
+		GETSET(PartsInfo, partialInfo, PartialInfo);
 		GETSET(string, path, Path);
 	private:
 		User::Ptr user;
@@ -128,20 +138,17 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), start(0), currentDownload(NULL),
+	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0)
 	{ 
-		string aTempTarget = getTempTarget(aTarget);
-		TargetInfo* TI = new TargetInfo(aTarget, aTempTarget);
-		setTargetInf(TI);
-
-		slowDisconnect = BOOLSETTING(DISCONNECTING_ENABLE);
 		
+		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
+			setFlag(FLAG_AUTODROP);
+		}
 		if(isSet(FLAG_USER_LIST) || isSet(FLAG_MP3_INFO) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
-
 		if(tth != NULL) {
 			TigerTree tree;
 			hasTree = HashManager::getInstance()->getTree(*tth, tree);
@@ -149,7 +156,7 @@ public:
 	};
 
 	QueueItem(const QueueItem& rhs) : 
-	Flags(rhs), targetInf(rhs.targetInf),
+	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
 		start(rhs.start), currentDownload(rhs.currentDownload)
@@ -195,7 +202,7 @@ public:
 				l.push_back((*i)->getUser());
 	}
 
-	string getTargetFileName() const { return Util::getFileName(targetInf->getTarget()); };
+	string getTargetFileName() const { return Util::getFileName(getTarget()); };
 
 	Source::Iter getSource(const User::Ptr& aUser) { return getSource(aUser, sources); };
 	Source::Iter getBadSource(const User::Ptr& aUser) { return getSource(aUser, badSources); };
@@ -244,7 +251,7 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(isSet(FLAG_MULTI_SOURCE)){
-			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(targetInf);
+			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
 			if(filedatainfo)
 				return filedatainfo->GetDownloadedSize();
 		}
@@ -267,19 +274,12 @@ public:
 
 	string getSearchString() const;
 
-	const string getTempTarget(string aTarget = Util::emptyString);
+	const string& getTempTarget();
 	void setTempTarget(const string& aTempTarget) {
-		targetInf->setTempTarget(aTempTarget);
+		tempTarget = aTempTarget;
 	}
-	const string& getTarget() {
-		return targetInf->getTarget();
-	}
-	void setTarget(const string& aTarget) {
-		targetInf->setTarget(aTarget);
-	}
-
-	GETSET(TargetInfo::Ptr, targetInf, TargetInf);
-	//string tempTarget;
+	GETSET(string, target, Target);
+	string tempTarget;
 	int64_t downloadedBytes;
 	GETSET(int64_t, size, Size);
 	GETSET(Status, status, Status);
@@ -292,9 +292,9 @@ public:
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
-	GETSET(bool, slowDisconnect, SlowDisconnect);
 	GETSET(int64_t, speed, Speed);
 	GETSET(u_int32_t, start, Start);
+	GETSET(FileChunksInfo::Ptr, chunkInfo, ChunkInfo);
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

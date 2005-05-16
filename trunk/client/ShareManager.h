@@ -51,7 +51,7 @@ class ShareManager : public Singleton<ShareManager>, private SettingsManagerList
 {
 public:
 	/**
-	 * @param aDirectory Physical directory localtion
+	 * @param aDirectory Physical directory location
 	 * @param aName Virtual name
 	 */
 	void addDirectory(const string& aDirectory, const string & aName) throw(ShareException);
@@ -64,7 +64,6 @@ public:
 	void setDirty() { xmlDirty = nmdcDirty = true; };
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
-	//StringList nonexistingFolders();
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
 	int64_t addExcludeFolder(const string &path);
 

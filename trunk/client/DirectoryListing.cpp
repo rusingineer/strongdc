@@ -56,12 +56,28 @@ void DirectoryListing::loadFile(const string& name) {
 		const size_t BUF_SIZE = 64*1024;
 		char buf[BUF_SIZE];
 		size_t len;
+
+		char last = 0; 
+		char last2 = 0; 
+		int count = 0;
+
 		for(;;) {
 			size_t n = BUF_SIZE;
 			len = f.read(buf, n);
 			txt.append(buf, len);
 			if(len < BUF_SIZE)
 				break;
+
+			last = buf[len-1]; 
+			if (last == last2) { 
+				count++; 
+			} else { 
+				count = 0; 
+			} 
+			if (count > 250) { 
+				break; 
+			} 
+			last2 = (buf, len);
 		}
 
 		loadXML(txt, false);

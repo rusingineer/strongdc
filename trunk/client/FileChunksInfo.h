@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2003-2004 RevConnect, http://www.revconnect.com
+ * Copyright (C) 2003-2005 RevConnect, http://www.revconnect.com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,22 +23,12 @@
 #include "File.h"
 #include "MerkleTree.h"
 
+#define PARTIAL_SHARE_MIN_SIZE 20971520
+typedef vector<u_int16_t> PartsInfo;
 typedef map<u_int16_t, u_int16_t> BlockMap;
 
 // For SetFileValidData() - antifrag purpose
 extern void ensurePrivilege();
-
-class TargetInfo : public PointerBase
-{
-public:
-	typedef Pointer<TargetInfo> Ptr;
-	
-	TargetInfo(string aTarget, string aTempTarget) : target(aTarget), temptarget(aTempTarget) { }
-	virtual ~TargetInfo() { }
-
-	GETSET(string, target, Target);
-	GETSET(string, temptarget, TempTarget);
-};
 
 class BlockDLException : public Exception {
 public:
@@ -74,31 +64,39 @@ public:
 	/**
      * Get file chunks information by file name
      */
-	static Ptr Get(const TargetInfo::Ptr& ti);
+	static Ptr Get(const string& name);
 
 	/**
      * Free the file chunks information, this is called when target is removed from download queue
      * See also ~FileChunksInfo()
      */
-    static void Free(const TargetInfo::Ptr& ti);
+    static void Free(const string& name);
 
 	/**
      * Create file chunks infromation with name, size and chunks detail
      */
-	FileChunksInfo(const TargetInfo::Ptr& ti, int64_t size, const vector<int64_t>* blocks = NULL);
+	FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks = NULL);
 
 	/**
      * Smart pointer based destructor
      */
 	virtual ~FileChunksInfo()
     {
-
+		dcdebug("Delete file chunks info: %s\n", tempTargetName.c_str());
 	}
 
 	/**
      * Get start offset of a free chunk, the end offset of chunk is unpredictable
      */
 	int64_t GetUndlStart();
+
+	/**
+	 * Compute download start position by source's parts info
+	 *
+	 * Return the 1st duplicate position both in free and parts info
+	 * Or split the biggest duplicate chunk both in running and parts info
+	 */
+	int64_t GetUndlStart(const PartsInfo& partialInfo);
 
 	/**
 	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
@@ -149,9 +147,40 @@ public:
 
 	void markVerifiedBlock(u_int16_t start, u_int16_t end);
 
+	/**
+	 * Is specified parts needed by this download?
+	 */
+	bool isSource(const PartsInfo& partsInfo);
 
+	/**
+	 * Get shared parts info, max 255 parts range pairs
+	 */
+	void getPartialInfo(PartsInfo& partialInfo);
 
-//private:
+	/**
+     * Is specified chunk start verified? If true, the chunk len is set.
+	 */
+	bool isVerified(int64_t startPos, int64_t& len){
+		if(len <= 0) return false;
+
+		Lock l(cs);
+
+		BlockMap::iterator i  = verifiedBlocks.begin();
+		for(; i != verifiedBlocks.end(); i++)
+		{
+			int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
+			int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
+			
+			second = min(second, iFileSize);
+
+			if(first <= startPos && startPos < second){
+				len = min(len, second - startPos);
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	static vector<Ptr> vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
@@ -161,8 +190,7 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-//	string  tempTargetName;					// temp target file name
-	TargetInfo::Ptr tInfo;
+	string  tempTargetName;					// temp target file name
 
 	int64_t iFileSize;
     int64_t iDownloadedSize;
@@ -222,7 +250,7 @@ public:
                 }
             }
 
-			dcassert(0);
+			_ASSERT(0);
         }
     }
 
@@ -298,10 +326,11 @@ class ChunkOutputStream : public OutputStream
 
 public:
 
-	ChunkOutputStream(OutputStream* _os, const TargetInfo::Ptr& name, int64_t _pos) 
+	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _pos) 
 		: os(_os), pos(_pos)
     {
 		file_chunks_info_ptr = FileChunksInfo::Get(name);
+		dcdebug(name.c_str());
 		if(file_chunks_info_ptr == (FileChunksInfo*)NULL)
         {
 			throw FileException("No chunks data");
@@ -358,3 +387,5 @@ private:
 	OutputStream* os;
 	int64_t pos;
 };
+
+string GetPartsString(const PartsInfo& partsInfo);
