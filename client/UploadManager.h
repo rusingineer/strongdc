@@ -241,6 +241,8 @@ public:
 		conn->setState(UserConnection::STATE_GET);
 	}
 
+	void abortUpload(const string& aFile);
+
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);
 	GETSET(u_int32_t, lastGrant, LastGrant);
@@ -324,7 +326,7 @@ private:
 	virtual void on(AdcCommand::NTD, UserConnection*, const AdcCommand&) throw();
 
 	void onGetBlock(UserConnection* aSource, const string& aFile, int64_t aResume, int64_t aBytes, bool z);
-	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t aBytes, bool listRecursive = false);
+	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t& aBytes, bool listRecursive = false);
 };
 
 #endif // !defined(UPLOAD_MANAGER_H)

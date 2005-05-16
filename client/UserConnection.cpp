@@ -75,8 +75,10 @@ again:
 			getUser()->setUnknownCommand(aLine);
 		if((aLine = strstr(aLine, "$")) == NULL) {
 			return;
-		} else
+		} else {
+			dcassert(0);
 			goto again;
+		}
 	}
 	char *temp;
 	if(aLine[1] == 'M') {

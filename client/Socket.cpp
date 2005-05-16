@@ -146,7 +146,7 @@ void Socket::accept(const ServerSocket& aSocket) throw(SocketException){
 	checksockerr(sock=::accept(aSocket.getSocket(), (sockaddr*)&sock_addr, &sz));
 #ifdef _WIN32
 	// Make sure we disable any inherited windows message things for this socket.
-	::WSAAsyncSelect(sock, NULL, 0, 0);
+	WSAAsyncSelect(sock, NULL, 0, 0);
 #endif
 	setBlocking(true);
 	connected = true;

@@ -31,6 +31,7 @@
 #include "HashManager.h"
 #include "AdcCommand.h"
 #include "FavoriteManager.h"
+#include "QueueManager.h"
 #define INBUFSIZE 64*1024
 bool UploadManager::m_boFireball = false;
 bool UploadManager::m_boFileServer = false;
@@ -66,7 +67,7 @@ UploadManager::~UploadManager() throw() {
 	}
 }
 
-bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t aBytes, bool listRecursive) {
+bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t& aBytes, bool listRecursive) {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM:prepFile Wrong state, ignoring\n");
 		return false;
@@ -86,7 +87,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	try {
 		if(aType == "file") {
 			file = ShareManager::getInstance()->translateFileName(aFile);
-			userlist = (Util::stricmp(aFile.c_str(), "files.xml.bz2") == 0);
+			userlist = (aFile == "files.xml.bz2");
 
 			try {
 				File* f = new File(file, File::READ, File::OPEN);
@@ -151,10 +152,72 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			return false;
 		}
 	} catch(const ShareException&) {
+		
+		// -- Added by RevConnect : Partial file sharing upload
+		if(aFile.compare(0, 4, "TTH/") == 0) {
+
+			TTHValue fileHash(aFile.substr(4));
+
+			// find in download queue
+			string target;
+			string tempTarget;
+
+            if(QueueManager::getInstance()->getTargetByRoot(fileHash, target, tempTarget)){
+
+				if(aType == "file") {
+					file = tempTarget;
+					// check start position and bytes
+					FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(file);
+					if(chunksInfo && chunksInfo->isVerified(aStartPos, aBytes)){
+						try{
+							SharedFileStream* ss = new SharedFileStream(file, aStartPos);
+							if(ss->getSize() < aBytes) {
+								aSource->fileNotAvail();
+								delete is;
+								return false;
+							}
+							is = ss;
+							size = chunksInfo->iFileSize;
+							free = (size <= (int64_t)(64 * 1024));
+
+							if((aStartPos + aBytes) < size) {
+								is = new LimitedInputStream<true>(is, aBytes);
+							}
+
+							goto ok;
+						}catch(const Exception&){
+							aSource->fileNotAvail();
+							delete is;
+							return false;
+						}
+					}else{
+						dcassert(0);
+					}
+				} else if(aType == "tthl") {
+					// TTH Leaves...
+					MemoryInputStream* mis = ShareManager::getInstance()->getTree(target);
+					file = target;
+					if(mis == NULL) {
+						aSource->fileNotAvail();
+						return false;
+					}
+
+					size = mis->getSize();
+					aStartPos = 0;
+					is = mis;
+					leaves = true;
+					free = true;
+					goto ok;
+				}
+			}
+		}
+		// --
+		dcdebug("File not avail : %s\n", aFile.c_str());
 		aSource->fileNotAvail();
 		return false;
 	}
 
+ok:
 
 	Lock l(cs);
 
@@ -227,7 +290,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 }
 
 void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
-	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, -1)) {
+	int64_t bytes = -1;
+	if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aResume, bytes)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
 	}
@@ -630,6 +694,49 @@ bool UploadManager::isInUploadQueue(UploadQueueItem* UQI) {
 		}
 	}
 	return false;
+}
+
+/**
+ * Abort upload of specific file
+ */
+void UploadManager::abortUpload(const string& aFile){
+	bool nowait = true;
+
+	{
+		Lock l(cs);
+
+		for(Upload::Iter i = uploads.begin(); i != uploads.end(); i++){
+			Upload::Ptr u = (*i);
+
+			if(u->getLocalFileName() == aFile){
+				u->getUserConnection()->disconnect();
+				nowait = false;
+			}
+		}
+	}
+	
+	if(nowait) return;
+	
+	for(int i = 0; i < 10 && nowait == false; i++){
+		Thread::sleep(300);
+		{
+			Lock l(cs);
+
+			nowait = true;
+			for(Upload::Iter i = uploads.begin(); i != uploads.end(); i++){
+				Upload::Ptr u = (*i);
+
+				if(u->getLocalFileName() == aFile){
+					dcdebug("upload %s is not removed\n", aFile);
+					nowait = false;
+					break;
+				}
+			}
+		}
+	}
+	
+	if(!nowait)
+		dcdebug("abort upload timeout %s\n", aFile);
 }
 
 /**

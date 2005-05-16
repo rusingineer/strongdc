@@ -410,25 +410,25 @@ void NmdcHub::onLine(const char* aLine) throw() {
     } else if(aLine[1] == 'Q') {
     	// $Quit		    
 		if(strncmp(aLine+2, "uit ", 4) == 0) {
-		aLine += 6;
-		if(aLine == NULL)
-			return;
-
-		User::Ptr u;
-		{
-			Lock l(cs);
-			User::NickIter i = users.find(fromNmdc(aLine));
-			if(i == users.end()) {
-				dcdebug("C::onLine Quitting user %s not found\n", aLine);
+			aLine += 6;
+			if(aLine == NULL)
 				return;
-			}
+	
+			User::Ptr u;
+			{
+				Lock l(cs);
+				User::NickIter i = users.find(fromNmdc(aLine));
+				if(i == users.end()) {
+					dcdebug("C::onLine Quitting user %s not found\n", aLine);
+					return;
+				}
 			
-			u = i->second;
-			users.erase(i);
-		}
+				u = i->second;
+				users.erase(i);
+			}
 		
-		fire(ClientListener::UserRemoved(), this, u);
-		ClientManager::getInstance()->putUserOffline(u, true);
+			fire(ClientListener::UserRemoved(), this, u);
+			ClientManager::getInstance()->putUserOffline(u, true);
     		return;
         }
     } else if(aLine[1] == 'C') {

@@ -186,7 +186,7 @@ public:
 	}
 	static string& escape(string& aString, bool aAttrib, bool aLoading = false, bool utf8 = true);
 	/** 
-	 * This is a heurestic for whether escape needs to be called or not. The results are
+	 * This is a heuristic for whether escape needs to be called or not. The results are
  	 * only guaranteed for false, i e sometimes true might be returned even though escape
 	 * was not needed...
 	 */

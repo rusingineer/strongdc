@@ -101,11 +101,6 @@ public:
 
 	virtual void disconnect() throw() {
 		Lock l(cs);
-
-		if(sending && (sock != INVALID_SOCKET)) {
-			::shutdown(sock, SD_BOTH);
-			closesocket(sock);
-		}
 		addTask(DISCONNECT);
 	}
 	
@@ -193,6 +188,7 @@ private:
 	bool threadSendFile();
 	void threadSendData();
 	void threadDisconnect();
+	void threadWrite(const char* aBuffer, size_t aLen) throw(SocketException);
 	
 	void fail(const string& aError) {
 		Socket::disconnect();
