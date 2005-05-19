@@ -114,7 +114,7 @@ const string SettingsManager::settingTags[] =
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
- 	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "ShowChunkInfo", "AdcDebug",
+ 	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "AdcDebug",
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
@@ -478,7 +478,6 @@ SettingsManager::SettingsManager()
 	setDefault(USERLIST_DBLCLICK, 0);
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	
-	setDefault(SHOW_CHUNK_INFO, true);
 	setDefault(CHECK_UNVERIFIED_ONLY, true);
 	setDefault(NORMAL_COLOUR, RGB(255,255,255));
 	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));

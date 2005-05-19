@@ -135,7 +135,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			}else
 				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 		}
-		qi->setChunkInfo(pChunksInfo);
+		qi->chunkInfo = pChunksInfo;
 
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
 			vector<u_int16_t> v;
@@ -260,16 +260,19 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-inline bool hasFreeSegments(QueueItem* qi) {
+inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
 	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
 				((qi->getActiveSegments().size() < qi->getMaxSegments()) &&
-				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getSpeed())));
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getSpeed())) &&
+				(qi->chunkInfo->hasFreeBlock() || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
 }
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
+#ifdef _DEBUG
 	QueueItem* next = pNext;
+#endif
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
@@ -277,15 +280,14 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = hasFreeSegments(found);
+			bool freeSegments = hasFreeSegments(found, aUser);
 
-			if(freeSegments && (pNext == NULL || fNext)/* && (next != found)*/) {
+			if(freeSegments && (pNext == NULL || fNext)) {
 				dcassert(found != next);
 				return found;
 			}else{
 				if(!freeSegments) {
 					if(fNext || (pNext == NULL)) {
-					//if((p != (QueueItem::LAST - 1)) || (pNext == NULL)) {
 						pNext = found;
 					}
 				}
@@ -296,7 +298,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	                fNext = true;   // found, next is target
 	
 					iQi++;
-					if((iQi != i->second.end()) && hasFreeSegments(*iQi)/* && (*iQi != next)*/) {
+					if((iQi != i->second.end()) && hasFreeSegments(*iQi, aUser)) {
 						dcassert(*iQi != next);
 						return *iQi;
 					}
@@ -1075,8 +1077,7 @@ again:
 	
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		QueueItem::Source* source = *(q->getSource(aUser));
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(q->getTempTarget());
-		int64_t freeBlock = chunksInfo->GetUndlStart(source->getPartialInfo());
+		int64_t freeBlock = q->chunkInfo->GetUndlStart(source->getPartialInfo());
 
 		if(freeBlock < 0) {
 			delete d;
@@ -1093,10 +1094,10 @@ again:
 
 		d->setStartPos(freeBlock);
 
-		int64_t freeBlockSize = chunksInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
+		int64_t freeBlockSize = q->chunkInfo->GetBlockEnd(d->getStartPos()) - d->getStartPos();
 
 		if(supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth())) {
-			int64_t needToDownload = min((int64_t)chunksInfo->minChunkSize,(int64_t)(d->getSize() - d->getPos()));
+			int64_t needToDownload = min((int64_t)q->chunkInfo->minChunkSize,(int64_t)(d->getSize() - d->getPos()));
 			d->setSegmentSize(min(freeBlockSize, needToDownload));
 			d->setFlag(Download::FLAG_CHUNK_TRANSFER);
 		} else {

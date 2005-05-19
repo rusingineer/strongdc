@@ -208,7 +208,7 @@ int64_t FileChunksInfo::GetUndlStart()
 
 bool FileChunksInfo::hasFreeBlock() {
 	Lock l(cs);
-	if(vecFreeBlocks.size() > 0)
+	if(!vecFreeBlocks.empty())
 		return true;
 
 	int64_t blen = 0;

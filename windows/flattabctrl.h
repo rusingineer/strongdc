@@ -258,7 +258,7 @@ public:
 					break;
 				}
 			}
-			if(moveLast)
+			if(moveLast && tabs.end() > 0)
 				moveTabs(tabs.back(), true);
 			moving = NULL;
 		}

@@ -251,9 +251,9 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(isSet(FLAG_MULTI_SOURCE)){
-			FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
-			if(filedatainfo)
-				return filedatainfo->GetDownloadedSize();
+			//FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
+			if(chunkInfo)
+				return chunkInfo->GetDownloadedSize();
 		}
 
 		return downloadedBytes;
@@ -294,7 +294,7 @@ public:
 	GETSET(bool, hasTree, HasTree);
 	GETSET(int64_t, speed, Speed);
 	GETSET(u_int32_t, start, Start);
-	GETSET(FileChunksInfo::Ptr, chunkInfo, ChunkInfo);
+	FileChunksInfo::Ptr chunkInfo;
 
 	QueueItem::Priority calculateAutoPriority(){
 		QueueItem::Priority p = getPriority();

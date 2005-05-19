@@ -128,7 +128,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	WinUtil::splitTokens(columnSizes, SETTING(DIRECTORLISTINGFRAME_WIDTHS), COLUMN_LAST);
 	for(int j = 0; j < COLUMN_LAST; j++) 
 	{
-		int fmt = (j == COLUMN_SIZE) || (j == COLUMN_EXACTSIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		int fmt = ((j == COLUMN_SIZE) || (j == COLUMN_EXACTSIZE) || (j == COLUMN_TYPE)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlList.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);

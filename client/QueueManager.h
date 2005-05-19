@@ -147,24 +147,20 @@ public:
 	bool autoDropSource(const User::Ptr& aUser);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
-	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, bool currents, int64_t& size, QueueItem::Status& status) {
+	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, int64_t& size) {
 		u_int16_t value;
 		{
 			Lock l(cs);
-			QueueItem* qi = currents ? fileQueue.find(aTarget) : userQueue.getRunning(aUser);
+			QueueItem* qi = fileQueue.find(aTarget);
 			size = -1;
-			status = QueueItem::STATUS_WAITING;
 
 			if(!qi)
 				return 0;
 
 			size = qi->getSize();
 			value  = qi->getActiveSegments().size();
-			status = qi->getStatus();
-			if(currents) {
-				if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
-					value -= 1;
-				}
+			if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
+				value -= 1;
 			}
 		}
 		return value;
@@ -229,6 +225,7 @@ public:
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+				qi->chunkInfo = NULL;
 				FileChunksInfo::Free(qi->getTempTarget());
 			}
 

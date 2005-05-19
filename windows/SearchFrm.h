@@ -448,19 +448,15 @@ private:
 			connection = Text::toT(sr->getUser()->getConnection());
 			hubName = Text::toT(sr->getHubName());
 			slots = Text::toT(sr->getSlotString());
-
-			if(sr->getIP() != "") {
-				tstring country = Text::toT(Util::getIpCountry(sr->getIP().c_str()));
-				ip = Text::toT(sr->getIP());
-				if(country != _T("")) {
-					ip =  country + _T(" (") + ip + _T(")");
-				}
-			}
+			ip = Text::toT(sr->getIP());
+			tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
+			if(!tmpCountry.empty())
+				ip = tmpCountry + _T(" (") + ip + _T(")");
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
 			
-			if(sr->getIP() != "")
-				flagimage = WinUtil::getFlagImage(Util::getIpCountry(sr->getIP().c_str()).c_str());
+			if(!sr->getIP().empty())
+				flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
 			else 
 				flagimage = 0;
 
@@ -479,9 +475,8 @@ private:
 
 		}
 
-		SearchInfo* createMainItem() {
-			return this;
-		}
+		SearchInfo* createMainItem() { return this; }
+		const string getGroupingString() { return Text::fromT(tth); }
 		void updateMainItem() {
 			u_int32_t total = main->subItems.size();
 			if(total != 0) {

@@ -1082,6 +1082,8 @@ int MainFrame::run() {
 			n2 = 512*1024;
 		}
 		tth.finalize();
+		f.close();
+
 		strcpy(TTH, tth.getRoot().toBase32().c_str());
 
 		CInputBox ibox(m_hWnd);

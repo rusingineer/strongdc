@@ -633,14 +633,14 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 	if(i == userMap.end()) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u, ui));
-		if(showUsers) {
+		if(!u->isSet(User::HIDDEN) && showUsers) {
 			filterUser(ui);
 		}
 		return true;
 	} else {
 		UserInfo* ui = i->second;
 
-		resort = ui->update() || resort; // @todo: this will be finished when that ugly stuff from DC++ is merged
+		resort = ui->update() || resort;
 		if(showUsers) {
 			int pos = ctrlUsers.findItem(ui);
 			if(pos != -1) {
@@ -658,7 +658,7 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	dcassert(i != userMap.end());
 
 	UserInfo* ui = i->second;
-	if(showUsers)
+	if(!aUser->isSet(User::HIDDEN) && showUsers)
 		ctrlUsers.deleteItem(ui);
 
 	userMap.erase(i);
@@ -1783,8 +1783,7 @@ void HubFrame::on(BadPassword, Client*) throw() {
 	client->setPassword(Util::emptyString);
 }
 void HubFrame::on(UserUpdated, Client*, const User::Ptr& user) throw() { 
-	if(showUsers && !user->isSet(User::HIDDEN)) 
-		speak(UPDATE_USER, user);
+	speak(UPDATE_USER, user);
 }
 void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
 	Lock l(updateCS);
@@ -1799,8 +1798,7 @@ void HubFrame::on(UsersUpdated, Client*, const User::List& aList) throw() {
 }
 
 void HubFrame::on(UserRemoved, Client*, const User::Ptr& user) throw() {
-	if(showUsers) 
-		speak(REMOVE_USER, user);
+	speak(REMOVE_USER, user);
 }
 
 void HubFrame::on(Redirect, Client*, const string& line) throw() { 

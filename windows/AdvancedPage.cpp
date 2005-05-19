@@ -58,7 +58,6 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::LIST_DUPES, ResourceManager::SETTINGS_LIST_DUPES },
 	{ SettingsManager::REMOVE_FORBIDDEN, ResourceManager::SETCZDC_REMOVE_FORBIDDEN },
 	{ SettingsManager::URL_HANDLER, ResourceManager::SETTINGS_URL_HANDLER },
-	{ SettingsManager::IGNORE_OFFLINE, ResourceManager::SETTINGS_IGNORE_OFFLINE },
 	{ SettingsManager::MAGNET_REGISTER, ResourceManager::SETCZDC_MAGNET_URI_HANDLER },
 	{ SettingsManager::SMALL_SEND_BUFFER, ResourceManager::SETTINGS_SMALL_SEND_BUFFER },
 	{ SettingsManager::CONFIRM_DELETE, ResourceManager::SETTINGS_CONFIRM_DELETE },
