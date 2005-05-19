@@ -129,15 +129,7 @@ public:
 	}
 
 	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		ItemInfo::Map::iterator i;
-		for(i = transferItems.begin(); i != transferItems.end(); ++i) {
-			delete i->second;
-		}
-
-		for(map<string, ItemInfo*>::iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); i++) {
-			delete i->second;
-		}
-
+		ctrlTransfers.deleteAllItems();
 		return 0;
 	}
 
@@ -214,7 +206,7 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
-			file(Util::emptyStringT), numberOfSegments(0),
+			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
 			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
@@ -230,20 +222,13 @@ private:
 		tstring IP;
 		tstring country;		
 		ItemInfo* main;
-		TargetInfo::Ptr ti;
+		string Target;
 		bool collapsed;
 		bool mainItem;
 		u_int16_t numberOfSegments;
 		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
-
-		const string& getTarget() {
-			if(ti != (TargetInfo::Ptr)NULL)
-				return ti->getTarget();
-			else
-				return Util::emptyString;
-		}
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -311,7 +296,7 @@ private:
 
 		ItemInfo* createMainItem() {
 	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
-			h->ti = ti;
+			h->Target = Target;
 			h->size = size;
 			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
 			h->numberOfSegments = 0;
@@ -320,6 +305,7 @@ private:
 
 			return h;
 		}
+		const string getGroupingString() { return Target; }
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
 				main->user = main->subItems.front()->user;
@@ -374,13 +360,13 @@ private:
 	inline void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
-			if(h->getTarget() != i->getTarget()) {
+			if(h->Target != i->Target) {
 				Lock l(cs);
 				ctrlTransfers.removeGroupedItem(i, false);
-				ctrlTransfers.insertGroupedItem(i, i->getTarget(), false);
+				ctrlTransfers.insertGroupedItem(i, false);
 			}
 		} else {
-			i->main = ctrlTransfers.findMainItem(i->getTarget());
+			i->main = ctrlTransfers.findMainItem(i->Target);
 		}
 	}
 };

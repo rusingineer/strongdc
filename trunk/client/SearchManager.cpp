@@ -325,7 +325,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		}
 	} else if(x.compare(0, 5, "$PSR ") == 0) {
 		string::size_type i, j;
-		// Syntax: $PSR <nick>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
+		// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
 		i = 5;
 		if( (j = x.find('$', i)) == string::npos) {
 			return;

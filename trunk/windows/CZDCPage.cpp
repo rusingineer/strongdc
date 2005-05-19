@@ -51,7 +51,6 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
 	//{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
-	{ SettingsManager::SHOW_CHUNK_INFO, ResourceManager::SHOW_CHUNK_INFO },
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
 	{ SettingsManager::DETECT_ZONEALARM, ResourceManager::SETTINGS_ZONE_ALARM },
 	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },

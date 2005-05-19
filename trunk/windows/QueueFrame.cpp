@@ -180,7 +180,7 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
-		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(getTarget()));
+		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(target));
 
 		int PocetSegmentu = qi ? qi->getActiveSegments().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;
@@ -612,10 +612,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		if(ii->FDI)
-			ii->setDownloadedBytes(ii->FDI->GetDownloadedSize());
-		else
-			ii->setDownloadedBytes(aQI->getDownloadedBytes());
+		ii->setDownloadedBytes(aQI->chunkInfo ? aQI->chunkInfo->GetDownloadedSize() : aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
 		ii->qi = aQI;
@@ -1118,7 +1115,7 @@ LRESULT QueueFrame::onRemoveSources(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndC
 	removeAllMenu.GetMenuItemInfo(wID, FALSE, &mi);
 	OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 	QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-	QueueManager::getInstance()->removeSources(s->getUser(), QueueItem::Source::FLAG_REMOVED);
+	QueueManager::getInstance()->removeSource(s->getUser(), QueueItem::Source::FLAG_REMOVED);
 	return 0;
 }
 
@@ -1505,11 +1502,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		
 			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, RGB(0, 150, 0), qi->getSize());
 
-			FileChunksInfo::Ptr filedatainfo = qi->FDI;
+			FileChunksInfo::Ptr filedatainfo = qi->qi->chunkInfo;
 
 			if(filedatainfo) {
-				// lock critical section of current filedatainfo to avoid crashes, I hope there won't be deadlock or higher cpu usage
-				// Lock l(filedatainfo->hMutex);
 				for(int smycka = 0; smycka < 2; smycka++) {
 					vector<int64_t> v;
 	
@@ -1523,25 +1518,18 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 							v.push_back(i->first * filedatainfo->tthBlockSize);
 							v.push_back(i->second * filedatainfo->tthBlockSize);
 						}
-						if(v.empty())
-							continue;
 					}
-	
-					if(qi && (v.size() > 0)) {
-						int64_t size = qi->getSize();
-
-						sort(v.begin(), v.end());
+					if(v.empty()) continue;
+					sort(v.begin(), v.end());
 		
-						if(smycka == 0) {
-							statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
-						}
-
-						for(vector<int64_t>::iterator i = v.begin(); i+2-smycka < v.end(); i++, i++) {
-							statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
-						}
-						if(smycka == 0) {		
-							statusBar.FillRange((int64_t)v.back(), size, RGB(255, 255, 100));
-						}
+					if(smycka == 0) {
+						statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
+					}
+					for(vector<int64_t>::iterator i = v.begin(); i+2-smycka < v.end(); i++, i++) {
+						statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
+					}
+					if(smycka == 0) {		
+						statusBar.FillRange((int64_t)v.back(), qi->getSize(), RGB(255, 255, 100));
 					}
 				}
 			} else {

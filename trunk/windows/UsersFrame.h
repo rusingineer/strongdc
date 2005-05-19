@@ -171,7 +171,7 @@ private:
 	void removeUser(const User::Ptr& aUser);
 };
 
-#endif // !defined(AFX_USERSFRAME_H__F6D75CA8_F229_4E7D_8ADC_0B1F3B0083C4__INCLUDED_)
+#endif // !defined(USERS_FRAME_H)
 
 /**
  * @file

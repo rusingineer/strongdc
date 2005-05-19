@@ -657,6 +657,7 @@ public:
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
+	typedef vector<T*> TreeItem;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -737,20 +738,22 @@ public:
 		InsertItem(&lvi);
 	}
 
-	T* findMainItem(string groupingString) {
-		map<string, T*>::iterator i = mainItems.find(groupingString);
-		if(i != mainItems.end())
-			return i->second;
-		else
-			return NULL;
+	T* findMainItem(const string& groupingString) {
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			if(groupingString == (*i)->getGroupingString()) {
+				return *i;
+			}
+		}
+		return NULL;
 	}
 
-	void insertGroupedItem(T* item, string groupingString, bool autoExpand, int p = -1) {
-		T* mainItem = findMainItem(groupingString);
+	void insertGroupedItem(T* item, bool autoExpand) {
+		T* mainItem = findMainItem(item->getGroupingString());
 
 		if(mainItem == NULL) {
 			T* newItem = item->createMainItem();
-			mainItems.insert(make_pair(groupingString, newItem));
+			mainItems.push_back(newItem);
+
 			newItem->mainItem = true;
 			insertItem(getSortPos(newItem), newItem, newItem->imageIndex());
 
@@ -776,16 +779,15 @@ public:
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 					mainItem->collapsed = false;
-					insertSubItem(item, pos + totalSubItems + 1);
+					insertSubItem(item, pos + totalSubItems);
 				} else {
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 				}
 			} else if(!mainItem->collapsed) {
-				insertSubItem(item, pos + totalSubItems + 1);
+				insertSubItem(item, pos + totalSubItems);
 			}
-		}
-		if(pos != -1)
 			updateItem(pos);
+		}
 	}
 
 	void removeMainItem(T* s) {
@@ -801,9 +803,10 @@ public:
 			}
 			s->subItems.clear();
 		}
-		for(map<string, T*>::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
-			if(i->second == s) {
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
+			if((*i) == s) {
 				mainItems.erase(i);
+				break;
 			}
 		}
 	}
@@ -847,8 +850,8 @@ public:
 	}
 
 	void deleteAllItems() {
-		for(map<string, T*>::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
-			T* si =  i->second;
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			T* si =  *i;
 			int q = 0;
 			if(si->subItems.size() > 0) {
 				while(q < si->subItems.size()) {
@@ -928,8 +931,9 @@ public:
 
 		return mid;
 	}
-	
-	map<string, T*>  mainItems;
+
+   	TreeItem mainItems;
+
 private:
 	
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
@@ -974,7 +978,6 @@ private:
 
 	CImageList states;
 	bool uniqueMainItem;
-
 };
 
 #endif // !defined(TYPED_LIST_VIEW_CTRL_H)

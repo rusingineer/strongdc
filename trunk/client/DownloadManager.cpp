@@ -660,6 +660,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 				if(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
+					dcdebug("ChunkFinished\n");
 					aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 					aSource->setDownload(NULL);
 					string aTarget = d->getTarget();
@@ -674,6 +675,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
+				dcdebug("BlockFinished\n");
 				aSource->setDownload(NULL);
 				string aTarget = d->getTarget();
 				removeDownload(d);
