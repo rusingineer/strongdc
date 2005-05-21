@@ -534,8 +534,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 	} else if(wParam == UPDATE_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
-		bool isDownload = (i->type == ItemInfo::TYPE_DOWNLOAD);
-		if(isDownload && !i->mainItem) {
+		if(!i->mainItem && (i->type == ItemInfo::TYPE_DOWNLOAD)) {
 			setMainItem(i);
 			ItemInfo* j = i->main;
 			j->updateMask |= i->updateMask;
@@ -545,10 +544,11 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				j->statusString = i->statusString;
 			} else if(i->status == ItemInfo::STATUS_RUNNING) {
 				j->status = ItemInfo::STATUS_RUNNING;
-				if(i->numberOfSegments == 1)
+				if(i->numberOfSegments == 1) {
 					j->statusString = i->statusString;
+				}
 			} else if(i->updateMask & ItemInfo::MASK_HUB) {	
-				j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target, j->size);
+				j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target);
 				if(!i->file.empty() && (j->numberOfSegments == 0)) {
 					j->file = i->file;
 					j->statusString = TSTRING(DOWNLOADING_TTHL);
@@ -564,8 +564,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				j->statusString = i->statusString;
 			}
 
-			if(j->size == -1)
-				j->size = i->size;
+			if(i->fullSize > 0)
+				j->size = i->fullSize;
 
 			if(!j->collapsed) {
 				i->update();
@@ -772,6 +772,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 		bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD);
 		i->start =  chunkInfo ? 0 : aDownload->getPos();
 		i->size = chunkInfo ? aDownload->getSegmentSize() : aDownload->getSize();
+		i->fullSize = aDownload->getSize();
 
 		i->actual = i->start;
 		i->Target = aDownload->getTarget();
@@ -902,8 +903,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			}
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 
-			if((d->getRunningAverage() <= 0) && (d->getStart() > 0)) {
-				d->getUserConnection()->reconnect();
+			if((d->getRunningAverage() <= 0) && ((GET_TICK() - d->getStart()) > 1000)) {
+				d->getUserConnection()->disconnect();
 			} else {
 				v->push_back(i);
 			}
@@ -929,6 +930,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 		i->statusString = Text::toT(aReason);
 		i->size = aDownload->getSize();
+		i->fullSize = aDownload->getSize();
 		i->Target = aDownload->getTarget();
 
 		if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
@@ -1059,7 +1061,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 			v->push_back(i);
 
-			if((u->getRunningAverage() <= 0) && (u->getStart() > 0)) {
+			if((u->getRunningAverage() <= 0) && ((GET_TICK() - u->getStart()) > 1000)) {
 				u->getUserConnection()->disconnect();
 			}
 		}

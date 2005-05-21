@@ -62,7 +62,7 @@ void Transfer::updateRunningAverage() {
 }
 
 void UserConnection::onLine(const char* aLine) throw() {
-again:
+
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
 		return;
@@ -73,12 +73,6 @@ again:
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		if(getUser())
 			getUser()->setUnknownCommand(aLine);
-		if((aLine = strstr(aLine, "$")) == NULL) {
-			return;
-		} else {
-			dcassert(0);
-			goto again;
-		}
 	}
 	char *temp;
 	if(aLine[1] == 'M') {
