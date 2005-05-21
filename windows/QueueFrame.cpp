@@ -1448,7 +1448,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 
-	if(!BOOLSETTING(SHOW_PROGRESS_BARS) || !BOOLSETTING(REALTIME_QUEUE_UPDATE)) {
+	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
 			bHandled = FALSE;
 			return 0;

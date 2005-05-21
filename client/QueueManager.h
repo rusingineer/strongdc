@@ -147,17 +147,15 @@ public:
 	bool autoDropSource(const User::Ptr& aUser);
 	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
 
-	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget, int64_t& size) {
+	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget) {
 		u_int16_t value;
 		{
 			Lock l(cs);
 			QueueItem* qi = fileQueue.find(aTarget);
-			size = -1;
 
 			if(!qi)
 				return 0;
 
-			size = qi->getSize();
 			value  = qi->getActiveSegments().size();
 			if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
 				value -= 1;

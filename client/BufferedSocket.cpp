@@ -473,18 +473,18 @@ int BufferedSocket::run() {
 			}
 
 			// Now check if there's any activity on the socket
-			if(isConnected()) {
-				setBlocking(false);
+			if(isConnected()) {				
 				int waitFor = wait(POLL_TIMEOUT, sendingFile ? WAIT_READ | WAIT_WRITE : WAIT_READ);
 				if(waitFor & WAIT_WRITE) {
 					dcassert(sendingFile);
+					setBlocking(false);
 					if(threadSendFile())
 						sendingFile = false;
+					setBlocking(true);
 				}
 				if(waitFor & WAIT_READ) {
 					threadRead();
 				}
-				setBlocking(true);
 			}
 		} catch(const SocketException& e) {
 			fail(e.getError());

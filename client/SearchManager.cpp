@@ -377,7 +377,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		PartsInfo outPartialInfo;
 		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
 
-		if(UdpPort > 0) {
+		if((UdpPort > 0) && (!outPartialInfo.empty())) {
 			char buf[1024];
 			Client* aClient = user->getClient();
 			string me = Text::utf8ToAcp(aClient->getMe()->getNick());

@@ -1081,7 +1081,13 @@ again:
 
 		if(freeBlock < 0) {
 			delete d;
+			if(freeBlock == -2) {
+				userQueue.remove(q, aUser);
+				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
+				//fire(QueueManagerListener::StatusUpdated(), q);
+			}
 			message = STRING(NO_FREE_BLOCK);
+			
 			if(!aTarget.empty()) {
 				aTarget = Util::emptyString;
 				q->removeActiveSegment(aUser);
@@ -1474,8 +1480,6 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 }
 
 void QueueManager::saveQueue() throw() {
-	if(!dirty)
-		return;
 
 	try {
 		
@@ -1503,10 +1507,9 @@ void QueueManager::saveQueue() throw() {
 					f.write(Util::toString((int)qi->getPriority()));
 					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 						f.write(STRINGLEN("\" FreeBlocks=\""));
-						FileChunksInfo::Ptr fileChunksInfo = FileChunksInfo::Get(qi->getTempTarget());
-						f.write(fileChunksInfo ? fileChunksInfo->getFreeBlocksString() : "");
+						f.write(qi->chunkInfo ? qi->chunkInfo->getFreeBlocksString() : "");
 						f.write(STRINGLEN("\" VerifiedParts=\""));
-						f.write(fileChunksInfo ? fileChunksInfo->getVerifiedBlocksString() : "");
+						f.write(qi->chunkInfo ? qi->chunkInfo->getVerifiedBlocksString() : "");
 					}
 					f.write(STRINGLEN("\" Added=\""));
 					f.write(Util::toString(qi->getAdded()));

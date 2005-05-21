@@ -620,10 +620,10 @@ int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
 		int64_t e = *(i+1);
 		int64_t block = minChunkSize * 2;
 		
-		if(e - b < block * 3) continue;
+		if(e - b < MIN_BLOCK_SIZE * 3) continue;
 
         b = b + (e - b) / 2;
-		b = b - (b % block);
+		b = b - (b % MIN_BLOCK_SIZE);
 
 		dcassert(b > *i);
 

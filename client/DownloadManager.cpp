@@ -72,8 +72,11 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 		setFlag(Download::FLAG_MULTI_CHUNK);
 
-	if((*(qi->getSource(aUser)))->isSet(QueueItem::Source::FLAG_UTF8))
+	QueueItem::Source* source = *(qi->getSource(aUser));
+	if(source->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
+	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
+		setFlag(Download::FLAG_PARTIAL);
 }
 
 int64_t Download::getQueueTotal() {
@@ -123,7 +126,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 
 		Download* d = *i;
 
-		if(d->getUserConnection() != NULL) {
+		if((d->getUserConnection() != NULL) && !d->isSet(Download::FLAG_PARTIAL)) {
 			if (!d->isSet(Download::FLAG_USER_LIST) && (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576))) {
 				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
 					if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
@@ -458,6 +461,9 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 	if(prepareFile(aSource, (bytes == -1) ? -1 : (old ? (aSource->getDownload()->getPos() + bytes) : aSource->getDownload()->getSize()), cmd.hasFlag("ZL", 4))) {
 		aSource->getDownload()->setSegmentSize(bytes);
 		aSource->setDataMode();
+	} else {
+		dcdebug((aSource->getUser()->getNick() + " - SND failed\n").c_str());
+		aSource->disconnect();
 	}
 }
 
