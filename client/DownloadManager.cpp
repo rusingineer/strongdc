@@ -514,18 +514,16 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
-	bool isActiveSegment;
-	u_int16_t activeSegments;
+	bool isActiveSegment = false;
+	u_int16_t activeSegments = 0;
 
-	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		if(!QueueManager::getInstance()->setActiveSegment(d->getUserConnection()->getUser(), isActiveSegment, activeSegments)) {
-			fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
-			aSource->setDownload(NULL);
-			removeDownload(d);
-			QueueManager::getInstance()->putDownload(d, false, false);
-			removeConnection(aSource);			
-			return false;
-		}		
+	if(!QueueManager::getInstance()->setActiveSegment(d->getUserConnection()->getUser(), isActiveSegment, activeSegments, d->isSet(Download::FLAG_TREE_DOWNLOAD))) {
+		fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
+		aSource->setDownload(NULL);
+		removeDownload(d);
+		QueueManager::getInstance()->putDownload(d, false, false);
+		removeConnection(aSource);			
+		return false;
 	}
 
 	if(newSize != -1) {
@@ -745,8 +743,14 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		if(d->getPos() > d->getSize()) {
 			throw Exception(STRING(TOO_MUCH_DATA));
 		} else if((d->getPos() == d->getSize()) || d->isSet(Download::FLAG_MP3_INFO)) {
-			if(!d->isSet(Download::FLAG_MULTI_CHUNK) || d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_TREE_DOWNLOAD) || d->isSet(Download::FLAG_MP3_INFO))
+			if(!d->isSet(Download::FLAG_MULTI_CHUNK) || d->isSet(Download::FLAG_USER_LIST) || d->isSet(Download::FLAG_TREE_DOWNLOAD) || d->isSet(Download::FLAG_MP3_INFO)) {
 				handleEndData(aSource);
+			} else { // peer's partial size < chunk size
+				aSource->setDownload(NULL);
+				removeDownload(d);
+				QueueManager::getInstance()->putDownload(d, false);
+				checkDownloads(aSource);
+			}
 			aSource->setLineMode();
 		}
 	} catch(const RollbackException& e) {

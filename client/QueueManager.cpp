@@ -387,7 +387,7 @@ QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
 	return userQueue.getRunning(aUser);
 }
 
-bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount) {
+bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount, bool isTree) {
 	{
 		Lock l(cs);
 		QueueItem* qi = userQueue.getRunning(aUser);
@@ -398,6 +398,10 @@ bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActiv
 		}
 
 		SegmentsCount = qi->getActiveSegments().size();
+		if(isTree) {
+			isAlreadyActive = false;
+			return true;
+		}
 
 		isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
 	

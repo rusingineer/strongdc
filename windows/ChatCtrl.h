@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(AFX_CHAT_CTRL_H__595F1372_081B_11D1_890D_00A0244AB9FD__INCLUDED_)
-#define AFX_CHAT_CTRL_H__595F1372_081B_11D1_890D_00A0244AB9FD__INCLUDED_
+#ifndef CHAT_CTRL_H
+#define CHAT_CTRL_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -36,7 +36,16 @@
 class UserInfo;
 
 class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl> {
+protected:
+	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
+	IRichEditOle* GetIRichEditOle() const;
+
+	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
+	bool m_boAutoScroll, myMess;
+	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
+	int g_BufTemplen, AppendTextlen;
 public:
 	ChatCtrl();
 	virtual ~ChatCtrl();
@@ -66,16 +75,6 @@ public:
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
 	static tstring sTempSelectedUser;
-protected:
-	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
-	IRichEditOle* GetIRichEditOle() const;
-
-	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
-	bool m_boAutoScroll, myMess;
-	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
-	int g_BufTemplen, AppendTextlen;
 };
 
 

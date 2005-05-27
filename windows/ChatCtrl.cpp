@@ -142,6 +142,9 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleBold);
 				}
+			} else {
+				SetSel(lSelBegin, lSelBegin+iLen+iAuthorLen);
+				boOK = SetSelectionCharFormat(cf);
 			}
 		}
 	} else {
@@ -196,7 +199,6 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 						rpl = txt;
 						pFoundedEmotion = (*pEmotion);
 						_tcscpy(Delimiter, Text::toT((*pEmotion)->GetEmotionText()).c_str());
-
 						len = nIdxFound;
 					}
 				}

@@ -65,7 +65,7 @@ public:
 	virtual void on(Failed, Client*, const string&) throw() { }
 	virtual void on(GetPassword, Client*) throw() { }
 	virtual void on(HubUpdated, Client*) throw() { }
-	virtual void on(Message, Client*, const string&) throw() { }
+	virtual void on(Message, Client*, const char*) throw() { }
 	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw() { }
 	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, Client*) throw() { }
