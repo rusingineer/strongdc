@@ -158,7 +158,7 @@ void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
 		fire(ClientListener::PrivateMessage(), this, pm, msg);
 	} else {
 		string msg = '<' + p->getNick() + "> " + c.getParam(0);
-		fire(ClientListener::Message(), this, msg);
+		fire(ClientListener::Message(), this, msg.c_str());
 	}		
 }
 
@@ -243,7 +243,7 @@ void AdcHub::handle(AdcCommand::STA, AdcCommand& c) throw() {
 	if(c.getParameters().size() < 2)
 		return;
 
-	fire(ClientListener::Message(), this, c.getParam(1));
+	fire(ClientListener::Message(), this, c.getParam(1).c_str());
 }
 
 void AdcHub::handle(AdcCommand::SCH, AdcCommand& c) throw() {	
@@ -417,7 +417,7 @@ void AdcHub::on(Connected) throw() {
 
 void AdcHub::on(Line, const string& aLine) throw() { 
 	if(BOOLSETTING(ADC_DEBUG)) {
-		fire(ClientListener::Message(), this, "<ADC>" + aLine + "</ADC>");
+		fire(ClientListener::Message(), this, ("<ADC>" + aLine + "</ADC>").c_str());
 	}
 	dispatch(aLine); 
 }

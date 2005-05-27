@@ -541,17 +541,23 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 
 			if(j->subItems.size() == 1) {
 				j->status = i->status;
-				j->statusString = i->statusString;
+				if(!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))
+					j->statusString = i->statusString;
 			} else if(i->status == ItemInfo::STATUS_RUNNING) {
 				j->status = ItemInfo::STATUS_RUNNING;
-				if(i->numberOfSegments == 1) {
+				if(!i->file.empty() && (i->numberOfSegments == 0)) {
+					j->file = i->file;
+					j->statusString = TSTRING(DOWNLOADING_TTHL);
+				} else {
+					j->file = Util::emptyStringT;
+				}
+				if((i->numberOfSegments == 1) && (!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))) {
 					j->statusString = i->statusString;
 				}
 			} else if(i->updateMask & ItemInfo::MASK_HUB) {	
 				j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target);
 				if(!i->file.empty() && (j->numberOfSegments == 0)) {
 					j->file = i->file;
-					j->statusString = TSTRING(DOWNLOADING_TTHL);
 				} else {
 					j->file = Util::emptyStringT;
 				}
@@ -584,6 +590,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
+		for(vector<ItemInfo*>::iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
+			(*i)->upperUpdated = false;
+		}
 		for(vector<ItemInfo*>::iterator j = v->begin(); j != v->end(); ++j) {
 			ItemInfo* i = *j;
 			i->update();
@@ -643,7 +652,7 @@ void TransferView::ItemInfo::update() {
 			columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(speed) + "/s");
 		}
 		if(colMask & MASK_RATIO) {
-			columns[COLUMN_RATIO] = Text::toT(Util::toString(mainItem ? compressRatio : getRatio()));
+			columns[COLUMN_RATIO] = Text::toT(Util::toString(getRatio()));
 		}
 	} else {
 		columns[COLUMN_TIMELEFT] = Util::emptyStringT;
@@ -660,13 +669,15 @@ void TransferView::ItemInfo::update() {
 		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(Target));
 	}
 	if(colMask & MASK_IP) {
-		if(!country.empty())
-			columns[COLUMN_IP] = country + _T(" (") + IP + _T(")");
-		else
-			columns[COLUMN_IP] = IP;
-		if((type == TYPE_DOWNLOAD) && (!mainItem) && (main != NULL) && (main->subItems.size() <= 1)) {
-			main->flagImage = flagImage;
-			main->columns[COLUMN_IP] = columns[COLUMN_IP];
+		if(!mainItem || type == TYPE_UPLOAD) {
+			if(!country.empty())
+				columns[COLUMN_IP] = country + _T(" (") + IP + _T(")");
+			else
+				columns[COLUMN_IP] = IP;
+			if((type == TYPE_DOWNLOAD) && (!mainItem) && (main != NULL) && (main->subItems.size() <= 1)) {
+				main->flagImage = flagImage;
+				main->columns[COLUMN_IP] = columns[COLUMN_IP];
+			}
 		}
 	}
 }
@@ -791,7 +802,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 						TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
 				}
 			}			
-		}	
+		} else
+			i->upperUpdated = true;
 
 		string ip = aDownload->getUserConnection()->getRemoteIp();
 		string country = Util::getIpCountry(ip);
@@ -908,10 +920,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			} else {
 				v->push_back(i);
 			}
-		}
-
-		for(vector<ItemInfo*>::iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
-			(*i)->upperUpdated = false;
 		}
 	}
 

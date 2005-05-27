@@ -655,14 +655,14 @@ bool HubFrame::updateUser(const User::Ptr& u) {
 
 void HubFrame::removeUser(const User::Ptr& aUser) {
 	UserMapIter i = userMap.find(aUser);
-	dcassert(i != userMap.end());
+	if(i != userMap.end()) {
+		UserInfo* ui = i->second;
+		if(!aUser->isSet(User::HIDDEN) && showUsers)
+			ctrlUsers.deleteItem(ui);
 
-	UserInfo* ui = i->second;
-	if(!aUser->isSet(User::HIDDEN) && showUsers)
-		ctrlUsers.deleteItem(ui);
-
-	userMap.erase(i);
-	delete ui;
+		userMap.erase(i);
+		delete ui;
+	}
 }
 
 static const char* sSameNumbers[] = { "000000", "111111", "222222", "333333", "444444", "555555", "666666", "777777", "888888", "999999" };
@@ -1730,12 +1730,17 @@ LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 }
 
 void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
-	tstring line = Text::toT("[" + Util::getShortTimeString() + "] ") + aLine;
+	tstring line = _T("[") + Text::toT(Util::getShortTimeString()) + _T("] ") + aLine;
+    TCHAR* sLine = (TCHAR*)line.c_str();
 
-	ctrlStatus.SetText(0, line.c_str());
+    if(_tcslen(sLine) > 750) {
+        sLine[750] = NULL;
+    }
+
+	ctrlStatus.SetText(0, sLine);
 	while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
 		lastLinesList.erase(lastLinesList.begin());
-	lastLinesList.push_back(line);
+	lastLinesList.push_back(sLine);
 
 	if (BOOLSETTING(TAB_DIRTY)) {
 		setDirty();
@@ -1827,24 +1832,48 @@ void HubFrame::on(GetPassword, Client*) throw() {
 void HubFrame::on(HubUpdated, Client*) throw() { 
 	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getName(), true, false) + " (" + client->getHubUrl() + ")");
 }
-void HubFrame::on(Message, Client*, const string& line) throw() { 
+void HubFrame::on(Message, Client*, const char* line) throw() {
+    char *temp, *chatline = (char *)line;
 	if(SETTING(FILTER_MESSAGES)) {
-		if(line.find("was kicked by") != string::npos) {
-			// Do nothing...
-		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
+		if((temp = strchr(chatline, '\n')) != NULL) {
+            temp[0] = NULL;
+            if(strstr(chatline, "was kicked by") != NULL) {
+			    temp[0] = '\n';
 			speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
-		} else {
-			speak(ADD_CHAT_LINE, Util::toDOS(line));
+			    return;
+            } else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL)) {
+                temp[0] = '\n';
+                speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
+                return;
+            }
+            temp[0] = '\n';
+        } else if(strstr(chatline, "was kicked by") != NULL) {
+			speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
+			return;
+        } else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL)) {
+			speak(ADD_SILENT_STATUS_LINE, Util::toDOS(line));
+			return;
 		}
-	} else if((strstr(line.c_str(), "is kicking") != NULL) && (strstr(line.c_str(), "because:") != NULL) || 
-		(strstr(line.c_str(), "was kicked by") != NULL)) {
+	} else if((temp = strchr(chatline, '\n')) != NULL) {
+        temp[0] = NULL;
+        if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
+		  (strstr(chatline, "was kicked by") != NULL)) {
+              temp[0] = '\n';
 		speak(KICK_MSG, Util::toDOS(line));		
-	} else {
-		speak(ADD_CHAT_LINE, Util::toDOS(line));
+		      return;
+        }
+        temp[0] = '\n';
+	} else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
+		(strstr(chatline, "was kicked by") != NULL)) {
+		speak(KICK_MSG, Util::toDOS(line));
+        return;	
 	}
+	
+	speak(ADD_CHAT_LINE, line);
 }
+
 void HubFrame::on(PrivateMessage, Client*, const User::Ptr& user, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, user, Util::toDOS(line));
+	speak(PRIVATE_MESSAGE, user, line);
 }
 void HubFrame::on(NickTaken, Client*) throw() { 
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));

@@ -190,8 +190,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							delete is;
 							return false;
 						}
-					}else{
-						dcassert(0);
 					}
 				} else if(aType == "tthl") {
 					// TTH Leaves...

@@ -252,7 +252,7 @@ private:
 		void deleteSelf() { delete this; }	
 
 		double getRatio() {
-			if(mainItem) {
+			if(mainItem && (type == ItemInfo::TYPE_DOWNLOAD)) {
 				if((compressRatio > 1) || (compressRatio < 0)) compressRatio = 1.0;
 				return compressRatio;
 			}

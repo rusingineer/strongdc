@@ -1505,6 +1505,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			FileChunksInfo::Ptr filedatainfo = qi->qi->chunkInfo;
 
 			if(filedatainfo) {
+				Lock l(filedatainfo->cs);
 				for(int smycka = 0; smycka < 2; smycka++) {
 					vector<int64_t> v;
 	

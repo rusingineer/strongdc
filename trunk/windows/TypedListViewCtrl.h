@@ -508,8 +508,7 @@ public:
 
 		StringIter i = l.begin();
 		ColumnIter j = columnList.begin();
-		for(; j != columnList.end() && i != l.end(); ++i, ++j){
-
+		for(; j != columnList.end() && i != l.end(); ++i, ++j) {
 			if(Util::toInt(*i) == 0){
 				(*j)->visible = false;
 				removeColumn(*j);

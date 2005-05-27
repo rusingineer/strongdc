@@ -508,7 +508,7 @@ private:
 	virtual void on(Failed, Client*, const string&) throw();
 	virtual void on(GetPassword, Client*) throw();
 	virtual void on(HubUpdated, Client*) throw();
-	virtual void on(Message, Client*, const string&) throw();
+	virtual void on(Message, Client*, const char*) throw();
 	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw();
 	virtual void on(NickTaken, Client*) throw();
 	virtual void on(SearchFlood, Client*, const string&) throw();

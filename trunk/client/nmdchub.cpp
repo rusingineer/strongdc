@@ -131,648 +131,737 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				reconnect = false;
 			}
 		}
-		fire(ClientListener::Message(), this, Util::validateMessage(fromNmdc(aLine), true));
+		fire(ClientListener::Message(), this, Util::validateMessage(fromNmdc(aLine), true).c_str());
 		return;
 	}
 
-	if(aLine[1] == 'S') {
-    	// $Search
-    	if(strncmp(aLine+2, "earch ", 6) == 0) {
-		    aLine += 8;
-			if(state != STATE_CONNECTED || (temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
+	switch(aLine[1]) {
+        case 'S':
+	    	// $Search
+    		if(strncmp(aLine+2, "earch ", 6) == 0) {
+				aLine += 8;
+				if(state != STATE_CONNECTED || (temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
 
-			temp[0] = NULL; temp += 1;
-			if(aLine == NULL || temp+1 == NULL || temp+2 == NULL || temp+3 == NULL || temp+4 == NULL) return;
+				temp[0] = NULL; temp += 1;
+				if(aLine == NULL || temp+1 == NULL || temp+2 == NULL || temp+3 == NULL || temp+4 == NULL) return;
 
-			string seeker = fromNmdc(aLine);
-			bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
-			bool isActive = ClientManager::getInstance()->isActive(this);
+				string seeker = fromNmdc(aLine);
+				bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
+				bool isActive = ClientManager::getInstance()->isActive(this);
 
-			// We don't wan't to answer passive searches if we're in passive mode...
-			if((bPassive == true) && !isActive) {
-				return;
-			}
-			// Filter own searches
-			if(isActive && bPassive == false) {
-				if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(UDP_PORT))).c_str())) == 0) {
+				// We don't wan't to answer passive searches if we're in passive mode...
+				if((bPassive == true) && !isActive) {
 					return;
 				}
-			} else {
-				if(strcmp(seeker.c_str() + 4, getNick().c_str()) == 0) {
-					return;
-				}
-			}
-
-			{
-				Lock l(cs);
-				u_int32_t tick = GET_TICK();
-				seekers.push_back(make_pair(seeker, tick));
-				// First, check if it's a flooder
-				FloodIter fi;
-				for(fi = flooders.begin(); fi != flooders.end(); ++fi) {
-					if(fi->first == seeker)
+				// Filter own searches
+				if(isActive && bPassive == false) {
+					if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(UDP_PORT))).c_str())) == 0) {
 						return;
-				}
-				int count = 0;
-				for(fi = seekers.begin(); fi != seekers.end(); ++fi) {
-					if(fi->first == seeker)
-						count++;
-	
-					if(count > 7) {
-					    // BFU don't need to know search spammers ;)
-					    if(getOp()) {
-							if(bPassive == true && strlen(seeker.c_str()) > 4) {
-								fire(ClientListener::SearchFlood(), this, seeker.c_str()+4);
-							} else {
-								fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
-							}
-						}				
-						flooders.push_back(make_pair(seeker, tick));
+					}
+				} else {
+					if(strcmp(seeker.c_str() + 4, getNick().c_str()) == 0) {
 						return;
 					}
 				}
-			}
-			int a;
-			if(temp[0] == 'F') {
-				a = SearchManager::SIZE_DONTCARE;
-			} else {
-				if(temp[2] == 'F') {
-					a = SearchManager::SIZE_ATLEAST;
-				} else {
-					a = SearchManager::SIZE_ATMOST;
-				}
-			}
-			temp += 4;
-			if((temp1 = strchr(temp, '?')) == NULL || temp1+1 == NULL || temp1+2 == NULL) return;
 
-			temp1[0] = NULL; temp1[2] = NULL;
-			if(temp == NULL) return;
-
-			int64_t size = _atoi64(temp);
-			int type = atoi(temp1+1) - 1; temp1 += 3;
-			if(temp1 != NULL) {
-				fire(ClientListener::NmdcSearch(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
-				if(bPassive == true && strlen(seeker.c_str()) > 4) {
-					User::Ptr u;
+				{
 					Lock l(cs);
-					User::NickIter ni = users.find(seeker.c_str()+4);
-					if(ni != users.end() && !ni->second->isSet(User::PASSIVE) && ni->second->getMode() != "A") {
-						u = ni->second;
-						u->setPassive();
-					}
-					if(u) {
-						updated(u);
-					}
-				}
-			}
-    		return;
-        }
-        
-        // $SR
-        if(strncmp(aLine+2, "R ", 2) == 0) {
-			SearchManager::getInstance()->onSearchResult(aLine);
-			return;
-        }
-        
-        // $Supports
-       	if(strncmp(aLine+2, "upports", 7) == 0) {
-			StringList sl;
-			aLine += 10;
-			if((temp = strtok((char*)aLine, " ")) == NULL) {
-				validateNick(getNick());
-				return;
-			}
-
-			while(temp != NULL) {
-				sl.push_back(temp);
-				if((strcmp(temp, "UserCommand")) == 0) {
-					supportFlags |= SUPPORTS_USERCOMMAND;
-				} else if((strcmp(temp, "NoGetINFO")) == 0) {
-					supportFlags |= SUPPORTS_NOGETINFO;
-				} else if((strcmp(temp, "UserIP2")) == 0) {
-					supportFlags |= SUPPORTS_USERIP2;
-				} else if((strcmp(temp, "QuickList")) == 0) {
-					if(state == STATE_HELLO) {
-						state = STATE_MYINFO;
-						updateCounts(false);
-						myInfo();
-						getNickList();
-						supportFlags |= SUPPORTS_QUICKLIST;
-					}
-				}
-				temp = strtok(NULL, " ");
-			}
-			if(!(getSupportFlags() & SUPPORTS_QUICKLIST)) {
-				validateNick(getNick());
-			}
-   			return;
-        }
-	} else if(aLine[1] == 'M') {
-    	// $MyINFO
-    	if(strncmp(aLine+2, "yINFO ", 6) == 0) {
-		    char *Description, *Tag, *Connection, *Email, *Share;
-		    aLine += 13;
-	    	Description = strchr((char*)aLine, ' ');
-		    if(Description == NULL || Description+1 == NULL)
-				return;
-
-			Description[0] = NULL;
-			Description += 1;
-	    
-		    if(aLine == NULL)
-		         return;
-
-			User::Ptr u;
-			string nick = fromNmdc(aLine);
+					u_int32_t tick = GET_TICK();
+					seekers.push_back(make_pair(seeker, tick));
+					// First, check if it's a flooder
+					FloodIter fi;
+					for(fi = flooders.begin(); fi != flooders.end(); ++fi) {
+						if(fi->first == seeker)
+							return;
+					}	
+					int count = 0;
+					for(fi = seekers.begin(); fi != seekers.end(); ++fi) {
+						if(fi->first == seeker)
+							count++;
 	
-			{
-				Lock l(cs);
-				User::NickIter ni = users.find(nick);
-				if(ni == users.end()) {
-					u = users[nick] = ClientManager::getInstance()->getUser(nick, this);
-				} else {
-					u  = ni->second;
-				}
-			}
-
-			// New MyINFO received, delete all user variables... if is bad MyINFO is user problem not my ;-)
-			u->setBytesShared(0);
-			u->setDescription(Util::emptyString);
-			u->setcType(10);
-			u->setStatus(1);		
-			u->setConnection(Util::emptyString);
-			u->setEmail(Util::emptyString);
-			u->setTag(Util::emptyString);
-			u->setVersion(Util::emptyString);
-			u->setMode(Util::emptyString);
-			u->setHubs(Util::emptyString);
-			u->setSlots(0);
-			u->setUpload(Util::emptyString);
-
-		    Connection = strchr(Description, '$');
-	    	if(Connection && Connection+1 && Connection+2 && Connection+3) {
-				Connection[0] = NULL;
-				Connection += 1;
-				if(Description) {
-					if(*(Connection-2) == '>') {
-						if((Tag = strrchr(Description, '<')) != NULL) {
-							u->setTag(fromNmdc(Tag));
-								u->TagParts();
-							Tag[0] = NULL;
-						} else
-							u->setTag(Util::emptyString);
-					}
-					u->setDescription(Util::validateMessage(fromNmdc(Description), true));
-				}
-				Email = strchr(Connection+2, '$');
-				if(Email && Email+1) {
-					Email[0] = NULL;
-					Email += 1;
-					Share = strchr(Email, '$');
-					if(Share && Share+1) {
-						if((temp = strchr(Share+1, '$')) != NULL) temp[0] = NULL;
-						Share[0] = NULL;
-						Share += 1;
-						u->setEmail(Util::validateMessage(fromNmdc(Email), true));
-						u->setBytesShared(Share);
-					}
-					Connection[1] = NULL;
-					if(Connection[0] != ' ')
-						u->setMode(Connection);			    
-
-					Connection += 2;
-					char status = *(Email-2);
-					*(Email-2) = NULL;
-					if(status != 1) {
-						if(status == 2 || status == 3) {
-							u->setFlag(User::AWAY);
-							u->unsetFlag(User::SERVER);
-							u->unsetFlag(User::FIREBALL);
-						} else if(status == 4 || status == 5) {
-							u->setFlag(User::SERVER);
-							u->unsetFlag(User::AWAY);
-							u->unsetFlag(User::FIREBALL);
-						} else if(status == 6 || status == 7) {
-							u->setFlag(User::SERVER);
-							u->setFlag(User::AWAY);
-							u->unsetFlag(User::FIREBALL);
-						} else if(status == 8 || status == 9) {
-							u->setFlag(User::FIREBALL);
-							u->unsetFlag(User::AWAY);
-							u->unsetFlag(User::SERVER);
-						} else if(status == 10 || status == 11) {
-							u->setFlag(User::FIREBALL);
-							u->setFlag(User::AWAY);
-							u->unsetFlag(User::SERVER);
+						if(count > 7) {
+					    	// BFU don't need to know search spammers ;)
+						    if(getOp()) {
+								if(bPassive == true && strlen(seeker.c_str()) > 4) {
+									fire(ClientListener::SearchFlood(), this, seeker.c_str()+4);
+								} else {
+									fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
+								}
+							}				
+							flooders.push_back(make_pair(seeker, tick));
+							return;
 						}
-					} else {
-						u->unsetFlag(User::AWAY);
-						u->unsetFlag(User::SERVER);
-						u->unsetFlag(User::FIREBALL);
 					}
-					u->setStatus(status);
-					u->setConnection(fromNmdc(Connection));
-					if(strcmp(Connection, "28.8Kbps") == 0 || strcmp(Connection, "33.6Kbps") == 0 ||
-						strcmp(Connection, "56Kbps") == 0 || strcmp(Connection, "Modem") == 0) {
-						u->setcType(1);
-					} else if(strcmp(Connection, "ISDN") == 0) {
-						u->setcType(2);
-					} else if(strcmp(Connection, "Satellite") == 0 || strcmp(Connection, "Microwave") == 0) {
-						u->setcType(3);
-					} else if(strcmp(Connection, "Wireless") == 0) {
-						u->setcType(4);
-					} else if(strcmp(Connection, "DSL") == 0) {
-						u->setcType(5);
-					} else if(strcmp(Connection, "Cable") == 0) {
-						u->setcType(6);
-					} else if(strcmp(Connection, "LAN(T1)") == 0 || strcmp(Connection, "LAN(T3)") == 0) {
-						u->setcType(7);
-					} else
-						u->setcType(10);
 				}
-			}
+				int a;
+				if(temp[0] == 'F') {
+					a = SearchManager::SIZE_DONTCARE;
+				} else {
+					if(temp[2] == 'F') {
+						a = SearchManager::SIZE_ATLEAST;
+					} else {
+						a = SearchManager::SIZE_ATMOST;
+					}
+				}
+				temp += 4;
+				if((temp1 = strchr(temp, '?')) == NULL || temp1+1 == NULL || temp1+2 == NULL) return;
 
-			if(state == STATE_MYINFO) {
-				if (stricmp(u->getNick().c_str(), getNick().c_str()) == 0) {
+				temp1[0] = NULL; temp1[2] = NULL;
+				if(temp == NULL) return;
+	
+				int64_t size = _atoi64(temp);
+				int type = atoi(temp1+1) - 1; temp1 += 3;
+				if(temp1 != NULL) {
+					fire(ClientListener::NmdcSearch(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
+					if(bPassive == true && strlen(seeker.c_str()) > 4) {
+						User::Ptr u;
+						Lock l(cs);
+						User::NickIter ni = users.find(seeker.c_str()+4);
+						if(ni != users.end() && !ni->second->isSet(User::PASSIVE) && ni->second->getMode() != "A") {
+							u = ni->second;
+							u->setPassive();
+						}
+						if(u) {
+							updated(u);
+						}
+					}
+				}
+    			return;
+        	}
+        
+	        // $SR
+	        if(strncmp(aLine+2, "R ", 2) == 0) {
+				SearchManager::getInstance()->onSearchResult(aLine);
+				return;
+	        }
+        
+    	    // $Supports
+       		if(strncmp(aLine+2, "upports", 7) == 0) {
+				StringList sl;
+				aLine += 10;
+        		if(aLine == NULL) {
+					validateNick(getNick());
+					return;
+				}
+
+        		while(aLine != NULL) {
+                    if((temp = strchr(aLine, ' ')) != NULL) {
+                        temp[0] = NULL; temp++;
+                    }
+
+        			sl.push_back(aLine);
+        			switch(aLine[0]) {
+                        case 'U':
+                			if((strcmp(aLine+1, "serCommand")) == 0) {
+								supportFlags |= SUPPORTS_USERCOMMAND;
+                			} else if((strcmp(aLine+1, "serIP2")) == 0) {
+								supportFlags |= SUPPORTS_USERIP2;
+                            }
+                            break;
+                        case 'N':
+                			if((strcmp(aLine+1, "oGetINFO")) == 0) {
+                				supportFlags |= SUPPORTS_NOGETINFO;
+                            }
+                            break;
+                        case 'Q':
+                			if((strcmp(aLine+1, "uickList")) == 0) {
+								if(state == STATE_HELLO) {
+									state = STATE_MYINFO;
+									updateCounts(false);
+									myInfo();
+									getNickList();
+									supportFlags |= SUPPORTS_QUICKLIST;
+								}
+							}
+                			break;
+                		default:
+                            dcdebug("NmdcHub::onLine Unknown supports %s\n", aLine);
+                            break;
+                    }
+        			aLine = temp;
+				}
+				if(!(getSupportFlags() & SUPPORTS_QUICKLIST)) {
+					validateNick(getNick());
+				}
+	   			return;
+    	    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+    	case 'M':
+	    	// $MyINFO
+    		if(strncmp(aLine+2, "yINFO ", 6) == 0) {
+			    char *Description, *Tag, *Connection, *Email, *Share;
+		    	aLine += 13;
+	    		Description = strchr((char*)aLine, ' ');
+			    if(Description == NULL || Description+1 == NULL)
+					return;
+
+				Description[0] = NULL;
+				Description += 1;
+	    
+			    if(aLine == NULL)
+		    	     return;
+
+				User::Ptr u;
+				string nick = fromNmdc(aLine);
+	
+				{
+					Lock l(cs);
+					User::NickIter ni = users.find(nick);
+					if(ni == users.end()) {
+						u = users[nick] = ClientManager::getInstance()->getUser(nick, this);
+					} else {
+						u  = ni->second;
+					}
+				}
+
+				// New MyINFO received, delete all user variables... if is bad MyINFO is user problem not my ;-)
+        		u->setNick(nick);
+				u->setBytesShared(0);
+				u->setDescription(Util::emptyString);
+				u->setcType(10);
+				u->setStatus(1);		
+				u->setConnection(Util::emptyString);
+				u->setEmail(Util::emptyString);
+				u->setTag(Util::emptyString);
+				u->setVersion(Util::emptyString);
+				u->setMode(Util::emptyString);
+				u->setHubs(Util::emptyString);
+				u->setSlots(0);
+				u->setUpload(Util::emptyString);
+
+			    Connection = strchr(Description, '$');
+	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
+					Connection[0] = NULL;
+					Connection += 1;
+					if(Description) {
+						if(*(Connection-2) == '>') {
+							if((Tag = strrchr(Description, '<')) != NULL) {
+								u->setTag(fromNmdc(Tag));
+								u->TagParts();
+								Tag[0] = NULL;
+							} else
+								u->setTag(Util::emptyString);
+						}
+						u->setDescription(Util::validateMessage(fromNmdc(Description), true));
+					}
+					Email = strchr(Connection+2, '$');
+					if(Email && Email+1) {
+						Email[0] = NULL;
+						Email += 1;
+						Share = strchr(Email, '$');
+						if(Share && Share+1) {
+							if((temp = strchr(Share+1, '$')) != NULL) temp[0] = NULL;
+							Share[0] = NULL;
+							Share += 1;
+							u->setEmail(Util::validateMessage(fromNmdc(Email), true));
+							u->setBytesShared(Share);
+						}
+						Connection[1] = NULL;
+						if(Connection[0] != ' ')
+							u->setMode(Connection);			    
+	
+						Connection += 2;
+						char status = *(Email-2);
+						*(Email-2) = NULL;
+       					switch(status) {
+                            case 1:
+                                u->unsetFlag(User::AWAY);
+      					        u->unsetFlag(User::SERVER);
+       					        u->unsetFlag(User::FIREBALL);
+                                break;
+                            case 2:
+                            case 3:
+								u->setFlag(User::AWAY);
+								u->unsetFlag(User::SERVER);
+								u->unsetFlag(User::FIREBALL);
+           						break;
+       					    case 4:
+                            case 5:
+								u->setFlag(User::SERVER);
+								u->unsetFlag(User::AWAY);
+								u->unsetFlag(User::FIREBALL);
+           						break;
+       					    case 6:
+                            case 7:
+								u->setFlag(User::SERVER);
+								u->setFlag(User::AWAY);
+								u->unsetFlag(User::FIREBALL);
+           						break;
+           					case 8:
+                            case 9:
+								u->setFlag(User::FIREBALL);
+								u->unsetFlag(User::AWAY);
+								u->unsetFlag(User::SERVER);
+           						break;
+           					case 10:
+                            case 11:
+								u->setFlag(User::FIREBALL);
+								u->setFlag(User::AWAY);
+								u->unsetFlag(User::SERVER);
+           						break;
+           					default:
+                                // WTF ?!? ok go to default...
+								u->unsetFlag(User::AWAY);
+								u->unsetFlag(User::SERVER);
+								u->unsetFlag(User::FIREBALL);
+                                break;
+						}
+						u->setStatus(status);
+						u->setConnection(fromNmdc(Connection));
+						if(strcmp(Connection, "28.8Kbps") == 0 || strcmp(Connection, "33.6Kbps") == 0 ||
+							strcmp(Connection, "56Kbps") == 0 || strcmp(Connection, "Modem") == 0) {
+							u->setcType(1);
+						} else if(strcmp(Connection, "ISDN") == 0) {
+							u->setcType(2);
+						} else if(strcmp(Connection, "Satellite") == 0 || strcmp(Connection, "Microwave") == 0) {
+							u->setcType(3);
+						} else if(strcmp(Connection, "Wireless") == 0) {
+							u->setcType(4);
+						} else if(strcmp(Connection, "DSL") == 0) {
+							u->setcType(5);
+						} else if(strcmp(Connection, "Cable") == 0) {
+							u->setcType(6);
+						} else if(strcmp(Connection, "LAN(T1)") == 0 || strcmp(Connection, "LAN(T3)") == 0) {
+							u->setcType(7);
+						} else
+							u->setcType(10);
+					}
+				}
+
+				if(state == STATE_MYINFO) {
+					if(stricmp(u->getNick().c_str(), getNick().c_str()) == 0) {
+						setMe(u);
+						state = STATE_CONNECTED;
+						updateCounts(false);
+						u->setFlag(User::DCPLUSPLUS);
+						if(!ClientManager::getInstance()->isActive(this))
+							u->setFlag(User::PASSIVE);
+						else
+							u->unsetFlag(User::PASSIVE);
+					}
+				}
+				fire(ClientListener::UserUpdated(), this, u);
+		    	return;
+		    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'Q':
+	    	// $Quit		    
+			if(strncmp(aLine+2, "uit ", 4) == 0) {
+				aLine += 6;
+				if(aLine == NULL)
+					return;
+	
+				User::Ptr u;
+				{
+					Lock l(cs);
+					User::NickIter i = users.find(fromNmdc(aLine));
+					if(i == users.end()) {
+						dcdebug("C::onLine Quitting user %s not found\n", aLine);
+						return;
+					}
+			
+					u = i->second;
+					users.erase(i);
+				}
+		
+				fire(ClientListener::UserRemoved(), this, u);
+				ClientManager::getInstance()->putUserOffline(u, true);
+    			return;
+        	}
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'C':
+			// $ConnectToMe
+			if(strncmp(aLine+2, "onnectToMe ", 11) == 0) {
+				aLine += 13;
+				if(state != STATE_CONNECTED || (temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
+	
+				temp[0] = NULL; temp += 1;
+				if(aLine == NULL || temp == NULL) return;
+
+				if(stricmp(fromNmdc(aLine).c_str(), getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+					return;
+	
+				if((temp1 = strchr(temp, ':')) == NULL || temp1+1 == NULL) return;
+
+				temp1[0] = NULL; temp1 += 1;
+				if(temp == NULL || temp1 == NULL) return;
+
+				ConnectionManager::getInstance()->nmdcConnect(temp, (short)atoi(temp1), getNick()); 
+	    		return;
+    	    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'R':
+    		// $RevConnectToMe
+    		if(strncmp(aLine+2, "evConnectToMe ", 14) == 0) {
+				if(state != STATE_CONNECTED) return;
+
+				aLine += 16;
+				User::Ptr u;
+				bool up = false;
+				{
+					Lock l(cs);
+					if((temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
+
+					temp[0] = NULL; temp += 1;
+					if(aLine == NULL || temp == NULL) return;
+
+					User::NickIter i = users.find(fromNmdc(aLine));
+
+					if(stricmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
+						return;
+
+					if(i == users.end()) {
+						return;
+					}
+
+					u = i->second;
+					if(!u->isSet(User::PASSIVE)) {
+						u->setPassive();
+						up = true;
+					}
+				}
+
+				if(u) {
+					if(ClientManager::getInstance()->isActive(this)) {
+						connectToMe(u);	
+					} else {
+						// Notify the user that we're passive too...
+						if(up)
+							revConnectToMe(u);
+					}
+
+					if(up)
+						updated(u);
+				}
+    			return;
+	        }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'H':
+	    	// $HubName
+    		if(strncmp(aLine+2, "ubName ", 7) == 0) {
+				aLine += 9;
+				if(aLine == NULL) return;
+	
+				name = fromNmdc(aLine);
+				fire(ClientListener::HubUpdated(), this);
+				return;
+			}
+        
+        	// $Hello
+       		if(strncmp(aLine+2, "ello ", 5) == 0) {
+				if(getSupportFlags() & SUPPORTS_QUICKLIST) return;
+				aLine += 7;
+				if(aLine == NULL) return;
+	
+				string nick = fromNmdc(aLine);
+				User::Ptr u = ClientManager::getInstance()->getUser(nick, this);
+				{
+					Lock l(cs);
+					users[nick] = u;
+				}
+		
+        		u->setNick(nick);
+        		
+        		if(stricmp(getNick().c_str(), nick.c_str()) == NULL) {
 					setMe(u);
-					state = STATE_CONNECTED;
-					updateCounts(false);
+		
 					u->setFlag(User::DCPLUSPLUS);
 					if(!ClientManager::getInstance()->isActive(this))
 						u->setFlag(User::PASSIVE);
 					else
 						u->unsetFlag(User::PASSIVE);
 				}
-			}
-			fire(ClientListener::UserUpdated(), this, u);
-	    	return;
-    	   }
-    } else if(aLine[1] == 'Q') {
-    	// $Quit		    
-		if(strncmp(aLine+2, "uit ", 4) == 0) {
-			aLine += 6;
-			if(aLine == NULL)
-				return;
-	
-			User::Ptr u;
-			{
-				Lock l(cs);
-				User::NickIter i = users.find(fromNmdc(aLine));
-				if(i == users.end()) {
-					dcdebug("C::onLine Quitting user %s not found\n", aLine);
-					return;
+
+				if(state == STATE_HELLO) {
+					state = STATE_CONNECTED;
+					updateCounts(false);
+
+					version();
+					if(YnHub == false) {
+						myInfo();
+						getNickList();
+	            	} else {
+						getNickList();
+						myInfo();
+    	        	}
 				}
+				fire(ClientListener::UserUpdated(), this, u);
+				return;
+			}
+        
+        	// $HubIsFull
+	       	if(strcmp(aLine+2, "ubIsFull") == 0) {
+				fire(ClientListener::HubFull(), this);
+				return;
+			}
+        	
+        	dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'U':
+	    	// $UserCommand
+    		if(strncmp(aLine+2, "serCommand ", 11) == 0) {
+				temp = (char*)aLine+13;
+				if(temp == NULL || temp+1 == NULL) return;
+
+				temp[1] = NULL;
+				int type = atoi(temp);
+				temp += 2;
+				if(temp == NULL || temp+1 == NULL) return;
+
+				temp[1] = NULL;
+				int ctx = atoi(temp);
+				temp += 2;
+				if(temp == NULL) return;
+
+        		switch(type) {
+                    case UserCommand::TYPE_SEPARATOR:
+                    case UserCommand::TYPE_CLEAR:
+        			    fire(ClientListener::UserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
+        			    break;
+            		case UserCommand::TYPE_RAW:
+                    case UserCommand::TYPE_RAW_ONCE:
+						if((temp1 = strchr(temp, '$')) == NULL || temp1+1 == NULL) return;
+
+						temp1[0] = NULL; temp1 += 1;
+						if(temp == NULL || temp1 == NULL) return;
+
+						fire(ClientListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(temp), true, false), Util::validateMessage(fromNmdc(temp1), true, false));
+       			    	break;
+        			default:
+                        // ?!?
+                        break;
+				}
+				return;
+			}
+        
+    	    // $UserIP
+       		if(strncmp(aLine+2, "serIP ", 6) == 0) {
+				User::List v;
+				StringList l;
+				aLine += 8;
+				if(aLine == NULL) return;
+
+				while((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
+					temp[0] = NULL; temp += 1; temp1 = strchr(temp, '$');
+					if(aLine == NULL || temp == NULL) break;
+					if(temp1 == NULL) {
+						v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
+						v.back()->setIp(temp);
+						break;
+					}
+
+					temp1[0] = NULL;
+					if(temp == NULL) break;
 			
-				u = i->second;
-				users.erase(i);
-			}
-		
-			fire(ClientListener::UserRemoved(), this, u);
-			ClientManager::getInstance()->putUserOffline(u, true);
-    		return;
-        }
-    } else if(aLine[1] == 'C') {
-		// $ConnectToMe
-		if(strncmp(aLine+2, "onnectToMe ", 11) == 0) {
-			aLine += 13;
-			if(state != STATE_CONNECTED || (temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
-	
-			temp[0] = NULL; temp += 1;
-			if(aLine == NULL || temp == NULL) return;
-
-			if(stricmp(fromNmdc(aLine).c_str(), getNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
-				return;
-	
-			if((temp1 = strchr(temp, ':')) == NULL || temp1+1 == NULL) return;
-
-			temp1[0] = NULL; temp1 += 1;
-			if(temp == NULL || temp1 == NULL) return;
-
-			ConnectionManager::getInstance()->nmdcConnect(temp, (short)atoi(temp1), getNick()); 
-    		return;
-        }
-    } else if(aLine[1] == 'R') {
-    	// $RevConnectToMe
-    	if(strncmp(aLine+2, "evConnectToMe ", 14) == 0) {
-			if(state != STATE_CONNECTED) return;
-
-			aLine += 16;
-			User::Ptr u;
-			bool up = false;
-			{
-				Lock l(cs);
-				if((temp = strchr((char*)aLine, ' ')) == NULL || temp+1 == NULL) return;
-
-				temp[0] = NULL; temp += 1;
-				if(aLine == NULL || temp == NULL) return;
-
-				User::NickIter i = users.find(fromNmdc(aLine));
-
-				if(stricmp(fromNmdc(temp).c_str(), getNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
-					return;
-
-				if(i == users.end()) {
-					return;
-				}
-
-				u = i->second;
-				if(!u->isSet(User::PASSIVE)) {
-					u->setPassive();
-					up = true;
-				}
-			}
-
-			if(u) {
-				if(ClientManager::getInstance()->isActive(this)) {
-					connectToMe(u);
-				} else {
-					// Notify the user that we're passive too...
-					if(up)
-						revConnectToMe(u);
-				}
-
-				if(up)
-					updated(u);
-			}
-    		return;
-        }
-    } else if(aLine[1] == 'H') {
-    	// $HubName
-    	if(strncmp(aLine+2, "ubName ", 7) == 0) {
-			aLine += 9;
-			if(aLine == NULL) return;
-	
-			name = fromNmdc(aLine);
-			fire(ClientListener::HubUpdated(), this);
-			return;
-		}
-        
-        // $Hello
-       	if(strncmp(aLine+2, "ello ", 5) == 0) {
-			if(getSupportFlags() & SUPPORTS_QUICKLIST) return;
-			aLine += 7;
-			if(aLine == NULL) return;
-
-			string nick = fromNmdc(aLine);
-			User::Ptr u = ClientManager::getInstance()->getUser(nick, this);
-			{
-				Lock l(cs);
-				users[nick] = u;
-			}
-		
-			if(stricmp(getNick().c_str(), nick.c_str()) == 0) {
-				setMe(u);
-		
-				u->setFlag(User::DCPLUSPLUS);
-				if(!ClientManager::getInstance()->isActive(this))
-					u->setFlag(User::PASSIVE);
-				else
-					u->unsetFlag(User::PASSIVE);
-			}
-
-			if(state == STATE_HELLO) {
-				state = STATE_CONNECTED;
-				updateCounts(false);
-
-				version();
-				if(YnHub == false) {
-					myInfo();
-					getNickList();
-	            } else {
-					getNickList();
-					myInfo();
-            	}
-			}
-			fire(ClientListener::UserUpdated(), this, u);
-			return;
-		}
-        
-        // $HubIsFull
-       	if(strcmp(aLine+2, "ubIsFull") == 0) {
-			fire(ClientListener::HubFull(), this);
-			return;
-		}
-    } else if(aLine[1] == 'U') {
-    	// $UserCommand
-    	if(strncmp(aLine+2, "serCommand ", 11) == 0) {
-			temp = (char*)aLine+13;
-			if(temp == NULL || temp+1 == NULL) return;
-
-			temp[1] = NULL;
-			int type = atoi(temp);
-			temp += 2;
-			if(temp == NULL || temp+1 == NULL) return;
-
-			temp[1] = NULL;
-			int ctx = atoi(temp);
-			temp += 2;
-			if(temp == NULL) return;
-
-			if(type == UserCommand::TYPE_SEPARATOR || type == UserCommand::TYPE_CLEAR) {
-				fire(ClientListener::UserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
-			} else if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
-				if((temp1 = strchr(temp, '$')) == NULL || temp1+1 == NULL) return;
-
-				temp1[0] = NULL; temp1 += 1;
-				if(temp == NULL || temp1 == NULL) return;
-
-				fire(ClientListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(temp), true, false), Util::validateMessage(fromNmdc(temp1), true, false));
-			}
-			return;
-		}
-        
-        // $UserIP
-       	if(strncmp(aLine+2, "serIP ", 6) == 0) {
-			User::List v;
-			StringList l;
-			aLine += 8;
-			if(aLine == NULL) return;
-
-			while((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
-				temp[0] = NULL; temp += 1; temp1 = strchr(temp, '$');
-				if(aLine == NULL || temp == NULL) break;
-				if(temp1 == NULL) {
-					v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
+					User::Ptr u = ClientManager::getInstance()->getUser(fromNmdc(aLine), this);
+					v.push_back(u);
 					v.back()->setIp(temp);
-					break;
+					ClientManager::getInstance()->setIPNick(temp, u);
+					aLine = temp1+2;
 				}
-
-				temp1[0] = NULL;
-				if(temp == NULL) break;
-			
-				User::Ptr u = ClientManager::getInstance()->getUser(fromNmdc(aLine), this);
-				v.push_back(u);
-				v.back()->setIp(temp);
-				ClientManager::getInstance()->setIPNick(temp, u);
-				aLine = temp1+2;
+				fire(ClientListener::UsersUpdated(), this, v);
+				return;
 			}
-			fire(ClientListener::UsersUpdated(), this, v);
-			return;
-		}
-    } else if(aLine[1] == 'L') {
-    	// $Lock
-    	if(strncmp(aLine+2, "ock ", 4) == 0) {
-			aLine += 6;
-			if(state != STATE_LOCK || aLine == NULL) return;
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'L':
+	    	// $Lock
+    		if(strncmp(aLine+2, "ock ", 4) == 0) {
+				aLine += 6;
+				if(state != STATE_LOCK || aLine == NULL) return;
 
-			state = STATE_HELLO;
-			if((temp = strstr(aLine, " Pk=")) != NULL && temp+1 != NULL)
-				temp[0] = NULL; temp += 1;
-
-			if(aLine == NULL) return;
-
-    		if(temp != NULL) {
-    			if(stricmp(temp+3, "YnHub") == 0) {
-    				YnHub = true;
-    			} else if(strcmp(temp+3, "PtokaX") == 0) {
-    				PtokaX = true;
-    			}
-            }
-            		
-			if(CryptoManager::getInstance()->isExtended(aLine)) {
-				StringList feat;
-				feat.push_back("UserCommand");
-				feat.push_back("NoGetINFO");
-				feat.push_back("NoHello");
-				feat.push_back("UserIP2");
-				feat.push_back("TTHSearch");
-
-				if (getStealth() == false)
-					feat.push_back("QuickList");
-
-				if(BOOLSETTING(COMPRESS_TRANSFERS))
-					feat.push_back("GetZBlock");
-				supports(feat);
-    			if(PtokaX == false) key(CryptoManager::getInstance()->makeKey(aLine));
-			} else {
-				key(CryptoManager::getInstance()->makeKey(aLine));
-				validateNick(getNick());
-			}
-			if(temp != NULL) {
-				if(stricmp(temp+3, "YnHub") == 0) {
-					YnHub = true;
-				} else if(strcmp(temp+3, "PtokaX") == 0) {
-					PtokaX = true;
-				}
-        	}
-        	return;
-        }
-	} else if(aLine[1] == 'F') {
-    	if(strncmp(aLine+2, "orceMove ", 9) == 0) {
-			aLine += 11;
-			if(aLine == NULL) return;
-
-			disconnect();
-			fire(ClientListener::Redirect(), this, fromNmdc(aLine));
-    		return;
-        }
-    } else if(aLine[1] == 'V') {
-    	// $ValidateDenide
-    	if(strncmp(aLine+2, "alidateDenide", 13) == 0) {
-			disconnect();
-			fire(ClientListener::NickTaken(), this);
-    		return;
-        }
-    } else if(aLine[1] == 'N') {
-    	// $NickList
-    	if(strncmp(aLine+2, "ickList ", 8) == 0) {
-			User::List v;
-			aLine += 10;
-			if(aLine == NULL) return;
-
-			while((temp = strchr(aLine, '$')) != NULL) {
-				temp[0] = NULL;
-				if(aLine == NULL) break;
-
-				v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
-				aLine = temp+2;
-			}
-
-			{
-				Lock l(cs);
-				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
-					users[(*it2)->getNick()] = *it2;
-				}
-			}
-		
-			if(!(getSupportFlags() & SUPPORTS_NOGETINFO)) {
-				string tmp;
-				// Let's assume 10 characters per nick...
-				tmp.reserve(v.size() * (11 + 10 + getNick().length())); 
-				string n = ' ' +  toNmdc(getNick()) + '|';
-				for(User::List::const_iterator i = v.begin(); i != v.end(); ++i) {
-					tmp += "$GetINFO ";
-					tmp += toNmdc((*i)->getNick());
-					tmp += n;
-				}
-				if(!tmp.empty()) {
-					send(tmp);
-				}
-			}
-			fire(ClientListener::UsersUpdated(), this, v);
-    		return;
-        }
-    } else if(aLine[1] == 'O') {
-    	// $OpList
-    	if(strncmp(aLine+2, "pList ", 6) == 0) {
-			User::List v;
-			aLine += 8;
-			if(aLine == NULL) return;
-
-			while((temp = strchr(aLine, '$')) != NULL) {
-				temp[0] = NULL;
-				if(aLine == NULL) break;
-
-				v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
-				v.back()->setFlag(User::OP);
-				aLine = temp+2;
-			}
-
-			{
-				Lock l(cs);
-				for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
-					users[(*it2)->getNick()] = *it2;
-				}
-			}
-			fire(ClientListener::UsersUpdated(), this, v);
-			updateCounts(false);
-			if(bFirstOpList == true) {
-				if(getRegistered() == true) {
-					myInfo();
-	            }
-				bFirstOpList = false;
-			}
-    		return;
-        }
-    } else if(aLine[1] == 'T') {
-    	// $To
-    	if(strncmp(aLine+2, "o: ", 3) == 0) {
-			if((temp1 = strstr(aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
-				if((temp = strchr(temp1+6, '$')) == NULL || temp+1 == NULL) return;
+				state = STATE_HELLO;
+				if((temp = strstr(aLine, " Pk=")) != NULL && temp+1 != NULL)
+					temp[0] = NULL; temp += 1;
 	
-				temp1 += 6; *(temp-1) = NULL; temp += 1;
-				if(temp1 == NULL || temp == NULL) return;
+				if(aLine == NULL) return;
 
-				fire(ClientListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(temp1), this, false), Util::validateMessage(fromNmdc(temp), true));
-			}
-    		return;
+    			if(temp != NULL) {
+    				if(stricmp(temp+3, "YnHub") == 0) {
+    					YnHub = true;
+	    			} else if(strcmp(temp+3, "PtokaX") == 0) {
+    					PtokaX = true;
+    				}
+            	}
+            		
+				if(CryptoManager::getInstance()->isExtended(aLine)) {
+					StringList feat;
+					feat.push_back("UserCommand");
+					feat.push_back("NoGetINFO");
+					feat.push_back("NoHello");
+					feat.push_back("UserIP2");
+					feat.push_back("TTHSearch");
+
+					if (getStealth() == false)
+						feat.push_back("QuickList");
+
+					if(BOOLSETTING(COMPRESS_TRANSFERS))
+						feat.push_back("GetZBlock");
+					supports(feat);
+    				if(PtokaX == false) key(CryptoManager::getInstance()->makeKey(aLine));
+				} else {
+					key(CryptoManager::getInstance()->makeKey(aLine));
+					validateNick(getNick());
+				}
+				if(temp != NULL) {
+					if(stricmp(temp+3, "YnHub") == 0) {
+						YnHub = true;
+					} else if(strcmp(temp+3, "PtokaX") == 0) {
+						PtokaX = true;
+					}
+    	    	}
+        		return;
+	        }
+          	dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+    	case 'F':
+	    	if(strncmp(aLine+2, "orceMove ", 9) == 0) {
+				aLine += 11;
+				if(aLine == NULL) return;
+
+				disconnect();
+				fire(ClientListener::Redirect(), this, fromNmdc(aLine));
+    			return;
+        	}
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'V':
+	    	// $ValidateDenide
+    		if(strncmp(aLine+2, "alidateDenide", 13) == 0) {
+				disconnect();
+				fire(ClientListener::NickTaken(), this);
+	    		return;
+    	    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'N':
+	    	// $NickList
+    		if(strncmp(aLine+2, "ickList ", 8) == 0) {
+				User::List v;
+				aLine += 10;
+				if(aLine == NULL) return;
+
+				while((temp = strchr(aLine, '$')) != NULL) {
+					temp[0] = NULL;
+					if(aLine == NULL) break;
+
+					v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
+					aLine = temp+2;
+				}
+	
+				{
+					Lock l(cs);
+					for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+						users[(*it2)->getNick()] = *it2;
+					}
+				}
+		
+				if(!(getSupportFlags() & SUPPORTS_NOGETINFO)) {
+					string tmp;
+					// Let's assume 10 characters per nick...
+					tmp.reserve(v.size() * (11 + 10 + getNick().length())); 
+					string n = ' ' +  toNmdc(getNick()) + '|';
+					for(User::List::const_iterator i = v.begin(); i != v.end(); ++i) {
+						tmp += "$GetINFO ";
+						tmp += toNmdc((*i)->getNick());
+						tmp += n;
+					}
+					if(!tmp.empty()) {
+						send(tmp);
+					}
+				}
+				fire(ClientListener::UsersUpdated(), this, v);
+    			return;
+	        }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'O':
+	    	// $OpList
+    		if(strncmp(aLine+2, "pList ", 6) == 0) {
+				User::List v;
+				aLine += 8;
+				if(aLine == NULL) return;
+
+				while((temp = strchr(aLine, '$')) != NULL) {
+					temp[0] = NULL;
+					if(aLine == NULL) break;
+
+					v.push_back(ClientManager::getInstance()->getUser(fromNmdc(aLine), this));
+					v.back()->setFlag(User::OP);
+					aLine = temp+2;
+				}
+
+				{
+					Lock l(cs);
+					for(User::Iter it2 = v.begin(); it2 != v.end(); ++it2) {
+						users[(*it2)->getNick()] = *it2;
+					}
+				}
+				fire(ClientListener::UsersUpdated(), this, v);
+				updateCounts(false);
+				if(bFirstOpList == true) {
+					if(getRegistered() == true) {
+						myInfo();
+		            }
+					bFirstOpList = false;
+				}
+	    		return;
+    	    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'T':
+	    	// $To
+    		if(strncmp(aLine+2, "o: ", 3) == 0) {
+				if((temp1 = strstr(aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
+					if((temp = strchr(temp1+6, '$')) == NULL || temp+1 == NULL) return;
+	
+					temp1 += 6; *(temp-1) = NULL; temp += 1;
+					if(temp1 == NULL || temp == NULL) return;
+
+					fire(ClientListener::PrivateMessage(), this, ClientManager::getInstance()->getUser(fromNmdc(temp1), this, false), Util::validateMessage(fromNmdc(temp), true));
+				}
+    			return;
+	        }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'G':
+	    	// $GetPass
+    		if(strcmp(aLine+2, "etPass") == 0) {
+				setRegistered(true);
+				fire(ClientListener::GetPassword(), this);
+	    		return;
+    	    }
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+        case 'B':
+	    	// $BadPass
+    		if(strcmp(aLine+2, "adPass") == 0) {
+				fire(ClientListener::BadPassword(), this);
+    			return;
         }
-    } else if(aLine[1] == 'G') {
-    	// $GetPass
-    	if(strcmp(aLine+2, "etPass") == 0) {
-			setRegistered(true);
-			fire(ClientListener::GetPassword(), this);
-    		return;
-        }
-    } else if(aLine[1] == 'B') {
-    	// $BadPass
-    	if(strcmp(aLine+2, "adPass") == 0) {
-			fire(ClientListener::BadPassword(), this);
-    		return;
-        }
-	} else {
-		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
-		return;
+            
+            dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+    	default:
+			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+			return;
 	}
 }
 
