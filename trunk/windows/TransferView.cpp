@@ -543,6 +543,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				j->status = i->status;
 				if(!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))
 					j->statusString = i->statusString;
+				if(i->updateMask & ItemInfo::MASK_IP)
+					j->start = 0;
 			} else if(i->status == ItemInfo::STATUS_RUNNING) {
 				j->status = ItemInfo::STATUS_RUNNING;
 				if(!i->file.empty() && (i->numberOfSegments == 0)) {
@@ -554,6 +556,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				if((i->numberOfSegments == 1) && (!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))) {
 					j->statusString = i->statusString;
 				}
+				if(i->updateMask & ItemInfo::MASK_IP)
+					j->start = 0;
 			} else if(i->updateMask & ItemInfo::MASK_HUB) {	
 				j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target);
 				if(!i->file.empty() && (j->numberOfSegments == 0)) {

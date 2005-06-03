@@ -108,7 +108,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 			// creating Edit
 			m_hWndEdit1 = CreateWindowEx(WS_EX_STATICEDGE,
 				_T("edit"),_T(""),
-				WS_VISIBLE | WS_CHILD  | WS_TABSTOP | ES_READONLY | ES_MULTILINE, 
+				WS_VISIBLE | WS_CHILD  | WS_TABSTOP | ES_READONLY | ES_MULTILINE | WS_VSCROLL, 
 				5, INPUTBOX_HEIGHT - 80, INPUTBOX_WIDTH - 16, 48, 
 				hWnd, 
 				NULL, 
@@ -235,7 +235,7 @@ BOOL CInputBox::DoModal(LPCTSTR szCaption, LPCTSTR szPrompt, LPCTSTR szText, LPC
         return FALSE;
 
 
-    SetWindowText(m_hWndPrompt, szPrompt);
+    	SetWindowText(m_hWndPrompt, szPrompt);
 	SetWindowText(m_hWndEdit, szText);
 	SetWindowText(m_hWndEdit1, szText1);
 
