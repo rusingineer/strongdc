@@ -178,7 +178,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							}
 							is = ss;
 							size = chunksInfo->iFileSize;
-							free = (size <= (int64_t)(64 * 1024));
+							free = false;
 
 							if((aStartPos + aBytes) < size) {
 								is = new LimitedInputStream<true>(is, aBytes);
