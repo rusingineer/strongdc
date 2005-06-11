@@ -332,11 +332,11 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
 	size_t n = 0;
-	size_t n2 = 512*1024;
+	size_t n2 = 524288;
 	int64_t hashed = 0;
 	while( (n = file.read(buf, n2)) > 0) {
 		tth.update(buf, n);
-		n2 = 512*1024;
+		n2 = 524288;
 		hashed = hashed + n;
 		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), aTarget, hashed);
 	}
@@ -618,7 +618,6 @@ int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
 	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i+=2){
 		int64_t b = *i;
 		int64_t e = *(i+1);
-		int64_t block = minChunkSize * 2;
 		
 		if(e - b < MIN_BLOCK_SIZE * 3) continue;
 

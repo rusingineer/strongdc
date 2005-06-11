@@ -449,16 +449,16 @@ private:
 			hubName = Text::toT(sr->getHubName());
 			slots = Text::toT(sr->getSlotString());
 			ip = Text::toT(sr->getIP());
-			tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
-			if(!tmpCountry.empty())
-				ip = tmpCountry + _T(" (") + ip + _T(")");
+			flagimage = 0;
+			if(!ip.empty()) {
+				tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
+				if(!tmpCountry.empty()) {
+					ip = tmpCountry + _T(" (") + ip + _T(")");
+					flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
+				}
+			}
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
-			
-			if(!sr->getIP().empty())
-				flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
-			else 
-				flagimage = 0;
 
 			if(user->getDownloadSpeed()<1) {
 				int status = user->getStatus();

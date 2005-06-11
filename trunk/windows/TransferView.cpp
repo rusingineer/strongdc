@@ -548,23 +548,14 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			} else if(i->status == ItemInfo::STATUS_RUNNING) {
 				j->status = ItemInfo::STATUS_RUNNING;
 				if(!i->file.empty() && (i->numberOfSegments == 0)) {
-					j->file = i->file;
 					j->statusString = TSTRING(DOWNLOADING_TTHL);
-				} else {
-					j->file = Util::emptyStringT;
-				}
-				if((i->numberOfSegments == 1) && (!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))) {
+				} else if((i->numberOfSegments == 1) && (!i->upperUpdated || !(i->updateMask & ItemInfo::MASK_IP))) {
 					j->statusString = i->statusString;
 				}
 				if(i->updateMask & ItemInfo::MASK_IP)
 					j->start = 0;
 			} else if(i->updateMask & ItemInfo::MASK_HUB) {	
 				j->numberOfSegments = QueueManager::getInstance()->getRunningCount(i->user, i->Target);
-				if(!i->file.empty() && (j->numberOfSegments == 0)) {
-					j->file = i->file;
-				} else {
-					j->file = Util::emptyStringT;
-				}
 				if(j->numberOfSegments == 0) {
 					j->status = ItemInfo::STATUS_WAITING;
 				}
@@ -840,8 +831,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
 			ItemInfo* i = transferItems[aCqi];
 	
-			if(i->main->start == -1)
-				continue;
+			//if(!i->main || (i->main->start == -1))
+			//	continue;
 
 			i->actual = i->start + d->getActual();
 			i->pos = i->start + d->getTotal();
@@ -975,7 +966,7 @@ void TransferView::on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi
 			i->main->statusString = Text::toT(aMessage);
 			i->main->status = ItemInfo::STATUS_WAITING;
 		}
-		i->updateMask |= ItemInfo::MASK_STATUS;	
+		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS;	
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
 }

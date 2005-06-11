@@ -837,7 +837,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 		int64_t available = client->getAvailable();
 		ctrlStatus.SetText(2, Text::toT(Util::formatBytes(available)).c_str());
-		if(client->getUserCount() > 0)
+		if(AllUsers > 0)
 			ctrlStatus.SetText(3, Text::toT((Util::formatBytes(available / AllUsers) + "/" + STRING(USER))).c_str());
 		else
 			ctrlStatus.SetText(3, _T(""));
