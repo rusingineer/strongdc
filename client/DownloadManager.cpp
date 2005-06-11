@@ -711,6 +711,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
+					d->setPos(d->getStartPos());
 					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree(), d->getTarget())) {
 						dcdebug("last verify failed .....\n");
 

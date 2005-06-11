@@ -77,7 +77,7 @@ namespace {
 
 const string& QueueItem::getTempTarget() {
 	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
-		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(getTarget()) == -1)) {
+		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() /*&& (File::getSize(getTarget()) == -1)*/) {
 #ifdef _WIN32
 			::StringMap sm;
 			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
@@ -1088,9 +1088,9 @@ again:
 			if(freeBlock == -2) {
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
-				//fire(QueueManagerListener::StatusUpdated(), q);
-			}
-			message = STRING(NO_FREE_BLOCK);
+				message = STRING(NO_NEEDED_PART);
+			} else
+				message = STRING(NO_FREE_BLOCK);
 			
 			if(!aTarget.empty()) {
 				aTarget = Util::emptyString;

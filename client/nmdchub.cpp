@@ -682,8 +682,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				if(state != STATE_LOCK || aLine == NULL) return;
 
 				state = STATE_HELLO;
-				if((temp = strstr(aLine, " Pk=")) != NULL && temp+1 != NULL)
-					temp[0] = NULL; temp += 1;
+				if((temp = strstr(aLine, " Pk=")) != NULL && temp+1 != NULL) {
+					temp[0] = NULL;
+					temp += 1;
+				}
 	
 				if(aLine == NULL) return;
 
