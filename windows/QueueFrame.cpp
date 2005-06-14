@@ -296,6 +296,8 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += TSTRING(INVALID_TREE);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
 						tmp += TSTRING(SLOW_USER);
+					} else if(j->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
+						tmp += TSTRING(NO_NEEDED_PART);
 					}
 					tmp += _T(')');
 				}

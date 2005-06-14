@@ -162,10 +162,10 @@ SettingsManager::SettingsManager()
 	setDefault(CLEAR_SEARCH, true);
 	setDefault(SHARE_HIDDEN, false);
 	setDefault(FILTER_MESSAGES, true);
-	setDefault(MINIMIZE_TRAY, false);
+	setDefault(MINIMIZE_TRAY, true);
 	setDefault(AUTO_SEARCH, true);
 	setDefault(TIME_STAMPS, false);
-	setDefault(CONFIRM_EXIT, false);
+	setDefault(CONFIRM_EXIT, true);
 	setDefault(IGNORE_OFFLINE, false);
 	setDefault(POPUP_OFFLINE, false);
 	setDefault(LIST_DUPES, true);
