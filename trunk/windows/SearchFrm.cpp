@@ -1374,6 +1374,9 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 	while(ctrlSearchBox.GetCount() > 0){
 			ctrlSearchBox.DeleteString(0);
 	}
+	while(lastSearches.size() > 0) {
+		lastSearches.erase(lastSearches.end());
+	}
 	return 0;
 }
 

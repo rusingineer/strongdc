@@ -263,13 +263,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		return;
 	}
 
-	{
-		Lock l(cs);
-		downloads.push_back(d);
-
-		d->setUserConnection(aConn);
-		aConn->setDownload(d);
-	}
+	d->setUserConnection(aConn);
+	aConn->setDownload(d);
 
 	if(d->isSet(Download::FLAG_TESTSUR)) {
 		aConn->getListLen();
@@ -322,6 +317,11 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		d->setStartPos(0);
 	}
 
+	{
+		Lock l(cs);
+		downloads.push_back(d);
+	}
+	
 	// File ok for adcget in nmdc-conns
 	bool adcOk = d->isSet(Download::FLAG_UTF8) || (aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) && d->getTTH() != NULL);
 

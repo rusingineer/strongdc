@@ -810,6 +810,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+		} else if(aDownload->isSet(Download::FLAG_PARTIAL)){
+			i->file = _T("Partial: ") + Text::toT(Util::getFileName(i->Target));
 		} else {
 			i->file = Util::emptyStringT;
 		}

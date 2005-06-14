@@ -376,10 +376,10 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 		PartsInfo outPartialInfo;
 		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
-
-		if((UdpPort > 0) && (!outPartialInfo.empty())) {
+		
+		Client* aClient = user->getClient();
+		if((UdpPort > 0) && (aClient != NULL) && !outPartialInfo.empty()) {
 			char buf[1024];
-			Client* aClient = user->getClient();
 			string me = Text::utf8ToAcp(aClient->getMe()->getNick());
 			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", me.c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo));
 			buf[1023] = NULL;
