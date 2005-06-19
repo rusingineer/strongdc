@@ -173,6 +173,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							SharedFileStream* ss = new SharedFileStream(file, aStartPos);
 							if(ss->getSize() < aBytes) {
 								aSource->fileNotAvail();
+								aSource->disconnect();
 								delete is;
 								return false;
 							}
@@ -185,11 +186,14 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							}
 
 							goto ok;
-						}catch(const Exception&){
+						}catch(const Exception&){							
 							aSource->fileNotAvail();
+							aSource->disconnect();
 							delete is;
 							return false;
 						}
+					} else {
+						aSource->disconnect();
 					}
 				} else if(aType == "tthl") {
 					// TTH Leaves...

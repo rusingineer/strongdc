@@ -380,8 +380,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		Client* aClient = user->getClient();
 		if((UdpPort > 0) && (aClient != NULL) && !outPartialInfo.empty()) {
 			char buf[1024];
-			string me = Text::utf8ToAcp(aClient->getMe()->getNick());
-			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", me.c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo));
+			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(aClient->getMe()->getNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo));
 			buf[1023] = NULL;
 			Socket s; s.writeTo(Socket::resolve(address), UdpPort, buf);
 		}
