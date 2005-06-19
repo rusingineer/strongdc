@@ -25,6 +25,7 @@
 #include "WinUtil.h"
 #include "CZDCLib.h"
 #include "MainFrm.h"
+#include "AGEmotionSetup.h"
 
 #include "../client/Client.h"
 #include "../client/ClientManager.h"
@@ -39,6 +40,8 @@ CriticalSection PrivateFrame::cs;
 PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
 tstring pSelectedURL = Util::emptyStringT;
+
+extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -61,6 +64,11 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ctrlMessage.SetFont(WinUtil::font);
 	ctrlMessage.SetLimitText(9999);
+
+	ctrlEmoticons.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER, 0, IDC_EMOT);
+  	hEmoticonBmp = (HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED);
+
+  	ctrlEmoticons.SetBitmap(hEmoticonBmp);
 
 	grantMenu.CreatePopupMenu();
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
@@ -358,6 +366,7 @@ void PrivateFrame::onEnter()
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
+		DeleteObject(hEmoticonBmp);
 		ClientManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
@@ -563,10 +572,14 @@ void PrivateFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc = rect;
 	rc.bottom -= 2;
 	rc.top = rc.bottom - (2*h) - 5;
-	rc.left +=2;
-	rc.right -=2;
+
+	rc.right -= rc.Height()+2;
 	ctrlMessage.MoveWindow(rc);
 	
+	rc.left = rc.right + 2;
+  	rc.right += rc.Height();
+  	 
+  	ctrlEmoticons.MoveWindow(rc);
 }
 
 void PrivateFrame::updateTitle() {
@@ -596,7 +609,7 @@ void PrivateFrame::updateTitle() {
 	setDirty();
 }
 
-LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
+LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 
 	POINT p;
@@ -607,11 +620,43 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM /*wParam*/, LPARAM lParam,
 	POINT cpt;
 	GetCursorPos(&cpt);
 
+	CRect rc;            // client area of window 
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
+	OMenu Mnu;
+
 	pSelectedLine = _T("");
 
 	bool bHitURL = ctrlClient.HitURL(p);
 	if (!bHitURL)
 		pSelectedURL = _T("");
+
+	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) { 
+		if(emoMenu != NULL) emoMenu.DestroyMenu();
+		emoMenu.CreatePopupMenu();
+		menuItems = 0;
+		emoMenu.AppendMenu(MF_STRING, IDC_PM, _T("Disabled"));
+		if (SETTING(EMOTICONS_FILE)=="Disabled") emoMenu.CheckMenuItem( IDC_PM, MF_BYCOMMAND | MF_CHECKED );
+		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
+		WIN32_FIND_DATA data;
+		HANDLE hFind;
+		hFind = FindFirstFile(Text::toT(Util::getAppPath()+"EmoPacks\\*.xml").c_str(), &data);
+		if(hFind != INVALID_HANDLE_VALUE) {
+			do {
+				tstring name = data.cFileName;
+				tstring::size_type i = name.rfind('.');
+				name = name.substr(0, i);
+
+				menuItems++;
+				emoMenu.AppendMenu(MF_STRING, IDC_PM + menuItems, name.c_str());
+				if(name == Text::toT(SETTING(EMOTICONS_FILE))) emoMenu.CheckMenuItem( IDC_PM + menuItems, MF_BYCOMMAND | MF_CHECKED );
+			} while(FindNextFile(hFind, &data));
+			FindClose(hFind);
+		}
+		emoMenu.InsertSeparatorFirst("Emoticons Pack");
+		if(menuItems>0) emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		emoMenu.RemoveFirstItem();
+		return TRUE;
+	}
 
 	int i = ctrlClient.CharFromPos(p);
 	int line = ctrlClient.LineFromChar(i);

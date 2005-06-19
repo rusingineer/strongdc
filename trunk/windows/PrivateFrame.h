@@ -31,6 +31,8 @@
 #include "FlatTabCtrl.h"
 #include "WinUtil.h"
 #include "UCHandler.h"
+#include "EmoticonsDlg.h"
+#include "HubFrame.h"
 
 #include "ChatCtrl.h"
 
@@ -82,6 +84,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_ACTUAL_LINE, onCopyActualLine)
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
+		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
@@ -111,6 +114,27 @@ public:
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+
+  	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
+  	       if (hWndCtl != ctrlEmoticons.m_hWnd) {
+  	                 bHandled = false;
+  	                 return 0;
+  	           }
+  	 
+  	       EmoticonsDlg dlg;
+  	       ctrlEmoticons.GetWindowRect(dlg.pos);
+  	       dlg.DoModal(m_hWnd);
+  		   if (!dlg.result.empty()) {
+  	             TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
+  	             ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
+  	             tstring s(message, ctrlMessage.GetWindowTextLength());
+  	             delete[] message;
+  	             ctrlMessage.SetWindowText(Text::toT(Text::fromT(s)+dlg.result).c_str());
+  	             ctrlMessage.SetFocus();
+  	             ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
+  	           }
+  	       return 0;
+  	}
 
 	void addLine(const tstring& aLine);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf);
@@ -194,6 +218,11 @@ private:
 	OMenu grantMenu;
 	OMenu textMenu;
 	OMenu tabMenu;
+	
+	int menuItems;
+	OMenu emoMenu;
+	CButton ctrlEmoticons;
+	HBITMAP hEmoticonBmp;
 
 	StringMap ucParams;
 

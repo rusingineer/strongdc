@@ -1391,17 +1391,17 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				sCopy = sr->getUser()->getNick();
 				break;
 			case IDC_COPY_FILENAME:
-				sCopy = Util::getFileName(sr->getFile());
+				sCopy = Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 				break;
 			case IDC_COPY_PATH:
-				sCopy = Util::getFilePath(sr->getFile());
+				sCopy = Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 				break;
 			case IDC_COPY_SIZE:
 				sCopy = Util::formatBytes(sr->getSize());
 				break;
 			case IDC_COPY_LINK:
 				if(sr->getType() == SearchResult::TYPE_FILE) {
-					WinUtil::copyMagnet(sr->getTTH(), Text::toT(sr->getFileName()), sr->getSize());
+					WinUtil::copyMagnet(sr->getTTH(), Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName())), sr->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:
