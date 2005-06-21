@@ -1890,7 +1890,7 @@ bool QueueManager::autoDropSource(const User::Ptr& aUser) {
     userQueue.setWaiting(q, aUser);
     userQueue.remove(q, aUser);
 
-    q->removeSource(aUser, QueueItem::Source::FLAG_REMOVED);
+    q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
 
 	fire(QueueManagerListener::StatusUpdated(), q);
     setDirty();

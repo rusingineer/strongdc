@@ -317,6 +317,9 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 	{
 		Lock l(cs);
 
+		if(BOOLSETTING(CHECK_UNVERIFIED_ONLY) && (iVerifiedSize*4/3 >= iFileSize))
+				return true;
+
 		// This is only called when download finish
 		// Because buffer is used during download, the disk data maybe incorrect
   		_ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());

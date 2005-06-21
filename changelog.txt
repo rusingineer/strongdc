@@ -1,4 +1,4 @@
-	-- StrongDC++ next version --
+	-- StrongDC++ 1.00 RC10 --
 
 * opraven problém s mezinárodními pøezdívkami
 * opraven problém s unicode znaky v èasových známkách
@@ -47,6 +47,7 @@
 * opraven vzácný deadlock pøi nalezení fakera
 * pøidána podpora pro balíky emotikonù (uložte je do podsložky EmoPacks)
 * pøepsán kód pro seskupování downloadù v Pøenosech
+* pøidáno sdílení èásteèných souborù (nápad z RevConnectu)
 
 
 	-- StrongDC++ 1.00 RC9 --
