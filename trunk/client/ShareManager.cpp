@@ -733,18 +733,17 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
 		//check for forbidden file patterns
 			string::size_type nameLen = name.size();
-			if ((nameLen >= 28 && name.find("download") == 0 && name.rfind(".dat") == nameLen - 4 && Util::toInt64(name.substr(8, 16))) ||		//kazaa temps
-				name.find("__INCOMPLETE__") == 0 ||		//winmx
-				name.find("__incomplete__") == 0 ||		//winmx
-				(nameLen > 9 && name.rfind(".GetRight") == nameLen - 9) ||
-				(nameLen > 9 && name.rfind(".tdc") == nameLen - 4) ||
-				(nameLen > 9 && name.rfind(".temp") == nameLen - 5) ||
-				(nameLen > 9 && name.rfind("part.met") == nameLen - 8) ||
-				(nameLen > 9 && name.rfind(".antifrag") == nameLen - 9) ||
-				(nameLen > (39 + 2 + 5) && name.rfind(".dctmp") == nameLen - 6)) {	// dc++ temp files
-				LogManager::getInstance()->message("Forbidden file will not be shared: " + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
-					//size-=j->getSize();
-					//++j;
+			string fileExt = Util::getFileExt(name);
+			if ((Util::stricmp(fileExt.c_str(), ".tdc") == 0) ||
+				(Util::stricmp(fileExt.c_str(), ".GetRight") == 0) ||
+				(Util::stricmp(fileExt.c_str(), ".temp") == 0) ||
+				(Util::stricmp(fileExt.c_str(), ".antifrag") == 0) ||
+				(Util::stricmp(fileExt.c_str(), ".dctmp") == 0) ||
+				(nameLen > 9 && name.rfind("part.met") == nameLen - 8) ||				
+				(name.find("__INCOMPLETE__") == 0) ||		//winmx
+				(name.find("__incomplete__") == 0) ||		//winmx
+				(nameLen >= 28 && name.find("download") == 0 && name.rfind(".dat") == nameLen - 4 && Util::toInt64(name.substr(8, 16)))) {		//kazaa temps
+					LogManager::getInstance()->message("Forbidden file will not be shared: " + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
 					continue;
 			}
 		}

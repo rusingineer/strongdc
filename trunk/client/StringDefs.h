@@ -245,7 +245,7 @@ enum Strings { // @DontAdd
 	CHECK_MISMATCHED_SHARE_SIZE, // "Mismatched share size - "
 	CHECK_ON_CONNECT, // "Check user on join"
 	CHECK_SHOW_REAL_SHARE, // ", stated size = %[statedshareformat], real size = %[realshareformat]"
-	CHECK_UNVERIFIED_ONLY, // "Check only unverified chunks after downloading"
+	CHECK_UNVERIFIED_ONLY, // "Don't check TTH on finish when more than 75% of file is verified"
 	CHECKING_TTH, // "Verifying TTH..."
 	CHOOSE_FOLDER, // "Choose folder"
 	IGNORE_TTH_SEARCHES, // "Ignore TTH searches"

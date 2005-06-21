@@ -576,7 +576,10 @@ void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
 	{
 		Lock l(cs);
 		QueueIter i = queue.find(aQI);
-		dcassert(i != queue.end());
+		
+		if(i == queue.end())
+			return;
+
 		qi = i->second;
 		queue.erase(i);
 

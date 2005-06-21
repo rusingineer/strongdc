@@ -806,6 +806,23 @@ void PrivateFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw()
 	RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }
 
+LRESULT PrivateFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	TCHAR buf[256];
+	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
+	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
+		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
+		delete g_pEmotionsSetup;
+		g_pEmotionsSetup = NULL;
+		g_pEmotionsSetup = new CAGEmotionSetup;
+		if ((g_pEmotionsSetup == NULL)||
+			(!g_pEmotionsSetup->Create())){
+			dcassert(FALSE);
+			return -1;
+		}
+	}
+	return 0;
+}
+
 /**
  * @file
  * $Id$

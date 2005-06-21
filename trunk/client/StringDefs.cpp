@@ -242,7 +242,7 @@ string ResourceManager::strings[] = {
 "Mismatched share size - ", 
 "Check user on join", 
 ", stated size = %[statedshareformat], real size = %[realshareformat]", 
-"Check only unverified chunks after downloading", 
+"Don't check TTH on finish when more than 75% of file is verified", 
 "Verifying TTH...", 
 "Choose folder", 
 "Ignore TTH searches", 

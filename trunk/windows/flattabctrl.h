@@ -696,6 +696,8 @@ private:
 		pos = pos + getFill() / 2 + FT_EXTRA_SPACE / 2;
 		if (tab->hIcon != 0)
 			pos += 10;
+
+		COLORREF oldclr = dc.SetTextColor(GetSysColor(COLOR_BTNTEXT));
 		if(tab->dirty) {
 			HFONT f = dc.SelectFont(WinUtil::boldFont);
 			dc.TextOut(pos, ypos + 2, tab->name, tab->len);
@@ -706,6 +708,7 @@ private:
 		if (tab->hIcon != 0) {
 			DrawIconEx(dc.m_hDC, pos - 18, ypos, tab->bState ? tab->hStateIcon : tab->hIcon, 16, 16, NULL, hBr, DI_NORMAL | DI_COMPAT);
 		}
+		dc.SetTextColor(oldclr);
 	};
 };
 

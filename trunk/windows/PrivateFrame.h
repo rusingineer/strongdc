@@ -85,6 +85,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
 		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
+		COMMAND_RANGE_HANDLER(IDC_PM, IDC_PM + menuItems, onEmoPackChange);
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
@@ -114,6 +115,7 @@ public:
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
   	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
   	       if (hWndCtl != ctrlEmoticons.m_hWnd) {
