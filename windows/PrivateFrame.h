@@ -85,7 +85,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
 		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
-		COMMAND_RANGE_HANDLER(IDC_PM, IDC_PM + menuItems, onEmoPackChange);
+		COMMAND_RANGE_HANDLER(IDC_EMOMENU, IDC_EMOMENU + menuItems, onEmoPackChange);
 		CHAIN_COMMANDS(ucBase)
 		CHAIN_MSG_MAP(baseClass)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
@@ -202,7 +202,7 @@ public:
 private:
 	PrivateFrame(const User::Ptr& aUser) : user(aUser), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
-		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP) {
+		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) {
 		}
 	
 	~PrivateFrame() {

@@ -1340,7 +1340,8 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 	}
 
 	for(Directory::MapIter l = directories.begin(); (l != directories.end()) && (aResults.size() < maxResults); ++l) {
-		l->second->search(aResults, *cur, aSearchType, aSize, aFileType, aClient, maxResults);
+		if(l->second != NULL)
+			l->second->search(aResults, *cur, aSearchType, aSize, aFileType, aClient, maxResults);
 	}
 }
 

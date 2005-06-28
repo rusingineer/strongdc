@@ -494,7 +494,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(i->subItems.size() == 1) {
+		if(i->subItems.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					ctrlTransfers.getItemData(item->iItem)->pm();

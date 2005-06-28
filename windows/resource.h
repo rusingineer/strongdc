@@ -593,6 +593,7 @@
 #define IDC_BROWSELIST                  3000
 #define IDC_REMOVE_SOURCE               3500
 #define IDC_PM                          4000
+#define IDC_EMOMENU						4001
 #define IDC_READD                       4500
 #define IDC_DOWNLOAD_TARGET             5000
 #define IDC_DOWNLOAD_TARGET_DIR         5500
