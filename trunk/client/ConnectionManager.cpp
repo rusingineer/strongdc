@@ -754,7 +754,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
 		} else if(*i == UserConnection::FEATURE_TTHF) {
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
-			conn->getUser()->setFlag(User::TTH_GET);
+			if(conn->getUser() != (User::Ptr)NULL)
+				conn->getUser()->setFlag(User::TTH_GET);
 		}
 	}
 	if(conn->getUser() != (User::Ptr)NULL) {

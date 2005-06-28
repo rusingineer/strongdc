@@ -255,7 +255,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 	CAtlString sMsgLower = sText;
 	sMsgLower.MakeLower();
 	CAtlString sNick = sMyNick;
-   if(myMess == true) {
+	if(myMess == true) {
 		// Moje vlastni zprava
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelBegin, lSelEnd);

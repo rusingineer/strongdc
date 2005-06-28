@@ -634,8 +634,8 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 		if(emoMenu != NULL) emoMenu.DestroyMenu();
 		emoMenu.CreatePopupMenu();
 		menuItems = 0;
-		emoMenu.AppendMenu(MF_STRING, IDC_PM, _T("Disabled"));
-		if (SETTING(EMOTICONS_FILE)=="Disabled") emoMenu.CheckMenuItem( IDC_PM, MF_BYCOMMAND | MF_CHECKED );
+		emoMenu.AppendMenu(MF_STRING, IDC_EMOMENU, _T("Disabled"));
+		if (SETTING(EMOTICONS_FILE)=="Disabled") emoMenu.CheckMenuItem( IDC_EMOMENU, MF_BYCOMMAND | MF_CHECKED );
 		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
@@ -647,8 +647,8 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 				name = name.substr(0, i);
 
 				menuItems++;
-				emoMenu.AppendMenu(MF_STRING, IDC_PM + menuItems, name.c_str());
-				if(name == Text::toT(SETTING(EMOTICONS_FILE))) emoMenu.CheckMenuItem( IDC_PM + menuItems, MF_BYCOMMAND | MF_CHECKED );
+				emoMenu.AppendMenu(MF_STRING, IDC_EMOMENU + menuItems, name.c_str());
+				if(name == Text::toT(SETTING(EMOTICONS_FILE))) emoMenu.CheckMenuItem( IDC_EMOMENU + menuItems, MF_BYCOMMAND | MF_CHECKED );
 			} while(FindNextFile(hFind, &data));
 			FindClose(hFind);
 		}

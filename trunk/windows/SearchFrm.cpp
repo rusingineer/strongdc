@@ -546,7 +546,7 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 			string target = Text::fromT(tgt + si->fileName);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
 				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
-				si->sr->getUtf8(), BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0);
+				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 			
 			if(si->subItems.size()>0) {
 				int q = 0;
@@ -554,7 +554,7 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 					SearchInfo* j = si->subItems[q];
 					try {
 						QueueManager::getInstance()->add(Text::fromT(tgt + si->fileName), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
-							j->sr->getFile(), j->sr->getUtf8(), BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0);
+							j->sr->getFile(), j->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 					} catch(const Exception&) {
 					}
 					q++;
@@ -589,7 +589,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 			string target = Text::fromT(tgt);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
 				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
-				si->sr->getUtf8(), BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0);
+				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 
 			if((GetKeyState(VK_SHIFT) & 0x8000) > 0)
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
