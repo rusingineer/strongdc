@@ -229,7 +229,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 			}
 		}
 	} else {
-		AppendTextOnly(sMyNick, _T(""), sText, cf, _T(""));
+		AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);

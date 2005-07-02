@@ -373,7 +373,7 @@ private:
 		client->setRawThree(Text::fromT(aRawThree));
 		client->setRawFour(Text::fromT(aRawFour));
 		client->setRawFive(Text::fromT(aRawFive));
-		client->addListener(this);
+		//client->addListener(this);
 		if(FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			showUsers = userliststate;
 		} else {

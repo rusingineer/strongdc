@@ -172,9 +172,11 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	{
 		Lock l(cs);
 		
-		dcassert(find(userConnections.begin(), userConnections.end(), aConn) != userConnections.end());
-		userConnections.erase(find(userConnections.begin(), userConnections.end(), aConn));
-		pendingDelete.push_back(aConn);
+		UserConnection::Iter u = find(userConnections.begin(), userConnections.end(), aConn);
+		if(u != userConnections.end()) {
+			userConnections.erase(u);
+			pendingDelete.push_back(aConn);
+		}
 	}
 }
 
