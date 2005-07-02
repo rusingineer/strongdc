@@ -462,7 +462,7 @@ int BufferedSocket::run() {
 
 				switch(t) {
 				case SHUTDOWN: threadShutDown(); return 0;
-				case DISCONNECT: if(isConnected()) fail(STRING(DISCONNECTED)); break;
+				case DISCONNECT: /*if(isConnected()) */fail(STRING(DISCONNECTED)); break;
 				case SEND_FILE: if(isConnected()) sendingFile = true; break;
 				case SEND_DATA: dcassert(!sendingFile); if(isConnected()) threadSendData(); break;
 				case CONNECT: sendingFile = false; threadConnect(); break;

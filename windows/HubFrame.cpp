@@ -187,6 +187,8 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlFilterSel.SetCurSel(0);
 
 	bHandled = FALSE;
+
+	client->addListener(this);
 	client->connect();
 
     TimerManager::getInstance()->addListener(this);

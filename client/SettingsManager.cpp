@@ -478,7 +478,7 @@ SettingsManager::SettingsManager()
 	setDefault(USERLIST_DBLCLICK, 0);
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	
-	setDefault(CHECK_UNVERIFIED_ONLY, true);
+	setDefault(CHECK_UNVERIFIED_ONLY, false);
 	setDefault(NORMAL_COLOUR, RGB(255,255,255));
 	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
 	setDefault(IGNORED_COLOR, RGB(192,192,192));	
