@@ -581,11 +581,12 @@ void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
 			return;
 
 		qi = i->second;
+		qi->qi = NULL;
 		queue.erase(i);
 
 		dirty = true;
 	}
-
+	
 	speak(REMOVE_ITEM, qi);
 }
 
@@ -667,7 +668,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			addQueueItem(ii, false);
 			updateStatus();
 		} else if(ti->first == REMOVE_ITEM) {
-			QueueItemInfo* ii = (QueueItemInfo*)ti->second;
+			QueueItemInfo* ii = (QueueItemInfo*)ti->second;			
 			
 			if(!showTree || isCurDir(ii->getPath()) ) {
 				dcassert(ctrlQueue.findItem(ii) != -1);
