@@ -48,6 +48,7 @@
 * pøidána podpora pro balíky emotikonù (uložte je do podsložky EmoPacks)
 * pøepsán kód pro seskupování downloadù v Pøenosech
 * pøidáno sdílení èásteèných souborù (nápad z RevConnectu)
+* hodnì dalších vìcí, které nejsem schopen sepsat
 
 
 	-- StrongDC++ 1.00 RC9 --
