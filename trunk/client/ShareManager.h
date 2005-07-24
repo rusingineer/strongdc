@@ -111,7 +111,6 @@ public:
 	GETSET(string, bzXmlFile, BZXmlFile);
 	GETSET(int64_t, sharedSize, SharedSize);
 
-	void generateXmlList(bool force = false);
 private:
 	struct AdcSearch;
 	class Directory : public FastAlloc<Directory> {
@@ -298,7 +297,7 @@ private:
 	void addTree(Directory* aDirectory);
 	void addFile(Directory* dir, Directory::File::Iter i);
 	void generateNmdcList();
-
+	void generateXmlList();
 	StringList notShared;
 	bool loadCache();
 

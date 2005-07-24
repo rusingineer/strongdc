@@ -109,7 +109,7 @@ ShareManager::~ShareManager() {
 
 ShareManager::Directory::~Directory() {
 	for(MapIter i = directories.begin(); i != directories.end(); ++i)
-		delete i->second;
+		if(i->second) delete i->second;
 	for(File::Iter i = files.begin(); i != files.end(); ++i) {
 		ShareManager::getInstance()->removeTTH(i->getTTH(), i);
 	}
@@ -879,9 +879,9 @@ int ShareManager::run() {
 	return 0;
 }
 		
-void ShareManager::generateXmlList(bool force /* = false */ ) {
+void ShareManager::generateXmlList() {
 	Lock l(listGenLock);
-	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate || force ) ) {
+	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate)) {
 		listN++;
 
 		try {

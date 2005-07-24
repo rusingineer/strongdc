@@ -277,11 +277,11 @@ public:
 			if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth())) ) {
 				// Bingo, this was clicked, check if the owner wants to handle it...
 				if(!::SendMessage(t->hWnd, FTM_CONTEXTMENU, 0, lParam)) {
-				closing = t->hWnd;
-				ClientToScreen(&pt);
-				OMenu mnu;
-				mnu.CreatePopupMenu();
-				mnu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
+					closing = t->hWnd;
+					ClientToScreen(&pt);
+					OMenu mnu;
+					mnu.CreatePopupMenu();
+					mnu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 					mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pt.x, pt.y, m_hWnd);
 				}
 				break;

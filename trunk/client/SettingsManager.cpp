@@ -237,7 +237,7 @@ SettingsManager::SettingsManager()
 	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);
-	setDefault(UPDATE_URL, "http://www.fin-overclocking.net/");
+	setDefault(UPDATE_URL, "http://ghostface.asgards.org/");
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
 	setDefault(SHOW_TRANSFERVIEW, true);

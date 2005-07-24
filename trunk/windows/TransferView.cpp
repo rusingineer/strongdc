@@ -273,6 +273,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		lvc.pszText = headerBuf;
 		lvc.cchTextMax = 128;
 		ctrlTransfers.GetColumn(cd->iSubItem, &lvc);
+		cd->clrTextBk = WinUtil::bgColor;
 
 		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0 && ii->status == ItemInfo::STATUS_RUNNING) {
 			if(BOOLSETTING(SHOW_PROGRESS_BARS) == false) {
@@ -287,6 +288,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					SETTING(DOWNLOAD_BAR_COLOR) : 
 					SETTING(UPLOAD_BAR_COLOR)) : 
 				GetSysColor(COLOR_HIGHLIGHT);
+
 			//this is just severely broken, msdn says GetSubItemRect requires a one based index
 			//but it wont work and index 0 gives the rect of the whole item
 			if(cd->iSubItem == 0) {
@@ -381,11 +383,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			}
 
 			// Draw the text only over the bar and with correct color
-			/*int right = rc2.right;
-			rc2.right = rc.right + 1;
-			COLORREF oldcol = ::SetTextColor(dc, OperaColors::TextFromBackground(clr));
-			::ExtTextOut(dc, rc2.left, top, ETO_CLIPPED, rc2, ii->getText(COLUMN_STATUS).c_str(), ii->getText(COLUMN_STATUS).length(), NULL);*/
-	
+
 			if (ii->isSet(ItemInfo::FLAG_COMPRESSED))
 				DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
 
@@ -442,7 +440,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			} else {
 				color = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-				SetTextColor(cd->nmcd.hdc, cd->clrText);
+				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
 			}
 			CRect rc2 = rc;
 			rc2.left += 2;
