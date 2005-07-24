@@ -560,7 +560,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			ctrlStatus.SetText(0, line.c_str());
 			while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
 				lastLinesList.erase(lastLinesList.begin());
-			if (line.find(_T('\r')) == string::npos) {
+			if (line.find(_T('\r')) == tstring::npos) {
 				lastLinesList.push_back(line);
 			} else {
 				lastLinesList.push_back(line.substr(0, line.find(_T('\r'))));

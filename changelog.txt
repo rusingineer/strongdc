@@ -49,6 +49,7 @@
 * pøepsán kód pro seskupování downloadù v Pøenosech
 * pøidáno sdílení èásteèných souborù (nápad z RevConnectu)
 * hodnì dalších vìcí, které nejsem schopen sepsat
+* opravena kritická chyba v knihovnì zlib
 
 
 	-- StrongDC++ 1.00 RC9 --

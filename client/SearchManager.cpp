@@ -371,7 +371,11 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 			i = j + 1;
 		}
 		dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
-		dcassert(partialInfo.size() == partialCount);
+		
+		if(partialInfo.size() != partialCount) {
+			// what to do now ? just ignore partial search result :-/
+			return;
+		}
 
 		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort);
 		PartsInfo outPartialInfo;
