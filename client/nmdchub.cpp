@@ -155,7 +155,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				}
 				// Filter own searches
 				if(isActive && bPassive == false) {
-					if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SETTING(UDP_PORT))).c_str())) == 0) {
+					if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SearchManager::getInstance()->getPort())).c_str())) == 0) {
 						return;
 					}
 				} else {
@@ -880,7 +880,7 @@ void NmdcHub::connectToMe(const User::Ptr& aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::connectToMe %s\n", aUser->getNick().c_str());
 	char buf[256];
-	sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), SETTING(TCP_PORT));
+	sprintf(buf, "$ConnectToMe %s %s:%d|", toNmdc(aUser->getNick()).c_str(), getLocalIp().c_str(), ConnectionManager::getInstance()->getPort());
 	send(buf);
 	ConnectionManager::iConnToMeCount++;
 }
@@ -1007,7 +1007,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	if(ClientManager::getInstance()->isActive(this) && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), SETTING(UDP_PORT), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
 	} else {
 		buf = new char[getNick().length() + aString.length() + 64];
 		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", toNmdc(getNick()).c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());

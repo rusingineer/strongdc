@@ -305,11 +305,6 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 				d->getUserConnection()->getUser()->getLastHubName(),
 				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK));
 
-			int64_t totalBytes = item->getSize();
-			int64_t totalTime = item->getMilliSeconds();
-			d->getUserConnection()->getUser()->setDownloadSpeed((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0 );
-			//User::updated(d->getUserConnection()->getUser());
-
 			{
 				Lock l(cs);
 				downloads.push_back(item);

@@ -309,7 +309,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(showUsers ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
-				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(SETTING(TCP_PORT)) + "/" + Util::toString(SETTING(UDP_PORT)))), WinUtil::m_ChatTextSystem);
+				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + Util::toString(SearchManager::getInstance()->getPort()))), WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){
@@ -459,18 +459,23 @@ int HubFrame::findUser(const User::Ptr& aUser) {
 }
 
 void HubFrame::addAsFavorite() {
-	FavoriteHubEntry aEntry;
-	TCHAR buf[256];
-	this->GetWindowText(buf, 255);
-	aEntry.setServer(Text::fromT(server));
-	aEntry.setName(Text::fromT(buf));
-	aEntry.setDescription(Text::fromT(buf));
-	aEntry.setConnect(false);
-	aEntry.setNick(client->getNick());
-	aEntry.setPassword(client->getPassword());
-	aEntry.setConnect(false);
-	FavoriteManager::getInstance()->addFavorite(aEntry);
-	addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );
+	FavoriteHubEntry* existingHub = FavoriteManager::getInstance()->getFavoriteHubEntry(client->getHubUrl());
+	if(!existingHub) {
+		FavoriteHubEntry aEntry;
+		TCHAR buf[256];
+		this->GetWindowText(buf, 255);
+		aEntry.setServer(Text::fromT(server));
+		aEntry.setName(Text::fromT(buf));
+		aEntry.setDescription(Text::fromT(buf));
+		aEntry.setConnect(false);
+		aEntry.setNick(client->getNick());
+		aEntry.setPassword(client->getPassword());
+		aEntry.setConnect(false);
+		FavoriteManager::getInstance()->addFavorite(aEntry);
+		addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );
+	} else {
+		addClientLine(TSTRING(FAVORITE_HUB_ALREADY_EXISTS), WinUtil::m_ChatTextSystem);
+	}
 }
 
 LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -2012,10 +2017,8 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_DESCRIPTION, CTSTRING(COPY_DESCRIPTION));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TAG, CTSTRING(COPY_TAG));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_EMAIL_ADDRESS, CTSTRING(COPY_EMAIL_ADDRESS));
-	if (client->getOp()) {
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
-	}
+	copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
+	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
 
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
 	copyMenu.InsertSeparator(0, TRUE, STRING(COPY));

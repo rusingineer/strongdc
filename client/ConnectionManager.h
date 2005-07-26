@@ -78,15 +78,11 @@ public:
 	
 	void removeConnection(const User::Ptr& aUser, int isDownload);
 	void shutdown();	
-	/**
-	 * Set this ConnectionManager to listen at a different port.
-	 */
-	void setPort(short aPort) throw(SocketException) {
-		port = aPort;
-		socket.waitForConnections(aPort);
-	}
+	/** Find a suitable port to listen on, and start doing it */
+	void listen() throw(Exception);
 	void disconnect() throw() {
 		socket.disconnect();
+		port = 0;
 	}
 	unsigned short getPort() {
 		return port;

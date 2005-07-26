@@ -57,7 +57,7 @@
 #include <deque>
 #include <list>
 #include <iterator>
-#include <sstream>
+//#include <sstream>
 #include <utility>
 
 // Use maps if hash_maps aren't available

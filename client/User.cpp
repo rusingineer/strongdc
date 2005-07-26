@@ -259,7 +259,7 @@ string User::getReport()
 	report += "\r\nTestSUR:		" + testSUR;
 	report += "\r\nDisconnects:	" + Util::toString(fileListDisconnects);
 	report += "\r\nTimeouts:		" + Util::toString(connectionTimeouts);
-	temp = Util::formatBytes(getDownloadSpeed());
+	temp = Util::formatBytes(getLastDownloadSpeed());
 	if (temp == "-1 B") {
 		temp = "N/A";
 	} else {

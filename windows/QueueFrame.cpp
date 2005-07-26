@@ -618,7 +618,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 
 		ii->setPriority(aQI->getPriority());
 		ii->setStatus(aQI->getStatus());
-		ii->setDownloadedBytes(aQI->chunkInfo ? aQI->chunkInfo->GetDownloadedSize() : aQI->getDownloadedBytes());
+		ii->setDownloadedBytes(aQI->chunkInfo ? aQI->chunkInfo->getDownloadedSize() : aQI->getDownloadedBytes());
 		ii->setTTH(aQI->getTTH());
 		ii->setAutoPriority(aQI->getAutoPriority());
 		ii->qi = aQI;
@@ -1512,23 +1512,10 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			FileChunksInfo::Ptr filedatainfo = qi->qi->chunkInfo;
 
 			if(filedatainfo) {
-				Lock l(filedatainfo->cs);
 				for(int smycka = 0; smycka < 2; smycka++) {
 					vector<int64_t> v;
-	
-					if(smycka == 0) {
-						if(filedatainfo->vecFreeBlocks.size() != NULL)
-							copy(filedatainfo->vecFreeBlocks.begin(), filedatainfo->vecFreeBlocks.end(), back_inserter(v));
-						if(filedatainfo->vecRunBlocks.size() != NULL)
-							copy(filedatainfo->vecRunBlocks.begin(), filedatainfo->vecRunBlocks.end(), back_inserter(v));
-					} else {
-						for(map<u_int16_t, u_int16_t>::iterator i = filedatainfo->verifiedBlocks.begin(); i != filedatainfo->verifiedBlocks.end(); i++) {
-							v.push_back(i->first * filedatainfo->tthBlockSize);
-							v.push_back(i->second * filedatainfo->tthBlockSize);
-						}
-					}
+					filedatainfo->getAllChunks(v, smycka == 1);
 					if(v.empty()) continue;
-					sort(v.begin(), v.end());
 		
 					if(smycka == 0) {
 						statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));

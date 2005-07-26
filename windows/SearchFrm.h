@@ -460,7 +460,7 @@ private:
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
 
-			if(user->getDownloadSpeed()<1) {
+			if(user->getLastDownloadSpeed()<1) {
 				int status = user->getStatus();
 				string Omezeni = user->getUpload();
 				if (!Omezeni.empty()) {
@@ -471,7 +471,7 @@ private:
 					uploadSpeed = Text::toT("N/A");
 				}
 			} else
-				uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())+"/s");
+				uploadSpeed = Text::toT(Util::formatBytes(user->getLastDownloadSpeed())+"/s");
 
 		}
 

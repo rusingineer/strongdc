@@ -411,7 +411,7 @@ string WebServerManager::getDLQueue(){
 		ret += "		<td>" + aQI->getTargetFileName() + "</td>";
 		ret += "		<td>" + Util::formatBytes(aQI->getSize()) + "</td>";
 		ret += "		<td>" + Util::formatBytes(aQI->getDownloadedBytes()) + " ("+ Util::toString(percent) + "%)</td>";
-		ret += "		<td>" + Util::formatBytes(aQI->getSpeed()) + "/s</td>";
+		ret += "		<td>" + Util::formatBytes(aQI->getAverageSpeed()) + "/s</td>";
 		ret += "		<td>" + Util::toString((int)aQI->getActiveSegments().size())+"/"+Util::toString(aQI->getMaxSegments()) + "</td>";
 		ret += "	</tr>";
 	}
