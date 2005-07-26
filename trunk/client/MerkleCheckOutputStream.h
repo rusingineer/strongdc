@@ -142,8 +142,10 @@ private:
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
 
-			if(multiSourceChecking)
+			if(multiSourceChecking) {
+				flush();
 				fileChunks->markVerifiedBlock((u_int16_t)verified, (u_int16_t)verified + 1);
+			}
 			
 			verified++;
 		}

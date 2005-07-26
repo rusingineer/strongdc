@@ -85,9 +85,9 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); };
 	};
 
-	User(const CID& aCID) : cid(aCID), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL) { unCacheClientInfo(); }
+	User(const CID& aCID) : cid(aCID), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL), lastDownloadSpeed(0) { unCacheClientInfo(); }
 	User(const string& aNick) throw() : nick(aNick), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			ctype(10), status(1), ip(Util::emptyString), downloadSpeed(-1), hasTestSURinQueue(false), cid(NULL) {
+			ctype(10), status(1), ip(Util::emptyString), lastDownloadSpeed(0), hasTestSURinQueue(false), cid(NULL) {
 		unCacheClientInfo();
 		unsetFlag(User::OP);
 		unsetFlag(User::PASSIVE);
@@ -165,7 +165,7 @@ public:
 	GETSET(string, unknownCommand, UnknownCommand);
 	GETSET(string, comment, Comment);	
 	GETSET(string, cheatingString, CheatingString);
-	GETSET(int64_t, downloadSpeed, DownloadSpeed);
+	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 	GETSET(int64_t, fileListSize, FileListSize);
 	GETSET(int64_t, bytesShared, BytesShared);
 	GETSET(int, slots, Slots);

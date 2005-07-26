@@ -107,6 +107,7 @@ public:
 	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
+	//GETSET(User::Ptr, user, User);
 	GETSET(int64_t, segmentSize, SegmentSize);
 	int64_t quickTick;
 	

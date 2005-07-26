@@ -219,6 +219,10 @@ void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
     connect(&*p, token);
 }
 
+void AdcHub::handle(AdcCommand::CMD, AdcCommand& c) throw() {
+	// @todo Add the user command
+}
+
 void AdcHub::sendUDP(const AdcCommand& cmd) {
 	try {
 		Socket s;
@@ -360,6 +364,8 @@ void AdcHub::info() {
 		lastInfoMap[var] = tmp; \
 	}
 
+	updateCounts(false); \
+	
 	ADDPARAM("NI", getNick());
 	ADDPARAM("DE", getDescription());
 	ADDPARAM("SL", Util::toString(SETTING(SLOTS)));
@@ -376,7 +382,7 @@ void AdcHub::info() {
 		} else {
 			ADDPARAM("I4", "0.0.0.0");
 		}
-		ADDPARAM("U4", Util::toString(SETTING(UDP_PORT)));
+		ADDPARAM("U4", Util::toString(SearchManager::getInstance()->getPort()));
 	} else {
 		ADDPARAM("I4", "");
 		ADDPARAM("U4", "");

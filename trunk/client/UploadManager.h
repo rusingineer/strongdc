@@ -241,7 +241,7 @@ public:
 		conn->setState(UserConnection::STATE_GET);
 	}
 
-	void abortUpload(const string& aFile);
+	void abortUpload(const string& aFile, bool waiting = true);
 
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);

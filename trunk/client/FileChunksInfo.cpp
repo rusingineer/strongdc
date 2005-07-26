@@ -20,11 +20,11 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
-#include "FileChunksInfo.h"
 #include "DownloadManager.h"
+#include "FileChunksInfo.h"
+
 #include "SettingsManager.h"
 #include "Winioctl.h"
-
 
 CriticalSection SharedFileStream::critical_section;
 SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
@@ -65,34 +65,34 @@ void FileChunksInfo::Free(const string& name)
 	dcassert(0);
 }
 
-FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks) 
+FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* chunks) 
 	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
 	hMutexMapList.leave();
 
-	SetFileSize(size);
+	setFileSize(size);
 
-	if(blocks){
-		vecFreeBlocks = *blocks;
-		sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
+	if(chunks != NULL){
+		waiting.clear();
+		for(vector<int64_t>::const_iterator i = chunks->begin(); i < chunks->end(); i++, i++)
+			waiting.insert(make_pair(*i, new Chunk(*i, *(i+1))));
 	}
 
     iDownloadedSize = iFileSize;
-    for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i < vecFreeBlocks.end(); i++, i++)
-        iDownloadedSize -= ((*(i+1)) - (*i));
+	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++)
+        iDownloadedSize -= (i->second->end - i->second->pos);
 }
 
-void FileChunksInfo::SetFileSize(const int64_t& size)
+void FileChunksInfo::setFileSize(const int64_t& size)
 {
 	dcassert(iFileSize == 0);
-	dcassert(vecFreeBlocks.empty());
+	dcassert(waiting.empty());
 
 	if(size > 0){
 		iFileSize = size;
-		vecFreeBlocks.push_back(0);
-		vecFreeBlocks.push_back(size);
+		waiting.insert(make_pair(0, new Chunk(0, size)));
 
 		tthBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)MIN_BLOCK_SIZE);
 		minChunkSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
@@ -100,114 +100,163 @@ void FileChunksInfo::SetFileSize(const int64_t& size)
 	}
 }
 
-int64_t FileChunksInfo::GetBlockEnd(int64_t begin)
+FileChunksInfo::~FileChunksInfo()
 {
-	Lock l(cs);
+	dcdebug("Delete file chunks info: %s, waiting = %d, running = %d\n", tempTargetName.c_str(), waiting.size(), running.size());
 
-	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i++, i++){
-		if((*i) == begin){
-			return *(i+1);
-		}
-	}
+	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++)
+		delete i->second;
 
-	return -1;
+	for(Chunk::Iter i = running.begin(); i != running.end(); i++)
+		delete i->second;
 }
 
-
-int FileChunksInfo::ValidBlock(int64_t start, size_t& len)
+int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 {
 	Lock l(cs);
 
-	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i++, i++){
-		if((*i) == start){
-			(*i) += len;
-			iDownloadedSize += len;
+	Chunk::Iter i = running.find(start);
+	dcassert(i != running.end());
+	Chunk* chunk = i->second;
 
-			// block over
-			if((*i) >= (*(i+1))){
+	if(chunk->pos != pos) return CHUNK_LOST;
 
-				iDownloadedSize -= ((*i) - (*(i+1)));
-				vecRunBlocks.erase(i, i + 2);
+	len = (size_t)min((int64_t)len, chunk->end - chunk->pos);
 
-				if(vecFreeBlocks.empty() && vecRunBlocks.empty()){
+	chunk->pos += len;
+	iDownloadedSize += len;
+
+	// chunk over
+	if(chunk->pos >= chunk->end){
+		if(!waiting.empty()) return CHUNK_OVER;
+		
+		// check unfinished running chunks
+		// finished chunk maybe still running, because of overlapped download
+		for(Chunk::Iter i = running.begin(); i != running.end(); i++){
+			if(i->second->pos < i->second->end)
+				return CHUNK_OVER;
+		}
 					return FILE_OVER;
 				}
-
-				return BLOCK_OVER;
-			}
-
-			return NORMAL_EXIT;
-		}
-	}
-
-	return WRONG_POS;
+	return NORMAL_EXIT;
 }
 
-int64_t FileChunksInfo::GetUndlStart()
+int64_t FileChunksInfo::setDownload(int64_t chunk, Download* d, User::Ptr u)
 {
-	dcdebug("GetUndlStart running = %d free = %d\n", vecRunBlocks.size(), vecFreeBlocks.size());
-	Lock l(cs);
+	map<int64_t, Chunk*>::iterator i = running.find(chunk);
 
-	// if have free blocks, return first one
-	if(vecFreeBlocks.size() > 1){
-		int64_t e = vecFreeBlocks[1];
-		int64_t b = vecFreeBlocks[0];
-
-		vecFreeBlocks.erase(vecFreeBlocks.begin(), vecFreeBlocks.begin() + 2);
-
-		vecRunBlocks.push_back(b);
-		vecRunBlocks.push_back(e);
-
-		sort(vecRunBlocks.begin(), vecRunBlocks.end());
-
-		return b;
+	if(i == running.end()){
+		dcassert(0);
+		return -1;
 	}
 
-	if(vecRunBlocks.empty()){
-		dcdebug("GetUndlStart return -1\n");
+	i->second->download = d;
+	i->second->user = u;
+
+	return i->second->end;
+}
+
+int64_t FileChunksInfo::getChunk(int64_t _speed)
+{
+	Chunk* chunk = NULL;
+
+	if(_speed == 0) _speed = DEFAULT_SPEED;
+
+	Lock l(cs);
+	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
+
+	// if there is any waiting chunk, return it
+	if(!waiting.empty()){
+		chunk = waiting.begin()->second;
+
+		waiting.erase(waiting.begin());
+		running.insert(make_pair(chunk->pos, chunk));
+
+		return chunk->pos;
+	}
+
+	if(running.empty()){
+		dcdebug("running empty, getChunk return -1\n");
 		return -1;
 	}
 	
-	// reassign current run blocks
+	// find the max time-left running chunk
+	Chunk*  maxChunk = NULL;
+	int64_t maxTimeLeft = 0;
+	int64_t speed;
 
-	int64_t blen = 0;
-	vector<int64_t>::iterator birr = vecRunBlocks.begin();
-
-	// find the biggest block
-	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i < vecRunBlocks.end(); i++, i++)
+	for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
 	{
-		if((*(i+1)) - (*i) > blen){
-			blen = (*(i+1)) - (*i);
-			birr = i;
+		chunk = i->second;
+
+		if((chunk->end - chunk->pos) < minChunkSize*2)
+			continue;
+
+		if(chunk->pos > i->first){
+			speed = chunk->download->getAverageSpeed();
+			if(speed == 0) speed = 1;
+		}else{
+			speed =  chunk->user->getLastDownloadSpeed();
+			if(speed == 0) speed = DEFAULT_SPEED;
+		}
+		
+		int64_t timeLeft = (chunk->end - chunk->pos) / speed;
+
+		if(timeLeft > maxTimeLeft){
+			maxTimeLeft = timeLeft;
+			maxChunk = chunk;
 		}
 	}
 
-	int64_t b = (*birr);
-	int64_t e = (* (birr+1));
+	// all running chunks are unbreakable (timeleft < 15 sec)
+	// try overlapped download the pending chunk
+	if(maxTimeLeft < 15){
+		for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
+		{
+			if(chunk->pos == i->first){
+				chunk->overlappedCount++;
+				return i->first;
+			}
+		}
 
-	if((e - b) < (minChunkSize*2)){
-		dcdebug("GetUndlStart return -1 (%I64d)\n", minChunkSize);
 		return -1;
 	}
 
-	int64_t n = b + (e - b) / 2;
+	// split the max time-left running chunk
+	int64_t b = maxChunk->pos;
+	int64_t e = maxChunk->end;
+
+	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
+
+	if(speed == 0){
+		speed =  chunk->user->getLastDownloadSpeed();
+	}
+
+	if(speed == 0){
+		speed = DEFAULT_SPEED;
+	}
+
+	double x = 1.0 + (double)_speed / (double)speed;
+
+	// too lag than orignal source
+	if(x < 1.01) return -1;
+
+	int64_t n = max(b + 1, b + (int64_t)((double)(e - b) / x));
 
 	// align to tiger tree block size
-	if(n - b > tthBlockSize)
+	if(n - b > tthBlockSize * 3 && e - n > tthBlockSize * 3)
 		n = n - (n % tthBlockSize);
 
-	(* (birr+1)) = n;
+	maxChunk->end = n;
 
-	vecRunBlocks.push_back(n);
-	vecRunBlocks.push_back(e);
+	running.insert(make_pair(n, new Chunk(n, e)));
 
-	sort(vecRunBlocks.begin(), vecRunBlocks.end());
-
+	dcdebug("split running chunk (%I64d , %I64d) * %I64d Bytes/s -> (%I64d , %I64d) * %I64d Bytes/s \n", b, e, speed, n, e, _speed);
 	return n;
 }
 
 bool FileChunksInfo::hasFreeBlock() {
-	Lock l(cs);
+/*	Lock l(cs);
 	if(!vecFreeBlocks.empty())
 		return true;
 
@@ -229,42 +278,71 @@ bool FileChunksInfo::hasFreeBlock() {
 	if((e - b) < (minChunkSize * 2)){
 		return false;
 	}
-
+*/
 	return true;
 }
 
-void FileChunksInfo::PutUndlStart(int64_t start)
+void FileChunksInfo::putChunk(int64_t start)
 {
-
 	Lock l(cs);
 
-	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i < vecRunBlocks.end(); i++, i++)
+	dcdebug("put chunk %I64d\n", start);
+
+	Chunk* prev = NULL;
+
+	for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
 	{
-		if((*i) == start){
-            if(i != vecRunBlocks.begin() && (*(i-1)) == start){ // continous blocks, concatenate it
-				*(i-1) = *(i+1);
-				vecRunBlocks.erase(i, i + 2);
-			}else{
-				addFreeChunk(make_pair(*i, *(i+1)));
-				vecRunBlocks.erase(i, i + 2);
+		Chunk* chunk = i->second;
+
+		if(i->first == start){
+
+			if(i->second->overlappedCount){
+				i->second->overlappedCount--;
+				return;
 			}
 
+			// chunk done
+			if(chunk->pos >= chunk->end){
+				delete chunk;
 
+			// found continuous running chunk, concatenate it
+            }else if(prev != NULL && prev->end == chunk->pos){ 
+				prev->end = chunk->end;
+				delete chunk;
+
+			// unfinished chunk, waiting ...
+			}else{
+				chunk->download = NULL;
+				waiting.insert(make_pair(chunk->pos, chunk));
+			}
+
+			running.erase(i);
 			return;
 		}
+
+		prev = chunk;
 	}
 
-	dcassert(vecRunBlocks.empty() && vecFreeBlocks.empty());
+	dcassert(0);
 }
 
-string FileChunksInfo::getFreeBlocksString()
+string FileChunksInfo::getFreeChunksString()
 {
-	ostringstream os;
+	vector<int64_t> tmp;
 
-	Lock l(cs);
-	vector<int64_t> tmp = vecFreeBlocks;
-	copy(vecRunBlocks.begin(), vecRunBlocks.end(), back_inserter(tmp));
-	sort(tmp.begin(), tmp.end());
+	{
+		Lock l(cs);
+
+		Chunk::Map tmpMap = waiting;
+		copy(running.begin(), running.end(), inserter(tmpMap, tmpMap.end())); // sort
+
+		tmp.reserve(tmpMap.size() * 2);
+
+		for(Chunk::Iter i = tmpMap.begin(); i != tmpMap.end(); i++){
+			tmp.push_back(i->second->pos);
+			tmp.push_back(i->second->end);
+		}
+	}
 
 	// merge
 	dcdebug("Before merge : %d\n", tmp.size());
@@ -274,7 +352,7 @@ string FileChunksInfo::getFreeBlocksString()
 		while(i < tmp.end()){
 			if(*i == *prev){
 				*prev = *(i + 1);
-				i = tmp.erase(i, i + 1);
+				i = tmp.erase(i, i + 2);
 			}else{
 				prev = i + 1;
 				i = i + 2;
@@ -283,26 +361,27 @@ string FileChunksInfo::getFreeBlocksString()
 	}
 	dcdebug("After merge : %d\n", tmp.size());
 
-	copy(tmp.begin(), tmp.end(), ostream_iterator<int64_t>(os, " "));
+	string ret;
+	for(vector<int64_t>::iterator i = tmp.begin(); i != tmp.end(); i++)
+		ret += Util::toString(*i) + " ";
 
-	return os.str();
-
+	return ret;
 }
 
 string FileChunksInfo::getVerifiedBlocksString()
 {
 	Lock l(cs);
 
-	ostringstream os;
+	string ret;
 
 	for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); i++)
-		os << i->first << " " << i->second << " ";
+		ret += Util::toString(i->first) + " " + Util::toString(i->second) + " ";
 
-	return os.str();
+	return ret;
 }
 
 
-bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
+bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 {
 	if(tthBlockSize != aTree.getBlockSize())
 		return true;
@@ -322,7 +401,8 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 
 		// This is only called when download finish
 		// Because buffer is used during download, the disk data maybe incorrect
-  		_ASSERT(vecFreeBlocks.empty() && vecRunBlocks.empty());
+	    dcassert(waiting.empty() && running.size() == 1 && running.begin()->second->pos == running.begin()->second->end);
+
 
 		verifiedBlocks.clear();
 	}
@@ -379,7 +459,7 @@ bool FileChunksInfo::DoLastVerify(const TigerTree& aTree, string aTarget)
 
 	{
 		Lock l(cs);
-		copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
+		//  @todo copy(CorruptedBlocks.begin(), CorruptedBlocks.end(), back_inserter(vecFreeBlocks));
 
 		// double smallest size when last verify failed
 		minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
@@ -423,7 +503,7 @@ void FileChunksInfo::markVerifiedBlock(u_int16_t start, u_int16_t end)
 
 }
 
-SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t size) 
+SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t size, bool shareDelete) 
     : pos(_pos)
 {
 	{
@@ -438,7 +518,7 @@ SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t siz
 
 		}else{
 
-	        shared_handle_ptr = new SharedFileHandle(name);
+	        shared_handle_ptr = new SharedFileHandle(name, shareDelete);
 	        shared_handle_ptr->ref_cnt = 1;
 			file_handle_pool[name] = shared_handle_ptr;
 
@@ -493,7 +573,12 @@ void ensurePrivilege()
     if(hModule == NULL) return;
 
     openProcessToken = (OpenProcessTokenFunc)GetProcAddress(hModule, "OpenProcessToken");
-    lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValue");
+
+#ifdef  UNICODE
+    lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValueW");
+#else
+	lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValueA");
+#endif
     adjustTokenPrivileges = (AdjustTokenPrivilegesFunc)GetProcAddress(hModule, "AdjustTokenPrivileges");
 
 	if(openProcessToken == NULL || lookupPrivilegeValue == NULL || adjustTokenPrivileges == NULL)
@@ -567,9 +652,10 @@ void FileChunksInfo::getPartialInfo(PartsInfo& partialInfo){
 	}
 }
 
-int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
+// TODO: speed
+int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 	if(partialInfo.empty()){
-		return GetUndlStart();
+		return getChunk(_speed);
 	}
 
 	Lock l(cs);
@@ -582,56 +668,52 @@ int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
 		posArray.push_back(min(iFileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
 
 	// Check free blocks
-	for(vector<int64_t>::iterator i = vecFreeBlocks.begin(); i != vecFreeBlocks.end(); i+=2){
+	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++){
+		Chunk* chunk = i->second;
 		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
-			if( (*j <= *i && *i < *(j+1)) || (*i <= *j && *j < *(i+1)) ){
-				int64_t b = max(*i, *j);
-				int64_t e = min(*(i+1), *(j+1));
+			if( (*j <= chunk->pos && chunk->pos < *(j+1)) || (chunk->pos <= *j && *j < chunk->end) ){
+				int64_t b = max(chunk->pos, *j);
+				int64_t e = min(chunk->end, *(j+1));
 
-				if(*i != b && *(i+1) != e){
-					int64_t tmp = *(i+1); 
-					*(i+1) = b;
-					vecFreeBlocks.push_back(e);
-					vecFreeBlocks.push_back(tmp);
+				if(chunk->pos != b && chunk->end != e){
+					int64_t tmp = chunk->end; 
+					chunk->end = b;
 
-					sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
-				}else if(*(i+1) != e){
-					*i = e;
-				}else if(*i != b){
-					*(i+1) = b;
+					waiting.insert(make_pair(e, new Chunk(e, tmp)));
+
+				}else if(chunk->end != e){
+					chunk->pos = e;
+				}else if(chunk->pos != b){
+					chunk->end = b;
 				}else{
-					vecFreeBlocks.erase(i, i + 2);
+					waiting.erase(i);
 				}
 
-				vecRunBlocks.push_back(b);
-				vecRunBlocks.push_back(e);
-
-				sort(vecRunBlocks.begin(), vecRunBlocks.end());
-
+				running.insert(make_pair(b, new Chunk(b, e)));
 				return b;
 			}
 		}
 	}
 
 	// Check running blocks
-	vector<int64_t>::iterator maxBlockIter = vecRunBlocks.end();
+	Chunk::Iter maxBlockIter = running.end();
 	int64_t maxBlockStart = 0;
     int64_t maxBlockEnd   = 0;
 
-	for(vector<int64_t>::iterator i = vecRunBlocks.begin(); i != vecRunBlocks.end(); i+=2){
-		int64_t b = *i;
-		int64_t e = *(i+1);
+	for(Chunk::Iter i = running.begin(); i != running.end(); i++){
+		int64_t b = i->second->pos;
+		int64_t e = i->second->end;
 		
 		if(e - b < MIN_BLOCK_SIZE * 3) continue;
 
         b = b + (e - b) / 2;
 		b = b - (b % MIN_BLOCK_SIZE);
 
-		dcassert(b > *i);
+		dcassert(b > i->second->pos);
 
 		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
 			if(*j <= b  && *(j+1) > b ){
-				int64_t e = min(*(i+1), e);
+				int64_t e = min(i->second->end, e);
 
 				if(e - b > maxBlockEnd - maxBlockStart){
 					maxBlockStart = b;
@@ -643,18 +725,13 @@ int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
 	}
 
 	if(maxBlockEnd > 0){
-		int64_t tmp = *(maxBlockIter+1);
-		*(maxBlockIter+1) = maxBlockStart;
+		int64_t tmp = maxBlockIter->second->end;
+		maxBlockIter->second->end = maxBlockStart;
 
-		vecRunBlocks.push_back(maxBlockStart);
-		vecRunBlocks.push_back(maxBlockEnd);
-
-		sort(vecRunBlocks.begin(), vecRunBlocks.end());
+		running.insert(make_pair(maxBlockStart, new Chunk(maxBlockStart, maxBlockEnd)));
 
 		if(tmp > maxBlockEnd){
-			vecFreeBlocks.push_back(maxBlockEnd);
-			vecFreeBlocks.push_back(tmp);
-			sort(vecFreeBlocks.begin(), vecFreeBlocks.end());
+			waiting.insert(make_pair(maxBlockEnd, new Chunk(maxBlockEnd, tmp)));
 		}
 
 		return maxBlockStart;
@@ -664,40 +741,20 @@ int64_t FileChunksInfo::GetUndlStart(const PartsInfo& partialInfo){
 
 }
 
-void FileChunksInfo::addFreeChunk(const Chunk& chunk){
-	
-	dcassert(chunk.first < chunk.second);
-	
-	vector<int64_t>::iterator i = vecFreeBlocks.begin();
-
-	while(i < vecFreeBlocks.end() && *i < chunk.first){
-		dcassert(chunk.first >= *(i+1));
-		i = i + 2;
-	}
-
-	dcassert(i == vecFreeBlocks.end() || *i >= chunk.second);
-	
-	// Todo: Merge with running chunks...
-
-	// *** merge ***
-	if(i != vecFreeBlocks.end() && i != vecFreeBlocks.begin() && chunk.first == *(i-1) && chunk.second == *i){
-		*i = *(i-2);
-		vecFreeBlocks.erase(i-2, i);
-	}else if(i != vecFreeBlocks.end() && chunk.second == *i){
-		*i = chunk.first;
-	}else if(i != vecFreeBlocks.begin() && chunk.first == *(i-1)){
-		*(i-1) = chunk.second;
-	}else{
-		i = vecFreeBlocks.insert(i, chunk.second);
-		vecFreeBlocks.insert(i, chunk.first);
-	}
-}
-
-SharedFileHandle::SharedFileHandle(const string& name)
+SharedFileHandle::SharedFileHandle(const string& name, bool shareDelete)
 {
+	DWORD dwShareMode = FILE_SHARE_READ;
+	DWORD dwDesiredAccess = GENERIC_READ;
+
+	if(shareDelete){
+		dwShareMode |= (FILE_SHARE_DELETE | FILE_SHARE_WRITE);
+	}else{
+		dwDesiredAccess |= GENERIC_WRITE;
+	}
+
 	handle = ::CreateFile(Text::utf8ToWide(name).c_str(), 
-					GENERIC_WRITE | GENERIC_READ, 
-					FILE_SHARE_READ, 
+					dwDesiredAccess, 
+					dwShareMode, 
 					NULL, 
 					OPEN_ALWAYS, 
 					0,
@@ -715,12 +772,33 @@ SharedFileHandle::SharedFileHandle(const string& name)
 
 string GetPartsString(const PartsInfo& partsInfo)
 {
-	ostringstream ret;
+	string ret;
 
 	for(PartsInfo::const_iterator i = partsInfo.begin(); i < partsInfo.end(); i+=2){
-		ret << *i << "," << *(i+1) << ",";
+		ret += Util::toString(*i) + "," + Util::toString(*(i+1)) + ",";
 	}
 
-	string tmp = ret.str();
-	return tmp.substr(0, tmp.size()-1);
+	return ret.substr(0, ret.size()-1);
+}
+
+void FileChunksInfo::getAllChunks(vector<int64_t>& v, bool verified)
+{
+	Lock l(cs);
+
+	if(verified) {
+		for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); i++) {
+			v.push_back(i->first * tthBlockSize);
+			v.push_back(i->second * tthBlockSize);
+		}
+	} else {
+		for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++) {
+			v.push_back(i->second->pos);
+			v.push_back(i->second->end);
+		}
+		for(Chunk::Iter i = running.begin(); i != running.end(); i++) {
+			v.push_back(i->second->pos);
+			v.push_back(i->second->end);
+		}
+	}
+	sort(v.begin(), v.end());
 }

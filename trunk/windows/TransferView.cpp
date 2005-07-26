@@ -559,7 +559,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				}
 			}
 
-			if((j->status == ItemInfo::STATUS_WAITING) && (j->statusString != TSTRING(DOWNLOAD_FINISHED_IDLE))) {
+			if((j->status == ItemInfo::STATUS_WAITING) && (i->statusString != TSTRING(DOWNLOAD_FINISHED_IDLE)) && (j->statusString != TSTRING(DOWNLOAD_FINISHED_IDLE))) {
 				j->statusString = i->statusString;
 			}
 
@@ -775,6 +775,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 		bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD);
 		i->start =  chunkInfo ? 0 : aDownload->getPos();
+		
 		i->size = chunkInfo ? aDownload->getSegmentSize() : aDownload->getSize();
 		i->fullSize = aDownload->getSize();
 
@@ -808,6 +809,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload, bo
 
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+			i->fullSize = 0;
 		} else if(aDownload->isSet(Download::FLAG_PARTIAL)){
 			i->file = _T("Partial: ") + Text::toT(Util::getFileName(i->Target));
 		} else {
@@ -831,9 +833,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
 			ItemInfo* i = transferItems[aCqi];
 	
-			//if(!i->main || (i->main->start == -1))
-			//	continue;
-
 			i->actual = i->start + d->getActual();
 			i->pos = i->start + d->getTotal();
 			i->timeLeft = d->getSecondsLeft();
@@ -853,7 +852,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 						Download* e = *h;
 						ItemInfo* ch = transferItems[e->getUserConnection()->getCQI()];
 						if (e->getTarget() == d->getTarget()) {
-							tmp += e->getRunningAverage();
+							tmp += e->getAverageSpeed();
 							if(e->isSet(Download::FLAG_ZDOWNLOAD)) {
 								compression = true;
 							}
@@ -946,6 +945,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_SIZE | ItemInfo::MASK_FILE | ItemInfo::MASK_PATH;
 		
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+			i->fullSize = 0;
 			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
 		} else {
 			i->file = Util::emptyStringT;

@@ -70,6 +70,7 @@ public:
 	void handle(AdcCommand::RCM, AdcCommand& c) throw();
 	void handle(AdcCommand::STA, AdcCommand& c) throw();
 	void handle(AdcCommand::SCH, AdcCommand& c) throw();
+	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
 	void refreshUserList(bool unknownOnly /* = false */) { }

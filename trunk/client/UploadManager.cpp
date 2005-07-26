@@ -701,7 +701,7 @@ bool UploadManager::isInUploadQueue(UploadQueueItem* UQI) {
 /**
  * Abort upload of specific file
  */
-void UploadManager::abortUpload(const string& aFile){
+void UploadManager::abortUpload(const string& aFile, bool waiting){
 	bool nowait = true;
 
 	{
@@ -718,9 +718,10 @@ void UploadManager::abortUpload(const string& aFile){
 	}
 	
 	if(nowait) return;
+	if(!waiting) return;
 	
-	for(int i = 0; i < 10 && nowait == false; i++){
-		Thread::sleep(300);
+	for(int i = 0; i < 20 && nowait == false; i++){
+		Thread::sleep(250);
 		{
 			Lock l(cs);
 

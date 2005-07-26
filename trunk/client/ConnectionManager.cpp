@@ -45,6 +45,31 @@ ConnectionManager::ConnectionManager() : port(0), floodCounter(0), shuttingDown(
 	adcFeatures.push_back("+BASE");
 }
 
+void ConnectionManager::listen() throw(Exception){
+	short lastPort = (short)SETTING(TCP_PORT);
+	
+	if(lastPort == 0)
+		lastPort = (short)Util::rand(1025, 32000);
+
+	short firstPort = lastPort;
+
+	disconnect();
+
+	while(true) {
+		try {
+			socket.waitForConnections(lastPort);
+			port = lastPort;
+			break;
+		} catch(const Exception&) {
+			short newPort = (short)((lastPort == 32000) ? 1025 : lastPort + 1);
+			if(!SettingsManager::getInstance()->isDefault(SettingsManager::TCP_PORT) || (firstPort == newPort)) {
+				throw Exception("Could not find a suitable free port");
+			}
+			lastPort = newPort;
+		}
+	}
+}
+
 /**
  * Request a connection for downloading.
  * DownloadManager::addConnection will be called as soon as the connection is ready
@@ -213,6 +238,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		Lock l(cs);
 
 		int attempts = 0;
+		int attemptCycle = (60 + (int)(max((int)downloads.size() - 240, 0) / 4)) * 1000;
 
 		for(ConnectionQueueItem::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 			ConnectionQueueItem* cqi = *i;
@@ -252,7 +278,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + 120*1000) < aTick) && (attempts < 4) ) {
+				if( ((cqi->getLastAttempt() + attemptCycle) < aTick) && (attempts < 4) ) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {

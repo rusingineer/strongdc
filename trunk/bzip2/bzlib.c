@@ -130,8 +130,7 @@ void BZ2_bz__AssertH__fail ( int errcode )
 }
 #endif
 
-//bah won't compile without this
-void bz_internal_error ( int errcode ) { errcode; };
+
 /*---------------------------------------------------*/
 static
 int bz_config_ok ( void )

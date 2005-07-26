@@ -228,6 +228,9 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void parseCommandLine(const tstring& cmdLine);
 
+	void startUPnP();
+	void stopUPnP();
+
 	LRESULT onWhereAreYou(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		return WMU_WHERE_ARE_YOU;
 	}

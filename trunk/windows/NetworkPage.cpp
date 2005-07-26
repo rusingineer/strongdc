@@ -114,6 +114,11 @@ LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 {
 	PropPage::translate((HWND)(*this), texts);
 	
+	if(!(WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1 ) //WinXP & WinSvr2003
+		|| WinUtil::getOsMajor() >= 6 ) //Longhorn
+	{
+		::EnableWindow(GetDlgItem(IDC_FIREWALL_UPNP), FALSE);
+	}
 	switch(SETTING(INCOMING_CONNECTIONS)) {
 		case SettingsManager::INCOMING_DIRECT: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_DIRECT); break;
 		case SettingsManager::INCOMING_FIREWALL_UPNP: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_FIREWALL_UPNP); break;

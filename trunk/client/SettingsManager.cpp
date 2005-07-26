@@ -148,9 +148,8 @@ SettingsManager::SettingsManager()
 	
 	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
-	//setDefault(SERVER, Util::getLocalIp());
-	setDefault(TCP_PORT, Util::rand(1025, 32000));
-	setDefault(UDP_PORT, Util::rand(1025, 32000));
+	setDefault(TCP_PORT, 0);
+	setDefault(UDP_PORT, 0);
 	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);
@@ -202,7 +201,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FILE_SYSTEM, "system.log");
 	setDefault(LOG_FILE_WEBSERVER, "Webserver.log");
 	setDefault(GET_USER_INFO, true);
-	setDefault(URL_HANDLER, false);
+	setDefault(URL_HANDLER, true);
 	setDefault(AUTO_AWAY, false);
 	setDefault(SMALL_SEND_BUFFER, false);
 	setDefault(BIND_ADDRESS, "0.0.0.0");
@@ -253,7 +252,7 @@ SettingsManager::SettingsManager()
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
-	setDefault(SEARCH_ONLY_TTH, false);
+	setDefault(SEARCH_ONLY_TTH, true);
 	setDefault(ADVANCED_RESUME, true);
 	setDefault(ADC_DEBUG, false);
 	setDefault(TOGGLE_ACTIVE_WINDOW, true);

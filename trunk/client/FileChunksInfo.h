@@ -24,24 +24,52 @@
 #include "MerkleTree.h"
 
 #define PARTIAL_SHARE_MIN_SIZE 20971520
+#define DEFAULT_SPEED 5120
+
 typedef vector<u_int16_t> PartsInfo;
 typedef map<u_int16_t, u_int16_t> BlockMap;
 
 // For SetFileValidData() - antifrag purpose
 extern void ensurePrivilege();
 
-class BlockDLException : public Exception {
+class Download;
+
+class ChunkDoneException : public Exception {
 public:
-	BlockDLException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
-	virtual ~BlockDLException() { }; 
+	ChunkDoneException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
+	virtual ~ChunkDoneException() { }; 
 	int64_t pos;
 };
 
-class FileDLException : public Exception {
+class FileDoneException : public Exception {
 public:
-	FileDLException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
-	virtual ~FileDLException() { }; 
+	FileDoneException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
+	virtual ~FileDoneException() { }; 
 	int64_t pos;
+};
+
+class Chunk
+{
+public:
+//private:
+	//friend class FileChunksInfo;
+	//friend class DownloadManager;
+
+	typedef map<int64_t, Chunk*> Map;
+	typedef Map::iterator  Iter;
+
+	Chunk(int64_t _start, int64_t _end) 
+		: download(NULL), pos(_start), end(_end), overlappedCount(0), user(NULL)
+	{}
+
+	Download* download;
+	User::Ptr user;
+	int64_t pos;
+	int64_t end;
+
+	// allow overlapped download the same pending chunk 
+	// when all running chunks are unbreakable
+	size_t overlappedCount;
 };
 
 /**
@@ -56,10 +84,10 @@ public:
 
 	enum{
 		NORMAL_EXIT,
-		BLOCK_OVER,
+		CHUNK_OVER,
 		FILE_OVER,
-        WRONG_POS
-	} VALID_RESULT;
+        CHUNK_LOST
+	} CHUNK_RESULT;
 
 	/**
      * Get file chunks information by file name
@@ -80,15 +108,12 @@ public:
 	/**
      * Smart pointer based destructor
      */
-	virtual ~FileChunksInfo()
-    {
-		dcdebug("Delete file chunks info: %s\n", tempTargetName.c_str());
-	}
+	virtual ~FileChunksInfo();
 
 	/**
      * Get start offset of a free chunk, the end offset of chunk is unpredictable
      */
-	int64_t GetUndlStart();
+	int64_t getChunk(int64_t _speed = DEFAULT_SPEED);
 
 	/**
 	 * Compute download start position by source's parts info
@@ -96,7 +121,7 @@ public:
 	 * Return the 1st duplicate position both in free and parts info
 	 * Or split the biggest duplicate chunk both in running and parts info
 	 */
-	int64_t GetUndlStart(const PartsInfo& partialInfo);
+	int64_t getChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
 
 	/**
 	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
@@ -106,12 +131,13 @@ public:
 	/**
      * Release the chunk with start offset
      */
-	void PutUndlStart(int64_t);
+	void putChunk(int64_t);
 
+	int64_t setDownload(int64_t, Download*, User::Ptr);
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "
      */
-	string getFreeBlocksString();
+	string getFreeChunksString();
 
 	/**
      * Convert all verified chunks range data to a string, eg. "0 65536 "
@@ -121,29 +147,38 @@ public:
 	/**
      * Mark a chunk range as download finished
      */
-	int ValidBlock(int64_t, size_t&);
-
-	int64_t GetBlockEnd(int64_t);
+	int addChunkPos(int64_t, int64_t, size_t&);
 
 	/**
      * Because magnet link maybe not contain size information...
      */
-	void SetFileSize(const int64_t& size);
+	void setFileSize(const int64_t& size);
 
-    int64_t GetDownloadedSize()
+	void getAllChunks(vector<int64_t>& v, bool verified);
+
+    int64_t getDownloadedSize()
     {
         return iDownloadedSize;
     }
 
-    int64_t GetVerifiedSize()
+    int64_t getVerifiedSize()
     {
         return iVerifiedSize;
     }
 
+	int64_t getChunkSize(int64_t start)
+	{
+		Lock l(cs);
+
+		Chunk::Iter i = running.find(start);
+
+		return (i->second->end - start);
+	}
+
 	/**
      * Perform last verifying against TigerTree
      */
-	bool DoLastVerify(const TigerTree& aTree, string aTarget);
+	bool doLastVerify(const TigerTree& aTree, string aTarget);
 
 	void markVerifiedBlock(u_int16_t start, u_int16_t end);
 
@@ -185,8 +220,10 @@ public:
 	static vector<Ptr> vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
 
-	vector<int64_t> vecFreeBlocks;
-	vector<int64_t> vecRunBlocks;
+	// chunk start position must be unique in both waiting and running
+	Chunk::Map waiting;
+	Chunk::Map running;
+
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
@@ -200,10 +237,6 @@ public:
 	CriticalSection cs;
 
 private:
-	typedef pair<int64_t, int64_t> Chunk;
-
-	void addFreeChunk(const Chunk& chunk);	// Merge free chunks when a running chunk becomes free
-
 };
 
 /******************************************************************************/
@@ -213,13 +246,16 @@ struct SharedFileHandle : CriticalSection
     HANDLE 				handle;
     int					ref_cnt;
 
-	SharedFileHandle(const string& name);
+	SharedFileHandle(const string& name, bool shareDelete = false);
 
 	~SharedFileHandle()
     {
         CloseHandle(handle);
     }
 };
+
+# pragma warning(disable: 4511) // copy constructor could not be generated
+# pragma warning(disable: 4512) // assignment operator could not be generated
 
 class SharedFileStream : public IOStream
 {
@@ -228,7 +264,7 @@ public:
 
     typedef map<string, SharedFileHandle*> SharedFileHandleMap;
 
-    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0);
+    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0, bool shareDelete = false);
 
     virtual ~SharedFileStream()
     {
@@ -259,7 +295,10 @@ public:
 		Lock l(*shared_handle_ptr);
 
 		DWORD x = (DWORD)(pos >> 32);
-		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
+		DWORD ret = ::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
+
+		if(ret == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+			throw FileException(Util::translateError(GetLastError()));
 
 		if(!::WriteFile(shared_handle_ptr->handle, buf, len, &x, NULL)) {
 			throw FileException(Util::translateError(GetLastError()));
@@ -326,12 +365,11 @@ class ChunkOutputStream : public OutputStream
 
 public:
 
-	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _pos) 
-		: os(_os), pos(_pos)
+	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _chunk) 
+		: os(_os), chunk(_chunk), pos(_chunk)
     {
-		file_chunks_info_ptr = FileChunksInfo::Get(name);
-		dcdebug(name.c_str());
-		if(file_chunks_info_ptr == (FileChunksInfo*)NULL)
+		fileChunks = FileChunksInfo::Get(name);
+		if(fileChunks == (FileChunksInfo*)NULL)
         {
 			throw FileException("No chunks data");
 		}
@@ -339,39 +377,42 @@ public:
 
 	virtual ~ChunkOutputStream()
     {
-        if(pos >=0)
-	        file_chunks_info_ptr->PutUndlStart(pos);
-
 		if(managed) delete os;
     }
 
 	virtual size_t write(const void* buf, size_t len) throw(Exception)
 	{
-		if(pos == -1) return 0;
+		if(chunk == -1) return 0;
+		if(len == 0) return 0;
 
-		size_t blockRemain = file_chunks_info_ptr->GetBlockEnd(pos) - pos; 
-		size_t size = os->write(buf, min(len, blockRemain)); 
-		int iRet = file_chunks_info_ptr->ValidBlock(pos, size);
+    	int iRet = fileChunks->addChunkPos(chunk, pos, len);
 
-		if (iRet == FileChunksInfo::BLOCK_OVER){
-			int64_t oldPos = pos;
-            pos = -1;
-			os->flush();
-			throw BlockDLException(Util::emptyString, oldPos + len);
-
-		}else if(iRet == FileChunksInfo::FILE_OVER){			
-			int64_t oldPos = pos;
-            pos = -1;
-   			os->flush();
-			throw FileDLException(Util::emptyString, oldPos + len);
-
-		}else if(iRet == FileChunksInfo::WRONG_POS){
-			throw FileException(string("Error:") + Util::toString(pos) + "," + Util::toString(pos + len));
-
+		if(iRet == FileChunksInfo::CHUNK_LOST){
+			chunk = -1;
+			throw ChunkDoneException(Util::emptyString, pos);
 		}
 
 		pos += len;
-        return size;
+
+		if(len > 0){
+			size_t size = os->write(buf, len);
+
+			if(size != len)
+				throw FileException("Internal Error");
+		}
+
+		if (iRet == FileChunksInfo::CHUNK_OVER){
+			os->flush();
+			chunk = -1;
+			throw ChunkDoneException(Util::emptyString, pos);
+
+		}else if(iRet == FileChunksInfo::FILE_OVER){			
+  			os->flush();
+			chunk = -1;
+			throw FileDoneException(Util::emptyString, pos);
+		}
+
+        return len;
     }
 
 	virtual size_t flush() throw(Exception) 
@@ -379,12 +420,11 @@ public:
 		return os->flush();
 	}
 
-	int64_t getPos(){return pos;}
-
 private:
 
-	FileChunksInfo::Ptr file_chunks_info_ptr;
+	FileChunksInfo::Ptr fileChunks;
 	OutputStream* os;
+	int64_t chunk;
 	int64_t pos;
 };
 

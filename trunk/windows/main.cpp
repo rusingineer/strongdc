@@ -267,18 +267,18 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		RECT rc1 = rc;
 		rc1.bottom = rc1.bottom - 35;
 		RECT rc2 = rc;
-		rc2.top = rc2.bottom - 55; 
+		rc2.top = rc2.bottom - 35; 
 		rc2.right = rc2.right - 10;
 		::SetBkMode(dc, TRANSPARENT);
 		
 		// Draw the icon
 		HBITMAP hi;
-		hi = (HBITMAP)LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 320,240, LR_SHARED);
+		hi = (HBITMAP)LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 350, 120, LR_SHARED);
 			 
 		HDC comp=CreateCompatibleDC(dc);
 		SelectObject(comp,hi);	
 
-		BitBlt(dc,0, 0 , 320, 240,comp,0,0,SRCCOPY);
+		BitBlt(dc,0, 0 , 350, 120,comp,0,0,SRCCOPY);
 
 		DeleteObject(hi);
 		DeleteObject(comp);
@@ -290,9 +290,9 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		logFont.lfWeight = 700;
 		hFont = CreateFontIndirect(&logFont);		
 		SelectObject(dc, hFont);
-		::SetBkMode(dc, OPAQUE);
-		::SetBkColor(dc, RGB(255, 255, 255));
-		::SetTextColor(dc, RGB(0,0,0));
+		::SetBkMode(dc, TRANSPARENT);
+		//::SetBkColor(dc, RGB(255, 255, 255));
+		::SetTextColor(dc, RGB(255,255,255));
 		::DrawText(dc, Text::toT(sTitle).c_str(), _tcslen(Text::toT(sTitle).c_str()), &rc2, DT_RIGHT);
 		DeleteObject(hFont);
 		ReleaseDC(hwnd, dc);
@@ -326,8 +326,8 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.SetFont((HFONT)GetStockObject(DEFAULT_GUI_FONT));
 	
 	HDC dc = splash.GetDC();
-	rc.right = rc.left + 320;
-	rc.bottom = rc.top + 240;
+	rc.right = rc.left + 350;
+	rc.bottom = rc.top + 120;
 	splash.ReleaseDC(dc);
 	splash.HideCaret();
 	splash.SetWindowPos(NULL, &rc, SWP_SHOWWINDOW);

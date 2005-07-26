@@ -650,7 +650,7 @@ void FavoriteManager::refresh() {
 UserCommand::List FavoriteManager::getUserCommands(int ctx, const string& hub, bool op) {
 	Lock l(cs);
 	UserCommand::List lst;
-	bool adc = hub.size() >= 6 && hub.substr(0, 6) == "adc://";
+	bool adc = (hub.compare(0, 6, "adc://") == 0);
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
 		if(uc.getCtx() & ctx) {

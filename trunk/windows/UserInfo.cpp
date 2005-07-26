@@ -57,7 +57,7 @@ bool UserInfo::update() {
 
 	tstring uploadSpeed;
 
-	if(user->getDownloadSpeed()<1) {
+	if(user->getLastDownloadSpeed()<1) {
 		int status = user->getStatus();
 		string Omezeni = user->getUpload();
 		if (!Omezeni.empty()) {
@@ -68,7 +68,7 @@ bool UserInfo::update() {
 			uploadSpeed = _T("N/A");
 		}
 	} else
-		uploadSpeed = Text::toT(Util::formatBytes(user->getDownloadSpeed())) + _T("/s");
+		uploadSpeed = Text::toT(Util::formatBytes(user->getLastDownloadSpeed())) + _T("/s");
 
 	columns[COLUMN_NICK] = Text::toT(user->getNick());
 	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(user->getBytesShared()));

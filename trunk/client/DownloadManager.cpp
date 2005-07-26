@@ -77,12 +77,14 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 		setFlag(Download::FLAG_UTF8);
 	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
+		
+	//user = aUser;
 }
 
 int64_t Download::getQueueTotal() {
 	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
 	if(chunksInfo != (FileChunksInfo*)NULL)
-		return chunksInfo->GetDownloadedSize();
+		return chunksInfo->getDownloadedSize();
 	return getTotal();
 }
 
@@ -116,14 +118,15 @@ AdcCommand Download::getCommand(bool zlib, bool tthf) {
 }
 
 void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {
-	Download::List tickList;
 	Lock l(cs);
 
+	Download::List tickList;
+	int64_t minSpeed = downloads.size() * 50;
 	throttleSetup();
 	throttleZeroCounters();
+
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-
 		Download* d = *i;
 
 		if((d->getUserConnection() != NULL) && !d->isSet(Download::FLAG_PARTIAL)) {
@@ -140,7 +143,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			}
 
 			if(d->getStart() &&  0 == ((int)(GET_TICK() - d->getStart()) / 1000 + 1) % 20) {
-				if(d->getRunningAverage() < 1230) {
+				if(d->getRunningAverage() < minSpeed) {
 					if(QueueManager::getInstance()->autoDropSource(d->getUserConnection()->getUser())) {
 						d->getUserConnection()->disconnect();
 						continue;
@@ -153,6 +156,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 			tickList.push_back(*i);
 		}
 	}
+
 	if(tickList.size() > 0)
 		fire(DownloadManagerListener::Tick(), tickList);
 }
@@ -340,7 +344,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		} else {
 			if(d->isSet(Download::FLAG_CHUNK_TRANSFER)) {
 				d->unsetFlag(Download::FLAG_CHUNK_TRANSFER);
-				d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->GetBlockEnd(d->getStartPos()) - d->getStartPos());
+
+				d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->getChunkSize(d->getStartPos()));
 			}
 			aConn->get(d->getSource(), d->getPos());
 		}
@@ -459,6 +464,7 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 
 	bool old = !aSource->getDownload()->isSet(Download::FLAG_MULTI_CHUNK) || aSource->getDownload()->isSet(Download::FLAG_USER_LIST) || aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD);
 	if(prepareFile(aSource, (bytes == -1) ? -1 : (old ? (aSource->getDownload()->getPos() + bytes) : aSource->getDownload()->getSize()), cmd.hasFlag("ZL", 4))) {
+		dcdebug("ADCSND : %s, %d \n", aSource->getUser()->getNick().c_str(), bytes);
 		aSource->getDownload()->setSegmentSize(bytes);
 		aSource->setDataMode();
 	} else {
@@ -612,29 +618,31 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			d->setFile(crc);
 		}
 
-		if(d->isSet(Download::FLAG_MULTI_CHUNK) && (false == d->isSet(Download::FLAG_USER_LIST)) && (d->isSet(Download::FLAG_TREE_DOWNLOAD) == false) && !d->isSet(Download::FLAG_MP3_INFO) && !d->isSet(Download::FLAG_TESTSUR)){
+		if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_MP3_INFO)){
+			if(d->getTreeValid()) {
+				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
+			}
+
 			try {
 				d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
-			} catch(const FileException& e) {
+			} catch(const FileException&) {
+				delete d->getFile();
 				d->setFile(NULL);
-				delete file;
-				removeDownload(d);			
-				fire(DownloadManagerListener::Failed(), d, e.getError());
+				fire(DownloadManagerListener::Failed(), d, STRING(COULD_NOT_OPEN_TARGET_FILE));
 				aSource->setDownload(NULL);
+				removeDownload(d);			
 				QueueManager::getInstance()->putDownload(d, false);
 				removeConnection(aSource);
 				return false;
 			}
-		}
-			
-		if(d->getTreeValid()) {
-			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
-			} else if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
-			}
-			if(d->isSet(Download::FLAG_ROLLBACK)) {
-				d->setFile(new RollbackOutputStream<true>(f, d->getFile(), (size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())));
+		} else {
+			if(d->getTreeValid()) {
+				if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
+					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
+				}
+				if(d->isSet(Download::FLAG_ROLLBACK)) {
+					d->setFile(new RollbackOutputStream<true>(f, d->getFile(), (size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())));
+				}
 			}
 		}
 	}
@@ -664,8 +672,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 				if(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					dcdebug("ChunkFinished\n");
-					aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
 					aSource->setDownload(NULL);
 					string aTarget = d->getTarget();
 					removeDownload(d);
@@ -675,8 +681,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 					return;
 				}
 			}
-		} catch(const BlockDLException e) {
-			aSource->getUser()->setDownloadSpeed(d->getAverageSpeed());
+		} catch(const ChunkDoneException e) {
+			dcdebug("ChunkDoneException.....\n");
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
 				dcdebug("BlockFinished\n");
@@ -696,14 +702,16 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 			return;
 
-		} catch(const FileDLException e) {
-			dcdebug("FileDLException.....\n");
+		} catch(const FileDoneException e) {
+			dcdebug("FileDoneException.....\n");
 
 			if(!d->getTreeValid() && d->getTTH() != NULL)
 			{
 				if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree()))
 					d->setTreeValid(true);
 			}
+
+			UploadManager::getInstance()->abortUpload(d->getTempTarget(), false);
 
 			if(d->getTreeValid()) {
 
@@ -712,14 +720,14 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				{
 					dcdebug("Do last verify.....\n");
 					d->setPos(d->getStartPos());
-					if(!lpFileDataInfo->DoLastVerify(d->getTigerTree(), d->getTarget())) {
+					if(!lpFileDataInfo->doLastVerify(d->getTigerTree(), d->getTarget())) {
 						dcdebug("last verify failed .....\n");
 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 						char buf[128];
-						_snprintf(buf, 127, CSTRING(LEAF_CORRUPTED), Util::formatBytes(d->getSize() - lpFileDataInfo->GetDownloadedSize()).c_str());
+						_snprintf(buf, 127, CSTRING(LEAF_CORRUPTED), Util::formatBytes(d->getSize() - lpFileDataInfo->getDownloadedSize()).c_str());
 						buf[127] = 0;
 						fire(DownloadManagerListener::Failed(), d, buf);
 
@@ -733,6 +741,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				}
 			}
 
+			// RevConnect : For partial file sharing, abort upload first to move file correctly
+			UploadManager::getInstance()->abortUpload(d->getTempTarget());
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
 				aSource->setLineMode();
@@ -837,8 +847,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			d->setFile(NULL);
 			d->setCrcCalc(NULL);
 
-			// For partial file sharing, abort upload first to move file correctly
-			UploadManager::getInstance()->abortUpload(d->getTempTarget());
 			// Check if we're anti-fragging...
 			if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 				// Ok, rename the file to what we expect it to be...
@@ -1089,10 +1097,6 @@ void DownloadManager::removeDownload(Download* d) {
 			// Ok, set the pos to whereever it was last writing and hope for the best...
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
 		} 
-	} else if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(d->getTempTarget());
-		if(!(fileChunks == (FileChunksInfo*)NULL))
-			fileChunks->PutUndlStart(d->getStartPos());
 	}
 
 	{
@@ -1116,6 +1120,7 @@ void DownloadManager::removeDownload(Download* d) {
 
 void DownloadManager::abortDownload(const string& aTarget) {
 	Lock l(cs);
+
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 		if(d->getTarget() == aTarget) {

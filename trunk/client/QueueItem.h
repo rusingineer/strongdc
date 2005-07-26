@@ -140,7 +140,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), speed(0)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), averageSpeed(0)
 	{ 
 		
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
@@ -158,7 +158,7 @@ public:
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
-		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
+		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), averageSpeed(rhs.averageSpeed),
 		start(rhs.start), currentDownload(rhs.currentDownload)
 	{
 		// Deep copy the source lists
@@ -253,7 +253,7 @@ public:
 		if(isSet(FLAG_MULTI_SOURCE)){
 			//FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
 			if(chunkInfo)
-				return chunkInfo->GetDownloadedSize();
+				return chunkInfo->getDownloadedSize();
 		}
 
 		return downloadedBytes;
@@ -292,7 +292,7 @@ public:
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
-	GETSET(int64_t, speed, Speed);
+	GETSET(u_int32_t, averageSpeed, AverageSpeed);
 	GETSET(u_int32_t, start, Start);
 	FileChunksInfo::Ptr chunkInfo;
 

@@ -70,9 +70,16 @@ void UserConnection::onLine(const char* aLine) throw() {
 		setFlag(FLAG_NMDC);
 	} else {
 		// We shouldn't be here?
-		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
-		if(getUser())
+		if(getUser()) {
 			getUser()->setUnknownCommand(aLine);
+			dcdebug(getUser()->getNick().c_str());
+		}
+		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
+		aLine = strchr(aLine, '$');
+		if(aLine != NULL) {
+			setFlag(FLAG_NMDC);
+		} else
+			return;
 	}
 
 	char *temp;
@@ -267,9 +274,11 @@ void UserConnection::onLine(const char* aLine) throw() {
  	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	default:
- 			if(getUser())	 	
+			if(getUser()) {
 				getUser()->setUnknownCommand(aLine);
-		dcdebug("Unknown NMDC command: %.50s\n", aLine);
+				dcdebug(getUser()->getNick().c_str());
+			}
+			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;
 	}
 }

@@ -688,7 +688,7 @@ public:
 			
 			if (pt.x < rect.left) {
 				T* i = (T*)getItemData(pos);
-				if(i->subItems.size() > 0)
+				if(i->subItems.size() > (uniqueMainItem ? 1 : 0))
 					if(i->collapsed) {
 						Expand(i, pos);
 					} else {
