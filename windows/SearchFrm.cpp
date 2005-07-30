@@ -1572,7 +1572,6 @@ LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*
 }
 
 void SearchFrame::updateSearchList() {
-	Lock l(cs);
 
 	while(ctrlResults.GetItemCount() > 0) {
 		ctrlResults.DeleteItem(0);

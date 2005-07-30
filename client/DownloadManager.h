@@ -222,18 +222,6 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
 
-	int getActiveDownloads() {
-		int j = 0;
-		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-			Download* d = *i;
-			Transfer* e = d;
-			UserConnection* uc = e->getUserConnection();
-			if (uc->isSet(UserConnection::FLAG_DOWNLOAD)) {
-				++j;
-			}
-		}
-		return j;
-	}
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);

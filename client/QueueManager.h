@@ -104,7 +104,7 @@ public:
 	}
 
 	/** Readd a source that was removed */
-	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
+	void readd(const string& target, User::Ptr aUser) throw(QueueException);
 
 	/** Add a directory to the queue (downloads filelist and matches the directory). */
 	void addDirectory(const string& aDir, const User::Ptr& aUser, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();

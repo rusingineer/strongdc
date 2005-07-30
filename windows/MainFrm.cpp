@@ -497,7 +497,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					ctrlStatus.SetIcon(9, hShutdownIcon);
 					isShutdownStatus = true;
 				}
-				if (DownloadManager::getInstance()->getActiveDownloads() > 0) {
+				if (DownloadManager::getInstance()->getDownloadCount() > 0) {
 					iCurrentShutdownTime = iSec;
 					ctrlStatus.SetText(9, _T(""));
 				} else {

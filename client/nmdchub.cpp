@@ -587,12 +587,12 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					updateCounts(false);
 
 					version();
-					if(YnHub == false) {
-						myInfo();
+					if((YnHub == true) || (getStealth() == true)) {
 						getNickList();
+						myInfo();
 	            	} else {
-						getNickList();
 						myInfo();
+						getNickList();
     	        	}
 				}
 				fire(ClientListener::UserUpdated(), this, u);
@@ -716,13 +716,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					key(CryptoManager::getInstance()->makeKey(aLine));
 					validateNick(getNick());
 				}
-				if(temp != NULL) {
-					if(stricmp(temp+3, "YnHub") == 0) {
-						YnHub = true;
-					} else if(strcmp(temp+3, "PtokaX") == 0) {
-						PtokaX = true;
-					}
-    	    	}
         		return;
 	        }
           	dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
@@ -961,7 +954,7 @@ void NmdcHub::myInfo() {
 		if (connection == "Modem") { connection = "56Kbps"; }
 		if (connection == "Wireless") { connection = "Satellite"; }
 	}
-
+/*
 	string description = getDescription();
 
 	string::size_type m = description.find_first_not_of(' ');
@@ -971,10 +964,10 @@ void NmdcHub::myInfo() {
 	else
 		description = Util::emptyString;
 
-
+*/
 	char myinfo[512];
 	sprintf(myinfo, "$MyINFO $ALL %s %s%s%s$ $%s%c$%s$", toNmdc(getNick()).c_str(), speedDescription.c_str(),
-		toNmdc(Util::validateMessage(description, false)).c_str(), tag, connection.c_str(), StatusMode, 
+		toNmdc(Util::validateMessage(getDescription(), false)).c_str(), tag, connection.c_str(), StatusMode, 
 		toNmdc(Util::validateMessage(SETTING(EMAIL), false)).c_str());
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
@@ -1007,10 +1000,10 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	if(ClientManager::getInstance()->isActive(this) && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getLocalIp();
 		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%s?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		chars = sprintf(buf, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	} else {
 		buf = new char[getNick().length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search Hub:%s %c?%c?%s?%d?%s|", toNmdc(getNick()).c_str(), c1, c2, Util::toString(aSize).c_str(), aFileType+1, tmp.c_str());
+		chars = sprintf(buf, "$Search Hub:%s %c?%c?%I64d?%d?%s|", toNmdc(getNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
 }
