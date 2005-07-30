@@ -688,12 +688,11 @@ public:
 			
 			if (pt.x < rect.left) {
 				T* i = (T*)getItemData(pos);
-				if(i->subItems.size() > (uniqueMainItem ? 1 : 0))
-					if(i->collapsed) {
-						Expand(i, pos);
-					} else {
-						Collapse(i, pos);
-					}
+				if(i->collapsed) {
+					Expand(i, pos);
+				} else {
+					Collapse(i, pos);
+				}
 			}
 		}
 
@@ -712,15 +711,17 @@ public:
 	}
 
 	void Expand(T* i, int a) {
-		size_t q = 0;
-		while(q < i->subItems.size()) {
-			i->subItems[q]->update();
-			insertSubItem(i->subItems[q], a + 1);
-			q++;
+		if(i->subItems.size() > (uniqueMainItem ? 1 : 0)) {
+			size_t q = 0;
+			while(q < i->subItems.size()) {
+				i->subItems[q]->update();
+				insertSubItem(i->subItems[q], a + 1);
+				q++;
+			}
+			i->collapsed = false;
+			SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+			resort();
 		}
-		i->collapsed = false;
-		SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-		resort();
 	}
 
 	void insertSubItem(T* i, int idx) {
@@ -774,7 +775,7 @@ public:
 
 		if(pos != -1) {
 			u_int32_t totalSubItems = mainItem->subItems.size();
-			if((!uniqueMainItem && (totalSubItems == 1)) || (uniqueMainItem && (totalSubItems == 2))) {
+			if(totalSubItems == (u_int32_t)(uniqueMainItem ? 2 : 1)/*(!uniqueMainItem && (totalSubItems == 1)) || (uniqueMainItem && (totalSubItems == 2))*/) {
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 					mainItem->collapsed = false;

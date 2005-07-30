@@ -195,7 +195,11 @@ private:
 		};
 		enum Status {
 			STATUS_RUNNING,
-			STATUS_WAITING
+			STATUS_WAITING,
+			// special statuses
+			TREE_DOWNLOAD,
+			DOWNLOAD_STARTING,
+			DOWNLOAD_FAILED
 		};
 		enum Types {
 			TYPE_DOWNLOAD,
@@ -311,7 +315,7 @@ private:
 			if(main->subItems.size() == 1) {
 				main->user = main->subItems.front()->user;
 			}
-			main->updateMask |= ItemInfo::MASK_USER;
+			main->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
 			main->update();
 		}
 	};

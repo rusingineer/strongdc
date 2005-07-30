@@ -77,8 +77,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 		setFlag(Download::FLAG_UTF8);
 	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
-		
-	//user = aUser;
+
 }
 
 int64_t Download::getQueueTotal() {

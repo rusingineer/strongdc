@@ -28,8 +28,6 @@
 #include "FileChunksInfo.h"
 #include "QueueManager.h"
 
-#include "../pme-1.0.4/pme.h"
-
 SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH, bool aUtf8) :
 file(aFile), hubName(aClient->getName()), hubIpPort(aClient->getIpPort()), user(aClient->getMe()), 
 size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
@@ -189,6 +187,7 @@ void SearchManager::listen() throw(SocketException) {
 void SearchManager::disconnect() throw() {
 	if(socket != NULL) {
 		stop = true;
+		queue.shutdown();
 		socket->disconnect();
 		port = 0;
 #ifdef _WIN32
@@ -204,6 +203,7 @@ int SearchManager::run() {
 	AutoArray<u_int8_t> buf(BUFSIZE);
 	int len;
 
+	queue.start();
 	while(true) {
 
 		string remoteAddr;
@@ -306,10 +306,8 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 			file, hubName, hubIpPort, address, false);
 
-		{
-			Lock l(cs);
-			seznam.push_back(sr);
-		}	
+		queue.addResult(sr);
+		queue.s.signal();
 	} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
 		AdcCommand c(x.substr(0, x.length()-1));
 		if(c.getParameters().empty())
@@ -474,35 +472,6 @@ string SearchManager::clean(const string& aSearchString) {
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-	bool resort = false;
-	{
-		Lock l(cs);
-
-		for(SearchResult::List::iterator i = seznam.begin(); i < seznam.end(); i++) {
-			SearchResult* sr = *i;
-			if (!sr->getIP().empty()) {
-				ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
-			}
-
-			if((sr->user->getVersion() == "0.403") && (sr->user->getClientType() != "rmDC++ 0.403D[1]")) {
-				string path(sr->file);
-				path = path.substr(0, path.find("\\"));
-				PME reg("([A-Z])");
-				if(reg.match(path)) {
-					sr->user->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
-					sr->user->setClientType("rmDC++ 0.403D[1]");
-					sr->user->setBadClient(true);
-				}
-			}
-			fire(SearchManagerListener::SR(), sr);
-			sr->decRef();
-		}
-		resort = !seznam.empty();
-		seznam.clear();
-	}
-
-	if(resort)
-		fire(SearchManagerListener::Resort());
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();

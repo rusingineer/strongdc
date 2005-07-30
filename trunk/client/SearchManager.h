@@ -36,6 +36,8 @@
 #include "SearchManagerListener.h"
 #include "TimerManager.h"
 #include "AdcCommand.h"
+#include "ClientManager.h"
+#include "../pme-1.0.4/pme.h"
 
 class SearchManager;
 
@@ -141,8 +143,82 @@ private:
 	StringList hubs;
 };
 
+
+
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
+	class ResultsQueue: public Thread
+	{
+	public:
+		bool stop;
+		CriticalSection cs;
+		Semaphore s;
+		SearchResult::List resultList;
+
+		ResultsQueue() : stop(false) {}
+		virtual ~ResultsQueue() throw() {
+			shutdown();
+		}
+
+		int run() {
+			setThreadPriority(Thread::IDLE);
+			SearchResult* sr = NULL;
+			bool resort = false;
+
+			for(;;) {
+				s.wait();
+				if(stop)
+					break;
+
+				{
+					Lock l(cs);
+					if(!resultList.empty()) {
+						sr = *resultList.begin();
+						resultList.erase(resultList.begin());
+						int size = resultList.size();
+						resort = (size % 20 == 0);
+					} else {
+						sr = NULL;
+					}
+				}
+
+				if(sr != NULL) {
+					if (!sr->getIP().empty()) {
+						ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
+					}
+
+					if((sr->getUser()->getVersion() == "0.403") && (sr->getUser()->getClientType() != "rmDC++ 0.403D[1]")) {
+						string path(sr->getFile());
+						path = path.substr(0, path.find("\\"));
+						PME reg("([A-Z])");
+						if(reg.match(path)) {
+							sr->getUser()->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+							sr->getUser()->setClientType("rmDC++ 0.403D[1]");
+							sr->getUser()->setBadClient(true);
+						}
+					}
+
+					SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+					sr->decRef();
+					if(resort)
+						SearchManager::getInstance()->fire(SearchManagerListener::Resort());
+				}
+				sleep(15);
+				resort = false;
+			}
+			return 0;
+		}
+
+		void shutdown() {
+			stop = true;
+			s.signal();
+		}
+		void addResult(SearchResult* sr) {
+			Lock l(cs);
+			resultList.push_back(sr);
+		}
+	
+	};
 public:
 	typedef list<SearchQueueItem> SearchQueueItemList;
 	typedef SearchQueueItemList::iterator SearchQueueIter;
@@ -200,11 +276,14 @@ private:
 	bool stop;
 	u_int32_t lastSearch;
 	friend class Singleton<SearchManager>;
+//	friend class ResultsQueue;
 	SearchQueueItemList searchQueue;
-	SearchResult::List seznam;
-	CriticalSection cs;
+//	SearchResult::List seznam;
+//	CriticalSection cs;
+	ResultsQueue queue;
 
 	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
+		//queue.start();
 		TimerManager::getInstance()->addListener(this);
 	};
 

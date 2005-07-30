@@ -249,14 +249,6 @@ static string sTitle;
 static HWND hWnd;
 static bool bGotTitle;
 
-void callBack(void* x, const string& a) {
-	if (!bGotTitle) {
-		string sTmp = VERSIONSTRING;
-		bGotTitle = true;
-		sTitle = sTmp;
-	}
-	::RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW | RDW_INTERNALPAINT);
-}
 LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_PAINT) {
 		// Get some information
@@ -264,8 +256,6 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		RECT rc;
 		GetWindowRect(hwnd, &rc);
 		OffsetRect(&rc, -rc.left, -rc.top);
-		RECT rc1 = rc;
-		rc1.bottom = rc1.bottom - 35;
 		RECT rc2 = rc;
 		rc2.top = rc2.bottom - 35; 
 		rc2.right = rc2.right - 10;
@@ -290,8 +280,6 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		logFont.lfWeight = 700;
 		hFont = CreateFontIndirect(&logFont);		
 		SelectObject(dc, hFont);
-		::SetBkMode(dc, TRANSPARENT);
-		//::SetBkColor(dc, RGB(255, 255, 255));
 		::SetTextColor(dc, RGB(255,255,255));
 		::DrawText(dc, Text::toT(sTitle).c_str(), _tcslen(Text::toT(sTitle).c_str()), &rc2, DT_RIGHT);
 		DeleteObject(hFont);
@@ -301,6 +289,44 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+void callBack(void* x, const string& a) {
+	if (!bGotTitle) {
+		string sTmp = VERSIONSTRING;
+		bGotTitle = true;
+		sTitle = sTmp;
+	}
+	HWND hwnd = (HWND)x;
+	HDC dc = GetDC(hwnd);
+	RECT rc;
+	GetWindowRect(hwnd, &rc);
+	OffsetRect(&rc, -rc.left, -rc.top);
+	RECT rc2 = rc;
+	rc2.top = rc2.bottom - 15; 
+	::SetBkMode(dc, TRANSPARENT);
+		
+	HBITMAP hi;
+	hi = (HBITMAP)LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 350, 120, LR_SHARED);
+			 
+	HDC comp=CreateCompatibleDC(dc);
+	SelectObject(comp,hi);	
+
+	BitBlt(dc,0, 100 , 350, 120,comp,0, 100,SRCCOPY);
+
+	DeleteObject(hi);
+	DeleteObject(comp);
+	LOGFONT logFont;
+	HFONT hFont;
+	GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(logFont), &logFont);
+	lstrcpy(logFont.lfFaceName, TEXT("Tahoma"));
+	logFont.lfHeight = 12;
+	logFont.lfWeight = 700;
+	hFont = CreateFontIndirect(&logFont);		
+	SelectObject(dc, hFont);
+	::SetTextColor(dc, RGB(255,255,255));
+	::DrawText(dc, Text::toT(".:: " + a + " ::.").c_str(), _tcslen(Text::toT(".:: " + a + " ::.").c_str()), &rc2, DT_CENTER);
+	DeleteObject(hFont);
+	ReleaseDC(hwnd, dc);
+}
 static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
 	checkCommonControls();
