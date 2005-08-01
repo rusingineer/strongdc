@@ -715,7 +715,7 @@ string ResourceManager::strings[] = {
 "Write buffer size", 
 "Override system colors", 
 "Override system colors", 
-"Enable ZoneAlarm detection", 
+"Enable bad software detection", 
 "CRC32 inconsistency (SFV-Check)", 
 "Shared", 
 "Shared Files", 
@@ -854,6 +854,7 @@ string ResourceManager::strings[] = {
 "Accepted Disconnects", 
 "Checking client...", 
 "Group search results by TTH", 
+"NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product.", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1569,7 +1570,7 @@ string ResourceManager::names[] = {
 "SettingsWriteBuffer", 
 "SettingsZdcProgressOverride", 
 "SettingsZdcProgressOverride2", 
-"SettingsZoneAlarm", 
+"SettingsBadSoftware", 
 "SfvInconsistency", 
 "Shared", 
 "SharedFiles", 
@@ -1708,4 +1709,5 @@ string ResourceManager::names[] = {
 "AcceptedDisconnects", 
 "CheckingClient", 
 "GroupSearchResults", 
+"NetlimiterWarning", 
 };

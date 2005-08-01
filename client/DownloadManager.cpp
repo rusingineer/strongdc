@@ -53,7 +53,7 @@ Download::Download() throw() : file(NULL),
 crcCalc(NULL), tth(NULL), treeValid(false) { 
 }
 
-Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSourcePath(aUser)),
+Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
@@ -72,10 +72,9 @@ Download::Download(QueueItem* qi, User::Ptr& aUser) throw() : source(qi->getSour
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 		setFlag(Download::FLAG_MULTI_CHUNK);
 
-	QueueItem::Source* source = *(qi->getSource(aUser));
-	if(source->isSet(QueueItem::Source::FLAG_UTF8))
+	if(aSource->isSet(QueueItem::Source::FLAG_UTF8))
 		setFlag(Download::FLAG_UTF8);
-	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
+	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
 
 }
@@ -128,7 +127,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 
-		if((d->getUserConnection() != NULL) && !d->isSet(Download::FLAG_PARTIAL)) {
+		if((d->getUserConnection() != NULL)/* && !d->isSet(Download::FLAG_PARTIAL)*/) {
 			if (!d->isSet(Download::FLAG_USER_LIST) && (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576))) {
 				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
 					if(((GET_TICK() - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
@@ -344,7 +343,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			if(d->isSet(Download::FLAG_CHUNK_TRANSFER)) {
 				d->unsetFlag(Download::FLAG_CHUNK_TRANSFER);
 
-				d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->getChunkSize(d->getStartPos()));
+				//d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->getChunkSize(d->getStartPos()));
+				d->setSegmentSize(d->getSize() - d->getPos());
 			}
 			aConn->get(d->getSource(), d->getPos());
 		}
@@ -466,9 +466,6 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 		dcdebug("ADCSND : %s, %d \n", aSource->getUser()->getNick().c_str(), bytes);
 		aSource->getDownload()->setSegmentSize(bytes);
 		aSource->setDataMode();
-	} else {
-		dcdebug((aSource->getUser()->getNick() + " - SND failed\n").c_str());
-		aSource->disconnect();
 	}
 }
 
@@ -669,17 +666,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 
-			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				if(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()) && !d->isSet(Download::FLAG_USER_LIST) && !d->isSet(Download::FLAG_TREE_DOWNLOAD) && !d->isSet(Download::FLAG_MP3_INFO)) {
-					aSource->setDownload(NULL);
-					string aTarget = d->getTarget();
-					removeDownload(d);
-					QueueManager::getInstance()->putDownload(d, false, false);
-					aSource->setLineMode();
-					checkDownloads(aSource, false, aTarget);
-					return;
-				}
-			}
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 			d->setPos(e.pos);

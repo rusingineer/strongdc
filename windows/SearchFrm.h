@@ -136,7 +136,10 @@ public:
 		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0),
 		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(BOOLSETTING(SEARCH_ONLY_TTH)), searches(0)
 	{	
-		SearchManager::getInstance()->addListener(this);
+		SearchManager* searchMgr = SearchManager::getInstance();
+		searchMgr->addListener(this);
+		searchMgr->queue.openedSearchFrms++;
+
 		headerBuf = new TCHAR[128];
 		useGrouping = BOOLSETTING(GROUP_SEARCH_RESULTS);
 	}

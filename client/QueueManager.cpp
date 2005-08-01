@@ -1092,33 +1092,18 @@ again:
 			goto again;
 		}
 	}
-
-	Download* d = new Download(q, aUser);
-
-	if((d->getSize() != -1) && d->getTTH()) {
-		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
-			d->setTreeValid(true);
-			q->setHasTree(true);
-		} else if(supportsTrees && !(*q->getSource(aUser))->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
-			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
-			d->setFlag(Download::FLAG_TREE_DOWNLOAD);
-			d->getTigerTree().setFileSize(d->getSize());
-			d->setPos(0);
-			d->setSize(-1);
-			d->unsetFlag(Download::FLAG_RESUME);
-		} else {
-			// Use the root as tree to get some sort of validation at least...
-			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
-			d->setTreeValid(true);
-		}
-	}
 	
-	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		QueueItem::Source* source = *(q->getSource(aUser));
-		int64_t freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
+	int64_t freeBlock = 0;
+	FileChunksInfo::Ptr fileChunksInfo;
+
+	QueueItem::Source* source = *(q->getSource(aUser));
+	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+		dcassert(!q->getTempTarget().empty());
+
+		fileChunksInfo = FileChunksInfo::Get(q->getTempTarget());
+		freeBlock = fileChunksInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 
 		if(freeBlock < 0) {
-			delete d;
 			if(freeBlock == -2) {
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
@@ -1136,27 +1121,51 @@ again:
 			goto again;
 		}
 
-		d->setStartPos(freeBlock);
-		
-		int64_t freeBlockSize = q->chunkInfo->setDownload(freeBlock, d, aUser) - d->getStartPos();
+#ifdef _DEBUG
+		dcdebug("Source part info: %s\n", GetPartsString(source->getPartialInfo()).c_str());
+		PartsInfo tmp;
+		fileChunksInfo->getPartialInfo(tmp);
+		dcdebug("Downloaded part info: %s\n", GetPartsString(tmp).c_str());
+		dcdebug("Downloading start position %I64d from user %s\n", freeBlock, aUser->getNick().c_str());
+#endif
+	}
 
-		if(supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth())) {
-			int64_t needToDownload = min((int64_t)q->chunkInfo->minChunkSize,(int64_t)(d->getSize() - d->getPos()));
-			d->setSegmentSize(min(freeBlockSize, needToDownload));
-			d->setFlag(Download::FLAG_CHUNK_TRANSFER);
+	userQueue.setRunning(q, aUser);
+
+	fire(QueueManagerListener::StatusUpdated(), q);
+
+	Download* d = new Download(q, aUser, source);
+	
+	if((d->getSize() != -1) && d->getTTH() && !d->isSet(Download::FLAG_PARTIAL)) {
+		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
+			d->setTreeValid(true);
+			q->setHasTree(true);
+		} else if(supportsTrees && !source->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
+			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
+			d->setFlag(Download::FLAG_TREE_DOWNLOAD);
+			d->getTigerTree().setFileSize(d->getSize());
+			d->setPos(0);
+			d->setSize(-1);
+			d->unsetFlag(Download::FLAG_RESUME);
+			
+			if(fileChunksInfo)
+				fileChunksInfo->putChunk(freeBlock);
 		} else {
-			d->setSegmentSize(freeBlockSize);
+			// Use the root as tree to get some sort of validation at least...
+			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
+			d->setTreeValid(true);
 		}
+	}
+
+	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		d->setStartPos(freeBlock);
+		q->chunkInfo->setDownload(freeBlock, d, aUser, supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth()));
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
 		}		
 		q->setCurrentDownload(d);
 	}
-
-	userQueue.setRunning(q, aUser);
-
-	fire(QueueManagerListener::StatusUpdated(), q);
 
 	return d;
 }
@@ -1944,7 +1953,6 @@ bool QueueManager::handlePartialSearch(const string& aSearchString, int64_t aSiz
 		// Compare chunks
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
 		if(!chunksInfo){
-			dcassert(0);
 			return false;
 		}
 
@@ -1975,7 +1983,6 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 		// Diff parts info
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
 		if(!chunksInfo){
-			dcassert(0);
 			return false;
 		}
 

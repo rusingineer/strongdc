@@ -582,6 +582,7 @@ public:
 	}
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 	static int getNetLimiterLimit();
+	static bool isNLrunning();
 
 private:
 	static string appPath;

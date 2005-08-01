@@ -154,8 +154,9 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		CriticalSection cs;
 		Semaphore s;
 		SearchResult::List resultList;
+		u_int32_t openedSearchFrms;
 
-		ResultsQueue() : stop(false) {}
+		ResultsQueue() : stop(false), openedSearchFrms(0) {}
 		virtual ~ResultsQueue() throw() {
 			shutdown();
 		}
@@ -203,7 +204,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 					if(resort)
 						SearchManager::getInstance()->fire(SearchManagerListener::Resort());
 				}
-				sleep(15);
+				sleep((openedSearchFrms != 0) ? 10 : 100);
 				resort = false;
 			}
 			return 0;
@@ -268,6 +269,7 @@ public:
 
 	u_int32_t getLastSearch();
 	int getSearchQueueNumber(int* aWindow);
+	ResultsQueue queue;
 
 private:
 	
@@ -276,14 +278,9 @@ private:
 	bool stop;
 	u_int32_t lastSearch;
 	friend class Singleton<SearchManager>;
-//	friend class ResultsQueue;
 	SearchQueueItemList searchQueue;
-//	SearchResult::List seznam;
-//	CriticalSection cs;
-	ResultsQueue queue;
 
 	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
-		//queue.start();
 		TimerManager::getInstance()->addListener(this);
 	};
 

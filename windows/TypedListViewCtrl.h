@@ -713,12 +713,12 @@ public:
 	void Expand(T* i, int a) {
 		if(i->subItems.size() > (uniqueMainItem ? 1 : 0)) {
 			size_t q = 0;
+			i->collapsed = false;
 			while(q < i->subItems.size()) {
 				i->subItems[q]->update();
 				insertSubItem(i->subItems[q], a + 1);
 				q++;
 			}
-			i->collapsed = false;
 			SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
 		}

@@ -250,14 +250,16 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 
 	// ZoneAlarm - ref: http://www.unixwiz.net/backstealth/
-	if (BOOLSETTING(DETECT_ZONEALARM)) {
-		if (FindWindow(NULL, _T("ZoneAlarm")) || FindWindow(NULL, _T("ZoneAlarm Pro"))) {
-			int times_detected = SETTING(ZONEALARM_DETECTIONS);
-			if (times_detected % 13 == 0) {
+	if (BOOLSETTING(DETECT_BADSOFT)) {
+		int times_detected = SETTING(BADSOFT_DETECTIONS);
+		if (times_detected % 5 == 0) {
+			if (FindWindow(NULL, _T("ZoneAlarm")) || FindWindow(NULL, _T("ZoneAlarm Pro"))) {
 				::MessageBox(m_hWnd, CTSTRING(ZONEALARM_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 			}
-			SettingsManager::getInstance()->set(SettingsManager::ZONEALARM_DETECTIONS, ++times_detected);
+			if(Util::isNLrunning())
+				::MessageBox(m_hWnd, CTSTRING(NETLIMITER_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 		}
+		SettingsManager::getInstance()->set(SettingsManager::BADSOFT_DETECTIONS, ++times_detected);
 	}
 	
 	if(BOOLSETTING(OPEN_PUBLIC)) PostMessage(WM_COMMAND, ID_FILE_CONNECT);

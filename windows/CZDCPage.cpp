@@ -52,7 +52,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	//{ SettingsManager::SPEED_USERS, ResourceManager::SPEED_USERS },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
-	{ SettingsManager::DETECT_ZONEALARM, ResourceManager::SETTINGS_ZONE_ALARM },
+	{ SettingsManager::DETECT_BADSOFT, ResourceManager::SETTINGS_BAD_SOFTWARE },
 	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
