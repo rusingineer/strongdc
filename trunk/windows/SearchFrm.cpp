@@ -754,7 +754,10 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-		SearchManager::getInstance()->removeListener(this);
+		SearchManager* searchMgr = SearchManager::getInstance();
+		searchMgr->removeListener(this);
+		searchMgr->queue.openedSearchFrms--;
+		dcassert(searchMgr->queue.openedSearchFrms >= 0);
 		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();

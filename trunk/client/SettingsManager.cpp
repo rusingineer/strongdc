@@ -116,7 +116,7 @@ const string SettingsManager::settingTags[] =
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "SpeedUsers", "AdcDebug",
 	"CheckUnverifiedOnly", "ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
-	"ZoneAlarmDetections", "DetectZoneAlarm", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
+	"BadSoftDetections", "DetectBadSoft", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults",
@@ -422,8 +422,8 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 200);
 
-	setDefault(DETECT_ZONEALARM, true);
-	setDefault(ZONEALARM_DETECTIONS, 0);
+	setDefault(DETECT_BADSOFT, true);
+	setDefault(BADSOFT_DETECTIONS, 0);
 	setDefault(DISCONNECT_RAW, 0);
 	setDefault(TIMEOUT_RAW, 0);
 	setDefault(FAKESHARE_RAW, 0);

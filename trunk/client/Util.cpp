@@ -131,6 +131,12 @@ int hexstr2int(char *hexstr) {
     return value;
 }
 
+bool Util::isNLrunning() {
+	nlfound = false;
+	EnumWindows(GetWOkna,NULL);
+	return nlfound;
+}
+
 int Util::getNetLimiterLimit() {
 	int NetLimiter_UploadLimit = -1;
 	int NetLimiter_UploadOn = 0;

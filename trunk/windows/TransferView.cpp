@@ -539,9 +539,13 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			if((i->status == ItemInfo::DOWNLOAD_STARTING)) {
 				i->status = ItemInfo::STATUS_RUNNING;
 				main->size = i->fullSize;
-				if(main->status != ItemInfo::STATUS_RUNNING)
+				if(main->status != ItemInfo::STATUS_RUNNING) {
+					main->status = ItemInfo::STATUS_RUNNING;
 					main->statusString = TSTRING(DOWNLOAD_STARTING);
+				}
 			} else if(main->subItems.size() == 1) {
+				if(i->status != ItemInfo::STATUS_RUNNING)
+					i->status = ItemInfo::STATUS_WAITING;
 				main->status = i->status;
 				main->statusString = i->statusString;
 				main->size = i->fullSize;
@@ -559,6 +563,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 					}
 				}
 			}
+			dcassert((i->status == ItemInfo::STATUS_WAITING) || (i->status == ItemInfo::STATUS_RUNNING));
+			dcassert((main->status == ItemInfo::STATUS_WAITING) || (main->status == ItemInfo::STATUS_RUNNING));
+
 			i->update();
 			if(!main->collapsed)
 				ctrlTransfers.updateItem(i);
@@ -604,6 +611,10 @@ void TransferView::ItemInfo::update() {
 		main->update();
 
 		if(main->collapsed) return;
+
+		if(colMask == 0)
+			colMask = ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO |
+					 ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 	}
 
 	if(colMask & MASK_USER) {

@@ -209,7 +209,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 					is = mis;
 					leaves = true;
 					free = true;
-					goto ok;
+					//goto ok;
 				}
 			}
 		}

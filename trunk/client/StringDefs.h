@@ -718,7 +718,7 @@ enum Strings { // @DontAdd
 	SETTINGS_WRITE_BUFFER, // "Write buffer size"
 	SETTINGS_ZDC_PROGRESS_OVERRIDE, // "Override system colors"
 	SETTINGS_ZDC_PROGRESS_OVERRIDE2, // "Override system colors"
-	SETTINGS_ZONE_ALARM, // "Enable ZoneAlarm detection"
+	SETTINGS_BAD_SOFTWARE, // "Enable bad software detection"
 	SFV_INCONSISTENCY, // "CRC32 inconsistency (SFV-Check)"
 	SHARED, // "Shared"
 	SHARED_FILES, // "Shared Files"
@@ -857,5 +857,6 @@ enum Strings { // @DontAdd
 	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
 	CHECKING_CLIENT, // "Checking client..."
 	GROUP_SEARCH_RESULTS, // "Group search results by TTH"
+	NETLIMITER_WARNING, // "NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product."
 	LAST // @DontAdd
 };

@@ -31,6 +31,7 @@
 #include "ZUtils.h"
 #include "MerkleTree.h"
 #include "LogManager.h"
+#include "QueueItem.h"
 
 class QueueItem;
 class ConnectionQueueItem;
@@ -68,7 +69,7 @@ public:
 	};
 
 	Download() throw();
-	Download(QueueItem* qi, User::Ptr& aUser) throw();
+	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw();
 
 	/**
 	 * @remarks This function is only used from DownloadManager but its

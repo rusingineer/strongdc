@@ -50,9 +50,8 @@ public:
 
 class Chunk
 {
-public:
-//private:
-	//friend class FileChunksInfo;
+private:
+	friend class FileChunksInfo;
 	//friend class DownloadManager;
 
 	typedef map<int64_t, Chunk*> Map;
@@ -133,7 +132,7 @@ public:
      */
 	void putChunk(int64_t);
 
-	int64_t setDownload(int64_t, Download*, User::Ptr);
+	void setDownload(int64_t, Download*, User::Ptr, bool);
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "
      */
@@ -165,15 +164,6 @@ public:
     {
         return iVerifiedSize;
     }
-
-	int64_t getChunkSize(int64_t start)
-	{
-		Lock l(cs);
-
-		Chunk::Iter i = running.find(start);
-
-		return (i->second->end - start);
-	}
 
 	/**
      * Perform last verifying against TigerTree
@@ -233,6 +223,8 @@ public:
     int64_t iDownloadedSize;
     int64_t iVerifiedSize;
 	int64_t minChunkSize;					// it'll be doubled when last verifying fail
+
+	bool noFreeBlock;
 
 	CriticalSection cs;
 
