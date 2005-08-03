@@ -159,14 +159,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			toIntList<int64_t>(freeBlocks, v);
 			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 		}else{
-			int64_t tmpSize = File::getSize(qi->getTempTarget());
-			if(tmpSize > 0){
-				vector<int64_t> v;
-				v.push_back(max((int64_t)0, (int64_t)(tmpSize - 65535)));
-				v.push_back(qi->getSize());
-				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
-			}else
-				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 		}
 		qi->chunkInfo = pChunksInfo;
 
@@ -387,10 +380,7 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 	
 	// Set flag to waiting
 	qi->removeCurrent(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ? aUser : qi->getCurrents()[0]->getUser());
-
-	if(removeSegment) {
-		qi->removeActiveSegment(aUser);
-	}
+	if(removeSegment) qi->removeActiveSegment(aUser);
 	
 	if(qi->getCurrents().empty() || !qi->isSet(QueueItem::FLAG_MULTI_SOURCE)){
 		qi->setStatus(QueueItem::STATUS_WAITING);
@@ -417,24 +407,18 @@ QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
 	return userQueue.getRunning(aUser);
 }
 
-bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount, bool isTree) {
+bool QueueManager::setActiveSegment(QueueItem* qi, const User::Ptr& aUser) {
 	{
 		Lock l(cs);
-		QueueItem* qi = userQueue.getRunning(aUser);
+		//QueueItem* qi = userQueue.getRunning(aUser);
 
 		if(qi == NULL) {
-			SegmentsCount = 0;
 			return false;
 		}
 
-		SegmentsCount = qi->getActiveSegments().size();
-		if(isTree) {
-			isAlreadyActive = false;
-			return true;
-		}
+		int32_t SegmentsCount = qi->getActiveSegments().size();
 
-		isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
-	
+		bool isAlreadyActive = find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end();
 		if(!isAlreadyActive) {
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && (qi->getMaxSegments() <= SegmentsCount)) {
 				return false;
@@ -448,22 +432,6 @@ bool QueueManager::setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActiv
 		}
 	}
 	return true;
-}
-
-int64_t QueueManager::setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments) {
-	int64_t start;
-	{
-		Lock l(cs);
-		QueueItem* qi = userQueue.getRunning(aUser);
-
-		if(!qi)
-			return -1;
-
-		qi->setAverageSpeed(speed);
-		start = qi->getStart();
-		activeSegments = qi->getActiveSegments().size();
-	}
-	return start;
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi) {
@@ -1094,14 +1062,12 @@ again:
 	}
 	
 	int64_t freeBlock = 0;
-	FileChunksInfo::Ptr fileChunksInfo;
 
 	QueueItem::Source* source = *(q->getSource(aUser));
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		dcassert(!q->getTempTarget().empty());
 
-		fileChunksInfo = FileChunksInfo::Get(q->getTempTarget());
-		freeBlock = fileChunksInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
+		freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 
 		if(freeBlock < 0) {
 			if(freeBlock == -2) {
@@ -1124,9 +1090,9 @@ again:
 #ifdef _DEBUG
 		dcdebug("Source part info: %s\n", GetPartsString(source->getPartialInfo()).c_str());
 		PartsInfo tmp;
-		fileChunksInfo->getPartialInfo(tmp);
+		q->chunkInfo->getPartialInfo(tmp);
 		dcdebug("Downloaded part info: %s\n", GetPartsString(tmp).c_str());
-		dcdebug("Downloading start position %I64d from user %s\n", freeBlock, aUser->getNick().c_str());
+		dcdebug("Downloading start position %I64d\n", freeBlock);
 #endif
 	}
 
@@ -1148,8 +1114,8 @@ again:
 			d->setSize(-1);
 			d->unsetFlag(Download::FLAG_RESUME);
 			
-			if(fileChunksInfo)
-				fileChunksInfo->putChunk(freeBlock);
+			if(q->chunkInfo)
+				q->chunkInfo->putChunk(freeBlock);
 		} else {
 			// Use the root as tree to get some sort of validation at least...
 			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
@@ -1180,6 +1146,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 
 	{
 		Lock l(cs);
+
+		aDownload->setQI(NULL);
 
 		if(aDownload->isSet(Download::FLAG_PARTIAL_LIST)) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUserConnection()->getUser()->getCID());
@@ -1595,6 +1563,9 @@ void QueueManager::saveQueue() throw() {
 	
 					for(QueueItem::Source::List::const_iterator j = qi->sources.begin(); j != qi->sources.end(); ++j) {
 						QueueItem::Source* s = *j;
+
+						if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
+
 						f.write(STRINGLEN("\t\t<Source Nick=\""));
 						f.write(CHECKESCAPE(s->getUser()->getNick()));
 						if(!s->getPath().empty() || (!s->getUser()->isSet(User::TTH_GET) && qi->getTTH())) {
@@ -1878,20 +1849,35 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return true;
 }
 
-bool QueueManager::dropSource(Download* d, const User::Ptr& aUser) {
+bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	int iHighSpeed = SETTING(H_DOWN_SPEED);
 
 	u_int16_t activeSegments, onlineUsers;
 	int64_t overallSpeed;
 	bool enabledSlowDisconnecting;
+	User::Ptr aUser = d->getUserConnection()->getUser();
 
 	{
 	    Lock l(cs);
 
-		QueueItem* q = userQueue.getRunning(aUser);
+		QueueItem* q = d->getQI();
 
-		if(q == NULL)
-			return false;
+		if(!q) return false;
+
+		if(autoDrop) {
+			// Don't drop only downloading source
+			if(q->getActiveSegments().size() < 2) return false;
+
+		    userQueue.setWaiting(q, aUser);
+			userQueue.remove(q, aUser);
+
+			q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
+
+			fire(QueueManagerListener::StatusUpdated(), q);
+			setDirty();
+
+			return true;
+		}
 
 		activeSegments = q->getActiveSegments().size();
 		onlineUsers = q->countOnlineUsers();
@@ -1913,29 +1899,6 @@ bool QueueManager::dropSource(Download* d, const User::Ptr& aUser) {
 	}
 	return true;
  }
-
-bool QueueManager::autoDropSource(const User::Ptr& aUser) {
-    Lock l(cs);
-
-    QueueItem* q = userQueue.getRunning(aUser);
-
-    if(!q) return false;
-
-    dcassert(q->isSource(aUser));
-
-    // Don't drop only downloading source
-    if(q->getActiveSegments().size() < 2) return false;
-
-    userQueue.setWaiting(q, aUser);
-    userQueue.remove(q, aUser);
-
-    q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
-
-	fire(QueueManagerListener::StatusUpdated(), q);
-    setDirty();
-
-	return true;
-}
 
 bool QueueManager::handlePartialSearch(const string& aSearchString, int64_t aSize, const TTHValue& tth, PartsInfo& _outPartsInfo) {
 	{
@@ -2018,6 +1981,7 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 
 	return true;
 }
+
 /**
  * @file
  * $Id$

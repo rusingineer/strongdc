@@ -142,10 +142,8 @@ public:
 	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	bool setActiveSegment(const User::Ptr& aUser, bool& isAlreadyActive, u_int16_t& SegmentsCount, bool isTree);
-	bool dropSource(Download* d, const User::Ptr& aUser);
-	bool autoDropSource(const User::Ptr& aUser);
-	int64_t setQueueItemSpeed(const User::Ptr& aUser, int64_t speed, u_int16_t& activeSegments);
+	bool setActiveSegment(QueueItem* qi, const User::Ptr& aUser);
+	bool dropSource(Download* d, bool autoDrop);
 
 	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget) {
 		u_int16_t value;

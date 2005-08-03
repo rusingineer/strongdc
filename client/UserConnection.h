@@ -100,7 +100,7 @@ class ConnectionQueueItem;
 class Transfer {
 public:
 	Transfer() : userConnection(NULL), start(0), lastTick(GET_TICK()), runningAverage(0), 
-		last(0), actual(0), pos(0), startPos(0), size(-1), fullSize(-1) { };
+		last(0), actual(0), pos(0), startPos(0), size(-1) { };
 	virtual ~Transfer() { };
 	
 	int64_t getPos() const { return pos; };
@@ -141,7 +141,6 @@ public:
 	GETSET(u_int32_t, start, Start);
 	GETSET(u_int32_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
-	GETSET(int64_t, fullSize, FullSize);
 private:
 	Transfer(const Transfer&);
 	Transfer& operator=(const Transfer&);

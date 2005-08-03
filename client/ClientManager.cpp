@@ -124,7 +124,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				dcdebug("Search caught error\n");
 			}
 		}
-	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0)) {
+	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0) && aClient->getMe()->isClientOp()) {
 		PartsInfo partialInfo;
 		TTHValue aTTH(aString.substr(4));
 		if(QueueManager::getInstance()->handlePartialSearch(aString, aSize, aTTH, partialInfo)) {
