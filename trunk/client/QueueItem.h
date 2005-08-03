@@ -220,13 +220,13 @@ public:
 	};
 	
 	void addActiveSegment(const User::Ptr& aUser) {
-		if(!isSource(aUser)) return;
 		activeSegments.push_back(*getSource(aUser));
 	}
 
 	void removeActiveSegment(const User::Ptr& aUser) {
-		if(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)) != activeSegments.end()) {
-			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), *getSource(aUser)));
+		Source* s = *getSource(aUser);
+		if(find(activeSegments.begin(), activeSegments.end(), s) != activeSegments.end()) {
+			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), s));
 		}
 	}
 

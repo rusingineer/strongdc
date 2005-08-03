@@ -108,8 +108,8 @@ public:
 	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
-	//GETSET(User::Ptr, user, User);
 	GETSET(int64_t, segmentSize, SegmentSize);
+	GETSET(QueueItem*, qi, QI);
 	int64_t quickTick;
 	
 private:
@@ -150,7 +150,7 @@ public:
 	 * This is the first message sent before a download starts. 
 	 * No other messages will be sent before.
 	 */
-	virtual void on(Starting, Download*, bool, u_int16_t) throw() { };
+	virtual void on(Starting, Download*) throw() { };
 
 	/**
 	 * Sent once a second if something has actually been downloaded.

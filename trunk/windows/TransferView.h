@@ -230,7 +230,7 @@ private:
 		string Target;
 		bool collapsed;
 		bool mainItem;
-		u_int16_t numberOfSegments;
+		int32_t numberOfSegments;
 		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
@@ -345,7 +345,7 @@ private:
 
 	virtual void on(DownloadManagerListener::Complete, Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, isTree);}
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
-	virtual void on(DownloadManagerListener::Starting, Download* aDownload, bool isActiveSegment, u_int16_t) throw();
+	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
 	virtual void on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi, const string& aMessage) throw();
 	virtual void on(DownloadManagerListener::Verifying, const string& fileName, int64_t) throw();

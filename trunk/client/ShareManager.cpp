@@ -1575,8 +1575,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 }
 
 void ShareManager::on(HashManagerListener::Finished) {
-	setDirty();
-	run();
+	generateXmlList();
 	LogManager::getInstance()->message(STRING(HASHING_FINISHED), true);
 }
 

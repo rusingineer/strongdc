@@ -549,17 +549,10 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 
 // TimerManagerListener
 void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
-	//Upload::List ticks;
-
 	{
 		Lock l(cs);
 		throttleSetup();
 		throttleZeroCounters();
-
-		//ticks = uploads;
-		/*for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-			ticks.push_back(*i);
-		}*/
 
 		if(uploads.size() > 0)
 			fire(UploadManagerListener::Tick(), uploads);
