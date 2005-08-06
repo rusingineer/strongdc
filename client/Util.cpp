@@ -565,11 +565,11 @@ string Util::getLocalIp() {
 	int i = 0;
 	
 	// We take the first ip as default, but if we can find a better one, use it instead...
-	memcpy(&(dest.sin_addr), he->h_addr_list[i++], he->h_length);
+	memcpy2(&(dest.sin_addr), he->h_addr_list[i++], he->h_length);
 	tmp = inet_ntoa(dest.sin_addr);
 	if(Util::isPrivateIp(tmp) || strncmp(tmp.c_str(), "169", 3) == 0) {
 		while(he->h_addr_list[i]) {
-			memcpy(&(dest.sin_addr), he->h_addr_list[i], he->h_length);
+			memcpy2(&(dest.sin_addr), he->h_addr_list[i], he->h_length);
 			string tmp2 = inet_ntoa(dest.sin_addr);
 			if(!Util::isPrivateIp(tmp2) && strncmp(tmp2.c_str(), "169", 3) != 0) {
 				tmp = tmp2;
@@ -1035,7 +1035,7 @@ string Util::getOsVersion() {
 	string os;
 
 	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {

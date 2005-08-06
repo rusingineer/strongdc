@@ -211,13 +211,12 @@ private:
 			status(s), pos(p), size(sz), fullSize(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
 			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
-			compressRatio(1.0), flagImage(0), upperUpdated(false) { update(); };
+			flagImage(0), upperUpdated(false) { update(); };
 
 		Types type;
 		Status status;
 		int64_t pos;
 		int64_t size;
-		int64_t fullSize;
 		int64_t start;
 		int64_t actual;
 		int64_t speed;
@@ -226,12 +225,13 @@ private:
 		tstring file;
 		tstring IP;
 		tstring country;		
+
+		int64_t fullSize;
 		ItemInfo* main;
 		string Target;
 		bool collapsed;
 		bool mainItem;
 		int32_t numberOfSegments;
-		double compressRatio;
 		bool upperUpdated;
 		int flagImage;
 
@@ -256,10 +256,6 @@ private:
 		void deleteSelf() { delete this; }	
 
 		double getRatio() {
-			if(mainItem && (type == ItemInfo::TYPE_DOWNLOAD)) {
-				if((compressRatio > 1) || (compressRatio < 0)) compressRatio = 1.0;
-				return compressRatio;
-			}
 			return (pos > 0) ? (double)actual / (double)pos : 1.0;
 		}
 

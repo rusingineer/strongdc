@@ -49,14 +49,14 @@ void CAGPtrArray::SetSize(int nNewSize, int nGrowBy) {
 #endif
 		m_pData = (void**) new BYTE[nNewSize * sizeof(void*)];
 
-		memset(m_pData, 0, nNewSize * sizeof(void*));  // zero fill
+		memset2(m_pData, 0, nNewSize * sizeof(void*));  // zero fill
 
 		m_nSize = m_nMaxSize = nNewSize;
 	} else if (nNewSize <= m_nMaxSize) {
 		// it fits
 		if (nNewSize > m_nSize) {
 			// initialize the new elements
-			memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
+			memset2(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
 		}
 		m_nSize = nNewSize;
 	} else {
@@ -80,12 +80,12 @@ void CAGPtrArray::SetSize(int nNewSize, int nGrowBy) {
 		void** pNewData = (void**) new BYTE[nNewMax * sizeof(void*)];
 
 		// copy new data from old
-		memcpy(pNewData, m_pData, m_nSize * sizeof(void*));
+		memcpy2(pNewData, m_pData, m_nSize * sizeof(void*));
 
 		// construct remaining elements
 		dcassert(nNewSize > m_nSize);
 
-		memset(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
+		memset2(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(void*));
 
 		// get rid of old stuff (note: no destructors called)
 		delete[] (BYTE*)m_pData;
@@ -106,7 +106,7 @@ int CAGPtrArray::Append(const CAGPtrArray& src) {
 	int nOldSize = m_nSize;
 	SetSize(m_nSize + src.m_nSize);
 
-	memcpy(m_pData + nOldSize, src.m_pData, src.m_nSize * sizeof(void*));
+	memcpy2(m_pData + nOldSize, src.m_pData, src.m_nSize * sizeof(void*));
 
 	return nOldSize;
 }
@@ -116,7 +116,7 @@ void CAGPtrArray::Copy(const CAGPtrArray& src) {
 
 	SetSize(src.m_nSize);
 
-	memcpy(m_pData, src.m_pData, src.m_nSize * sizeof(void*));
+	memcpy2(m_pData, src.m_pData, src.m_nSize * sizeof(void*));
 }
 
 void CAGPtrArray::FreeExtra() {
@@ -129,7 +129,7 @@ void CAGPtrArray::FreeExtra() {
 		if (m_nSize != 0) {
 			pNewData = (void**) new BYTE[m_nSize * sizeof(void*)];
 			// copy new data from old
-			memcpy(pNewData, m_pData, m_nSize * sizeof(void*));
+			memcpy2(pNewData, m_pData, m_nSize * sizeof(void*));
 		}
 
 		// get rid of old stuff (note: no destructors called)
@@ -164,7 +164,7 @@ void CAGPtrArray::InsertAt(int nIndex, void* newElement, int nCount) {
 
 		// re-init slots we copied from
 
-		memset(&m_pData[nIndex], 0, nCount * sizeof(void*));
+		memset2(&m_pData[nIndex], 0, nCount * sizeof(void*));
 	}
 
 	// insert new value in the gap

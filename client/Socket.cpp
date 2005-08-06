@@ -169,7 +169,7 @@ void Socket::connect(const string& aAddr, short aPort) throw(SocketException) {
 		create();
 	}
 
-	memset(&serv_addr, 0, sizeof(serv_addr));
+	memset2(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_port = htons(aPort);
 	serv_addr.sin_family = AF_INET;
 	
@@ -332,7 +332,7 @@ void Socket::writeTo(const string& aIp, short aPort, const char* aBuffer, size_t
 		throw SocketException(STRING(ADDRESS_NOT_AVAILABLE));
 	}
 
-	memset(&serv_addr, 0, sizeof(serv_addr));
+	memset2(&serv_addr, 0, sizeof(serv_addr));
 
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5 && !noproxy) {
 
@@ -369,7 +369,7 @@ void Socket::writeTo(const string& aIp, short aPort, const char* aBuffer, size_t
 			connLen = 10;
 		}
 
-		memcpy(((u_int8_t*)connStr) + connLen, aBuffer, aLen);
+		memcpy2(((u_int8_t*)connStr) + connLen, aBuffer, aLen);
 
 		int i = ::sendto(sock, (char*)(u_int8_t*)connStr, connLen + (int)aLen, 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 		checksockerr(i);
@@ -462,7 +462,7 @@ int Socket::wait(u_int32_t millis, int waitFor) throw(SocketException) {
 string Socket::resolve(const string& aDns) {
 	sockaddr_in sock_addr;
 
-	memset(&sock_addr, 0, sizeof(sock_addr));
+	memset2(&sock_addr, 0, sizeof(sock_addr));
 	sock_addr.sin_port = 0;
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_addr.s_addr = inet_addr(aDns.c_str());
@@ -561,7 +561,7 @@ void Socket::socksUpdated() {
 
 			sockaddr_in  serv_addr;
 			
-			memset(&serv_addr, 0, sizeof(serv_addr));
+			memset2(&serv_addr, 0, sizeof(serv_addr));
 			serv_addr.sin_port = htons(udpPort);
 			serv_addr.sin_family = AF_INET;
 			

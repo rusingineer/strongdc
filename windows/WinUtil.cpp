@@ -309,7 +309,7 @@ void UserInfoBase::ungrantSlot() {
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
@@ -439,7 +439,7 @@ void WinUtil::init(HWND hWnd) {
 #if 0	
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset(&fi, 0, sizeof(SHFILEINFO));
+		memset2(&fi, 0, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
 		::SHGetFileInfo(_T(""), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
@@ -519,7 +519,7 @@ void WinUtil::initColors() {
 	bgColor = SETTING(BACKGROUND_COLOR);
 
 	CHARFORMAT2 cf;
-	memset(&cf, 0, sizeof(CHARFORMAT2));
+	memset2(&cf, 0, sizeof(CHARFORMAT2));
 	cf.cbSize = sizeof(cf);
 	cf.dwReserved = 0;
 	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
@@ -1461,7 +1461,7 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const tstring& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset(&fi, 0, sizeof(SHFILEINFO));
+		memset2(&fi, 0, sizeof(SHFILEINFO));
 		string x = Text::toLower(Util::getFileExt(Text::fromT(aFileName)));
 		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);
@@ -1482,7 +1482,7 @@ int WinUtil::getIconIndex(const tstring& aFileName) {
 
 int WinUtil::getOsMajor() {
 	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1495,7 +1495,7 @@ int WinUtil::getOsMajor() {
 int WinUtil::getOsMinor() 
 {
 	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1700,22 +1700,28 @@ unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
 }
 
 string WinUtil::generateStats() {
-	char buf[1024];
-	PROCESS_MEMORY_COUNTERS pmc;
-	pmc.cb = sizeof(pmc);
-	GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-	FILETIME tmpa, tmpb, kernelTimeFT, userTimeFT;
-	GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
-	int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
-	int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
-	sprintf(buf, "\n-=[ StrongDC++ %s%s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
-		VERSIONSTRING, STRONGDCVERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
-		Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
-		Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
-		Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
-		Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
-		formatTime(::GetTickCount()/1000).c_str(), ProcSpeedCalc());
-	return buf;
+	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
+		char buf[1024];
+		PROCESS_MEMORY_COUNTERS pmc;
+		pmc.cb = sizeof(pmc);
+		typedef bool (CALLBACK* LPFUNC)(HANDLE Process, PPROCESS_MEMORY_COUNTERS ppsmemCounters, DWORD cb);
+		LPFUNC _GetProcessMemoryInfo = (LPFUNC)GetProcAddress(LoadLibrary(_T("psapi")), "GetProcessMemoryInfo");
+		_GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+		FILETIME tmpa, tmpb, kernelTimeFT, userTimeFT;
+		GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
+		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
+		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
+		sprintf(buf, "\n-=[ StrongDC++ %s%s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
+			VERSIONSTRING, STRONGDCVERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
+			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
+			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
+			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
+			Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
+			formatTime(::GetTickCount()/1000).c_str(), ProcSpeedCalc());
+		return buf;
+	} else {
+		return "Not supported by OS";
+	}
 } 
 
 /**

@@ -166,7 +166,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	hIconTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_YES), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 	hIconNotTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_NO), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 
-	memset(statusSizes, 0, sizeof(statusSizes));
+	memset2(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
 	updateStatus();
@@ -1433,7 +1433,7 @@ void QueueFrame::updateQueue() {
 static TCHAR tmpBuf[1024];
 void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 	TVINSERTSTRUCT tvis;
-	memset(&tvis, 0, sizeof(tvis));
+	memset2(&tvis, 0, sizeof(tvis));
 	tvis.itemex.hItem = item;
 	tvis.itemex.mask = TVIF_CHILDREN | TVIF_HANDLE | TVIF_IMAGE | TVIF_INTEGRAL | TVIF_PARAM |
 		TVIF_SELECTEDIMAGE | TVIF_STATE | TVIF_TEXT;

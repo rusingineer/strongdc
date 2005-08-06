@@ -20,6 +20,7 @@
 #define STDINC_H
 
 #include "config.h"
+#include "memcpy_amd.h"
 
 #ifdef _WIN32
 

@@ -30,15 +30,15 @@
 #include "UserInfo.h"
 
 #ifndef _RICHEDIT_VER
-#define _RICHEDIT_VER 0x0200
+#define _RICHEDIT_VER 0x0300
 #endif
 
+#include <AtlCrack.h>
 class UserInfo;
 
-class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl> {
+class ChatCtrl: public CRichEditCtrl {
 protected:
 	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	IRichEditOle* GetIRichEditOle() const;
 
@@ -47,14 +47,9 @@ protected:
 	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen;
 public:
+	LRESULT OnRButtonDown(POINT pt);
 	ChatCtrl();
 	virtual ~ChatCtrl();
-
-	BEGIN_MSG_MAP(ChatCtrl)
-	  // put your message handler entries here
-		MESSAGE_HANDLER(WM_SIZE, OnSize)
-		MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
-	END_MSG_MAP()
 
 	bool HitNick(POINT p, CAtlString *sNick, int *piBegin = NULL, int *piEnd = NULL);
 	bool HitIP(POINT p, CAtlString *sIP, int *piBegin = NULL, int *piEnd = NULL);

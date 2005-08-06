@@ -76,7 +76,7 @@ MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastU
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
 closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT),
 bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
-		memset(statusSizes, 0, sizeof(statusSizes));
+		memset2(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
 };
 
@@ -426,7 +426,7 @@ HWND MainFrame::createToolbar() {
 		int i = Util::toInt(*k);		
 		
 	TBBUTTON nTB;
-		memset(&nTB, 0, sizeof(TBBUTTON));
+		memset2(&nTB, 0, sizeof(TBBUTTON));
 
 		if(i == -1) {
 			nTB.fsStyle = TBSTYLE_SEP;			
@@ -1422,7 +1422,7 @@ void MainFrame::checkFileList(tstring file, User::Ptr u) {
 		HubFrame* hubFrame = HubFrame::getHub(client);
 	
 		CHARFORMAT2 cf;
-		memset(&cf, 0, sizeof(CHARFORMAT2));
+		memset2(&cf, 0, sizeof(CHARFORMAT2));
 		cf.cbSize = sizeof(cf);
 		cf.dwReserved = 0;
 		cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;

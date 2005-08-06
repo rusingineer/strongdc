@@ -41,10 +41,10 @@ public:
 		initDelta1();
 	};
 	StringSearch(const StringSearch& rhs) throw() : pattern(rhs.pattern) { 
-		memcpy(delta1, rhs.delta1, sizeof(delta1));
+		memcpy2(delta1, rhs.delta1, sizeof(delta1));
 	};
 	const StringSearch& operator=(const StringSearch& rhs) {
-		memcpy(delta1, rhs.delta1, sizeof(delta1));
+		memcpy2(delta1, rhs.delta1, sizeof(delta1));
 		pattern = rhs.pattern;
 		return *this;
 	}

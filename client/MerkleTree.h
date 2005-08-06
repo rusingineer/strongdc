@@ -152,7 +152,7 @@ public:
 		vector<u_int8_t> buf(getLeaves().size() * HASH_SIZE);
 		u_int8_t* p = &buf[0];
 		for(size_t i = 0; i < getLeaves().size(); ++i) {
-			memcpy(p + i * HASH_SIZE, &getLeaves()[i], HASH_SIZE);
+			memcpy2(p + i * HASH_SIZE, &getLeaves()[i], HASH_SIZE);
 		}
 		return buf;
 	}

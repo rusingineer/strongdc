@@ -180,10 +180,6 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 		running.insert(make_pair(chunk->pos, chunk));
 
 		noFreeBlock = false;
-#ifdef _DEBUG
-		dcdebug("#Chunks: %s", getFreeChunksString());
-#endif
-		dcdebug("#2 Return chunk: %I64d - %I64d \n", chunk->pos, chunk->end);
 		return chunk->pos;
 	}
 
@@ -273,7 +269,6 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	dcdebug("split running chunk (%I64d , %I64d) * %I64d Bytes/s -> (%I64d , %I64d) * %I64d Bytes/s \n", b, e, speed, n, e, _speed);
 	noFreeBlock = false;
-	dcdebug("#3 Return chunk: %I64d - %I64d \n", n, e);
 	return n;
 }
 
@@ -305,29 +300,13 @@ void FileChunksInfo::putChunk(int64_t start)
 			// found continuous running chunk, concatenate it
             }else if(prev != NULL && prev->end == chunk->pos){ 
 				prev->end = chunk->end;
-				dcdebug("#6 Return chunk: %I64d - %I64d", prev->pos, chunk->end);
 				delete chunk;
 
 			// unfinished chunk, waiting ...
 			}else{
 				chunk->download = NULL;
 				noFreeBlock = false;
-				dcdebug("#4 Return chunk: %I64d - %I64d \n", chunk->pos, chunk->end);
-#ifdef _DEBUG
-	for(map<int64_t, Chunk*>::iterator j = waiting.begin(); j != waiting.end(); j++)
-	{
-		dcdebug("#Before Chunks: %I64d, %I64d -> %I64d\n", j->first, j->second->pos, j->second->end);
-	}
-#endif
 				waiting.insert(make_pair(chunk->pos, chunk));				
-
-#ifdef _DEBUG
-	for(map<int64_t, Chunk*>::iterator j = waiting.begin(); j != waiting.end(); j++)
-	{
-		dcdebug("#After Chunks: %I64d, %I64d -> %I64d\n", j->first, j->second->pos, j->second->end);
-	}
-#endif
-
 			}
 
 			running.erase(i);
@@ -337,12 +316,13 @@ void FileChunksInfo::putChunk(int64_t start)
 		prev = chunk;
 	}
 
-	dcassert(0);
+//	dcassert(0);
 }
 
 string FileChunksInfo::getFreeChunksString()
 {
 	vector<int64_t> tmp;
+
 	{
 		Lock l(cs);
 
@@ -676,9 +656,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 
 	Lock l(cs);
 
-#ifdef _DEBUG
-		dcdebug("#Chunks: %s", getFreeChunksString());
-#endif
 	// Convert block index to file position
 	vector<int64_t> posArray;
 	posArray.reserve(partialInfo.size());
@@ -699,7 +676,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 					chunk->end = b;
 
 					waiting.insert(make_pair(e, new Chunk(e, tmp)));
-					dcdebug("#30 %I64d - %I64d\n", e, tmp);
 
 				}else if(chunk->end != e){
 					waiting.erase(i);
@@ -713,7 +689,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 
 				running.insert(make_pair(b, new Chunk(b, e)));
 				noFreeBlock = false;
-				dcdebug("#1 Return chunk: %I64d - %I64d \n", b, e);
 				return b;
 			}
 		}
@@ -757,8 +732,8 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 		if(tmp > maxBlockEnd){
 			waiting.insert(make_pair(maxBlockEnd, new Chunk(maxBlockEnd, tmp)));
 		}
+
 		noFreeBlock = false;
-		dcdebug("#5 Return chunk: %I64d - %I64d \n", maxBlockEnd, tmp);
 		return maxBlockStart;
 	}
 
