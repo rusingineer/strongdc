@@ -120,7 +120,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 	Lock l(cs);
 
 	Download::List tickList;
-	int64_t minSpeed = downloads.size() * 50;
+	int64_t minSpeed = downloads.size() * 100;
 	throttleSetup();
 	throttleZeroCounters();
 
@@ -210,7 +210,7 @@ public:
 				pos += TigerTree::HASH_SIZE;
 			} else {
 				size_t bytes = min(TigerTree::HASH_SIZE - bufPos, left);
-				memcpy(buf + bufPos, b + pos, bytes);
+				memcpy2(buf + bufPos, b + pos, bytes);
 				bufPos += bytes;
 				pos += bytes;
 				if(bufPos == TigerTree::HASH_SIZE) {

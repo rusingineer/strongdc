@@ -148,8 +148,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	f.write(LIT("\r\n"));
 	f.close();
 
-	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
-	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
+	memcpy2(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
+	memcpy2(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
 
 	WinUtil::exceptioninfo += Text::toT(StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp));
 	
@@ -360,6 +360,20 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.SetWindowLong(GWL_WNDPROC, (LONG)&splashCallback);
 	splash.CenterWindow();
 	sTitle = VERSIONSTRING "" STRONGDCVERSIONSTRING;
+	switch (get_cpu_type())
+	{
+		case 2:
+			sTitle += " MMX";
+			break;
+		case 3:
+			sTitle += " AMD";
+			break;
+		case 4:
+		case 5:
+			sTitle += " SSE";
+			break;
+	}
+
 	splash.SetFocus();
 	splash.RedrawWindow();
 
@@ -478,7 +492,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		dcdebug("Failed reading exe\n");
 	}	
 
-	HINSTANCE hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());	
+	HINSTANCE hInstRich = ::LoadLibrary(_T("RICHED20.DLL"));	
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
  

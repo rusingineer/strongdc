@@ -385,8 +385,9 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser, 
 	if(qi->getCurrents().empty() || !qi->isSet(QueueItem::FLAG_MULTI_SOURCE)){
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setAverageSpeed(0);
-		if(removeSegment)
+		if(removeSegment) {
 			qi->setStart(0);
+		}
 	}
 
    	// Add to the userQueue
@@ -1032,18 +1033,19 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	Lock l(cs);
 
 	// First check PFS's...
-	PfsIter pi = pfsQueue.find(aUser->getCID());
+	/*PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
 		Download* d = new Download();
 		d->setFlag(Download::FLAG_PARTIAL_LIST);
 		d->setFlag(Download::FLAG_UTF8);
 		d->setSource(pi->second);
 		return d;
-	}
-	
-	QueueItem* q = NULL;
+	}*/
 
-	if(!aTarget.empty()) {
+	QueueItem* q = NULL;
+	bool nextChunk = !aTarget.empty();
+
+	if(nextChunk) {
 		q = fileQueue.find(aTarget);
 	} else {
 		q = userQueue.getNext(aUser);
@@ -1077,8 +1079,8 @@ again:
 			} else
 				message = STRING(NO_FREE_BLOCK);
 			
-			if(!aTarget.empty()) {
-				aTarget = Util::emptyString;
+			if(nextChunk) {
+				nextChunk = false;
 				q->removeActiveSegment(aUser);
 				q = userQueue.getNext(aUser);
 			} else {
@@ -1086,14 +1088,6 @@ again:
 			}
 			goto again;
 		}
-
-#ifdef _DEBUG
-		dcdebug("Source part info: %s\n", GetPartsString(source->getPartialInfo()).c_str());
-		PartsInfo tmp;
-		q->chunkInfo->getPartialInfo(tmp);
-		dcdebug("Downloaded part info: %s\n", GetPartsString(tmp).c_str());
-		dcdebug("Downloading start position %I64d\n", freeBlock);
-#endif
 	}
 
 	userQueue.setRunning(q, aUser);
@@ -1860,7 +1854,8 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	{
 	    Lock l(cs);
 
-		QueueItem* q = d->getQI();
+		QueueItem* q = userQueue.getRunning(aUser);
+		d->setQI(q);
 
 		if(!q) return false;
 

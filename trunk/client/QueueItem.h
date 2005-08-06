@@ -138,9 +138,9 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL),
+	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false), averageSpeed(0)
+	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
 	{ 
 		
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
@@ -158,8 +158,8 @@ public:
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
-		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority), averageSpeed(rhs.averageSpeed),
-		start(rhs.start), currentDownload(rhs.currentDownload)
+		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
+		start(rhs.start), currentDownload(rhs.currentDownload), averageSpeed(rhs.averageSpeed)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -251,7 +251,6 @@ public:
 
 	int64_t getDownloadedBytes(){
 		if(isSet(FLAG_MULTI_SOURCE)){
-			//FileChunksInfo::Ptr filedatainfo = FileChunksInfo::Get(tempTarget);
 			if(chunkInfo)
 				return chunkInfo->getDownloadedSize();
 		}
@@ -292,8 +291,8 @@ public:
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
-	GETSET(u_int32_t, averageSpeed, AverageSpeed);
 	GETSET(u_int32_t, start, Start);
+	GETSET(int64_t, averageSpeed, AverageSpeed);
 	FileChunksInfo::Ptr chunkInfo;
 
 	QueueItem::Priority calculateAutoPriority(){

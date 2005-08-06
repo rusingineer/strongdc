@@ -416,6 +416,9 @@ void User::sendRawCommand(const int aRawCommand) {
 			paramMap["ip"] = getIp();
 //			paramMap["userip"] = getUserIp();
 			paramMap["tag"] = getTag();
+			paramMap["connection"] = getConnection();
+			paramMap["slots"] = Util::toString(getSlots());
+			paramMap["uplimit"] = getUpload();
 			paramMap["clienttype"] = getClientType();
 			paramMap["statedshare"] = Util::toString(getBytesShared());
 			paramMap["statedshareformat"] = Util::formatBytes(getBytesShared());

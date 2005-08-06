@@ -540,6 +540,14 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 				i->status = ItemInfo::STATUS_RUNNING;
 				main->size = i->fullSize;
 				if(main->status != ItemInfo::STATUS_RUNNING) {
+					if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+						PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+					if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+						MainFrame::getMainFrame()->ShowBalloonTip((
+							TSTRING(FILE) + _T(": ")+ Text::toT(Util::getFileName(i->Target)) + _T("\n")+
+							TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
+					}
 					main->status = ItemInfo::STATUS_RUNNING;
 					main->statusString = TSTRING(DOWNLOAD_STARTING);
 				}
@@ -577,11 +585,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == UPDATE_ITEMS) {
 		vector<ItemInfo*>* v = (vector<ItemInfo*>*)lParam;
 		ctrlTransfers.SetRedraw(FALSE);
-		for(vector<ItemInfo*>::iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
-			(*i)->upperUpdated = false;
-		}
 		for(vector<ItemInfo*>::iterator j = v->begin(); j != v->end(); ++j) {
 			ItemInfo* i = *j;
+			if(i->main)	i->main->upperUpdated = false;
 			i->update();
 			if(i->mainItem || !i->main->collapsed)
 				ctrlTransfers.updateItem(i);
@@ -601,18 +607,15 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 
 void TransferView::ItemInfo::update() {
 	u_int32_t colMask = updateMask;
-	updateMask = 0;
 	
 	if(main != NULL) {
 		main->updateMask |= colMask | ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
 		main->update();
 
 		if(main->collapsed) return;
-
-		if(colMask == 0)
-			colMask = ItemInfo::MASK_USER | ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO |
-					 ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE | ItemInfo::MASK_IP;
 	}
+
+	updateMask = 0;
 
 	if(colMask & MASK_USER) {
 		if(!mainItem || (subItems.size() == 1) || (type == TYPE_UPLOAD)) {
@@ -783,17 +786,6 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 		i->Target = aDownload->getTarget();
 		i->statusString = TSTRING(DOWNLOAD_STARTING);
 
-/*	@todo	if(!aDownload->isSet(Download::FLAG_USER_LIST)) {
-			if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-				PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-			if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-				MainFrame::getMainFrame()->ShowBalloonTip((
-					TSTRING(FILE) + _T(": ")+ Text::toT(Util::getFileName(i->Target)) + _T("\n")+
-					TSTRING(USER) + _T(": ") + Text::toT(i->user->getNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
-			}
-		}			*/
-
 		string ip = aDownload->getUserConnection()->getRemoteIp();
 		string country = Util::getIpCountry(ip);
 		i->IP = Text::toT(ip);
@@ -806,7 +798,7 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
 			i->status = ItemInfo::TREE_DOWNLOAD;
 		} else if(aDownload->isSet(Download::FLAG_PARTIAL)){
-			i->file = _T("Partial: ") + Text::toT(Util::getFileName(i->Target));
+			i->file = _T("Part: ") + Text::toT(Util::getFileName(i->Target));
 		} else {
 			i->file = Util::emptyStringT;
 		}
@@ -826,49 +818,48 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 			Download* d = *j;			
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
-			ItemInfo* i = transferItems[aCqi];
-	
+			ItemInfo* i = transferItems[aCqi];	
 			i->actual = i->start + d->getActual();
 			i->pos = i->start + d->getTotal();
 			i->timeLeft = d->getSecondsLeft();
 			i->speed = d->getRunningAverage();
 			i->upperUpdated = false;
 
-			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) || (i->numberOfSegments == 1)) {
-				i->timeLeft = (d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
+			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+				i->timeLeft = d->isSet(Download::FLAG_MULTI_CHUNK) ? ((i->speed > 0) ? ((i->size - d->getTotal()) / i->speed) : 0) : i->timeLeft;
 				ItemInfo* u = i->main;
 
-				if((u != NULL) && !u->upperUpdated) {
+				if(u && !u->upperUpdated) {
 					u->upperUpdated = true;
 					i->upperUpdated = true;
 
-					u_int16_t segments = 0; int64_t tmp = 0; double ratio = 0; bool compression = false;
-					for(Download::List::const_iterator h = dl.begin(); h != dl.end(); ++h) {
-						Download* e = *h;
-						if (e->getTarget() == d->getTarget()) {
-							tmp += e->getAverageSpeed();
-							if(e->isSet(Download::FLAG_ZDOWNLOAD)) {
-								compression = true;
-							}
-							ratio += (e->getTotal() > 0) ? (double)e->getActual() / (double)e->getTotal() : 1.0;
-							++segments;
+					int64_t totalSpeed = 0;
+					double ratio = 0;
+					int segs = 0;
+					bool compression = false;
+					for(Download::List::const_iterator k = dl.begin(); k != dl.end(); ++k) {
+						Download* l = *k;
+						if(d->getTarget() == l->getTarget()) {
+							totalSpeed += l->getAverageSpeed();
+							ratio += (l->getTotal() > 0) ? (double)l->getActual() / (double)l->getTotal() : 1.0;;
+							if(l->isSet(Download::FLAG_ZDOWNLOAD)) compression = true;
+							segs++;
 						}
 					}
-	
-					d->getQI()->setAverageSpeed(tmp);
+					ratio = ratio / segs;
 
-					int64_t total = (d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) ? d->getQueueTotal() : d->getPos();
+					int64_t total = d->isSet(Download::FLAG_MULTI_CHUNK) ? d->getQueueTotal() : d->getPos();
 					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
 						(double)total*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - d->getQI()->getStart())/1000)).c_str());
-	
-					u->numberOfSegments = segments;
+
+					u->numberOfSegments = segs;
 					u->statusString = buf;
-					u->compressRatio = (segments > 0) ? (ratio / segments) : 1.0;
-					u->actual = total * u->compressRatio;
+					u->actual = total * ratio;
 					u->pos = total;
-					u->timeLeft = (tmp > 0) ? ((d->getSize() - total) / tmp) : 0;
-					u->speed = tmp;
 					u->status = ItemInfo::STATUS_RUNNING;
+					u->speed = totalSpeed;
+					u->timeLeft = (u->speed > 0) ? ((d->getSize() - u->pos) / u->speed) : 0;
+					d->getQI()->setAverageSpeed(u->speed);
 
 					if(compression) {
 						u->setFlag(ItemInfo::FLAG_COMPRESSED);
@@ -938,6 +929,8 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		
 		if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			i->file = _T("TTH: ") + Text::toT(Util::getFileName(i->Target));
+		} else if(aDownload->isSet(Download::FLAG_PARTIAL)){
+			i->file = _T("Part: ") + Text::toT(Util::getFileName(i->Target));
 		} else {
 			i->file = Util::emptyStringT;
 		}			
@@ -975,7 +968,6 @@ void TransferView::on(DownloadManagerListener::Verifying, const string& fileName
 
 		i->pos = verified;
 		i->actual = verified;
-		i->compressRatio = 1.00;
 		i->start = -1;
 		i->statusString = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(verified * 100 / i->size) + "%");
 		i->updateMask = ItemInfo::MASK_STATUS;

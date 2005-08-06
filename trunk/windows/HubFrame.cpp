@@ -714,7 +714,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 									u->setCheat(Util::validateMessage(detectString, false), false, false);
 									
 									CHARFORMAT2 cf;
-									memset(&cf, 0, sizeof(CHARFORMAT2));
+									memset2(&cf, 0, sizeof(CHARFORMAT2));
 									cf.cbSize = sizeof(cf);
 									cf.dwReserved = 0;
 									cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
@@ -771,7 +771,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		tstring* x = (tstring*)lParam;
 
 		CHARFORMAT2 cf;
-		memset(&cf, 0, sizeof(CHARFORMAT2));
+		memset2(&cf, 0, sizeof(CHARFORMAT2));
 		cf.cbSize = sizeof(cf);
 		cf.dwReserved = 0;
 		cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
@@ -1339,7 +1339,6 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		emoMenu.RemoveFirstItem();
 		return TRUE;
 	}
-	sSelectedUser = ChatCtrl::sTempSelectedUser;
 
 	if(reinterpret_cast<HWND>(wParam) == ctrlClient) { 
 		if(pt.x == -1 && pt.y == -1) {
@@ -1351,6 +1350,9 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 		POINT ptCl = pt;
 		ctrlClient.ScreenToClient(&ptCl); 
+		ctrlClient.OnRButtonDown(ptCl);
+
+		sSelectedUser = ChatCtrl::sTempSelectedUser;
 		bool boHitURL = ctrlClient.HitURL(ptCl);
 		if (!boHitURL)
 			sSelectedURL = _T("");

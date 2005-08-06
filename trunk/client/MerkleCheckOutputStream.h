@@ -92,7 +92,7 @@ public:
 		
 		if(bufPos != 0) {
 			size_t bytes = min(TreeType::BASE_BLOCK_SIZE - bufPos, len);
-			memcpy(buf + bufPos, xb, bytes);
+			memcpy2(buf + bufPos, xb, bytes);
 			pos = bytes;
 			bufPos += bytes;
 
@@ -111,7 +111,7 @@ public:
 				pos += part;
 			}
 			left = len - pos;
-			memcpy(buf, xb + pos, left);
+			memcpy2(buf, xb + pos, left);
 			bufPos = left;
 		}
 

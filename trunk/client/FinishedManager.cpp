@@ -101,7 +101,7 @@ void ChangeEndian(void* pBuffer, int nBufSize)
 
 BOOL GetNextFrameHeader(HANDLE hFile, MP3FRAMEHEADER* pHeader, int nPassBytes)
 {
-	memset(pHeader,0,sizeof(*pHeader));
+	memset2(pHeader,0,sizeof(*pHeader));
 	if (nPassBytes > 0)
 		SetFilePointer(hFile,nPassBytes,NULL,FILE_CURRENT);
 
@@ -178,7 +178,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 			int nNextSearch = 0;
 
 			MP3FRAMEHEADER sFrameHeader;
-			memset(&sFrameHeader,0,sizeof(sFrameHeader));
+			memset2(&sFrameHeader,0,sizeof(sFrameHeader));
 
 			int nFrameBR = 0;
 			double dLength = 0; // total length of file

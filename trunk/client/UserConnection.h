@@ -103,6 +103,7 @@ public:
 		last(0), actual(0), pos(0), startPos(0), size(-1) { };
 	virtual ~Transfer() { };
 	
+	void nullTransfer() { pos = 0; actual = 0; last = 0; start = 0; lastTick = GET_TICK(); runningAverage = 0; }
 	int64_t getPos() const { return pos; };
 	void setPos(int64_t aPos) { pos = aPos; };
 

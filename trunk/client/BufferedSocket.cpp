@@ -413,13 +413,13 @@ void BufferedSocket::write(const char* aBuf, size_t aLen) throw() {
 			// Need to grow...
 			dcdebug("Growing outbuf[%d] to %lu bytes\n", curBuf, newSize);
 			u_int8_t* newbuf = new u_int8_t[newSize];
-			memcpy(newbuf, outbuf[curBuf], outbufPos[curBuf]);
+			memcpy2(newbuf, outbuf[curBuf], outbufPos[curBuf]);
 			delete[] outbuf[curBuf];
 			outbuf[curBuf] = newbuf;
 			outbufSize[curBuf] = newSize;
 		}
 
-		memcpy(outbuf[curBuf] + outbufPos[curBuf], aBuf, aLen);
+		memcpy2(outbuf[curBuf] + outbufPos[curBuf], aBuf, aLen);
 		outbufPos[curBuf] += aLen;
 		addTask(SEND_DATA);
 	}

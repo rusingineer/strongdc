@@ -73,10 +73,10 @@ private:
 class MemoryInputStream : public InputStream {
 public:
 	MemoryInputStream(const u_int8_t* src, size_t len) : pos(0), size(len), buf(new u_int8_t[len]) {
-		memcpy(buf, src, len);
+		memcpy2(buf, src, len);
 	}
 	MemoryInputStream(const string& src) : pos(0), size(src.size()), buf(new u_int8_t[src.size()]) {
-		memcpy(buf, src.data(), src.size());
+		memcpy2(buf, src.data(), src.size());
 	}
 
 	~MemoryInputStream() throw() {
@@ -85,7 +85,7 @@ public:
 
 	virtual size_t read(void* tgt, size_t& len) throw(Exception) {
 		len = min(len, size - pos);
-		memcpy(tgt, buf+pos, len);
+		memcpy2(tgt, buf+pos, len);
 		pos += len;
 		return len;
 	}
@@ -156,7 +156,7 @@ public:
 				break;
 			} else {
 				size_t n = min(bufSize - pos, len);
-				memcpy(buf + pos, b, n);
+				memcpy2(buf + pos, b, n);
 				b += n;
 				pos += n;
 				len -= n;

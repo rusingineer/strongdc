@@ -52,7 +52,6 @@ class Chunk
 {
 private:
 	friend class FileChunksInfo;
-	//friend class DownloadManager;
 
 	typedef map<int64_t, Chunk*> Map;
 	typedef Map::iterator  Iter;

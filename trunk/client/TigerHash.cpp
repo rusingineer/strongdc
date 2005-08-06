@@ -118,7 +118,7 @@ void TigerHash::update(const void* data, size_t length) {
 	// First empty tmp buffer if possible
 	if(tmppos > 0) {
 		size_t n = min(length, BLOCK_SIZE-tmppos);
-		memcpy(tmp + tmppos, str, n);
+		memcpy2(tmp + tmppos, str, n);
 		str += n;
 		pos += n;
 		length -= n;
@@ -141,7 +141,7 @@ void TigerHash::update(const void* data, size_t length) {
 	}
 
 	// Copy the rest to the tmp buffer
-	memcpy(tmp, str, length);
+	memcpy2(tmp, str, length);
 	pos += length;
 }
 
@@ -153,11 +153,11 @@ u_int8_t* TigerHash::finalize() {
 	tmp[tmppos++] = 0x01;
 
 	if(tmppos > (BLOCK_SIZE - sizeof(u_int64_t))) {
-		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos);
+		memset2(tmp + tmppos, 0, BLOCK_SIZE - tmppos);
 		tigerCompress(((u_int64_t*)tmp), res);
-		memset(tmp, 0, BLOCK_SIZE);
+		memset2(tmp, 0, BLOCK_SIZE);
 	} else {
-		memset(tmp + tmppos, 0, BLOCK_SIZE - tmppos - sizeof(u_int64_t));
+		memset2(tmp + tmppos, 0, BLOCK_SIZE - tmppos - sizeof(u_int64_t));
 	}
 
 	((u_int64_t*)(&(tmp[56])))[0] = pos<<3;

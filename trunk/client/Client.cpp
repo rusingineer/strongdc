@@ -92,7 +92,8 @@ int Client::getMode() {
 }
 
 void Client::connect() {
-	socket->disconnect();
+	if(socket->isConnected())
+		socket->disconnect();
 
 	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings();

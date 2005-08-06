@@ -77,7 +77,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset(&pf, 0, sizeof(PARAFORMAT2));
+	memset2(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 
@@ -241,7 +241,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset(&pf, 0, sizeof(PARAFORMAT2));
+	memset2(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 
@@ -552,8 +552,7 @@ void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
 		GoToEnd();
 }
 
-LRESULT ChatCtrl::OnRButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 	long lSelBegin = 0, lSelEnd = 0; CAtlString sSel;
 
 	sSelectedLine = Text::toT(LineFromPos(pt));

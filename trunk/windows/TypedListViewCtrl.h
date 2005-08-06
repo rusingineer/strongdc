@@ -775,7 +775,7 @@ public:
 
 		if(pos != -1) {
 			u_int32_t totalSubItems = mainItem->subItems.size();
-			if(totalSubItems == (u_int32_t)(uniqueMainItem ? 2 : 1)/*(!uniqueMainItem && (totalSubItems == 1)) || (uniqueMainItem && (totalSubItems == 2))*/) {
+			if(totalSubItems == (u_int32_t)(uniqueMainItem ? 2 : 1)) {
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 					mainItem->collapsed = false;
@@ -819,8 +819,6 @@ public:
 			if(n != s->main->subItems.end()) {
 				s->main->subItems.erase(n);
 			}
-			s->updateMainItem();
-			updateItem(s->main);
 			if(uniqueMainItem) {
 				if(s->main->subItems.size() == 1) {
 					if(!s->main->collapsed) {
@@ -839,6 +837,10 @@ public:
 					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
+			if(s->main) {
+				s->updateMainItem();
+				updateItem(s->main);
+			}
 		}
 
 		int p = findItem(s);
@@ -853,12 +855,10 @@ public:
 		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
 			T* si =  *i;
 			int q = 0;
-			if(si->subItems.size() > 0) {
-				while(q < si->subItems.size()) {
-					T* j = si->subItems[q];
-					delete j;
-					q++;
-				}
+			while(q < si->subItems.size()) {
+				T* j = si->subItems[q];
+				delete j;
+				q++;
 			}
 			delete si;
 		}
