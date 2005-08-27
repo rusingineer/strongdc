@@ -439,7 +439,7 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
-	if (BOOLSETTING(TAB_DIRTY)) {
+	if (BOOLSETTING(TAB_PM_DIRTY)) {
 		setDirty();
 	}
 }

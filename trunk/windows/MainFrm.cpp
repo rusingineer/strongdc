@@ -74,7 +74,7 @@ CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT),
+closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
 bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
 		memset2(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
@@ -218,6 +218,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	ctrlTab.Create(m_hWnd, rcDefault);
 	WinUtil::tabCtrl = &ctrlTab;
+	tabsontop = BOOLSETTING(TABS_ON_TOP);
 
 	transferView.Create(m_hWnd);
 
@@ -712,6 +713,10 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		else ctrlToolbar.CheckButton(IDC_SHUTDOWN, false);
 	
 		updateTray(BOOLSETTING(MINIMIZE_TRAY));
+		if(tabsontop != BOOLSETTING(TABS_ON_TOP)) {
+			tabsontop = BOOLSETTING(TABS_ON_TOP);
+			UpdateLayout();
+		}
 	}
 	return 0;
 }
@@ -1083,12 +1088,18 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 		ctrlLastLines.SetMaxTipWidth(w[0]);
 	}
 	CRect rc = rect;
-	rc.top = rc.bottom - ctrlTab.getHeight();
+	if(tabsontop == false)
+		rc.top = rc.bottom - ctrlTab.getHeight();
+	else
+		rc.bottom = rc.top + ctrlTab.getHeight();
 	if(ctrlTab.IsWindow())
 		ctrlTab.MoveWindow(rc);
 	
 	CRect rc2 = rect;
-	rc2.bottom = rc.top;
+	if(tabsontop == false)
+		rc2.bottom = rc.top;
+	else
+		rc2.top = rc.bottom;
 	SetSplitterRect(rc2);
 }
 

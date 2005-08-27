@@ -36,7 +36,7 @@
 
 #include "cvsversion.h"
 
-NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), supportFlags(0), state(STATE_CONNECT),
+NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), state(STATE_CONNECT),
 	reconnect(true),
 	lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
     YnHub(false) {

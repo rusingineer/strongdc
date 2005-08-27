@@ -560,11 +560,11 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 					q++;
 				}
 			}
-			if((GetKeyState(VK_SHIFT) & 0x8000) > 0)
+			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), Text::fromT(tgt),
-			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
+			WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}
@@ -574,10 +574,10 @@ void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->addDirectory(Text::fromT(si->path), si->sr->getUser(), Text::fromT(tgt),
-			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
+			WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), Text::fromT(tgt),
-			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
+			WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}
@@ -591,11 +591,11 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
 				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 
-			if((GetKeyState(VK_SHIFT) & 0x8000) > 0)
+			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), Text::fromT(tgt),
-			(GetKeyState(VK_SHIFT) & 0x8000) > 0 ? QueueItem::HIGHEST : QueueItem::DEFAULT);
+			WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
 	}
@@ -1001,7 +1001,7 @@ LRESULT SearchFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& b
 	switch(wParam) {
 	case VK_TAB:
 		if(uMsg == WM_KEYDOWN) {
-			onTab((GetKeyState(VK_SHIFT) & 0x8000) > 0);
+			onTab(WinUtil::isShift());
 		}
 		break;
 	case VK_RETURN:
@@ -1092,7 +1092,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					si->mainItem = true;
 					addEntry(si, 0);
 				}
-				setDirty();
+				if (BOOLSETTING(TAB_SEARCH_DIRTY)) {
+					setDirty();
+				}
 				ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());
 			} else {
 				PausedResults.push_back(si);

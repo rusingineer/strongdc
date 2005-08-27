@@ -547,6 +547,7 @@
 #define IDC_FIREWALL_PASSIVE            1305
 #define IDC_DIRECT_OUT                  1306
 #define IDC_SOCKS5                      1307
+#define IDC_FILELIST_DIFF               1406
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_UPDATE_VERSION              1445

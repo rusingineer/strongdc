@@ -1118,8 +1118,10 @@ again:
 	}
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		supportsChunks = supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth()) && 
+			((q->chunkInfo->getDownloadedSize() > 0.85*q->getSize()) || (q->getActiveSegments().size() > 1));
 		d->setStartPos(freeBlock);
-		q->chunkInfo->setDownload(freeBlock, d, aUser, supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth()));
+		q->chunkInfo->setDownload(freeBlock, d, aUser, supportsChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
@@ -1562,7 +1564,8 @@ void QueueManager::saveQueue() throw() {
 
 						f.write(STRINGLEN("\t\t<Source Nick=\""));
 						f.write(CHECKESCAPE(s->getUser()->getNick()));
-						if(!s->getPath().empty() || (!s->getUser()->isSet(User::TTH_GET) && qi->getTTH())) {
+
+						if(!s->getPath().empty() && (!s->getUser()->isSet(User::TTH_GET) || !qi->getTTH()) ) {
 							f.write(STRINGLEN("\" Path=\""));
 							f.write(CHECKESCAPE(s->getPath()));
 							f.write(STRINGLEN("\" Utf8=\""));

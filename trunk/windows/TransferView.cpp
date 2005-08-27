@@ -53,7 +53,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	WinUtil::splitTokens(columnIndexes, SETTING(MAINFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(MAINFRAME_WIDTHS), COLUMN_LAST);
 
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(int j=0; j<COLUMN_LAST; ++j) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_TIMELEFT || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlTransfers.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -612,7 +612,7 @@ void TransferView::ItemInfo::update() {
 		main->updateMask |= colMask | ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
 		main->update();
 
-		if(main->collapsed) return;
+		if(main->collapsed && !(colMask & MASK_IP)) return;
 	}
 
 	updateMask = 0;
@@ -665,7 +665,7 @@ void TransferView::ItemInfo::update() {
 		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(Target));
 	}
 	if(colMask & MASK_IP) {
-		if(!mainItem || type == TYPE_UPLOAD) {
+		if(!mainItem || (type == TYPE_UPLOAD)) {
 			if(!country.empty())
 				columns[COLUMN_IP] = country + _T(" (") + IP + _T(")");
 			else
@@ -816,7 +816,10 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	{
 		Lock l(cs);
 		for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
-			Download* d = *j;			
+			Download* d = *j;
+
+			if(!d->getQI()) continue;
+
 			ConnectionQueueItem* aCqi = d->getUserConnection()->getCQI();
 			ItemInfo* i = transferItems[aCqi];	
 			i->actual = i->start + d->getActual();

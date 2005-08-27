@@ -190,7 +190,7 @@ public:
 		Lock l(cs);
 
 		BlockMap::iterator i  = verifiedBlocks.begin();
-		for(; i != verifiedBlocks.end(); i++)
+		for(; i != verifiedBlocks.end(); ++i)
 		{
 			int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
 			int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
@@ -267,7 +267,7 @@ public:
 		{
             for(SharedFileHandleMap::iterator i = file_handle_pool.begin();
             							i != file_handle_pool.end();
-                                        i++)
+                                        ++i)
 			{
 				if(i->second == shared_handle_ptr)
 				{

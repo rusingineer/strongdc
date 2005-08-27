@@ -36,6 +36,7 @@
 #include "../client/AdcCommand.h"
 #include "../client/SettingsManager.h"
 #include "../client/ConnectionManager.h" 
+#include "../client/NmdcHub.h"
 
 #include "../pme-1.0.4/pme.h"
 
@@ -182,7 +183,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(int j=0; j<COLUMN_LAST; ++j) {
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.SetCurSel(0);
@@ -702,7 +703,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							if(bytesSharedInt64 > 0) {
 								string bytesShared = Util::toString(bytesSharedInt64);
 								bool samenumbers = false;
-								for(int i = 0; i < 10; i++) {
+								for(int i = 0; i < 10; ++i) {
 									if(strstr(bytesShared.c_str(), sSameNumbers[i]) != 0) {
 										samenumbers = true;
 										break;
@@ -1232,7 +1233,7 @@ void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = t
 	} else {
 		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe, bUseEmo);
 	}
-	if (BOOLSETTING(TAB_DIRTY)) {
+	if (BOOLSETTING(TAB_HUB_DIRTY)) {
 		setDirty();
 	}
 }
@@ -1298,10 +1299,14 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 
 		if(PreparePopupMenu(&ctrlUsers, sSelectedUser, &Mnu)) {
 			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, Text::toT(client->getHubUrl()), client->getOp());
-			if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-				Mnu.AppendMenu(MF_SEPARATOR);
+			
+			if(!(client->getSupportFlags() & NmdcHub::SUPPORTS_QUICKLIST)) {
+				if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
+					Mnu.AppendMenu(MF_SEPARATOR);
+				}
+				Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
 			}
-			Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
+
 			if(ctrlUsers.GetSelectedCount() > 0)
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			cleanMenu(Mnu);
@@ -1752,7 +1757,7 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 		lastLinesList.erase(lastLinesList.begin());
 	lastLinesList.push_back(sLine);
 
-	if (BOOLSETTING(TAB_DIRTY)) {
+	if (BOOLSETTING(TAB_HUB_DIRTY)) {
 		setDirty();
 	}
 	

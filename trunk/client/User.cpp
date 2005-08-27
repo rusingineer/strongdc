@@ -158,7 +158,7 @@ void User::getParams(StringMap& ucParams, bool myNick /* = false */) {
 		ucParams["realshareformat"] = Util::formatBytes(realBytesShared);
 	}
 	ucParams["cheatingdescription"] = cheatingString;
-	ucParams["clientinfo"] = getReport();
+	//ucParams["clientinfo"] = getReport();
 	ucParams["nl"] = "\r\n";
 	if(myNick && client) {
 		RLock<> l(cs);

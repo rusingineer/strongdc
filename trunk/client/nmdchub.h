@@ -133,7 +133,7 @@ public:
 		send("$Supports " + x + '|');
 	}
 
-	GETSET(int, supportFlags, SupportFlags);
+	//GETSET(int, supportFlags, SupportFlags);
 private:
 	enum States {
 		STATE_CONNECT,

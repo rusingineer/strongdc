@@ -54,6 +54,7 @@ CZDCPage::ListItem CZDCPage::listItems[] = {
 	{ SettingsManager::CHECK_UNVERIFIED_ONLY, ResourceManager::CHECK_UNVERIFIED_ONLY },
 	{ SettingsManager::DETECT_BADSOFT, ResourceManager::SETTINGS_BAD_SOFTWARE },
 	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },
+	{ SettingsManager::TABS_ON_TOP, ResourceManager::TABS_ON_TOP },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

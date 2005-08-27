@@ -57,15 +57,18 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_JOINS, ResourceManager::SETTINGS_SHOW_JOINS },
 	{ SettingsManager::FAV_SHOW_JOINS, ResourceManager::SETTINGS_FAV_SHOW_JOINS },
 	{ SettingsManager::FILTER_MESSAGES, ResourceManager::SETTINGS_FILTER_MESSAGES },
-	{ SettingsManager::FINISHED_DIRTY, ResourceManager::SETTINGS_FINISHED_DIRTY },
-	{ SettingsManager::QUEUE_DIRTY, ResourceManager::SETTINGS_QUEUE_DIRTY },
-	{ SettingsManager::TAB_DIRTY, ResourceManager::SETTINGS_TAB_DIRTY },
 	{ SettingsManager::EXPAND_QUEUE , ResourceManager::SETTINGS_EXPAND_QUEUE },
 	{ SettingsManager::USE_SYSTEM_ICONS, ResourceManager::SETTINGS_USE_SYSTEM_ICONS },
 	{ SettingsManager::USE_OEM_MONOFONT, ResourceManager::SETTINGS_USE_OEM_MONOFONT },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
 	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
 	{ SettingsManager::CONFIRM_HUB_REMOVAL, ResourceManager::SETTINGS_CONFIRM_HUB_REMOVAL },
+	{ SettingsManager::FINISHED_DOWNLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_DOWNLOAD_DIRTY },	
+    { SettingsManager::FINISHED_UPLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_UPLOAD_DIRTY },	
+    { SettingsManager::QUEUE_DIRTY, ResourceManager::SETTINGS_QUEUE_DIRTY },	
+	{ SettingsManager::TAB_HUB_DIRTY, ResourceManager::SETTINGS_TAB_HUB_DIRTY },	
+	{ SettingsManager::TAB_SEARCH_DIRTY, ResourceManager::SETTINGS_TAB_SEARCH_DIRTY },	
+    { SettingsManager::TAB_PM_DIRTY, ResourceManager::SETTINGS_TAB_PM_DIRTY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

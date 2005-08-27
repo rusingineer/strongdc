@@ -66,7 +66,7 @@ const string SettingsManager::settingTags[] =
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway", 
 	"SmallSendBuffer", "SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
 	"CompressTransfers", "ShowProgressBars", "SFVCheck", "MaxTabRows", "AutoUpdateList", 
-	"MaxCompression", "FinishedDirty", "QueueDirty", "TabDirty", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots", 
+	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
 	"LogFilelistTransfers", "EmptyWorkingSet",
@@ -119,7 +119,8 @@ const string SettingsManager::settingTags[] =
 	"BadSoftDetections", "DetectBadSoft", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
-	"NoIPOverride", "GroupSearchResults",
+	"NoIPOverride", "GroupSearchResults", "FinishedDownloadDirty", "FinishedUploadDirty", "QueueDirty", 
+	"TabHubDirty", "TabPmDirty", "TabSearchDirty", "TabsOnTop",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -219,9 +220,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_TAB_ROWS, 2);
 	setDefault(AUTO_UPDATE_LIST, true);
 	setDefault(MAX_COMPRESSION, 3);
-	setDefault(FINISHED_DIRTY, true);
-	setDefault(QUEUE_DIRTY, true);
-	setDefault(TAB_DIRTY, true);
 	setDefault(ANTI_FRAG, true);
 	setDefault(NO_AWAYMSG_TO_BOTS, true);
 	setDefault(SKIP_ZERO_BYTE, false);
@@ -267,7 +265,12 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
 	setDefault(NO_IP_OVERRIDE, false);
-
+	setDefault(FINISHED_DOWNLOAD_DIRTY, true);
+	setDefault(FINISHED_UPLOAD_DIRTY, true);
+	setDefault(QUEUE_DIRTY, true);
+	setDefault(TAB_HUB_DIRTY, true);
+	setDefault(TAB_SEARCH_DIRTY, true);
+	setDefault(TAB_PM_DIRTY, true);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
@@ -497,6 +500,7 @@ SettingsManager::SettingsManager()
 	setDefault(ACCEPTED_TIMEOUTS, 10);
 	setDefault(EMOTICONS_FILE, "Chat (Large)");
 	setDefault(GROUP_SEARCH_RESULTS, true);
+	setDefault(TABS_ON_TOP, false);
 
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
