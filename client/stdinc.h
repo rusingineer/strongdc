@@ -58,7 +58,6 @@
 #include <deque>
 #include <list>
 #include <iterator>
-//#include <sstream>
 #include <utility>
 
 // Use maps if hash_maps aren't available
@@ -98,7 +97,7 @@ using namespace _STL;
 
 #elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
 #include <ext/hash_map>
-
+#include <ext/hash_set>
 using namespace std;
 using namespace __gnu_cxx;
 
@@ -115,6 +114,8 @@ namespace __gnu_cxx {
 #else // __GLIBCPP__
 
 #include <hash_map>
+#include <hash_set>
+
 using namespace std;
 using namespace stdext;
 

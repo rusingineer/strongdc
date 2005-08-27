@@ -432,7 +432,7 @@ public:
 			lvcl.mask = LVCF_ORDER;
 			lvcl.iOrder = ci->pos;
 			SetColumn(ci->pos, &lvcl);
-			for(int i = 0; i < GetItemCount(); i++) {
+			for(int i = 0; i < GetItemCount(); ++i) {
 				LVITEM lvItem;
 				lvItem.iItem = i;
 				lvItem.iSubItem = 0;
@@ -604,7 +604,7 @@ private:
 
 			DeleteColumn(column);
 
-			for(int i = 0; i < GetItemCount(); i++) {
+			for(int i = 0; i < GetItemCount(); ++i) {
 				LVITEM lvItem;
 				lvItem.iItem = i;
 				lvItem.iSubItem = 0;
@@ -704,7 +704,7 @@ public:
 		size_t q = 0;
 		while(q < i->subItems.size()) {
 			deleteItem(i->subItems[q]);
-			q++;
+			++q;
 		}
 		i->collapsed = true;
 		SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
@@ -717,7 +717,7 @@ public:
 			while(q < i->subItems.size()) {
 				i->subItems[q]->update();
 				insertSubItem(i->subItems[q], a + 1);
-				q++;
+				++q;
 			}
 			SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
@@ -739,7 +739,7 @@ public:
 	}
 
 	T* findMainItem(const string& groupingString) {
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
 			if(groupingString == (*i)->getGroupingString()) {
 				return *i;
 			}
@@ -799,7 +799,7 @@ public:
 				if(p != -1)
 					DeleteItem(p);
 				delete j;
-				q++;
+				++q;
 			}
 			s->subItems.clear();
 		}
@@ -852,13 +852,13 @@ public:
 	}
 
 	void deleteAllItems() {
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
 			T* si =  *i;
 			int q = 0;
 			while(q < si->subItems.size()) {
 				T* j = si->subItems[q];
 				delete j;
-				q++;
+				++q;
 			}
 			delete si;
 		}

@@ -269,7 +269,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sText, CHA
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
 	lSelEnd = GetTextLengthEx(GTL_PRECISE);
 	long lSearchFrom = 0;
-	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
+	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); ++i) {
 		long linkStart = sMsgLower.Find(Links[i], lSearchFrom);
 		while(linkStart > 0) {
 			long linkEnd;
@@ -376,7 +376,7 @@ bool ChatCtrl::HitNick(POINT p, CAtlString *sNick, int *piBegin, int *piEnd) {
 			break;
 	}
 	lSelBegin++;
-	for(lSelEnd = iCharPos; lSelEnd < iEnd1; lSelEnd++) {
+	for(lSelEnd = iCharPos; lSelEnd < iEnd1; ++lSelEnd) {
 		if(FindWordBreak(WB_ISDELIMITER, lSelEnd))
 			break;
 	}
@@ -470,7 +470,7 @@ bool ChatCtrl::HitIP(POINT p, CAtlString *sIP, int *piBegin, int *piEnd) {
 	}
 	GetTextRange(lPosBegin, lPosEnd, g_BufTemp);
 	g_BufTemp[len] = 0;
-	for(int i = 0; i < len; i++) {
+	for(int i = 0; i < len; ++i) {
 		if(!((g_BufTemp[i] == 0) || (g_BufTemp[i] == '.') || ((g_BufTemp[i] >= '0') && (g_BufTemp[i] <= '9')))) {
 			return false;
 		}
@@ -483,7 +483,7 @@ bool ChatCtrl::HitIP(POINT p, CAtlString *sIP, int *piBegin, int *piEnd) {
 	sText = sText + '.';
 	int iFindBegin = 0, iPos = -1, iEnd2 = 0;
 	bool boOK = true;
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < 4; ++i) {
 		iPos = sText.Find('.', iFindBegin);
 		if(iPos < 0) {
 			boOK = false;

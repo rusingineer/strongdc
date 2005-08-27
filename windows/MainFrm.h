@@ -427,6 +427,7 @@ private:
 	tstring lastTTHdir;
 	bool oldshutdown;
 
+	bool tabsontop;
 	bool closing;
 
 	int lastUpload;

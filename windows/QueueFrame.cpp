@@ -790,7 +790,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 	if (reinterpret_cast<HWND>(wParam) == ctrlQueue && ctrlQueue.GetSelectedCount() > 0) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 	
-		for(int i=0;i<10;i++) {
+		for(int i=0;i<10;++i) {
 			segmentsMenu.CheckMenuItem(i, MF_BYPOSITION | MF_UNCHECKED);
 			segmentsMenu.EnableMenuItem(i + 110, MF_ENABLED);		
 		}
@@ -838,7 +838,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			if(ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 				segmentsMenu.EnableMenuItem(110, MFS_DISABLED);
 			} else {
-				for(int i=1;i<10;i++) {
+				for(int i=1;i<10;++i) {
 					segmentsMenu.EnableMenuItem(i + 110, MFS_DISABLED);		
 				}
 			}
@@ -1511,24 +1511,29 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			FileChunksInfo::Ptr filedatainfo = qi->qi->chunkInfo;
 
+			COLORREF crDownloaded = RGB(255, 255, 100);
+			COLORREF crVerified = RGB(222, 160, 0);
+
 			if(filedatainfo) {
-				for(int smycka = 0; smycka < 2; smycka++) {
-					vector<int64_t> v;
-					filedatainfo->getAllChunks(v, smycka == 1);
-					if(v.empty()) continue;
-		
-					if(smycka == 0) {
-						statusBar.FillRange(0, (int64_t)v.front(), RGB(255, 255, 100));
-					}
-					for(vector<int64_t>::iterator i = v.begin(); i+2-smycka < v.end(); i++, i++) {
-						statusBar.FillRange(*(i+1 - smycka), *(i+2 - smycka), (smycka == 0) ? RGB(255, 255, 100) : RGB(222, 160, 0));
-					}
-					if(smycka == 0) {		
-						statusBar.FillRange((int64_t)v.back(), qi->getSize(), RGB(255, 255, 100));
-					}
+				vector<int64_t> v;
+
+				// downloaded chunks
+				filedatainfo->getAllChunks(v, false);
+				statusBar.FillRange(0, (int64_t)v.front(), crDownloaded);
+				for(vector<int64_t>::iterator i = v.begin(); (i+2) < v.end(); ++i, ++i) {
+					statusBar.FillRange(*(i+1), *(i+2), crDownloaded);
+				}
+				statusBar.FillRange((int64_t)v.back(), qi->getSize(), crDownloaded);
+				
+				v.clear();
+				
+				// verified chunks
+				filedatainfo->getAllChunks(v, true);
+				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); ++i, ++i) {
+					statusBar.FillRange(*i, *(i+1), crVerified);
 				}
 			} else {
-				statusBar.FillRange(0, qi->getDownloadedBytes(), RGB(222, 160, 0));
+				statusBar.FillRange(0, qi->getDownloadedBytes(), crVerified);
 			}
 			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);

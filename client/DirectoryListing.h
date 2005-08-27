@@ -94,6 +94,9 @@ public:
 
 		size_t getTotalFileCount(bool adls = false);		
 		int64_t getTotalSize(bool adls = false);
+		void filterList(DirectoryListing& dirList);
+		void filterList(const HASH_SET<TTHValue, TTHValue::Hash>& l);
+		void getHashList(HASH_SET<TTHValue, TTHValue::Hash>& l);
 		
 		size_t getFileCount() { return files.size(); };
 		
@@ -149,6 +152,7 @@ public:
 	const Directory* getRoot() const { return root; }
 	Directory* getRoot() { return root; }
 
+	static User::Ptr getUserFromFilename(const string& fileName);
 	bool detectRMDC403D1() {
 		return root->getRMDC403D1detected();
 	}

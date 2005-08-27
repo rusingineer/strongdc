@@ -31,7 +31,7 @@ Client::Counts Client::counts;
 Client::Client(const string& hubURL, char separator) : 
 	socket(BufferedSocket::getSocket(separator)), reconnDelay(120), me(NULL),
 	lastActivity(0), registered(false), hubUrl(hubURL), port(0), 
-	countType(COUNT_UNCOUNTED)
+	countType(COUNT_UNCOUNTED), supportFlags(0)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);

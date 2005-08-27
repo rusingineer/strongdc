@@ -182,6 +182,10 @@ public:
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
 	GETSET(string, ip, IP);
+	//GETSET(int, supportFlags, SupportFlags);
+
+	int supportFlags;
+	int getSupportFlags() { return supportFlags; }
 
 protected:
 	struct Counts {

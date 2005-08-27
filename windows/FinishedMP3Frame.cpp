@@ -93,7 +93,7 @@ LRESULT FinishedMP3Frame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	if(wParam == SPEAK_ADD_LINE) {
 		FinishedMP3Item* entry = (FinishedMP3Item*)lParam;
 		addEntry(entry);
-		if(BOOLSETTING(FINISHED_DIRTY))
+		if(BOOLSETTING(FINISHED_DOWNLOAD_DIRTY))
 			setDirty();
 		updateStatus();
 	} else if(wParam == SPEAK_REMOVE) {

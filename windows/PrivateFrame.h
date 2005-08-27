@@ -184,7 +184,7 @@ public:
 			CreateEx(WinUtil::mdiClient);
 		}
 		ctrlStatus.SetText(0, (_T("[") + Text::toT(Util::getShortTimeString()) + _T("] ") + aLine).c_str());
-		if (BOOLSETTING(TAB_DIRTY)) {
+		if (BOOLSETTING(TAB_PM_DIRTY)) {
 			setDirty();
 		}
 	}

@@ -29,6 +29,7 @@
 #include "FilteredFile.h"
 #include "BZUtils.h"
 #include "CryptoManager.h"
+#include "ResourceManager.h"
 #include "User.h"
 
 #include "../pme-1.0.4/pme.h"
@@ -50,7 +51,10 @@ void DirectoryListing::loadFile(const string& name) {
 		::File(name, ::File::READ, ::File::OPEN).read(buf, len);
 		CryptoManager::getInstance()->decodeHuffman(buf, txt, len);
 		load(txt);
-	} else if(Util::stricmp(ext, ".bz2") == 0) {
+		return;
+	} 
+	
+	if(Util::stricmp(ext, ".bz2") == 0) {
 		::File ff(name, ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
@@ -79,9 +83,16 @@ void DirectoryListing::loadFile(const string& name) {
 			} 
 			last2 = (buf, len);
 		}
-
-		loadXML(txt, false);
+	} else if(Util::stricmp(ext, ".xml") == 0) {
+		int64_t sz = ::File::getSize(name);
+		if(sz == -1 || sz >= txt.max_size())
+			throw(FileException(CSTRING(FILE_NOT_AVAILABLE)));
+		txt.resize((size_t) sz);
+		size_t n = txt.length();
+		::File(name, ::File::READ, ::File::OPEN).read(&txt[0], n);
 	}
+	
+	loadXML(txt, false);
 }
 
 void DirectoryListing::load(const string& in) {
@@ -358,6 +369,45 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 			return find(aName.substr(end + 1), *i);
 	}
 	return NULL;
+}
+
+struct HashContained {
+	HashContained(const HASH_SET<TTHValue, TTHValue::Hash>& l) : tl(l) { }
+	const HASH_SET<TTHValue, TTHValue::Hash>& tl;
+	bool operator()(const DirectoryListing::File::Ptr i) const {
+		bool r = !tl.count(*(i->getTTH()));
+		if (r) DeleteFunction<const DirectoryListing::File*>()(i);
+		return r;
+	}
+private:
+	HashContained& operator=(HashContained&);
+};
+
+struct DirectoryEmpty {
+	bool operator()(const DirectoryListing::Directory::Ptr i) const {
+		bool r = i->getFileCount() + i->directories.size() == 0;
+		if (r) DeleteFunction<const DirectoryListing::Directory*>()(i);
+		return r;
+	}
+};
+
+void DirectoryListing::Directory::filterList(DirectoryListing& dirList) {
+		DirectoryListing::Directory* d = dirList.getRoot();
+
+		HASH_SET<TTHValue, TTHValue::Hash> l;
+		d->getHashList(l);
+		filterList(l);
+}
+
+void DirectoryListing::Directory::filterList(const HASH_SET<TTHValue, TTHValue::Hash>& l) {
+	for(Iter i = directories.begin(); i != directories.end(); ++i) (*i)->filterList(l);
+	directories.erase(std::remove_if(directories.begin(),directories.end(),DirectoryEmpty()),directories.end());
+	files.erase(std::remove_if(files.begin(),files.end(),HashContained(l)),files.end());
+}
+
+void DirectoryListing::Directory::getHashList(HASH_SET<TTHValue, TTHValue::Hash>& l) {
+	for(Iter i = directories.begin(); i != directories.end(); ++i) (*i)->getHashList(l);
+	for(DirectoryListing::File::Iter i = files.begin(); i != files.end(); ++i) l.insert(*(*i)->getTTH());
 }
 
 int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
