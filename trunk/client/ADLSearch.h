@@ -48,7 +48,8 @@ public:
 
 	// Constructor
 	ADLSearch() : searchString("<Enter string>"), isActive(true), isAutoQueue(false), sourceType(OnlyFile), 
-		minFileSize(-1), maxFileSize(-1), typeFileSize(SizeBytes), destDir("ADLSearch"), ddIndex(0) {}
+		minFileSize(-1), maxFileSize(-1), typeFileSize(SizeBytes), destDir("ADLSearch"), ddIndex(0)
+		, isForbidden(false), raw(0) {}
 
 	// Prepare search
 	void Prepare(StringMap& params) {
@@ -73,6 +74,9 @@ public:
 
 	// Active search
 	bool isActive;
+	// Forbidden file
+	bool isForbidden;
+	int raw;
 
 	// Auto Queue Results
 	bool isAutoQueue;
@@ -263,6 +267,7 @@ public:
 	// Settings
 	GETSET(bool, breakOnFirst, BreakOnFirst)
 	GETSET(User::Ptr, user, User)
+	GETSET(bool, sentRaw, SentRaw);
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing
 	void matchListing(DirectoryListing* /*aDirList*/) throw();

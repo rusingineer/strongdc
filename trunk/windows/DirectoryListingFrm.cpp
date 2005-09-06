@@ -51,11 +51,11 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aU
 		}
 	} else {
 		DirectoryListingFrame* frame = new DirectoryListingFrame(aUser);
-	if(BOOLSETTING(POPUNDER_FILELIST)) {
-		WinUtil::hiddenCreateEx(frame);
-	} else {
-		frame->CreateEx(WinUtil::mdiClient);
-	}
+		if(BOOLSETTING(POPUNDER_FILELIST)) {
+			WinUtil::hiddenCreateEx(frame);
+		} else {
+			frame->CreateEx(WinUtil::mdiClient);
+		}
 		frame->loadFile(aFile);
 	}
 }

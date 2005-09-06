@@ -23,6 +23,7 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#include "HubFrame.h"
 #include "../client/TimerManager.h"
 #include "../client/HttpConnection.h"
 #include "../client/FavoriteManager.h"
@@ -35,6 +36,7 @@
 #include "../client/DownloadManager.h"
 #include "../client/SettingsManager.h"
 #include "../client/WebServerManager.h"
+#include "../client/AdlSearch.h"
 #include "PopupManager.h"
 
 #include "FlatTabCtrl.h"
@@ -76,7 +78,6 @@ public:
 		VIEW_FILE_AND_DELETE, 
 		SET_STATUSTEXT,
 		STATUS_MESSAGE,
-		CHECK_LISTING,
 		SHOW_POPUP,
 		SET_NORMAL_TRAY_ICON,
 		SET_PM_TRAY_ICON
@@ -358,8 +359,6 @@ public:
 		}
 	}
 
-	//void SendCheatMessage(Client* client, User::Ptr u);
-	
 	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
 
 	CImageList largeImages, largeImagesHot;
@@ -372,7 +371,7 @@ private:
 
 	NOTIFYICONDATA normalicon;
 	NOTIFYICONDATA pmicon;
-	
+
 	class DirectoryListInfo {
 	public:
 		DirectoryListInfo(LPARAM lp = NULL) : lParam(lp) { };
@@ -385,6 +384,24 @@ private:
 		DirectoryBrowseInfo(const User::Ptr& ptr, string aText) : user(ptr), text(aText) { };
 		User::Ptr user;
 		string text;
+	};
+	class FileListQueue: public Thread {
+	public:
+		bool stop;
+		Semaphore s;
+		CriticalSection cs;
+		list<DirectoryListInfo*> fileLists;
+
+		FileListQueue() : stop(false) {}
+		virtual ~FileListQueue() throw() {
+			shutdown();
+		}
+
+		virtual int run();
+		void shutdown() {
+			stop = true;
+			s.signal();
+		}
 	};
 	
 	TransferView transferView;
@@ -436,7 +453,7 @@ private:
 	
 	HANDLE stopperThread;
 
-
+	FileListQueue listQueue;
 	bool missedAutoConnect;
 	HWND createToolbar();
 	void buildMenu();
@@ -476,7 +493,6 @@ private:
 	virtual void on(QueueManagerListener::Finished, QueueItem* qi) throw();
 	virtual void on(PartialList, const User::Ptr&, const string& text) throw();
 
-	void checkFileList(tstring file, User::Ptr u);
 	// UPnP connectors
 	UPnP* UPnP_TCPConnection;
 	UPnP* UPnP_UDPConnection;

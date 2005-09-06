@@ -419,14 +419,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 {
 #ifndef _DEBUG
 	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}"));
-
-#if defined(isCVS)
-	if (::MessageBox(NULL, _T("!!! WARNING !!!\n\nThis version is considered to be beta, because it can contain serious bugs which can have negative influence on your system!\nAre you sure you want to run this unstable beta version?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDNO) {
-					ExitProcess(-1);
-				}	
-#endif
-
 #else
 	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48350}"));
 #endif
@@ -463,6 +455,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 #ifdef _DEBUG
 	EXTENDEDTRACEINITIALIZE( Util::getAppPath().c_str() );
 	//File::deleteFile(Util::getAppPath() + "exceptioninfo.txt");
+#else
+#if defined(isCVS)
+	if (::MessageBox(NULL, _T("!!! WARNING !!!\n\nThis version is considered to be beta, because it can contain serious bugs which can have negative influence on your system!\nAre you sure you want to run this unstable beta version?"), 
+			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) != IDYES) {
+					ExitProcess(-1);
+				}	
+#endif
 #endif
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldSEHFilter = NULL;
 	pOldSEHFilter = SetUnhandledExceptionFilter(&DCUnhandledExceptionFilter);

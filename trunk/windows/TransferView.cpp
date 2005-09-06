@@ -811,7 +811,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	vector<ItemInfo*>* v = new vector<ItemInfo*>();
 	v->reserve(dl.size());
 
-	AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
+	u_int32_t stringSize = TSTRING(DOWNLOADED_BYTES).size() + 64;
+	AutoArray<TCHAR> buf(stringSize);
 
 	{
 		Lock l(cs);
@@ -843,8 +844,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					for(Download::List::const_iterator k = dl.begin(); k != dl.end(); ++k) {
 						Download* l = *k;
 						if(d->getTarget() == l->getTarget()) {
-							totalSpeed += l->getAverageSpeed();
-							ratio += (l->getTotal() > 0) ? (double)l->getActual() / (double)l->getTotal() : 1.0;;
+							totalSpeed += l->getRunningAverage();
+							ratio += (l->getTotal() > 0) ? (double)l->getActual() / (double)l->getTotal() : 1.0;
 							if(l->isSet(Download::FLAG_ZDOWNLOAD)) compression = true;
 							segs++;
 						}
@@ -871,14 +872,21 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					}
 				}
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
+					double progress = (double)(d->getTotal())*100.0/(double)i->size;
 					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(d->getTotal())).c_str(), 
-						(double)(d->getTotal())*100.0/(double)(i->size), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+						progress, Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+					if(progress > 100) {
+						// workaround to fix > 100% percentage
+						d->getUserConnection()->disconnect();
+						continue;
+					}
 				}
 			} else {
 				_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(d->getPos())).c_str(), 
 					(double)d->getPos()*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
 			}
 
+			buf[stringSize-1] = NULL;
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
 					i->setFlag(ItemInfo::FLAG_COMPRESSED);
@@ -949,9 +957,8 @@ void TransferView::on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi
 		i = transferItems[aCqi];		
 		i->status = ItemInfo::STATUS_WAITING;
 		i->statusString = Text::toT(aMessage);
-		if(aMessage == STRING(ALL_FILE_SLOTS_TAKEN)) {	
+		if((i->main->status != ItemInfo::STATUS_RUNNING) && (aMessage == STRING(ALL_FILE_SLOTS_TAKEN))) {	
 			i->main->statusString = Text::toT(aMessage);
-			i->main->status = ItemInfo::STATUS_WAITING;
 		}
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS;	
 	}
@@ -1071,6 +1078,8 @@ void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, bool i
 
 		if(!isUpload) {
 			i->main->status = ItemInfo::STATUS_WAITING;
+			i->main->pos = 0;
+			i->main->actual = 0;
 			if(!isTree) {
 				i->numberOfSegments = 0;
 				i->main->numberOfSegments = 0;

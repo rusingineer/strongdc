@@ -74,6 +74,12 @@ void ADLSearchManager::Load()
 					if(xml.findChild("IsActive")) {
 						search.isActive = (Util::toInt(xml.getChildData()) != 0);
 					}
+					if(xml.findChild("IsForbidden")) {
+						search.isForbidden = (Util::toInt(xml.getChildData()) != 0);
+					}
+					if(xml.findChild("Raw")) {
+						search.raw = Util::toInt(xml.getChildData());
+					}
 					if(xml.findChild("MaxSize")) {
 						search.maxFileSize = Util::toInt64(xml.getChildData());
 					}
@@ -145,6 +151,11 @@ void ADLSearchManager::Save()
 			xml.addTag("IsActive", search.isActive);
 			xml.addChildAttrib(type, string("int"));
 
+			xml.addTag("IsForbidden", search.isForbidden);
+			xml.addChildAttrib(type, string("int"));
+
+			xml.addTag("Raw", search.raw);
+			xml.addChildAttrib(type, string("int"));
 			xml.addTag("MaxSize", search.maxFileSize);
 			xml.addChildAttrib(type, string("int64"));
 
@@ -203,6 +214,14 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 		}
 		if(is->MatchesFile(currentFile->getName(), filePath, currentFile->getSize())) {
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
+			if(is->isForbidden && !getSentRaw()) {
+				char buf[128];
+				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName());
+				buf[127] = 0;
+				user->setCheat(buf, false);
+				user->sendRawCommand(is->raw);
+				setSentRaw(true);
+			}
 			destDirVector[is->ddIndex].dir->files.push_back(copyFile);
 			destDirVector[is->ddIndex].fileAdded = true;
 
@@ -298,6 +317,7 @@ void ADLSearchManager::matchListing(DirectoryListing* aDirList) throw() {
 	StringMap params;
 	params["nick"] = aDirList->getUser()->getNick();
 	setUser(aDirList->getUser());
+	setSentRaw(false);
 
 	DestDirList destDirs;
 	PrepareDestinationDirectories(destDirs, aDirList->getRoot(), params);
