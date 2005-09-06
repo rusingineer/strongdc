@@ -134,7 +134,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 						  int64_t aDownloadedBytes, u_int32_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
 {
 	if(p == QueueItem::DEFAULT)
-		p = (aSize <= 64*1024) ? QueueItem::HIGHEST : QueueItem::NORMAL;
+		p = (aSize <= 65536) ? QueueItem::HIGHEST : QueueItem::NORMAL;
 
 	if(aFlags & QueueItem::FLAG_USER_LIST) 
 		p = QueueItem::HIGHEST;
@@ -175,7 +175,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	if((qi->getDownloadedBytes() > 0))
 		qi->setFlag(QueueItem::FLAG_EXISTS);
 
-	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && p != QueueItem::HIGHEST ) {
+	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && (p != QueueItem::HIGHEST) ) {
 		qi->setAutoPriority(true);
 		qi->setPriority(qi->calculateAutoPriority());
 	}
@@ -956,15 +956,15 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 
 	switch(SETTING(SEGMENTS_TYPE)) {
 	case SettingsManager::SEGMENT_ON_SIZE : {
-		if((filesize >= (SETTING(SET_MIN2)*1024*1024)) && (filesize <( SETTING(SET_MAX2)*1024*1024))) {
+		if((filesize >= (SETTING(SET_MIN2)*1048576)) && (filesize < (SETTING(SET_MAX2)*1048576))) {
 			MaxSegments = 2;
-		} else if((filesize >= (SETTING(SET_MIN3)*1024*1024)) && (filesize < (SETTING(SET_MAX3)*1024*1024))) {
+		} else if((filesize >= (SETTING(SET_MIN3)*1048576)) && (filesize < (SETTING(SET_MAX3)*1048576))) {
 			MaxSegments = 3;
-		} else if( (filesize >= (SETTING(SET_MIN4)*1024*1024)) && (filesize < (SETTING(SET_MAX4)*1024*1024))) {
+		} else if( (filesize >= (SETTING(SET_MIN4)*1048576)) && (filesize < (SETTING(SET_MAX4)*1048576))) {
 			MaxSegments = 4;
-		} else if( (filesize >= (SETTING(SET_MIN6)*1024*1024)) && (filesize < (SETTING(SET_MAX6)*1024*1024))) {
+		} else if( (filesize >= (SETTING(SET_MIN6)*1048576)) && (filesize < (SETTING(SET_MAX6)*1048576))) {
 			MaxSegments = 6;
-		} else if(filesize >= (SETTING(SET_MIN8)*1024*1024)) {
+		} else if(filesize >= (SETTING(SET_MIN8)*1048576)) {
 			MaxSegments = 8;
 		}
 			break;
@@ -1696,8 +1696,8 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			if(nick.empty())
 				return;
 			const string& path = getAttrib(attribs, sPath, 1);
-			if(path.empty())
-				return;
+//			if(path.empty())
+//				return;
 			const string& utf8 = getAttrib(attribs, sUtf8, 2);
 			bool isUtf8 = (utf8 == "1");
 			User::Ptr user = ClientManager::getInstance()->getUser(nick);

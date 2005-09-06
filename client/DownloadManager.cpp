@@ -81,9 +81,15 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 }
 
 int64_t Download::getQueueTotal() {
-	FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
-	if(chunksInfo != (FileChunksInfo*)NULL)
-		return chunksInfo->getDownloadedSize();
+	if(isSet(Download::FLAG_MULTI_CHUNK)) {
+		if(qi && qi->chunkInfo)
+			return qi->chunkInfo->getDownloadedSize();
+
+		// it doesn't have to be here but have it for special cases :)
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
+		if(chunksInfo != (FileChunksInfo*)NULL)
+			return chunksInfo->getDownloadedSize();
+	}
 	return getTotal();
 }
 

@@ -312,6 +312,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
 	currentPic = SETTING(BACKGROUND_IMAGE);
 	m_PictureWindow.Load(Text::toT(currentPic).c_str());
+	listQueue.start();
 
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;
@@ -455,18 +456,11 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			DirectoryListingFrame::openWindow(i->file, i->user);
 		}
 		delete i;
-	} else if(wParam == CHECK_LISTING) {
-		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		if(Util::fileExists(Text::fromT(i->file))) {
-			checkFileList(i->file, i->user);
-			i->user->updated();
-		}
-		delete i;
 	} else if(wParam == BROWSE_LISTING) {
 		DirectoryBrowseInfo* i = (DirectoryBrowseInfo*)lParam;
 		DirectoryListingFrame::openWindow(i->user, i->text);
 		delete i;
-	}  else if(wParam == VIEW_FILE_AND_DELETE) {
+	} else if(wParam == VIEW_FILE_AND_DELETE) {
 		tstring* file = (tstring*)lParam;
 		TextFrame::openWindow(*file);
 		File::deleteFile(Text::fromT(*file));
@@ -988,6 +982,7 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			LogManager::getInstance()->removeListener(this);
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
+			listQueue.shutdown();
 
 			stopUPnP();
 
@@ -1374,7 +1369,11 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		DirectoryListInfo* i = new DirectoryListInfo();
 		i->file = Text::toT(qi->getListName());
 		i->user = qi->getCurrents()[0]->getUser(); 
-		PostMessage(WM_SPEAKER, CHECK_LISTING, (LPARAM)i);
+		{
+			Lock l(listQueue.cs);
+			listQueue.fileLists.push_back(i);
+		}
+		listQueue.s.signal();
 	}	
 }
 
@@ -1408,43 +1407,6 @@ LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
 	return 0;
 }
 
-void MainFrame::checkFileList(tstring file, User::Ptr u) {
-	if(u) {
-		Client* c = u->getClient();
-		if(c) {
-			if(!c->getOp()) return;
-			HubFrame* hubFrame = HubFrame::getHub(c);
-			if(hubFrame == NULL) {
-				return;
-			}
-			DirectoryListing* dl = new DirectoryListing(u);
-			try {
-				dl->loadFile(Text::fromT(file));
-				hubFrame->checkCheating(u, dl);
-			} catch(...) {
-			}
-			delete dl;
-		}
-	}
-}
-
-/*void MainFrame::SendCheatMessage(Client* client, User::Ptr u) {
-	if(client) {
-		HubFrame* hubFrame = HubFrame::getHub(client);
-	
-		CHARFORMAT2 cf;
-		memset2(&cf, 0, sizeof(CHARFORMAT2));
-		cf.cbSize = sizeof(cf);
-		cf.dwReserved = 0;
-		cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-		cf.dwEffects = 0;
-		cf.crBackColor = SETTING(BACKGROUND_COLOR);
-		cf.crTextColor = SETTING(ERROR_COLOR);
-
-		hubFrame->addLine(_T("*** ")+TSTRING(USER)+_T(" ")+Text::toT(u->getNick())+_T(": ")+Text::toT(u->getCheatingString()),cf);
-	}
-}*/
-
 LRESULT MainFrame::onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	UpdateDlg dlg;
 	dlg.DoModal();
@@ -1462,6 +1424,44 @@ void MainFrame::on(WebServerListener::Setup) throw() {
 
 void MainFrame::on(WebServerListener::ShutdownPC, int action) throw() {
 	CZDCLib::shutDown(action);
+}
+
+int MainFrame::FileListQueue::run() {
+	setThreadPriority(Thread::LOW);
+
+	for(;;) {
+		s.wait();
+		if(stop)
+			break;
+
+		DirectoryListInfo* i;
+		{
+			Lock l(cs);
+			i = fileLists.front();
+			fileLists.pop_front();
+		}
+		if(Util::fileExists(Text::fromT(i->file))) {
+			if(i->user) {
+				Client* c = i->user->getClient();
+				if(c && c->getOp()) {
+					HubFrame* hubFrame = HubFrame::getHub(c);
+					if(hubFrame) {
+						DirectoryListing* dl = new DirectoryListing(i->user);
+						try {
+							dl->loadFile(Text::fromT(i->file));
+							ADLSearchManager::getInstance()->matchListing(dl);
+							hubFrame->checkCheating(i->user, dl);
+							i->user->updated();
+						} catch(...) {
+						}
+						delete dl;
+					}
+				}
+			}
+		}
+		delete i;
+	}
+	return 0;
 }
 /**
  * @file

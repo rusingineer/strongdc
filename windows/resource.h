@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\strongdc.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -265,6 +265,7 @@
 #define IDC_MAX_FILE_SIZE               1122
 #define IDC_AUTOQUEUE                   1123
 #define IDC_GO_TO_DIRECTORY             1124
+#define IDC_IS_FORBIDDEN                1124
 #define IDC_MATCH_QUEUE                 1125
 #define IDC_VIEW_AS_TEXT                1129
 #define IDC_PAGE                        1130
@@ -540,7 +541,9 @@
 #define IDC_SETTINGS_AUTO_OPEN          1299
 #define IDC_SETTINGS_BIND_ADDRESS       1299
 #define IDC_SETTINGS_WINDOWS_OPTIONS    1300
+#define IDC_ADLSEARCH_ACTION            1300
 #define IDC_WINDOWS_OPTIONS             1301
+#define IDC_ADLSEARCH_RAW_ACTION        1301
 #define IDC_DIRECT                      1302
 #define IDC_FIREWALL_UPNP               1303
 #define IDC_FIREWALL_NAT                1304
@@ -594,7 +597,7 @@
 #define IDC_BROWSELIST                  3000
 #define IDC_REMOVE_SOURCE               3500
 #define IDC_PM                          4000
-#define IDC_EMOMENU						4001
+#define IDC_EMOMENU                     4001
 #define IDC_READD                       4500
 #define IDC_DOWNLOAD_TARGET             5000
 #define IDC_DOWNLOAD_TARGET_DIR         5500

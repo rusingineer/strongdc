@@ -38,6 +38,17 @@ LRESULT ADLSProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_ADLSP_DESTINATION, CTSTRING(ADLS_DESTINATION));
 	SetDlgItemText(IDC_IS_ACTIVE, CTSTRING(ADLS_ENABLED));
 	SetDlgItemText(IDC_AUTOQUEUE, CTSTRING(ADLS_DOWNLOAD));
+	SetDlgItemText(IDC_IS_FORBIDDEN, CTSTRING(FORBIDDEN));
+	SetDlgItemText(IDC_ADLSEARCH_ACTION, CTSTRING(USER_CMD_RAW));
+	
+	cRaw.Attach(GetDlgItem(IDC_ADLSEARCH_RAW_ACTION));
+	cRaw.AddString(_T("No action")); \
+	cRaw.AddString(_T("Raw 1")); \
+	cRaw.AddString(_T("Raw 2")); \
+	cRaw.AddString(_T("Raw 3")); \
+	cRaw.AddString(_T("Raw 4")); \
+	cRaw.AddString(_T("Raw 5"));
+	cRaw.SetCurSel(search->raw);
 
 	// Initialize combo boxes
 	::SendMessage(GetDlgItem(IDC_SOURCE_TYPE), CB_ADDSTRING, 0, 
@@ -65,6 +76,7 @@ LRESULT ADLSProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	::SendMessage(GetDlgItem(IDC_SOURCE_TYPE), CB_SETCURSEL, search->sourceType, 0L);
 	::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_SETCURSEL, search->typeFileSize, 0L);
 	::SendMessage(GetDlgItem(IDC_AUTOQUEUE), BM_SETCHECK, search->isAutoQueue ? 1 : 0, 0L);
+	::SendMessage(GetDlgItem(IDC_IS_FORBIDDEN), BM_SETCHECK, search->isForbidden ? 1 : 0, 0L);
 
 	// Center dialog
 	CenterWindow(GetParent());
@@ -94,6 +106,11 @@ LRESULT ADLSProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		search->typeFileSize = (ADLSearch::SizeType)::SendMessage(GetDlgItem(IDC_SIZE_TYPE), CB_GETCURSEL, 0, 0L);
 		search->isActive = (::SendMessage(GetDlgItem(IDC_IS_ACTIVE), BM_GETCHECK, 0, 0L) != 0);
 		search->isAutoQueue = (::SendMessage(GetDlgItem(IDC_AUTOQUEUE), BM_GETCHECK, 0, 0L) != 0);
+		search->isForbidden = (::SendMessage(GetDlgItem(IDC_IS_FORBIDDEN), BM_GETCHECK, 0, 0L) != 0);
+		if(search->isForbidden) {
+			search->destDir = "Forbidden Files";
+		}
+		search->raw = cRaw.GetCurSel();
 	}
 
 	EndDialog(wID);

@@ -56,6 +56,7 @@ private:
 
 	// Current search
 	ADLSearch* search;
+	CComboBox cRaw;
 };
 
 #endif // !defined(ADLS_PROPERTIES_H)

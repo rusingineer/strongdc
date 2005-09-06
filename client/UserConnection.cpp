@@ -75,11 +75,11 @@ void UserConnection::onLine(const char* aLine) throw() {
 			dcdebug(getUser()->getNick().c_str());
 		}
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
-		aLine = strchr(aLine, '$');
+		/*aLine = strchr(aLine, '$');
 		if(aLine != NULL) {
 			setFlag(FLAG_NMDC);
 		} else
-			return;
+			return;*/
 	}
 
 	char *temp;
