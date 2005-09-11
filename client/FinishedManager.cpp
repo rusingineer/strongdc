@@ -20,6 +20,7 @@
 #include "DCPlusPlus.h"
 
 #include "FinishedManager.h"
+#include "FileChunksInfo.h"
 #include "Client.h"
 
 FinishedManager::~FinishedManager() throw() {
@@ -303,8 +304,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 			FinishedItem *item = new FinishedItem(
 				d->getTarget(), d->getUserConnection()->getUser()->getNick(),
 				d->getUserConnection()->getUser()->getLastHubName(),
-				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK));
-
+				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH() ? d->getTTH()->toBase32() : Util::emptyString);
 			{
 				Lock l(cs);
 				downloads.push_back(item);
@@ -339,6 +339,41 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 
 		fire(FinishedManagerListener::AddedUl(), item);
 	}
+}
+
+string FinishedManager::getTarget(const string& aTTH){
+	if(aTTH.empty()) return Util::emptyString;
+
+	{
+		Lock l(cs);
+
+		for(FinishedItem::Iter i = downloads.begin(); i != downloads.end(); i++)
+		{
+			if((*i)->getTTH() == aTTH)
+				return (*i)->getTarget();
+		}
+	}
+
+	return Util::emptyString;
+}
+
+bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<u_int16_t>& outPartialInfo)
+{
+
+	string target = getTarget(tth.toBase32());
+
+	if(target.empty()) return false;
+
+	int64_t fileSize = File::getSize(target);
+
+	if(fileSize < PARTIAL_SHARE_MIN_SIZE)
+		return false;
+
+	u_int16_t len = TigerTree::calcBlocks(fileSize);
+	outPartialInfo.push_back(0);
+	outPartialInfo.push_back(len);
+
+	return true;
 }
 
 /**

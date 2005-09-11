@@ -83,6 +83,9 @@ public:
 	static size_t calcBlocks(int64_t aFileSize, int64_t aBlockSize) {
 		return max((size_t)((aFileSize + aBlockSize - 1) / aBlockSize), (size_t)1);
 	}
+	static u_int16_t calcBlocks(int64_t aFileSize){
+		return (u_int16_t)calcBlocks(aFileSize, calcBlockSize(aFileSize, 10));
+	}
 
 	/**
 	 * Update the merkle tree.

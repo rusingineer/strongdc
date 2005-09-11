@@ -27,6 +27,7 @@
 #include "ConnectionManager.h"
 #include "FavoriteManager.h"
 #include "QueueManager.h"
+#include "FinishedManager.h"
 
 #include "AdcHub.h"
 #include "NmdcHub.h"
@@ -124,29 +125,33 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				dcdebug("Search caught error\n");
 			}
 		}
-	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0) && aClient->getMe()->isClientOp()) {
+	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0)/* && aClient->getMe()->isClientOp()*/) {
 		PartsInfo partialInfo;
 		TTHValue aTTH(aString.substr(4));
-		if(QueueManager::getInstance()->handlePartialSearch(aString, aSize, aTTH, partialInfo)) {
-			try {
-				char buf[1024];
-				// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
-				string hubIpPort = aClient->getIpPort();
-				string tth = aTTH.toBase32();
-				string user = Text::utf8ToAcp(aClient->getMe()->getNick());
-				_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo));
-				buf[1023] = NULL;
-				string ip, file;
-				u_int16_t port = 0;
-				Util::decodeUrl(aSeeker, ip, port, file);
-				ip = Socket::resolve(ip);
-				if(port == 0) port = 412;
-				s.writeTo(ip, port, buf);
-			} catch(const SocketException&) {
-				dcdebug("Search caught error\n");
+		if(!QueueManager::getInstance()->handlePartialSearch(aString, aSize, aTTH, partialInfo)) {
+			// if not found, try to find in finished list
+			if(!FinishedManager::getInstance()->handlePartialRequest(aTTH, partialInfo)){
+				return;
 			}
 		}
-		
+
+		try {
+			char buf[1024];
+			// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
+			string hubIpPort = aClient->getIpPort();
+			string tth = aTTH.toBase32();
+			string user = Text::utf8ToAcp(aClient->getMe()->getNick());
+			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo));
+			buf[1023] = NULL;
+			string ip, file;
+			u_int16_t port = 0;
+			Util::decodeUrl(aSeeker, ip, port, file);
+			ip = Socket::resolve(ip);
+			if(port == 0) port = 412;
+			s.writeTo(ip, port, buf);
+		} catch(const SocketException&) {
+			dcdebug("Search caught error\n");
+		}
 	}
 }
 

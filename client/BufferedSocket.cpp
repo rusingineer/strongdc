@@ -73,7 +73,7 @@ bool BufferedSocket::threadSendFile() {
 	dcassert(inbufSize >= SMALL_BUFFER_SIZE);
 
 	UploadManager *um = UploadManager::getInstance();
-	size_t sendMaximum, start = 0, current= 0;
+	size_t sendMaximum, start = 0, current = 0;
 	bool throttling;
 	try {
 		for(;;) {

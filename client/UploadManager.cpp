@@ -32,6 +32,8 @@
 #include "AdcCommand.h"
 #include "FavoriteManager.h"
 #include "QueueManager.h"
+#include "FinishedManager.h"
+
 #define INBUFSIZE 64*1024
 bool UploadManager::m_boFireball = false;
 bool UploadManager::m_boFileServer = false;
@@ -163,7 +165,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			string tempTarget;
 
             if(QueueManager::getInstance()->getTargetByRoot(fileHash, target, tempTarget)){
-
 				if(aType == "file") {
 					file = tempTarget;
 					// check start position and bytes
@@ -209,7 +210,45 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 					is = mis;
 					leaves = true;
 					free = true;
-					//goto ok;
+				}
+
+			// Share finished file
+			}else{
+				target = FinishedManager::getInstance()->getTarget(fileHash.toBase32());
+
+				if(!target.empty()){
+					if(aType == "file") {
+						file = target;
+						try{
+							is = new SharedFileStream(file, aStartPos, 0, true);
+							size = File::getSize(file);
+							free = false;
+
+							if((aStartPos + aBytes) < size) {
+								is = new LimitedInputStream<true>(is, aBytes);
+							}
+
+							goto ok;
+						}catch(const Exception&){
+							aSource->fileNotAvail();
+							delete is;
+							return false;
+						}
+					} else if(aType == "tthl") {
+						// TTH Leaves...
+						MemoryInputStream* mis = ShareManager::getInstance()->getTree(target);
+						file = target;
+						if(mis == NULL) {
+							aSource->fileNotAvail();
+							return false;
+						}
+
+						size = mis->getSize();
+						aStartPos = 0;
+						is = mis;
+						leaves = true;
+						free = true;
+					}
 				}
 			}
 		}
@@ -662,16 +701,16 @@ void UploadManager::throttleSetup() {
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-			if (mUploadLimit <= (INBUFSIZE * 10 * num_transfers)) {
+		if (mUploadLimit <= (INBUFSIZE * 10 * num_transfers)) {
 			mByteSlice = mUploadLimit / (5 * num_transfers);
-				if (mByteSlice > INBUFSIZE)
-					mByteSlice = INBUFSIZE;
-				mCycleTime = 1000 / 10;
-		}	else {
+			if (mByteSlice > INBUFSIZE)
 				mByteSlice = INBUFSIZE;
-				mCycleTime = 1000 * INBUFSIZE / mUploadLimit;
-			}
+			mCycleTime = 1000 / 10;
+		} else {
+			mByteSlice = INBUFSIZE;
+			mCycleTime = 1000 * INBUFSIZE / mUploadLimit;
 		}
+	}
 }
 
 UploadQueueItem::UserMap UploadManager::getQueue() {

@@ -203,7 +203,7 @@ public:
 	void sendRawCommand(const int aRawCommand);
 	void unCacheClientInfo() {
 		if(!isFavoriteUser()) {
-			lastHubAddress = Util::emptyString;
+			//lastHubAddress = Util::emptyString;
 			lastHubName = Util::emptyString;
 			description = Util::emptyString;
 		}

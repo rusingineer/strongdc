@@ -45,6 +45,7 @@
 #define IDC_ENABLE_EMOTICONS            132
 #define IDC_SERVER                      133
 #define IDC_EXTERNAL_IP                 133
+#define IDC_DELETE_TTH_TREE             133
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
 #define IDB_ARROWS                      208
@@ -782,6 +783,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        297
 #define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1300
-#define _APS_NEXT_SYMED_VALUE           133
+#define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

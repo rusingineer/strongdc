@@ -749,13 +749,14 @@ public:
 
 	void insertGroupedItem(T* item, bool autoExpand) {
 		T* mainItem = findMainItem(item->getGroupingString());
+		int pos = -1;
 
 		if(mainItem == NULL) {
 			T* newItem = item->createMainItem();
 			mainItems.push_back(newItem);
 
 			newItem->mainItem = true;
-			insertItem(getSortPos(newItem), newItem, newItem->imageIndex());
+			pos = insertItem(getSortPos(newItem), newItem, newItem->imageIndex());
 
 			if(newItem != item) {
 				mainItem = newItem;
@@ -764,14 +765,13 @@ public:
 				uniqueMainItem = false;
 				return;
 			}
-		}
+		} else 
+			pos = findItem(mainItem);
 
 		mainItem->subItems.push_back(item);
 		item->main = mainItem;
 		item->mainItem = false;
 		item->updateMainItem();
-
-		int pos = findItem(mainItem);
 
 		if(pos != -1) {
 			u_int32_t totalSubItems = mainItem->subItems.size();
