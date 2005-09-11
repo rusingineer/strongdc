@@ -220,10 +220,12 @@ void HashManager::HashStore::rebuild() {
 				if(!j->getUsed())
 					continue;
 
+				if(!Util::fileExists(i->first + j->getFileName())) continue;
+
 				TreeIter k = treeIndex.find(j->getRoot());
 				if(k != treeIndex.end()) {
 					newIndex[j->getRoot()] = k->second;
-					}
+				}
 			}
 		}
 		

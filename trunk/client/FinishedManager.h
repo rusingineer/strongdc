@@ -42,9 +42,9 @@ public:
 
 	FinishedItem(string const& aTarget, string const& aUser, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, u_int32_t aTime,
-		bool aCrc32 = false) : 
+		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 
 		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32),
+		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH),
 		collapsed(true), mainitem(false), needDelete(true), main(NULL)
 	{
 	}
@@ -64,6 +64,7 @@ public:
 	GETSET(int64_t, milliSeconds, MilliSeconds);
 	GETSET(u_int32_t, time, Time);
 	GETSET(bool, crc32Checked, Crc32Checked)
+	GETSET(string, tth, TTH);	
 private:
 	friend class FinishedManager;
 
@@ -130,6 +131,12 @@ public:
 
 	void remove(FinishedItem *item, bool upload = false);
 	void removeAll(bool upload = false);
+
+	/** Get file full path by tth to share */
+	string getTarget(const string& aTTH);
+	bool handlePartialRequest(const TTHValue& tth, vector<u_int16_t>& outPartialInfo);
+
+
 private:
 	friend class Singleton<FinishedManager>;
 	

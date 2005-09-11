@@ -78,6 +78,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
 
+	user = aUser;
 }
 
 int64_t Download::getQueueTotal() {
@@ -349,8 +350,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		} else {
 			if(d->isSet(Download::FLAG_CHUNK_TRANSFER)) {
 				d->unsetFlag(Download::FLAG_CHUNK_TRANSFER);
-
-				//d->setSegmentSize(FileChunksInfo::Get(d->getTempTarget())->getChunkSize(d->getStartPos()));
 				d->setSegmentSize(d->getSize() - d->getPos());
 			}
 			aConn->get(d->getSource(), d->getPos());

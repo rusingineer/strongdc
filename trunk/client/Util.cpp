@@ -132,9 +132,9 @@ int hexstr2int(char *hexstr) {
 }
 
 bool Util::isNLrunning() {
-	nlfound = false;
-	EnumWindows(GetWOkna,NULL);
-	return nlfound;
+	//nlfound = false;
+	//EnumWindows(GetWOkna,NULL);
+	return GetModuleHandle(L"nl_lsp.dll");
 }
 
 int Util::getNetLimiterLimit() {

@@ -57,13 +57,13 @@ private:
 	typedef Map::iterator  Iter;
 
 	Chunk(int64_t _start, int64_t _end) 
-		: download(NULL), pos(_start), end(_end), overlappedCount(0), user(NULL)
+		: download(NULL), pos(_start), end(_end), overlappedCount(0)
 	{}
 
 	Download* download;
-	User::Ptr user;
 	int64_t pos;
 	int64_t end;
+	int64_t size;
 
 	// allow overlapped download the same pending chunk 
 	// when all running chunks are unbreakable
@@ -131,7 +131,7 @@ public:
      */
 	void putChunk(int64_t);
 
-	void setDownload(int64_t, Download*, User::Ptr, bool);
+	void setDownload(int64_t, Download*, bool);
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "
      */
@@ -152,7 +152,7 @@ public:
      */
 	void setFileSize(const int64_t& size);
 
-	void getAllChunks(vector<int64_t>& v, bool verified);
+	void getAllChunks(vector<int64_t>& v, int type);
 
     int64_t getDownloadedSize()
     {

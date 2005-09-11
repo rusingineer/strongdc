@@ -646,7 +646,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 			q = fileQueue.find(target);
 
 		if(q == NULL) {
-			q = fileQueue.add(target, aSize, aFlags, QueueItem::NORMAL, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
+			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
 			newItem = true;
@@ -1121,7 +1121,7 @@ again:
 		supportsChunks = supportsChunks && (!aUser->getClient() || !aUser->getClient()->getStealth()) && 
 			((q->chunkInfo->getDownloadedSize() > 0.85*q->getSize()) || (q->getActiveSegments().size() > 1));
 		d->setStartPos(freeBlock);
-		q->chunkInfo->setDownload(freeBlock, d, aUser, supportsChunks);
+		q->chunkInfo->setDownload(freeBlock, d, supportsChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
@@ -1383,7 +1383,7 @@ void QueueManager::removeSource(const string& aTarget, User::Ptr aUser, int reas
 					return;
 				}
 			}
-			if((q->getStatus() == QueueItem::STATUS_RUNNING) && q->isCurrent(aUser)) {
+			if(q->isCurrent(aUser)) {
 				if(removeConn)
 					x = q->getTarget();
 				userQueue.setWaiting(q, aUser);
@@ -1887,7 +1887,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
 			if(onlineUsers > 2) {
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
-					removeSource(aUser, QueueItem::Source::FLAG_SLOW);
+					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
 				} else {
 					d->getUserConnection()->disconnect();
 				}
@@ -1896,35 +1896,11 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 		}
 	}
 	return true;
- }
-
-bool QueueManager::handlePartialSearch(const string& aSearchString, int64_t aSize, const TTHValue& tth, PartsInfo& _outPartsInfo) {
-	{
-		Lock l(cs);
-
-		// Locate target QueueItem in download queue
-		QueueItem::List ql;
-		fileQueue.find(ql, tth);
-
-		if(ql.empty()) return false;
-
-		QueueItem::Ptr qi = ql[0];
-		if(qi->getSize() < PARTIAL_SHARE_MIN_SIZE) return false;
-
-		// Compare chunks
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
-		if(!chunksInfo){
-			return false;
-		}
-
-		chunksInfo->getPartialInfo(_outPartsInfo);
-	}
-
-	return !_outPartsInfo.empty();
 }
 
 bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo) {
-	bool source = false;
+	bool wantConnection = false;
+	dcassert(outPartialInfo.empty());
 
 	{
 		Lock l(cs);
@@ -1933,29 +1909,34 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 		QueueItem::List ql;
 		fileQueue.find(ql, tth);
 
-		if(ql.empty()) return false;
+		if(ql.empty()){
+			dcdebug("Not found in download queue\n");
+			return false;
+		}
 
+		// Check min size
 		QueueItem::Ptr qi = ql[0];
 		if(qi->getSize() < PARTIAL_SHARE_MIN_SIZE){
 			dcassert(0);
 			return false;
 		}
 
-		// Diff parts info
+		// Get my parts info
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
 		if(!chunksInfo){
 			return false;
 		}
-
-		source = chunksInfo->isSource(partialInfo);
 		chunksInfo->getPartialInfo(outPartialInfo);
+		
+		// Any parts for me?
+		wantConnection = chunksInfo->isSource(partialInfo);
 
 		// If this user isn't a source and has no parts needed, ignore it
 		QueueItem::Source::Iter si = qi->getSource(aUser);
 		if(si == qi->getSources().end()){
 			si = qi->getBadSource(aUser);
 
-			if(!source){
+		if(!wantConnection){
 				if(si == qi->getBadSources().end())
 					return false;
 			}else{
@@ -1974,12 +1955,39 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 	}
 	
 	// Connect to this user
-	if(source)
+	if(wantConnection)
 		ConnectionManager::getInstance()->getDownloadConnection(aUser);
 
 	return true;
 }
 
+bool QueueManager::handlePartialSearch(const string& aSearchString, int64_t aSize, const TTHValue& tth, PartsInfo& _outPartsInfo) {
+	{
+		Lock l(cs);
+
+		// Locate target QueueItem in download queue
+		QueueItem::List ql;
+		fileQueue.find(ql, tth);
+
+		if(ql.empty()){
+			return false;
+		}
+
+		QueueItem::Ptr qi = ql[0];
+		if(qi->getSize() < PARTIAL_SHARE_MIN_SIZE){
+			return false;
+		}
+
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
+		if(!chunksInfo){
+			return false;
+		}
+
+		chunksInfo->getPartialInfo(_outPartsInfo);
+	}
+
+	return !_outPartsInfo.empty();
+}
 /**
  * @file
  * $Id$

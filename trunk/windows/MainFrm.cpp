@@ -1044,13 +1044,13 @@ int MainFrame::run() {
 			n2 = 512*1024;
 		}
 		tth.finalize();
-		f.close();
 
 		strcpy(TTH, tth.getRoot().toBase32().c_str());
 
 		CInputBox ibox(m_hWnd);
 
 		string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
+		f.close();
 		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
 	}
 	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);

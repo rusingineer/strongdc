@@ -58,6 +58,10 @@ void FileChunksInfo::Free(const string& name)
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); ++i){
 		if((*i)->tempTargetName == name ){
 			vecAllFileChunksInfo.erase(i);
+			
+			for(Chunk::Iter j = (*i)->running.begin(); j != (*i)->running.end(); ++j)
+				if(j->second->download) j->second->download->setQI(NULL);
+			
 			return;
 		}
 	}
@@ -139,13 +143,13 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 		}
 		return FILE_OVER;
 	}
-	if(chunk->pos >= i->first + chunk->download->getSegmentSize()){
+	if(chunk->pos >= i->first + chunk->size){
 		return CHUNK_OVER;
 	}
 	return NORMAL_EXIT;
 }
 
-void FileChunksInfo::setDownload(int64_t chunk, Download* d, User::Ptr u, bool noStealth)
+void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 {
 	map<int64_t, Chunk*>::iterator i = running.find(chunk);
 
@@ -156,12 +160,14 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, User::Ptr u, bool n
 
 	int64_t chunkEnd = i->second->end;
 	i->second->download = d;
-	i->second->user = u;
+
 	if(noStealth) {
 		i->second->download->setFlag(Download::FLAG_CHUNK_TRANSFER);
 		chunkEnd = min(i->second->end, i->second->pos + min(minChunkSize, iFileSize - i->second->pos));
 	}
+	
 	i->second->download->setSegmentSize(chunkEnd - i->second->pos);
+	i->second->size = i->second->download->getSegmentSize();
 }
 
 int64_t FileChunksInfo::getChunk(int64_t _speed)
@@ -203,10 +209,10 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 			continue;
 
 		if(chunk->pos > i->first){
-			speed = chunk->download->getAverageSpeed();
+			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
 			if(speed == 0) speed = 1;
 		}else{
-			speed =  chunk->user->getLastDownloadSpeed();
+			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
 			if(speed == 0) speed = DEFAULT_SPEED;
 		}
 		
@@ -230,13 +236,9 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 				return i->first;
 			}
 		}
+
 		return -1;
 	}
-
-	/*if(maxChunk == NULL) {
-		noFreeBlock = true;
-		return -1;
-	}*/
 
 	// split the max time-left running chunk
 	int64_t b = maxChunk->pos;
@@ -244,8 +246,8 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
 
-	if(speed == 0){
-		speed =  chunk->user->getLastDownloadSpeed();
+	if(speed == 0 && maxChunk->download){
+		speed =  maxChunk->download->getUser()->getLastDownloadSpeed();
 	}
 
 	if(speed == 0){
@@ -293,6 +295,7 @@ void FileChunksInfo::putChunk(int64_t start)
 
 			if(i->second->overlappedCount){
 				i->second->overlappedCount--;
+				chunk->download = NULL;
 				return;
 			}
 
@@ -319,7 +322,7 @@ void FileChunksInfo::putChunk(int64_t start)
 		prev = chunk;
 	}
 
-//	dcassert(0);
+	dcassert(0);
 }
 
 string FileChunksInfo::getFreeChunksString()
@@ -784,16 +787,12 @@ string GetPartsString(const PartsInfo& partsInfo)
 	return ret.substr(0, ret.size()-1);
 }
 
-void FileChunksInfo::getAllChunks(vector<int64_t>& v, bool verified)
+void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - downloaded, 1 - running, 2 - verified
 {
 	Lock l(cs);
 
-	if(verified) {
-		for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); ++i) {
-			v.push_back(i->first * tthBlockSize);
-			v.push_back(i->second * tthBlockSize);
-		}
-	} else {
+	switch(type) {
+	case 0 :
 		for(Chunk::Iter i = waiting.begin(); i != waiting.end(); ++i) {
 			v.push_back(i->second->pos);
 			v.push_back(i->second->end);
@@ -802,6 +801,23 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, bool verified)
 			v.push_back(i->second->pos);
 			v.push_back(i->second->end);
 		}
+		break;
+	case 1 :
+		for(Chunk::Iter i = running.begin(); i != running.end(); ++i) {
+			if(!v.empty() && (v.back() > i->first)) {
+				v.pop_back();
+				v.push_back(i->first);
+			}
+			v.push_back(i->second->pos);
+			v.push_back(i->first + i->second->size);
+		}
+		break;
+	case 2 :
+		for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); ++i) {
+			v.push_back(i->first * tthBlockSize);
+			v.push_back(i->second * tthBlockSize);
+		}
+		break;
 	}
 	sort(v.begin(), v.end());
 }
