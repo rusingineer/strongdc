@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,6 @@ bool BufferedSocket::threadSendFile() {
 			if (throttling) { 
 				start = TimerManager::getTick();
 			}
-
 			{
 				Lock l(cs);
 				if(!tasks.empty())
@@ -312,15 +311,12 @@ void BufferedSocket::threadRead() {
 		DownloadManager *dm = DownloadManager::getInstance();
 		unsigned int readsize = inbufSize;
 		bool throttling = false;
-		if (mode == MODE_DATA)
-		{
-			u_int32_t getMaximum;
+		if(mode == MODE_DATA) {
 			throttling = dm->throttle();
-			if (throttling)
-			{
-				getMaximum = dm->throttleGetSlice();
+			if(throttling) {
+				u_int32_t getMaximum = dm->throttleGetSlice();
 				readsize = (u_int32_t)min((int64_t)inbufSize, (int64_t)getMaximum);
-				if (readsize <= 0  || readsize > inbufSize) { // FIX
+				if (readsize <= 0  || readsize > inbufSize) {
 					sleep(dm->throttleCycleTime());
 					return;
 				}
@@ -462,7 +458,7 @@ int BufferedSocket::run() {
 
 				switch(t) {
 				case SHUTDOWN: threadShutDown(); return 0;
-				case DISCONNECT: /*if(isConnected()) */fail(STRING(DISCONNECTED)); break;
+				case DISCONNECT: if(isConnected() || (mode == MODE_DATA)) fail(STRING(DISCONNECTED)); break;
 				case SEND_FILE: if(isConnected()) sendingFile = true; break;
 				case SEND_DATA: dcassert(!sendingFile); if(isConnected()) threadSendData(); break;
 				case CONNECT: sendingFile = false; threadConnect(); break;

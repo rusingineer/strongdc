@@ -6,7 +6,7 @@
 class CBarShader
 {
 public:
-	CBarShader(int64_t dwHeight, int64_t dwWidth, COLORREF crColor = 0, int64_t dwFileSize = 1);
+	CBarShader(int dwHeight, int dwWidth, COLORREF crColor = 0, int64_t dwFileSize = 1);
 	~CBarShader(void);
 
 	//set the width of the bar
@@ -52,6 +52,6 @@ protected:
 private:
 	CRBMap<int64_t, COLORREF> m_Spans;
 	double	*m_pdblModifiers;
-	byte	m_used3dlevel;
+	int	m_used3dlevel;
 	bool		m_bIsPreview;
 };

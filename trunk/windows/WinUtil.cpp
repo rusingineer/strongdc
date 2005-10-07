@@ -260,7 +260,9 @@ void UserInfoBase::getUserResponses() {
 }
 
 void UserInfoBase::doReport() {
-	user->addLine("*** Info on " + user->getNick() + " ***" + "\r\n" + user->getReport() + "\r\n");
+	OnlineUser* ou = user->getOnlineUser();
+	if(ou)
+		user->addCheatLine("*** Info on " + ou->getIdentity().getNick() + " ***" + "\r\n" + ou->getReport() + "\r\n");
 }
 
 void UserInfoBase::getList() {
@@ -1297,7 +1299,8 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 		if(file[0] == '/') // Remove any '/' in from of the file
 			file = file.substr(1);
 		try {
-			QueueManager::getInstance()->addList(ClientManager::getInstance()->getUser(file), QueueItem::FLAG_CLIENT_VIEW);
+			/// @todo check this...
+			QueueManager::getInstance()->addList(ClientManager::getInstance()->getLegacyUser(file), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception&) {
 			// ...
 		}
@@ -1569,7 +1572,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 	return PreviewAppsSize;
 }
 
-void WinUtil::RunPreviewCommand(int index, string target){
+void WinUtil::RunPreviewCommand(unsigned int index, string target){
 	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();
 
 	if(index <= lst.size()) {
@@ -1639,25 +1642,46 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-int WinUtil::getImage(const User::Ptr& u) {
-	int image = u->getcType();
-	if(u->isSet(User::OP)) {
+int WinUtil::getImage(const Identity& u) {
+	int image;
+
+	if(u.isOp()) {
 		image = 0;
-	} else if(u->isSet(User::FIREBALL)) {
-		image = 9; // 8
-	} else if(u->isSet(User::SERVER)) {
-		image = 8; // 7
+	} else if(u.getUser()->isSet(User::FIREBALL)) {
+		image = 9;
+	} else if(u.getUser()->isSet(User::SERVER)) {
+		image = 8;
+	} else if((u.getConnection() == "28.8Kbps") || (u.getConnection() == "33.6Kbps") ||
+		(u.getConnection() == "56Kbps") || (u.getConnection() == "Modem")) {
+		image = 1;
+	} else if(u.getConnection() == "ISDN") {
+		image = 2;
+	} else if((u.getConnection() == "Satellite") || (u.getConnection() == "Microwave")) {
+		image = 3;
+	} else if(u.getConnection() == "Wireless") {
+		image = 4;
+	} else if(u.getConnection() == "DSL") {
+		image = 5;
+	} else if(u.getConnection() == "Cable") {
+		image = 6;
+	} else if((u.getConnection() == "LAN(T1)") || (u.getConnection() == "LAN(T3)")) {
+		image = 7;
+	} else {
+		image = 10;
 	}
-	if(u->isSet(User::AWAY)) {
-		image+=11; // 10
+	
+	if(u.getUser()->isSet(User::AWAY)) {
+		image+=11;
 	}
-	if(u->isSet(User::DCPLUSPLUS)) {
-		image+=22; // 20
+	if(u.getUser()->isSet(User::DCPLUSPLUS)) {
+		image+=22;
 	}
-	if(u->isSet(User::PASSIVE) || (u->getMode() == "P") || (u->getMode() == "5")) {
-		image+=44; // 40
+
+	if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_PASSIVE && !u.isTcpActive()) {
+		// Users we can't connect to...
+		image+=44;
 	}
-	return image;	
+	return image;
 }
 
 int WinUtil::getFlagImage(const char* country, bool fullname) {

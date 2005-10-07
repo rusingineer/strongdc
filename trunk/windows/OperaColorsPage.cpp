@@ -162,7 +162,7 @@ void OperaColorsPage::write()
 	SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_UP, (int)crProgressTextUp);
 }
 
-LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 	if(PropertiesDlg::needUpdate)
 	{
 		SendMessage(WM_DESTROY,0,0);
@@ -208,7 +208,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	return S_OK;
 }
 
-LRESULT OperaColorsPage::onMenubarClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled) {
+LRESULT OperaColorsPage::onMenubarClicked(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if (wID == IDC_SETTINGS_ODC_MENUBAR_LEFT) {
 		CColorDialog d(crMenubarLeft, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;
@@ -243,7 +243,7 @@ LRESULT OperaColorsPage::onMenubarClicked(WORD wNotifyCode, WORD wID, HWND hWndC
 	return S_OK;
 }
 LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
-	odcStyle = IsDlgButtonChecked(IDC_ODC_STYLE);
+	odcStyle = IsDlgButtonChecked(IDC_ODC_STYLE) == 1;
 	if (wID == IDC_SETTINGS_DOWNLOAD_BAR_COLOR) {
 		CColorDialog d(crProgressDown, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;
@@ -309,12 +309,12 @@ void OperaColorsPage::BrowseForPic(int DLGITEM) {
 	}
 }
 
-LRESULT OperaColorsPage::onImageBrowse(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT OperaColorsPage::onImageBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	BrowseForPic(IDC_BACKGROUND_IMAGE);
 	return 0;
 }
 
-LRESULT OperaColorsPage::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+LRESULT OperaColorsPage::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	if (ctrlProgressDownDrawer.m_hWnd != NULL)	
 		ctrlProgressDownDrawer.Detach();

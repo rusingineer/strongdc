@@ -53,7 +53,7 @@ Download::Download() throw() : file(NULL),
 crcCalc(NULL), tth(NULL), treeValid(false), qi(NULL) { 
 }
 
-Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
+Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
 	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
@@ -78,7 +78,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
 
-	user = aUser;
+	user = aUser->getOnlineUser();
 }
 
 int64_t Download::getQueueTotal() {
@@ -422,26 +422,18 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	}
 
 	Download::Ptr download = aSource->getDownload();
-	User::Ptr user = aSource->getUser();
-	if (download != NULL) {	
-		if ( aSource->getDownload()->isSet(Download::FLAG_USER_LIST) ) {
-			Client* client = NULL;
-			if (user) {
-				client = user->getClient();
-				user->setFileListSize(aFileLength);
-				if (client != NULL) {
-					if((aFileLength < 100) && (user != (User::Ptr)NULL) && (user->getBytesShared() > 0)) {
-						user->setCheat(Util::validateMessage("Too small filelist - " + Util::formatBytes(aFileLength) + " for the specified share of " + Util::formatBytes(user->getBytesShared()), false), false);
-						user->sendRawCommand(SETTING(FILELIST_TOO_SMALL));	
-						user->setBadFilelist(true);
-					} else if ( user->isSet(User::DCPLUSPLUS) && (user->getListLength() != -1) && (user->getListLength() * 3 < aFileLength) && (user->getBytesShared() > 0) ) {
-						user->setCheat("Fake file list - ListLen = " + Util::toString(user->getListLength()) + " FileLength = " + Util::toString(aFileLength), false);
-						user->sendRawCommand(SETTING(LISTLEN_MISMATCH));
-					}
-					client->updated(user);
-				}
-			}
+	OnlineUser* user = aSource->getUser()->getOnlineUser();
+	if (download && aSource->getDownload()->isSet(Download::FLAG_USER_LIST) && user) {	
+		user->setFileListSize(aFileLength);
+		if((aFileLength < 100) && (user->getIdentity().getBytesShared() > 0)) {
+			user->setCheat(Util::validateMessage("Too small filelist - " + Util::formatBytes(aFileLength) + " for the specified share of " + Util::formatBytes(user->getIdentity().getBytesShared()), false), false);
+			user->getUser()->sendRawCommand(SETTING(FILELIST_TOO_SMALL));	
+			user->setBadFilelist(true);
+		} else if ( user->getUser()->isSet(User::DCPLUSPLUS) && (user->getListLength() != -1) && (user->getListLength() * 3 < aFileLength) && (user->getIdentity().getBytesShared() > 0) ) {
+			user->setCheat("Fake file list - ListLen = " + Util::toString(user->getListLength()) + " FileLength = " + Util::toString(aFileLength), false);
+			user->getUser()->sendRawCommand(SETTING(LISTLEN_MISMATCH));
 		}
+		user->getClient().updated(*user);
 	}
 
 	if(prepareFile(aSource, aFileLength, aSource->getDownload()->isSet(Download::FLAG_ZDOWNLOAD))) {
@@ -472,7 +464,6 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 		if(bytes < 0) {
 			dcassert(0);
 		}
-		dcdebug("ADCSND : %s, %d \n", aSource->getUser()->getNick().c_str(), bytes);
 		aSource->getDownload()->setSegmentSize(bytes);
 		aSource->setDataMode();
 	}
@@ -526,7 +517,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	dcassert(d != NULL);
 
 	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		if(!QueueManager::getInstance()->setActiveSegment(d->getQI(), d->getUserConnection()->getUser())) {
+		if(!QueueManager::getInstance()->setActiveSegment(d->getUserConnection()->getUser())) {
 			fire(DownloadManagerListener::Failed(), d, STRING(ALL_SEGMENTS_TAKEN) + STRING(BECAUSE_SEGMENT));
 			aSource->setDownload(NULL);
 			removeDownload(d);
@@ -691,7 +682,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
 				removeConnection(aSource, false, false, true);
-				aSource->getUser()->connect();
+				//aSource->getUser()->connect();
 			}
 			return;
 
@@ -944,7 +935,7 @@ bool DownloadManager::checkSfv(UserConnection* aSource, Download* d, u_int32_t c
 void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	StringMap params;
 	params["target"] = d->getTarget();
-	params["user"] = aSource->getUser()->getNick();
+	params["user"] = aSource->getUser()->getFirstNick();
 	params["userip"] = aSource->getRemoteIp();
 	params["hub"] = aSource->getUser()->getLastHubName();
 	params["hubip"] = aSource->getUser()->getLastHubAddress();
@@ -1005,10 +996,8 @@ void DownloadManager::noSlots(UserConnection* aSource) {
 	removeDownload(d);
 	fire(DownloadManagerListener::Failed(), d, STRING(NO_SLOTS_AVAILABLE));
 
-	User::Ptr user = aSource->getUser();
-
-	if( d->isSet(Download::FLAG_TESTSUR) && user->getConnection().size() > 0) {
-		dcdebug("No slots for TestSUR %s\n", user->getNick());
+	OnlineUser* user = aSource->getUser()->getOnlineUser();
+	if(user && d->isSet(Download::FLAG_TESTSUR) && user->getIdentity().getConnection().size() > 0) {
 		user->setTestSUR("MaxedOut");
 		user->setTestSURComplete(true);
 		user->updateClientType();
@@ -1016,7 +1005,7 @@ void DownloadManager::noSlots(UserConnection* aSource) {
 		QueueManager::getInstance()->putDownload(d, true);
 		removeConnection(aSource);
 		user->setCheat(Util::validateMessage("No slots for TestSUR. User is using slotlocker.", false), true);
-		User::updated(user);
+		user->getClient().updated(*user);
 		return;
 	}
 
@@ -1037,12 +1026,12 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	fire(DownloadManagerListener::Failed(), d, aError);
 
 	if ( d->isSet(Download::FLAG_USER_LIST) ) {
-		User::Ptr user = aSource->getUser();
+		OnlineUser* user = aSource->getUser()->getOnlineUser();
 		if (user) {
 			if (aError.find("File Not Available") != string::npos || aError.find("File non disponibile") != string::npos ) {
 				user->setCheat("filelist not available", false);
-				user->updated();
-				user->sendRawCommand(SETTING(FILELIST_UNAVAILABLE));
+				user->getClient().updated(*user);
+				user->getUser()->sendRawCommand(SETTING(FILELIST_UNAVAILABLE));
 				aSource->setDownload(NULL);
 				QueueManager::getInstance()->putDownload(d, true);
 				removeConnection(aSource);
@@ -1056,13 +1045,14 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 				}
 			}
 		} 
-	}
-	else if( d->isSet(Download::FLAG_TESTSUR) ) {
+	} else if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR Error: %s\n", aError);
-		User::Ptr user = aSource->getUser();
-		user->setTestSUR(aError);
-		user->setTestSURComplete(true);
-		user->updateClientType();
+		OnlineUser* user = aSource->getUser()->getOnlineUser();
+		if(user) {
+			user->setTestSUR(aError);
+			user->setTestSURComplete(true);
+			user->updateClientType();
+		}
 		aSource->setDownload(NULL);
 		QueueManager::getInstance()->putDownload(d, true);
 		removeConnection(aSource);
@@ -1138,7 +1128,7 @@ void DownloadManager::abortDownload(const string& aTarget, User::Ptr& aUser) {
 }
 
 void DownloadManager::on(UserConnectionListener::ListLength, UserConnection* aSource, const string& aListLength) {
-	User::Ptr user = aSource->getUser();
+	OnlineUser* user = aSource->getUser()->getOnlineUser();
 	int64_t listLength = Util::toInt64(aListLength);
 	if (user) {
 		user->setListLength(listLength);
@@ -1194,10 +1184,12 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR File not available\n");
-		User::Ptr user = aSource->getUser();
-		user->setTestSUR("File Not Available");
-		user->setTestSURComplete(true);
-		user->updateClientType();
+		OnlineUser* user = aSource->getUser()->getOnlineUser();
+		if(user) {
+			user->setTestSUR("File Not Available");
+			user->setTestSURComplete(true);
+			user->updateClientType();
+		}
 		aSource->setDownload(NULL);
 		QueueManager::getInstance()->putDownload(d, true);
 		removeConnection(aSource);

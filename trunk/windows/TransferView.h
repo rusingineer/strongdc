@@ -208,7 +208,7 @@ private:
 
 		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
-			status(s), pos(p), size(sz), fullSize(sz), start(st), actual(a), speed(0), timeLeft(0),
+			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
 			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
 			flagImage(0), upperUpdated(false) { update(); };
@@ -226,7 +226,6 @@ private:
 		tstring IP;
 		tstring country;		
 
-		int64_t fullSize;
 		ItemInfo* main;
 		string Target;
 		bool collapsed;
@@ -296,9 +295,8 @@ private:
 		}
 
 		ItemInfo* createMainItem() {
-	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING);
+	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING, 0, size);
 			h->Target = Target;
-			h->size = size;
 			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
 			h->numberOfSegments = 0;
 			h->updateMask |= ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE;
@@ -311,7 +309,7 @@ private:
 			if(main->subItems.size() == 1) {
 				main->user = main->subItems.front()->user;
 			}
-			main->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
+			main->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | MASK_SIZE;
 			main->update();
 		}
 	};

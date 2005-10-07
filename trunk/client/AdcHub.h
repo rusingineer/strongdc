@@ -32,12 +32,12 @@ class ClientManager;
 class AdcHub : public Client, public CommandHandler<AdcHub> {
 public:
 
-	virtual void connect(const User* user);
-	virtual void connect(const User* user, string const& token);
+	virtual void connect(const OnlineUser& user);
+	virtual void connect(const OnlineUser& user, string const& token);
 	virtual void disconnect();
 	
 	virtual void hubMessage(const string& aMessage);
-	virtual void privateMessage(const User* user, const string& aMessage);
+	virtual void privateMessage(const OnlineUser& user, const string& aMessage);
 	virtual void sendRaw(const string& aRaw) { send(aRaw); }
 	virtual void send(const string& aMessage) { socket->write(aMessage); };
 	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
@@ -46,13 +46,8 @@ public:
 	virtual void info();
 	virtual void cheatMessage(const string&) { } 
 
-	virtual size_t getUserCount() const { return 0;};
-	virtual int64_t getAvailable() const { return 0; };
-	virtual const string& getName() const { return (hub ? hub->getNick() : getHubUrl()); };
-	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
-
-	virtual User::NickMap& lockUserList() { return nickMap; };
-	virtual void unlockUserList() { };
+	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
+	//virtual int64_t getAvailable() const;
 
 	template<typename T> void handle(T, AdcCommand&) { 
 		//Speaker<AdcHubListener>::fire(t, this, c);
@@ -73,7 +68,7 @@ public:
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
-	void refreshUserList(bool unknownOnly /* = false */) { }
+	void refreshUserList(bool /*unknownOnly = false */) { }
 
 private:
 	friend class ClientManager;
@@ -90,9 +85,11 @@ private:
 	AdcHub(const AdcHub&);
 	AdcHub& operator=(const AdcHub&);
 	virtual ~AdcHub() throw();
-	User::NickMap nickMap;
-	User::CIDMap cidMap;
-	User::Ptr hub;
+
+	typedef HASH_MAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) CIDMap;
+	typedef CIDMap::iterator CIDIter;
+
+	CIDMap users;
 	StringMap lastInfoMap;
 	mutable CriticalSection cs;
 
@@ -101,6 +98,10 @@ private:
 	static const string CLIENT_PROTOCOL;
 	 
 	virtual string checkNick(const string& nick);
+
+	OnlineUser& getUser(const CID& cid);
+	OnlineUser* findUser(const CID& cid);
+	void putUser(const CID& cid);
 
 	void clearUsers();
 

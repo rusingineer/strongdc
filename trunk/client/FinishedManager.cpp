@@ -288,7 +288,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		CloseHandle(hFile);
 	
 		FinishedMP3Item *item = new FinishedMP3Item(
-				d->getTarget(), d->getUserConnection()->getUser()->getNick(),
+				d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
 				d->getUserConnection()->getUser()->getLastHubName(),
 				d->getSize(),MPEGVer+" Verze "+Util::toString(m_nMPEGLayer), m_nSampleRate, m_nBitRate, m_enChannelMode,GET_TIME());
 
@@ -302,7 +302,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 			FinishedItem *item = new FinishedItem(
-				d->getTarget(), d->getUserConnection()->getUser()->getNick(),
+				d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
 				d->getUserConnection()->getUser()->getLastHubName(),
 				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH() ? d->getTTH()->toBase32() : Util::emptyString);
 			{
@@ -314,7 +314,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		}
 		char* buf = new char[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128];
 		_snprintf(buf, STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
-			d->getUserConnection()->getUser()->getNick().c_str());
+			d->getUserConnection()->getUser()->getFirstNick().c_str());
 		buf[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127] = 0;
 		LogManager::getInstance()->message(buf, true);
 		delete[] buf;
@@ -329,7 +329,7 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 	}
 	if(!u->isSet(Upload::FLAG_TTH_LEAVES) && (!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && u->getSize() == u->getFullSize()) {
 		FinishedItem *item = new FinishedItem(
-			u->getLocalFileName(), u->getUserConnection()->getUser()->getNick(),
+			u->getLocalFileName(), u->getUserConnection()->getUser()->getFirstNick(),
 			u->getUserConnection()->getUser()->getLastHubName(),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
 		{

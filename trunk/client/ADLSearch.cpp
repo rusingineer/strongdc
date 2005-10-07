@@ -218,7 +218,8 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 				char buf[128];
 				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName());
 				buf[127] = 0;
-				user->setCheat(buf, false);
+				if(user->getOnlineUser())
+					user->getOnlineUser()->setCheat(buf, false);
 				user->sendRawCommand(is->raw);
 				setSentRaw(true);
 			}
@@ -315,7 +316,7 @@ void ADLSearchManager::PrepareDestinationDirectories(DestDirList& destDirVector,
 
 void ADLSearchManager::matchListing(DirectoryListing* aDirList) throw() {
 	StringMap params;
-	params["nick"] = aDirList->getUser()->getNick();
+	params["nick"] = aDirList->getUser()->getFirstNick();
 	setUser(aDirList->getUser());
 	setSentRaw(false);
 

@@ -43,7 +43,7 @@
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
 #include "UPnP.h"
-#include "UploadQueueFrame.h"
+#include "WaitingUsersFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
 #include "InputBox.h"
@@ -401,19 +401,19 @@ void MainFrame::stopUPnP() {
 
 HWND MainFrame::createToolbar() {
 	if(!tbarcreated) {
-	if(SETTING(TOOLBARIMAGE) == "")
-		largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	else
-		WinUtil::createImageList1(largeImages, SETTING(TOOLBARIMAGE), 20);
+		if(SETTING(TOOLBARIMAGE) == "")
+			largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+		else
+			WinUtil::createImageList1(largeImages, SETTING(TOOLBARIMAGE), 20);
 
-	if(SETTING(TOOLBARHOTIMAGE) == "")
-		largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	else
-		WinUtil::createImageList1(largeImagesHot, SETTING(TOOLBARHOTIMAGE), 20);
+		if(SETTING(TOOLBARHOTIMAGE) == "")
+			largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+		else
+			WinUtil::createImageList1(largeImagesHot, SETTING(TOOLBARHOTIMAGE), 20);
 
-	ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
-	ctrlToolbar.SetImageList(largeImages);
-	ctrlToolbar.SetHotImageList(largeImagesHot);
+		ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
+		ctrlToolbar.SetImageList(largeImages);
+		ctrlToolbar.SetHotImageList(largeImagesHot);
 		tbarcreated = true;
 	}
 
@@ -427,7 +427,7 @@ HWND MainFrame::createToolbar() {
 	for(StringList::const_iterator k = l.begin(); k != l.end(); ++k) {
 		int i = Util::toInt(*k);		
 		
-	TBBUTTON nTB;
+		TBBUTTON nTB;
 		memset2(&nTB, 0, sizeof(TBBUTTON));
 
 		if(i == -1) {
@@ -437,8 +437,9 @@ HWND MainFrame::createToolbar() {
 			nTB.idCommand = WinUtil::ToolbarButtons[i].id;
 			nTB.fsState = TBSTATE_ENABLED;
 			nTB.fsStyle = TBSTYLE_AUTOSIZE | ((WinUtil::ToolbarButtons[i].check == true)? TBSTYLE_CHECK : TBSTYLE_BUTTON);
+			nTB.iString = WinUtil::ToolbarButtons[i].tooltip;
 		}
-			ctrlToolbar.AddButtons(1, &nTB);
+		ctrlToolbar.AddButtons(1, &nTB);
 	}	
 
 	ctrlToolbar.AutoSize();
@@ -792,7 +793,7 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	{
 		int stringId = -1;
 
-	for(int i = 0; WinUtil::ToolbarButtons[i].id != 0; i++) {
+		for(int i = 0; WinUtil::ToolbarButtons[i].id != 0; i++) {
 			if(WinUtil::ToolbarButtons[i].id == idCtrl) {
 				stringId = WinUtil::ToolbarButtons[i].tooltip;
 				break;
@@ -835,7 +836,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 					, Text::toT(entry->getRawThree())
 					, Text::toT(entry->getRawFour())
 					, Text::toT(entry->getRawFive())
-					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getUserListState());
  			} else
  				missedAutoConnect = true;
  		}				
@@ -1105,23 +1106,15 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	
 	if(wID == IDC_OPEN_MY_LIST){
 		if(!ShareManager::getInstance()->getOwnListFile().empty()){
-			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getUser(SETTING(NICK)));
+			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getMe());
 		}
 		return 0;
 	}
 
 
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), types)) {
-		tstring username;
-		if(file.rfind('\\') != string::npos) {
-			username = file.substr(file.rfind('\\') + 1);
-			if(username.rfind('.') != string::npos) {
-				username.erase(username.rfind('.'));
-			}
-			if(username.length() > 4 && Util::stricmp(username.c_str() + username.length() - 4, _T(".xml")) == 0)
-				username.erase(username.length()-4);
-			DirectoryListingFrame::openWindow(file, ClientManager::getInstance()->getUser(Text::fromT(username)));
-		}
+		User::Ptr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
+		DirectoryListingFrame::openWindow(file, u);
 	}
 	return 0;
 }
@@ -1277,11 +1270,31 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		int64_t updiff = Socket::getTotalUp() - lastUp;
 		int64_t downdiff = Socket::getTotalDown() - lastDown;
 
+		TStringList* str = new TStringList();
+		str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
+		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getSharedSize())));
+		str->push_back(Text::toT("H: " + Client::getCounts()));
+		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
+		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
+		str->push_back(Text::toT("U: " + Util::formatBytes(Socket::getTotalUp())));
+		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloadCount()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
+		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploadCount()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
+		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
+		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
+		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);
+		lastUpdate = aTick;
+		lastUp = Socket::getTotalUp();
+		lastDown = Socket::getTotalDown();
+		if(currentPic != SETTING(BACKGROUND_IMAGE)) {
+			currentPic = SETTING(BACKGROUND_IMAGE);
+			m_PictureWindow.Load(Text::toT(currentPic).c_str());
+		}
+
 		if(BOOLSETTING(THROTTLE_ENABLE)) {
 			// Limitery sem a tam, vsude kam se podivam :o)
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 4) );
 				}
 				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
@@ -1289,8 +1302,8 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			}
 
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 5) ) {
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 5) );
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 4) );
 				}
 				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
@@ -1317,31 +1330,6 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 0);
 			SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 0);
 		}		
-
-		TStringList* str = new TStringList();
-		str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
-		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getSharedSize())));
-		str->push_back(Text::toT("H: " + Client::getCounts()));
-		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
-		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
-		str->push_back(Text::toT("U: " + Util::formatBytes(Socket::getTotalUp())));
-		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloadCount()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
-		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploadCount()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
-		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
-		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
-		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);
-		lastUpdate = aTick;
-		lastUp = Socket::getTotalUp();
-		lastDown = Socket::getTotalDown();
-		if(currentPic != SETTING(BACKGROUND_IMAGE)) {
-			currentPic = SETTING(BACKGROUND_IMAGE);
-			m_PictureWindow.Load(Text::toT(currentPic).c_str());
-		}
-}
-
-void MainFrame::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
-	if(BOOLSETTING(EMPTY_WORKING_SET))
-		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
 void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
@@ -1377,16 +1365,16 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 	}	
 }
 
-LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	bHandled = FALSE;
-	WinUtil::isAppActive = wParam;	//wParam == TRUE if window is activated, FALSE if deactivated
+	WinUtil::isAppActive = (wParam == 1);	//wParam == TRUE if window is activated, FALSE if deactivated
 	if(wParam == 1) {
 		setNormalTrayIcon();
 	}
 	return 0;
 }
 
-LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
+LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_FORWARD)
 		ctrlTab.SwitchTo();
 	if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_BACKWARD)
@@ -1441,19 +1429,20 @@ int MainFrame::FileListQueue::run() {
 			fileLists.pop_front();
 		}
 		if(Util::fileExists(Text::fromT(i->file))) {
-			if(i->user) {
-				Client* c = i->user->getClient();
-				if(c && c->getOp()) {
+			OnlineUser* u = i->user->getOnlineUser();
+			if(u) {
+				Client* c = &u->getClient();
+				if(c && c->isOp()) {
 					HubFrame* hubFrame = HubFrame::getHub(c);
 					if(hubFrame) {
 						DirectoryListing* dl = new DirectoryListing(i->user);
-						try {
+						//try {
 							dl->loadFile(Text::fromT(i->file));
 							ADLSearchManager::getInstance()->matchListing(dl);
-							hubFrame->checkCheating(i->user, dl);
-							i->user->updated();
-						} catch(...) {
-						}
+							hubFrame->checkCheating(*u, dl);
+							c->updated(*u);
+						//} catch(...) {
+						//}
 						delete dl;
 					}
 				}

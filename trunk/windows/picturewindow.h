@@ -92,7 +92,7 @@ protected:
 		pPicture->Render( hDC, rPicture.left ,rPicture.top, rPicture.right - rPicture.left, rPicture.bottom - rPicture.top, 0, nHeight, nWidth, -nHeight, NULL );
 	};
 
-	LRESULT OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	LRESULT OnEraseBkGnd(UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 	{
 		if ( IsHandlerMessage( uMsg ) )
 		{
@@ -122,7 +122,7 @@ protected:
 		return FALSE;
 	};
 
-	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	LRESULT OnPaint(UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 	{
 		if ( IsHandlerMessage( uMsg ) )
 		{

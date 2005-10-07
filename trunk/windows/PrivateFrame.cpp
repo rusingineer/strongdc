@@ -112,7 +112,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
 		bool found = false;
 		for(i = frames.begin(); i != frames.end(); ++i) {
 			if( (!i->first->isOnline()) && 
-				(i->first->getNick() == aUser->getNick()) &&
+				(i->first->getFirstNick() == aUser->getFirstNick()) &&
 				(i->first->getLastHubAddress() == aUser->getLastHubAddress()) ) {
 				
 				found = true;
@@ -123,7 +123,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
 				p->addLine(aMessage);
 
 				if(BOOLSETTING(POPUP_PM)) {
-					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFullNick()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
 				}
 
 				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -142,12 +142,12 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
 			p->addLine(aMessage);
 			if(Util::getAway()) {
 				// if no_awaymsg_to_bots is set, and aUser has an empty connection type (i.e. probably is a bot), then don't send
-				if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && aUser->getConnection().empty()))
+				if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && aUser->isSet(User::BOT)))
 				p->sendMessage(Text::toT(Util::getAwayMessage()));
 			}
 
 			if(BOOLSETTING(POPUP_NEW_PM)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFullNick()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -160,7 +160,7 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
 		}
 	} else {
 		if(BOOLSETTING(POPUP_PM)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFullNick()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -281,7 +281,6 @@ LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& 
 	default:
 		bHandled = FALSE;
 	}
-
 	return 0;
 }
 
@@ -332,12 +331,12 @@ void PrivateFrame::onEnter()
 				onGetList(0,0,0,bTmp);
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
-				params["user"] = user->getNick();
-				params["hub"] = user->getClientName();
+				params["user"] = user->getFirstNick();
+				/** @todo params["hub"] = user->getClientName();
 				params["mynick"] = user->getClientNick(); 
 				params["mycid"] = user->getClientCID().toBase32(); 
 				params["cid"] = user->getCID().toBase32(); 
-				params["hubaddr"] = user->getClientAddressPort();
+				params["hubaddr"] = user->getClientAddressPort();*/
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
@@ -362,6 +361,18 @@ void PrivateFrame::onEnter()
 		if(resetText)
 			ctrlMessage.SetWindowText(_T(""));
 	} 
+}
+
+void PrivateFrame::sendMessage(const tstring& msg) {
+	if(user && user->isOnline()) {
+		string myNick = Util::emptyString;
+		ClientManager::getInstance()->privateMessage(user, Text::fromT(msg), myNick);
+		string s = "<" + myNick + "> " + Text::fromT(msg);
+		// local echo formatting
+		s = Util::validateMessage(s, false);
+		s = Util::validateMessage(s, true, true);
+		addLine(Text::toT(s));
+	}
 }
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -416,17 +427,18 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
 		params["message"] = Text::fromT(sTmp);
+		/** @todo 
 		params["user"] = user->getNick();
 		params["hub"] = user->getClientName();
 		params["hubaddr"] = user->getClientAddressPort();
 		params["mynick"] = user->getClientNick(); 
-		params["mycid"] = user->getClientCID().toBase32(); 
+		params["mycid"] = user->getClientCID().toBase32(); */
 		params["cid"] = user->getCID().toBase32(); 
 		LOG(LogManager::PM, params);
 	}
 
-	if(user->isOnline()) {
-		sMyNick = user->getClient()->getNick().c_str();
+	if(user->getOnlineUser()) {
+		sMyNick = user->getOnlineUser()->getClient().getMyNick().c_str();
 	} else {
 		sMyNick = SETTING(NICK).c_str();
 	}
@@ -468,12 +480,12 @@ LRESULT PrivateFrame::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 
 LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, Text::toT(user->getClientAddressPort()), user->isClientOp());
+	prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, user->getClient());
 	if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 		tabMenu.AppendMenu(MF_SEPARATOR);
 	}
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
-	tabMenu.InsertSeparatorFirst(user->getNick());	
+	tabMenu.InsertSeparatorFirst(user->getFirstNick());	
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 	tabMenu.RemoveFirstItem();
 	tabMenu.DeleteMenu(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION);
@@ -486,14 +498,10 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
-	ucParams["mynick"] = user->getClientNick();
-	ucParams["mycid"] = user->getClientCID().toBase32();
+	StringMap tmp = ucParams;
+	user->getOnlineUser()->getIdentity().getParams(tmp, "");
+	user->getOnlineUser()->getClient().sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 
-	if(user->isOnline()) {
-		user->getParams(ucParams);
-		user->clientEscapeParams(ucParams);
-		user->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams));
-	}
 	return;
 };
 
@@ -585,31 +593,31 @@ void PrivateFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 void PrivateFrame::updateTitle() {
 	if(user->isOnline()) {
 		unsetIconState();
-		SetWindowText(Text::toT(user->getFullNick()).c_str());
+		SetWindowText(Text::toT(user->getFirstNick() + " - " + user->getLastHubName()).c_str());
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), WinUtil::m_ChatTextServer);
+				addLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
 			} else {
-				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"));
+				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"));
 			}
 		}
 		isoffline = false;
 	} else {
 		setIconState();
-        SetWindowText(Text::toT(user->getFullNick()).c_str());
+        SetWindowText(Text::toT(user->getFirstNick() + " - " + user->getLastHubName()).c_str());
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"), WinUtil::m_ChatTextServer);
+			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
 		} else {
-			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFullNick()) + _T("] ***"));
+			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"));
 		}
 		isoffline = true;
 	}
 	setDirty();
 }
 
-LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 
 	POINT p;
@@ -626,7 +634,7 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 	pSelectedLine = _T("");
 
-	bool bHitURL = ctrlClient.HitURL(p);
+	bool bHitURL = ctrlClient.HitURL();
 	if (!bHitURL)
 		pSelectedURL = _T("");
 
@@ -670,12 +678,12 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	delete buf;
 	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 	if (start == string::npos) { start = 0; }
-	tstring nick = Text::toT(user->getNick());
+	tstring nick = Text::toT(user->getFirstNick());
 	if (x.substr(start, (nick.length() + 2) ) == (_T("<") + nick + _T(">"))) {
 		if(!user->isOnline()) {
 			return S_OK;
 		}
-		prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, Text::toT(user->getClientAddressPort()), user->isClientOp());
+		prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, user->getClient());
 		if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			tabMenu.AppendMenu(MF_SEPARATOR);
 		}
@@ -709,7 +717,7 @@ LRESULT PrivateFrame::onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	return S_OK;
 }
 
-LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
+LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	ENLINK* pEL = (ENLINK*)pnmh;
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
@@ -736,8 +744,8 @@ LRESULT PrivateFrame::onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) {
 
 void PrivateFrame::readLog() {
 	StringMap params;	
-	params["user"] = user->getNick();	
-	params["hub"] = user->getClientName();
+	params["user"] = user->getFirstNick();	
+	/** @todo params["hub"] = user->getClientName();
 	params["mynick"] = user->getClientNick();	
 	params["mycid"] = user->getClientCID().toBase32();	
 	params["cid"] = user->getCID().toBase32();	
@@ -772,18 +780,18 @@ void PrivateFrame::readLog() {
 
 			f.close();
 		}
-	} catch(FileException & /*e*/){
-	}
+	} catch(FileException&){
+	}*/
 }
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
-	params["user"] = user->getNick();
-	params["hub"] = user->getClientName();
+	params["user"] = user->getFirstNick();
+/* @todo	params["hub"] = user->getClientName();
 	params["mynick"] = user->getClientNick(); 
 	params["mycid"] = user->getClientCID().toBase32(); 
 	params["cid"] = user->getCID().toBase32(); 
-	params["hubaddr"] = user->getClientAddressPort();
+	params["hubaddr"] = user->getClientAddressPort();*/
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 	if(Util::fileExists(file)) {
 		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);

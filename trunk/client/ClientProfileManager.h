@@ -217,7 +217,7 @@ public:
 		}
 	}
 
-	bool moveClientProfile(int id, int pos, int position) {
+	bool moveClientProfile(int id, int pos) {
 		dcassert(pos == -1 || pos == 1);
 		Lock l(ccs);
 		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {

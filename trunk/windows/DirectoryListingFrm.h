@@ -168,7 +168,7 @@ public:
 
 	void setWindowTitle() {
 		if(error.empty())
-			SetWindowText(Text::toT(dl->getUser()->getFullNick()).c_str());
+			SetWindowText(Text::toT(dl->getUser()->getFirstNick()).c_str());
 		else
 			SetWindowText(error.c_str());		
 	}

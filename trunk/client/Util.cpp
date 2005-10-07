@@ -46,7 +46,7 @@
 FastCriticalSection FastAllocBase::cs;
 #endif
 
-int64_t Util::mUptimeSeconds = 0;
+long Util::mUptimeSeconds = 0;
 string Util::emptyString;
 wstring Util::emptyStringW;
 tstring Util::emptyStringT;
@@ -70,7 +70,7 @@ int arraywin[48] = {65, 67, 68, 69, 69, 73, 76, 78, 79, 82, 83, 84, 85, 85, 89, 
 string Util::disableCzChars(string message) {
 	string s = "";
 
-	for(int j = 0; j < message.length(); j++) {
+	for(unsigned int j = 0; j < message.length(); j++) {
 		int zn = (int)message[j];
 		int zzz = -1;
 		for(int l = 0; l < 96; l+=2) {
@@ -93,7 +93,7 @@ string Util::disableCzChars(string message) {
 
 
 bool nlfound = false;
-BOOL CALLBACK GetWOkna(HWND handle, LPARAM lparam) {
+BOOL CALLBACK GetWOkna(HWND handle, LPARAM) {
 	TCHAR buf[256];
 	buf[0] = NULL;
 	if (!handle) {
@@ -134,12 +134,14 @@ int hexstr2int(char *hexstr) {
 bool Util::isNLrunning() {
 	//nlfound = false;
 	//EnumWindows(GetWOkna,NULL);
-	return GetModuleHandle(L"nl_lsp.dll");
+	return GetModuleHandle(L"nl_lsp.dll") > 0;
 }
 
 int Util::getNetLimiterLimit() {
 	int NetLimiter_UploadLimit = -1;
 	int NetLimiter_UploadOn = 0;
+
+	if(!isNLrunning()) return -1;
 
 	try {
 		TCHAR AppData[256];
@@ -148,7 +150,7 @@ int Util::getNetLimiterLimit() {
 		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
 
 		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName()+"/";
+		string cesta = Util::getAppName() + "/";
 		char buf[BUF_SIZE];
 		u_int32_t len;
 		char* w2 = strdup(cesta.c_str());
@@ -156,8 +158,8 @@ int Util::getNetLimiterLimit() {
 		for(;;) {
 			size_t n = BUF_SIZE;
 			len = f.read(buf, n);
-			string txt = "";
-			for(int i = 0; i<len; ++i) {
+			string txt = Util::emptyString;
+			for(u_int32_t i = 0; i < len; ++i) {
 				if (buf[i]== 0) 
 				txt += "/"; else
 				txt += buf[i];

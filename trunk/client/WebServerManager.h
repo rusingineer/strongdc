@@ -53,7 +53,7 @@ public:
 
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {
+	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
 		if(BOOLSETTING(WEBSERVER)){
 			Restart();
 		} else {

@@ -115,7 +115,7 @@ public:
 		DEFAULT_REFLECTION_HANDLER()
 	END_MSG_MAP()
 
-	LRESULT OnClick(int idCtrl, LPNMHDR pnmh, BOOL& bHandled)
+	LRESULT OnClick(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& bHandled)
 	{
 		DWORD dwPos = GetMessagePos();
 	    POINT ptPos;
@@ -157,7 +157,7 @@ public:
 	virtual bool IsDrive(const tstring& sPath);
 	virtual bool IsFolder(const tstring& sPath);
 	bool GetChecked(HTREEITEM hItem) const;
-    bool SetChecked(HTREEITEM hItem, bool fCheck);
+    BOOL SetChecked(HTREEITEM hItem, bool fCheck);
 	void SetStaticCtrl(CStatic *staticCtrl);
 	bool IsDirty();
 
@@ -187,7 +187,7 @@ protected:
 	virtual bool IsMediaValid(const tstring& sDrive);
 	virtual bool EnumNetwork(HTREEITEM hParent);
 	virtual int DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator);
-	virtual bool GetSerialNumber(const tstring& sDrive, DWORD& dwSerialNumber);
+	virtual BOOL GetSerialNumber(const tstring& sDrive, DWORD& dwSerialNumber);
 	void SetHasSharedChildren(HTREEITEM hItem, bool bHasSharedChildren);
 	void SetHasSharedChildren(HTREEITEM hItem);
 	bool GetHasSharedChildren(HTREEITEM hItem);

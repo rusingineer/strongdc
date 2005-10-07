@@ -270,7 +270,7 @@ ok:
 
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
 			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS) || !aSource->isSet(UserConnection::FLAG_NMDC);
-			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->getUser()->isSet(User::OP) || getFreeExtraSlots() > 0;
+			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
 			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
 			} else {
@@ -411,8 +411,8 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
 		!u->isSet(Upload::FLAG_TTH_LEAVES) && (u->getSize() == u->getFullSize())) {
 		StringMap params;
-		params["source"] = u->getLocalFileName();
-		params["user"] = aSource->getUser()->getNick();
+		params["source"] = u->getFileName();
+		params["user"] = aSource->getUser()->getFirstNick();
 		params["userip"] = aSource->getRemoteIp();
 		params["hub"] = aSource->getUser()->getLastHubName();
 		params["hubip"] = aSource->getUser()->getLastHubAddress();
@@ -438,7 +438,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
 	string path = Util::getFilePath(file);
 	string filename = Util::getFileName(file);
-	int64_t itime = GET_TIME();
+	time_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
 	if(j != UploadQueueItems.end()) {
@@ -491,7 +491,7 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 				aUser = UploadQueueItems.begin()->first;
 		}
 		if((aUser != (User::Ptr)NULL) && aUser->isOnline())
-			aUser->connect();
+			ClientManager::getInstance()->connect(aUser);
 
 		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 	} 
@@ -557,7 +557,6 @@ void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcComman
 	}
 }
 
-/** @todo fixme */
 void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
 	if(c.getParameters().size() < 2) {
 		aSource->sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Missing parameters");
@@ -604,12 +603,12 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 			if ( m_boLastTickHighSpeed ) {
 				u_int32_t iHighSpeedTicks = 0;
 				if ( iActTicks >= m_iHighSpeedStartTick ) 
-				iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
-			else
-				iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
+					iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
+				else
+					iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
 
-			if ( iHighSpeedTicks > 60000 ) {
-				m_boFireball = true;
+				if ( iHighSpeedTicks > 60000 ) {
+					m_boFireball = true;
 					if(boFireballSent == false) {
 						ClientManager::getInstance()->infoUpdated(true);
 						boFireballSent = true;
@@ -639,9 +638,9 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 
 void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
 	Lock l(cs);
-	if( (!aUser->isOnline()) && 
-		(aUser->isSet(User::QUIT_HUB)) && 
-		(BOOLSETTING(AUTO_KICK)) ){
+
+	/// @todo Don't kick when /me disconnects
+	if( BOOLSETTING(AUTO_KICK) ) {
 
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			Upload* u = *i;
@@ -651,10 +650,12 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
 					reserveSlot(u->getUser());
-				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFullNick(), true);
+				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFirstNick(), true);
 			}
 		}
 	}
+
+	//Remove references to them.
 	if(!aUser->isOnline()) {
 		clearUserFiles(aUser);
 	}

@@ -569,8 +569,8 @@ int HashManager::Hasher::run() {
 	string fname;
 	int64_t speed = 0;
 	bool last = false;
-	int procenta = 0;
-	int64_t pocetHashu = 0;
+	unsigned int procenta = 0;
+	unsigned int pocetHashu = 0;
 
 	for(;;) {
 		s.wait();
@@ -587,14 +587,14 @@ int HashManager::Hasher::run() {
 			if(!w.empty()) {
 				file = fname = w.begin()->first;
 				w.erase(w.begin());
-				int k = w.size();
-				if(k>pocetHashu) pocetHashu = k;
+				unsigned int k = w.size();
+				if(k > pocetHashu) pocetHashu = k;
 				if(k != 0) {
-				procenta = ((pocetHashu-k)*100) / pocetHashu;
-				string rychlost = "";
-				if(speed > 0)				
-					rychlost = ", "+Util::formatBytes(speed) + "/s ";
-				LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",true);
+					procenta = ((pocetHashu-k)*100) / pocetHashu;
+					string rychlost = Util::emptyString;
+					if(speed > 0)				
+						rychlost = ", "+Util::formatBytes(speed) + "/s ";
+					LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",true);
 				}
 				last = w.empty();
 			} else {

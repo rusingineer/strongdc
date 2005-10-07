@@ -68,9 +68,9 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ClientManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	User::List ul = FavoriteManager::getInstance()->getFavoriteUsers();
+	FavoriteUser::List ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	ctrlUsers.SetRedraw(FALSE);
-	for(User::Iter i = ul.begin(); i != ul.end(); ++i) {
+	for(FavoriteUser::Iter i = ul.begin(); i != ul.end(); ++i) {
 		addUser(*i);
 	}
 	ctrlUsers.SetRedraw(TRUE);
@@ -94,7 +94,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		
 		string x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getNick();
+			x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick();
 		} else {
 			x = "";
 		}
@@ -148,11 +148,11 @@ LRESULT UsersFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		dcassert(i != -1);
 	LineDlg dlg;
 		dlg.description = TSTRING(DESCRIPTION);
-		dlg.title = Text::toT(ui->user->getNick());
-		dlg.line = Text::toT(ui->user->getUserDescription());
+		dlg.title = ui->columns[COLUMN_NICK];
+		dlg.line = ui->columns[COLUMN_DESCRIPTION];
 		if(dlg.DoModal(m_hWnd)) {
-			ui->user->setUserDescription(Text::fromT(dlg.line));
-			ui->update();
+			/// @todo ui->user->setUserDescription(Text::fromT(dlg.line));
+			/// @todo ui->update();
 			ctrlUsers.updateItem(i);
 				FavoriteManager::getInstance()->save();
 			}	
@@ -163,41 +163,40 @@ LRESULT UsersFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 LRESULT UsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	NMITEMACTIVATE* l = (NMITEMACTIVATE*)pnmh;
 	if(!startup && l->iItem != -1 && ((l->uNewState & LVIS_STATEIMAGEMASK) != (l->uOldState & LVIS_STATEIMAGEMASK))) {
-		ctrlUsers.getItemData(l->iItem)->user->setAutoExtraSlot(ctrlUsers.GetCheckState(l->iItem) != FALSE);
+		/// @todo ctrlUsers.getItemData(l->iItem)->user->setFavoriteGrantSlot(ctrlUsers.GetCheckState(l->iItem) != FALSE);
 		FavoriteManager::getInstance()->save();
  	}
   	return 0;
 }
 
-void UsersFrame::addUser(const User::Ptr& aUser) {
-	int i = ctrlUsers.insertItem(new UserInfo(aUser), 2);
-	bool b = aUser->getAutoExtraSlot();
+void UsersFrame::addUser(const FavoriteUser& aUser) {
+	int i = ctrlUsers.insertItem(new UserInfo(aUser), 0);
+	bool b = aUser.isSet(FavoriteUser::FLAG_GRANTSLOT);
 	ctrlUsers.SetCheckState(i, b);
 	updateUser(aUser);
 }
 
-void UsersFrame::updateUser(const User::Ptr& aUser) {
-	int i = -1;
-	while((i = ctrlUsers.findItem(Text::toT(aUser->getNick()), i)) != -1) {
+void UsersFrame::updateUser(const FavoriteUser& aUser) {
+	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
-		if(ui->user == aUser) {
-			ui->update();
-			if(aUser->isOnline()) {
-				if((aUser->getStatus() == 2) || (aUser->getStatus() == 3) || (aUser->getStatus() == 6) || (aUser->getStatus() == 7) || (aUser->getStatus() == 10) || (aUser->getStatus() == 11))
+		if(ui->user == aUser.getUser()) {
+			ui->update(aUser);
+			if(aUser.getUser()->isOnline()) {
+				if(aUser.getUser()->isSet(User::AWAY))
 					ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 1, 0, 0, NULL);
-				else ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 0, 0, 0, NULL);
-			}
-			else ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 2, 0, 0, NULL);
+				else
+				ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 0, 0, 0, NULL);
+			} else
+				ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 2, 0, 0, NULL);
 			ctrlUsers.updateItem(i);
 		}
 	}
 }
 
-void UsersFrame::removeUser(const User::Ptr& aUser) {
-	int i = -1;
-	while((i = ctrlUsers.findItem(Text::toT(aUser->getNick()), i)) != -1) {
+void UsersFrame::removeUser(const FavoriteUser& aUser) {
+	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
-		if(ui->user == aUser) {
+		if(ui->user == aUser.getUser()) {
 			ctrlUsers.DeleteItem(i);
 			delete ui;
 			return;
@@ -207,8 +206,8 @@ void UsersFrame::removeUser(const User::Ptr& aUser) {
 
 LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-	FavoriteManager::getInstance()->removeListener(this);
-	ClientManager::getInstance()->removeListener(this);
+		FavoriteManager::getInstance()->removeListener(this);
+		ClientManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FAVUSERS, false);
@@ -227,7 +226,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	}
 }
 
-LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+LRESULT UsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 
@@ -264,7 +263,7 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		UserInfo* ui = ctrlUsers.getItemData(i);
 		dcassert(i != -1);
 		string file = Util::emptyString;
-		string xNick = ui->user->getNick();
+		string xNick = Text::fromT(ui->columns[COLUMN_NICK]);
 		if (xNick != "") {
 			file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + xNick + ".log");
 		}

@@ -180,8 +180,8 @@ public:
 	virtual void on(DownloadFinished, const string&) throw() { }
 	virtual void on(FavoriteAdded, const FavoriteHubEntry*) throw() { }
 	virtual void on(FavoriteRemoved, const FavoriteHubEntry*) throw() { }
-	virtual void on(UserAdded, const User::Ptr&) throw() { }
-	virtual void on(UserRemoved, const User::Ptr&) throw() { }
+	virtual void on(UserAdded, const FavoriteUser&) throw() { }
+	virtual void on(UserRemoved, const FavoriteUser&) throw() { }
 	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
 	virtual void on(RecentUpdated, const RecentHubEntry*) throw() { }
@@ -203,7 +203,7 @@ public:
 	};
 	StringList getHubLists();
 	bool setHubList(int /*aHubList*/);
-	int getSelectedHubList() { return lastServer; };
+	unsigned int getSelectedHubList() { return lastServer; };
 	void refresh();
 	HubTypes getHubListType() { return listType; };
 	HubEntry::List getPublicHubs() {
@@ -213,21 +213,20 @@ public:
 	bool isDownloading() { return running; };
 
 // Favorite Users
-	User::List& getFavoriteUsers() { return users; };
-	
+	FavoriteUser::List& getFavoriteUsers() { return users; };
 	PreviewApplication::List& getPreviewApps() { return previewApplications; };
-	
-	void addFavoriteUser(User::Ptr& aUser);
+
+	void addFavoriteUser(User::Ptr& aUser, const string& aHubUrl = Util::emptyString);
 	bool isFavoriteUser(const User::Ptr& aUser) const {
 		return find(users.begin(), users.end(), aUser) != users.end();
 	}
 	void removeFavoriteUser(User::Ptr& aUser);
 
 	bool hasSlot(const User::Ptr& aUser) const { 
-		User::List::const_iterator i = find(users.begin(), users.end(), aUser);
+		FavoriteUser::List::const_iterator i = find(users.begin(), users.end(), aUser);
 		if(i == users.end())
 			return false;
-		return aUser->getAutoExtraSlot();
+		return i->isSet(FavoriteUser::FLAG_GRANTSLOT);
 	}
 
 // Favorite Hubs
@@ -275,14 +274,14 @@ public:
 		return pa;
 	}
 
-	PreviewApplication* removePreviewApp(int index){
-		if(previewApplications.size()>index)
+	PreviewApplication* removePreviewApp(unsigned int index){
+		if(previewApplications.size() > index)
 			previewApplications.erase(previewApplications.begin() + index);	
 		return NULL;
 	}
 
-	PreviewApplication* getPreviewApp(int index, PreviewApplication &pa){
-		if(previewApplications.size()>index)
+	PreviewApplication* getPreviewApp(unsigned int index, PreviewApplication &pa){
+		if(previewApplications.size() > index)
 			pa = *previewApplications[index];	
 		return NULL;
 	}
@@ -300,6 +299,7 @@ public:
 // User Commands
 	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub);
 	bool getUserCommand(int cid, UserCommand& uc);
+	int findUserCommand(const string& aName);
 	bool moveUserCommand(int cid, int pos);
 	void updateUserCommand(const UserCommand& uc);
 	void removeUserCommand(int cid);
@@ -321,7 +321,7 @@ private:
 	UserCommand::List userCommands;
 	int lastId;
 
-	User::List users;
+	FavoriteUser::List users;
 
 	RWLock<> rwcs;
 	CriticalSection cs;
@@ -332,7 +332,7 @@ private:
 	string publicListServer;
 	bool running;
 	HttpConnection* c;
-	int lastServer;
+	unsigned int lastServer;
 	HubTypes listType;
 	string downloadBuf;
 	

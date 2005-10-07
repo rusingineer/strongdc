@@ -27,14 +27,20 @@ class ClientManagerListener {
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
 	
-	typedef X<0> UserUpdated;
-	typedef X<1> IncomingSearch;
-	typedef X<2> ClientConnected;
-	typedef X<3> ClientUpdated;
-	typedef X<4> ClientDisconnected;
+	typedef X<0> UserConnected;
+	typedef X<1> UserUpdated;
+	typedef X<2> UserDisconnected;
+	typedef X<3> IncomingSearch;
+	typedef X<4> ClientConnected;
+	typedef X<5> ClientUpdated;
+	typedef X<6> ClientDisconnected;
 
+	/** User online in at least one hub */
+	virtual void on(UserConnected, const User::Ptr&) throw() { }
 	virtual void on(UserUpdated, const User::Ptr&) throw() { }
-	virtual void on(IncomingSearch, const string&, const string&) throw() { }
+	/** User offline in all hubs */
+	virtual void on(UserDisconnected, const User::Ptr&) throw() { }
+	virtual void on(IncomingSearch, const string&) throw() { }
 	virtual void on(ClientConnected, Client*) throw() { }
 	virtual void on(ClientUpdated, Client*) throw() { }
 	virtual void on(ClientDisconnected, Client*) throw() { }

@@ -406,7 +406,7 @@ private:
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
 			} else {
-				const string& tmp = sr->getUser()->getConnection();
+				const string& tmp = sr->getUser()->getOnlineUser() ? sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString;
 				if( (tmp == "28.8Kbps") ||
 					(tmp == "33.6Kbps") ||
 					(tmp == "56Kbps") ||
@@ -447,8 +447,8 @@ private:
 				path = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 				type = TSTRING(DIRECTORY);
 			}
-			nick = Text::toT(sr->getUser()->getNick());
-			connection = Text::toT(sr->getUser()->getConnection());
+			nick = Text::toT(sr->getUser()->getFirstNick());
+			connection = Text::toT(sr->getUser()->getOnlineUser() ? sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString);
 			hubName = Text::toT(sr->getHubName());
 			slots = Text::toT(sr->getSlotString());
 			ip = Text::toT(sr->getIP());
@@ -463,19 +463,14 @@ private:
 			if(sr->getTTH() != NULL)
 				setTTH(Text::toT(sr->getTTH()->toBase32()));
 
-			if(user->getLastDownloadSpeed()<1) {
-				int status = user->getStatus();
-				string Omezeni = user->getUpload();
-				if (!Omezeni.empty()) {
-					uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)+"/s");
-				} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) {
-					uploadSpeed = Text::toT(">=100 kB/s");
-				} else {
-					uploadSpeed = Text::toT("N/A");
-				}
-			} else
-				uploadSpeed = Text::toT(Util::formatBytes(user->getLastDownloadSpeed())+"/s");
-
+			string us = user->getOnlineUser() ? user->getOnlineUser()->getIdentity().get("US") : Util::emptyString;
+			if (!us.empty()) {
+				uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(us)) + "/s");
+			} else if(user->isSet(User::FIREBALL)) {
+				uploadSpeed = Text::toT(">=100 kB/s");
+			} else {
+				uploadSpeed = Text::toT("N/A");
+			}
 		}
 
 		SearchInfo* createMainItem() { return this; }
@@ -487,6 +482,8 @@ private:
 				_sntprintf(buf, 255, _T("%d %s"), total + 1, TSTRING(USERS));
 				buf[255] = NULL;
 				main->totalUsers = buf;
+				if(total == 1)
+					main->size = size;
 			} else {
 				main->totalUsers = Util::emptyStringT;
 			}
@@ -654,7 +651,7 @@ private:
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
 	void speak(Speakers s, Client* aClient) {
-		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getIpPort()), Text::toT(aClient->getName()), aClient->getOp());
+		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getIpPort()), Text::toT(aClient->getHubName()), aClient->getMyIdentity().isOp());
 		PostMessage(WM_SPEAKER, WPARAM(s), LPARAM(hubInfo)); 
 	};
 };

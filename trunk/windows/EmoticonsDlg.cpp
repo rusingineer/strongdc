@@ -19,7 +19,7 @@ EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
 
 EmoticonsDlg::~EmoticonsDlg() { };
 
-LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/) {
+LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/) {
 	TCHAR buf[256];
 	::GetWindowText(hWndCtl, buf, 255);
 	result = Text::fromT(buf);
@@ -48,7 +48,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
 
-		int pocet = 0;
+		unsigned int pocet = 0;
 		string lastEmotionPath = "";
 		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
 		{
@@ -57,9 +57,9 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		// x, y jen pro for cyklus
-		int i = (int)sqrt((double)Emoticons.size());
-		int nXfor = i;
-		int nYfor = i;
+		unsigned int i = (unsigned int)sqrt((double)Emoticons.size());
+		unsigned int nXfor = i;
+		unsigned int nYfor = i;
 		if ((i*i) == (int)Emoticons.size()) {
 			nXfor, nYfor = i;
 		}
@@ -70,9 +70,9 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		// x, y pro korektni vkladani ikonek za sebou
-		i = (int)sqrt((double)pocet);
-		int nX = i;
-		int nY = i;
+		i = (unsigned int)sqrt((double)pocet);
+		unsigned int nX = i;
+		unsigned int nY = i;
 		if ((i*i) == pocet) {
 			nX, nY = i;
 		}
@@ -102,8 +102,8 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		pos.top = 0;
 		pos.bottom = bW + EMOTICONS_ICONMARGIN;
 
-		for (int iY = 0; iY < nYfor; iY++)
-		for (int iX = 0; iX < nXfor; iX++)
+		for (unsigned int iY = 0; iY < nYfor; iY++)
+		for (unsigned int iX = 0; iX < nXfor; iX++)
 		{
 			if ((iY*nXfor)+iX+1 > Emoticons.size()) break;
 
@@ -123,7 +123,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 				pos.left = pos.left + bW + EMOTICONS_ICONMARGIN;
 				pos.right = pos.left + bW + EMOTICONS_ICONMARGIN;
-				if (pos.left >= (nX*(bW+EMOTICONS_ICONMARGIN))) {
+				if (pos.left >= (LONG)(nX*(bW+EMOTICONS_ICONMARGIN))) {
 					pos.left = 0;
 					pos.right = bW + EMOTICONS_ICONMARGIN;
 					pos.top = pos.top + bW + EMOTICONS_ICONMARGIN;

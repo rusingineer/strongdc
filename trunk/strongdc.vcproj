@@ -554,9 +554,6 @@
 				RelativePath=".\windows\UploadPage.cpp">
 			</File>
 			<File
-				RelativePath=".\windows\UploadQueueFrame.cpp">
-			</File>
-			<File
 				RelativePath=".\windows\upnp.cpp">
 			</File>
 			<File
@@ -567,6 +564,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\UsersFrame.cpp">
+			</File>
+			<File
+				RelativePath=".\windows\WaitingUsersFrame.cpp">
 			</File>
 			<File
 				RelativePath=".\windows\WindowsPage.cpp">
@@ -819,9 +819,6 @@
 				RelativePath=".\windows\UploadPage.h">
 			</File>
 			<File
-				RelativePath=".\windows\UploadQueueFrame.h">
-			</File>
-			<File
 				RelativePath=".\windows\upnp.h">
 			</File>
 			<File
@@ -832,6 +829,9 @@
 			</File>
 			<File
 				RelativePath=".\windows\UsersFrame.h">
+			</File>
+			<File
+				RelativePath=".\windows\WaitingUsersFrame.h">
 			</File>
 			<File
 				RelativePath=".\windows\Winamp.h">

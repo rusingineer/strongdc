@@ -30,6 +30,14 @@
 
 friend struct CompareItems;
 
+	struct UpdateInfo {
+		UpdateInfo() { }
+		UpdateInfo(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
+
+		User::Ptr user;
+		Identity identity;
+	};
+
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
 public:
 	enum {
@@ -53,19 +61,23 @@ public:
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
-	UserInfo(const User::Ptr& u);
-
+	UserInfo(const UpdateInfo& u) : UserInfoBase(u.user), op(false), hidden(false) { 
+		update(u.identity, -1); 
+	};
 	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
 	int imageIndex() {
-		return WinUtil::getImage(user);
+		return WinUtil::getImage(identity);
 	}
 
-	bool update();
+	bool update(const Identity& identity, int sortCol);
 
 	tstring columns[COLUMN_LAST];
+	GETSET(Identity, identity, Identity);
+	GETSET(int64_t, bytes, Bytes);
 	GETSET(bool, op, Op);
+	GETSET(bool, hidden, Hidden);
 };
 
 #endif //USERINFO_H

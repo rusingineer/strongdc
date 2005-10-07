@@ -46,7 +46,7 @@ void WebServerManager::Start(){
 	started = true;
 
 	socket.addListener(this);
-	socket.waitForConnections(SETTING(WEBSERVER_PORT));
+	socket.waitForConnections((short)SETTING(WEBSERVER_PORT));
 	fire(WebServerListener::Setup());
 
 	page404 = new WebPageInfo(PAGE_404,"");
@@ -431,7 +431,7 @@ string WebServerManager::getULQueue(){
 	ret += "		</tr>";
 	for(UploadQueueItem::UserMapIter ii = UploadManager::getInstance()->UploadQueueItems.begin(); ii != UploadManager::getInstance()->UploadQueueItems.end(); ++ii) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
-			ret+="<tr><td>" + (*i)->User->getFullNick() + "</td>";
+			ret+="<tr><td>" + (*i)->User->getFirstNick() + "</td>";
 			ret+="<td>" + (*i)->FileName + "</td></tr>";
 		}
 	}
@@ -545,7 +545,7 @@ void WebServerManager::onSearchResult(SearchResult* aResult) {
 			results += "<input type='hidden' name='tth' value='" + TTH + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";
-			results += "<td>" + aResult->getUser()->getNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + TTH + "</td></form></tr>";
+			results += "<td>" + aResult->getUser()->getFirstNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + TTH + "</td></form></tr>";
 			row++;
 		}
 	}

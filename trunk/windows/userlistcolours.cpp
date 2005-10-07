@@ -202,7 +202,7 @@ void UserListColours::BrowseForPic(int DLGITEM) {
 	}
 }
 
-LRESULT UserListColours::onImageBrowse(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT UserListColours::onImageBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	BrowseForPic(IDC_USERLIST_IMAGE);
 	return 0;
 }

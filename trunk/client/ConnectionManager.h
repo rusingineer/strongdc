@@ -31,6 +31,7 @@
 #include "CriticalSection.h"
 #include "Singleton.h"
 #include "Util.h"
+#include "ClientManager.h"
 
 #include "ConnectionManagerListener.h"
 
@@ -70,8 +71,12 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 	public Singleton<ConnectionManager>
 {
 public:
-	void nmdcConnect(const string& aServer, short aPort, const string& aNick);
-	void adcConnect(const string& aServer, short aPort, const string& aToken);
+	void nmdcExpect(const string& aNick, const string& aMyNick, const string& aHubUrl) {
+		expectedConnections.insert(make_pair(aNick, make_pair(aMyNick, aHubUrl)));
+	}
+
+	void nmdcConnect(const string& aServer, short aPort, const string& aMyNick, const string& hubUrl);
+	void adcConnect(const OnlineUser& aUser, short aPort, const string& aToken);
 	void getDownloadConnection(const User::Ptr& aUser);
 	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool ntd = false, bool reconn = false);
 	void putUploadConnection(UserConnection* aSource, bool ntd);
@@ -115,6 +120,10 @@ private:
 	ServerSocket socket;
 	StringList features;
 	StringList adcFeatures;
+
+	/** Nick -> myNick, hubUrl for expected NMDC incoming connections */
+	typedef map<string, pair<string, string> > ExpectMap;
+	ExpectMap expectedConnections;
 
 	u_int32_t floodCounter;
 

@@ -201,8 +201,9 @@ public:
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
-	void addClientLine(const tstring& aLine, bool inChat = true);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
+	void addLine(const User::Ptr& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
+	void addClientLine(const tstring& aLine, bool inChat = true);
 	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
 	void onTab();
@@ -214,11 +215,11 @@ public:
 		, const tstring& rawThree = Util::emptyStringT
 		, const tstring& rawFour = Util::emptyStringT
 		, const tstring& rawFive = Util::emptyStringT
-		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool stealth = true, bool userliststate = true,
+		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool userliststate = true,
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void closeDisconnected();
 
-	BOOL checkCheating(User::Ptr &user, DirectoryListing* dl);
+	BOOL checkCheating(OnlineUser& user, DirectoryListing* dl);
 
 	static HubFrame* getHub(Client* aClient) {
 		HubFrame* hubFrame = NULL;
@@ -254,7 +255,7 @@ public:
 		return 0;
 	}
 
-	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		HDC hDC = (HDC)wParam;
 				::SetBkColor(hDC, WinUtil::bgColor);
 				::SetTextColor(hDC, WinUtil::textColor);
@@ -270,8 +271,8 @@ public:
 	}
 
 	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		client->disconnect();
 		clearUserList();
-		client->addListener(this);
 		client->connect();
 		return 0;
 	}
@@ -291,7 +292,7 @@ public:
 				ignoreList.insert(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.insert(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick()));
+					ignoreList.insert(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getFirstNick()));
 				}
 			}
 		}
@@ -305,7 +306,7 @@ public:
 				ignoreList.erase(sSelectedUser);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getNick()));
+					ignoreList.erase(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getFirstNick()));
 				}
 			}
 		}
@@ -344,9 +345,9 @@ private:
 		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
 	};
 
-	class PMInfo {
+	class MessageInfo {
 	public:
-		PMInfo(const User::Ptr& u, const string& m) : user(u), msg(Text::toT(m)) { };
+		MessageInfo(const User::Ptr& u, const string& m) : user(u), msg(Text::toT(m)) { };
 		User::Ptr user;
 		tstring msg;
 	};
@@ -357,7 +358,7 @@ private:
 		, const tstring& aRawThree
 		, const tstring& aRawFour
 		, const tstring& aRawFive
-		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool stealth, bool userliststate) : 
+		, int chatusersplit, bool userliststate) : 
 		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false), curCommandPosition(0), currentNeedlePos(-1),
 		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), menuItems(0),
@@ -447,7 +448,7 @@ private:
 	TStringMap tabParams;
 	bool tabMenuShown;
 	
-	typedef vector<pair<User::Ptr, Speakers> > UpdateList;
+	typedef vector<pair<UpdateInfo, Speakers> > UpdateList;
 	typedef UpdateList::iterator UpdateIter;
 	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
 	typedef UserMap::iterator UserMapIter;
@@ -468,7 +469,7 @@ private:
 	
 	int findUser(const User::Ptr& aUser);
 
-	bool updateUser(const User::Ptr& u);
+	bool updateUser(const UpdateInfo& u);
 	void removeUser(const User::Ptr& aUser);
 
 	void addAsFavorite();
@@ -501,27 +502,27 @@ private:
 	virtual void on(Connecting, Client*) throw();
 	virtual void on(Connected, Client*) throw();
 	virtual void on(BadPassword, Client*) throw();
-	virtual void on(UserUpdated, Client*, const User::Ptr&) throw();
-	virtual void on(UsersUpdated, Client*, const User::List&) throw();
-	virtual void on(UserRemoved, Client*, const User::Ptr&) throw();
+	virtual void on(UserUpdated, Client*, const OnlineUser&) throw();
+	virtual void on(UsersUpdated, Client*, const OnlineUser::List&) throw();
+	virtual void on(UserRemoved, Client*, const OnlineUser&) throw();
 	virtual void on(Redirect, Client*, const string&) throw();
 	virtual void on(Failed, Client*, const string&) throw();
 	virtual void on(GetPassword, Client*) throw();
 	virtual void on(HubUpdated, Client*) throw();
-	virtual void on(Message, Client*, const char*) throw();
-	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw();
+	virtual void on(Message, Client*, OnlineUser*, const char*) throw();
+	virtual void on(PrivateMessage, Client*, const OnlineUser&, const string&) throw();
 	virtual void on(NickTaken, Client*) throw();
 	virtual void on(SearchFlood, Client*, const string&) throw();
 	virtual void on(CheatMessage, Client*, const string&) throw();	
 
 	void speak(Speakers s) { PostMessage(WM_SPEAKER, (WPARAM)s); };
 	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new tstring(Text::toT(msg))); };
-	void speak(Speakers s, const User::Ptr& u) { 
+	void speak(Speakers s, const OnlineUser& u) { 
 		Lock l(updateCS);
-		updateList.push_back(make_pair(u, s));
+		updateList.push_back(make_pair(UpdateInfo(u), s));
 		updateUsers = true;
 	};
-	void speak(Speakers s, const User::Ptr& u, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new PMInfo(u, line)); };
+	void speak(Speakers s, const User::Ptr& u, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(u, line)); };
 
 };
 

@@ -38,6 +38,45 @@
 #undef ff
 #endif
 
+User::Ptr DirectoryListing::getUserFromFilename(const string& fileName) {
+	// General file list name format: [username].[CID].[xml|xml.bz2|DcLst]
+
+	string name = Util::getFileName(fileName);
+
+	// Strip off any extensions
+	if(Util::stricmp(name.c_str() + name.length() - 6, ".DcLst") == 0) {
+		name.erase(name.length() - 6);
+	}
+
+	if(Util::stricmp(name.c_str() + name.length() - 4, ".bz2") == 0) {
+		name.erase(name.length() - 4);
+	}
+
+	if(Util::stricmp(name.c_str() + name.length() - 4, ".xml") == 0) {
+		name.erase(name.length() - 4);
+	}
+
+	// Find CID
+	string::size_type i = name.rfind('.');
+	if(i == string::npos) {
+		return NULL;
+	}
+
+	size_t n = name.length() - (i + 1);
+	// CID's always 13 chars long...
+	if(n != 13)
+		return NULL;
+
+	CID cid(name.substr(i + 1));
+	if(cid.isZero())
+		return NULL;
+
+	User::Ptr p = ClientManager::getInstance()->getUser(cid);
+	if(p->getFirstNick().empty())
+		p->setFirstNick(name.substr(0, i));
+	return p;
+}
+
 void DirectoryListing::loadFile(const string& name) {
 	string txt;
 
@@ -60,28 +99,12 @@ void DirectoryListing::loadFile(const string& name) {
 		const size_t BUF_SIZE = 64*1024;
 		char buf[BUF_SIZE];
 		size_t len;
-
-		char last = 0; 
-		char last2 = 0; 
-		int count = 0;
-
 		for(;;) {
 			size_t n = BUF_SIZE;
 			len = f.read(buf, n);
 			txt.append(buf, len);
 			if(len < BUF_SIZE)
 				break;
-
-			last = buf[len-1]; 
-			if (last == last2) { 
-				count++; 
-			} else { 
-				count = 0; 
-			} 
-			if (count > 250) { 
-				break; 
-			} 
-			last2 = (buf, len);
 		}
 	} else if(Util::stricmp(ext, ".xml") == 0) {
 		int64_t sz = ::File::getSize(name);
@@ -249,17 +272,20 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 		}
 		cur->setComplete(true);
 		const string& generator = getAttrib(attribs, sGenerator, 2);
-		if(uziv->isOnline()) {
-			PME reg("^<StrgDC\\+\\+ V:1.00 RC([89]){1}");
+		
+		OnlineUser* ou = uziv->getOnlineUser();
+		if(ou) {
+			PME reg("^StrgDC\\+\\+ V:1.00 RC([89]){1}");
 			if((generator == "DC++ 0.403")) {
-				if(reg.match(uziv->getTag())) {
-					uziv->setCheat("rmDC++ in StrongDC++ "+uziv->getVersion()+" emulation mode" , true);
-					uziv->setClientType("rmDC++ 0.403");
-					uziv->setBadClient(true);
-					uziv->setBadFilelist(true);
+				string version = ou->getIdentity().get("VE");
+				if(reg.match(version)) {
+					ou->setCheat("rmDC++ in StrongDC" + version + " emulation mode" , true);
+					ou->setClientType("rmDC++ 0.403");
+					ou->setBadClient(true);
+					ou->setBadFilelist(true);
 				}
 			}
-			uziv->setGenerator(generator);
+			ou->setGenerator(generator);
 		}
 		inListing = true;
 
