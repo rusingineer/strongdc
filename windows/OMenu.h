@@ -58,7 +58,7 @@ public:
 	}
 	inline void RemoveFirstItem(int amount) {
 		for (int i = 0; i < amount; ++i) {
-			CheckOwnerDrawn(0, TRUE);
+			//CheckOwnerDrawn(0, TRUE);
 			RemoveMenu(0, MF_BYPOSITION);
 		}
 	}

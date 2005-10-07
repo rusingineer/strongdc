@@ -332,7 +332,7 @@ public:
 		setShutDown(!getShutDown());
 		return S_OK;
 	}
-	LRESULT OnCreateToolbar(WORD /*wNotifyCode*/,WPARAM wParam, LPARAM, BOOL& /*bHandled*/) {
+	LRESULT OnCreateToolbar(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		createToolbar();
 		return S_OK;
 	}
@@ -480,7 +480,6 @@ private:
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute type, u_int32_t aTick) throw();
 	
 	// HttpConnectionListener
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();

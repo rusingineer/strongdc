@@ -80,6 +80,16 @@ void FavoriteManager::updateUserCommand(const UserCommand& uc) {
 		save();
 }
 
+int FavoriteManager::findUserCommand(const string& aName) {
+	Lock l(cs);
+	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
+		if(i->getName() == aName) {
+			return i->getId();
+		}
+	}
+	return -1;
+}
+
 void FavoriteManager::removeUserCommand(int cid) {
 	bool nosave = true;
 	Lock l(cs);
@@ -115,20 +125,19 @@ void FavoriteManager::removeHubUserCommands(int ctx, const string& hub) {
 	}
 }
 
-void FavoriteManager::addFavoriteUser(User::Ptr& aUser) { 
+void FavoriteManager::addFavoriteUser(User::Ptr& aUser, const string& aHubUrl) { 
 	if(find(users.begin(), users.end(), aUser) == users.end()) {
-		users.push_back(aUser);
-		aUser->setFavoriteUser(new FavoriteUser());
-		fire(FavoriteManagerListener::UserAdded(), aUser);
+		aUser->setFlag(User::SAVE_NICK);
+		users.push_back(FavoriteUser(aUser, aHubUrl.empty() ? aUser->getLastHubAddress() : aHubUrl));
+		fire(FavoriteManagerListener::UserAdded(), users.back());
 		save();
 	}
 }
 
 void FavoriteManager::removeFavoriteUser(User::Ptr& aUser) {
-	User::Iter i = find(users.begin(), users.end(), aUser);
+	FavoriteUser::Iter i = find(users.begin(), users.end(), aUser);
 	if(i != users.end()) {
-		aUser->setFavoriteUser(NULL);
-		fire(FavoriteManagerListener::UserRemoved(), aUser);
+		fire(FavoriteManagerListener::UserRemoved(), *i);
 		users.erase(i);
 		save();
 	}
@@ -368,14 +377,16 @@ void FavoriteManager::save() {
 		xml.stepOut();
 		xml.addTag("Users");
 		xml.stepIn();
-		for(User::Iter j = users.begin(); j != users.end(); ++j) {
+		for(FavoriteUser::Iter j = users.begin(); j != users.end(); ++j) {
+			j->getUser()->setFlag(User::SAVE_NICK);
 			xml.addTag("User");
-			xml.addChildAttrib("Nick", (*j)->getNick());
-			xml.addChildAttrib("LastHubAddress", (*j)->getLastHubAddress());
-			xml.addChildAttrib("LastHubName", (*j)->getLastHubName());
-			xml.addChildAttrib("LastSeen", (*j)->getFavoriteLastSeen());
-			xml.addChildAttrib("GrantSlot", (*j)->getAutoExtraSlot());
-			xml.addChildAttrib("UserDescription", (*j)->getUserDescription());
+			xml.addChildAttrib("CID", j->getLastIdentity().getUser()->getCID().toBase32());
+			xml.addChildAttrib("Nick", j->getLastIdentity().getNick());
+			xml.addChildAttrib("LastHubName", j->getLastIdentity().getUser()->getLastHubName());
+			xml.addChildAttrib("LastHubAddress", j->getLastIdentity().getHubUrl());
+			xml.addChildAttrib("LastSeen", j->getLastSeen());
+			xml.addChildAttrib("GrantSlot", j->isSet(FavoriteUser::FLAG_GRANTSLOT));
+			xml.addChildAttrib("UserDescription", j->getDescription());
 		}
 		xml.stepOut();
 		xml.addTag("UserCommands");
@@ -555,15 +566,27 @@ void FavoriteManager::load(SimpleXML* aXml) {
 	if(aXml->findChild("Users")) {
 		aXml->stepIn();
 		while(aXml->findChild("User")) {
-			User::Ptr u = ClientManager::getInstance()->getUser(aXml->getChildAttrib("Nick"), aXml->getChildAttrib("LastHubAddress"));
-			if(!u->isOnline()) {
-				u->setLastHubAddress(aXml->getChildAttrib("LastHubAddress"));
-				u->setLastHubName(aXml->getChildAttrib("LastHubName"));
+			User::Ptr u;
+			const string& cid = aXml->getChildAttrib("CID");
+			const string& nick = aXml->getChildAttrib("Nick");
+			const string& hubUrl = aXml->getChildAttrib("LastHubAddress");
+
+			if(cid.empty()) {
+				if(nick.empty() || hubUrl.empty())
+					continue;
+				u = ClientManager::getInstance()->getUser(nick, hubUrl);
+			} else {
+				u = ClientManager::getInstance()->getUser(CID(cid));
+				u->setFirstNick(nick);
 			}
-			addFavoriteUser(u);
-			u->setAutoExtraSlot(aXml->getBoolChildAttrib("GrantSlot"));
-			u->setFavoriteLastSeen((u_int32_t)aXml->getIntChildAttrib("LastSeen"));
-			u->setUserDescription(aXml->getChildAttrib("UserDescription"));
+			if(!u->isOnline()) {
+				u->setLastSavedHubAddress(aXml->getChildAttrib("LastHubAddress"));
+				u->setLastSavedHubName(aXml->getChildAttrib("LastHubName"));
+			}
+			addFavoriteUser(u, hubUrl);
+			/// u->setFavoriteGrantSlot(aXml->getBoolChildAttrib("GrantSlot"));
+			/// @todo u->setFavoriteLastSeen((u_int32_t)aXml->getIntChildAttrib("LastSeen"));
+			/// @todo u->setUserDescription(aXml->getChildAttrib("UserDescription"));
 		}
 		aXml->stepOut();
 	}

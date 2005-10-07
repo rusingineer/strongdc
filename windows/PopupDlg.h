@@ -82,7 +82,7 @@ public:
 		return 1;
 	}
 
-	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		HDC hDC = (HDC)wParam;
 				::SetBkColor(hDC, ::GetSysColor(COLOR_INFOBK));
 				::SetTextColor(hDC, ::GetSysColor(COLOR_INFOTEXT));

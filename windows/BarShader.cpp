@@ -12,7 +12,7 @@
 
 #define HALF(X) (((X) + 1) / 2)
 
-CBarShader::CBarShader(int64_t dwHeight, int64_t dwWidth, COLORREF crColor /*= 0*/, int64_t dwFileSize /*= 1*/)
+CBarShader::CBarShader(int dwHeight, int dwWidth, COLORREF crColor /*= 0*/, int64_t dwFileSize /*= 1*/)
 {
 	m_iWidth = dwWidth;
 	m_iHeight = dwHeight;
@@ -40,7 +40,7 @@ void CBarShader::BuildModifiers()
 
 	static const double dDepths[5] = { 5.5, 4.0, 3.0, 2.50, 2.25 };		//aqua bar - smoother gradient jumps...
 	double	depth = dDepths[((m_used3dlevel > 5) ? (256 - m_used3dlevel) : m_used3dlevel) - 1];
-	int64_t  dwCount = HALF(static_cast<int64_t>(m_iHeight));
+	unsigned int dwCount = HALF(static_cast<unsigned int>(m_iHeight));
 	double piOverDepth = PI/depth;
 	double base = PI / 2 - piOverDepth;
 	double increment = piOverDepth / (dwCount - 1);
@@ -137,7 +137,7 @@ void CBarShader::Fill(COLORREF crColor)
 void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 {
 	m_used3dlevel = P3DDepth;
-	COLORREF crLastColor = ~0, crPrevBkColor = dc.GetBkColor();
+	COLORREF crLastColor = (COLORREF)~0, crPrevBkColor = dc.GetBkColor();
 	POSITION pos = m_Spans.GetHeadPosition();
 	RECT rectSpan;
 	rectSpan.top = iTop;
@@ -151,7 +151,7 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 	iLeft += m_iWidth;
 	while ((pos != NULL) && (rectSpan.right < iLeft)) {
 		int64_t uSpan = m_Spans.GetKeyAt(pos) - start;
-		int64_t iPixels = static_cast<int64_t>(uSpan * m_dblPixelsPerByte + 0.5);
+		LONG iPixels = static_cast<LONG>(uSpan * m_dblPixelsPerByte + 0.5);
 
 		if(iPixels > 0) {
 			rectSpan.left = rectSpan.right;

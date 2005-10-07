@@ -101,11 +101,11 @@ LRESULT UpdateDlg::OnDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 
-void UpdateDlg::on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
-	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(CONNECTION_ERROR) + "!"));
+void UpdateDlg::on(HttpConnectionListener::Failed, HttpConnection* /*conn*/, const string& aLine) throw() {
+	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(CONNECTION_ERROR) + ": " + aLine + "!"));
 }
 
-void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
+void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, string const& /*aLine*/) throw() {
 			PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(DATA_RETRIEVED) + "!"));
 			string sText;
 			try {
@@ -152,7 +152,7 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* conn, strin
 			}
 }
 
-void UpdateDlg::on(HttpConnectionListener::Data, HttpConnection* conn, const u_int8_t* buf, size_t len) throw() {
+void UpdateDlg::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 			if (xmldata.empty())
 				PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(RETRIEVING_DATA) + "..."));
 			xmldata += string((const char*)buf, len);

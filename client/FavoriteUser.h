@@ -24,21 +24,28 @@
 #endif // _MSC_VER > 1000
 
 #include "FastAlloc.h"
+#include "User.h"
 
-class FavoriteUser : public Flags, public FastAlloc<FavoriteUser>
-{
+class FavoriteUser : public Flags {
 public:
-	typedef FavoriteUser* Ptr;
+	typedef vector<FavoriteUser> List;
+	typedef List::iterator Iter;
+    
+	FavoriteUser(const User::Ptr& ptr, const string& aHubUrl) : user(ptr), lastIdentity(ptr, aHubUrl), lastSeen(0) { }
+
+	bool operator==(const User::Ptr& rhs) const { return user == rhs; }
+	operator User::Ptr() { return user; }
 	
 	enum Flags {
 		FLAG_GRANTSLOT = 1 << 0
 	};
 
-	GETSET(string, description, Description);
-	GETSET(u_int32_t, lastSeen, LastSeen);
+	User::Ptr& getUser() { return user; }
 
-	FavoriteUser() : lastSeen(0) {}
-	~FavoriteUser() {}
+	GETSET(User::Ptr, user, User);
+	GETSET(Identity, lastIdentity, LastIdentity);
+	GETSET(u_int32_t, lastSeen, LastSeen);
+	GETSET(string, description, Description);
 };
 
 #endif // !defined(FAVORITE_USER_H)

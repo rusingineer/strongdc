@@ -536,7 +536,7 @@ void FolderTree::DisplayDrives(HTREEITEM hParent, bool bUseSetRedraw /* = true *
 		if (dwDrives & dwMask)
 		{
 			tstring sDrive;
-			sDrive = ('A' + i);
+			sDrive = (wchar_t)('A' + i);
 			sDrive += _T(":\\");
 
 			//check if this drive is one of the types to hide
@@ -1255,12 +1255,12 @@ int FolderTree::DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator)
 	return nCount;
 }
 
-bool FolderTree::GetSerialNumber(const tstring &sDrive, DWORD &dwSerialNumber)
+BOOL FolderTree::GetSerialNumber(const tstring &sDrive, DWORD &dwSerialNumber)
 {
 	return GetVolumeInformation(sDrive.c_str(), NULL, 0, &dwSerialNumber, NULL, NULL, NULL, 0);
 }
 
-LRESULT FolderTree::OnSelChanged(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
+LRESULT FolderTree::OnSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL &bHandled)
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pnmh;
 
@@ -1303,7 +1303,7 @@ LRESULT FolderTree::OnSelChanged(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
 	return 0;	
 }
 
-LRESULT FolderTree::OnItemExpanding(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
+LRESULT FolderTree::OnItemExpanding(int /*idCtrl*/, LPNMHDR pnmh, BOOL &bHandled)
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pnmh;
 	if (pNMTreeView->action == TVE_EXPAND)
@@ -1343,7 +1343,7 @@ LRESULT FolderTree::OnItemExpanding(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
 	return 0;
 }
 
-LRESULT FolderTree::OnDeleteItem(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
+LRESULT FolderTree::OnDeleteItem(int /*idCtrl*/, LPNMHDR pnmh, BOOL &bHandled)
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pnmh;
 	if (pNMTreeView->itemOld.hItem != TVI_ROOT)
@@ -1367,10 +1367,10 @@ LRESULT FolderTree::OnDeleteItem(int idCtrl, LPNMHDR pnmh, BOOL &bHandled)
 bool FolderTree::GetChecked(HTREEITEM hItem) const
 {
 	UINT u = GetItemState(hItem, TVIS_STATEIMAGEMASK);
-	return ((u >> 12) - 1);
+	return ((u >> 12) - 1) > 0;
 }
 
-bool FolderTree::SetChecked(HTREEITEM hItem, bool fCheck)
+BOOL FolderTree::SetChecked(HTREEITEM hItem, bool fCheck)
 {
 	TVITEM item;
 	item.mask = TVIF_HANDLE | TVIF_STATE;
@@ -1383,7 +1383,7 @@ bool FolderTree::SetChecked(HTREEITEM hItem, bool fCheck)
 	*/
 	item.state = INDEXTOSTATEIMAGEMASK((fCheck ? 2 : 1));
 
-	return (bool)SetItem(&item);
+	return SetItem(&item);
 }
 
 LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
@@ -1433,7 +1433,7 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 	return 0;
 }
 
-LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL &bHandled)
+LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL& /*bHandled*/)
 {
 	FolderTreeItemInfo* pItem = (FolderTreeItemInfo*) GetItemData(hItem);
 

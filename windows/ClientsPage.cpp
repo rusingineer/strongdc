@@ -140,7 +140,7 @@ LRESULT ClientsPage::onMoveClientUp(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != 0) {
 		int n = ctrlProfiles.GetItemData(i);
-		ClientProfileManager::getInstance()->moveClientProfile(n, -1, i);
+		ClientProfileManager::getInstance()->moveClientProfile(n, -1);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
 		ClientProfile cp;
@@ -157,7 +157,7 @@ LRESULT ClientsPage::onMoveClientDown(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != (ctrlProfiles.GetItemCount()-1) ) {
 		int n = ctrlProfiles.GetItemData(i);
-		ClientProfileManager::getInstance()->moveClientProfile(n, 1, i);
+		ClientProfileManager::getInstance()->moveClientProfile(n, 1);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
 		ClientProfile cp;

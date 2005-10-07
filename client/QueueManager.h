@@ -87,16 +87,16 @@ public:
 	void addPfs(const User::Ptr aUser, const string& aDir) throw();
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
-		string fileName = "TestSUR" + Util::validateFileName(aUser->getNick());
+		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick());
 		string file = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(file, -1, NULL, aUser, fileName, true, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
-		aUser->setHasTestSURinQueue(true);
+// @todo		aUser->setHasTestSURinQueue(true);
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
 		try {
-			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aUser->getNick());
-			aUser->setHasTestSURinQueue(false);
+			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aUser->getFirstNick());
+// @todo			aUser->setHasTestSURinQueue(false);
 		} catch(...) {
 			// exception
 		}
@@ -138,15 +138,15 @@ public:
 	void loadQueue() throw();
 	void saveQueue() throw();
 
-	bool handlePartialSearch(const string& aSearchString, int64_t aSize, const TTHValue& tth, PartsInfo& _outPartsInfo);
+	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
 	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	bool setActiveSegment(QueueItem* qi, const User::Ptr& aUser);
+	bool setActiveSegment(const User::Ptr& aUser);
 	bool dropSource(Download* d, bool autoDrop);
 
-	inline u_int16_t getRunningCount(const User::Ptr& aUser, const string& aTarget) {
-		u_int16_t value;
+	inline unsigned int getRunningCount(const User::Ptr& aUser, const string& aTarget) {
+		unsigned int value;
 		{
 			Lock l(cs);
 			QueueItem* qi = fileQueue.find(aTarget);
@@ -310,7 +310,7 @@ private:
 	virtual void on(SearchManagerListener::SR, SearchResult*) throw();
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw();
 };
 
 #endif // !defined(QUEUE_MANAGER_H)

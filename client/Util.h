@@ -245,7 +245,7 @@ public:
 #endif // _WIN32
 	}
 
-	static int64_t getUptime() {
+	static long getUptime() {
 		return mUptimeSeconds;
 	}
 
@@ -596,7 +596,7 @@ private:
 
 	static CountryList countries;
 	
-	static int64_t mUptimeSeconds;
+	static long mUptimeSeconds;
 };
 	
 /** Case insensitive hash function for strings */

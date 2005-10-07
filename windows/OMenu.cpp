@@ -90,6 +90,7 @@ void OMenu::CheckOwnerDrawn(UINT uItem, BOOL byPosition) {
 	GetMenuItemInfo(uItem, byPosition, &mii);
 	if ((mii.fType &= MFT_OWNERDRAW) && (mii.dwItemData != NULL)) {
 		OMenuItem* mi = (OMenuItem*)mii.dwItemData;
+		mii.dwItemData = NULL;
 		OMenuItem::Iter i = find(items.begin(), items.end(), mi);
 		if (i != items.end()) {
 			items.erase(i);

@@ -203,7 +203,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(j->getUser()->isOnline())
 					online++;
 
-				tmp += Text::toT(j->getUser()->getFullNick());
+				tmp += Text::toT(j->getUser()->getFirstNick());
 			}
 			display->columns[COLUMN_USERS] = tmp.empty() ? TSTRING(NO_USERS) : tmp;
 		}
@@ -284,7 +284,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
-					tmp += Text::toT(j->getUser()->getNick());
+						tmp += Text::toT(j->getUser()->getFirstNick());
 					tmp += _T(" (");
 					if(j->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						tmp += TSTRING(FILE_NOT_AVAILABLE);
@@ -864,7 +864,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					if(!i->getUser()) {
 						continue;
 					}
-					tstring nick = Text::toT(i->getUser()->getNick());
+					tstring nick = Text::toT(i->getUser()->getFirstNick());
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -888,7 +888,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					if(!i->getUser()) {
 						continue;
 					}
-					tstring nick = Text::toT(i->getUser()->getNick());
+					tstring nick = Text::toT(i->getUser()->getFirstNick());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_PASSIVE)) {
@@ -984,11 +984,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			multiMenu.RemoveFirstItem();
 
 			return TRUE; 
-
-
-
-
-	
 		}
 	} else if (reinterpret_cast<HWND>(wParam) == ctrlDirs && ctrlDirs.GetSelectedItem() != NULL) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -1141,7 +1136,7 @@ LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL&
 	return 0;
 }
 
-LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
+LRESULT QueueFrame::onAutoPriority(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 
 	if(usingDirMenu) {
 		setAutoPriority(ctrlDirs.GetSelectedItem(), true);
@@ -1158,7 +1153,7 @@ LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	int i = -1;
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-		if(ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
+		if(ii->qi && ii->qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
 			ii->qi->setMaxSegments(max(2, wID - 109));
 		ii->update();
 		ctrlQueue.updateItem(ii);
@@ -1620,7 +1615,7 @@ LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 	return 0;
 }
 
-LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);

@@ -159,11 +159,26 @@ wstring& Text::acpToWide(const string& str, wstring& tmp) throw() {
 }
 
 string& Text::wideToUtf8(const wstring& str, string& tgt) throw() {
+#ifdef _WIN32
+	int size = 0;
+	tgt.resize( str.length() * 2 );
+
+	while( ( size = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &tgt[0], tgt.length(), NULL, NULL) ) == 0 ){
+		if( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
+			tgt.resize( tgt.size() * 2 );
+		else
+			break;
+	}
+	
+	tgt.resize( size );
+	return tgt;
+#else
 	string::size_type n = str.length();
 	for(string::size_type i = 0; i < n; ++i) {
 		wcToUtf8(str[i], tgt);
 	}
 	return tgt;
+#endif
 }
 
 string& Text::wideToAcp(const wstring& str, string& tmp) throw() {
@@ -216,6 +231,20 @@ string& Text::utf8ToAcp(const string& str, string& tmp) throw() {
 }
 
 wstring& Text::utf8ToWide(const string& str, wstring& tgt) throw() {
+#ifdef _WIN32
+	int size = 0;
+	tgt.resize( str.length()+1 );
+	while( ( size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &tgt[0], (int)tgt.length()) ) == 0 ){
+		if( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+			tgt.resize( tgt.size()*2 );
+		} else {
+			break;
+		}
+
+	}
+	tgt.resize( size );
+	return tgt;
+#else
 	tgt.reserve(str.length());
 	string::size_type n = str.length();
 	for(string::size_type i = 0; i < n; ) {
@@ -230,6 +259,7 @@ wstring& Text::utf8ToWide(const string& str, wstring& tgt) throw() {
 		}
 	}
 	return tgt;
+#endif
 }
 
 wstring& Text::toLower(const wstring& str, wstring& tmp) throw() {

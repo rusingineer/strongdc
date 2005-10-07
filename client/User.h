@@ -25,258 +25,239 @@
 
 #include "Util.h"
 #include "Pointer.h"
-#include "CriticalSection.h"
 #include "CID.h"
 #include "FastAlloc.h"
-#include "SettingsManager.h"
 #include "ResourceManager.h"
 
+class OnlineUser;
 class Client;
-class FavoriteUser;
+class NmdcHub;
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
 {
 public:
 	enum Bits {
-		OP_BIT,
 		ONLINE_BIT,
 		DCPLUSPLUS_BIT,
 		PASSIVE_BIT,
+		NMDC_BIT,
 		BOT_BIT,
 		HUB_BIT,
 		TTH_GET_BIT,
-		QUIT_HUB_BIT,
-		HIDDEN_BIT,
+		SAVE_NICK_BIT,
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
-
 	};
 
 	/** Each flag is set if it's true in at least one hub */
 	enum UserFlags {
-		OP = 1<<OP_BIT,
 		ONLINE = 1<<ONLINE_BIT,
 		DCPLUSPLUS = 1<<DCPLUSPLUS_BIT,
 		PASSIVE = 1<<PASSIVE_BIT,
+		NMDC = 1<<NMDC_BIT,
 		BOT = 1<<BOT_BIT,
 		HUB = 1<<HUB_BIT,
 		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
-		QUIT_HUB = 1<<QUIT_HUB_BIT,
-		HIDDEN = 1<<HIDDEN_BIT,
-		AWAY = 1<<AWAY_BIT,
-		SERVER = 1<<SERVER_BIT,
-		FIREBALL = 1<<FIREBALL_BIT,
+		SAVE_NICK = 1<<SAVE_NICK_BIT,	//< Save cid->nick association
+		AWAY = 1 << AWAY_BIT,
+		SERVER = 1 << SERVER_BIT,
+		FIREBALL = 1 << FIREBALL_BIT
 	};
 
 	typedef Pointer<User> Ptr;
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
-	typedef HASH_MAP_X(string,Ptr,noCaseStringHash,noCaseStringEq,noCaseStringLess) NickMap;
-	typedef NickMap::iterator NickIter;
-	typedef HASH_MAP_X(CID, Ptr, CID::Hash, equal_to<CID>, less<CID>) CIDMap;
-	typedef CIDMap::iterator CIDIter;
 
 	struct HashFunction {
 		static const size_t bucket_size = 4;
 		static const size_t min_buckets = 8;
-		size_t operator()(const Ptr& x) const { return ((size_t)(&(*x)))/sizeof(User); };
-		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); };
+		size_t operator()(const Ptr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
+		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const CID& aCID) : cid(aCID), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL), lastDownloadSpeed(0) { unCacheClientInfo(); }
-	User(const string& aNick) throw() : nick(aNick), bytesShared(0), slots(0), udpPort(0), client(NULL), favoriteUser(NULL), autoextraslot(false),
-			ctype(10), status(1), ip(Util::emptyString), lastDownloadSpeed(0), hasTestSURinQueue(false), cid(NULL) {
-		unCacheClientInfo();
-		unsetFlag(User::OP);
-		unsetFlag(User::PASSIVE);
-		unsetFlag(User::DCPLUSPLUS);
-		unsetFlag(User::AWAY);
-		unsetFlag(User::SERVER);
-		unsetFlag(User::FIREBALL);				
-	}
+	User(const string& nick) : firstNick(nick), Flags(NMDC), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
+	User(const CID& aCID) : cid(aCID), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
 
-	virtual ~User() throw();
+	virtual ~User() throw() { };
 
-	void setClient(Client* aClient);
-	void connect();
-	const string& getClientNick() const;
-	CID getClientCID() const;
-	const string& getClientName() const;
-	string getClientAddressPort() const;
-	void privateMessage(const string& aMsg);
-	void clientMessage(const string& aMsg);
-	bool isClientOp() const;
-	void send(const string& msg);
-	void sendUserCmd(const string& aUserCmd);
-	
-	string getFullNick() const { 
-		string tmp(getNick());
-		tmp += " (";
-		tmp += getClientName();
-		tmp += ")";
-		return tmp;
-	}
-	
-	void setBytesShared(const string& aSharing) { setBytesShared(Util::toInt64(aSharing)); };
+	operator CID() { return cid; }
 
-	bool isOnline() const { return isSet(ONLINE); };
-	bool isClient(Client* aClient) const { return client == aClient; };
+	bool isOnline() const { return isSet(ONLINE); }
+	bool isNMDC() const { return isSet(NMDC); }
 
-	void getParams(StringMap& ucParams, bool myNick = false);
-
-	// favorite user stuff
-	void setFavoriteUser(FavoriteUser* aUser);
-	bool isFavoriteUser() const;
-	void setFavoriteLastSeen(u_int32_t anOfflineTime = 0);
-	u_int32_t getFavoriteLastSeen() const;
-	const string& getUserDescription() const;
-	void setUserDescription(const string& aDescription);
-	string insertUserData(const string& s, Client* aClient = NULL);
-
-	static void updated(User::Ptr& aUser);
-	
-	Client* getClient() { return client; }
-	
-	GETSET(string, connection, Connection);
-	GETSET(int, ctype, cType);
-	GETSET(int, status, Status);
-	GETSET(int, fileListDisconnects, FileListDisconnects);
-	GETSET(int, connectionTimeouts, ConnectionTimeouts);
-	GETSET(string, nick, Nick);
-	GETSET(string, email, Email);
-	GETSET(string, description, Description);
-	GETSET(string, tag, Tag);
-	GETSET(string, version, Version);
-	GETSET(string, mode, Mode);
-	GETSET(string, hubs, Hubs);
-	GETSET(string, upload, Upload);
-	GETSET(string, lastHubAddress, LastHubAddress);
-	GETSET(string, lastHubName, LastHubName);
-	GETSET(string, ip, Ip);
-	GETSET(CID, cid, CID);
-	GETSET(string, supports, Supports);
-	GETSET(string, lock, Lock);
-	GETSET(string, pk, Pk);
-	GETSET(string, clientType, ClientType);
-	GETSET(string, generator, Generator);
-	GETSET(string, testSUR, TestSUR);
-	GETSET(string, unknownCommand, UnknownCommand);
-	GETSET(string, comment, Comment);	
-	GETSET(string, cheatingString, CheatingString);
-	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
-	GETSET(int64_t, fileListSize, FileListSize);
-	GETSET(int64_t, bytesShared, BytesShared);
-	GETSET(int, slots, Slots);
-	GETSET(short, udpPort, UDPPort);
-	GETSET(int64_t, realBytesShared, RealBytesShared);
-	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
-	GETSET(int64_t, listLength, ListLength);
-	GETSET(bool, autoextraslot, AutoExtraSlot);
-	GETSET(bool, testSURComplete, TestSURComplete);
-	GETSET(bool, filelistComplete, FilelistComplete);
-	GETSET(bool, badClient, BadClient);	
-	GETSET(bool, badFilelist, BadFilelist);
-	GETSET(bool, hasTestSURinQueue, HasTestSURinQueue);
-	StringMap& clientEscapeParams(StringMap& sm) const;
-
-	void setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat = true) {
-		if(isSet(User::OP) || !isClientOp()) return;
-
-		if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-			PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-		
-		StringMap ucParams;
-		getParams(ucParams);
-		string cheat = Util::formatParams(aCheatDescription, ucParams);
-		if(postToChat)
-			addLine("*** "+STRING(USER)+" "+nick+" - "+cheat);
-		cheatingString = cheat;
-		badClient = aBadClient;
-	}
-		
-	void TagParts();
-	void updateClientType();
-	bool matchProfile(const string& aString, const string& aProfile);
-	string getReport();
 	void sendRawCommand(const int aRawCommand);
-	void unCacheClientInfo() {
-		if(!isFavoriteUser()) {
-			//lastHubAddress = Util::emptyString;
-			lastHubName = Util::emptyString;
-			description = Util::emptyString;
-		}
-		connection = Util::emptyString;
-		email = Util::emptyString;
-		tag = Util::emptyString;
-		version = Util::emptyString;
-		mode = Util::emptyString;
-		hubs = Util::emptyString;
-		upload = Util::emptyString;
-		ip = Util::emptyString;
-		supports = Util::emptyString;
-		bytesShared = 0;
-		realBytesShared = -1;
-		fakeShareBytesShared = -1;
-		testSURComplete = false;
-		filelistComplete = false;
-		pk = Util::emptyString;
-		lock = Util::emptyString;
-		supports = Util::emptyString;
-		clientType = Util::emptyString;
-		generator = Util::emptyString;
-		testSUR = Util::emptyString;
-		unknownCommand = Util::emptyString;
-		cheatingString = Util::emptyString;
-		comment = Util::emptyString;
-		fileListSize = -1;
-		listLength = -1;
-		badClient = false;
-		badFilelist = false;
-		fileListDisconnects = 0;
-		connectionTimeouts = 0;
-	};
-	void addLine(const string& aLine);
-	void updated();
-	bool fileListDisconnected();
-	bool connectionTimeout();
-	void setPassive();
-private:
-	mutable RWLock<> cs;
+	void addCheatLine(const string& aLine);
+	const string& getClientName() const;
+	Client* getClient();
 
+	const string& getLastHubName() const;
+	string getLastHubAddress() const;
+
+	GETSET(CID, cid, CID);
+	GETSET(string, firstNick, FirstNick);
+	GETSET(OnlineUser*, onlineUser, OnlineUser);
+	GETSET(string, lastSavedHubName, LastSavedHubName);
+	GETSET(string, lastSavedHubAddress, LastSavedHubAddress);
+private:
 	User(const User&);
 	User& operator=(const User&);
-
-	Client* client;
-	FavoriteUser* favoriteUser;
-	StringMap getPreparedFormatedStringMap(Client* aClient = NULL); 
-	string getVersion(const string& aExp, const string& aTag);
-	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
 
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity : public Flags {
 public:
-	Identity(const User::Ptr& ptr) : user(ptr) { }
-	Identity(const Identity& rhs) : user(rhs.user), hubURL(rhs.hubURL), info(rhs.info) { }
-	Identity& operator=(const Identity& rhs) { user = rhs.user; hubURL = rhs.hubURL; info = rhs.info; }
+	enum {
+		GOT_INF_BIT,
+		NMDC_PASSIVE_BIT
+	};
+	enum Flags {
+		GOT_INF = 1 << GOT_INF_BIT,
+		NMDC_PASSIVE = 1 << NMDC_PASSIVE_BIT
+	};
 
-	const string& getNick() { return get("NI"); }
-	const string& getDescription() { return get("DE"); }
+	Identity() { }
+	Identity(const User::Ptr& ptr, const string& aHubUrl) : user(ptr), hubUrl(aHubUrl) { setNick(ptr->getFirstNick()); }
+	Identity(const Identity& rhs) : user(rhs.user), hubUrl(rhs.hubUrl), info(rhs.info) { }
+	Identity& operator=(const Identity& rhs) { user = rhs.user; hubUrl = rhs.hubUrl; info = rhs.info; return *this; }
 
-	const string& get(const char* name) {
-		InfIter i = info.find(*(short*)name);
+#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
+	GS(Nick, "NI")
+	GS(Description, "DE")
+	GS(Ip, "I4")
+	GS(UdpPort, "U4")
+	GS(Email, "EM")
+	GS(Connection, "CT")
+	GS(Tag, "TG")
+
+	void setBytesShared(const string& bs) { set("SS", bs); }
+	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
+	
+	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
+
+	/*string getTag() const { 
+		if(get("VE").empty() || get("HN").empty() || get("HR").empty() ||get("HO").empty() || get("SL").empty())
+			return Util::emptyString;
+
+		string us = get("US");
+		return "<" + get("VE") + ",M:" + string(isTcpActive() ? "A" : "P") + ",H:" + get("HN") + "/" + 
+			get("HR") + "/" + get("HO") + ",S:" + get("SL") + (us.empty() ? "" : ",L:" + us) + ">";
+	}*/
+
+	const bool isHub() const { return !get("HU").empty(); }
+	const bool isOp() const { return !get("OP").empty(); }
+	const bool isHidden() const { return !get("HI").empty(); }
+	const bool isTcpActive() const { return !getIp().empty() || (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)) || isSet(NMDC_PASSIVE); }
+	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
+
+	const string& get(const char* name) const {
+		InfMap::const_iterator i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
 	}
 
+	void set(const char* name, const string& val) {
+		if(val.empty())
+			info.erase(*(short*)name);
+		else
+			info[*(short*)name] = val;
+	}
+	
+	void getParams(StringMap& map, const string& prefix) const;
 	GETSET(User::Ptr, user, User);
-	GETSET(string, hubURL, HubURL);
+	GETSET(string, hubUrl, HubUrl);
+
 private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::iterator InfIter;
 
 	InfMap info;
+};
+
+class OnlineUser : public FastAlloc<OnlineUser> {
+public:
+	typedef vector<OnlineUser*> List;
+	typedef List::iterator Iter;
+
+	OnlineUser() : client(NULL) { unCacheClientInfo(); }
+	OnlineUser(const User::Ptr& ptr, Client& client_);
+
+	virtual ~OnlineUser() throw();
+
+	operator User::Ptr&() { return user; }
+	operator const User::Ptr&() const { return user; }
+
+	User::Ptr& getUser() { return user; }
+	Identity& getIdentity() { return identity; }
+	Client& getClient() { return *client; }
+	const Client& getClient() const { return *client; }
+
+	GETSET(User::Ptr, user, User);
+	GETSET(Identity, identity, Identity);
+
+	// fake detection variables
+	GETSET(bool, testSURComplete, TestSURComplete);
+	GETSET(bool, filelistComplete, FilelistComplete);
+	GETSET(bool, badClient, BadClient);	
+	GETSET(bool, badFilelist, BadFilelist);
+	GETSET(int, fileListDisconnects, FileListDisconnects);
+	GETSET(int, connectionTimeouts, ConnectionTimeouts);
+	GETSET(int, status, Status);
+	GETSET(int64_t, fileListSize, FileListSize);
+	GETSET(int64_t, listLength, ListLength);
+	GETSET(int64_t, realBytesShared, RealBytesShared);
+	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
+	GETSET(string, cheatingString, CheatingString);
+	GETSET(string, clientType, ClientType);
+	GETSET(string, generator, Generator);
+	GETSET(string, supports, Supports);
+	GETSET(string, lock, Lock);
+	GETSET(string, pk, Pk);
+	GETSET(string, testSUR, TestSUR);
+	GETSET(string, unknownCommand, UnknownCommand);
+	GETSET(string, comment, Comment);	
+
+	void setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat = true);
+	string getReport();
+	void updateClientType();
+	bool matchProfile(const string& aString, const string& aProfile);
+	bool fileListDisconnected();
+	bool connectionTimeout();
+
+	void unCacheClientInfo() {
+		testSURComplete = false;
+		filelistComplete = false;
+		badClient = false;
+		badFilelist = false;
+		status = 1;
+		fileListDisconnects = 0;
+		connectionTimeouts = 0;
+		fileListSize = -1;
+		listLength = -1;
+		realBytesShared = -1;
+		fakeShareBytesShared = -1;
+		cheatingString = Util::emptyString;
+		clientType = Util::emptyString;
+		generator = Util::emptyString;
+		pk = Util::emptyString;
+		lock = Util::emptyString;
+		supports = Util::emptyString;
+		testSUR = Util::emptyString;
+		unknownCommand = Util::emptyString;
+		comment = Util::emptyString;
+		user->setLastSavedHubName(Util::emptyString);
+		user->setLastSavedHubAddress(Util::emptyString);
+	}
+
+private:
+	friend class NmdcHub;
+
+	OnlineUser(const OnlineUser&);
+	OnlineUser& operator=(const OnlineUser&);
+
+	Client* client;
+	string getVersion(const string& aExp, const string& aTag);
+	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
 
 #endif // !defined(USER_H)

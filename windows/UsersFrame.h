@@ -78,8 +78,9 @@ public:
 
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(wParam == USER_UPDATED) {
-			updateUser(((UserInfoBase*)lParam)->user);
-			delete (UserInfoBase*)lParam;
+			FavoriteUser* u = (FavoriteUser*)lParam;
+			updateUser(*u);
+			delete u;
 		}
 		return 0;
 	}
@@ -110,9 +111,8 @@ private:
 
 	class UserInfo : public UserInfoBase {
 	public:
-		UserInfo(const User::Ptr& u) : UserInfoBase(u) { 
-			columns[COLUMN_NICK] = Text::toT(u->getNick());
-			update();
+		UserInfo(const FavoriteUser& u) : UserInfoBase(u.getUser()) { 
+			update(u);
 		};
 
 		const tstring& getText(int col) const {
@@ -129,14 +129,15 @@ private:
 
 		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(user); }
 
-		void update() {
-			columns[COLUMN_STATUS] = user->isOnline() ? TSTRING(ONLINE) : TSTRING(OFFLINE);
-			columns[COLUMN_HUB] = Text::toT(user->getClientName());
+		void update(const FavoriteUser& u) {
+			columns[COLUMN_NICK] = Text::toT(u.getLastIdentity().getNick());
+			columns[COLUMN_STATUS] = u.getUser()->isOnline() ? TSTRING(ONLINE) : TSTRING(OFFLINE);
+			columns[COLUMN_HUB] = Text::toT(user->getLastHubName());
 			if(!user->getLastHubAddress().empty()) {
 				columns[COLUMN_HUB] += Text::toT(" (" + user->getLastHubAddress() + ")");
 			}
-			columns[COLUMN_SEEN] = user->isOnline() ? Util::emptyStringT : Text::toT(Util::formatTime("%Y-%m-%d %H:%M", user->getFavoriteLastSeen()));
-			columns[COLUMN_DESCRIPTION] = Text::toT(user->getUserDescription());
+			/*columns[COLUMN_SEEN] = user->isOnline() ? Util::emptyStringT : Text::toT(Util::formatTime("%Y-%m-%d %H:%M", user->getFavoriteLastSeen()));*/
+			columns[COLUMN_DESCRIPTION] = Text::toT(u.getDescription());
 		}
 
 		tstring columns[COLUMN_LAST];
@@ -155,20 +156,29 @@ private:
 	static int columnIndexes[COLUMN_LAST];
 
 	// FavoriteManagerListener
-	virtual void on(UserAdded, const User::Ptr& aUser) throw() { addUser(aUser); }
-	virtual void on(UserRemoved, const User::Ptr& aUser) throw() { removeUser(aUser); }
+	virtual void on(UserAdded, const FavoriteUser& aUser) throw() { addUser(aUser); }
+	virtual void on(UserRemoved, const FavoriteUser& aUser) throw() { removeUser(aUser); }
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
-			if(aUser->isFavoriteUser()) {
-				PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM) new UserInfoBase(aUser));
-			}
+	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {
+		FavoriteUser::List users = FavoriteManager::getInstance()->getFavoriteUsers();
+		FavoriteUser::Iter i = find(users.begin(), users.end(), aUser);
+		if(i != users.end()) {
+			PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM)new FavoriteUser(*i));
 		}
+	}
+	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
+		FavoriteUser::List users = FavoriteManager::getInstance()->getFavoriteUsers();
+		FavoriteUser::Iter i = find(users.begin(), users.end(), aUser);
+		if(i != users.end()) {
+			PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM)new FavoriteUser(*i));
+		}
+	}
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
-	void addUser(const User::Ptr& aUser);
-	void updateUser(const User::Ptr& aUser);
-	void removeUser(const User::Ptr& aUser);
+	void addUser(const FavoriteUser& aUser);
+	void updateUser(const FavoriteUser& aUser);
+	void removeUser(const FavoriteUser& aUser);
 };
 
 #endif // !defined(USERS_FRAME_H)

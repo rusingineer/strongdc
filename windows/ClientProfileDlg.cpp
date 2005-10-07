@@ -133,8 +133,8 @@ void ClientProfileDlg::getProfile() {
 	cheatingDescription = Text::toT(currentProfile.getCheatingDescription());
 	rawToSend = currentProfile.getRawToSend();
 //	tagVersion = currentProfile.getTagVersion();
-	useExtraVersion = currentProfile.getUseExtraVersion();
-	checkMismatch = currentProfile.getCheckMismatch();
+	useExtraVersion = currentProfile.getUseExtraVersion() == 1;
+	checkMismatch = currentProfile.getCheckMismatch() == 1;
 	connection = Text::toT(currentProfile.getConnection());
 	comment = Text::toT(currentProfile.getComment());
 }

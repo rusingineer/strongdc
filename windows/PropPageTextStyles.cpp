@@ -40,7 +40,7 @@ PropPageTextStyles::clrs PropPageTextStyles::colours[] = {
 	{ResourceManager::PROGRESS_COMPRESS,	SettingsManager::PROGRESS_COMPRESS_COLOR, 0},
 	{ResourceManager::PROGRESS_SEGMENT,	SettingsManager::PROGRESS_SEGMENT_COLOR, 0},
 	{ResourceManager::PROGRESS_DOWNLOADED,	SettingsManager::COLOR_DOWNLOADED, 0},
-	//{ResourceManager::PROGRESS_RUNNING,	SettingsManager::COLOR_RUNNING, 0},
+	{ResourceManager::PROGRESS_RUNNING,	SettingsManager::COLOR_RUNNING, 0},
 	{ResourceManager::PROGRESS_VERIFIED,	SettingsManager::COLOR_VERIFIED, 0},
 };
 
@@ -406,7 +406,7 @@ void PropPageTextStyles::TextStyleSettings::EditTextStyle() {
 	}
 }
 
-LRESULT PropPageTextStyles::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+LRESULT PropPageTextStyles::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	m_lsbList.Detach();
 	m_Preview.Detach();

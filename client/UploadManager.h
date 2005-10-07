@@ -27,6 +27,7 @@
 #include "Singleton.h"
 
 #include "Client.h"
+#include "ClientManager.h"
 #include "ClientManagerListener.h"
 #include "File.h"
 #include "MerkleTree.h"
@@ -87,7 +88,7 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 	public:
-		UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, int64_t itime) :
+		UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, time_t itime) :
 			User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { };
 		virtual ~UploadQueueItem() throw() { };
 		typedef UploadQueueItem* Ptr;
@@ -103,7 +104,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 			switch(col) {
 				case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
 				case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
-				case COLUMN_NICK: return Util::stricmp(a->User->getNick(), b->User->getNick());
+				case COLUMN_NICK: return Util::stricmp(a->User->getFirstNick(), b->User->getFirstNick());
 				case COLUMN_HUB: return Util::stricmp(a->User->getLastHubName(), b->User->getLastHubName());
 				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 				case COLUMN_SIZE: return compare(a->size, b->size);
@@ -137,7 +138,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 		string FileName;
 		int64_t pos;
 		int64_t size;
-		int64_t iTime;
+		time_t iTime;
 		tstring columns[COLUMN_LAST];
 		int icon;
 };
@@ -200,7 +201,7 @@ public:
 			reservedSlots[aUser] = GET_TICK() + 600*1000;
 		}
 		if(aUser->isOnline())
-			aUser->connect();	
+			ClientManager::getInstance()->connect(aUser);	
 	}
 	
 	void reserveSlotHour(User::Ptr& aUser) {
@@ -209,7 +210,7 @@ public:
 			reservedSlots[aUser] = GET_TICK() + 3600*1000;
 		}
 		if(aUser->isOnline())
-			aUser->connect();				
+			ClientManager::getInstance()->connect(aUser);				
 	}
 
 	void reserveSlotDay(User::Ptr& aUser) {
@@ -218,7 +219,7 @@ public:
 			reservedSlots[aUser] = GET_TICK() + 24*3600*1000;
 		}
 		if(aUser->isOnline())
-			aUser->connect();	
+			ClientManager::getInstance()->connect(aUser);	
 	}
 
 	void reserveSlotWeek(User::Ptr& aUser) {
@@ -227,7 +228,7 @@ public:
 			reservedSlots[aUser] = GET_TICK() + 7*24*3600*1000;
 		}
 		if(aUser->isOnline())
-			aUser->connect();	
+			ClientManager::getInstance()->connect(aUser);	
 }
 
 	void unreserveSlot(const User::Ptr& aUser) {

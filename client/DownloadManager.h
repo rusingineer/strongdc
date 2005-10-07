@@ -69,7 +69,7 @@ public:
 	};
 
 	Download() throw();
-	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw();
+	Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw();
 
 	/**
 	 * @remarks This function is only used from DownloadManager but its
@@ -108,7 +108,7 @@ public:
 	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
-	GETSET(User::Ptr, user, User);	
+	GETSET(OnlineUser*, user, User);	
 	GETSET(int64_t, segmentSize, SegmentSize);
 	GETSET(QueueItem*, qi, QI);
 	int64_t quickTick;

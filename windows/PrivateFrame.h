@@ -190,13 +190,7 @@ public:
 	}
 	
 	void setUser(const User::Ptr& aUser) { user = aUser; };
-	void sendMessage(const tstring& msg) {
-		if(user && user->isOnline()) {
-			user->privateMessage(Text::fromT(msg));
-			string s = "<" + user->getClientNick() + "> " + Text::fromT(msg);
-			addLine(Text::toT(s));
-		}
-	}
+	void sendMessage(const tstring& msg);
 	
 	User::Ptr& getUser() { return user; };
 private:
@@ -245,6 +239,14 @@ private:
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
+		if(aUser == user)
+			PostMessage(WM_SPEAKER, USER_UPDATED);
+	}
+	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {
+		if(aUser == user)
+			PostMessage(WM_SPEAKER, USER_UPDATED);
+	}
+	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
 		if(aUser == user)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}

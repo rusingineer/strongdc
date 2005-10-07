@@ -58,15 +58,15 @@ public:
 	virtual void on(Connecting, Client*) throw() { }
 	virtual void on(Connected, Client*) throw() { }
 	virtual void on(BadPassword, Client*) throw() { }
-	virtual void on(UserUpdated, Client*, const User::Ptr&) throw() { }
-	virtual void on(UsersUpdated, Client*, const User::List&) throw() { }
-	virtual void on(UserRemoved, Client*, const User::Ptr&) throw() { }
+	virtual void on(UserUpdated, Client*, const OnlineUser&) throw() { }
+	virtual void on(UsersUpdated, Client*, const OnlineUser::List&) throw() { }
+	virtual void on(UserRemoved, Client*, const OnlineUser&) throw() { }
 	virtual void on(Redirect, Client*, const string&) throw() { }
 	virtual void on(Failed, Client*, const string&) throw() { }
 	virtual void on(GetPassword, Client*) throw() { }
 	virtual void on(HubUpdated, Client*) throw() { }
-	virtual void on(Message, Client*, const char*) throw() { }
-	virtual void on(PrivateMessage, Client*, const User::Ptr&, const string&) throw() { }
+	virtual void on(Message, Client*, OnlineUser*, const char*) throw() { }
+	virtual void on(PrivateMessage, Client*, const OnlineUser&, const string&) throw() { }
 	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, Client*) throw() { }
 	virtual void on(NickTaken, Client*) throw() { }
@@ -90,9 +90,9 @@ public:
 	bool isConnected() const { return socket->isConnected(); }
 	void disconnect() { socket->disconnect(); }
 
-	virtual void connect(const User* user) = 0;
+	virtual void connect(const OnlineUser& user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
-	virtual void privateMessage(const User* user, const string& aMessage) = 0;
+	virtual void privateMessage(const OnlineUser& user, const string& aMessage) = 0;
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
 	virtual void password(const string& pwd) = 0;
@@ -101,12 +101,10 @@ public:
 	virtual void cheatMessage(const string& aLine) = 0;
 
 	virtual size_t getUserCount() const = 0;
-	virtual int64_t getAvailable() const = 0;
-	virtual const string& getName() const = 0;
-	virtual bool getOp() const = 0;
+	int64_t getAvailable() const { return availableBytes; };
+	
+	bool isOp() const { return getMyIdentity().isOp(); }
 
-	virtual User::NickMap& lockUserList() = 0;
-	virtual void unlockUserList() = 0;
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
 
 	short getPort() const { return port; }
@@ -117,7 +115,7 @@ public:
 	string getIpPort() const { return getIp() + ':' + Util::toString(port); };
 	string getLocalIp() const;
 
-	void updated(User::Ptr& aUser) {
+	void updated(const OnlineUser& aUser) { 
 		fire(ClientListener::UserUpdated(), this, aUser);
 	}
 
@@ -130,13 +128,6 @@ public:
 		char buf[128];
 		return string(buf, sprintf(buf, "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
 	}
-
-	const User::Ptr& getMe() const { return me; };
-	User::Ptr& getMe() { return me; }
-	void setMe(const User::Ptr& aMe) { me = aMe; }
-
-	const string& getDescription() const { return description.empty() ? SETTING(DESCRIPTION) : description; };
-	void setDescription(const string& aDesc) { description = aDesc; };
 
 	void scheduleDestruction() const { socket->shutdown(); }
 	BufferedSocket* getSocket() { return socket; }
@@ -166,10 +157,17 @@ public:
 		updateActivity();
 		socket->write(aMessage, aLen);
 	}
+	const string& getMyNick() const { return getMyIdentity().getNick(); }
+	const string& getHubName() const { return getHubIdentity().getNick().empty() ? getHubUrl() : getHubIdentity().getNick(); }
+	const string& getHubDescription() const { return getHubIdentity().getDescription(); }
+
+	Identity& getMyIdentity() { return myIdentity; }
+	Identity& getHubIdentity() { return hubIdentity; }
 
 	const string& getHubUrl() const { return hubUrl; }
 
-	GETSET(string, nick, Nick);
+	GETSET(Identity, myIdentity, MyIdentity);
+	GETSET(Identity, hubIdentity, HubIdentity);
 
 	GETSET(string, defpassword, Password);
 	GETSET(u_int32_t, reconnDelay, ReconnDelay);
@@ -181,11 +179,12 @@ public:
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
-	GETSET(string, ip, IP);
+	//GETSET(string, ip, IP);
 	//GETSET(int, supportFlags, SupportFlags);
 
 	int supportFlags;
 	int getSupportFlags() { return supportFlags; }
+	int64_t availableBytes;
 
 protected:
 	struct Counts {
@@ -198,14 +197,13 @@ protected:
 
 	BufferedSocket* socket;
 
-	User::Ptr me;
 	static Counts counts;
 	Counts lastCounts;
 
 	void updateCounts(bool aRemove);
 	void updateActivity();
 
-	// reload nick from settings, other details from FavoriteManager
+	// reload nick from settings, other details from favmanager
 	void reloadSettings();
 
 	virtual string checkNick(const string& nick) = 0;
@@ -225,7 +223,6 @@ private:
 	string hubUrl;
 	string address;
 	u_int16_t port;
-	string description;
 
 	CountType countType;
 

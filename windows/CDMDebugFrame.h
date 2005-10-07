@@ -103,7 +103,7 @@ public:
 		bHandled = FALSE;
 		return 0;
 	}
-	LRESULT onChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	LRESULT onChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		AutoArray<TCHAR> buf(ctrlFilterText.GetWindowTextLength() + 1);
 		ctrlFilterText.GetWindowText(buf, ctrlFilterText.GetWindowTextLength() + 1);
 		sFilterIp = buf;

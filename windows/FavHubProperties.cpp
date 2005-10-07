@@ -100,7 +100,7 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setPassword(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBUSERDESCR, buf, 256);
 		entry->setUserDescription(Text::fromT(buf));
-		entry->setStealth(IsDlgButtonChecked(IDC_STEALTH));
+		entry->setStealth(IsDlgButtonChecked(IDC_STEALTH) == 1);
 		GetDlgItemText(IDC_RAW_ONE, buf, 512);
 		entry->setRawOne(Text::fromT(buf));
 		GetDlgItemText(IDC_RAW_TWO, buf, 512);

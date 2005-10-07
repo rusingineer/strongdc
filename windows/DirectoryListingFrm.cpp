@@ -92,7 +92,7 @@ void DirectoryListingFrame::loadFile(const tstring& name) {
 		ADLSearchManager::getInstance()->matchListing(dl);
 		refreshTree(Text::toT(WinUtil::getInitialDir(dl->getUser())));
 	} catch(const Exception& e) {
-		error = Text::toT(dl->getUser()->getFullNick() + ": " + e.getError());
+		error = Text::toT(dl->getUser()->getFirstNick() + ": " + e.getError());
 	}
 
 	initStatus();
@@ -102,7 +102,7 @@ void DirectoryListingFrame::loadXML(const string& txt) {
 	try {
 		refreshTree(Text::toT(Util::toNmdcFile(dl->loadXML(txt, true))));
 	} catch(const Exception& e) {
-		error = Text::toT(dl->getUser()->getFullNick() + ": " + e.getError());
+		error = Text::toT(dl->getUser()->getFirstNick() + ": " + e.getError());
 	}
 
 	initStatus();
@@ -163,7 +163,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	SetSplitterPanes(ctrlTree.m_hWnd, ctrlList.m_hWnd);
 	m_nProportionalPos = 2500;
 	
-	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(dl->getUser()->getNick()).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);
+	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(dl->getUser()->getFirstNick()).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);
 
 	memset2(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[4] = WinUtil::getTextWidth(TSTRING(FILE_LIST_DIFF), m_hWnd) + 8;
@@ -647,6 +647,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 	fileMenu.RemoveMenu(IDC_GO_TO_DIRECTORY, MF_BYCOMMAND);
 
 	if (reinterpret_cast<HWND>(wParam) == ctrlList && ctrlList.GetSelectedCount() > 0) {
+		User::Ptr pUser = dl->getUser();
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
 		if(pt.x == -1 && pt.y == -1) {
@@ -706,7 +707,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CTSTRING(GO_TO_DIRECTORY));
 			}
 			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MFS_ENABLED);
-			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, Text::toT(dl->getUser()->getClientAddressPort()), dl->getUser()->isClientOp());
+			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, pUser->getClient());
 			fileMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			cleanMenu(fileMenu);
 		} else {
@@ -734,7 +735,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			   ii->dir->getAdls() && ii->dir->getParent() != dl->getRoot()) {
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CTSTRING(GO_TO_DIRECTORY));
 			}
-			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, Text::toT(dl->getUser()->getClientAddressPort()), dl->getUser()->isClientOp());
+			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, pUser->getClient());
 			fileMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			cleanMenu(fileMenu);
 		}
@@ -1102,8 +1103,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 		}
 		if(!dl->getUser()->isOnline())
 			return;
-		ucParams["mynick"] = dl->getUser()->getClientNick();
-		ucParams["mycid"] = dl->getUser()->getClientCID().toBase32();
+		
 		ucParams["tth"] = "NONE";
 		if(ii->type == ItemInfo::FILE) {
 			ucParams["type"] = "File";
@@ -1125,9 +1125,8 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 
 		StringMap tmp = ucParams;
 		User::Ptr tmpPtr = dl->getUser();
-		tmpPtr->getParams(tmp);
-		tmpPtr->clientEscapeParams(tmp);
-		tmpPtr->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
+		tmpPtr->getOnlineUser()->getIdentity().getParams(tmp, "");
+		tmpPtr->getOnlineUser()->getClient().sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 	}
 	return;
 }
@@ -1140,7 +1139,7 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 			return 0;
 		switch (wID) {
 			case IDC_COPY_NICK:
-				sCopy = dl->getUser()->getNick();
+				sCopy = dl->getUser()->getFirstNick();
 				break;
 			case IDC_COPY_FILENAME:
 				sCopy = Util::getFileName(ii->file->getName());
@@ -1189,7 +1188,7 @@ LRESULT DirectoryListingFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/
 	if(dl != NULL) {
 		User::Ptr pUser = dl->getUser();
 		if(pUser != (User*) NULL)
-			nick = pUser->getNick();
+			nick = pUser->getFirstNick();
 	}
 	tabMenu.InsertSeparatorFirst(nick);
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

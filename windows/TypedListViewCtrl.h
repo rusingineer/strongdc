@@ -673,7 +673,7 @@ public:
 		return 0;
 	}
 
-	LRESULT onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT onLButton(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 		CPoint pt;
 		pt.x = GET_X_LPARAM(lParam);
 		pt.y = GET_Y_LPARAM(lParam);
@@ -711,7 +711,7 @@ public:
 	}
 
 	void Expand(T* i, int a) {
-		if(i->subItems.size() > (uniqueMainItem ? 1 : 0)) {
+		if(i->subItems.size() > (unsigned int)(uniqueMainItem ? 1 : 0)) {
 			size_t q = 0;
 			i->collapsed = false;
 			while(q < i->subItems.size()) {
@@ -792,7 +792,7 @@ public:
 
 	void removeMainItem(T* s) {
 		if(s->subItems.size() > 0) {
-			int q = 0;
+			unsigned int q = 0;
 			while(q < s->subItems.size()) {
 				T* j = s->subItems[q];
 				int p = findItem(j);
@@ -854,7 +854,7 @@ public:
 	void deleteAllItems() {
 		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
 			T* si =  *i;
-			int q = 0;
+			unsigned int q = 0;
 			while(q < si->subItems.size()) {
 				T* j = si->subItems[q];
 				delete j;

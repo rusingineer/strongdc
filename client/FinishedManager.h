@@ -126,7 +126,7 @@ class FinishedManager : public Singleton<FinishedManager>,
 {
 public:
 	FinishedItem::List& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; };
-	FinishedMP3Item::List& lockMP3List(bool upload = false) { cs.enter(); return MP3downloads; };
+	FinishedMP3Item::List& lockMP3List() { cs.enter(); return MP3downloads; };
 	void unlockList() { cs.leave(); };
 
 	void remove(FinishedItem *item, bool upload = false);

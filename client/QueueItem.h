@@ -289,7 +289,7 @@ public:
 	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
-	GETSET(int, maxSegments, MaxSegments);
+	GETSET(unsigned int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
 	GETSET(u_int32_t, start, Start);
 	GETSET(int64_t, averageSpeed, AverageSpeed);
@@ -299,7 +299,7 @@ public:
 		QueueItem::Priority p = getPriority();
 		if(p == QueueItem::PAUSED) return p;
 		if(getAutoPriority()){			
-			int percent = getDownloadedBytes() * 10.0 / getSize();
+			int percent = (int)(getDownloadedBytes() * 10.0 / getSize());
 			switch(percent){
 					case 0:
 					case 1:

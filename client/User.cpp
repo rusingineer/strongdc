@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,288 +19,136 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
-#include "SettingsManager.h"
-#include "ResourceManager.h"
-#include "TimerManager.h"
-
 #include "User.h"
-
 #include "Client.h"
-#include "FavoriteUser.h"
-
+#include "ClientManager.h"
 #include "DebugManager.h"
 #include "ClientProfileManager.h"
 #include "QueueManager.h"
+
 #include "../pme-1.0.4/pme.h"
-#include "Socket.h"
 
-User::~User() throw() {
-	delete favoriteUser;
+OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), identity(ptr, client_.getHubUrl()), client(&client_) { 
+	unCacheClientInfo(); 
+	user->setOnlineUser(this);
 }
 
-void User::connect() {
-	RLock<> l(cs);
-	if(client) {
-		client->connect(this);
+OnlineUser::~OnlineUser() throw() {
+	user->setLastSavedHubName(getClient().getHubName());
+	user->setLastSavedHubAddress(getClient().getIpPort());
+	user->setOnlineUser(NULL);
+};
+
+void Identity::getParams(StringMap& map, const string& prefix) const {
+	for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
+		map[prefix + string((char*)(&i->first), 2)] = i->second;
+	}
+	map[prefix + "CID"] = user->getCID().toBase32();
+
+	// for compatibility with old raw commands
+	map["nick"] = getNick();
+	map["tag"] = getTag();
+	map["ip"] = getIp();
+	OnlineUser* ou = getUser()->getOnlineUser();
+	if(ou) {
+		map["mynick"] =  ou->getClient().getMyNick();
+		map["hub"] = ou->getClient().getHubName();
+		map["hubip"] = ou->getClient().getHubUrl();
+		map["hubaddr"] = ou->getClient().getAddress();
+		map["realshare"] = Util::toString(ou->getRealBytesShared());
+		map["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
+		map["statedshare"] = Util::toString(getBytesShared());
+		map["statedshareformat"] = Util::formatBytes(getBytesShared());
+		map["cheatingdescription"] = ou->getCheatingString();
+		map["clienttype"] = ou->getClientType();
 	}
 }
 
-const string& User::getClientNick() const {
-	RLock<> l(cs);
-	if(client) {
-		return client->getNick();
-	} else {
-		return SETTING(NICK);
+void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat) {
+	if(getIdentity().isOp()) return;
+
+	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+		PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+		
+	StringMap ucParams;
+	getIdentity().getParams(ucParams, Util::emptyString);
+	string cheat = Util::formatParams(aCheatDescription, ucParams);
+	if(postToChat)
+		user->addCheatLine("*** " + STRING(USER) + " " + getIdentity().getNick() + " - " + cheat);
+	
+	cheatingString = cheat;
+	badClient = aBadClient;
+}
+
+void User::sendRawCommand(const int aRawCommand) {
+	if(getClient()) {
+		if(!getClient()->isOp()) return;
+		string rawCommand = getClient()->getRawCommand(aRawCommand);
+		if (!rawCommand.empty()) {
+			StringMap ucParams;
+			getOnlineUser()->getIdentity().getParams(ucParams, Util::emptyString);
+			getClient()->sendRaw(Util::formatParams(rawCommand, ucParams));
+		}
 	}
 }
 
-CID User::getClientCID() const {
-	RLock<> l(cs);
-	if(client && client->getMe()) {
-		return client->getMe()->getCID();
-	} else {
-		return CID(SETTING(CLIENT_ID));
-	}
-}
-
-void User::updated(User::Ptr& aUser) {
-	RLock<> l(aUser->cs);
-	if(aUser->client) {
-		aUser->client->updated(aUser);
+void User::addCheatLine(const string& aLine) {
+	if(getOnlineUser()) {
+		getOnlineUser()->getClient().cheatMessage(aLine);
 	}
 }
 
 const string& User::getClientName() const {
-	RLock<> l(cs);
-	if(client) {
-		return client->getName();
-	} else if(!getLastHubName().empty()) {
-		return getLastHubName();
+	if(getOnlineUser()) {
+		return getOnlineUser()->getClient().getHubName();
 	} else {
 		return STRING(OFFLINE);
 	}
 }
 
-string User::getClientAddressPort() const {
-	RLock<> l(cs);
-	if(client) {
-		return client->getHubUrl();
+Client* User::getClient() {
+	if(getOnlineUser()) {
+		return &getOnlineUser()->getClient();
 	} else {
-		return Util::emptyString;
+		return NULL;
 	}
 }
 
-void User::privateMessage(const string& aMsg) {
-	RLock<> l(cs);
-	if(client) {
-		client->privateMessage(this, aMsg);
-	}
-}
-
-bool User::isClientOp() const {
-	RLock<> l(cs);
-	if(client) {
-		return client->getOp();
-	}
-	return false;
-}
-
-void User::send(const string& aMsg) {
-	RLock<> l(cs);
-	if(client) {
-		client->send(aMsg);
-	}
-}
-
-void User::sendUserCmd(const string& aUserCmd) {
-	RLock<> l(cs);
-	if(client) {
-		client->sendUserCmd(aUserCmd);
-	}
-}
-
-void User::clientMessage(const string& aMsg) {
-	RLock<> l(cs);
-	if(client) {
-		client->hubMessage(aMsg);
-	}
-}
-
-void User::setClient(Client* aClient) { 
-	WLock<> l(cs); 
-	client = aClient; 
-	if(client == NULL) {
-		if (isSet(ONLINE) && isFavoriteUser())
-			setFavoriteLastSeen();
-		unsetFlag(ONLINE);
-	} else {
-		setLastHubAddress(aClient->getIpPort());
-		setLastHubName(aClient->getName());
-		setFlag(ONLINE);
-		unsetFlag(QUIT_HUB);
-	}
-}
-
-void User::getParams(StringMap& ucParams, bool myNick /* = false */) {
-	ucParams["nick"] = getNick();
-	ucParams["cid"] = getCID().toBase32();
-	ucParams["tag"] = getTag();
-	ucParams["description"] = getDescription();
-	ucParams["email"] = getEmail();
-	ucParams["share"] = Util::toString(getBytesShared());
-	ucParams["shareshort"] = Util::formatBytes(getBytesShared());
-	ucParams["ip"] = getIp();
-	ucParams["clienttype"] = getClientType();
-	ucParams["statedshare"] = Util::toString(getBytesShared());
-	ucParams["statedshareformat"] = Util::formatBytes(getBytesShared());
-	if(realBytesShared > -1) {
-		ucParams["realshare"] = Util::toString(realBytesShared);
-		ucParams["realshareformat"] = Util::formatBytes(realBytesShared);
-	}
-	ucParams["cheatingdescription"] = cheatingString;
-	//ucParams["clientinfo"] = getReport();
-	ucParams["nl"] = "\r\n";
-	if(myNick && client) {
-		RLock<> l(cs);
-		ucParams["mynick"] = client->getNick();
-	}
-}
-
-// favorite user stuff
-void User::setFavoriteUser(FavoriteUser* aUser) {
-	WLock<> l(cs);
-	delete favoriteUser;
-	favoriteUser = aUser;
-}
-
-bool User::isFavoriteUser() const {
-	RLock<> l(cs);
-	return (favoriteUser != NULL);
-}
-
-void User::setFavoriteLastSeen(u_int32_t anOfflineTime) {
-	WLock<> l(cs);
-	if (favoriteUser != NULL) {
-		if (anOfflineTime != 0)
-			favoriteUser->setLastSeen(anOfflineTime);
-		else
-			favoriteUser->setLastSeen(GET_TIME());
-	}
-}
-
-u_int32_t User::getFavoriteLastSeen() const {
-	RLock<> l(cs);
-	if (favoriteUser != NULL)
-		return favoriteUser->getLastSeen();
-	else
-		return 0;
-}
-
-const string& User::getUserDescription() const {
-	RLock<> l(cs);
-	if (favoriteUser != NULL)
-		return favoriteUser->getDescription();
-	else
-		return Util::emptyString;
-}
-
-void User::setUserDescription(const string& aDescription) {
-	WLock<> l(cs);
-	if (favoriteUser != NULL)
-		favoriteUser->setDescription(aDescription);
-}
-
-StringMap& User::clientEscapeParams(StringMap& sm) const {
-	RLock<> l(cs);
-	if(client) {
-		return client->escapeParams(sm);
-	} else
-		return sm;
-}
-
-void User::TagParts() {
-	char *sTag = strdup(getTag().c_str());
-	char *temp;
-	if(strlen(sTag) > 2) {
-		if((temp = strtok(sTag+1, " ")) != NULL) {
-			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'V')) {
-					setVersion(temp+2);
-			}
-			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'M')) {
-					setMode(temp+2);
-			}
-			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'H')) {
-				setHubs(temp+2);
-			}
-			if(((temp = strtok(NULL, ",")) != NULL) && (temp[0] == 'S')) {
-				setSlots(atoi(temp+2));
-			}
-			if(((temp = strtok(NULL, ",")) != NULL) && ((temp[0] == 'L') || (temp[0] == 'B') || (temp[0] == 'U'))) {
-				setUpload(Util::toString(atoi(temp+2)));
-			}
-		}	
-	}
-	free(sTag);
-}
-
-string User::getReport()
+string OnlineUser::getReport()
 {
-	string temp = getGenerator();
 	string report = "\r\nClient:		" + getClientType();
-	if(temp=="") {
-		temp = "N/A";
-	}
-	report += "\r\nXML Generator:	" + temp;
+	report += "\r\nXML Generator:	" + (generator.empty() ? "N/A" : generator);
 	report += "\r\nLock:		" + lock;
 	report += "\r\nPk:		" + pk;
-	report += "\r\nTag:		" + tag;
+	report += "\r\nTag:		" + getIdentity().getTag();
 	report += "\r\nSupports:		" + supports;
 	report += "\r\nStatus:		" + Util::formatStatus(status);
 	report += "\r\nTestSUR:		" + testSUR;
 	report += "\r\nDisconnects:	" + Util::toString(fileListDisconnects);
 	report += "\r\nTimeouts:		" + Util::toString(connectionTimeouts);
-	temp = Util::formatBytes(getLastDownloadSpeed());
-	if (temp == "-1 B") {
-		temp = "N/A";
-	} else {
-		temp += "/s";
-	}
-	report += "\r\nDownspeed:	" + temp;
-	report += "\r\nIP:		" + ip;
-	report += "\r\nHost:		" + Socket::getRemoteHost(ip);
-	report += "\r\nDescription:	" + description;
-	report += "\r\nEmail:		" + email;
-	report += "\r\nConnection:	" + connection;
+	report += "\r\nDownspeed:	" + Util::formatBytes(Util::toInt64(getIdentity().get("US"))) + "/s";
+	report += "\r\nIP:		" + getIdentity().getIp();
+	report += "\r\nHost:		" + Socket::getRemoteHost(getIdentity().getIp());
+	report += "\r\nDescription:	" + getIdentity().getDescription();
+	report += "\r\nEmail:		" + getIdentity().getEmail();
+	report += "\r\nConnection:	" + getIdentity().getConnection();
 	report += "\r\nCommands:	" + unknownCommand;
-	temp = (getFileListSize() != -1) ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A";
-	report += "\r\nFilelist size:	" + temp;
-	if ( listLength != -1 ) {
-		temp = Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )";
-	} else {
-		temp = "N/A";
-	}
-	report += "\r\nListLen:		" + temp;
-	report += "\r\nStated Share:	" + Util::formatBytes(bytesShared) + "  (" + Util::formatExactSize(bytesShared) + " )";
-	if ( getRealBytesShared() > -1 ) {
-		temp = Util::formatBytes(getRealBytesShared()) + "  (" + Util::formatExactSize(getRealBytesShared()) + " )";
-	} else {
-		temp = "N/A";
-	}
-	report += "\r\nReal Share:	" + temp;
-	temp = cheatingString;
-	if (temp.empty()) {	temp = "N/A"; }
-	report += "\r\nCheat status:	" + temp;
+	report += "\r\nFilelist size:	" + (fileListSize != -1 ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A");
+	report += "\r\nListLen:		" + (listLength != -1 ? Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )" : "N/A");
+	report += "\r\nStated Share:	" + Util::formatBytes(getIdentity().getBytesShared()) + "  (" + Util::formatExactSize(getIdentity().getBytesShared()) + " )";
+	report += "\r\nReal Share:	" + (realBytesShared > -1 ? Util::formatBytes(realBytesShared) + "  (" + Util::formatExactSize(realBytesShared) + " )" : "N/A");
+	report += "\r\nCheat status:	" + (cheatingString.empty() ? "N/A" : cheatingString);
 	report += "\r\nComment:		" + comment;
 	return report;
 }
 
-void User::updateClientType() {
-	if ( isSet(User::DCPLUSPLUS) && (listLength == 11) && (bytesShared > 0) ) {
+void OnlineUser::updateClientType() {
+	if ( getUser()->isSet(User::DCPLUSPLUS) && (listLength == 11) && (getIdentity().getBytesShared() > 0) ) {
 		setCheat("Fake file list - ListLen = 11" , true);
 		clientType = "DC++ Stealth";
 		badClient = true;
 		badFilelist = true;
-		sendRawCommand(SETTING(LISTLEN_MISMATCH));
+		getUser()->sendRawCommand(SETTING(LISTLEN_MISMATCH));
 		return;
 	}
 	int64_t tick = GET_TICK();
@@ -336,17 +184,17 @@ void User::updateClientType() {
 		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
 
 		if (!matchProfile(lock, cp.getLock())) { continue; }
-		if (!matchProfile(tag, formattedTagExp)) { continue; } 
+		if (!matchProfile(getIdentity().getTag(), formattedTagExp)) { continue; } 
 		if (!matchProfile(pk, formattedPkExp)) { continue; }
 		if (!matchProfile(supports, cp.getSupports())) { continue; }
 		if (!matchProfile(testSUR, cp.getTestSUR())) { continue; }
 		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
 		if (!matchProfile(unknownCommand, cp.getUserConCom())) { continue; }
-		if (!matchProfile(description, formattedExtTagExp))	{ continue; }
-		if (!matchProfile(connection, cp.getConnection()))	{ continue; }
+		if (!matchProfile(getIdentity().getDescription(), formattedExtTagExp))	{ continue; }
+		if (!matchProfile(getIdentity().getConnection(), cp.getConnection()))	{ continue; }
 
-		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, tag); }
-		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, description); }
+		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, getIdentity().getTag()); }
+		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, getIdentity().getDescription()); }
 		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, getPk()); }
 
 		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
@@ -358,37 +206,37 @@ void User::updateClientType() {
 			setClientType(cp.getName() + " " + version);
 		}
 			cheatingString = cp.getCheatingDescription();
-		comment = cp.getComment();
+			comment = cp.getComment();
 		badClient = !cheatingString.empty();
 
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
 			badClient = true;
-			updated();
+			ClientManager::getInstance()->UserUpdated(getUser());
 			setCheat(cheatingString, true);
 			return;
 		}
 		if(badClient) setCheat(cheatingString, true);
-		updated();
+		ClientManager::getInstance()->UserUpdated(getUser());
 		if(cp.getRawToSend() > 0) {
-			sendRawCommand(cp.getRawToSend());
+			getUser()->sendRawCommand(cp.getRawToSend());
 		}
 		return;
 	}
 	setClientType("Unknown");
 	cheatingString = Util::emptyString;
 	badClient = false;
-	updated();
+	ClientManager::getInstance()->UserUpdated(getUser());
 }
 
-bool User::matchProfile(const string& aString, const string& aProfile) {
+bool OnlineUser::matchProfile(const string& aString, const string& aProfile) {
 	DETECTION_DEBUG("\t\tMatching String: " + aString + " to Profile: " + aProfile);
 	PME reg(aProfile);
-	return reg.IsValid() ? reg.match(aString) : false;
+	return reg.IsValid() ? (reg.match(aString) > 0) : false;
 }
 
-string User::getVersion(const string& aExp, const string& aTag) {
+string OnlineUser::getVersion(const string& aExp, const string& aTag) {
 	string::size_type i = aExp.find("%[version]");
 	if (i == string::npos) { 
 		i = aExp.find("%[version2]"); 
@@ -397,110 +245,14 @@ string User::getVersion(const string& aExp, const string& aTag) {
 	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 }
 
-string User::splitVersion(const string& aExp, const string& aTag, const int part) {
+string OnlineUser::splitVersion(const string& aExp, const string& aTag, const int part) {
 	PME reg(aExp);
 	if(!reg.IsValid()) { return ""; }
 	reg.split(aTag, 2);
 	return reg[part];
 }
 
-void User::sendRawCommand(const int aRawCommand) {
-	RLock<> l(cs);
-	if(client) {
-		if(!client->getOp()) return;
-		string rawCommand = client->getRawCommand(aRawCommand);
-		if (!rawCommand.empty()) {
-			StringMap paramMap;
-			paramMap["mynick"] = client->getNick();
-			paramMap["nick"] = getNick();
-			paramMap["ip"] = getIp();
-//			paramMap["userip"] = getUserIp();
-			paramMap["tag"] = getTag();
-			paramMap["connection"] = getConnection();
-			paramMap["slots"] = Util::toString(getSlots());
-			paramMap["uplimit"] = getUpload();
-			paramMap["clienttype"] = getClientType();
-			paramMap["statedshare"] = Util::toString(getBytesShared());
-			paramMap["statedshareformat"] = Util::formatBytes(getBytesShared());
-			if(realBytesShared > -1) {
-				paramMap["realshare"] = Util::toString(realBytesShared);
-				paramMap["realshareformat"] = Util::formatBytes(realBytesShared);
-			}
-//			if(filesShared > -1) {
-//				paramMap["filesshared"] = Util::toString(filesShared);
-//			}
-			paramMap["cheatingdescription"] = cheatingString;
-			paramMap["cd"] = cheatingString;
-			paramMap["clientinfo"] = getReport();
-
-			client->sendRaw(Util::formatParams(rawCommand, paramMap));
-		}
-	}
-}
-
-void User::updated() {
-	RLock<> l(cs);
-	if(client) {
-		User::Ptr user = this;
-		client->updated(user);
-	}
-}
-
-StringMap User::getPreparedFormatedStringMap(Client* aClient /* = NULL */)
-{
-	StringMap fakeShareParams;
-	Client* clientToUse = aClient;
-	if(clientToUse == NULL)
-	{
-		clientToUse = client;
-	}
-	try
-	{
-		string ip = " ";
-		if(getIp().size() > 0)
-		{
-			ip += "IP = " + getIp() + " ";
-		}
-		fakeShareParams["ip"] = ip;
-		if(clientToUse != NULL)
-		{
-			string sNick = clientToUse->getNick();
-			fakeShareParams["mynick"] = sNick;
-		}
-		fakeShareParams["user"] = getNick();
-		fakeShareParams["nick"] = getNick();
-		fakeShareParams["hub"] = getLastHubName();
-		fakeShareParams["hubip"] = getLastHubAddress();
-		fakeShareParams["hubaddress"] = getLastHubAddress();
-		if(realBytesShared > -1)
-		{
-			fakeShareParams["realshare"] = Util::toString(realBytesShared);
-			fakeShareParams["realshareformat"] = Util::formatBytes(realBytesShared);
-		}
-		fakeShareParams["statedshare"] = Util::toString(getBytesShared());
-		fakeShareParams["statedshareformat"] = Util::formatBytes(getBytesShared());
-		fakeShareParams["cheatingdescription"] = cheatingString;
-	}
-	catch(...)
-	{
-	}
-	return fakeShareParams;
-}
-void User::addLine(const string& aLine) {
-	RLock<> l(cs);
-	if(client) {
-		client->cheatMessage(aLine);
-	}
-}
-string User::insertUserData(const string& s, Client* aClient /* = NULL */)
-{
-	StringMap userParams = getPreparedFormatedStringMap(aClient);
-	return Util::formatParams(s, userParams);
-}
-
-
-
-bool User::fileListDisconnected() {
+bool OnlineUser::fileListDisconnected() {
 	fileListDisconnects++;
 
 	if(SETTING(ACCEPTED_DISCONNECTS) == 0)
@@ -508,13 +260,14 @@ bool User::fileListDisconnected() {
 
 	if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
-		updated();
-		sendRawCommand(SETTING(DISCONNECT_RAW));
+		ClientManager::getInstance()->UserUpdated(getUser());
+		getUser()->sendRawCommand(SETTING(DISCONNECT_RAW));
 		return true;
 	}
 	return false;
 }
-bool User::connectionTimeout() {
+
+bool OnlineUser::connectionTimeout() {
 	connectionTimeouts++;
 
 	if(SETTING(ACCEPTED_TIMEOUTS) == 0)
@@ -522,29 +275,34 @@ bool User::connectionTimeout() {
 
 	if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
-		updated();
+		ClientManager::getInstance()->UserUpdated(getUser());
 		try {
-			QueueManager::getInstance()->removeTestSUR(this);
+			QueueManager::getInstance()->removeTestSUR(getUser());
 		} catch(...) {
 		}
-		sendRawCommand(SETTING(TIMEOUT_RAW));
+		getUser()->sendRawCommand(SETTING(TIMEOUT_RAW));
 		return true;
 	}
 	return false;
 }
-void User::setPassive() {
-	setFlag(User::PASSIVE);
-	if(tag.find(",M:A") != string::npos) {
-		setCheat("Tag states active mode but is using passive commands", false);
-		updated();
-		QueueManager::getInstance()->removeTestSUR(this);
+
+const string& User::getLastHubName() const {
+	if(getOnlineUser()) {
+		return getOnlineUser()->getClient().getHubName();
+	} else {
+		return lastSavedHubName;
 	}
 }
 
-// CDM EXTENSION ENDS
+string User::getLastHubAddress() const {
+	if(getOnlineUser()) {
+		return getOnlineUser()->getClient().getIpPort();
+	} else {
+		return lastSavedHubAddress;
+	}
+}
 
 /**
  * @file
  * $Id$
  */
-

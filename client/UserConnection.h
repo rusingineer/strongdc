@@ -31,6 +31,7 @@
 #include "User.h"
 #include "AdcCommand.h"
 #include "DebugManager.h"
+#include "ClientManager.h"
 
 class UserConnection;
 
@@ -190,7 +191,8 @@ public:
 
 	enum Flags {
 		FLAG_NMDC = 0x01,
-		FLAG_UPLOAD = FLAG_NMDC << 1,
+		FLAG_OP = FLAG_NMDC << 1,
+		FLAG_UPLOAD = FLAG_OP << 1,
 		FLAG_DOWNLOAD = FLAG_UPLOAD << 1,
 		FLAG_INCOMING = FLAG_DOWNLOAD << 1,
 		FLAG_HASSLOT = FLAG_INCOMING << 1,
@@ -271,9 +273,9 @@ public:
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
-			x+= ' ' + *i;
+			x+= *i + ' ';
 		}
-		send("$Supports" + x + " |");
+		send("$Supports " + x + '|');
 	}
 	void setDataMode(int64_t aBytes = -1) { dcassert(socket); socket->setDataMode(aBytes); }
 	void setLineMode() { dcassert(socket); socket->setLineMode(); };
@@ -308,7 +310,7 @@ public:
 	void reconnect() {
 		disconnect();
 		Thread::sleep(100);
-		user->connect();
+		ClientManager::getInstance()->connect(user);
 	}
 	
 	void handle(AdcCommand::SUP t, const AdcCommand& c) {
@@ -341,7 +343,7 @@ public:
 	void handle(T , const AdcCommand& ) {
 	}
 
-	GETSET(string, nick, Nick);
+	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
 	GETSET(ConnectionQueueItem*, cqi, CQI);
 	GETSET(States, state, State);

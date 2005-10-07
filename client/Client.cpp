@@ -25,17 +25,20 @@
 #include "DebugManager.h"
 
 #include "FavoriteManager.h"
+#include "TimerManager.h"
+#include "ClientManager.h"
 
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator) : 
-	socket(BufferedSocket::getSocket(separator)), reconnDelay(120), me(NULL),
+	socket(BufferedSocket::getSocket(separator)), reconnDelay(120),
 	lastActivity(0), registered(false), hubUrl(hubURL), port(0), 
-	countType(COUNT_UNCOUNTED), supportFlags(0)
+	countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
 	socket->addListener(this);
+	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
 }
 
 Client::~Client() throw() {
@@ -45,20 +48,26 @@ Client::~Client() throw() {
 }
 
 void Client::reloadSettings() {
+	availableBytes = 0;
 	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
+	
+	string speedDescription = Util::emptyString;
+	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
+		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
+
 	if(hub) {
-		setNick(checkNick(hub->getNick(true)));
-		setDescription(hub->getUserDescription());
+		getMyIdentity().setNick(checkNick(hub->getNick(true)));
+		getMyIdentity().setDescription(speedDescription + (hub->getUserDescription().empty() ? SETTING(DESCRIPTION) : hub->getUserDescription()));
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
 		switch(hub->getMode()) {
-			case 1 : setIP(hub->getIP()); break;
-			default: setIP(SETTING(EXTERNAL_IP));
+			case 1 : getMyIdentity().setIp(hub->getIP()); break;
+			//default: getMyIdentity().setIP(SETTING(EXTERNAL_IP));
 		}
 	} else {
-		setNick(checkNick(SETTING(NICK)));
+		getMyIdentity().setNick(checkNick(SETTING(NICK)));
+		getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
 		setStealth(true);
-		setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
 	}
 }
 
@@ -70,7 +79,7 @@ int Client::getMode() {
 			case 1 :
 			{
 				mode = SettingsManager::INCOMING_DIRECT;
-				setIP(hub->getIP());
+				getMyIdentity().setIp(hub->getIP());
 				break;
 			}
 			case 2 :
@@ -81,19 +90,18 @@ int Client::getMode() {
 			default:
 			{
 				mode = SETTING(INCOMING_CONNECTIONS);
-				setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
+				//getMyIdentity().setIp(SETTING(EXTERNAL_IP));
 			}
 		}
 	} else {
 		mode = SETTING(INCOMING_CONNECTIONS);
-		setIP(SETTING(EXTERNAL_IP)); // @todo: override ip option
+		//setIP(SETTING(EXTERNAL_IP));
 	}
 	return mode;
 }
 
 void Client::connect() {
-	if(socket->isConnected())
-		socket->disconnect();
+	socket->disconnect();
 
 	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings();
@@ -121,7 +129,7 @@ void Client::updateCounts(bool aRemove) {
 	countType = COUNT_UNCOUNTED;
 
 	if(!aRemove) {
-		if(getOp()) {
+		if(getMyIdentity().isOp()) {
 			Thread::safeInc(counts.op);
 			countType = COUNT_OP;
 		} else if(registered) {
@@ -134,10 +142,10 @@ void Client::updateCounts(bool aRemove) {
 	}
 }
 
-string Client::getLocalIp() const { 
+string Client::getLocalIp() const {
 	// Best case - the server detected it
-	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty()) && !getIP().empty()) {
-		return getIP();
+	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty()) && !getMyIdentity().getIp().empty()) {
+		return getMyIdentity().getIp();
 	}
 
 	if(!SETTING(EXTERNAL_IP).empty()) {

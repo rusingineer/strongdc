@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,14 +53,14 @@ public:
 
 #define checkstate() if(state != STATE_CONNECTED) return
 
-	virtual void connect(const User* aUser);
+	virtual void connect(const OnlineUser& aUser);
 	virtual void hubMessage(const string& aMessage) {
 		checkstate();
 		char buf[256];
-		sprintf(buf, "<%s> ", getNick().c_str());
+		sprintf(buf, "<%s> ", getMyNick().c_str());
 		send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
 	}
-	virtual void privateMessage(const User* aUser, const string& aMessage) { privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage); }
+	virtual void privateMessage(const OnlineUser& aUser, const string& aMessage) { privateMessage(aUser.getIdentity().getNick(), string("<") + getMyNick() + "> " + aMessage); }
 	virtual void sendUserCmd(const string& aUserCmd) throw() { send(toNmdc(aUserCmd)); }
 	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
@@ -71,12 +71,7 @@ public:
 	}    
 
 	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
-	virtual int64_t getAvailable() const;
-	virtual const string& getName() const { return name; };
-	virtual bool getOp() const { return getMe() ? getMe()->isSet(User::OP) : false; };
-	
-	virtual User::NickMap& lockUserList() { cs.enter(); return users; };
-	virtual void unlockUserList() { cs.leave(); };
+	//virtual int64_t getAvailable() const;
 
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
@@ -93,35 +88,18 @@ public:
 	};
 	void key(const string& aKey) { send("$Key " + aKey + "|"); };	
 	void version() { send("$Version 1,0091|"); };
-	void getNickList() {
-		if(state == STATE_CONNECTED || state == STATE_MYINFO) {
-			send("$GetNickList|");
-		}
-	};
-	void getInfo(User::Ptr aUser) {
-		 checkstate();
-		 char buf[256];
-		 sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
-		 send(buf);
-	};
-	void getInfo(User* aUser) {
-		checkstate();
-		char buf[256];
-		sprintf(buf, "$GetINFO %s %s|", toNmdc(aUser->getNick()).c_str(), toNmdc(getNick()).c_str());
-		send(buf);
-	};
+	void getNickList() { checkstate(); send("$GetNickList|"); };
+	void getInfo(const OnlineUser& aUser) { checkstate(); send("$GetINFO " + toNmdc(aUser.getIdentity().getNick()) + " " + toNmdc(getMyNick()) + "|"); };
+
 	void sendRaw(const string& aRaw) { send(toNmdc(aRaw)); }
 	
-	void connectToMe(const User::Ptr& aUser);
-	void revConnectToMe(const User::Ptr& aUser);
+	void connectToMe(const OnlineUser& aUser);
+	void revConnectToMe(const OnlineUser& aUser);
 
-	void privateMessage(const User::Ptr& aUser, const string& aMessage) {
-		privateMessage(aUser->getNick(), string("<") + getNick() + "> " + aMessage);
-	}
 	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
 		char buf[512];
-		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getNick()).c_str());
+		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getMyNick()).c_str());
 		send(string(buf)+toNmdc(Util::validateChatMessage(aMessage))+"|");
 	}
 
@@ -144,9 +122,11 @@ private:
 	} state;
 
 	mutable CriticalSection cs;
-	string name;
 
-	User::NickMap users;
+	typedef HASH_MAP_X(string, OnlineUser*, noCaseStringHash, noCaseStringEq, noCaseStringLess) NickMap;
+	typedef NickMap::iterator NickIter;
+
+	NickMap users;
 
 	bool reconnect;
 	string lastmyinfo;
@@ -170,9 +150,15 @@ private:
 
 	void clearUsers();
 	void onLine(const char* aLine) throw();
+
+	OnlineUser& getUser(const string& aNick);
+	OnlineUser* findUser(const string& aNick);
+	void putUser(const string& aNick);
 	
 	string fromNmdc(const string& str) const { return Text::acpToUtf8(str); }
 	string toNmdc(const string& str) const { return Text::utf8ToAcp(str); }
+
+	void updateFromTag(Identity& id, const string& tag);
 
 	virtual string checkNick(const string& aNick);
 

@@ -127,7 +127,7 @@ void ConnectionManager::putDownloadConnection(UserConnection* aSource, bool reus
 	dcassert(cqi);
 
 	if(reuse) {
-		dcdebug("ConnectionManager::putDownloadConnection Pooling reusable connection %p to %s\n", aSource, aSource->getUser()->getNick().c_str());
+		dcdebug("ConnectionManager::putDownloadConnection Pooling reusable connection %p to %s\n", aSource, aSource->getUser()->getFirstNick().c_str());
 		// Pool it for later usage...
 		aSource->addListener(this);
 		{
@@ -297,8 +297,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					if(cqi->getState() == ConnectionQueueItem::WAITING) {
 						if(startDown) {
 							cqi->setState(ConnectionQueueItem::CONNECTING);
-							if(cqi->getUser()->isOnline())
-								cqi->getUser()->connect();
+							ClientManager::getInstance()->connect(cqi->getUser());
 							fire(ConnectionManagerListener::StatusChanged(), cqi);
 							attempts++;
 						} else {
@@ -310,8 +309,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					}
 				} else if(((cqi->getLastAttempt() + 50*1000) < aTick) && (cqi->getState() == ConnectionQueueItem::CONNECTING)) {
 					User::Ptr user = cqi->getUser();
-					if (user) {
-						user->connectionTimeout();
+					if (user->getOnlineUser()) {
+						user->getOnlineUser()->connectionTimeout();
 					}			
 					fire(ConnectionManagerListener::Failed(), cqi, STRING(CONNECTION_TIMEOUT));
 					cqi->setState(ConnectionQueueItem::WAITING);
@@ -327,6 +326,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 
 		penDel = pendingDelete;
 		pendingDelete.clear();
+
 	}
 
 	for_each(penDel.begin(), penDel.end(), DeleteFunction<UserConnection*>());
@@ -395,7 +395,7 @@ void ConnectionManager::on(ServerSocketListener::IncomingConnection) throw() {
 	}
 }
 
-void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const string& aNick) {
+void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const string& aNick, const string& hubUrl) {
 	if(shuttingDown)
 		return;
 
@@ -417,7 +417,8 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 			}
 		} 
 		uc = getConnection(true);
-		uc->setNick(aNick);
+		uc->setToken(aNick);
+		uc->setHubUrl(hubUrl);
 		uc->setState(UserConnection::STATE_CONNECT);
 		uc->setFlag(UserConnection::FLAG_NMDC);
 		uc->connect(aServer, aPort);
@@ -427,7 +428,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 	}
 }
 
-void ConnectionManager::adcConnect(const string& aServer, short aPort, const string& aToken) {
+void ConnectionManager::adcConnect(const OnlineUser& aUser, short aPort, const string& aToken) {
 	if(shuttingDown)
 		return;
 
@@ -436,7 +437,10 @@ void ConnectionManager::adcConnect(const string& aServer, short aPort, const str
 		uc = getConnection(false);
 		uc->setToken(aToken);
 		uc->setState(UserConnection::STATE_CONNECT);
-		uc->connect(aServer, aPort);
+		if(aUser.getIdentity().isOp()) {
+			uc->setFlag(UserConnection::FLAG_OP);
+		}
+		uc->connect(aUser.getIdentity().getIp(), aPort);
 	} catch(const SocketException&) {
 		if(uc)
 			putConnection(uc);
@@ -472,7 +476,7 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 	if (SETTING(GARBAGE_COMMAND_OUTGOING))
 		aSource->garbageCommand();
 	if(aSource->isSet(UserConnection::FLAG_NMDC)) {
-		aSource->myNick(aSource->getNick());
+		aSource->myNick(aSource->getToken());
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	} else {
 		aSource->sup(adcFeatures);
@@ -480,9 +484,6 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 	aSource->setState(UserConnection::STATE_SUPNICK);
 }
 
-/**
- * Nick received. If it's a downloader, fine, otherwise it must be an uploader.
- */
 void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSource, const string& aNick) throw() {
 	if(aSource->getState() != UserConnection::STATE_SUPNICK) {
 		// Already got this once, ignore...
@@ -494,12 +495,26 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	dcdebug("ConnectionManager::onMyNick %p, %s\n", aSource, aNick.c_str());
 	dcassert(!aSource->getUser());
 
+	if(aSource->isSet(UserConnection::FLAG_INCOMING)) {
+		// Try to guess where this came from...
+		ExpectMap::iterator i = expectedConnections.find(aNick);
+		if(i == expectedConnections.end()) {
+			dcdebug("Unknown incoming connection from %s\n", aNick.c_str());
+			putConnection(aSource);
+			return;
+		}
+        aSource->setToken(i->second.first);	
+		aSource->setHubUrl(i->second.second);	
+		expectedConnections.erase(i);
+	}
+	CID cid = ClientManager::getInstance()->makeCid(aNick, aSource->getHubUrl());
+
 	// First, we try looking in the pending downloads...hopefully it's one of them...
 	{
 		Lock l(cs);
 		for(ConnectionQueueItem::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 			ConnectionQueueItem* cqi = *i;
-			if((cqi->getState() == ConnectionQueueItem::CONNECTING || cqi->getState() == ConnectionQueueItem::WAITING) && cqi->getUser()->getNick() == aNick) {
+			if((cqi->getState() == ConnectionQueueItem::CONNECTING || cqi->getState() == ConnectionQueueItem::WAITING) && cqi->getUser()->getCID() == cid) {
 				aSource->setUser(cqi->getUser());
 				// Indicate that we're interested in this file...
 				aSource->setFlag(UserConnection::FLAG_DOWNLOAD);
@@ -510,36 +525,33 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 	if(!aSource->getUser()) {
 		// Make sure we know who it is, i e that he/she is connected...
-		if(!ClientManager::getInstance()->isOnline(aNick)) {
+
+		aSource->setUser(ClientManager::getInstance()->findUser(cid));
+		if(!aSource->getUser() || !ClientManager::getInstance()->isOnline(aSource->getUser())) {
 			dcdebug("CM::onMyNick Incoming connection from unknown user %s\n", aNick.c_str());
 			putConnection(aSource);
 			return;
 		}
-
-		aSource->setUser(ClientManager::getInstance()->getUser(aNick));
 		// We don't need this connection for downloading...make it an upload connection instead...
 		aSource->setFlag(UserConnection::FLAG_UPLOAD);
 	}
 
-	if(aSource->getUser()->isOnline()) {
-		// We don't want connections from people claiming to be us
-		if(!aSource->getUser()->getClient()->getStealth() && (aNick == aSource->getUser()->getClientNick())) {
-			putConnection(aSource);
-			return;
-		}
-		if (aSource->getUser()->getClient()->getNick().compare(aSource->getUser()->getNick()) != 0) {		
-			string address = aSource->getRemoteIp();
-			if(aSource->getUser()->getIp() != address) {
-				ClientManager::getInstance()->setIPNick(address, aSource->getUser());
-				User::updated(aSource->getUser());
-			}
+	if(ClientManager::getInstance()->isOp(aSource->getUser(), aSource->getHubUrl()))
+		aSource->setFlag(UserConnection::FLAG_OP);
+
+	OnlineUser* ou = aSource->getUser()->getOnlineUser();
+	if(ou) {
+		string address = aSource->getRemoteIp();
+		if(ou->getIdentity().getIp() != address) {
+			ou->getIdentity().setIp(address);
+			ClientManager::getInstance()->UserUpdated(aSource->getUser());
 		}
 	}
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
 		if(SETTING(GARBAGE_COMMAND_INCOMING))
 			aSource->garbageCommand();
-		aSource->myNick(aSource->getUser()->getClientNick()); 
+		aSource->myNick(aSource->getToken()); 
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	}
 
@@ -552,13 +564,17 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		return;
 	}
 	
-	aSource->getUser()->setPk(aPk);
-	aSource->getUser()->setLock(aLock);
+	OnlineUser* ou = aSource->getUser()->getOnlineUser();
+	if(ou) {
+		ou->setPk(aPk);
+		ou->setLock(aLock);
+	}
+
 	if( CryptoManager::getInstance()->isExtended(aLock) ) {
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
 			aSource->getUser()->setFlag(User::DCPLUSPLUS);
-			User::updated(aSource->getUser());
+			ClientManager::getInstance()->UserUpdated(aSource->getUser());
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
@@ -703,7 +719,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 		return;
 	}
 
-	aSource->setUser(ClientManager::getInstance()->getUser(cmd.getFrom(), false));
+	aSource->setUser(ClientManager::getInstance()->findUser(cmd.getFrom()));
 
 	if(!aSource->getUser()) {
 		dcdebug("CM::onINF: User not found");
@@ -721,7 +737,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
+void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
 	Lock l(cs_failedConnections);
 #ifdef _DEBUG
 	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI())
@@ -786,8 +802,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 				conn->getUser()->setFlag(User::TTH_GET);
 		}
 	}
-	if(conn->getUser() != (User::Ptr)NULL) {
-		conn->getUser()->setSupports(sup);
+	if(conn->getUser()->getOnlineUser() != NULL) {
+		conn->getUser()->getOnlineUser()->setSupports(sup);
 	}
 }
 

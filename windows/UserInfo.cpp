@@ -21,10 +21,6 @@
 #include "Resource.h"
 #include "UserInfo.h"
 
-UserInfo::UserInfo(const User::Ptr& u) : UserInfoBase(u), op(false) { 
-	update();
-};
-
 const tstring& UserInfo::getText(int col) const {
 	return columns[col];
 }
@@ -43,52 +39,57 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	}
 
 	switch(col) {
-		case COLUMN_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
-		case COLUMN_EXACT_SHARED: return compare(a->user->getBytesShared(), b->user->getBytesShared());
-		case COLUMN_HUBS: return compare(Util::toInt(a->user->getHubs()), Util::toInt(b->user->getHubs()));
-		case COLUMN_SLOTS: return compare(a->user->getSlots(), b->user->getSlots());
-		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->user->getUpload()), Util::toInt(b->user->getUpload()));
+		case COLUMN_SHARED:
+		case COLUMN_EXACT_SHARED: return compare(a->getBytes(), b->getBytes());
+		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
+		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->identity.get("US")), Util::toInt(b->identity.get("US")));
 	}
 	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
 }
 
-bool UserInfo::update() {
-	bool needsSort = (op != user->isSet(User::OP));
+bool UserInfo::update(const Identity& identity, int sortCol) {
+	bool needsSort = (op != identity.isOp());
 
-	tstring uploadSpeed;
+	tstring old;
+	if(sortCol != -1)
+		old = columns[sortCol];
 
-	if(user->getLastDownloadSpeed()<1) {
-		int status = user->getStatus();
-		string Omezeni = user->getUpload();
-		if (!Omezeni.empty()) {
-			uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(Omezeni)*1024)) + _T("/s");
-		} else if( (status == 8) || (status == 9)  || (status == 10) || (status == 11)) {
-			uploadSpeed = _T(">= 100 kB/s");
-		} else {
-			uploadSpeed = _T("N/A");
-		}
-	} else
-		uploadSpeed = Text::toT(Util::formatBytes(user->getLastDownloadSpeed())) + _T("/s");
+	string uploadSpeed = identity.get("US");
+	if (!uploadSpeed.empty()) {
+		columns[COLUMN_UPLOAD_SPEED] = Text::toT(Util::formatBytes(Util::toInt64(uploadSpeed))) + _T("/s");
+	} else if(identity.getUser()->isSet(User::FIREBALL)) {
+		columns[COLUMN_UPLOAD_SPEED] = _T(">= 100 kB/s");
+	} else {
+		columns[COLUMN_UPLOAD_SPEED] = _T("N/A");
+	}
 
-	columns[COLUMN_NICK] = Text::toT(user->getNick());
-	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(user->getBytesShared()));
-	columns[COLUMN_EXACT_SHARED] = Text::toT(Util::formatExactSize(user->getBytesShared()));
-	columns[COLUMN_DESCRIPTION] = Text::toT(user->getDescription());
-	columns[COLUMN_TAG] = Text::toT(user->getTag());
-	columns[COLUMN_CONNECTION] = Text::toT(user->getConnection());
-	columns[COLUMN_UPLOAD_SPEED] = uploadSpeed;
-	columns[COLUMN_EMAIL] = Text::toT(user->getEmail());
-	columns[COLUMN_CLIENTID] = Text::toT(user->getClientType());
-	columns[COLUMN_VERSION] = Text::toT(user->getVersion());
-	columns[COLUMN_MODE] = Text::toT(user->getMode());
-	columns[COLUMN_HUBS] = Text::toT(user->getHubs());
-	columns[COLUMN_SLOTS] = Text::toT(Util::toString(user->getSlots()));
-	columns[COLUMN_IP] = Text::toT(user->getIp());
-	columns[COLUMN_PK] = Text::toT(user->getPk());
-	columns[COLUMN_LOCK] = Text::toT(user->getLock());
-	columns[COLUMN_SUPPORTS] = Text::toT(user->getSupports());
+	bytes = identity.getBytesShared();
 
-	op = user->isSet(User::OP);
+	columns[COLUMN_NICK] = Text::toT(identity.getNick());
+	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(bytes));
+	columns[COLUMN_EXACT_SHARED] = Text::toT(Util::formatExactSize(bytes));
+	columns[COLUMN_DESCRIPTION] = Text::toT(identity.getDescription());
+	columns[COLUMN_TAG] = Text::toT(identity.getTag());
+	columns[COLUMN_EMAIL] = Text::toT(identity.getEmail());
+	columns[COLUMN_CONNECTION] = Text::toT(identity.getConnection());
+	columns[COLUMN_VERSION] = Text::toT(identity.get("VE"));
+	columns[COLUMN_MODE] = Text::toT(identity.isTcpActive() ? "A" : "P");
+	columns[COLUMN_HUBS] = Text::toT(Util::toString(Util::toInt(identity.get("HN"))+Util::toInt(identity.get("HR"))+Util::toInt(identity.get("HO"))));
+	columns[COLUMN_SLOTS] = Text::toT(identity.get("SL"));
+	columns[COLUMN_IP] = Text::toT(identity.getIp());
+	if(user->getOnlineUser()) {
+		columns[COLUMN_PK] = Text::toT(user->getOnlineUser()->getPk());
+		columns[COLUMN_LOCK] = Text::toT(user->getOnlineUser()->getLock());
+		columns[COLUMN_SUPPORTS] = Text::toT(user->getOnlineUser()->getSupports());
+		columns[COLUMN_CLIENTID] = Text::toT(user->getOnlineUser()->getClientType());
+	}
+	op = identity.isOp();
+	hidden = identity.isHidden();
+	
+	if(sortCol != -1) {
+		needsSort = needsSort || (old != columns[sortCol]);
+	}
 
+	setIdentity(identity);
 	return needsSort;
 }

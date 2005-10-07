@@ -254,15 +254,13 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CTSTRING(SIZE));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CTSTRING(TTH_ROOT));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
-	copyMenu.InsertSeparator(0, TRUE, STRING(USERINFO));
-	
+
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
-	grantMenu.InsertSeparator(0, TRUE, STRING(GRANT_SLOTS_MENU));
 	
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CTSTRING(DOWNLOAD));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CTSTRING(DOWNLOAD_TO));
@@ -318,13 +316,13 @@ LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 };
 
 
-BOOL SearchFrame::ListMeasure(HWND hwnd, UINT uCtrlId, MEASUREITEMSTRUCT *mis) {
+BOOL SearchFrame::ListMeasure(HWND /*hwnd*/, UINT /*uCtrlId*/, MEASUREITEMSTRUCT *mis) {
 	mis->itemHeight = 16;
 	return TRUE;
 }
 
 
-BOOL SearchFrame::ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis) {
+BOOL SearchFrame::ListDraw(HWND /*hwnd*/, UINT /*uCtrlId*/, DRAWITEMSTRUCT *dis) {
 	TCHAR szText[MAX_PATH+1];
 	int idx;
 	
@@ -549,8 +547,8 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 			
 			if(si->subItems.size()>0) {
-				int q = 0;
-				while(q<si->subItems.size()) {
+				unsigned int q = 0;
+				while(q < si->subItems.size()) {
 					SearchInfo* j = si->subItems[q];
 					try {
 						QueueManager::getInstance()->add(Text::fromT(tgt + si->fileName), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
@@ -646,6 +644,7 @@ void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
 	} else {
 		size = -1;
 	}
+	/** @todo 
 	if(oneHub && hub.empty()) {
 		hub = Text::toT(si->sr->getUser()->getClientAddressPort());
 	} else if(hub != Text::toT(si->sr->getUser()->getClientAddressPort())) {
@@ -654,6 +653,7 @@ void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
 	}
 	if(op)
 		op = si->sr->getUser()->isClientOp();
+		*/
 }
 
 LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -835,7 +835,7 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		// "Size"
 		int w2 = width - rMargin - lMargin;
 		rc.top += spacing;
-		rc.bottom += spacing;
+		rc.bottom = rc.top + comboH;
 		rc.right = w2/3;
 		ctrlMode.MoveWindow(rc);
 
@@ -843,10 +843,12 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 
 		rc.left = rc.right + lMargin;
 		rc.right += w2/3;
+		rc.bottom = rc.top + 21;
 		ctrlSize.MoveWindow(rc);
 
 		rc.left = rc.right + lMargin;
 		rc.right = width - rMargin;
+		rc.bottom = rc.top + comboH;
 		ctrlSizeMode.MoveWindow(rc);
 
 		// "File type"
@@ -963,9 +965,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		}
 		if(!sr->getUser()->isOnline())
 			return;
-			
-		ucParams["mynick"] = sr->getUser()->getClientNick();
-		ucParams["mycid"] = sr->getUser()->getClientCID().toBase32();
+
 		ucParams["file"] = sr->getFile();
 		ucParams["filesize"] = Util::toString(sr->getSize());
 		ucParams["filesizeshort"] = Util::formatBytes(sr->getSize());
@@ -974,9 +974,8 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		}
 
 		StringMap tmp = ucParams;
-		sr->getUser()->getParams(tmp);
-		sr->getUser()->clientEscapeParams(tmp);
-		sr->getUser()->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
+		sr->getUser()->getOnlineUser()->getIdentity().getParams(tmp, "");
+		sr->getUser()->getOnlineUser()->getClient().sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 	}
 	return;
 };
@@ -1073,16 +1072,17 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
             // Check previous search results for dupes	 	
 			for(vector<SearchInfo*>::iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
 				SearchInfo* si2 = *s;
-                SearchResult* sr2 = si2->sr;	 	
-                if((sr->getUser()->getNick() == sr2->getUser()->getNick()) && (sr->getFile() == sr2->getFile())) {	 	
+                SearchResult* sr2 = si2->sr;
+				// @BM todo: getFirstNick ???
+				if((sr->getUser()->getFirstNick() == sr2->getUser()->getFirstNick()) && (sr->getFile() == sr2->getFile())) {
 					delete si;	 	
                     return 0;	 	
-                }	 	
+				}
                 for(SearchInfo::Iter k = si2->subItems.begin(); k != si2->subItems.end(); k++){	 	
-					if((sr->getUser()->getNick() == (*k)->getUser()->getNick()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
+					if((sr->getUser()->getFirstNick() == (*k)->getUser()->getFirstNick()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
 				        delete si;	 	
 		                return 0;	 	
-					}	 	
+					} 	
 				}	 	
             }
 			if(bPaused == false) {
@@ -1264,15 +1264,23 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 				}					
 			}
 
-			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hub, cs.op);
+			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, sr->getUser()->getClient());
 			if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 				resultsMenu.AppendMenu(MF_SEPARATOR);
 			}
 			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 			checkAdcItems(resultsMenu);
 			resultsMenu.InsertSeparatorFirst(sr->getFileName());
+			copyMenu.InsertSeparatorFirst(STRING(USERINFO));
+			grantMenu.InsertSeparatorFirst(STRING(GRANT_SLOTS_MENU));	
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+
 			resultsMenu.RemoveFirstItem();
+			copyMenu.RemoveFirstItem();
+			grantMenu.RemoveFirstItem();
+			targetDirMenu.RemoveFirstItem();
+			targetMenu.RemoveFirstItem();
+
 			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
 			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
 			cleanMenu(resultsMenu);
@@ -1300,7 +1308,7 @@ void SearchFrame::initHubs() {
 		if (!client->isConnected())
 			continue;
 
-		onHubAdded(new HubInfo(Text::toT(client->getIpPort()), Text::toT(client->getName()), client->getOp()));
+		onHubAdded(new HubInfo(Text::toT(client->getIpPort()), Text::toT(client->getHubName()), client->getMyIdentity().isOp()));
 	}
 
 	clientMgr->unlock();
@@ -1393,7 +1401,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		SearchResult* sr = ctrlResults.getItemData(pos)->sr;
 		switch (wID) {
 			case IDC_COPY_NICK:
-				sCopy = sr->getUser()->getNick();
+				sCopy = sr->getUser()->getFirstNick();
 				break;
 			case IDC_COPY_FILENAME:
 				sCopy = Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
@@ -1423,7 +1431,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	return S_OK;
 }
 
-LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
 	SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
@@ -1513,7 +1521,7 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 	if(!reg.IsValid() || filter.empty()) {
 		match = true;
 	} else {
-		match = reg.match(Text::fromT(item->getText(columnIndexes[sel])));
+		match = reg.match(Text::fromT(item->getText(columnIndexes[sel]))) > 0;
 	}
 
 	if(match) {
@@ -1521,7 +1529,7 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(item->sr->getFile())) : WinUtil::getDirIconIndex();
 		} else {
-			const string& tmp = item->sr->getUser()->getConnection();
+			const string& tmp = item->sr->getUser()->getOnlineUser() ? item->sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString;
 			if( (tmp == "28.8Kbps") ||
 				(tmp == "33.6Kbps") ||
 				(tmp == "56Kbps") ||

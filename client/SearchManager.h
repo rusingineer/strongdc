@@ -71,7 +71,7 @@ public:
 		tth((aTTH != NULL) ? new TTHValue(*aTTH) : NULL), utf8(aUtf8), ref(1) { }
 
 	string getFileName() const;
-	string toSR() const;
+	string toSR(const Client& client) const;
 	AdcCommand toRES(char type) const;
 
 	User::Ptr& getUser() { return user; }
@@ -79,6 +79,7 @@ public:
 
 	const string& getFile() const { return file; }
 	const string& getHubIpPort() const { return hubIpPort; }
+	/** @todo Return a hub where the user is online? */
 	const string& getHubName() const { return hubName.empty() ? user->getClientName() : hubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
@@ -165,6 +166,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 			setThreadPriority(Thread::IDLE);
 			SearchResult* sr = NULL;
 			bool resort = false;
+			stop = false;
 
 			for(;;) {
 				s.wait();
@@ -184,18 +186,20 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 				}
 
 				if(sr != NULL) {
-					if (!sr->getIP().empty()) {
-						ClientManager::getInstance()->setIPNick(sr->getIP(), sr->getUser());
-					}
+					OnlineUser* ou = sr->getUser()->getOnlineUser();
+					if(ou) {
+						if (!sr->getIP().empty())
+							ou->getIdentity().setIp(sr->getIP());
 
-					if((sr->getUser()->getVersion() == "0.403") && (sr->getUser()->getClientType() != "rmDC++ 0.403D[1]")) {
-						string path(sr->getFile());
-						path = path.substr(0, path.find("\\"));
-						PME reg("([A-Z])");
-						if(reg.match(path)) {
-							sr->getUser()->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
-							sr->getUser()->setClientType("rmDC++ 0.403D[1]");
-							sr->getUser()->setBadClient(true);
+						if((ou->getIdentity().get("VE") == "++ 0.403") && (ou->getClientType() != "rmDC++ 0.403D[1]")) {
+							string path(sr->getFile());
+							path = path.substr(0, path.find("\\"));
+							PME reg("([A-Z])");
+							if(reg.match(path)) {
+								ou->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
+								ou->setClientType("rmDC++ 0.403D[1]");
+								ou->setBadClient(true);
+							}
 						}
 					}
 

@@ -212,7 +212,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
 			if(speed == 0) speed = 1;
 		}else{
-			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
+			speed = chunk->download ? Util::toInt64(chunk->download->getUser()->getIdentity().get("US")) : DEFAULT_SPEED;
 			if(speed == 0) speed = DEFAULT_SPEED;
 		}
 		
@@ -247,7 +247,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
 
 	if(speed == 0 && maxChunk->download){
-		speed =  maxChunk->download->getUser()->getLastDownloadSpeed();
+		speed = Util::toInt64(maxChunk->download->getUser()->getIdentity().get("US"));
 	}
 
 	if(speed == 0){
@@ -425,7 +425,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 	tth.finalize();
 
 	int64_t end;
-	for(int i = 0; i < tth.getLeaves().size(); ++i) {
+	for(unsigned int i = 0; i < tth.getLeaves().size(); ++i) {
 		end = min(start + tth.getBlockSize(), file.getSize());
 		if(!(tth.getLeaves()[i] == aTree.getLeaves()[i])) {
        		if(!CorruptedBlocks.empty() && *(CorruptedBlocks.rbegin()) == start) {
@@ -544,7 +544,7 @@ SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t siz
 
 void ensurePrivilege()
 {
-	HANDLE			 hToken;
+	HANDLE			 hToken = NULL;
 	TOKEN_PRIVILEGES privilege;
 	LUID			 luid;
 	DWORD			 dwRet;
@@ -814,8 +814,8 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - dow
 		break;
 	case 2 :
 		for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); ++i) {
-			v.push_back(i->first * tthBlockSize);
-			v.push_back(i->second * tthBlockSize);
+			v.push_back((int64_t)i->first * (int64_t)tthBlockSize);
+			v.push_back((int64_t)i->second * (int64_t)tthBlockSize);
 		}
 		break;
 	}

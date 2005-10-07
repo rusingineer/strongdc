@@ -70,9 +70,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 		setFlag(FLAG_NMDC);
 	} else {
 		// We shouldn't be here?
-		if(getUser()) {
-			getUser()->setUnknownCommand(aLine);
-			dcdebug(getUser()->getNick().c_str());
+		if(getUser() && getUser()->getOnlineUser()) {
+			getUser()->getOnlineUser()->setUnknownCommand(aLine);
 		}
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		/*aLine = strchr(aLine, '$');
@@ -88,7 +87,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 	    	// $MyNick
     		if(strncmp(aLine+2, "yNick ", 6) == 0) {
     			aLine += 8;
-    			if(aLine+8 != NULL) {
+        		if(aLine[0] != NULL) {
     				fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine));
 	            }
     	        return;
@@ -105,11 +104,11 @@ void UserConnection::onLine(const char* aLine) throw() {
 	        // $Direction
     	    if(strncmp(aLine+2, "irection ", 9) == 0) {
     			aLine += 11;
-    			if(aLine == NULL) return;
+        		if(aLine[0] == NULL) return;
     
-	    		if((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
+        		if((temp = strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
     				temp[0] = NULL, temp += 1;
-    				if(aLine == NULL || temp == NULL) return;
+        			if(aLine[0] == NULL || temp[0] == NULL) return;
     
     				fire(UserConnectionListener::Direction(), this, aLine, temp);
 	    		}
@@ -122,7 +121,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 			// $Error
     	    if(strncmp(aLine+2, "rror ", 5) == 0) {
     			aLine += 7;
-    			if(aLine == NULL) return;
+        		if(aLine[0] == NULL) return;
     
 	    		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
     				strstr(aLine, /*path/file*/" no more exists") != 0) {
@@ -139,7 +138,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 			// $FileLength
     	    if(strncmp(aLine+2, "ileLength ", 10) == 0) {
     			aLine += 12;
-    			if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				fire(UserConnectionListener::FileLength(), this, _atoi64(aLine));
 	    		}
     			return;
@@ -151,11 +150,11 @@ void UserConnection::onLine(const char* aLine) throw() {
 	        // $Get
     		if(strncmp(aLine+2, "et ", 3) == 0) {
     			aLine += 5;
-    			if(aLine == NULL) return;
+        		if(aLine[0] == NULL) return;
     
-	    		if((temp = strchr(aLine, '$')) != NULL && temp+1 != NULL)  {
+        		if((temp = strchr(aLine, '$')) != NULL && temp[1] != NULL)  {
     				temp[0] = NULL; temp += 1;
-    				if(aLine == NULL || temp == NULL) return;
+        			if(aLine[0] == NULL || temp[0] == NULL) return;
     
     				fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
 	    		}
@@ -171,7 +170,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     	    // GetZBlock
     		if(strncmp(aLine+2, "etZBlock ", 9) == 0) {
     			aLine += 11;
-	    		if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				processBlock(aLine, 1);
     			}
     			return;
@@ -183,7 +182,7 @@ void UserConnection::onLine(const char* aLine) throw() {
        		// $UGetZBLock
 	        if(strncmp(aLine+2, "GetZBlock ", 10) == 0) {
     			aLine += 12;
-    			if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				processBlock(aLine, 2);
 	    		}
     			return;
@@ -192,7 +191,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 	        // $UGetBlock
     		if(strncmp(aLine+2, "GetBlock ", 9) == 0) {
     			aLine += 11;
-    			if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
 	    			processBlock(aLine, 3);
     			}
     			return;
@@ -204,7 +203,7 @@ void UserConnection::onLine(const char* aLine) throw() {
   	      // $Key
      	   if(strncmp(aLine+2, "ey ", 3) == 0) {
     			aLine += 5;
-    			if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				fire(UserConnectionListener::Key(), this, aLine);
     			}
     			return;
@@ -216,11 +215,11 @@ void UserConnection::onLine(const char* aLine) throw() {
         	// $Lock
         	if(strncmp(aLine+2, "ock ", 4) == 0) {
     			aLine += 6;
-    			if(aLine == NULL) return;
+        		if(aLine[0] == NULL) return;
      
-    			if((temp = strchr(aLine, ' ')) != NULL && temp+4 != NULL) {
-    				temp[0] = NULL; temp += 4;
-    				if(aLine == NULL || temp == NULL) return; 
+        		if((temp = strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
+        			temp[0] = NULL; temp += 1;
+        			if(aLine[0] == NULL || temp[0] == NULL) return;
                 
     				fire(UserConnectionListener::CLock(), this, aLine, temp);
 	    		} else {
@@ -232,7 +231,7 @@ void UserConnection::onLine(const char* aLine) throw() {
 			// $ListLen
 			if(strncmp(aLine+2, "istLen ", 7) == 0) {	                 	
 				aLine += 9;	 	
-	            if(aLine != NULL) {	 	
+	            if(aLine[0] != NULL) {	 	
 					fire(UserConnectionListener::ListLength(), this, aLine);	
 				}
 				return;
@@ -249,7 +248,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     	    // $Sending
     		if(strncmp(aLine+2, "ending ", 7) == 0) {
     			aLine += 9;
-	    		if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				fire(UserConnectionListener::Sending(), this, _atoi64(aLine));
     			}
     			return;
@@ -258,7 +257,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     	    // $Supports
     		if(strncmp(aLine+2, "upports ", 8) == 0) {
     			aLine += 10;
-	    		if(aLine != NULL) {
+        		if(aLine[0] != NULL) {
     				fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine, ' ').getTokens());
     			}
     			return;
@@ -274,9 +273,8 @@ void UserConnection::onLine(const char* aLine) throw() {
  	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	default:
-			if(getUser()) {
-				getUser()->setUnknownCommand(aLine);
-				dcdebug(getUser()->getNick().c_str());
+			if(getUser() && getUser()->getOnlineUser()) {
+				getUser()->getOnlineUser()->setUnknownCommand(aLine);
 			}
 			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;
@@ -290,10 +288,10 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 
 void UserConnection::processBlock(const char* param, int type) throw() {
 	char *temp, *temp1;
-	if((temp = strchr(param, ' ')) == NULL || temp+1 == NULL) return;
+	if((temp = strchr(param, ' ')) == NULL || temp[1] == NULL) return;
 
 	temp[0] = NULL; temp += 1;
-	if(param == NULL || temp == NULL) return;
+	if(param[0] == NULL || temp[0] == NULL) return;
 
 	int64_t start = _atoi64(param);
 	if(start < 0) {
@@ -301,10 +299,10 @@ void UserConnection::processBlock(const char* param, int type) throw() {
 		return;
 	}
 
-	if((temp1 = strchr(temp, ' ')) == NULL || temp1+1 == NULL) return;
+	if((temp1 = strchr(temp, ' ')) == NULL || temp1[1] == NULL) return;
 
 	temp1[0] = NULL; temp1 += 1;
-	if(temp == NULL || temp1 == NULL) return;
+	if(temp[0] == NULL || temp1[0] == NULL) return;
 
 	int64_t bytes = _atoi64(temp);
 

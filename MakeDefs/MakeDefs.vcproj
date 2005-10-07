@@ -54,10 +54,12 @@
 				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreAllDefaultLibraries="FALSE"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="TRUE"
 				SubSystem="1"
-				OptimizeReferences="2"
+				OptimizeReferences="0"
 				EnableCOMDATFolding="2"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -117,7 +119,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
+				AdditionalOptions="/MACHINE:I386 /NODEFAULTLIB:LIBCMT"
 				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"

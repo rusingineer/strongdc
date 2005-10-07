@@ -128,7 +128,7 @@ void FavoriteHubsFrame::openSelected() {
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+			entry->getChatUserSplit(), entry->getUserListState());
 	}
 	return;
 }
@@ -209,7 +209,7 @@ LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BO
 			, Text::toT(entry->getRawFour())
 			, Text::toT(entry->getRawFive())	
 			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getStealth(), entry->getUserListState());
+			entry->getChatUserSplit(), entry->getUserListState());
 	}
 
 	return 0;

@@ -514,7 +514,7 @@ SettingsManager::SettingsManager()
 	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));
 	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
 	setDefault(PROGRESS_SEGMENT_COLOR, RGB(49, 106, 197));
-	setDefault(COLOR_RUNNING, RGB(0,0,0)); // @todo: make some good color
+	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
 	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
 	setDefault(COLOR_VERIFIED, RGB(222, 160, 0));
 #endif
