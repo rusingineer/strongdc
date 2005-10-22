@@ -71,7 +71,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else {
 		// We shouldn't be here?
 		if(getUser() && getUser()->getOnlineUser()) {
-			getUser()->getOnlineUser()->setUnknownCommand(aLine);
+			if(strlen(aLine) < 255)
+				getUser()->getOnlineUser()->setUnknownCommand(aLine);
 		}
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		/*aLine = strchr(aLine, '$');
@@ -274,7 +275,8 @@ void UserConnection::onLine(const char* aLine) throw() {
 		    return;
     	default:
 			if(getUser() && getUser()->getOnlineUser()) {
-				getUser()->getOnlineUser()->setUnknownCommand(aLine);
+				if(strlen(aLine) < 255)
+					getUser()->getOnlineUser()->setUnknownCommand(aLine);
 			}
 			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;

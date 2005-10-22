@@ -234,6 +234,7 @@ public:
 
 	void addFavorite(const FavoriteHubEntry& aEntry);
 	void removeFavorite(FavoriteHubEntry* entry);
+	bool checkFavHubExists(const FavoriteHubEntry& aEntry);
 
 // Favorite Directories
 	bool addFavoriteDir(const string& aDirectory, const string& aName);

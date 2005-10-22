@@ -62,7 +62,6 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::USE_OEM_MONOFONT, ResourceManager::SETTINGS_USE_OEM_MONOFONT },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
 	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
-	{ SettingsManager::CONFIRM_HUB_REMOVAL, ResourceManager::SETTINGS_CONFIRM_HUB_REMOVAL },
 	{ SettingsManager::FINISHED_DOWNLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_DOWNLOAD_DIRTY },	
     { SettingsManager::FINISHED_UPLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_UPLOAD_DIRTY },	
     { SettingsManager::QUEUE_DIRTY, ResourceManager::SETTINGS_QUEUE_DIRTY },	

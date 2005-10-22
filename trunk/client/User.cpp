@@ -65,7 +65,7 @@ void Identity::getParams(StringMap& map, const string& prefix) const {
 }
 
 void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat) {
-	if(getIdentity().isOp()) return;
+	if(getIdentity().isOp() || !getClient().isOp()) return;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);

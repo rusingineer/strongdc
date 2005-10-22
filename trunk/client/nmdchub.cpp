@@ -129,8 +129,10 @@ void NmdcHub::putUser(const string& aNick) {
 	{
 		Lock l(cs);
 		NickIter i = users.find(aNick);
-		if(i == users.end())
+		if(i == users.end()) {
+			dcassert(0);
 			return;
+		}
 		u = i->second;
 		users.erase(i);
 	}
@@ -410,9 +412,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         	    if(aLine[0] == NULL)
 		    	     return;
 
-				string nick = fromNmdc(aLine);
-	
-				OnlineUser& u = getUser(nick);
+				OnlineUser& u = getUser(fromNmdc(aLine));
 
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
@@ -421,7 +421,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					if(Description) {
 						if(*(Connection-2) == '>') {
 							if((Tag = strrchr(Description, '<')) != NULL) {
-								u.getIdentity().setTag(Tag);
+								u.getIdentity().setTag(fromNmdc(Tag));
 								Tag[strlen(Tag)-1] = NULL;
 								updateFromTag(u.getIdentity(), Tag+1);
 								Tag[0] = NULL;
@@ -489,7 +489,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
                                 break;
 						}
 						u.setStatus(status);
-						u.getIdentity().setConnection(Connection);
+						u.getIdentity().setConnection(fromNmdc(Connection));
 					}
 				}
 
@@ -516,14 +516,16 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 6;
         		if(aLine[0] == NULL)
 					return;
+
+				string nick = fromNmdc(aLine);
 	
-				OnlineUser* u = findUser(aLine);
+				OnlineUser* u = findUser(nick);
 				if(u == NULL)
 					return;
 
 				fire(ClientListener::UserRemoved(), this, *u);
 
-				putUser(aLine);
+				putUser(nick);
     			return;
         	}
             
@@ -563,7 +565,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				temp[0] = NULL; temp += 1;
         		if(aLine[0] == NULL || temp[0] == NULL) return;
 
-				OnlineUser* u = findUser(aLine);
+				OnlineUser* u = findUser(fromNmdc(aLine));
 				if(u == NULL)
 					return;
 
@@ -601,9 +603,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 7;
         		if(aLine[0] == NULL) return;
 	
-				OnlineUser& u = getUser(aLine);
+     			string nick = fromNmdc(aLine);
+				OnlineUser& u = getUser(nick);
         		
-        		if(stricmp(getMyNick().c_str(), aLine) == NULL) {
+        		if(stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
 					u.getUser()->setFlag(User::DCPLUSPLUS);
 					if(ClientManager::getInstance()->isActive(this))
 						u.getUser()->unsetFlag(User::PASSIVE);
@@ -684,7 +687,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp[0] = NULL; temp += 1; temp1 = strchr(temp, '$');
 					if(aLine[0] == NULL || temp[0] == NULL) break;
 					if(temp1 == NULL) {
-						OnlineUser* u = findUser(aLine);
+						OnlineUser* u = findUser(fromNmdc(aLine));
 				
 						if(u == NULL)
 							continue;
@@ -697,7 +700,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp1[0] = NULL;
 					if(temp[0] == NULL) break;
 			
-					OnlineUser* u = findUser(aLine);
+					OnlineUser* u = findUser(fromNmdc(aLine));
 				
 					if(u == NULL)
 						continue;
@@ -790,7 +793,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
-					v.push_back(&getUser(aLine));
+					v.push_back(&getUser(fromNmdc(aLine)));
 					aLine = temp+2;
 				}
 		
@@ -825,7 +828,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
-					OnlineUser& ou = getUser(aLine);
+					OnlineUser& ou = getUser(fromNmdc(aLine));
 					ou.getIdentity().setOp(true);
 
 					if(ou.getIdentity().getNick() == getMyIdentity().getNick())
@@ -857,11 +860,11 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp1 += 6; *(temp-1) = NULL; temp += 1;
         			if(temp1[0] == NULL || temp[0] == NULL) return;
 
-					OnlineUser* ou = findUser(temp1);
+					OnlineUser* ou = findUser(fromNmdc(temp1));
 					if(ou == NULL) {
 						// @todo Route anonymous message to the ui
 					} else {
-						fire(ClientListener::PrivateMessage(), this, *ou, Util::validateMessage(temp, true));
+						fire(ClientListener::PrivateMessage(), this, *ou, Util::validateMessage(fromNmdc(temp), true));
 					}
 				}
     			return;

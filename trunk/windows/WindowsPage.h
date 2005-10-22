@@ -51,6 +51,7 @@ protected:
 	static Item items[];
 	static ListItem listItems[];
 	static ListItem optionItems[];
+	static ListItem confirmItems[];
 };
 
 #endif // !defined(WINDOWS_PAGE_H)

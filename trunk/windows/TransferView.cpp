@@ -791,10 +791,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 			i->status = ItemInfo::TREE_DOWNLOAD;
 		} else if(aDownload->isSet(Download::FLAG_PARTIAL)){
 			i->file = _T("Part: ") + Text::toT(Util::getFileName(i->Target));
-			i->main->size = aDownload->getSize();
 		} else {
 			i->file = Util::emptyStringT;
-			i->main->size = aDownload->getSize();
 		}
 	}
 
@@ -857,7 +855,10 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					u->status = ItemInfo::STATUS_RUNNING;
 					u->speed = totalSpeed;
 					u->timeLeft = (u->speed > 0) ? ((d->getSize() - u->pos) / u->speed) : 0;
+					u->size = d->getSize();
 					d->getQI()->setAverageSpeed(u->speed);
+					
+					u->updateMask |= ItemInfo::MASK_SIZE;
 
 					if(compression) {
 						u->setFlag(ItemInfo::FLAG_COMPRESSED);

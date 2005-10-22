@@ -88,12 +88,16 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 	if(wID == IDOK)
 	{
 		TCHAR buf[512];
+		GetDlgItemText(IDC_HUBADDR, buf, 256);
+		if(buf[0] == '\0') {
+			MessageBox(CTSTRING(INCOMPLETE_FAV_HUB), _T(""), MB_ICONWARNING | MB_OK);
+			return 0;
+		}
+		entry->setServer(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBNAME, buf, 256);
 		entry->setName(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBDESCR, buf, 256);
 		entry->setDescription(Text::fromT(buf));
-		GetDlgItemText(IDC_HUBADDR, buf, 256);
-		entry->setServer(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBNICK, buf, 256);
 		entry->setNick(Text::fromT(buf));
 		GetDlgItemText(IDC_HUBPASS, buf, 256);
