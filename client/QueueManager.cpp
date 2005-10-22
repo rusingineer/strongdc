@@ -287,7 +287,7 @@ inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
 	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
 				((qi->getActiveSegments().size() < qi->getMaxSegments()) &&
 				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())) &&
-				(qi->chunkInfo->hasFreeBlock() || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
+				(qi->chunkInfo->hasFreeBlock(aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0) || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
 }
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {

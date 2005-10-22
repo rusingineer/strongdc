@@ -124,7 +124,7 @@ public:
 	/**
 	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
 	 */
-	bool hasFreeBlock();
+	bool hasFreeBlock(int64_t);
 
 	/**
      * Release the chunk with start offset
@@ -222,8 +222,6 @@ public:
     int64_t iDownloadedSize;
     int64_t iVerifiedSize;
 	int64_t minChunkSize;					// it'll be doubled when last verifying fail
-
-	bool noFreeBlock;
 
 	CriticalSection cs;
 

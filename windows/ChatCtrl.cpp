@@ -75,7 +75,6 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 
 	BOOL boOK = false;
 	long lSelBegin = 0, lSelEnd = 0;
-	LPCTSTR sAuthor = Text::toT(u ? u->getFirstNick() : Util::emptyString).c_str();
 
 	PARAFORMAT2 pf;
 	memset(&pf, 0, sizeof(PARAFORMAT2));
@@ -97,7 +96,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 	tstring msg = sMsg;
 	CAtlString sText;
 	if(u) {
-		int iLen = 0, iAuthorLen = _tcslen(sAuthor)+1;
+		unsigned int iLen = 0, iAuthorLen = _tcslen(Text::toT(u->getFirstNick()).c_str())+1;
 		if(sMsg[0] == _T('*')) iLen = 1;
    		sText = sMsg+iAuthorLen+iLen;
 		msg = msg.substr(0, iAuthorLen+iLen);
@@ -120,6 +119,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
 				} else if(isOP) {
+					dcassert(iAuthorLen == u->getFirstNick().size()+1);
 					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
 				} else {
@@ -250,7 +250,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 					TCHAR *out = cmp + _tcslen(Delimiter); 
 					_tcscpy(afterAppendText, out);
 				}
-				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, sAuthor);
+				AppendTextOnly(sMyNick, _T(""), beforeAppendText, cf, (u ? Text::toT(u->getFirstNick()) : Util::emptyStringT).c_str());
 				COLORREF clrBkColor = WinUtil::m_ChatTextGeneral.crBackColor;
 				if(myMess == true) clrBkColor = WinUtil::m_ChatTextMyOwn.crBackColor;
 				HBITMAP hbmNext = pFoundedEmotion->GetEmotionBmp(clrBkColor);
@@ -261,13 +261,13 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
+					AppendTextOnly(sMyNick, _T(""), sText, cf, (u ? Text::toT(u->getFirstNick()) : Util::emptyStringT).c_str());
 				}
 				break;
 			}
 		}
 	} else {
-		AppendTextOnly(sMyNick, _T(""), sText, cf, sAuthor);
+		AppendTextOnly(sMyNick, _T(""), sText, cf, (u ? Text::toT(u->getFirstNick()) : Util::emptyStringT).c_str());
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);

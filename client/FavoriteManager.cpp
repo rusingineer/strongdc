@@ -168,6 +168,14 @@ void FavoriteManager::removeFavorite(FavoriteHubEntry* entry) {
 	save();
 }
 
+bool FavoriteManager::checkFavHubExists(const FavoriteHubEntry& aEntry){
+	FavoriteHubEntry::Iter i = getFavoriteHub(aEntry.getServer());
+	if(i != favoriteHubs.end()) {
+		return true;
+	}
+	return false;
+}
+
 bool FavoriteManager::addFavoriteDir(const string& aDirectory, const string & aName){
 	string path = aDirectory;
 

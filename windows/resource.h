@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC\StrongDC.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio Projects\StrongDC 1.00\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -551,6 +551,8 @@
 #define IDC_FIREWALL_PASSIVE            1305
 #define IDC_DIRECT_OUT                  1306
 #define IDC_SOCKS5                      1307
+#define IDC_SETTINGS_CONFIRM_OPTIONS    1315
+#define IDC_CONFIRM_OPTIONS             1316
 #define IDC_FILELIST_DIFF               1406
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409

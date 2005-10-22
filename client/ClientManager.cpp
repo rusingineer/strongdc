@@ -196,6 +196,7 @@ void ClientManager::putOnline(OnlineUser& ou) throw() {
 }
 
 void ClientManager::putOffline(OnlineUser& ou) throw() {
+	// @BM: todo fix removing users
 	bool lastUser = false;
 	{
 		Lock l(cs);

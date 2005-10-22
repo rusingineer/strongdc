@@ -70,7 +70,7 @@ void FileChunksInfo::Free(const string& name)
 }
 
 FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* chunks) 
-	: tempTargetName(name), iFileSize(0), iVerifiedSize(0), noFreeBlock(false)
+	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
@@ -186,12 +186,10 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 		waiting.erase(waiting.begin());
 		running.insert(make_pair(chunk->pos, chunk));
 
-		noFreeBlock = false;
 		return chunk->pos;
 	}
 
 	if(running.empty()){
-		noFreeBlock = true;
 		dcdebug("running empty, getChunk return -1\n");
 		return -1;
 	}
@@ -212,7 +210,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
 			if(speed == 0) speed = 1;
 		}else{
-			speed = chunk->download ? Util::toInt64(chunk->download->getUser()->getIdentity().get("US")) : DEFAULT_SPEED;
+			speed = (chunk->download && chunk->download->getUser()) ? Util::toInt64(chunk->download->getUser()->getIdentity().get("US")) : DEFAULT_SPEED;
 			if(speed == 0) speed = DEFAULT_SPEED;
 		}
 		
@@ -232,11 +230,9 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 			chunk = i->second;
 			if(chunk->pos == i->first){
 				chunk->overlappedCount++;
-				noFreeBlock = false;
 				return i->first;
 			}
 		}
-
 		return -1;
 	}
 
@@ -258,7 +254,6 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	// too lag than orignal source
 	if(x < 1.01) { 
-		noFreeBlock = true;
 		return -1;
 	}
 
@@ -273,11 +268,79 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 	running.insert(make_pair(n, new Chunk(n, e)));
 
 	dcdebug("split running chunk (%I64d , %I64d) * %I64d Bytes/s -> (%I64d , %I64d) * %I64d Bytes/s \n", b, e, speed, n, e, _speed);
-	noFreeBlock = false;
 	return n;
 }
 
-bool FileChunksInfo::hasFreeBlock() { return !noFreeBlock; }
+bool FileChunksInfo::hasFreeBlock(int64_t _speed) { 
+	Chunk* chunk = NULL;
+
+	if(_speed == 0) _speed = DEFAULT_SPEED;
+
+	Lock l(cs);
+
+	if(!waiting.empty()) return true;
+	if(running.empty()) return false;
+	
+	// find the max time-left running chunk
+	Chunk*  maxChunk = NULL;
+	int64_t maxTimeLeft = 0;
+	int64_t speed;
+
+	for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); ++i)
+	{
+		chunk = i->second;
+
+		if((chunk->end - chunk->pos) < minChunkSize*2)
+			continue;
+
+		if(chunk->pos > i->first){
+			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
+			if(speed == 0) speed = 1;
+		}else{
+			speed = (chunk->download && chunk->download->getUser()) ? Util::toInt64(chunk->download->getUser()->getIdentity().get("US")) : DEFAULT_SPEED;
+			if(speed == 0) speed = DEFAULT_SPEED;
+		}
+		
+		int64_t timeLeft = (chunk->end - chunk->pos) / speed;
+
+		if(timeLeft > maxTimeLeft){
+			maxTimeLeft = timeLeft;
+			maxChunk = chunk;
+		}
+	}
+
+	// all running chunks are unbreakable (timeleft < 15 sec)
+	// try overlapped download the pending chunk
+	if(maxTimeLeft < 15){
+		for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); ++i)
+		{
+			chunk = i->second;
+			if(chunk->pos == i->first){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
+
+	if(speed == 0 && maxChunk->download){
+		speed = Util::toInt64(maxChunk->download->getUser()->getIdentity().get("US"));
+	}
+
+	if(speed == 0){
+		speed = DEFAULT_SPEED;
+	}
+
+	double x = 1.0 + (double)_speed / (double)speed;
+
+	// too lag than orignal source
+	if(x < 1.01) { 
+		return false;
+	}
+
+	return true;
+}
 
 void FileChunksInfo::putChunk(int64_t start)
 {
@@ -311,7 +374,6 @@ void FileChunksInfo::putChunk(int64_t start)
 			// unfinished chunk, waiting ...
 			}else{
 				chunk->download = NULL;
-				noFreeBlock = false;
 				waiting.insert(make_pair(chunk->pos, chunk));				
 			}
 
@@ -464,7 +526,6 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 
 		// double smallest size when last verify failed
 		minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
-		noFreeBlock = false;
 	}
 
 	return false;
@@ -694,7 +755,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 				}
 
 				running.insert(make_pair(b, new Chunk(b, e)));
-				noFreeBlock = false;
 				return b;
 			}
 		}
@@ -739,7 +799,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 			waiting.insert(make_pair(maxBlockEnd, new Chunk(maxBlockEnd, tmp)));
 		}
 
-		noFreeBlock = false;
 		return maxBlockStart;
 	}
 

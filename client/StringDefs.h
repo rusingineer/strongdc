@@ -255,6 +255,8 @@ enum Strings { // @DontAdd
 	IGNORE_TTH_SEARCHES, // "Ignore TTH searches"
 	IGNORE_USER, // "Ignore User"
 	IGNORED_MESSAGE, // "Ignored message: "
+	INCOMPLETE_FAV_HUB, // "Hub address cannot be empty."
+	INVALID_LISTNAME, // "Invalid file list name"
 	INVALID_NUMBER_OF_SLOTS, // "Invalid number of slots"
 	INVALID_SIZE, // "Invalid size"
 	INVALID_TARGET_FILE, // "Invalid target file (missing directory, check default download directory setting)"

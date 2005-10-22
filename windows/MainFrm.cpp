@@ -1111,10 +1111,13 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 		return 0;
 	}
 
-
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), types)) {
 		User::Ptr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
-		DirectoryListingFrame::openWindow(file, u);
+		if(u) {
+			DirectoryListingFrame::openWindow(file, u);
+		} else {
+			MessageBox(CTSTRING(INVALID_LISTNAME), _T(APPNAME) _T(" ") _T(VERSIONSTRING));
+		}
 	}
 	return 0;
 }
