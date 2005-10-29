@@ -143,7 +143,7 @@ private:
 			}
 
 			if(multiSourceChecking) {
-				flush();
+				//flush();
 				fileChunks->markVerifiedBlock((u_int16_t)verified, (u_int16_t)verified + 1);
 			}
 			

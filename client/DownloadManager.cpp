@@ -49,13 +49,11 @@
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
-Download::Download() throw() : file(NULL),
-crcCalc(NULL), tth(NULL), treeValid(false), qi(NULL) { 
+Download::Download() throw() : file(NULL), tth(NULL), treeValid(false), qi(NULL) { 
 }
 
 Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
-	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
-	crcCalc(NULL), tth(qi->getTTH()), treeValid(false),
+	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
 	
 	setQI(qi);
@@ -300,8 +298,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 				d->setFlag(Download::FLAG_ANTI_FRAG);
 			}
-		
-			if(d->getTreeValid() && start > 0) {
+
+			if(d->getTreeValid() && start > 0 && 
+			  (d->getTigerTree().getLeaves().size() > 1 || aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL))) {
 				d->setStartPos(getResumePos(d->getDownloadTarget(), d->getTigerTree(), start));
 			} else {
 				int rollback = SETTING(ROLLBACK);
@@ -604,15 +603,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			d->setFile(new BufferedOutputStream<true>(d->getFile()));
 		}
 	
-		bool sfvcheck = BOOLSETTING(SFV_CHECK) && (d->getPos() == 0) && (SFVReader(d->getTarget()).hasCRC());
-
-		if(sfvcheck) {
-			d->setFlag(Download::FLAG_CALC_CRC32);
-			Download::CrcOS* crc = new Download::CrcOS(d->getFile());
-			d->setCrcCalc(crc);
-			d->setFile(crc);
-		}
-
 		if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_MP3_INFO)){
 			if(d->getTreeValid()) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
@@ -822,17 +812,12 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		d->setTreeValid(true);
 	} else {
 
-		// Hm, if the real crc == 0, we'll get a file reread extra, but what the heck...
-		u_int32_t crc = 0;
-
 		// First, finish writing the file (flushing the buffers and closing the file...)
 		try {
 			d->getFile()->flush();
-			if(d->getCrcCalc() != NULL)
-				crc = d->getCrcCalc()->getFilter().getValue();
 			delete d->getFile();
 			d->setFile(NULL);
-			d->setCrcCalc(NULL);
+
 
 			// Check if we're anti-fragging...
 			if(d->isSet(Download::FLAG_ANTI_FRAG)) {
@@ -860,12 +845,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 					!(d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize())));
 		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getTarget().c_str(), d->getSize(), d->getTotal());
 
-		// Check if we have some crc:s...
-		if(BOOLSETTING(SFV_CHECK)) {
-			if(!checkSfv(aSource, d, crc))
-				return;
-		}
-
 		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !d->isSet(Download::FLAG_USER_LIST)) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			logDownload(aSource, d);
 		}
@@ -882,57 +861,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	aSource->setDownload(NULL);
 	QueueManager::getInstance()->putDownload(d, true);	
 	checkDownloads(aSource, reconn);
-}
-
-u_int32_t DownloadManager::calcCrc32(const string& file) throw(FileException) {
-	File ff(file, File::READ, File::OPEN);
-	CalcInputStream<CRC32Filter, false> f(&ff);
-
-	const size_t BUF_SIZE = 1024*1024;
-	AutoArray<u_int8_t> b(BUF_SIZE);
-	size_t n = BUF_SIZE;
-	while(f.read((u_int8_t*)b, n) > 0)
-		;		// Keep on looping...
-
-	return f.getFilter().getValue();
-}
-
-bool DownloadManager::checkSfv(UserConnection* aSource, Download* d, u_int32_t crc) {
-	SFVReader sfv(d->getTarget());
-	if(sfv.hasCRC()) {
-		bool crcMatch = (crc == sfv.getCRC());
-		if(!crcMatch && crc == 0) {
-			// Blah. We have to reread the file...
-			try {
-				crcMatch = (calcCrc32(d->getDownloadTarget()) == sfv.getCRC());
-			} catch(const FileException& ) {
-				// Couldn't read the file to get the CRC(!!!)
-				crcMatch = false;
-			}
-		}
-
-		if(!crcMatch) {
-			File::deleteFile(d->getDownloadTarget());
-			dcdebug("DownloadManager: CRC32 mismatch for %s\n", d->getTarget().c_str());
-			LogManager::getInstance()->message(STRING(SFV_INCONSISTENCY) + " (" + STRING(FILE) + ": " + d->getTarget() + ")", true);
-			removeDownload(d);				
-			fire(DownloadManagerListener::Failed(), d, STRING(SFV_INCONSISTENCY));
-
-			string target = d->getTarget();
-
-			aSource->setDownload(NULL);
-			QueueManager::getInstance()->putDownload(d, false);
-
-			QueueManager::getInstance()->removeSource(target, aSource->getUser(), QueueItem::Source::FLAG_CRC_WARN, false);
-			checkDownloads(aSource);
-			return false;
-		} 
-
-		d->setFlag(Download::FLAG_CRC32_OK);
-
-		dcdebug("DownloadManager: CRC32 match for %s\n", d->getTarget().c_str());
-	}
-	return true;
 }
 
 void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
@@ -1077,7 +1005,6 @@ void DownloadManager::removeDownload(Download* d) {
 		}
 		delete d->getFile();
 		d->setFile(NULL);
-		d->setCrcCalc(NULL);
 
 		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 			// Ok, set the pos to whereever it was last writing and hope for the best...
@@ -1180,7 +1107,6 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	if(d->getFile()) {
 		delete d->getFile();
 		d->setFile(NULL);
-		d->setCrcCalc(NULL);
 	}
 
 	removeDownload(d);

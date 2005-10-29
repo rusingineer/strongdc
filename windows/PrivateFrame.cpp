@@ -745,11 +745,11 @@ LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 void PrivateFrame::readLog() {
 	StringMap params;	
 	params["user"] = user->getFirstNick();	
-	/** @todo params["hub"] = user->getClientName();
-	params["mynick"] = user->getClientNick();	
-	params["mycid"] = user->getClientCID().toBase32();	
+	params["hub"] = user->getClientName();
+	//params["mynick"] = user->getClientNick();	
+	//params["mycid"] = user->getClientCID().toBase32();	
 	params["cid"] = user->getCID().toBase32();	
-	params["hubaddr"] = user->getClientAddressPort();	
+	//params["hubaddr"] = user->getClientAddressPort();	
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 		
 	try {
@@ -781,7 +781,7 @@ void PrivateFrame::readLog() {
 			f.close();
 		}
 	} catch(FileException&){
-	}*/
+	}
 }
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	

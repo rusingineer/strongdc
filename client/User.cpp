@@ -106,7 +106,7 @@ const string& User::getClientName() const {
 	}
 }
 
-Client* User::getClient() {
+Client* User::getClient() const {
 	if(getOnlineUser()) {
 		return &getOnlineUser()->getClient();
 	} else {

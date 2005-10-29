@@ -179,7 +179,7 @@ LRESULT OperaColorsPage::onDrawItem(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPa
 			CRect rc(dis->rcItem);
 			if (dis->CtlID == IDC_SETTINGS_ODC_MENUBAR_COLOR) {
 				if (getCheckbox(IDC_SETTINGS_ODC_MENUBAR_USETWO))
-					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, crMenubarLeft, crMenubarRight);
+					OperaColors::FloodFill(dc, rc.left, rc.top, rc.right, rc.bottom, crMenubarLeft, crMenubarRight, getCheckbox(IDC_SETTINGS_ODC_MENUBAR_BUMPED));
 				else
 					dc.FillSolidRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, crMenubarLeft);
 				dc.SetTextColor(OperaColors::TextFromBackground(crMenubarLeft));
