@@ -90,7 +90,7 @@ public:
 	void sendRawCommand(const int aRawCommand);
 	void addCheatLine(const string& aLine);
 	const string& getClientName() const;
-	Client* getClient();
+	Client* getClient() const;
 
 	const string& getLastHubName() const;
 	string getLastHubAddress() const;

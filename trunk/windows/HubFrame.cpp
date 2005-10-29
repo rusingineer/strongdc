@@ -1388,7 +1388,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
-	client->getMyIdentity().getParams(ucParams, "my");
+	if(!client) return;
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);
@@ -2367,15 +2367,19 @@ LRESULT HubFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 void HubFrame::updateUserList() {
-	Lock l(updateCS);
-
 	ctrlUsers.SetRedraw(FALSE);
-	ctrlUsers.DeleteAllItems();
+	
+	{
+		Lock l(updateCS);
 
-	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		filterUser(i->second);
+		ctrlUsers.DeleteAllItems();
+
+		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+			filterUser(i->second);
+		}
+
+		updateUsers = true;
 	}
-	//ctrlUsers.resort();
 	ctrlUsers.SetRedraw(TRUE);
 }
 

@@ -332,8 +332,8 @@ void NmdcHub::onLine(const char* aLine) throw() {
 							u->getUser()->setFlag(User::PASSIVE);
 							updated(*u);
 						}
-						fire(ClientListener::NmdcSearch(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
 					}
+					fire(ClientListener::NmdcSearch(), this, seeker, a, size, type, fromNmdc(temp1), bPassive);
 				}
     			return;
         	}

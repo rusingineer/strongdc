@@ -65,7 +65,7 @@ const string SettingsManager::settingTags[] =
 	"UseSystemIcons", "PopupPMs", "MinUploadSpeed", "GetUserInfo", "UrlHandler", "MainWindowState", 
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway", 
 	"SmallSendBuffer", "SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
-	"CompressTransfers", "ShowProgressBars", "SFVCheck", "MaxTabRows", "AutoUpdateList", 
+	"CompressTransfers", "ShowProgressBars", "MaxTabRows", "AutoUpdateList", 
 	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots", 
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", 
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
@@ -214,7 +214,6 @@ SettingsManager::SettingsManager()
 	setDefault(QUEUEFRAME_SHOW_TREE, true);
 	setDefault(COMPRESS_TRANSFERS, true);
 	setDefault(SHOW_PROGRESS_BARS, true);
-	setDefault(SFV_CHECK, false);
 	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. I might answer later if you're lucky.");
 	setDefault(TIME_STAMPS_FORMAT, "%H:%M:%S");
 	setDefault(MAX_TAB_ROWS, 2);

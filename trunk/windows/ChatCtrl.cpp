@@ -119,7 +119,6 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
 				} else if(isOP) {
-					dcassert(iAuthorLen == u->getFirstNick().size()+1);
 					SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 					boOK = SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
 				} else {

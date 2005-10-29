@@ -1677,7 +1677,7 @@ int WinUtil::getImage(const Identity& u) {
 		image+=22;
 	}
 
-	if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_PASSIVE && !u.isTcpActive()) {
+	if(!ClientManager::getInstance()->isActive(u.getUser()->getClient()) && !u.isTcpActive()) {
 		// Users we can't connect to...
 		image+=44;
 	}

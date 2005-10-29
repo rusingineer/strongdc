@@ -100,12 +100,10 @@ public:
 	/** @internal */
 	AdcCommand getCommand(bool zlib, bool tthf);
 
-	typedef CalcOutputStream<CRC32Filter, true> CrcOS;
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
-	GETSET(CrcOS*, crcCalc, CrcCalc);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(OnlineUser*, user, User);	
@@ -265,8 +263,6 @@ private:
 	
 	void moveFile(const string& source, const string&target);
 	void logDownload(UserConnection* aSource, Download* d);
-	u_int32_t calcCrc32(const string& file) throw(FileException);
-	bool checkSfv(UserConnection* aSource, Download* d, u_int32_t crc);
 	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
 
 	friend class Singleton<DownloadManager>;

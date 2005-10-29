@@ -1530,11 +1530,11 @@ void QueueManager::saveQueue() throw() {
 					f.write(Util::toString(qi->getSize()));
 					f.write(STRINGLEN("\" Priority=\""));
 					f.write(Util::toString((int)qi->getPriority()));
-					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->chunkInfo) {
 						f.write(STRINGLEN("\" FreeBlocks=\""));
-						f.write(qi->chunkInfo ? qi->chunkInfo->getFreeChunksString() : "");
+						f.write(qi->chunkInfo->getFreeChunksString());
 						f.write(STRINGLEN("\" VerifiedParts=\""));
-						f.write(qi->chunkInfo ? qi->chunkInfo->getVerifiedBlocksString() : "");
+						f.write(qi->chunkInfo->getVerifiedBlocksString());
 					}
 					f.write(STRINGLEN("\" Added=\""));
 					f.write(Util::toString(qi->getAdded()));
