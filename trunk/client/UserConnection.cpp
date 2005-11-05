@@ -107,7 +107,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 11;
         		if(aLine[0] == NULL) return;
     
-        		if((temp = strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
+        		if((temp = (char*)strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
     				temp[0] = NULL, temp += 1;
         			if(aLine[0] == NULL || temp[0] == NULL) return;
     
@@ -124,7 +124,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 7;
         		if(aLine[0] == NULL) return;
     
-	    		if(stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
+	    		if(_stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
     				strstr(aLine, /*path/file*/" no more exists") != 0) {
     				fire(UserConnectionListener::FileNotAvailable(), this);
     			} else {
@@ -153,7 +153,7 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 5;
         		if(aLine[0] == NULL) return;
     
-        		if((temp = strchr(aLine, '$')) != NULL && temp[1] != NULL)  {
+        		if((temp = (char*)strchr(aLine, '$')) != NULL && temp[1] != NULL)  {
     				temp[0] = NULL; temp += 1;
         			if(aLine[0] == NULL || temp[0] == NULL) return;
     
@@ -218,8 +218,8 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 6;
         		if(aLine[0] == NULL) return;
      
-        		if((temp = strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
-        			temp[0] = NULL; temp += 1;
+        		if((temp = (char*)strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
+        			temp[0] = NULL; temp += 4;
         			if(aLine[0] == NULL || temp[0] == NULL) return;
                 
     				fire(UserConnectionListener::CLock(), this, aLine, temp);
@@ -290,7 +290,7 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 
 void UserConnection::processBlock(const char* param, int type) throw() {
 	char *temp, *temp1;
-	if((temp = strchr(param, ' ')) == NULL || temp[1] == NULL) return;
+	if((temp = (char*)strchr(param, ' ')) == NULL || temp[1] == NULL) return;
 
 	temp[0] = NULL; temp += 1;
 	if(param[0] == NULL || temp[0] == NULL) return;

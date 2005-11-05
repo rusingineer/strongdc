@@ -374,7 +374,7 @@ LRESULT DirectoryListingFrame::onDoubleClickFiles(int /*idCtrl*/, LPNMHDR pnmh, 
 
 		if(ii->type == ItemInfo::FILE) {
 			try {
-				dl->download(ii->file, SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(ii->getText(COLUMN_FILENAME)), false, WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+				dl->download(ii->file, SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(ii->getText(COLUMN_FILENAME)), false, WinUtil::isShift(), QueueItem::DEFAULT);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -397,7 +397,7 @@ LRESULT DirectoryListingFrame::onDownloadDir(WORD , WORD , HWND , BOOL& ) {
 	if(t != NULL) {
 		DirectoryListing::Directory* dir = (DirectoryListing::Directory*)ctrlTree.GetItemData(t);
 		try {
-			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+			dl->download(dir, SETTING(DOWNLOAD_DIRECTORY), WinUtil::isShift(), QueueItem::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -439,7 +439,7 @@ LRESULT DirectoryListingFrame::onDownloadDirTo(WORD , WORD , HWND , BOOL& ) {
 			WinUtil::addLastDir(target);
 			
 			try {
-				dl->download(dir, Text::fromT(target), WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+				dl->download(dir, Text::fromT(target), WinUtil::isShift(), QueueItem::DEFAULT);
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 			}
@@ -518,13 +518,13 @@ LRESULT DirectoryListingFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, 
 				tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + ii->getText(COLUMN_FILENAME);
 				if(WinUtil::browseFile(target, m_hWnd)) {
 					WinUtil::addLastDir(Util::getFilePath(target));
-					dl->download(ii->file, Text::fromT(target), false, WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+					dl->download(ii->file, Text::fromT(target), false, WinUtil::isShift(), QueueItem::DEFAULT);
 				}
 			} else {
 				tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 				if(WinUtil::browseDirectory(target, m_hWnd)) {
 					WinUtil::addLastDir(target);
-					dl->download(ii->dir, Text::fromT(target), WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+					dl->download(ii->dir, Text::fromT(target), WinUtil::isShift(), QueueItem::DEFAULT);
 				}
 			} 
 		} catch(const Exception& e) {
@@ -801,7 +801,7 @@ LRESULT DirectoryListingFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, 
 		if(ii->type == ItemInfo::FILE) {
 			if(newId < (int)targets.size()) {
 				try {
-					dl->download(ii->file, targets[newId], false, WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+					dl->download(ii->file, targets[newId], false, WinUtil::isShift(), QueueItem::DEFAULT);
 				} catch(const Exception& e) {
 					ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 				} 
@@ -831,7 +831,7 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 		string target = SETTING(DOWNLOAD_DIRECTORY);
 		try {
 			dcassert(newId < (int)WinUtil::lastDirs.size());
-			dl->download(dir, Text::fromT(WinUtil::lastDirs[newId]), WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+			dl->download(dir, Text::fromT(WinUtil::lastDirs[newId]), WinUtil::isShift(), QueueItem::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}
@@ -849,7 +849,7 @@ LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD
 		if(ii->type == ItemInfo::FILE) {
 			if(newId < (int)targets.size()) {
 				try {
-					dl->download(ii->file, targets[newId], false, WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+					dl->download(ii->file, targets[newId], false, WinUtil::isShift(), QueueItem::DEFAULT);
 				} catch(const Exception& e) {
 					ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 				}
@@ -880,7 +880,7 @@ LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/,
 		try {
 			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			dcassert(newId < (int)spl.size());
-			dl->download(dir, spl[newId].first, WinUtil::isShift(), QueueItem::Priority::DEFAULT);
+			dl->download(dir, spl[newId].first, WinUtil::isShift(), QueueItem::DEFAULT);
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
 		}

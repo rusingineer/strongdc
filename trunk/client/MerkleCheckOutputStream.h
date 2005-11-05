@@ -122,6 +122,7 @@ public:
 	int64_t verifiedBytes() {
 		return min(real.getFileSize(), (int64_t)(cur.getBlockSize() * cur.getLeaves().size()));
 	}
+
 private:
 	OutputStream* s;
 	const TreeType& real;

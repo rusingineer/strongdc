@@ -332,7 +332,7 @@ private:
 		GETSET(tstring, path, Path);
 		GETSET(int64_t, size, Size);
 		GETSET(int64_t, downloadedBytes, DownloadedBytes);
-		GETSET(u_int32_t, added, Added);
+		GETSET(time_t, added, Added);
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
 		GETSET(TTHValue*, tth, TTH);
@@ -457,7 +457,11 @@ private:
 			clearTree(next);
 			next = ctrlDirs.GetNextSiblingItem(next);
 		}
-		delete (string*)ctrlDirs.GetItemData(item);
+#if _STLPORT_MAJOR >= 5
+		delete (tstring*)ctrlDirs.GetItemData(item);
+#else
+ 		delete (string*)ctrlDirs.GetItemData(item);
+#endif
 	}
 
 	void removeSelected() {

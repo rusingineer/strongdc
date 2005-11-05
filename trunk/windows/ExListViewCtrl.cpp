@@ -32,7 +32,8 @@ int ExListViewCtrl::moveItem(int oldPos, int newPos) {
 	GetItem(&lvi);
 	TStringList l;
 
-	for(int j = 0; j < GetHeader().GetItemCount(); j++) {
+	int j;
+	for(j = 0; j < GetHeader().GetItemCount(); j++) {
 		GetItemText(oldPos, j, buf, 512);
 		l.push_back(buf);
 	}

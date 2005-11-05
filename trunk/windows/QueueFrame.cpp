@@ -524,7 +524,11 @@ void QueueFrame::removeDirectory(const tstring& dir, bool isFileList /* = false 
 	
 	if(isFileList) {
 		dcassert(fileLists != NULL);
-		delete (string*)ctrlDirs.GetItemData(fileLists);
+#if _STLPORT_MAJOR >= 5
+		delete (tstring*)ctrlDirs.GetItemData(fileLists);
+#else
+ 		delete (string*)ctrlDirs.GetItemData(fileLists);
+#endif
 		ctrlDirs.DeleteItem(fileLists);
 		fileLists = NULL;
 		return;
@@ -551,7 +555,11 @@ void QueueFrame::removeDirectory(const tstring& dir, bool isFileList /* = false 
 	next = parent;
 
 	while((ctrlDirs.GetChildItem(next) == NULL) && (directories.find(getDir(next)) == directories.end())) {
-		delete (string*)ctrlDirs.GetItemData(next);
+#if _STLPORT_MAJOR >= 5
+		delete (tstring*)ctrlDirs.GetItemData(next);
+#else
+ 		delete (string*)ctrlDirs.GetItemData(next);
+#endif
 		parent = ctrlDirs.GetParentItem(next);
 		
 		ctrlDirs.DeleteItem(next);
@@ -567,7 +575,11 @@ void QueueFrame::removeDirectories(HTREEITEM ht) {
 		removeDirectories(next);
 		next = ctrlDirs.GetNextSiblingItem(ht);
 	}
-	delete (string*)ctrlDirs.GetItemData(ht);
+#if _STLPORT_MAJOR >= 5
+		delete (tstring*)ctrlDirs.GetItemData(ht);
+#else
+		delete (string*)ctrlDirs.GetItemData(ht);
+#endif
 	ctrlDirs.DeleteItem(ht);
 }
 

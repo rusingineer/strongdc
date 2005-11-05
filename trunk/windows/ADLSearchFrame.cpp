@@ -48,7 +48,7 @@ static ResourceManager::Strings columnNames[] = {
 	ResourceManager::SOURCE_TYPE, 
 	ResourceManager::DESTINATION, 
 	ResourceManager::SIZE_MIN, 
-	ResourceManager::SIZE_MAX, 
+	ResourceManager::MAX_SIZE, 
 };
 
 // Frame creation

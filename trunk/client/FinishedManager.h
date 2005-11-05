@@ -41,7 +41,7 @@ public:
 	FinishedItem::List subItems;
 
 	FinishedItem(string const& aTarget, string const& aUser, string const& aHub, 
-		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, u_int32_t aTime,
+		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
 		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 
 		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
 		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH),
@@ -62,7 +62,7 @@ public:
 	GETSET(int64_t, size, Size);
 	GETSET(int64_t, chunkSize, ChunkSize);
 	GETSET(int64_t, milliSeconds, MilliSeconds);
-	GETSET(u_int32_t, time, Time);
+	GETSET(time_t, time, Time);
 	GETSET(bool, crc32Checked, Crc32Checked)
 	GETSET(string, tth, TTH);	
 private:
@@ -78,7 +78,7 @@ public:
 	typedef List::iterator Iter;
 
 	FinishedMP3Item(string const& aTarget, string const& aUser, string const& aHub, 
-		int64_t aSize, string aMPEGVer, int aSampleRate, int aBitRate, string aChannels, u_int32_t aTime) : 
+		int64_t aSize, string aMPEGVer, int aSampleRate, int aBitRate, string aChannels, time_t aTime) : 
 		target(aTarget), user(aUser), hub(aHub), size(aSize), MpegVer(aMPEGVer), samplerate(aSampleRate),
 		bitrate(aBitRate), channels(aChannels), time(aTime)
 	{
@@ -90,7 +90,7 @@ public:
 	GETSET(int64_t, size, Size);
 	GETSET(string, MpegVer, MPEGVer);
 	GETSET(string, channels, Channels);
-	GETSET(u_int32_t, time, Time);
+	GETSET(time_t, time, Time);
 	GETSET(int, bitrate, BitRate);
 	GETSET(int, samplerate, SampleRate);
 

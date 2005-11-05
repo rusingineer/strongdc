@@ -39,7 +39,7 @@ public:
 };
 
 template<class T, int ctrlId>
-class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl, CListViewCtrl, CControlWinTraits>,
+class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl<T, ctrlId>, CListViewCtrl, CControlWinTraits>,
 	public ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
@@ -827,10 +827,11 @@ public:
 					}
 					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				} else if(s->main->subItems.size() == 0) {
-					removeMainItem(s->main);
-					DeleteItem(findItem(s->main));
-					delete s->main;
+					T* main = s->main;
+					removeMainItem(main);
+					DeleteItem(findItem(main));
 					s->main = NULL;
+					delete main;
 				}
 			} else {
 				if(s->main->subItems.size() == 0) {

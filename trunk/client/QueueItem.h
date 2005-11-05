@@ -137,7 +137,7 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
@@ -286,7 +286,7 @@ public:
 	GETSET(Source::List, currents, Currents);
 	GETSET(Source::List, activeSegments, ActiveSegments);
 	GETSET(Download*, currentDownload, CurrentDownload);
-	GETSET(u_int32_t, added, Added);
+	GETSET(time_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(unsigned int, maxSegments, MaxSegments);

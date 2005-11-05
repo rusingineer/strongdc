@@ -203,7 +203,7 @@ public:
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
-			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
+			time_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);

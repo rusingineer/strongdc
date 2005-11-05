@@ -58,7 +58,12 @@
 # pragma warning(disable: 4512) // can't generate assignment operator
 # pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 
-# if _MSC_VER == 1200 || _MSC_VER == 1300 || _MSC_VER == 1310
+# if _MSC_VER == 1400 // @BM: todo fix this warning by using ISO C standard
+#define _CRT_SECURE_NO_DEPRECATE	// Disable warnings about deprecated functions in new visual studio
+#define _CRT_NON_CONFORMING_SWPRINTFS
+# endif
+
+# if _MSC_VER == 1200 || _MSC_VER == 1300 || _MSC_VER == 1310 || _MSC_VER == 1400
 
 typedef signed char int8_t;
 typedef signed short int16_t;

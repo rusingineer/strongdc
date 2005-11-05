@@ -207,7 +207,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 
 		switch(aLine[0]) {
             case '<':
-                if((temp = strchr(aLine+1, '>')) != NULL) {
+                if((temp = (char*)strchr(aLine+1, '>')) != NULL) {
                     temp[0] = NULL;
                     nick = fromNmdc(aLine+1);
                     if(temp[1] == ' ' && temp[2] == '/' && tolower(temp[3]) == 'm' && tolower(temp[4]) == 'e' && temp[5] == ' ' && temp[6] != NULL) {
@@ -224,7 +224,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
                 }
                 break;
             case '*':
-                if((temp = strchr(aLine+2, ' ')) != NULL) {
+                if((temp = (char*)strchr(aLine+2, ' ')) != NULL) {
                     temp[0] = NULL;
                     nick = fromNmdc(aLine+2);
                     temp[0] = ' ';
@@ -256,7 +256,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				string seeker = fromNmdc(aLine);
         		int iseekerLen = (temp-aLine)-1;
         		
-				bool bPassive = (strnicmp(seeker.c_str(), "Hub:", 4) == 0);
+				bool bPassive = (_strnicmp(seeker.c_str(), "Hub:", 4) == 0);
 				bool isActive = ClientManager::getInstance()->isActive(this);
 
 				// We don't wan't to answer passive searches if we're in passive mode...
@@ -354,7 +354,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				}
 
         		while(aLine != NULL) {
-                    if((temp = strchr(aLine, ' ')) != NULL) {
+                    if((temp = (char*)strchr(aLine, ' ')) != NULL) {
                         temp[0] = NULL; temp++;
                     }
 
@@ -383,6 +383,12 @@ void NmdcHub::onLine(const char* aLine) throw() {
 								}
 							}
                 			break;
+						case 'Z':
+							if((strcmp(aLine+1, "Lines")) == 0) {
+								supportFlags |= SUPPORTS_ZLINE;
+							}
+							break;
+
                 		default:
                             dcdebug("NmdcHub::onLine Unknown supports %s\n", aLine);
                             break;
@@ -402,16 +408,17 @@ void NmdcHub::onLine(const char* aLine) throw() {
     		if(strncmp(aLine+2, "yINFO ", 6) == 0) {
 			    char *Description, *Tag, *Connection, *Email, *Share;
 		    	aLine += 13;
-	    		Description = strchr((char*)aLine, ' ');
-        	    if(Description[0] == NULL || Description[1] == NULL)
+
+				if(aLine[0] == NULL)
+		    	     return;
+
+				Description = strchr((char*)aLine, ' ');
+        	    if(Description == NULL || Description[0] == NULL || Description[1] == NULL)
 					return;
 
 				Description[0] = NULL;
 				Description += 1;
 	    
-        	    if(aLine[0] == NULL)
-		    	     return;
-
 				OnlineUser& u = getUser(fromNmdc(aLine));
 
 			    Connection = strchr(Description, '$');
@@ -494,7 +501,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				}
 
 				if(state == STATE_MYINFO) {
-					if(stricmp(u.getUser()->getFirstNick().c_str(), getMyNick().c_str()) == 0) {
+					if(_stricmp(u.getUser()->getFirstNick().c_str(), getMyNick().c_str()) == 0) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -540,7 +547,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				temp[0] = NULL; temp += 1;
         		if(aLine[0] == NULL || temp[0] == NULL) return;
 
-				if(stricmp(fromNmdc(aLine).c_str(), getMyNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+				if(_stricmp(fromNmdc(aLine).c_str(), getMyNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
 					return;
 	
         		if((temp1 = strchr(temp, ':')) == NULL || temp1[1] == NULL) return;
@@ -606,7 +613,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
      			string nick = fromNmdc(aLine);
 				OnlineUser& u = getUser(nick);
         		
-        		if(stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
+        		if(_stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
 					u.getUser()->setFlag(User::DCPLUSPLUS);
 					if(ClientManager::getInstance()->isActive(this))
 						u.getUser()->unsetFlag(User::PASSIVE);
@@ -683,7 +690,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 8;
         		if(aLine[0] == NULL) return;
 
-				while((temp = strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
+				while((temp = (char*)strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
 					temp[0] = NULL; temp += 1; temp1 = strchr(temp, '$');
 					if(aLine[0] == NULL || temp[0] == NULL) break;
 					if(temp1 == NULL) {
@@ -723,14 +730,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if(state != STATE_LOCK || aLine[0] == NULL) return;
 
 				state = STATE_HELLO;
-				if((temp = strstr(aLine, " Pk=")) != NULL && temp[1] != NULL) {
+				if((temp = (char*)strstr(aLine, " Pk=")) != NULL && temp[1] != NULL) {
 					temp[0] = NULL; temp += 1;
 				}
 	
         		if(aLine[0] == NULL) return;
 
         		if(temp[0] != NULL) {
-    				if(stricmp(temp+3, "YnHub") == 0) {
+    				if(_stricmp(temp+3, "YnHub") == 0) {
     					YnHub = true;
 	    			} else if(strcmp(temp+3, "PtokaX") == 0) {
     					PtokaX = true;
@@ -745,11 +752,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					feat.push_back("UserIP2");
 					feat.push_back("TTHSearch");
 
-					if (getStealth() == false)
+					if (getStealth() == false) {
 						feat.push_back("QuickList");
+						feat.push_back("ZLine");
+					}
 
 					if(BOOLSETTING(COMPRESS_TRANSFERS))
 						feat.push_back("GetZBlock");
+
 					supports(feat);
     				if(PtokaX == false) key(CryptoManager::getInstance()->makeKey(aLine));
 				} else {
@@ -789,7 +799,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 10;
 				if(aLine[0] == NULL) return;
 
-				while((temp = strchr(aLine, '$')) != NULL) {
+				while((temp = (char*)strchr(aLine, '$')) != NULL) {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
@@ -824,7 +834,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 8;
 				if(aLine[0] == NULL) return;
 
-				while((temp = strchr(aLine, '$')) != NULL) {
+				while((temp = (char*)strchr(aLine, '$')) != NULL) {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
@@ -854,7 +864,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         case 'T':
 	    	// $To
     		if(strncmp(aLine+2, "o: ", 3) == 0) {
-				if((temp1 = strstr(aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
+				if((temp1 = (char*)strstr(aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
 					if((temp = strchr(temp1+6, '$')) == NULL || temp[1] == NULL) return;
 	
 					temp1 += 6; *(temp-1) = NULL; temp += 1;
@@ -887,9 +897,64 @@ void NmdcHub::onLine(const char* aLine) throw() {
     		if(strcmp(aLine+2, "adPass") == 0) {
 				fire(ClientListener::BadPassword(), this);
     			return;
-        }
+			}
             
             dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+            return;
+		case 'Z':
+			// $Zline
+        	if(strncmp(aLine+2, "Line ", 5) == 0) { 
+				aLine += 7;
+				if(aLine[0] == NULL) return;
+
+				string::size_type i = 0, j;
+				string rawParam = (char*)aLine;
+				bool corrupt = false;
+
+				// unescape \\ to \ and \P to | 
+				while((i = rawParam.find("\\", i)) != string::npos && !corrupt) {
+					if (i + 1 < rawParam.size()) {
+						switch (rawParam[i+1]) {
+							case '\\':
+								rawParam.replace(i++, 2, "\\");
+								break;
+							case 'P':
+								rawParam.replace(i++, 2, "|");
+								break;
+							default:
+								corrupt = true;
+								break;
+						}
+					} else {
+						corrupt = true;
+					}
+				}
+
+				if (!corrupt) {
+					// unzip the ZBlock
+					i = rawParam.size();
+					j = i * 10;
+					AutoArray<u_int8_t> temp2(j);
+					UnZFilter filter;
+					try {
+						filter(rawParam.c_str(), i, temp2, j);
+					} catch(...){
+						dcdebug("Error during Zline decompression\n");
+					}
+					string lines = string((char*)(u_int8_t*)temp2, j);
+
+					// "fire" the lines
+					COMMAND_DEBUG("\r\n", DebugManager::HUB_IN, "");
+					StringTokenizer<string> st(lines, '|');
+					for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
+						COMMAND_DEBUG("$Zline: " + (*i), DebugManager::HUB_IN, getIpPort());
+						onLine((*i).c_str());
+					}
+				} else {
+					dcdebug("Corrupt Zline datastream\n");
+				}
+			}
+
             return;
     	default:
 			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);

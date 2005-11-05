@@ -2,12 +2,7 @@
 #include "../client/DCPlusPlus.h"
 #include "../client/StringTokenizer.h"
 #include "MainFrm.h"
-
 #include "CZDCLib.h"
-
-#undef WINAPI 
-#define WINAPI extern "C" __stdcall 
-#pragma warning(disable: 4502 4518) 
 #include <powrprof.h>
 
 bool CZDCLib::bIsXP = false;

@@ -49,7 +49,7 @@ public:
 		if(::IsDlgButtonChecked((HWND)* this, IDC_CHECK1) == BST_CHECKED) {
 			char* arg_list[] = { NULL };
 			shutdown();
-			execv("strongdc.exe", arg_list);
+			_execv("strongdc.exe", arg_list);
 		}
 		EndDialog(IDCANCEL);
 		return 0;

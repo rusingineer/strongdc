@@ -368,11 +368,13 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 			} else {
-				rc.right = rc.left + (int) (((int64_t)rc.Width()) * ii->actual / ii->size);
+				int right = rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size);
+				// some debug data
+				if(right > 10000) MessageBox(_T("ERROR"), _T("right > 1000"), MB_OK);
                 
 				COLORREF a, b;
 				OperaColors::EnlightenFlood(mainItem ? clr : SETTING(PROGRESS_SEGMENT_COLOR), a, b);
-				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, rc.right, rc.bottom-1, a, b);
+				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, right, rc.bottom-1, a, b);
 			}
 
 			// Draw the text only over the bar and with correct color
@@ -599,7 +601,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 void TransferView::ItemInfo::update() {
 	u_int32_t colMask = updateMask;
 	
-	if(main != NULL) {
+	if(!mainItem && (main != NULL)) {
 		main->updateMask |= colMask | ItemInfo::MASK_USER | ItemInfo::MASK_HUB;
 		main->update();
 
@@ -613,7 +615,7 @@ void TransferView::ItemInfo::update() {
 			columns[COLUMN_USER] = Text::toT(user->getFirstNick());
 		} else {
 			TCHAR buf[256];
-			_sntprintf(buf, 255, _T("%d %s"), subItems.size(), TSTRING(USERS));
+			_sntprintf(buf, 255, _T("%d %s"), subItems.size(), CTSTRING(USERS));
 			buf[255] = NULL;
 			columns[COLUMN_USER] = buf;
 		}
@@ -623,7 +625,7 @@ void TransferView::ItemInfo::update() {
 			columns[COLUMN_HUB] = Text::toT(user->getClientName());
 		} else {
 			TCHAR buf[256];
-			_sntprintf(buf, 255, _T("%d %s"), numberOfSegments, TSTRING(NUMBER_OF_SEGMENTS));
+			_sntprintf(buf, 255, _T("%d %s"), numberOfSegments, CTSTRING(NUMBER_OF_SEGMENTS));
 			buf[255] = NULL;
 			columns[COLUMN_HUB] = buf;
 		}

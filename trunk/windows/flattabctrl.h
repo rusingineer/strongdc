@@ -626,7 +626,7 @@ private:
 
 	TabInfo* active;
 	TabInfo* moving;
-	TabInfo::List tabs;
+	typename TabInfo::List tabs;
 	CPen black;
 
 	typedef list<HWND> WindowList;
