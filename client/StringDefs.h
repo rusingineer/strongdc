@@ -741,7 +741,7 @@ enum Strings { // @DontAdd
 	SHUTDOWN_ON, // "Shutdown sequence activated..."
 	SIZE, // "Size"
 	SIZE_EXACT, // "Exactly"
-	SIZE_MAX, // "Max Size"
+	MAX_SIZE, // "Max Size"
 	SIZE_MIN, // "Min Size"
 	SKIP_RENAME, // "New virtual name matches old name, skipping..."
 	SLOT_GRANTED, // "Slot granted"

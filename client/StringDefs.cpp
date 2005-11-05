@@ -1603,7 +1603,7 @@ string ResourceManager::names[] = {
 "ShutdownOn", 
 "Size", 
 "SizeExact", 
-"SizeMax", 
+"MaxSize", 
 "SizeMin", 
 "SkipRename", 
 "SlotGranted", 

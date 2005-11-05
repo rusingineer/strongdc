@@ -26,6 +26,7 @@
 #include "User.h"
 #include "BufferedSocket.h"
 #include "SettingsManager.h"
+#include "DebugManager.h"
 
 class Client;
 class AdcCommand;
@@ -155,6 +156,7 @@ public:
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
 		updateActivity();
+		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
 	}
 	const string& getMyNick() const { return getMyIdentity().getNick(); }

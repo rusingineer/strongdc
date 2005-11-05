@@ -134,7 +134,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
         switch(sMsg[0]) {
             case _T('<'): {
 				TCHAR *temp;
-                if((temp = _tcschr(sMsg+1, _T('>'))) != NULL) {
+                if((temp = (TCHAR*)_tcschr(sMsg+1, _T('>'))) != NULL) {
                     temp[0] = NULL;
                     int iAuthorLen = _tcslen(sMsg+1)+1;
                     temp[0] = '>';
@@ -159,7 +159,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
             }
             case _T('*'): {
 				TCHAR *temp;
-                if(sMsg[1] == _T(' ') && (temp = _tcschr(sMsg+2, _T(' '))) != NULL) {
+                if(sMsg[1] == _T(' ') && (temp = (TCHAR*)_tcschr(sMsg+2, _T(' '))) != NULL) {
                     temp[0] = NULL;
                     int iAuthorLen = _tcslen(sMsg+2)+1;
                     temp[0] = ' ';
@@ -242,7 +242,7 @@ void ChatCtrl::AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPC
 			}
 
 			if(rpl && (smiles < maxsmiles)) {
-				TCHAR *cmp = _tcsstr(sText, Delimiter);
+				TCHAR *cmp = (TCHAR*)_tcsstr(sText, Delimiter);
 				if(cmp) {
 					_tcsncpy(beforeAppendText, sText, cmp - sText);
 					beforeAppendText[cmp - sText] = 0;
@@ -412,7 +412,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 			}
 
 			if(rpl && (smiles < maxsmiles)) {
-				TCHAR *cmp = _tcsstr(sText, Delimiter);
+				TCHAR *cmp = (TCHAR*)_tcsstr(sText, Delimiter);
 				if(cmp) {
 					_tcsncpy(beforeAppendText, sText, cmp - sText);
 					beforeAppendText[cmp - sText] = 0;

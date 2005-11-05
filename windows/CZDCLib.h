@@ -26,8 +26,8 @@ private:
 	static int iWinVerMajor;
 };
 
-const MAX_SHADE = 44;
-const SHADE_LEVEL = 90;
+const int MAX_SHADE = 44;
+const int SHADE_LEVEL = 90;
 const int blend_vector[MAX_SHADE] = {0, 4, 8, 10, 5, 2, 0, -1, -2, -3, -5, -6, -7, -8, -7, -6, -5, -4, -3, -2, -1, 0, 
 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 3, 2, 1, 0, -2, -5, -10, -8, -4, 0};
 
@@ -79,6 +79,8 @@ public:
 	static inline void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = true) {
 		if (x2 <= x1 || y2 <= y1)
 			return;
+
+		if(x2 > 10000) return;
 
 		if (!light) {
 			for (int _x = x1; _x <= x2; ++_x) {

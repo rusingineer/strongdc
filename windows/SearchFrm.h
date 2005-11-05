@@ -479,7 +479,7 @@ private:
 			u_int32_t total = main->subItems.size();
 			if(total != 0) {
 				TCHAR buf[256];
-				_sntprintf(buf, 255, _T("%d %s"), total + 1, TSTRING(USERS));
+				_sntprintf(buf, 255, _T("%d %s"), total + 1, CTSTRING(USERS));
 				buf[255] = NULL;
 				main->totalUsers = buf;
 				if(total == 1)

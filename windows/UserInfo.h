@@ -28,17 +28,16 @@
 
 #include "../client/FastAlloc.h"
 
-friend struct CompareItems;
+struct UpdateInfo {
+	UpdateInfo() { }
+	UpdateInfo(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
 
-	struct UpdateInfo {
-		UpdateInfo() { }
-		UpdateInfo(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
-
-		User::Ptr user;
-		Identity identity;
-	};
+	User::Ptr user;
+	Identity identity;
+};
 
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
+friend struct CompareItems;
 public:
 	enum {
 		COLUMN_FIRST,

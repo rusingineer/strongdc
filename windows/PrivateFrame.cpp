@@ -332,11 +332,11 @@ void PrivateFrame::onEnter()
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
 				params["user"] = user->getFirstNick();
-				/** @todo params["hub"] = user->getClientName();
-				params["mynick"] = user->getClientNick(); 
-				params["mycid"] = user->getClientCID().toBase32(); 
+				params["hub"] = user->getClientName();
+				/** @todo params["mynick"] = user->getClientNick(); 
+				params["mycid"] = user->getClientCID().toBase32(); */
 				params["cid"] = user->getCID().toBase32(); 
-				params["hubaddr"] = user->getClientAddressPort();*/
+				//params["hubaddr"] = user->getClientAddressPort();
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
@@ -427,10 +427,9 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
 		params["message"] = Text::fromT(sTmp);
-		/** @todo 
-		params["user"] = user->getNick();
+		params["user"] = user->getFirstNick();
 		params["hub"] = user->getClientName();
-		params["hubaddr"] = user->getClientAddressPort();
+		/** @todo params["hubaddr"] = user->getClientAddressPort();
 		params["mynick"] = user->getClientNick(); 
 		params["mycid"] = user->getClientCID().toBase32(); */
 		params["cid"] = user->getCID().toBase32(); 
@@ -787,11 +786,11 @@ void PrivateFrame::readLog() {
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
 	params["user"] = user->getFirstNick();
-/* @todo	params["hub"] = user->getClientName();
-	params["mynick"] = user->getClientNick(); 
-	params["mycid"] = user->getClientCID().toBase32(); 
+	params["hub"] = user->getClientName();
+/* @todo	params["mynick"] = user->getClientNick(); 
+	params["mycid"] = user->getClientCID().toBase32(); */
 	params["cid"] = user->getCID().toBase32(); 
-	params["hubaddr"] = user->getClientAddressPort();*/
+//	params["hubaddr"] = user->getClientAddressPort();
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 	if(Util::fileExists(file)) {
 		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);

@@ -23,7 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include <natupnp.h>
+#include "natupnp.h"
 
 class UPnP
 {

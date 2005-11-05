@@ -131,7 +131,7 @@ const string& QueueItem::getTempTarget() {
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
-						  int64_t aDownloadedBytes, u_int32_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
+						  int64_t aDownloadedBytes, time_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
 {
 	if(p == QueueItem::DEFAULT)
 		p = (aSize <= 65536) ? QueueItem::HIGHEST : QueueItem::NORMAL;
@@ -1004,11 +1004,11 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		}
 	}
 
-#ifdef _DEBUG
+//#ifndef _DEBUG
 	return 500;
-#else
-	return MaxSegments;
-#endif
+//#else
+//	return MaxSegments;
+//#endif
 }
 
 void QueueManager::getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
@@ -1667,7 +1667,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& verifiedBlocks = getAttrib(attribs, sVerifiedBlocks, 2);
 
 			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 3));
-			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 4));
+			time_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 4));
 			const string& tthRoot = getAttrib(attribs, sTTH, 5);
 			string tempTarget = getAttrib(attribs, sTempTarget, 5);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 5));

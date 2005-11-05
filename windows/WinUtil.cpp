@@ -46,7 +46,6 @@
 #include "HubFrame.h"
 #include "MagnetDlg.h"
 #include "winamp.h"
-#include <strmif.h>
 #include <control.h>
 #include <Windows.h>
 #include "../client/cvsversion.h"
@@ -1222,11 +1221,11 @@ void WinUtil::openLink(const tstring& url) {
 	CRegKey key;
 	TCHAR regbuf[MAX_PATH];
 	ULONG len = MAX_PATH;
-	if(strnicmp(Text::fromT(url).c_str(), "magnet:?", 8) == 0) {
+	if(_strnicmp(Text::fromT(url).c_str(), "magnet:?", 8) == 0) {
 		parseMagnetUri(url);
 		return;
 	}
-	if(strnicmp(Text::fromT(url).c_str(), "dchub://", 8) == 0) {
+	if(_strnicmp(Text::fromT(url).c_str(), "dchub://", 8) == 0) {
 		parseDchubUrl(url);
 		return;
 	}
@@ -1559,7 +1558,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 
 			
 			for(StringIter si = tok.begin(); si != tok.end(); ++si) {
-				if(stricmp(extension.c_str(), si->c_str())==0){
+				if(_stricmp(extension.c_str(), si->c_str())==0){
 					add = true;
 					break;
 				}
@@ -1687,13 +1686,13 @@ int WinUtil::getImage(const Identity& u) {
 int WinUtil::getFlagImage(const char* country, bool fullname) {
 	if(fullname) {
 		for(size_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
-			if(stricmp(country, CountryNames[i-1]) == 0) {
+			if(_stricmp(country, CountryNames[i-1]) == 0) {
 				return i;
 			}
 		}
 	} else {
 		for(size_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
-			if(stricmp(country,CountryCodes[i-1]) == 0) {
+			if(_stricmp(country,CountryCodes[i-1]) == 0) {
 				return i;
 			}
 		}

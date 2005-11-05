@@ -190,7 +190,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 			ULONG index = 0;
 			for( ; ; index++ )
 			{
-				lpszParamSep = _tcschr( lpszParsed, _T(',') );
+				lpszParamSep = (LPTSTR)_tcschr( lpszParsed, _T(',') );
 				if ( lpszParamSep == NULL )
 					break;
 
@@ -202,7 +202,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 				lpszParsed = lpszParamSep + 1;
 			}
 
-			lpszParamSep = _tcschr( lpszParsed, _T(')') );
+			lpszParamSep = (LPTSTR)_tcschr( lpszParsed, _T(')') );
 			if ( lpszParamSep != NULL )
 			{
 				*lpszParamSep = _T('\0');

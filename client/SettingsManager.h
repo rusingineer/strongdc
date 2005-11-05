@@ -263,7 +263,7 @@ public:
 
 	void set(IntSetting key, bool value) { set(key, (int)value); }
 
-	void setDefault(StrSetting key, string const& value) {
+	void setDefault(StrSetting key, const string& value) {
 		strDefaults[key - STR_FIRST] = value;
 	}
 

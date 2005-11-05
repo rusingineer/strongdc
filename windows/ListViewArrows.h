@@ -86,7 +86,7 @@ public:
 		}
 		dc.SelectPen(penLight);
 		dc.Polyline(pathArrowShort, sizeof(pathArrowShort)/sizeof(pathArrowShort[0]));
-		for (i=0; i < sizeof(pathArrowLong)/sizeof(pathArrowLong[0]); ++i)
+		for (int i=0; i < sizeof(pathArrowLong)/sizeof(pathArrowLong[0]); ++i)
 		{
 			POINT& pt = pathArrowLong[i];
 			pt.x = bitmapWidth - pt.x;

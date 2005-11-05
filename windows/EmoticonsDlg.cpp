@@ -17,8 +17,6 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 WNDPROC EmoticonsDlg::m_MFCWndProc = 0;
 EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
 
-EmoticonsDlg::~EmoticonsDlg() { };
-
 LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/) {
 	TCHAR buf[256];
 	::GetWindowText(hWndCtl, buf, 255);
@@ -50,7 +48,8 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 		unsigned int pocet = 0;
 		string lastEmotionPath = "";
-		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
+		CAGEmotion::Iter pEmotion;
+		for(pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
 		{
 			if ((*pEmotion)->GetEmotionBmpPath() != lastEmotionPath) pocet++;
 			lastEmotionPath = (*pEmotion)->GetEmotionBmpPath();

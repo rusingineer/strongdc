@@ -153,7 +153,7 @@ int Util::getNetLimiterLimit() {
 		string cesta = Util::getAppName() + "/";
 		char buf[BUF_SIZE];
 		u_int32_t len;
-		char* w2 = strdup(cesta.c_str());
+		char* w2 = _strdup(cesta.c_str());
 
 		for(;;) {
 			size_t n = BUF_SIZE;
@@ -164,9 +164,9 @@ int Util::getNetLimiterLimit() {
 				txt += "/"; else
 				txt += buf[i];
 			}
-			char* w1 = strdup(txt.c_str());
+			char* w1 = _strdup(txt.c_str());
 
-			if(::strstr(strupr(w1),strupr(w2)) != NULL) {
+			if(::strstr(_strupr(w1),_strupr(w2)) != NULL) {
 				char buf1[256];
 				char buf2[256];
 
@@ -178,7 +178,7 @@ int Util::getNetLimiterLimit() {
 				buf2[255] = 0;
 				string a2 = buf2;
 
-				char* limit_hex = strdup(("0x" + a2 + a1).c_str());
+				char* limit_hex = _strdup(("0x" + a2 + a1).c_str());
 
 				NetLimiter_UploadLimit = 0;
 
