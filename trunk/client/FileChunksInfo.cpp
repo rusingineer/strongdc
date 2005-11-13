@@ -242,7 +242,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
 
-	if(speed == 0 && maxChunk->download){
+	if(speed == 0 && maxChunk->download && maxChunk->download->getUser()){
 		speed = Util::toInt64(maxChunk->download->getUser()->getIdentity().get("US"));
 	}
 

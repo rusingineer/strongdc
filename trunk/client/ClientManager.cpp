@@ -272,7 +272,7 @@ void ClientManager::infoUpdated(bool antispam) {
 void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 									int aFileType, const string& aString, bool isPassive) throw() 
 {
-	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aString);
+	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
 
 	// We don't wan't to answer passive searches if we're in passive mode...
 	if(isPassive && !ClientManager::getInstance()->isActive(aClient)) {
@@ -331,7 +331,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 			string hubIpPort = aClient->getIpPort();
 			string tth = aTTH.toBase32();
 			string user = Text::utf8ToAcp(aClient->getMyNick());
-			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo));
+			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
 			buf[1023] = NULL;
 			string ip, file;
 			u_int16_t port = 0;

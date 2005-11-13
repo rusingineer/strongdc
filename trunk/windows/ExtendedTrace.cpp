@@ -123,6 +123,10 @@ static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
 	{
 	   // Got it!
 		PCSTR2LPTSTR( moduleInfo.ModuleName, lpszModule );
+
+		if(stricmp(moduleInfo.ModuleName, "nl_lsp") == 0)
+			MessageBox(0, CTSTRING(NL_CRASH), _T("Unhandled exception"), MB_OK);
+
 		ret = TRUE;
 	}
 	else
@@ -190,7 +194,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 			ULONG index = 0;
 			for( ; ; index++ )
 			{
-				lpszParamSep = (LPTSTR)_tcschr( lpszParsed, _T(',') );
+				lpszParamSep = _tcschr( const_cast<wchar_t*>(lpszParsed), _T(',') );
 				if ( lpszParamSep == NULL )
 					break;
 
@@ -202,7 +206,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 				lpszParsed = lpszParamSep + 1;
 			}
 
-			lpszParamSep = (LPTSTR)_tcschr( lpszParsed, _T(')') );
+			lpszParamSep = _tcschr( const_cast<wchar_t*>(lpszParsed), _T(')') );
 			if ( lpszParamSep != NULL )
 			{
 				*lpszParamSep = _T('\0');

@@ -80,16 +80,16 @@ LRESULT UpdateDlg::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		ctrlCurrentVersion.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_LATEST_VERSION) {
-		string* text = (string*)lParam;
-		ctrlLatestVersion.SetWindowText(Text::toT(*text).c_str());
+		tstring* text = (tstring*)lParam;
+		ctrlLatestVersion.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_STATUS) {
-		string* text = (string*)lParam;
-		ctrlStatus.SetWindowText(Text::toT(*text).c_str());
+		tstring* text = (tstring*)lParam;
+		ctrlStatus.SetWindowText(text->c_str());
 		delete text;
 	} else if (wParam == UPDATE_CONTENT) {
-		string* text = (string*)lParam;
-		ctrlChangeLog.SetWindowText(Text::toT(*text).c_str());
+		tstring* text = (tstring*)lParam;
+		ctrlChangeLog.SetWindowText(text->c_str());
 		delete text;
 	}
 	return S_OK;
@@ -102,11 +102,11 @@ LRESULT UpdateDlg::OnDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
 
 void UpdateDlg::on(HttpConnectionListener::Failed, HttpConnection* /*conn*/, const string& aLine) throw() {
-	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(CONNECTION_ERROR) + ": " + aLine + "!"));
+	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(CONNECTION_ERROR) + _T(": ") + Text::toT(aLine) + _T("!")));
 }
 
 void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, string const& /*aLine*/) throw() {
-			PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(DATA_RETRIEVED) + "!"));
+			PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(DATA_RETRIEVED) + _T("!")));
 			string sText;
 			try {
 				string s_latestVersion;
@@ -146,14 +146,14 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 					const string& sData = xml.getChildData();
 					sText += sData + "\r\n";
 				}
-				PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new string(sText));
+				PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new tstring(Text::toT(sText)));
 			} catch (const Exception&) {
-				PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new string("Couldn't parse xml-data"));
+				PostMessage(WM_SPEAKER, UPDATE_CONTENT, (LPARAM)new tstring(_T("Couldn't parse xml-data")));
 			}
 }
 
 void UpdateDlg::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 			if (xmldata.empty())
-				PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new string(STRING(RETRIEVING_DATA) + "..."));
+				PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(RETRIEVING_DATA) + _T("...")));
 			xmldata += string((const char*)buf, len);
 }

@@ -717,7 +717,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 										break;
 									}
 								}
-								if(samenumbers) {
+								if(samenumbers && u.user->getOnlineUser()) {
 									string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
 									u.user->getOnlineUser()->setBadFilelist(true);
 									u.user->getOnlineUser()->setCheat(Util::validateMessage(detectString, false), false, false);
@@ -1389,6 +1389,8 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		return;
 
 	if(!client) return;
+
+	client->getMyIdentity().getParams(ucParams, "my");
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);

@@ -58,6 +58,7 @@ public:
 	void removeDirectory(const string& aName, bool duringRefresh = false);	
 	void removeDirectory1(const string& aName);
 	void renameDirectory(const string& oName, const string& nName) throw(ShareException);
+	string translateTTH(const string& TTH) throw(ShareException);
 	string translateFileName(const string& aFile) throw(ShareException);
 	bool getTTH(const string& aFile, TTHValue& tth) throw();
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ShareException);
@@ -265,6 +266,9 @@ private:
 	bool refreshDirs;
 	bool update;
 	bool initial;
+
+	//used to check if we've already started a refresh
+	__declspec(align(4)) volatile long refreshing;
 	
 	int listN;
 

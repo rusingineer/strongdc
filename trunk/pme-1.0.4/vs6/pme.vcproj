@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="pme"
 	ProjectGUID="{B643EECE-9EEE-4E81-A6BE-3AEA2A4D09AF}"
+	RootNamespace="pme"
 	>
 	<Platforms>
 		<Platform
@@ -22,6 +23,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"

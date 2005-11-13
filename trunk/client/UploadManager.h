@@ -307,11 +307,11 @@ private:
 	}
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();

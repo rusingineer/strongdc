@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="StrongDC"
 	ProjectGUID="{E82610AA-B6FD-4813-B5B9-E717CBD0F23B}"
+	RootNamespace="StrongDC"
 	>
 	<Platforms>
 		<Platform
@@ -145,12 +146,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="4"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				WholeProgramOptimization="false"
 				PreprocessorDefinitions="HAVE_STLPORT"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -161,7 +161,7 @@
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				AssemblerOutput="0"
+				AssemblerOutput="4"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 				CallingConvention="1"
@@ -182,15 +182,13 @@
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
 				AdditionalDependencies="unicows.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib delayimp.lib htmlhelp.lib ws2_32.lib powrprof.lib"
 				OutputFile="./Compiled/StrongDC.exe"
-				Version=""
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				DelayLoadDLLs="dbghelp.dll;oleaut32.dll"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="./Compiled/StrongDC.pdb"
-				GenerateMapFile="true"
-				MapFileName=""
+				GenerateMapFile="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

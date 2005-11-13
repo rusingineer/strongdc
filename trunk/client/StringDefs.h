@@ -866,7 +866,8 @@ enum Strings { // @DontAdd
 	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
 	CHECKING_CLIENT, // "Checking client..."
 	GROUP_SEARCH_RESULTS, // "Group search results by TTH"
-	NETLIMITER_WARNING, // "NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product."
+	NETLIMITER_WARNING, // "NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product, or built-in limiter."
 	TABS_ON_TOP, // "Tabs on top"
+	NL_CRASH, // "Application NetLimiter caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product, or built-in limiter."
 	LAST // @DontAdd
 };

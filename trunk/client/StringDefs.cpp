@@ -863,8 +863,9 @@ string ResourceManager::strings[] = {
 "Accepted Disconnects", 
 "Checking client...", 
 "Group search results by TTH", 
-"NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product.", 
+"NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product, or built-in limiter.", 
 "Tabs on top", 
+"Application NetLimiter caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product, or built-in limiter.", 
 };
 string ResourceManager::names[] = {
 "Active", 
@@ -1730,4 +1731,5 @@ string ResourceManager::names[] = {
 "GroupSearchResults", 
 "NetlimiterWarning", 
 "TabsOnTop", 
+"NlCrash", 
 };

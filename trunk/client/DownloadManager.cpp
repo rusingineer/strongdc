@@ -653,7 +653,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	try {
 		try{
 			dcassert(d->getFile());
-			if(!d->getFile()) MessageBox(0, _T("d->getFile() is NULL"), _T("Debug data, please report"), MB_OK);
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 
 		} catch(const ChunkDoneException e) {
@@ -673,7 +672,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
 				removeConnection(aSource, false, false, true);
-				//aSource->getUser()->connect();
+				checkDownloads(aSource, true);
 			}
 			return;
 
@@ -768,8 +767,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		QueueManager::getInstance()->putDownload(d, false);
 		removeConnection(aSource);
 		return;
-	} catch(...) {
-		MessageBox(0, _T("Unknown exception"), _T("Debug data, please report"), MB_OK);
 	}
 }
 

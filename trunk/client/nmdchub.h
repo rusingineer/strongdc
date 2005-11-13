@@ -35,6 +35,8 @@
 #include "Client.h"
 #include "ConnectionManager.h"
 #include "UploadManager.h"
+#include "StringTokenizer.h"
+#include "ZUtils.h"
 
 class NmdcHub : public Client, private TimerManagerListener, private Flags
 {
@@ -167,8 +169,56 @@ private:
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	virtual void on(Line, const string& l) throw() {
-		COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
-		onLine(l.c_str());
+		if(l.substr(0, 7) == "$ZLine ") {
+			string::size_type i = 0, j;
+			string rawParam = l.substr(7);
+			bool corrupt = false;
+
+			// unescape \\ to \ and \P to | 
+			while((i = rawParam.find("\\", i)) != string::npos && !corrupt) {
+				if (i + 1 < rawParam.size()) {
+					switch (rawParam[i+1]) {
+						case '\\':
+							rawParam.replace(i++, 2, "\\");
+							break;
+						case 'P':
+							rawParam.replace(i++, 2, "|");
+							break;
+						default:
+							corrupt = true;
+							break;
+					}
+				} else {
+					corrupt = true;
+				}
+			}
+		
+			if (!corrupt) {
+				// unzip the ZBlock
+				i = rawParam.size();
+				j = i * 10;
+				AutoArray<u_int8_t> temp(j);
+				UnZFilter filter;
+				try {
+					filter(rawParam.c_str(), i, temp, j);
+				} catch(...){
+					dcdebug("Error during Zline decompression");
+				}
+				string lines = string((char*)(u_int8_t*)temp, j);
+	
+				// "fire" the lines
+				StringTokenizer<string> st(lines, '|');
+				for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
+					COMMAND_DEBUG(*i, DebugManager::HUB_IN, getIpPort());
+					onLine((*i).c_str());
+				}
+			} else {
+				dcdebug("Corrupt Zline datastream");
+			}
+		} else {
+			COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
+			onLine(l.c_str());
+		}
 	}
 	virtual void on(Failed, const string&) throw();
 

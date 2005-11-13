@@ -60,6 +60,33 @@ FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
 
 #endif
 
+string getExceptionName(DWORD code) {
+	switch(code)
+    { 
+		case EXCEPTION_ACCESS_VIOLATION:      return "Access violation"; break; 
+		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:   return "Array out of range"; break; 
+		case EXCEPTION_BREAKPOINT:            return "Breakpoint"; break; 
+		case EXCEPTION_DATATYPE_MISALIGNMENT:   return "Read or write error"; break; 
+		case EXCEPTION_FLT_DENORMAL_OPERAND:   return "Floating-point error"; break; 
+		case EXCEPTION_FLT_DIVIDE_BY_ZERO:      return "Floating-point division by zero"; break; 
+		case EXCEPTION_FLT_INEXACT_RESULT:      return "Floating-point inexact result"; break; 
+		case EXCEPTION_FLT_INVALID_OPERATION:   return "Unknown floating-point error"; break; 
+		case EXCEPTION_FLT_OVERFLOW:         return "Floating-point overflow"; break; 
+		case EXCEPTION_FLT_STACK_CHECK:         return "Floating-point operation caused stack overflow"; break; 
+		case EXCEPTION_FLT_UNDERFLOW:         return "Floating-point underflow"; break; 
+		case EXCEPTION_ILLEGAL_INSTRUCTION:      return "Illegal instruction"; break; 
+		case EXCEPTION_IN_PAGE_ERROR:         return "Page erro"; break; 
+		case EXCEPTION_INT_DIVIDE_BY_ZERO:      return "Integer division by zero"; break; 
+		case EXCEPTION_INT_OVERFLOW:         return "Integer overflow"; break; 
+		case EXCEPTION_INVALID_DISPOSITION:      return "Invalid disposition"; break; 
+		case EXCEPTION_NONCONTINUABLE_EXCEPTION:return "Noncontinueable exception"; break; 
+		case EXCEPTION_PRIV_INSTRUCTION:      return "Invalid instruction"; break; 
+		case EXCEPTION_SINGLE_STEP:            return "Single step executed"; break; 
+		case EXCEPTION_STACK_OVERFLOW:         return "Stack overflow"; break; 
+	}
+	return "";
+}
+
 LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 {	
 	Lock l(cs);
@@ -101,9 +128,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
-
-	sprintf(buf, "Code: %x\r\nVersion: %s%s\r\n", 
-		exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
+	sprintf(buf, "Code: %s %x\r\nVersion: %s%s\r\n", 
+		getExceptionName(exceptionCode).c_str(), exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
 
 	f.write(buf, strlen(buf));
 
@@ -113,7 +139,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	sprintf(buf, "CVS: %s\r\n", 
 		CVSVERSION);	
 	f.write(buf, strlen(buf));
-	WinUtil::exceptioninfo = Text::toT(buf);
+	WinUtil::exceptioninfo += Text::toT(buf);
 #endif	
 	
 	OSVERSIONINFOEX ver;

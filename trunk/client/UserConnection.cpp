@@ -107,9 +107,9 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 11;
         		if(aLine[0] == NULL) return;
     
-        		if((temp = (char*)strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
+        		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
     				temp[0] = NULL, temp += 1;
-        			if(aLine[0] == NULL || temp[0] == NULL) return;
+        			if(aLine[0] == NULL) return;
     
     				fire(UserConnectionListener::Direction(), this, aLine, temp);
 	    		}
@@ -153,9 +153,9 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 5;
         		if(aLine[0] == NULL) return;
     
-        		if((temp = (char*)strchr(aLine, '$')) != NULL && temp[1] != NULL)  {
+        		if((temp = strchr((char *)aLine, '$')) != NULL && temp[1] != NULL)  {
     				temp[0] = NULL; temp += 1;
-        			if(aLine[0] == NULL || temp[0] == NULL) return;
+        			if(aLine[0] == NULL) return;
     
     				fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
 	    		}
@@ -218,9 +218,9 @@ void UserConnection::onLine(const char* aLine) throw() {
     			aLine += 6;
         		if(aLine[0] == NULL) return;
      
-        		if((temp = (char*)strchr(aLine, ' ')) != NULL && temp[1] != NULL) {
+        		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
         			temp[0] = NULL; temp += 4;
-        			if(aLine[0] == NULL || temp[0] == NULL) return;
+        			if(aLine[0] == NULL) return;
                 
     				fire(UserConnectionListener::CLock(), this, aLine, temp);
 	    		} else {
@@ -290,10 +290,10 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 
 void UserConnection::processBlock(const char* param, int type) throw() {
 	char *temp, *temp1;
-	if((temp = (char*)strchr(param, ' ')) == NULL || temp[1] == NULL) return;
+	if((temp = strchr((char *)param, ' ')) == NULL || temp[1] == NULL) return;
 
 	temp[0] = NULL; temp += 1;
-	if(param[0] == NULL || temp[0] == NULL) return;
+	if(param[0] == NULL) return;
 
 	int64_t start = _atoi64(param);
 	if(start < 0) {
@@ -304,7 +304,7 @@ void UserConnection::processBlock(const char* param, int type) throw() {
 	if((temp1 = strchr(temp, ' ')) == NULL || temp1[1] == NULL) return;
 
 	temp1[0] = NULL; temp1 += 1;
-	if(temp[0] == NULL || temp1[0] == NULL) return;
+	if(temp[0] == NULL) return;
 
 	int64_t bytes = _atoi64(temp);
 

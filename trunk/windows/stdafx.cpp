@@ -29,10 +29,6 @@
 #error WTL not correctly installed, read compile.txt
 #endif
 
-#if defined(HAS_STLPORT) && (_STLPORT_VERSION != 0x462)
-#error STLPort not correctly installed, read compile.txt
-#endif
-
 /**
  * @file
  * $Id$
