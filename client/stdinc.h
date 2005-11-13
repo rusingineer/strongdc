@@ -33,6 +33,12 @@
 #define _ATL_NO_HOSTING
 #define _ATL_NO_OLD_NAMES
 
+#if _MSC_VER == 1400
+#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
+//disable the deperecated warnings for the crt functions.
+#pragma warning(disable: 4996)
+#endif
+
 #include <Winsock2.h>
 
 #include <windows.h>
@@ -114,8 +120,6 @@ namespace __gnu_cxx {
 #else // __GLIBCPP__
 
 #include <hash_map>
-#include <hash_set>
-
 using namespace std;
 using namespace stdext;
 

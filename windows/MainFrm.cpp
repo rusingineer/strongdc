@@ -430,7 +430,7 @@ HWND MainFrame::createToolbar() {
 		TBBUTTON nTB;
 		memset2(&nTB, 0, sizeof(TBBUTTON));
 
-		if(i == INT_MAX) {
+		if((i == INT_MAX) || (i == -1)) {
 			nTB.fsStyle = TBSTYLE_SEP;			
 		} else {
 			nTB.iBitmap = WinUtil::ToolbarButtons[i].image;

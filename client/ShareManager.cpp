@@ -45,7 +45,8 @@
 
 ShareManager::ShareManager() : hits(0), listLen(0), bzXmlListLen(0),
 	xmlDirty(true), nmdcDirty(false), refreshDirs(false), update(false), initial(true), listN(0), lFile(NULL), 
-	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
+	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0),
+	refreshing(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -115,12 +116,22 @@ ShareManager::Directory::~Directory() {
 	}
 }
 
+string ShareManager::translateTTH(const string& TTH) throw(ShareException) {
+	TTHValue v(TTH);
+	HashFileIter i = tthIndex.find(&v);
+	if(i != tthIndex.end()) {
+		return i->second->getADCPath();
+	} else {
+		throw ShareException("File Not Available");
+	}
+}
+
 string ShareManager::translateFileName(const string& aFile) throw(ShareException) {
 	RLock<> l(cs);
 	if(aFile == "MyList.DcLst") {
 		generateNmdcList();
 		return getListFile();
-	} else if((aFile == "files.xml.bz2") || (aFile == "files.xml")) {
+	} else if(aFile == "files.xml.bz2" || aFile == "files.xml") {
 		generateXmlList();
 		return getBZXmlFile();
 	} else {
@@ -131,13 +142,7 @@ string ShareManager::translateFileName(const string& aFile) throw(ShareException
 
 		// Check for tth root identifier
 		if(aFile.compare(0, 4, "TTH/") == 0) {
-			TTHValue v(aFile.substr(4));
-			HashFileIter i = tthIndex.find(&v);
-			if(i != tthIndex.end()) {
-				file = i->second->getADCPath();
-			} else {
-				throw ShareException("File Not Available");
-			}
+			file = translateTTH(aFile.substr(4));
 		} else if(aFile[0] != '/') {
 			throw ShareException("File Not Available");
 		} else {
@@ -148,7 +153,6 @@ string ShareManager::translateFileName(const string& aFile) throw(ShareException
 		if(i == string::npos)
 			throw ShareException("File Not Available");
 		
-
 		StringPairIter j = lookupVirtual(file.substr(1, i-1));
 		if(j == virtualMap.end()) {
 			throw ShareException("File Not Available");
@@ -818,6 +822,11 @@ void ShareManager::removeTTH(const TTHValue& tth, const Directory::File::Iter& i
 }
 
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ShareException) {
+	if(Thread::safeInc(refreshing) == 2) {
+		Thread::safeDec(refreshing);
+		return;
+	}
+
 	update = aUpdate;
 	refreshDirs = dirs;
 	join();
@@ -871,6 +880,8 @@ int ShareManager::run() {
 		}
 	}
 
+	Thread::safeDec(refreshing);
+	
 	sharedSize = getShareSize();
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
 	if(update) {

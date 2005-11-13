@@ -1004,11 +1004,11 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		}
 	}
 
-//#ifndef _DEBUG
+#ifdef _DEBUG
 	return 500;
-//#else
-//	return MaxSegments;
-//#endif
+#else
+	return MaxSegments;
+#endif
 }
 
 void QueueManager::getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {

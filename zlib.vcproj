@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="zlib"
 	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
+	RootNamespace="zlib"
 	>
 	<Platforms>
 		<Platform
@@ -118,12 +119,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="4"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				WholeProgramOptimization="false"
 				PreprocessorDefinitions="ZLIB_COMPILE"
 				StringPooling="true"
 				MinimalRebuild="true"

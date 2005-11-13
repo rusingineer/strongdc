@@ -159,22 +159,13 @@ void UploadPage::write()
 	}
 
 	if(SETTING(HUB_SLOTS) < 0)
-	settings->set(SettingsManager::HUB_SLOTS, 0);
+		settings->set(SettingsManager::HUB_SLOTS, 0);
 
-/*	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((2 * SETTING(SLOTS)) + 3) ) {
-			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((2 * SETTING(SLOTS)) + 3) );
-		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
-		}
-	}*/
-
-	ShareManager::getInstance()->refresh();
-	if(!BOOLSETTING(USE_OLD_SHARING_UI) && ft.IsDirty())
-	{
+	if(!BOOLSETTING(USE_OLD_SHARING_UI) && ft.IsDirty()) {
 		ShareManager::getInstance()->setDirty();
 		ShareManager::getInstance()->refresh(true);
+	} else {
+		ShareManager::getInstance()->refresh();
 	}
 }
 

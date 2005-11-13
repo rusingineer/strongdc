@@ -625,7 +625,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 		if(!m_boFileServer) {
 			if(	(Util::getUptime() > 7200) && 
 				(Socket::getTotalUp() > 209715200) &&
-				(ShareManager::getInstance()->getShareSize() > 2147483648)) {
+				(ShareManager::getInstance()->getSharedSize() > 2147483648)) {
 					m_boFileServer = true;
 				if(!boFireballSent && !boFileServerSent) {
 					ClientManager::getInstance()->infoUpdated(true);
@@ -636,12 +636,12 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 	}
 }
 
-void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
-	Lock l(cs);
+void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
 
 	/// @todo Don't kick when /me disconnects
 	if( BOOLSETTING(AUTO_KICK) ) {
 
+		Lock l(cs);
 		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
 			Upload* u = *i;
 			if(u->getUser() == aUser) {
@@ -657,6 +657,7 @@ void UploadManager::on(ClientManagerListener::UserUpdated, const User::Ptr& aUse
 
 	//Remove references to them.
 	if(!aUser->isOnline()) {
+		Lock l(cs);
 		clearUserFiles(aUser);
 	}
 }

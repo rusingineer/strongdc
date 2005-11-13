@@ -207,7 +207,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 
 		switch(aLine[0]) {
             case '<':
-                if((temp = (char*)strchr(aLine+1, '>')) != NULL) {
+                if((temp = strchr((char *)aLine+1, '>')) != NULL) {
                     temp[0] = NULL;
                     nick = fromNmdc(aLine+1);
                     if(temp[1] == ' ' && temp[2] == '/' && tolower(temp[3]) == 'm' && tolower(temp[4]) == 'e' && temp[5] == ' ' && temp[6] != NULL) {
@@ -224,7 +224,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
                 }
                 break;
             case '*':
-                if((temp = (char*)strchr(aLine+2, ' ')) != NULL) {
+                if((temp = strchr((char *)aLine+2, ' ')) != NULL) {
                     temp[0] = NULL;
                     nick = fromNmdc(aLine+2);
                     temp[0] = ' ';
@@ -354,7 +354,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				}
 
         		while(aLine != NULL) {
-                    if((temp = (char*)strchr(aLine, ' ')) != NULL) {
+                    if((temp = strchr((char *)aLine, ' ')) != NULL) {
                         temp[0] = NULL; temp++;
                     }
 
@@ -408,16 +408,14 @@ void NmdcHub::onLine(const char* aLine) throw() {
     		if(strncmp(aLine+2, "yINFO ", 6) == 0) {
 			    char *Description, *Tag, *Connection, *Email, *Share;
 		    	aLine += 13;
+        	    if((Description = strchr((char*)aLine, ' ')) == NULL || Description[1] == NULL)
+        	         return;
+        
+        		Description[0] = NULL;
+        		Description += 1;
 
 				if(aLine[0] == NULL)
 		    	     return;
-
-				Description = strchr((char*)aLine, ' ');
-        	    if(Description == NULL || Description[0] == NULL || Description[1] == NULL)
-					return;
-
-				Description[0] = NULL;
-				Description += 1;
 	    
 				OnlineUser& u = getUser(fromNmdc(aLine));
 
@@ -443,6 +441,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 						Share = strchr(Email, '$');
 						if(Share && Share+1) {
 							if((temp = strchr(Share+1, '$')) != NULL) temp[0] = NULL;
+
 							Share[0] = NULL;
 							Share += 1;
 							u.getIdentity().setEmail(Util::validateMessage(fromNmdc(Email), true));
@@ -545,7 +544,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if(state != STATE_CONNECTED || (temp = strchr((char*)aLine, ' ')) == NULL || temp[1] == NULL) return;
 	
 				temp[0] = NULL; temp += 1;
-        		if(aLine[0] == NULL || temp[0] == NULL) return;
+        		if(aLine[0] == NULL) return;
 
 				if(_stricmp(fromNmdc(aLine).c_str(), getMyNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
 					return;
@@ -553,7 +552,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if((temp1 = strchr(temp, ':')) == NULL || temp1[1] == NULL) return;
 
 				temp1[0] = NULL; temp1 += 1;
-        		if(temp[0] == NULL || temp1[0] == NULL) return;
+        		if(temp[0] == NULL) return;
 
 				ConnectionManager::getInstance()->nmdcConnect(temp, (short)atoi(temp1), getMyNick(), getHubUrl()); 
 	    		return;
@@ -570,7 +569,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if((temp = strchr((char*)aLine, ' ')) == NULL || temp[1] == NULL) return;
 
 				temp[0] = NULL; temp += 1;
-        		if(aLine[0] == NULL || temp[0] == NULL) return;
+        		if(aLine[0] == NULL) return;
 
 				OnlineUser* u = findUser(fromNmdc(aLine));
 				if(u == NULL)
@@ -649,18 +648,22 @@ void NmdcHub::onLine(const char* aLine) throw() {
         case 'U':
 	    	// $UserCommand
     		if(strncmp(aLine+2, "serCommand ", 11) == 0) {
-				temp = (char*)aLine+13;
-        		if(temp[0] == NULL || temp[1] == NULL) return;
+        		aLine += 13;
+        		if((temp = strchr((char*)aLine, ' ')) == NULL || temp[1] == NULL) return;
 
-				temp[1] = NULL;
-				int type = atoi(temp);
-				temp += 2;
-        		if(temp[0] == NULL || temp[1] == NULL) return;
-
-				temp[1] = NULL;
-				int ctx = atoi(temp);
-				temp += 2;
-        		if(temp[0] == NULL) return;
+        		temp[0] = NULL;
+        		int type = atoi(aLine);
+        		int ctx = 0;
+        		
+        		if(type == 0 || type == 255) {
+        			ctx = atoi(temp+1);
+        		} else {
+        			temp1 = temp+1;
+        			if((temp = strchr(temp1, ' ')) == NULL || temp[1] == NULL) return;
+	        		temp[0] = NULL;
+	        		ctx = atoi(temp1);
+	        		temp = temp+1;
+        		}
 
         		switch(type) {
                     case UserCommand::TYPE_SEPARATOR:
@@ -672,7 +675,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         			    if((temp1 = strchr(temp, '$')) == NULL || temp1[1] == NULL) return;
 
 						temp1[0] = NULL; temp1 += 1;
-        			    if(temp[0] == NULL || temp1[0] == NULL) return;
+        			    if(temp[0] == NULL) return;
 
 						fire(ClientListener::UserCommand(), this, type, ctx, Util::validateMessage(fromNmdc(temp), true, false), Util::validateMessage(fromNmdc(temp1), true, false));
        			    	break;
@@ -690,10 +693,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 8;
         		if(aLine[0] == NULL) return;
 
-				while((temp = (char*)strchr(aLine, ' ')) != NULL && temp+1 != NULL) {
-					temp[0] = NULL; temp += 1; temp1 = strchr(temp, '$');
-					if(aLine[0] == NULL || temp[0] == NULL) break;
-					if(temp1 == NULL) {
+				while((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
+        			temp[0] = NULL; temp += 1;
+        			if(aLine[0] == NULL) break;
+        			if((temp1 = strchr(temp, '$')) == NULL) {
 						OnlineUser* u = findUser(fromNmdc(aLine));
 				
 						if(u == NULL)
@@ -730,7 +733,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if(state != STATE_LOCK || aLine[0] == NULL) return;
 
 				state = STATE_HELLO;
-				if((temp = (char*)strstr(aLine, " Pk=")) != NULL && temp[1] != NULL) {
+        		if((temp = strstr((char *)aLine, " Pk=")) != NULL && temp[1] != NULL) {
 					temp[0] = NULL; temp += 1;
 				}
 	
@@ -799,7 +802,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 10;
 				if(aLine[0] == NULL) return;
 
-				while((temp = (char*)strchr(aLine, '$')) != NULL) {
+        		while((temp = strchr((char *)aLine, '$')) != NULL) {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
@@ -834,7 +837,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				aLine += 8;
 				if(aLine[0] == NULL) return;
 
-				while((temp = (char*)strchr(aLine, '$')) != NULL) {
+        		while((temp = strchr((char *)aLine, '$')) != NULL) {
 					temp[0] = NULL;
 					if(aLine[0] == NULL) break;
 
@@ -864,7 +867,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         case 'T':
 	    	// $To
     		if(strncmp(aLine+2, "o: ", 3) == 0) {
-				if((temp1 = (char*)strstr(aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
+        		if((temp1 = strstr((char *)aLine+5, "From:")) != NULL && strlen(temp1) > 6) {
 					if((temp = strchr(temp1+6, '$')) == NULL || temp[1] == NULL) return;
 	
 					temp1 += 6; *(temp-1) = NULL; temp += 1;
@@ -900,61 +903,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 			}
             
             dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
-            return;
-		case 'Z':
-			// $Zline
-        	if(strncmp(aLine+2, "Line ", 5) == 0) { 
-				aLine += 7;
-				if(aLine[0] == NULL) return;
-
-				string::size_type i = 0, j;
-				string rawParam = (char*)aLine;
-				bool corrupt = false;
-
-				// unescape \\ to \ and \P to | 
-				while((i = rawParam.find("\\", i)) != string::npos && !corrupt) {
-					if (i + 1 < rawParam.size()) {
-						switch (rawParam[i+1]) {
-							case '\\':
-								rawParam.replace(i++, 2, "\\");
-								break;
-							case 'P':
-								rawParam.replace(i++, 2, "|");
-								break;
-							default:
-								corrupt = true;
-								break;
-						}
-					} else {
-						corrupt = true;
-					}
-				}
-
-				if (!corrupt) {
-					// unzip the ZBlock
-					i = rawParam.size();
-					j = i * 10;
-					AutoArray<u_int8_t> temp2(j);
-					UnZFilter filter;
-					try {
-						filter(rawParam.c_str(), i, temp2, j);
-					} catch(...){
-						dcdebug("Error during Zline decompression\n");
-					}
-					string lines = string((char*)(u_int8_t*)temp2, j);
-
-					// "fire" the lines
-					COMMAND_DEBUG("\r\n", DebugManager::HUB_IN, "");
-					StringTokenizer<string> st(lines, '|');
-					for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-						COMMAND_DEBUG("$Zline: " + (*i), DebugManager::HUB_IN, getIpPort());
-						onLine((*i).c_str());
-					}
-				} else {
-					dcdebug("Corrupt Zline datastream\n");
-				}
-			}
-
             return;
     	default:
 			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
@@ -1052,7 +1000,7 @@ void NmdcHub::myInfo() {
 	sprintf(myinfo, "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toNmdc(getMyNick()).c_str(),
 		toNmdc(Util::validateMessage(getMyIdentity().getDescription(), false)).c_str(), tag, connection.c_str(), StatusMode, 
 		toNmdc(Util::validateMessage(SETTING(EMAIL), false)).c_str());
-	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
+	int64_t newbytesshared = ShareManager::getInstance()->getSharedSize();
 	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
 		lastmyinfo = myinfo;
 		lastbytesshared = newbytesshared;

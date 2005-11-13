@@ -37,6 +37,9 @@
 // This enables stlport's debug mode (and slows it down to a crawl...)
 //# define _STLP_DEBUG 1
 
+//Remove this line if you want to try compiling without stlport
+#define HAS_STLPORT 1
+
 // --- Shouldn't have to change anything under here...
 
 #ifndef _REENTRANT
@@ -50,18 +53,8 @@
 #endif
 
 #ifdef _MSC_VER
-# pragma warning(disable: 4711) // function 'xxx' selected for automatic inline expansion
-# pragma warning(disable: 4786) // identifier was truncated to '255' characters in the debug information
 # pragma warning(disable: 4290) // C++ Exception Specification ignored
 # pragma warning(disable: 4127) // constant expression
-# pragma warning(disable: 4710) // function not inlined
-# pragma warning(disable: 4512) // can't generate assignment operator
-# pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
-
-# if _MSC_VER == 1400 // @BM: todo fix this warning by using ISO C standard
-#define _CRT_SECURE_NO_DEPRECATE	// Disable warnings about deprecated functions in new visual studio
-#define _CRT_NON_CONFORMING_SWPRINTFS
-# endif
 
 # if _MSC_VER == 1200 || _MSC_VER == 1300 || _MSC_VER == 1310 || _MSC_VER == 1400
 
@@ -122,6 +115,8 @@ typedef unsigned __int64 u_int64_t;
 #define BZ_NO_STDIO
 
 #ifdef _WIN32
+// Change these values to use different versions...don't know what happens though...=)
+#define WINVER		0x0501
 # define _WIN32_WINNT 0x0501
 # define _WIN32_IE	0x0500
 # define _RICHEDIT_VER 0x0300

@@ -104,7 +104,8 @@ void ToolbarPage::write()
 	string toolbar;
 	for(int i = 0; i < ctrlToolbar.GetItemCount(); i++) {
 		if(i!=0)toolbar+=",";
-		toolbar+=Util::toString(ctrlToolbar.GetItemData(i));
+		int j = ctrlToolbar.GetItemData(i);
+		toolbar += Util::toString(j);
 	}
 	if(toolbar != settings->get(SettingsManager::TOOLBAR)) {
 	settings->set(SettingsManager::TOOLBAR, toolbar);
