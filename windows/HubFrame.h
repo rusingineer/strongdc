@@ -130,13 +130,6 @@ public:
 		COMMAND_CODE_HANDLER(CBN_SELCHANGE, onSelChange)
 	END_MSG_MAP()
 
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		dcassert(frames.find(server) != frames.end());
-		dcassert(frames[server] == this);
-		frames.erase(server);
-		delete this;
-	}
-
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -383,7 +376,11 @@ private:
 		headerBuf = new TCHAR[128];
 	}
 
-	~HubFrame() {
+	virtual ~HubFrame() {
+		dcassert(frames.find(server) != frames.end());
+		dcassert(frames[server] == this);
+		frames.erase(server);
+
 		ClientManager::getInstance()->putClient(client);
 		delete[] headerBuf;
 	}
@@ -510,7 +507,7 @@ private:
 	virtual void on(GetPassword, Client*) throw();
 	virtual void on(HubUpdated, Client*) throw();
 	virtual void on(Message, Client*, OnlineUser*, const char*) throw();
-	virtual void on(PrivateMessage, Client*, const OnlineUser&, const string&) throw();
+	virtual void on(PrivateMessage, Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
 	virtual void on(NickTaken, Client*) throw();
 	virtual void on(SearchFlood, Client*, const string&) throw();
 	virtual void on(CheatMessage, Client*, const string&) throw();	

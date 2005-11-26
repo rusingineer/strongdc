@@ -40,11 +40,6 @@ public:
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("UsersFrame"), IDR_USERS, 0, COLOR_3DFACE);
 		
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		frame = NULL;
-		delete this;
-	}
-
 	typedef MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_USERS> baseClass;
 	typedef UserInfoBaseHandler<UsersFrame> uibBase;
 

@@ -244,12 +244,12 @@ LRESULT UploadQueueFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			PrivateFrame::openWindow(User);
+			PrivateFrame::openWindow(NULL, User);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			PrivateFrame::openWindow(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			PrivateFrame::openWindow(NULL, ((UploadQueueItem*)ctrlList.getItemData(i))->User);
 		}
 	}
 	return 0;

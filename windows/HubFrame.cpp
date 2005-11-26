@@ -371,7 +371,7 @@ void HubFrame::onEnter() {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params))));
 				}
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist"), WinUtil::m_ChatTextSystem);
+				addLine(_T("*** ") + WinUtil::commands + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist"), WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), _T("pm")) == 0) {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
@@ -380,15 +380,15 @@ void HubFrame::onEnter() {
 					if(k != -1) {
 						UserInfo* ui = ctrlUsers.getItemData(k);
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->user, param.substr(j+1));
+							PrivateFrame::openWindow(NULL, ui->user, param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->user);
+							PrivateFrame::openWindow(NULL, ui->user);
 					}
 				} else if(!param.empty()) {
 					int k = ctrlUsers.findItem(param);
 					if(k != -1) {
 						UserInfo* ui = ctrlUsers.getItemData(k);
-						PrivateFrame::openWindow(ui->user);
+						PrivateFrame::openWindow(NULL, ui->user);
 					}
 				}
 			} else if(Util::stricmp(s.c_str(), _T("me")) == 0) {
@@ -865,7 +865,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		if(!ignoreList.count(Text::toT(i->user->getFirstNick())) || (i->user->getOnlineUser() && i->user->getOnlineUser()->getIdentity().isOp() && !client->isOp())) {
 			if(i->user->isOnline()) {
 				if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(i->user)) {
-						PrivateFrame::gotMessage(i->user, i->msg);
+						PrivateFrame::gotMessage(i->user, NULL, i->user, i->msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getFirstNick()) + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 					}
@@ -877,7 +877,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				if(BOOLSETTING(IGNORE_OFFLINE)) {
 					addClientLine(TSTRING(IGNORED_MESSAGE) + i->msg, WinUtil::m_ChatTextPrivate, false);
 				} else if(BOOLSETTING(POPUP_OFFLINE)) {
-					PrivateFrame::gotMessage(i->user, i->msg);
+					PrivateFrame::gotMessage(i->user, NULL, i->user, i->msg);
 				} else {
 					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + Text::toT(i->user->getFirstNick()) + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 				}
@@ -1133,7 +1133,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(pos != -1) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow((ctrlUsers.getItemData(pos))->user);
+					PrivateFrame::openWindow(NULL, (ctrlUsers.getItemData(pos))->user);
 				} else if (wParam & MK_SHIFT) {
 					try {
 						QueueManager::getInstance()->addList((ctrlUsers.getItemData(pos))->user, QueueItem::FLAG_CLIENT_VIEW);
@@ -1390,7 +1390,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 
 	if(!client) return;
 
-	client->getMyIdentity().getParams(ucParams, "my");
+	client->getMyIdentity().getParams(ucParams, "");
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);
@@ -1868,8 +1868,8 @@ void HubFrame::on(Message, Client*, OnlineUser* u, const char* line) throw() {
 	speak(ADD_CHAT_LINE, u ? u->getUser() : NULL, Util::toDOS(line));
 }
 
-void HubFrame::on(PrivateMessage, Client*, const OnlineUser& user, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, user, Util::toDOS(line));
+void HubFrame::on(PrivateMessage, Client*, const OnlineUser& /*from*/, const OnlineUser& /*to*/, const OnlineUser& replyTo, const string& line) throw() { 
+	speak(PRIVATE_MESSAGE, replyTo, Util::toDOS(line));
 }
 void HubFrame::on(NickTaken, Client*) throw() { 
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));

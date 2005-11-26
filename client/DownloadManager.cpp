@@ -672,7 +672,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
 				removeConnection(aSource, false, false, true);
-				checkDownloads(aSource, true);
+				ClientManager::getInstance()->connect(aSource->getUser());
 			}
 			return;
 

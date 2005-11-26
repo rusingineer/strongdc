@@ -285,7 +285,7 @@ class UserCommand;
 template<class T, int title, int ID = -1>
 class StaticFrame {
 public:
-	~StaticFrame() { frame = NULL; };
+	virtual ~StaticFrame() { frame = NULL; };
 
 	static T* frame;
 	static void openWindow() {
@@ -355,7 +355,7 @@ public:
 	static HWND mainWnd;
 	static HWND mdiClient;
 	static FlatTabCtrl* tabCtrl;
-	static string commands;
+	static tstring commands;
 	static HHOOK hook;
 	static tstring tth;
 	static StringPairList initialDirs;	
@@ -491,6 +491,7 @@ public:
 	static void openFile(const tstring& file) {
 		::ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	}
+	static void openFolder(const tstring& file);
 
 	static int getIconIndex(const tstring& aFileName);
 

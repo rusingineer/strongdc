@@ -158,8 +158,15 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			vector<int64_t> v;
 			toIntList<int64_t>(freeBlocks, v);
 			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
-		}else{
-			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+		} else {
+			int64_t tmpSize = File::getSize(qi->getTempTarget());
+			if(tmpSize > 0){
+				vector<int64_t> v;
+				v.push_back((int64_t)max((int64_t)0, (int64_t)(tmpSize-10)));
+				v.push_back(qi->getSize());
+				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
+			} else
+				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
 		}
 		qi->chunkInfo = pChunksInfo;
 
@@ -1072,6 +1079,10 @@ again:
 		freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
 
 		if(freeBlock < 0) {
+			if(nextChunk) {
+				q->removeActiveSegment(aUser);
+			}		
+
 			if(freeBlock == -2) {
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
@@ -1081,7 +1092,6 @@ again:
 			
 			if(nextChunk) {
 				nextChunk = false;
-				q->removeActiveSegment(aUser);
 				q = userQueue.getNext(aUser);
 			} else {
 				q = userQueue.getNext(aUser, QueueItem::LOWEST, q);

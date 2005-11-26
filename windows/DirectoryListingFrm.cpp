@@ -571,7 +571,7 @@ LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	if(dl != NULL) {
 		User::Ptr pUser = dl->getUser();
 		if(pUser != (User*) NULL)
-			PrivateFrame::openWindow(pUser);
+			PrivateFrame::openWindow(NULL, pUser);
 	}
 	return 0;
 }

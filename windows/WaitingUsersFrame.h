@@ -46,10 +46,6 @@ public:
 		delete[] headerBuf;
 	}
 
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
-	}
-
 	enum {
 		ADD_ITEM,
 		REMOVE,

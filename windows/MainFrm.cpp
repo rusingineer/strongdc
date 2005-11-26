@@ -296,8 +296,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	updateTray( BOOLSETTING( MINIMIZE_TRAY ) );
 
 
-	if(BOOLSETTING(IPUPDATE))
-		SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::getLocalIp());
+	//if(BOOLSETTING(IPUPDATE))
+	//	SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::getLocalIp());
 
 	Util::setAway(BOOLSETTING(AWAY));
 

@@ -129,7 +129,7 @@ LRESULT FinishedULFrame::onOpenFolder(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	int i;
 	if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 		FinishedItem * const entry = (FinishedItem*)ctrlList.GetItemData(i);
-		::ShellExecute(NULL, NULL, Text::toT(Util::getFilePath(entry->getTarget())).c_str(), NULL, NULL, SW_SHOWNORMAL);
+		WinUtil::openFolder(Text::toT(entry->getTarget()));
 	}
 	return 0;
 }

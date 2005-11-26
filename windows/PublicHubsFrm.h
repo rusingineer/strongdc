@@ -46,10 +46,6 @@ public:
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("PublicHubsFrame"), IDR_PUBLICHUBS, 0, COLOR_3DFACE);
 		
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
-	}
-	
 	typedef MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 0), IDR_PUBLICHUBS> baseClass;
 	BEGIN_MSG_MAP(PublicHubsFrame)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)

@@ -117,23 +117,23 @@ void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
 	if(c.getParameters().empty())
 		return;
 
-	OnlineUser* u = findUser(c.getFrom());
-	if(!u)
+	OnlineUser* from = findUser(c.getFrom());
+	if(!from)
 		return;
+	OnlineUser* to = findUser(c.getTo());
+	if(!to)
+		return;
+
 	string pmFrom;
 	if(c.getParam("PM", 1, pmFrom)) { // add PM<group-cid> as well
-		OnlineUser* pm = findUser(CID(pmFrom));
-		if(!pm)
+		OnlineUser* replyTo = findUser(CID(pmFrom));
+		if(!replyTo)
 				return;
 
-		if(pm->getUser() == ClientManager::getInstance()->getMe()) {
-			return;
-		}
-		string msg = '<' + u->getIdentity().getNick() + "> " + c.getParam(0);
-		fire(ClientListener::PrivateMessage(), this, *pm, msg);
+		fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, c.getParam(0));
 	} else {
-		string msg = '<' + u->getIdentity().getNick() + "> " + c.getParam(0);
-		fire(ClientListener::Message(), this, u, msg.c_str());
+		string msg = '<' + from->getIdentity().getNick() + "> " + c.getParam(0);
+		fire(ClientListener::Message(), this, from, msg.c_str());
 	}		
 }
 

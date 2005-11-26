@@ -24,7 +24,6 @@
 #endif // _MSC_VER > 1000
 
 #include "../client/User.h"
-#include "../client/CriticalSection.h"
 #include "../client/ClientManagerListener.h"
 #include "../client/ResourceManager.h"
 
@@ -42,8 +41,8 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const User::Ptr& aUser, const tstring& aMessage);
-	static void openWindow(const User::Ptr& aUser, const tstring& aMessage = Util::emptyStringT);
+	static void gotMessage(const User::Ptr& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
+	static void openWindow(const User::Ptr& from, const User::Ptr& to, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); };
 
 	enum {
@@ -51,10 +50,6 @@ public:
 	};
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("PrivateFrame"), IDR_PRIVATE, 0, COLOR_3DFACE);
-
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
-	}
 
 	typedef MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255), IDR_PRIVATE, IDR_PRIVATE_OFF> baseClass;
 	typedef UCHandler<PrivateFrame> ucBase;
@@ -138,8 +133,8 @@ public:
   	       return 0;
   	}
 
-	void addLine(const tstring& aLine);
-	void addLine(const tstring& aLine, CHARFORMAT2& cf);
+	void addLine(const User::Ptr&, const tstring& aLine);
+	void addLine(const User::Ptr&, const tstring& aLine, CHARFORMAT2& cf);
 	void onEnter();
 	void UpdateLayout(BOOL bResizeBars = TRUE);	
 	void runUserCommand(UserCommand& uc);
@@ -189,7 +184,6 @@ public:
 		}
 	}
 	
-	void setUser(const User::Ptr& aUser) { user = aUser; };
 	void sendMessage(const tstring& msg);
 	
 	User::Ptr& getUser() { return user; };
@@ -199,8 +193,7 @@ private:
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) {
 		}
 	
-	~PrivateFrame() {
-	}
+	virtual ~PrivateFrame() { }
 
 	bool created;
 	typedef HASH_MAP<User::Ptr, PrivateFrame*, User::HashFunction> FrameMap;
@@ -209,7 +202,6 @@ private:
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;
 	CStatusBarCtrl ctrlStatus;
-	static CriticalSection cs;
 
 	OMenu grantMenu;
 	OMenu textMenu;

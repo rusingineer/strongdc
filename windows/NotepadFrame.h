@@ -38,12 +38,8 @@ public:
 		ctrlClientContainer(_T("edit"), this, NOTEPAD_MESSAGE_MAP) {
 		SettingsManager::getInstance()->addListener(this);
 	}
-	~NotepadFrame() { }
+	virtual ~NotepadFrame() { }
 	
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
-	}
-
 	typedef MDITabChildWindowImpl<NotepadFrame, RGB(0, 0, 0), IDR_NOTEPAD> baseClass;
 	BEGIN_MSG_MAP(NotepadFrame)
 		MESSAGE_HANDLER(WM_SETFOCUS, OnFocus)
