@@ -225,8 +225,9 @@ public:
 
 	void removeActiveSegment(const User::Ptr& aUser) {
 		Source* s = *getSource(aUser);
-		if(find(activeSegments.begin(), activeSegments.end(), s) != activeSegments.end()) {
-			activeSegments.erase(find(activeSegments.begin(), activeSegments.end(), s));
+		Source::List::iterator i = find(activeSegments.begin(), activeSegments.end(), s);
+		if(i != activeSegments.end()) {
+			activeSegments.erase(i);
 		}
 	}
 

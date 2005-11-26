@@ -37,7 +37,7 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_UPLOADS)).c_str());
 		SetTitle(title);
 	};
-	~UploadPage() {
+	virtual ~UploadPage() {
 		ctrlDirectories.Detach();
 		ctrlTotal.Detach();
 		free(title);

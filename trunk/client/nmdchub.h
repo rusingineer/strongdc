@@ -169,54 +169,77 @@ private:
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	virtual void on(Line, const string& l) throw() {
-		if(l.substr(0, 7) == "$ZLine ") {
-			string::size_type i = 0, j;
-			string rawParam = l.substr(7);
-			bool corrupt = false;
+		if(l.substr(0, 3) == "$Z ") { 
+			string::size_type i = 0;
+			string rawParam = l.substr(3);
+			bool corrupt = false; 
 
-			// unescape \\ to \ and \P to | 
-			while((i = rawParam.find("\\", i)) != string::npos && !corrupt) {
-				if (i + 1 < rawParam.size()) {
-					switch (rawParam[i+1]) {
-						case '\\':
-							rawParam.replace(i++, 2, "\\");
-							break;
-						case 'P':
-							rawParam.replace(i++, 2, "|");
-							break;
-						default:
-							corrupt = true;
-							break;
-					}
-				} else {
-					corrupt = true;
-				}
-			}
-		
+			// unescape \\ to \ and \P to |  
+			while((i = rawParam.find("\\", i)) != string::npos && !corrupt) { 
+				if (i + 1 < rawParam.size()) { 
+					switch (rawParam[i+1]) { 
+						case '\\': 
+							rawParam.replace(i++, 2, "\\"); 
+							break; 
+						case 'P': 
+							rawParam.replace(i++, 2, "|"); 
+							break; 
+						default: 
+							corrupt = true; 
+							break; 
+					} 
+				} else { 
+					corrupt = true; 
+				} 
+			} 
+ 
 			if (!corrupt) {
 				// unzip the ZBlock
-				i = rawParam.size();
-				j = i * 10;
-				AutoArray<u_int8_t> temp(j);
 				UnZFilter filter;
-				try {
-					filter(rawParam.c_str(), i, temp, j);
-				} catch(...){
-					dcdebug("Error during Zline decompression");
-				}
-				string lines = string((char*)(u_int8_t*)temp, j);
-	
-				// "fire" the lines
-				StringTokenizer<string> st(lines, '|');
-				for(StringList::iterator i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
-					COMMAND_DEBUG(*i, DebugManager::HUB_IN, getIpPort());
-					onLine((*i).c_str());
+				string lines = "";
+				bool more;
+				string::size_type j, readFromPos = 0, estOutSize = rawParam.size() / 4;
+				AutoArray<u_int8_t> temp(estOutSize);
+
+				while (true) {
+					j = estOutSize;
+					try {
+						more = filter((rawParam.substr(readFromPos)).c_str(), i, temp, j);
+					} catch(...){
+						dcdebug("Error during Zline decompression\n");
+						break;
+					}
+					lines += string((char*)(u_int8_t*)temp, j);
+					readFromPos += i;
+
+					// split lines up into indiviual commands
+					StringTokenizer<string> st(lines, '|');
+					for(StringList::iterator k = st.getTokens().begin(); k != st.getTokens().end(); ++k) {
+						if (k + 1 == st.getTokens().end() && more)
+						// last token, roll over if more data to decompress
+							lines = *k;
+						else {
+							// "fire" the lines
+							COMMAND_DEBUG(*k, DebugManager::HUB_IN, getIpPort()); 
+							onLine((*k).c_str()); 
+						}
+					}
+
+					// a nmdc command over 1mb ?
+					if (lines.size() > 1048576) {
+						dcdebug("Malicious data found during ZLine decompression\n");
+						break;
+					}
+
+					// no more data to decompress
+					if (!more)
+						break;
 				}
 			} else {
-				dcdebug("Corrupt Zline datastream");
+				dcdebug("Corrupt Zline datastream\n");
 			}
-		} else {
-			COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
+		} else { 
+			COMMAND_DEBUG(fromNmdc(l), DebugManager::HUB_IN, getIpPort()); 
 			onLine(l.c_str());
 		}
 	}

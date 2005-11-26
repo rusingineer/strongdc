@@ -961,9 +961,9 @@ void TransferView::on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi
 		i = transferItems[aCqi];		
 		i->status = ItemInfo::STATUS_WAITING;
 		i->statusString = Text::toT(aMessage);
-		if((i->main->status != ItemInfo::STATUS_RUNNING) && (aMessage == STRING(ALL_FILE_SLOTS_TAKEN))) {	
+		/*if((i->main->status != ItemInfo::STATUS_RUNNING) && (aMessage == STRING(ALL_FILE_SLOTS_TAKEN))) {	
 			i->main->statusString = Text::toT(aMessage);
-		}
+		}*/
 		i->updateMask |= ItemInfo::MASK_HUB | ItemInfo::MASK_STATUS;	
 	}
 	PostMessage(WM_SPEAKER, UPDATE_ITEM, (LPARAM)i);
@@ -1117,9 +1117,8 @@ void TransferView::ItemInfo::disconnect() {
 }
 
 LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
-
-	if(i != -1) {
+	int i = -1;
+	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
@@ -1146,9 +1145,8 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 }
 			
 LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
-	int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
-
-	if(i != -1) {
+	int i = -1;
+	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
@@ -1190,8 +1188,8 @@ void TransferView::ExpandAll() {
 }
 
 LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlTransfers.GetSelectedCount() == 1) {
-		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
+	int i = -1;
+	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
@@ -1209,8 +1207,8 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ctrlTransfers.GetSelectedCount() == 1) {
-		int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
+	int i = -1;
+	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		for(ItemInfo::Map::iterator j = transferItems.begin(); j != transferItems.end(); ++j) {
@@ -1227,9 +1225,8 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 }
 
 LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int i = ctrlTransfers.GetNextItem(-1, LVNI_SELECTED);
-
-	if(i != -1) {
+	int i = -1;
+	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();

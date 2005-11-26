@@ -403,7 +403,7 @@ public:
 		return toUInt32(str.c_str());
 	}
 	static u_int32_t toUInt32(const char* c) {
-		return (u_int32_t)atoi(c);
+		return (u_int32_t)strtoul(c, NULL, 10);
 	}
 
 	static double toDouble(const string& aString) {

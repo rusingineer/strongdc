@@ -48,7 +48,7 @@ public:
 	TransferView() : PreviewAppsSize(0) {
 		headerBuf = new TCHAR[128];
 	};
-	~TransferView(void);
+	virtual ~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
 	typedef UCHandler<TransferView> ucBase;

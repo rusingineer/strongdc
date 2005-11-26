@@ -418,6 +418,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		    	     return;
 	    
 				OnlineUser& u = getUser(fromNmdc(aLine));
+				if(u.getIdentity().getNick() == getMyIdentity().getNick()) {
+					User::Ptr me = getMyIdentity().getUser();
+					me->setOnlineUser(&u);
+				}
 
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
@@ -611,18 +615,16 @@ void NmdcHub::onLine(const char* aLine) throw() {
 	
      			string nick = fromNmdc(aLine);
 				OnlineUser& u = getUser(nick);
-        		
-        		if(_stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
-					u.getUser()->setFlag(User::DCPLUSPLUS);
-					if(ClientManager::getInstance()->isActive(this))
-						u.getUser()->unsetFlag(User::PASSIVE);
-					else
-						u.getUser()->setFlag(User::PASSIVE);
-				}
-
-				if(state == STATE_HELLO) {
-					state = STATE_CONNECTED;
-					updateCounts(false);
+ 				if(state == STATE_HELLO) {
+       		   		if(_stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
+						state = STATE_CONNECTED;
+						updateCounts(false);
+						u.getUser()->setFlag(User::DCPLUSPLUS);
+						if(ClientManager::getInstance()->isActive(this))
+							u.getUser()->unsetFlag(User::PASSIVE);
+						else
+							u.getUser()->setFlag(User::PASSIVE);
+					}
 
 					version();
 					if((YnHub == true) || (getStealth() == true)) {
@@ -873,11 +875,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					temp1 += 6; *(temp-1) = NULL; temp += 1;
         			if(temp1[0] == NULL || temp[0] == NULL) return;
 
-					OnlineUser* ou = findUser(fromNmdc(temp1));
-					if(ou == NULL) {
+					OnlineUser* from = findUser(fromNmdc(temp1));
+					OnlineUser* to = findUser(getMyNick());	
+									
+					if(from == NULL || to == NULL) {
 						// @todo Route anonymous message to the ui
 					} else {
-						fire(ClientListener::PrivateMessage(), this, *ou, Util::validateMessage(fromNmdc(temp), true));
+						fire(ClientListener::PrivateMessage(), this, *from, *to, *from, Util::validateMessage(fromNmdc(temp), true));
 					}
 				}
     			return;

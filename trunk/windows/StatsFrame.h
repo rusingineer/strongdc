@@ -40,8 +40,7 @@ public:
 		foregr.CreatePen(PS_SOLID, 0, WinUtil::textColor);
 	}
 
-	~StatsFrame() { 
-	}
+	virtual ~StatsFrame() { }
 
 	static CFrameWndClassInfo& GetWndClassInfo() { 
 		static CFrameWndClassInfo wc = { 
@@ -53,10 +52,6 @@ public:
 		};
 		
 		return wc; 
-	}
-
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
 	}
 
 	typedef MDITabChildWindowImpl<StatsFrame, RGB(0, 0, 0), IDR_NET_STATS> baseClass;

@@ -61,8 +61,6 @@ public:
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("SpyFrame"), IDR_SPY, 0, COLOR_3DFACE)
 
-	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
-
 	typedef MDITabChildWindowImpl<SpyFrame, RGB(0, 0, 0), IDR_SPY> baseClass;
 	BEGIN_MSG_MAP(SpyFrame)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)

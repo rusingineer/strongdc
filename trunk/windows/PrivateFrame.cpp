@@ -36,7 +36,6 @@
 #include "../client/FavoriteManager.h"
 #include "../client/QueueManager.h"
 
-CriticalSection PrivateFrame::cs;
 PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
 tstring pSelectedURL = Util::emptyStringT;
@@ -104,63 +103,33 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const User::Ptr& from, const User::Ptr& /*to*/, const User::Ptr& replyTo, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
-	Lock l(cs);
-	FrameIter i = frames.find(aUser);
+	FrameIter i = frames.find(replyTo);
 	if(i == frames.end()) {
-		bool found = false;
-		for(i = frames.begin(); i != frames.end(); ++i) {
-			if( (!i->first->isOnline()) && 
-				(i->first->getFirstNick() == aUser->getFirstNick()) &&
-				(i->first->getLastHubAddress() == aUser->getLastHubAddress()) ) {
-				
-				found = true;
-				p = i->second;
-				frames.erase(i);
-				frames[aUser] = p;
-				p->setUser(aUser);
-				p->addLine(aMessage);
-
-				if(BOOLSETTING(POPUP_PM)) {
-					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
-				}
-
-				if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
-					if(SETTING(BEEPFILE).empty()) {
-						MessageBeep(MB_OK);
-					} else {
-						PlaySound(Text::toT(SETTING(BEEPFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-					}
-				}
-				break;
-			}
+		p = new PrivateFrame(replyTo);
+		frames[replyTo] = p;
+		//p->readLog();
+		p->addLine(from, aMessage);
+		if(Util::getAway()) {
+		if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && from->isSet(User::BOT)))
+			p->sendMessage(Text::toT(Util::getAwayMessage()));
 		}
-		if(!found) {
-			p = new PrivateFrame(aUser);
-			frames[aUser] = p;
-			p->addLine(aMessage);
-			if(Util::getAway()) {
-				// if no_awaymsg_to_bots is set, and aUser has an empty connection type (i.e. probably is a bot), then don't send
-				if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && aUser->isSet(User::BOT)))
-				p->sendMessage(Text::toT(Util::getAwayMessage()));
-			}
 
-			if(BOOLSETTING(POPUP_NEW_PM)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
-			}
+		if(BOOLSETTING(POPUP_NEW_PM)) {
+			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(from->getFirstNick() + " - " + from->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+		}
 
-			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
-				if (SETTING(BEEPFILE).empty()) {
-					MessageBeep(MB_OK);
-				} else {
-					::PlaySound(Text::toT(SETTING(BEEPFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-				}
+		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
+			if (SETTING(BEEPFILE).empty()) {
+				MessageBeep(MB_OK);
+			} else {
+				::PlaySound(Text::toT(SETTING(BEEPFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 			}
 		}
 	} else {
 		if(BOOLSETTING(POPUP_PM)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(aUser->getFirstNick() + " - " + aUser->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(from->getFirstNick() + " - " + from->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -170,17 +139,16 @@ void PrivateFrame::gotMessage(const User::Ptr& aUser, const tstring& aMessage) {
 				::PlaySound(Text::toT(SETTING(BEEPFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 			}
 		}
-		i->second->addLine(aMessage);
+		i->second->addLine(from, aMessage);
 	}
 }
 
-void PrivateFrame::openWindow(const User::Ptr& aUser, const tstring& msg) {
+void PrivateFrame::openWindow(const User::Ptr& /*from*/, const User::Ptr& to, const tstring& msg) {
 	PrivateFrame* p = NULL;
-	Lock l(cs);
-	FrameIter i = frames.find(aUser);
+	FrameIter i = frames.find(to);
 	if(i == frames.end()) {
-		p = new PrivateFrame(aUser);
-		frames[aUser] = p;
+		p = new PrivateFrame(to);
+		frames[to] = p;
 		p->CreateEx(WinUtil::mdiClient);
 	} else {
 		p = i->second;
@@ -341,7 +309,7 @@ void PrivateFrame::onEnter()
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + Text::toT(WinUtil::commands) + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
+				addLine(NULL, _T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(user->isOnline()) {
 					sendMessage(tstring(m));
@@ -371,7 +339,7 @@ void PrivateFrame::sendMessage(const tstring& msg) {
 		// local echo formatting
 		s = Util::validateMessage(s, false);
 		s = Util::validateMessage(s, true, true);
-		addLine(Text::toT(s));
+		addLine(user, Text::toT(s));
 	}
 }
 
@@ -384,7 +352,6 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-		Lock l(cs);
 		frames.erase(user);
 
 		bHandled = FALSE;
@@ -392,11 +359,11 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 }
 
-void PrivateFrame::addLine(const tstring& aLine) {
-	addLine( aLine, WinUtil::m_ChatTextGeneral );
+void PrivateFrame::addLine(const User::Ptr& u, const tstring& aLine) {
+	addLine(u, aLine, WinUtil::m_ChatTextGeneral );
 }
 
-void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
+void PrivateFrame::addLine(const User::Ptr&, const tstring& aLine, CHARFORMAT2& cf) {
 	if(!created) {
 		if(BOOLSETTING(POPUNDER_PM))
 			WinUtil::hiddenCreateEx(this);
@@ -596,7 +563,7 @@ void PrivateFrame::updateTitle() {
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
+				addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
 			} else {
 				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"));
 			}
@@ -607,7 +574,7 @@ void PrivateFrame::updateTitle() {
         SetWindowText(Text::toT(user->getFirstNick() + " - " + user->getLastHubName()).c_str());
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
+			addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
 		} else {
 			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(user->getFirstNick() + " - " + user->getLastHubName()) + _T("] ***"));
 		}

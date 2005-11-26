@@ -59,10 +59,6 @@ public:
 		delete[] headerBuf;
 	}
 	
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
-		delete this;
-	}
-
 	typedef MDITabChildWindowImpl<QueueFrame, RGB(0, 0, 0), IDR_QUEUE> baseClass;
 	typedef CSplitterImpl<QueueFrame> splitBase;
 

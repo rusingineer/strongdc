@@ -129,7 +129,7 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 				} else
 					throw Exception();
 
-				PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new string(s_latestVersion));
+				PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new tstring(Text::toT(s_latestVersion)));
 				if (xml.findChild("VeryOldVersion")) {
 					oldVersion = atof(xml.getChildData().c_str());					
 				}

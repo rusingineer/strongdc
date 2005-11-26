@@ -36,7 +36,7 @@ public:
 		SetTitle(title);
 		//m_psp.dwFlags |= PSP_HASHELP;
 	};
-	~FavoriteDirsPage() {
+	virtual ~FavoriteDirsPage() {
 		ctrlDirectories.Detach();
 		free(title);
 	};

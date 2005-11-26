@@ -113,8 +113,8 @@ void SpyFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 		int tmp = (sr.Width()) > 616 ? 516 : ((sr.Width() > 116) ? sr.Width()-100 : 16);
 
-		w[0] = 15;
-		w[1] = sr.right - tmp - 15;
+		w[0] = 150;
+		w[1] = sr.right - tmp - 150;
 		w[2] = w[1] + (tmp-16)*1/4;
 		w[3] = w[1] + (tmp-16)*2/4;
 		w[4] = w[1] + (tmp-16)*3/4;

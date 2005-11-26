@@ -1141,7 +1141,7 @@ LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL&
 		pmMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-		PrivateFrame::openWindow(s->getUser());
+		PrivateFrame::openWindow(NULL, s->getUser());
 	}
 	return 0;
 }
