@@ -48,8 +48,6 @@
 #include "picturewindow.h"
 #include "atlctrlxp.h"
 
-#define SERVER_SOCKET_MESSAGE (WM_APP + 1235)
-
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
 		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>, public Thread,
 		private TimerManagerListener, private HttpConnectionListener, private QueueManagerListener,
@@ -118,7 +116,6 @@ public:
 		MESSAGE_HANDLER(trayMessage, onTray)
 		MESSAGE_HANDLER(WM_COPYDATA, onCopyData)
 		MESSAGE_HANDLER(WMU_WHERE_ARE_YOU, onWhereAreYou)
-		MESSAGE_HANDLER(SERVER_SOCKET_MESSAGE, onServerSocket)
 		MESSAGE_HANDLER(WM_ACTIVATEAPP, onActivateApp)
 		MESSAGE_HANDLER(WM_APPCOMMAND, onAppCommand)
 		MESSAGE_HANDLER(IDC_REBUILD_TOOLBAR, OnCreateToolbar)

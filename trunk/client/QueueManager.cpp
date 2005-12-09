@@ -154,20 +154,32 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		FileChunksInfo* pChunksInfo = NULL;
 
 		dcassert(!qi->getTempTarget().empty());
+		vector<int64_t> v;
+		
 		if ( freeBlocks != Util::emptyString ){
-			vector<int64_t> v;
 			toIntList<int64_t>(freeBlocks, v);
-			pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 		} else {
-			int64_t tmpSize = File::getSize(qi->getTempTarget());
-			if(tmpSize > 0){
-				vector<int64_t> v;
-				v.push_back((int64_t)max((int64_t)0, (int64_t)(tmpSize-10)));
-				v.push_back(qi->getSize());
-				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
-			} else
-				pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), NULL);
+			// import DC++'s download queue
+			v.push_back(aDownloadedBytes);
+			v.push_back(qi->getSize());
 		}
+		
+		if(v.size() < 2 || v.size() % 2 != 0){
+			dcassert(0); // wrong freeBlocks
+			v.clear();
+			
+			TigerTree tth;
+			if(root && HashManager::getInstance()->getTree(*root, tth)){
+				// mark first byte as free, finish and verify this download
+				v.push_back(0);
+				v.push_back(1);
+			}else{
+				v.push_back(0);
+				v.push_back(qi->getSize());
+			}
+		}
+		
+		pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 		qi->chunkInfo = pChunksInfo;
 
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
@@ -589,7 +601,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
 	string target = Util::getAppPath() + "FileLists\\" + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
-	add(target, -1, NULL, aUser, USER_LIST_NAME, true, QueueItem::FLAG_USER_LIST | aFlags);
+	add(target, -1, NULL, aUser, USER_LIST_NAME, false, QueueItem::FLAG_USER_LIST | aFlags);
 }
 
 void QueueManager::addPfs(const User::Ptr aUser, const string& aDir) throw() {

@@ -326,7 +326,7 @@ void CryptoManager::encodeHuffman(const string& is, string& os) {
 	// First, we count all characters
 	u_int8_t csum = 0;
 	int count[256];
-	memset2(count, 0, sizeof(count));
+	memset(count, 0, sizeof(count));
 	int chars = countChars(is, count, csum);
 
 	// Next, we create a set of nodes and add it to a list, removing all characters that never occur.

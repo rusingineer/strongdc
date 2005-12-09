@@ -105,7 +105,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 				case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
 				case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
 				case COLUMN_NICK: return Util::stricmp(a->User->getFirstNick(), b->User->getFirstNick());
-				case COLUMN_HUB: return Util::stricmp(a->User->getLastHubName(), b->User->getLastHubName());
+				case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
 				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 				case COLUMN_SIZE: return compare(a->size, b->size);
 				case COLUMN_ADDED: return compare(a->iTime, b->iTime);
@@ -250,8 +250,8 @@ public:
 	GETSET(u_int32_t, lastGrant, LastGrant);
 
 	// Upload throttling
-	size_t throttleGetSlice();
-	size_t throttleCycleTime();
+	int throttleGetSlice();
+	int throttleCycleTime();
 
 	UploadQueueItem::UserMap getQueue();
 	void clearUserFiles(const User::Ptr&);
@@ -265,7 +265,7 @@ private:
 	void throttleBytesTransferred(u_int32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
-	size_t mBytesSent,
+	int mBytesSent,
 		   mBytesSpokenFor,
 		   mUploadLimit,
 		   mCycleTime,

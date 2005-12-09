@@ -31,6 +31,8 @@
 
 #include "ClientManagerListener.h"
 
+class UserCommand;
+
 class ClientManager : public Speaker<ClientManagerListener>, 
 	private ClientListener, public Singleton<ClientManager>, 
 	private TimerManagerListener, private SettingsManagerListener
@@ -39,36 +41,13 @@ public:
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
-	size_t getUserCount() {
-		Lock l(cs);
+	size_t getUserCount();
+	int64_t getAvailable();
+	StringList getHubs(const CID& cid);
+	StringList getHubNames(const CID& cid);
+	StringList getNicks(const CID& cid);
 
-		size_t c = 0;
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			c+=(*i)->getUserCount();
-		}
-		return c;
-	}
-
-	int64_t getAvailable() {
-		Lock l(cs);
-		
-		int64_t c = 0;
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			c+=(*i)->getAvailable();
-		}
-		return c;
-	}
-
-	bool isConnected(const string& aAddress, short port) {
-		Lock l(cs);
-
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			if(((*i)->getAddress() == aAddress || (*i)->getIp() == aAddress) && (*i)->getPort() == port) {
-				return true;
-			}
-		}
-		return false;
-	}
+	bool isConnected(const string& aUrl);
 	
 	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
@@ -112,7 +91,9 @@ public:
 	
 	void connect(const User::Ptr& p);
 	void send(AdcCommand& c);
-	void privateMessage(const User::Ptr& p, const string& msg, string& myNick);
+	void privateMessage(const User::Ptr& p, const string& msg);
+
+	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params);
 
 	bool isActive(Client* aClient) { return (aClient ? aClient->getMode() : SETTING(INCOMING_CONNECTIONS)) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 

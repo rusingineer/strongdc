@@ -142,8 +142,6 @@ public:
 	}
 
 private:
-	/** Parameter map for user commands */
-	StringMap ucParams;
 	TCHAR * headerBuf;
 
 	class ItemInfo;	

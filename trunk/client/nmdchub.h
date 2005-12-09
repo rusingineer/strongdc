@@ -63,7 +63,7 @@ public:
 		sprintf(buf, "<%s> ", getMyNick().c_str());
 		send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
 	}
-	virtual void privateMessage(const OnlineUser& aUser, const string& aMessage) { privateMessage(aUser.getIdentity().getNick(), string("<") + getMyNick() + "> " + aMessage); }
+	virtual void privateMessage(const OnlineUser& aUser, const string& aMessage);
 	virtual void sendUserCmd(const string& aUserCmd) throw() { send(toNmdc(aUserCmd)); }
 	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
@@ -99,13 +99,13 @@ public:
 	void connectToMe(const OnlineUser& aUser);
 	void revConnectToMe(const OnlineUser& aUser);
 
-	void privateMessage(const string& aNick, const string& aMessage) {
+/*	void privateMessage(const string& aNick, const string& aMessage) {
 		checkstate(); 
 		char buf[512];
 		sprintf(buf, "$To: %s From: %s $", toNmdc(aNick).c_str(), toNmdc(getMyNick()).c_str());
 		send(string(buf)+toNmdc(Util::validateChatMessage(aMessage))+"|");
 	}
-
+*/
 	void supports(const StringList& feat) { 
 		string x;
 		for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {

@@ -76,7 +76,7 @@ MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastU
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
 closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
 bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
-		memset2(statusSizes, 0, sizeof(statusSizes));
+		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
 };
 
@@ -126,11 +126,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	WebServerManager::getInstance()->addListener(this);
 
 	WinUtil::init(m_hWnd);
-
-	// Register server socket message
-	WSAAsyncSelect(ConnectionManager::getInstance()->getServerSocket().getSocket(),
-		m_hWnd, SERVER_SOCKET_MESSAGE, FD_ACCEPT);
- 	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSocket(),m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
 
 	trayMessage = RegisterWindowMessage(_T("TaskbarCreated"));
 
@@ -326,7 +321,6 @@ void MainFrame::startSocket() {
 //	if(ClientManager::getInstance()->isActive()) {
 		try {
 			ConnectionManager::getInstance()->listen();
-			WSAAsyncSelect(ConnectionManager::getInstance()->getServerSocket().getSocket(), m_hWnd, SERVER_SOCKET_MESSAGE, FD_ACCEPT);
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
@@ -428,7 +422,7 @@ HWND MainFrame::createToolbar() {
 		int i = Util::toInt(*k);		
 		
 		TBBUTTON nTB;
-		memset2(&nTB, 0, sizeof(TBBUTTON));
+		memset(&nTB, 0, sizeof(TBBUTTON));
 
 		if((i == INT_MAX) || (i == -1)) {
 			nTB.fsStyle = TBSTYLE_SEP;			
@@ -777,11 +771,6 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 
 LRESULT MainFrame::onWebServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	WebServerManager::getInstance()->getServerSocket().incoming();
-	return 0;
-}
-
-LRESULT MainFrame::onServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	ConnectionManager::getInstance()->getServerSocket().incoming();
 	return 0;
 }
 
@@ -1410,7 +1399,7 @@ LRESULT MainFrame::onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 void MainFrame::on(WebServerListener::Setup) throw() {
-	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSocket(),m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
+	WSAAsyncSelect(WebServerManager::getInstance()->getServerSocket().getSock(), m_hWnd, WEBSERVER_SOCKET_MESSAGE, FD_ACCEPT);
 }
 
 void MainFrame::on(WebServerListener::ShutdownPC, int action) throw() {

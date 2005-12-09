@@ -46,6 +46,14 @@ public:
 	GETSET(Identity, lastIdentity, LastIdentity);
 	GETSET(u_int32_t, lastSeen, LastSeen);
 	GETSET(string, description, Description);
+
+	void setGrantSlot(bool grant) {
+		if (grant)
+			setFlag(FLAG_GRANTSLOT);
+		else
+			unsetFlag(FLAG_GRANTSLOT);
+	}
+
 };
 
 #endif // !defined(FAVORITE_USER_H)

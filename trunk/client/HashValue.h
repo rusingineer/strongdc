@@ -47,10 +47,10 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 	};
 
 	HashValue() { };
-	explicit HashValue(u_int8_t* aData) { memcpy2(data, aData, SIZE); }
+	explicit HashValue(u_int8_t* aData) { memcpy(data, aData, SIZE); }
 	explicit HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); };
-	HashValue(const HashValue& rhs) { memcpy2(data, rhs.data, SIZE); }
-	HashValue& operator=(const HashValue& rhs) { memcpy2(data, rhs.data, SIZE); return *this; }
+	HashValue(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); }
+	HashValue& operator=(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); return *this; }
 	bool operator!=(const HashValue& rhs) const { return !(*this == rhs); }
 	bool operator==(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) == 0; }
 	bool operator<(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) < 0; }

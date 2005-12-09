@@ -30,20 +30,19 @@
 
 Client::Counts Client::counts;
 
-Client::Client(const string& hubURL, char separator) : 
-	socket(BufferedSocket::getSocket(separator)), reconnDelay(120),
-	lastActivity(0), registered(false), hubUrl(hubURL), port(0), 
-	countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0)
+Client::Client(const string& hubURL, char separator_, bool secure_) : 
+	socket(NULL), reconnDelay(120),
+	lastActivity(0), registered(false), hubUrl(hubURL), port(0), separator(separator_),
+	secure(secure_), countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0)
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
-	socket->addListener(this);
 	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
 }
 
 Client::~Client() throw() {
-	socket->removeListener(this);
-
+	if(socket)
+		BufferedSocket::putSocket(socket);
 	updateCounts(true);
 }
 
@@ -101,14 +100,16 @@ int Client::getMode() {
 }
 
 void Client::connect() {
-	socket->disconnect();
+	if(socket)
+		BufferedSocket::putSocket(socket);
 
 	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings();
 	setRegistered(false);
 
-	socket->connect(address, port);
-
+	socket = BufferedSocket::getSocket(separator);
+	socket->addListener(this);
+	socket->connect(address, port, secure, true);
 	updateActivity();
 }
 
@@ -152,7 +153,9 @@ string Client::getLocalIp() const {
 		return Socket::resolve(SETTING(EXTERNAL_IP));
 	}
 
-	string lip = socket->getLocalIp();
+	string lip;
+	if(socket)
+		lip = socket->getLocalIp();
 
 	if(lip.empty())
 		return Util::getLocalIp();

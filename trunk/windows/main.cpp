@@ -60,6 +60,8 @@ FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
 
 #endif
 
+#include "../client/SSLSocket.h"
+
 string getExceptionName(DWORD code) {
 	switch(code)
     { 
@@ -174,8 +176,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	f.write(LIT("\r\n"));
 	f.close();
 
-	memcpy2(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
-	memcpy2(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
+	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
+	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
 
 	WinUtil::exceptioninfo += Text::toT(StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp));
 	

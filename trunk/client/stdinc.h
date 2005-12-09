@@ -49,6 +49,11 @@
 #include <unistd.h>
 #endif
 
+#undef memcpy
+#define memcpy(d,s,n)    memcpy2(d,s,n)
+#undef memset
+#define memset(s,c,n)	memset2(s,c,n)
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <memory.h>
@@ -65,6 +70,7 @@
 #include <list>
 #include <iterator>
 #include <utility>
+#include <functional>
 
 // Use maps if hash_maps aren't available
 #ifdef HAVE_HASH
@@ -120,6 +126,8 @@ namespace __gnu_cxx {
 #else // __GLIBCPP__
 
 #include <hash_map>
+#include <hash_set>
+
 using namespace std;
 using namespace stdext;
 

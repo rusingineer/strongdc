@@ -1585,11 +1585,6 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 	}
 }
 
-void ShareManager::on(HashManagerListener::Finished) {
-	refresh(true, true);
-	LogManager::getInstance()->message(STRING(HASHING_FINISHED), true);
-}
-
 void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
 	if(BOOLSETTING(AUTO_UPDATE_LIST)) {
 		if(lastFullUpdate + 60 * 60 * 1000 < tick) {

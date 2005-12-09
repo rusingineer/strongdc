@@ -346,12 +346,12 @@ private:
 			const tstring& tgt;
 		};
 		struct CheckSize {
-			CheckSize() : size(-1), op(true), oneHub(true), hasTTH(false), firstTTH(true) { };
+			CheckSize() : size(-1), op(true), firstHubs(true), hasTTH(false), firstTTH(true) { };
 			void operator()(SearchInfo* si);
 			tstring ext;
 			int64_t size;
-			bool oneHub;
-			tstring hub;
+			bool firstHubs;
+			StringList hubs;
 			bool op;
 			bool hasTTH;
 			bool firstTTH;
@@ -427,51 +427,8 @@ private:
 			return image;
 		}
 
-		void update() { 
-			if(sr->getType() == SearchResult::TYPE_FILE) {
-				if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-					fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
-				} else {
-					fileName = Text::toT(Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
-					path = Text::toT(Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
-				}
-
-				type = Text::toT(Util::getFileExt(Text::fromT(fileName)));
-				if(!type.empty() && type[0] == _T('.'))
-					type.erase(0, 1);
-				size = Text::toT(Util::formatBytes(sr->getSize()));
-				exactSize = Text::toT(Util::formatExactSize(sr->getSize()));
-			} else {
-				fileName = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
-				path = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
-				type = TSTRING(DIRECTORY);
-			}
-			nick = Text::toT(sr->getUser()->getFirstNick());
-			connection = Text::toT(sr->getUser()->getOnlineUser() ? sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString);
-			hubName = Text::toT(sr->getHubName());
-			slots = Text::toT(sr->getSlotString());
-			ip = Text::toT(sr->getIP());
-			flagimage = 0;
-			if(!ip.empty()) {
-				tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
-				if(!tmpCountry.empty()) {
-					ip = tmpCountry + _T(" (") + ip + _T(")");
-					flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
-				}
-			}
-			if(sr->getTTH() != NULL)
-				setTTH(Text::toT(sr->getTTH()->toBase32()));
-
-			string us = user->getOnlineUser() ? user->getOnlineUser()->getIdentity().get("US") : Util::emptyString;
-			if (!us.empty()) {
-				uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(us)) + "/s");
-			} else if(user->isSet(User::FIREBALL)) {
-				uploadSpeed = Text::toT(">=100 kB/s");
-			} else {
-				uploadSpeed = Text::toT("N/A");
-			}
-		}
-
+		void update();
+		
 		SearchInfo* createMainItem() { return this; }
 		const string getGroupingString() { return Text::fromT(tth); }
 		void updateMainItem() {
@@ -595,13 +552,10 @@ private:
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
 
-	/** Parameter map for user commands */
-	StringMap ucParams;
-
 	bool onlyFree;
+	bool isHash;
 	bool onlyTTH;
 	bool expandSR;
-	bool isHash;
 	bool bPaused;
 	bool exactSize1;
 	bool useGrouping;

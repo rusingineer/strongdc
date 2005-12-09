@@ -39,7 +39,6 @@
 
 #include <limits>
 
-#define INBUFSIZE 64*1024
 
 // some strange mac definition
 #ifdef ff
@@ -215,7 +214,7 @@ public:
 				pos += TigerTree::HASH_SIZE;
 			} else {
 				size_t bytes = min(TigerTree::HASH_SIZE - bufPos, left);
-				memcpy2(buf + bufPos, b + pos, bytes);
+				memcpy(buf + bufPos, b + pos, bytes);
 				bufPos += bytes;
 				pos += bytes;
 				if(bufPos == TigerTree::HASH_SIZE) {
@@ -606,6 +605,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_MP3_INFO)){
 			if(d->getTreeValid()) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
+				d->setFlag(Download::FLAG_TTH_CHECK);
 			}
 
 			try {
@@ -624,6 +624,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			if(d->getTreeValid()) {
 				if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
 					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
+					d->setFlag(Download::FLAG_TTH_CHECK);
 				}
 				if(d->isSet(Download::FLAG_ROLLBACK)) {
 					d->setFile(new RollbackOutputStream<true>(f, d->getFile(), (size_t)min((int64_t)SETTING(ROLLBACK), d->getSize() - d->getPos())));
@@ -1182,14 +1183,14 @@ void DownloadManager::throttleSetup() {
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-			if (mDownloadLimit <= (INBUFSIZE * 10 * num_transfers)) {
+			if (mDownloadLimit <= (SETTING(SOCKET_IN_BUFFER) * 10 * num_transfers)) {
 				mByteSlice = mDownloadLimit / (7 * num_transfers);
-				if (mByteSlice > INBUFSIZE)
-					mByteSlice = INBUFSIZE;
+				if (mByteSlice > (unsigned int)SETTING(SOCKET_IN_BUFFER))
+					mByteSlice = SETTING(SOCKET_IN_BUFFER);
 				mCycleTime = 1000 / 10;
 				} else {
-				mByteSlice = INBUFSIZE;
-				mCycleTime = 1000 * INBUFSIZE / mDownloadLimit;
+				mByteSlice = SETTING(SOCKET_IN_BUFFER);
+				mCycleTime = 1000 * SETTING(SOCKET_IN_BUFFER) / mDownloadLimit;
 			}
 		}
 }

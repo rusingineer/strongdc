@@ -32,14 +32,15 @@ class ClientManager;
 class AdcHub : public Client, public CommandHandler<AdcHub> {
 public:
 
+	using Client::send;
+
 	virtual void connect(const OnlineUser& user);
-	virtual void connect(const OnlineUser& user, string const& token);
+	virtual void connect(const OnlineUser& user, string const& token, bool secure);
 	virtual void disconnect();
 	
 	virtual void hubMessage(const string& aMessage);
 	virtual void privateMessage(const OnlineUser& user, const string& aMessage);
 	virtual void sendRaw(const string& aRaw) { send(aRaw); }
-	virtual void send(const string& aMessage) { socket->write(aMessage); };
 	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& pwd);
@@ -53,7 +54,7 @@ public:
 		//Speaker<AdcHubListener>::fire(t, this, c);
 	}
 
-	void send(const AdcCommand& cmd) { socket->write(cmd.toString(false)); };
+	void send(const AdcCommand& cmd) { dcassert(socket); socket->write(cmd.toString(false)); };
 	void sendUDP(const AdcCommand& cmd);
 
 	void handle(AdcCommand::SUP, AdcCommand& c) throw();
@@ -80,7 +81,7 @@ private:
 		STATE_NORMAL
 	} state;
 
-	AdcHub(const string& aHubURL);
+	AdcHub(const string& aHubURL, bool secure);
 
 	AdcHub(const AdcHub&);
 	AdcHub& operator=(const AdcHub&);
@@ -96,6 +97,7 @@ private:
 	string salt;
 
 	static const string CLIENT_PROTOCOL;
+	static const string SECURE_CLIENT_PROTOCOL;
 	 
 	virtual string checkNick(const string& nick);
 

@@ -122,6 +122,8 @@
 #define IDB_EMOTICON                    295
 #define IDD_DIALOG1                     296
 #define IDD_NETWORKPAGE                 296
+#define IDD_DIALOG2                     297
+#define IDD_CERTIFICATESPAGE            297
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -553,9 +555,16 @@
 #define IDC_SOCKS5                      1307
 #define IDC_SETTINGS_CONFIRM_OPTIONS    1315
 #define IDC_CONFIRM_OPTIONS             1316
+#define IDC_SOCKET_IN_BUFFER            1317
+#define IDC_SOCKET_OUT_BUFFER           1318
+#define IDC_SSL_CERTIFICATE_FILE        1318
+#define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
+#define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_FILELIST_DIFF               1406
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
+#define IDC_SSL_PRIVATE_KEY_FILE        1414
+#define IDC_SSL_TRUSTED_CERTIFICATES_PATH 1415
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -782,7 +791,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        297
+#define _APS_NEXT_RESOURCE_VALUE        298
 #define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1300
 #define _APS_NEXT_SYMED_VALUE           134

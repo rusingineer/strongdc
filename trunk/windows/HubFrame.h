@@ -340,8 +340,10 @@ private:
 
 	class MessageInfo {
 	public:
-		MessageInfo(const User::Ptr& u, const string& m) : user(u), msg(Text::toT(m)) { };
-		User::Ptr user;
+		MessageInfo(const User::Ptr& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
+		User::Ptr from;
+		User::Ptr to;
+		User::Ptr replyTo;
 		tstring msg;
 	};
 
@@ -413,6 +415,8 @@ private:
 
 	CFindReplaceDialog findDlg;
 
+	const tstring& getNick(const User::Ptr& u);
+	
 	Client* client;
 	tstring server;
 	CContainedWindow ctrlMessageContainer;
@@ -441,10 +445,9 @@ private:
 	HBITMAP hEmoticonBmp;
 	bool closed;
 
-	StringMap ucParams;
 	TStringMap tabParams;
 	bool tabMenuShown;
-	
+
 	typedef vector<pair<UpdateInfo, Speakers> > UpdateList;
 	typedef UpdateList::iterator UpdateIter;
 	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
@@ -519,7 +522,7 @@ private:
 		updateList.push_back(make_pair(UpdateInfo(u), s));
 		updateUsers = true;
 	};
-	void speak(Speakers s, const User::Ptr& u, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(u, line)); };
+	void speak(Speakers s, const User::Ptr& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(from, to, replyTo, line)); };
 
 };
 

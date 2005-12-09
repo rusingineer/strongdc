@@ -33,6 +33,7 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
+#include "SSLSocket.h"
 #include "DebugManager.h"
 #include "ClientProfileManager.h"
 
@@ -43,6 +44,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
 	// Nev's great contribution to dc++
 	while(1) break;
+
 	Util::initialize();
 
 	ResourceManager::newInstance();
@@ -62,6 +64,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	QueueManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
+	SSLSocketFactory::newInstance();	
 	DebugManager::newInstance();
 	ClientProfileManager::newInstance();	
 	PopupManager::newInstance();
@@ -72,6 +75,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	}
 
 	FavoriteManager::getInstance()->load();
+	SSLSocketFactory::getInstance()->loadCertificates();
 	ClientProfileManager::getInstance()->load();	
 	WebServerManager::newInstance();
 	int i;
@@ -105,6 +109,7 @@ void shutdown() {
 	WebServerManager::deleteInstance();
 	ClientProfileManager::deleteInstance();	
 	PopupManager::deleteInstance();
+	SSLSocketFactory::deleteInstance();	
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();

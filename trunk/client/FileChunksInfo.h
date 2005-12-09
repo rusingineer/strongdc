@@ -122,6 +122,11 @@ public:
 	int64_t getChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
 
 	/**
+     * Abandon all unverified bytes received by a chunk
+     */
+	void abandonChunk(int64_t);
+	
+	/**
 	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
 	 */
 	bool hasFreeBlock(int64_t);
@@ -190,7 +195,7 @@ public:
 		Lock l(cs);
 
 		BlockMap::iterator i  = verifiedBlocks.begin();
-		for(; i != verifiedBlocks.end(); ++i)
+		for(; i != verifiedBlocks.end(); i++)
 		{
 			int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
 			int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
@@ -205,7 +210,7 @@ public:
 
 		return false;
 	}
-
+	
 	static vector<Ptr> vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
 
@@ -265,7 +270,7 @@ public:
 		{
             for(SharedFileHandleMap::iterator i = file_handle_pool.begin();
             							i != file_handle_pool.end();
-                                        ++i)
+                                        i++)
 			{
 				if(i->second == shared_handle_ptr)
 				{
@@ -315,10 +320,12 @@ public:
 
 	virtual size_t flush() throw(Exception) 
 	{
+/*		
 		Lock l(*shared_handle_ptr);
 
 		if(!FlushFileBuffers(shared_handle_ptr->handle))
 			throw FileException(Util::translateError(GetLastError()));
+*/
 		return 0;
 	}
 
@@ -384,7 +391,14 @@ public:
 		pos += len;
 
 		if(len > 0){
-			size_t size = os->write(buf, len);
+			size_t size = 0;
+			
+			try{
+				size = os->write(buf, len);
+			}catch(Exception e){
+				fileChunks->abandonChunk(chunk);
+				throw e;
+			}
 
 			if(size != len)
 				throw FileException("Internal Error");
@@ -395,8 +409,8 @@ public:
 			chunk = -1;
 			throw ChunkDoneException(Util::emptyString, pos);
 
-		}else if(iRet == FileChunksInfo::FILE_OVER){			
-  			os->flush();
+		}else if(iRet == FileChunksInfo::FILE_OVER){
+   			os->flush();
 			chunk = -1;
 			throw FileDoneException(Util::emptyString, pos);
 		}

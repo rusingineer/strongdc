@@ -25,7 +25,6 @@
 
 #include "TimerManager.h"
 
-#include "ServerSocket.h"
 #include "UserConnection.h"
 #include "User.h"
 #include "CriticalSection.h"
@@ -67,7 +66,7 @@ private:
 inline bool operator==(ConnectionQueueItem::Ptr ptr, const User::Ptr& aUser) { return ptr->getUser() == aUser; }
 
 class ConnectionManager : public Speaker<ConnectionManagerListener>, 
-	public UserConnectionListener, ServerSocketListener, TimerManagerListener, 
+	public UserConnectionListener, TimerManagerListener, 
 	public Singleton<ConnectionManager>
 {
 public:
@@ -76,7 +75,7 @@ public:
 	}
 
 	void nmdcConnect(const string& aServer, short aPort, const string& aMyNick, const string& hubUrl);
-	void adcConnect(const OnlineUser& aUser, short aPort, const string& aToken);
+	void adcConnect(const OnlineUser& aUser, short aPort, const string& aToken, bool secure);
 	void getDownloadConnection(const User::Ptr& aUser);
 	void putDownloadConnection(UserConnection* aSource, bool reuse = false, bool ntd = false, bool reconn = false);
 	void putUploadConnection(UserConnection* aSource, bool ntd);
@@ -86,26 +85,41 @@ public:
 	/** Find a suitable port to listen on, and start doing it */
 	void listen() throw(Exception);
 	void disconnect() throw() {
-		socket.disconnect();
-		port = 0;
+		delete server;
+		delete secureServer;
+
+		server = secureServer = 0;
+		port = securePort = 0;
 	}
+
 	unsigned short getPort() {
 		return port;
 	}
-
-	// Ugly trick to use windows messages...
-	ServerSocket& getServerSocket() {
-		return socket;
+	unsigned short getSecurePort() {
+		return securePort;
 	}
-
 	static int iConnToMeCount;
 
-	bool shuttingDown;
-
 private:
+
+	class Server : public Thread {
+	public:
+		Server(bool secure_, short port, const string& ip = "0.0.0.0");
+		virtual ~Server() { die = true; join(); }
+	private:
+		virtual int run() throw();
+
+		Socket sock;
+		bool secure;
+		bool die;
+	};
+
+	friend class Server;
+
 	CriticalSection cs;
 	CriticalSection cs_failedConnections;
 	short port;
+	short securePort;
 
 	/** All ConnectionQueueItems */
 	ConnectionQueueItem::List downloads;
@@ -117,7 +131,6 @@ private:
 	/** All active connections */
 	UserConnection::List userConnections;
 
-	ServerSocket socket;
 	StringList features;
 	StringList adcFeatures;
 
@@ -127,12 +140,17 @@ private:
 
 	u_int32_t floodCounter;
 
+	Server* server;
+	Server* secureServer;
+
+	bool shuttingDown;
+
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
 
 	virtual ~ConnectionManager() throw() { shutdown(); };
 	
-	UserConnection* getConnection(bool aNmdc) throw(SocketException);
+	UserConnection* getConnection(bool aNmdc, bool secure) throw(SocketException);
 	void putConnection(UserConnection* aConn);
 
 	void addUploadConnection(UserConnection* uc);
@@ -141,8 +159,7 @@ private:
 	ConnectionQueueItem* getCQI(const User::Ptr& aUser, bool download);
 	void putCQI(ConnectionQueueItem* cqi);
 
-	// ServerSocketListener
-	virtual void on(ServerSocketListener::IncomingConnection) throw();
+	void accept(const Socket& sock, bool secure) throw();
 
 	// UserConnectionListener
 	virtual void on(Connected, UserConnection*) throw();

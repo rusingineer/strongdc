@@ -18,7 +18,9 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
+
 #include "UserConnection.h"
+
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 #include "DebugManager.h"
@@ -282,6 +284,23 @@ void UserConnection::onLine(const char* aLine) throw() {
 		return;
 	}
 }
+
+void UserConnection::connect(const string& aServer, short aPort) throw(SocketException) { 
+	if(socket)
+		BufferedSocket::putSocket(socket);
+	socket = BufferedSocket::getSocket(0);
+	socket->addListener(this);
+	socket->connect(aServer, aPort, secure, true);
+}
+
+void UserConnection::accept(const Socket& aServer) throw(SocketException) {
+	if(socket)
+		BufferedSocket::putSocket(socket);
+	socket = BufferedSocket::getSocket(0);
+	socket->addListener(this);
+	socket->accept(aServer, secure);
+}
+
 
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);

@@ -100,7 +100,7 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	contextMenu.AppendMenu(MF_SEPARATOR);
 	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
-    memset2(statusSizes, 0, sizeof(statusSizes));
+    memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(4, statusSizes);
 	UpdateLayout();
@@ -244,12 +244,12 @@ LRESULT UploadQueueFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			PrivateFrame::openWindow(NULL, User);
+			PrivateFrame::openWindow(User);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			PrivateFrame::openWindow(NULL, ((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			PrivateFrame::openWindow(((UploadQueueItem*)ctrlList.getItemData(i))->User);
 		}
 	}
 	return 0;
@@ -356,7 +356,7 @@ void UploadQueueFrame::LoadAll() {
 	ctrlQueued.SetRedraw(FALSE);
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		UQFUsers.push_back(uit->first);
-		ctrlQueued.InsertItem(Text::toT(uit->first->getFirstNick() + " (" + uit->first->getLastHubName() + ")").c_str(), TVI_ROOT, TVI_LAST);
+		ctrlQueued.InsertItem((WinUtil::getNicks(uit->first) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), TVI_ROOT, TVI_LAST);
 		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
 			AddFile(*i);
 		}
@@ -381,7 +381,7 @@ void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 	while(nickNode) {
 		TCHAR nickBuf[512];
 		ctrlQueued.GetItemText(nickNode, nickBuf, 511);
-		if ((aUser->getFirstNick() + " (" + aUser->getLastHubName() + ")") == Text::fromT(nickBuf)) {
+		if ((WinUtil::getNicks(aUser) + _T(" - ") + WinUtil::getHubNames(aUser).first) == nickBuf) {
 			ctrlQueued.DeleteItem(nickNode);
 			break;
 		}
@@ -399,7 +399,7 @@ LRESULT UploadQueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL
 		ctrlQueued.GetItemText(nickNode, nickBuf, 255);
 		UploadQueueItem::UserMap users = UploadManager::getInstance()->getQueue();
 		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
-			if((uit->first->getFirstNick() + " (" + uit->first->getLastHubName() + ")") == Text::fromT(nickBuf)) {
+			if((WinUtil::getNicks(uit->first) + _T(" - ") + WinUtil::getHubNames(uit->first).first) == nickBuf) {
 				ctrlList.SetRedraw(FALSE);
 				ctrlQueued.SetRedraw(FALSE);
 				for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
@@ -434,12 +434,12 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 	}
 	if(add) {
 			UQFUsers.push_back(aUQI->User);
-			nickNode = ctrlQueued.InsertItem(Text::toT(aUQI->User->getFirstNick() + " (" + aUQI->User->getLastHubName() + ")").c_str(), TVI_ROOT, TVI_LAST);
+			nickNode = ctrlQueued.InsertItem((WinUtil::getNicks(aUQI->User) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), TVI_ROOT, TVI_LAST);
 	}	
 	if(selNode) {
 		TCHAR selBuf[256];
 		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		if(_tcscmp(selBuf, Text::toT(aUQI->User->getFirstNick() + " (" + aUQI->User->getLastHubName() + ")").c_str()) != 0) {
+		if(_tcscmp(selBuf, (WinUtil::getNicks(aUQI->User) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str()) != 0) {
 			return;
 		}
 	}
@@ -489,8 +489,8 @@ void UploadQueueFrame::updateStatus() {
 void UploadQueueItem::update() {
 	columns[COLUMN_FILE] = Text::toT(FileName);
 	columns[COLUMN_PATH] = Text::toT(Path);
-	columns[COLUMN_NICK] = Text::toT(User->getFirstNick());
-	columns[COLUMN_HUB] = Text::toT(User->getLastHubName());
+	columns[COLUMN_NICK] = WinUtil::getNicks(User);
+	columns[COLUMN_HUB] = WinUtil::getHubNames(User).first;
 	columns[COLUMN_TRANSFERRED] = Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");
 	columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
 	columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime));

@@ -242,31 +242,32 @@ void Util::initialize() {
 		string file = Util::getAppPath() + SETTINGS_DIR + "GeoIpCountryWhois.csv";
 		string data = File(file, File::READ, File::OPEN).read();
 
-		char* linestart = (char *)data.c_str();
-		char* comma1 = NULL;
-		char* comma2 = NULL;
-		char* comma3 = NULL;
-		char* lineend = NULL;
+		const char* start = data.c_str();
+		string::size_type linestart = 0;
+		string::size_type comma1 = 0;
+		string::size_type comma2 = 0;
+		string::size_type comma3 = 0;
+		string::size_type comma4 = 0;
+		string::size_type lineend = 0;
 		CountryIter last = countries.end();
 		u_int32_t startIP = 0;
 		u_int32_t endIP = 0, endIPprev = 0;
 
 		for(;;) {
-			comma1 = strchr(linestart, ',');
-			if(comma1 == NULL) break;
-			*(comma1-1) = NULL;
-			comma2 = strchr(comma1 + 1, ',');
-			if(comma2 == NULL) break;
-			*(comma2-1) = NULL;
-			comma3 = strchr(comma2 + 1, ',');
-			*(comma3-1) = NULL;
-			if(comma3 == NULL) break;
-			lineend = strchr(comma3, '\n');
-			if(lineend == NULL) break;
+			comma1 = data.find(',', linestart);
+			if(comma1 == string::npos) break;
+			comma2 = data.find(',', comma1 + 1);
+			if(comma2 == string::npos) break;
+			comma3 = data.find(',', comma2 + 1);
+			if(comma3 == string::npos) break;
+			comma4 = data.find(',', comma3 + 1);
+			if(comma4 == string::npos) break;
+			lineend = data.find('\n', comma4);
+			if(lineend == string::npos) break;
 
-			startIP = toUInt32(linestart+1);
-			endIP = toUInt32(comma1+2);
-			u_int16_t* country = (u_int16_t*)(comma2+2);
+			startIP = Util::toUInt32(start + comma2 + 2);
+			endIP = Util::toUInt32(start + comma3 + 2);
+			u_int16_t* country = (u_int16_t*)(start + comma4 + 2);
 			if((startIP-1) != endIPprev)
 				last = countries.insert(last, make_pair((startIP-1), (u_int16_t)16191));
 			last = countries.insert(last, make_pair(endIP, *country));
@@ -566,11 +567,11 @@ string Util::getLocalIp() {
 	int i = 0;
 	
 	// We take the first ip as default, but if we can find a better one, use it instead...
-	memcpy2(&(dest.sin_addr), he->h_addr_list[i++], he->h_length);
+	memcpy(&(dest.sin_addr), he->h_addr_list[i++], he->h_length);
 	tmp = inet_ntoa(dest.sin_addr);
 	if(Util::isPrivateIp(tmp) || strncmp(tmp.c_str(), "169", 3) == 0) {
 		while(he->h_addr_list[i]) {
-			memcpy2(&(dest.sin_addr), he->h_addr_list[i], he->h_length);
+			memcpy(&(dest.sin_addr), he->h_addr_list[i], he->h_length);
 			string tmp2 = inet_ntoa(dest.sin_addr);
 			if(!Util::isPrivateIp(tmp2) && strncmp(tmp2.c_str(), "169", 3) != 0) {
 				tmp = tmp2;
@@ -1036,7 +1037,7 @@ string Util::getOsVersion() {
 	string os;
 
 	OSVERSIONINFOEX ver;
-	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {

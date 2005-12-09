@@ -42,7 +42,7 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 {
 public:
 	static void gotMessage(const User::Ptr& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
-	static void openWindow(const User::Ptr& from, const User::Ptr& to, const tstring& aMessage = Util::emptyStringT);
+	static void openWindow(const User::Ptr& replyTo, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); };
 
 	enum {
@@ -186,9 +186,9 @@ public:
 	
 	void sendMessage(const tstring& msg);
 	
-	User::Ptr& getUser() { return user; };
+	User::Ptr& getUser() { return replyTo; };
 private:
-	PrivateFrame(const User::Ptr& aUser) : user(aUser), 
+	PrivateFrame(const User::Ptr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) {
 		}
@@ -212,9 +212,7 @@ private:
 	CButton ctrlEmoticons;
 	HBITMAP hEmoticonBmp;
 
-	StringMap ucParams;
-
-	User::Ptr user;	
+	User::Ptr replyTo;
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlClientContainer;
 
@@ -231,15 +229,15 @@ private:
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
-		if(aUser == user)
+		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {
-		if(aUser == user)
+		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
-		if(aUser == user)
+		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();

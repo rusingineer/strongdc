@@ -45,8 +45,8 @@ void WebServerManager::Start(){
 	Lock l(cs);
 	started = true;
 
+	socket.listen((short)SETTING(WEBSERVER_PORT));
 	socket.addListener(this);
-	socket.waitForConnections((short)SETTING(WEBSERVER_PORT));
 	fire(WebServerListener::Setup());
 
 	page404 = new WebPageInfo(PAGE_404,"");

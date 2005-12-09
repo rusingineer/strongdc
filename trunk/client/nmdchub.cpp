@@ -36,7 +36,7 @@
 
 #include "cvsversion.h"
 
-NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|'), state(STATE_CONNECT),
+NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), state(STATE_CONNECT),
 	reconnect(true),
 	lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
     YnHub(false) {
@@ -60,9 +60,9 @@ void NmdcHub::connect() {
 
 	state = STATE_LOCK;
 
-	if(getPort() == 0) {
+/*	if(getPort() == 0) {
 		setPort(411);
-	}
+	}*/
 	Client::connect();
 }
 
@@ -108,7 +108,11 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		if(i != users.end())
 			return *i->second;
 
-		User::Ptr p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
+		User::Ptr p;
+		if(aNick == getMyNick())
+			p = ClientManager::getInstance()->getMe();
+		else
+			p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 
 		u = users.insert(make_pair(aNick, new OnlineUser(p, *this))).first->second;
 		u->getIdentity().setNick(aNick);
@@ -190,7 +194,10 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 void NmdcHub::onLine(const char* aLine) throw() {
 	char *temp, *temp1;
 	updateActivity();
-	
+
+	if(strlen(aLine) == 0)
+		return;
+
 	if(aLine[0] != '$') {
 		if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!isOp())) {
 			return;
@@ -280,6 +287,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					seekers.push_back(make_pair(seeker, tick));
 					// First, check if it's a flooder
         			for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
+						dcdebug("Comparing %d to %d\n", seeker, fi->first);
 						if(fi->first == seeker)
 							return;
 					}	
@@ -879,7 +887,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					OnlineUser* to = findUser(getMyNick());	
 									
 					if(from == NULL || to == NULL) {
-						// @todo Route anonymous message to the ui
+						fire(ClientListener::Message(), this, from, Util::validateMessage(fromNmdc(temp), true).c_str());
 					} else {
 						fire(ClientListener::PrivateMessage(), this, *from, *to, *from, Util::validateMessage(fromNmdc(temp), true));
 					}
@@ -1041,6 +1049,18 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 		chars = sprintf(buf, "$Search Hub:%s %c?%c?%I64d?%d?%s|", toNmdc(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
+}
+
+void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) { 
+	checkstate();
+
+	send("$To: " + toNmdc(aUser.getIdentity().getNick()) + " From: " + toNmdc(getMyNick()) + " $" + toNmdc(Util::validateMessage("<" + getMyNick() + "> " + aMessage, false)) + "|");
+	// Emulate a returning message...
+	Lock l(cs);
+	string mynick = getMyNick();
+	NickIter i = users.find(mynick);
+	if(i != users.end())
+		fire(ClientListener::PrivateMessage(), this, *i->second, aUser, *i->second, '<' + mynick + "> " + aMessage);
 }
 
 // TimerManagerListener

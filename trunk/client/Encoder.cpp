@@ -74,7 +74,7 @@ string& Encoder::toBase32(const u_int8_t* src, size_t len, string& dst) {
 void Encoder::fromBase32(const char* src, u_int8_t* dst, size_t len) {
 	size_t i, index, offset;
 
-	memset2(dst, 0, len);
+	memset(dst, 0, len);
 	for(i = 0, index = 0, offset = 0; src[i]; i++) {
 		// Skip what we don't recognise
 		int8_t tmp = base32Table[(unsigned char)src[i]];

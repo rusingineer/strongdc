@@ -135,7 +135,7 @@ private:
 		TCHAR nickBuf[512];
 		ctrlQueued.GetItemText(selectedItem, nickBuf, 511);
 		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-			if(((*i)->getFirstNick() + " (" + (*i)->getLastHubName() + ")") == Text::fromT(nickBuf)) {
+			if((WinUtil::getNicks(*i) + _T(" - ") + WinUtil::getHubNames(*i).first) == nickBuf) {
 				return *i;
 				break;
 			}

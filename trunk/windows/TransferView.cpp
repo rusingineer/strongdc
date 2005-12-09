@@ -148,7 +148,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				usercmdsMenu.InsertSeparatorFirst(STRING(SETTINGS_USER_COMMANDS));
 	
 				if(itemI->user != (User::Ptr)NULL)
-					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, itemI->user->getClient());
+					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(itemI->user->getCID()));
 			}
 			ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
 			WinUtil::ClearPreviewMenu(previewMenu);
@@ -210,6 +210,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 }
 
 void TransferView::runUserCommand(UserCommand& uc) {
+	StringMap ucParams;
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
@@ -219,11 +220,9 @@ void TransferView::runUserCommand(UserCommand& uc) {
 		if(!itemI->user->isOnline())
 			return;
 
-		ucParams["file"] = itemI->Target;
-
 		StringMap tmp = ucParams;
-		itemI->user->getOnlineUser()->getIdentity().getParams(tmp, "");
-		itemI->user->getOnlineUser()->getClient().sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
+		ucParams["file"] = itemI->Target;
+		ClientManager::getInstance()->userCommand(itemI->user, uc, tmp);
 	}
 	return;
 };
@@ -612,7 +611,7 @@ void TransferView::ItemInfo::update() {
 
 	if(colMask & MASK_USER) {
 		if(!mainItem || (subItems.size() == 1) || (type == TYPE_UPLOAD)) {
-			columns[COLUMN_USER] = Text::toT(user->getFirstNick());
+			columns[COLUMN_USER] = WinUtil::getNicks(user);
 		} else {
 			TCHAR buf[256];
 			_sntprintf(buf, 255, _T("%d %s"), subItems.size(), CTSTRING(USERS));
@@ -622,7 +621,7 @@ void TransferView::ItemInfo::update() {
 	}
 	if(colMask & MASK_HUB) {
 		if(!mainItem || (subItems.size() == 1) || (type == TYPE_UPLOAD)) {
-			columns[COLUMN_HUB] = Text::toT(user->getClientName());
+			columns[COLUMN_HUB] = WinUtil::getHubNames(user).first;
 		} else {
 			TCHAR buf[256];
 			_sntprintf(buf, 255, _T("%d %s"), numberOfSegments, CTSTRING(NUMBER_OF_SEGMENTS));
@@ -883,21 +882,32 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 					(double)d->getPos()*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
 			}
 
-			buf[stringSize-1] = NULL;
+			i->statusString.clear();
+			if(d->getUserConnection()->isSecure()) {
+				i->statusString += _T("[S]");
+			}
+			if(d->isSet(Download::FLAG_TTH_CHECK)) {
+				i->statusString += _T("[T]");
+			}
+			
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
 					i->setFlag(ItemInfo::FLAG_COMPRESSED);
 				} else {
 					i->unsetFlag(ItemInfo::FLAG_COMPRESSED);
 				}
-				i->statusString = buf;
 			} else {
 				if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
-					i->statusString = _T("* ") + tstring(buf);
-				} else {
-					i->statusString = buf;
+					i->statusString += _T("[Z]");
 				}
 			}
+			if(d->isSet(Download::FLAG_ROLLBACK)) {
+				i->statusString += _T("[R]");
+			}
+			if(!i->statusString.empty()) {
+				i->statusString += _T(" ");
+			}		
+			i->statusString += buf;
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 
 			if((d->getRunningAverage() == 0) && ((GET_TICK() - d->getStart()) > 1000)) {
@@ -1048,17 +1058,26 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 			if (u->getPos() > 0) {
 				_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 
 				(double)u->getPos()*100.0/(double)(u->isSet(Upload::FLAG_TTH_LEAVES) ? u->getSize() : u->getFullSize()), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
-            } else _stprintf(buf, CTSTRING(UPLOAD_STARTING));
+            } else
+            	_stprintf(buf, CTSTRING(UPLOAD_STARTING));
+            	
+            i->statusString.clear();
+
+			if(u->getUserConnection()->isSecure()) {
+				i->statusString += _T("[S]");
+			}
 			if (BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				u->isSet(Upload::FLAG_ZUPLOAD) ? i->setFlag(ItemInfo::FLAG_COMPRESSED) : i->unsetFlag(ItemInfo::FLAG_COMPRESSED);
-				i->statusString = buf;
 			} else {
 				if(u->isSet(Upload::FLAG_ZUPLOAD)) {
-				i->statusString = _T("* ") + tstring(buf);
-				} else {
-					i->statusString = buf;
+					i->statusString += _T("[Z]");
 				}
 			}
+			if(!i->statusString.empty()) {
+				i->statusString += _T(" ");
+			}			
+			i->statusString += buf;
+			
 
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 			v->push_back(i);
