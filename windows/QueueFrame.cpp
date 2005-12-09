@@ -28,7 +28,7 @@
 
 #include "../client/StringTokenizer.h"
 #include "../client/ShareManager.h"
-
+#include "../client/ClientManager.h"
 #include "BarShader.h"
 
 #define FILE_LIST_NAME _T("File Lists")
@@ -168,7 +168,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	hIconTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_YES), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 	hIconNotTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_NO), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 
-	memset2(statusSizes, 0, sizeof(statusSizes));
+	memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
 	updateStatus();
@@ -203,7 +203,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(j->getUser()->isOnline())
 					online++;
 
-				tmp += Text::toT(j->getUser()->getFirstNick());
+				tmp += WinUtil::getNicks(j->getUser());
 			}
 			display->columns[COLUMN_USERS] = tmp.empty() ? TSTRING(NO_USERS) : tmp;
 		}
@@ -284,7 +284,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
-						tmp += Text::toT(j->getUser()->getFirstNick());
+					tmp += WinUtil::getNicks(j->getUser());
 					tmp += _T(" (");
 					if(j->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						tmp += TSTRING(FILE_NOT_AVAILABLE);
@@ -871,10 +871,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			if(ii) {
 				QueueItemInfo::SourceIter i;
 				for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
-					if(!i->getUser()) {
-						continue;
-					}
-					tstring nick = Text::toT(i->getUser()->getFirstNick());
+				tstring nick = WinUtil::getNicks(i->getUser());
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -895,10 +892,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 
 				readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
-					if(!i->getUser()) {
-						continue;
-					}
-					tstring nick = Text::toT(i->getUser()->getFirstNick());
+					tstring nick = WinUtil::getNicks(i->getUser());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_PASSIVE)) {
@@ -1141,7 +1135,7 @@ LRESULT QueueFrame::onPM(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL&
 		pmMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItemInfo::SourceInfo* s = (QueueItemInfo::SourceInfo*)omi->data;
-		PrivateFrame::openWindow(NULL, s->getUser());
+		PrivateFrame::openWindow(s->getUser());
 	}
 	return 0;
 }
@@ -1440,7 +1434,7 @@ void QueueFrame::updateQueue() {
 static TCHAR tmpBuf[1024];
 void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 	TVINSERTSTRUCT tvis;
-	memset2(&tvis, 0, sizeof(tvis));
+	memset(&tvis, 0, sizeof(tvis));
 	tvis.itemex.hItem = item;
 	tvis.itemex.mask = TVIF_CHILDREN | TVIF_HANDLE | TVIF_IMAGE | TVIF_INTEGRAL | TVIF_PARAM |
 		TVIF_SELECTEDIMAGE | TVIF_STATE | TVIF_TEXT;

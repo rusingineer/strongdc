@@ -54,21 +54,21 @@ const string SettingsManager::settingTags[] =
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
-	"EmoticonsFile",
+	"EmoticonsFile", 	"SslPrivateKeyFile", "SslCertificateFile", "SslTrustedCertificatesPath",
 	"SENTRY", 
 	// Ints
 	"IncomingConnections", "InPort", "Slots", "Rollback", "AutoFollow", "ClearSearch",
-	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray", 
-	"AutoSearch", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline", 
-	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat", 
-	"LogDownloads", "LogUploads", "StatusInChat", "ShowJoins", "PrivateMessageBeep", "PrivateMessageBeepOpen", 
+	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray",
+	"AutoSearch", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline",
+	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat",
+	"LogDownloads", "LogUploads", "StatusInChat", "ShowJoins", "PrivateMessageBeep", "PrivateMessageBeepOpen",
 	"UseSystemIcons", "PopupPMs", "MinUploadSpeed", "GetUserInfo", "UrlHandler", "MainWindowState", 
-	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway", 
-	"SmallSendBuffer", "SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
-	"CompressTransfers", "ShowProgressBars", "MaxTabRows", "AutoUpdateList", 
-	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots", 
+	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway",
+	"SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
+	"CompressTransfers", "ShowProgressBars", "MaxTabRows", "AutoUpdateList",
+	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots",
 	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", 
-	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem", 
+	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
 	"LogFilelistTransfers", "EmptyWorkingSet",
 	"ShowStatusbar",
 	"ShowToolbar", "ShowTransferview", 
@@ -120,7 +120,8 @@ const string SettingsManager::settingTags[] =
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "FinishedDownloadDirty", "FinishedUploadDirty", "QueueDirty", 
-	"TabHubDirty", "TabPmDirty", "TabSearchDirty", "TabsOnTop", "ColorRunning", "ColorDownloaded", "ColorVerified",
+	"TabHubDirty", "TabPmDirty", "TabSearchDirty", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
+	"ColorRunning", "ColorDownloaded", "ColorVerified",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -204,7 +205,6 @@ SettingsManager::SettingsManager()
 	setDefault(GET_USER_INFO, true);
 	setDefault(URL_HANDLER, true);
 	setDefault(AUTO_AWAY, false);
-	setDefault(SMALL_SEND_BUFFER, false);
 	setDefault(BIND_ADDRESS, "0.0.0.0");
 	setDefault(SOCKS_PORT, 1080);
 	setDefault(SOCKS_RESOLVE, 1);
@@ -270,6 +270,9 @@ SettingsManager::SettingsManager()
 	setDefault(TAB_HUB_DIRTY, true);
 	setDefault(TAB_SEARCH_DIRTY, true);
 	setDefault(TAB_PM_DIRTY, true);
+	setDefault(SOCKET_IN_BUFFER, 8192);
+	setDefault(SOCKET_OUT_BUFFER, 8192);
+	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "certs" PATH_SEPARATOR_STR);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);

@@ -124,16 +124,7 @@ private:
 
 		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(user); }
 
-		void update(const FavoriteUser& u) {
-			columns[COLUMN_NICK] = Text::toT(u.getLastIdentity().getNick());
-			columns[COLUMN_STATUS] = u.getUser()->isOnline() ? TSTRING(ONLINE) : TSTRING(OFFLINE);
-			columns[COLUMN_HUB] = Text::toT(user->getLastHubName());
-			if(!user->getLastHubAddress().empty()) {
-				columns[COLUMN_HUB] += Text::toT(" (" + user->getLastHubAddress() + ")");
-			}
-			/*columns[COLUMN_SEEN] = user->isOnline() ? Util::emptyStringT : Text::toT(Util::formatTime("%Y-%m-%d %H:%M", user->getFavoriteLastSeen()));*/
-			columns[COLUMN_DESCRIPTION] = Text::toT(u.getDescription());
-		}
+		void update(const FavoriteUser& u);
 
 		tstring columns[COLUMN_LAST];
 	};

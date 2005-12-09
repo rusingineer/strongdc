@@ -34,7 +34,6 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
-#define INBUFSIZE 64*1024
 bool UploadManager::m_boFireball = false;
 bool UploadManager::m_boFileServer = false;
 
@@ -662,9 +661,9 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr&
 	}
 }
 
-size_t UploadManager::throttleGetSlice() {
+int UploadManager::throttleGetSlice() {
 	if (mThrottleEnable) {
-		size_t left = mUploadLimit - mBytesSpokenFor;
+		int left = mUploadLimit - mBytesSpokenFor;
 		if (left > 0) {
 			if (left > 2*mByteSlice) {
 				mBytesSpokenFor += mByteSlice;
@@ -673,15 +672,15 @@ size_t UploadManager::throttleGetSlice() {
 				mBytesSpokenFor += left;
 				return left;
 			}
-	} else {
+		} else {
 			return 16; // must send > 0 bytes or threadSendFile thinks the transfer is complete
-	}
+		}
 	} else {
-		return (size_t)-1;
+		return -1;
 	}
 }
 
-size_t UploadManager::throttleCycleTime() {
+int UploadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -699,18 +698,18 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
-	unsigned int num_transfers = uploads.size();
+	int num_transfers = (int)uploads.size();
 	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-		if (mUploadLimit <= (INBUFSIZE * 10 * num_transfers)) {
+		if (mUploadLimit <= (SETTING(SOCKET_OUT_BUFFER) * 10 * num_transfers)) {
 			mByteSlice = mUploadLimit / (5 * num_transfers);
-			if (mByteSlice > INBUFSIZE)
-				mByteSlice = INBUFSIZE;
+			if (mByteSlice > SETTING(SOCKET_OUT_BUFFER))
+				mByteSlice = SETTING(SOCKET_OUT_BUFFER);
 			mCycleTime = 1000 / 10;
 		} else {
-			mByteSlice = INBUFSIZE;
-			mCycleTime = 1000 * INBUFSIZE / mUploadLimit;
+			mByteSlice = SETTING(SOCKET_OUT_BUFFER);
+			mCycleTime = 1000 * SETTING(SOCKET_OUT_BUFFER) / mUploadLimit;
 		}
 	}
 }

@@ -45,6 +45,7 @@
 #include "UserListColours.h"
 #include "NetworkPage.h"
 #include "WindowsPage.h"
+#include "CertificatesPage.h"
 
 bool PropertiesDlg::needUpdate = false;
 PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS)) {
@@ -58,6 +59,7 @@ PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SE
 	pages[n++] = new AdvancedPage(s);
 	pages[n++] = new LogPage(s);
 	pages[n++] = new UCPage(s);
+	pages[n++] = new CertificatesPage(s);	
 	pages[n++] = new CZDCPage(s);
 	pages[n++] = new SDCPage(s);
 	pages[n++] = new FavoriteDirsPage(s);

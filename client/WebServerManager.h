@@ -186,7 +186,7 @@ public:
 		int fromlen=sizeof(from);
 
 		printf("accepting\n");
-		sock = ::accept(s->getSocket(), (struct sockaddr*)&from,&fromlen);
+		sock = ::accept(s->getSock(), (struct sockaddr*)&from,&fromlen);
 		u_long b = 1;
 		ioctlsocket(sock, FIONBIO, &b);		
 	}

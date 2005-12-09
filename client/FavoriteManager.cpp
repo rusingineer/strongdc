@@ -678,19 +678,15 @@ void FavoriteManager::refresh() {
 	}
 }
 
-UserCommand::List FavoriteManager::getUserCommands(int ctx, const string& hub, bool op) {
+UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hubs) {
 	Lock l(cs);
 	UserCommand::List lst;
-	bool adc = (hub.compare(0, 6, "adc://") == 0);
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
-		if(uc.getCtx() & ctx) {
-		if( (!adc && (uc.getHub().empty() || (op && uc.getHub() == "op"))) ||
-				(adc && (uc.getHub() == "adc://" || (op && uc.getHub() == "adc://op"))) ||
-				(Util::stricmp(hub, uc.getHub()) == 0) )
-			{
-				lst.push_back(*i);
-			}
+        if( (uc.getCtx() & ctx) && 
+			(uc.getHub().empty() || find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end()) ) 
+		{
+			lst.push_back(*i);
 		}
 	}
 	return lst;

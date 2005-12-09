@@ -36,32 +36,27 @@ public:
 
 class ServerSocket : public Speaker<ServerSocketListener> {
 public:
-	void waitForConnections(short aPort) throw(SocketException);
-	ServerSocket() : sock(INVALID_SOCKET) { };
+	ServerSocket() throw() { };
 
-	virtual ~ServerSocket() throw() {
-		disconnect();
-	}
-	
-	void disconnect() throw() {
-		if(sock != INVALID_SOCKET) {
-			closesocket(sock);
-			sock = INVALID_SOCKET;
-		}
-	}
-
-	socket_t getSocket() const { return sock; }
+	void listen(short port);
+	void disconnect() throw() { socket.disconnect(); }
 
 	/** This is called by windows whenever an "FD_ACCEPT" is sent...doesn't work with unix... */
 	void incoming() {
 		fire(ServerSocketListener::IncomingConnection());
 	}
 	
+	socket_t getSock() { return socket.sock; }
+	operator const Socket&() const { return socket; }
+
 private:
 	ServerSocket(const ServerSocket&);
 	ServerSocket& operator=(const ServerSocket&);
 
-	socket_t sock;
+	friend class Socket;
+	friend class WebServerSocket;
+
+	Socket socket;
 };
 
 #endif // !defined(SERVER_SOCKET_H)

@@ -77,7 +77,7 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : firstNick(nick), Flags(NMDC), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
 	User(const CID& aCID) : cid(aCID), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
 
 	virtual ~User() throw() { };
@@ -148,7 +148,7 @@ public:
 	const bool isHub() const { return !get("HU").empty(); }
 	const bool isOp() const { return !get("OP").empty(); }
 	const bool isHidden() const { return !get("HI").empty(); }
-	const bool isTcpActive() const { return !getIp().empty() || (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)) || isSet(NMDC_PASSIVE); }
+	const bool isTcpActive() const { return !getIp().empty() && (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)); }
 	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
 	const string& get(const char* name) const {

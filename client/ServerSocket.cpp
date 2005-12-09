@@ -22,34 +22,13 @@
 #include "ServerSocket.h"
 #include "SettingsManager.h"
 
-#define MAX_CONNECTIONS 20
-
-void ServerSocket::waitForConnections(short aPort) throw(SocketException) {
-	disconnect();
-	
-	sockaddr_in tcpaddr;
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if(sock == -1) {
-		throw SocketException(errno);
-	}
-
+void ServerSocket::listen(short aPort) throw(SocketException) {
+	socket.disconnect();
+	socket.create(Socket::TYPE_TCP);
 	// Set reuse address option...
-	int x = 1;
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&x, sizeof(x));
-
-	tcpaddr.sin_family = AF_INET;
-	tcpaddr.sin_port = htons(aPort);
-	
-	// Multiple interfaces fix
-	tcpaddr.sin_addr.s_addr = inet_addr(SETTING(BIND_ADDRESS).c_str());
-	if(::bind(sock, (sockaddr *)&tcpaddr, sizeof(tcpaddr)) == SOCKET_ERROR) {
-		tcpaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-		if(::bind(sock, (sockaddr *)&tcpaddr, sizeof(tcpaddr)) == SOCKET_ERROR)
-			throw SocketException(errno);
-	}
-	if(listen(sock, MAX_CONNECTIONS) == SOCKET_ERROR) {
-		throw SocketException(errno);
-	}
+	socket.setSocketOpt(SO_REUSEADDR, 1);
+	socket.bind(aPort, SETTING(BIND_ADDRESS));
+	socket.listen();
 }
 
 /**

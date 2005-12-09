@@ -316,7 +316,6 @@ private:
 
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
-	virtual void on(HashManagerListener::Finished) throw();
 
 	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {

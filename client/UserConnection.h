@@ -181,7 +181,7 @@ public:
 	static const string FEATURE_ZLIB_GET;
 	static const string FEATURE_TTHL;
 	static const string FEATURE_TTHF;
-	
+
 	static const string FILE_NOT_AVAILABLE;
 	
 	enum Modes {	
@@ -226,7 +226,7 @@ public:
 		// DownloadManager
 		STATE_FILELENGTH,
 		STATE_TREE
-		
+
 	};
 
 	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
@@ -282,18 +282,12 @@ public:
 
 	void sendRaw(const string& raw) { send(raw); }
 
-	void connect(const string& aServer, short aPort) throw(SocketException) { 
-		socket->connect(aServer, aPort);
-	}
-	
-	void accept(const ServerSocket& aServer) throw(SocketException) {
-		socket->accept(aServer);
-	}
+	void connect(const string& aServer, short aPort) throw(SocketException);
+	void accept(const Socket& aServer) throw(SocketException);
+
 	
 	void disconnect() { if(socket) socket->disconnect(); };
-	void transmitFile(InputStream* f) { 
-		socket->transmitFile(f); 
-	};
+	void transmitFile(InputStream* f) { socket->transmitFile(f); };
 
 	const string& getDirectionString() {
 		dcassert(isSet(FLAG_UPLOAD) ^ isSet(FLAG_DOWNLOAD));
@@ -301,7 +295,10 @@ public:
 	}
 
 	User::Ptr& getUser() { return user; };
+	bool isSecure() const { return secure; };
 
+	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
+	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; };
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; };
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; };
@@ -352,8 +349,6 @@ public:
 	GETSET(string, unknownCommand, UnknownCommand);
 
 	BufferedSocket const* getSocket() { return socket; } 
-	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
-	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	void garbageCommand() { 
 		string tmp;
 		tmp.reserve(20);
@@ -366,6 +361,7 @@ public:
 private:
 	BufferedSocket* socket;
 	User::Ptr user;
+	bool secure;
 	
 	static const string UPLOAD, DOWNLOAD;
 	
@@ -375,10 +371,8 @@ private:
 	};
 
 	// We only want ConnectionManager to create this...
-	UserConnection() throw(SocketException) : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(BufferedSocket::getSocket(0)), download(NULL), unknownCommand(Util::emptyString) { 
-		
-		socket->addListener(this);
+	UserConnection(bool secure_) throw() : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
+		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString) { 
 	};
 
 	virtual ~UserConnection() throw() {

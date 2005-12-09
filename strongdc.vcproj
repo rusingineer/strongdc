@@ -46,6 +46,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
 				PreprocessorDefinitions="HAVE_STLPORT"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -151,6 +152,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
 				PreprocessorDefinitions="HAVE_STLPORT"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -486,6 +488,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\windows\CertificatesPage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\windows\ChatCtrl.cpp"
 				>
 			</File>
@@ -808,6 +814,10 @@
 			</File>
 			<File
 				RelativePath=".\windows\CDMDebugFrame.h"
+				>
+			</File>
+			<File
+				RelativePath=".\windows\CertificatesPage.h"
 				>
 			</File>
 			<File

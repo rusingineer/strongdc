@@ -40,10 +40,8 @@ public:
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> TTHDone;
-	typedef X<1> Finished;
 
 	virtual void on(TTHDone, const string& /* fileName */, const TTHValue& /* root */) throw() = 0;
-	virtual void on(Finished) throw() = 0;
 };
 
 class HashLoader;
@@ -164,9 +162,6 @@ private:
 			s.signal();
 		}
 
-		size_t getFilesLeft() {
-			return w.size();
-		}
 	private:
 		// Case-sensitive (faster), it is rather unlikely that case changes, and if it does it's harmless.
 		// map because it's sorted (to avoid random hash order that would create quite strange shares while hashing)

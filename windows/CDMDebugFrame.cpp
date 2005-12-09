@@ -113,7 +113,11 @@ void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 		ctrlFilterIp.MoveWindow(sr);
 		ctrlStatus.GetRect(5, sr);
 		ctrlFilterText.MoveWindow(sr);
-		tstring msg = bFilterIp ? _T("Watching IP: ") + sFilterIp : _T("Watching all IPs");
+		tstring msg;
+		if(bFilterIp)
+			msg = Text::toT("Watching IP: ") + sFilterIp;
+		else
+			msg = _T("Watching all IPs");
 		ctrlStatus.SetText(6, msg.c_str());
 	}
 	

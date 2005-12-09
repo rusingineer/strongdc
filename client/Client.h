@@ -84,12 +84,12 @@ public:
 	typedef list<Ptr> List;
 	typedef List::iterator Iter;
 
-	Client(const string& hubURL, char separator);
+	Client(const string& hubURL, char separator, bool secure_);
 	virtual ~Client() throw();
 
 	virtual void connect();
-	bool isConnected() const { return socket->isConnected(); }
-	void disconnect() { socket->disconnect(); }
+	bool isConnected() const { return socket && socket->isConnected(); }
+	void disconnect() { if(socket) socket->disconnect(); }
 
 	virtual void connect(const OnlineUser& user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
@@ -109,7 +109,6 @@ public:
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
 
 	short getPort() const { return port; }
-	void setPort(u_int16_t aPort) { port = aPort; }
 	const string& getAddress() const { return address; }
 
 	const string& getIp() const { return socket->getIp().empty() ? getAddress() : socket->getIp(); };
@@ -130,8 +129,7 @@ public:
 		return string(buf, sprintf(buf, "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
 	}
 
-	void scheduleDestruction() const { socket->shutdown(); }
-	BufferedSocket* getSocket() { return socket; }
+//	BufferedSocket* getSocket() { return socket; }
 
 	string getRawCommand(const int aRawCommand) {
 		switch(aRawCommand) {
@@ -155,6 +153,7 @@ public:
 	int getMode();
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
+		dcassert(socket);
 		updateActivity();
 		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
@@ -225,16 +224,14 @@ private:
 	string hubUrl;
 	string address;
 	u_int16_t port;
+	char separator;
+	bool secure;
 
 	CountType countType;
 
 	// BufferedSocketListener
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
 	virtual void on(Connected) throw() { updateActivity(); fire(ClientListener::Connected(), this); }
-	virtual void on(Shutdown) throw() {
-		removeListeners();
-		delete this;
-	}
 };
 
 #endif // !defined(CLIENT_H)

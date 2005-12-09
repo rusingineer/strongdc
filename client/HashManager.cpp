@@ -76,8 +76,6 @@ void HashManager::hashDone(const string& aFileName, u_int32_t aTimeStamp, const 
 	} else if(speed <= 0) {
 		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn, true);
 	}
-	if(hasher.getFilesLeft() == 0)
-		fire(HashManagerListener::Finished());
 }
 
 void HashManager::HashStore::addFile(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, bool aUsed) {

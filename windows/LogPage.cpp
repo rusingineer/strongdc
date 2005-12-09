@@ -77,7 +77,7 @@ LRESULT LogPage::onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandle
 	
 	int sel = logOptions.GetSelectedIndex();
 		
-	if(sel >= 0) {
+	if(sel >= 0 && sel < LogManager::LAST) {
 		BOOL checkState = logOptions.GetCheckState(sel) == BST_CHECKED ? TRUE : FALSE;
 				
 		::EnableWindow(GetDlgItem(IDC_LOG_FORMAT), checkState);
@@ -88,6 +88,12 @@ LRESULT LogPage::onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandle
 	
 		//save the old selection so we know where to save the values
 		oldSelection = sel;
+	} else {
+		::EnableWindow(GetDlgItem(IDC_LOG_FORMAT), FALSE);
+		::EnableWindow(GetDlgItem(IDC_LOG_FILE), FALSE);
+
+		SetDlgItemText(IDC_LOG_FILE, _T(""));
+		SetDlgItemText(IDC_LOG_FORMAT, _T(""));
 	}
 		
 	logOptions.Detach();

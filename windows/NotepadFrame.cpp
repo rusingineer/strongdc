@@ -99,8 +99,8 @@ LRESULT NotepadFrame::onLButton(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	if(focus == ctrlPad.m_hWnd) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 		tstring x;
-		string::size_type start = (string::size_type)WinUtil::textUnderCursor(pt, ctrlPad, x);
-		string::size_type end = x.find(_T(" "), start);
+		tstring::size_type start = (tstring::size_type)WinUtil::textUnderCursor(pt, ctrlPad, x);
+		tstring::size_type end = x.find(_T(" "), start);
 
 		if(end == string::npos)
 			end = x.length();

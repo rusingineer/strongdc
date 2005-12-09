@@ -78,7 +78,7 @@ LRESULT CALLBACK CInputBox::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	{
 		case WM_CREATE:
             // font
-            memset2(&lfont, 0, sizeof(lfont));
+            memset(&lfont, 0, sizeof(lfont));
             lstrcpy(lfont.lfFaceName, _T("Arial"));
             lfont.lfHeight = 16;
             lfont.lfWeight = FW_NORMAL;//FW_BOLD;

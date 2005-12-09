@@ -18,13 +18,13 @@
 
 #include "stdinc.h"
 
-#ifdef HAS_STLPORT
+#ifdef HAVE_STLPORT
 
 #if (_STLPORT_VERSION != 0x500)
 #error STLPort not correctly installed, read compile.txt
 #endif
 
-#endif // HAS_STLPORT
+#endif // HAVE_STLPORT
 
 /**
  * @file

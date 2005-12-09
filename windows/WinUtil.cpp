@@ -288,7 +288,7 @@ void UserInfoBase::addFav() {
 	FavoriteManager::getInstance()->addFavoriteUser(user);
 }
 void UserInfoBase::pm() {
-	PrivateFrame::openWindow(NULL, user);
+	PrivateFrame::openWindow(user);
 }
 void UserInfoBase::grant() {
 	UploadManager::getInstance()->reserveSlot(user);
@@ -310,7 +310,7 @@ void UserInfoBase::ungrantSlot() {
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
-	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
@@ -440,7 +440,7 @@ void WinUtil::init(HWND hWnd) {
 #if 0	
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset2(&fi, 0, sizeof(SHFILEINFO));
+		memset(&fi, 0, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
 		::SHGetFileInfo(_T(""), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
@@ -520,7 +520,7 @@ void WinUtil::initColors() {
 	bgColor = SETTING(BACKGROUND_COLOR);
 
 	CHARFORMAT2 cf;
-	memset2(&cf, 0, sizeof(CHARFORMAT2));
+	memset(&cf, 0, sizeof(CHARFORMAT2));
 	cf.cbSize = sizeof(cf);
 	cf.dwReserved = 0;
 	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
@@ -1463,7 +1463,7 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const tstring& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset2(&fi, 0, sizeof(SHFILEINFO));
+		memset(&fi, 0, sizeof(SHFILEINFO));
 		string x = Text::toLower(Util::getFileExt(Text::fromT(aFileName)));
 		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);
@@ -1484,7 +1484,7 @@ int WinUtil::getIconIndex(const tstring& aFileName) {
 
 int WinUtil::getOsMajor() {
 	OSVERSIONINFOEX ver;
-	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1497,7 +1497,7 @@ int WinUtil::getOsMajor() {
 int WinUtil::getOsMinor() 
 {
 	OSVERSIONINFOEX ver;
-	memset2(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1505,6 +1505,19 @@ int WinUtil::getOsMinor()
 	GetVersionEx((OSVERSIONINFO*)&ver);
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	return ver.dwMinorVersion;
+}
+
+tstring WinUtil::getNicks(const CID& cid) throw() {
+	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid)));
+}
+
+pair<tstring, bool> WinUtil::getHubNames(const CID& cid) throw() {
+	StringList hubs = ClientManager::getInstance()->getHubNames(cid);
+	if(hubs.empty()) {
+		return make_pair(TSTRING(OFFLINE), false);
+	} else {
+		return make_pair(Text::toT(Util::toString(hubs)), true);
+	}
 }
 
 void WinUtil::getContextMenuPos(CListViewCtrl& aList, POINT& aPt) {

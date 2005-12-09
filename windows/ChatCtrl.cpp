@@ -284,7 +284,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset2(&pf, 0, sizeof(PARAFORMAT2));
+	memset(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 
@@ -448,7 +448,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR /*sTime*/, LPCTSTR sText,
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset2(&pf, 0, sizeof(PARAFORMAT2));
+	memset(&pf, 0, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 

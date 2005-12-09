@@ -43,25 +43,27 @@ void Identity::getParams(StringMap& map, const string& prefix) const {
 	for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
 		map[prefix + string((char*)(&i->first), 2)] = i->second;
 	}
-	map[prefix + "CID"] = user->getCID().toBase32();
+	if(user) {
+		map[prefix + "CID"] = user->getCID().toBase32();
 
-	// for compatibility with old raw commands
+		OnlineUser* ou = getUser()->getOnlineUser();
+		if(ou) {
+			map["mynick"] =  ou->getClient().getMyNick();
+			map["hub"] = ou->getClient().getHubName();
+			map["hubip"] = ou->getClient().getHubUrl();
+			map["hubaddr"] = ou->getClient().getAddress();
+			map["realshare"] = Util::toString(ou->getRealBytesShared());
+			map["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
+			map["statedshare"] = Util::toString(getBytesShared());
+			map["statedshareformat"] = Util::formatBytes(getBytesShared());
+			map["cheatingdescription"] = ou->getCheatingString();
+			map["clienttype"] = ou->getClientType();
+		}
+	}
+
 	map["nick"] = getNick();
 	map["tag"] = getTag();
 	map["ip"] = getIp();
-	OnlineUser* ou = getUser()->getOnlineUser();
-	if(ou) {
-		map["mynick"] =  ou->getClient().getMyNick();
-		map["hub"] = ou->getClient().getHubName();
-		map["hubip"] = ou->getClient().getHubUrl();
-		map["hubaddr"] = ou->getClient().getAddress();
-		map["realshare"] = Util::toString(ou->getRealBytesShared());
-		map["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
-		map["statedshare"] = Util::toString(getBytesShared());
-		map["statedshareformat"] = Util::formatBytes(getBytesShared());
-		map["cheatingdescription"] = ou->getCheatingString();
-		map["clienttype"] = ou->getClientType();
-	}
 }
 
 void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat) {
@@ -133,10 +135,10 @@ string OnlineUser::getReport()
 	report += "\r\nEmail:		" + getIdentity().getEmail();
 	report += "\r\nConnection:	" + getIdentity().getConnection();
 	report += "\r\nCommands:	" + unknownCommand;
-	report += "\r\nFilelist size:	" + (fileListSize != -1 ? Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )" : "N/A");
-	report += "\r\nListLen:		" + (listLength != -1 ? Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )" : "N/A");
+	report += "\r\nFilelist size:	" + ((fileListSize != -1) ? (string)(Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )") : "N/A");
+	report += "\r\nListLen:		" + (listLength != -1 ? (string)(Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )") : "N/A");
 	report += "\r\nStated Share:	" + Util::formatBytes(getIdentity().getBytesShared()) + "  (" + Util::formatExactSize(getIdentity().getBytesShared()) + " )";
-	report += "\r\nReal Share:	" + (realBytesShared > -1 ? Util::formatBytes(realBytesShared) + "  (" + Util::formatExactSize(realBytesShared) + " )" : "N/A");
+	report += "\r\nReal Share:	" + (realBytesShared > -1 ? (string)(Util::formatBytes(realBytesShared) + "  (" + Util::formatExactSize(realBytesShared) + " )") : "N/A");
 	report += "\r\nCheat status:	" + (cheatingString.empty() ? "N/A" : cheatingString);
 	report += "\r\nComment:		" + comment;
 	return report;

@@ -23,12 +23,15 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "Socket.h"
 #include "Semaphore.h"
 #include "Thread.h"
 #include "Speaker.h"
+#include "Util.h"
+#include "Socket.h"
 
 class InputStream;
+class Socket;
+class SocketException;
 
 class BufferedSocketListener {
 public:
@@ -42,7 +45,6 @@ public:
 	typedef X<5> ModeChange;
 	typedef X<6> TransmitDone;
 	typedef X<7> Failed;
-	typedef X<8> Shutdown;
 
 	virtual void on(Connecting) throw() { }
 	virtual void on(Connected) throw() { }
@@ -52,10 +54,9 @@ public:
 	virtual void on(ModeChange) throw() { }
 	virtual void on(TransmitDone) throw() { }
 	virtual void on(Failed, const string&) throw() { }
-	virtual void on(Shutdown) throw() { }
 };
 
-class BufferedSocket : public Speaker<BufferedSocketListener>, public Socket, public Thread
+class BufferedSocket : public Speaker<BufferedSocketListener>, public Thread
 {
 public:
 	enum {	
@@ -73,83 +74,77 @@ public:
 	};
 
 	/**
-	 * BufferedSocket factory
+	 * BufferedSocket factory, each BufferedSocket may only be used to create one connection
 	 * @param sep Line separator
-	 * @param esc A preceding backslash escapes any character, including the separator
 	 * @return An unconnected socket
 	 */
-	static BufferedSocket* getSocket(char sep) throw(SocketException) { 
+	static BufferedSocket* getSocket(char sep) throw() { 
 		return new BufferedSocket(sep); 
 	};
 
 	static void putSocket(BufferedSocket* aSock) { 
 		aSock->removeListeners(); 
-		aSock->Socket::disconnect();
 		aSock->shutdown();
 	};
 
-	virtual void shutdown() {
+	void shutdown() {
 		Lock l(cs);
-		addTask(SHUTDOWN);
+		addTask(SHUTDOWN, 0);
 	}
 
-	virtual void accept(const ServerSocket& srv) throw(SocketException) { 
-		Socket::accept(srv); 
-		Lock l(cs);
-		addTask(ACCEPTED);
-	}
+	void accept(const Socket& srv, bool secure) throw(SocketException, ThreadException);
+	void connect(const string& aAddress, short aPort, bool secure, bool proxy) throw(ThreadException);
 
-	virtual void disconnect() throw() {
+	void disconnect() throw() {
 		Lock l(cs);
-		addTask(DISCONNECT);
+		addTask(DISCONNECT, 0);
 	}
 	
-	/**
-	 * Sets data mode for aBytes bytes long. Must be called within an action method...
-	 */
+	/** Sets data mode for aBytes bytes long. Must be called within an action method... */
 	void setDataMode(int64_t aBytes = -1) {
-		dcdebug("SetDataMode\n");
 		mode = MODE_DATA;
 		dataBytes = aBytes;
 	}
-	/**
-	 * Should be called when data mode.
-	 */
+	/** Should be called when data mode. */
 	void setLineMode() {
-		dcdebug("SetLineMode\n");
 		dcassert(mode == MODE_DATA);
 		dcassert(dataBytes == -1);
 		mode = MODE_LINE;
 	}
 	int getMode() { return mode; };
-	
-	/**
-	 * Connect to aAddress / aPort
-	 * Note; this one doesn't actually throw, but it overrides one that does...
-	 */
-	virtual void connect(const string& aAddress, short aPort) throw(SocketException) {
-		Lock l(cs);
-		mode = MODE_LINE;
-		address = aAddress;
-		port = aPort;
-		addTask(CONNECT);
-	}
+	const string& getIp() { return sock ? sock->getIp() : Util::emptyString; }
+	const string getRemoteHost(const string& aIp) { return sock ? sock->getRemoteHost(aIp) : Util::emptyString; }
+	bool isConnected() { return sock && sock->isConnected(); }
 	
 	void write(const string& aData) throw(SocketException) { write(aData.data(), aData.length()); };
 	virtual void write(const char* aBuf, size_t aLen) throw();
 
-	/**
-	 * Send the file f over this socket.
-	 */
+	/** Send the file f over this socket. */
 	void transmitFile(InputStream* f) throw() {
 		Lock l(cs);
-		file = f;
-		addTask(SEND_FILE);
+		addTask(SEND_FILE, new SendFileInfo(f));
 	}
+
+	string getLocalIp() { return sock->getLocalIp(); }
 
 	GETSET(char, separator, Separator)
 private:
-	BufferedSocket(char aSeparator = 0x0a) throw(SocketException);
+
+	struct TaskData { 
+		virtual ~TaskData() { };
+	};
+	struct ConnectInfo : public TaskData {
+		ConnectInfo(string addr_, short port_, bool proxy_) : addr(addr_), port(port_), proxy(proxy_) { }
+		string addr;
+		short port;
+		bool proxy;
+	};
+	struct SendFileInfo : public TaskData {
+		SendFileInfo(InputStream* stream_) : stream(stream_) { }
+		InputStream* stream;
+	};
+
+	BufferedSocket(char aSeparator) throw();
 
 	// Dummy...
 	BufferedSocket(const BufferedSocket&);
@@ -157,58 +152,48 @@ private:
 
 	virtual ~BufferedSocket() throw();
 
-	bool fillBuffer(char* buf, int bufLen, u_int32_t timeout = 0) throw(SocketException);
-	
 	CriticalSection cs;
 
 	Semaphore taskSem;
-	vector<Tasks> tasks;
-	string address;
-	short port;
+	vector<pair<Tasks, TaskData*> > tasks;
+
 	int mode;
 	int64_t dataBytes;
 	
 	string line;
-	bool escaped;
-	u_int8_t* inbuf;
-	size_t inbufSize;
-	enum {BUFFERS = 2};
-	u_int8_t* outbuf[BUFFERS];
-	size_t outbufSize[BUFFERS];
-	size_t outbufPos[BUFFERS];
-	int curBuf;
+	vector<u_int8_t> inbuf;
+	vector<u_int8_t> writeBuf;
+	vector<u_int8_t> sendBuf;
 
-	InputStream* file;
-
-	virtual void create(int) throw(SocketException) { dcassert(0); }; // Sockets are created implicitly
-	virtual void bind(short) throw(SocketException) { dcassert(0); }; // Binding / UDP not supported...
+	Socket* sock;
 
 	virtual int run();
 
-	void threadConnect();
-	void threadRead();
-	bool threadSendFile();
+	void threadConnect(const string& aAddr, short aPort, bool proxy) throw(SocketException);
+	void threadRead() throw(SocketException);
+	void threadSendFile(InputStream* is) throw(Exception);
 	void threadSendData();
 	void threadDisconnect();
 	void threadWrite(const char* aBuffer, size_t aLen) throw(SocketException);
-	
+
 	void fail(const string& aError) {
-		Socket::disconnect();
+		sock->disconnect();
 		fire(BufferedSocketListener::Failed(), aError);
 	}
+
+	bool checkEvents();
+	void checkSocket();
 
 	/**
 	 * Shut down the socket and delete itself...no variables must be referenced after
 	 * calling threadShutDown, the thread function should exit as soon as possible
 	 */
 	void threadShutDown() {
-		fire(BufferedSocketListener::Shutdown());
-		removeListeners();
 		delete this;
 	}
 	
-	void addTask(Tasks task) {
-		tasks.push_back(task);
+	void addTask(Tasks task, TaskData* data) {
+		tasks.push_back(make_pair(task, data));
 		taskSem.signal();
 	}
 };

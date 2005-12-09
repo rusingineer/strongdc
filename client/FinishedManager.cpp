@@ -102,7 +102,7 @@ void ChangeEndian(void* pBuffer, int nBufSize)
 
 BOOL GetNextFrameHeader(HANDLE hFile, MP3FRAMEHEADER* pHeader, int nPassBytes)
 {
-	memset2(pHeader,0,sizeof(*pHeader));
+	memset(pHeader,0,sizeof(*pHeader));
 	if (nPassBytes > 0)
 		SetFilePointer(hFile,nPassBytes,NULL,FILE_CURRENT);
 
@@ -179,7 +179,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 			int nNextSearch = 0;
 
 			MP3FRAMEHEADER sFrameHeader;
-			memset2(&sFrameHeader,0,sizeof(sFrameHeader));
+			memset(&sFrameHeader,0,sizeof(sFrameHeader));
 
 			int nFrameBR = 0;
 			double dLength = 0; // total length of file
@@ -288,9 +288,9 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		CloseHandle(hFile);
 	
 		FinishedMP3Item *item = new FinishedMP3Item(
-				d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
-				d->getUserConnection()->getUser()->getLastHubName(),
-				d->getSize(),MPEGVer+" Verze "+Util::toString(m_nMPEGLayer), m_nSampleRate, m_nBitRate, m_enChannelMode,GET_TIME());
+			d->getTarget(), Util::toString(ClientManager::getInstance()->getNicks(d->getUserConnection()->getUser()->getCID())),
+			Util::toString(ClientManager::getInstance()->getHubNames(d->getUserConnection()->getUser()->getCID())),
+			d->getSize(),MPEGVer+" Verze "+Util::toString(m_nMPEGLayer), m_nSampleRate, m_nBitRate, m_enChannelMode,GET_TIME());
 
 		Lock l(cs);
 		MP3downloads.push_back(item);
@@ -302,8 +302,8 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 			FinishedItem *item = new FinishedItem(
-				d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
-				d->getUserConnection()->getUser()->getLastHubName(),
+				d->getTarget(), Util::toString(ClientManager::getInstance()->getNicks(d->getUserConnection()->getUser()->getCID())),
+				Util::toString(ClientManager::getInstance()->getHubNames(d->getUserConnection()->getUser()->getCID())),
 				d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH() ? d->getTTH()->toBase32() : Util::emptyString);
 			{
 				Lock l(cs);
@@ -329,8 +329,8 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 	}
 	if(!u->isSet(Upload::FLAG_TTH_LEAVES) && (!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS)) && u->getSize() == u->getFullSize()) {
 		FinishedItem *item = new FinishedItem(
-			u->getLocalFileName(), u->getUserConnection()->getUser()->getFirstNick(),
-			u->getUserConnection()->getUser()->getLastHubName(),
+			u->getLocalFileName(), Util::toString(ClientManager::getInstance()->getNicks(u->getUserConnection()->getUser()->getCID())),
+			Util::toString(ClientManager::getInstance()->getHubNames(u->getUserConnection()->getUser()->getCID())),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
 		{
 			Lock l(cs);

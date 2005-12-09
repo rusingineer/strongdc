@@ -66,9 +66,12 @@ void HttpConnection::downloadFile(const string& aUrl) {
 	if(!socket) {
 		socket = BufferedSocket::getSocket(0x0a);
 	}
-	socket->setNoproxy(true);
 	socket->addListener(this);
-	socket->connect(server, port);
+	try {
+		socket->connect(server, port, false, false);
+	} catch(const ThreadException& e) {
+		dcdebug("Thread exception: %s\n", e.getError().c_str());
+	}
 }
 
 void HttpConnection::on(BufferedSocketListener::Connected) throw() { 
@@ -105,10 +108,10 @@ void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		ok = true;
 	} else if(moved302 && Util::findSubString(aLine, "Location") != string::npos){
 		dcassert(socket);
-		socket->removeListener(this); 
-		socket->disconnect(); 
-			BufferedSocket::putSocket(socket);
-			socket = NULL;
+		socket->removeListener(this);
+		socket->disconnect();
+		BufferedSocket::putSocket(socket);
+		socket = NULL;
 
 		string location302 = aLine.substr(10, aLine.length() - 11);
 		// make sure we can also handle redirects with relative paths
@@ -139,18 +142,18 @@ void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 }
 
 void HttpConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
-		socket->removeListener(this);
-		BufferedSocket::putSocket(socket);
-		socket = NULL;
+	socket->removeListener(this);
+	BufferedSocket::putSocket(socket);
+	socket = NULL;
 	fire(HttpConnectionListener::Failed(), this, aLine + " (" + currentUrl + ")");
 }
 
 void HttpConnection::on(BufferedSocketListener::ModeChange) throw() {
-		socket->removeListener(this);
-		socket->disconnect();
-		BufferedSocket::putSocket(socket);
-		socket = NULL;
-		fire(HttpConnectionListener::Complete(), this, currentUrl); 
+	socket->removeListener(this);
+	socket->disconnect();
+	BufferedSocket::putSocket(socket);
+	socket = NULL;
+	fire(HttpConnectionListener::Complete(), this, currentUrl); 
 }
 void HttpConnection::on(BufferedSocketListener::Data, u_int8_t* aBuf, size_t aLen) throw() {
 	fire(HttpConnectionListener::Data(), this, aBuf, aLen);
