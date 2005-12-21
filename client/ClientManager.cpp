@@ -222,14 +222,6 @@ User::Ptr ClientManager::findUser(const CID& cid) throw() {
 	return NULL;
 }
 
-string ClientManager::getHubUrl(const User::Ptr& user) {
-	Lock l(cs);
-	OnlineIter i = onlineUsers.find(user->getCID());
-	if(i != onlineUsers.end())
-		return i->second->getClient().getHubUrl();
-	return Util::emptyString;
-}
-
 bool ClientManager::isOp(const User::Ptr& user, const string& aHubUrl) {
 	Lock l(cs);
 	pair<OnlineIter, OnlineIter> p = onlineUsers.equal_range(user->getCID());
@@ -429,6 +421,14 @@ void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc) throw() {
 	SearchManager::getInstance()->respond(adc);
 }
 
+Identity ClientManager::getIdentity(const User::Ptr& aUser) {
+	OnlineIter i = onlineUsers.find(aUser->getCID());
+	if(i != onlineUsers.end()) {
+		return i->second->getIdentity();
+	}
+	return Identity(aUser, Util::emptyString);
+}
+
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	Lock l(cs);
 
@@ -529,6 +529,7 @@ void ClientManager::on(Load, SimpleXML*) throw() {
 					p->setFirstNick(xml.getChildData());
 					users.insert(make_pair(p->getCID(), p));
 				}
+				xml.stepOut();
 			}
 		}
 	} catch(const Exception& e) {

@@ -216,7 +216,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
 			if(is->isForbidden && !getSentRaw()) {
 				char buf[128];
-				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName());
+				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
 				buf[127] = 0;
 				if(user->getOnlineUser())
 					user->getOnlineUser()->setCheat(buf, false);

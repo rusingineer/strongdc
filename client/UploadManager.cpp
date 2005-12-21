@@ -33,6 +33,7 @@
 #include "FavoriteManager.h"
 #include "QueueManager.h"
 #include "FinishedManager.h"
+#include "SharedFileStream.h"
 
 bool UploadManager::m_boFireball = false;
 bool UploadManager::m_boFileServer = false;
@@ -153,7 +154,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			return false;
 		}
 	} catch(const ShareException&) {
-		
 		// -- Added by RevConnect : Partial file sharing upload
 		if(aFile.compare(0, 4, "TTH/") == 0) {
 
@@ -195,22 +195,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 					} else {
 						aSource->disconnect();
 					}
-				} else if(aType == "tthl") {
-					// TTH Leaves...
-					MemoryInputStream* mis = ShareManager::getInstance()->getTree(target);
-					file = target;
-					if(mis == NULL) {
-						aSource->fileNotAvail();
-						return false;
-					}
-
-					size = mis->getSize();
-					aStartPos = 0;
-					is = mis;
-					leaves = true;
-					free = true;
 				}
-
 			// Share finished file
 			}else{
 				target = FinishedManager::getInstance()->getTarget(fileHash.toBase32());
@@ -233,20 +218,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							delete is;
 							return false;
 						}
-					} else if(aType == "tthl") {
-						// TTH Leaves...
-						MemoryInputStream* mis = ShareManager::getInstance()->getTree(target);
-						file = target;
-						if(mis == NULL) {
-							aSource->fileNotAvail();
-							return false;
-						}
-
-						size = mis->getSize();
-						aStartPos = 0;
-						is = mis;
-						leaves = true;
-						free = true;
 					}
 				}
 			}
@@ -308,8 +279,8 @@ ok:
 	dcassert(aSource->getUpload() == NULL);
 	aSource->setUpload(u);
 	uploads.push_back(u);
-	throttleSetup();
 
+	throttleSetup();
 	if(!aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
 			if(!aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
@@ -413,8 +384,8 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 		params["source"] = u->getFileName();
 		params["user"] = aSource->getUser()->getFirstNick();
 		params["userip"] = aSource->getRemoteIp();
-		params["hub"] = aSource->getUser()->getLastHubName();
-		params["hubip"] = aSource->getUser()->getLastHubAddress();
+//		params["hub"] = aSource->getUser()->getLastHubName();
+//		params["hubip"] = aSource->getUser()->getLastHubAddress();
 		params["size"] = Util::toString(u->getSize());
 		params["sizeshort"] = Util::formatBytes(u->getSize());
 		params["chunksize"] = Util::toString(u->getTotal());
@@ -699,7 +670,7 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 
 void UploadManager::throttleSetup() {
 	int num_transfers = (int)uploads.size();
-	mUploadLimit = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024);
+	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
 		if (mUploadLimit <= (SETTING(SOCKET_OUT_BUFFER) * 10 * num_transfers)) {

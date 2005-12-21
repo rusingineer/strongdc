@@ -493,7 +493,8 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					iCurrentShutdownTime = iSec;
 					ctrlStatus.SetText(9, _T(""));
 				} else {
-					ctrlStatus.SetText(9, Text::toT(' ' + Util::toTime(SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime))).c_str(), SBT_POPOUT);
+					int64_t timeLeft = SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime);
+					ctrlStatus.SetText(9, Text::toT(' ' + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
 						bDidShutDown = CZDCLib::shutDown(SETTING(SHUTDOWN_ACTION));

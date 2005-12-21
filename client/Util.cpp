@@ -505,21 +505,21 @@ string Util::getAwayMessage() {
 string Util::formatBytes(int64_t aBytes) {
 	char buf[128];
 	if(aBytes < 1024) {
-		_snprintf(buf, 127, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
+		sprintf(buf, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
 	} else if(aBytes < 1048576) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
 	} else if(aBytes < 1073741824) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1048576.0), CSTRING(MB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1048576.0), CSTRING(MB));
 	} else if(aBytes < (int64_t)1099511627776) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1073741824.0), CSTRING(GB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1073741824.0), CSTRING(GB));
 	} else if(aBytes < (int64_t)1125899906842624) {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1099511627776.0), CSTRING(TB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1099511627776.0), CSTRING(TB));
 	} else if(aBytes < (int64_t)1152921504606846976)  {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1125899906842624.0), CSTRING(PB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1125899906842624.0), CSTRING(PB));
 	} else {
-		_snprintf(buf, 127, "%.02f %s", (double)aBytes/(1152921504606846976.0), CSTRING(EB));
+		sprintf(buf, "%.02f %s", (double)aBytes/(1152921504606846976.0), CSTRING(EB));
 	}
-	buf[127] = 0;
+
 	return buf;
 }
 
@@ -636,37 +636,6 @@ static wchar_t utf8ToLC(ccp& str) {
 	}
 
 	return Text::toLower(c);
-}
-wstring::size_type Util::findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type pos) throw() {
-	if(aString.length() < pos)
-		return static_cast<wstring::size_type>(wstring::npos);
-
-	if(aString.length() - pos < aSubString.length())
-		return static_cast<wstring::size_type>(wstring::npos);
-
-	if(aSubString.empty())
-		return 0;
-	
-	wstring::size_type j = 0;
-	wstring::size_type end = aString.length() - aSubString.length() + 1;
-    
-	for(; pos < end; ++pos) {
-		if(CharUpper((LPWSTR)aString[pos]) == CharUpper((LPWSTR)aSubString[j])) {
-			wstring::size_type tmp = pos+1;
-			bool found = true;
-			for(++j; j < aSubString.length(); ++j, ++tmp) {
-				if(CharUpper((LPWSTR)aString[tmp]) != CharUpper((LPWSTR)aSubString[j])) {
-					j = 0;
-					found = false;
-					break;
-				}
-			}
-
-			if(found)
-				return pos;
-		}
-	}
-	return static_cast<wstring::size_type>(wstring::npos);
 }
 
 string::size_type Util::findSubString(const string& aString, const string& aSubString, string::size_type start) throw() {

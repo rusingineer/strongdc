@@ -255,14 +255,7 @@ public:
 			c.addParam(*i);
 		send(c);
 	}
-	void inf(bool withToken) { 
-		AdcCommand c(AdcCommand::CMD_INF);
-		c.addParam("CI", SETTING(CLIENT_ID));
-		if(withToken) {
-			c.addParam("TO", getToken());
-		}
-		send(c);
-	}
+	void inf(bool withToken);
 	void get(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_GET).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
 	void snd(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_SND).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
 	void ntd() { send(AdcCommand(AdcCommand::CMD_NTD)); }

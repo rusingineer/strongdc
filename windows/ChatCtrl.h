@@ -34,6 +34,7 @@
 #endif
 
 #include <AtlCrack.h>
+
 class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
@@ -47,9 +48,10 @@ protected:
 	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen;
 public:
-	LRESULT OnRButtonDown(POINT pt);
 	ChatCtrl();
 	virtual ~ChatCtrl();
+
+	LRESULT OnRButtonDown(POINT pt);
 
 	bool HitNick(POINT p, CAtlString *sNick, int *piBegin = NULL, int *piEnd = NULL);
 	bool HitIP(POINT p, CAtlString *sIP, int *piBegin = NULL, int *piEnd = NULL);
@@ -61,7 +63,7 @@ public:
 	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
 	void AppendText(const User::Ptr& u, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
 	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), int iAuthorLen = 0, bool isMe = false, bool bUseEmo = true);
-	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
+	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
 	void EndRedrawAppendTextOnly();
 
 	void GoToEnd();

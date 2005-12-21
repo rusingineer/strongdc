@@ -21,12 +21,13 @@
 
 #include "User.h"
 #include "Client.h"
+#include "StringTokenizer.h"
 #include "ClientManager.h"
 #include "DebugManager.h"
 #include "ClientProfileManager.h"
 #include "QueueManager.h"
 
-#include "../pme-1.0.4/pme.h"
+#include "pme.h"
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), identity(ptr, client_.getHubUrl()), client(&client_) { 
 	unCacheClientInfo(); 
@@ -34,8 +35,6 @@ OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), ident
 }
 
 OnlineUser::~OnlineUser() throw() {
-	user->setLastSavedHubName(getClient().getHubName());
-	user->setLastSavedHubAddress(getClient().getIpPort());
 	user->setOnlineUser(NULL);
 };
 
@@ -64,6 +63,16 @@ void Identity::getParams(StringMap& map, const string& prefix) const {
 	map["nick"] = getNick();
 	map["tag"] = getTag();
 	map["ip"] = getIp();
+}
+
+const bool Identity::supports(const string& name) const {
+	string su = get("SU");
+	StringTokenizer<string> st(su, ',');
+	for(StringIter i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
+		if(*i == name)
+			return true;
+	}
+	return false;
 }
 
 void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat) {
@@ -215,12 +224,12 @@ void OnlineUser::updateClientType() {
 			clientType += " Version mis-match";
 			cheatingString += " Version mis-match";
 			badClient = true;
-			ClientManager::getInstance()->UserUpdated(getUser());
+			ClientManager::getInstance()->updateUser(getUser());
 			setCheat(cheatingString, true);
 			return;
 		}
 		if(badClient) setCheat(cheatingString, true);
-		ClientManager::getInstance()->UserUpdated(getUser());
+		ClientManager::getInstance()->updateUser(getUser());
 		if(cp.getRawToSend() > 0) {
 			getUser()->sendRawCommand(cp.getRawToSend());
 		}
@@ -229,7 +238,7 @@ void OnlineUser::updateClientType() {
 	setClientType("Unknown");
 	cheatingString = Util::emptyString;
 	badClient = false;
-	ClientManager::getInstance()->UserUpdated(getUser());
+	ClientManager::getInstance()->updateUser(getUser());
 }
 
 bool OnlineUser::matchProfile(const string& aString, const string& aProfile) {
@@ -262,7 +271,7 @@ bool OnlineUser::fileListDisconnected() {
 
 	if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
-		ClientManager::getInstance()->UserUpdated(getUser());
+		ClientManager::getInstance()->updateUser(getUser());
 		getUser()->sendRawCommand(SETTING(DISCONNECT_RAW));
 		return true;
 	}
@@ -277,7 +286,7 @@ bool OnlineUser::connectionTimeout() {
 
 	if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
-		ClientManager::getInstance()->UserUpdated(getUser());
+		ClientManager::getInstance()->updateUser(getUser());
 		try {
 			QueueManager::getInstance()->removeTestSUR(getUser());
 		} catch(...) {
@@ -286,22 +295,6 @@ bool OnlineUser::connectionTimeout() {
 		return true;
 	}
 	return false;
-}
-
-const string& User::getLastHubName() const {
-	if(getOnlineUser()) {
-		return getOnlineUser()->getClient().getHubName();
-	} else {
-		return lastSavedHubName;
-	}
-}
-
-string User::getLastHubAddress() const {
-	if(getOnlineUser()) {
-		return getOnlineUser()->getClient().getIpPort();
-	} else {
-		return lastSavedHubAddress;
-	}
 }
 
 /**

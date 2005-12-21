@@ -36,7 +36,7 @@
 #include "DirectoryListing.h"
 
 #include "FileChunksInfo.h"
-#include "../pme-1.0.4/pme.h"
+#include "pme.h"
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
 #include "UploadManager.h"
@@ -88,7 +88,7 @@ namespace {
 		StringTokenizer<string> t(freeBlocks, ' ');
 		StringList& sl = t.getTokens();
 
-		v.reserve(sl.size() / 2);
+		v.reserve(sl.size());
 
 		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i) {
 			if(!i->empty()) {
@@ -499,7 +499,6 @@ QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTI
 	ClientManager::getInstance()->addListener(this);
 
 	File::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
-	ensurePrivilege();
 }
 
 QueueManager::~QueueManager() throw() { 
@@ -1052,14 +1051,14 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 	Lock l(cs);
 
 	// First check PFS's...
-	/*PfsIter pi = pfsQueue.find(aUser->getCID());
+	PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
 		Download* d = new Download();
 		d->setFlag(Download::FLAG_PARTIAL_LIST);
 		d->setFlag(Download::FLAG_UTF8);
 		d->setSource(pi->second);
 		return d;
-	}*/
+	}
 
 	QueueItem* q = NULL;
 	bool nextChunk = !aTarget.empty();
@@ -1118,7 +1117,7 @@ again:
 
 	Download* d = new Download(q, aUser, source);
 	
-	if((d->getSize() != -1) && d->getTTH() && !d->isSet(Download::FLAG_PARTIAL)) {
+	if((d->getSize() != -1) && d->getTTH()) {
 		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
 			q->setHasTree(true);
@@ -1585,14 +1584,14 @@ void QueueManager::saveQueue() throw() {
 
 						if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 
-						/*if(!s->getUser()->getCID().isZero()) {
+						if(!s->getUser()->getCID().isZero()) {
 							s->getUser()->setFlag(User::SAVE_NICK);
 							f.write(STRINGLEN("\t\t<Source CID=\""));
 							f.write(s->getUser()->getCID().toBase32());
-						} else {*/
+						} else {
 							f.write(STRINGLEN("\t\t<Source Nick=\""));
 							f.write(CHECKESCAPE(s->getUser()->getFirstNick()));
-						//}
+						}
 						if(!s->getPath().empty() && (!s->getUser()->isSet(User::TTH_GET) || !qi->getTTH()) ) {
 							f.write(STRINGLEN("\" Path=\""));
 							f.write(CHECKESCAPE(s->getPath()));

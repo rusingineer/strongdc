@@ -18,7 +18,6 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
-#include "ConnectionManager.h"
 
 #include "Socket.h"
 
@@ -190,8 +189,9 @@ void Socket::socksConnect(const string& aAddr, short aPort, u_int32_t timeout) t
 	connStr.push_back(pport[1]);
 
 	writeAll(&connStr[0], connStr.size(), timeLeft(start, timeout));
-	// We assume we'll get a ipv4 address back...therefore, 10 bytes...if not, things
-	// will break, but hey...noone's perfect (and I'm tired...)...
+
+	// We assume we'll get a ipv4 address back...therefore, 10 bytes...
+	/// @todo add support for ipv6
 	if(readAll(&connStr[0], 10, timeLeft(start, timeout)) != 10) {
 		throw SocketException(STRING(SOCKS_FAILED));
 	}
@@ -206,10 +206,11 @@ void Socket::socksConnect(const string& aAddr, short aPort, u_int32_t timeout) t
 	sock_addr.s_addr = *((unsigned long*)&connStr[4]);
 	setIp(inet_ntoa(sock_addr));
 
-	setBlocking(oldblock);
+	if(oldblock)
+		setBlocking(oldblock);
 }
 
-void Socket::socksAuth(u_int32_t timeout) {
+void Socket::socksAuth(u_int32_t timeout) throw(SocketException) {
 	vector<u_int8_t> connStr;
 
 	u_int32_t start = GET_TICK();
@@ -266,7 +267,7 @@ void Socket::socksAuth(u_int32_t timeout) {
 
 int Socket::getSocketOptInt(int option) throw(SocketException) {
 	int val;
-	int len = sizeof(val);
+	socklen_t len = sizeof(val);
 	check(::getsockopt(sock, SOL_SOCKET, option, (char*)&val, &len));
 	return val;
 }
@@ -558,17 +559,17 @@ void Socket::socksUpdated() {
 	}
 }
 
-void Socket::shutdown() {
+void Socket::shutdown() throw() {
 	if(sock != INVALID_SOCKET)
 		::shutdown(sock, 1);
 }
 
-void Socket::close() {
+void Socket::close() throw() {
 	if(sock != INVALID_SOCKET) {
 #ifdef _WIN32
-		closesocket(sock);
+		::closesocket(sock);
 #else
-		close(sock);
+		::close(sock);
 #endif
 		connected = false;
 		sock = INVALID_SOCKET;

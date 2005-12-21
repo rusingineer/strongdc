@@ -906,7 +906,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			}
 			if(!i->statusString.empty()) {
 				i->statusString += _T(" ");
-			}		
+			}
+			buf[stringSize-1] = NULL;
 			i->statusString += buf;
 			i->updateMask |= ItemInfo::MASK_STATUS | ItemInfo::MASK_TIMELEFT | ItemInfo::MASK_SPEED | ItemInfo::MASK_RATIO;
 

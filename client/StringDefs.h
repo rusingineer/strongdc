@@ -154,6 +154,7 @@ enum Strings { // @DontAdd
 	ENTER_NICK, // "Please enter a nickname in the settings dialog!"
 	ENTER_SEARCH_STRING, // "Enter search string"
 	ERRORS, // "Errors"
+	ERROR_CREATING_HASH_DATA_FILE, // "Error creating hash data file: "
 	EXACT_SHARED, // "Exact Share"
 	EXACT_SIZE, // "Exact size"
 	EXECUTABLE, // "Executable"

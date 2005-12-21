@@ -93,14 +93,14 @@ void SSLSocketFactory::loadCertificates() throw() {
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if(SSL_CTX_load_verify_locations(clientContext, (SETTING(SSL_TRUSTED_CERTIFICATES_PATH) + Text::fromT(data.cFileName)).c_str(), NULL) != SSL_SUCCESS) {
-				LogManager::getInstance()->message("Failed to load trusted certificates", true);
+				LogManager::getInstance()->message("Failed to load trusted certificates from " + Text::fromT(data.cFileName), true);
 			}
 		} while(FindNextFile(hFind, &data));
 
 		FindClose(hFind);
 	}
 #else
-#error todo
+//#error todo
 #endif
 	certsLoaded = true;
 }
@@ -192,7 +192,6 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 					}
 					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
 					char errbuf[80];
-					dcdebug("%s\n", Util::translateError(::WSAGetLastError()).c_str());
 					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
 				}
 		}

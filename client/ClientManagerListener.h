@@ -37,7 +37,7 @@ public:
 
 	/** User online in at least one hub */
 	virtual void on(UserConnected, const User::Ptr&) throw() { }
-	virtual void on(UserUpdated, const User::Ptr&) throw() { }
+	virtual void on(UserUpdated, const OnlineUser&) throw() { }
 	/** User offline in all hubs */
 	virtual void on(UserDisconnected, const User::Ptr&) throw() { }
 	virtual void on(IncomingSearch, const string&, const string&) throw() { }

@@ -37,7 +37,7 @@
 #include "TimerManager.h"
 #include "AdcCommand.h"
 #include "ClientManager.h"
-#include "../pme-1.0.4/pme.h"
+#include "pme.h"
 
 class SearchManager;
 

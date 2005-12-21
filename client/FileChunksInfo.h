@@ -16,38 +16,45 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Terms:
+ *     Chunk  : file bytes range
+ *     Block  : TTH level-10 blocks range
+ *     Running: a chunk status of asking slot or downloading, occupied
+ *     Waiting: a chunk not running
+ *     Pending: running chunk without any progress
+ *     Split  : when no waiting chunk available, a running chunk is split 
+ *              into two chunks
+ *     PFS    : partial file sharing
+ */
+
 #pragma once
 
 #include "Pointer.h"
 #include "CriticalSection.h"
-#include "File.h"
 #include "MerkleTree.h"
 
+// minimum file size to be PFS : 20M
 #define PARTIAL_SHARE_MIN_SIZE 20971520
+
+// it's used when a source's download speed is unknown
 #define DEFAULT_SPEED 5120
 
+// PFS purpose
 typedef vector<u_int16_t> PartsInfo;
-typedef map<u_int16_t, u_int16_t> BlockMap;
 
-// For SetFileValidData() - antifrag purpose
-extern void ensurePrivilege();
+// ...
+typedef map<u_int16_t, u_int16_t> BlockMap;
 
 class Download;
 
-class ChunkDoneException : public Exception {
-public:
-	ChunkDoneException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
-	virtual ~ChunkDoneException() { }; 
-	int64_t pos;
-};
 
-class FileDoneException : public Exception {
-public:
-	FileDoneException(const string& aError, int64_t _pos) throw() : Exception(aError), pos(_pos) { };
-	virtual ~FileDoneException() { }; 
-	int64_t pos;
-};
-
+/**
+ * Hold basic information of a chunk
+ * Features: 
+ *     . download speed awareness when chunk split
+ *     . overlapped
+ */
 class Chunk
 {
 private:
@@ -56,8 +63,8 @@ private:
 	typedef map<int64_t, Chunk*> Map;
 	typedef Map::iterator  Iter;
 
-	Chunk(int64_t _start, int64_t _end) 
-		: download(NULL), pos(_start), end(_end), overlappedCount(0)
+	Chunk(int64_t startOffset, int64_t endOffset) 
+		: download(NULL), pos(startOffset), end(endOffset), overlappedCount(0)
 	{}
 
 	Download* download;
@@ -66,7 +73,7 @@ private:
 	int64_t size;
 
 	// allow overlapped download the same pending chunk 
-	// when all running chunks are unbreakable
+	// when all running chunks could not be split
 	size_t overlappedCount;
 };
 
@@ -136,7 +143,11 @@ public:
      */
 	void putChunk(int64_t);
 
-	void setDownload(int64_t, Download*, bool);
+	/** 
+	 * Specify a Download to a running chunk
+	 */
+	 void setDownload(int64_t, Download*, bool);
+
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "
      */
@@ -189,26 +200,56 @@ public:
 	/**
      * Is specified chunk start verified? If true, the chunk len is set.
 	 */
-	bool isVerified(int64_t startPos, int64_t& len){
-		if(len <= 0) return false;
+	bool isVerified(int64_t startPos, int64_t& len);
 
-		Lock l(cs);
+	/**
+	 * Debug
+	 */
 
-		BlockMap::iterator i  = verifiedBlocks.begin();
-		for(; i != verifiedBlocks.end(); i++)
-		{
-			int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
-			int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
-			
-			second = min(second, iFileSize);
+	void selfCheck()
+	{
+#ifdef _DEBUG
+		// check running
+		for(Chunk::Iter i = running.begin(); i != running.end();){
+			dcassert(i->first <= i->second->pos);
+			dcassert(i->second->pos <= i->second->end);
 
-			if(first <= startPos && startPos < second){
-				len = min(len, second - startPos);
-				return true;
+			int64_t tmp = i->second->end;
+			i++;
+
+			if(i != running.end()){
+				dcassert(tmp <= i->first);
 			}
 		}
+		// check waiting
+		for(Chunk::Iter i = waiting.begin(); i != waiting.end();){
+			dcassert(i->first == i->second->pos);
+			dcassert(i->second->pos <= i->second->end);
 
-		return false;
+			for(Chunk::Iter j = running.begin(); j != running.end(); j++){
+				Chunk* c1 = i->second;
+				int64_t s1 = i->first;
+				Chunk* c2 = j->second;
+				int64_t s2 = j->first;
+
+				dcassert(i->first != j->first);
+
+				if(s1 > s2)
+					dcassert(s1 >= c2->end);
+				if(s1 < s2){
+					dcassert(c1->end <= s2);
+				}
+			}			
+
+			int64_t tmp = i->second->end;
+			i++;
+
+			if(i != waiting.end()){
+				dcassert(tmp <= i->first);
+			}
+
+		}
+#endif
 	}
 	
 	static vector<Ptr> vecAllFileChunksInfo;
@@ -231,204 +272,8 @@ public:
 	CriticalSection cs;
 
 private:
-};
-
-/******************************************************************************/
-
-struct SharedFileHandle : CriticalSection
-{
-    HANDLE 				handle;
-    int					ref_cnt;
-
-	SharedFileHandle(const string& name, bool shareDelete = false);
-
-	~SharedFileHandle()
-    {
-        CloseHandle(handle);
-    }
-};
-
-# pragma warning(disable: 4511) // copy constructor could not be generated
-# pragma warning(disable: 4512) // assignment operator could not be generated
-
-class SharedFileStream : public IOStream
-{
-
-public:
-
-    typedef map<string, SharedFileHandle*> SharedFileHandleMap;
-
-    SharedFileStream(const string& name, int64_t _pos, int64_t size = 0, bool shareDelete = false);
-
-    virtual ~SharedFileStream()
-    {
-		Lock l(critical_section);
-
-		shared_handle_ptr->ref_cnt--;
-		
-		if(!shared_handle_ptr->ref_cnt)
-		{
-            for(SharedFileHandleMap::iterator i = file_handle_pool.begin();
-            							i != file_handle_pool.end();
-                                        i++)
-			{
-				if(i->second == shared_handle_ptr)
-				{
-                	file_handle_pool.erase(i);
-					delete shared_handle_ptr;
-                    return;
-                }
-            }
-
-			_ASSERT(0);
-        }
-    }
-
-	virtual size_t write(const void* buf, size_t len) throw(Exception)
-    {
-		Lock l(*shared_handle_ptr);
-
-		DWORD x = (DWORD)(pos >> 32);
-		DWORD ret = ::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
-
-		if(ret == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-			throw FileException(Util::translateError(GetLastError()));
-
-		if(!::WriteFile(shared_handle_ptr->handle, buf, len, &x, NULL)) {
-			throw FileException(Util::translateError(GetLastError()));
-		}
-
-        pos += len;
-		return len;
-    }
-
-	virtual size_t read(void* buf, size_t& len) throw(Exception) {
-		Lock l(*shared_handle_ptr);
-
-		DWORD x = (DWORD)(pos >> 32);
-		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(pos & 0xffffffff), (PLONG)&x, FILE_BEGIN);
-
-		if(!::ReadFile(shared_handle_ptr->handle, buf, len, &x, NULL)) {
-			throw(FileException(Util::translateError(GetLastError())));
-		}
-		len = x;
-
-        pos += len;
-
-		return x;
-	}
-
-	virtual size_t flush() throw(Exception) 
-	{
-/*		
-		Lock l(*shared_handle_ptr);
-
-		if(!FlushFileBuffers(shared_handle_ptr->handle))
-			throw FileException(Util::translateError(GetLastError()));
-*/
-		return 0;
-	}
-
-	virtual void setPos(int64_t _pos) 
-	{ pos = _pos; }
-
-	virtual int64_t getSize() throw() {
-		DWORD x;
-		DWORD l = ::GetFileSize(shared_handle_ptr->handle, &x);
-
-		if( (l == INVALID_FILE_SIZE) && (GetLastError() != NO_ERROR))
-			return -1;
-
-		return (int64_t)l | ((int64_t)x)<<32;
-	}
-
-    static CriticalSection critical_section;
-	static SharedFileHandleMap file_handle_pool;
-
-private:
-	SharedFileHandle* shared_handle_ptr;
-	int64_t pos;
-
-
-};
-
-/******************************************************************************/
-
-// Note: should be used before BufferedOutputStream
-template<bool managed>
-class ChunkOutputStream : public OutputStream
-{
-
-public:
-
-	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _chunk) 
-		: os(_os), chunk(_chunk), pos(_chunk)
-    {
-		fileChunks = FileChunksInfo::Get(name);
-		if(fileChunks == (FileChunksInfo*)NULL)
-        {
-			throw FileException("No chunks data");
-		}
-    }
-
-	virtual ~ChunkOutputStream()
-    {
-		if(managed) delete os;
-    }
-
-	virtual size_t write(const void* buf, size_t len) throw(Exception)
-	{
-		if(chunk == -1) return 0;
-		if(len == 0) return 0;
-
-    	int iRet = fileChunks->addChunkPos(chunk, pos, len);
-
-		if(iRet == FileChunksInfo::CHUNK_LOST){
-			chunk = -1;
-			throw ChunkDoneException(Util::emptyString, pos);
-		}
-
-		pos += len;
-
-		if(len > 0){
-			size_t size = 0;
-			
-			try{
-				size = os->write(buf, len);
-			}catch(Exception e){
-				fileChunks->abandonChunk(chunk);
-				throw e;
-			}
-
-			if(size != len)
-				throw FileException("Internal Error");
-		}
-
-		if (iRet == FileChunksInfo::CHUNK_OVER){
-			os->flush();
-			chunk = -1;
-			throw ChunkDoneException(Util::emptyString, pos);
-
-		}else if(iRet == FileChunksInfo::FILE_OVER){
-   			os->flush();
-			chunk = -1;
-			throw FileDoneException(Util::emptyString, pos);
-		}
-
-        return len;
-    }
-
-	virtual size_t flush() throw(Exception) 
-	{
-		return os->flush();
-	}
-
-private:
-
-	FileChunksInfo::Ptr fileChunks;
-	OutputStream* os;
-	int64_t chunk;
-	int64_t pos;
+	// for debug purpose
+	void dumpVerifiedBlocks();
 };
 
 string GetPartsString(const PartsInfo& partsInfo);

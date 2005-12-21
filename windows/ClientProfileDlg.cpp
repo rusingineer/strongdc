@@ -5,7 +5,7 @@
 #include "WinUtil.h"
 
 #include "ClientProfileDlg.h"
-#include "../pme-1.0.4/pme.h"
+#include "../client/pme.h"
 
 #define GET_TEXT(id, var) \
 	GetDlgItemText(id, buf, 1024); \

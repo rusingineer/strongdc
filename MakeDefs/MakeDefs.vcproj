@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="MakeDefs"
 	ProjectGUID="{AEF82786-9DA2-4CDF-8602-02643CAFC727}"
+	RootNamespace="MakeDefs"
 	>
 	<Platforms>
 		<Platform
@@ -42,7 +43,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"

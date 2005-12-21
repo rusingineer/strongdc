@@ -276,7 +276,8 @@ void NmdcHub::onLine(const char* aLine) throw() {
 						return;
 					}
 				} else {
-					if(strcmp(seeker.c_str() + 4, getMyNick().c_str()) == 0) {
+					// Hub:seeker
+					if(Util::stricmp(seeker.c_str() + 4, getMyNick().c_str()) == 0) {
 						return;
 					}
 				}
@@ -284,13 +285,16 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				{
 					Lock l(cs);
 					u_int32_t tick = GET_TICK();
+
 					seekers.push_back(make_pair(seeker, tick));
+
 					// First, check if it's a flooder
         			for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
-						dcdebug("Comparing %d to %d\n", seeker, fi->first);
-						if(fi->first == seeker)
+						if(fi->first == seeker) {
 							return;
-					}	
+						}	
+					}
+
 					int count = 0;
         			for(FloodIter fi = seekers.begin(); fi != seekers.end(); ++fi) {
 						if(fi->first == seeker)
@@ -310,6 +314,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 						}
 					}
 				}
+
 				int a;
 				if(temp[0] == 'F') {
 					a = SearchManager::SIZE_DONTCARE;
@@ -426,10 +431,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		    	     return;
 	    
 				OnlineUser& u = getUser(fromNmdc(aLine));
-				if(u.getIdentity().getNick() == getMyIdentity().getNick()) {
+/*				if(u.getIdentity().getNick() == getMyIdentity().getNick()) {
 					User::Ptr me = getMyIdentity().getUser();
 					me->setOnlineUser(&u);
-				}
+				}*/
 
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
@@ -512,7 +517,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				}
 
 				if(state == STATE_MYINFO) {
-					if(_stricmp(u.getUser()->getFirstNick().c_str(), getMyNick().c_str()) == 0) {
+					if(_stricmp(u.getIdentity().getNick().c_str(), getMyNick().c_str()) == 0) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -881,15 +886,23 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					if((temp = strchr(temp1+6, '$')) == NULL || temp[1] == NULL) return;
 	
 					temp1 += 6; *(temp-1) = NULL; temp += 1;
-        			if(temp1[0] == NULL || temp[0] == NULL) return;
 
-					OnlineUser* from = findUser(fromNmdc(temp1));
+					char* temp2;
+					string fromNick = Util::emptyString;
+        			if(temp1[0] == NULL || temp[0] == NULL || (temp2 = strchr((char *)temp+1, '>')) == NULL) return;
+
+					temp2[0] = NULL;
+					fromNick = fromNmdc(temp+1);
+					temp2 += 2;
+
+					OnlineUser* replyTo = findUser(fromNmdc(temp1));
+					OnlineUser* from = findUser(fromNick);
 					OnlineUser* to = findUser(getMyNick());	
 									
-					if(from == NULL || to == NULL) {
-						fire(ClientListener::Message(), this, from, Util::validateMessage(fromNmdc(temp), true).c_str());
+					if(replyTo == NULL || from == NULL || to == NULL) {
+						fire(ClientListener::Message(), this, from, Util::validateMessage(fromNmdc(temp2), true).c_str());
 					} else {
-						fire(ClientListener::PrivateMessage(), this, *from, *to, *from, Util::validateMessage(fromNmdc(temp), true));
+						fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, Util::validateMessage(fromNmdc(temp2), true));
 					}
 				}
     			return;
@@ -1057,10 +1070,9 @@ void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) {
 	send("$To: " + toNmdc(aUser.getIdentity().getNick()) + " From: " + toNmdc(getMyNick()) + " $" + toNmdc(Util::validateMessage("<" + getMyNick() + "> " + aMessage, false)) + "|");
 	// Emulate a returning message...
 	Lock l(cs);
-	string mynick = getMyNick();
-	NickIter i = users.find(mynick);
+	NickIter i = users.find(getMyNick());
 	if(i != users.end())
-		fire(ClientListener::PrivateMessage(), this, *i->second, aUser, *i->second, '<' + mynick + "> " + aMessage);
+		fire(ClientListener::PrivateMessage(), this, *i->second, aUser, *i->second, aMessage);
 }
 
 // TimerManagerListener

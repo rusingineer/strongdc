@@ -73,7 +73,7 @@ void HashManager::hashDone(const string& aFileName, u_int32_t aTimeStamp, const 
 	}
 	if(speed > 0) {
 		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn + " (" + Util::formatBytes(speed) + "/s)", true);
-	} else if(speed <= 0) {
+	} else {
 		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn, true);
 	}
 }
@@ -87,7 +87,7 @@ void HashManager::HashStore::addFile(const string& aFileName, u_int32_t aTimeSta
 
 	FileInfoList& fileList = fileIndex[fpath];
 
-	FileInfoIter j = find_if(fileList.begin(), fileList.end(), FileInfo::StringComp(fname));
+	FileInfoIter j = find(fileList.begin(), fileList.end(), fname);
 	if(j != fileList.end()) {
 		fileList.erase(j);
 	}
@@ -173,7 +173,7 @@ bool HashManager::HashStore::checkTTH(const string& aFileName, int64_t aSize, u_
 	string fpath = Text::toLower(Util::getFilePath(aFileName));
 	DirIter i = fileIndex.find(fpath);
 	if(i != fileIndex.end()) {
-		FileInfoIter j = find_if(i->second.begin(), i->second.end(), FileInfo::StringComp(fname));
+		FileInfoIter j = find(i->second.begin(), i->second.end(), fname);
 		if(j != i->second.end()) {
 			FileInfo& fi = *j;
 			TreeIter ti = treeIndex.find(fi.getRoot());
@@ -194,7 +194,7 @@ const TTHValue* HashManager::HashStore::getTTH(const string& aFileName) {
 
 	DirIter i = fileIndex.find(fpath);
 	if(i != fileIndex.end()) {
-		FileInfoIter j = find_if(i->second.begin(), i->second.end(), FileInfo::StringComp(fname));
+		FileInfoIter j = find(i->second.begin(), i->second.end(), fname);
 		if(j != i->second.end()) {
 			j->setUsed(true);
 			return &(j->getRoot());
@@ -449,8 +449,8 @@ void HashManager::HashStore::createDataFile(const string& name) {
 		int64_t start = sizeof(start);
 		dat.write(&start, sizeof(start));
 
-	} catch(const FileException&) {
-		/** @todo All further hashing will unfortunately be wasted(!) */
+	} catch(const FileException& e) {
+		LogManager::getInstance()->message(STRING(ERROR_CREATING_HASH_DATA_FILE) + e.getError(), true);
 	}
 }
 

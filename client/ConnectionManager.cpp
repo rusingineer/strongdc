@@ -580,7 +580,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		string address = aSource->getRemoteIp();
 		if(ou->getIdentity().getIp() != address) {
 			ou->getIdentity().setIp(address);
-			ClientManager::getInstance()->UserUpdated(aSource->getUser());
+			ClientManager::getInstance()->updateUser(aSource->getUser());
 		}
 	}
 
@@ -610,7 +610,7 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
 			aSource->getUser()->setFlag(User::DCPLUSPLUS);
-			ClientManager::getInstance()->UserUpdated(aSource->getUser());
+			ClientManager::getInstance()->updateUser(aSource->getUser());
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {

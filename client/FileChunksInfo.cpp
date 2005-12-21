@@ -22,18 +22,10 @@
 
 #include "DownloadManager.h"
 #include "FileChunksInfo.h"
-
-#include "SettingsManager.h"
-#include "Winioctl.h"
-
-CriticalSection SharedFileStream::critical_section;
-SharedFileStream::SharedFileHandleMap SharedFileStream::file_handle_pool;
+#include "SharedFileStream.h"
 
 vector<FileChunksInfo::Ptr> FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;
-
-typedef BOOL (__stdcall *SetFileValidDataFunc) (HANDLE, LONGLONG); 
-static SetFileValidDataFunc setFileValidData = NULL;
 
 // NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
 enum { MIN_BLOCK_SIZE = 65536 };
@@ -377,6 +369,7 @@ void FileChunksInfo::putChunk(int64_t start)
 			}
 
 			running.erase(i);
+			selfCheck();
 			return;
 		}
 
@@ -393,14 +386,18 @@ string FileChunksInfo::getFreeChunksString()
 	{
 		Lock l(cs);
 
+		selfCheck();
+
 		Chunk::Map tmpMap = waiting;
 		copy(running.begin(), running.end(), inserter(tmpMap, tmpMap.end())); // sort
 
 		tmp.reserve(tmpMap.size() * 2);
 
 		for(Chunk::Iter i = tmpMap.begin(); i != tmpMap.end(); i++){
-			tmp.push_back(i->second->pos);
-			tmp.push_back(i->second->end);
+			if(i->second->pos < i->second->end){
+				tmp.push_back(i->second->pos);
+				tmp.push_back(i->second->end);
+			}
 		}
 	}
 
@@ -440,6 +437,16 @@ string FileChunksInfo::getVerifiedBlocksString()
 	return ret;
 }
 
+inline void FileChunksInfo::dumpVerifiedBlocks()
+{
+#ifdef _DEBUG
+	dcdebug("verifiedBlocks: (%d)\n", verifiedBlocks.size());
+
+	BlockMap::iterator i = verifiedBlocks.begin();
+	for(;i != verifiedBlocks.end(); i++)
+		dcdebug("   %hu, %hu\n", i->first, i->second);
+#endif
+}
 
 bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 {
@@ -507,8 +514,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
 	if(CorruptedBlocks.empty()){
-		dcdebug("VerifiedBlocks size = %d\n", verifiedBlocks.size());
-
+		dumpVerifiedBlocks();
 
 		dcassert(verifiedBlocks.size() == 1 && 
 			    verifiedBlocks.begin()->first == 0 &&
@@ -565,123 +571,6 @@ void FileChunksInfo::markVerifiedBlock(u_int16_t start, u_int16_t end)
 
 }
 
-SharedFileStream::SharedFileStream(const string& name, int64_t _pos, int64_t size, bool shareDelete) 
-    : pos(_pos)
-{
-	{
-		Lock l(critical_section);
-
-		if(file_handle_pool.count(name) > 0){
-
-	        shared_handle_ptr = file_handle_pool[name];
-			shared_handle_ptr->ref_cnt++;
-
-			return;
-
-		}else{
-
-	        shared_handle_ptr = new SharedFileHandle(name, shareDelete);
-	        shared_handle_ptr->ref_cnt = 1;
-			file_handle_pool[name] = shared_handle_ptr;
-
-		}
-	}
-
-	if((size > 0) && BOOLSETTING(ANTI_FRAG)){
-		Lock l(*shared_handle_ptr);
-
-		DWORD x = (DWORD)(size >> 32);
-		::SetFilePointer(shared_handle_ptr->handle, (DWORD)(size & 0xffffffff), (PLONG)&x, FILE_BEGIN);
-		::SetEndOfFile(shared_handle_ptr->handle);
-
-		if(setFileValidData != NULL){
-			if(!setFileValidData(shared_handle_ptr->handle, size))
-				dcdebug("SetFileValidData error %d\n", GetLastError());
-		}
-    }
-
-}
-
-void ensurePrivilege()
-{
-	HANDLE			 hToken = NULL;
-	TOKEN_PRIVILEGES privilege;
-	LUID			 luid;
-	DWORD			 dwRet;
-	OSVERSIONINFO    osVersionInfo;
-
-	typedef BOOL (__stdcall *OpenProcessTokenFunc) (HANDLE, DWORD, PHANDLE);
-	typedef BOOL (__stdcall *LookupPrivilegeValueFunc) (LPCTSTR, LPCTSTR, PLUID);
-	typedef BOOL (__stdcall *AdjustTokenPrivilegesFunc) (HANDLE, BOOL, PTOKEN_PRIVILEGES, DWORD, PTOKEN_PRIVILEGES, PDWORD);
-
-	OpenProcessTokenFunc openProcessToken = NULL;
-	LookupPrivilegeValueFunc lookupPrivilegeValue = NULL;
-	AdjustTokenPrivilegesFunc adjustTokenPrivileges = NULL;
-
-	osVersionInfo.dwOSVersionInfoSize = sizeof(osVersionInfo);
-	dwRet = GetVersionEx(&osVersionInfo);
-
-	if(!dwRet){
-		dcdebug("GetVersionEx error : %d\n", GetLastError());
-		return;
-	}
-
-	if(osVersionInfo.dwMajorVersion < 5) return;
-	if(osVersionInfo.dwMajorVersion == 5 && osVersionInfo.dwMinorVersion < 1) return;
-
-	HMODULE hModule;
-
-	hModule = GetModuleHandle(_T("advapi32"));
-    if(hModule == NULL) return;
-
-    openProcessToken = (OpenProcessTokenFunc)GetProcAddress(hModule, "OpenProcessToken");
-
-#ifdef  UNICODE
-    lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValueW");
-#else
-	lookupPrivilegeValue = (LookupPrivilegeValueFunc)GetProcAddress(hModule, "LookupPrivilegeValueA");
-#endif
-    adjustTokenPrivileges = (AdjustTokenPrivilegesFunc)GetProcAddress(hModule, "AdjustTokenPrivileges");
-
-	if(openProcessToken == NULL || lookupPrivilegeValue == NULL || adjustTokenPrivileges == NULL)
-		return;
-
-	dcdebug("Os version %d.%d\n", osVersionInfo.dwMajorVersion, osVersionInfo.dwMinorVersion);
-
-	dwRet = openProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken);
-
-	if(!dwRet){
-		dcdebug("OpenProcessToken error : %d\n", GetLastError());
-		return;
-	}
-
-	dwRet = lookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &luid);
-	if(!dwRet){
-		dcdebug("LookupPrivilegeValue error : %d\n", GetLastError());
-		goto cleanup;
-	}
-
-	privilege.PrivilegeCount = 1;
-	privilege.Privileges[0].Luid = luid;
-	privilege.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-	dwRet = adjustTokenPrivileges(hToken, FALSE, &privilege, 0, NULL, NULL);
-
-	if(!dwRet){
-		dcdebug("AdjustTokenPrivileges error : %d\n", GetLastError());
-		goto cleanup;
-	}
-
-	hModule = GetModuleHandle(_T("kernel32"));
-    if(hModule)
-        setFileValidData = (SetFileValidDataFunc)GetProcAddress(hModule, "SetFileValidData");
-
-	dcdebug("ensurePrivilege done.\n");
-cleanup:
-	CloseHandle(hToken);
-
-}
-
 void FileChunksInfo::abandonChunk(int64_t start)
 {
 	Lock l(cs);
@@ -711,6 +600,8 @@ void FileChunksInfo::abandonChunk(int64_t start)
 			chunk->pos = start;
 		}
 	}
+	selfCheck();
+
 }
 
 bool FileChunksInfo::isSource(const PartsInfo& partsInfo)
@@ -745,10 +636,24 @@ void FileChunksInfo::getPartialInfo(PartsInfo& partialInfo){
 	}
 }
 
-// TODO: speed
-int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
+/**
+ * return first chunk size after split
+ */
+
+int64_t splitChunk(int64_t chunkSize, int64_t chunkSpeed, int64_t estimatedSpeed)
+{
+	if(chunkSpeed <= 0) chunkSpeed = 1;
+	if(estimatedSpeed <= 0) estimatedSpeed = DEFAULT_SPEED;
+
+	if(chunkSpeed * 200 < estimatedSpeed) return 0;
+	if(chunkSpeed > estimatedSpeed * 200) return chunkSize;
+
+	return chunkSize * chunkSpeed / (chunkSpeed + estimatedSpeed);
+}
+
+int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t estimatedSpeed){
 	if(partialInfo.empty()){
-		return getChunk(_speed);
+		return getChunk(estimatedSpeed);
 	}
 
 	Lock l(cs);
@@ -760,7 +665,7 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 	for(PartsInfo::const_iterator i = partialInfo.begin(); i != partialInfo.end(); i++)
 		posArray.push_back(min(iFileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
 
-	// Check free blocks
+	// Check waiting chunks
 	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++){
 		Chunk* chunk = i->second;
 		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
@@ -775,9 +680,9 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 					waiting.insert(make_pair(e, new Chunk(e, tmp)));
 
 				}else if(chunk->end != e){
-					waiting.erase(i);
 					chunk->pos = e;
-					waiting.insert(make_pair(e, chunk));
+					waiting.erase(i);
+					waiting.insert(make_pair(chunk->pos, chunk));
 				}else if(chunk->pos != b){
 					chunk->end = b;
 				}else{
@@ -785,12 +690,13 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 				}
 
 				running.insert(make_pair(b, new Chunk(b, e)));
+				selfCheck();
 				return b;
 			}
 		}
 	}
 
-	// Check running blocks
+	// Check running chunks
 	Chunk::Iter maxBlockIter = running.end();
 	int64_t maxBlockStart = 0;
     int64_t maxBlockEnd   = 0;
@@ -800,26 +706,23 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 		int64_t e = i->second->end;
 		
 		if(e - b < MIN_BLOCK_SIZE * 3) continue;
-
-        b = b + (e - b) / 2;
-		b = b - (b % MIN_BLOCK_SIZE);
+        b = b + (e - b) / 2; //@todo speed
 
 		dcassert(b > i->second->pos);
 
 		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
-			if(*j <= b  && *(j+1) > b ){
-				int64_t e = min(i->second->end, e);
+			int64_t bb = max(*j, b);
+			int64_t ee = min(*(j+1), e);
 
-				if(e - b > maxBlockEnd - maxBlockStart){
-					maxBlockStart = b;
-					maxBlockEnd   = e;
-					maxBlockIter  = i;
-				}
+			if(ee - bb > maxBlockEnd - maxBlockStart){
+				maxBlockStart = bb;
+				maxBlockEnd   = ee;
+				maxBlockIter  = i;
 			}
 		}
 	}
 
-	if(maxBlockEnd > 0){
+	if(maxBlockEnd - maxBlockStart >= minChunkSize){
 		int64_t tmp = maxBlockIter->second->end;
 		maxBlockIter->second->end = maxBlockStart;
 
@@ -829,6 +732,7 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 			waiting.insert(make_pair(maxBlockEnd, new Chunk(maxBlockEnd, tmp)));
 		}
 
+		selfCheck();
 		return maxBlockStart;
 	}
 
@@ -836,33 +740,26 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t _speed){
 
 }
 
-SharedFileHandle::SharedFileHandle(const string& name, bool shareDelete)
-{
-	DWORD dwShareMode = FILE_SHARE_READ;
-	DWORD dwDesiredAccess = GENERIC_READ;
+bool FileChunksInfo::isVerified(int64_t startPos, int64_t& len){
+	if(len <= 0) return false;
 
-	if(shareDelete){
-		dwShareMode |= (FILE_SHARE_DELETE | FILE_SHARE_WRITE);
-	}else{
-		dwDesiredAccess |= GENERIC_WRITE;
+	Lock l(cs);
+
+	BlockMap::iterator i  = verifiedBlocks.begin();
+	for(; i != verifiedBlocks.end(); i++)
+	{
+		int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
+		int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
+		
+		second = min(second, iFileSize);
+
+		if(first <= startPos && startPos < second){
+			len = min(len, second - startPos);
+			return true;
+		}
 	}
 
-	handle = ::CreateFile(Text::utf8ToWide(name).c_str(), 
-					dwDesiredAccess, 
-					dwShareMode, 
-					NULL, 
-					OPEN_ALWAYS, 
-					0,
-					NULL);
-	
-	if(handle == INVALID_HANDLE_VALUE) {
-		throw FileException(Util::translateError(GetLastError()));
-	}
-
-	if(!SETTING(ANTI_FRAG)){
-		DWORD bytesReturned;
-		DeviceIoControl(handle, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &bytesReturned, NULL);
-	}
+	return false;
 }
 
 string GetPartsString(const PartsInfo& partsInfo)

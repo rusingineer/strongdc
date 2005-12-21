@@ -38,7 +38,7 @@ class ServerSocket : public Speaker<ServerSocketListener> {
 public:
 	ServerSocket() throw() { };
 
-	void listen(short port);
+	void listen(short port) throw(SocketException);
 	void disconnect() throw() { socket.disconnect(); }
 
 	/** This is called by windows whenever an "FD_ACCEPT" is sent...doesn't work with unix... */
@@ -48,7 +48,6 @@ public:
 	
 	socket_t getSock() { return socket.sock; }
 	operator const Socket&() const { return socket; }
-
 private:
 	ServerSocket(const ServerSocket&);
 	ServerSocket& operator=(const ServerSocket&);

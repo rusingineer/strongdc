@@ -37,7 +37,7 @@ Client::Client(const string& hubURL, char separator_, bool secure_) :
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
-	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
+	//getMyIdentity().setUser(ClientManager::getInstance()->getMe());
 }
 
 Client::~Client() throw() {
@@ -48,6 +48,7 @@ Client::~Client() throw() {
 
 void Client::reloadSettings() {
 	availableBytes = 0;
+	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
 	string speedDescription = Util::emptyString;

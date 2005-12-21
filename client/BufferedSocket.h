@@ -183,6 +183,7 @@ private:
 
 	bool checkEvents();
 	void checkSocket();
+	bool checkDisconnect();
 
 	/**
 	 * Shut down the socket and delete itself...no variables must be referenced after

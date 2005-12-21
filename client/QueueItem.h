@@ -31,6 +31,7 @@ class Download;
 #include "MerkleTree.h"
 #include "FileChunksInfo.h"
 #include "HashManager.h"
+#include "SettingsManager.h"
 
 class QueueItem : public Flags, public FastAlloc<QueueItem> {
 public:
