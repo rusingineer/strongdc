@@ -115,14 +115,21 @@ public:
 			bufPos = left;
 		}
 
+		size_t old = verified;
 		checkTrees();
-		return s->write(b, len);
+		size_t ret = s->write(b, len);
+		
+		// mark verified block
+		if(multiSourceChecking && (verified > old)) {
+			flush();
+			fileChunks->markVerifiedBlock((u_int16_t)old, (u_int16_t)verified);
+		}
+		return ret;
 	}
 
 	int64_t verifiedBytes() {
 		return min(real.getFileSize(), (int64_t)(cur.getBlockSize() * cur.getLeaves().size()));
 	}
-
 private:
 	OutputStream* s;
 	const TreeType& real;
@@ -142,12 +149,6 @@ private:
 			{
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
-
-			if(multiSourceChecking) {
-				//flush();
-				fileChunks->markVerifiedBlock((u_int16_t)verified, (u_int16_t)verified + 1);
-			}
-			
 			verified++;
 		}
 	}

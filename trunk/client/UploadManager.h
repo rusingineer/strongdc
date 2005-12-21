@@ -104,7 +104,7 @@ class UploadQueueItem : public FastAlloc<UploadQueueItem> {
 			switch(col) {
 				case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
 				case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
-				case COLUMN_NICK: return Util::stricmp(a->User->getFirstNick(), b->User->getFirstNick());
+				case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
 				case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
 				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 				case COLUMN_SIZE: return compare(a->size, b->size);

@@ -68,6 +68,7 @@ void startup(void (*f)(void*, const string&), void* p) {
 	DebugManager::newInstance();
 	ClientProfileManager::newInstance();	
 	PopupManager::newInstance();
+
 	SettingsManager::getInstance()->load();	
 
 	if(!SETTING(LANGUAGE_FILE).empty()) {
@@ -100,10 +101,12 @@ void startup(void (*f)(void*, const string&), void* p) {
 }
 
 void shutdown() {
-	ConnectionManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();
+	ConnectionManager::getInstance()->shutdown();
 
 	TimerManager::getInstance()->removeListeners();
+
+	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();
 
 	WebServerManager::deleteInstance();
@@ -119,8 +122,8 @@ void shutdown() {
 	QueueManager::deleteInstance();
 	ConnectionManager::deleteInstance();
 	SearchManager::deleteInstance();
-	ClientManager::deleteInstance();
 	FavoriteManager::deleteInstance();
+	ClientManager::deleteInstance();
 	HashManager::deleteInstance();
 	LogManager::deleteInstance();
 	SettingsManager::deleteInstance();

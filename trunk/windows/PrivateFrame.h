@@ -221,15 +221,13 @@ private:
 
 	void updateTitle();
 	
-	LPCSTR sMyNick;
-
 	TStringList prevCommands;
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const User::Ptr& aUser) throw() {
-		if(aUser == replyTo)
+	virtual void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
+		if(aUser.getUser() == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {

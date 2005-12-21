@@ -151,7 +151,7 @@ string SearchResult::getFileName() const {
 	return getFile().substr(i + 1);
 }
 
-void SearchManager::listen() throw(SocketException) {
+void SearchManager::listen() throw(Exception) {
 	short lastPort = (short)SETTING(UDP_PORT);
 
 	if(lastPort == 0)
@@ -414,7 +414,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 
 void SearchManager::respond(const AdcCommand& adc) {
 	// Filter own searches
-	if(adc.getFrom().toBase32() == SETTING(CLIENT_ID))
+	if(adc.getFrom() == ClientManager::getInstance()->getMe()->getCID())
 		return;
 
 	User::Ptr p = ClientManager::getInstance()->findUser(adc.getFrom());

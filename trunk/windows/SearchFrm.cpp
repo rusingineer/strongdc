@@ -30,7 +30,7 @@
 #include "../client/TimerManager.h"
 #include "../client/SearchManager.h"
 
-#include "../pme-1.0.4/pme.h"
+#include "../client/pme.h"
 
 TStringList SearchFrame::lastSearches;
 

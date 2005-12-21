@@ -113,14 +113,14 @@ void PrivateFrame::gotMessage(const User::Ptr& from, const User::Ptr& to, const 
 		p = new PrivateFrame(user);
 		frames[user] = p;
 		//p->readLog();
-		p->addLine(user, aMessage);
+		p->addLine(from, aMessage);
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
 				p->sendMessage(Text::toT(Util::getAwayMessage()));
 		}
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick() /* @todo: + " - " + replyTo->getLastHubName()*/).c_str(), CTSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -133,7 +133,7 @@ void PrivateFrame::gotMessage(const User::Ptr& from, const User::Ptr& to, const 
 	} else {
 		if(!myPM) {
 			if(BOOLSETTING(POPUP_PM)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/).c_str(), CTSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -304,12 +304,12 @@ void PrivateFrame::onEnter()
 				onGetList(0,0,0,bTmp);
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
-				params["user"] = replyTo->getFirstNick();
-				params["hub"] = replyTo->getClientName();
-				/** @todo params["mynick"] = user->getClientNick(); 
-				params["mycid"] = user->getClientCID().toBase32(); */
+				params["hub"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+				params["hubaddr"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 				params["cid"] = replyTo->getCID().toBase32(); 
-				//params["hubaddr"] = user->getClientAddressPort();
+				params["user"] = replyTo->getFirstNick();
+				params["mycid"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
+
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
@@ -372,25 +372,9 @@ void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine, CHARFORM
 	CRect r;
 	ctrlClient.GetClientRect(r);
 
-	tstring sTmp = aLine;
-	tstring sAuthor = _T("");
-	int iAuthorLen = 0;
-	bool isMe = false;
-	if(aLine[0] == _T('<')) {
-		string::size_type i = aLine.find(_T(">"));
-		if (i != string::npos) {
-     		sAuthor = aLine.substr(1, i-1);
-     		iAuthorLen = i;
-			if (_tcsncmp(_T(" /me "), aLine.substr(i+1, 5).c_str(), 5) == 0 ) {
-				isMe = true;
-				sTmp = _T("* ") + sAuthor + aLine.substr(i+5);
-			}
-		}
-	}
-
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
-		params["message"] = Text::fromT(sTmp);
+		params["message"] = Text::fromT(aLine);
 		params["user"] = replyTo->getFirstNick();
 		params["hub"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 		params["hubaddr"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
@@ -399,17 +383,19 @@ void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine, CHARFORM
 		LOG(LogManager::PM, params);
 	}
 
+	LPCSTR sMyNick;
 	if(replyTo->isOnline()) {
 		sMyNick = replyTo->getClient()->getMyNick().c_str();
 	} else {
 		sMyNick = SETTING(NICK).c_str();
 	}
 
+	bool myMess = (from == ClientManager::getInstance()->getMe());
+
 	if(BOOLSETTING(TIME_STAMPS)) {
-		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe);
-		
+		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf);
 	} else {
-		ctrlClient.AppendText(Text::toT(sMyNick).c_str(), _T(""), sTmp.c_str(), cf, sAuthor.c_str(), iAuthorLen, isMe);
+		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, _T(""), aLine.c_str(), cf);
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
@@ -554,9 +540,9 @@ void PrivateFrame::updateTitle() {
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
+				addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
 			} else {
-				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()) + _T("] ***"));
+				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"));
 			}
 		}
 		isoffline = false;
@@ -564,9 +550,9 @@ void PrivateFrame::updateTitle() {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()) + _T("] ***"), WinUtil::m_ChatTextServer);
+			addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
 		} else {
-			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getLastHubName()) + _T("] ***"));
+			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"));
 		}
 		isoffline = true;
 	}
@@ -700,13 +686,14 @@ LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 }
 
 void PrivateFrame::readLog() {
-	StringMap params;	
-	params["user"] = replyTo->getFirstNick();	
-	params["hub"] = replyTo->getClientName();
-	//params["mynick"] = user->getClientNick();	
-	//params["mycid"] = user->getClientCID().toBase32();	
-	params["cid"] = replyTo->getCID().toBase32();	
-	//params["hubaddr"] = user->getClientAddressPort();	
+	StringMap params;
+	
+	params["hub"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+	params["hubaddr"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+	params["cid"] = replyTo->getCID().toBase32(); 
+	params["user"] = replyTo->getFirstNick();
+	params["mycid"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
+		
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 
 	try {
@@ -743,12 +730,12 @@ void PrivateFrame::readLog() {
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
-	params["user"] = replyTo->getFirstNick();
-	params["hub"] = replyTo->getClientName();
-/* @todo	params["mynick"] = user->getClientNick(); 
-	params["mycid"] = user->getClientCID().toBase32(); */
+	params["hub"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+	params["hubaddr"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	params["cid"] = replyTo->getCID().toBase32(); 
-//	params["hubaddr"] = user->getClientAddressPort();
+	params["user"] = replyTo->getFirstNick();
+	params["mycid"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
+
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 	if(Util::fileExists(file)) {
 		ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);

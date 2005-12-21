@@ -218,6 +218,7 @@ public:
 		return downloads.size();
 	}
 	
+	// the following functions were added to help download throttle
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
 	size_t throttleGetSlice();

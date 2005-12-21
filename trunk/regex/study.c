@@ -2,47 +2,42 @@
 *      Perl-Compatible Regular Expressions       *
 *************************************************/
 
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
+/*
+This is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language. See
+the file Tech.Notes for some information on the internals.
 
-                       Written by Philip Hazel
-           Copyright (c) 1997-2005 University of Cambridge
+Written by: Philip Hazel <ph10@cam.ac.uk>
+
+           Copyright (c) 1997-2003 University of Cambridge
 
 -----------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Permission is granted to anyone to use this software for any purpose on any
+computer system, and to redistribute it freely, subject to the following
+restrictions:
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
+1. This software is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
+2. The origin of this software must not be misrepresented, either by
+   explicit claim or by omission.
 
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
+3. Altered versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+4. If PCRE is embedded in any software that is released under the GNU
+   General Purpose Licence (GPL), then the terms of that licence shall
+   supersede any condition above with which it is incompatible.
 -----------------------------------------------------------------------------
 */
 
 
-/* This module contains the external function pcre_study(), along with local
-supporting functions. */
+/* Include the internals header, which itself includes Standard C headers plus
+the external pcre header. */
 
+#include "internal.h"
 
-#include "pcre_internal.h"
 
 
 /*************************************************
@@ -62,7 +57,7 @@ Returns:        nothing
 */
 
 static void
-set_bit(uschar *start_bits, unsigned int c, BOOL caseless, compile_data *cd)
+set_bit(uschar *start_bits, int c, BOOL caseless, compile_data *cd)
 {
 start_bits[c/8] |= (1 << (c&7));
 if (caseless && (cd->ctypes[c] & ctype_letter) != 0)
@@ -128,7 +123,7 @@ do
       /* Skip over callout */
 
       case OP_CALLOUT:
-      tcode += 2 + 2*LINK_SIZE;
+      tcode += 2;
       break;
 
       /* Skip over extended extraction bracket number */
@@ -191,10 +186,11 @@ do
       /* At least one single char sets the bit and stops */
 
       case OP_EXACT:       /* Fall through */
-      tcode += 2;
+      tcode++;
 
-      case OP_CHAR:
-      case OP_CHARNC:
+      case OP_CHARS:       /* Fall through */
+      tcode++;
+
       case OP_PLUS:
       case OP_MINPLUS:
       set_bit(start_bits, tcode[1], caseless, cd);
@@ -407,9 +403,8 @@ pcre_study(const pcre *external_re, int options, const char **errorptr)
 uschar start_bits[32];
 pcre_extra *extra;
 pcre_study_data *study;
-const uschar *tables;
 const real_pcre *re = (const real_pcre *)external_re;
-uschar *code = (uschar *)re + re->name_table_offset +
+uschar *code = (uschar *)re + sizeof(real_pcre) +
   (re->name_count * re->name_entry_size);
 compile_data compile_block;
 
@@ -434,17 +429,12 @@ at present. */
 if ((re->options & (PCRE_ANCHORED|PCRE_FIRSTSET|PCRE_STARTLINE)) != 0)
   return NULL;
 
-/* Set the character tables in the block that is passed around */
+/* Set the character tables in the block which is passed around */
 
-tables = re->tables;
-if (tables == NULL)
-  (void)pcre_fullinfo(external_re, NULL, PCRE_INFO_DEFAULT_TABLES,
-  (void *)(&tables));
-
-compile_block.lcc = tables + lcc_offset;
-compile_block.fcc = tables + fcc_offset;
-compile_block.cbits = tables + cbits_offset;
-compile_block.ctypes = tables + ctypes_offset;
+compile_block.lcc = re->tables + lcc_offset;
+compile_block.fcc = re->tables + fcc_offset;
+compile_block.cbits = re->tables + cbits_offset;
+compile_block.ctypes = re->tables + ctypes_offset;
 
 /* See if we can find a fixed set of initial characters for the pattern. */
 
@@ -459,7 +449,7 @@ pcre_study_data is fixed. We nevertheless save it in a field for returning via
 the pcre_fullinfo() function so that if it becomes variable in the future, we
 don't have to change that code. */
 
-extra = (pcre_extra *)(pcre_malloc)
+extra = (pcre_extra *)malloc
   (sizeof(pcre_extra) + sizeof(pcre_study_data));
 
 if (extra == NULL)
@@ -479,4 +469,4 @@ memcpy(study->start_bits, start_bits, sizeof(start_bits));
 return extra;
 }
 
-/* End of pcre_study.c */
+/* End of study.c */

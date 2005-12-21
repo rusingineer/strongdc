@@ -50,9 +50,9 @@
 #endif
 
 #undef memcpy
-#define memcpy(d,s,n)    memcpy2(d,s,n)
 #undef memset
-#define memset(s,c,n)	memset2(s,c,n)
+#define memcpy memcpy2
+#define memset memset2
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -68,7 +68,6 @@
 #include <set>
 #include <deque>
 #include <list>
-#include <iterator>
 #include <utility>
 #include <functional>
 
@@ -110,6 +109,7 @@ using namespace _STL;
 #elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
 #include <ext/hash_map>
 #include <ext/hash_set>
+#include <ext/functional>
 using namespace std;
 using namespace __gnu_cxx;
 

@@ -27,12 +27,11 @@
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 
-#include "../client/ClientManager.h"
 #include "../client/FavoriteManager.h"
 #include "../client/File.h"
 
 class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_USERS>, public StaticFrame<UsersFrame, ResourceManager::FAVORITE_USERS, IDC_FAVUSERS>,
-	private FavoriteManagerListener, private ClientManagerListener, public UserInfoBaseHandler<UsersFrame>, private SettingsManagerListener {
+	private FavoriteManagerListener, public UserInfoBaseHandler<UsersFrame>, private SettingsManagerListener {
 public:
 	
 	UsersFrame() : closed(false), startup(true) { };
@@ -47,7 +46,6 @@ public:
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_USERS, LVN_COLUMNCLICK, ctrlUsers.onColumnClick)
 		NOTIFY_HANDLER(IDC_USERS, LVN_ITEMCHANGED, onItemChanged)
-		NOTIFY_HANDLER(IDC_USERS, NM_CUSTOMDRAW, onCustomDraw)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
@@ -65,20 +63,12 @@ public:
 	LRESULT onRemove(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onEdit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
-	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 
-	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-		if(wParam == USER_UPDATED) {
-			FavoriteUser* u = (FavoriteUser*)lParam;
-			updateUser(*u);
-			delete u;
-		}
-		return 0;
-	}
+	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlUsers.SetFocus();
@@ -93,7 +83,6 @@ private:
 	enum {
 		COLUMN_FIRST,
 		COLUMN_NICK = COLUMN_FIRST,
-		COLUMN_STATUS,
 		COLUMN_HUB,
 		COLUMN_SEEN,
 		COLUMN_DESCRIPTION,
@@ -144,26 +133,12 @@ private:
 	// FavoriteManagerListener
 	virtual void on(UserAdded, const FavoriteUser& aUser) throw() { addUser(aUser); }
 	virtual void on(UserRemoved, const FavoriteUser& aUser) throw() { removeUser(aUser); }
+	virtual void on(StatusChanged, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, (WPARAM)USER_UPDATED, (LPARAM)new UserInfoBase(aUser)); }
 
-	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {
-		FavoriteUser::List users = FavoriteManager::getInstance()->getFavoriteUsers();
-		FavoriteUser::Iter i = find(users.begin(), users.end(), aUser);
-		if(i != users.end()) {
-			PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM)new FavoriteUser(*i));
-		}
-	}
-	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
-		FavoriteUser::List users = FavoriteManager::getInstance()->getFavoriteUsers();
-		FavoriteUser::Iter i = find(users.begin(), users.end(), aUser);
-		if(i != users.end()) {
-			PostMessage(WM_SPEAKER, USER_UPDATED, (LPARAM)new FavoriteUser(*i));
-		}
-	}
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void addUser(const FavoriteUser& aUser);
-	void updateUser(const FavoriteUser& aUser);
+	void updateUser(const User::Ptr& aUser);
 	void removeUser(const FavoriteUser& aUser);
 };
 

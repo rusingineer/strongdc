@@ -878,11 +878,11 @@ int ShareManager::run() {
 			}
 			refreshDirs = false;
 		}
+		sharedSize = getShareSize();
 	}
 
 	Thread::safeDec(refreshing);
 	
-	sharedSize = getShareSize();
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);
@@ -908,7 +908,7 @@ void ShareManager::generateXmlList() {
 				CalcOutputStream<TTFilter<1024*1024*1024>, false> newXmlFile(&bzipper);
 
 				newXmlFile.write(SimpleXML::utf8Header);
-				newXmlFile.write("<FileListing Version=\"1\" CID=\"" + SETTING(CLIENT_ID) + "\" Base=\"/\" Generator=\"DC++ " DCVERSIONSTRING "\">\r\n");
+				newXmlFile.write("<FileListing Version=\"1\" CID=\"" + ClientManager::getInstance()->getMe()->getCID().toBase32() + "\" Base=\"/\" Generator=\"DC++ " DCVERSIONSTRING "\">\r\n");
 				for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
 					i->second->toXml(newXmlFile, indent, tmp2, true);
 				}
@@ -991,7 +991,7 @@ MemoryInputStream* ShareManager::generatePartialList(const string& dir, bool rec
 
 	string xml = SimpleXML::utf8Header;
 	string tmp;
-	xml += "<FileListing Version=\"1\" CID=\"" + SETTING(CLIENT_ID) + "\" Base=\"" + SimpleXML::escape(dir, tmp, false) + "\" Generator=\"" APPNAME " " VERSIONSTRING "\">\r\n";
+	xml += "<FileListing Version=\"1\" CID=\"" + ClientManager::getInstance()->getMe()->getCID().toBase32() + "\" Base=\"" + SimpleXML::escape(dir, tmp, false) + "\" Generator=\"DC++ " DCVERSIONSTRING "\">\r\n";
 	StringOutputStream sos(xml);
 	string indent = "\t";
 
@@ -1351,7 +1351,6 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 	}
 
 	for(Directory::MapIter l = directories.begin(); (l != directories.end()) && (aResults.size() < maxResults); ++l) {
-		if(l->second != NULL)
 			l->second->search(aResults, *cur, aSearchType, aSize, aFileType, aClient, maxResults);
 	}
 }
@@ -1361,14 +1360,24 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 	if(aFileType == SearchManager::TYPE_TTH) {
 		if(aString.compare(0, 4, "TTH:") == 0) {
 			TTHValue tth(aString.substr(4));
-			HashFileIter i = tthIndex.find(&tth);
+/*			HashFileIter i = tthIndex.find(&tth);
 			if(i != tthIndex.end()) {
 				SearchResult* sr = new SearchResult(aClient, SearchResult::TYPE_FILE, 
 					i->second->getSize(), i->second->getParent()->getFullName() + i->second->getName(), 
 					&i->second->getTTH(), true);
 
-				results.push_back(sr);
+				results.push_back(sr);*/
+			pair< HashFileIter, HashFileIter> iter = tthIndex.equal_range(&tth);
+			for(; iter.first != iter.second; ++(iter.first) ){
+
+				results.push_back( new SearchResult(aClient, SearchResult::TYPE_FILE, 
+					iter.first->second->getSize(),
+					iter.first->second->getParent()->getFullName() + iter.first->second->getName(), 
+					&iter.first->second->getTTH(), true));
+
 				ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
+				if(ShareManager::getInstance()->getHits() == maxResults)
+					break;
 			}
 		}
 		return;

@@ -45,7 +45,7 @@ typedef SOCKET socket_t;
 
 typedef int socket_t;
 const int INVALID_SOCKET = -1;
-
+#define SOCKET_ERROR -1
 #endif
 
 class SocketException : public Exception {
@@ -183,18 +183,17 @@ public:
 	static const string getRemoteHost(const string& aIp);
 	socket_t sock;
 
+protected:
+	int type;
+	bool connected;
+	bool blocking;
+
 	class Stats {
 	public:
 		int64_t totalDown;
 		int64_t totalUp;
 	};
 	static Stats stats;
-
-protected:
-
-	int type;
-	bool connected;
-	bool blocking;
 
 	static string udpServer;
 	static short udpPort;

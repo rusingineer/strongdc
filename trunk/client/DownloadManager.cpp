@@ -33,12 +33,11 @@
 #include "File.h"
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
-#include "FileChunksInfo.h"
-#include "Client.h"
+#include "SharedFileStream.h"
+#include "ChunkOutputStream.h"
 #include "UploadManager.h"
 
 #include <limits>
-
 
 // some strange mac definition
 #ifdef ff
@@ -532,7 +531,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		// Already finished?
 		aSource->setDownload(NULL);
 		removeDownload(d);
-		QueueManager::getInstance()->putDownload(d, true);
+		QueueManager::getInstance()->putDownload(d, false);
 		removeConnection(aSource);
 		return false;
 	}
@@ -866,8 +865,8 @@ void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	params["target"] = d->getTarget();
 	params["user"] = aSource->getUser()->getFirstNick();
 	params["userip"] = aSource->getRemoteIp();
-	params["hub"] = aSource->getUser()->getLastHubName();
-	params["hubip"] = aSource->getUser()->getLastHubAddress();
+//	params["hub"] = aSource->getUser()->getLastHubName();
+//	params["hubip"] = aSource->getUser()->getLastHubAddress();
 	params["size"] = Util::toString(d->getSize());
 	params["sizeshort"] = Util::formatBytes(d->getSize());
 	params["chunksize"] = Util::toString(d->getTotal());
@@ -1031,7 +1030,6 @@ void DownloadManager::removeDownload(Download* d) {
 
 void DownloadManager::abortDownload(const string& aTarget) {
 	Lock l(cs);
-
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 		if(d->getTarget() == aTarget) {
@@ -1132,7 +1130,6 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 }
 
 void DownloadManager::throttleReturnBytes(u_int32_t b) {
-	Lock l(cs);
 	if (b > 0 && b < 2*mByteSlice) {
 		mBytesSpokenFor -= b;
 		if (mBytesSpokenFor < 0)
@@ -1142,7 +1139,6 @@ void DownloadManager::throttleReturnBytes(u_int32_t b) {
 
 size_t DownloadManager::throttleGetSlice() {
 	if (mThrottleEnable) {
-		Lock l(cs);
 		size_t left = mDownloadLimit - mBytesSpokenFor;
 		if (left > 0) {
 			if (left > 2*mByteSlice) {
@@ -1171,7 +1167,6 @@ void DownloadManager::throttleZeroCounters() {
 }
 
 void DownloadManager::throttleBytesTransferred(u_int32_t i) {
-	Lock l(cs);
 	mBytesSent += i;
 }
 

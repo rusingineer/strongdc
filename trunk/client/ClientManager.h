@@ -65,7 +65,7 @@ public:
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
-	void UserUpdated(const User::Ptr& aUser) {
+	void updateUser(const User::Ptr& aUser) {
 		OnlineUser* ou;
 		{
 			Lock l(cs);
@@ -78,8 +78,6 @@ public:
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
-
-	string getHubUrl(const User::Ptr& user);
 
 	/** Constructs a synthetic, hopefully unique CID */
 	CID makeCid(const string& nick, const string& hubUrl) throw();
@@ -99,6 +97,8 @@ public:
 
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
+
+	Identity getIdentity(const User::Ptr& aUser);
 
 	Client::List& getClients() { return clients; }
 
@@ -158,6 +158,7 @@ private:
 
 	// ClientListener
 	virtual void on(Connected, Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
+	virtual void on(UserUpdated, Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
 	virtual void on(UsersUpdated, Client* c, const User::List&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
 	virtual void on(Failed, Client*, const string&) throw();
 	virtual void on(HubUpdated, Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }

@@ -372,18 +372,10 @@ public:
 
 	static string formatSeconds(int64_t aSec, bool supressHours = false) {
 		char buf[64];
-#ifdef _WIN32
 		if (!supressHours)
-			_snprintf(buf, 63, "%01I64d:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
+			sprintf(buf, "%01lu:%02d:%02d", (unsigned long)(aSec / (60*60)), (int)((aSec / 60) % 60), (int)(aSec % 60));
 		else
-			_snprintf(buf, 63, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
-#else
-		if (!supressHours)
-			_snprintf(buf, 63, "%01lld:%02d:%02d", aSec / (60*60), (int)((aSec / 60) % 60), (int)(aSec % 60));
-		else
-			_snprintf(buf, 63, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));
-#endif		
-		buf[63] = 0;
+			sprintf(buf, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));	
 		return buf;
 	}
 
@@ -427,64 +419,55 @@ public:
 
 	static string toString(short val) {
 		char buf[8];
-		_snprintf(buf, 7, "%d", (int)val);
-		buf[7] = 0;
+		sprintf(buf, "%d", (int)val);
 		return buf;
 	}
 	static string toString(unsigned short val) {
 		char buf[8];
-		_snprintf(buf, 7, "%u", (unsigned int)val);
-		buf[7] = 0;
+		sprintf(buf, "%u", (unsigned int)val);
 		return buf;
 	}
 	static string toString(int val) {
 		char buf[16];
-		_snprintf(buf, 15, "%d", val);
-		buf[15] = 0;
+		sprintf(buf, "%d", val);
 		return buf;
 	}
 	static string toString(unsigned int val) {
 		char buf[16];
-		_snprintf(buf, 15, "%u", val);
-		buf[15] = 0;
+		sprintf(buf, "%u", val);
 		return buf;
 	}
 	static string toString(long val) {
 		char buf[32];
-		_snprintf(buf, 31, "%ld", val);
-		buf[31] = 0;
+		sprintf(buf, "%ld", val);
 		return buf;
 	}
 	static string toString(unsigned long val) {
 		char buf[32];
-		_snprintf(buf, 31, "%lu", val);
-		buf[31] = 0;
+		sprintf(buf, "%lu", val);
 		return buf;
 	}
 	static string toString(long long val) {
 		char buf[32];
 #ifdef _MSC_VER
-		_snprintf(buf, 31, "%I64d", val);
+		sprintf(buf, "%I64d", val);
 #else
-		_snprintf(buf, 31, "%lld", val);
+		sprintf(buf, "%lld", val);
 #endif
-		buf[31] = 0;
 		return buf;
 	}
 	static string toString(unsigned long long val) {
 		char buf[32];
 #ifdef _MSC_VER
-		_snprintf(buf, 31, "%I64u", val);
+		sprintf(buf, "%I64u", val);
 #else
-		_snprintf(buf, 31, "%llu", val);
+		sprintf(buf, "%llu", val);
 #endif
-		buf[31] = 0;
 		return buf;
 	}
 	static string toString(double val) {
 		char buf[16];
-		_snprintf(buf, 15, "%0.2f", val);
-		buf[15] = 0;
+		sprintf(buf, "%0.2f", val);
 		return buf;
 	}
 
@@ -504,8 +487,7 @@ public:
 
 	static string toHexEscape(char val) {
 		char buf[sizeof(int)*2+1+1];
-		_snprintf(buf, sizeof(int)*2+1, "%%%X", val&0x0FF);
-		buf[sizeof(int)*2+1] = 0;
+		sprintf(buf, "%%%X", val&0x0FF);
 		return buf;
 	}
 	static char fromHexEscape(const string aString) {
@@ -533,7 +515,6 @@ public:
 	 * @return First position found or string::npos
 	 */
 	static string::size_type findSubString(const string& aString, const string& aSubString, string::size_type start = 0) throw();
-	static wstring::size_type findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type pos = 0) throw();
 
 	/* Utf-8 versions of strnicmp and stricmp, unicode char code order (!) */
 	static int stricmp(const char* a, const char* b);
@@ -542,7 +523,6 @@ public:
 	static int stricmp(const wchar_t* a, const wchar_t* b) {
 		while(*a && Text::toLower(*a) == Text::toLower(*b))
 			++a, ++b;
-
 		return ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
 	}
 	static int strnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
@@ -590,26 +570,6 @@ public:
 		return (c >= '0' && c <= '9') ? true : false;
 	}
 
-	static string toTime(u_int32_t i) {
-		char buf[64];
-		if (i > 60*60) {
-#ifdef _WIN32
-			_snprintf(buf, 63, "%01I64d:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
-#else
-			_snprintf(buf, 63, "%01lld:%02d:%02d", i / (60*60), (int)((i / 60) % 60), (int)(i % 60));
-#endif
-		} else if (i > 60) {
-#ifdef _WIN32
-			_snprintf(buf, 63, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
-#else
-			_snprintf(buf, 63, "%02d:%02d", (int)((i / 60) % 60), (int)(i % 60));
-#endif
-		} else {
-			return Util::toString(i);
-		}
-		buf[63] = 0;
-		return buf;
-	}
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 	static int getNetLimiterLimit();
 	static bool isNLrunning();

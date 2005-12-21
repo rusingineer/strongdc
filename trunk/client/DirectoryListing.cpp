@@ -32,7 +32,7 @@
 #include "ResourceManager.h"
 #include "User.h"
 
-#include "../pme-1.0.4/pme.h"
+#include "pme.h"
 
 #ifdef ff
 #undef ff

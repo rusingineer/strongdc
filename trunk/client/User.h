@@ -29,9 +29,9 @@
 #include "FastAlloc.h"
 #include "ResourceManager.h"
 
-class OnlineUser;
 class Client;
 class NmdcHub;
+class OnlineUser;
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
@@ -46,6 +46,7 @@ public:
 		HUB_BIT,
 		TTH_GET_BIT,
 		SAVE_NICK_BIT,
+		SSL_BIT,
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
@@ -61,6 +62,7 @@ public:
 		HUB = 1<<HUB_BIT,
 		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
 		SAVE_NICK = 1<<SAVE_NICK_BIT,	//< Save cid->nick association
+		SSL = 1<<SSL_BIT,				//< Client supports SSL
 		AWAY = 1 << AWAY_BIT,
 		SERVER = 1 << SERVER_BIT,
 		FIREBALL = 1 << FIREBALL_BIT
@@ -77,8 +79,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
-	User(const CID& aCID) : cid(aCID), onlineUser(NULL), lastSavedHubName(Util::emptyString), lastSavedHubAddress(Util::emptyString) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), onlineUser(NULL) { }
+	User(const CID& aCID) : cid(aCID), onlineUser(NULL) { }
 
 	virtual ~User() throw() { };
 
@@ -92,14 +94,9 @@ public:
 	const string& getClientName() const;
 	Client* getClient() const;
 
-	const string& getLastHubName() const;
-	string getLastHubAddress() const;
-
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
 	GETSET(OnlineUser*, onlineUser, OnlineUser);
-	GETSET(string, lastSavedHubName, LastSavedHubName);
-	GETSET(string, lastSavedHubAddress, LastSavedHubAddress);
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -118,7 +115,7 @@ public:
 	};
 
 	Identity() { }
-	Identity(const User::Ptr& ptr, const string& aHubUrl) : user(ptr), hubUrl(aHubUrl) { setNick(ptr->getFirstNick()); }
+	Identity(const User::Ptr& ptr, const string& aHubUrl) : user(ptr), hubUrl(aHubUrl) { }
 	Identity(const Identity& rhs) : user(rhs.user), hubUrl(rhs.hubUrl), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { user = rhs.user; hubUrl = rhs.hubUrl; info = rhs.info; return *this; }
 
@@ -145,10 +142,11 @@ public:
 			get("HR") + "/" + get("HO") + ",S:" + get("SL") + (us.empty() ? "" : ",L:" + us) + ">";
 	}*/
 
+	const bool supports(const string& name) const;
 	const bool isHub() const { return !get("HU").empty(); }
 	const bool isOp() const { return !get("OP").empty(); }
 	const bool isHidden() const { return !get("HI").empty(); }
-	const bool isTcpActive() const { return !getIp().empty() && (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)); }
+	const bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)); }
 	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
 	const string& get(const char* name) const {
@@ -166,7 +164,6 @@ public:
 	void getParams(StringMap& map, const string& prefix) const;
 	GETSET(User::Ptr, user, User);
 	GETSET(string, hubUrl, HubUrl);
-
 private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::iterator InfIter;
@@ -245,8 +242,6 @@ public:
 		testSUR = Util::emptyString;
 		unknownCommand = Util::emptyString;
 		comment = Util::emptyString;
-		user->setLastSavedHubName(Util::emptyString);
-		user->setLastSavedHubAddress(Util::emptyString);
 	}
 
 private:

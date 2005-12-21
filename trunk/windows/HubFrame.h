@@ -476,7 +476,6 @@ private:
 
 	void clearUserList();
 
-	LPCSTR sMyNick;
 	int hubchatusersplit;
 	tstring filter;
 	void updateUserList();
