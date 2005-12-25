@@ -47,14 +47,13 @@
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
-Download::Download() throw() : file(NULL), tth(NULL), treeValid(false), qi(NULL) { 
+Download::Download() throw() : file(NULL), tth(NULL), treeValid(false) { 
 }
 
 Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()), segmentSize(1048576) { 
 	
-	setQI(qi);
 	setSize(qi->getSize());
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
 		setFlag(Download::FLAG_USER_LIST);
@@ -79,10 +78,6 @@ Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSo
 
 int64_t Download::getQueueTotal() {
 	if(isSet(Download::FLAG_MULTI_CHUNK)) {
-		if(qi && qi->chunkInfo)
-			return qi->chunkInfo->getDownloadedSize();
-
-		// it doesn't have to be here but have it for special cases :)
 		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
 		if(chunksInfo != (FileChunksInfo*)NULL)
 			return chunksInfo->getDownloadedSize();
@@ -159,8 +154,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) thro
 		}
 	}
 
-	if(tickList.size() > 0)
-		fire(DownloadManagerListener::Tick(), tickList);
+	//if(tickList.size() > 0)
+	fire(DownloadManagerListener::Tick(), tickList);
 }
 
 void DownloadManager::FileMover::moveFile(const string& source, const string& target) {
@@ -777,7 +772,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
-	bool reconn = false;
+	bool reconn = true;
 
 	if(d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->getFile()->flush();
@@ -807,6 +802,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 		d->setTreeValid(true);
+		reconn = false;
 	} else {
 
 		// First, finish writing the file (flushing the buffers and closing the file...)

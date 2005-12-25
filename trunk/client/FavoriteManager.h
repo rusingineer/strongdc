@@ -413,6 +413,7 @@ private:
 	void previewload(SimpleXML* aXml);
 	void previewsave(SimpleXML* aXml);
 	
+	string getConfigFile() { return Util::getConfigPath() + "Favorites.xml"; }
 };
 
 #endif // !defined(FAVORITE_MANAGER_H)

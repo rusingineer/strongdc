@@ -119,11 +119,13 @@ const string& QueueItem::getTempTarget() {
 			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
 				sm["targetdrive"] = target.substr(0, 3);
 			else
-				sm["targetdrive"] = Util::getAppPath().substr(0, 3);
+				sm["targetdrive"] = Util::getConfigPath().substr(0, 3);
 			setTempTarget(Util::formatParams(SETTING(TEMP_DOWNLOAD_DIRECTORY), sm) + getTempName(getTargetFileName(), getTTH()));
 #else //_WIN32
 			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
 #endif //_WIN32
+		}else{
+			tempTarget = target + ".dctmp";
 		}
 	}
 	return tempTarget;
@@ -493,12 +495,12 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-QueueManager::QueueManager() : lastSave(0), queueFile(Util::getAppPath() + SETTINGS_DIR + "Queue.xml"), dirty(true), nextSearch(0) { 
+QueueManager::QueueManager() : lastSave(0), queueFile(Util::getConfigPath() + "Queue.xml"), dirty(true), nextSearch(0) { 
 	TimerManager::getInstance()->addListener(this); 
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
 
-	File::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
+	File::ensureDirectory(Util::getConfigPath() + FILELISTS_DIR);
 }
 
 QueueManager::~QueueManager() throw() { 
@@ -509,7 +511,7 @@ QueueManager::~QueueManager() throw() {
 	saveQueue();
 
 	if(!BOOLSETTING(KEEP_LISTS)) {
-		string path = Util::getAppPath() + FILELISTS_DIR;
+		string path = Util::getConfigPath() + FILELISTS_DIR;
 
 #ifdef _WIN32
 		WIN32_FIND_DATA data;
@@ -598,7 +600,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 }
 
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
-	string target = Util::getAppPath() + "FileLists\\" + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
+	string target = Util::getConfigPath() + FILELISTS_DIR + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
 	add(target, -1, NULL, aUser, USER_LIST_NAME, false, QueueItem::FLAG_USER_LIST | aFlags);
 }
@@ -1087,7 +1089,11 @@ again:
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		dcassert(!q->getTempTarget().empty());
 
-		freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
+		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
+			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
+		} else {
+			freeBlock = q->chunkInfo->getChunk(aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
+		}
 
 		if(freeBlock < 0) {
 			if(nextChunk) {
@@ -1164,8 +1170,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 
 	{
 		Lock l(cs);
-
-		aDownload->setQI(NULL);
 
 		if(aDownload->isSet(Download::FLAG_PARTIAL_LIST)) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUserConnection()->getUser()->getCID());
@@ -1888,7 +1892,6 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	    Lock l(cs);
 
 		QueueItem* q = userQueue.getRunning(aUser);
-		d->setQI(q);
 
 		if(!q) return false;
 

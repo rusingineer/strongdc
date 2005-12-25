@@ -195,7 +195,7 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
-	void addLine(const User::Ptr& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
+	void addLine(const OnlineUser& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
 	void addClientLine(const tstring& aLine, bool inChat = true);
 	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
@@ -340,8 +340,8 @@ private:
 
 	class MessageInfo {
 	public:
-		MessageInfo(const User::Ptr& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
-		User::Ptr from;
+		MessageInfo(const OnlineUser& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from((OnlineUser*)&from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
+		OnlineUser* from;
 		User::Ptr to;
 		User::Ptr replyTo;
 		tstring msg;
@@ -521,7 +521,7 @@ private:
 		updateList.push_back(make_pair(UpdateInfo(u), s));
 		updateUsers = true;
 	};
-	void speak(Speakers s, const User::Ptr& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(from, to, replyTo, line)); };
+	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(from, to, replyTo, line)); };
 
 };
 

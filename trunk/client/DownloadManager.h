@@ -88,7 +88,7 @@ public:
 	}
 
 	int64_t getQueueTotal();
-	
+
 	/** @internal */
 	string getDownloadTarget() {
 		const string& tgt = (getTempTarget().empty() ? getTarget() : getTempTarget());
@@ -109,7 +109,6 @@ public:
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(OnlineUser*, user, User);	
 	GETSET(int64_t, segmentSize, SegmentSize);
-	GETSET(QueueItem*, qi, QI);
 	int64_t quickTick;
 	
 private:
@@ -210,6 +209,17 @@ public:
 			avg += (int)d->getRunningAverage();
 		}
 		return avg;
+	}
+
+	Download* getDownloadItem(const string& aTarget) {
+		Lock l(cs);
+		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+			Download* d = *i;
+			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (d->getTarget() == aTarget)) {
+				return d;
+			}
+		}
+		return NULL;
 	}
 
 	/** @return Number of downloads. */ 

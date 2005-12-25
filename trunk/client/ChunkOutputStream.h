@@ -63,7 +63,7 @@ public:
 
 		if(iRet == FileChunksInfo::CHUNK_LOST){
 			chunk = -1;
-			throw ChunkDoneException(Util::emptyString, pos);
+			throw ChunkDoneException(Util::emptyString, chunk);
 		}
 
 		pos += len;

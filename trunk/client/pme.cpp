@@ -260,9 +260,9 @@ PME::match(const std::string & s, ///< s String to match against
 		offset += lastglobalposition;
 	}
 
-	//check that the offset isn't at the last position in the string
-	if( offset == s.length() )
-		return 0;
+//	//check that the offset isn't at the last position in the string
+//	if( offset == s.length() )
+//		return 0;
 
 	nMatches = pcre_exec(re, extra, s.c_str(), s.length(), offset, 0, m, msize);
 	
@@ -360,7 +360,7 @@ PME::split(const std::string & s, unsigned maxfields)
 	vector<markers> oCurrentTrailingEmpties; 
 
 	int nOffset = 0;
-	unsigned int nMatchesFound = 0;
+	int nMatchesFound = 0;
 
 	// while we are still finding matches and maxfields is 0 or negative
 	//   (meaning we get all matches), or we haven't gotten to the number

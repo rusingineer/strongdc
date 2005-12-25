@@ -133,10 +133,8 @@ void NmdcHub::putUser(const string& aNick) {
 	{
 		Lock l(cs);
 		NickIter i = users.find(aNick);
-		if(i == users.end()) {
-			dcassert(0);
+		if(i == users.end())
 			return;
-		}
 		u = i->second;
 		users.erase(i);
 	}
@@ -166,13 +164,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 		if(i->length() < 2)
 			continue;
 
-		if((j = i->find("M:")) != string::npos) {
-			i->erase(i->begin() + j, i->begin() + j + 2);
-			if((*i == "P") || (*i == "5")) {
-				User::Ptr u = id.getUser();
-				u->setFlag(User::PASSIVE);
-			}
-		} else if(i->compare(0, 2, "H:") == 0) {
+		if(i->compare(0, 2, "H:") == 0) {
 			StringTokenizer<string> t(i->substr(2), '/');
 			if(t.getTokens().size() != 3)
 				continue;
@@ -181,9 +173,17 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			id.set("HO", t.getTokens()[2]);
 		} else if(i->compare(0, 2, "S:") == 0) {
 			id.set("SL", i->substr(2));
-		} else if((j = i->find("V:")) != string::npos) {
+		} else if(i->compare(0, 2, "V:") == 0) {
+			string::size_type j = i->find("V:");
 			i->erase(i->begin() + j, i->begin() + j + 2);
 			id.set("VE", *i);
+		} else if(i->compare(0, 2, "M:") == 0) {
+			if(i->size() == 3) {
+				if((*i)[2] == 'A')
+					id.getUser()->unsetFlag(User::PASSIVE);
+				else
+					id.getUser()->setFlag(User::PASSIVE);
+			}
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
 			id.set("US", Util::toString(Util::toInt64(*i)*1024));
@@ -1025,7 +1025,7 @@ void NmdcHub::myInfo() {
 	sprintf(myinfo, "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toNmdc(getMyNick()).c_str(),
 		toNmdc(Util::validateMessage(getMyIdentity().getDescription(), false)).c_str(), tag, connection.c_str(), StatusMode, 
 		toNmdc(Util::validateMessage(SETTING(EMAIL), false)).c_str());
-	int64_t newbytesshared = ShareManager::getInstance()->getSharedSize();
+	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
 		lastmyinfo = myinfo;
 		lastbytesshared = newbytesshared;

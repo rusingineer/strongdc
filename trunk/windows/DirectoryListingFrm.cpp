@@ -585,7 +585,7 @@ LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 LRESULT DirectoryListingFrame::onListDiff(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring file;
-	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), _T("File Lists\0*.xml.bz2\0All Files\0*.*\0"))) {
+	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), _T("File Lists\0*.xml.bz2\0All Files\0*.*\0"))) {
 		DirectoryListing dirList(dl->getUser());
 		dirList.loadFile(Text::fromT(file));
 		dl->getRoot()->filterList(dirList);
@@ -1115,9 +1115,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 			if(hash != NULL) {
 				ucParams["tth"] = hash->toBase32();
 			}
-		}
-		else
-		{
+		} else {
 			ucParams["type"] = "Directory";
 			ucParams["file"] = dl->getPath(ii->dir) + ii->dir->getName();
 			ucParams["filesize"] = Util::toString(ii->dir->getTotalSize());
@@ -1126,7 +1124,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 
 		StringMap tmp = ucParams;
 		User::Ptr tmpPtr = dl->getUser();
-		ClientManager::getInstance()->userCommand(dl->getUser(), uc, tmp);
+		ClientManager::getInstance()->userCommand(dl->getUser(), uc, tmp, true);
 	}
 }
 

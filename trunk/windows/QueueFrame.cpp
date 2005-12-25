@@ -712,7 +712,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			
 			delete ii;
 			updateStatus();
-			if (BOOLSETTING(QUEUE_DIRTY)) {
+			if (BOOLSETTING(BOLD_QUEUE)) {
 				setDirty();
 			}
 			dirty = true;

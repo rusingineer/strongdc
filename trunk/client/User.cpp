@@ -26,7 +26,6 @@
 #include "DebugManager.h"
 #include "ClientProfileManager.h"
 #include "QueueManager.h"
-
 #include "pme.h"
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), identity(ptr, client_.getHubUrl()), client(&client_) { 
@@ -38,31 +37,36 @@ OnlineUser::~OnlineUser() throw() {
 	user->setOnlineUser(NULL);
 };
 
-void Identity::getParams(StringMap& map, const string& prefix) const {
+void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
 	for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
-		map[prefix + string((char*)(&i->first), 2)] = i->second;
+		sm[prefix + string((char*)(&i->first), 2)] = i->second;
 	}
 	if(user) {
-		map[prefix + "CID"] = user->getCID().toBase32();
+		sm[prefix + "CID"] = user->getCID().toBase32();
 
 		OnlineUser* ou = getUser()->getOnlineUser();
 		if(ou) {
-			map["mynick"] =  ou->getClient().getMyNick();
-			map["hub"] = ou->getClient().getHubName();
-			map["hubip"] = ou->getClient().getHubUrl();
-			map["hubaddr"] = ou->getClient().getAddress();
-			map["realshare"] = Util::toString(ou->getRealBytesShared());
-			map["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
-			map["statedshare"] = Util::toString(getBytesShared());
-			map["statedshareformat"] = Util::formatBytes(getBytesShared());
-			map["cheatingdescription"] = ou->getCheatingString();
-			map["clienttype"] = ou->getClientType();
+			sm["hub"] = ou->getClient().getHubName();
+			sm["hubip"] = ou->getClient().getHubUrl();
+			sm["hubaddr"] = ou->getClient().getAddress();
+			sm["realshare"] = Util::toString(ou->getRealBytesShared());
+			sm["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
+			sm["statedshare"] = Util::toString(getBytesShared());
+			sm["statedshareformat"] = Util::formatBytes(getBytesShared());
+			sm["cheatingdescription"] = ou->getCheatingString();
+			sm["clienttype"] = ou->getClientType();
 		}
-	}
 
-	map["nick"] = getNick();
-	map["tag"] = getTag();
-	map["ip"] = getIp();
+		if(compatibility) {
+			if(prefix == "my") {
+				sm["mynick"] = getNick();
+				sm["mycid"] = user->getCID().toBase32();
+			} else {
+				sm["nick"] = getNick();
+				sm["cid"] = user->getCID().toBase32();
+			}				
+		}
+	}	
 }
 
 const bool Identity::supports(const string& name) const {
@@ -82,7 +86,7 @@ void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool
 		PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		
 	StringMap ucParams;
-	getIdentity().getParams(ucParams, Util::emptyString);
+	getIdentity().getParams(ucParams, Util::emptyString, true);
 	string cheat = Util::formatParams(aCheatDescription, ucParams);
 	if(postToChat)
 		user->addCheatLine("*** " + STRING(USER) + " " + getIdentity().getNick() + " - " + cheat);
@@ -97,7 +101,7 @@ void User::sendRawCommand(const int aRawCommand) {
 		string rawCommand = getClient()->getRawCommand(aRawCommand);
 		if (!rawCommand.empty()) {
 			StringMap ucParams;
-			getOnlineUser()->getIdentity().getParams(ucParams, Util::emptyString);
+			getOnlineUser()->getIdentity().getParams(ucParams, Util::emptyString, true);
 			getClient()->sendRaw(Util::formatParams(rawCommand, ucParams));
 		}
 	}

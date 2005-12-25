@@ -137,8 +137,8 @@ public:
 		BADSOFT_DETECTIONS, DETECT_BADSOFT, ADVANCED_RESUME, ACCEPTED_DISCONNECTS, ACCEPTED_TIMEOUTS,
 		OPEN_PUBLIC, OPEN_FAVORITE_HUBS, OPEN_FAVORITE_USERS, OPEN_QUEUE, OPEN_FINISHED_DOWNLOADS, 
 		OPEN_FINISHED_UPLOADS, OPEN_SEARCH_SPY, OPEN_NETWORK_STATISTICS, OPEN_NOTEPAD, OUTGOING_CONNECTIONS, 
-		NO_IP_OVERRIDE, GROUP_SEARCH_RESULTS, FINISHED_DOWNLOAD_DIRTY, FINISHED_UPLOAD_DIRTY, QUEUE_DIRTY, 
-		TAB_HUB_DIRTY, TAB_PM_DIRTY, TAB_SEARCH_DIRTY, TABS_ON_TOP, SOCKET_IN_BUFFER, SOCKET_OUT_BUFFER,
+		NO_IP_OVERRIDE, GROUP_SEARCH_RESULTS, BOLD_FINISHED_DOWNLOADS, BOLD_FINISHED_UPLOADS, BOLD_QUEUE, 
+		BOLD_HUB, BOLD_PM, BOLD_SEARCH, TABS_ON_TOP, SOCKET_IN_BUFFER, SOCKET_OUT_BUFFER,
 		COLOR_RUNNING, COLOR_DOWNLOADED, COLOR_VERIFIED,
 		INT_LAST };
 
@@ -277,10 +277,10 @@ public:
 	bool isDefault(int aSet) { return !isSet[aSet]; };
 
 	void load() {
-		load(Util::getAppPath() + SETTINGS_DIR + "DCPlusPlus.xml");
+		load(Util::getConfigPath() + "DCPlusPlus.xml");
 	}
 	void save() {
-		save(Util::getAppPath() + SETTINGS_DIR + "DCPlusPlus.xml");
+		save(Util::getConfigPath() + "DCPlusPlus.xml");
 	}
 
 	void load(const string& aFileName);
@@ -300,22 +300,6 @@ private:
 	int    intDefaults[INT_LAST - INT_FIRST];
 	int64_t int64Defaults[INT64_LAST - INT64_FIRST];
 	bool isSet[SETTINGS_LAST];
-
-	void setTemp(){
-		// force to use temp directory
-		if(get(TEMP_DOWNLOAD_DIRECTORY, true).empty()){
-			string s = get(DOWNLOAD_DIRECTORY, true);
-
-			s.erase(s.find_last_of('\\'));
-
-			string::size_type i = s.find_last_of('\\');
-			if( i != string::npos)
-				s.erase(i);
-
-			string t = s + "\\temp\\";
-			set(TEMP_DOWNLOAD_DIRECTORY, t);
-		}
-	}
 };
 
 // Shorthand accessor macros

@@ -825,9 +825,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			PlaySound(Text::toT(SETTING(SOUND_HUBCON)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	} else if(wParam == ADD_CHAT_LINE) {
         MessageInfo* i = (MessageInfo*)lParam;
-        if(!i->from || !ignoreList.count(Text::toT(i->from->getFirstNick())) ||
-          (i->from->getOnlineUser()->getIdentity().isOp() && !client->isOp())) {
-            addLine(i->from, i->msg, WinUtil::m_ChatTextGeneral);
+        if(!i->from || !ignoreList.count(Text::toT(i->from->getIdentity().getNick())) ||
+          (i->from->getIdentity().isOp() && !client->isOp())) {
+            addLine(*i->from, i->msg, WinUtil::m_ChatTextGeneral);
         }
 
 		delete i;
@@ -869,15 +869,15 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 	} else if(wParam == PRIVATE_MESSAGE) {
 		MessageInfo* i = (MessageInfo*)lParam;
-		tstring nick = getNick(i->from);
-		if(!ignoreList.count(nick) || (i->from->getOnlineUser() && i->from->getOnlineUser()->getIdentity().isOp() && !client->isOp())) {
+		tstring nick = getNick(*i->from);
+		if(!ignoreList.count(nick) || (i->from && i->from->getIdentity().isOp() && !client->isOp())) {
 			if(i->replyTo->isOnline()) {
 				if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(i->replyTo)) {
-						PrivateFrame::gotMessage(i->from, i->to, i->replyTo, i->msg);
+						PrivateFrame::gotMessage(*i->from, i->to, i->replyTo, i->msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 					}
-				if(BOOLSETTING(MINIMIZE_TRAY) && i->from->getOnlineUser() && !i->from->getOnlineUser()->getIdentity().getConnection().empty()) {
+				if(BOOLSETTING(MINIMIZE_TRAY) && i->from && !i->from->getIdentity().getConnection().empty()) {
 					HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
 					::PostMessage(hMainWnd, WM_SPEAKER, MainFrame::SET_PM_TRAY_ICON, NULL);
 				}
@@ -885,7 +885,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 				if(BOOLSETTING(IGNORE_OFFLINE)) {
 					addClientLine(TSTRING(IGNORED_MESSAGE) + i->msg, WinUtil::m_ChatTextPrivate, false);
 				} else if(BOOLSETTING(POPUP_OFFLINE)) {
-					PrivateFrame::gotMessage(i->from, i->to, i->replyTo, i->msg);
+					PrivateFrame::gotMessage(*i->from, i->to, i->replyTo, i->msg);
 				} else {
 					addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + i->msg, WinUtil::m_ChatTextPrivate);
 				}
@@ -897,7 +897,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
         if(SETTING(FILTER_MESSAGES)) {
             addClientLine(i->msg, false);
         } else {
-    		addLine(i->from, i->msg, WinUtil::m_ChatTextServer, false);
+    		addLine(*i->from, i->msg, WinUtil::m_ChatTextServer, false);
         }
         delete i;
 	}
@@ -1213,28 +1213,28 @@ void HubFrame::addLine(const tstring& aLine) {
 }
 
 void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
-    addLine(NULL, aLine, cf, bUseEmo);
+    addLine(*(OnlineUser*)NULL, aLine, cf, bUseEmo);
 }
 
-void HubFrame::addLine(const User::Ptr& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void HubFrame::addLine(const OnlineUser& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	ctrlClient.AdjustTextSize();
 
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
 		StringMap params;
 		params["message"] = Text::fromT(aLine);
-		client->getHubIdentity().getParams(params, "hub");
+		client->getHubIdentity().getParams(params, "hub", false);
 		params["hubURL"] = client->getHubUrl();
-		client->getMyIdentity().getParams(params, "my");
+		client->getMyIdentity().getParams(params, "my", true);
 		LOG(LogManager::CHAT, params);
 	}
 
-	bool bMyMess = (u == ClientManager::getInstance()->getMe());
+	bool bMyMess = &u && (u.getIdentity().getNick() == client->getMyNick());
 	if(timeStamps) {
 		ctrlClient.AppendText(u, Text::toT(client->getMyNick()).c_str(), bMyMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf, bUseEmo);
 	} else {
 		ctrlClient.AppendText(u, Text::toT(client->getMyNick()).c_str(), bMyMess, _T(""), aLine.c_str(), cf, bUseEmo);
 	}
-	if (BOOLSETTING(TAB_HUB_DIRTY)) {
+	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
 }
@@ -1393,8 +1393,8 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
-	client->getMyIdentity().getParams(ucParams, "my");
-	client->getHubIdentity().getParams(ucParams, "hub");
+	client->getMyIdentity().getParams(ucParams, "my", true);
+	client->getHubIdentity().getParams(ucParams, "hub", false);
 
 	if(tabMenuShown) {
 		client->escapeParams(ucParams);
@@ -1409,7 +1409,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 				if(u->user->isOnline()) {
 					StringMap tmp = ucParams;
 					
-					u->getIdentity().getParams(tmp, "user");
+					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp); 
 					client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 				}
@@ -1421,7 +1421,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 				if(u->user->isOnline()) {
 					StringMap tmp = ucParams;
 
-					u->getIdentity().getParams(tmp, "user");
+					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp);
 					client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp));
 				}
@@ -1754,7 +1754,7 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 		lastLinesList.erase(lastLinesList.begin());
 	lastLinesList.push_back(sLine);
 
-	if (BOOLSETTING(TAB_HUB_DIRTY)) {
+	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
 	
@@ -1850,18 +1850,18 @@ void HubFrame::on(Message, Client*, OnlineUser* u, const char* line) throw() {
  	     	if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
 			  (strstr(chatline, "was kicked by") != NULL)) {
     			temp[0] = '\n';
-				speak(KICK_MSG, u ? u->getUser() : NULL, NULL, NULL, Util::toDOS(line));		
+				speak(KICK_MSG, *u, NULL, NULL, Util::toDOS(line));		
 			    return;
   			}
  	       temp[0] = '\n';
 		} else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
 			(strstr(chatline, "was kicked by") != NULL)) {
-			speak(KICK_MSG, u ? u->getUser() : NULL, NULL, NULL, Util::toDOS(line));
+			speak(KICK_MSG, *u, NULL, NULL, Util::toDOS(line));
  	       return;	
 		}
     }
 	
-	speak(ADD_CHAT_LINE, u ? u->getUser() : NULL, NULL, NULL, Util::toDOS(line));
+	speak(ADD_CHAT_LINE, *u, NULL, NULL, Util::toDOS(line));
 }
 
 void HubFrame::on(PrivateMessage, Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 

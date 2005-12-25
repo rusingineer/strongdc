@@ -78,6 +78,16 @@ public:
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
+	bool isMeOp(const string& aHubUrl) {
+		Lock l(cs);
+
+		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+			if(((*i)->getHubUrl() == aHubUrl) && ((*i)->getMyIdentity().isOp())) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/** Constructs a synthetic, hopefully unique CID */
 	CID makeCid(const string& nick, const string& hubUrl) throw();
@@ -91,7 +101,7 @@ public:
 	void send(AdcCommand& c);
 	void privateMessage(const User::Ptr& p, const string& msg);
 
-	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params);
+	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
 
 	bool isActive(Client* aClient) { return (aClient ? aClient->getMode() : SETTING(INCOMING_CONNECTIONS)) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
@@ -110,6 +120,8 @@ public:
  			client->removeListener(listener);
  		}
  	}
+
+	void loadUsers();
 
 private:
 	typedef HASH_MAP<string, User::Ptr> LegacyMap;
@@ -150,10 +162,10 @@ private:
 		TimerManager::getInstance()->removeListener(this); 
 	}
 
-	string getUsersFile() { return Util::getAppPath() + "Settings\\Users.xml"; }
+	string getUsersFile() { return Util::getConfigPath() + "Users.xml"; }
 
 	// SettingsManagerListener
-	virtual void on(Load, SimpleXML*) throw();
+	virtual void on(Load, SimpleXML*) throw() { loadUsers(); }
 	virtual void on(Save, SimpleXML*) throw();
 
 	// ClientListener

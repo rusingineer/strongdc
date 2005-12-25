@@ -103,9 +103,9 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const User::Ptr& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
-	bool myPM = from == ClientManager::getInstance()->getMe();
+	bool myPM = from.getUser() == ClientManager::getInstance()->getMe();
 	const User::Ptr& user = myPM ? to : replyTo;
 	
 	FrameIter i = frames.find(user);
@@ -314,7 +314,7 @@ void PrivateFrame::onEnter()
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(NULL, _T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
+				addLine(*(OnlineUser*)NULL, _T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(replyTo->isOnline()) {
 					sendMessage(tstring(m));
@@ -356,11 +356,11 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 }
 
-void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine) {
+void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine) {
 	addLine(from, aLine, WinUtil::m_ChatTextGeneral );
 }
 
-void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine, CHARFORMAT2& cf) {
+void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine, CHARFORMAT2& cf) {
 	if(!created) {
 		if(BOOLSETTING(POPUNDER_PM))
 			WinUtil::hiddenCreateEx(this);
@@ -390,7 +390,7 @@ void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine, CHARFORM
 		sMyNick = SETTING(NICK).c_str();
 	}
 
-	bool myMess = (from == ClientManager::getInstance()->getMe());
+	bool myMess = &from && (from.getUser() == ClientManager::getInstance()->getMe());
 
 	if(BOOLSETTING(TIME_STAMPS)) {
 		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf);
@@ -399,7 +399,7 @@ void PrivateFrame::addLine(const User::Ptr& from, const tstring& aLine, CHARFORM
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
-	if (BOOLSETTING(TAB_PM_DIRTY)) {
+	if (BOOLSETTING(BOLD_PM)) {
 		setDirty();
 	}
 }
@@ -447,7 +447,7 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
 		return;
 
-	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams);
+	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams, true);
 };
 
 LRESULT PrivateFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -540,7 +540,7 @@ void PrivateFrame::updateTitle() {
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
+				addLine(*(OnlineUser*)NULL, _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
 			} else {
 				addClientLine(_T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"));
 			}
@@ -550,7 +550,7 @@ void PrivateFrame::updateTitle() {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(NULL, _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
+			addLine(*(OnlineUser*)NULL, _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"), WinUtil::m_ChatTextServer);
 		} else {
 			addClientLine(_T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick()/* @todo: + " - " + replyTo->getLastHubName()*/) + _T("] ***"));
 		}

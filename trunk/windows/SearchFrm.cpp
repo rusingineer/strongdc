@@ -431,7 +431,7 @@ void SearchFrame::onEnter() {
 			ctrlSearchBox.DeleteString(i);
 		ctrlSearchBox.InsertString(0, s.c_str());
 
-		while(lastSearches.size() > (int64_t)i) {
+		while(lastSearches.size() > (TStringList::size_type)i) {
 			lastSearches.erase(lastSearches.begin());
 		}
 		lastSearches.push_back(s);
@@ -974,7 +974,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		}
 
 		StringMap tmp = ucParams;
-		ClientManager::getInstance()->userCommand(sr->getUser(), uc, tmp);
+		ClientManager::getInstance()->userCommand(sr->getUser(), uc, tmp, true);
 	}
 	return;
 };
@@ -1090,7 +1090,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					si->mainItem = true;
 					addEntry(si, 0);
 				}
-				if (BOOLSETTING(TAB_SEARCH_DIRTY)) {
+				if (BOOLSETTING(BOLD_SEARCH)) {
 					setDirty();
 				}
 				ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());
@@ -1382,12 +1382,8 @@ LRESULT SearchFrame::onItemChangedHub(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* b
 
 LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) 
 {
-	while(ctrlSearchBox.GetCount() > 0){
-			ctrlSearchBox.DeleteString(0);
-	}
-	while(lastSearches.size() > 0) {
-		lastSearches.erase(lastSearches.end());
-	}
+	ctrlSearchBox.ResetContent();
+	lastSearches.clear();
 	return 0;
 }
 
