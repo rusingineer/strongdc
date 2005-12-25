@@ -71,7 +71,7 @@ ShareManager::~ShareManager() {
 	WIN32_FIND_DATA data;
 	HANDLE hFind;
 
-	hFind = FindFirstFile(Text::toT(Util::getAppPath() + "files*.xml.bz2").c_str(), &data);
+	hFind = FindFirstFile(Text::toT(Util::getConfigPath() + "files*.xml.bz2").c_str(), &data);
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if(_tcslen(data.cFileName) > 13) // length of "files.xml.bz2"
@@ -81,7 +81,7 @@ ShareManager::~ShareManager() {
 		FindClose(hFind);
 	}
 
-	hFind = FindFirstFile(Text::toT(Util::getAppPath() + "MyList*.DcLst").c_str(), &data);
+	hFind = FindFirstFile(Text::toT(Util::getConfigPath() + "MyList*.DcLst").c_str(), &data);
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			File::deleteFile(Util::getAppPath() + Text::fromT(data.cFileName));			
@@ -96,7 +96,7 @@ ShareManager::~ShareManager() {
 		while (struct dirent* ent = readdir(dir)) {
 			if (fnmatch("files*.xml.bz2", ent->d_name, 0) == 0 ||
 				fnmatch("MyList*.DcLst", ent->d_name, 0) == 0) {
-					File::deleteFile(Util::getAppPath() + ent->d_name);	
+					File::deleteFile(Util::getConfigPath() + ent->d_name);	
 				}
 		}
 		closedir(dir);
@@ -354,7 +354,7 @@ bool ShareManager::loadCache() {
 	try {
 		ShareLoader loader(directories, virtualMap);
 		string txt;
-		::File ff(Util::getAppPath() + "files.xml.bz2", ::File::READ, ::File::OPEN);
+		::File ff(Util::getConfigPath() + "files.xml.bz2", ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
 		char buf[BUF_SIZE];
@@ -789,6 +789,7 @@ void ShareManager::addTree(Directory* dir) {
 	for(Directory::File::Iter i = dir->files.begin(); i != dir->files.end(); ) {
 		addFile(dir, i++);
 	}
+	sharedSize += dir->size;
 }
 
 void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
@@ -847,6 +848,7 @@ int ShareManager::run() {
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED), true);
 	{
 		if(refreshDirs) {
+			sharedSize = 0;
 			lastFullUpdate = GET_TICK();
 			StringPairList dirs;
 			Directory::Map newDirs;
@@ -878,7 +880,6 @@ int ShareManager::run() {
 			}
 			refreshDirs = false;
 		}
-		sharedSize = getShareSize();
 	}
 
 	Thread::safeDec(refreshing);
@@ -899,7 +900,7 @@ void ShareManager::generateXmlList() {
 			string tmp2;
 			string indent;
 
-			string newXmlName = Util::getAppPath() + "files" + Util::toString(listN) + ".xml.bz2";
+			string newXmlName = Util::getConfigPath() + "files" + Util::toString(listN) + ".xml.bz2";
 			{
 				File f(newXmlName, File::WRITE, File::TRUNCATE | File::CREATE);
 				// We don't care about the leaves...
@@ -928,8 +929,8 @@ void ShareManager::generateXmlList() {
 				File::deleteFile(getBZXmlFile());
 			}
 			try {
-				File::renameFile(newXmlName, Util::getAppPath() + "files.xml.bz2");
-				newXmlName = Util::getAppPath() + "files.xml.bz2";
+				File::renameFile(newXmlName, Util::getConfigPath() + "files.xml.bz2");
+				newXmlName = Util::getConfigPath() + "files.xml.bz2";
 			} catch(const FileException&) {
 				// Ignore, this is for caching only...
 			}
@@ -958,7 +959,7 @@ void ShareManager::generateNmdcList() {
 				i->second->toNmdc(tmp, indent, tmp2);
 			}
 
-			string newName = Util::getAppPath() + "MyList" + Util::toString(listN) + ".DcLst";
+			string newName = Util::getConfigPath() + "MyList" + Util::toString(listN) + ".DcLst";
 			tmp2.clear();
 			CryptoManager::getInstance()->encodeHuffman(tmp, tmp2);
 			File(newName, File::WRITE, File::CREATE | File::TRUNCATE).write(tmp2);
@@ -969,8 +970,8 @@ void ShareManager::generateNmdcList() {
 				File::deleteFile(getListFile());
 			}
 			try {
-				File::renameFile(newName, Util::getAppPath() + "MyList.DcLst");
-				newName = Util::getAppPath() + "MyList.DcLst";
+				File::renameFile(newName, Util::getConfigPath() + "MyList.DcLst");
+				newName = Util::getConfigPath() + "MyList.DcLst";
 			} catch(const FileException&) {
 			}
 			lFile = new File(newName, File::READ, File::OPEN);

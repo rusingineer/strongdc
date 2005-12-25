@@ -161,7 +161,8 @@ public:
 			info[*(short*)name] = val;
 	}
 	
-	void getParams(StringMap& map, const string& prefix) const;
+	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
+	User::Ptr& getUser() { return user; }
 	GETSET(User::Ptr, user, User);
 	GETSET(string, hubUrl, HubUrl);
 private:
@@ -244,7 +245,7 @@ public:
 		comment = Util::emptyString;
 	}
 
-private:
+//private:
 	friend class NmdcHub;
 
 	OnlineUser(const OnlineUser&);

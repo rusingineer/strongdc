@@ -196,7 +196,7 @@ LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 		entry->collapsed = true;
 
 		addEntry(entry);
-		if(BOOLSETTING(FINISHED_UPLOAD_DIRTY))
+		if(BOOLSETTING(BOLD_FINISHED_UPLOADS))
 			setDirty();
 		updateStatus();
 	} else if(wParam == SPEAK_REMOVE) {

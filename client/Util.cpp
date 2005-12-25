@@ -239,7 +239,7 @@ void Util::initialize() {
 	try {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
 		// Updates at http://www.maxmind.com/app/geoip_country
-		string file = Util::getAppPath() + SETTINGS_DIR + "GeoIpCountryWhois.csv";
+		string file = Util::getDataPath() + "GeoIpCountryWhois.csv";
 		string data = File(file, File::READ, File::OPEN).read();
 
 		const char* start = data.c_str();
@@ -282,12 +282,31 @@ void Util::initialize() {
 
 string Util::getConfigPath() {
 #ifdef _WIN32
-		return getAppPath();
+		return getAppPath() + SETTINGS_DIR;
 #else
 		char* home = getenv("HOME");
 		if (home) {
 #ifdef __APPLE__
-			return string(home) + "/Library/Application Support/Mac StrongDC++/";
+/// @todo Verify this for apple?
+			return string(home) + "/Library/Application Support/Mac DC++/";
+#else
+			return string(home) + "/.dc++/";
+#endif // __APPLE__
+		}
+		return emptyString;
+#endif // _WIN32
+}
+
+string Util::getDataPath() {
+#ifdef _WIN32
+	return getAppPath();
+#else
+	// This probably ought to be /usr/share/*...
+	char* home = getenv("HOME");
+	if (home) {
+#ifdef __APPLE__
+		/// @todo Verify this for apple?
+		return string(home) + "/Library/Application Support/Mac DC++/";
 #else
 			return string(home) + "/.strongdc++/";
 #endif // __APPLE__

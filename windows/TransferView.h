@@ -189,7 +189,8 @@ private:
 		ItemInfo::List subItems;
 
 		enum Flags {
-			FLAG_COMPRESSED = 0x01
+			FLAG_COMPRESSED = 0x01,
+			FLAG_SEGMENTED = 0x02
 		};
 		enum Status {
 			STATUS_RUNNING,
@@ -197,7 +198,8 @@ private:
 			// special statuses
 			TREE_DOWNLOAD,
 			DOWNLOAD_STARTING,
-			DOWNLOAD_FAILED
+			DOWNLOAD_FAILED,
+			DOWNLOAD_FINISHED,
 		};
 		enum Types {
 			TYPE_DOWNLOAD,
@@ -209,7 +211,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
 			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
-			flagImage(0), upperUpdated(false) { update(); };
+			flagImage(0), updated(false) { update(); };
 
 		Types type;
 		Status status;
@@ -229,7 +231,7 @@ private:
 		bool collapsed;
 		bool mainItem;
 		int32_t numberOfSegments;
-		bool upperUpdated;
+		bool updated;
 		int flagImage;
 
 		enum {
@@ -352,8 +354,9 @@ private:
 
 	void CollapseAll();
 	void ExpandAll();
+	void mainItemTick(ItemInfo* i);
 
-	inline void setMainItem(ItemInfo* i) {
+	void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
 			if(h->Target != i->Target) {

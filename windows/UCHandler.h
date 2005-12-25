@@ -25,6 +25,7 @@
 
 #include "../client/FavoriteManager.h"
 #include "../client/StringTokenizer.h"
+#include "../client/ClientManager.h"
 
 template<class T>
 class UCHandler {
@@ -51,7 +52,7 @@ public:
 
 	void prepareMenu(CMenu& menu, int ctx, const string& hubUrl) {
 		prepareMenu(menu, ctx, StringList(1, hubUrl));
-		}
+	}
 
 	void prepareMenu(CMenu& menu, int ctx, const StringList& hubs) {
 		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs);
@@ -59,13 +60,13 @@ public:
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
-/*			if(op) {
+			if(ClientManager::getInstance()->isMeOp(hubs[0])) {
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				menu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
 				menu.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
 				extraItems = 5;
-			} else */{
+			} else {
 				extraItems = 1;
 			}
 			menu.AppendMenu(MF_SEPARATOR);

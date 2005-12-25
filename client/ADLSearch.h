@@ -308,6 +308,8 @@ private:
 			}
 		}
 	}
+
+	string getConfigFile() { return Util::getConfigPath() + "ADLSearch.xml"; }
 };
 
 #endif // !defined(ADL_SEARCH_H)

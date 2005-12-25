@@ -1101,7 +1101,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 		return 0;
 	}
 
-	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getAppPath() + "FileLists\\"), types)) {
+	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), types)) {
 		User::Ptr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
 		if(u) {
 			DirectoryListingFrame::openWindow(file, u);

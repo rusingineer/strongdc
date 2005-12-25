@@ -145,7 +145,7 @@ public:
 	bool setActiveSegment(const User::Ptr& aUser);
 	bool dropSource(Download* d, bool autoDrop);
 
-	inline unsigned int getRunningCount(const User::Ptr& aUser, const string& aTarget) {
+	unsigned int getRunningCount(const User::Ptr& aUser, const string& aTarget) {
 		unsigned int value;
 		{
 			Lock l(cs);

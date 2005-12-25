@@ -119,8 +119,8 @@ const string SettingsManager::settingTags[] =
 	"BadSoftDetections", "DetectBadSoft", "AdvancedResume", "AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
-	"NoIPOverride", "GroupSearchResults", "FinishedDownloadDirty", "FinishedUploadDirty", "QueueDirty", 
-	"TabHubDirty", "TabPmDirty", "TabSearchDirty", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
+	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
+	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
 	"ColorRunning", "ColorDownloaded", "ColorVerified",
 	"SENTRY",
 	// Int64
@@ -148,7 +148,8 @@ SettingsManager::SettingsManager()
 		int64Settings[k] = 0;
 	}
 	
-	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
+	setDefault(DOWNLOAD_DIRECTORY, Util::getConfigPath() + "Downloads" PATH_SEPARATOR_STR);
+	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getConfigPath() + "Incomplete" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
@@ -264,15 +265,15 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
 	setDefault(NO_IP_OVERRIDE, false);
-	setDefault(FINISHED_DOWNLOAD_DIRTY, true);
-	setDefault(FINISHED_UPLOAD_DIRTY, true);
-	setDefault(QUEUE_DIRTY, true);
-	setDefault(TAB_HUB_DIRTY, true);
-	setDefault(TAB_SEARCH_DIRTY, true);
-	setDefault(TAB_PM_DIRTY, true);
 	setDefault(SOCKET_IN_BUFFER, 8192);
 	setDefault(SOCKET_OUT_BUFFER, 8192);
 	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "certs" PATH_SEPARATOR_STR);
+	setDefault(BOLD_FINISHED_DOWNLOADS, true);
+	setDefault(BOLD_FINISHED_UPLOADS, true);
+	setDefault(BOLD_QUEUE, true);
+	setDefault(BOLD_HUB, true);
+	setDefault(BOLD_PM, true);
+	setDefault(BOLD_SEARCH, true);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
@@ -524,27 +525,10 @@ SettingsManager::SettingsManager()
 
 void SettingsManager::load(string const& aFileName)
 {
-	string xmltext;
-	try {
-		File f(aFileName, File::READ, File::OPEN);
-		xmltext = f.read();		
-	} catch(const FileException&) {
-		// ...
-		FavoriteManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
-		setTemp();
-		return;
-	}
-
-	if(xmltext.empty()) {
-		// Nothing to load...
-		FavoriteManager::getInstance()->addPreviewApp("AVI Preview",Util::getAppPath() + "\\AVIPreview.exe","%[file]","avi;divx;mpg;mpeg");
-		setTemp();
-		return;
-	}
-
 	try {
 		SimpleXML xml;
-		xml.fromXML(xmltext);
+		
+		xml.fromXML(File(aFileName, File::READ, File::OPEN).read());
 		
 		xml.resetCurrentChild();
 		
@@ -596,21 +580,23 @@ void SettingsManager::load(string const& aFileName)
 #ifdef _DEBUG
 		set(CLIENT_ID, CID::generate().toBase32());
 #endif
-		setDefault(UDP_PORT, SETTING(TCP_PORT));
-
-		if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
-			set(TCP_PORT, (int)Util::rand(1025, 32000));
-			set(UDP_PORT, (int)Util::rand(1025, 32000));
-		}
-
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
 
-		setTemp();
 	} catch(const Exception&) {
-		// Oops, bad...
+		if(CID(SETTING(CLIENT_ID)).isZero())
+			set(CLIENT_ID, CID::generate().toBase32());
+
+		ClientManager::getInstance()->loadUsers();
 	}
+	
+	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
+		set(TCP_PORT, (int)Util::rand(1025, 32000));
+		set(UDP_PORT, (int)Util::rand(1025, 32000));
+	}
+
+	setDefault(UDP_PORT, SETTING(TCP_PORT));
 }
 
 void SettingsManager::save(string const& aFileName) {

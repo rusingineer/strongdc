@@ -50,10 +50,6 @@ void FileChunksInfo::Free(const string& name)
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if((*i)->tempTargetName == name ){
 			vecAllFileChunksInfo.erase(i);
-			
-			for(Chunk::Iter j = (*i)->running.begin(); j != (*i)->running.end(); ++j)
-				if(j->second->download) j->second->download->setQI(NULL);
-			
 			return;
 		}
 	}
@@ -651,9 +647,9 @@ int64_t splitChunk(int64_t chunkSize, int64_t chunkSpeed, int64_t estimatedSpeed
 	return chunkSize * chunkSpeed / (chunkSpeed + estimatedSpeed);
 }
 
-int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t estimatedSpeed){
+int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimatedSpeed*/){
 	if(partialInfo.empty()){
-		return getChunk(estimatedSpeed);
+		return -1;
 	}
 
 	Lock l(cs);

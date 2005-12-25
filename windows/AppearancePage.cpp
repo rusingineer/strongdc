@@ -62,12 +62,12 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::USE_OEM_MONOFONT, ResourceManager::SETTINGS_USE_OEM_MONOFONT },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
 	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
-	{ SettingsManager::FINISHED_DOWNLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_DOWNLOAD_DIRTY },	
-    { SettingsManager::FINISHED_UPLOAD_DIRTY, ResourceManager::SETTINGS_FINISHED_UPLOAD_DIRTY },	
-    { SettingsManager::QUEUE_DIRTY, ResourceManager::SETTINGS_QUEUE_DIRTY },	
-	{ SettingsManager::TAB_HUB_DIRTY, ResourceManager::SETTINGS_TAB_HUB_DIRTY },	
-	{ SettingsManager::TAB_SEARCH_DIRTY, ResourceManager::SETTINGS_TAB_SEARCH_DIRTY },	
-    { SettingsManager::TAB_PM_DIRTY, ResourceManager::SETTINGS_TAB_PM_DIRTY },
+	{ SettingsManager::BOLD_FINISHED_DOWNLOADS, ResourceManager::SETTINGS_FINISHED_DOWNLOAD_DIRTY },	
+    { SettingsManager::BOLD_FINISHED_UPLOADS, ResourceManager::SETTINGS_FINISHED_UPLOAD_DIRTY },	
+    { SettingsManager::BOLD_QUEUE, ResourceManager::SETTINGS_QUEUE_DIRTY },	
+	{ SettingsManager::BOLD_HUB, ResourceManager::SETTINGS_TAB_HUB_DIRTY },	
+	{ SettingsManager::BOLD_SEARCH, ResourceManager::SETTINGS_TAB_SEARCH_DIRTY },	
+    { SettingsManager::BOLD_PM, ResourceManager::SETTINGS_TAB_PM_DIRTY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
