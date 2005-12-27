@@ -302,12 +302,12 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 			return;
 		}
 		string hubIpPort = x.substr(i, j-i);
-		User::Ptr user = ClientManager::getInstance()->getUser(nick, hubIpPort, true);
+		//User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
 
-		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
+		SearchResult* sr = new SearchResult(NULL, type, slots, freeSlots, size,
 			file, hubName, hubIpPort, address, false);
 
-		queue.addResult(sr);
+		queue.addResult(sr, nick);
 		queue.s.signal();
 	} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
 		AdcCommand c(x.substr(0, x.length()-1));

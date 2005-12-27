@@ -533,8 +533,10 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 	if(aSource->isSet(UserConnection::FLAG_INCOMING)) {
 		// Try to guess where this came from...
+		cs_expected.enter();
 		ExpectMap::iterator i = expectedConnections.find(aNick);
 		if(i == expectedConnections.end()) {
+			cs_expected.leave();
 			dcdebug("Unknown incoming connection from %s\n", aNick.c_str());
 			putConnection(aSource);
 			return;
@@ -542,6 +544,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
         aSource->setToken(i->second.first);	
 		aSource->setHubUrl(i->second.second);	
 		expectedConnections.erase(i);
+		cs_expected.leave();
 	}
 	CID cid = ClientManager::getInstance()->makeCid(aNick, aSource->getHubUrl());
 

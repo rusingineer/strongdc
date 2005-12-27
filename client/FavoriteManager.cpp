@@ -639,6 +639,16 @@ void FavoriteManager::userUpdated(const OnlineUser& info) {
 	}
 }
 
+FavoriteHubEntry* FavoriteManager::getFavoriteHubEntry(const string& aServer) {
+	for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
+		FavoriteHubEntry* hub = *i;
+		if(Util::stricmp(hub->getServer(), aServer) == 0) {
+			return hub;
+		}
+	}
+	return NULL;
+}
+	
 bool FavoriteManager::hasSlot(const User::Ptr& aUser) const { 
 	Lock l(cs);
 	FavoriteMap::const_iterator i = users.find(aUser->getCID());
@@ -737,7 +747,7 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
         if( (uc.getCtx() & ctx) && 
-			(uc.getHub().empty() || find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end()) ) 
+			(/*uc.getHub().empty() || */find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end()) ) 
 		{
 			lst.push_back(*i);
 		}

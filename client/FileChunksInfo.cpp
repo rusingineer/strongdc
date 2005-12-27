@@ -444,6 +444,52 @@ inline void FileChunksInfo::dumpVerifiedBlocks()
 #endif
 }
 
+bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t end, const TigerTree& aTree)
+{
+	dcassert(end - start <= tthBlockSize);
+	size_t len = (size_t)(end - start);
+
+	TigerTree cur(tthBlockSize);
+    cur.update(data, len);
+	cur.finalize();
+
+	dcassert(cur.getLeaves().size() == 1);
+
+	// verify OK
+	u_int16_t blockNo = (u_int16_t)(start / tthBlockSize);
+	if(cur.getLeaves()[0] == aTree.getLeaves()[blockNo]){
+		markVerifiedBlock(blockNo, blockNo + 1);
+		return true;
+	}
+
+	// fail
+	if(!waiting.empty() && waiting.rbegin()->second->end == start){
+		waiting.rbegin()->second->end = end;
+
+    }else{
+		bool merged = false;
+		// try to merge with running first
+		for(Chunk::Iter j = running.begin(); j != running.end(); j++){
+			if(j->first == start){
+				dcassert(j->second->pos == j->second->end);
+				j->second->pos = start;
+				j->second->end = end;
+				merged = true;
+			}else if(j->second->end == start){
+				j->second->end = end;
+				merged = true;
+			}
+		}
+		
+		if(!merged)
+			waiting.insert(make_pair(start, new Chunk(start, end)));
+	}
+
+	iDownloadedSize -= (end - start);
+
+	return false;
+}
+
 bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 {
 	if(tthBlockSize != aTree.getBlockSize())
@@ -577,6 +623,8 @@ void FileChunksInfo::abandonChunk(int64_t start)
 	
 	dcassert(chunk->pos != start);
 
+	int64_t oldPos = chunk->pos;
+
 	// don't abandon verified chunk
 	if(chunk->pos - start < tthBlockSize * 2){
 		chunk->pos = start;
@@ -596,8 +644,11 @@ void FileChunksInfo::abandonChunk(int64_t start)
 			chunk->pos = start;
 		}
 	}
-	selfCheck();
 
+	// adjust downloade size
+	iDownloadedSize -= (oldPos - chunk->pos);
+
+	selfCheck();
 }
 
 bool FileChunksInfo::isSource(const PartsInfo& partsInfo)
@@ -756,6 +807,54 @@ bool FileChunksInfo::isVerified(int64_t startPos, int64_t& len){
 	}
 
 	return false;
+}
+
+void FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree)
+{
+	Lock l(cs);
+
+	// which block the pos belong to?
+	u_int16_t block = (u_int16_t)(anyPos / tthBlockSize);
+	int64_t   start = block * tthBlockSize;
+	int64_t   end   = min(start + tthBlockSize, iFileSize);
+	size_t    len   = (size_t)(end - start);
+
+	if(len == 0){
+		dcassert(0);
+		return;
+	}
+
+	// all block bytes ready?
+	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++)
+		if(start < i->second->end && i->second->pos < end) return;
+
+	for(Chunk::Iter i = running.begin(); i != running.end(); i++)
+		if(start < i->second->end && i->second->pos < end) return;
+
+	// block not verified yet?
+	int64_t tmp = len;
+	if(isVerified(start, tmp)){
+		dcassert(tmp == len);
+		return;
+	}
+
+	// yield to allow other threads flush their data
+	Thread::yield();
+
+	// for exception free
+	auto_ptr<unsigned char> buf(new unsigned char[len]);
+
+	// reread all bytes from stream
+	SharedFileStream file(tempTargetName, start);
+
+	size_t tmpLen = len;
+	file.read(buf.get(), tmpLen);
+
+	dcassert(len == tmpLen);
+
+	// check against tiger tree
+	verify(buf.get(), start, end, aTree);
+
 }
 
 string GetPartsString(const PartsInfo& partsInfo)

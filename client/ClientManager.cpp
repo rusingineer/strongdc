@@ -158,20 +158,8 @@ User::Ptr ClientManager::getLegacyUser(const string& aNick) throw() {
 	return legacyUsers.insert(make_pair(Text::toLower(aNick), new User(aNick))).first->second;
 }
 
-User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl, bool aIpPort) throw() {
-	CID cid;
-	if(aIpPort) {
-		Lock l(cs);
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			if(((*i)->getIpPort() == aHubUrl) || ((*i)->getIp() == aHubUrl)) {
-				cid = makeCid(aNick, (*i)->getHubUrl());
-				break;
-			}
-		}
-	} else {
-		cid = makeCid(aNick, aHubUrl);
-	}
-
+User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw() {
+	CID cid = makeCid(aNick, aHubUrl);
 	Lock l(cs);
 
 	UserIter ui = users.find(cid);
@@ -256,7 +244,6 @@ void ClientManager::putOnline(OnlineUser& ou) throw() {
 }
 
 void ClientManager::putOffline(OnlineUser& ou) throw() {
-	// @BM: todo fix removing users
 	bool lastUser = false;
 	{
 		Lock l(cs);

@@ -71,6 +71,7 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 {
 public:
 	void nmdcExpect(const string& aNick, const string& aMyNick, const string& aHubUrl) {
+		Lock l(cs_expected);
 		expectedConnections.insert(make_pair(aNick, make_pair(aMyNick, aHubUrl)));
 	}
 
@@ -118,6 +119,7 @@ private:
 
 	CriticalSection cs;
 	CriticalSection cs_failedConnections;
+	CriticalSection cs_expected;
 	short port;
 	short securePort;
 

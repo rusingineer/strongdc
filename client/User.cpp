@@ -56,17 +56,17 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 			sm["cheatingdescription"] = ou->getCheatingString();
 			sm["clienttype"] = ou->getClientType();
 		}
+	}
 
-		if(compatibility) {
-			if(prefix == "my") {
-				sm["mynick"] = getNick();
-				sm["mycid"] = user->getCID().toBase32();
-			} else {
-				sm["nick"] = getNick();
-				sm["cid"] = user->getCID().toBase32();
-			}				
-		}
-	}	
+	if(compatibility) {
+		if(prefix == "my") {
+			sm["mynick"] = getNick();
+			if(user) sm["mycid"] = user->getCID().toBase32();
+		} else {
+			sm["nick"] = getNick();
+			if(user) sm["cid"] = user->getCID().toBase32();
+		}				
+	}
 }
 
 const bool Identity::supports(const string& name) const {

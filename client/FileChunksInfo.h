@@ -203,6 +203,11 @@ public:
 	bool isVerified(int64_t startPos, int64_t& len);
 
 	/**
+	 * Verify a block	
+ 	 */	
+ 	void verifyBlock(int64_t anyPos, const TigerTree& aTree);	
+ 	 	
+ 	/**
 	 * Debug
 	 */
 
@@ -272,6 +277,8 @@ public:
 	CriticalSection cs;
 
 private:
+	bool verify(const unsigned char* data, int64_t start, int64_t end, const TigerTree& aTree);
+
 	// for debug purpose
 	void dumpVerifiedBlocks();
 };

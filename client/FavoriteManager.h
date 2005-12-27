@@ -236,6 +236,7 @@ public:
 	void addFavorite(const FavoriteHubEntry& aEntry);
 	void removeFavorite(FavoriteHubEntry* entry);
 	bool checkFavHubExists(const FavoriteHubEntry& aEntry);
+	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer);
 
 // Favorite Directories
 	bool addFavoriteDir(const string& aDirectory, const string& aName);
@@ -246,16 +247,6 @@ public:
 // Recent Hubs
 	RecentHubEntry::List& getRecentHubs() { return recentHubs; };
 
-	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) {
-		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
-			FavoriteHubEntry* hub = *i;
-			if(Util::stricmp(hub->getServer(), aServer) == 0) {
-				return hub;
-			}
-		}
-		return NULL;
-	}
-	
 	void addRecent(const RecentHubEntry& aEntry);
 	void removeRecent(const RecentHubEntry* entry);
 	void updateRecent(const RecentHubEntry* entry);

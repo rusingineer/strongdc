@@ -322,9 +322,9 @@ void HubFrame::onEnter() {
 				}
 			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
-				params["hub"] = client->getHubName();
-				params["hubaddr"] = client->getHubUrl();
-				params["mynick"] = client->getMyNick(); 
+				params["hubNI"] = client->getHubName();
+				params["hubURL"] = client->getHubUrl();
+				params["myNI"] = client->getMyNick(); 
 				if(param.empty()) {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params))));
 				} else if(Util::stricmp(param.c_str(), _T("status")) == 0) {
@@ -706,7 +706,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 							PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 						if(isFavorite && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
-							MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.identity.getNick() + " - " + u.identity.getHubUrl()).c_str(), CTSTRING(FAVUSER_ONLINE));
+							MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.identity.getNick() + " - " + client->getHubName()).c_str(), CTSTRING(FAVUSER_ONLINE));
 						}
 
 						if (showJoins || (favShowJoins && isFavorite)) {
@@ -842,6 +842,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 	} else if(wParam == SET_WINDOW_TITLE) {
 		tstring* x = (tstring*)lParam;
 		SetWindowText(x->c_str());
+		SetMDIFrameMenu();
 		delete x;
 	} else if(wParam == STATS) {
 		size_t AllUsers = client->getUserCount();
@@ -1763,8 +1764,9 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	}
 	if(BOOLSETTING(LOG_STATUS_MESSAGES)) {
 		StringMap params;
-		params["hub"] = client->getHubName();
-		params["hubaddr"] = client->getHubUrl();
+		client->getHubIdentity().getParams(params, "hub", false);
+		params["hubURL"] = client->getHubUrl();
+		client->getMyIdentity().getParams(params, "my", true);
 		params["message"] = Text::fromT(aLine);
 		LOG(LogManager::STATUS, params);
 	}
@@ -1842,26 +1844,26 @@ void HubFrame::on(GetPassword, Client*) throw() {
 void HubFrame::on(HubUpdated, Client*) throw() { 
 	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getHubName(), true, false) + " (" + client->getHubUrl() + ")");
 }
-void HubFrame::on(Message, Client*, OnlineUser* u, const char* line) throw() {
+void HubFrame::on(Message, Client*, const OnlineUser& from, const char* line) throw() {
     char *temp, *chatline = (char *)line;
-    if(!u || u->getIdentity().isOp()) {
+	if(!(&from) || from.getIdentity().isOp()) {
 		if((temp = strchr(chatline, '\n')) != NULL) {
             temp[0] = NULL;
  	     	if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
 			  (strstr(chatline, "was kicked by") != NULL)) {
     			temp[0] = '\n';
-				speak(KICK_MSG, *u, NULL, NULL, Util::toDOS(line));		
+				speak(KICK_MSG, from, NULL, NULL, Util::toDOS(line));		
 			    return;
   			}
  	       temp[0] = '\n';
 		} else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
 			(strstr(chatline, "was kicked by") != NULL)) {
-			speak(KICK_MSG, *u, NULL, NULL, Util::toDOS(line));
+			speak(KICK_MSG, from, NULL, NULL, Util::toDOS(line));
  	       return;	
 		}
     }
 	
-	speak(ADD_CHAT_LINE, *u, NULL, NULL, Util::toDOS(line));
+	speak(ADD_CHAT_LINE, from, NULL, NULL, Util::toDOS(line));
 }
 
 void HubFrame::on(PrivateMessage, Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 
@@ -1907,6 +1909,8 @@ LRESULT HubFrame::onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 }
 
 BOOL HubFrame::checkCheating(OnlineUser& user, DirectoryListing* dl) {
+	if(!(&user)) return false;
+
 	int64_t statedSize = user.getIdentity().getBytesShared();
 	int64_t realSize = dl->getTotalSize();
 	
