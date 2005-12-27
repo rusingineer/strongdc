@@ -24,7 +24,7 @@
 #include "ResourceManager.h"
 #include "SettingsManager.h"
 
-ZFilter::ZFilter() : totalIn(0), totalOut(0) {
+ZFilter::ZFilter() throw(Exception) : totalIn(0), totalOut(0) {
 	memset(&zs, 0, sizeof(zs));
 
 	if(deflateInit(&zs, SETTING(MAX_COMPRESSION)) != Z_OK) {
@@ -37,7 +37,7 @@ ZFilter::~ZFilter() {
 	deflateEnd(&zs);
 }
 
-bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
+bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
 	if(outsize == 0)
 		return 0;
 
@@ -69,7 +69,7 @@ bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outs
 	}
 }
 
-UnZFilter::UnZFilter() {
+UnZFilter::UnZFilter() throw(Exception) {
 	memset(&zs, 0, sizeof(zs));
 
 	if(inflateInit(&zs) != Z_OK) 
@@ -82,7 +82,7 @@ UnZFilter::~UnZFilter() {
 	inflateEnd(&zs);
 }
 
-bool UnZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
+bool UnZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
 	if(outsize == 0)
 		return 0;
 

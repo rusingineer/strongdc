@@ -36,7 +36,7 @@ public:
 				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
 			fileChunks = FileChunksInfo::Get(tempTarget);
-			_ASSERT(!(fileChunks == (FileChunksInfo*)NULL));
+
 			bufPos = 0;
 			start = start + skippingBytes;
 			multiSourceChecking = true;

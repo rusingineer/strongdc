@@ -133,7 +133,7 @@ public:
 	
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
 
-	/*string getTag() const { 
+/*	string getTag() const { 
 		if(get("VE").empty() || get("HN").empty() || get("HR").empty() ||get("HO").empty() || get("SL").empty())
 			return Util::emptyString;
 

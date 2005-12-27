@@ -60,7 +60,7 @@ public:
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
-			if(ClientManager::getInstance()->isMeOp(hubs[0])) {
+			if(!hubs.empty() && ClientManager::getInstance()->isMeOp(hubs[0])) {
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				menu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));

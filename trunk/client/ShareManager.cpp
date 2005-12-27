@@ -1370,15 +1370,16 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 				results.push_back(sr);*/
 			pair< HashFileIter, HashFileIter> iter = tthIndex.equal_range(&tth);
 			for(; iter.first != iter.second; ++(iter.first) ){
-
-				results.push_back( new SearchResult(aClient, SearchResult::TYPE_FILE, 
-					iter.first->second->getSize(),
-					iter.first->second->getParent()->getFullName() + iter.first->second->getName(), 
-					&iter.first->second->getTTH(), true));
-
-				ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
-				if(ShareManager::getInstance()->getHits() == maxResults)
-					break;
+				try {
+					results.push_back( new SearchResult(aClient, SearchResult::TYPE_FILE, 
+						iter.first->second->getSize(),
+						iter.first->second->getParent()->getFullName() + iter.first->second->getName(), 
+						&iter.first->second->getTTH(), true));
+	
+					ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
+					if(ShareManager::getInstance()->getHits() == maxResults)
+						break;
+				} catch(...) { }
 			}
 		}
 		return;

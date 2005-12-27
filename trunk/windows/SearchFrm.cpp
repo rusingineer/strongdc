@@ -751,10 +751,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-		SearchManager* searchMgr = SearchManager::getInstance();
-		searchMgr->removeListener(this);
-		searchMgr->queue.openedSearchFrms--;
-		dcassert(searchMgr->queue.openedSearchFrms >= 0);
+		SearchManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
  		ClientManager* clientMgr = ClientManager::getInstance();
@@ -966,11 +963,11 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 			users.insert(sr->getUser()->getCID());
 		}
 
-		ucParams["file"] = sr->getFile();
-		ucParams["filesize"] = Util::toString(sr->getSize());
-		ucParams["filesizeshort"] = Util::formatBytes(sr->getSize());
+		ucParams["fileFN"] = sr->getFile();
+		ucParams["fileSI"] = Util::toString(sr->getSize());
+		ucParams["fileSIshort"] = Util::formatBytes(sr->getSize());
 		if(sr->getTTH() != NULL) {
-			ucParams["tth"] = sr->getTTH()->toBase32();
+			ucParams["fileTR"] = sr->getTTH()->toBase32();
 		}
 
 		StringMap tmp = ucParams;

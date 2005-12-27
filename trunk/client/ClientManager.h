@@ -53,7 +53,7 @@ public:
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void infoUpdated(bool antispam);
 
-	User::Ptr getUser(const string& aNick, const string& aHubUrl, bool aIpPort = false) throw();
+	User::Ptr getUser(const string& aNick, const string& aHubUrl) throw();
 	User::Ptr getLegacyUser(const string& aNick) throw();
 	User::Ptr getUser(const CID& cid) throw();
 

@@ -452,6 +452,7 @@ void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = 
 	int i=-1;
 	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(i);
+
 		tstring target = aTarget.empty() ? Text::toT(SETTING(DOWNLOAD_DIRECTORY)) : aTarget;
 
 		try {
@@ -459,7 +460,7 @@ void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = 
 				if(view) {
 					File::deleteFile(Text::fromT(target) + Util::validateFileName(ii->file->getName()));
 				}
-				dl->download(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)), view, WinUtil::isShift(), prio);
+				dl->download(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)), view, WinUtil::isShift() || view, prio);
 			} else if(!view) {
 				dl->download(ii->dir, Text::fromT(target), WinUtil::isShift(), prio);
 			} 
@@ -513,6 +514,7 @@ LRESULT DirectoryListingFrame::onDownloadWithPrio(WORD /*wNotifyCode*/, WORD wID
 LRESULT DirectoryListingFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlList.GetSelectedCount() == 1) {
 		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
+
 		try {
 			if(ii->type == ItemInfo::FILE) {
 				tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + ii->getText(COLUMN_FILENAME);
@@ -607,7 +609,7 @@ LRESULT DirectoryListingFrame::onGoToDirectory(WORD /*wNotifyCode*/, WORD /*wID*
 			return 0;
 		DirectoryListing::Directory* pd = ii->file->getParent();
 		while(pd != NULL && pd != dl->getRoot()) {
-			fullPath = _T("\\") + Text::toT(pd->getName()) + fullPath;
+			fullPath = Text::toT(pd->getName()) + _T("\\") + fullPath;
 			pd = pd->getParent();
 		}
 	} else if(ii->type == ItemInfo::DIRECTORY)	{
@@ -1105,21 +1107,21 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 		}
 		if(!dl->getUser()->isOnline())
 			return;
-		ucParams["tth"] = "NONE";
+		ucParams["fileTR"] = "NONE";
 		if(ii->type == ItemInfo::FILE) {
 			ucParams["type"] = "File";
-			ucParams["file"] = dl->getPath(ii->file) + ii->file->getName();
-			ucParams["filesize"] = Util::toString(ii->file->getSize());
-			ucParams["filesizeshort"] = Util::formatBytes(ii->file->getSize());
+			ucParams["fileFN"] = dl->getPath(ii->file) + ii->file->getName();
+			ucParams["fileSI"] = Util::toString(ii->file->getSize());
+			ucParams["fileSIshort"] = Util::formatBytes(ii->file->getSize());
 			TTHValue *hash = ii->file->getTTH();
 			if(hash != NULL) {
-				ucParams["tth"] = hash->toBase32();
+				ucParams["fileTR"] = hash->toBase32();
 			}
 		} else {
 			ucParams["type"] = "Directory";
-			ucParams["file"] = dl->getPath(ii->dir) + ii->dir->getName();
-			ucParams["filesize"] = Util::toString(ii->dir->getTotalSize());
-			ucParams["filesizeshort"] = Util::formatBytes(ii->dir->getTotalSize());
+			ucParams["fileFN"] = dl->getPath(ii->dir) + ii->dir->getName();
+			ucParams["fileSI"] = Util::toString(ii->dir->getTotalSize());
+			ucParams["fileSIshort"] = Util::formatBytes(ii->dir->getTotalSize());
 		}
 
 		StringMap tmp = ucParams;

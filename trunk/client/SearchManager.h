@@ -51,6 +51,7 @@ public:
 
 	typedef SearchResult* Ptr;
 	typedef vector<Ptr> List;
+	typedef map<Ptr, string> Map;
 	typedef List::iterator Iter;
 	
 	SearchResult(Client* aClient, Types aType, int64_t aSize, const string& name, const TTHValue* aTTH, bool aUtf8);
@@ -75,6 +76,7 @@ public:
 	AdcCommand toRES(char type) const;
 
 	User::Ptr& getUser() { return user; }
+	void setUser(const User::Ptr& u) { user = u; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
 
 	const string& getFile() const { return file; }
@@ -154,10 +156,9 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		bool stop;
 		CriticalSection cs;
 		Semaphore s;
-		SearchResult::List resultList;
-		u_int32_t openedSearchFrms;
+		SearchResult::Map resultList;
 
-		ResultsQueue() : stop(false), openedSearchFrms(0) {}
+		ResultsQueue() : stop(false) {}
 		virtual ~ResultsQueue() throw() {
 			shutdown();
 		}
@@ -165,10 +166,11 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		int run() {
 			setThreadPriority(Thread::IDLE);
 			SearchResult* sr = NULL;
+			string nick;
 			bool resort = false;
 			stop = false;
 
-			for(;;) {
+			while(true) {
 				s.wait();
 				if(stop)
 					break;
@@ -176,16 +178,18 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 				{
 					Lock l(cs);
 					if(!resultList.empty()) {
-						sr = *resultList.begin();
+						sr = resultList.begin()->first;
+						nick = resultList.begin()->second;
 						resultList.erase(resultList.begin());
 						int size = resultList.size();
-						resort = (size % 20 == 0);
+						resort = (size % 10 == 0);
 					} else {
 						sr = NULL;
 					}
 				}
 
 				if(sr != NULL) {
+					sr->setUser(ClientManager::getInstance()->getLegacyUser(nick));
 					OnlineUser* ou = sr->getUser()->getOnlineUser();
 					if(ou) {
 						if (!sr->getIP().empty())
@@ -208,7 +212,6 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 					if(resort)
 						SearchManager::getInstance()->fire(SearchManagerListener::Resort());
 				}
-				sleep((openedSearchFrms != 0) ? 10 : 100);
 				resort = false;
 			}
 			return 0;
@@ -218,9 +221,9 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 			stop = true;
 			s.signal();
 		}
-		void addResult(SearchResult* sr) {
+		void addResult(SearchResult* sr, const string& aNick) {
 			Lock l(cs);
-			resultList.push_back(sr);
+			resultList.insert(make_pair(sr, aNick));
 		}
 	
 	};

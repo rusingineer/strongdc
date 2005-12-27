@@ -109,11 +109,13 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 			return *i->second;
 
 		User::Ptr p;
-		if(aNick == getMyNick())
+		if(aNick == getMyNick()) {
 			p = ClientManager::getInstance()->getMe();
-		else
+			getMyIdentity().setUser(p);
+			getMyIdentity().setHubUrl(getHubUrl());
+		} else {
 			p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
-
+		}
 		u = users.insert(make_pair(aNick, new OnlineUser(p, *this))).first->second;
 		u->getIdentity().setNick(aNick);
 	}
@@ -173,8 +175,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			id.set("HO", t.getTokens()[2]);
 		} else if(i->compare(0, 2, "S:") == 0) {
 			id.set("SL", i->substr(2));
-		} else if(i->compare(0, 2, "V:") == 0) {
-			string::size_type j = i->find("V:");
+		} else if((j = i->find("V:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
 			id.set("VE", *i);
 		} else if(i->compare(0, 2, "M:") == 0) {
@@ -246,7 +247,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         	u = findUser(nick);
         }
 
-		fire(ClientListener::Message(), this, u, Util::validateMessage(fromNmdc(aLine), true).c_str());
+		fire(ClientListener::Message(), this, *u, Util::validateMessage(fromNmdc(aLine), true).c_str());
 		return;
 	}
 
@@ -527,6 +528,10 @@ void NmdcHub::onLine(const char* aLine) throw() {
 							u.getUser()->unsetFlag(User::PASSIVE);
 					}
 				}
+
+				if(u.getUser() == getMyIdentity().getUser())
+					setMyIdentity(u.getIdentity());
+					
 				fire(ClientListener::UserUpdated(), this, u);
 		    	return;
 		    }
@@ -900,7 +905,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					OnlineUser* to = findUser(getMyNick());	
 									
 					if(replyTo == NULL || from == NULL || to == NULL) {
-						fire(ClientListener::Message(), this, from, Util::validateMessage(fromNmdc(temp2), true).c_str());
+						fire(ClientListener::Message(), this, *from, Util::validateMessage(fromNmdc(temp2), true).c_str());
 					} else {
 						fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, Util::validateMessage(fromNmdc(temp2), true));
 					}

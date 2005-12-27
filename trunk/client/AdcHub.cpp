@@ -112,6 +112,7 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 	dcdebug("%s %s\n", u.getUser()->getCID().toBase32().c_str(), ClientManager::getInstance()->getMe()->getCID().toBase32().c_str());
 	if(u.getUser() == ClientManager::getInstance()->getMe()) {
 		state = STATE_NORMAL;
+		setMyIdentity(u.getIdentity());
 	}
 	fire(ClientListener::UserUpdated(), this, u);
 }
@@ -148,7 +149,7 @@ void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
 		fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, c.getParam(0));
 	} else {
 		string msg = '<' + from->getIdentity().getNick() + "> " + c.getParam(0);
-		fire(ClientListener::Message(), this, from, msg.c_str());
+		fire(ClientListener::Message(), this, *from, msg.c_str());
 	}		
 }
 
@@ -264,7 +265,7 @@ void AdcHub::handle(AdcCommand::STA, AdcCommand& c) throw() {
 		return;
 
 	// @todo Check for invalid protocol and unset SSL if necessary
-	fire(ClientListener::Message(), this, u, c.getParam(1).c_str());
+	fire(ClientListener::Message(), this, *u, c.getParam(1).c_str());
 }
 
 void AdcHub::handle(AdcCommand::SCH, AdcCommand& c) throw() {	
@@ -448,7 +449,7 @@ void AdcHub::on(Connected) throw() {
 
 void AdcHub::on(Line, const string& aLine) throw() { 
 	if(BOOLSETTING(ADC_DEBUG)) {
-		fire(ClientListener::Message(), this, (OnlineUser*)NULL, ("<ADC>" + aLine + "</ADC>").c_str());
+		fire(ClientListener::Message(), this, *(OnlineUser*)NULL, ("<ADC>" + aLine + "</ADC>").c_str());
 	}
 	dispatch(aLine); 
 }

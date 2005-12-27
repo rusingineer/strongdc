@@ -84,7 +84,7 @@ public:
 		/** Add a user's filelist to the queue. */
 	void addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException);
 	/** Queue a partial file list download */
-	void addPfs(const User::Ptr aUser, const string& aDir) throw();
+	void addPfs(const User::Ptr& aUser, const string& aDir) throw();
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick());

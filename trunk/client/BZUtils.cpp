@@ -23,7 +23,7 @@
 #include "Exception.h"
 #include "ResourceManager.h"
 
-BZFilter::BZFilter() {
+BZFilter::BZFilter() throw(Exception) {
 	memset(&zs, 0, sizeof(zs));
 
 	if(BZ2_bzCompressInit(&zs, 9, 0, 30) != BZ_OK) {
@@ -36,7 +36,7 @@ BZFilter::~BZFilter() {
 	BZ2_bzCompressEnd(&zs);
 }
 
-bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
+bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
 	if(outsize == 0)
 		return 0;
 
@@ -64,7 +64,7 @@ bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& out
 	}
 }
 
-UnBZFilter::UnBZFilter() {
+UnBZFilter::UnBZFilter() throw(Exception) {
 	memset(&zs, 0, sizeof(zs));
 
 	if(BZ2_bzDecompressInit(&zs, 0, 0) != BZ_OK) 
@@ -77,7 +77,7 @@ UnBZFilter::~UnBZFilter() {
 	BZ2_bzDecompressEnd(&zs);
 }
 
-bool UnBZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
+bool UnBZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
 	if(outsize == 0)
 		return 0;
 

@@ -37,7 +37,6 @@ Client::Client(const string& hubURL, char separator_, bool secure_) :
 {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
-	//getMyIdentity().setUser(ClientManager::getInstance()->getMe());
 }
 
 Client::~Client() throw() {
@@ -69,6 +68,8 @@ void Client::reloadSettings() {
 		getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
 		setStealth(true);
 	}
+	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
+	getMyIdentity().setHubUrl(getHubUrl());	
 }
 
 int Client::getMode() {

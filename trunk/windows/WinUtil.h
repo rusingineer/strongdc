@@ -249,7 +249,7 @@ public:
 
 	struct NmdcOnly {
 		NmdcOnly() : nmdcOnly(true) { }
-		void operator()(UserInfoBase* ui) { if(!ui->getUser()->getCID().isZero()) nmdcOnly = false; }
+		void operator()(UserInfoBase* ui) { if(!ui->getUser()->isSet(User::NMDC)) nmdcOnly = false; }
 
 		bool nmdcOnly;
 	};

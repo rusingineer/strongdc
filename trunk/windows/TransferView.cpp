@@ -141,7 +141,8 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			int i = -1;
 			ItemInfo* itemI;
 			bool bCustomMenu = false;
-			if( (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
+			if(!ii->isSet(ItemInfo::FLAG_SEGMENTED) && (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 				itemI = ctrlTransfers.getItemData(i);
 				bCustomMenu = true;
 	
@@ -150,7 +151,6 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				if(itemI->user != (User::Ptr)NULL)
 					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(itemI->user->getCID()));
 			}
-			ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
 			WinUtil::ClearPreviewMenu(previewMenu);
 
 			segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
@@ -221,7 +221,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 			continue;
 
 		StringMap tmp = ucParams;
-		ucParams["file"] = itemI->Target;
+		ucParams["fileFN"] = itemI->Target;
 		ClientManager::getInstance()->userCommand(itemI->user, uc, tmp, true);
 	}
 	return;

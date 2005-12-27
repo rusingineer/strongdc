@@ -652,6 +652,16 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
+
+			if(d->getTreeValid()) {
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+				if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
+					lpFileDataInfo->verifyBlock(e.pos, d->getTigerTree());
+				}else{
+					dcassert(0);
+				}
+			}
+
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
 				dcdebug("BlockFinished\n");
@@ -859,22 +869,22 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	StringMap params;
 	params["target"] = d->getTarget();
-	params["user"] = aSource->getUser()->getFirstNick();
-	params["userip"] = aSource->getRemoteIp();
-//	params["hub"] = aSource->getUser()->getLastHubName();
-//	params["hubip"] = aSource->getUser()->getLastHubAddress();
-	params["size"] = Util::toString(d->getSize());
-	params["sizeshort"] = Util::formatBytes(d->getSize());
-	params["chunksize"] = Util::toString(d->getTotal());
-	params["chunksizeshort"] = Util::formatBytes(d->getTotal());
-	params["actualsize"] = Util::toString(d->getActual());
-	params["actualsizeshort"] = Util::formatBytes(d->getActual());
+	params["userNI"] = aSource->getUser()->getFirstNick();
+	params["userI4"] = aSource->getRemoteIp();
+	/// @todo params["hub"] = aSource->getUser()->getLastHubName();
+	/// @todo params["hubip"] = aSource->getUser()->getLastHubAddress();
+	params["fileSI"] = Util::toString(d->getSize());
+	params["fileSIshort"] = Util::formatBytes(d->getSize());
+	params["fileSIchunk"] = Util::toString(d->getTotal());
+	params["fileSIchunkshort"] = Util::formatBytes(d->getTotal());
+	params["fileSIactual"] = Util::toString(d->getActual());
+	params["fileSIactualshort"] = Util::formatBytes(d->getActual());
 	params["speed"] = Util::formatBytes(d->getAverageSpeed()) + "/s";
 	params["time"] = Util::formatSeconds((GET_TICK() - d->getStart()) / 1000);
 	params["sfv"] = Util::toString(d->isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
 	TTHValue *hash = d->getTTH();
 	if(hash != NULL) {
-		params["tth"] = d->getTTH()->toBase32();
+		params["fileTR"] = d->getTTH()->toBase32();
 	}
 	LOG(LogManager::DOWNLOAD, params);
 }
@@ -970,7 +980,6 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 			}
 		} 
 	} else if( d->isSet(Download::FLAG_TESTSUR) ) {
-		dcdebug("TestSUR Error: %s\n", aError);
 		OnlineUser* user = aSource->getUser()->getOnlineUser();
 		if(user) {
 			user->setTestSUR(aError);

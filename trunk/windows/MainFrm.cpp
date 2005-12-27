@@ -1028,11 +1028,15 @@ int MainFrame::run() {
 		File f(Text::fromT(file), File::READ, File::OPEN);
 		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
 
-		size_t n = 0;
-		size_t n2 = 512*1024;
-		while( (n = f.read(buf, n2)) > 0) {
-			tth.update(buf, n);
-			n2 = 512*1024;
+		if(f.getSize() > 0) {
+			size_t n = 0;
+			size_t n2 = 512*1024;
+			while( (n = f.read(buf, n2)) > 0) {
+				tth.update(buf, n);
+				n2 = 512*1024;
+			}
+		} else {
+			tth.update("", 0);
 		}
 		tth.finalize();
 
@@ -1422,6 +1426,7 @@ int MainFrame::FileListQueue::run() {
 			fileLists.pop_front();
 		}
 		if(Util::fileExists(Text::fromT(i->file))) {
+			// @TODO: fix
 			OnlineUser* u = i->user->getOnlineUser();
 			if(u) {
 				Client* c = &u->getClient();
@@ -1429,13 +1434,13 @@ int MainFrame::FileListQueue::run() {
 					HubFrame* hubFrame = HubFrame::getHub(c);
 					if(hubFrame) {
 						DirectoryListing* dl = new DirectoryListing(i->user);
-						//try {
+						try {
 							dl->loadFile(Text::fromT(i->file));
 							ADLSearchManager::getInstance()->matchListing(dl);
 							hubFrame->checkCheating(*u, dl);
 							c->updated(*u);
-						//} catch(...) {
-						//}
+						} catch(...) {
+						}
 						delete dl;
 					}
 				}
