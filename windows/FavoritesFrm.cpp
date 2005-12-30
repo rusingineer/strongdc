@@ -388,9 +388,9 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 		int i = ctrlHubs.GetNextItem(-1, LVNI_SELECTED);
 		FavoriteHubEntry* entry = (FavoriteHubEntry*)ctrlHubs.GetItemData(i);
 		StringMap params;
-		params["hub"] = entry->getName();
-		params["hubaddr"] = entry->getServer();
-		params["mynick"] = entry->getNick(); 
+		params["hubNI"] = entry->getName();
+		params["hubURL"] = entry->getServer();
+		params["myNI"] = entry->getNick(); 
 		tstring filename = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params)));
 		if(Util::fileExists(Text::fromT(filename))){
 			ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);

@@ -56,7 +56,6 @@ public:
 	 */
 	void addDirectory(const string& aDirectory, const string & aName) throw(ShareException);
 	void removeDirectory(const string& aName, bool duringRefresh = false);	
-	void removeDirectory1(const string& aName);
 	void renameDirectory(const string& oName, const string& nName) throw(ShareException);
 	string translateTTH(const string& TTH) throw(ShareException);
 	string translateFileName(const string& aFile) throw(ShareException);

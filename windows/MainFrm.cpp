@@ -542,6 +542,10 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		Popup* msg = (Popup*)lParam;
 		PopupManager::getInstance()->Show(Text::fromT(msg->Message), Text::fromT(msg->Title), msg->Icon);
 		delete msg;
+	} else if(wParam == WM_CLOSE) {
+		PopupManager::getInstance()->Remove((int)lParam);
+	} else if(wParam == REMOVE_POPUP){
+		PopupManager::getInstance()->AutoRemove();
 	} else if(wParam == SET_NORMAL_TRAY_ICON) {
 		if(bIsPM && bTrayIcon == true) {
 			NOTIFYICONDATA nid;
@@ -1426,25 +1430,14 @@ int MainFrame::FileListQueue::run() {
 			fileLists.pop_front();
 		}
 		if(Util::fileExists(Text::fromT(i->file))) {
-			// @TODO: fix
-			OnlineUser* u = i->user->getOnlineUser();
-			if(u) {
-				Client* c = &u->getClient();
-				if(c && c->isOp()) {
-					HubFrame* hubFrame = HubFrame::getHub(c);
-					if(hubFrame) {
-						DirectoryListing* dl = new DirectoryListing(i->user);
-						try {
-							dl->loadFile(Text::fromT(i->file));
-							ADLSearchManager::getInstance()->matchListing(dl);
-							hubFrame->checkCheating(*u, dl);
-							c->updated(*u);
-						} catch(...) {
-						}
-						delete dl;
-					}
-				}
+			DirectoryListing* dl = new DirectoryListing(i->user);
+			try {
+				dl->loadFile(Text::fromT(i->file));
+				ADLSearchManager::getInstance()->matchListing(dl);
+				ClientManager::getInstance()->checkCheating(i->user, dl);
+			} catch(...) {
 			}
+			delete dl;
 		}
 		delete i;
 	}

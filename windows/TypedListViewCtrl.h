@@ -740,26 +740,29 @@ public:
 
 	T* findMainItem(const string& groupingString) {
 		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-			if(groupingString == (*i)->getGroupingString()) {
+			if(strcmp(groupingString.c_str(), (*i)->getGroupingString().c_str()) == 0) {
 				return *i;
 			}
 		}
 		return NULL;
 	}
 
-	void insertGroupedItem(T* item, bool autoExpand) {
-		T* mainItem = findMainItem(item->getGroupingString());
+	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
+		T* mainItem = NULL;
+		
+		if(!extra)
+			findMainItem(item->getGroupingString());
+
 		int pos = -1;
 
 		if(mainItem == NULL) {
-			T* newItem = item->createMainItem();
-			mainItems.push_back(newItem);
+			mainItem = item->createMainItem();
+			mainItems.push_back(mainItem);
 
-			newItem->mainItem = true;
-			pos = insertItem(getSortPos(newItem), newItem, newItem->imageIndex());
+			mainItem->mainItem = true;
+			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
 
-			if(newItem != item) {
-				mainItem = newItem;
+			if(mainItem != item) {
 				uniqueMainItem = true;
 			} else {
 				uniqueMainItem = false;

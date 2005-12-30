@@ -31,8 +31,8 @@ public:
 		eFilterContainer(WC_EDIT, this, DEBUG_FILTER_TEXT_MESSAGE_MAP),
 		clearContainer(WC_BUTTON, this, CLEAR_MESSAGE_MAP),
 		statusContainer(STATUSCLASSNAME, this, CLEAR_MESSAGE_MAP)
- { 
-		DebugManager::getInstance()->addListener(this);
+	 { 
+
 	}
 	~CDMDebugFrame() {		
 	}

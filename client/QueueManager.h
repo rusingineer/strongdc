@@ -126,7 +126,7 @@ public:
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
-	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
+	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw();
 	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
@@ -311,6 +311,7 @@ private:
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 };
 
 #endif // !defined(QUEUE_MANAGER_H)

@@ -1,3 +1,21 @@
+/* 
+* Copyright (C) 2003-2005 Pär Björklund, per.bjorklund@gmail.com
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
@@ -14,10 +32,9 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	if(!activated)
 		return;
 
-	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY)) {
+	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY))
 		return;
-	}
-
+	
 	if(!MainFrame::getMainFrame()->bAppMinimized && BOOLSETTING(POPUP_MINIMIZED)) {
 		return;
 	}
@@ -51,8 +68,6 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	int screenHeight = rcDesktop.bottom;
 	int screenWidth = rcDesktop.right;
 
-	Lock l(cs);
-
 	//if we have popups all the way up to the top of the screen do not create a new one
 	if( (offset + height) > screenHeight)
 		return;
@@ -64,7 +79,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	CRect rc(screenWidth - width , screenHeight - height - offset, screenWidth, screenHeight - offset);
 	
 	//Create a new popup
-	PopupWnd *p = new PopupWnd(msg, aTitle, rc);
+	PopupWnd *p = new PopupWnd(msg, aTitle, rc, id++);
 			
 	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
 		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
@@ -89,24 +104,27 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	popups.push_back(p);
 }
 
-void PopupManager::on(TimerManagerListener::Second /*type*/, u_int32_t tick) {
-//	if(!BOOLSETTING(REMOVE_POPUPS))
-//		return;
+void PopupManager::on(TimerManagerListener::Second /*type*/, u_int32_t /*tick*/) {
 
-	Lock l(cs);
+	//post a message and let the main window thread take care of the window
+	::PostMessage(WinUtil::mainWnd, WM_SPEAKER, MainFrame::REMOVE_POPUP, 0);
 
+}
+
+
+void PopupManager::AutoRemove(){
 	//we got nothing to do here
 	if(popups.empty()) {
 		return;
 	}
 
 	//check all popups and see if we need to remove anyone
-	PopupList::iterator i = popups.begin();
+	PopupIter i = popups.begin();
 	for(; i != popups.end(); ++i) {
 
-		if((*i)->visible + /*SETTING(POPUP_TIMEOUT)*/5 * 1000 < tick) {
+		if((*i)->visible + 5 * 1000 < GET_TICK()) {
 			//okay remove the first popup
-			Remove();
+			Remove((*i)->id);
 
 			//if list is empty there is nothing more to do
 			if(popups.empty())
@@ -118,30 +136,26 @@ void PopupManager::on(TimerManagerListener::Second /*type*/, u_int32_t tick) {
 	}
 }
 
-void PopupManager::Remove(int pos) {
-	Lock l(cs);
-
-	CRect rcDesktop;
-
-	//get desktop rect so we know where to place the popup
-	::SystemParametersInfo(SPI_GETWORKAREA,0,&rcDesktop,0);
-	if(pos == 0)
-		pos = rcDesktop.bottom;
-
+void PopupManager::Remove(u_int32_t pos) {
 	//find the correct window
-	int end = (rcDesktop.bottom - pos) / height;
-	PopupList::iterator i = popups.begin();
-	for(int j = 0; j < end; ++j, ++i);
-	
+	PopupIter i = popups.begin();
+
+	for(; i != popups.end(); ++i) {
+		if((*i)->id == pos)
+			break;
+	}
+
+	dcassert(i != popups.end());	
+
 	//remove the window from the list
 	PopupWnd *p = (*i);
-	popups.erase(i);
+	i = popups.erase(i);
 	
-	//close the window and delete it
 	if(p == NULL){
 		return;
 	}
 	
+	//close the window and delete it
 	p->SendMessage(WM_CLOSE, 0, 0);
 	delete p;
 	p = NULL;
@@ -158,12 +172,10 @@ void PopupManager::Remove(int pos) {
 	CRect rc;
 
 	//move down all windows
-	for(i = popups.begin(); i != popups.end(); ++i) {
+	for(; i != popups.end(); ++i) {
 		(*i)->GetWindowRect(rc);
-		if(rc.bottom <= pos){
-			rc.top += height;
-			rc.bottom += height;
-			(*i)->MoveWindow(rc);
-		}
+		rc.top += height;
+		rc.bottom += height;
+		(*i)->MoveWindow(rc);
 	}
 }

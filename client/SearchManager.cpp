@@ -198,7 +198,7 @@ void SearchManager::disconnect() throw() {
 	}
 }
 
-#define BUFSIZE 8192
+#define BUFSIZE 16384
 int SearchManager::run() {
 	
 	AutoArray<u_int8_t> buf(BUFSIZE);
@@ -402,12 +402,14 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		PartsInfo outPartialInfo;
 		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
 		
-		OnlineUser* ou = user->getOnlineUser();
-		if((UdpPort > 0) && ou && !outPartialInfo.empty()) {
-			char buf[1024];
-			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou->getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
-			buf[1023] = NULL;
-			Socket s; s.writeTo(Socket::resolve(address), UdpPort, buf);
+		if((UdpPort > 0) && !outPartialInfo.empty()) {
+			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+			if(&ou) {
+				char buf[1024];
+				_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou.getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
+				buf[1023] = NULL;
+				Socket s; s.writeTo(Socket::resolve(address), UdpPort, buf);
+			}
 		}
 	}
 }

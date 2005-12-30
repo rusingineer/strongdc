@@ -213,35 +213,13 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	{
 		Lock l(cs);
 		
-		UserConnection::Iter u = find(userConnections.begin(), userConnections.end(), aConn);
-		if(u != userConnections.end()) {
-			userConnections.erase(u);
-			pendingDelete.push_back(aConn);
-		}
+		dcassert(find(userConnections.begin(), userConnections.end(), aConn) != userConnections.end());
+		userConnections.erase(find(userConnections.begin(), userConnections.end(), aConn));
+		pendingDelete.push_back(aConn);
 	}
 }
 
 void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-
-	{
-		Lock l(cs_failedConnections);
-		for(UserConnection::Iter i = failedConnections.begin(); i != failedConnections.end(); ++i) {
-			UserConnection* aSource = *i;
-			if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
-				Lock l(cs);
-			
-				ConnectionQueueItem* cqi = aSource->getCQI();
-				dcassert(cqi->getState() == ConnectionQueueItem::IDLE);
-				cqi->setState(ConnectionQueueItem::WAITING);
-				cqi->setLastAttempt(GET_TICK());
-//				cqi->setConnection(NULL);
-				aSource->setCQI(NULL);
-			}
-			putConnection(aSource);
-		}
-		failedConnections.clear();
-	}
-
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
 	UserConnection::List added;
@@ -254,7 +232,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 		Lock l(cs);
 
 		int attempts = 0;
-		int attemptCycle = (60 + (int)(max((int)downloads.size() - 240, 0) / 4)) * 1000;
+		int attemptCycle = (60 + (int)(max((int)downloads.size() - 120, 0) / 2)) * 1000;
 
 		for(ConnectionQueueItem::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 			ConnectionQueueItem* cqi = *i;
@@ -288,13 +266,13 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				} 
 				
-				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(cqi->getUser()->getClient())) {
+				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(NULL)) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + attemptCycle) < aTick) && (attempts < 4) ) {
+				if( ((cqi->getLastAttempt() + attemptCycle) < aTick) && (attempts < 2) ) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
@@ -324,10 +302,10 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 						cqi->setState(ConnectionQueueItem::WAITING);
 					}
 				} else if(((cqi->getLastAttempt() + 50*1000) < aTick) && (cqi->getState() == ConnectionQueueItem::CONNECTING)) {
-					User::Ptr user = cqi->getUser();
-					if (user->getOnlineUser()) {
-						user->getOnlineUser()->connectionTimeout();
-					}			
+					OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(cqi->getUser());
+					if (&ou)
+						ou.getIdentity().connectionTimeout();
+
 					fire(ConnectionManagerListener::Failed(), cqi, STRING(CONNECTION_TIMEOUT));
 					cqi->setState(ConnectionQueueItem::WAITING);
 				}
@@ -437,13 +415,13 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 
 	UserConnection* uc = NULL;
 	try {
-/*		{
+		{
 			Lock l(cs);
 
 			// We don't want to be used as flooding instruments
 			unsigned count = 0;
 			for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
-				if((*j)->getSocket()->getIp() == aServer && (*j)->getSocket()->getPort() == aPort) {
+				if((*j)->getRemoteIp() == aServer && (*j)->getPort() == aPort) {
 					if(++count >= 5) {
 						// More than 5 outbound connections to the same addr/port? Can't trust that..
 						dcdebug("ConnectionManager::connect Tried to connect more than 2 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
@@ -451,7 +429,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 					}
 				}
 			}
-		} */
+		}
 		uc = getConnection(true, false);
 		uc->setToken(aNick);
 		uc->setHubUrl(hubUrl);
@@ -533,19 +511,16 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 	if(aSource->isSet(UserConnection::FLAG_INCOMING)) {
 		// Try to guess where this came from...
-		cs_expected.enter();
-		ExpectMap::iterator i = expectedConnections.find(aNick);
-		if(i == expectedConnections.end()) {
-			cs_expected.leave();
+		pair<string, string> i = expectedConnections.remove(aNick);
+		if(i.first.empty() && i.second.empty()) {
 			dcdebug("Unknown incoming connection from %s\n", aNick.c_str());
 			putConnection(aSource);
 			return;
 		}
-        aSource->setToken(i->second.first);	
-		aSource->setHubUrl(i->second.second);	
-		expectedConnections.erase(i);
-		cs_expected.leave();
+        aSource->setToken(i.first);	
+		aSource->setHubUrl(i.second);
 	}
+
 	CID cid = ClientManager::getInstance()->makeCid(aNick, aSource->getHubUrl());
 
 	// First, we try looking in the pending downloads...hopefully it's one of them...
@@ -578,11 +553,11 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	if(ClientManager::getInstance()->isOp(aSource->getUser(), aSource->getHubUrl()))
 		aSource->setFlag(UserConnection::FLAG_OP);
 
-	OnlineUser* ou = aSource->getUser()->getOnlineUser();
-	if(ou) {
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
+	if(&ou) {
 		string address = aSource->getRemoteIp();
-		if(ou->getIdentity().getIp() != address) {
-			ou->getIdentity().setIp(address);
+		if(ou.getIdentity().getIp() != address) {
+			ou.getIdentity().setIp(address);
 			ClientManager::getInstance()->updateUser(aSource->getUser());
 		}
 	}
@@ -603,12 +578,6 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		return;
 	}
 	
-	OnlineUser* ou = aSource->getUser()->getOnlineUser();
-	if(ou) {
-		ou->setPk(aPk);
-		ou->setLock(aLock);
-	}
-
 	if( CryptoManager::getInstance()->isExtended(aLock) ) {
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
@@ -627,6 +596,12 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	aSource->setState(UserConnection::STATE_DIRECTION);
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
+
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
+	if(&ou) {
+		ou.getIdentity().setPk(aPk);
+		ou.getIdentity().setLock(aLock);
+	}
 }
 
 void ConnectionManager::on(UserConnectionListener::Direction, UserConnection* aSource, const string& dir, const string& num) throw() {
@@ -777,12 +752,19 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 }
 
 void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& /*aError*/) throw() {
-	Lock l(cs_failedConnections);
-#ifdef _DEBUG
-	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI())
-		dcassert(aSource->getCQI()->getState() == ConnectionQueueItem::IDLE);
-#endif
-	failedConnections.push_back(aSource);
+	if(aSource->isSet(UserConnection::FLAG_DOWNLOAD) && aSource->getCQI()) {
+		{
+			Lock l(cs);
+
+			ConnectionQueueItem* cqi = aSource->getCQI();
+			dcassert(cqi->getState() == ConnectionQueueItem::IDLE);
+			cqi->setState(ConnectionQueueItem::WAITING);
+			cqi->setLastAttempt(GET_TICK());
+			//cqi->setConnection(NULL);
+			aSource->setCQI(NULL);
+		}
+	}
+	putConnection(aSource);
 }
 
 void ConnectionManager::removeConnection(const User::Ptr& aUser, int isDownload) {
@@ -836,12 +818,13 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
 		} else if(*i == UserConnection::FEATURE_TTHF) {
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
-			if(conn->getUser() != (User::Ptr)NULL)
-				conn->getUser()->setFlag(User::TTH_GET);
+			conn->getUser()->setFlag(User::TTH_GET);
 		}
 	}
-	if(conn->getUser()->getOnlineUser() != NULL) {
-		conn->getUser()->getOnlineUser()->setSupports(sup);
+
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(conn->getUser());
+	if(&ou) {
+		ou.getIdentity().setSupports(sup);
 	}
 }
 

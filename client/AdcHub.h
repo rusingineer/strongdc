@@ -40,7 +40,6 @@ public:
 	
 	virtual void hubMessage(const string& aMessage);
 	virtual void privateMessage(const OnlineUser& user, const string& aMessage);
-	virtual void sendRaw(const string& aRaw) { send(aRaw); }
 	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& pwd);

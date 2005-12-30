@@ -212,8 +212,6 @@ public:
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void closeDisconnected();
 
-	BOOL checkCheating(OnlineUser& user, DirectoryListing* dl);
-
 	static HubFrame* getHub(Client* aClient) {
 		HubFrame* hubFrame = NULL;
 		for(FrameIter i = frames.begin() ; i != frames.end() ; i++)
@@ -340,8 +338,8 @@ private:
 
 	class MessageInfo {
 	public:
-		MessageInfo(const OnlineUser& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from((OnlineUser*)&from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
-		OnlineUser* from;
+		MessageInfo(const OnlineUser& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
+		const OnlineUser& from;
 		User::Ptr to;
 		User::Ptr replyTo;
 		tstring msg;

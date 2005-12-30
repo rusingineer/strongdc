@@ -147,7 +147,7 @@ User::Ptr ClientManager::getLegacyUser(const string& aNick) throw() {
 
 	for(UserIter i = users.begin(); i != users.end(); ++i) {
 		User::Ptr& p = i->second;
-		if(p->isSet(User::NMDC) && Text::toLower(p->getFirstNick()) == Text::toLower(aNick))
+		if(p->isSet(User::NMDC) && (Util::stricmp(p->getFirstNick().c_str(), aNick.c_str()) == 0))
 			return p;
 	}
 
@@ -402,6 +402,72 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().getMyIdentity().getParams(params, "my", compatibility);
 	ou.getClient().escapeParams(params);
 	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params));
+}
+
+void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
+	OnlineIter i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end())
+		return;
+
+	OnlineUser& ou = *i->second;
+
+	int64_t statedSize = ou.getIdentity().getBytesShared();
+	int64_t realSize = dl->getTotalSize();
+	
+	double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
+	int64_t sizeTolerated = (int64_t)(realSize*multiplier);
+	string detectString = Util::emptyString;
+	string inflationString = Util::emptyString;
+	ou.getIdentity().setRealBytesShared(Util::toString(realSize));
+	bool isFakeSharing = false;
+	
+	string version = ou.getIdentity().get("VE");
+	PME reg("^\\+\\+ 0.40([0123]){1}$");
+	if(reg.match(version) && dl->detectRMDC403D1()) {
+		ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in DC" + version + " emulation mode" , true);
+		ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
+		ou.getIdentity().setBadClient("1");
+		
+		ou.getClient().updated(ou);
+		return;
+	}
+
+	PME reg1("^StrgDC\\+\\+ V:1.00 RC7");
+	if(reg1.match(version) && dl->detectRMDC403D1()) {
+		ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in StrongDC++ 1.00 RC7 emulation mode" , true);
+		ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
+		ou.getIdentity().setBadClient("1");
+		ou.getIdentity().setBadFilelist("1");
+		
+		ou.getClient().updated(ou);
+		return;
+	}
+
+	if(statedSize > sizeTolerated) {
+		isFakeSharing = true;
+	}
+
+	if(isFakeSharing) {
+		ou.getIdentity().setBadFilelist("1");
+		detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
+		if(realSize == 0) {
+			detectString += STRING(CHECK_0BYTE_SHARE);
+		} else {
+			double qwe = (double)((double)statedSize / (double)realSize);
+			char buf[128];
+			_snprintf(buf, 127, CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
+			buf[127] = 0;
+			inflationString = buf;
+			detectString += inflationString;
+		}
+		detectString += STRING(CHECK_SHOW_REAL_SHARE);
+
+		ou.getIdentity().setCheat(ou.getClient(), Util::validateMessage(detectString, false), false);
+		ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(FAKESHARE_RAW));
+	}     
+	
+	ou.getIdentity().setFilelistComplete("1");
+	ou.getClient().updated(ou);
 }
 
 void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc) throw() {

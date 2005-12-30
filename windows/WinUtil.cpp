@@ -259,9 +259,9 @@ void UserInfoBase::getUserResponses() {
 }
 
 void UserInfoBase::doReport() {
-	OnlineUser* ou = user->getOnlineUser();
-	if(ou)
-		user->addCheatLine("*** Info on " + ou->getIdentity().getNick() + " ***" + "\r\n" + ou->getReport() + "\r\n");
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+	if(&ou)
+		ou.getClient().cheatMessage("*** Info on " + ou.getIdentity().getNick() + " ***" + "\r\n" + ou.getIdentity().getReport() + "\r\n");
 }
 
 void UserInfoBase::getList() {
@@ -1696,7 +1696,7 @@ int WinUtil::getImage(const Identity& u) {
 		image+=22;
 	}
 
-	if(!ClientManager::getInstance()->isActive(u.getUser()->getClient()) && !u.isTcpActive()) {
+	if(!ClientManager::getInstance()->isActive(NULL) && !u.isTcpActive()) {
 		// Users we can't connect to...
 		image+=44;
 	}

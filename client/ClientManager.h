@@ -28,6 +28,7 @@
 #include "Client.h"
 #include "Singleton.h"
 #include "SettingsManager.h"
+#include "DirectoryListing.h"
 
 #include "ClientManagerListener.h"
 
@@ -77,6 +78,14 @@ public:
 		ou->getClient().updated(*ou);
 	}
 
+	OnlineUser& getOnlineUser(const User::Ptr& aUser) {
+		OnlineIter i = onlineUsers.find(aUser->getCID());
+		if(i != onlineUsers.end()) {
+			return *i->second;
+		}
+		return *(OnlineUser*)NULL;
+	}
+
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
 	bool isMeOp(const string& aHubUrl) {
 		Lock l(cs);
@@ -102,6 +111,7 @@ public:
 	void privateMessage(const User::Ptr& p, const string& msg);
 
 	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
+	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
 
 	bool isActive(Client* aClient) { return (aClient ? aClient->getMode() : SETTING(INCOMING_CONNECTIONS)) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 

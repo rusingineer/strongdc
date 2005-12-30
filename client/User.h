@@ -79,8 +79,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), onlineUser(NULL) { }
-	User(const CID& aCID) : cid(aCID), onlineUser(NULL) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick) { }
+	User(const CID& aCID) : cid(aCID) { }
 
 	virtual ~User() throw() { };
 
@@ -89,14 +89,8 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	void sendRawCommand(const int aRawCommand);
-	void addCheatLine(const string& aLine);
-	const string& getClientName() const;
-	Client* getClient() const;
-
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
-	GETSET(OnlineUser*, onlineUser, OnlineUser);
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -125,22 +119,34 @@ public:
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
-	GS(Connection, "CT")
+	GS(Connection, "CN")
 	GS(Tag, "TG")
+
+	// fake detection variables
+	GS(TestSURComplete, "TC");
+	GS(FilelistComplete, "FC");
+	GS(BadClient, "BC");	
+	GS(BadFilelist, "BF");
+	GS(FileListDisconnects, "FD");
+	GS(ConnectionTimeouts, "TO");
+	GS(Status, "ST");
+	GS(FileListSize, "LS");
+	GS(ListLength, "LL");
+	GS(RealBytesShared, "RS");
+	GS(CheatingString, "CS");
+	GS(ClientType, "CT");
+	GS(Generator, "GE");
+	GS(Supports, "SP");
+	GS(Lock, "LO");
+	GS(Pk, "PK");
+	GS(TestSUR, "TS");
+	GS(UnknownCommand, "UC");
+	GS(Comment, "CO");	
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
-
-/*	string getTag() const { 
-		if(get("VE").empty() || get("HN").empty() || get("HR").empty() ||get("HO").empty() || get("SL").empty())
-			return Util::emptyString;
-
-		string us = get("US");
-		return "<" + get("VE") + ",M:" + string(isTcpActive() ? "A" : "P") + ",H:" + get("HN") + "/" + 
-			get("HR") + "/" + get("HO") + ",S:" + get("SL") + (us.empty() ? "" : ",L:" + us) + ">";
-	}*/
 
 	const bool supports(const string& name) const;
 	const bool isHub() const { return !get("HU").empty(); }
@@ -148,6 +154,14 @@ public:
 	const bool isHidden() const { return !get("HI").empty(); }
 	const bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)); }
 	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
+
+	void sendRawCommand(Client& c, const int aRawCommand);
+	void setCheat(Client& c, const string& aCheatDescription, bool aBadClient, bool postToChat = true);
+	string getReport();
+	void updateClientType();
+	bool matchProfile(const string& aString, const string& aProfile);
+	bool fileListDisconnected();
+	bool connectionTimeout();
 
 	const string& get(const char* name) const {
 		InfMap::const_iterator i = info.find(*(short*)name);
@@ -170,17 +184,19 @@ private:
 	typedef InfMap::iterator InfIter;
 
 	InfMap info;
+
+	string getVersion(const string& aExp, const string& aTag);
+	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
+
 
 class OnlineUser : public FastAlloc<OnlineUser> {
 public:
 	typedef vector<OnlineUser*> List;
 	typedef List::iterator Iter;
 
-	OnlineUser() : client(NULL) { unCacheClientInfo(); }
+	OnlineUser() : client(NULL) { }
 	OnlineUser(const User::Ptr& ptr, Client& client_);
-
-	virtual ~OnlineUser() throw();
 
 	operator User::Ptr&() { return user; }
 	operator const User::Ptr&() const { return user; }
@@ -193,67 +209,13 @@ public:
 	GETSET(User::Ptr, user, User);
 	GETSET(Identity, identity, Identity);
 
-	// fake detection variables
-	GETSET(bool, testSURComplete, TestSURComplete);
-	GETSET(bool, filelistComplete, FilelistComplete);
-	GETSET(bool, badClient, BadClient);	
-	GETSET(bool, badFilelist, BadFilelist);
-	GETSET(int, fileListDisconnects, FileListDisconnects);
-	GETSET(int, connectionTimeouts, ConnectionTimeouts);
-	GETSET(int, status, Status);
-	GETSET(int64_t, fileListSize, FileListSize);
-	GETSET(int64_t, listLength, ListLength);
-	GETSET(int64_t, realBytesShared, RealBytesShared);
-	GETSET(int64_t, fakeShareBytesShared, FakeShareBytesShared);
-	GETSET(string, cheatingString, CheatingString);
-	GETSET(string, clientType, ClientType);
-	GETSET(string, generator, Generator);
-	GETSET(string, supports, Supports);
-	GETSET(string, lock, Lock);
-	GETSET(string, pk, Pk);
-	GETSET(string, testSUR, TestSUR);
-	GETSET(string, unknownCommand, UnknownCommand);
-	GETSET(string, comment, Comment);	
-
-	void setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat = true);
-	string getReport();
-	void updateClientType();
-	bool matchProfile(const string& aString, const string& aProfile);
-	bool fileListDisconnected();
-	bool connectionTimeout();
-
-	void unCacheClientInfo() {
-		testSURComplete = false;
-		filelistComplete = false;
-		badClient = false;
-		badFilelist = false;
-		status = 1;
-		fileListDisconnects = 0;
-		connectionTimeouts = 0;
-		fileListSize = -1;
-		listLength = -1;
-		realBytesShared = -1;
-		fakeShareBytesShared = -1;
-		cheatingString = Util::emptyString;
-		clientType = Util::emptyString;
-		generator = Util::emptyString;
-		pk = Util::emptyString;
-		lock = Util::emptyString;
-		supports = Util::emptyString;
-		testSUR = Util::emptyString;
-		unknownCommand = Util::emptyString;
-		comment = Util::emptyString;
-	}
-
-//private:
+private:
 	friend class NmdcHub;
 
 	OnlineUser(const OnlineUser&);
 	OnlineUser& operator=(const OnlineUser&);
 
 	Client* client;
-	string getVersion(const string& aExp, const string& aTag);
-	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
 
 #endif // !defined(USER_H)

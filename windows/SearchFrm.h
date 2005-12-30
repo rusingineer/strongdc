@@ -403,7 +403,8 @@ private:
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
 			} else {
-				const string& tmp = sr->getUser()->getOnlineUser() ? sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString;
+				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(sr->getUser());
+				const string& tmp = &ou ? ou.getIdentity().getConnection() : Util::emptyString;
 				if( (tmp == "28.8Kbps") ||
 					(tmp == "33.6Kbps") ||
 					(tmp == "56Kbps") ||

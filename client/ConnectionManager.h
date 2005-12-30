@@ -30,7 +30,6 @@
 #include "CriticalSection.h"
 #include "Singleton.h"
 #include "Util.h"
-#include "ClientManager.h"
 
 #include "ConnectionManagerListener.h"
 
@@ -62,6 +61,34 @@ private:
 	
 	User::Ptr user;
 };
+
+class ExpectedMap {
+public:
+	void add(const string& aNick, const string& aMyNick, const string& aHubUrl) {
+		Lock l(cs);
+		expectedConnections.insert(make_pair(aNick, make_pair(aMyNick, aHubUrl)));
+	}
+
+	pair<string, string> remove(const string& aNick) {
+		Lock l(cs);
+		ExpectMap::iterator i = expectedConnections.find(aNick);
+		
+		if(i == expectedConnections.end()) return make_pair(Util::emptyString, Util::emptyString);
+
+		pair<string, string> tmp = make_pair(i->second.first, i->second.second);
+		expectedConnections.erase(i);
+		
+		return tmp;
+	}
+
+private:
+	/** Nick -> myNick, hubUrl for expected NMDC incoming connections */
+	typedef map<string, pair<string, string> > ExpectMap;
+	ExpectMap expectedConnections;
+
+	CriticalSection cs;
+};
+
 // Comparing with a user...
 inline bool operator==(ConnectionQueueItem::Ptr ptr, const User::Ptr& aUser) { return ptr->getUser() == aUser; }
 
@@ -71,8 +98,7 @@ class ConnectionManager : public Speaker<ConnectionManagerListener>,
 {
 public:
 	void nmdcExpect(const string& aNick, const string& aMyNick, const string& aHubUrl) {
-		Lock l(cs_expected);
-		expectedConnections.insert(make_pair(aNick, make_pair(aMyNick, aHubUrl)));
+		expectedConnections.add(aNick, aMyNick, aHubUrl);
 	}
 
 	void nmdcConnect(const string& aServer, short aPort, const string& aMyNick, const string& hubUrl);
@@ -118,8 +144,6 @@ private:
 	friend class Server;
 
 	CriticalSection cs;
-	CriticalSection cs_failedConnections;
-	CriticalSection cs_expected;
 	short port;
 	short securePort;
 
@@ -129,16 +153,13 @@ private:
 
 	User::List pendingAdd;
 	UserConnection::List pendingDelete;
-	UserConnection::List failedConnections;
 	/** All active connections */
 	UserConnection::List userConnections;
 
 	StringList features;
 	StringList adcFeatures;
 
-	/** Nick -> myNick, hubUrl for expected NMDC incoming connections */
-	typedef map<string, pair<string, string> > ExpectMap;
-	ExpectMap expectedConnections;
+	ExpectedMap expectedConnections;
 
 	u_int32_t floodCounter;
 

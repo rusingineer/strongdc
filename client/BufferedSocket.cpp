@@ -246,8 +246,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				if(written > 0) {
 					buf.erase(buf.begin(), buf.begin()+written);
 
-					fire(BufferedSocketListener::BytesSent(), bytesRead, written);
-					bytesRead = 0;		// Make sure we only report the bytes we actually read just once...
 					if (throttling) {
 						int32_t cycle_time = um->throttleCycleTime();
 						current = TimerManager::getTick();
@@ -256,6 +254,9 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 							Thread::sleep(sleep_time);
 						}
 					}
+
+					fire(BufferedSocketListener::BytesSent(), bytesRead, written);
+					bytesRead = 0;		// Make sure we only report the bytes we actually read just once...
 				}	
 			}
 		}

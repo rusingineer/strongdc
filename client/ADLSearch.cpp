@@ -216,10 +216,13 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 				char buf[128];
 				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
 				buf[127] = 0;
-				if(user->getOnlineUser())
-					user->getOnlineUser()->setCheat(buf, false);
-				user->sendRawCommand(is->raw);
-				setSentRaw(true);
+				
+				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+				if(&ou) {
+					ou.getIdentity().setCheat(ou.getClient(), buf, false);
+					ou.getIdentity().sendRawCommand(ou.getClient(), is->raw);
+					setSentRaw(true);
+				}
 			}
 			destDirVector[is->ddIndex].dir->files.push_back(copyFile);
 			destDirVector[is->ddIndex].fileAdded = true;
