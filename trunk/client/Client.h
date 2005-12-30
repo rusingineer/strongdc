@@ -98,7 +98,6 @@ public:
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
 	virtual void password(const string& pwd) = 0;
 	virtual void info() = 0;
-	virtual void sendRaw(const string& aRaw) = 0;
 	virtual void cheatMessage(const string& aLine) = 0;
 
 	virtual size_t getUserCount() const = 0;

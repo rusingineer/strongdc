@@ -77,12 +77,11 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	columns[COLUMN_HUBS] = Text::toT(Util::toString(Util::toInt(identity.get("HN"))+Util::toInt(identity.get("HR"))+Util::toInt(identity.get("HO"))));
 	columns[COLUMN_SLOTS] = Text::toT(identity.get("SL"));
 	columns[COLUMN_IP] = Text::toT(identity.getIp());
-	if(user->getOnlineUser()) {
-		columns[COLUMN_PK] = Text::toT(user->getOnlineUser()->getPk());
-		columns[COLUMN_LOCK] = Text::toT(user->getOnlineUser()->getLock());
-		columns[COLUMN_SUPPORTS] = Text::toT(user->getOnlineUser()->getSupports());
-		columns[COLUMN_CLIENTID] = Text::toT(user->getOnlineUser()->getClientType());
-	}
+	columns[COLUMN_PK] = Text::toT(identity.getPk());
+	columns[COLUMN_LOCK] = Text::toT(identity.getLock());
+	columns[COLUMN_SUPPORTS] = Text::toT(identity.getSupports());
+	columns[COLUMN_CLIENTID] = Text::toT(identity.getClientType());
+
 	op = identity.isOp();
 	hidden = identity.isHidden();
 	

@@ -132,6 +132,7 @@ void Socket::connect(const string& aAddr, short aPort) throw(SocketException) {
 	check(::connect(sock,(sockaddr*)&serv_addr,sizeof(serv_addr)), true);
 	connected = true;
 	setIp(addr);
+	setPort(aPort);
 }
 
 namespace {

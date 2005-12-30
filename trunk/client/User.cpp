@@ -27,36 +27,18 @@
 #include "ClientProfileManager.h"
 #include "QueueManager.h"
 #include "pme.h"
+#include "UserCommand.h"
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), identity(ptr, client_.getHubUrl()), client(&client_) { 
-	unCacheClientInfo(); 
-	user->setOnlineUser(this);
-}
 
-OnlineUser::~OnlineUser() throw() {
-	user->setOnlineUser(NULL);
-};
+}
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
 	for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
 		sm[prefix + string((char*)(&i->first), 2)] = i->second;
 	}
-	if(user) {
+	if(user)
 		sm[prefix + "CID"] = user->getCID().toBase32();
-
-		OnlineUser* ou = getUser()->getOnlineUser();
-		if(ou) {
-			sm["hub"] = ou->getClient().getHubName();
-			sm["hubip"] = ou->getClient().getHubUrl();
-			sm["hubaddr"] = ou->getClient().getAddress();
-			sm["realshare"] = Util::toString(ou->getRealBytesShared());
-			sm["realshareformat"] = Util::formatBytes(ou->getRealBytesShared());
-			sm["statedshare"] = Util::toString(getBytesShared());
-			sm["statedshareformat"] = Util::formatBytes(getBytesShared());
-			sm["cheatingdescription"] = ou->getCheatingString();
-			sm["clienttype"] = ou->getClientType();
-		}
-	}
 
 	if(compatibility) {
 		if(prefix == "my") {
@@ -65,7 +47,10 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 		} else {
 			sm["nick"] = getNick();
 			if(user) sm["cid"] = user->getCID().toBase32();
-		}				
+		}
+		
+		sm["realshareformat"] = Util::formatBytes(getRealBytesShared());
+		sm["statedshareformat"] = Util::formatBytes(getBytesShared());
 	}
 }
 
@@ -79,91 +64,65 @@ const bool Identity::supports(const string& name) const {
 	return false;
 }
 
-void OnlineUser::setCheat(const string& aCheatDescription, bool aBadClient, bool postToChat) {
-	if(getIdentity().isOp() || !getClient().isOp()) return;
+void Identity::setCheat(Client& c, const string& aCheatDescription, bool aBadClient, bool postToChat) {
+	if(!c.isOp() || isOp()) return;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 		
 	StringMap ucParams;
-	getIdentity().getParams(ucParams, Util::emptyString, true);
+	getParams(ucParams, "user", true);
 	string cheat = Util::formatParams(aCheatDescription, ucParams);
 	if(postToChat)
-		user->addCheatLine("*** " + STRING(USER) + " " + getIdentity().getNick() + " - " + cheat);
+		c.cheatMessage("*** " + STRING(USER) + " " + getNick() + " - " + cheat);
 	
-	cheatingString = cheat;
-	badClient = aBadClient;
+	setCheatingString(cheat);
+	setBadClient(Util::toString(aBadClient));
 }
 
-void User::sendRawCommand(const int aRawCommand) {
-	if(getClient()) {
-		if(!getClient()->isOp()) return;
-		string rawCommand = getClient()->getRawCommand(aRawCommand);
-		if (!rawCommand.empty()) {
-			StringMap ucParams;
-			getOnlineUser()->getIdentity().getParams(ucParams, Util::emptyString, true);
-			getClient()->sendRaw(Util::formatParams(rawCommand, ucParams));
-		}
-	}
-}
-
-void User::addCheatLine(const string& aLine) {
-	if(getOnlineUser()) {
-		getOnlineUser()->getClient().cheatMessage(aLine);
-	}
-}
-
-const string& User::getClientName() const {
-	if(getOnlineUser()) {
-		return getOnlineUser()->getClient().getHubName();
-	} else {
-		return STRING(OFFLINE);
-	}
-}
-
-Client* User::getClient() const {
-	if(getOnlineUser()) {
-		return &getOnlineUser()->getClient();
-	} else {
-		return NULL;
-	}
-}
-
-string OnlineUser::getReport()
+string Identity::getReport()
 {
 	string report = "\r\nClient:		" + getClientType();
-	report += "\r\nXML Generator:	" + (generator.empty() ? "N/A" : generator);
-	report += "\r\nLock:		" + lock;
-	report += "\r\nPk:		" + pk;
-	report += "\r\nTag:		" + getIdentity().getTag();
-	report += "\r\nSupports:		" + supports;
-	report += "\r\nStatus:		" + Util::formatStatus(status);
-	report += "\r\nTestSUR:		" + testSUR;
-	report += "\r\nDisconnects:	" + Util::toString(fileListDisconnects);
-	report += "\r\nTimeouts:		" + Util::toString(connectionTimeouts);
-	report += "\r\nDownspeed:	" + Util::formatBytes(Util::toInt64(getIdentity().get("US"))) + "/s";
-	report += "\r\nIP:		" + getIdentity().getIp();
-	report += "\r\nHost:		" + Socket::getRemoteHost(getIdentity().getIp());
-	report += "\r\nDescription:	" + getIdentity().getDescription();
-	report += "\r\nEmail:		" + getIdentity().getEmail();
-	report += "\r\nConnection:	" + getIdentity().getConnection();
-	report += "\r\nCommands:	" + unknownCommand;
-	report += "\r\nFilelist size:	" + ((fileListSize != -1) ? (string)(Util::formatBytes(fileListSize) + "  (" + Util::formatExactSize(fileListSize) + " )") : "N/A");
-	report += "\r\nListLen:		" + (listLength != -1 ? (string)(Util::formatBytes(listLength) + "  (" + Util::formatExactSize(listLength) + " )") : "N/A");
-	report += "\r\nStated Share:	" + Util::formatBytes(getIdentity().getBytesShared()) + "  (" + Util::formatExactSize(getIdentity().getBytesShared()) + " )";
-	report += "\r\nReal Share:	" + (realBytesShared > -1 ? (string)(Util::formatBytes(realBytesShared) + "  (" + Util::formatExactSize(realBytesShared) + " )") : "N/A");
-	report += "\r\nCheat status:	" + (cheatingString.empty() ? "N/A" : cheatingString);
-	report += "\r\nComment:		" + comment;
+	report += "\r\nXML Generator:	" + (getGenerator().empty() ? "N/A" : getGenerator());
+	report += "\r\nLock:		" + getLock();
+	report += "\r\nPk:		" + getPk();
+	report += "\r\nTag:		" + getTag();
+	report += "\r\nSupports:		" + getSupports();
+	report += "\r\nStatus:		" + Util::formatStatus(Util::toInt(getStatus()));
+	report += "\r\nTestSUR:		" + getTestSUR();
+	report += "\r\nDisconnects:	" + getFileListDisconnects();
+	report += "\r\nTimeouts:		" + getConnectionTimeouts();
+	report += "\r\nDownspeed:	" + Util::formatBytes(Util::toInt64(get("US"))) + "/s";
+	report += "\r\nIP:		" + getIp();
+	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
+	report += "\r\nDescription:	" + getDescription();
+	report += "\r\nEmail:		" + getEmail();
+	report += "\r\nConnection:	" + getConnection();
+	report += "\r\nCommands:	" + getUnknownCommand();
+
+	int64_t listSize = Util::toInt64(getFileListSize());
+	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Util::formatExactSize(listSize) + " )") : "N/A");
+	
+	int64_t listLen = Util::toInt64(getListLength());
+	report += "\r\nListLen:		" + (listLen != -1 ? (string)(Util::formatBytes(listLen) + "  (" + Util::formatExactSize(listLen) + " )") : "N/A");
+	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Util::formatExactSize(getBytesShared()) + " )";
+	
+	int64_t realBytes = Util::toInt64(getRealBytesShared());
+	report += "\r\nReal Share:	" + (realBytes > -1 ? (string)(Util::formatBytes(realBytes) + "  (" + Util::formatExactSize(realBytes) + " )") : "N/A");
+	report += "\r\nCheat status:	" + (getCheatingString().empty() ? "N/A" : getCheatingString());
+	report += "\r\nComment:		" + getComment();
 	return report;
 }
 
-void OnlineUser::updateClientType() {
-	if ( getUser()->isSet(User::DCPLUSPLUS) && (listLength == 11) && (getIdentity().getBytesShared() > 0) ) {
-		setCheat("Fake file list - ListLen = 11" , true);
-		clientType = "DC++ Stealth";
-		badClient = true;
-		badFilelist = true;
-		getUser()->sendRawCommand(SETTING(LISTLEN_MISMATCH));
+void Identity::updateClientType() {
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+
+	if ( getUser()->isSet(User::DCPLUSPLUS) && (getListLength() == "11") && (getBytesShared() > 0) ) {
+		setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
+		setClientType("DC++ Stealth");
+		setBadClient("1");
+		setBadFilelist("1");
+		sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
 		return;
 	}
 	int64_t tick = GET_TICK();
@@ -198,18 +157,18 @@ void OnlineUser::updateClientType() {
 
 		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
 
-		if (!matchProfile(lock, cp.getLock())) { continue; }
-		if (!matchProfile(getIdentity().getTag(), formattedTagExp)) { continue; } 
-		if (!matchProfile(pk, formattedPkExp)) { continue; }
-		if (!matchProfile(supports, cp.getSupports())) { continue; }
-		if (!matchProfile(testSUR, cp.getTestSUR())) { continue; }
-		if (!matchProfile(Util::toString(status), cp.getStatus())) { continue; }
-		if (!matchProfile(unknownCommand, cp.getUserConCom())) { continue; }
-		if (!matchProfile(getIdentity().getDescription(), formattedExtTagExp))	{ continue; }
-		if (!matchProfile(getIdentity().getConnection(), cp.getConnection()))	{ continue; }
+		if (!matchProfile(getLock(), cp.getLock())) { continue; }
+		if (!matchProfile(getTag(), formattedTagExp)) { continue; } 
+		if (!matchProfile(getPk(), formattedPkExp)) { continue; }
+		if (!matchProfile(getSupports(), cp.getSupports())) { continue; }
+		if (!matchProfile(getTestSUR(), cp.getTestSUR())) { continue; }
+		if (!matchProfile(getStatus(), cp.getStatus())) { continue; }
+		if (!matchProfile(getUnknownCommand(), cp.getUserConCom())) { continue; }
+		if (!matchProfile(getDescription(), formattedExtTagExp))	{ continue; }
+		if (!matchProfile(getConnection(), cp.getConnection()))	{ continue; }
 
-		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, getIdentity().getTag()); }
-		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, getIdentity().getDescription()); }
+		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, getTag()); }
+		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, getDescription()); }
 		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, getPk()); }
 
 		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
@@ -220,38 +179,38 @@ void OnlineUser::updateClientType() {
 		} else {
 			setClientType(cp.getName() + " " + version);
 		}
-			cheatingString = cp.getCheatingDescription();
-			comment = cp.getComment();
-		badClient = !cheatingString.empty();
+		setCheatingString(cp.getCheatingDescription());
+		setComment(cp.getComment());
+		setBadClient(cp.getCheatingDescription().empty() ? Util::emptyString : "1");
 
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
-			clientType += " Version mis-match";
-			cheatingString += " Version mis-match";
-			badClient = true;
+			setClientType(getClientType() + " Version mis-match");
+			setCheatingString(getCheatingString() + " Version mis-match");
+			setBadClient("1");
 			ClientManager::getInstance()->updateUser(getUser());
-			setCheat(cheatingString, true);
+			setCheat(ou.getClient(), getCheatingString(), true);
 			return;
 		}
-		if(badClient) setCheat(cheatingString, true);
+		if(!getBadClient().empty()) setCheat(ou.getClient(), getCheatingString(), true);
 		ClientManager::getInstance()->updateUser(getUser());
 		if(cp.getRawToSend() > 0) {
-			getUser()->sendRawCommand(cp.getRawToSend());
+			sendRawCommand(ou.getClient(), cp.getRawToSend());
 		}
 		return;
 	}
 	setClientType("Unknown");
-	cheatingString = Util::emptyString;
-	badClient = false;
+	setCheatingString(Util::emptyString);
+	setBadClient(Util::emptyString);
 	ClientManager::getInstance()->updateUser(getUser());
 }
 
-bool OnlineUser::matchProfile(const string& aString, const string& aProfile) {
+bool Identity::matchProfile(const string& aString, const string& aProfile) {
 	DETECTION_DEBUG("\t\tMatching String: " + aString + " to Profile: " + aProfile);
 	PME reg(aProfile);
 	return reg.IsValid() ? (reg.match(aString) > 0) : false;
 }
 
-string OnlineUser::getVersion(const string& aExp, const string& aTag) {
+string Identity::getVersion(const string& aExp, const string& aTag) {
 	string::size_type i = aExp.find("%[version]");
 	if (i == string::npos) { 
 		i = aExp.find("%[version2]"); 
@@ -260,45 +219,57 @@ string OnlineUser::getVersion(const string& aExp, const string& aTag) {
 	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 }
 
-string OnlineUser::splitVersion(const string& aExp, const string& aTag, const int part) {
+string Identity::splitVersion(const string& aExp, const string& aTag, const int part) {
 	PME reg(aExp);
 	if(!reg.IsValid()) { return ""; }
 	reg.split(aTag, 2);
 	return reg[part];
 }
 
-bool OnlineUser::fileListDisconnected() {
-	fileListDisconnects++;
+bool Identity::fileListDisconnected() {
+	setFileListDisconnects(Util::toString(Util::toInt(getFileListDisconnects()) + 1));
 
 	if(SETTING(ACCEPTED_DISCONNECTS) == 0)
 		return false;
 
-	if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
-		setCheat("Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
+	if(Util::toInt(getFileListDisconnects()) == SETTING(ACCEPTED_DISCONNECTS)) {
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+		setCheat(ou.getClient(), "Disconnected file list " + getFileListDisconnects() + " times", false);
 		ClientManager::getInstance()->updateUser(getUser());
-		getUser()->sendRawCommand(SETTING(DISCONNECT_RAW));
+		sendRawCommand(ou.getClient(), SETTING(DISCONNECT_RAW));
 		return true;
 	}
 	return false;
 }
 
-bool OnlineUser::connectionTimeout() {
-	connectionTimeouts++;
+bool Identity::connectionTimeout() {
+	setConnectionTimeouts(Util::toString(Util::toInt(getConnectionTimeouts()) + 1));
 
 	if(SETTING(ACCEPTED_TIMEOUTS) == 0)
 		return false;
 
-	if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
-		setCheat("Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
+	if(Util::toInt(getConnectionTimeouts()) == SETTING(ACCEPTED_TIMEOUTS)) {
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+		setCheat(ou.getClient(), "Connection timeout " + getConnectionTimeouts() + " times", false);
 		ClientManager::getInstance()->updateUser(getUser());
 		try {
 			QueueManager::getInstance()->removeTestSUR(getUser());
 		} catch(...) {
 		}
-		getUser()->sendRawCommand(SETTING(TIMEOUT_RAW));
+		sendRawCommand(ou.getClient(), SETTING(TIMEOUT_RAW));
 		return true;
 	}
 	return false;
+}
+
+void Identity::sendRawCommand(Client& c, const int aRawCommand) {
+	string rawCommand = c.getRawCommand(aRawCommand);
+	if (!rawCommand.empty()) {
+		StringMap ucParams;
+
+		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "");
+		ClientManager::getInstance()->userCommand(user, uc, ucParams, true);
+	}
 }
 
 /**

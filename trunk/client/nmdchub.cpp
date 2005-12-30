@@ -432,10 +432,6 @@ void NmdcHub::onLine(const char* aLine) throw() {
 		    	     return;
 	    
 				OnlineUser& u = getUser(fromNmdc(aLine));
-/*				if(u.getIdentity().getNick() == getMyIdentity().getNick()) {
-					User::Ptr me = getMyIdentity().getUser();
-					me->setOnlineUser(&u);
-				}*/
 
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
@@ -512,13 +508,13 @@ void NmdcHub::onLine(const char* aLine) throw() {
 								u.getUser()->unsetFlag(User::FIREBALL);
                                 break;
 						}
-						u.setStatus(status);
+						u.getIdentity().setStatus(Util::toString(status));
 						u.getIdentity().setConnection(fromNmdc(Connection));
 					}
 				}
 
 				if(state == STATE_MYINFO) {
-					if(_stricmp(u.getIdentity().getNick().c_str(), getMyNick().c_str()) == 0) {
+					if(Util::stricmp(u.getIdentity().getNick().c_str(), getMyNick().c_str()) == 0) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -568,7 +564,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
 				temp[0] = NULL; temp += 1;
         		if(aLine[0] == NULL) return;
 
-				if(_stricmp(fromNmdc(aLine).c_str(), getMyNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
+				if(Util::stricmp(fromNmdc(aLine).c_str(), getMyNick().c_str()) != 0) // Check nick... is CTM really for me ? ;o)
 					return;
 	
         		if((temp1 = strchr(temp, ':')) == NULL || temp1[1] == NULL) return;
@@ -634,7 +630,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
      			string nick = fromNmdc(aLine);
 				OnlineUser& u = getUser(nick);
  				if(state == STATE_HELLO) {
-       		   		if(_stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
+       		   		if(Util::stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -760,7 +756,7 @@ void NmdcHub::onLine(const char* aLine) throw() {
         		if(aLine[0] == NULL) return;
 
         		if(temp[0] != NULL) {
-    				if(_stricmp(temp+3, "YnHub") == 0) {
+    				if(Util::stricmp(temp+3, "YnHub") == 0) {
     					YnHub = true;
 	    			} else if(strcmp(temp+3, "PtokaX") == 0) {
     					PtokaX = true;

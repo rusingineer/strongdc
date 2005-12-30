@@ -113,6 +113,7 @@ public:
 	}
 	int getMode() { return mode; };
 	const string& getIp() { return sock ? sock->getIp() : Util::emptyString; }
+	const short getPort() { return sock ? sock->getPort() : 0; }
 	const string getRemoteHost(const string& aIp) { return sock ? sock->getRemoteHost(aIp) : Util::emptyString; }
 	bool isConnected() { return sock && sock->isConnected(); }
 	
@@ -174,7 +175,6 @@ private:
 	void threadSendFile(InputStream* is) throw(Exception);
 	void threadSendData();
 	void threadDisconnect();
-	void threadWrite(const char* aBuffer, size_t aLen) throw(SocketException);
 
 	void fail(const string& aError) {
 		sock->disconnect();

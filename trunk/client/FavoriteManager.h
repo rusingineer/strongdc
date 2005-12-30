@@ -300,7 +300,7 @@ public:
 	void removeHubUserCommands(int ctx, const string& hub);
 
 	UserCommand::List getUserCommands() { Lock l(cs); return userCommands; };
-	UserCommand::List getUserCommands(int ctx, const StringList& hub);
+	UserCommand::List getUserCommands(int ctx, const StringList& hub, bool op);
 
 	void load();
 	void save();

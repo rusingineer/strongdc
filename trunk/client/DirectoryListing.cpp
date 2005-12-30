@@ -272,20 +272,20 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 		}
 		cur->setComplete(true);
 		const string& generator = getAttrib(attribs, sGenerator, 2);
-		
-		OnlineUser* ou = uziv->getOnlineUser();
-		if(ou) {
+
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(uziv);
+		if(&ou) {
 			PME reg("^StrgDC\\+\\+ V:1.00 RC([89]){1}");
 			if((generator == "DC++ 0.403")) {
-				string version = ou->getIdentity().get("VE");
+				string version = ou.getIdentity().get("VE");
 				if(reg.match(version)) {
-					ou->setCheat("rmDC++ in StrongDC" + version + " emulation mode" , true);
-					ou->setClientType("rmDC++ 0.403");
-					ou->setBadClient(true);
-					ou->setBadFilelist(true);
+					ou.getIdentity().setCheat(ou.getClient(), "rmDC++ in StrongDC" + version + " emulation mode" , true);
+					ou.getIdentity().setClientType("rmDC++ 0.403");
+					ou.getIdentity().setBadClient("1");
+					ou.getIdentity().setBadFilelist("1");
 				}
 			}
-			ou->setGenerator(generator);
+			ou.getIdentity().setGenerator(generator);
 		}
 		inListing = true;
 

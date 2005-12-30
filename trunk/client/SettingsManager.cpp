@@ -148,8 +148,8 @@ SettingsManager::SettingsManager()
 		int64Settings[k] = 0;
 	}
 	
-	setDefault(DOWNLOAD_DIRECTORY, Util::getConfigPath() + "Downloads" PATH_SEPARATOR_STR);
-	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getConfigPath() + "Incomplete" PATH_SEPARATOR_STR);
+	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
+	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getAppPath() + "Incomplete" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 1);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
@@ -267,7 +267,7 @@ SettingsManager::SettingsManager()
 	setDefault(NO_IP_OVERRIDE, false);
 	setDefault(SOCKET_IN_BUFFER, 8192);
 	setDefault(SOCKET_OUT_BUFFER, 8192);
-	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "certs" PATH_SEPARATOR_STR);
+	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getAppPath() + "certs" PATH_SEPARATOR_STR);
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
 	setDefault(BOLD_QUEUE, true);

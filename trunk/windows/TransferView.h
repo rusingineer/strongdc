@@ -211,7 +211,7 @@ private:
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
 			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
-			flagImage(0), updated(false) { update(); };
+			flagImage(0), updated(false), filelist(false) { update(); };
 
 		Types type;
 		Status status;
@@ -233,6 +233,7 @@ private:
 		int32_t numberOfSegments;
 		bool updated;
 		int flagImage;
+		bool filelist;
 
 		enum {
 			MASK_USER = 1 << COLUMN_USER,
@@ -300,7 +301,7 @@ private:
 			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
 			h->numberOfSegments = 0;
 			h->updateMask |= ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE;
-			h->update();
+			//h->update();
 
 			return h;
 		}
@@ -359,8 +360,7 @@ private:
 	void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
-			if(h->Target != i->Target) {
-				Lock l(cs);
+			if(strcmp(h->Target.c_str(), i->Target.c_str()) != 0) {
 				ctrlTransfers.removeGroupedItem(i, false);
 				ctrlTransfers.insertGroupedItem(i, false);
 			}

@@ -71,7 +71,7 @@ ShareManager::~ShareManager() {
 	WIN32_FIND_DATA data;
 	HANDLE hFind;
 
-	hFind = FindFirstFile(Text::toT(Util::getConfigPath() + "files*.xml.bz2").c_str(), &data);
+	hFind = FindFirstFile(Text::toT(Util::getAppPath() + "files*.xml.bz2").c_str(), &data);
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if(_tcslen(data.cFileName) > 13) // length of "files.xml.bz2"
@@ -81,7 +81,7 @@ ShareManager::~ShareManager() {
 		FindClose(hFind);
 	}
 
-	hFind = FindFirstFile(Text::toT(Util::getConfigPath() + "MyList*.DcLst").c_str(), &data);
+	hFind = FindFirstFile(Text::toT(Util::getAppPath() + "MyList*.DcLst").c_str(), &data);
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			File::deleteFile(Util::getAppPath() + Text::fromT(data.cFileName));			
@@ -96,7 +96,7 @@ ShareManager::~ShareManager() {
 		while (struct dirent* ent = readdir(dir)) {
 			if (fnmatch("files*.xml.bz2", ent->d_name, 0) == 0 ||
 				fnmatch("MyList*.DcLst", ent->d_name, 0) == 0) {
-					File::deleteFile(Util::getConfigPath() + ent->d_name);	
+					File::deleteFile(Util::getAppPath() + ent->d_name);	
 				}
 		}
 		closedir(dir);
@@ -110,7 +110,7 @@ ShareManager::~ShareManager() {
 
 ShareManager::Directory::~Directory() {
 	for(MapIter i = directories.begin(); i != directories.end(); ++i)
-		if(i->second) delete i->second;
+		delete i->second;
 	for(File::Iter i = files.begin(); i != files.end(); ++i) {
 		ShareManager::getInstance()->removeTTH(i->getTTH(), i);
 	}
@@ -354,7 +354,7 @@ bool ShareManager::loadCache() {
 	try {
 		ShareLoader loader(directories, virtualMap);
 		string txt;
-		::File ff(Util::getConfigPath() + "files.xml.bz2", ::File::READ, ::File::OPEN);
+		::File ff(Util::getAppPath() + "files.xml.bz2", ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
 		char buf[BUF_SIZE];
@@ -422,14 +422,17 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 		RLock<> l(cs);
 		
 		Directory::Map a = directories;
-
 		for(Directory::MapIter i = a.begin(); i != a.end(); ++i) {
-			if(Util::strnicmp(d, i->first, i->first.length()) == 0) {
-				// Trying to share an already shared directory
-				removeDirectory1(i->first);
-			} else if(Util::strnicmp(d, i->first, d.length()) == 0) {
-				// Trying to share a parent directory
-				removeDirectory1(i->first);
+			try {
+				if(Util::strnicmp(d, i->first, i->first.length()) == 0) {
+					// Trying to share an already shared directory
+					throw ShareException();
+				} else if(Util::strnicmp(d, i->first, d.length()) == 0) {
+					// Trying to share a parent directory
+					throw ShareException();	
+				}
+			} catch(ShareException) {
+				removeDirectory(i->first, true);
 			}
 		}
 
@@ -475,31 +478,6 @@ void ShareManager::removeDirectory(const string& aDirectory, bool duringRefresh)
 	if(!duringRefresh)
 		HashManager::getInstance()->stopHashing(d);
 
-	setDirty();
-}
-
-void ShareManager::removeDirectory1(const string& aDirectory) {
-
-	string d(aDirectory);
-
-	if(d[d.length() - 1] != PATH_SEPARATOR)
-		d += PATH_SEPARATOR;
-
-	Directory::MapIter i = directories.find(d);
-	if(i != directories.end()) {
-		delete i->second;
-		directories.erase(i);
-	}
-
-	for(StringPairIter j = virtualMap.begin(); j != virtualMap.end(); ++j) {
-		if(Util::stricmp(j->second.c_str(), d.c_str()) == 0) {
-			virtualMap.erase(j);
-			break;
-		}
-	}
-
-	HashManager::getInstance()->stopHashing(d);
-	
 	setDirty();
 }
 
@@ -900,7 +878,7 @@ void ShareManager::generateXmlList() {
 			string tmp2;
 			string indent;
 
-			string newXmlName = Util::getConfigPath() + "files" + Util::toString(listN) + ".xml.bz2";
+			string newXmlName = Util::getAppPath() + "files" + Util::toString(listN) + ".xml.bz2";
 			{
 				File f(newXmlName, File::WRITE, File::TRUNCATE | File::CREATE);
 				// We don't care about the leaves...
@@ -929,8 +907,8 @@ void ShareManager::generateXmlList() {
 				File::deleteFile(getBZXmlFile());
 			}
 			try {
-				File::renameFile(newXmlName, Util::getConfigPath() + "files.xml.bz2");
-				newXmlName = Util::getConfigPath() + "files.xml.bz2";
+				File::renameFile(newXmlName, Util::getAppPath() + "files.xml.bz2");
+				newXmlName = Util::getAppPath() + "files.xml.bz2";
 			} catch(const FileException&) {
 				// Ignore, this is for caching only...
 			}
@@ -959,7 +937,7 @@ void ShareManager::generateNmdcList() {
 				i->second->toNmdc(tmp, indent, tmp2);
 			}
 
-			string newName = Util::getConfigPath() + "MyList" + Util::toString(listN) + ".DcLst";
+			string newName = Util::getAppPath() + "MyList" + Util::toString(listN) + ".DcLst";
 			tmp2.clear();
 			CryptoManager::getInstance()->encodeHuffman(tmp, tmp2);
 			File(newName, File::WRITE, File::CREATE | File::TRUNCATE).write(tmp2);
@@ -970,8 +948,8 @@ void ShareManager::generateNmdcList() {
 				File::deleteFile(getListFile());
 			}
 			try {
-				File::renameFile(newName, Util::getConfigPath() + "MyList.DcLst");
-				newName = Util::getConfigPath() + "MyList.DcLst";
+				File::renameFile(newName, Util::getAppPath() + "MyList.DcLst");
+				newName = Util::getAppPath() + "MyList.DcLst";
 			} catch(const FileException&) {
 			}
 			lFile = new File(newName, File::READ, File::OPEN);
@@ -1361,25 +1339,14 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 	if(aFileType == SearchManager::TYPE_TTH) {
 		if(aString.compare(0, 4, "TTH:") == 0) {
 			TTHValue tth(aString.substr(4));
-/*			HashFileIter i = tthIndex.find(&tth);
+			HashFileIter i = tthIndex.find(&tth);
 			if(i != tthIndex.end()) {
 				SearchResult* sr = new SearchResult(aClient, SearchResult::TYPE_FILE, 
 					i->second->getSize(), i->second->getParent()->getFullName() + i->second->getName(), 
 					&i->second->getTTH(), true);
 
-				results.push_back(sr);*/
-			pair< HashFileIter, HashFileIter> iter = tthIndex.equal_range(&tth);
-			for(; iter.first != iter.second; ++(iter.first) ){
-				try {
-					results.push_back( new SearchResult(aClient, SearchResult::TYPE_FILE, 
-						iter.first->second->getSize(),
-						iter.first->second->getParent()->getFullName() + iter.first->second->getName(), 
-						&iter.first->second->getTTH(), true));
-	
-					ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
-					if(ShareManager::getInstance()->getHits() == maxResults)
-						break;
-				} catch(...) { }
+				results.push_back(sr);
+				ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
 			}
 		}
 		return;

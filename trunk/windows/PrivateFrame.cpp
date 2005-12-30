@@ -120,7 +120,8 @@ void PrivateFrame::gotMessage(const OnlineUser& from, const User::Ptr& to, const
 		}
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick() + " - " + replyTo->getClientName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
+			MainFrame::getMainFrame()->ShowBalloonTip((Text::toT(replyTo->getFirstNick() + " - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -133,7 +134,8 @@ void PrivateFrame::gotMessage(const OnlineUser& from, const User::Ptr& to, const
 	} else {
 		if(!myPM) {
 			if(BOOLSETTING(POPUP_PM)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(replyTo->getFirstNick() + " - " + replyTo->getClientName()).c_str(), CTSTRING(PRIVATE_MESSAGE));
+				pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
+				MainFrame::getMainFrame()->ShowBalloonTip((Text::toT(replyTo->getFirstNick() + " - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -384,8 +386,9 @@ void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine, CHARFOR
 	}
 
 	LPCSTR sMyNick;
-	if(replyTo->isOnline()) {
-		sMyNick = replyTo->getClient()->getMyNick().c_str();
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(replyTo);
+	if(&ou) {
+		sMyNick = ou.getClient().getMyNick().c_str();
 	} else {
 		sMyNick = SETTING(NICK).c_str();
 	}
@@ -539,7 +542,7 @@ void PrivateFrame::updateTitle() {
 		unsetIconState();
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
-			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getClientName()) + _T("] ***");
+			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
 				addLine(*(OnlineUser*)NULL, status, WinUtil::m_ChatTextServer);
 			} else {
@@ -550,7 +553,7 @@ void PrivateFrame::updateTitle() {
 	} else {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
-		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - " + replyTo->getClientName()) + _T("] ***");
+		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
 			addLine(*(OnlineUser*)NULL, status, WinUtil::m_ChatTextServer);
 		} else {
@@ -732,11 +735,11 @@ void PrivateFrame::readLog() {
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
-	params["hub"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
-	params["hubaddr"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
-	params["cid"] = replyTo->getCID().toBase32(); 
-	params["user"] = replyTo->getFirstNick();
-	params["mycid"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
+	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+	params["userCID"] = replyTo->getCID().toBase32(); 
+	params["userNI"] = replyTo->getFirstNick();
+	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 	if(Util::fileExists(file)) {

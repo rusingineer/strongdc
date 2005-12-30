@@ -1405,7 +1405,9 @@ void SearchFrame::SearchInfo::update() {
 		type = TSTRING(DIRECTORY);
 	}
 	nick = Text::toT(sr->getUser()->getFirstNick());
-	connection = Text::toT(sr->getUser()->getOnlineUser() ? sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString);
+	
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(sr->getUser());
+	connection = Text::toT(&ou ? ou.getIdentity().getConnection() : Util::emptyString);
 	hubName = Text::toT(sr->getHubName());
 	slots = Text::toT(sr->getSlotString());
 	ip = Text::toT(sr->getIP());
@@ -1421,7 +1423,7 @@ void SearchFrame::SearchInfo::update() {
 	if(sr->getTTH() != NULL)
 		setTTH(Text::toT(sr->getTTH()->toBase32()));
 	
-	string us = user->getOnlineUser() ? user->getOnlineUser()->getIdentity().get("US") : Util::emptyString;
+	string us = &ou ? ou.getIdentity().get("US") : Util::emptyString;
 	if (!us.empty()) {
 		uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(us)) + "/s");
 	} else if(user->isSet(User::FIREBALL)) {
@@ -1567,7 +1569,8 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(item->sr->getFile())) : WinUtil::getDirIconIndex();
 		} else {
-			const string& tmp = item->sr->getUser()->getOnlineUser() ? item->sr->getUser()->getOnlineUser()->getIdentity().getConnection() : Util::emptyString;
+			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(item->sr->getUser());
+			const string& tmp = &ou ? ou.getIdentity().getConnection() : Util::emptyString;
 			if( (tmp == "28.8Kbps") ||
 				(tmp == "33.6Kbps") ||
 				(tmp == "56Kbps") ||

@@ -73,9 +73,10 @@ void UserConnection::onLine(const char* aLine) throw() {
 		setFlag(FLAG_NMDC);
 	} else {
 		// We shouldn't be here?
-		if(getUser() && getUser()->getOnlineUser()) {
-			if(strlen(aLine) < 255)
-				getUser()->getOnlineUser()->setUnknownCommand(aLine);
+		if(getUser()) {
+			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
+			if(&ou && strlen(aLine) < 255)
+				ou.getIdentity().setUnknownCommand(aLine);
 		}
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		/*aLine = strchr(aLine, '$');
@@ -277,9 +278,10 @@ void UserConnection::onLine(const char* aLine) throw() {
  	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	default:
-			if(getUser() && getUser()->getOnlineUser()) {
-				if(strlen(aLine) < 255)
-					getUser()->getOnlineUser()->setUnknownCommand(aLine);
+			if(getUser()) {
+				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
+				if(&ou && strlen(aLine) < 255)
+					ou.getIdentity().setUnknownCommand(aLine);
 			}
 			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;

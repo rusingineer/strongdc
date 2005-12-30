@@ -510,7 +510,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	if(wParam == ADD_ITEM) {
 		ItemInfo* i = (ItemInfo*)lParam;
 		if(i->type == ItemInfo::TYPE_DOWNLOAD) {
-			ctrlTransfers.insertGroupedItem(i, false);
+			ctrlTransfers.insertGroupedItem(i, false, i->filelist);
+			i->filelist = false;
 		} else {
 			i->mainItem = true;
 			ctrlTransfers.insertItem(ctrlTransfers.GetItemCount(), i, IMAGE_UPLOAD);
@@ -699,7 +700,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 
 	bool hasInfo = false;
 	if(t == ItemInfo::TYPE_DOWNLOAD) {
-		hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags);
+		hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags, i->filelist);
 	}
 
 	{
@@ -726,8 +727,9 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 	string aTarget;
 	int64_t aSize;
 	int aFlags;
+	bool filelist;
 
-	bool hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags);
+	bool hasInfo = QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags, filelist);
 	{
 		Lock l(cs);
 		dcassert(transferItems.find(aCqi) != transferItems.end());
@@ -1302,13 +1304,15 @@ void TransferView::mainItemTick(ItemInfo* i) {
 			main->timeLeft = i->timeLeft;
 			main->size = i->size;
 			main->unsetFlag(ItemInfo::FLAG_SEGMENTED);
-
-			string tmp = main->Target;
-			QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
-			QueueItem::StringIter qi = queue.find(&tmp);
-			if(qi != queue.end())
-				qi->second->setAverageSpeed(main->speed);
-			QueueManager::getInstance()->unlockQueue();
+			
+			if(!d->isSet(Download::FLAG_USER_LIST)) {
+				string tmp = main->Target;
+				QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+				QueueItem::StringIter qi = queue.find(&tmp);
+				if(qi != queue.end())
+					qi->second->setAverageSpeed(main->speed);
+				QueueManager::getInstance()->unlockQueue();
+			}
 		}
 
 					

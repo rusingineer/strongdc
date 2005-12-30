@@ -82,7 +82,8 @@ public:
 	const string& getFile() const { return file; }
 	const string& getHubIpPort() const { return hubIpPort; }
 	/** @todo Return a hub where the user is online? */
-	const string& getHubName() const { return hubName.empty() ? user->getClientName() : hubName; }
+	const string& getHubName() const { return hubName; }
+	void setHubName(const string& aName) { hubName = aName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
 	int getSlots() const { return slots; }
@@ -146,7 +147,12 @@ private:
 	StringList hubs;
 };
 
-
+class ResultInfo {
+public:
+	ResultInfo(SearchResult* _sr, string _nick) : sr(_sr), nick(_nick) { }
+	string nick;
+	SearchResult* sr;
+};
 
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
@@ -156,7 +162,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		bool stop;
 		CriticalSection cs;
 		Semaphore s;
-		SearchResult::Map resultList;
+		list<ResultInfo> resultList;
 
 		ResultsQueue() : stop(false) {}
 		virtual ~ResultsQueue() throw() {
@@ -178,8 +184,8 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 				{
 					Lock l(cs);
 					if(!resultList.empty()) {
-						sr = resultList.begin()->first;
-						nick = resultList.begin()->second;
+						sr = resultList.begin()->sr;
+						nick = resultList.begin()->nick;
 						resultList.erase(resultList.begin());
 						int size = resultList.size();
 						resort = (size % 10 == 0);
@@ -190,21 +196,12 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 
 				if(sr != NULL) {
 					sr->setUser(ClientManager::getInstance()->getLegacyUser(nick));
-					OnlineUser* ou = sr->getUser()->getOnlineUser();
-					if(ou) {
-						if (!sr->getIP().empty())
-							ou->getIdentity().setIp(sr->getIP());
 
-						if((ou->getIdentity().get("VE") == "++ 0.403") && (ou->getClientType() != "rmDC++ 0.403D[1]")) {
-							string path(sr->getFile());
-							path = path.substr(0, path.find("\\"));
-							PME reg("([A-Z])");
-							if(reg.match(path)) {
-								ou->setCheat("rmDC++ 0.403D[1] with DC++ emulation" , true);
-								ou->setClientType("rmDC++ 0.403D[1]");
-								ou->setBadClient(true);
-							}
-						}
+					OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(sr->getUser());
+					if(&ou) {
+						sr->setHubName(ou.getClient().getHubName());
+						if(!sr->getIP().empty())
+							ou.getIdentity().setIp(sr->getIP());
 					}
 
 					SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
@@ -223,7 +220,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		}
 		void addResult(SearchResult* sr, const string& aNick) {
 			Lock l(cs);
-			resultList.insert(make_pair(sr, aNick));
+			resultList.push_back(ResultInfo(sr, aNick));
 		}
 	
 	};

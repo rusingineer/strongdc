@@ -94,8 +94,6 @@ public:
 	void getNickList() { checkstate(); send("$GetNickList|"); };
 	void getInfo(const OnlineUser& aUser) { checkstate(); send("$GetINFO " + toNmdc(aUser.getIdentity().getNick()) + " " + toNmdc(getMyNick()) + "|"); };
 
-	void sendRaw(const string& aRaw) { send(toNmdc(aRaw)); }
-	
 	void connectToMe(const OnlineUser& aUser);
 	void revConnectToMe(const OnlineUser& aUser);
 

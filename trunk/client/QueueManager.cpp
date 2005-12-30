@@ -305,10 +305,11 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 }
 
 inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
 	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
 				((qi->getActiveSegments().size() < qi->getMaxSegments()) &&
 				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())) &&
-				(qi->chunkInfo->hasFreeBlock(aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0) || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
+				(qi->chunkInfo->hasFreeBlock(&ou ? Util::toInt64(ou.getIdentity().get("US")) : 0) || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
 }
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
@@ -500,7 +501,7 @@ QueueManager::QueueManager() : lastSave(0), queueFile(Util::getConfigPath() + "Q
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
 
-	File::ensureDirectory(Util::getConfigPath() + FILELISTS_DIR);
+	File::ensureDirectory(Util::getAppPath() + FILELISTS_DIR);
 }
 
 QueueManager::~QueueManager() throw() { 
@@ -511,7 +512,7 @@ QueueManager::~QueueManager() throw() {
 	saveQueue();
 
 	if(!BOOLSETTING(KEEP_LISTS)) {
-		string path = Util::getConfigPath() + FILELISTS_DIR;
+		string path = Util::getAppPath() + FILELISTS_DIR;
 
 #ifdef _WIN32
 		WIN32_FIND_DATA data;
@@ -600,7 +601,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 }
 
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
-	string target = Util::getConfigPath() + FILELISTS_DIR + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
+	string target = Util::getAppPath() + FILELISTS_DIR + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
 	add(target, -1, NULL, aUser, USER_LIST_NAME, false, QueueItem::FLAG_USER_LIST | aFlags);
 }
@@ -785,7 +786,8 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(utf8)
 		s->setFlag(QueueItem::Source::FLAG_UTF8);
 
-	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(aUser->getClient()) ) {
+	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
+	if(aUser->isSet(User::PASSIVE) && (&ou && !ClientManager::getInstance()->isActive(&ou.getClient())) ) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) || (qi->getStatus() != QueueItem::STATUS_RUNNING)) {
@@ -958,7 +960,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw() {
+bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw() {
     Lock l(cs);
     QueueItem* qi = userQueue.getNext(aUser);
 	if(qi == NULL)
@@ -967,6 +969,7 @@ bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSiz
 	aTarget = qi->getTarget();
 	aSize = qi->getSize();
 	aFlags = qi->getFlags();
+	aFileList = qi->isSet(QueueItem::FLAG_USER_LIST);
 
 	return true;
 }
@@ -1089,10 +1092,11 @@ again:
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		dcassert(!q->getTempTarget().empty());
 
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
+			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), &ou ? Util::toInt64(ou.getIdentity().get("US")) : 0);
 		} else {
-			freeBlock = q->chunkInfo->getChunk(aUser->getOnlineUser() ? Util::toInt64(aUser->getOnlineUser()->getIdentity().get("US")) : 0);
+			freeBlock = q->chunkInfo->getChunk(&ou ? Util::toInt64(ou.getIdentity().get("US")) : 0);
 		}
 
 		if(freeBlock < 0) {
@@ -1145,8 +1149,8 @@ again:
 	}
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		Client* c = aUser->getOnlineUser() ? &aUser->getOnlineUser()->getClient() : NULL;
-		supportsChunks = supportsChunks && (!c || !c->getStealth()) && 
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
+		supportsChunks = supportsChunks && (!(&ou) || !ou.getClient().getStealth()) && 
 			((q->chunkInfo->getDownloadedSize() > 0.85*q->getSize()) || (q->getActiveSegments().size() > 1));
 		d->setStartPos(freeBlock);
 		q->chunkInfo->setDownload(freeBlock, d, supportsChunks);
@@ -1279,8 +1283,11 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 		}
 
 		int64_t speed = aDownload->getAverageSpeed();
-		if(aDownload->getUserConnection()->getUser()->getOnlineUser() && (speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760)) {
-			aDownload->getUserConnection()->getUser()->getOnlineUser()->getIdentity().set("US", Util::toString(speed));
+		
+		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760) {
+			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aDownload->getUserConnection()->getUser());
+			if(&ou)
+				ou.getIdentity().set("US", Util::toString(speed));
 		}
 		
 		checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
@@ -1819,11 +1826,12 @@ void QueueManager::on(ClientManagerListener::UserConnected, const User::Ptr& aUs
 		}		
 	}
 
-	if(!aUser->isOnline() /* @todo && aUser->getHasTestSURinQueue() */)
-		removeTestSUR(aUser);
-
 	if(hasDown)	
 		ConnectionManager::getInstance()->getDownloadConnection(aUser);
+}
+
+void QueueManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
+	removeTestSUR(aUser);
 }
 
 void QueueManager::on(TimerManagerListener::Second, u_int32_t /*aTick*/) throw() {

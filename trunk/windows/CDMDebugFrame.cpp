@@ -57,6 +57,8 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	m_hWndClient = ctrlPad;
 	m_hMenu = WinUtil::mainMenu;
 
+	DebugManager::getInstance()->addListener(this);
+
 	bHandled = FALSE;
 	return 1;
 }
