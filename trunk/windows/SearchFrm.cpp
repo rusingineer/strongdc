@@ -1406,8 +1406,8 @@ void SearchFrame::SearchInfo::update() {
 	}
 	nick = Text::toT(sr->getUser()->getFirstNick());
 	
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(sr->getUser());
-	connection = Text::toT(&ou ? ou.getIdentity().getConnection() : Util::emptyString);
+	Identity ident = ClientManager::getInstance()->getIdentity(sr->getUser());
+	connection = Text::toT(ident.getConnection());
 	hubName = Text::toT(sr->getHubName());
 	slots = Text::toT(sr->getSlotString());
 	ip = Text::toT(sr->getIP());
@@ -1423,7 +1423,7 @@ void SearchFrame::SearchInfo::update() {
 	if(sr->getTTH() != NULL)
 		setTTH(Text::toT(sr->getTTH()->toBase32()));
 	
-	string us = &ou ? ou.getIdentity().get("US") : Util::emptyString;
+	string us = ident.get("US");
 	if (!us.empty()) {
 		uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(us)) + "/s");
 	} else if(user->isSet(User::FIREBALL)) {
@@ -1569,8 +1569,7 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(item->sr->getFile())) : WinUtil::getDirIconIndex();
 		} else {
-			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(item->sr->getUser());
-			const string& tmp = &ou ? ou.getIdentity().getConnection() : Util::emptyString;
+			const string& tmp = ClientManager::getInstance()->getIdentity(item->sr->getUser()).getConnection();
 			if( (tmp == "28.8Kbps") ||
 				(tmp == "33.6Kbps") ||
 				(tmp == "56Kbps") ||

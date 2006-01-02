@@ -63,7 +63,7 @@ public:
 
 		if(iRet == FileChunksInfo::CHUNK_LOST){
 			chunk = -1;
-			throw ChunkDoneException(Util::emptyString, chunk);
+			throw ChunkDoneException(STRING(CHUNK_OVERLAPPED), chunk);
 		}
 
 		pos += len;
@@ -85,7 +85,7 @@ public:
 		if (iRet == FileChunksInfo::CHUNK_OVER){
 			os->flush();
 			chunk = -1;
-			throw ChunkDoneException(Util::emptyString, pos);
+			throw ChunkDoneException(CSTRING(BLOCK_FINISHED), pos);
 
 		}else if(iRet == FileChunksInfo::FILE_OVER){
    			os->flush();

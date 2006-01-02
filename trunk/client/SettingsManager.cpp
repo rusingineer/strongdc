@@ -65,9 +65,9 @@ const string SettingsManager::settingTags[] =
 	"UseSystemIcons", "PopupPMs", "MinUploadSpeed", "GetUserInfo", "UrlHandler", "MainWindowState", 
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway",
 	"SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
-	"CompressTransfers", "ShowProgressBars", "MaxTabRows", "AutoUpdateList",
+	"CompressTransfers", "ShowProgressBars", "MaxTabRows",
 	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots",
-	"SkipZeroByte", "AdlsBreakOnFirst", "TabCompletion", 
+	"SkipZeroByte", "AdlsBreakOnFirst",
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
 	"LogFilelistTransfers", "EmptyWorkingSet",
 	"ShowStatusbar",
@@ -121,7 +121,7 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "ColorVerified",
+	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -218,13 +218,11 @@ SettingsManager::SettingsManager()
 	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. I might answer later if you're lucky.");
 	setDefault(TIME_STAMPS_FORMAT, "%H:%M:%S");
 	setDefault(MAX_TAB_ROWS, 2);
-	setDefault(AUTO_UPDATE_LIST, true);
 	setDefault(MAX_COMPRESSION, 3);
 	setDefault(ANTI_FRAG, true);
 	setDefault(NO_AWAYMSG_TO_BOTS, true);
 	setDefault(SKIP_ZERO_BYTE, false);
 	setDefault(ADLS_BREAK_ON_FIRST, false);
-	setDefault(TAB_COMPLETION, true);
 	setDefault(HUB_USER_COMMANDS, true);
 	setDefault(AUTO_SEARCH_AUTO_MATCH, false);
 	setDefault(LOG_FILELIST_TRANSFERS, true);
@@ -274,6 +272,7 @@ SettingsManager::SettingsManager()
 	setDefault(BOLD_HUB, true);
 	setDefault(BOLD_PM, true);
 	setDefault(BOLD_SEARCH, true);
+	setDefault(AUTO_REFRESH_TIME, 60);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
@@ -594,6 +593,12 @@ void SettingsManager::load(string const& aFileName)
 #ifdef _DEBUG
 		set(CLIENT_ID, CID::generate().toBase32());
 #endif
+		if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
+			set(TCP_PORT, (int)Util::rand(1025, 32000));
+			set(UDP_PORT, (int)Util::rand(1025, 32000));
+		}
+		setDefault(UDP_PORT, SETTING(TCP_PORT));
+		
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
@@ -601,16 +606,7 @@ void SettingsManager::load(string const& aFileName)
 	} catch(const Exception&) {
 		if(CID(SETTING(CLIENT_ID)).isZero())
 			set(CLIENT_ID, CID::generate().toBase32());
-
-		ClientManager::getInstance()->loadUsers();
 	}
-	
-	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
-		set(TCP_PORT, (int)Util::rand(1025, 32000));
-		set(UDP_PORT, (int)Util::rand(1025, 32000));
-	}
-
-	setDefault(UDP_PORT, SETTING(TCP_PORT));
 }
 
 void SettingsManager::save(string const& aFileName) {

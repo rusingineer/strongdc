@@ -147,7 +147,7 @@ User::Ptr ClientManager::getLegacyUser(const string& aNick) throw() {
 
 	for(UserIter i = users.begin(); i != users.end(); ++i) {
 		User::Ptr& p = i->second;
-		if(p->isSet(User::NMDC) && (Util::stricmp(p->getFirstNick().c_str(), aNick.c_str()) == 0))
+		if(p->isSet(User::NMDC) && Util::stricmp(p->getFirstNick(), aNick) == 0)
 			return p;
 	}
 
@@ -561,10 +561,20 @@ void ClientManager::on(Save, SimpleXML*) throw() {
 		// ...
 	}
 }
-void ClientManager::loadUsers() {
-	me = new User(CID(SETTING(CLIENT_ID)));
-	me->setFirstNick(SETTING(NICK));
-	users.insert(make_pair(me->getCID(), me));
+
+User::Ptr& ClientManager::getMe() {
+	if(!me) {
+		Lock l(cs);
+		if(!me) {
+			me = new User(CID(SETTING(CLIENT_ID)));
+			me->setFirstNick(SETTING(NICK));
+		}
+	}
+	return me;
+}
+
+void ClientManager::on(Load, SimpleXML*) throw() {
+	users.insert(make_pair(getMe()->getCID(), getMe()));
 
 	try {
 		SimpleXML xml;

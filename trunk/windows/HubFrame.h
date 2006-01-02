@@ -471,6 +471,7 @@ private:
 	void removeUser(const User::Ptr& aUser);
 
 	void addAsFavorite();
+	void removeFavoriteHub();
 
 	void clearUserList();
 

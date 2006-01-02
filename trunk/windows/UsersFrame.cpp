@@ -137,10 +137,9 @@ void UsersFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 }
 
 LRESULT UsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	//ctrlUsers.forEachSelected(&UserInfo::remove);
 	int i = -1;
 	while( (i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-		FavoriteManager::getInstance()->removeFavoriteUser(((UserInfo*)ctrlUsers.GetItemData(i))->user);
+		ctrlUsers.getItemData(i)->remove();
 	}
 	return 0;
 }

@@ -54,7 +54,7 @@ UploadManager::~UploadManager() throw() {
 	{
 		Lock l(cs);
 		for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
-			for_each(ii->second.begin(), ii->second.end(), DeleteFunction<UploadQueueItem*>());
+			for_each(ii->second.begin(), ii->second.end(), DeleteFunction());
 		}
 		UploadQueueItems.clear();
 	}
@@ -460,8 +460,11 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 			if(!UploadQueueItems.empty())
 				aUser = UploadQueueItems.begin()->first;
 		}
-		if((aUser != (User::Ptr)NULL) && aUser->isOnline())
-			ClientManager::getInstance()->connect(aUser);
+		if((aUser != (User::Ptr)NULL) && aUser->isOnline()) {
+			ClientManager* clientMgr = ClientManager::getInstance();
+			if(clientMgr)
+				clientMgr->connect(aUser);
+		}
 
 		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 	} 

@@ -133,7 +133,6 @@
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="0"
 				SuppressStartupBanner="true"

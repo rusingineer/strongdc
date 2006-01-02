@@ -266,7 +266,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				} 
 				
-				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(NULL)) {
+				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(cqi->getUser());
+				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(&ou.getClient())) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
@@ -302,9 +303,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 						cqi->setState(ConnectionQueueItem::WAITING);
 					}
 				} else if(((cqi->getLastAttempt() + 50*1000) < aTick) && (cqi->getState() == ConnectionQueueItem::CONNECTING)) {
-					OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(cqi->getUser());
-					if (&ou)
-						ou.getIdentity().connectionTimeout();
+					ou.getIdentity().connectionTimeout();
 
 					fire(ConnectionManagerListener::Failed(), cqi, STRING(CONNECTION_TIMEOUT));
 					cqi->setState(ConnectionQueueItem::WAITING);
@@ -323,7 +322,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 
 	}
 
-	for_each(penDel.begin(), penDel.end(), DeleteFunction<UserConnection*>());
+	for_each(penDel.begin(), penDel.end(), DeleteFunction());
 
 	for(User::Iter ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
 		QueueManager::getInstance()->removeSource(*ui, QueueItem::Source::FLAG_PASSIVE);
@@ -512,7 +511,8 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	if(aSource->isSet(UserConnection::FLAG_INCOMING)) {
 		// Try to guess where this came from...
 		pair<string, string> i = expectedConnections.remove(aNick);
-		if(i.first.empty() && i.second.empty()) {
+		if(i.second.empty()) {
+			dcassert(i.first.empty());
 			dcdebug("Unknown incoming connection from %s\n", aNick.c_str());
 			putConnection(aSource);
 			return;
@@ -520,7 +520,6 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
         aSource->setToken(i.first);	
 		aSource->setHubUrl(i.second);
 	}
-
 	CID cid = ClientManager::getInstance()->makeCid(aNick, aSource->getHubUrl());
 
 	// First, we try looking in the pending downloads...hopefully it's one of them...
@@ -601,6 +600,7 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	if(&ou) {
 		ou.getIdentity().setPk(aPk);
 		ou.getIdentity().setLock(aLock);
+		ou.getClient().updated(ou);
 	}
 }
 

@@ -655,22 +655,20 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		try{
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
-
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 
 			if(d->getTreeValid()) {
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-				if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
+				//if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
 					lpFileDataInfo->verifyBlock(e.pos, d->getTigerTree());
-				}else{
-					dcassert(0);
-				}
+				//}else{
+				//	dcassert(0);
+				//}
 			}
 
 			d->setPos(e.pos);
 			if((d->getPos() == d->getSize()) || (d->isSet(Download::FLAG_CHUNK_TRANSFER) && (d->getTotal() >= d->getSegmentSize()))) {
-				dcdebug("BlockFinished\n");
 				aSource->setDownload(NULL);
 				string aTarget = d->getTarget();
 				removeDownload(d);
@@ -678,7 +676,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setLineMode();
 				checkDownloads(aSource, false, aTarget);
 			}else{
-				fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
+				fire(DownloadManagerListener::Failed(), d, e.getError());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);

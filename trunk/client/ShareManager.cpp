@@ -811,7 +811,7 @@ void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, b
 	join();
 	bool cached = false;
 	if(initial) {
-		cached = loadCache();
+		//cached = loadCache();
 		initial = false;
 	}
 	start();
@@ -1564,8 +1564,8 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 }
 
 void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
-	if(BOOLSETTING(AUTO_UPDATE_LIST)) {
-		if(lastFullUpdate + 60 * 60 * 1000 < tick) {
+	if(SETTING(AUTO_REFRESH_TIME) > 0) {
+		if(lastFullUpdate + SETTING(AUTO_REFRESH_TIME) * 60 * 1000 < tick) {
 			try {
 				refresh(true, true);
 			} catch(const ShareException&) {

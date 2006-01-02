@@ -562,7 +562,6 @@ void PrivateFrame::updateTitle() {
 		isoffline = true;
 	}
 	SetWindowText((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str());
-	setDirty();
 }
 
 LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {

@@ -173,8 +173,8 @@ public:
 	}
 
 	virtual ~QueueItem() { 
-		for_each(sources.begin(), sources.end(), DeleteFunction<Source*>());
-		for_each(badSources.begin(), badSources.end(), DeleteFunction<Source*>());
+		for_each(sources.begin(), sources.end(), DeleteFunction());
+		for_each(badSources.begin(), badSources.end(), DeleteFunction());
 		delete tthRoot;
 	};
 

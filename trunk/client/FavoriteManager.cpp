@@ -602,6 +602,8 @@ void FavoriteManager::load(SimpleXML* aXml) {
 
 			i->second.setLastSeen((u_int32_t)aXml->getIntChildAttrib("LastSeen"));
 			i->second.setDescription(aXml->getChildAttrib("UserDescription"));
+
+			i->second.getUser()->setFlag(User::SAVE_NICK);
 		}
 		aXml->stepOut();
 	}

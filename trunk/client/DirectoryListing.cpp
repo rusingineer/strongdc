@@ -401,9 +401,7 @@ struct HashContained {
 	HashContained(const HASH_SET<TTHValue, TTHValue::Hash>& l) : tl(l) { }
 	const HASH_SET<TTHValue, TTHValue::Hash>& tl;
 	bool operator()(const DirectoryListing::File::Ptr i) const {
-		bool r = !tl.count(*(i->getTTH()));
-		if (r) DeleteFunction<const DirectoryListing::File*>()(i);
-		return r;
+		return tl.count(*(i->getTTH())) && (DeleteFunction()(i), true);
 	}
 private:
 	HashContained& operator=(HashContained&);
@@ -412,7 +410,7 @@ private:
 struct DirectoryEmpty {
 	bool operator()(const DirectoryListing::Directory::Ptr i) const {
 		bool r = i->getFileCount() + i->directories.size() == 0;
-		if (r) DeleteFunction<const DirectoryListing::Directory*>()(i);
+		if (r) DeleteFunction()(i);
 		return r;
 	}
 };

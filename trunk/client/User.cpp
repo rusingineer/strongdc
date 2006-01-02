@@ -28,6 +28,7 @@
 #include "QueueManager.h"
 #include "pme.h"
 #include "UserCommand.h"
+#include "ResourceManager.h"
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_) : user(ptr), identity(ptr, client_.getHubUrl()), client(&client_) { 
 

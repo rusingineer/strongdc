@@ -176,7 +176,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 		} else if(i->compare(0, 2, "S:") == 0) {
 			id.set("SL", i->substr(2));
 		} else if((j = i->find("V:")) != string::npos) {
-			i->erase(i->begin() + j, i->begin() + j + 2);
+			i->erase(i->begin(), i->begin() + j + 2);
 			id.set("VE", *i);
 		} else if(i->compare(0, 2, "M:") == 0) {
 			if(i->size() == 3) {
@@ -190,6 +190,8 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			id.set("US", Util::toString(Util::toInt64(*i)*1024));
 		}
 	}
+	/// @todo Think about this
+	id.set("TA", tag);
 }
 
 void NmdcHub::onLine(const char* aLine) throw() {
@@ -440,9 +442,9 @@ void NmdcHub::onLine(const char* aLine) throw() {
 					if(Description) {
 						if(*(Connection-2) == '>') {
 							if((Tag = strrchr(Description, '<')) != NULL) {
-								u.getIdentity().setTag(fromNmdc(Tag));
-								Tag[strlen(Tag)-1] = NULL;
-								updateFromTag(u.getIdentity(), Tag+1);
+								//u.getIdentity().setTag(fromNmdc(Tag));
+								//Tag[strlen(Tag)-1] = NULL;
+								updateFromTag(u.getIdentity(), Tag);
 								Tag[0] = NULL;
 							}
 						}
