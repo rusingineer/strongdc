@@ -31,9 +31,9 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		return NULL;
 	}
 	if(col == COLUMN_NICK) {
-			if(a->getOp() && !b->getOp()) {
+			if(a->getIdentity().isOp() && !b->getIdentity().isOp()) {
 				return -1;
-			} else if(!a->getOp() && b->getOp()) {
+			} else if(!a->getIdentity().isOp() && b->getIdentity().isOp()) {
 				return 1;
 			}
 	}
@@ -48,7 +48,7 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 }
 
 bool UserInfo::update(const Identity& identity, int sortCol) {
-	bool needsSort = (op != identity.isOp());
+	bool needsSort = (getIdentity().isOp() != identity.isOp());
 
 	tstring old;
 	if(sortCol != -1)
@@ -82,9 +82,6 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	columns[COLUMN_SUPPORTS] = Text::toT(identity.getSupports());
 	columns[COLUMN_CLIENTID] = Text::toT(identity.getClientType());
 
-	op = identity.isOp();
-	hidden = identity.isHidden();
-	
 	if(sortCol != -1) {
 		needsSort = needsSort || (old != columns[sortCol]);
 	}

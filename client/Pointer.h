@@ -157,8 +157,8 @@ bool operator<(T* lhs, const Pointer<T>& rhs) { return rhs > lhs; }
 template <class T>
 bool operator>(T* lhs, const Pointer<T>& rhs) { return rhs < lhs; }
 
-template <class T>
 struct DeleteFunction {
+	template<typename T>
 	void operator()(const T& p) const { delete p; };
 };
 

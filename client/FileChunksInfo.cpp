@@ -752,7 +752,7 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 		int64_t b = i->second->pos;
 		int64_t e = i->second->end;
 		
-		if(e - b < MIN_BLOCK_SIZE * 3) continue;
+		if(e - b < minChunkSize * 2) continue;
         b = b + (e - b) / 2; //@todo speed
 
 		dcassert(b > i->second->pos);

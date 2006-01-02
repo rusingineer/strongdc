@@ -453,11 +453,7 @@ private:
 			clearTree(next);
 			next = ctrlDirs.GetNextSiblingItem(next);
 		}
-#if _STLPORT_MAJOR >= 5
-		delete (tstring*)ctrlDirs.GetItemData(item);
-#else
- 		delete (string*)ctrlDirs.GetItemData(item);
-#endif
+		delete reinterpret_cast<tstring*>(ctrlDirs.GetItemData(item));
 	}
 
 	void removeSelected() {

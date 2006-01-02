@@ -27,11 +27,6 @@
 #include "Pointer.h"
 #include "CID.h"
 #include "FastAlloc.h"
-#include "ResourceManager.h"
-
-class Client;
-class NmdcHub;
-class OnlineUser;
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
@@ -96,6 +91,8 @@ private:
 	User& operator=(const User&);
 };
 
+class Client;
+
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity : public Flags {
 public:
@@ -119,8 +116,7 @@ public:
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
-	GS(Connection, "CN")
-	GS(Tag, "TG")
+	GS(Connection, "CO")
 
 	// fake detection variables
 	GS(TestSURComplete, "TC");
@@ -141,12 +137,21 @@ public:
 	GS(Pk, "PK");
 	GS(TestSUR, "TS");
 	GS(UnknownCommand, "UC");
-	GS(Comment, "CO");	
+	GS(Comment, "CM");	
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
+
+	string getTag() const { 
+		if(!get("TA").empty())
+			return get("TA");
+		if(get("VE").empty() || get("HN").empty() || get("HR").empty() ||get("HO").empty() || get("SL").empty())
+			return Util::emptyString;
+		return "<" + get("VE") + ",M:" + string(isTcpActive() ? "A" : "P") + ",H:" + get("HN") + "/" + 
+			get("HR") + "/" + get("HO") + ",S:" + get("SL") + ">";
+	}
 
 	const bool supports(const string& name) const;
 	const bool isHub() const { return !get("HU").empty(); }
@@ -189,6 +194,7 @@ private:
 	string splitVersion(const string& aExp, const string& aTag, const int part);
 };
 
+class NmdcHub;
 
 class OnlineUser : public FastAlloc<OnlineUser> {
 public:

@@ -313,6 +313,8 @@ void HubFrame::onEnter() {
 				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + Util::toString(SearchManager::getInstance()->getPort()))), WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
+			} else if((Util::stricmp(s.c_str(), _T("removefavorite")) == 0) || (Util::stricmp(s.c_str(), _T("removefav")) == 0)) {
+				removeFavoriteHub();
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){
 				if( !param.empty() ){
 					int k = ctrlUsers.findItem(param);
@@ -371,7 +373,7 @@ void HubFrame::onEnter() {
 					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params))));
 				}
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + WinUtil::commands + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist"), WinUtil::m_ChatTextSystem);
+				addLine(_T("*** ") + WinUtil::commands + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist, /removefavorite"), WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(s.c_str(), _T("pm")) == 0) {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
@@ -483,6 +485,16 @@ void HubFrame::addAsFavorite() {
 		addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );
 	} else {
 		addClientLine(TSTRING(FAVORITE_HUB_ALREADY_EXISTS), WinUtil::m_ChatTextSystem);
+	}
+}
+
+void HubFrame::removeFavoriteHub() {
+	FavoriteHubEntry* removeHub = FavoriteManager::getInstance()->getFavoriteHubEntry(client->getHubUrl());
+	if(removeHub) {
+		FavoriteManager::getInstance()->removeFavorite(removeHub);
+		addClientLine(TSTRING(FAVORITE_HUB_REMOVED), WinUtil::m_ChatTextSystem);
+	} else {
+		addClientLine(TSTRING(FAVORITE_HUB_DOES_NOT_EXIST), WinUtil::m_ChatTextSystem);
 	}
 }
 
@@ -647,16 +659,16 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UpdateInfo& u) {
 	UserMapIter i = userMap.find(u.user);
 	if(i == userMap.end()) {
-		UserInfo* ui = new UserInfo(u);
+		UserInfo* ui = new UserInfo(u, client);
 		userMap.insert(make_pair(u.user, ui));
-		if(!ui->getHidden() && showUsers)
+		if(!ui->getIdentity().isHidden() && showUsers)
 			filterUser(ui);
 
 		client->availableBytes += ui->getBytes();
 		return true;
 	} else {
 		UserInfo* ui = i->second;
-		if(!ui->getHidden() && u.identity.isHidden() && showUsers) {
+		if(!ui->getIdentity().isHidden() && u.identity.isHidden() && showUsers) {
 			ctrlUsers.deleteItem(ui);
 		}
 		
@@ -668,7 +680,7 @@ bool HubFrame::updateUser(const UpdateInfo& u) {
 			int pos = ctrlUsers.findItem(ui);
 			if(pos != -1) {
 				ctrlUsers.updateItem(pos);
-				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity, client), 0, 0, NULL);
 			}
 		}
 
@@ -681,7 +693,7 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	dcassert(i != userMap.end());
 
 	UserInfo* ui = i->second;
-	if(!ui->getHidden() && showUsers)
+	if(!ui->getIdentity().isHidden() && showUsers)
 		ctrlUsers.deleteItem(ui);
 
 	client->availableBytes -= ui->getBytes();
@@ -1433,8 +1445,8 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 };
 
 void HubFrame::onTab() {
-	if(BOOLSETTING(TAB_COMPLETION) && 
-		(GetFocus() == ctrlMessage.m_hWnd) && 
+	HWND focus = GetFocus();
+	if( (focus == ctrlMessage.m_hWnd) && 
 		!(GetAsyncKeyState(VK_SHIFT) & 0x8000) ) 
 	{
 		int n = ctrlMessage.GetWindowTextLength();
@@ -1451,6 +1463,7 @@ void HubFrame::onTab() {
 			}
 			if(complete.empty()) {
 				// Still empty, no text entered...
+				ctrlUsers.SetFocus();
 				return;
 			}
 			int y = ctrlUsers.GetItemCount();
@@ -1508,17 +1521,13 @@ void HubFrame::onTab() {
 				i = 0;
 			}
 		}
-	} else {
-		HWND focus = GetFocus();
-
-		if(focus == ctrlClient.m_hWnd) {
-			ctrlMessage.SetFocus();
-		} else if(focus == ctrlMessage.m_hWnd) {
-			ctrlUsers.SetFocus();
-		} else if(focus == ctrlUsers.m_hWnd) {
-			ctrlClient.SetFocus();
-		} 
 	}
+
+	if(focus == ctrlClient.m_hWnd) {
+		ctrlMessage.SetFocus();
+	} else if(focus == ctrlUsers.m_hWnd) {
+		ctrlClient.SetFocus();
+	} 
 }
 
 LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -2018,7 +2027,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 				int i = ctrlUsers.findItem(sNick);
 				if ( i >= 0 ) {
 					UserInfo* ui = (UserInfo*)ctrlUsers.getItemData(i);
-					if (client->isOp() || !ui->getOp()) {
+					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
 						if(!ignoreList.count(sNick)) {
 							pMenu->AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
@@ -2324,19 +2333,21 @@ void HubFrame::updateUserList() {
 }
 
 void HubFrame::filterUser(UserInfo* ui) {
-	bool adduser = false;
-	if(filter.empty()) {
-		adduser = true;
-	} else {
-		PME reg(Text::fromT(filter),"i");
-		if(!reg.IsValid()) { 
+	if(!ui->getIdentity().isHidden()) {
+		bool adduser = false;
+		if(filter.empty()) {
 			adduser = true;
-		} else if(reg.match(Text::fromT(ui->getText(ctrlFilterSel.GetCurSel())))) {
+		} else {
+			PME reg(Text::fromT(filter),"i");
+			if(!reg.IsValid()) { 
 				adduser = true;
+			} else if(reg.match(Text::fromT(ui->getText(ctrlFilterSel.GetCurSel())))) {
+					adduser = true;
+			}
 		}
-	}
-	if(adduser == true){
-		ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+		if(adduser == true){
+			ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client));
+		}
 	}
 }
 
@@ -2380,7 +2391,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(FIREBALL_COLOR);
 			} else if(ui->user->isSet(User::SERVER)) {
 				cd->clrText = SETTING(SERVER_COLOR);
-			} else if(ui->getOp()) {
+			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);
 			} else if(ui->getIdentity().isTcpActive()) {
 				cd->clrText = SETTING(ACTIVE_COLOR);

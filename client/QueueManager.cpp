@@ -304,12 +304,10 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
+inline bool hasFreeSegments(QueueItem* qi) {
 	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
 				((qi->getActiveSegments().size() < qi->getMaxSegments()) &&
-				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())) &&
-				(qi->chunkInfo->hasFreeBlock(&ou ? Util::toInt64(ou.getIdentity().get("US")) : 0) || !(*(qi->getSource(aUser)))->getPartialInfo().empty()));
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
 }
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
@@ -325,7 +323,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = hasFreeSegments(found, aUser);
+			bool freeSegments = hasFreeSegments(found);
 
 			if(freeSegments && (pNext == NULL || fNext)) {
 				dcassert(found != next);
@@ -343,7 +341,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	                fNext = true;   // found, next is target
 	
 					iQi++;
-					if((iQi != i->second.end()) && hasFreeSegments(*iQi, aUser)) {
+					if((iQi != i->second.end()) && hasFreeSegments(*iQi)) {
 						dcassert(*iQi != next);
 						return *iQi;
 					}

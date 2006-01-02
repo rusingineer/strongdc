@@ -751,7 +751,7 @@ public:
 		T* mainItem = NULL;
 		
 		if(!extra)
-			findMainItem(item->getGroupingString());
+			mainItem = findMainItem(item->getGroupingString());
 
 		int pos = -1;
 

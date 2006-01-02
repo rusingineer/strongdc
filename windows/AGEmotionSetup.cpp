@@ -141,7 +141,7 @@ CAGEmotionSetup::CAGEmotionSetup() {
 }
 
 CAGEmotionSetup::~CAGEmotionSetup() {
-	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction<CAGEmotion*>());
+	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
 	if (m_toolbarsStruct != NULL) {
 		delete [] m_toolbarsStruct;
 		m_toolbarsStruct = NULL;

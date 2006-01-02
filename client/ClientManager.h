@@ -104,7 +104,7 @@ public:
 	void putOnline(OnlineUser& ou) throw();
 	void putOffline(OnlineUser& ou) throw();
 
-	User::Ptr& getMe() { return me; }
+	User::Ptr& getMe();
 	
 	void connect(const User::Ptr& p);
 	void send(AdcCommand& c);
@@ -130,8 +130,6 @@ public:
  			client->removeListener(listener);
  		}
  	}
-
-	void loadUsers();
 
 private:
 	typedef HASH_MAP<string, User::Ptr> LegacyMap;
@@ -175,7 +173,7 @@ private:
 	string getUsersFile() { return Util::getConfigPath() + "Users.xml"; }
 
 	// SettingsManagerListener
-	virtual void on(Load, SimpleXML*) throw() { loadUsers(); }
+	virtual void on(Load, SimpleXML*) throw();
 	virtual void on(Save, SimpleXML*) throw();
 
 	// ClientListener

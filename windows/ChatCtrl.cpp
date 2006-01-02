@@ -331,7 +331,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 					i = m_pUsers->findItem(sAuthor);
 				if(i != -1) {
 					UserInfo* ui = m_pUsers->getItemData(i);
-					isOP = ui->getOp();
+					isOP = ui->getIdentity().isOp();
 				}
 			}
 			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP || isFavorite) {

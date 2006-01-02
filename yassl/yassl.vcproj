@@ -124,7 +124,6 @@
 				MinimalRebuild="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=""
 				WarningLevel="3"
@@ -517,6 +516,10 @@
 			</File>
 			<File
 				RelativePath="include\socket_wrapper.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\include\openssl\ssl.h"
 				>
 			</File>
 			<File

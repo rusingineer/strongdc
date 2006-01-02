@@ -348,9 +348,9 @@ private:
 			c = NULL;
 		}
 		
-		for_each(favoriteHubs.begin(), favoriteHubs.end(), DeleteFunction<FavoriteHubEntry*>());
-		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction<RecentHubEntry*>());
-		for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction<PreviewApplication*>());
+		for_each(favoriteHubs.begin(), favoriteHubs.end(), DeleteFunction());
+		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction());
+		for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction());
 	}
 	
 	FavoriteHubEntry::Iter getFavoriteHub(const string& aServer) {
