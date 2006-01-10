@@ -48,7 +48,8 @@
 #include "CertificatesPage.h"
 
 bool PropertiesDlg::needUpdate = false;
-PropertiesDlg::PropertiesDlg(SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS)) {
+PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertySheet(CTSTRING(SETTINGS), 0, parent)
+{
 	int n = 0;
 	pages[n++] = new GeneralPage(s);
 	pages[n++] = new NetworkPage(s);

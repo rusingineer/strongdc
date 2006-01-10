@@ -36,7 +36,7 @@ public:
 				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
 			fileChunks = FileChunksInfo::Get(tempTarget);
-
+		dcassert(!(fileChunks == (FileChunksInfo*)NULL));
 			bufPos = 0;
 			start = start + skippingBytes;
 			multiSourceChecking = true;
@@ -76,6 +76,7 @@ public:
 	virtual size_t write(const void* b, size_t len) throw(FileException) {
 		u_int8_t* xb = (u_int8_t*)b;
 		size_t pos = 0;
+		bool verifyFlag = false;
 
 		
 		if(multiSourceChecking && (skippingBytes > 0))
@@ -83,10 +84,20 @@ public:
 			if(skippingBytes >= len)
 			{
 				skippingBytes -= len;
-				return s->write(b, len);
+				size_t ret = s->write(b, len);
+				if(skippingBytes == 0){
+					s->flush();
+					dcassert(verified > 0);
+					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
+					if(!fileChunks->verifyBlock(offset, real)){
+						LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(offset), true);
+					}
+				}
+				return ret;
 	        }else{
 				pos = skippingBytes;
 				skippingBytes = 0;
+				verifyFlag = true;
 			}
 		}
 		
@@ -119,10 +130,22 @@ public:
 		checkTrees();
 		size_t ret = s->write(b, len);
 		
-		// mark verified block
-		if(multiSourceChecking && (verified > old)) {
-			flush();
-			fileChunks->markVerifiedBlock((u_int16_t)old, (u_int16_t)verified);
+		if(multiSourceChecking) {
+			// mark verified block
+			if(verified > old) {
+				s->flush();
+				fileChunks->markVerifiedBlock((u_int16_t)old, (u_int16_t)verified);
+			}
+
+			if(verifyFlag){
+				s->flush();
+				dcassert(old > 0);
+				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
+				if(!fileChunks->verifyBlock(offset, real)){
+					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(offset), true);
+				}
+
+			}
 		}
 		return ret;
 	}
@@ -147,6 +170,9 @@ private:
 			if(cur.getLeaves().size() > real.getLeaves().size() ||
 				!(cur.getLeaves()[verified] == real.getLeaves()[verified])) 
 			{
+				dcassert(cur.getLeaves().size() <= real.getLeaves().size());
+				LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified), true);
+
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
 			verified++;

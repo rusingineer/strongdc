@@ -39,6 +39,18 @@ class ClientManager : public Speaker<ClientManagerListener>,
 	private TimerManagerListener, private SettingsManagerListener
 {
 public:
+	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
+	typedef OnlineMap::iterator OnlineIter;
+	typedef pair<OnlineIter, OnlineIter> OnlinePair;
+
+	OnlineUser& getOnlineUser(const User::Ptr& p) {
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			return *i->second;
+		}
+		return *(OnlineUser*)NULL;
+	}
+
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
@@ -47,6 +59,7 @@ public:
 	StringList getHubs(const CID& cid);
 	StringList getHubNames(const CID& cid);
 	StringList getNicks(const CID& cid);
+	string getConnection(const CID& cid);
 
 	bool isConnected(const string& aUrl);
 	
@@ -58,6 +71,8 @@ public:
 	User::Ptr getLegacyUser(const string& aNick) throw();
 	User::Ptr getUser(const CID& cid) throw();
 
+	string findHub(const string& ipPort);
+
 	User::Ptr findUser(const string& aNick, const string& aHubUrl) throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	User::Ptr findUser(const CID& cid) throw();
 
@@ -65,6 +80,11 @@ public:
 		Lock l(cs);
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
+	
+	void setIPUser(const string& IP, User::Ptr user) {
+		OnlinePair p = onlineUsers.equal_range(user->getCID());
+		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
+	}	
 	
 	void updateUser(const User::Ptr& aUser) {
 		OnlineUser* ou;
@@ -78,25 +98,9 @@ public:
 		ou->getClient().updated(*ou);
 	}
 
-	OnlineUser& getOnlineUser(const User::Ptr& aUser) {
-		OnlineIter i = onlineUsers.find(aUser->getCID());
-		if(i != onlineUsers.end()) {
-			return *i->second;
-		}
-		return *(OnlineUser*)NULL;
-	}
+
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
-	bool isMeOp(const string& aHubUrl) {
-		Lock l(cs);
-
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			if(((*i)->getHubUrl() == aHubUrl) && ((*i)->getMyIdentity().isOp())) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	/** Constructs a synthetic, hopefully unique CID */
 	CID makeCid(const string& nick, const string& hubUrl) throw();
@@ -111,7 +115,6 @@ public:
 	void privateMessage(const User::Ptr& p, const string& msg);
 
 	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
-	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
 
 	bool isActive(Client* aClient) { return (aClient ? aClient->getMode() : SETTING(INCOMING_CONNECTIONS)) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
@@ -131,16 +134,21 @@ public:
  		}
  	}
 
+	// fake detection methods
+	void setListLength(const User::Ptr& p, const string& listLen);
+	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock);
+	bool fileListDisconnected(const User::Ptr& p);
+	bool connectionTimeout(const User::Ptr& p);
+	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
+	void setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
+
+
 private:
 	typedef HASH_MAP<string, User::Ptr> LegacyMap;
 	typedef LegacyMap::iterator LegacyIter;
 
 	typedef HASH_MAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
 	typedef UserMap::iterator UserIter;
-
-	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
-	typedef OnlineMap::iterator OnlineIter;
-	typedef pair<OnlineIter, OnlineIter> OnlinePair;
 
 	Client::List clients;
 	CriticalSection cs;

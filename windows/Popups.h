@@ -33,6 +33,7 @@ public:
 	Popups(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(BALLOON_POPUPS)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	~Popups() {

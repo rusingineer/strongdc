@@ -801,7 +801,7 @@ void ShareManager::removeTTH(const TTHValue& tth, const Directory::File::Iter& i
 }
 
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ShareException) {
-	if(Thread::safeInc(refreshing) == 2) {
+	if(Thread::safeInc(refreshing) > 1) {
 		Thread::safeDec(refreshing);
 		return;
 	}
@@ -1293,9 +1293,8 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 	bool sizeOk = (aSearchType != SearchManager::SIZE_ATLEAST) || (aSize == 0);
 	if( (cur->empty()) && 
 		(((aFileType == SearchManager::TYPE_ANY) && sizeOk) || (aFileType == SearchManager::TYPE_DIRECTORY)) ) {
-		// We satisfied all the search words! Add the directory...
-		SearchResult* sr = new SearchResult(aClient, SearchResult::TYPE_DIRECTORY, 
-			0, getFullName(), NULL, true);
+		// We satisfied all the search words! Add the directory...(NMDC searches don't support directory size)
+		SearchResult* sr = new SearchResult(SearchResult::TYPE_DIRECTORY, 0, getFullName(), NULL);
 		aResults.push_back(sr);
 		ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
 	}
@@ -1317,9 +1316,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 			
 			// Check file type...
 			if(checkType(i->getName(), aFileType)) {
-				
-				SearchResult* sr = new SearchResult(aClient, SearchResult::TYPE_FILE, 
-					i->getSize(), getFullName() + i->getName(), &i->getTTH(), true);
+				SearchResult* sr = new SearchResult(SearchResult::TYPE_FILE, i->getSize(), getFullName() + i->getName(), &i->getTTH());
 				aResults.push_back(sr);
 				ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
 				if(aResults.size() >= maxResults) {
@@ -1341,9 +1338,8 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 			TTHValue tth(aString.substr(4));
 			HashFileIter i = tthIndex.find(&tth);
 			if(i != tthIndex.end()) {
-				SearchResult* sr = new SearchResult(aClient, SearchResult::TYPE_FILE, 
-					i->second->getSize(), i->second->getParent()->getFullName() + i->second->getName(), 
-					&i->second->getTTH(), true);
+				SearchResult* sr = new SearchResult(SearchResult::TYPE_FILE, i->second->getSize(), 
+					i->second->getParent()->getFullName() + i->second->getName(), &i->second->getTTH());
 
 				results.push_back(sr);
 				ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
@@ -1429,8 +1425,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, AdcSearch& aS
 	bool sizeOk = (aStrings.gt == 0);
 	if( cur->empty() && aStrings.ext.empty() && sizeOk ) {
 		// We satisfied all the search words! Add the directory...
-		SearchResult* sr = new SearchResult(SearchResult::TYPE_DIRECTORY, 
-			0, getFullName(), NULL);
+		SearchResult* sr = new SearchResult(SearchResult::TYPE_DIRECTORY, getSize(), getFullName(), NULL);
 		aResults.push_back(sr);
 		ShareManager::getInstance()->setHits(ShareManager::getInstance()->getHits()+1);
 	}

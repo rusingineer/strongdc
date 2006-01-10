@@ -386,9 +386,8 @@ void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine, CHARFOR
 	}
 
 	LPCSTR sMyNick;
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(replyTo);
-	if(&ou) {
-		sMyNick = ou.getClient().getMyNick().c_str();
+	if(&from) {
+		sMyNick = from.getClient().getMyNick().c_str();
 	} else {
 		sMyNick = SETTING(NICK).c_str();
 	}

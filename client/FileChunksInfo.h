@@ -45,6 +45,7 @@ typedef vector<u_int16_t> PartsInfo;
 
 // ...
 typedef map<u_int16_t, u_int16_t> BlockMap;
+typedef BlockMap::iterator BlockIter;
 
 class Download;
 
@@ -70,7 +71,6 @@ private:
 	Download* download;
 	int64_t pos;
 	int64_t end;
-	int64_t size;
 
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
@@ -133,11 +133,6 @@ public:
      */
 	void abandonChunk(int64_t);
 	
-	/**
-	 * Check whether there is some free block to avoid unnecessary connection attempts when there's none free
-	 */
-	bool hasFreeBlock(int64_t);
-
 	/**
      * Release the chunk with start offset
      */
@@ -205,57 +200,13 @@ public:
 	/**
 	 * Verify a block	
  	 */	
- 	void verifyBlock(int64_t anyPos, const TigerTree& aTree);	
+ 	bool verifyBlock(int64_t anyPos, const TigerTree& aTree);
  	 	
  	/**
 	 * Debug
 	 */
 
-	void selfCheck()
-	{
-#ifdef _DEBUG
-		// check running
-		for(Chunk::Iter i = running.begin(); i != running.end();){
-			dcassert(i->first <= i->second->pos);
-			dcassert(i->second->pos <= i->second->end);
-
-			int64_t tmp = i->second->end;
-			i++;
-
-			if(i != running.end()){
-				dcassert(tmp <= i->first);
-			}
-		}
-		// check waiting
-		for(Chunk::Iter i = waiting.begin(); i != waiting.end();){
-			dcassert(i->first == i->second->pos);
-			dcassert(i->second->pos <= i->second->end);
-
-			for(Chunk::Iter j = running.begin(); j != running.end(); j++){
-				Chunk* c1 = i->second;
-				int64_t s1 = i->first;
-				Chunk* c2 = j->second;
-				int64_t s2 = j->first;
-
-				dcassert(i->first != j->first);
-
-				if(s1 > s2)
-					dcassert(s1 >= c2->end);
-				if(s1 < s2){
-					dcassert(c1->end <= s2);
-				}
-			}			
-
-			int64_t tmp = i->second->end;
-			i++;
-
-			if(i != waiting.end()){
-				dcassert(tmp <= i->first);
-			}
-
-		}
-#endif
-	}
+	inline void selfCheck();
 	
 	static vector<Ptr> vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
@@ -278,6 +229,7 @@ public:
 
 private:
 	bool verify(const unsigned char* data, int64_t start, int64_t end, const TigerTree& aTree);
+
 
 	// for debug purpose
 	void dumpVerifiedBlocks();

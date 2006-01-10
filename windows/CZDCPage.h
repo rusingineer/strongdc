@@ -28,6 +28,7 @@ class CZDCPage : public CPropertyPage<IDD_CZDCPAGE>, public PropPage
 public:
 	CZDCPage(SettingsManager *s) : PropPage(s) { 
 		SetTitle(CTSTRING(SETTINGS_CZDC));
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~CZDCPage() { };
 

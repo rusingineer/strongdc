@@ -126,7 +126,7 @@ public:
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); };
 
-	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw();
+	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
 	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
@@ -142,25 +142,7 @@ public:
 	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
 	QueueItem* getRunning(const User::Ptr& aUser);
-	bool setActiveSegment(const User::Ptr& aUser);
 	bool dropSource(Download* d, bool autoDrop);
-
-	unsigned int getRunningCount(const User::Ptr& aUser, const string& aTarget) {
-		unsigned int value;
-		{
-			Lock l(cs);
-			QueueItem* qi = fileQueue.find(aTarget);
-
-			if(!qi)
-				return 0;
-
-			value  = qi->getActiveSegments().size();
-			if(find(qi->getActiveSegments().begin(), qi->getActiveSegments().end(), *qi->getSource(aUser)) != qi->getActiveSegments().end()) {
-				value -= 1;
-			}
-		}
-		return value;
-	}
 
 	QueueItem::List getRunningFiles() throw() {
 		QueueItem::List ql;
@@ -246,7 +228,7 @@ private:
 		QueueItem* getNext(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST, QueueItem* pNext = NULL);
 		QueueItem* getRunning(const User::Ptr& aUser);
 		void setRunning(QueueItem* qi, const User::Ptr& aUser);
-		void setWaiting(QueueItem* qi, const User::Ptr& aUser, bool removeSegment = true);
+		void setWaiting(QueueItem* qi, const User::Ptr& aUser);
 		QueueItem::UserListMap& getList(int p) { return userQueue[p]; };
 		void remove(QueueItem* qi);
 		void remove(QueueItem* qi, const User::Ptr& aUser);

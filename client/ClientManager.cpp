@@ -30,6 +30,7 @@
 #include "FinishedManager.h"
 #include "SimpleXML.h"
 #include "UserCommand.h"
+#include "ResourceManager.h"
 
 #include "AdcHub.h"
 #include "NmdcHub.h"
@@ -118,6 +119,14 @@ StringList ClientManager::getNicks(const CID& cid) {
 	return lst;
 }
 
+string ClientManager::getConnection(const CID& cid) {
+	Lock l(cs);
+	OnlineIter i = onlineUsers.find(cid);
+	if(i != onlineUsers.end()) {
+		return i->second->getIdentity().getConnection();
+	}
+	return STRING(OFFLINE);
+}
 
 int64_t ClientManager::getAvailable() {
 	Lock l(cs);
@@ -140,6 +149,26 @@ bool ClientManager::isConnected(const string& aUrl) {
 	return false;
 }
 
+string ClientManager::findHub(const string& ipPort) {
+	Lock l(cs);
+
+	string ip;
+	short port = 411;
+	string::size_type i = ipPort.find(':');
+	if(i == string::npos) {
+		ip = ipPort;
+	} else {
+		ip = ip.substr(0, i);
+		port = (short)Util::toInt(ipPort.substr(i+1));
+	}
+
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		Client* c = *i;
+		if(c->getPort() == port && c->getIp() == ip)
+			return c->getHubUrl();
+	}
+	return Util::emptyString;
+}
 
 User::Ptr ClientManager::getLegacyUser(const string& aNick) throw() {
 	Lock l(cs);
@@ -214,8 +243,9 @@ bool ClientManager::isOp(const User::Ptr& user, const string& aHubUrl) {
 	Lock l(cs);
 	pair<OnlineIter, OnlineIter> p = onlineUsers.equal_range(user->getCID());
 	for(OnlineIter i = p.first; i != p.second; ++i) {
-		if(i->second->getClient().getHubUrl() == aHubUrl)
-			return true;
+		if(i->second->getClient().getHubUrl() == aHubUrl) {
+			return i->second->getClient().getMyIdentity().isOp();
+		}
 	}
 	return false;
 }
@@ -271,7 +301,8 @@ void ClientManager::connect(const User::Ptr& p) {
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
-		u->getClient().connect(*u);
+		if(&u->getClient())
+			u->getClient().connect(*u);
 	}
 }
 
@@ -402,72 +433,6 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().getMyIdentity().getParams(params, "my", compatibility);
 	ou.getClient().escapeParams(params);
 	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params));
-}
-
-void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
-	OnlineIter i = onlineUsers.find(p->getCID());
-	if(i == onlineUsers.end())
-		return;
-
-	OnlineUser& ou = *i->second;
-
-	int64_t statedSize = ou.getIdentity().getBytesShared();
-	int64_t realSize = dl->getTotalSize();
-	
-	double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
-	int64_t sizeTolerated = (int64_t)(realSize*multiplier);
-	string detectString = Util::emptyString;
-	string inflationString = Util::emptyString;
-	ou.getIdentity().setRealBytesShared(Util::toString(realSize));
-	bool isFakeSharing = false;
-	
-	string version = ou.getIdentity().get("VE");
-	PME reg("^\\+\\+ 0.40([0123]){1}$");
-	if(reg.match(version) && dl->detectRMDC403D1()) {
-		ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in DC" + version + " emulation mode" , true);
-		ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
-		ou.getIdentity().setBadClient("1");
-		
-		ou.getClient().updated(ou);
-		return;
-	}
-
-	PME reg1("^StrgDC\\+\\+ V:1.00 RC7");
-	if(reg1.match(version) && dl->detectRMDC403D1()) {
-		ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in StrongDC++ 1.00 RC7 emulation mode" , true);
-		ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
-		ou.getIdentity().setBadClient("1");
-		ou.getIdentity().setBadFilelist("1");
-		
-		ou.getClient().updated(ou);
-		return;
-	}
-
-	if(statedSize > sizeTolerated) {
-		isFakeSharing = true;
-	}
-
-	if(isFakeSharing) {
-		ou.getIdentity().setBadFilelist("1");
-		detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
-		if(realSize == 0) {
-			detectString += STRING(CHECK_0BYTE_SHARE);
-		} else {
-			double qwe = (double)((double)statedSize / (double)realSize);
-			char buf[128];
-			_snprintf(buf, 127, CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
-			buf[127] = 0;
-			inflationString = buf;
-			detectString += inflationString;
-		}
-		detectString += STRING(CHECK_SHOW_REAL_SHARE);
-
-		ou.getIdentity().setCheat(ou.getClient(), Util::validateMessage(detectString, false), false);
-		ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(FAKESHARE_RAW));
-	}     
-	
-	ou.getIdentity().setFilelistComplete("1");
-	ou.getClient().updated(ou);
 }
 
 void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc) throw() {
@@ -613,6 +578,189 @@ void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const st
 			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
 		}
 	}
+}
+
+void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
+	Lock l(cs);
+	OnlineIter i = onlineUsers.find(p->getCID());
+	if(i != onlineUsers.end()) {
+		i->second->getIdentity().setListLength(listLen);
+	}
+}
+
+void ClientManager::setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
+	Lock l(cs);
+	OnlineIter i = onlineUsers.find(p->getCID());
+	if(i != onlineUsers.end()) {
+		i->second->getIdentity().setPk(aPk);
+		i->second->getIdentity().setLock(aLock);
+	}
+}
+
+bool ClientManager::fileListDisconnected(const User::Ptr& p) {
+	string report = Util::emptyString;
+	Client* c = NULL;
+	{
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			OnlineUser& ou = *i->second;
+	
+			int fileListDisconnects = Util::toInt(ou.getIdentity().getFileListDisconnects()) + 1;
+			ou.getIdentity().setFileListDisconnects(Util::toString(fileListDisconnects));
+
+			if(SETTING(ACCEPTED_DISCONNECTS) == 0)
+				return false;
+
+			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
+				c = &ou.getClient();
+				report = ou.getIdentity().setCheat(ou.getClient(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
+				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(DISCONNECT_RAW));
+			}
+		}
+	}
+	if(c && !report.empty()) {
+		c->cheatMessage(report);
+		return true;
+	}
+	return false;
+}
+
+bool ClientManager::connectionTimeout(const User::Ptr& p) {
+	string report = Util::emptyString;
+	Client* c = NULL;
+	{
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			OnlineUser& ou = *i->second;
+	
+			int connectionTimeouts = Util::toInt(ou.getIdentity().getConnectionTimeouts()) + 1;
+			ou.getIdentity().setConnectionTimeouts(Util::toString(connectionTimeouts));
+	
+			if(SETTING(ACCEPTED_TIMEOUTS) == 0)
+				return false;
+	
+			if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
+				c = &ou.getClient();
+				report = ou.getIdentity().setCheat(ou.getClient(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
+				try {
+					QueueManager::getInstance()->removeTestSUR(p);
+				} catch(...) {
+				}
+				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(TIMEOUT_RAW));
+			}
+		}
+	}
+	if(c && !report.empty()) {
+		c->cheatMessage(report);
+		return true;
+	}
+	return false;
+}
+
+void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
+	string report = Util::emptyString;
+	Client* c = NULL;
+	{
+		Lock l(cs);
+
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end())
+			return;
+
+		OnlineUser& ou = *i->second;
+
+		int64_t statedSize = ou.getIdentity().getBytesShared();
+		int64_t realSize = dl->getTotalSize();
+	
+		double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
+		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
+		string detectString = Util::emptyString;
+		string inflationString = Util::emptyString;
+		ou.getIdentity().setRealBytesShared(Util::toString(realSize));
+		bool isFakeSharing = false;
+	
+/*		string version = ou.getIdentity().get("VE");
+		PME reg("^\\+\\+ 0.40([0123]){1}$");
+		if(reg.match(version) && dl->detectRMDC403D1()) {
+			ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in DC" + version + " emulation mode" , true);
+			ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
+			ou.getIdentity().setBadClient("1");
+			return;
+		}
+
+		PME reg1("^StrgDC\\+\\+ V:1.00 RC7");
+		if(reg1.match(version) && dl->detectRMDC403D1()) {
+			ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in StrongDC++ 1.00 RC7 emulation mode" , true);
+			ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
+			ou.getIdentity().setBadClient("1");
+			ou.getIdentity().setBadFilelist("1");
+			return;
+		}*/
+
+		if(statedSize > sizeTolerated) {
+			isFakeSharing = true;
+		}
+
+		if(isFakeSharing) {
+			ou.getIdentity().setBadFilelist("1");
+			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
+			if(realSize == 0) {
+				detectString += STRING(CHECK_0BYTE_SHARE);
+			} else {
+				double qwe = (double)((double)statedSize / (double)realSize);
+				char buf[128];
+				_snprintf(buf, 127, CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
+				buf[127] = 0;
+				inflationString = buf;
+				detectString += inflationString;
+			}
+			detectString += STRING(CHECK_SHOW_REAL_SHARE);
+
+			c = &ou.getClient();
+			report = ou.getIdentity().setCheat(ou.getClient(), Util::validateMessage(detectString, false), false);
+			ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(FAKESHARE_RAW));
+		}
+		ou.getIdentity().setFilelistComplete("1");
+	}
+
+	if(c && !report.empty())
+		c->cheatMessage(report);
+}
+
+void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient) {
+	OnlineUser* ou = NULL;
+	Client* c = NULL;
+	string report = Util::emptyString;
+	bool update = false;
+	{
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			ou = i->second;
+		
+			if(!aTestSURString.empty()) {
+				c = &ou->getClient();
+				ou->getIdentity().setTestSUR(aTestSURString);
+				ou->getIdentity().setTestSURComplete("1");
+				report = ou->getIdentity().updateClientType(*ou);
+				update = true;
+			}
+		
+			if(!aCheatString.empty()) {
+				c = &ou->getClient();
+				report = ou->getIdentity().setCheat(ou->getClient(), aCheatString, aBadClient);
+			}
+
+			if(aRawCommand != -1)
+				ou->getIdentity().sendRawCommand(ou->getClient(), aRawCommand);
+		}
+	}
+	if(c && !report.empty())
+		c->cheatMessage(report);
+	if(update)
+		ou->getClient().updated(*ou);
 }
 
 /**

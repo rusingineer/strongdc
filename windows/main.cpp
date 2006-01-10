@@ -411,6 +411,10 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.DestroyWindow();
 	dummy.DestroyWindow();
 
+	if(ResourceManager::getInstance()->isRTL()) {
+		SetProcessDefaultLayout(LAYOUT_RTL);
+	}
+	
 	rc = wndMain.rcDefault;
 
 	if( (SETTING(MAIN_WINDOW_POS_X) != CW_USEDEFAULT) &&
@@ -428,7 +432,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		}
 	}
 
-	if(wndMain.CreateEx(NULL, rc) == NULL) {
+	if(wndMain.CreateEx(NULL, rc, 0, WS_EX_RTLREADING | WS_EX_APPWINDOW | WS_EX_WINDOWEDGE) == NULL) {
 		ATLTRACE(_T("Main window creation failed!\n"));
 		return 0;
 	}
@@ -516,7 +520,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			n2 = DEBUG_BUFSIZE;
 		}
 		tth.finalize();
-		memcpy(::tth, tth.getRoot().toBase32().c_str(), 39);
+		strcpy(::tth, tth.getRoot().toBase32().c_str());
 		WinUtil::tth = Text::toT(::tth);
 	} catch(const FileException&) {
 		dcdebug("Failed reading exe\n");

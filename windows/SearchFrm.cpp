@@ -968,7 +968,15 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		ucParams["fileSIshort"] = Util::formatBytes(sr->getSize());
 		if(sr->getTTH() != NULL) {
 			ucParams["fileTR"] = sr->getTTH()->toBase32();
+		} else {
+			ucParams["fileTR"] = "NONE";
 		}
+
+		// compatibility with 0.674 and earlier
+		ucParams["file"] = ucParams["fileFN"];
+		ucParams["filesize"] = ucParams["fileSI"];
+		ucParams["filesizeshort"] = ucParams["fileSIshort"];
+		ucParams["tth"] = ucParams["fileTR"];
 
 		StringMap tmp = ucParams;
 		ClientManager::getInstance()->userCommand(sr->getUser(), uc, tmp, true);
@@ -1066,7 +1074,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;	 	
             // Check previous search results for dupes	 	
-			for(vector<SearchInfo*>::iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+			for(list<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
 				SearchInfo* si2 = *s;
                 SearchResult* sr2 = si2->sr;
 				if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
@@ -1403,9 +1411,13 @@ void SearchFrame::SearchInfo::update() {
 		fileName = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
 		path = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 		type = TSTRING(DIRECTORY);
+		if(sr->getSize() > 0) {
+			size = Text::toT(Util::formatBytes(sr->getSize()));
+			exactSize = Text::toT(Util::formatExactSize(sr->getSize()));
+		}
 	}
-	nick = Text::toT(sr->getUser()->getFirstNick());
-	
+	nick = WinUtil::getNicks(sr->getUser());
+
 	Identity ident = ClientManager::getInstance()->getIdentity(sr->getUser());
 	connection = Text::toT(ident.getConnection());
 	hubName = Text::toT(sr->getHubName());
@@ -1474,83 +1486,77 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	CRect rc;
 	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
-	SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
 
-	if(si) {
-		switch(cd->nmcd.dwDrawStage) {
-		case CDDS_PREPAINT:
-			return CDRF_NOTIFYITEMDRAW;
+	switch(cd->nmcd.dwDrawStage) {
+	case CDDS_PREPAINT:
+		return CDRF_NOTIFYITEMDRAW;
 
-		case CDDS_ITEMPREPAINT: {
-			cd->clrText = WinUtil::textColor;	
-			if(si->sr != NULL) {
-				targets.clear();
-				if(si->sr->getTTH()) {
-					QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(si->sr->getTTH()->toBase32()));
-					if(si->sr->getType() == SearchResult::TYPE_FILE && targets.size() > 0) {		
-						cd->clrText = SETTING(SEARCH_ALTERNATE_COLOUR);	
-					}
+	case CDDS_ITEMPREPAINT: {
+		cd->clrText = WinUtil::textColor;	
+		SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
+		if(si->sr != NULL) {
+			targets.clear();
+			if(si->sr->getTTH()) {
+				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(si->sr->getTTH()->toBase32()));
+				if(si->sr->getType() == SearchResult::TYPE_FILE && targets.size() > 0) {		
+					cd->clrText = SETTING(SEARCH_ALTERNATE_COLOUR);	
 				}
 			}
-			return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 		}
-		case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT;
-			lvc.pszText = headerBuf;
-			lvc.cchTextMax = 128;
-			ctrlResults.GetColumn(cd->iSubItem, &lvc);
- 			if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {			
-				if(si->sr->getIP() != "" && BOOLSETTING(GET_USER_COUNTRY)) {
-					if(ctrlResults.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
-						if(ctrlResults.m_hWnd == ::GetFocus()) {
-							barva = GetSysColor(COLOR_HIGHLIGHT);
-							SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
-							SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-						} else {
-							barva = GetBkColor(cd->nmcd.hdc);
-							SetBkColor(cd->nmcd.hdc, barva);
-						}				
-					} else {
-						barva = WinUtil::bgColor;
-						SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-						SetTextColor(cd->nmcd.hdc, cd->clrText);
-					}
-
-					ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_IP, LVIR_BOUNDS, rc);
-					CRect rc2 = rc;
-					rc2.left += 2;
-	
-					HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
-					HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
-					Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
-	
-					DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-					DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
-
-					TCHAR buf[256];
-					ctrlResults.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_IP, buf, 255);
-					buf[255] = 0;
-					if(_tcslen(buf) > 0) {
-						LONG top = rc2.top + (rc2.Height() - 15)/2;
-						if((top - rc2.top) < 2)
-							top = rc2.top + 1;
-
-						POINT p = { rc2.left, top };
-						WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getflagImage(), p, LVSIL_SMALL);
-						top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
-
-						::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
-						return CDRF_SKIPDEFAULT;
-					}
-				}
-			}		
-		}
-		default:
-			return CDRF_DODEFAULT;
-		}
+		return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 	}
-	return CDRF_DODEFAULT;
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
+		LVCOLUMN lvc;
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = headerBuf;
+		lvc.cchTextMax = 128;
+		ctrlResults.GetColumn(cd->iSubItem, &lvc);
+		if(BOOLSETTING(GET_USER_COUNTRY) && Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {
+			SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
+			ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
+			COLORREF color;
+			if(ctrlResults.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
+				if(ctrlResults.m_hWnd == ::GetFocus()) {
+					color = GetSysColor(COLOR_HIGHLIGHT);
+					SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
+					SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				} else {
+					color = GetBkColor(cd->nmcd.hdc);
+					SetBkColor(cd->nmcd.hdc, color);
+				}				
+			} else {
+				color = WinUtil::bgColor;
+				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
+				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+			}
+			CRect rc2 = rc;
+			rc2.left += 2;
+			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, color));
+			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(color));
+			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
+
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+
+			TCHAR buf[256];
+			ctrlResults.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
+			buf[255] = 0;
+			if(_tcslen(buf) > 0) {
+				LONG top = rc2.top + (rc2.Height() - 15)/2;
+				if((top - rc2.top) < 2)
+					top = rc2.top + 1;
+
+				POINT p = { rc2.left, top };
+				WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getflagImage(), p, LVSIL_SMALL);
+				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+				return CDRF_SKIPDEFAULT;
+			}
+		}		
+	}
+	default:
+		return CDRF_DODEFAULT;
+	}
 }
 
 void SearchFrame::addEntry(SearchInfo* item, int pos) {
@@ -1561,7 +1567,7 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 	if(!reg.IsValid() || filter.empty()) {
 		match = true;
 	} else {
-		match = reg.match(Text::fromT(item->getText(columnIndexes[sel]))) > 0;
+		match = reg.match(Text::fromT(item->getText(/*columnIndexes[sel]*/sel))) > 0;
 	}
 
 	if(match) {
@@ -1630,7 +1636,7 @@ void SearchFrame::updateSearchList() {
 		ctrlResults.DeleteItem(0);
 	}
 
-	for(vector<SearchInfo*>::iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+	for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
 	    SearchInfo* si = *i;
 		si->collapsed = true;
 		addEntry(si, 0);

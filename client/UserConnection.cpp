@@ -64,7 +64,7 @@ void Transfer::updateRunningAverage() {
 	lastTick = tick;
 }
 
-void UserConnection::onLine(const char* aLine) throw() {
+void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
 
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
@@ -74,16 +74,14 @@ void UserConnection::onLine(const char* aLine) throw() {
 	} else {
 		// We shouldn't be here?
 		if(getUser()) {
+			dcdebug("%s - ", getUser()->getFirstNick().c_str());
 			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
 			if(&ou && strlen(aLine) < 255)
 				ou.getIdentity().setUnknownCommand(aLine);
 		}
+		ucNumber++;
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
-		/*aLine = strchr(aLine, '$');
-		if(aLine != NULL) {
-			setFlag(FLAG_NMDC);
-		} else
-			return;*/
+		return;
 	}
 
 	char *temp;
@@ -91,10 +89,9 @@ void UserConnection::onLine(const char* aLine) throw() {
         case 'M':
 	    	// $MyNick
     		if(strncmp(aLine+2, "yNick ", 6) == 0) {
-    			aLine += 8;
-        		if(aLine[0] != NULL) {
-    				fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine));
-	            }
+                if(iLineLen < 9) return;
+                
+        		fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine+8));
     	        return;
 	       }
        
@@ -102,14 +99,15 @@ void UserConnection::onLine(const char* aLine) throw() {
     			fire(UserConnectionListener::MaxedOut(), this);
     			return;
 	        }
-            
+ 			ucNumber++;           
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'D':
 	        // $Direction
     	    if(strncmp(aLine+2, "irection ", 9) == 0) {
+                if(iLineLen < 12) return;
+                
     			aLine += 11;
-        		if(aLine[0] == NULL) return;
     
         		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
     				temp[0] = NULL, temp += 1;
@@ -119,15 +117,16 @@ void UserConnection::onLine(const char* aLine) throw() {
 	    		}
     			return;
         	}
-            
+ 			ucNumber++;           
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'E':
 			// $Error
     	    if(strncmp(aLine+2, "rror ", 5) == 0) {
+                if(iLineLen < 8) return;
+                
     			aLine += 7;
-        		if(aLine[0] == NULL) return;
-    
+   
 	    		if(_stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
     				strstr(aLine, /*path/file*/" no more exists") != 0) {
     				fire(UserConnectionListener::FileNotAvailable(), this);
@@ -136,26 +135,26 @@ void UserConnection::onLine(const char* aLine) throw() {
 	    		}
     			return;
         	}
-            
+ 			ucNumber++;          
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'F':
 			// $FileLength
     	    if(strncmp(aLine+2, "ileLength ", 10) == 0) {
-    			aLine += 12;
-        		if(aLine[0] != NULL) {
-    				fire(UserConnectionListener::FileLength(), this, _atoi64(aLine));
-	    		}
+                if(iLineLen < 13) return;
+                
+        		fire(UserConnectionListener::FileLength(), this, _atoi64(aLine+12));
     			return;
         	}
-            
+ 			ucNumber++;           
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'G':
 	        // $Get
     		if(strncmp(aLine+2, "et ", 3) == 0) {
+                if(iLineLen < 6) return;
+                
     			aLine += 5;
-        		if(aLine[0] == NULL) return;
     
         		if((temp = strchr((char *)aLine, '$')) != NULL && temp[1] != NULL)  {
     				temp[0] = NULL; temp += 1;
@@ -172,55 +171,52 @@ void UserConnection::onLine(const char* aLine) throw() {
     			return;
 	        }
         
-    	    // GetZBlock
+            // $GetZBlock
     		if(strncmp(aLine+2, "etZBlock ", 9) == 0) {
-    			aLine += 11;
-        		if(aLine[0] != NULL) {
-    				processBlock(aLine, 1);
-    			}
+                if(iLineLen < 12) return;
+                
+        		processBlock((char *)aLine+11, 1);
     			return;
 	        }
-            
+			ucNumber++;            
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'U':
        		// $UGetZBLock
 	        if(strncmp(aLine+2, "GetZBlock ", 10) == 0) {
-    			aLine += 12;
-        		if(aLine[0] != NULL) {
-    				processBlock(aLine, 2);
-	    		}
+                if(iLineLen < 13) return;
+                
+        		processBlock((char *)aLine+12, 2);
     			return;
         	}
         
 	        // $UGetBlock
     		if(strncmp(aLine+2, "GetBlock ", 9) == 0) {
-    			aLine += 11;
-        		if(aLine[0] != NULL) {
-	    			processBlock(aLine, 3);
-    			}
+                if(iLineLen < 12) return;
+                
+        		processBlock((char *)aLine+11, 3);
     			return;
 	        }
-            
+			ucNumber++;            
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'K':
-  	      // $Key
-     	   if(strncmp(aLine+2, "ey ", 3) == 0) {
-    			aLine += 5;
-        		if(aLine[0] != NULL) {
-    				fire(UserConnectionListener::Key(), this, aLine);
-    			}
+  			// $Key
+     		if(strncmp(aLine+2, "ey ", 3) == 0) {
+				if(iLineLen < 6) return;
+                
+        		fire(UserConnectionListener::Key(), this, aLine+5);
     			return;
-      	  }
-            
+      		}
+			ucNumber++;            
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'L':
         	// $Lock
         	if(strncmp(aLine+2, "ock ", 4) == 0) {
+                if(iLineLen < 7) return;
+                
     			aLine += 6;
-        		if(aLine[0] == NULL) return;
      
         		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
         			temp[0] = NULL; temp += 4;
@@ -234,14 +230,16 @@ void UserConnection::onLine(const char* aLine) throw() {
 	        }
 
 			// $ListLen
-			if(strncmp(aLine+2, "istLen ", 7) == 0) {	                 	
+			if(strncmp(aLine+2, "istLen ", 7) == 0) {
+                if(iLineLen < 8) return;
+               
 				aLine += 9;	 	
-	            if(aLine[0] != NULL) {	 	
-					fire(UserConnectionListener::ListLength(), this, aLine);	
-				}
+				fire(UserConnectionListener::ListLength(), this, aLine);	
+
 				return;
         	}
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
+			ucNumber++; 
+			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'S':
 	       	// $Send
@@ -252,22 +250,20 @@ void UserConnection::onLine(const char* aLine) throw() {
         
     	    // $Sending
     		if(strncmp(aLine+2, "ending ", 7) == 0) {
-    			aLine += 9;
-        		if(aLine[0] != NULL) {
-    				fire(UserConnectionListener::Sending(), this, _atoi64(aLine));
-    			}
+                if(iLineLen < 10) return;
+                
+        		fire(UserConnectionListener::Sending(), this, _atoi64(aLine+9));
     			return;
 	        }
         
     	    // $Supports
     		if(strncmp(aLine+2, "upports ", 8) == 0) {
-    			aLine += 10;
-        		if(aLine[0] != NULL) {
-    				fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine, ' ').getTokens());
-    			}
+                if(iLineLen < 11) return;
+
+        		fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine+10, ' ').getTokens());
     			return;
 	        }
-            
+  			ucNumber++;          
             dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	case 'A':
@@ -275,14 +271,17 @@ void UserConnection::onLine(const char* aLine) throw() {
     			dispatch(aLine, true);
     			return;
         	}
+			ucNumber++;
  	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	default:
 			if(getUser()) {
+				dcdebug("%s - ", getUser()->getFirstNick().c_str());
 				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
 				if(&ou && strlen(aLine) < 255)
 					ou.getIdentity().setUnknownCommand(aLine);
 			}
+			ucNumber++;
 			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;
 	}
@@ -318,7 +317,7 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 	fire(UserConnectionListener::Failed(), this, aLine);
 }
 
-void UserConnection::processBlock(const char* param, int type) throw() {
+void UserConnection::processBlock(char* param, int type) throw() {
 	char *temp, *temp1;
 	if((temp = strchr((char *)param, ' ')) == NULL || temp[1] == NULL) return;
 

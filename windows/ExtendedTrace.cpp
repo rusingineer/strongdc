@@ -124,7 +124,7 @@ static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
 	   // Got it!
 		PCSTR2LPTSTR( moduleInfo.ModuleName, lpszModule );
 
-		if(stricmp(moduleInfo.ModuleName, "nl_lsp") == 0)
+		if(Util::stricmp(moduleInfo.ModuleName, "nl_lsp") == 0)
 			MessageBox(0, CTSTRING(NL_CRASH), _T("Unhandled exception"), MB_OK);
 
 		ret = TRUE;

@@ -28,14 +28,9 @@
 #include "FileChunksInfo.h"
 #include "QueueManager.h"
 
-SearchResult::SearchResult(Client* aClient, Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH, bool aUtf8) :
-	file(aFile), hubName(aClient->getHubName()), hubIpPort(aClient->getIpPort()),
-	user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()),
-	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
-	tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), utf8(aUtf8), ref(1) { }
-
 SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH) :
-	file(aFile), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), freeSlots(UploadManager::getInstance()->getFreeSlots()),  
+	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
+	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
 	tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), utf8(true), ref(1) { }
 
 string SearchResult::toSR(const Client& c) const {
@@ -60,7 +55,7 @@ string SearchResult::toSR(const Client& c) const {
 	tmp.append(Util::toString(slots));
 	tmp.append(1, '\x05');
 	if(getTTH() == NULL) {
-		tmp.append(Text::utf8ToAcp(hubName));
+		tmp.append(Text::utf8ToAcp(c.getHubName()));
 	} else {
 		tmp.append("TTH:" + getTTH()->toBase32());
 	}
@@ -119,10 +114,10 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 			// Insert before the automatic searches (manual search) 
 			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
 				if(qi->getWindow() == NULL) {
-					if(qi != NULL)
+					//if(qi != NULL)
 						searchQueue.insert(qi, sqi);
-					else
-						searchQueue.push_front(sqi);
+					//else
+					//	searchQueue.push_front(sqi);
 					added = true;
 					break;
 				}
@@ -233,7 +228,7 @@ int SearchManager::run() {
 	return 0;
 }
 
-void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& address) {
+void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remoteIp) {
 	string x((char*)buf, aLen);
 	if(x.compare(0, 4, "$SR ") == 0) {
 		string::size_type i, j;
@@ -244,6 +239,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 			return;
 		}
 		string nick = Text::acpToUtf8(x.substr(i, j-i));
+		//User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
 		i = j + 1;
 
 		// A file has 2 0x05, a directory only one
@@ -295,17 +291,22 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		if( (j = x.rfind(" (")) == string::npos) {
 			return;
 		}
-		// the hub's name will get replaced later (with a UTF-8 version) if there's a TTH in the result
 		string hubName = Text::acpToUtf8(x.substr(i, j-i));
+		string tth;
+		if(hubName.compare(0, 4, "TTH:") == 0) {
+			tth = hubName.substr(4);
+			/*StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
+			hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);*/
+			hubName = Util::emptyString;
+		}
 		i = j + 2;
 		if( (j = x.rfind(')')) == string::npos) {
 			return;
 		}
 		string hubIpPort = x.substr(i, j-i);
-		//User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
-
+		string url = ClientManager::getInstance()->findHub(hubIpPort);
 		SearchResult* sr = new SearchResult(NULL, type, slots, freeSlots, size,
-			file, hubName, hubIpPort, address, false);
+			file, hubName, url, remoteIp, tth.empty() ? NULL : new TTHValue(tth), false);
 
 		queue.addResult(sr, nick);
 		queue.s.signal();
@@ -314,38 +315,49 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 		if(c.getParameters().empty())
 			return;
 
-		User::Ptr p = ClientManager::getInstance()->findUser(c.getFrom());
-		if(!p)
+		User::Ptr user = ClientManager::getInstance()->findUser(c.getFrom());
+		if(!user)
 			return;
 
 		int freeSlots = -1;
 		int64_t size = -1;
-		string name;
+		string file;
+		string tth;
 
 		for(StringIter i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
 			string& str = *i;
 			if(str.compare(0, 2, "FN") == 0) {
-				name = Util::toNmdcFile(str.substr(2));
+				file = Util::toNmdcFile(str.substr(2));
 			} else if(str.compare(0, 2, "SL") == 0) {
 				freeSlots = Util::toInt(str.substr(2));
 			} else if(str.compare(0, 2, "SI") == 0) {
 				size = Util::toInt64(str.substr(2));
+			} else if(str.compare(0, 2, "TR") == 0) {
+				tth = str.substr(2);
 			}
 		}
 
-		if(!name.empty() && freeSlots != -1 && size != -1) {
-			SearchResult::Types type = (name[name.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
+		if(!file.empty() && freeSlots != -1 && size != -1) {
+
+			StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
+			string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
+			StringList hubs = ClientManager::getInstance()->getHubs(user->getCID());
+			string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
+
+			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
 			/// @todo Something about the slots
-			SearchResult* sr = new SearchResult(p, type, 0, freeSlots, size, name, Util::emptyString, "0.0.0.0", NULL, true);
+			SearchResult* sr = new SearchResult(user, type, 0, freeSlots, size, 
+				file, hubName, hub, remoteIp, tth.empty() ? NULL : new TTHValue(tth), true);
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		}
-	} else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
+	} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 		try {
 			respond(AdcCommand(x.substr(0, x.length()-1)));
 		} catch(ParseException& ) {
 		}
-	} else if(x.compare(0, 5, "$PSR ") == 0) {
+	}*/ // Needs further DoS investigation
+	 else if(x.compare(0, 5, "$PSR ") == 0) {
 		string::size_type i, j;
 		// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
 		i = 5;
@@ -408,7 +420,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& addre
 				char buf[1024];
 				_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou.getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
 				buf[1023] = NULL;
-				Socket s; s.writeTo(Socket::resolve(address), UdpPort, buf);
+				Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
 			}
 		}
 	}

@@ -101,7 +101,7 @@ class ConnectionQueueItem;
 class Transfer {
 public:
 	Transfer() : userConnection(NULL), start(0), lastTick(GET_TICK()), runningAverage(0), 
-		last(0), actual(0), pos(0), startPos(0), size(-1) { };
+		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1) { };
 	virtual ~Transfer() { };
 	
 	void nullTransfer() { pos = 0; actual = 0; last = 0; start = 0; lastTick = GET_TICK(); runningAverage = 0; }
@@ -143,6 +143,7 @@ public:
 	GETSET(u_int32_t, start, Start);
 	GETSET(u_int32_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
+	GETSET(int64_t, fileSize, FileSize);
 private:
 	Transfer(const Transfer&);
 	Transfer& operator=(const Transfer&);
@@ -218,7 +219,6 @@ public:
 		STATE_LOCK,
 		STATE_DIRECTION,
 		STATE_KEY,
-
 		// UploadManager
 		STATE_GET,
 		STATE_SEND,
@@ -226,7 +226,6 @@ public:
 		// DownloadManager
 		STATE_FILELENGTH,
 		STATE_TREE
-
 	};
 
 	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
@@ -261,7 +260,9 @@ public:
 	void ntd() { send(AdcCommand(AdcCommand::CMD_NTD)); }
 	void sta(AdcCommand::Severity sev, AdcCommand::Error err, const string& desc) { send(AdcCommand(AdcCommand::CMD_STA).addParam(Util::toString(100 * sev + err)).addParam(desc)); }
 
-	void send(const AdcCommand& c) { send(c.toString(isSet(FLAG_NMDC), isSet(FLAG_SUPPORTS_ADCGET))); }
+	void send(const AdcCommand& c) { 
+		dcdebug("%s - %s\n", getUser()->getFirstNick().c_str(), c.toString(isSet(FLAG_NMDC), isSet(FLAG_SUPPORTS_ADCGET)).c_str());
+		send(c.toString(isSet(FLAG_NMDC), isSet(FLAG_SUPPORTS_ADCGET))); }
 
 	void supports(const StringList& feat) { 
 		string x;
@@ -356,6 +357,7 @@ private:
 	BufferedSocket* socket;
 	User::Ptr user;
 	bool secure;
+	int ucNumber;
 	
 	static const string UPLOAD, DOWNLOAD;
 	
@@ -366,7 +368,7 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection(bool secure_) throw() : cqi(NULL), state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString) { 
+		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString), ucNumber(0) { 
 	};
 
 	virtual ~UserConnection() throw() {
@@ -383,7 +385,7 @@ private:
 		user = aUser;
 	};
 
-	void onLine(const char* aLine) throw();
+	void onLine(const char* aLine, int iLineLen) throw();
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
@@ -397,7 +399,9 @@ private:
     }
 	virtual void on(Line, const string& line) throw() {
 		COMMAND_DEBUG(line, DebugManager::CLIENT_IN, getRemoteIp());
-		onLine(line.c_str());
+        onLine(line.c_str(), line.size());
+
+		if(ucNumber > 3) disconnect();
 	}
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 
         lastActivity = GET_TICK(); 
@@ -414,7 +418,7 @@ private:
 	virtual void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
 	virtual void on(Failed, const string&) throw();
 
-	void processBlock(const char* param, int type) throw();
+	void processBlock(char* param, int type) throw();
 };
 
 #endif // !defined(USER_CONNECTION_H)

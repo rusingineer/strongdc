@@ -32,8 +32,6 @@
 #include "ResourceManager.h"
 #include "User.h"
 
-#include "pme.h"
-
 #ifdef ff
 #undef ff
 #endif
@@ -435,13 +433,6 @@ void DirectoryListing::Directory::getHashList(HASH_SET<TTHValue, TTHValue::Hash>
 }
 
 int64_t DirectoryListing::Directory::getTotalSize(bool adl) {
-	if(parent != NULL && parent->parent == NULL) {
-		PME reg("([A-Z])");
-		if(reg.match(getName())) {
-			parent->rmDC403D1detected = true;
-		}
-	}
-
 	int64_t x = getSize();
 	for(Iter i = directories.begin(); i != directories.end(); ++i) {
 		if(!(adl && (*i)->getAdls()))

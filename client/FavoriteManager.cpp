@@ -482,15 +482,11 @@ void FavoriteManager::load() {
 	
 	// Add NMDC standard op commands
 	static const char kickstr[] = 
-		"$To: %[nick] From: %[mynick] $<%[mynick]> You are being kicked because: %[kickline:Reason]|<%[mynick]> is kicking %[nick] because: %[kickline:Reason]|$Kick %[nick]|";
+		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[line:Reason]|<%[myNI]> %[myNI] is kicking %[userNI] because: %[line:Reason]|$Kick %[userNI]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(KICK_USER), kickstr, "op");
-	static const char kickfilestr[] = 
-		"$To: %[nick] From: %[mynick] $<%[mynick]> You are being kicked because: %[kickline:Reason] %[file]|<%[mynick]> is kicking %[nick] because: %[kickline:Reason] %[file]|$Kick %[nick]|";
-	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
-		STRING(KICK_USER_FILE), kickfilestr, "op");
 	static const char redirstr[] =
-		"$OpForceMove $Who:%[nick]$Where:%[line:Target Server]$Msg:%[line:Message]|";
+		"$OpForceMove $Who:%[userNI]$Where:%[line:Target Server]$Msg:%[line:Message]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(REDIRECT_USER), redirstr, "op");
 
@@ -499,18 +495,6 @@ void FavoriteManager::load() {
 		"HDSC %[mycid] %[cid] DI ND Friendly\\ disconnect\n";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE,
 		STRING(DISCONNECT_USER), adc_disconnectstr, "adc://op");
-	static const char adc_kickstr[] =
-		"HDSC %[mycid] %[cid] KK KK %[line:Reason]\n";
-	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE,
-		STRING(KICK_USER), adc_kickstr, "adc://op");
-	static const char adc_banstr[] =
-		"HDSC %[mycid] %[cid] BN BN %[line:Seconds (-1 = forever)] %[line:Reason]\n";
-	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE,
-		STRING(BAN_USER), adc_banstr, "adc://op");
-	static const char adc_redirstr[] =
-		"HDSC %[mycid] %[cid] RD RD %[line:Redirect address] %[line:Reason]\n";
-	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE,
-		STRING(REDIRECT_USER), adc_redirstr, "adc://op");
 
 
 	try {
@@ -749,8 +733,8 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
         if( (uc.getCtx() & ctx) && 
-			(uc.getHub().empty() || (op && uc.getHub() == "op")) ||
-			(find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end()) ) 
+			(uc.getHub().empty() || (op && uc.getHub() == "op") ||
+			(find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end())) )
 		{
 			lst.push_back(*i);
 		}

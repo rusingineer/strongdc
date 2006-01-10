@@ -32,6 +32,7 @@ public:
 	Segment(SettingsManager *s) : PropPage(s) { 
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_SEGMENT)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	virtual ~Segment() { 

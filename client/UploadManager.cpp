@@ -193,7 +193,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							return false;
 						}
 					} else {
-						aSource->disconnect();
 					}
 				}
 			// Share finished file
@@ -239,7 +238,7 @@ ok:
 		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource->getUser());
 
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
-			bool supportsFree = aSource->getUser()->isSet(User::DCPLUSPLUS) || aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS) || !aSource->isSet(UserConnection::FLAG_NMDC);
+			bool supportsFree = aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS) || !aSource->isSet(UserConnection::FLAG_NMDC);
 			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
 			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
@@ -264,7 +263,7 @@ ok:
 	else
 		u->setSize(aStartPos + aBytes);
 
-	u->setFullSize(size);
+	u->setFileSize(size);
 	u->setStartPos(aStartPos);
 	u->setFileName(file);
 	u->setLocalFileName(file);
@@ -379,13 +378,19 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setState(UserConnection::STATE_GET);
 
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-		!u->isSet(Upload::FLAG_TTH_LEAVES) && (u->getSize() == u->getFullSize())) {
+		!u->isSet(Upload::FLAG_TTH_LEAVES) && (u->getSize() == u->getFileSize())) {
 		StringMap params;
 		params["source"] = u->getFileName();
-		params["userNI"] = aSource->getUser()->getFirstNick();
+		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource->getUser()->getCID()));
 		params["userI4"] = aSource->getRemoteIp();
-		/// @todo params["hub"] = aSource->getUser()->getLastHubName();
-		/// @todo params["hubip"] = aSource->getUser()->getLastHubAddress();
+		StringList hubNames = ClientManager::getInstance()->getHubNames(aSource->getUser()->getCID());
+		if(hubNames.empty())
+			hubNames.push_back(STRING(OFFLINE));
+		params["hub"] = Util::toString(hubNames);
+		StringList hubs = ClientManager::getInstance()->getHubs(aSource->getUser()->getCID());
+		if(hubs.empty())
+			hubs.push_back(STRING(OFFLINE));
+		params["hubURL"] = Util::toString(hubs);
 		params["fileSI"] = Util::toString(u->getSize());
 		params["fileSIshort"] = Util::formatBytes(u->getSize());
 		params["fileSIchunk"] = Util::toString(u->getTotal());

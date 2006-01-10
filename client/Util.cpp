@@ -73,11 +73,13 @@ string Util::disableCzChars(string message) {
 	for(unsigned int j = 0; j < message.length(); j++) {
 		int zn = (int)message[j];
 		int zzz = -1;
-		for(int l = 0; l < 96; l+=2) {
-			int zn2 = (int)message[j+1];
-			if ((zn == arrayutf[l])&&(zn2 == arrayutf[l+1])) {
-				zzz = (int)(l/2);
-				break;
+		for(int l = 0; l + 1 < 96; l+=2) {
+			if (zn == arrayutf[l]) {
+				int zn2 = (int)message[j+1];
+				if(zn2 == arrayutf[l+1]) {
+					zzz = (int)(l/2);
+					break;
+				}
 			}
 		}
 		if (zzz >= 0) {

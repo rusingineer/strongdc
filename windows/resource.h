@@ -42,10 +42,8 @@
 #define IDC_HUBLIST                     131
 #define IDC_EMOT                        131
 #define IDC_OPEN_MY_LIST                132
-#define IDC_ENABLE_EMOTICONS            132
 #define IDC_SERVER                      133
 #define IDC_EXTERNAL_IP                 133
-#define IDC_DELETE_TTH_TREE             133
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
 #define IDB_ARROWS                      208
@@ -118,11 +116,8 @@
 #define IDB_FLAGS                       291
 #define IDD_WINDOWSPAGE                 292
 #define IDD_EMOTICONS_DLG               293
-#define IDB_BITMAP1                     295
 #define IDB_EMOTICON                    295
-#define IDD_DIALOG1                     296
 #define IDD_NETWORKPAGE                 296
-#define IDD_DIALOG2                     297
 #define IDD_CERTIFICATESPAGE            297
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
@@ -279,7 +274,6 @@
 #define IDC_SETTINGS_DESCRIPTION        1135
 #define IDC_SETTINGS_ODC_SHUTDOWNTIMEOUT 1135
 #define IDC_SETTINGS_CONNECTION_TYPE    1136
-#define IDC_SETTINGS_CONNECTION_SETTINGS 1137
 #define IDC_SETTINGS_IP                 1138
 #define IDC_SETTINGS_PORT               1139
 #define IDC_SETTINGS_SOCKS5_IP          1140
@@ -349,7 +343,6 @@
 #define IDC_PREVIEW_EXTENSION           1215
 #define IDC_CHECK1                      1216
 #define IDC_AUTOSEGMENT                 1216
-#define IDC_UPDATEIP                    1216
 #define IDC_SETTINGS_SEGMENT_BAR_COLOR  1216
 #define IDC_COPY_TTH                    1217
 #define IDC_DONTBEGIN                   1217
@@ -382,7 +375,6 @@
 #define IDC_TOOLBAR_POSSIBLE            1226
 #define IDC_CLIENT_USER_CON_COM         1226
 #define IDC_SETTINGS_MBS                1226
-#define IDC_IMAGEBROWSE2                1226
 #define IDC_MOUSE_OVER                  1227
 #define IDC_CLIENT_STATUS               1227
 #define IDC_NORMAL                      1228
@@ -486,14 +478,11 @@
 #define IDC_UPDATE_URL                  1264
 #define IDC_REGEXP_TESTER_TEXT          1264
 #define IDC_LIST_EDIT                   1264
-#define IDC_GETIP                       1266
 #define IDC_CHANGE_COLOR                1266
 #define IDC_PORT_UDP                    1266
 #define IDC_USERLIST_IMAGE              1267
-#define IDC_SETTINGS_UDP_PORT           1267
 #define IDC_SETTINGS_PORT_UDP           1267
 #define IDC_USERLIST                    1268
-#define IDC_UDP_PORT                    1268
 #define IDC_IMPORT                      1269
 #define IDC_BACKGROUND_IMAGE            1269
 #define IDC_EXPORT                      1270
@@ -523,7 +512,6 @@
 #define IDC_SETTINGS_BIND_ADDRESS_HELP  1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
 #define IDC_SECOND                      1288
-#define IDC_SETTINGS_BIND_ADDRESS1      1288
 #define IDC_SECOND1                     1289
 #define IDC_SECOND2                     1290
 #define IDC_FLAT                        1291
@@ -590,7 +578,6 @@
 #define IDC_SETTINGS_ODC_MENUBAR2       1615
 #define IDC_PROGRESS_COLOR_DOWN_SHOW    1616
 #define IDC_PROGRESS_COLOR_UP_SHOW      1617
-#define IDC_PROGRESS_COLOR_SEGMENT_SHOW 1619
 #define IDC_PREVIEW_APP                 1700
 #define IDC_DISCONNECT_RAW              2187
 #define IDC_TIMEOUT_RAW                 2188
@@ -725,10 +712,8 @@
 #define IDC_CZDC_UP_NOTE                10113
 #define IDC_CZDC_DW_NOTE                10114
 #define IDC_CZDC_PROGRESS_COLOR         10115
-#define IDC_ZDC_PROGRESS_COLOR          10115
 #define IDC_SETCZDC_MAX_EMOTICONS       10116
 #define IDC_CZDC_PROGRESS_TEXT          10117
-#define IDC_ZDC_PROGRESS_TEXT           10117
 #define IDC_SAVEQUEUE_TEXT              10117
 #define IDC_INTERVAL_TEXT               10118
 #define IDC_MATCH_QUEUE_TEXT            10119
@@ -752,7 +737,6 @@
 #define IDC_PM_LINES                    10147
 #define IDC_COPY_ALL                    10148
 #define IDC_PM_LINESSPIN                10148
-#define IDC_COPY_ISP                    10149
 #define IDC_CHECKLIST                   10150
 #define ID_GET_TTH                      10151
 #define IDC_COPY_LINK                   10152

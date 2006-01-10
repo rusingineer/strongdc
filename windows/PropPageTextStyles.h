@@ -16,6 +16,7 @@ public:
 		bg = 0;
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~PropPageTextStyles() {
 		free(title);
