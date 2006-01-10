@@ -112,9 +112,10 @@ public:
 			FLAG_NO_TREE = 0x200,
 			FLAG_NO_NEED_PARTS = 0x400,
 			FLAG_PARTIAL = 0x800,
+			FLAG_TTH_INCONSISTENCY = 0x1000,
 			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
-				| FLAG_SLOW | FLAG_NO_TREE
+				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
 
 		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { };
@@ -139,7 +140,7 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue* tth) : 
-	Flags(aFlag), target(aTarget), start(0), currentDownload(NULL), averageSpeed(0),
+	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
 	{ 
@@ -158,9 +159,9 @@ public:
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents), activeSegments(rhs.activeSegments),
+		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents),
 		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
-		start(rhs.start), currentDownload(rhs.currentDownload), averageSpeed(rhs.averageSpeed)
+		currentDownload(rhs.currentDownload), averageSpeed(rhs.averageSpeed)
 	{
 		// Deep copy the source lists
 		Source::List::const_iterator i;
@@ -220,18 +221,6 @@ public:
 		return false;
 	};
 	
-	void addActiveSegment(const User::Ptr& aUser) {
-		activeSegments.push_back(*getSource(aUser));
-	}
-
-	void removeActiveSegment(const User::Ptr& aUser) {
-		Source* s = *getSource(aUser);
-		Source::List::iterator i = find(activeSegments.begin(), activeSegments.end(), s);
-		if(i != activeSegments.end()) {
-			activeSegments.erase(i);
-		}
-	}
-
 	void addCurrent(const User::Ptr& aUser) {
 		dcassert(isSource(aUser));
 		currents.push_back(*getSource(aUser));
@@ -286,14 +275,12 @@ public:
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
 	GETSET(Source::List, currents, Currents);
-	GETSET(Source::List, activeSegments, ActiveSegments);
 	GETSET(Download*, currentDownload, CurrentDownload);
 	GETSET(time_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(unsigned int, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
-	GETSET(u_int32_t, start, Start);
 	GETSET(int64_t, averageSpeed, AverageSpeed);
 	FileChunksInfo::Ptr chunkInfo;
 

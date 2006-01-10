@@ -46,7 +46,7 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::iterator Iter;
 	
-	Upload() : tth(NULL), file(NULL), fullSize(-1) { };
+	Upload() : tth(NULL), file(NULL) { };
 	virtual ~Upload() { 
 		delete file;
 		delete tth;
@@ -58,7 +58,6 @@ public:
 	GETSET(string, localFileName, LocalFileName);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(InputStream*, file, File);
-	GETSET(int64_t, fullSize, FullSize);
 };
 
 class UploadManagerListener {

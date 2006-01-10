@@ -33,6 +33,7 @@ public:
 	AppearancePage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_APPEARANCE)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	virtual ~AppearancePage();

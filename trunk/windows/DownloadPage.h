@@ -32,6 +32,7 @@ public:
 	DownloadPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_DOWNLOADS)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~DownloadPage() { free(title); };
 

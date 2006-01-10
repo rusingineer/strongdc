@@ -79,6 +79,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::SEARCH_ONLY_TTH, ResourceManager::SETTINGS_ONLY_TTH },
 	{ SettingsManager::ADVANCED_RESUME, ResourceManager::SETTINGS_ADVANCED_RESUME },
 	{ SettingsManager::TOGGLE_ACTIVE_WINDOW, ResourceManager::SETTINGS_TOGGLE_ACTIVE_WINDOW },
+	{ SettingsManager::USE_SSL, ResourceManager::SETTINGS_USE_SSL },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

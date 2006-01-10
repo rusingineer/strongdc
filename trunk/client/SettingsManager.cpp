@@ -121,7 +121,7 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime",
+	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -247,7 +247,7 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_DL_ALREADY_SHARED, false);
 	setDefault(CONFIRM_HUB_REMOVAL, false);
 	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
-	setDefault(SETTINGS_OPEN_NEW_WINDOW, false);
+	setDefault(JOIN_OPEN_NEW_WINDOW, false);
 	setDefault(SEARCH_ONLY_TTH, true);
 	setDefault(ADVANCED_RESUME, true);
 	setDefault(ADC_DEBUG, false);
@@ -263,8 +263,8 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
 	setDefault(NO_IP_OVERRIDE, false);
-	setDefault(SOCKET_IN_BUFFER, 8192);
-	setDefault(SOCKET_OUT_BUFFER, 8192);
+	setDefault(SOCKET_IN_BUFFER, 64*1024);
+	setDefault(SOCKET_OUT_BUFFER, 32*1024);
 	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getAppPath() + "certs" PATH_SEPARATOR_STR);
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
@@ -273,6 +273,7 @@ SettingsManager::SettingsManager()
 	setDefault(BOLD_PM, true);
 	setDefault(BOLD_SEARCH, true);
 	setDefault(AUTO_REFRESH_TIME, 60);
+	setDefault(USE_SSL, false);
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);

@@ -31,6 +31,7 @@ class GeneralPage : public CPropertyPage<IDD_GENERALPAGE>, public PropPage
 public:
 	GeneralPage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_GENERAL));
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~GeneralPage() {
 		ConnTypes.Destroy();

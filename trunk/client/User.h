@@ -92,6 +92,7 @@ private:
 };
 
 class Client;
+class OnlineUser;
 
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity : public Flags {
@@ -161,12 +162,10 @@ public:
 	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
 	void sendRawCommand(Client& c, const int aRawCommand);
-	void setCheat(Client& c, const string& aCheatDescription, bool aBadClient, bool postToChat = true);
-	string getReport();
-	void updateClientType();
+	const string setCheat(Client& c, const string& aCheatDescription, bool aBadClient);
+	const string getReport();
+	const string updateClientType(OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile);
-	bool fileListDisconnected();
-	bool connectionTimeout();
 
 	const string& get(const char* name) const {
 		InfMap::const_iterator i = info.find(*(short*)name);

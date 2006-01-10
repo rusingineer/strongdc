@@ -1124,6 +1124,12 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 			ucParams["fileSIshort"] = Util::formatBytes(ii->dir->getTotalSize());
 		}
 
+		// compatibility with 0.674 and earlier
+		ucParams["file"] = ucParams["fileFN"];
+		ucParams["filesize"] = ucParams["fileSI"];
+		ucParams["filesizeshort"] = ucParams["fileSIshort"];
+		ucParams["tth"] = ucParams["fileTR"];
+
 		StringMap tmp = ucParams;
 		User::Ptr tmpPtr = dl->getUser();
 		ClientManager::getInstance()->userCommand(dl->getUser(), uc, tmp, true);

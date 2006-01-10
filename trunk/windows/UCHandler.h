@@ -55,7 +55,7 @@ public:
 	}
 
 	void prepareMenu(CMenu& menu, int ctx, const StringList& hubs) {
-		bool op = !hubs.empty() && ClientManager::getInstance()->isMeOp(hubs[0]);
+		bool op = !hubs.empty() && ClientManager::getInstance()->isOp(ClientManager::getInstance()->getMe(), hubs[0]);
 		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, op);
 		int n = 0;
 

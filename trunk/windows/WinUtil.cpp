@@ -247,14 +247,16 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 void UserInfoBase::matchQueue() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_MATCH_QUEUE);
-	} catch(const Exception&) {
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError(), true);
 	}
 }
 
 void UserInfoBase::getUserResponses() {
 	try {
 		QueueManager::getInstance()->addTestSUR(user, false);
-	} catch(const Exception&) {
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError(), true);		
 	}
 }
 
@@ -267,7 +269,8 @@ void UserInfoBase::doReport() {
 void UserInfoBase::getList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);
-	} catch(const Exception&) {
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError(), true);		
 	}
 }
 void UserInfoBase::browseList() {
@@ -275,13 +278,15 @@ void UserInfoBase::browseList() {
 		return;
 	try {
 		QueueManager::getInstance()->addPfs(user, "");
-	} catch(const Exception&) {
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError(), true);		
 	}
 }
 void UserInfoBase::checkList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
-	} catch(const Exception&) {
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError(), true);		
 	}
 }
 void UserInfoBase::addFav() {

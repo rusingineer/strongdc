@@ -38,20 +38,27 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 	for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
 		sm[prefix + string((char*)(&i->first), 2)] = i->second;
 	}
-	if(user)
+	if(user) {
 		sm[prefix + "CID"] = user->getCID().toBase32();
+		sm[prefix + "TAG"] = getTag();
+		sm[prefix + "SSshort"] = Util::formatBytes(get("SS"));
 
-	if(compatibility) {
-		if(prefix == "my") {
-			sm["mynick"] = getNick();
-			if(user) sm["mycid"] = user->getCID().toBase32();
-		} else {
-			sm["nick"] = getNick();
-			if(user) sm["cid"] = user->getCID().toBase32();
+		if(compatibility) {
+			if(prefix == "my") {
+				sm["mynick"] = getNick();
+				sm["mycid"] = user->getCID().toBase32();
+			} else {
+				sm["nick"] = getNick();
+				sm["cid"] = user->getCID().toBase32();
+				sm["ip"] = get("I4");
+				sm["tag"] = getTag();
+				sm["description"] = get("DE");
+				sm["email"] = get("EM");
+				sm["share"] = get("SS");
+				sm["shareshort"] = Util::formatBytes(get("SS"));
+				sm["realshareformat"] = Util::formatBytes(getRealBytesShared());
+			}
 		}
-		
-		sm["realshareformat"] = Util::formatBytes(getRealBytesShared());
-		sm["statedshareformat"] = Util::formatBytes(getBytesShared());
 	}
 }
 
@@ -65,8 +72,8 @@ const bool Identity::supports(const string& name) const {
 	return false;
 }
 
-void Identity::setCheat(Client& c, const string& aCheatDescription, bool aBadClient, bool postToChat) {
-	if(!c.isOp() || isOp()) return;
+const string Identity::setCheat(Client& c, const string& aCheatDescription, bool aBadClient) {
+	if(!c.isOp() || isOp()) return Util::emptyString;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(FAKERFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -74,14 +81,15 @@ void Identity::setCheat(Client& c, const string& aCheatDescription, bool aBadCli
 	StringMap ucParams;
 	getParams(ucParams, "user", true);
 	string cheat = Util::formatParams(aCheatDescription, ucParams);
-	if(postToChat)
-		c.cheatMessage("*** " + STRING(USER) + " " + getNick() + " - " + cheat);
 	
 	setCheatingString(cheat);
 	setBadClient(Util::toString(aBadClient));
+
+	string report = "*** " + STRING(USER) + " " + getNick() + " - " + cheat;
+	return report;
 }
 
-string Identity::getReport()
+const string Identity::getReport()
 {
 	string report = "\r\nClient:		" + getClientType();
 	report += "\r\nXML Generator:	" + (getGenerator().empty() ? "N/A" : getGenerator());
@@ -115,16 +123,14 @@ string Identity::getReport()
 	return report;
 }
 
-void Identity::updateClientType() {
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-
+const string Identity::updateClientType(OnlineUser& ou) {
 	if ( getUser()->isSet(User::DCPLUSPLUS) && (getListLength() == "11") && (getBytesShared() > 0) ) {
-		setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
+		string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
 		setClientType("DC++ Stealth");
 		setBadClient("1");
 		setBadFilelist("1");
 		sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
-		return;
+		return report;
 	}
 	int64_t tick = GET_TICK();
 
@@ -188,21 +194,21 @@ void Identity::updateClientType() {
 			setClientType(getClientType() + " Version mis-match");
 			setCheatingString(getCheatingString() + " Version mis-match");
 			setBadClient("1");
-			ClientManager::getInstance()->updateUser(getUser());
-			setCheat(ou.getClient(), getCheatingString(), true);
-			return;
+			string report = setCheat(ou.getClient(), getCheatingString(), true);
+			return report;
 		}
-		if(!getBadClient().empty()) setCheat(ou.getClient(), getCheatingString(), true);
-		ClientManager::getInstance()->updateUser(getUser());
+		string report = Util::emptyString;
+		if(!getBadClient().empty()) report = setCheat(ou.getClient(), getCheatingString(), true);
 		if(cp.getRawToSend() > 0) {
 			sendRawCommand(ou.getClient(), cp.getRawToSend());
 		}
-		return;
+		return report;
 	}
 	setClientType("Unknown");
 	setCheatingString(Util::emptyString);
 	setBadClient(Util::emptyString);
-	ClientManager::getInstance()->updateUser(getUser());
+
+	return Util::emptyString;
 }
 
 bool Identity::matchProfile(const string& aString, const string& aProfile) {
@@ -225,42 +231,6 @@ string Identity::splitVersion(const string& aExp, const string& aTag, const int 
 	if(!reg.IsValid()) { return ""; }
 	reg.split(aTag, 2);
 	return reg[part];
-}
-
-bool Identity::fileListDisconnected() {
-	setFileListDisconnects(Util::toString(Util::toInt(getFileListDisconnects()) + 1));
-
-	if(SETTING(ACCEPTED_DISCONNECTS) == 0)
-		return false;
-
-	if(Util::toInt(getFileListDisconnects()) == SETTING(ACCEPTED_DISCONNECTS)) {
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-		setCheat(ou.getClient(), "Disconnected file list " + getFileListDisconnects() + " times", false);
-		ClientManager::getInstance()->updateUser(getUser());
-		sendRawCommand(ou.getClient(), SETTING(DISCONNECT_RAW));
-		return true;
-	}
-	return false;
-}
-
-bool Identity::connectionTimeout() {
-	setConnectionTimeouts(Util::toString(Util::toInt(getConnectionTimeouts()) + 1));
-
-	if(SETTING(ACCEPTED_TIMEOUTS) == 0)
-		return false;
-
-	if(Util::toInt(getConnectionTimeouts()) == SETTING(ACCEPTED_TIMEOUTS)) {
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-		setCheat(ou.getClient(), "Connection timeout " + getConnectionTimeouts() + " times", false);
-		ClientManager::getInstance()->updateUser(getUser());
-		try {
-			QueueManager::getInstance()->removeTestSUR(getUser());
-		} catch(...) {
-		}
-		sendRawCommand(ou.getClient(), SETTING(TIMEOUT_RAW));
-		return true;
-	}
-	return false;
 }
 
 void Identity::sendRawCommand(Client& c, const int aRawCommand) {

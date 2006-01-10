@@ -33,6 +33,7 @@ public:
 	LogPage(SettingsManager *s) : PropPage(s), oldSelection(-1) {
 		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_LOGS)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	virtual ~LogPage() { free(title); };

@@ -32,6 +32,7 @@ public:
 	NetworkPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_NETWORK)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~NetworkPage() {
 		free(title);

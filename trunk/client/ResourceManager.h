@@ -33,14 +33,14 @@ public:
 	void loadLanguage(const string& aFile);
 	const string& getString(Strings x) const { return strings[x]; };
 	const wstring& getStringW(Strings x) const { return wstrings[x]; };
-
+	bool isRTL() { return rtl; }
 private:
 	friend class Singleton<ResourceManager>;
 	
 	typedef HASH_MAP<string, Strings> NameMap;
 	typedef NameMap::iterator NameIter;
 
-	ResourceManager() {
+	ResourceManager() : rtl(false) {
 		createWide();
 	};
 
@@ -49,6 +49,8 @@ private:
 	static string strings[LAST];
 	static wstring wstrings[LAST];
 	static string names[LAST];
+
+	bool rtl;
 
 	void createWide();
 };

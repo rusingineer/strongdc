@@ -20,6 +20,7 @@ public:
 	ClientsPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_FAKEDETECT) + _T('\\') + TSTRING(SETTINGS_CLIENTS)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	virtual ~ClientsPage() { 

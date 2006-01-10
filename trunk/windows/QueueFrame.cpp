@@ -184,7 +184,7 @@ void QueueFrame::QueueItemInfo::update() {
 
 		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(target));
 
-		int PocetSegmentu = qi ? qi->getActiveSegments().size() : 0;
+		int PocetSegmentu = qi ? qi->getCurrents().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;
 		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString(PocetSegmentu))+_T("/")+Text::toT(Util::toString(MaxSegmentu))+ _T(" ");
 
@@ -203,8 +203,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(j->getUser()->isOnline())
 					online++;
 
-				//tmp += WinUtil::getNicks(j->getUser());
-				tmp += Text::toT(j->getUser()->getFirstNick());
+				tmp += WinUtil::getNicks(j->getUser());
 			}
 			display->columns[COLUMN_USERS] = tmp.empty() ? TSTRING(NO_USERS) : tmp;
 		}
@@ -285,8 +284,7 @@ void QueueFrame::QueueItemInfo::update() {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
-//					tmp += WinUtil::getNicks(j->getUser());
-					tmp += Text::toT(j->getUser()->getFirstNick());
+					tmp += WinUtil::getNicks(j->getUser());
 					tmp += _T(" (");
 					if(j->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						tmp += TSTRING(FILE_NOT_AVAILABLE);
@@ -861,10 +859,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			if(ii) {
 				QueueItemInfo::SourceIter i;
 				for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
-					if(!i->getUser()) {
-						continue;
-					}
-					tstring nick = Text::toT(i->getUser()->getFirstNick());
+				tstring nick = WinUtil::getNicks(i->getUser());
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -885,10 +880,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 
 				readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
-					if(!i->getUser()) {
-						continue;
-					}
-					tstring nick = Text::toT(i->getUser()->getFirstNick());
+					tstring nick = WinUtil::getNicks(i->getUser());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_PASSIVE)) {
@@ -1517,7 +1509,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 				// running chunks
 				filedatainfo->getAllChunks(v, 1);
-				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); ++i, ++i) {
+				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), crPending);
 				}
 				v.clear();
@@ -1526,7 +1518,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				v.push_back(0);
 				filedatainfo->getAllChunks(v, 0);
 				v.push_back(qi->getSize());
-				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); ++i, ++i) {
+				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), crDownloaded);
 				}
 				v.clear();

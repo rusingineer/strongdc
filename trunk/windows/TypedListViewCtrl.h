@@ -656,7 +656,7 @@ public:
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
-	typedef vector<T*> TreeItem;
+	typedef list<T*> TreeItem;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -738,13 +738,17 @@ public:
 		InsertItem(&lvi);
 	}
 
-	T* findMainItem(const string& groupingString) {
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-			if(strcmp(groupingString.c_str(), (*i)->getGroupingString().c_str()) == 0) {
-				return *i;
-			}
-		}
-		return NULL;
+	struct StringComp {
+		StringComp(const string& s) : a(s) { }
+		bool operator()(T* b) const { return b->getGroupingString() == a; }
+		const string& a;
+	private:
+		StringComp& operator=(const StringComp&);
+	};
+
+	inline T* findMainItem(const string& groupingString) {
+		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), StringComp(groupingString));
+		return j != mainItems.end() ? *j : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
@@ -806,12 +810,7 @@ public:
 			}
 			s->subItems.clear();
 		}
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-			if((*i) == s) {
-				mainItems.erase(i);
-				break;
-			}
-		}
+		mainItems.remove(s);
 	}
 
 	void removeGroupedItem(T* s, bool removeFromMemory = true) {

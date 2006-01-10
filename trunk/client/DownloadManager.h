@@ -64,9 +64,8 @@ public:
 		FLAG_MP3_INFO = 0x1000,
 		FLAG_CHECK_FILE_LIST = 0x2000,
 		FLAG_MULTI_CHUNK = 0x4000,
-		FLAG_CHUNK_TRANSFER = 0x8000,
-		FLAG_PARTIAL = 0x10000,
-		FLAG_TTH_CHECK = 0x20000
+		FLAG_PARTIAL = 0x8000,
+		FLAG_TTH_CHECK = 0x10000
 	};
 
 	Download() throw();
@@ -95,6 +94,9 @@ public:
 		return isSet(FLAG_ANTI_FRAG) ? tgt + ANTI_FRAG_EXT : tgt;			
 	}
 
+	int64_t getChunkSize() {
+		return getSize() - getStartPos();
+	}
 	/** @internal */
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
@@ -107,8 +109,7 @@ public:
 	GETSET(OutputStream*, file, File);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
-	GETSET(OnlineUser*, user, User);	
-	GETSET(int64_t, segmentSize, SegmentSize);
+	GETSET(OnlineUser*, user, User);
 	int64_t quickTick;
 	
 private:
@@ -194,6 +195,8 @@ public:
 	/** @internal */
 	void abortDownload(const string& aTarget);
 	void abortDownload(const string& aTarget, User::Ptr& aUser);
+	void abortDownloadExcept(const string& aTarget, Download*);
+	
 
 	/**
 	 * @remarks This is only used in the tray icons. In MainFrame this is

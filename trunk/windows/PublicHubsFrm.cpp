@@ -319,6 +319,8 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		ctrlStatus.SetParts(3, w);
 	}
 	
+	int const comboH = 140;
+
 	// listview
 	CRect rc = rect;
 	rc.top += 2;
@@ -350,14 +352,14 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	
 	// lists dropdown
 	rc.top += 16;
-	rc.bottom -= 8 - 140;
+	rc.bottom -= 8 - comboH;
 	rc.right -= 8 + 100;
 	rc.left += 8;
 	ctrlPubLists.MoveWindow(rc);
 	
 	// configure button
 	rc.left = rc.right + 4;
-	rc.bottom -= 140;
+	rc.bottom -= comboH;
 	rc.right += 100;
 	ctrlConfigure.MoveWindow(rc);
 

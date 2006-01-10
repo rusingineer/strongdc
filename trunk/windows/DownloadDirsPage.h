@@ -36,6 +36,7 @@ public:
 	DownloadDirsPage(SettingsManager *s) : PropPage(s)  {
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_DOWNLOADDIRS)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~DownloadDirsPage()
 	{	ctrlCommands.Detach();

@@ -40,6 +40,8 @@ void ResourceManager::loadLanguage(const string& aFile) {
 		}
 
 		if(xml.findChild("Language")) {
+			rtl = xml.getBoolChildAttrib("RightToLeft");
+
 			xml.stepIn();
 			if(xml.findChild("Strings")) {
 				xml.stepIn();

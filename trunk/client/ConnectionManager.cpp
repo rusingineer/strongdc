@@ -245,7 +245,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					dcassert(cqi->getConnection());
 					dcassert(cqi->getConnection()->getCQI() == cqi);
 					cqi->setState(ConnectionQueueItem::ACTIVE);
-					cqi->getConnection()->removeListener(this);
 					added.push_back(cqi->getConnection());
 
 					pendingAdd.erase(it);
@@ -267,7 +266,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 				} 
 				
 				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(cqi->getUser());
-				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(&ou.getClient())) {
+				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(&ou ? &ou.getClient() : NULL)) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
@@ -303,7 +302,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 						cqi->setState(ConnectionQueueItem::WAITING);
 					}
 				} else if(((cqi->getLastAttempt() + 50*1000) < aTick) && (cqi->getState() == ConnectionQueueItem::CONNECTING)) {
-					ou.getIdentity().connectionTimeout();
+					ClientManager::getInstance()->connectionTimeout(cqi->getUser());
 
 					fire(ConnectionManagerListener::Failed(), cqi, STRING(CONNECTION_TIMEOUT));
 					cqi->setState(ConnectionQueueItem::WAITING);
@@ -329,6 +328,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	}
 
 	for(UserConnection::Iter i = added.begin(); i != added.end(); ++i) {
+		(*i)->removeListener(this);
 		DownloadManager::getInstance()->addConnection(*i);
 	}
 }
@@ -549,17 +549,10 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		aSource->setFlag(UserConnection::FLAG_UPLOAD);
 	}
 
+	ClientManager::getInstance()->setIPUser(aSource->getRemoteIp(), aSource->getUser());
+
 	if(ClientManager::getInstance()->isOp(aSource->getUser(), aSource->getHubUrl()))
 		aSource->setFlag(UserConnection::FLAG_OP);
-
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
-	if(&ou) {
-		string address = aSource->getRemoteIp();
-		if(ou.getIdentity().getIp() != address) {
-			ou.getIdentity().setIp(address);
-			ClientManager::getInstance()->updateUser(aSource->getUser());
-		}
-	}
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
 		if(SETTING(GARBAGE_COMMAND_INCOMING))
@@ -596,12 +589,7 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
 
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
-	if(&ou) {
-		ou.getIdentity().setPk(aPk);
-		ou.getIdentity().setLock(aLock);
-		ou.getClient().updated(ou);
-	}
+	ClientManager::getInstance()->setPkLock(aSource->getUser(), aPk, aLock);
 }
 
 void ConnectionManager::on(UserConnectionListener::Direction, UserConnection* aSource, const string& dir, const string& num) throw() {

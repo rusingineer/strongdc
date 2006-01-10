@@ -269,7 +269,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("join"))==0) {
 				if(!param.empty()) {
 					redirect = param;
-					if(BOOLSETTING(SETTINGS_OPEN_NEW_WINDOW)) {
+					if(BOOLSETTING(JOIN_OPEN_NEW_WINDOW)) {
 						HubFrame::openWindow(param);
 					} else {
 						BOOL whatever = FALSE;
@@ -707,8 +707,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 	if(wParam == UPDATE_USERS) {
 		ctrlUsers.SetRedraw(FALSE);
 		{
-			Lock l(updateCS);
-			for(UpdateIter i = updateList.begin(); i != updateList.end(); ++i) {
+			UpdateList updateList1;
+			{
+				Lock l(updateCS);
+				updateList1 = updateList;
+				updateList.clear();
+			}
+			for(UpdateIter i = updateList1.begin(); i != updateList1.end(); ++i) {
 				UpdateInfo& u = i->first;
 				switch(i->second) {
 				case UPDATE_USER:
@@ -739,7 +744,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 								if(samenumbers) {
 									string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
 									u.identity.setBadFilelist("1");
-									u.identity.setCheat(*client, Util::validateMessage(detectString, false), false, false);
+									u.identity.setCheat(*client, Util::validateMessage(detectString, false), false);
 									
 									CHARFORMAT2 cf;
 									memset(&cf, 0, sizeof(CHARFORMAT2));
@@ -786,7 +791,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 					break;
 				}
 			}
-			updateList.clear();
+//			updateList.clear();
 		}
 
 		if(resort && showUsers) {

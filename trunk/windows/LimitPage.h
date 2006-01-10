@@ -11,6 +11,7 @@ public:
 	LimitPage(SettingsManager *s) : PropPage(s) {
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_LIMIT)).c_str());
 		SetTitle(title);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~LimitPage() {
 		free(title);

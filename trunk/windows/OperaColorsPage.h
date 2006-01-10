@@ -34,6 +34,7 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_OPERACOLORS)).c_str());
 		SetTitle(title);
 		hloubka = SETTING(PROGRESS_3DDEPTH);
+		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
 	virtual ~OperaColorsPage() { free(title);};

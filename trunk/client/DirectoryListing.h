@@ -85,7 +85,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent, const string& aName, bool _adls, bool aComplete) 
-			: name(aName), parent(aParent), adls(_adls), rmDC403D1detected(false), complete(aComplete) { };
+			: name(aName), parent(aParent), adls(_adls), complete(aComplete) { };
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction());
@@ -110,7 +110,6 @@ public:
 		
 		GETSET(string, name, Name);
 		GETSET(Directory*, parent, Parent);		
-		GETSET(bool, rmDC403D1detected, RMDC403D1detected);
 		GETSET(bool, adls, Adls);		
 		GETSET(bool, complete, Complete);
 
@@ -153,9 +152,6 @@ public:
 	Directory* getRoot() { return root; }
 
 	static User::Ptr getUserFromFilename(const string& fileName);
-	bool detectRMDC403D1() {
-		return root->getRMDC403D1detected();
-	}
 
 	GETSET(User::Ptr, user, User);
 	GETSET(bool, utf8, Utf8);

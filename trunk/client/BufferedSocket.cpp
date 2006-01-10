@@ -146,6 +146,9 @@ void BufferedSocket::threadRead() throw(SocketException) {
 	int bufpos = 0;
 	string l;
 	while(left > 0) {
+		if(checkDisconnect())
+			return;
+
 		if(mode == MODE_LINE) {
 			// Special to autodetect nmdc connections...
 			if(separator == 0) {
@@ -212,11 +215,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		if(throttling) { 
 			start = TimerManager::getTick();
 		}
-
-		size_t bytesRead = 0;
-
 		buf.resize(SETTING(SOCKET_OUT_BUFFER));
-		bytesRead = buf.size();
+		size_t bytesRead = buf.size();
 		size_t s;
 		if(throttling) {
 			sendMaximum = um->throttleGetSlice();

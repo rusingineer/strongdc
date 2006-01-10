@@ -198,7 +198,6 @@ private:
 			// special statuses
 			TREE_DOWNLOAD,
 			DOWNLOAD_STARTING,
-			DOWNLOAD_FAILED,
 			DOWNLOAD_FINISHED,
 		};
 		enum Types {
@@ -210,8 +209,8 @@ private:
 			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
 			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
 			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
-			Target(Util::emptyString), file(Util::emptyStringT), numberOfSegments(0),
-			flagImage(0), updated(false), filelist(false) { update(); };
+			Target(Util::emptyString), file(Util::emptyStringT),
+			flagImage(0), filelist(false) { update(); };
 
 		Types type;
 		Status status;
@@ -230,8 +229,6 @@ private:
 		string Target;
 		bool collapsed;
 		bool mainItem;
-		int32_t numberOfSegments;
-		bool updated;
 		int flagImage;
 		bool filelist;
 
@@ -248,7 +245,7 @@ private:
 			MASK_RATIO = 1 << COLUMN_RATIO
 	};
 		tstring columns[COLUMN_LAST];
-		u_int32_t updateMask;
+		u_int32_t updateMask; // this isn't used by mainitem, so use it for store start tick =)
 		void update();
 
 		void disconnect();
@@ -298,10 +295,10 @@ private:
 		ItemInfo* createMainItem() {
 	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING, 0, size);
 			h->Target = Target;
-			h->columns[COLUMN_STATUS] = h->statusString = TSTRING(CONNECTING);
-			h->numberOfSegments = 0;
-			h->updateMask |= ItemInfo::MASK_FILE | ItemInfo::MASK_PATH | ItemInfo::MASK_SIZE;
-			//h->update();
+			h->columns[COLUMN_FILE] = Text::toT(Util::getFileName(h->Target));
+			h->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(h->Target));
+			h->columns[COLUMN_STATUS] = TSTRING(CONNECTING);
+			h->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
 
 			return h;
 		}
@@ -309,9 +306,14 @@ private:
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
 				main->user = main->subItems.front()->user;
+				main->columns[COLUMN_USER] = WinUtil::getNicks(main->user);
+				main->columns[COLUMN_HUB] = WinUtil::getHubNames(main->user).first;
+			} else {
+				TCHAR buf[256];
+				_sntprintf(buf, 255, _T("%d %s"), main->subItems.size(), CTSTRING(USERS));
+				buf[255] = NULL;
+				main->columns[COLUMN_USER] = buf;
 			}
-			main->updateMask |= ItemInfo::MASK_USER | ItemInfo::MASK_HUB | MASK_SIZE;
-			main->update();
 		}
 	};
 

@@ -664,7 +664,7 @@ LRESULT MainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
 LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	PropertiesDlg dlg(SettingsManager::getInstance());
+	PropertiesDlg dlg(m_hWnd, SettingsManager::getInstance());
 
 	short lastPort = (short)SETTING(TCP_PORT);
 	short lastUDP = (short)SETTING(UDP_PORT);
