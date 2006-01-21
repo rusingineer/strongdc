@@ -48,9 +48,6 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlList.SetTextBkColor(WinUtil::bgColor);
 	ctrlList.SetTextColor(WinUtil::textColor);
 
-	stateImages.CreateFromImage(IDB_STATE, 16, 2, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	ctrlList.SetImageList(stateImages, LVSIL_STATE);
-
 	// Create listview columns
 	WinUtil::splitTokens(columnIndexes, SETTING(FINISHED_UL_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(FINISHED_UL_WIDTHS), COLUMN_LAST);
@@ -66,7 +63,6 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	UpdateLayout();
 	
 	FinishedManager::getInstance()->addListener(this);
-	SettingsManager::getInstance()->addListener(this);
 	updateList(FinishedManager::getInstance()->lockList(true));
 	FinishedManager::getInstance()->unlockList();
 	
@@ -79,18 +75,71 @@ LRESULT FinishedULFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
-	tabMenu.CreatePopupMenu();
-
-	if(BOOLSETTING(LOG_UPLOADS)) {
-		tabMenu.AppendMenu(MF_STRING, IDC_UPLOAD_LOG, CTSTRING(OPEN_UPLOAD_LOG));
-		tabMenu.AppendMenu(MF_SEPARATOR);
-	}
-	tabMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
-	tabMenu.AppendMenu(MF_SEPARATOR);
-	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
-
 	bHandled = FALSE;
 	return TRUE;
+}
+
+LRESULT FinishedULFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if (reinterpret_cast<HWND>(wParam) == ctrlList && ctrlList.GetSelectedCount() > 0) { 
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+		
+		if(pt.x == -1 && pt.y == -1) {
+			WinUtil::getContextMenuPos(ctrlList, pt);
+		}
+
+		ctxMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
+		return TRUE; 
+	}
+
+	bHandled = FALSE;
+	return FALSE; 
+}
+
+LRESULT FinishedULFrame::onColumnClickFinished(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	NMLISTVIEW* const l = (NMLISTVIEW*)pnmh;
+	if(l->iSubItem == ctrlList.getSortColumn()) {
+		if (!ctrlList.isAscending())
+			ctrlList.setSort(-1, ctrlList.getSortType());
+		else
+			ctrlList.setSortDirection(false);
+	} else {
+		switch(l->iSubItem) {
+			case COLUMN_SIZE:
+				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_FUNC, true, sortSize);
+				break;
+			case COLUMN_SPEED:
+				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_FUNC, true, sortSpeed);
+				break;
+			default:
+				ctrlList.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
+				break;
+		}
+	}
+	return 0;
+}
+
+void FinishedULFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
+{
+	RECT rect;
+	GetClientRect(&rect);
+
+	// position bars and offset their dimensions
+	UpdateBarsPosition(rect, bResizeBars);
+
+	if(ctrlStatus.IsWindow()) {
+		CRect sr;
+		int w[4];
+		ctrlStatus.GetClientRect(sr);
+		w[3] = sr.right - 16;
+		w[2] = max(w[3] - 100, 0);
+		w[1] = max(w[2] - 100, 0);
+		w[0] = max(w[1] - 100, 0);
+
+		ctrlStatus.SetParts(4, w);
+	}
+
+	CRect rc(rect);
+	ctrlList.MoveWindow(rc);
 }
 
 LRESULT FinishedULFrame::onDoubleClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -156,7 +205,7 @@ LRESULT FinishedULFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		FinishedManager::getInstance()->removeListener(this);
-		SettingsManager::getInstance()->removeListener(this);
+
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -173,28 +222,6 @@ LRESULT FinishedULFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == SPEAK_ADD_LINE) {
 		FinishedItem* entry = (FinishedItem*)lParam;
-
-		for(int i = 0, j = ctrlList.GetItemCount(); i < j; ++i) {
-			FinishedItem* fi = (FinishedItem*)ctrlList.GetItemData(i);
-
-			if(!fi->mainitem) continue;
-
-			if((fi->getUser() == entry->getUser()) && (fi->getTarget() == entry->getTarget())) {
-				fi->subItems.push_back(entry);
-				entry->main = fi;
-				entry->mainitem = false;
-
-				if(fi->subItems.size() == 1){
-					ctrlList.SetItemState(i, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-				}else if(!fi->collapsed){
-					addEntry(entry, i + 1);
-				}
-				return 0;
-			}
-		}
-		entry->mainitem = true;
-		entry->collapsed = true;
-
 		addEntry(entry);
 		if(BOOLSETTING(BOLD_FINISHED_UPLOADS))
 			setDirty();
@@ -208,7 +235,7 @@ LRESULT FinishedULFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	return 0;
 }
 
-void FinishedULFrame::addEntry(FinishedItem* entry, int pos) {
+void FinishedULFrame::addEntry(FinishedItem* entry) {
 	TStringList l;
 	l.push_back(Text::toT(Util::getFileName(entry->getTarget())));
 	l.push_back(Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
@@ -221,105 +248,8 @@ void FinishedULFrame::addEntry(FinishedItem* entry, int pos) {
 	totalTime += entry->getMilliSeconds();
 
 	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
-	int loc = -1;
-	if(pos == -1) {
-		loc = ctrlList.insert(l, image, (LPARAM)entry);
-	} else {
-		LV_ITEM lvi;
-		lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
-		lvi.iItem = pos;
-		lvi.iSubItem = 0;
-		lvi.iIndent = 1;
-		lvi.pszText = const_cast<TCHAR*>(ctrlList.getSortColumn() == -1 ? l[0].c_str() : l[ctrlList.getSortColumn()].c_str());
-		lvi.cchTextMax = ctrlList.getSortColumn() == -1 ? l[0].size() : l[ctrlList.getSortColumn()].size();
-		lvi.iImage = image;
-		lvi.lParam = (LPARAM)entry;
-		lvi.state = 0;
-		lvi.stateMask = 0;
-		loc = ctrlList.InsertItem(&lvi);
-		int k = 0;
-		for(TStringIter j = l.begin(); j != l.end(); ++j, k++) {
-			ctrlList.SetItemText(loc, k, j->c_str());
-		}
-	}
+	int loc = ctrlList.insert(l, image, (LPARAM)entry);
 	ctrlList.EnsureVisible(loc, FALSE);
-}
-
-LRESULT FinishedULFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-	return TRUE;
-}
-
-LRESULT FinishedULFrame::onUploadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	tstring filename = Text::toT(SETTING(LOG_DIRECTORY)) + _T("Uploads.log");
-	if(Util::fileExists(Text::fromT(filename))){
-		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
-	} else {
-		MessageBox(CTSTRING(NO_UPLOAD_LOG), CTSTRING(NO_UPLOAD_LOG), MB_OK );	  
-	}
-	return 0;
-}
-
-void FinishedULFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
-	bool refresh = false;
-	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
-		ctrlList.SetBkColor(WinUtil::bgColor);
-		ctrlList.SetTextBkColor(WinUtil::bgColor);
-		refresh = true;
-	}
-	if(ctrlList.GetTextColor() != WinUtil::textColor) {
-		ctrlList.SetTextColor(WinUtil::textColor);
-		refresh = true;
-	}
-	if(refresh == true) {
-		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-	}
-}
-
-LRESULT FinishedULFrame::onLButton(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-	bHandled = false;
-	LPNMITEMACTIVATE item = (LPNMITEMACTIVATE)pnmh;
-	
-	if (item->iItem != -1) {
-		CRect rect;
-		ctrlList.GetItemRect(item->iItem, rect, LVIR_ICON);
-
-		if (item->ptAction.x < rect.left)
-		{
-			FinishedItem* i = (FinishedItem*)ctrlList.GetItemData(item->iItem);
-			if(i->subItems.size() > 0)
-				if(i->collapsed) Expand(i,item->iItem); else Collapse(i,item->iItem);
-		}
-	}
-	return 0;
-} 
-
-void FinishedULFrame::Collapse(FinishedItem* i, int a) {
-	size_t q = 0;
-	while(q<i->subItems.size()) {
-		FinishedItem* j = i->subItems[q];
-		int h = ctrlList.find((LPARAM)j);
-		if(h != -1)
-			ctrlList.DeleteItem(h);
-		q++;
-	}
-
-	i->collapsed = true;
-	ctrlList.SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-}
-
-void FinishedULFrame::Expand(FinishedItem* i, int a) {
-	size_t q = 0;
-	while(q < i->subItems.size()) {
-		addEntry(i->subItems[q], a + 1);
-		q++;
-	}
-
-	i->collapsed = false;
-	ctrlList.SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-	//ctrlResults.resort();
 }
 
 /**

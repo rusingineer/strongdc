@@ -103,7 +103,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
 	bool myPM = from.getUser() == ClientManager::getInstance()->getMe();
 	const User::Ptr& user = myPM ? to : replyTo;
@@ -316,7 +316,7 @@ void PrivateFrame::onEnter()
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
 				sendMessage(Text::toT(WinUtil::generateStats()));
 			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(*(OnlineUser*)NULL, _T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
+				addLine(_T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(replyTo->isOnline()) {
 					sendMessage(tstring(m));
@@ -358,11 +358,16 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	}
 }
 
-void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine) {
+void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
+	Identity i = Identity(NULL, Util::emptyString);
+    addLine(i, aLine, cf);
+}
+
+void PrivateFrame::addLine(Identity& from, const tstring& aLine) {
 	addLine(from, aLine, WinUtil::m_ChatTextGeneral );
 }
 
-void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine, CHARFORMAT2& cf) {
+void PrivateFrame::addLine(Identity& from, const tstring& aLine, CHARFORMAT2& cf) {
 	if(!created) {
 		if(BOOLSETTING(POPUNDER_PM))
 			WinUtil::hiddenCreateEx(this);
@@ -385,14 +390,14 @@ void PrivateFrame::addLine(const OnlineUser& from, const tstring& aLine, CHARFOR
 		LOG(LogManager::PM, params);
 	}
 
-	LPCSTR sMyNick;
-	if(&from) {
-		sMyNick = from.getClient().getMyNick().c_str();
-	} else {
-		sMyNick = SETTING(NICK).c_str();
-	}
+//	LPCSTR sMyNick;
+//	if(&from) {
+//		sMyNick = from.getClient().getMyNick().c_str();
+//	} else {
+	LPCSTR sMyNick = SETTING(NICK).c_str();
+//	}
 
-	bool myMess = &from && (from.getUser() == ClientManager::getInstance()->getMe());
+	bool myMess = from.getUser() == ClientManager::getInstance()->getMe();
 
 	if(BOOLSETTING(TIME_STAMPS)) {
 		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf);
@@ -543,7 +548,7 @@ void PrivateFrame::updateTitle() {
 		if(isoffline) {
 			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
-				addLine(*(OnlineUser*)NULL, status, WinUtil::m_ChatTextServer);
+				addLine(status, WinUtil::m_ChatTextServer);
 			} else {
 				addClientLine(status);
 			}
@@ -554,7 +559,7 @@ void PrivateFrame::updateTitle() {
 		setTabColor(RGB(255, 0, 0));
 		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
-			addLine(*(OnlineUser*)NULL, status, WinUtil::m_ChatTextServer);
+			addLine(status, WinUtil::m_ChatTextServer);
 		} else {
 			addClientLine(status);
 		}

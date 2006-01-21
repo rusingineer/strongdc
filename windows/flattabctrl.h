@@ -258,7 +258,11 @@ public:
 					break;
 				}
 			}
+#ifdef _STLP_DEBUG
+			if(moveLast)
+#else
 			if(moveLast && tabs.end() > 0)
+#endif
 				moveTabs(tabs.back(), true);
 			moving = NULL;
 		}
@@ -630,7 +634,7 @@ private:
 	CPen black;
 
 	typedef list<HWND> WindowList;
-	typedef WindowList::iterator WindowIter;
+	typedef WindowList::const_iterator WindowIter;
 
 	WindowList viewOrder;
 	WindowIter nextTab;

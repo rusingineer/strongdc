@@ -135,7 +135,7 @@ void FavoriteManager::addFavoriteUser(User::Ptr& aUser) {
 		if(nicks.empty())
 			nicks.push_back(Util::emptyString);
 
-		FavoriteMap::iterator i = users.insert(make_pair(aUser->getCID(), FavoriteUser(aUser, nicks[0], urls[0]))).first;
+		FavoriteMap::const_iterator i = users.insert(make_pair(aUser->getCID(), FavoriteUser(aUser, nicks[0], urls[0]))).first;
 		fire(FavoriteManagerListener::UserAdded(), i->second);
 		save();
 	}
@@ -165,7 +165,7 @@ void FavoriteManager::addFavorite(const FavoriteHubEntry& aEntry) {
 }
 
 void FavoriteManager::removeFavorite(FavoriteHubEntry* entry) {
-	FavoriteHubEntry::Iter i = find(favoriteHubs.begin(), favoriteHubs.end(), entry);
+	FavoriteHubEntry::List::iterator i = find(favoriteHubs.begin(), favoriteHubs.end(), entry);
 	if(i == favoriteHubs.end()) {
 		return;
 	}
@@ -245,7 +245,7 @@ void FavoriteManager::addRecent(const RecentHubEntry& aEntry) {
 }
 
 void FavoriteManager::removeRecent(const RecentHubEntry* entry) {
-	RecentHubEntry::Iter i = find(recentHubs.begin(), recentHubs.end(), entry);
+	RecentHubEntry::List::iterator i = find(recentHubs.begin(), recentHubs.end(), entry);
 	if(i == recentHubs.end()) {
 		return;
 	}
@@ -482,9 +482,13 @@ void FavoriteManager::load() {
 	
 	// Add NMDC standard op commands
 	static const char kickstr[] = 
-		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[line:Reason]|<%[myNI]> %[myNI] is kicking %[userNI] because: %[line:Reason]|$Kick %[userNI]|";
+		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[kickline:Reason]|<%[myNI]> %[myNI] is kicking %[userNI] because: %[line:Reason]|$Kick %[userNI]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(KICK_USER), kickstr, "op");
+	static const char kickfilestr[] = 
+		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[kickline:Reason] %[fileFN]|<%[myNI]> is kicking %[userNI] because: %[kickline:Reason] %[fileFN]|$Kick %[userNI]|";
+	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
+		STRING(KICK_USER_FILE), kickfilestr, "op");
 	static const char redirstr[] =
 		"$OpForceMove $Who:%[userNI]$Where:%[line:Target Server]$Msg:%[line:Message]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
@@ -791,7 +795,7 @@ void FavoriteManager::on(UserConnected, const User::Ptr& user) throw() {
 	bool isFav = false;
 	{
 		Lock l(cs);
-		FavoriteMap::iterator i = users.find(user->getCID());
+		FavoriteMap::const_iterator i = users.find(user->getCID());
 		if(i != users.end()) {
 			isFav = true;
 		}

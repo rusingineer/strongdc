@@ -119,7 +119,7 @@ void PopupManager::AutoRemove(){
 	}
 
 	//check all popups and see if we need to remove anyone
-	PopupIter i = popups.begin();
+	PopupList::const_iterator i = popups.begin();
 	for(; i != popups.end(); ++i) {
 
 		if((*i)->visible + 5 * 1000 < GET_TICK()) {

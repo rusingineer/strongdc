@@ -195,7 +195,7 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
-	void addLine(const OnlineUser& u, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
+	void addLine(Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
 	void addClientLine(const tstring& aLine, bool inChat = true);
 	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
@@ -262,7 +262,7 @@ public:
 	}
 
 	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		client->disconnect();
+		client->disconnect(false);
 		clearUserList();
 		client->connect();
 		return 0;
@@ -338,8 +338,8 @@ private:
 
 	class MessageInfo {
 	public:
-		MessageInfo(const OnlineUser& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
-		const OnlineUser& from;
+		MessageInfo(Identity from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
+		Identity from;
 		User::Ptr to;
 		User::Ptr replyTo;
 		tstring msg;
@@ -386,7 +386,7 @@ private:
 	}
 
 	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
-	typedef FrameMap::iterator FrameIter;
+	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
 	tstring redirect;
@@ -447,9 +447,9 @@ private:
 	bool tabMenuShown;
 
 	typedef vector<pair<UpdateInfo, Speakers> > UpdateList;
-	typedef UpdateList::iterator UpdateIter;
+	typedef UpdateList::const_iterator UpdateIter;
 	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
-	typedef UserMap::iterator UserMapIter;
+	typedef UserMap::const_iterator UserMapIter;
 
 	UserMap userMap;
 	UpdateList updateList;
@@ -520,7 +520,7 @@ private:
 		updateList.push_back(make_pair(UpdateInfo(u), s));
 		updateUsers = true;
 	};
-	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(from, to, replyTo, line)); };
+	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(&from ? from.getIdentity() : Identity(NULL, Util::emptyString), to, replyTo, line)); };
 
 };
 

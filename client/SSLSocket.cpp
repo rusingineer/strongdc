@@ -157,6 +157,9 @@ void SSLSocket::accept(const Socket& listeningSocket) throw(SocketException) {
 }
 
 int SSLSocket::read(void* aBuffer, int aBufLen) throw(SocketException) {
+	if(!ssl) {
+		return -1;
+	}
 	int len = checkSSL(SSL_read(ssl, aBuffer, aBufLen));
 
 	if(len > 0) {
@@ -164,10 +167,12 @@ int SSLSocket::read(void* aBuffer, int aBufLen) throw(SocketException) {
 		dcdebug("In(s): %.*s\n", len, (char*)aBuffer);
 	}
 	return len;
-
 }
 
 int SSLSocket::write(const void* aBuffer, int aLen) throw(SocketException) {
+	if(!ssl) {
+		return -1;
+	}
 	int ret = checkSSL(SSL_write(ssl, aBuffer, aLen));
 	if(ret > 0) {
 		stats.totalUp += ret;
@@ -177,6 +182,9 @@ int SSLSocket::write(const void* aBuffer, int aLen) throw(SocketException) {
 }
 
 int SSLSocket::checkSSL(int ret) throw(SocketException) {
+	if(!ssl) {
+		return -1;
+	}
 	if(ret <= 0) {
 		int err = SSL_get_error(ssl, ret);
 		switch(SSL_get_error(ssl, ret)) {
@@ -186,10 +194,8 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 				return -1;
 			default:
 				{
-					if(ssl) {
-						SSL_free(ssl);
-						ssl = 0;
-					}
+					SSL_free(ssl);
+					ssl = 0;
 					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
 					char errbuf[80];
 					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate

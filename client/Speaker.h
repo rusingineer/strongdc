@@ -28,11 +28,11 @@
 template<typename Listener>
 class Speaker {
 	typedef vector<Listener*> ListenerList;
-	typedef typename ListenerList::iterator ListenerIter;
+	typedef typename ListenerList::const_iterator ListenerIter;
 
 public:
 	Speaker() throw() { };
-	virtual ~Speaker() throw() { };
+	virtual ~Speaker() throw() { dcassert(listeners.empty()); };
 
 	template<typename T0>
 	void fire(T0 type) throw() {
@@ -114,7 +114,8 @@ public:
 
 	void removeListener(Listener* aListener) {
 		Lock l(listenerCS);
-		ListenerIter it = find(listeners.begin(), listeners.end(), aListener);
+		ListenerList::iterator it = find(listeners.begin(), listeners.end(), aListener);
+		dcassert(it != listeners.end());
 		if(it != listeners.end())
 			listeners.erase(it);
 	}

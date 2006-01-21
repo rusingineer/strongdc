@@ -184,11 +184,11 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
 		qi->chunkInfo = pChunksInfo;
 
-		if(pChunksInfo && !verifiedBlocks.empty()){
+		if(pChunksInfo && verifiedBlocks != Util::emptyString){
 			vector<u_int16_t> v;
 			toIntList<u_int16_t>(verifiedBlocks, v);
 
-			for(vector<u_int16_t>::iterator i = v.begin(); i + 1 < v.end(); i++, i++)
+			for(vector<u_int16_t>::iterator i = v.begin(); i < v.end(); i++, i++)
 				pChunksInfo->markVerifiedBlock(*i, *(i+1));
 		}
 	}
@@ -304,10 +304,19 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-inline bool hasFreeSegments(QueueItem* qi) {
-	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
-				((qi->getCurrents().size() < qi->getMaxSegments()) &&
-				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
+inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
+	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) return true;
+
+	switch(qi->chunkInfo->findChunk((*qi->getSource(aUser))->getPartialInfo(), aUser->getLastDownloadSpeed())) {
+		case 0: return false;
+		case 1:	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
+					((qi->getCurrents().size() < qi->getMaxSegments()) &&
+					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
+		case 2: return true; // need testing, whether it will be really overlapped.
+		default:
+			dcassert(0);
+	}
+	return false;	
 }
 
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
@@ -323,7 +332,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = hasFreeSegments(found);
+			bool freeSegments = hasFreeSegments(found, aUser);
 
 			if(freeSegments && (pNext == NULL || fNext)) {
 				dcassert(found != next);
@@ -341,7 +350,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	                fNext = true;   // found, next is target
 	
 					iQi++;
-					if((iQi != i->second.end()) && hasFreeSegments(*iQi)) {
+					if((iQi != i->second.end()) && hasFreeSegments(*iQi, aUser)) {
 						dcassert(*iQi != next);
 						return *iQi;
 					}
@@ -359,7 +368,7 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) 
 	dcassert(qi->isSource(aUser));
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
-		QueueItem::UserListIter j = ulm.find(aUser);
+		QueueItem::UserListMap::iterator j = ulm.find(aUser);
 		dcassert(j != ulm.end());
 		QueueItem::List& l = j->second;
 		dcassert(find(l.begin(), l.end(), qi) != l.end());
@@ -451,7 +460,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const User::Ptr& aUser) {
 	} else {
 		dcassert(qi->isSource(aUser));
 		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
-		QueueItem::UserListIter j = ulm.find(aUser);
+		QueueItem::UserListMap::iterator j = ulm.find(aUser);
 		dcassert(j != ulm.end());
 		QueueItem::List& l = j->second;
 		dcassert(find(l.begin(), l.end(), qi) != l.end());
@@ -617,11 +626,10 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 		return;
 	}
 
-/** @todo
-	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive()) {
+	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getIdentity(aUser).getHubUrl())) {
 		throw QueueException(STRING(NO_DOWNLOADS_FROM_PASSIVE));
 	}
-*/	
+	
 	{
 		Lock l(cs);
 
@@ -758,8 +766,7 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	if(utf8)
 		s->setFlag(QueueItem::Source::FLAG_UTF8);
 
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
-	if(aUser->isSet(User::PASSIVE) && (&ou && !ClientManager::getInstance()->isActive(&ou.getClient())) ) {
+	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getIdentity(aUser).getHubUrl())) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) || (qi->getStatus() != QueueItem::STATUS_RUNNING)) {
@@ -941,7 +948,7 @@ bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSiz
 	aTarget = qi->getTarget();
 	aSize = qi->getSize();
 	aFlags = qi->getFlags();
-	aFileList = qi->isSet(QueueItem::FLAG_USER_LIST);
+	aFileList = qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR);
 	aSegmented = qi->isSet(QueueItem::FLAG_MULTI_SOURCE);
 
 	return true;
@@ -966,7 +973,7 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 			break;
 		}
 	case SettingsManager::SEGMENT_ON_CONNECTION : {
-		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) {
+/*		if (SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) {
 			MaxSegments = 2;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) {
 			MaxSegments = 3;
@@ -982,8 +989,8 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 			MaxSegments = 8;
 		} else if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) {
 			MaxSegments = 10;
-		}
-			break;
+		}*/
+		break;
 		}
 	case SettingsManager::SEGMENT_MANUAL : {
 			MaxSegments = min(SETTING(NUMBER_OF_SEGMENTS), 10);
@@ -1000,11 +1007,11 @@ int QueueManager::FileQueue::getMaxSegments(string filename, int64_t filesize) {
 		}
 	}
 
-#ifdef _DEBUG
-	return 500;
-#else
+//#ifdef _DEBUG
+//	return 500;
+//#else
 	return MaxSegments;
-#endif
+//#endif
 }
 
 void QueueManager::getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
@@ -1052,7 +1059,7 @@ again:
 			return NULL;
 
 		if((SETTING(FILE_SLOTS) != 0) && (q->getStatus() == QueueItem::STATUS_WAITING) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
-			!q->isSet(QueueItem::FLAG_MP3_INFO) && !q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (unsigned int)SETTING(FILE_SLOTS))) {
+			!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (unsigned int)SETTING(FILE_SLOTS))) {
 			message = STRING(ALL_FILE_SLOTS_TAKEN);
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;
@@ -1065,11 +1072,10 @@ again:
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		dcassert(!q->getTempTarget().empty());
 
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), &ou ? Util::toInt64(ou.getIdentity().get("US")) : 0);
+			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {
-			freeBlock = q->chunkInfo->getChunk(&ou ? Util::toInt64(ou.getIdentity().get("US")) : 0);
+			freeBlock = q->chunkInfo->getChunk(aUser->getLastDownloadSpeed());
 		}
 
 		if(freeBlock < 0) {
@@ -1211,7 +1217,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 					}
 
 					if(removeSegment && (q->getPriority() != QueueItem::PAUSED)) {
-						for(QueueItem::Source::Iter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
+						for(QueueItem::Source::ConstIter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
 							if((*j)->getUser()->isOnline() && false == q->isCurrent((*j)->getUser())) {
 								getConn.push_back((*j)->getUser());
 							}
@@ -1251,11 +1257,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool removeSe
 		}
 
 		int64_t speed = aDownload->getAverageSpeed();
-		
-		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760) {
-			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aDownload->getUserConnection()->getUser());
-			if(&ou)
-				ou.getIdentity().set("US", Util::toString(speed));
+		if(speed > 0 && aDownload->getTotal() > 32 * 1024 && speed < 10 * 1024 * 1024){
+			aDownload->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)speed);
 		}
 		
 		checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
@@ -1460,11 +1463,11 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 			} else {
 				running = true;
 				if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-					for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
+					for(QueueItem::Source::ConstIter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
 						if(!q->isCurrent((*i)->getUser())) userQueue.remove(q, (*i)->getUser());
 					}
 					q->setPriority(p);
-					for(QueueItem::Source::Iter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
+					for(QueueItem::Source::ConstIter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
 						if(!q->isCurrent((*i)->getUser())) userQueue.add(q, (*i)->getUser());
 					}
 				} else {
@@ -1523,7 +1526,7 @@ void QueueManager::saveQueue() throw() {
 			Lock l(cs);
 			for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 				QueueItem* qi = i->second;
-				if((!qi->isSet(QueueItem::FLAG_USER_LIST)) && (!qi->isSet(QueueItem::FLAG_TESTSUR)) && (!qi->isSet(QueueItem::FLAG_MP3_INFO))) {
+				if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 					f.write(STRINGLEN("\t<Download Target=\""));
 					f.write(CHECKESCAPE(qi->getTarget()));
 					f.write(STRINGLEN("\" Size=\""));
@@ -1874,6 +1877,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 		if(autoDrop) {
 			// Don't drop only downloading source
 			if(q->getCurrents().size() < 2) return false;
+			if((q->getAverageSpeed() > 0) && (2*d->getRunningAverage() > q->getAverageSpeed())) return false;
 
 		    userQueue.setWaiting(q, aUser);
 			userQueue.remove(q, aUser);

@@ -60,14 +60,14 @@ public:
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
-	UserInfo(const UpdateInfo& u, Client* c) : UserInfoBase(u.user), client(c) { 
+	UserInfo(const UpdateInfo& u) : UserInfoBase(u.user) { 
 		update(u.identity, -1); 
 	};
 	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
 	int imageIndex() {
-		return WinUtil::getImage(identity, client);
+		return WinUtil::getImage(identity);
 	}
 
 	bool update(const Identity& identity, int sortCol);
@@ -75,7 +75,6 @@ public:
 	tstring columns[COLUMN_LAST];
 	GETSET(Identity, identity, Identity);
 	GETSET(int64_t, bytes, Bytes);
-	GETSET(Client*, client, Client);
 };
 
 #endif //USERINFO_H

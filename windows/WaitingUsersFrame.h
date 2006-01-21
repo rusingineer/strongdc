@@ -220,6 +220,7 @@ private:
 		PostMessage(WM_SPEAKER, REMOVE, (LPARAM) new UserInfoBase(aUser));
 	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
+		aUQI->inc();
 		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
 	}
 	virtual void on(UploadManagerListener::QueueUpdate) throw() {

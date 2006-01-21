@@ -35,7 +35,7 @@
 class StringSearch {
 public:
 	typedef vector<StringSearch> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	explicit StringSearch(const string& aPattern) throw() : pattern(Text::toLower(aPattern)) { 
 		initDelta1();

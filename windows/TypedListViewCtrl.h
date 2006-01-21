@@ -57,7 +57,7 @@ public:
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
 		MESSAGE_HANDLER(WM_MENUCOMMAND, onHeaderMenu)
-		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
+		MESSAGE_HANDLER(WM_CHAR, onChar)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
@@ -107,6 +107,19 @@ public:
 		int cur;
 		int cnt;
 	};
+
+	LRESULT onChar(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+		if((GetKeyState(VkKeyScan('A') & 0xFF) & 0xFF00) > 0 && (GetKeyState(VK_CONTROL) & 0xFF00) > 0){
+			int count = GetItemCount();
+			for(int i = 0; i < count; ++i)
+				ListView_SetItemState(m_hWnd, i, LVIS_SELECTED, LVIS_SELECTED);
+
+			return 0;
+		}
+		
+		bHandled = FALSE;
+		return 1;
+	}
 
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
@@ -525,19 +538,6 @@ public:
 		}
 	}
 
-	LRESULT onChar(UINT /*msg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-		if((GetKeyState(VkKeyScan('A') & 0xFF) & 0xFF00) > 0 && (GetKeyState(VK_CONTROL) & 0xFF00) > 0){
-			int count = GetItemCount();
-			for(int i = 0; i < count; ++i)
-				ListView_SetItemState(m_hWnd, i, LVIS_SELECTED, LVIS_SELECTED);
-
-			return 0;
-		}
-		
-		bHandled = FALSE;
-		return 1;
-	}
-
 	//find the current position for the column that was inserted at the specified pos
 	int findColumn(int col){
 		TCHAR *buf = new TCHAR[512];
@@ -579,7 +579,7 @@ private:
 	}
 
 	typedef vector< ColumnInfo* > ColumnList;
-	typedef ColumnList::iterator ColumnIter;
+	typedef ColumnList::const_iterator ColumnIter;
 
 	ColumnList columnList;
 
@@ -715,7 +715,7 @@ public:
 			size_t q = 0;
 			i->collapsed = false;
 			while(q < i->subItems.size()) {
-				i->subItems[q]->update();
+//				i->subItems[q]->update();
 				insertSubItem(i->subItems[q], a + 1);
 				++q;
 			}
@@ -763,7 +763,7 @@ public:
 			mainItem = item->createMainItem();
 			mainItems.push_back(mainItem);
 
-			mainItem->mainItem = true;
+			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
 
 			if(mainItem != item) {
@@ -777,7 +777,6 @@ public:
 
 		mainItem->subItems.push_back(item);
 		item->main = mainItem;
-		item->mainItem = false;
 		item->updateMainItem();
 
 		if(pos != -1) {
@@ -814,7 +813,7 @@ public:
 	}
 
 	void removeGroupedItem(T* s, bool removeFromMemory = true) {
-		if(s->mainItem) {
+		if(!s->main) {
 			removeMainItem(s);
 		} else {
 			T::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
@@ -855,7 +854,7 @@ public:
 	}
 
 	void deleteAllItems() {
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
+		for(TreeItem::const_iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
 			T* si =  *i;
 			unsigned int q = 0;
 			while(q < si->subItems.size()) {
@@ -953,7 +952,7 @@ private:
 
 	static int compareItems(T* a, T* b, int col) {
 		// Copyright (C) Liny, RevConnect
-		if(a->mainItem == b->mainItem){
+/*		if(a->mainItem == b->mainItem){
 
 			// both are children with diffent mother, compare their monther
 			if(a->mainItem == false && a->main != b->main)
@@ -975,8 +974,27 @@ private:
 		if(b->mainItem == false && b->main != a)
 			return T::compareItems(a, b->main, col);
 
-		dcassert(0);
-		return 0;
+		dcassert(0);*/
+		// both are children
+		if(a->main && b->main){
+			// different parent
+			if(a->main != b->main)
+				return compareItems(a->main, b->main, col);			
+		}else{
+			if(a->main == b)
+				return 2;  // a should be displayed below b
+
+			if(b->main == a)
+				return -2; // b should be displayed below a
+
+			if(a->main)
+				return compareItems(a->main, b, col);	
+
+			if(b->main)
+				return compareItems(a, b->main, col);	
+		}
+
+		return T::compareItems(a, b, col);
 	}
 
 	CImageList states;

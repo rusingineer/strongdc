@@ -44,7 +44,7 @@ class NmdcHub : public Client, private TimerManagerListener, private Flags
 public:
 	typedef NmdcHub* Ptr;
 	typedef list<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	enum SupportFlags {
 		SUPPORTS_USERCOMMAND = 0x01,
@@ -78,7 +78,7 @@ public:
 
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
-	void disconnect() throw();
+	virtual void disconnect(bool graceless) throw();
 	void myInfo();
 
 	void refreshUserList(bool unknownOnly = false);
@@ -125,7 +125,7 @@ private:
 	mutable CriticalSection cs;
 
 	typedef HASH_MAP_X(string, OnlineUser*, noCaseStringHash, noCaseStringEq, noCaseStringLess) NickMap;
-	typedef NickMap::iterator NickIter;
+	typedef NickMap::const_iterator NickIter;
 
 	NickMap users;
 
@@ -136,7 +136,7 @@ private:
 	bool PtokaX, YnHub;
 
 	typedef list<pair<string, u_int32_t> > FloodMap;
-	typedef FloodMap::iterator FloodIter;
+	typedef FloodMap::const_iterator FloodIter;
 	FloodMap seekers;
 	FloodMap flooders;
 
@@ -147,7 +147,7 @@ private:
 	NmdcHub(const NmdcHub&);
 	NmdcHub& operator=(const NmdcHub&);
 
-	void connect();
+	virtual void connect();
 
 	void clearUsers();
 	void ZLine(char* aLine, int iaLineLen) throw();

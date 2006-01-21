@@ -79,14 +79,6 @@ void startup(void (*f)(void*, const string&), void* p) {
 	SSLSocketFactory::getInstance()->loadCertificates();
 	ClientProfileManager::getInstance()->load();	
 	WebServerManager::newInstance();
-	int i;
-	for(i = 0; i < SettingsManager::SPEED_LAST; i++) {
-		if(SETTING(CONNECTION) == SettingsManager::connectionSpeeds[i])
-			break;
-	}
-	if(i == SettingsManager::SPEED_LAST) {
-		SettingsManager::getInstance()->set(SettingsManager::CONNECTION, SettingsManager::connectionSpeeds[0]);
-	}
 
 	if(f != NULL)
 		(*f)(p, STRING(HASH_DATABASE));
@@ -104,7 +96,7 @@ void shutdown() {
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
 
-	TimerManager::getInstance()->removeListeners();
+	//TimerManager::getInstance()->removeListeners();
 
 	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();

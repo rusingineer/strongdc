@@ -69,7 +69,7 @@ public:
 		ctrlList.GetClientRect(rc);
 		ctrlList.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() - 4, 0);
 		StringList lists(FavoriteManager::getInstance()->getHubLists());
-		for(StringList::iterator idx = lists.begin(); idx != lists.end(); ++idx) {
+		for(StringList::const_iterator idx = lists.begin(); idx != lists.end(); ++idx) {
 			ctrlList.insert(ctrlList.GetItemCount(), Text::toT(*idx));
 		}
 

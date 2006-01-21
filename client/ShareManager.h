@@ -127,7 +127,7 @@ private:
 				bool operator()(const File& a, const File& b) const { return (Util::stricmp(a.getName(), b.getName()) < 0); }
 			};
 			typedef set<File, FileLess> Set;
-			typedef Set::iterator Iter;
+			typedef Set::const_iterator Iter;
 
 			File() : size(0), parent(NULL) { };
 			File(const string& aName, int64_t aSize, Directory* aParent, const TTHValue& aRoot) : 
@@ -153,7 +153,7 @@ private:
 
 		typedef Directory* Ptr;
 		typedef HASH_MAP<string, Ptr> Map;
-		typedef Map::iterator MapIter;
+		typedef Map::const_iterator MapIter;
 
 		int64_t size;
 		Map directories;
@@ -266,11 +266,10 @@ private:
 	bool update;
 	bool initial;
 
-	//used to check if we've already started a refresh
-	__declspec(align(4)) volatile long refreshing;
-	
 	int listN;
 
+	volatile long refreshing;
+	
 	File* lFile;
 	File* xFile;
 

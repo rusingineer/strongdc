@@ -78,7 +78,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIR, onDownloadWhole)
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIRTO, onDownloadWholeTo)
 		COMMAND_ID_HANDLER(IDC_VIEW_AS_TEXT, onViewAsText)
-		COMMAND_ID_HANDLER(IDC_MP3, onMP3Info)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
 		COMMAND_ID_HANDLER(IDC_SEARCH, onSearch)
 		COMMAND_ID_HANDLER(IDC_SEARCH_PAUSE, onPause)
@@ -181,11 +180,6 @@ public:
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			ctrlResults.removeGroupedItem(ctrlResults.getItemData(i));
 		}
-	}
-	
-	LRESULT onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelected(&SearchInfo::GetMP3Info);
-		return 0;
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -308,11 +302,11 @@ private:
 
 		typedef SearchInfo* Ptr;
 		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
+		typedef List::const_iterator Iter;
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), mainItem(false), main(NULL) { 
+		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), main(NULL) { 
 			sr->incRef(); update();
 		};
 		~SearchInfo() { 
@@ -320,14 +314,12 @@ private:
 		};
 
 		bool collapsed;
-		bool mainItem;
 		SearchInfo* main;
 
 		void getList();
 		void browseList();
 
 		void view();
-		void GetMP3Info();
 		struct Download {
 			Download(const tstring& aTarget) : tgt(aTarget) { };
 			void operator()(SearchInfo* si);
@@ -407,16 +399,16 @@ private:
 				if( (tmp == "28.8Kbps") ||
 					(tmp == "33.6Kbps") ||
 					(tmp == "56Kbps") ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) ) {
+					(tmp == "Modem") ||
+					(tmp == "Satellite") ||
+					(tmp == "Wireless") ||
+					(tmp == "ISDN") ) {
 					image = 1;
-				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) ) {
+				} else if( (tmp == "Cable") ||
+					(tmp == "DSL") ) {
 					image = 2;
-				} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
-					(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
+				} else if( (tmp == "LAN T1") ||
+					(tmp == "LAN T3") ) {
 					image = 3;
 				}
 				if(sr->getType() == SearchResult::TYPE_FILE)

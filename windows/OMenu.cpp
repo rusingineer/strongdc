@@ -71,6 +71,10 @@ void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const string& caption, 
 	if (!accels)
 		while ((i = mi->text.find('&')) != string::npos)
 			mi->text.erase(i, i+1);
+
+	if(mi->text.length() > 20) {
+		mi->text = mi->text.substr(0, 20) + "...";
+	}
 	mi->parent = this;
 	items.push_back(mi);
 	MENUITEMINFO mii;

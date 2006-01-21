@@ -45,7 +45,7 @@ public:
 			}
 		};
 		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
+		typedef List::const_iterator Iter;
 		
 		File(Directory* aDir, const string& aName, int64_t aSize, const string& aTTH) throw() : 
 			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH)), adls(false) { };
@@ -79,7 +79,7 @@ public:
 			}
 		};
 		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
+		typedef List::const_iterator Iter;
 		
 		List directories;
 		File::List files;
@@ -140,7 +140,6 @@ public:
 	void download(const string& aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::DEFAULT);
 	void download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio = QueueItem::DEFAULT);
 	void download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio = QueueItem::DEFAULT);
-	void downloadMP3(File* aFile, const string& aTarget);
 
 	string getPath(const Directory* d) const;
 	string getPath(const File* f) const { return getPath(f->getParent()); }

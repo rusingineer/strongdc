@@ -34,7 +34,7 @@ FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 {
     Lock l(hMutexMapList);
 
-	for(vector<Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
+	for(vector<Ptr>::const_iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if((*i)->tempTargetName == name){
 			return (*i);
 		}
@@ -136,7 +136,7 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 
 void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 {
-	map<int64_t, Chunk*>::iterator i = running.find(chunk);
+	map<int64_t, Chunk*>::const_iterator i = running.find(chunk);
 
 	if(i == running.end()){
 		dcassert(0);
@@ -148,6 +148,80 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 	if(noStealth) {
 		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, iFileSize - i->second->pos)));
 	}
+}
+
+int FileChunksInfo::findChunk(const PartsInfo& partialInfo, int64_t _speed) {
+	//  0 no free block
+	//  1 start block only when max chunk number isn't exceeded
+	//  2 start overlapped chunk
+	if(!partialInfo.empty()) return 1;
+
+	Chunk* chunk = NULL;
+	
+	if(_speed == 0) _speed = DEFAULT_SPEED;
+	
+	Lock l(cs);
+	
+	if(!waiting.empty()) return 1;
+	if(running.empty()) return 0;
+
+	// find the max time-left running chunk
+	Chunk*  maxChunk = NULL;
+	int64_t maxTimeLeft = 0;
+	int64_t speed;
+
+	for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
+	{
+		chunk = i->second;
+
+		if((chunk->end - chunk->pos) < minChunkSize*2)
+			continue;
+
+		if(chunk->pos > i->first){
+			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
+			if(speed == 0) speed = 1;
+		}else{
+			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
+			if(speed == 0) speed = DEFAULT_SPEED;
+		}
+		
+		int64_t timeLeft = (chunk->end - chunk->pos) / speed;
+
+		if(timeLeft > maxTimeLeft){
+			maxTimeLeft = timeLeft;
+			maxChunk = chunk;
+		}
+	}
+
+	// all running chunks are unbreakable (timeleft < 15 sec)
+	// try overlapped download the pending chunk
+	if(maxTimeLeft < 15){
+		for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
+		{
+			chunk = i->second;
+			if(chunk->pos == i->first){
+				return 2;
+			}
+		}
+		return 0;
+	}
+
+	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
+
+	if(speed == 0 && maxChunk->download){
+		speed = maxChunk->download->getUser()->getLastDownloadSpeed();
+	}
+
+	if(speed == 0){
+		speed = DEFAULT_SPEED;
+	}
+
+	double x = 1.0 + (double)_speed / (double)speed;
+
+	// too lag than orignal source
+	if(x < 1.01) return 0;
+
+	return 1;
 }
 
 int64_t FileChunksInfo::getChunk(int64_t _speed)
@@ -179,7 +253,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 	int64_t maxTimeLeft = 0;
 	int64_t speed;
 
-	for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
+	for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
 	{
 		chunk = i->second;
 
@@ -190,7 +264,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
 			if(speed == 0) speed = 1;
 		}else{
-			speed = (chunk->download && chunk->download->getUser()) ? Util::toInt64(chunk->download->getUser()->getIdentity().get("US")) : DEFAULT_SPEED;
+			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
 			if(speed == 0) speed = DEFAULT_SPEED;
 		}
 		
@@ -205,7 +279,7 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 	// all running chunks are unbreakable (timeleft < 15 sec)
 	// try overlapped download the pending chunk
 	if(maxTimeLeft < 15){
-		for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
+		for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
 		{
 			chunk = i->second;
 			if(chunk->pos == i->first){
@@ -223,8 +297,8 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
 
-	if(speed == 0 && maxChunk->download && maxChunk->download->getUser()){
-		speed = Util::toInt64(maxChunk->download->getUser()->getIdentity().get("US"));
+	if(speed == 0 && maxChunk->download){
+		speed =  maxChunk->download->getUser()->getLastDownloadSpeed();
 	}
 
 	if(speed == 0){
@@ -336,7 +410,7 @@ string FileChunksInfo::getFreeChunksString()
 	dcdebug("After merge : %d\n", tmp.size());
 
 	string ret;
-	for(vector<int64_t>::iterator i = tmp.begin(); i != tmp.end(); i++)
+	for(vector<int64_t>::const_iterator i = tmp.begin(); i != tmp.end(); i++)
 		ret += Util::toString(*i) + " ";
 
 	return ret;
@@ -348,7 +422,7 @@ string FileChunksInfo::getVerifiedBlocksString()
 
 	string ret;
 
-	for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); i++)
+	for(BlockMap::const_iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); i++)
 		ret += Util::toString(i->first) + " " + Util::toString(i->second) + " ";
 
 	return ret;
@@ -359,7 +433,7 @@ inline void FileChunksInfo::dumpVerifiedBlocks()
 #ifdef _DEBUG
 	dcdebug("verifiedBlocks: (%d)\n", verifiedBlocks.size());
 
-	BlockMap::iterator i = verifiedBlocks.begin();
+	BlockMap::const_iterator i = verifiedBlocks.begin();
 	for(;i != verifiedBlocks.end(); i++)
 		dcdebug("   %hu, %hu\n", i->first, i->second);
 #endif
@@ -489,7 +563,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 
 	{
 		Lock l(cs);
-		for(vector<int64_t>::iterator i = CorruptedBlocks.begin(); i != CorruptedBlocks.end(); ++i, ++i) {
+		for(vector<int64_t>::const_iterator i = CorruptedBlocks.begin(); i != CorruptedBlocks.end(); ++i, ++i) {
 			waiting.insert(make_pair(*i, new Chunk(*i, *(i+1))));
 		}
 
@@ -603,7 +677,7 @@ bool FileChunksInfo::isSource(const PartsInfo& partsInfo)
 
 	dcassert(partsInfo.size() % 2 == 0);
 	
-	BlockMap::iterator i  = verifiedBlocks.begin();
+	BlockMap::const_iterator i  = verifiedBlocks.begin();
 	for(PartsInfo::const_iterator j = partsInfo.begin(); j != partsInfo.end(); j+=2){
 		while(i != verifiedBlocks.end() && i->second <= *j)
 			i++;
@@ -622,7 +696,7 @@ void FileChunksInfo::getPartialInfo(PartsInfo& partialInfo){
 	size_t maxSize = min(verifiedBlocks.size() * 2, (size_t)510);
 	partialInfo.reserve(maxSize);
 
-	BlockMap::iterator i = verifiedBlocks.begin();
+	BlockMap::const_iterator i = verifiedBlocks.begin();
 	for(; i != verifiedBlocks.end() && partialInfo.size() < maxSize; i++){
 		partialInfo.push_back(i->first);
 		partialInfo.push_back(i->second);
@@ -659,9 +733,9 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 		posArray.push_back(min(iFileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
 
 	// Check waiting chunks
-	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++){
+	for(Chunk::Map::iterator i = waiting.begin(); i != waiting.end(); i++){
 		Chunk* chunk = i->second;
-		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
+		for(vector<int64_t>::const_iterator j = posArray.begin(); j < posArray.end(); j+=2){
 			if( (*j <= chunk->pos && chunk->pos < *(j+1)) || (chunk->pos <= *j && *j < chunk->end) ){
 				int64_t b = max(chunk->pos, *j);
 				int64_t e = min(chunk->end, *(j+1));
@@ -703,7 +777,7 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 
 		dcassert(b > i->second->pos);
 
-		for(vector<int64_t>::iterator j = posArray.begin(); j < posArray.end(); j+=2){
+		for(vector<int64_t>::const_iterator j = posArray.begin(); j < posArray.end(); j+=2){
 			int64_t bb = max(*j, b);
 			int64_t ee = min(*(j+1), e);
 
@@ -738,7 +812,7 @@ bool FileChunksInfo::isVerified(int64_t startPos, int64_t& len){
 
 	Lock l(cs);
 
-	BlockMap::iterator i  = verifiedBlocks.begin();
+	BlockMap::const_iterator i  = verifiedBlocks.begin();
 	for(; i != verifiedBlocks.end(); i++)
 	{
 		int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
@@ -895,7 +969,7 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - dow
 		}
 		break;
 	case 2 :
-		for(BlockMap::iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); ++i) {
+		for(BlockMap::const_iterator i = verifiedBlocks.begin(); i != verifiedBlocks.end(); ++i) {
 			v.push_back((int64_t)i->first * (int64_t)tthBlockSize);
 			v.push_back((int64_t)i->second * (int64_t)tthBlockSize);
 		}

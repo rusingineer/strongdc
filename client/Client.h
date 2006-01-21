@@ -82,14 +82,14 @@ class Client : public Speaker<ClientListener>, public BufferedSocketListener {
 public:
 	typedef Client* Ptr;
 	typedef list<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	Client(const string& hubURL, char separator, bool secure_);
 	virtual ~Client() throw();
 
 	virtual void connect();
 	bool isConnected() const { return socket && socket->isConnected(); }
-	void disconnect() { if(socket) socket->disconnect(); }
+	void disconnect(bool graceless) { if(socket) socket->disconnect(graceless); }
 
 	virtual void connect(const OnlineUser& user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
@@ -110,7 +110,7 @@ public:
 	short getPort() const { return port; }
 	const string& getAddress() const { return address; }
 
-	const string& getIp() const { return socket->getIp().empty() ? getAddress() : socket->getIp(); };
+	const string& getIp() const { return (!socket || socket->getIp().empty()) ? getAddress() : socket->getIp(); };
 	string getIpPort() const { return getIp() + ':' + Util::toString(port); };
 	string getLocalIp() const;
 
@@ -149,10 +149,13 @@ public:
 		return sm;
 	}
 
-	int getMode();
+	bool isActive();
+
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
 		dcassert(socket);
+		if(!socket)
+			return;
 		updateActivity();
 		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
@@ -179,7 +182,7 @@ public:
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
-	//GETSET(string, ip, IP);
+	GETSET(string, favIp, FavIp);
 	//GETSET(int, supportFlags, SupportFlags);
 
 	int supportFlags;

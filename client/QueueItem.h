@@ -38,14 +38,14 @@ public:
 	typedef QueueItem* Ptr;
 	// Strange, the vc7 optimizer won't take a deque here...
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 	typedef map<string*, Ptr, noCaseStringLess> StringMap;
 	//	typedef HASH_MAP<string, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
-	typedef StringMap::iterator StringIter;
+	typedef StringMap::const_iterator StringIter;
 	typedef HASH_MAP_X(User::Ptr, Ptr, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
-	typedef UserMap::iterator UserIter;
+	typedef UserMap::const_iterator UserIter;
 	typedef HASH_MAP_X(User::Ptr, List, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserListMap;
-	typedef UserListMap::iterator UserListIter;
+	typedef UserListMap::const_iterator UserListIter;
 
 	enum Status {
 		/** The queue item is waiting to be downloaded and can be found in userQueue */
@@ -84,12 +84,14 @@ public:
 		FLAG_MATCH_QUEUE = 0x80,
 		/** The file list downloaded was actually an .xml.bz2 list */
 		FLAG_XML_BZLIST = 0x200,
-		/** MP3 Info */
-		FLAG_MP3_INFO = 0x400,
-		FLAG_TESTSUR = 0x800,
-		FLAG_CHECK_FILE_LIST = 0x1000,
-		FLAG_MULTI_SOURCE = 0x2000,
-		FLAG_AUTODROP = 0x4000
+		/** Test user for slotlocker */
+		FLAG_TESTSUR = 0x400,
+		/** Test user's file list for fake share */
+		FLAG_CHECK_FILE_LIST = 0x800,
+		/** The file can be downloaded from multiple sources simultaneously */
+		FLAG_MULTI_SOURCE = 0x1000,
+		/** Autodrop slow source is enabled for this file */
+		FLAG_AUTODROP = 0x2000
 	};
 
 	class Source : public Flags, public FastAlloc<Source> {
@@ -148,7 +150,7 @@ public:
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
 		}
-		if(isSet(FLAG_USER_LIST) || isSet(FLAG_MP3_INFO) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
+		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
 		if(tth != NULL) {

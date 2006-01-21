@@ -47,7 +47,7 @@ void ResourceManager::loadLanguage(const string& aFile) {
 				xml.stepIn();
 
 				while(xml.findChild("String")) {
-					HASH_MAP<string, int>::iterator j = h.find(xml.getChildAttrib("Name"));
+					HASH_MAP<string, int>::const_iterator j = h.find(xml.getChildAttrib("Name"));
 
 					if(j != h.end()) {
 						strings[j->second] = xml.getChildData();

@@ -273,16 +273,6 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 
 		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(uziv);
 		if(&ou) {
-			PME reg("^StrgDC\\+\\+ V:1.00 RC([89]){1}");
-			if((generator == "DC++ 0.403")) {
-				string version = ou.getIdentity().get("VE");
-				if(reg.match(version)) {
-					ou.getIdentity().setCheat(ou.getClient(), "rmDC++ in StrongDC" + version + " emulation mode" , true);
-					ou.getIdentity().setClientType("rmDC++ 0.403");
-					ou.getIdentity().setBadClient("1");
-					ou.getIdentity().setBadFilelist("1");
-				}
-			}
 			ou.getIdentity().setGenerator(generator);
 		}
 		inListing = true;
@@ -368,16 +358,6 @@ void DirectoryListing::download(File* aFile, const string& aTarget, bool view, b
 
 	if(highPrio || (prio != QueueItem::DEFAULT))
 		QueueManager::getInstance()->setPriority(aTarget, highPrio ? QueueItem::HIGHEST : prio);
-}
-
-void DirectoryListing::downloadMP3(File* aFile, const string& aTarget) {
-	int flags = QueueItem::FLAG_MP3_INFO;
-
-	::File::ensureDirectory(aTarget);
-	QueueManager::getInstance()->add(aTarget, 2100, NULL, getUser(),
-		getPath(aFile) + aFile->getName(), getUtf8(), flags);
-		
-	QueueManager::getInstance()->setPriority(aTarget, QueueItem::HIGHEST);
 }
 
 DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directory* current) {

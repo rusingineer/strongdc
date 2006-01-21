@@ -39,12 +39,13 @@ public:
 		FLAG_USER_LIST = 0x01,
 		FLAG_TTH_LEAVES = 0x02,
 		FLAG_ZUPLOAD = 0x04,
-		FLAG_PARTIAL_LIST = 0x08
+		FLAG_PARTIAL_LIST = 0x08,
+		FLAG_PARTIAL_SHARE = 0x10
 	};
 
 	typedef Upload* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 	
 	Upload() : tth(NULL), file(NULL) { };
 	virtual ~Upload() { 
@@ -85,61 +86,61 @@ public:
 
 };
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem> {
-	public:
-		UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, time_t itime) :
-			User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { };
-		virtual ~UploadQueueItem() throw() { };
-		typedef UploadQueueItem* Ptr;
-		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
-		typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
-		typedef UserMap::iterator UserMapIter;
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
+public:
+	UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, time_t itime) :
+		User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { inc(); };
+	virtual ~UploadQueueItem() throw() { };
+	typedef UploadQueueItem* Ptr;
+	typedef vector<Ptr> List;
+	typedef List::const_iterator Iter;
+	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
+	typedef UserMap::const_iterator UserMapIter;
 
-		const tstring& getText(int col) const {
-			return columns[col];
+	const tstring& getText(int col) const {
+		return columns[col];
+	}
+	static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
+		switch(col) {
+			case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
+			case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
+			case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
+			case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
+			case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
+			case COLUMN_SIZE: return compare(a->size, b->size);
+			case COLUMN_ADDED: return compare(a->iTime, b->iTime);
+			case COLUMN_WAITING: return compare(a->iTime, b->iTime);
 		}
-		static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
-			switch(col) {
-				case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
-				case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
-				case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
-				case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
-				case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
-				case COLUMN_SIZE: return compare(a->size, b->size);
-				case COLUMN_ADDED: return compare(a->iTime, b->iTime);
-				case COLUMN_WAITING: return compare(a->iTime, b->iTime);
-			}
-			return 0;
-		}
+		return 0;
+	}
 
-		enum {
-			COLUMN_FIRST,
-			COLUMN_FILE = COLUMN_FIRST,
-			COLUMN_PATH,
-			COLUMN_NICK,
-			COLUMN_HUB,
-			COLUMN_TRANSFERRED,
-			COLUMN_SIZE,
-			COLUMN_ADDED,
-			COLUMN_WAITING,
-			COLUMN_LAST
-		};
+	enum {
+		COLUMN_FIRST,
+		COLUMN_FILE = COLUMN_FIRST,
+		COLUMN_PATH,
+		COLUMN_NICK,
+		COLUMN_HUB,
+		COLUMN_TRANSFERRED,
+		COLUMN_SIZE,
+		COLUMN_ADDED,
+		COLUMN_WAITING,
+		COLUMN_LAST
+	};
 		
-		int imageIndex() {
-			return icon;
-		}
-		void update();
+	int imageIndex() {
+		return icon;
+	}
+	void update();
 
-		User::Ptr User;
-		string File;
-		string Path;
-		string FileName;
-		int64_t pos;
-		int64_t size;
-		time_t iTime;
-		tstring columns[COLUMN_LAST];
-		int icon;
+	User::Ptr User;
+	string File;
+	string Path;
+	string FileName;
+	int64_t pos;
+	int64_t size;
+	time_t iTime;
+	tstring columns[COLUMN_LAST];
+	int icon;
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
@@ -187,7 +188,7 @@ public:
 		if(GET_TICK() < getLastGrant() + 30*1000)
 			return false;
 		/** Grant if uploadspeed is less than the threshold speed */
-		return UploadManager::getInstance()->getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
+		return getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
 	}
 
 	/** @internal */
@@ -249,13 +250,12 @@ public:
 	GETSET(u_int32_t, lastGrant, LastGrant);
 
 	// Upload throttling
-	int throttleGetSlice();
-	int throttleCycleTime();
+	size_t throttleGetSlice();
+	size_t throttleCycleTime();
 
 	UploadQueueItem::UserMap getQueue();
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
-	bool isInUploadQueue(UploadQueueItem* UQI);
 	static bool getFireballStatus() { return m_boFireball; };
 	static bool getFileServerStatus() { return m_boFileServer; };
 	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
@@ -264,7 +264,7 @@ private:
 	void throttleBytesTransferred(u_int32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
-	int mBytesSent,
+	size_t mBytesSent,
 		   mBytesSpokenFor,
 		   mUploadLimit,
 		   mCycleTime,
@@ -296,14 +296,7 @@ private:
 	virtual ~UploadManager() throw();
 
 	void removeConnection(UserConnection::Ptr aConn, bool ntd);
-	void removeUpload(Upload* aUpload) {
-		Lock l(cs);
-		dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
-		uploads.erase(find(uploads.begin(), uploads.end(), aUpload));
-		throttleSetup();
-		aUpload->setUserConnection(NULL);
-		delete aUpload;
-	}
+	void removeUpload(Upload* aUpload);
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();

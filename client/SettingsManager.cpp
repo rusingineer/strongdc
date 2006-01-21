@@ -29,10 +29,12 @@
 #include "version.h"
 #include "CID.h"
 
+StringList SettingsManager::connectionSpeeds;
+
 const string SettingsManager::settingTags[] =
 {
 	// Strings
-	"Connection", "Description", "DownloadDirectory", "EMail", "Nick", "ExternalIp",
+	"Nick", "UploadSpeed", "Description", "DownloadDirectory", "EMail", "ExternalIp",
 	"Font", "MainFrameOrder", "MainFrameWidths", "HubFrameOrder", "HubFrameWidths", 
 	"RecentFrameOrder", "RecentFrameWidths", "FinishedMP3Order", "FinishedMP3Widths",
 	"LanguageFile", "SearchFrameOrder", "SearchFrameWidths", "FavoritesFrameOrder", "FavoritesFrameWidths", 
@@ -55,6 +57,7 @@ const string SettingsManager::settingTags[] =
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
 	"EmoticonsFile", 	"SslPrivateKeyFile", "SslCertificateFile", "SslTrustedCertificatesPath",
+	"FinishedVisible", "FinishedULVisible",
 	"SENTRY", 
 	// Ints
 	"IncomingConnections", "InPort", "Slots", "Rollback", "AutoFollow", "ClearSearch",
@@ -128,14 +131,26 @@ const string SettingsManager::settingTags[] =
 	"SENTRY"
 };
 
-const string SettingsManager::connectionSpeeds[] = { "Modem", "ISDN", 
-"Satellite", "Wireless", "Cable", "DSL", "LAN(T1)", "LAN(T3)" };
-
 const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
 "256K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
 
 SettingsManager::SettingsManager()
 {
+	connectionSpeeds.push_back("0.005");
+	connectionSpeeds.push_back("0.01");
+	connectionSpeeds.push_back("0.02");
+	connectionSpeeds.push_back("0.05");
+	connectionSpeeds.push_back("0.1");
+	connectionSpeeds.push_back("0.2");
+	connectionSpeeds.push_back("0.5");
+	connectionSpeeds.push_back("1");
+	connectionSpeeds.push_back("2");
+	connectionSpeeds.push_back("5");
+	connectionSpeeds.push_back("10");
+	connectionSpeeds.push_back("20");
+	connectionSpeeds.push_back("50");
+	connectionSpeeds.push_back("100");
+
 	for(int i=0; i<SETTINGS_LAST; i++)
 		isSet[i] = false;
 
@@ -183,7 +198,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_MAIN_CHAT, false);
 	setDefault(STATUS_IN_CHAT, true);
 	setDefault(SHOW_JOINS, false);
-	setDefault(CONNECTION, connectionSpeeds[0]);
+	setDefault(UPLOAD_SPEED, connectionSpeeds[0]);
 	setDefault(PRIVATE_MESSAGE_BEEP, false);
 	setDefault(PRIVATE_MESSAGE_BEEP_OPEN, false);
 	setDefault(USE_SYSTEM_ICONS, true);
@@ -264,7 +279,7 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_NOTEPAD, false);
 	setDefault(NO_IP_OVERRIDE, false);
 	setDefault(SOCKET_IN_BUFFER, 64*1024);
-	setDefault(SOCKET_OUT_BUFFER, 32*1024);
+	setDefault(SOCKET_OUT_BUFFER, 64*1024);
 	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getAppPath() + "certs" PATH_SEPARATOR_STR);
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
@@ -283,7 +298,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, 0);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
-	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,10,-1,11,12,13,-1,14,-1,15,-1,16,-1,17,-1,18,19,20,21,22");
+	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,13,-1,14,15,16,17,-1,18,19,20,21");
 	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
 	setDefault(WEBSERVER, false);
 	setDefault(WEBSERVER_PORT, 80);
@@ -499,6 +514,8 @@ SettingsManager::SettingsManager()
 	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
 	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 	setDefault(HUBFRAME_VISIBLE, "1,1,0,1,0,1,1,0,0,0,0,0,0,0");
+	setDefault(FINISHED_VISIBLE, "1,1,1,1,1,1,1,1");
+	setDefault(FINISHED_UL_VISIBLE, "1,1,1,1,1,1,1");
 	setDefault(ACCEPTED_DISCONNECTS, 5);
 	setDefault(ACCEPTED_TIMEOUTS, 10);
 	setDefault(EMOTICONS_FILE, "Chat (Large)");

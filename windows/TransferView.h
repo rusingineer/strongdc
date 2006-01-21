@@ -177,21 +177,15 @@ private:
 		IMAGE_SEGMENT
 	};
 
-	class ItemInfo : public UserInfoBase, public Flags {
+	struct UpdateInfo;
+	class ItemInfo : public UserInfoBase {
 	public:
-		typedef HASH_MAP<ConnectionQueueItem*, ItemInfo*, PointerHash<ConnectionQueueItem> > Map;
-		typedef Map::iterator MapIter;
-
 		typedef ItemInfo* Ptr;
 		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
+		typedef List::const_iterator Iter;
 
 		ItemInfo::List subItems;
 
-		enum Flags {
-			FLAG_COMPRESSED = 0x01,
-			FLAG_SEGMENTED = 0x02
-		};
 		enum Status {
 			STATUS_RUNNING,
 			STATUS_WAITING,
@@ -200,61 +194,33 @@ private:
 			DOWNLOAD_STARTING,
 			DOWNLOAD_FINISHED,
 		};
-		enum Types {
-			TYPE_DOWNLOAD,
-			TYPE_UPLOAD
-		};
 
-		ItemInfo(const User::Ptr& u, Types t = TYPE_DOWNLOAD, Status s = STATUS_WAITING, 
-			int64_t p = 0, int64_t sz = 0, int st = 0, int a = 0) : UserInfoBase(u), type(t), 
-			status(s), pos(p), size(sz), start(st), actual(a), speed(0), timeLeft(0),
-			updateMask((u_int32_t)-1), collapsed(true), mainItem(false), main(NULL),
-			Target(Util::emptyString), file(Util::emptyStringT),
-			flagImage(0), filelist(false) { update(); };
+		ItemInfo(const User::Ptr& u, bool aDownload);
 
-		Types type;
+		bool download;
+		bool transferFailed;
+		bool collapsed;
+		ItemInfo* main;
 		Status status;
+		int flagImage;
 		int64_t pos;
 		int64_t size;
 		int64_t start;
 		int64_t actual;
 		int64_t speed;
 		int64_t timeLeft;
-		tstring statusString;
-		tstring file;
-		tstring IP;
-		tstring country;		
-
-		ItemInfo* main;
 		string Target;
-		bool collapsed;
-		bool mainItem;
-		int flagImage;
-		bool filelist;
+		time_t fileBegin;
+		bool multiSource;
 
-		enum {
-			MASK_USER = 1 << COLUMN_USER,
-			MASK_HUB = 1 << COLUMN_HUB,
-			MASK_STATUS = 1 << COLUMN_STATUS,
-			MASK_TIMELEFT = 1 << COLUMN_TIMELEFT,
-			MASK_SPEED = 1 << COLUMN_SPEED,
-			MASK_FILE = 1 << COLUMN_FILE,
-			MASK_SIZE = 1 << COLUMN_SIZE,
-			MASK_PATH = 1 << COLUMN_PATH,
-			MASK_IP = 1 << COLUMN_IP,
-			MASK_RATIO = 1 << COLUMN_RATIO
-	};
 		tstring columns[COLUMN_LAST];
-		u_int32_t updateMask; // this isn't used by mainitem, so use it for store start tick =)
-		void update();
+		void update(const UpdateInfo& ui);
 
 		void disconnect();
 		void removeAll();
 		void deleteSelf() { delete this; }	
 
-		double getRatio() {
-			return (pos > 0) ? (double)actual / (double)pos : 1.0;
-		}
+		double getRatio() { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
 
 		const tstring& getText(int col) const {
 			return columns[col];
@@ -262,8 +228,8 @@ private:
 
 		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
 			if(a->status == b->status) {
-				if(a->type != b->type) {
-					return (a->type == ItemInfo::TYPE_DOWNLOAD) ? -1 : 1;					
+				if(a->download != b->download) {
+					return a->download ? -1 : 1;
 				}
 			} else {
 				return (a->status == ItemInfo::STATUS_RUNNING) ? -1 : 1;
@@ -272,8 +238,6 @@ private:
 			switch(col) {
 				case COLUMN_USER:
 					{
-						dcassert(a->mainItem == b->mainItem);
-
 						if(a->subItems.size() == b->subItems.size())
 							return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
 
@@ -287,13 +251,13 @@ private:
 				default: return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 			}
 		}
-
+		
 		int imageIndex() {
-			return (type == TYPE_UPLOAD) ? IMAGE_UPLOAD : (mainItem ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
+			return !download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
 		}
 
 		ItemInfo* createMainItem() {
-	  		ItemInfo* h = new ItemInfo(user, ItemInfo::TYPE_DOWNLOAD, ItemInfo::STATUS_WAITING, 0, size);
+	  		ItemInfo* h = new ItemInfo(user, true);
 			h->Target = Target;
 			h->columns[COLUMN_FILE] = Text::toT(Util::getFileName(h->Target));
 			h->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(h->Target));
@@ -305,20 +269,79 @@ private:
 		const string getGroupingString() { return Target; }
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
-				main->user = main->subItems.front()->user;
+				ItemInfo* i = main->subItems.front();
+				main->user = i->user;
+				main->flagImage = i->flagImage;
 				main->columns[COLUMN_USER] = WinUtil::getNicks(main->user);
 				main->columns[COLUMN_HUB] = WinUtil::getHubNames(main->user).first;
+				main->columns[COLUMN_IP] = i->columns[COLUMN_IP];
 			} else {
 				TCHAR buf[256];
 				_sntprintf(buf, 255, _T("%d %s"), main->subItems.size(), CTSTRING(USERS));
 				buf[255] = NULL;
 				main->columns[COLUMN_USER] = buf;
+				main->columns[COLUMN_IP] = Util::emptyStringT;
 			}
 		}
 	};
 
+	struct UpdateInfo {
+		enum {
+			MASK_POS = 1 << 0,
+			MASK_SIZE = 1 << 1,
+			MASK_START = 1 << 2,
+			MASK_ACTUAL = 1 << 3,
+			MASK_SPEED = 1 << 4,
+			MASK_FILE = 1 << 5,
+			MASK_STATUS = 1 << 6,
+			MASK_TIMELEFT = 1 << 7,
+			MASK_IP = 1 << 8,
+			MASK_STATUS_STRING = 1 << 9,
+			MASK_COUNTRY = 1 << 10,
+			MASK_SEGMENT = 1 << 11
+		};
+
+		bool operator==(const ItemInfo& ii) { return download == ii.download && user == ii.user; }
+
+		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false) { }
+
+		u_int32_t updateMask;
+
+		User::Ptr user;
+		bool download;
+		bool transferFailed;
+		bool fileList;
+		tstring target;
+		void setMultiSource(bool aSeg) { multiSource = aSeg; updateMask |= MASK_SEGMENT; }
+		bool multiSource;
+		void setStatus(ItemInfo::Status aStatus) { status = aStatus; updateMask |= MASK_STATUS; }
+		ItemInfo::Status status;
+		void setPos(int64_t aPos) { pos = aPos; updateMask |= MASK_POS; }
+		int64_t pos;
+		void setSize(int64_t aSize) { size = aSize; updateMask |= MASK_SIZE; }
+		int64_t size;
+		void setStart(int64_t aStart) { start = aStart; updateMask |= MASK_START; }
+		int64_t start;
+		void setActual(int64_t aActual) { actual = aActual; updateMask |= MASK_ACTUAL; }
+		int64_t actual;
+		void setSpeed(int64_t aSpeed) { speed = aSpeed; updateMask |= MASK_SPEED; }
+		int64_t speed;
+		void setTimeLeft(int64_t aTimeLeft) { timeLeft = aTimeLeft; updateMask |= MASK_TIMELEFT; }
+		int64_t timeLeft;
+		void setStatusString(const tstring& aStatusString) { statusString = aStatusString; updateMask |= MASK_STATUS_STRING; }
+		tstring statusString;
+		void setFile(const tstring& aFile) { file = Util::getFileName(aFile); path = Util::getFilePath(aFile); target = aFile; updateMask|= MASK_FILE; }
+		tstring file;
+		tstring path;
+		void setIP(const tstring& aIP) { IP = aIP; updateMask |= MASK_IP; }
+		tstring IP;
+		int flagImage;
+	};
+
+	void speak(int type, UpdateInfo* ui) { PostMessage(WM_SPEAKER, type, reinterpret_cast<LPARAM>(ui)); }
+	void speak(int type, vector<UpdateInfo*>* ui) { PostMessage(WM_SPEAKER, type, reinterpret_cast<LPARAM>(ui)); }
+
 	CriticalSection cs;
-	ItemInfo::Map transferItems;
 
 	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
@@ -329,40 +352,42 @@ private:
 	OMenu usercmdsMenu;
 	OMenu previewMenu;
 	CImageList arrows;
-	HICON hIconCompressed;	
+//	HICON hIconCompressed;	
 
 	HDC hDCDB; // Double buffer DC
 	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC
 	StringList searchFilter;
+
+	ItemInfo::List transferItems;
 
 	virtual void on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) throw();
 	virtual void on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) throw();
 
-	virtual void on(DownloadManagerListener::Complete, Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, isTree);}
+	virtual void on(DownloadManagerListener::Complete, Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, aDownload->getTargetFileName(), isTree);}
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
 	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
-	virtual void on(DownloadManagerListener::Status, ConnectionQueueItem* aCqi, const string& aMessage) throw();
+	virtual void on(DownloadManagerListener::Status, const User::Ptr&, const string& aMessage) throw();
 	virtual void on(DownloadManagerListener::Verifying, const string& fileName, int64_t) throw();
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
-	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, false); }
+	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getFileName(), false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
-	void onTransferComplete(Transfer* aTransfer, bool isUpload, bool isTree);
+	void onTransferComplete(Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree);
 
 	void CollapseAll();
 	void ExpandAll();
-	void mainItemTick(ItemInfo* i);
+	bool mainItemTick(ItemInfo* i, bool);
 
 	void setMainItem(ItemInfo* i) {
 		if(i->main != NULL) {
 			ItemInfo* h = i->main;		
-			if(strcmp(h->Target.c_str(), i->Target.c_str()) != 0) {
+			if(h->Target != i->Target) {
 				ctrlTransfers.removeGroupedItem(i, false);
 				ctrlTransfers.insertGroupedItem(i, false);
 			}

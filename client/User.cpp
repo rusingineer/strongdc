@@ -101,7 +101,7 @@ const string Identity::getReport()
 	report += "\r\nTestSUR:		" + getTestSUR();
 	report += "\r\nDisconnects:	" + getFileListDisconnects();
 	report += "\r\nTimeouts:		" + getConnectionTimeouts();
-	report += "\r\nDownspeed:	" + Util::formatBytes(Util::toInt64(get("US"))) + "/s";
+	report += "\r\nDownspeed:	" + Util::formatBytes(getUser()->getLastDownloadSpeed()) + "/s";
 	report += "\r\nIP:		" + getIp();
 	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
 	report += "\r\nDescription:	" + getDescription();
@@ -138,7 +138,7 @@ const string Identity::updateClientType(OnlineUser& ou) {
 	ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
 
 	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
-		ClientProfile& cp = *i;	
+		ClientProfile& cp = const_cast<ClientProfile&>(*i);
 		string version, pkVersion, extraVersion, formattedTagExp, verTagExp;
 
 		verTagExp = Util::formatRegExp(cp.getTag(), params);

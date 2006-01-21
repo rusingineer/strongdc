@@ -329,7 +329,7 @@ public:
 	static CImageList flagImages;
 
 	typedef HASH_MAP<string, int> ImageMap;
-	typedef ImageMap::iterator ImageIter;
+	typedef ImageMap::const_iterator ImageIter;
 
 	struct TextItem {
 		WORD itemID;
@@ -562,7 +562,7 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, string target);
 	static string formatTime(long rest);
-	static int getImage(const Identity& u, Client* c);
+	static int getImage(const Identity& u);
 	static int getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
 private:

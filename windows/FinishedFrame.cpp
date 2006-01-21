@@ -63,7 +63,6 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	UpdateLayout();
 	
 	FinishedManager::getInstance()->addListener(this);
-	SettingsManager::getInstance()->addListener(this);
 	updateList(FinishedManager::getInstance()->lockList());
 	FinishedManager::getInstance()->unlockList();
 	
@@ -76,16 +75,6 @@ LRESULT FinishedFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	ctxMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
 	ctxMenu.SetMenuDefaultItem(IDC_OPEN_FILE);
 
-	tabMenu.CreatePopupMenu();
-
-	if(BOOLSETTING(LOG_DOWNLOADS)) {
-		tabMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_LOG, CTSTRING(OPEN_DOWNLOAD_LOG));
-		tabMenu.AppendMenu(MF_SEPARATOR);
-	}
-	tabMenu.AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
-	tabMenu.AppendMenu(MF_SEPARATOR);
-	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
-
 	bHandled = FALSE;
 	return TRUE;
 }
@@ -96,7 +85,8 @@ LRESULT FinishedFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		
 		if(pt.x == -1 && pt.y == -1) {
 			WinUtil::getContextMenuPos(ctrlList, pt);
-	}
+		}
+		
 		ctxMenu.InsertSeparatorFirst(STRING(FILE));
 		ctxMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
 		ctxMenu.RemoveFirstItem();
@@ -215,7 +205,7 @@ LRESULT FinishedFrame::onRemove(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 LRESULT FinishedFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		FinishedManager::getInstance()->removeListener(this);
-		SettingsManager::getInstance()->removeListener(this);
+
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_FINISHED, false);
 		PostMessage(WM_CLOSE);
@@ -261,39 +251,6 @@ void FinishedFrame::addEntry(FinishedItem* entry) {
 	int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
 	int loc = ctrlList.insert(l, image, (LPARAM)entry);
 	ctrlList.EnsureVisible(loc, FALSE);
-}
-
-LRESULT FinishedFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
-	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-	return TRUE;
-}
-
-LRESULT FinishedFrame::onDownloadLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	tstring filename = Text::toT(SETTING(LOG_DIRECTORY)) + _T("Downloads.log");
-	if(Util::fileExists(Text::fromT(filename))){
-		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
-	} else {
-		MessageBox(CTSTRING(NO_DOWNLOAD_LOG), CTSTRING(NO_DOWNLOAD_LOG), MB_OK );	  
-	}
-	return 0;
-}
-
-void FinishedFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
-	bool refresh = false;
-	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
-		ctrlList.SetBkColor(WinUtil::bgColor);
-		ctrlList.SetTextBkColor(WinUtil::bgColor);
-		refresh = true;
-	}
-	if(ctrlList.GetTextColor() != WinUtil::textColor) {
-		ctrlList.SetTextColor(WinUtil::textColor);
-		refresh = true;
-	}
-	if(refresh == true) {
-		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-	}
 }
 
 /**

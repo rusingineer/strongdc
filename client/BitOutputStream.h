@@ -30,7 +30,7 @@ public:
 	~BitOutputStream() { };
 	
 	void put(vector<u_int8_t>& b) {
-		for(vector<u_int8_t>::iterator i = b.begin(); i != b.end(); ++i) {
+		for(vector<u_int8_t>::const_iterator i = b.begin(); i != b.end(); ++i) {
 			next |=  (*i) << bitPos++;
 			
 			if(bitPos > 7) {

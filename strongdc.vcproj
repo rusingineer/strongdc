@@ -57,7 +57,7 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
-				ForceConformanceInForLoopScope="false"
+				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="4"
@@ -163,10 +163,10 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
-				RuntimeTypeInfo="false"
+				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				AssemblerOutput="0"
+				AssemblerOutput="4"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 				CallingConvention="1"
@@ -555,18 +555,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\FinishedFrame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\FinishedMP3Frame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\FinishedULFrame.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\FolderTree.cpp"
 				>
 			</File>
@@ -896,7 +884,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\FinishedMP3Frame.h"
+				RelativePath=".\windows\FinishedFrameBase.h"
 				>
 			</File>
 			<File

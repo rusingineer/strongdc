@@ -97,7 +97,6 @@
 #define IDD_CLIENT_PROFILE              263
 #define IDD_CLIENTS_PAGE                264
 #define IDB_SPEEDS                      266
-#define IDR_FINISHED_MP3                269
 #define IDR_CDM                         270
 #define IDR_STOP                        273
 #define IDD_UPDATE                      274
@@ -133,7 +132,6 @@
 #define IDC_REMOVE_ALL                  1010
 #define IDC_ADD                         1011
 #define IDC_REMOVE                      1012
-#define IDC_MP3                         1013
 #define IDC_TOTAL                       1014
 #define IDC_SLOTS                       1015
 #define IDC_SLOTSPIN                    1016
@@ -212,7 +210,6 @@
 #define IDC_SOCKS_RESOLVE               1086
 #define IDC_PROGRESS_BUMPED             1086
 #define IDC_REMOVEALL                   1087
-#define IDC_FINISHEDMP3                 1088
 #define IDC_SOCKS_SERVER                1090
 #define IDC_SOCKS_PORT                  1091
 #define IDC_SOCKS_USER                  1092
@@ -280,6 +277,7 @@
 #define IDC_SETTINGS_SOCKS5_PORT        1141
 #define IDC_SETTINGS_SOCKS5_USERNAME    1142
 #define IDC_SETTINGS_SOCKS5_PASSWORD    1143
+#define IDC_SETTINGS_UPLOAD_SPEED       1143
 #define IDC_SETTINGS_DIRECTORIES        1144
 #define IDC_SETTINGS_INCOMING           1144
 #define IDC_SETTINGS_DOWNLOAD_DIRECTORY 1145
@@ -549,6 +547,7 @@
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_FILELIST_DIFF               1406
+#define IDC_SETTINGS_MEBIBYES           1406
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
 #define IDC_SSL_PRIVATE_KEY_FILE        1414

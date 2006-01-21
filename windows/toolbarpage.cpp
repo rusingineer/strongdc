@@ -136,7 +136,7 @@ LRESULT ToolbarPage::onHotBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 
 string name;
 void ToolbarPage::makeItem(LPLVITEM lvi, int item){
-	if((item > -1) && (item < 23)) {
+	if((item > -1) && (item < 22)) {
 		lvi->iImage = WinUtil::ToolbarButtons[item].image;
 		name = Text::toT(filter(ResourceManager::getInstance()->getString(WinUtil::ToolbarButtons[item].tooltip)));			
 	} else {

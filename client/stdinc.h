@@ -33,6 +33,15 @@
 #define _ATL_NO_HOSTING
 #define _ATL_NO_OLD_NAMES
 
+#if _MSC_VER == 1400
+#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
+//disable the deperecated warnings for the crt functions.
+#pragma warning(disable: 4996)
+//#define _CRT_SECURE_NO_DEPRECATE 1
+//#define _ATL_SECURE_NO_DEPRECATE 1
+//#define _CRT_NON_CONFORMING_SWPRINTFS 1
+#endif
+
 #include <Winsock2.h>
 
 #include <windows.h>
@@ -68,12 +77,15 @@
 // Use maps if hash_maps aren't available
 #ifdef HAVE_HASH
 # ifdef HAVE_STLPORT
+#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
 #  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
 #  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
 # elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
+#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
 #  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
 #  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
 # elif defined(_MSC_VER)  // Assume the msvc 7.x stl
+#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc >
 #  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc >
 #  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc >
 # else
@@ -86,6 +98,7 @@
 
 #else // HAVE_HASH
 
+#define HASH_SET_X(key, hfunc, eq, order) 
 # define HASH_SET set
 # define HASH_MAP map
 # define HASH_MAP_X(key, type, hfunc, eq, order) map<key, type, order >

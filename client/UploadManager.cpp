@@ -54,7 +54,9 @@ UploadManager::~UploadManager() throw() {
 	{
 		Lock l(cs);
 		for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
-			for_each(ii->second.begin(), ii->second.end(), DeleteFunction());
+			for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
+				(*i)->dec();
+			}
 		}
 		UploadQueueItems.clear();
 	}
@@ -75,6 +77,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		return false;
 	}
 	
+	bool partialShare = false;
+
 	dcassert(aFile.size() > 0);
 
 	InputStream* is = NULL;
@@ -185,6 +189,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
+							partialShare = true;
 							goto ok;
 						}catch(const Exception&){							
 							aSource->fileNotAvail();
@@ -211,6 +216,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
+							partialShare = true;
 							goto ok;
 						}catch(const Exception&){
 							aSource->fileNotAvail();
@@ -228,7 +234,6 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 
 ok:
-
 	Lock l(cs);
 
 	bool extraSlot = false;
@@ -274,6 +279,8 @@ ok:
 		u->setFlag(Upload::FLAG_TTH_LEAVES);
 	if(partList)
 		u->setFlag(Upload::FLAG_PARTIAL_LIST);
+	if(partialShare)
+		u->setFlag(Upload::FLAG_PARTIAL_SHARE);
 
 	dcassert(aSource->getUpload() == NULL);
 	aSource->setUpload(u);
@@ -297,6 +304,15 @@ ok:
 	}
 
 	return true;
+}
+
+void UploadManager::removeUpload(Upload* aUpload) {
+	Lock l(cs);
+	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
+	uploads.erase(find(uploads.begin(), uploads.end(), aUpload));
+	throttleSetup();
+	aUpload->setUserConnection(NULL);
+	delete aUpload;
 }
 
 void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
@@ -428,7 +444,7 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 	if(found == false) {
 		UploadQueueItem* qi = new UploadQueueItem(User, file, path, filename, pos, size, itime);
 		{
-			UploadQueueItem::UserMapIter i = UploadQueueItems.find(User);
+		UploadQueueItem::UserMap::iterator i = UploadQueueItems.find(User);
 			if(i == UploadQueueItems.end()) {
 				UploadQueueItem::List l;
 				l.push_back(qi);
@@ -442,18 +458,18 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 }
 
 void UploadManager::clearUserFiles(const User::Ptr& source) {
-	UploadQueueItem::UserMapIter ii = UploadQueueItems.find(source);
+	UploadQueueItem::UserMap::iterator ii = UploadQueueItems.find(source);
 	if(ii != UploadQueueItems.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
-			delete *i;
+			(*i)->dec();
 		}
 		UploadQueueItems.erase(ii);
 		fire(UploadManagerListener::QueueRemove(), source);
 	}
 }
 
-void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
+void UploadManager::removeConnection(UserConnection::Ptr aConn, bool /*ntd*/) {
 	dcassert(aConn->getUpload() == NULL);
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
@@ -477,7 +493,6 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn, bool ntd) {
 		extra--;
 		aConn->unsetFlag(UserConnection::FLAG_HASEXTRASLOT);
 	}
-	ConnectionManager::getInstance()->putUploadConnection(aConn, ntd);
 }
 
 void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
@@ -640,9 +655,9 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr&
 	}
 }
 
-int UploadManager::throttleGetSlice() {
+size_t UploadManager::throttleGetSlice()  {
 	if (mThrottleEnable) {
-		int left = mUploadLimit - mBytesSpokenFor;
+		size_t left = mUploadLimit - mBytesSpokenFor;
 		if (left > 0) {
 			if (left > 2*mByteSlice) {
 				mBytesSpokenFor += mByteSlice;
@@ -655,11 +670,11 @@ int UploadManager::throttleGetSlice() {
 			return 16; // must send > 0 bytes or threadSendFile thinks the transfer is complete
 		}
 	} else {
-		return -1;
+		return (size_t)-1;
 	}
 }
 
-int UploadManager::throttleCycleTime() {
+size_t UploadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -677,13 +692,13 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
-	int num_transfers = (int)uploads.size();
+	unsigned int num_transfers = uploads.size();
 	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
 		if (mUploadLimit <= (SETTING(SOCKET_OUT_BUFFER) * 10 * num_transfers)) {
 			mByteSlice = mUploadLimit / (5 * num_transfers);
-			if (mByteSlice > SETTING(SOCKET_OUT_BUFFER))
+			if (mByteSlice > (size_t)SETTING(SOCKET_OUT_BUFFER))
 				mByteSlice = SETTING(SOCKET_OUT_BUFFER);
 			mCycleTime = 1000 / 10;
 		} else {
@@ -694,20 +709,8 @@ void UploadManager::throttleSetup() {
 }
 
 UploadQueueItem::UserMap UploadManager::getQueue() {
-	Lock l(cs);
+	//Lock l(cs);
 	return UploadQueueItems;
-}
-
-bool UploadManager::isInUploadQueue(UploadQueueItem* UQI) {
-	Lock l(cs);
-	for(UploadQueueItem::UserMapIter j = UploadQueueItems.begin(); j != UploadQueueItems.end(); ++j) {
-		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
-			if(*i == UQI) {
-				return true;
-			}
-		}
-	}
-	return false;
 }
 
 /**

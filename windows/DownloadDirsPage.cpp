@@ -53,7 +53,7 @@ LRESULT DownloadDirsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 
 	// Do specialized reading here
 	SettingsManager::DDList d = SettingsManager::getInstance()->getDownloadDirs();
-	for(SettingsManager::DDList::iterator i = d.begin(); i != d.end(); ++i) {		
+	for(SettingsManager::DDList::const_iterator i = d.begin(); i != d.end(); ++i) {		
 		addEntry(i, ctrlCommands.GetItemCount());
 	}
 	return TRUE;
