@@ -29,6 +29,45 @@
 
 #define BUFFERSIZE   0x200
 
+static void checkBuggyLibrary(PCSTR library) {
+	map<string, string> libraries;
+	libraries.insert(make_pair("Vslp", "V-One Smartpass"));
+	libraries.insert(make_pair("mclsp", "McAfee AV"));
+	libraries.insert(make_pair("Niphk", "Norman AV"));
+	libraries.insert(make_pair("aslsp", "Aventail Corporation VPN"));
+	libraries.insert(make_pair("AXShlEx", "Alcohol 120%"));
+	libraries.insert(make_pair("gdlsphlr", "McAfee"));
+	libraries.insert(make_pair("mlang", "IE"));
+	libraries.insert(make_pair("cslsp", "McAfee"));
+	libraries.insert(make_pair("winsflt", "PureSight Internet Content Filter"));
+	libraries.insert(make_pair("imslsp", "ZoneLabs IM Secure"));
+	libraries.insert(make_pair("apitrap", "Norton Cleansweep [?]"));
+	libraries.insert(make_pair("sockspy", "BitDefender Antivirus"));
+	libraries.insert(make_pair("imon", "Eset NOD32"));
+	libraries.insert(make_pair("KvWspXp(_1)", "Kingsoft Antivirus"));
+	libraries.insert(make_pair("nl_lsp", "NetLimiter"));
+	libraries.insert(make_pair("OSMIM", "Marketscore Internet Accelerator"));
+	libraries.insert(make_pair("opls", "Opinion Square [malware]"));
+	libraries.insert(make_pair("PavTrc", "Panda Anti-Virus"));
+	libraries.insert(make_pair("pavlsp", "Panda Anti-Virus"));
+	libraries.insert(make_pair("AppToPort", "Wyvern Works  Firewall"));
+	libraries.insert(make_pair("SpyDll", "Nice Spy [malware]"));
+	libraries.insert(make_pair("WBlind", "Window Blinds"));
+	libraries.insert(make_pair("UPS10", "Uniscribe Unicode Script Processor Library"));
+	libraries.insert(make_pair("SOCKS32", "Sockscap [?]"));
+	libraries.insert(make_pair("___j", "Worm: W32.Maslan.C@mm"));
+
+	for(map<string, string>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
+		string lib = i->first; string app = i->second;
+		if(Util::stricmp(library, lib) == 0) {
+			AutoArray<TCHAR> buf(TSTRING(LIB_CRASH).size() + 64);
+			_stprintf(buf, CTSTRING(LIB_CRASH), Text::toT(app).c_str());
+		
+			MessageBox(0, buf, _T("Unhandled exception"), MB_OK);
+		}
+	}
+}
+
 // Unicode safe char* -> TCHAR* conversion
 void PCSTR2LPTSTR( PCSTR lpszIn, LPTSTR lpszOut )
 {
@@ -124,8 +163,7 @@ static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
 	   // Got it!
 		PCSTR2LPTSTR( moduleInfo.ModuleName, lpszModule );
 
-		if(Util::stricmp(moduleInfo.ModuleName, "nl_lsp") == 0)
-			MessageBox(0, CTSTRING(NL_CRASH), _T("Unhandled exception"), MB_OK);
+		checkBuggyLibrary(moduleInfo.ModuleName);
 
 		ret = TRUE;
 	}

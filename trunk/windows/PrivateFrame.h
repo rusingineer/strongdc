@@ -41,7 +41,7 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
+	static void gotMessage(Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
 	static void openWindow(const User::Ptr& replyTo, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); };
 
@@ -132,8 +132,9 @@ public:
   	       return 0;
   	}
 
-	void addLine(const OnlineUser&, const tstring& aLine);
-	void addLine(const OnlineUser&, const tstring& aLine, CHARFORMAT2& cf);
+	void addLine(const tstring& aLine, CHARFORMAT2& cf);
+	void addLine(Identity&, const tstring& aLine);
+	void addLine(Identity&, const tstring& aLine, CHARFORMAT2& cf);
 	void onEnter();
 	void UpdateLayout(BOOL bResizeBars = TRUE);	
 	void runUserCommand(UserCommand& uc);
@@ -197,7 +198,7 @@ private:
 
 	bool created;
 	typedef HASH_MAP<User::Ptr, PrivateFrame*, User::HashFunction> FrameMap;
-	typedef FrameMap::iterator FrameIter;
+	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 	ChatCtrl ctrlClient;
 	CEdit ctrlMessage;

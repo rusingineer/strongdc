@@ -59,46 +59,19 @@ void Client::reloadSettings() {
 		getMyIdentity().setDescription(speedDescription + (hub->getUserDescription().empty() ? SETTING(DESCRIPTION) : hub->getUserDescription()));
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
-		switch(hub->getMode()) {
-			case 1 : getMyIdentity().setIp(hub->getIP()); break;
-			//default: getMyIdentity().setIP(SETTING(EXTERNAL_IP));
-		}
+		setFavIp(hub->getIP());
 	} else {
 		getMyIdentity().setNick(checkNick(SETTING(NICK)));
 		getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
 		setStealth(true);
+		setFavIp(Util::emptyString);
 	}
 	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
 	getMyIdentity().setHubUrl(getHubUrl());	
 }
 
-int Client::getMode() {
-	int mode = 0;
-	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
-	if(hub) {
-		switch(hub->getMode()) {
-			case 1 :
-			{
-				mode = SettingsManager::INCOMING_DIRECT;
-				getMyIdentity().setIp(hub->getIP());
-				break;
-			}
-			case 2 :
-			{
-				mode = SettingsManager::INCOMING_FIREWALL_PASSIVE;
-				break;
-			}
-			default:
-			{
-				mode = SETTING(INCOMING_CONNECTIONS);
-				//getMyIdentity().setIp(SETTING(EXTERNAL_IP));
-			}
-		}
-	} else {
-		mode = SETTING(INCOMING_CONNECTIONS);
-		//setIP(SETTING(EXTERNAL_IP));
-	}
-	return mode;
+bool Client::isActive() {
+	return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE;
 }
 
 void Client::connect() {
@@ -146,6 +119,10 @@ void Client::updateCounts(bool aRemove) {
 }
 
 string Client::getLocalIp() const {
+	// Favorite hub Ip
+	if(!getFavIp().empty())
+		return getFavIp();
+
 	// Best case - the server detected it
 	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty()) && !getMyIdentity().getIp().empty()) {
 		return getMyIdentity().getIp();

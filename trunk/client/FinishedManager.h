@@ -36,28 +36,23 @@ class FinishedItem
 public:
 	typedef FinishedItem* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	FinishedItem::List subItems;
 
-	FinishedItem(string const& aTarget, string const& aUser, string const& aHub, 
+	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
 		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 
-		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH),
-		collapsed(true), mainitem(false), needDelete(true), main(NULL)
+		target(aTarget), user(aUser), cid(aCID), hub(aHub), size(aSize), chunkSize(aChunkSize),
+		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH)
 	{
 	}
 
 	int64_t getAvgSpeed() { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; };
 
-	bool collapsed;
-	bool mainitem;
-	bool needDelete;
-	FinishedItem* main;
-
 	GETSET(string, target, Target);
 	GETSET(string, user, User);
+	GETSET(CID, cid, CID);
 	GETSET(string, hub, Hub);
 	GETSET(int64_t, size, Size);
 	GETSET(int64_t, chunkSize, ChunkSize);
@@ -65,35 +60,6 @@ public:
 	GETSET(time_t, time, Time);
 	GETSET(bool, crc32Checked, Crc32Checked)
 	GETSET(string, tth, TTH);	
-private:
-	friend class FinishedManager;
-
-};
-
-class FinishedMP3Item
-{
-public:
-	typedef FinishedMP3Item* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
-
-	FinishedMP3Item(string const& aTarget, string const& aUser, string const& aHub, 
-		int64_t aSize, string aMPEGVer, int aSampleRate, int aBitRate, string aChannels, time_t aTime) : 
-		target(aTarget), user(aUser), hub(aHub), size(aSize), MpegVer(aMPEGVer), samplerate(aSampleRate),
-		bitrate(aBitRate), channels(aChannels), time(aTime)
-	{
-	}
-
-	GETSET(string, target, Target);
-	GETSET(string, user, User);
-	GETSET(string, hub, Hub);
-	GETSET(int64_t, size, Size);
-	GETSET(string, MpegVer, MPEGVer);
-	GETSET(string, channels, Channels);
-	GETSET(time_t, time, Time);
-	GETSET(int, bitrate, BitRate);
-	GETSET(int, samplerate, SampleRate);
-
 private:
 	friend class FinishedManager;
 
@@ -109,10 +75,8 @@ public:
 	typedef X<3> RemovedDl;
 	typedef X<4> RemovedAllUl;
 	typedef X<5> RemovedAllDl;
-	typedef X<6> Added_MP3Dl;
 
 	virtual void on(AddedDl, FinishedItem*) throw() { }
-	virtual void on(Added_MP3Dl, FinishedMP3Item*) throw() { }
 	virtual void on(RemovedDl, FinishedItem*) throw() { }
 	virtual void on(RemovedAllDl) throw() { }
 	virtual void on(AddedUl, FinishedItem*) throw() { }
@@ -126,7 +90,6 @@ class FinishedManager : public Singleton<FinishedManager>,
 {
 public:
 	FinishedItem::List& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; };
-	FinishedMP3Item::List& lockMP3List() { cs.enter(); return MP3downloads; };
 	void unlockList() { cs.leave(); };
 
 	void remove(FinishedItem *item, bool upload = false);
@@ -150,7 +113,6 @@ private:
 	virtual void on(UploadManagerListener::Complete, Upload*) throw();
 
 	CriticalSection cs;
-	FinishedMP3Item::List MP3downloads;
 	FinishedItem::List downloads, uploads;
 };
 

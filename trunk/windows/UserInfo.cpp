@@ -31,18 +31,20 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		return NULL;
 	}
 	if(col == COLUMN_NICK) {
-			if(a->getIdentity().isOp() && !b->getIdentity().isOp()) {
-				return -1;
-			} else if(!a->getIdentity().isOp() && b->getIdentity().isOp()) {
-				return 1;
-			}
+		bool aOp = a->getIdentity().isOp();
+		bool bOp = b->getIdentity().isOp();
+		if(aOp && !bOp) {
+			return -1;
+		} else if(!aOp && bOp) {
+			return 1;
+		}
 	}
 
 	switch(col) {
 		case COLUMN_SHARED:
 		case COLUMN_EXACT_SHARED: return compare(a->getBytes(), b->getBytes());
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
-		case COLUMN_UPLOAD_SPEED: return compare(Util::toInt(a->identity.get("US")), Util::toInt(b->identity.get("US")));
+		case COLUMN_UPLOAD_SPEED: return compare(a->identity.getUser()->getLastDownloadSpeed(), b->identity.getUser()->getLastDownloadSpeed());
 	}
 	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
 }
@@ -54,9 +56,8 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	if(sortCol != -1)
 		old = columns[sortCol];
 
-	string uploadSpeed = identity.get("US");
-	if (!uploadSpeed.empty()) {
-		columns[COLUMN_UPLOAD_SPEED] = Text::toT(Util::formatBytes(Util::toInt64(uploadSpeed))) + _T("/s");
+	if (identity.getUser()->getLastDownloadSpeed() > 0) {
+		columns[COLUMN_UPLOAD_SPEED] = Text::toT(Util::formatBytes(identity.getUser()->getLastDownloadSpeed()) + "/s");
 	} else if(identity.getUser()->isSet(User::FIREBALL)) {
 		columns[COLUMN_UPLOAD_SPEED] = _T(">= 100 kB/s");
 	} else {

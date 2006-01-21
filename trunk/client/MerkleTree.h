@@ -44,7 +44,7 @@ public:
 
 	typedef HashValue<Hasher> MerkleValue;
 	typedef vector<MerkleValue> MerkleList;
-	typedef typename MerkleList::iterator MerkleIter;
+	typedef typename MerkleList::const_iterator MerkleIter;
 
 	MerkleTree() : fileSize(0), blockSize(baseBlockSize) { }
 	MerkleTree(int64_t aBlockSize) : fileSize(0), blockSize(aBlockSize) { }

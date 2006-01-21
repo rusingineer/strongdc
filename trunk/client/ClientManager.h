@@ -40,7 +40,7 @@ class ClientManager : public Speaker<ClientManagerListener>,
 {
 public:
 	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
-	typedef OnlineMap::iterator OnlineIter;
+	typedef OnlineMap::const_iterator OnlineIter;
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;
 
 	OnlineUser& getOnlineUser(const User::Ptr& p) {
@@ -116,7 +116,8 @@ public:
 
 	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
 
-	bool isActive(Client* aClient) { return (aClient ? aClient->getMode() : SETTING(INCOMING_CONNECTIONS)) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
+	int getMode(const string& aHubUrl);
+	bool isActive(const string& aHubUrl) { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
@@ -134,6 +135,8 @@ public:
  		}
  	}
 
+	string getCachedIp() const { Lock l(cs); return cachedIp; }
+	
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
 	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock);
@@ -151,7 +154,7 @@ private:
 	typedef UserMap::iterator UserIter;
 
 	Client::List clients;
-	CriticalSection cs;
+	mutable CriticalSection cs;
 	
 	UserMap users;
 	LegacyMap legacyUsers;
@@ -161,6 +164,7 @@ private:
 	
 	Socket s;
 
+	string cachedIp;
 	int64_t quickTick;
 	int infoTick;
 
@@ -179,6 +183,8 @@ private:
 	}
 
 	string getUsersFile() { return Util::getConfigPath() + "Users.xml"; }
+
+	void updateCachedIp();
 
 	// SettingsManagerListener
 	virtual void on(Load, SimpleXML*) throw();

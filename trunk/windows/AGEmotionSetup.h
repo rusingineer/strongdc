@@ -31,7 +31,7 @@ class CAGEmotion {
 public:
 	typedef CAGEmotion* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	CAGEmotion();
 	virtual ~CAGEmotion();

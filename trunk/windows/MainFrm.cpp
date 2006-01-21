@@ -34,7 +34,6 @@
 #include "QueueFrame.h"
 #include "SpyFrame.h"
 #include "FinishedFrame.h"
-#include "FinishedMP3Frame.h"
 #include "ADLSearchFrame.h"
 #include "FinishedULFrame.h"
 #include "TextFrame.h"
@@ -175,7 +174,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_CmdBar.m_arrCommand.Add(ID_WINDOW_TILE_VERT);
 	m_CmdBar.m_arrCommand.Add(ID_WINDOW_MINIMIZE_ALL);
 	m_CmdBar.m_arrCommand.Add(ID_WINDOW_RESTORE_ALL);
-	m_CmdBar.m_arrCommand.Add(IDC_FINISHEDMP3);	
 	m_CmdBar.m_arrCommand.Add(ID_GET_TTH);	
 	m_CmdBar.m_arrCommand.Add(IDC_UPDATE);	
 
@@ -307,7 +305,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
 	currentPic = SETTING(BACKGROUND_IMAGE);
 	m_PictureWindow.Load(Text::toT(currentPic).c_str());
-	listQueue.start();
+	//listQueue.start();
 
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;
@@ -1226,11 +1224,6 @@ LRESULT MainFrame::onCloseDisconnected(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
-LRESULT MainFrame::onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	FinishedMP3Frame::openWindow();
-	return 0;
-}
-
 LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
 	if(BOOLSETTING(THROTTLE_ENABLE)) SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,false);
 	else SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,true);
@@ -1358,6 +1351,11 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
 		DirectoryListInfo* i = new DirectoryListInfo();
 		i->file = Text::toT(qi->getListName());
 		i->user = qi->getCurrents()[0]->getUser(); 
+		
+		if(listQueue.stop) {
+			listQueue.stop = false;
+			listQueue.start();
+		}
 		{
 			Lock l(listQueue.cs);
 			listQueue.fileLists.push_back(i);
@@ -1418,10 +1416,11 @@ void MainFrame::on(WebServerListener::ShutdownPC, int action) throw() {
 int MainFrame::FileListQueue::run() {
 	setThreadPriority(Thread::LOW);
 
-	for(;;) {
-		s.wait();
-		if(stop)
+	while(true) {
+		s.wait(15000);
+		if(stop || fileLists.empty()) {
 			break;
+		}
 
 		DirectoryListInfo* i;
 		{

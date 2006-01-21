@@ -53,7 +53,7 @@ public:
 	typedef SearchResult* Ptr;
 	typedef vector<Ptr> List;
 	typedef map<Ptr, string> Map;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 	
 	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue* aTTH);
 
@@ -138,6 +138,7 @@ private:
 class ResultInfo {
 public:
 	ResultInfo(SearchResult* _sr, string _nick) : sr(_sr), nick(_nick) { }
+	~ResultInfo() { }
 	string nick;
 	SearchResult* sr;
 };
@@ -150,7 +151,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		bool stop;
 		CriticalSection cs;
 		Semaphore s;
-		list<ResultInfo> resultList;
+		deque<ResultInfo> resultList;
 
 		ResultsQueue() : stop(false) {}
 		virtual ~ResultsQueue() throw() {
@@ -174,7 +175,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 					if(!resultList.empty()) {
 						sr = resultList.begin()->sr;
 						nick = resultList.begin()->nick;
-						resultList.erase(resultList.begin());
+						resultList.pop_front();
 						int size = resultList.size();
 						resort = (size % 10 == 0);
 					} else {
@@ -213,7 +214,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 	
 	};
 public:
-	typedef list<SearchQueueItem> SearchQueueItemList;
+	typedef deque<SearchQueueItem> SearchQueueItemList;
 	typedef SearchQueueItemList::iterator SearchQueueIter;
 
 	enum SizeModes {
@@ -281,6 +282,7 @@ private:
 	virtual int run();
 
 	virtual ~SearchManager() throw() {
+		TimerManager::getInstance()->removeListener(this);
 		if(socket) {
 			stop = true;
 			socket->disconnect();
@@ -289,7 +291,6 @@ private:
 #endif
 			delete socket;
 		}
-		TimerManager::getInstance()->removeListener(this);
 	};
 
 	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };

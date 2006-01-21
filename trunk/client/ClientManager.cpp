@@ -56,7 +56,7 @@ Client* ClientManager::getClient(const string& aHubURL) {
 }
 
 void ClientManager::putClient(Client* aClient) {
-	aClient->disconnect();
+	aClient->disconnect(true);
 	fire(ClientManagerListener::ClientDisconnected(), aClient);
 	aClient->removeListeners();
 
@@ -68,7 +68,7 @@ void ClientManager::putClient(Client* aClient) {
 		//		dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
 		//		clients.erase(find(clients.begin(), clients.end(), aClient));
 		
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		for(Client::List::iterator i = clients.begin(); i != clients.end(); ++i) {
 			if(*i == aClient) {
 				clients.erase(i);
 				break;
@@ -277,9 +277,9 @@ void ClientManager::putOffline(OnlineUser& ou) throw() {
 	bool lastUser = false;
 	{
 		Lock l(cs);
-		OnlinePair op = onlineUsers.equal_range(ou.getUser()->getCID());
+		pair<OnlineMap::iterator, OnlineMap::iterator> op = onlineUsers.equal_range(ou.getUser()->getCID());
 		dcassert(op.first != op.second);
-		for(OnlineIter i = op.first; i != op.second; ++i) {
+		for(OnlineMap::iterator i = op.first; i != op.second; ++i) {
 			OnlineUser* ou2 = i->second;
 			/// @todo something nicer to compare with...
 			if(&ou.getClient() == &ou2->getClient()) {
@@ -301,8 +301,7 @@ void ClientManager::connect(const User::Ptr& p) {
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
-		if(&u->getClient())
-			u->getClient().connect(*u);
+		u->getClient().connect(*u);
 	}
 }
 
@@ -352,7 +351,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
 
 	// We don't wan't to answer passive searches if we're in passive mode...
-	if(isPassive && !ClientManager::getInstance()->isActive(aClient)) {
+	if(isPassive && !ClientManager::getInstance()->isActive(aClient->getHubUrl())) {
 		return;
 	}
 
@@ -450,6 +449,8 @@ Identity ClientManager::getIdentity(const User::Ptr& aUser) {
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	Lock l(cs);
 
+	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
+
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
 			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken);
@@ -459,6 +460,8 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 
 void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	Lock l(cs);
+
+	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
 
 	for(StringIter it = who.begin(); it != who.end(); ++it) {
 		string& client = *it;
@@ -580,6 +583,27 @@ void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const st
 	}
 }
 
+void ClientManager::updateCachedIp() {
+	// Best case - the server detected it
+	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty())) {
+		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+			if(!(*i)->getMyIdentity().getIp().empty()) {
+				cachedIp = (*i)->getMyIdentity().getIp();
+				return;
+			}
+		}
+	}
+
+	if(!SETTING(EXTERNAL_IP).empty()) {
+		cachedIp = Socket::resolve(SETTING(EXTERNAL_IP));
+		return;
+	}
+
+	//if we've come this far just use the first client to get the ip.
+	if(clients.size() > 0)
+		cachedIp = (*clients.begin())->getLocalIp();
+}
+
 void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 	Lock l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
@@ -661,7 +685,7 @@ bool ClientManager::connectionTimeout(const User::Ptr& p) {
 
 void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 	string report = Util::emptyString;
-	Client* c = NULL;
+	OnlineUser* ou = NULL;
 	{
 		Lock l(cs);
 
@@ -669,42 +693,24 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 		if(i == onlineUsers.end())
 			return;
 
-		OnlineUser& ou = *i->second;
+		ou = i->second;
 
-		int64_t statedSize = ou.getIdentity().getBytesShared();
+		int64_t statedSize = ou->getIdentity().getBytesShared();
 		int64_t realSize = dl->getTotalSize();
 	
 		double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
 		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
 		string detectString = Util::emptyString;
 		string inflationString = Util::emptyString;
-		ou.getIdentity().setRealBytesShared(Util::toString(realSize));
+		ou->getIdentity().setRealBytesShared(Util::toString(realSize));
 		bool isFakeSharing = false;
 	
-/*		string version = ou.getIdentity().get("VE");
-		PME reg("^\\+\\+ 0.40([0123]){1}$");
-		if(reg.match(version) && dl->detectRMDC403D1()) {
-			ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in DC" + version + " emulation mode" , true);
-			ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
-			ou.getIdentity().setBadClient("1");
-			return;
-		}
-
-		PME reg1("^StrgDC\\+\\+ V:1.00 RC7");
-		if(reg1.match(version) && dl->detectRMDC403D1()) {
-			ou.getIdentity().setCheat(ou.getClient(), "rmDC++ 0.403D[1] in StrongDC++ 1.00 RC7 emulation mode" , true);
-			ou.getIdentity().setClientType("rmDC++ 0.403D[1]");
-			ou.getIdentity().setBadClient("1");
-			ou.getIdentity().setBadFilelist("1");
-			return;
-		}*/
-
 		if(statedSize > sizeTolerated) {
 			isFakeSharing = true;
 		}
 
 		if(isFakeSharing) {
-			ou.getIdentity().setBadFilelist("1");
+			ou->getIdentity().setBadFilelist("1");
 			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
 			if(realSize == 0) {
 				detectString += STRING(CHECK_0BYTE_SHARE);
@@ -718,49 +724,62 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 			}
 			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 
-			c = &ou.getClient();
-			report = ou.getIdentity().setCheat(ou.getClient(), Util::validateMessage(detectString, false), false);
-			ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(FAKESHARE_RAW));
+			report = ou->getIdentity().setCheat(ou->getClient(), Util::validateMessage(detectString, false), false);
+			ou->getIdentity().sendRawCommand(ou->getClient(), SETTING(FAKESHARE_RAW));
 		}
-		ou.getIdentity().setFilelistComplete("1");
+		ou->getIdentity().setFilelistComplete("1");
 	}
-
-	if(c && !report.empty())
-		c->cheatMessage(report);
+	ou->getClient().updated(*ou);
+	if(!report.empty())
+		ou->getClient().cheatMessage(report);
 }
 
 void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient) {
 	OnlineUser* ou = NULL;
-	Client* c = NULL;
 	string report = Util::emptyString;
-	bool update = false;
 	{
 		Lock l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
-		if(i != onlineUsers.end()) {
-			ou = i->second;
+		if(i == onlineUsers.end()) return;
 		
-			if(!aTestSURString.empty()) {
-				c = &ou->getClient();
-				ou->getIdentity().setTestSUR(aTestSURString);
-				ou->getIdentity().setTestSURComplete("1");
-				report = ou->getIdentity().updateClientType(*ou);
-				update = true;
-			}
+		ou = i->second;
 		
-			if(!aCheatString.empty()) {
-				c = &ou->getClient();
-				report = ou->getIdentity().setCheat(ou->getClient(), aCheatString, aBadClient);
-			}
-
-			if(aRawCommand != -1)
-				ou->getIdentity().sendRawCommand(ou->getClient(), aRawCommand);
+		if(!aTestSURString.empty()) {
+			ou->getIdentity().setTestSUR(aTestSURString);
+			ou->getIdentity().setTestSURComplete("1");
+			report = ou->getIdentity().updateClientType(*ou);
 		}
+		if(!aCheatString.empty()) {
+			report = ou->getIdentity().setCheat(ou->getClient(), aCheatString, aBadClient);
+		}
+		if(aRawCommand != -1)
+			ou->getIdentity().sendRawCommand(ou->getClient(), aRawCommand);
 	}
-	if(c && !report.empty())
-		c->cheatMessage(report);
-	if(update)
-		ou->getClient().updated(*ou);
+	ou->getClient().updated(*ou);
+	if(!report.empty())
+		ou->getClient().cheatMessage(report);
+}
+
+int ClientManager::getMode(const string& aHubUrl) {
+	if(aHubUrl.empty()) return SETTING(INCOMING_CONNECTIONS);
+
+	int mode = 0;
+	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(aHubUrl);
+	if(hub) {
+		switch(hub->getMode()) {
+			case 1 :
+				mode = SettingsManager::INCOMING_DIRECT;
+				break;
+			case 2 :
+				mode = SettingsManager::INCOMING_FIREWALL_PASSIVE;
+				break;
+			default:
+				mode = SETTING(INCOMING_CONNECTIONS);
+		}
+	} else {
+		mode = SETTING(INCOMING_CONNECTIONS);
+	}
+	return mode;
 }
 
 /**

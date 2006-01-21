@@ -186,7 +186,7 @@ void QueueFrame::QueueItemInfo::update() {
 
 		int PocetSegmentu = qi ? qi->getCurrents().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;
-		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString(PocetSegmentu))+_T("/")+Text::toT(Util::toString(MaxSegmentu))+ _T(" ");
+		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString(PocetSegmentu) + "/" + Util::toString(MaxSegmentu) + " ");
 
 		if(colMask & MASK_TARGET) {
 			display->columns[COLUMN_TARGET] = Util::getFileName(getTarget());
@@ -624,7 +624,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 		ii->qi = aQI;
 
 		{
-			for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); ) {
+			for(QueueItemInfo::SourceList::iterator i = ii->getSources().begin(); i != ii->getSources().end(); ) {
 				if(!aQI->isSource(i->getUser())) {
 					i = ii->getSources().erase(i);
 				} else {
@@ -638,7 +638,7 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 			}
 		}
 		{
-			for(QueueItemInfo::SourceIter i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ) {
+			for(QueueItemInfo::SourceList::iterator i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ) {
 				if(!aQI->isBadSource(i->getUser())) {
 					i = ii->getBadSources().erase(i);
 				} else {
@@ -1509,7 +1509,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 				// running chunks
 				filedatainfo->getAllChunks(v, 1);
-				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); i += 2) {
+				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), crPending);
 				}
 				v.clear();
@@ -1518,14 +1518,14 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				v.push_back(0);
 				filedatainfo->getAllChunks(v, 0);
 				v.push_back(qi->getSize());
-				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); i += 2) {
+				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), crDownloaded);
 				}
 				v.clear();
 
 				// verified chunks
 				filedatainfo->getAllChunks(v, 2);
-				for(vector<int64_t>::iterator i = v.begin(); (i+1) < v.end(); ++i, ++i) {
+				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), crVerified);
 				}
 			} else {

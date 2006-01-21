@@ -135,7 +135,7 @@ string WebServerManager::getPage(string file){
 	string pagehtml = "";
 
 	WebPageInfo *page = page404;
-	WebPages::iterator find = pages.find(file.c_str());
+	WebPages::const_iterator find = pages.find(file.c_str());
 	if(find != pages.end()) page = find->second;	
     pagehtml = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.1//EN' 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'>";
     pagehtml += "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='cs'>";

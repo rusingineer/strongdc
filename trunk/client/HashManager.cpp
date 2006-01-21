@@ -651,8 +651,8 @@ int HashManager::Hasher::run() {
 				int64_t speed = 0;
 #endif				
 				HashManager::getInstance()->hashDone(fname, timestamp, *tth, speed);
-			} catch(const FileException&) {
-				// Ignore, it'll be readded on the next share refresh...
+			} catch(const FileException& e) {
+				LogManager::getInstance()->message(STRING(ERROR_HASHING) + fname + ": " + e.getError(), true);
 			}
 
 			total -= sizeLeft;

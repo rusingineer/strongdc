@@ -371,7 +371,7 @@ void UploadQueueFrame::LoadAll() {
 void UploadQueueFrame::RemoveUser(const User::Ptr& aUser) {
 	HTREEITEM nickNode = ctrlQueued.GetRootItem();
 
-	for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
+	for(User::List::iterator i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
 		if(*i == aUser) {
 			UQFUsers.erase(i);
 			break;
@@ -504,6 +504,7 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		UploadQueueItem* i = (UploadQueueItem*)lParam;
 		ctrlList.deleteItem(i);
 		updateStatus();
+		i->dec();
 	} else if(wParam == REMOVE) {
 		RemoveUser(((UserInfoBase*)lParam)->user);
 		delete (UserInfoBase*)lParam;
@@ -515,10 +516,8 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			if(UploadManager::getInstance()->isInUploadQueue(UQI)) {
-				UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
-				ctrlList.updateItem(i);
-			}
+			UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
+			ctrlList.updateItem(i);
 		}
 	}
 	ctrlList.SetRedraw(TRUE);

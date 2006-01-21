@@ -46,6 +46,8 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), state(STA
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
+
+	socket->removeListener(this); 
 	clearUsers();
 }
 
@@ -67,7 +69,7 @@ void NmdcHub::connect() {
 void NmdcHub::connect(const OnlineUser& aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::connectToMe %s\n", aUser.getIdentity().getNick().c_str());
-	if(ClientManager::getInstance()->isActive(this)) {
+	if(isActive()) {
 		connectToMe(aUser);
 	} else {
 		revConnectToMe(aUser);
@@ -132,7 +134,7 @@ void NmdcHub::putUser(const string& aNick) {
 	OnlineUser* u = NULL;
 	{
 		Lock l(cs);
-		NickIter i = users.find(aNick);
+		NickMap::iterator i = users.find(aNick);
 		if(i == users.end())
 			return;
 		u = i->second;
@@ -185,7 +187,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			}
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
-			id.set("US", Util::toString(Util::toInt64(*i)*1024));
+			id.getUser()->setLastDownloadSpeed((Util::toInt64(*i)*1024) / Util::toInt64(id.get("SL")));
 		}
 	}
 	/// @todo Think about this
@@ -377,15 +379,15 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
         		int iseekerLen = (temp-aLine)-1;
         		
 				bool bPassive = (_strnicmp(seeker.c_str(), "Hub:", 4) == 0);
-				bool isActive = ClientManager::getInstance()->isActive(this);
+				bool meActive = isActive();
 
 				// We don't wan't to answer passive searches if we're in passive mode...
-				if((bPassive == true) && !isActive) {
+				if((bPassive == true) && !meActive) {
 					return;
 				}
 				// Filter own searches
-				if(isActive && bPassive == false) {
-					if((strcmp(seeker.c_str(), (getLocalIp() + ":" + Util::toString(SearchManager::getInstance()->getPort())).c_str())) == 0) {
+				if(meActive && bPassive == false) {
+					if((strcmp(seeker.c_str(), ((getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp()) + ":" + Util::toString(SearchManager::getInstance()->getPort())).c_str())) == 0) {
 						return;
 					}
 				} else {
@@ -604,12 +606,16 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 								u.getUser()->setFlag(User::FIREBALL);
 								u.getUser()->unsetFlag(User::AWAY);
 								u.getUser()->unsetFlag(User::SERVER);
+								if(u.getUser()->getLastDownloadSpeed() == 0)
+									u.getUser()->setLastDownloadSpeed(100*1024);
            						break;
            					case 10:
                             case 11:
 								u.getUser()->setFlag(User::FIREBALL);
 								u.getUser()->setFlag(User::AWAY);
 								u.getUser()->unsetFlag(User::SERVER);
+								if(u.getUser()->getLastDownloadSpeed() == 0)
+									u.getUser()->setLastDownloadSpeed(100*1024);
            						break;
            					default:
                                 // WTF ?!? ok go to default...
@@ -628,15 +634,18 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
-						if(!ClientManager::getInstance()->isActive(this))
+						if(!isActive())
 							u.getUser()->setFlag(User::PASSIVE);
 						else
 							u.getUser()->unsetFlag(User::PASSIVE);
 					}
 				}
 
-				if(u.getUser() == getMyIdentity().getUser())
+				if(u.getUser() == getMyIdentity().getUser()) {
+					string oldDesc = getMyIdentity().getDescription();
 					setMyIdentity(u.getIdentity());
+					getMyIdentity().setDescription(oldDesc);
+				}
 					
 				fire(ClientListener::UserUpdated(), this, u);
 		    	return;
@@ -703,7 +712,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				if(u == NULL)
 					return;
 
-				if(ClientManager::getInstance()->isActive(this)) {
+				if(isActive()) {
 					connectToMe(*u);	
 				} else {
 					if(!u->getUser()->isSet(User::PASSIVE)) {
@@ -724,9 +733,20 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
                 if(iaLineLen < 10) return;
                 
 				aLine += 9;
- 	
-				getHubIdentity().setNick(aLine);
-				getHubIdentity().setDescription(Util::emptyString);			
+				if((temp = strstr(aLine, " - ")) == NULL || temp[1] == NULL) {
+					if((temp = strchr(aLine, ' ')) == NULL || temp[1] == NULL) {
+						getHubIdentity().setNick(aLine);
+						getHubIdentity().setDescription(Util::emptyString);
+					} else {
+						temp[0] = NULL; temp += 1;
+						getHubIdentity().setNick(aLine);
+						getHubIdentity().setDescription(temp);
+					}
+				} else {
+					temp[0] = NULL; temp += 1;
+					getHubIdentity().setNick(aLine);
+					getHubIdentity().setDescription(temp);
+				}
 
 				fire(ClientListener::HubUpdated(), this);
 				return;
@@ -745,7 +765,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
-						if(ClientManager::getInstance()->isActive(this))
+						if(isActive())
 							u.getUser()->unsetFlag(User::PASSIVE);
 						else
 							u.getUser()->setFlag(User::PASSIVE);
@@ -860,7 +880,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 	    	// $Lock
     		if(strncmp(aLine+2, "ock ", 4) == 0) {
         		if(state != STATE_LOCK || ibLineLen < 7) return;
-        		
+
         		bLine += 6;
 
 				state = STATE_HELLO;
@@ -911,7 +931,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
                 
 				aLine += 11;
 
-				disconnect();
+				disconnect(false);
 				fire(ClientListener::Redirect(), this, aLine);
     			return;
         	}
@@ -921,7 +941,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
         case 'V':
 	    	// $ValidateDenide
     		if(strncmp(aLine+2, "alidateDenide", 13) == 0) {
-				disconnect();
+				disconnect(false);
 				fire(ClientListener::NickTaken(), this);
 	    		return;
     	    }
@@ -1101,7 +1121,7 @@ void NmdcHub::myInfo() {
 	char modeChar = '?';
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
 		modeChar = '5';
-	else if(ClientManager::getInstance()->isActive(this))
+	else if(isActive())
 		modeChar = 'A';
 	else 
 		modeChar = 'P';
@@ -1126,7 +1146,7 @@ void NmdcHub::myInfo() {
 	}
 
 	int NetLimit = Util::getNetLimiterLimit();
-	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(CONNECTION);
+	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(UPLOAD_SPEED);
 
 	if(getStealth() == false) {
 		if (UploadManager::getFireballStatus()) {
@@ -1158,9 +1178,9 @@ void NmdcHub::myInfo() {
 	}
 }
 
-void NmdcHub::disconnect() throw() {
+void NmdcHub::disconnect(bool graceless) throw() {
 	state = STATE_CONNECT;
-	Client::disconnect();
+	Client::disconnect(graceless);
 	clearUsers();
 }
 
@@ -1175,8 +1195,8 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 		tmp[i] = '$';
 	}
 	int chars = 0;
-	if(ClientManager::getInstance()->isActive(this) && !BOOLSETTING(SEARCH_PASSIVE)) {
-		string x = getLocalIp();
+	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
+		string x = getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp();
 		buf = new char[x.length() + aString.length() + 64];
 		chars = sprintf(buf, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	} else {

@@ -114,10 +114,7 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 			// Insert before the automatic searches (manual search) 
 			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
 				if(qi->getWindow() == NULL) {
-					//if(qi != NULL)
-						searchQueue.insert(qi, sqi);
-					//else
-					//	searchQueue.push_front(sqi);
+					searchQueue.insert(qi, sqi);
 					added = true;
 					break;
 				}

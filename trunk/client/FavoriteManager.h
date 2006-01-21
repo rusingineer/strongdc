@@ -37,7 +37,7 @@
 class HubEntry {
 public:
 	typedef vector<HubEntry> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 	
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
 	name(aName), server(aServer), description(aDescription), country(Util::emptyString), 
@@ -77,23 +77,19 @@ class FavoriteHubEntry {
 public:
 	typedef FavoriteHubEntry* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	FavoriteHubEntry() throw() : connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { };
 	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), 
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { };
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
-		userliststate(rhs.userliststate), mode(0)
-		, rawOne(rhs.rawOne)
-		, rawTwo(rhs.rawTwo)
-		, rawThree(rhs.rawThree)
-		, rawFour(rhs.rawFour)
-		, rawFive(rhs.rawFive) { };
+		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip),
+		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { };
 	~FavoriteHubEntry() throw() { }
 	
 	const string& getNick(bool useDefault = true) const { 
@@ -135,7 +131,7 @@ class RecentHubEntry {
 public:
 	typedef RecentHubEntry* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	~RecentHubEntry() throw() { }	
 	
@@ -150,7 +146,7 @@ class PreviewApplication {
 public:
 	typedef PreviewApplication* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	PreviewApplication() throw() {}
 	PreviewApplication(string n, string a, string r, string e) : name(n), application(a), arguments(r), extension(e) {};

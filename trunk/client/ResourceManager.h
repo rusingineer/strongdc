@@ -38,7 +38,7 @@ private:
 	friend class Singleton<ResourceManager>;
 	
 	typedef HASH_MAP<string, Strings> NameMap;
-	typedef NameMap::iterator NameIter;
+	typedef NameMap::const_iterator NameIter;
 
 	ResourceManager() : rtl(false) {
 		createWide();

@@ -265,6 +265,7 @@ wstring& Text::utf8ToWide(const string& str, wstring& tgt) throw() {
 }
 
 wstring& Text::toLower(const wstring& str, wstring& tmp) throw() {
+	if(str.empty()) return tmp;
 	tmp.reserve(str.length());
 	wstring::const_iterator end = str.end();
 	for(wstring::const_iterator i = str.begin(); i != end; ++i) {
@@ -274,6 +275,7 @@ wstring& Text::toLower(const wstring& str, wstring& tmp) throw() {
 }
 
 string& Text::toLower(const string& str, string& tmp) throw() {
+	if(str.empty()) return tmp;
 	tmp.reserve(str.length());
 	const char* end = &str[0] + str.length();
 	for(const char* p = &str[0]; p < end;) {

@@ -154,7 +154,6 @@ public:
 		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE_ALL, onWindowMinimizeAll)
 		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE_ALL, onWindowRestoreAll)
 		COMMAND_ID_HANDLER(IDC_FINISHED, onFinished)
-		COMMAND_ID_HANDLER(IDC_FINISHEDMP3, onFinishedMP3)
 		COMMAND_ID_HANDLER(IDC_FINISHED_UL, onFinishedUploads)
 		COMMAND_ID_HANDLER(IDC_UPLOAD_QUEUE, onUploadQueue);
 		COMMAND_ID_HANDLER(IDC_SHUTDOWN, onShutDown)
@@ -205,7 +204,6 @@ public:
 	LRESULT OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onFinishedMP3(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
@@ -390,7 +388,7 @@ private:
 		CriticalSection cs;
 		list<DirectoryListInfo*> fileLists;
 
-		FileListQueue() : stop(false) {}
+		FileListQueue() : stop(true) {}
 		virtual ~FileListQueue() throw() {
 			shutdown();
 		}

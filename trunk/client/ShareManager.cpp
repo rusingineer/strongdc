@@ -462,7 +462,7 @@ void ShareManager::removeDirectory(const string& aDirectory, bool duringRefresh)
 	if(d[d.length() - 1] != PATH_SEPARATOR)
 		d += PATH_SEPARATOR;
 
-	Directory::MapIter i = directories.find(d);
+	Directory::Map::iterator i = directories.find(d);
 	if(i != directories.end()) {
 		delete i->second;
 		directories.erase(i);
@@ -693,7 +693,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 	Directory* dir = new Directory(Util::getLastDir(aName), aParent);
 	dir->addType(SearchManager::TYPE_DIRECTORY); // needed since we match our own name in directory searches
 
-	Directory::File::Iter lastFileIter = dir->files.begin();
+	Directory::File::Set::iterator lastFileIter = dir->files.begin();
 
 	FileFindIter end;
 #ifdef _WIN32
@@ -767,7 +767,6 @@ void ShareManager::addTree(Directory* dir) {
 	for(Directory::File::Iter i = dir->files.begin(); i != dir->files.end(); ) {
 		addFile(dir, i++);
 	}
-	sharedSize += dir->size;
 }
 
 void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
@@ -776,12 +775,13 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 	HashFileIter j = tthIndex.find(const_cast<TTHValue*>(&f.getTTH()));
 	if(j == tthIndex.end()) {
 		dir->size+=f.getSize();
+		sharedSize+=f.getSize();
 	} else {
-		if(!SETTING(LIST_DUPES)) {
+		/*if(!SETTING(LIST_DUPES)) {
 			LogManager::getInstance()->message(STRING(DUPLICATE_FILE_NOT_SHARED) + dir->getFullName() + f.getName() + " (" + STRING(SIZE) + ": " + Util::toString(f.getSize()) + " " + STRING(B) + ") " + STRING(DUPLICATE_MATCH) + j->second->getParent()->getFullName() + j->second->getName(), true);
-			dir->files.erase(i);
+			dir->files.erase(const_cast<Directory::File::Set::iterator>(i));
 			return;
-		}
+		}*/
 	}
 
 	dir->addType(getType(f.getName()));
@@ -803,6 +803,7 @@ void ShareManager::removeTTH(const TTHValue& tth, const Directory::File::Iter& i
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ShareException) {
 	if(Thread::safeInc(refreshing) > 1) {
 		Thread::safeDec(refreshing);
+		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS), false);
 		return;
 	}
 
@@ -1353,7 +1354,7 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 		return;
 
 	StringSearch::List ssl;
-	for(StringList::iterator i = sl.begin(); i != sl.end(); ++i) {
+	for(StringList::const_iterator i = sl.begin(); i != sl.end(); ++i) {
 		if(!i->empty()) {
 			ssl.push_back(StringSearch(*i));
 		}

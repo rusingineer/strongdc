@@ -90,9 +90,9 @@ private:
 		int64_t speed;
 	};
 	typedef deque<Stat> StatList;
-	typedef StatList::iterator StatIter;
+	typedef StatList::const_iterator StatIter;
 	typedef deque<int64_t> AvgList;
-	typedef AvgList::iterator AvgIter;
+	typedef AvgList::const_iterator AvgIter;
 
 	StatList up;
 	AvgList upAvg;

@@ -88,15 +88,15 @@ _T("Hub: Hub ip as typed when connecting (empty = all hubs, \"op\" = hubs where 
 To: PM recipient\r\n\
 Only once: Send only once per user from search frame\r\n\
 In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m, ...). The following are available:\r\n\
-%[mynick]: your own nick\r\n\
-%[nick]: the users nick (user && search context only)\r\n\
-%[tag]: user tag (user && search context only)\r\n\
-%[description]: user description (user && search context only)\r\n\
-%[email]: user email (user && search context only)\r\n\
-%[share]: user shared bytes (exact) (user && search context only)\r\n\
-%[shareshort]: user shared bytes (formatted) (user && search context only)\r\n\
-%[ip]: user ip (if supported by hub)\r\n\
-%[file]: filename (search context only)\r\n\
+%[myNI]: your own nick\r\n\
+%[userNI]: the users nick (user && search context only)\r\n\
+%[userTAG]: user tag (user && search context only)\r\n\
+%[userDE]: user description (user && search context only)\r\n\
+%[userEM]: user email (user && search context only)\r\n\
+%[userSS]: user shared bytes (exact) (user && search context only)\r\n\
+%[userSSshort]: user shared bytes (formatted) (user && search context only)\r\n\
+%[userI4]: user ip (if supported by hub)\r\n\
+%[fileFN]: filename (search context only)\r\n\
 %[line:reason]: opens up a window asking for \"reason\"\
 "));
 
@@ -105,21 +105,25 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 	} else {
 		// More difficult, determine type by what it seems to be...
 		if((_tcsncmp(command.c_str(), _T("$To: "), 5) == 0) &&
-			command.find(_T(" From: %[mynick] $<%[mynick]> ")) != string::npos &&
+			(command.find(_T(" From: %[myNI] $<%[myNI]> ")) != string::npos ||
+			command.find(_T(" From: %[mynick] $<%[mynick]> ")) != string::npos) &&
 			command.find(_T('|')) == command.length() - 1) // if it has | anywhere but the end, it is raw
 		{
 			string::size_type i = command.find(_T(' '), 5);
 			dcassert(i != string::npos);
 			tstring to = command.substr(5, i-5);
-			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(i + 30, command.length()-i-31)), true, false));
+			string::size_type cmd_pos = command.find(_T('>'), 5) + 2;
+			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true, false));
 			ctrlPM.SetCheck(BST_CHECKED);
 			ctrlNick.SetWindowText(to.c_str());
 			ctrlCommand.SetWindowText(cmd.c_str());
-		} else if((_tcsncmp(command.c_str(), _T("<%[mynick]> "), 12) == 0) &&
+		} else if(((_tcsncmp(command.c_str(), _T("<%[mynick]> "), 12) == 0) ||
+			(_tcsncmp(command.c_str(), _T("<%[myNI]> "), 10) == 0)) &&
 			command[command.length()-1] == '|') 
 		{
 			// Looks like a chat thing...
-			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(12, command.length()-13)), true, false));
+			string::size_type cmd_pos = command.find(_T('>')) + 2;
+			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true, false));
 			ctrlChat.SetCheck(BST_CHECKED);
 			ctrlCommand.SetWindowText(cmd.c_str());
 		} else {

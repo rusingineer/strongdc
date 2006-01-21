@@ -30,7 +30,8 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_NICK, ResourceManager::NICK },
 	{ IDC_SETTINGS_EMAIL, ResourceManager::EMAIL },
 	{ IDC_SETTINGS_DESCRIPTION, ResourceManager::DESCRIPTION },
-	{ IDC_SETTINGS_CONNECTION_TYPE, ResourceManager::SETTINGS_CONNECTION_TYPE },
+	{ IDC_SETTINGS_UPLOAD_SPEED, ResourceManager::SETTINGS_UPLOAD_SPEED },
+	{ IDC_SETTINGS_MEBIBYES, ResourceManager::MBITSPS },
 	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
 	{ IDC_DU, ResourceManager::DU },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
@@ -49,7 +50,7 @@ PropPage::Item GeneralPage::items[] = {
 void GeneralPage::write()
 {
 	PropPage::write((HWND)(*this), items);
-	settings->set(SettingsManager::CONNECTION, SettingsManager::connectionSpeeds[ctrlConnection.GetCurSel()]);
+	settings->set(SettingsManager::UPLOAD_SPEED, SettingsManager::connectionSpeeds[ctrlConnection.GetCurSel()]);
 }
 
 LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -70,15 +71,15 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlDownloadSpeed.SetCurSel(ctrlDownloadSpeed.FindString(0, Text::toT(SETTING(DOWN_SPEED)).c_str()));
 	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, Text::toT(SETTING(UP_SPEED)).c_str()));
 
-	int q = 1;
-	for(int i = 0; i < SettingsManager::SPEED_LAST; i++) {
+	int q = -1;
+	for(size_t i = 0; i < SettingsManager::connectionSpeeds.size(); i++) {
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
 		tstring conn = Text::toT(SettingsManager::connectionSpeeds[i]); // oprava connections
 		cbitem.pszText = const_cast<TCHAR*>(conn.c_str());
 		cbitem.iItem = i; 
 
 
-		switch(i) {
+	/*	switch(i) {
 			case 0: q = 1; break;
 			case 1: q = 2; break;
 			case 2: q = 3; break;
@@ -87,7 +88,7 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 			case 5: q = 5; break;
 			case 6: q = 7; break;
 			case 7: q = 7; break;
-		}
+		}*/
 		
 		cbitem.iImage = q;
 
@@ -100,7 +101,7 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	int m = 0;
 	for (m = 0; m<8; m++) {
-		if(SettingsManager::connectionSpeeds[m] == SETTING(CONNECTION)) break;
+		if(SettingsManager::connectionSpeeds[m] == SETTING(UPLOAD_SPEED)) break;
 	}
 	ctrlConnection.SetCurSel(m);
 

@@ -231,7 +231,8 @@ private:
 				user = s.getUser();
 				return *this;
 			}
-			User::Ptr& getUser() { return user; };
+//			User::Ptr& getUser() { return user; };
+			const User::Ptr& getUser() const { return user; };
 
 			User::Ptr user;
 		};
@@ -240,7 +241,7 @@ private:
 		};
 
 		typedef vector<SourceInfo> SourceList;
-		typedef SourceList::iterator SourceIter;
+		typedef SourceList::const_iterator SourceIter;
 
 		enum {
 			MASK_TARGET = 1 << COLUMN_TARGET,
@@ -351,7 +352,7 @@ private:
 
 	typedef pair<Tasks, void*> Task;
 	typedef list<Task> TaskList;
-	typedef TaskList::iterator TaskIter;
+	typedef TaskList::const_iterator TaskIter;
 	
 	TaskList tasks;
 	bool spoken;

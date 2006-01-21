@@ -45,7 +45,7 @@ typedef vector<u_int16_t> PartsInfo;
 
 // ...
 typedef map<u_int16_t, u_int16_t> BlockMap;
-typedef BlockMap::iterator BlockIter;
+typedef BlockMap::const_iterator BlockIter;
 
 class Download;
 
@@ -62,7 +62,7 @@ private:
 	friend class FileChunksInfo;
 
 	typedef map<int64_t, Chunk*> Map;
-	typedef Map::iterator  Iter;
+	typedef Map::const_iterator  Iter;
 
 	Chunk(int64_t startOffset, int64_t endOffset) 
 		: download(NULL), pos(startOffset), end(endOffset), overlappedCount(0)
@@ -127,6 +127,11 @@ public:
 	 * Or split the biggest duplicate chunk both in running and parts info
 	 */
 	int64_t getChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
+
+	/**
+	 * Detects whether new chunk can be started
+	 */
+	int findChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
 
 	/**
      * Abandon all unverified bytes received by a chunk

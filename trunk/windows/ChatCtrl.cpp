@@ -66,7 +66,7 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 	SendMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
 }
 
-void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
 	long lSelBeginSaved, lSelEndSaved;
 	GetSel(lSelBeginSaved, lSelEndSaved);
@@ -94,8 +94,8 @@ void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LP
     myMess = bMyMess;
 	tstring msg = sMsg;
 	CAtlString sText;
-	if(&u) {
-		unsigned int iLen = 0, iAuthorLen = _tcslen(Text::toT(u.getIdentity().getNick()).c_str())+1;
+	if(i.getUser()) {
+		unsigned int iLen = 0, iAuthorLen = _tcslen(Text::toT(i.getNick()).c_str())+1;
 		if(sMsg[0] == _T('*')) iLen = 1;
    		sText = sMsg+iAuthorLen+iLen;
 		msg = msg.substr(0, iAuthorLen+iLen);
@@ -108,8 +108,8 @@ void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LP
 			SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 			SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		} else {
-			bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u);
-			bool isOP = (m_pUsers != NULL) ? u.getIdentity().isOp() : false;
+			bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(i.getUser());
+			bool isOP = (m_pUsers != NULL) ? i.isOp() : false;
 
 			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP || isFavorite) {
 				SetSel(lSelBegin, lSelBegin+iLen+1);
@@ -222,7 +222,7 @@ void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LP
 	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS) && bUseEmo) {
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
 		int smiles = 0; int nIdxFound = -1, maxsmiles = SETTING(MAX_EMOTICONS);
-		for(;;) {
+		while(true) {
 			TCHAR Delimiter[1024] = { NULL };
 			TCHAR *rpl = NULL;
 			CAGEmotion::Ptr pFoundedEmotion = NULL;
@@ -248,7 +248,7 @@ void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LP
 					TCHAR *out = cmp + _tcslen(Delimiter); 
 					_tcscpy(afterAppendText, out);
 				}
-				AppendTextOnly(sMyNick, beforeAppendText, cf, (&u ? Text::toT(u.getIdentity().getNick()) : Util::emptyStringT).c_str());
+				AppendTextOnly(sMyNick, beforeAppendText, cf, Text::toT(i.getNick()).c_str());
 				COLORREF clrBkColor = WinUtil::m_ChatTextGeneral.crBackColor;
 				if(myMess == true) clrBkColor = WinUtil::m_ChatTextMyOwn.crBackColor;
 				HBITMAP hbmNext = pFoundedEmotion->GetEmotionBmp(clrBkColor);
@@ -259,13 +259,13 @@ void ChatCtrl::AppendText(const OnlineUser& u, LPCTSTR sMyNick, bool bMyMess, LP
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, sText, cf, (&u ? Text::toT(u.getIdentity().getNick()) : Util::emptyStringT).c_str());
+					AppendTextOnly(sMyNick, sText, cf, Text::toT(i.getNick()).c_str());
 				}
 				break;
 			}
 		}
 	} else {
-		AppendTextOnly(sMyNick, sText, cf, (&u ? Text::toT(u.getIdentity().getNick()) : Util::emptyStringT).c_str());
+		AppendTextOnly(sMyNick, sText, cf, Text::toT(i.getNick()).c_str());
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	SendMessage(EM_SETSCROLLPOS, 0, (LPARAM)&cr);
@@ -317,7 +317,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 		} else {
 			bool isFavorite = false;
 			FavoriteManager::FavoriteMap ul = FavoriteManager::getInstance()->getFavoriteUsers();
-			for(FavoriteManager::FavoriteMap::iterator i = ul.begin(); i != ul.end(); ++i) {
+			for(FavoriteManager::FavoriteMap::const_iterator i = ul.begin(); i != ul.end(); ++i) {
 				FavoriteUser pUser = i->second;
 				if(_tcsicmp(Text::toT(pUser.getUser()->getFirstNick()).c_str(), sAuthor) == 0) {
 					isFavorite = true;
@@ -517,7 +517,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sText, CHARFORMAT2& cf, L
 	// Zvyrazneni vsech vyskytu nicku Favorite useru
 	lSelEnd = GetTextLengthEx(GTL_PRECISE);
 	FavoriteManager::FavoriteMap ul = FavoriteManager::getInstance()->getFavoriteUsers();
-	for(FavoriteManager::FavoriteMap::iterator i = ul.begin(); i != ul.end(); ++i) {
+	for(FavoriteManager::FavoriteMap::const_iterator i = ul.begin(); i != ul.end(); ++i) {
 		FavoriteUser pUser = i->second;
 		string sU = "";
 

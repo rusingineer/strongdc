@@ -46,7 +46,7 @@ public:
 
 	typedef Download* Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	enum {
 		FLAG_USER_LIST = 0x01,
@@ -61,15 +61,14 @@ public:
 		FLAG_TREE_TRIED = 0x200,
 		FLAG_PARTIAL_LIST = 0x400,
 		FLAG_TESTSUR = 0x800,
-		FLAG_MP3_INFO = 0x1000,
 		FLAG_CHECK_FILE_LIST = 0x2000,
-		FLAG_MULTI_CHUNK = 0x4000,
-		FLAG_PARTIAL = 0x8000,
-		FLAG_TTH_CHECK = 0x10000
+		FLAG_MULTI_CHUNK = 0x2000,
+		FLAG_PARTIAL = 0x4000,
+		FLAG_TTH_CHECK = 0x8000
 	};
 
 	Download() throw();
-	Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw();
+	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw();
 
 	/**
 	 * @remarks This function is only used from DownloadManager but its
@@ -109,7 +108,7 @@ public:
 	GETSET(OutputStream*, file, File);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
-	GETSET(OnlineUser*, user, User);
+	GETSET(User::Ptr, user, User);
 	int64_t quickTick;
 	
 private:
@@ -171,7 +170,7 @@ public:
 	 * display an error string.
 	 */
 	virtual void on(Failed, Download*, const string&) throw() { };
-	virtual void on(Status, ConnectionQueueItem*, const string&) throw() { };
+	virtual void on(Status, const User::Ptr&, const string&) throw() { };
 	virtual void on(Verifying, const string&, int64_t) throw() { };
 };
 
@@ -191,6 +190,8 @@ public:
 		conn->addListener(this);
 		checkDownloads(conn);
 	}
+
+	void checkIdle(const User::Ptr& user);
 
 	/** @internal */
 	void abortDownload(const string& aTarget);
@@ -259,7 +260,7 @@ private:
 	private:
 		typedef pair<string, string> FilePair;
 		typedef vector<FilePair> FileList;
-		typedef FileList::iterator FileIter;
+		typedef FileList::const_iterator FileIter;
 
 		bool active;
 
@@ -269,9 +270,10 @@ private:
 	
 	CriticalSection cs;
 	Download::List downloads;
-	
+	UserConnection::List idlers;
+
 	bool checkRollback(Download* aDownload, const u_int8_t* aBuf, int aLen) throw(FileException);
-	void removeConnection(UserConnection::Ptr aConn, bool reuse = false, bool ntd = false, bool reconn = false);
+	void removeConnection(UserConnection::Ptr aConn);
 	void removeDownload(Download* aDown);
 	void fileNotAvailable(UserConnection* aSource);
 	void noSlots(UserConnection* aSource);

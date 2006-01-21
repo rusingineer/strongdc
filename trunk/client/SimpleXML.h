@@ -199,7 +199,7 @@ private:
 	public:
 		typedef Tag* Ptr;
 		typedef vector<Ptr> List;
-		typedef List::iterator Iter;
+		typedef List::const_iterator Iter;
 
 		/**
 		 * A simple list of children. To find a tag, one must search the entire list.
@@ -235,7 +235,7 @@ private:
 
 		StringList getAttribs() {
 			StringList d;
-			for(StringPairList::iterator i = attribs.begin(); i != attribs.end(); ++i) {
+			for(StringPairList::const_iterator i = attribs.begin(); i != attribs.end(); ++i) {
 				d.push_back(i->first);
 			}
 			return d;

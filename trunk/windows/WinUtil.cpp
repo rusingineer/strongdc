@@ -102,21 +102,20 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
 	{IDC_QUEUE, 6, true, ResourceManager::MENU_DOWNLOAD_QUEUE},
 	{IDC_FINISHED, 7, true, ResourceManager::FINISHED_DOWNLOADS},
-	{IDC_FINISHEDMP3, 8, true, ResourceManager::FINISHED_MP3_DOWNLOADS},
-	{IDC_UPLOAD_QUEUE, 9, true, ResourceManager::UPLOAD_QUEUE},
-	{IDC_FINISHED_UL, 10, true, ResourceManager::FINISHED_UPLOADS},
-	{ID_FILE_SEARCH, 11, false, ResourceManager::MENU_SEARCH},
-	{IDC_FILE_ADL_SEARCH, 12, true, ResourceManager::MENU_ADL_SEARCH},
-	{IDC_SEARCH_SPY, 13, true, ResourceManager::MENU_SEARCH_SPY},
-	{IDC_NET_STATS, 14, true, ResourceManager::NETWORK_STATISTICS},
-	{IDC_OPEN_FILE_LIST, 15, false, ResourceManager::MENU_OPEN_FILE_LIST},
-	{ID_FILE_SETTINGS, 16, false, ResourceManager::MENU_SETTINGS},
-	{IDC_NOTEPAD, 17, true, ResourceManager::MENU_NOTEPAD},
-	{IDC_AWAY, 18, true, ResourceManager::AWAY},
-	{IDC_SHUTDOWN, 19, true, ResourceManager::SHUTDOWN},
-	{IDC_LIMITER, 20, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
-	{IDC_UPDATE, 21, false, ResourceManager::UPDATE_CHECK},
-	{IDC_DISABLE_SOUNDS, 22, true, ResourceManager::DISABLE_SOUNDS},
+	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::UPLOAD_QUEUE},
+	{IDC_FINISHED_UL, 9, true, ResourceManager::FINISHED_UPLOADS},
+	{ID_FILE_SEARCH, 10, false, ResourceManager::MENU_SEARCH},
+	{IDC_FILE_ADL_SEARCH, 11, true, ResourceManager::MENU_ADL_SEARCH},
+	{IDC_SEARCH_SPY, 12, true, ResourceManager::MENU_SEARCH_SPY},
+	{IDC_NET_STATS, 13, true, ResourceManager::NETWORK_STATISTICS},
+	{IDC_OPEN_FILE_LIST, 14, false, ResourceManager::MENU_OPEN_FILE_LIST},
+	{ID_FILE_SETTINGS, 15, false, ResourceManager::MENU_SETTINGS},
+	{IDC_NOTEPAD, 16, true, ResourceManager::MENU_NOTEPAD},
+	{IDC_AWAY, 17, true, ResourceManager::AWAY},
+	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
+	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
+	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
+	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS},
 	{0, 0, false, ResourceManager::MENU_NOTEPAD}
 };
 
@@ -406,7 +405,6 @@ void WinUtil::init(HWND hWnd) {
 
 	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CTSTRING(MENU_DOWNLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CTSTRING(FINISHED_DOWNLOADS));
-	transfers.AppendMenu(MF_STRING, IDC_FINISHEDMP3, CTSTRING(FINISHED_MP3_DOWNLOADS));
 	transfers.AppendMenu(MF_SEPARATOR);
 	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(UPLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CTSTRING(FINISHED_UPLOADS));
@@ -1349,7 +1347,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 		MagMap hashes;
 		tstring fname, fhash, type, param;
 		int64_t fsize = 0;
-		for(TStringList::iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
+		for(TStringList::const_iterator idx = mag.getTokens().begin(); idx != mag.getTokens().end(); ++idx) {
 			// break into pairs
 			string::size_type pos = idx->find(_T('='));
 			if(pos != string::npos) {
@@ -1681,7 +1679,7 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-int WinUtil::getImage(const Identity& u, Client* c) {
+int WinUtil::getImage(const Identity& u) {
 	int image;
 
 	if(u.isOp()) {
@@ -1716,7 +1714,7 @@ int WinUtil::getImage(const Identity& u, Client* c) {
 		image+=22;
 	}
 
-	if(!ClientManager::getInstance()->isActive(c) && !u.isTcpActive()) {
+	if(!ClientManager::getInstance()->isActive(u.getHubUrl()) && !u.isTcpActive()) {
 		// Users we can't connect to...
 		image+=44;
 	}

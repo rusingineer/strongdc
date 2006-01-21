@@ -48,11 +48,11 @@ class DirectoryItem {
 public:
 	typedef DirectoryItem* Ptr;
 	typedef HASH_MULTIMAP<User::Ptr, Ptr, User::HashFunction> DirectoryMap;
-	typedef DirectoryMap::iterator DirectoryIter;
+	typedef DirectoryMap::const_iterator DirectoryIter;
 	typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
 	
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	DirectoryItem() : priority(QueueItem::DEFAULT) { };
 	DirectoryItem(const User::Ptr& aUser, const string& aName, const string& aTarget, 
@@ -87,16 +87,14 @@ public:
 	void addPfs(const User::Ptr& aUser, const string& aDir) throw();
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
-		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick());
-		string file = Util::getAppPath() + "TestSURs\\" + fileName;
-		add(file, -1, NULL, aUser, fileName, true, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
-// @todo		aUser->setHasTestSURinQueue(true);
+		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick())  + "." + aUser->getCID().toBase32();
+		string target = Util::getAppPath() + "TestSURs\\" + fileName;
+		add(target, -1, NULL, aUser, fileName, false, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
 		try {
 			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aUser->getFirstNick());
-// @todo			aUser->setHasTestSURinQueue(false);
 		} catch(...) {
 			// exception
 		}
@@ -213,7 +211,7 @@ public:
 	private:
 		QueueItem::StringMap queue;
 		/** A hint where to insert an item... */
-		QueueItem::StringIter lastInsert;
+		QueueItem::StringMap::iterator lastInsert;
 	};
 
 	/** QueueItems by target */

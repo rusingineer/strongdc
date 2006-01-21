@@ -268,7 +268,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_WHOLE_DIR_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
-	resultsMenu.AppendMenu(MF_STRING, IDC_MP3, CTSTRING(GET_MP3INFO));
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(resultsMenu);
 	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-2, MF_BYPOSITION);
@@ -298,6 +297,8 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.SetCurSel(0);
+
+	SettingsManager::getInstance()->addListener(this);
 
 	bHandled = FALSE;
 	return 1;
@@ -528,16 +529,6 @@ void SearchFrame::SearchInfo::view() {
 	}
 }
 
-void SearchFrame::SearchInfo::GetMP3Info() {
-	try {
-		if(sr->getType() == SearchResult::TYPE_FILE) {
-			QueueManager::getInstance()->add(Util::getAppPath() + "MP3Info\\" + Text::fromT(fileName), 2100, NULL, sr->getUser(), 
-				sr->getFile(), sr->getUtf8(), QueueItem::FLAG_MP3_INFO);
-		}
-	} catch(const Exception&) {
-	}
-}
-	
 void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
@@ -751,11 +742,10 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-		SearchManager::getInstance()->removeListener(this);
-		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
- 		ClientManager* clientMgr = ClientManager::getInstance();
- 		clientMgr->removeListener(this);
+		if(searches != 0) TimerManager::getInstance()->removeListener(this);
+		SearchManager::getInstance()->removeListener(this);
+ 		ClientManager::getInstance()->removeListener(this);
 
 		closed = true;
 		PostMessage(WM_CLOSE);
@@ -1092,7 +1082,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if(!si->getTTH().empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
-					si->mainItem = true;
+//					si->mainItem = true;
 					addEntry(si, 0);
 				}
 				if (BOOLSETTING(BOLD_SEARCH)) {
@@ -1258,13 +1248,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 					resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MFS_DISABLED);
 					resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_DISABLED);
 					resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_DISABLED);
-				}
-	
-				if(ctrlResults.GetSelectedCount() == 1 && ((Util::getFileExt(sr->getFileName()) == ".mp3") || (Util::getFileExt(sr->getFileName()) == ".MP3"))) {
-					resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MFS_ENABLED);
-				} else {
-					resultsMenu.EnableMenuItem(IDC_MP3, MF_BYCOMMAND | MFS_DISABLED);
-				}					
+				}		
 			}
 
 			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
@@ -1304,8 +1288,8 @@ void SearchFrame::initHubs() {
 
 	Client::List& clients = clientMgr->getClients();
 
-	Client::List::iterator it;
-	Client::List::iterator endIt = clients.end();
+	Client::List::const_iterator it;
+	Client::List::const_iterator endIt = clients.end();
 	for(it = clients.begin(); it != endIt; ++it) {
 		Client* client = *it;
 		if (!client->isConnected())
@@ -1395,6 +1379,7 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
+
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
 			fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 		} else {
@@ -1435,9 +1420,8 @@ void SearchFrame::SearchInfo::update() {
 	if(sr->getTTH() != NULL)
 		setTTH(Text::toT(sr->getTTH()->toBase32()));
 	
-	string us = ident.get("US");
-	if (!us.empty()) {
-		uploadSpeed = Text::toT(Util::formatBytes(Util::toInt64(us)) + "/s");
+	if (sr->getUser()->getLastDownloadSpeed() > 0) {
+		uploadSpeed = Text::toT(Util::formatBytes(sr->getUser()->getLastDownloadSpeed()) + "/s");
 	} else if(user->isSet(User::FIREBALL)) {
 		uploadSpeed = Text::toT(">=100 kB/s");
 	} else {
@@ -1571,29 +1555,7 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 	}
 
 	if(match) {
-		int image = 0;
-		if (BOOLSETTING(USE_SYSTEM_ICONS)) {
-			image = item->sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(item->sr->getFile())) : WinUtil::getDirIconIndex();
-		} else {
-			const string& tmp = ClientManager::getInstance()->getIdentity(item->sr->getUser()).getConnection();
-			if( (tmp == "28.8Kbps") ||
-				(tmp == "33.6Kbps") ||
-				(tmp == "56Kbps") ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_MODEM]) ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_SATELLITE]) ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_WIRELESS]) ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_ISDN]) ) {
-				image = 1;
-			} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_CABLE]) ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_DSL]) ) {
-				image = 2;
-			} else if( (tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T1]) ||
-				(tmp == SettingsManager::connectionSpeeds[SettingsManager::SPEED_T3]) ) {
-				image = 3;
-			}
-			if(item->sr->getType() == SearchResult::TYPE_FILE)
-				image+=4;
-		}
+		int image = item->imageIndex();
 
 		int k = -1;
 		if(pos == 0) {

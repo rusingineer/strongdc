@@ -51,7 +51,7 @@ const string Download::ANTI_FRAG_EXT = ".antifrag";
 Download::Download() throw() : file(NULL), tth(NULL), treeValid(false) { 
 }
 
-Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
+Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw() : source(qi->getSourcePath(aUser)),
 	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), tth(qi->getTTH()), treeValid(false),
 	quickTick(GET_TICK()) { 
 	
@@ -60,8 +60,6 @@ Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSo
 
 	if(qi->isSet(QueueItem::FLAG_USER_LIST))
 		setFlag(Download::FLAG_USER_LIST);
-	if(qi->isSet(QueueItem::FLAG_MP3_INFO))
-		setFlag(Download::FLAG_MP3_INFO);
 	if(qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
 		setFlag(Download::FLAG_CHECK_FILE_LIST);
 	if(qi->isSet(QueueItem::FLAG_TESTSUR))
@@ -76,7 +74,7 @@ Download::Download(QueueItem* qi, const User::Ptr& aUser, QueueItem::Source* aSo
 	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
 
-	user = &ClientManager::getInstance()->getOnlineUser(aUser);
+	user = aUser;
 }
 
 int64_t Download::getQueueTotal() {
@@ -179,15 +177,25 @@ int DownloadManager::FileMover::run() {
 		try {
 			File::renameFile(next.first, next.second);
 		} catch(const FileException&) {
-			// Too bad...
+			try {
+				// Try to just rename it to the correct name  at least
+				string newTarget = Util::getFilePath(next.first) + Util::getFileName(next.second);
+				File::renameFile(next.first, newTarget);
+				LogManager::getInstance()->message(next.first + STRING(RENAMED_TO) + newTarget, true);
+			} catch(const FileException& e) {
+				LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + next.first + ": " + e.getError(), true);
+			}
 		}
 	}
 }
 
-void DownloadManager::removeConnection(UserConnection::Ptr aConn, bool reuse /* = false */, bool ntd /* = false */, bool reconnect /* = false */) {
+void DownloadManager::removeConnection(UserConnection::Ptr aConn) {
 	dcassert(aConn->getDownload() == NULL);
 	aConn->removeListener(this);
-	ConnectionManager::getInstance()->putDownloadConnection(aConn, reuse, ntd, reconnect);
+	aConn->disconnect();
+
+ 	Lock l(cs);
+ 	idlers.erase(remove(idlers.begin(), idlers.end(), aConn), idlers.end());
 }
 
 class TreeOutputStream : public OutputStream {
@@ -226,6 +234,18 @@ private:
 	size_t bufPos;
 };
 
+void DownloadManager::checkIdle(const User::Ptr& user) {	
+	Lock l(cs);	
+	for(UserConnection::List::iterator i = idlers.begin(); i != idlers.end(); ++i) {	
+		UserConnection* uc = *i;	
+		if(uc->getUser() == user) {	
+			idlers.erase(i);	
+			checkDownloads(uc);	
+			return;	
+		}	
+	}	
+}
+
 void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false*/, string aTarget) {
 	dcassert(aConn->getDownload() == NULL);
 
@@ -242,9 +262,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	// this happen when download finished, we need reconnect.	
 	if(reconn){
-		if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
-			removeConnection(aConn, false, false, true);
-		else
+//		if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
+//			removeConnection(aConn, true);
+//		else
 			removeConnection(aConn);
 		return;
 	}
@@ -255,9 +275,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		message, aTarget);
 
 	if(d == NULL) {
-		if(!message.empty() && aConn->getCQI())
-			fire(DownloadManagerListener::Status(), aConn->getCQI(), message);
-		removeConnection(aConn, true);
+		if(!message.empty()) fire(DownloadManagerListener::Status(), aConn->getUser(), message);
+		Lock l(cs);
+ 	    idlers.push_back(aConn);
 		return;
 	}
 
@@ -576,10 +596,21 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 
 		if(SETTING(BUFFER_SIZE) > 0 ) {
-			d->setFile(new BufferedOutputStream<true>(d->getFile()));
+			try {
+				d->setFile(new BufferedOutputStream<true>(d->getFile()));
+			} catch(const Exception& e) {
+				delete d->getFile();
+				d->setFile(NULL);
+				fire(DownloadManagerListener::Failed(), d, e.getError());
+				aSource->setDownload(NULL);
+				removeDownload(d);			
+				QueueManager::getInstance()->putDownload(d, false);
+				removeConnection(aSource);
+				return false;
+			}
 		}
 	
-		if(d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_MP3_INFO)){
+		if(d->isSet(Download::FLAG_MULTI_CHUNK)){
 			if(d->getTreeValid()) {
 				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
 				d->setFlag(Download::FLAG_TTH_CHECK);
@@ -650,7 +681,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				string aTarget = d->getTarget();
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
-				aSource->setLineMode();
+				aSource->setLineMode(0);
 				checkDownloads(aSource, false, aTarget);
 			}else{
 				dcdebug("Chunk disconnected\n");
@@ -658,7 +689,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				removeDownload(d);
 				fire(DownloadManagerListener::Failed(), d, e.getError());
 				QueueManager::getInstance()->putDownload(d, false);
-				removeConnection(aSource, false, false, true);
+				removeConnection(aSource);
 				ClientManager::getInstance()->connect(aSource->getUser());
 			}
 			return;
@@ -696,7 +727,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 						removeDownload(d);
 						fire(DownloadManagerListener::Failed(), d, buf);
 						QueueManager::getInstance()->putDownload(d, false);
-						removeConnection(aSource, false, false, true);
+						removeConnection(aSource);
 						return;
 					}
 					d->setFlag(Download::FLAG_CRC32_OK);
@@ -729,15 +760,15 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize())
-				aSource->setLineMode();
+				aSource->setLineMode(0);
 			handleEndData(aSource);
 			return;	
 		}
 
 		if(d->getPos() > d->getSize()) {
 			throw Exception(STRING(TOO_MUCH_DATA));
-		} else if(d->getPos() == d->getSize() || d->isSet(Download::FLAG_MP3_INFO)) {
-			if(!d->isSet(Download::FLAG_MULTI_CHUNK)) {
+		} else if(d->getPos() == d->getSize()) {
+			if(!d->isSet(Download::FLAG_MULTI_CHUNK) || d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 				handleEndData(aSource);
 			}
 			else{ // peer's partial size < chunk size
@@ -758,10 +789,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false);
+				QueueManager::getInstance()->putDownload(d, false, false);
 				checkDownloads(aSource);
 			}
-			aSource->setLineMode();
+			aSource->setLineMode(0);
 		}
 	} catch(const RollbackException& e) {
 		string target = d->getTarget();
@@ -971,7 +1002,7 @@ void DownloadManager::noSlots(UserConnection* aSource) {
 
 	aSource->setDownload(NULL);
 	QueueManager::getInstance()->putDownload(d, false, false);
-	removeConnection(aSource, false, !aSource->isSet(UserConnection::FLAG_NMDC));
+	removeConnection(aSource);
 }
 
 void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
@@ -1043,7 +1074,7 @@ void DownloadManager::removeDownload(Download* d) {
 
 		//		downloads.erase(find(downloads.begin(), downloads.end(), d));
 		
-		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+		for(Download::List::iterator i = downloads.begin(); i != downloads.end(); ++i) {
 			if(*i == d) {
 				downloads.erase(i);
 				break;

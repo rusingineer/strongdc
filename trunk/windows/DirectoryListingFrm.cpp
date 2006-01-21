@@ -198,7 +198,6 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	fileMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)priorityMenu, CTSTRING(DOWNLOAD_WITH_PRIORITY));
 	fileMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
 	fileMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
-	fileMenu.AppendMenu(MF_STRING, IDC_MP3, CTSTRING(GET_MP3INFO));
 	fileMenu.AppendMenu(MF_SEPARATOR);
 	fileMenu.AppendMenu(MF_STRING,IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
 	fileMenu.AppendMenu(MF_SEPARATOR);
@@ -470,24 +469,6 @@ void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = 
 	}
 }
 
-void DirectoryListingFrame::downloadMP3List() {
-	int i=-1;
-	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(i);
-
-		try {
-			if(ii->type == ItemInfo::FILE) {
-				string target = Util::getAppPath() + "MP3Info\\";
-				File::ensureDirectory(target);
-				File::deleteFile(target + Util::validateFileName(ii->file->getName()));
-				dl->downloadMP3(ii->file, target + Text::fromT(ii->getText(COLUMN_FILENAME)));
-			} 
-		} catch(const Exception& e) {
-			ctrlStatus.SetText(0, Text::toT(e.getError()).c_str());
-		}
-	}
-}
-
 LRESULT DirectoryListingFrame::onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	downloadList(Text::toT(SETTING(DOWNLOAD_DIRECTORY)));
 	return 0;
@@ -552,11 +533,6 @@ LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/,
 	if(ii != NULL && ii->type == ItemInfo::FILE && ii->file->getTTH() != NULL) {
 		WinUtil::searchHash(ii->file->getTTH());
 	} 
-	return 0;
-}
-
-LRESULT DirectoryListingFrame::onMP3Info(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	downloadMP3List();
 	return 0;
 }
 

@@ -121,7 +121,7 @@ void AdcHub::handle(AdcCommand::SUP, AdcCommand& c) throw() {
 	if(state != STATE_PROTOCOL) /** @todo SUP changes */
 		return;
 	if(find(c.getParameters().begin(), c.getParameters().end(), "+BASE") == c.getParameters().end()) {
-		disconnect();
+		disconnect(false);
 		return;
 	}
 	state = STATE_IDENTIFY;
@@ -194,7 +194,7 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 }
 
 void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
-	if(!ClientManager::getInstance()->isActive(this))
+	if(!isActive())
 		return;
 	OnlineUser* u = findUser(c.getFrom());
 	if(!u || u->getUser() == ClientManager::getInstance()->getMe())
@@ -284,16 +284,16 @@ void AdcHub::connect(const OnlineUser& user, string const& token, bool secure) {
 	const string& proto = secure ? SECURE_CLIENT_PROTOCOL : CLIENT_PROTOCOL;
 	short port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
 
-	if(ClientManager::getInstance()->isActive(this)) {
+	if(isActive()) {
 		send(AdcCommand(AdcCommand::CMD_CTM, user.getUser()->getCID()).addParam(proto).addParam(Util::toString(port)).addParam(token));
 	} else {
 		send(AdcCommand(AdcCommand::CMD_RCM, user.getUser()->getCID()).addParam(proto));
 	}
 }
 
-void AdcHub::disconnect() {
+void AdcHub::disconnect(bool graceless) {
 	state = STATE_PROTOCOL;
-	Client::disconnect();
+	Client::disconnect(graceless);
 	{
 		Lock l(cs);
 		clearUsers();
@@ -335,7 +335,7 @@ void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& a
 	if(!aToken.empty())
 		c.addParam("TO", aToken);
 
-	if(ClientManager::getInstance()->isActive(this)) {
+	if(isActive()) {
 		send(c);
 	} else {
 		c.setType(AdcCommand::TYPE_TCP_ACTIVE);
@@ -402,7 +402,7 @@ void AdcHub::info() {
 		ADDPARAM("SU", Util::emptyString);
 	}
 	
-	if(ClientManager::getInstance()->isActive(this)) {
+	if(isActive()) {
 		if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
 			ADDPARAM("I4", Socket::resolve(SETTING(EXTERNAL_IP)));
 		} else {

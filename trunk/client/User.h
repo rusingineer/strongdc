@@ -65,7 +65,7 @@ public:
 
 	typedef Pointer<User> Ptr;
 	typedef vector<Ptr> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	struct HashFunction {
 		static const size_t bucket_size = 4;
@@ -74,8 +74,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick) { }
-	User(const CID& aCID) : cid(aCID) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
 
 	virtual ~User() throw() { };
 
@@ -86,6 +86,7 @@ public:
 
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
+	GETSET(int64_t, lastDownloadSpeed, LastDownloadSpeed);
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -185,7 +186,7 @@ public:
 	GETSET(string, hubUrl, HubUrl);
 private:
 	typedef map<short, string> InfMap;
-	typedef InfMap::iterator InfIter;
+	typedef InfMap::const_iterator InfIter;
 
 	InfMap info;
 
@@ -198,7 +199,7 @@ class NmdcHub;
 class OnlineUser : public FastAlloc<OnlineUser> {
 public:
 	typedef vector<OnlineUser*> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	OnlineUser() : client(NULL) { }
 	OnlineUser(const User::Ptr& ptr, Client& client_);

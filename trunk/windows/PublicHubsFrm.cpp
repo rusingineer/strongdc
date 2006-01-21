@@ -484,7 +484,7 @@ LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 void PublicHubsFrame::updateDropDown() {
 	ctrlPubLists.ResetContent();
 	StringList lists(FavoriteManager::getInstance()->getHubLists());
-	for(StringList::iterator idx = lists.begin(); idx != lists.end(); ++idx) {
+	for(StringList::const_iterator idx = lists.begin(); idx != lists.end(); ++idx) {
 		ctrlPubLists.AddString(Text::toT(*idx).c_str());
 	}
 	ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
