@@ -395,7 +395,7 @@ private:
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
 			} else {
-				const string& tmp = ClientManager::getInstance()->getIdentity(sr->getUser()).getConnection();
+				string tmp = ClientManager::getInstance()->getIdentity(sr->getUser()).getConnection();
 				if( (tmp == "28.8Kbps") ||
 					(tmp == "33.6Kbps") ||
 					(tmp == "56Kbps") ||
@@ -407,8 +407,8 @@ private:
 				} else if( (tmp == "Cable") ||
 					(tmp == "DSL") ) {
 					image = 2;
-				} else if( (tmp == "LAN T1") ||
-					(tmp == "LAN T3") ) {
+				} else if( (tmp == "LAN(T1)") ||
+					(tmp == "LAN(T3)") ) {
 					image = 3;
 				}
 				if(sr->getType() == SearchResult::TYPE_FILE)

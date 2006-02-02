@@ -14,7 +14,7 @@ public:
 	PropPageTextStyles(SettingsManager *s) : PropPage(s) { 
 		fg = 0;
 		bg = 0;
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

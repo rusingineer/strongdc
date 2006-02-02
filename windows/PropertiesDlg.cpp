@@ -29,9 +29,7 @@
 #include "AdvancedPage.h"
 #include "LogPage.h"
 #include "Sounds.h"
-#include "Segment.h"
 #include "UCPage.h"
-#include "CZDCPage.h"
 #include "LimitPage.h"
 #include "PropPageTextStyles.h"
 #include "FakeDetect.h"
@@ -45,6 +43,7 @@
 #include "UserListColours.h"
 #include "NetworkPage.h"
 #include "WindowsPage.h"
+#include "QueuePage.h"
 #include "CertificatesPage.h"
 
 bool PropertiesDlg::needUpdate = false;
@@ -53,29 +52,28 @@ PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertyShee
 	int n = 0;
 	pages[n++] = new GeneralPage(s);
 	pages[n++] = new NetworkPage(s);
+	pages[n++] = new DownloadPage(s);
 	pages[n++] = new UploadPage(s);
-	pages[n++] = new DownloadPage(s);	
 	pages[n++] = new AppearancePage(s);
-	pages[n++] = new WindowsPage(s);
-	pages[n++] = new AdvancedPage(s);
-	pages[n++] = new LogPage(s);
-	pages[n++] = new UCPage(s);
-	pages[n++] = new CertificatesPage(s);	
-	pages[n++] = new CZDCPage(s);
-	pages[n++] = new SDCPage(s);
-	pages[n++] = new FavoriteDirsPage(s);
-	pages[n++] = new Popups(s);
 	pages[n++] = new PropPageTextStyles(s);
+	pages[n++] = new Popups(s);
 	pages[n++] = new OperaColorsPage(s);
-	pages[n++] = new FakeDetect(s);	
-	pages[n++] = new LimitPage(s);
-	pages[n++] = new AVIPreview(s);	
-	pages[n++] = new Segment(s);
 	pages[n++] = new Sounds(s);
 	pages[n++] = new ToolbarPage(s);
-	pages[n++] = new ClientsPage(s);	
 	pages[n++] = new UserListColours(s);	
-
+	pages[n++] = new WindowsPage(s);
+	pages[n++] = new AdvancedPage(s);
+	pages[n++] = new SDCPage(s);
+	pages[n++] = new LogPage(s);
+	pages[n++] = new UCPage(s);
+	pages[n++] = new FavoriteDirsPage(s);
+	pages[n++] = new AVIPreview(s);	
+	pages[n++] = new QueuePage(s);
+	pages[n++] = new LimitPage(s);
+	pages[n++] = new FakeDetect(s);	
+	pages[n++] = new ClientsPage(s);	
+	pages[n++] = new CertificatesPage(s);	
+	
 	for(int i=0; i<numPages; i++) {
 		AddPage(pages[i]->getPSP());
 	}

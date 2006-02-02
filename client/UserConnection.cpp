@@ -305,7 +305,6 @@ void UserConnection::accept(const Socket& aServer) throw(SocketException, Thread
 
 void UserConnection::inf(bool withToken) { 
 	AdcCommand c(AdcCommand::CMD_INF);
-	c.addParam("CI", ClientManager::getInstance()->getMe()->getCID().toBase32());
 	if(withToken) {
 		c.addParam("TO", getToken());
 	}

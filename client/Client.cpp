@@ -56,7 +56,11 @@ void Client::reloadSettings() {
 
 	if(hub) {
 		getMyIdentity().setNick(checkNick(hub->getNick(true)));
-		getMyIdentity().setDescription(speedDescription + (hub->getUserDescription().empty() ? SETTING(DESCRIPTION) : hub->getUserDescription()));
+		if(!hub->getUserDescription().empty()) {
+			getMyIdentity().setDescription(speedDescription + hub->getUserDescription());
+		} else {
+			getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
+		}
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
 		setFavIp(hub->getIP());
@@ -82,9 +86,17 @@ void Client::connect() {
 	reloadSettings();
 	setRegistered(false);
 
-	socket = BufferedSocket::getSocket(separator);
-	socket->addListener(this);
-	socket->connect(address, port, secure, true);
+	try {
+		socket = BufferedSocket::getSocket(separator);
+		socket->addListener(this);
+		socket->connect(address, port, secure, true);
+	} catch(const Exception& e) {
+		if(socket) {
+			BufferedSocket::putSocket(socket);
+			socket = NULL;
+		}
+		fire(ClientListener::Failed(), this, e.getError());
+	}
 	updateActivity();
 }
 

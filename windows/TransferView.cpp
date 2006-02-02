@@ -40,7 +40,6 @@ ResourceManager::IP_BARE, ResourceManager::RATIO};
 TransferView::~TransferView() {
 	delete[] headerBuf;
 	arrows.Destroy();
-//	DestroyIcon(hIconCompressed);
 }
 
 LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -99,8 +98,6 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	segmentedMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CTSTRING(COLLAPSE_ALL));
 	segmentedMenu.AppendMenu(MF_SEPARATOR);
 	segmentedMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_ALL));
-
-//	hIconCompressed = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TRANSFER_COMPRESSED), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 
 	ConnectionManager::getInstance()->addListener(this);
 	DownloadManager::getInstance()->addListener(this);
@@ -274,7 +271,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		ctrlTransfers.GetColumn(cd->iSubItem, &lvc);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0 && ii->status == ItemInfo::STATUS_RUNNING) {
+		if((ii->status == ItemInfo::STATUS_RUNNING) && (_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0)) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -374,11 +371,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, right, rc.bottom-1, a, b);
 			}
 
-			// Draw the text only over the bar and with correct color
-
-//			if (!ii->main && ii->isSet(ItemInfo::FLAG_COMPRESSED))
-//				DrawIconEx(dc, rc2.left - 12, rc2.top + 2, hIconCompressed, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
-
 			// Get the color of this text bar
 			COLORREF oldcol = ::SetTextColor(dc, SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
 				(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
@@ -416,7 +408,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				}
 			}
 			return CDRF_SKIPDEFAULT;
-		} else if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0 && BOOLSETTING(GET_USER_COUNTRY)) {
+		} else if(BOOLSETTING(GET_USER_COUNTRY) && (Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0)) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;
@@ -580,7 +572,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 							default:
 								defString = true;
 						}
-						if(mainItemTick(main, true) && defString)
+						if(mainItemTick(main, true) && defString && ui->transferFailed)
 							main->columns[COLUMN_STATUS] = ii->columns[COLUMN_STATUS];
 					
 						if(!main->collapsed)
@@ -898,7 +890,7 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
 		ui->setIP(country + _T(" (") + ip + _T(")"));
 	}
-	if(aUpload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+	if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
 		ui->file = _T("TTH: ") + ui->file;
 	}
 
@@ -919,7 +911,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 		UpdateInfo* ui = new UpdateInfo(u->getUserConnection()->getUser(), false);
 		ui->setActual(u->getActual());
 		ui->setPos(u->getTotal());
-		ui->setTimeLeft(u->getSecondsLeft());
+		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
 		ui->setSpeed(u->getRunningAverage());
 
 		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 

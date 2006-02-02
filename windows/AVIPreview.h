@@ -34,7 +34,7 @@ class AVIPreview : public CPropertyPage<IDD_AVIPREVIEW>, public PropPage
 {
 public:
 	AVIPreview(SettingsManager *s) : PropPage(s)  {
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_AVIPREVIEW)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_DOWNLOADS) + _T('\\') + TSTRING(SETTINGS_AVIPREVIEW)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

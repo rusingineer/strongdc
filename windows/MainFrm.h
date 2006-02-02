@@ -370,10 +370,10 @@ private:
 
 	class DirectoryListInfo {
 	public:
-		DirectoryListInfo(LPARAM lp = NULL) : lParam(lp) { };
+		DirectoryListInfo(const User::Ptr& aUser, const tstring& aFile, int64_t aSpeed) : user(aUser), file(aFile), speed(aSpeed) { };
 		User::Ptr user;
 		tstring file;
-		LPARAM lParam;
+		int64_t speed;
 	};
 	class DirectoryBrowseInfo {
 	public:
@@ -485,7 +485,7 @@ private:
 	virtual void on(WebServerListener::ShutdownPC, int);
 
 	// QueueManagerListener
-	virtual void on(QueueManagerListener::Finished, QueueItem* qi) throw();
+	virtual void on(QueueManagerListener::Finished, QueueItem* qi, int64_t speed) throw();
 	virtual void on(PartialList, const User::Ptr&, const string& text) throw();
 
 	// UPnP connectors

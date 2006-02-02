@@ -418,27 +418,28 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	string vName = validateVirtual(aName);
 
 	Directory* dp = NULL;
+	list<string> removeMap;
 	{
 		RLock<> l(cs);
 		
 		Directory::Map a = directories;
 		for(Directory::MapIter i = a.begin(); i != a.end(); ++i) {
-			try {
-				if(Util::strnicmp(d, i->first, i->first.length()) == 0) {
-					// Trying to share an already shared directory
-					throw ShareException();
-				} else if(Util::strnicmp(d, i->first, d.length()) == 0) {
-					// Trying to share a parent directory
-					throw ShareException();	
-				}
-			} catch(ShareException) {
-				removeDirectory(i->first, true);
+			if(Util::strnicmp(d, i->first, i->first.length()) == 0) {
+				// Trying to share an already shared directory
+				removeMap.push_back(i->first);
+			} else if(Util::strnicmp(d, i->first, d.length()) == 0) {
+				// Trying to share a parent directory
+				removeMap.push_back(i->first);	
 			}
 		}
 
 		if(lookupVirtual(vName) != virtualMap.end()) {
 			throw ShareException(STRING(VIRTUAL_NAME_EXISTS));
 		}
+	}
+
+	for(list<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
+		removeDirectory(*i, true);
 	}
 	
 	dp = buildTree(d, NULL);
@@ -776,12 +777,6 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 	if(j == tthIndex.end()) {
 		dir->size+=f.getSize();
 		sharedSize+=f.getSize();
-	} else {
-		/*if(!SETTING(LIST_DUPES)) {
-			LogManager::getInstance()->message(STRING(DUPLICATE_FILE_NOT_SHARED) + dir->getFullName() + f.getName() + " (" + STRING(SIZE) + ": " + Util::toString(f.getSize()) + " " + STRING(B) + ") " + STRING(DUPLICATE_MATCH) + j->second->getParent()->getFullName() + j->second->getName(), true);
-			dir->files.erase(const_cast<Directory::File::Set::iterator>(i));
-			return;
-		}*/
 	}
 
 	dir->addType(getType(f.getName()));
@@ -798,6 +793,7 @@ void ShareManager::removeTTH(const TTHValue& tth, const Directory::File::Iter& i
 			break;
 		}
 	}
+
 }
 
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ShareException) {
@@ -812,7 +808,7 @@ void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, b
 	join();
 	bool cached = false;
 	if(initial) {
-		//cached = loadCache();
+		cached = loadCache();
 		initial = false;
 	}
 	start();

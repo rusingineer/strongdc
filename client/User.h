@@ -74,8 +74,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { }
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
 
 	virtual ~User() throw() { };
 
@@ -83,6 +83,8 @@ public:
 
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
+
+	bool hasTestSURinQueue;
 
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
@@ -159,7 +161,7 @@ public:
 	const bool isHub() const { return !get("HU").empty(); }
 	const bool isOp() const { return !get("OP").empty(); }
 	const bool isHidden() const { return !get("HI").empty(); }
-	const bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || (user->isSet(User::NMDC) && !user->isSet(User::PASSIVE)); }
+	const bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
 	void sendRawCommand(Client& c, const int aRawCommand);
@@ -201,8 +203,8 @@ public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
-	OnlineUser() : client(NULL) { }
-	OnlineUser(const User::Ptr& ptr, Client& client_);
+	OnlineUser() : client(NULL), sid(0) { }
+	OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_);
 
 	operator User::Ptr&() { return user; }
 	operator const User::Ptr&() const { return user; }
@@ -214,7 +216,7 @@ public:
 
 	GETSET(User::Ptr, user, User);
 	GETSET(Identity, identity, Identity);
-
+	GETSET(u_int32_t, sid, SID);
 private:
 	friend class NmdcHub;
 

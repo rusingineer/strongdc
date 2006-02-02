@@ -30,11 +30,13 @@ class WindowsPage : public CPropertyPage<IDD_WINDOWSPAGE>, public PropPage
 {
 public:
 	WindowsPage(SettingsManager *s) : PropPage(s) { 
-		SetTitle(CTSTRING(SETTINGS_WINDOWS));
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_WINDOWS)).c_str());
+		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
-	virtual ~WindowsPage() { 
+	virtual ~WindowsPage() {
+		free(title);
 	};
 
 	BEGIN_MSG_MAP(WindowsPage)
@@ -49,10 +51,13 @@ public:
 	
 protected:
 
+	static TextItem textItem[];
 	static Item items[];
 	static ListItem listItems[];
 	static ListItem optionItems[];
 	static ListItem confirmItems[];
+
+	TCHAR* title;
 };
 
 #endif // !defined(WINDOWS_PAGE_H)

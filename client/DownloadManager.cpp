@@ -246,13 +246,13 @@ void DownloadManager::checkIdle(const User::Ptr& user) {
 	}	
 }
 
-void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false*/, string aTarget) {
+void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false*/) {
 	dcassert(aConn->getDownload() == NULL);
 
 	bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
 	bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
 
-	if(aTarget.empty() && (slotsFull || speedFull) ) {
+	if(slotsFull || speedFull) {
 		bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
 		if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
 			removeConnection(aConn);
@@ -262,20 +262,18 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	// this happen when download finished, we need reconnect.	
 	if(reconn){
-//		if(QueueManager::getInstance()->hasDownload(aConn->getUser())) 
-//			removeConnection(aConn, true);
-//		else
-			removeConnection(aConn);
+		removeConnection(aConn);
 		return;
 	}
 
-	string message = Util::emptyString;
+	string message = STRING(WAITING_TO_RETRY);
 	Download* d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL), 
 		aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST),
-		message, aTarget);
+		message);
 
 	if(d == NULL) {
-		if(!message.empty()) fire(DownloadManagerListener::Status(), aConn->getUser(), message);
+		fire(DownloadManagerListener::Status(), aConn->getUser(), message);
+		
 		Lock l(cs);
  	    idlers.push_back(aConn);
 		return;
@@ -666,25 +664,21 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 
-			if(d->getTreeValid()) {
-				if(e.pos > 0){
-					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-					if(!lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree())){
-						LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(e.pos - 1) + " " + aSource->getRemoteIp(), true);
-					}
-				}
+			if(d->getTreeValid() && e.pos > 0) {
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree());
 			}
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
+				dcdebug("%s - Chunk finished\n", aSource->getUser()->getFirstNick().c_str());
 				aSource->setDownload(NULL);
-				string aTarget = d->getTarget();
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
 				aSource->setLineMode(0);
-				checkDownloads(aSource, false, aTarget);
+				checkDownloads(aSource);
 			}else{
-				dcdebug("Chunk disconnected\n");
+				dcdebug("%s - Chunk disconnected\n", aSource->getUser()->getFirstNick().c_str());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				fire(DownloadManagerListener::Failed(), d, e.getError());
@@ -778,10 +772,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
 					if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
 						dcassert(d->getPos() > 0);
-						if(!lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree())){
-							LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(d->getPos() - 1) + " " + aSource->getRemoteIp(), true);
-						}
-
+						lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree());
 					}else{
 						dcassert(0);
 					}

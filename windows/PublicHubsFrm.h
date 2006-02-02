@@ -54,6 +54,7 @@ public:
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
+		MESSAGE_HANDLER(WM_CTLCOLORLISTBOX, onCtlColor)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
 		COMMAND_ID_HANDLER(IDC_FILTER_FOCUS, onFilterFocus)
 		COMMAND_ID_HANDLER(IDC_ADD, onAdd)
@@ -89,10 +90,10 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	bool checkNick();
 	
-	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	LRESULT onCtlColor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 		HWND hWnd = (HWND)lParam;
 		HDC hDC = (HDC)wParam;
-		if(hWnd == ctrlPubLists.m_hWnd || hWnd == ctrlFilter.m_hWnd || hWnd == ctrlPubLists.m_hWnd) {
+		if(uMsg == WM_CTLCOLORLISTBOX || hWnd == ctrlPubLists.m_hWnd || hWnd == ctrlFilter.m_hWnd || hWnd == ctrlFilterSel.m_hWnd) {
 			::SetBkColor(hDC, WinUtil::bgColor);
 			::SetTextColor(hDC, WinUtil::textColor);
 			return (LRESULT)WinUtil::bgBrush;
@@ -142,10 +143,11 @@ private:
 
 	CContainedWindow filterContainer;
 	CComboBox ctrlPubLists;
+	CComboBox ctrlFilterSel;
 	ExListViewCtrl ctrlHubs;
 
 	HubEntry::List hubs;
-	StringSearch filter;
+	string filter;
 
 	bool closed;
 	
@@ -164,7 +166,9 @@ private:
 	void updateStatus();
 	void updateList();
 	void updateDropDown();
-	void Refresh();
+
+	bool parseFilter(int& mode, double& size);
+	bool matchFilter(const HubEntry& entry, const int& sel, bool doSizeCompare, const int& mode, const double& size);
 };
 
 #endif // !defined(PUBLIC_HUBS_FRM_H)

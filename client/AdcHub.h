@@ -25,11 +25,12 @@
 
 #include "Client.h"
 #include "AdcCommand.h"
+#include "TimerManager.h"
 #include "User.h"
 
 class ClientManager;
 
-class AdcHub : public Client, public CommandHandler<AdcHub> {
+class AdcHub : public Client, public CommandHandler<AdcHub>, private TimerManagerListener {
 public:
 
 	using Client::send;
@@ -53,7 +54,7 @@ public:
 		//Speaker<AdcHubListener>::fire(t, this, c);
 	}
 
-	void send(const AdcCommand& cmd) { dcassert(socket);  if(socket) socket->write(cmd.toString(false)); };
+	void send(const AdcCommand& cmd);
 	void sendUDP(const AdcCommand& cmd);
 
 	void handle(AdcCommand::SUP, AdcCommand& c) throw();
@@ -70,6 +71,7 @@ public:
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
 	void refreshUserList(bool /*unknownOnly = false */) { }
 
+	string getMySID() { return AdcCommand::fromSID(sid); }
 private:
 	friend class ClientManager;
 
@@ -86,14 +88,18 @@ private:
 	AdcHub& operator=(const AdcHub&);
 	virtual ~AdcHub() throw();
 
-	typedef HASH_MAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) CIDMap;
-	typedef CIDMap::iterator CIDIter;
+	/** Map session id to OnlineUser */
+	typedef HASH_MAP<u_int32_t, OnlineUser*> SIDMap;
+	typedef SIDMap::iterator SIDIter;
 
-	CIDMap users;
+	SIDMap users;
 	StringMap lastInfoMap;
 	mutable CriticalSection cs;
 
 	string salt;
+
+	u_int32_t sid;
+	bool reconnect;
 
 	static const string CLIENT_PROTOCOL;
 	static const string SECURE_CLIENT_PROTOCOL;
@@ -101,9 +107,9 @@ private:
 	 
 	virtual string checkNick(const string& nick);
 
-	OnlineUser& getUser(const CID& cid);
-	OnlineUser* findUser(const CID& cid);
-	void putUser(const CID& cid);
+	OnlineUser& getUser(const u_int32_t aSID, const CID& aCID);
+	OnlineUser* findUser(const u_int32_t sid);
+	void putUser(const u_int32_t sid);
 
 	void clearUsers();
 
@@ -111,6 +117,7 @@ private:
 	virtual void on(Connected) throw();
 	virtual void on(Line, const string& aLine) throw();
 	virtual void on(Failed, const string& aLine) throw();
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 };
 
 #endif // !defined(ADC_HUB_H)

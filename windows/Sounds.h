@@ -31,7 +31,7 @@ class Sounds : public CPropertyPage<IDD_SOUNDS>, public PropPage
 {
 public:
 	Sounds(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_SOUNDS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_SOUNDS)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

@@ -28,12 +28,20 @@
 
 PropPage::Item WindowsPage::items[] = { { 0, 0, PropPage::T_END } };
 
+PropPage::TextItem WindowsPage::textItem[] = {
+	{ IDC_SETTINGS_AUTO_OPEN, ResourceManager::SETTINGS_AUTO_OPEN },
+	{ IDC_SETTINGS_WINDOWS_OPTIONS, ResourceManager::SETTINGS_WINDOWS_OPTIONS },
+	{ IDC_SETTINGS_CONFIRM_OPTIONS, ResourceManager::SETTINGS_CONFIRM_DIALOG_OPTIONS },
+	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
+};
+
 WindowsPage::ListItem WindowsPage::listItems[] = {
 	{ SettingsManager::OPEN_PUBLIC, ResourceManager::PUBLIC_HUBS },
 	{ SettingsManager::OPEN_FAVORITE_HUBS, ResourceManager::FAVORITE_HUBS },
 	{ SettingsManager::OPEN_FAVORITE_USERS, ResourceManager::FAVORITE_USERS },
 	{ SettingsManager::OPEN_QUEUE, ResourceManager::DOWNLOAD_QUEUE },
 	{ SettingsManager::OPEN_FINISHED_DOWNLOADS, ResourceManager::FINISHED_DOWNLOADS },
+	{ SettingsManager::OPEN_WAITING_USERS, ResourceManager::WAITING_USERS },
 	{ SettingsManager::OPEN_FINISHED_UPLOADS, ResourceManager::FINISHED_UPLOADS },
 	{ SettingsManager::OPEN_SEARCH_SPY, ResourceManager::SEARCH_SPY },
 	{ SettingsManager::OPEN_NETWORK_STATISTICS, ResourceManager::NETWORK_STATISTICS },
@@ -55,7 +63,7 @@ WindowsPage::ListItem WindowsPage::optionItems[] = {
 WindowsPage::ListItem WindowsPage::confirmItems[] = {
 	{ SettingsManager::CONFIRM_EXIT, ResourceManager::SETTINGS_CONFIRM_EXIT },
 	{ SettingsManager::CONFIRM_HUB_REMOVAL, ResourceManager::SETTINGS_CONFIRM_HUB_REMOVAL },
-	{ SettingsManager::CONFIRM_DELETE, ResourceManager::SETTINGS_CONFIRM_DELETE },
+	{ SettingsManager::CONFIRM_DELETE, ResourceManager::SETTINGS_CONFIRM_ITEM_REMOVAL },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -79,4 +87,3 @@ void WindowsPage::write() {
  * @file
  * $Id$
  */
-

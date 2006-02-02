@@ -90,6 +90,7 @@ public:
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick())  + "." + aUser->getCID().toBase32();
 		string target = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(target, -1, NULL, aUser, fileName, false, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
+		aUser->hasTestSURinQueue = true;
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
@@ -125,7 +126,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); };
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
-	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message, string aTarget = Util::emptyString) throw();
+	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message) throw();
 	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
@@ -187,7 +188,7 @@ public:
 
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
-		int getMaxSegments(string filename, int64_t filesize);
+		int getMaxSegments(int64_t filesize);
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
 

@@ -30,11 +30,10 @@ class DownloadPage : public CPropertyPage<IDD_DOWNLOADPAGE>, public PropPage
 {
 public:
 	DownloadPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_DOWNLOADS)).c_str());
-		SetTitle(title);
+		SetTitle(CTSTRING(SETTINGS_DOWNLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~DownloadPage() { free(title); };
+	virtual ~DownloadPage() { };
 
 	BEGIN_MSG_MAP_EX(DownloadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -55,7 +54,6 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	TCHAR* title;
 };
 
 #endif //  !defined(DOWNLOAD_PAGE_H)

@@ -35,7 +35,7 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); };
 	};
 	struct PtrLess {
-		int operator()(const Ptr lhs, const Ptr rhs) { return (*lhs) < (*rhs); };
+		int operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); };
 	};
 
 	struct Hash {

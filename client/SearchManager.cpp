@@ -24,7 +24,6 @@
 
 #include "ClientManager.h"
 #include "ShareManager.h"
-#include "AdcCommand.h"
 #include "FileChunksInfo.h"
 #include "QueueManager.h"
 
@@ -311,8 +310,13 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		AdcCommand c(x.substr(0, x.length()-1));
 		if(c.getParameters().empty())
 			return;
+		string cid;
+		if(!c.getParam("ID", 0, cid))
+			return;
+		if(cid.size() != 39)
+			return;
 
-		User::Ptr user = ClientManager::getInstance()->findUser(c.getFrom());
+		User::Ptr user = ClientManager::getInstance()->findUser(CID(cid));
 		if(!user)
 			return;
 
@@ -423,12 +427,12 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 	}
 }
 
-void SearchManager::respond(const AdcCommand& adc) {
+void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 	// Filter own searches
-	if(adc.getFrom() == ClientManager::getInstance()->getMe()->getCID())
+	if(from == ClientManager::getInstance()->getMe()->getCID())
 		return;
 
-	User::Ptr p = ClientManager::getInstance()->findUser(adc.getFrom());
+	User::Ptr p = ClientManager::getInstance()->findUser(from);
 	if(!p)
 		return;
 
@@ -447,7 +451,7 @@ void SearchManager::respond(const AdcCommand& adc) {
 		cmd.setTo(adc.getFrom());
 		if(!token.empty())
 			cmd.addParam("TO", token);
-		ClientManager::getInstance()->send(cmd);
+		ClientManager::getInstance()->send(cmd, from);
 		(*i)->decRef();
 	}
 }

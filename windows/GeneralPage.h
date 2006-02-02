@@ -42,11 +42,14 @@ public:
 		COMMAND_HANDLER(IDC_NICK, EN_CHANGE, onTextChanged)
 		COMMAND_HANDLER(IDC_EMAIL, EN_CHANGE, onTextChanged)
 		COMMAND_HANDLER(IDC_DESCRIPTION, EN_CHANGE, onTextChanged)
+		COMMAND_ID_HANDLER(IDC_BW_BOTH, onClickedRadioButton)
+		COMMAND_ID_HANDLER(IDC_BW_SIMPLE, onClickedRadioButton)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onGetIP(WORD /* wNotifyCode */, WORD /* wID */, HWND /* hWndCtl */, BOOL& /* bHandled */);
 	LRESULT onTextChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onClickedRadioButton(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
@@ -55,10 +58,12 @@ public:
 private:
 	static Item items[];
 	static TextItem texts[];
-	CComboBoxEx ctrlConnection;
+	CComboBoxEx ctrlConnectionType;
+	CComboBox ctrlConnection;	
 	CComboBox ctrlDownloadSpeed, ctrlUploadSpeed;
 	CEdit nick;
 	CImageList ConnTypes;
+	void fixControls();
 
 };
 

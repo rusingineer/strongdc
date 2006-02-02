@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\vc7\Debug\windows\"
-			IntermediateDirectory=".\vc7\Debug\windows\"
+			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -41,7 +41,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Compiled/StrongDC.tlb"
+				TypeLibraryName="$(SolutionDir)compiled/$(ProjectName).tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -79,16 +79,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="ws2_32.lib winmm.lib uxtheme.lib powrprof.lib"
-				ShowProgress="0"
-				OutputFile=".\Compiled/StrongDC.exe"
+				AdditionalDependencies="unicows.lib ws2_32.lib winmm.lib powrprof.lib"
+				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateManifest="false"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Compiled/StrongDC.pdb"
+				ProgramDatabaseFile="$(SolutionDir)compiled/$(ProjectName).pdb"
 				SubSystem="2"
 				TargetMachine="1"
 			/>
@@ -119,8 +118,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\vc7\Release\windows"
-			IntermediateDirectory=".\vc7\Release\windows"
+			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -145,7 +144,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Compiled/StrongDC.tlb"
+				TypeLibraryName="$(SolutionDir)compiled/$(ProjectName).tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -166,7 +165,7 @@
 				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				AssemblerOutput="4"
+				AssemblerOutput="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 				CallingConvention="1"
@@ -185,9 +184,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="ws2_32.lib winmm.lib powrprof.lib"
-				ShowProgress="0"
-				OutputFile="./Compiled/StrongDC.exe"
+				AdditionalDependencies="unicows.lib ws2_32.lib winmm.lib powrprof.lib"
+				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				Version=""
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -195,7 +193,7 @@
 				IgnoreDefaultLibraryNames="kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"
 				DelayLoadDLLs="dbghelp.dll;oleaut32.dll;winmm.dll"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="./Compiled/StrongDC.pdb"
+				ProgramDatabaseFile="$(SolutionDir)compiled/$(ProjectName).pdb"
 				GenerateMapFile="true"
 				MapFileName=""
 				SubSystem="2"
@@ -255,14 +253,6 @@
 			</File>
 			<File
 				RelativePath=".\res\CZDCPlusPlus-about.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\res\CZDCPlusPlus-PM-XP.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\res\CZDCPlusPlus-PM.ico"
 				>
 			</File>
 			<File
@@ -338,6 +328,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\PM.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\res\PublicHubs.ico"
 				>
 			</File>
@@ -387,6 +381,10 @@
 			</File>
 			<File
 				RelativePath=".\res\stop_ikona.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\StrongDC.ico"
 				>
 			</File>
 			<File
@@ -511,15 +509,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\CZDCPage.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\DirectoryListingFrm.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\DownloadDirDlg.cpp"
 				>
 			</File>
 			<File
@@ -651,6 +641,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\windows\QueuePage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\windows\RecentsFrm.cpp"
 				>
 			</File>
@@ -660,10 +654,6 @@
 			</File>
 			<File
 				RelativePath=".\windows\SearchFrm.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\Segment.cpp"
 				>
 			</File>
 			<File
@@ -828,19 +818,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\CZDCPage.h"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\DimEdit.h"
 				>
 			</File>
 			<File
 				RelativePath=".\windows\DirectoryListingFrm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\DownloadDirDlg.h"
 				>
 			</File>
 			<File
@@ -1008,6 +990,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\windows\QueuePage.h"
+				>
+			</File>
+			<File
 				RelativePath=".\windows\RecentsFrm.h"
 				>
 			</File>
@@ -1021,10 +1007,6 @@
 			</File>
 			<File
 				RelativePath=".\windows\SearchFrm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\Segment.h"
 				>
 			</File>
 			<File

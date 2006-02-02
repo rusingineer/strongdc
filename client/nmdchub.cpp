@@ -116,7 +116,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		} else {
 			p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 		}
-		u = users.insert(make_pair(aNick, new OnlineUser(p, *this))).first->second;
+		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
 		u->getIdentity().setNick(aNick);
 	}
 
@@ -626,6 +626,8 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						}
 						u.getIdentity().setStatus(Util::toString(status));
 						u.getIdentity().setConnection(Connection);
+						if(strlen(Connection) == 0)
+							u.getUser()->setFlag(User::BOT);
 					}
 				}
 

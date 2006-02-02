@@ -32,7 +32,7 @@ class Speaker {
 
 public:
 	Speaker() throw() { };
-	virtual ~Speaker() throw() { dcassert(listeners.empty()); };
+	virtual ~Speaker() throw() { };
 
 	template<typename T0>
 	void fire(T0 type) throw() {
@@ -115,7 +115,6 @@ public:
 	void removeListener(Listener* aListener) {
 		Lock l(listenerCS);
 		ListenerList::iterator it = find(listeners.begin(), listeners.end(), aListener);
-		dcassert(it != listeners.end());
 		if(it != listeners.end())
 			listeners.erase(it);
 	}

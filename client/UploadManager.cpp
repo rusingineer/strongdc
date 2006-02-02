@@ -382,7 +382,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 		removeUpload(u);
 	}
 
-	removeConnection(aSource, false);
+	removeConnection(aSource);
 }
 
 void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) throw() {
@@ -469,7 +469,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	}
 }
 
-void UploadManager::removeConnection(UserConnection::Ptr aConn, bool /*ntd*/) {
+void UploadManager::removeConnection(UserConnection::Ptr aConn) {
 	dcassert(aConn->getUpload() == NULL);
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
@@ -510,10 +510,6 @@ void UploadManager::on(GetListLength, UserConnection* conn) throw() {
 	conn->listLen(ShareManager::getInstance()->getListLenString()); 
 }
 
-void UploadManager::on(AdcCommand::NTD, UserConnection* aConn, const AdcCommand&) throw() {
-	removeConnection(aConn, true);
-}
-
 void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) throw() {
 	int64_t aBytes = Util::toInt64(c.getParam(3));
 	int64_t aStartPos = Util::toInt64(c.getParam(2));
@@ -552,7 +548,7 @@ void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcComman
 
 void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
 	if(c.getParameters().size() < 2) {
-		aSource->sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Missing parameters");
+		aSource->send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Missing parameters"));
 		return;
 	}
 
@@ -564,13 +560,13 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 		StringList sl;
 
 		if(ident.compare(0, 4, "TTH/") != 0) {
-			aSource->sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Invalid identifier");
+			aSource->send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Invalid identifier"));
 			return;
 		}
 		sl.push_back("TH" + ident.substr(4));
 		ShareManager::getInstance()->search(l, sl, 1);
 		if(l.empty()) {
-			aSource->sta(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_FILE_NOT_AVAILABLE, "Not found");
+			aSource->send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_FILE_NOT_AVAILABLE, "Not found"));
 		} else {
 			aSource->send(l[0]->toRES(AdcCommand::TYPE_CLIENT));
 			l[0]->decRef();
@@ -579,7 +575,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
+void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();
@@ -592,7 +588,7 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 	}
 	if(!m_boFireball) {
 		if(getAverageSpeed() >= 102400) {
-			u_int32_t iActTicks = TimerManager::getTick();
+			u_int32_t iActTicks = aTick;
 			if ( m_boLastTickHighSpeed ) {
 				u_int32_t iHighSpeedTicks = 0;
 				if ( iActTicks >= m_iHighSpeedStartTick ) 
@@ -608,10 +604,11 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t) throw() {
 					}
 				}
 			} else {
-				m_iHighSpeedStartTick = TimerManager::getTick();
+				m_iHighSpeedStartTick = aTick;
 				m_boLastTickHighSpeed = true;
 			}
 		} else {
+			m_iHighSpeedStartTick = 0;
 			m_boLastTickHighSpeed = false;
 		}
 

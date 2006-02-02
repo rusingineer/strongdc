@@ -238,10 +238,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	trayMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, CTSTRING(MENU_ABOUT));
 	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
-	if(BOOLSETTING(GET_UPDATE_INFO)) {
-		c->addListener(this);
-		c->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
-	}
+	c->addListener(this);
+	c->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
 
 	// ZoneAlarm - ref: http://www.unixwiz.net/backstealth/
 	if (BOOLSETTING(DETECT_BADSOFT)) {
@@ -261,6 +259,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(BOOLSETTING(OPEN_FAVORITE_USERS)) PostMessage(WM_COMMAND, IDC_FAVUSERS);
 	if(BOOLSETTING(OPEN_QUEUE)) PostMessage(WM_COMMAND, IDC_QUEUE);
 	if(BOOLSETTING(OPEN_FINISHED_DOWNLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED);
+	if(BOOLSETTING(OPEN_WAITING_USERS)) PostMessage(WM_COMMAND, IDC_UPLOAD_QUEUE);
 	if(BOOLSETTING(OPEN_FINISHED_UPLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED_UL);
 	if(BOOLSETTING(OPEN_SEARCH_SPY)) PostMessage(WM_COMMAND, IDC_SEARCH_SPY);
 	if(BOOLSETTING(OPEN_NETWORK_STATISTICS)) PostMessage(WM_COMMAND, IDC_NET_STATS);
@@ -279,18 +278,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	startSocket();
 	
-	if (CZDCLib::isXp()) {
-		normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME_XP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM_XP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	} else {
-		normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-		pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	}
+	normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+
 	updateTray( BOOLSETTING( MINIMIZE_TRAY ) );
-
-
-	//if(BOOLSETTING(IPUPDATE))
-	//	SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::getLocalIp());
 
 	Util::setAway(BOOLSETTING(AWAY));
 
@@ -444,22 +435,18 @@ HWND MainFrame::createToolbar() {
 LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		
 	if(wParam == DOWNLOAD_LISTING) {
-		DirectoryListInfo* i = (DirectoryListInfo*)lParam;
-		if(Util::fileExists(Text::fromT(i->file))) {
-			DirectoryListingFrame::openWindow(i->file, i->user);
-		}
-		delete i;
+		auto_ptr<DirectoryListInfo> i(reinterpret_cast<DirectoryListInfo*>(lParam));
+		DirectoryListingFrame::openWindow(i->file, i->user, i->speed);
 	} else if(wParam == BROWSE_LISTING) {
-		DirectoryBrowseInfo* i = (DirectoryBrowseInfo*)lParam;
-		DirectoryListingFrame::openWindow(i->user, i->text);
-		delete i;
+		auto_ptr<DirectoryBrowseInfo> i(reinterpret_cast<DirectoryBrowseInfo*>(lParam));
+		DirectoryListingFrame::openWindow(i->user, i->text, 0);
 	} else if(wParam == VIEW_FILE_AND_DELETE) {
-		tstring* file = (tstring*)lParam;
+		auto_ptr<tstring> file(reinterpret_cast<tstring*>(lParam));
 		TextFrame::openWindow(*file);
 		File::deleteFile(Text::fromT(*file));
-		delete file;
 	} else if(wParam == STATS) {
-		TStringList& str = *(TStringList*)lParam;
+		auto_ptr<TStringList> pstr(reinterpret_cast<TStringList*>(lParam));
+		const TStringList& str = *pstr;
 		if(ctrlStatus.IsWindow()) {
 			HDC dc = ::GetDC(ctrlStatus.m_hWnd);
 			bool u = false;
@@ -477,8 +464,6 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			if(u)
 				UpdateLayout(TRUE);
 		}
-		delete &str;
-
 		if (bShutdown) {
 			u_int32_t aTick = (u_int32_t)GET_TICK();
 			u_int32_t iSec = (aTick / 1000);
@@ -1071,7 +1056,7 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 		CRect sr;
 		int w[10];
 		ctrlStatus.GetClientRect(sr);
-		w[9] = sr.right - 16;
+		w[9] = sr.right - 20;
 		w[8] = w[9] - 60;
 #define setw(x) w[x] = max(w[x+1] - statusSizes[x], 0)
 		setw(7); setw(6); setw(5); setw(4); setw(3); setw(2); setw(1); setw(0);
@@ -1102,7 +1087,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	
 	if(wID == IDC_OPEN_MY_LIST){
 		if(!ShareManager::getInstance()->getOwnListFile().empty()){
-			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getMe());
+			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), ClientManager::getInstance()->getMe(), 0);
 		}
 		return 0;
 	}
@@ -1110,7 +1095,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), types)) {
 		User::Ptr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
 		if(u) {
-			DirectoryListingFrame::openWindow(file, u);
+			DirectoryListingFrame::openWindow(file, u, 0);
 		} else {
 			MessageBox(CTSTRING(INVALID_LISTNAME), _T(APPNAME) _T(" ") _T(VERSIONSTRING));
 		}
@@ -1210,7 +1195,7 @@ LRESULT MainFrame::onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 LRESULT MainFrame::onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadQueueFrame::openWindow();
+	WaitingUsersFrame::openWindow();
 	return 0;
 }
 
@@ -1334,23 +1319,19 @@ void MainFrame::on(PartialList, const User::Ptr& aUser, const string& text) thro
 	PostMessage(WM_SPEAKER, BROWSE_LISTING, (LPARAM)new DirectoryBrowseInfo(aUser, text));
 }
 
-void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi) throw() {
+void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi, int64_t speed) throw() {
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			// This is a file listing, show it...
 
-			DirectoryListInfo* i = new DirectoryListInfo();
-			i->file = Text::toT(qi->getListName());
-			i->user = qi->getCurrents()[0]->getUser(); 
+			DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0]->getUser(), Text::toT(qi->getListName()), speed);
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
 	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
-		DirectoryListInfo* i = new DirectoryListInfo();
-		i->file = Text::toT(qi->getListName());
-		i->user = qi->getCurrents()[0]->getUser(); 
+		DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0]->getUser(), Text::toT(qi->getListName()), speed);
 		
 		if(listQueue.stop) {
 			listQueue.stop = false;
@@ -1432,7 +1413,7 @@ int MainFrame::FileListQueue::run() {
 			DirectoryListing* dl = new DirectoryListing(i->user);
 			try {
 				dl->loadFile(Text::fromT(i->file));
-				ADLSearchManager::getInstance()->matchListing(dl);
+				ADLSearchManager::getInstance()->matchListing(*dl);
 				ClientManager::getInstance()->checkCheating(i->user, dl);
 			} catch(...) {
 			}

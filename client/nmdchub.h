@@ -79,6 +79,9 @@ public:
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
 	virtual void disconnect(bool graceless) throw();
+	using Client::send;
+	virtual void send(const AdcCommand&) { dcassert(0); }
+
 	void myInfo();
 
 	void refreshUserList(bool unknownOnly = false);

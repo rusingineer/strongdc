@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2003 Jacek Sieka, j_s@telia.com
+/*
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,58 +16,53 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef Segment_H
-#define Segment_H
+#if !defined(QUEUE_PAGE_H)
+#define QUEUE_PAGE_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <atlcrack.h>
 #include "PropPage.h"
+#include "ExListViewCtrl.h"
 
-
-class Segment : public CPropertyPage<IDD_SEGMENT>, public PropPage
+class QueuePage : public CPropertyPage<IDD_QUEUEPAGE>, public PropPage
 {
 public:
-	Segment(SettingsManager *s) : PropPage(s) { 
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_SEGMENT)).c_str());
+	QueuePage(SettingsManager *s) : PropPage(s) {
+		title = _tcsdup((TSTRING(SETTINGS_DOWNLOADS) + _T('\\') + TSTRING(SETTINGS_QUEUE)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
-	virtual ~Segment() { 
-		ctrlMultiSource.Detach();
+	virtual ~QueuePage() {
 		free(title);
 	};
 
-	BEGIN_MSG_MAP(Segment)
+	BEGIN_MSG_MAP(QueuePage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
-		COMMAND_ID_HANDLER(IDC_RADIO1, onClickedRadio)
-		COMMAND_ID_HANDLER(IDC_RADIO2, onClickedRadio)
-		COMMAND_ID_HANDLER(IDC_RADIO3, onClickedRadio)
 	END_MSG_MAP()
 
-	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
-	LRESULT onBrowse(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	LRESULT onClickedRadio(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	
+	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	virtual void write();
-
+	
 protected:
+
 	static Item items[];
 	static TextItem texts[];
+	static ListItem optionItems[];
 	TCHAR* title;
+
 	CComboBox ctrlMultiSource;
-		
-	void fixControls();
 };
 
-#endif //Segment_H
+#endif // !defined(QUEUE_PAGE_H)
 
 /**
  * @file
  * $Id$
  */
-

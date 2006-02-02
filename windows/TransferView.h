@@ -352,7 +352,6 @@ private:
 	OMenu usercmdsMenu;
 	OMenu previewMenu;
 	CImageList arrows;
-//	HICON hIconCompressed;	
 
 	HDC hDCDB; // Double buffer DC
 	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC

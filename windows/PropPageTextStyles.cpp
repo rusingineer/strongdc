@@ -418,135 +418,104 @@ LRESULT PropPageTextStyles::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	return 1;
 }
 
+static const TCHAR types[] = _T("DC++ Theme Files\0*.dctheme;\0DC++ Settings Files\0*.xml;\0All Files\0*.*\0");
+static const TCHAR defExt[] = _T(".dctheme");
+
+#define importData(x, y) \
+		if(xml.findChild(x)) { SettingsManager::getInstance()->set(SettingsManager::y, xml.getChildData());} \
+		xml.resetCurrentChild();
+
 LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring x = _T("");	
-	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
-
-	SimpleXML xml;
-	xml.fromXML(File(Text::fromT(x), File::READ, File::OPEN).read());
-	xml.resetCurrentChild();
-	xml.stepIn();
-	if(xml.findChild("Settings")) {
+	if(WinUtil::browseFile(x, m_hWnd, false, x, types, defExt) == IDOK) {
+		SimpleXML xml;
+		xml.fromXML(File(Text::fromT(x), File::READ, File::OPEN).read());
+		xml.resetCurrentChild();
 		xml.stepIn();
+		if(xml.findChild(("Settings"))) {
+			xml.stepIn();
 
-		if(xml.findChild("Font")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_FONT,xml.getChildData());}
+			importData("Font", TEXT_FONT);
+			importData("BackgroundColor", BACKGROUND_COLOR);
+			importData("TextColor", TEXT_COLOR);
+			importData("DownloadBarColor", DOWNLOAD_BAR_COLOR);
+			importData("UploadBarColor", UPLOAD_BAR_COLOR);
+			importData("TextGeneralBackColor", TEXT_GENERAL_BACK_COLOR);
+			importData("TextGeneralForeColor", TEXT_GENERAL_FORE_COLOR);
+			importData("TextGeneralBold", TEXT_GENERAL_BOLD);
+			importData("TextGeneralItalic", TEXT_GENERAL_ITALIC);
+			importData("TextMyOwnBackColor", TEXT_MYOWN_BACK_COLOR);
+			importData("TextMyOwnForeColor", TEXT_MYOWN_FORE_COLOR);
+			importData("TextMyOwnBold", TEXT_MYOWN_BOLD);
+			importData("TextMyOwnItalic", TEXT_MYOWN_ITALIC);
+			importData("TextPrivateBackColor", TEXT_PRIVATE_BACK_COLOR);
+			importData("TextPrivateForeColor", TEXT_PRIVATE_FORE_COLOR);
+			importData("TextPrivateBold", TEXT_PRIVATE_BOLD);
+			importData("TextPrivateItalic", TEXT_PRIVATE_ITALIC);
+			importData("TextSystemBackColor", TEXT_SYSTEM_BACK_COLOR);
+			importData("TextSystemForeColor", TEXT_SYSTEM_FORE_COLOR);
+			importData("TextSystemBold", TEXT_SYSTEM_BOLD);
+			importData("TextSystemItalic", TEXT_SYSTEM_ITALIC);
+			importData("TextServerBackColor", TEXT_SERVER_BACK_COLOR);
+			importData("TextServerForeColor", TEXT_SERVER_FORE_COLOR);
+			importData("TextServerBold", TEXT_SERVER_BOLD);
+			importData("TextServerItalic", TEXT_SERVER_ITALIC);
+			importData("TextTimestampBackColor", TEXT_TIMESTAMP_BACK_COLOR);
+			importData("TextTimestampForeColor", TEXT_TIMESTAMP_FORE_COLOR);
+			importData("TextTimestampBold", TEXT_TIMESTAMP_BOLD);
+			importData("TextTimestampItalic", TEXT_TIMESTAMP_ITALIC);
+			importData("TextMyNickBackColor", TEXT_MYNICK_BACK_COLOR);
+			importData("TextMyNickForeColor", TEXT_MYNICK_FORE_COLOR);
+			importData("TextMyNickBold", TEXT_MYNICK_BOLD);
+			importData("TextMyNickItalic", TEXT_MYNICK_ITALIC);
+			importData("TextFavBackColor", TEXT_FAV_BACK_COLOR);
+			importData("TextFavForeColor", TEXT_FAV_FORE_COLOR);
+			importData("TextFavBold", TEXT_FAV_BOLD);
+			importData("TextFavItalic", TEXT_FAV_ITALIC);
+			importData("TextURLBackColor", TEXT_URL_BACK_COLOR);
+			importData("TextURLForeColor", TEXT_URL_FORE_COLOR);
+			importData("TextURLBold", TEXT_URL_BOLD);
+			importData("TextURLItalic", TEXT_URL_ITALIC);
+			importData("BoldAuthorsMess", BOLD_AUTHOR_MESS);
+			importData("ProgressTextDown", PROGRESS_TEXT_COLOR_DOWN);
+			importData("ProgressTextUp", PROGRESS_TEXT_COLOR_UP);
+			importData("ErrorColor", ERROR_COLOR);
+			importData("ProgressOverrideColors", PROGRESS_OVERRIDE_COLORS);
+			importData("MenubarTwoColors", MENUBAR_TWO_COLORS);
+			importData("MenubarLeftColor", MENUBAR_LEFT_COLOR);
+			importData("MenubarRightColor", MENUBAR_RIGHT_COLOR);
+			importData("MenubarBumped", MENUBAR_BUMPED);
+			importData("Progress3DDepth", PROGRESS_3DDEPTH);
+			importData("ProgressOverrideColors2", PROGRESS_OVERRIDE_COLORS2);
+			importData("TextOPBackColor", TEXT_OP_BACK_COLOR);
+			importData("TextOPForeColor", TEXT_OP_FORE_COLOR);
+			importData("TextOPBold", TEXT_OP_BOLD);
+			importData("TextOPItalic", TEXT_OP_ITALIC);
+			importData("SearchAlternateColour", SEARCH_ALTERNATE_COLOUR);
+			importData("ProgressBackColor", PROGRESS_BACK_COLOR);
+			importData("ProgressCompressColor", PROGRESS_COMPRESS_COLOR);
+			importData("ProgressSegmentColor", PROGRESS_SEGMENT_COLOR);
+			importData("ColorDownloaded", COLOR_DOWNLOADED);
+			importData("ColorRunning", COLOR_RUNNING);
+			importData("ColorVerified", COLOR_VERIFIED);
+			importData("ReservedSlotColor", RESERVED_SLOT_COLOR);
+			importData("IgnoredColor", IGNORED_COLOR);
+			importData("FavoriteColor", FAVORITE_COLOR);
+			importData("NormalColour", NORMAL_COLOUR);
+			importData("ClientCheckedColour", CLIENT_CHECKED_COLOUR);
+			importData("FileListCheckedColour", FILELIST_CHECKED_COLOUR);
+			importData("FireballColor", FIREBALL_COLOR);
+			importData("ServerColor", SERVER_COLOR);
+			importData("ActiveColor", ACTIVE_COLOR);
+			importData("PasiveColor", PASIVE_COLOR);
+			importData("OpColor", OP_COLOR);
+			importData("FileListAndClientCheckedColour", FULL_CHECKED_COLOUR);
+			importData("BadClientColour", BAD_CLIENT_COLOUR);
+			importData("BadFilelistColour", BAD_FILELIST_COLOUR);
+			importData("ProgressbaroDCStyle", PROGRESSBAR_ODC_STYLE);
+		}
 		xml.resetCurrentChild();
-		if(xml.findChild("BackgroundColor")) { SettingsManager::getInstance()->set(SettingsManager::BACKGROUND_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("DownloadBarColor")) { SettingsManager::getInstance()->set(SettingsManager::DOWNLOAD_BAR_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("UploadBarColor")) { SettingsManager::getInstance()->set(SettingsManager::UPLOAD_BAR_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextGeneralBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_GENERAL_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextGeneralForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_GENERAL_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextGeneralBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_GENERAL_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextGeneralItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_GENERAL_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyOwnBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYOWN_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyOwnForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYOWN_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyOwnBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYOWN_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyOwnItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYOWN_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextPrivateBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_PRIVATE_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextPrivateForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_PRIVATE_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextPrivateBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_PRIVATE_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextPrivateItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_PRIVATE_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextSystemBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SYSTEM_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextSystemForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SYSTEM_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextSystemBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SYSTEM_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextSystemItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SYSTEM_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextServerBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SERVER_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextServerForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SERVER_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextServerBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SERVER_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextServerItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_SERVER_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextTimestampBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_TIMESTAMP_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextTimestampForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_TIMESTAMP_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextTimestampBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_TIMESTAMP_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextTimestampItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_TIMESTAMP_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyNickBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYNICK_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyNickForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYNICK_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyNickBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYNICK_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextMyNickItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_MYNICK_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextFavBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_FAV_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextFavForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_FAV_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextFavBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_FAV_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextFavItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_FAV_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextURLBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_URL_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextURLForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_URL_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextURLBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_URL_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextURLItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_URL_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("BoldAuthorsMess")) { SettingsManager::getInstance()->set(SettingsManager::BOLD_AUTHOR_MESS,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("ProgressTextDown")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_DOWN,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("ProgressTextUp")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_TEXT_COLOR_UP,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("ErrorColor")) { SettingsManager::getInstance()->set(SettingsManager::ERROR_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("ProgressOverrideColors")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_OVERRIDE_COLORS,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("MenubarTwoColors")) { SettingsManager::getInstance()->set(SettingsManager::MENUBAR_TWO_COLORS,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("MenubarLeftColor")) { SettingsManager::getInstance()->set(SettingsManager::MENUBAR_LEFT_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("MenubarRightColor")) { SettingsManager::getInstance()->set(SettingsManager::MENUBAR_RIGHT_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("MenubarBumped")) { SettingsManager::getInstance()->set(SettingsManager::MENUBAR_BUMPED,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("Progress3DDepth")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_3DDEPTH,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("ProgressOverrideColors2")) { SettingsManager::getInstance()->set(SettingsManager::PROGRESS_OVERRIDE_COLORS2,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextOPBackColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_OP_BACK_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextOPForeColor")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_OP_FORE_COLOR,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextOPBold")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_OP_BOLD,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("TextOPItalic")) { SettingsManager::getInstance()->set(SettingsManager::TEXT_OP_ITALIC,xml.getChildData());}
-		xml.resetCurrentChild();
-		if(xml.findChild("SearchAlternateColour")) { SettingsManager::getInstance()->set(SettingsManager::SEARCH_ALTERNATE_COLOUR,xml.getChildData());}
-		xml.resetCurrentChild();
-	}
-
-	xml.resetCurrentChild();
-	xml.stepOut();
+		xml.stepOut();
 	}
 
 	SendMessage(WM_DESTROY,0,0);
@@ -558,9 +527,13 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	return 0;
 }
 
+#define exportData(x, y) \
+	xml.addTag(x, SETTING(y)); \
+	xml.addChildAttrib(type, curType);
+
 LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring x = _T("");	
-	if(WinUtil::browseFile(x, m_hWnd, true) == IDOK) {
+	if(WinUtil::browseFile(x, m_hWnd, true, x, types, defExt) == IDOK) {
 	SimpleXML xml;
 	xml.addTag("DCPlusPlus");
 	xml.stepIn();
@@ -572,118 +545,85 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	xml.addChildAttrib(type, curType);
 
 	curType = "int";
-	xml.addTag("BackgroundColor", SETTING(BACKGROUND_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextColor", SETTING(TEXT_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("DownloadBarColor", SETTING(DOWNLOAD_BAR_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("UploadBarColor", SETTING(UPLOAD_BAR_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextGeneralBackColor", SETTING(TEXT_GENERAL_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextGeneralForeColor", SETTING(TEXT_GENERAL_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextGeneralBold", SETTING(TEXT_GENERAL_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextGeneralItalic", SETTING(TEXT_GENERAL_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyOwnBackColor", SETTING(TEXT_MYOWN_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyOwnForeColor", SETTING(TEXT_MYOWN_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyOwnBold", SETTING(TEXT_MYOWN_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyOwnItalic", SETTING(TEXT_MYOWN_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextPrivateBackColor", SETTING(TEXT_PRIVATE_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextPrivateForeColor", SETTING(TEXT_PRIVATE_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextPrivateBold", SETTING(TEXT_PRIVATE_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextPrivateItalic", SETTING(TEXT_PRIVATE_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextSystemBackColor", SETTING(TEXT_SYSTEM_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextSystemForeColor", SETTING(TEXT_SYSTEM_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextSystemBold", SETTING(TEXT_SYSTEM_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextSystemItalic", SETTING(TEXT_SYSTEM_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextServerBackColor", SETTING(TEXT_SERVER_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextServerForeColor", SETTING(TEXT_SERVER_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextServerBold", SETTING(TEXT_SERVER_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextServerItalic", SETTING(TEXT_SERVER_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextTimestampBackColor", SETTING(TEXT_TIMESTAMP_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextTimestampForeColor", SETTING(TEXT_TIMESTAMP_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextTimestampBold", SETTING(TEXT_TIMESTAMP_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextTimestampItalic", SETTING(TEXT_TIMESTAMP_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyNickBackColor", SETTING(TEXT_MYNICK_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyNickForeColor", SETTING(TEXT_MYNICK_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyNickBold", SETTING(TEXT_MYNICK_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextMyNickItalic", SETTING(TEXT_MYNICK_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextFavBackColor", SETTING(TEXT_FAV_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextFavForeColor", SETTING(TEXT_FAV_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextFavBold", SETTING(TEXT_FAV_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextFavItalic", SETTING(TEXT_FAV_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextURLBackColor", SETTING(TEXT_URL_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextURLForeColor", SETTING(TEXT_URL_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextURLBold", SETTING(TEXT_URL_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextURLItalic", SETTING(TEXT_URL_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("BoldAuthorsMess", SETTING(BOLD_AUTHOR_MESS));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("ProgressTextDown", SETTING(PROGRESS_TEXT_COLOR_DOWN));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("ProgressTextUp", SETTING(PROGRESS_TEXT_COLOR_UP));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("ErrorColor", SETTING(ERROR_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("ProgressOverrideColors", SETTING(PROGRESS_OVERRIDE_COLORS));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("MenubarTwoColors", SETTING(MENUBAR_TWO_COLORS));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("MenubarLeftColor", SETTING(MENUBAR_LEFT_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("MenubarRightColor", SETTING(MENUBAR_RIGHT_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("MenubarBumped", SETTING(MENUBAR_BUMPED));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("Progress3DDepth", SETTING(PROGRESS_3DDEPTH));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("ProgressOverrideColors2", SETTING(PROGRESS_OVERRIDE_COLORS2));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextOPBackColor", SETTING(TEXT_OP_BACK_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextOPForeColor", SETTING(TEXT_OP_FORE_COLOR));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextOPBold", SETTING(TEXT_OP_BOLD));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("TextOPItalic", SETTING(TEXT_OP_ITALIC));
-	xml.addChildAttrib(type, curType);
-	xml.addTag("SearchAlternateColour", SETTING(SEARCH_ALTERNATE_COLOUR));
-	xml.addChildAttrib(type, curType);
+
+	exportData("Font", TEXT_FONT);
+	exportData("BackgroundColor", BACKGROUND_COLOR);
+	exportData("TextColor", TEXT_COLOR);
+	exportData("DownloadBarColor", DOWNLOAD_BAR_COLOR);
+	exportData("UploadBarColor", UPLOAD_BAR_COLOR);
+	exportData("TextGeneralBackColor", TEXT_GENERAL_BACK_COLOR);
+	exportData("TextGeneralForeColor", TEXT_GENERAL_FORE_COLOR);
+	exportData("TextGeneralBold", TEXT_GENERAL_BOLD);
+	exportData("TextGeneralItalic", TEXT_GENERAL_ITALIC);
+	exportData("TextMyOwnBackColor", TEXT_MYOWN_BACK_COLOR);
+	exportData("TextMyOwnForeColor", TEXT_MYOWN_FORE_COLOR);
+	exportData("TextMyOwnBold", TEXT_MYOWN_BOLD);
+	exportData("TextMyOwnItalic", TEXT_MYOWN_ITALIC);
+	exportData("TextPrivateBackColor", TEXT_PRIVATE_BACK_COLOR);
+	exportData("TextPrivateForeColor", TEXT_PRIVATE_FORE_COLOR);
+	exportData("TextPrivateBold", TEXT_PRIVATE_BOLD);
+	exportData("TextPrivateItalic", TEXT_PRIVATE_ITALIC);
+	exportData("TextSystemBackColor", TEXT_SYSTEM_BACK_COLOR);
+	exportData("TextSystemForeColor", TEXT_SYSTEM_FORE_COLOR);
+	exportData("TextSystemBold", TEXT_SYSTEM_BOLD);
+	exportData("TextSystemItalic", TEXT_SYSTEM_ITALIC);
+	exportData("TextServerBackColor", TEXT_SERVER_BACK_COLOR);
+	exportData("TextServerForeColor", TEXT_SERVER_FORE_COLOR);
+	exportData("TextServerBold", TEXT_SERVER_BOLD);
+	exportData("TextServerItalic", TEXT_SERVER_ITALIC);
+	exportData("TextTimestampBackColor", TEXT_TIMESTAMP_BACK_COLOR);
+	exportData("TextTimestampForeColor", TEXT_TIMESTAMP_FORE_COLOR);
+	exportData("TextTimestampBold", TEXT_TIMESTAMP_BOLD);
+	exportData("TextTimestampItalic", TEXT_TIMESTAMP_ITALIC);
+	exportData("TextMyNickBackColor", TEXT_MYNICK_BACK_COLOR);
+	exportData("TextMyNickForeColor", TEXT_MYNICK_FORE_COLOR);
+	exportData("TextMyNickBold", TEXT_MYNICK_BOLD);
+	exportData("TextMyNickItalic", TEXT_MYNICK_ITALIC);
+	exportData("TextFavBackColor", TEXT_FAV_BACK_COLOR);
+	exportData("TextFavForeColor", TEXT_FAV_FORE_COLOR);
+	exportData("TextFavBold", TEXT_FAV_BOLD);
+	exportData("TextFavItalic", TEXT_FAV_ITALIC);
+	exportData("TextURLBackColor", TEXT_URL_BACK_COLOR);
+	exportData("TextURLForeColor", TEXT_URL_FORE_COLOR);
+	exportData("TextURLBold", TEXT_URL_BOLD);
+	exportData("TextURLItalic", TEXT_URL_ITALIC);
+	exportData("BoldAuthorsMess", BOLD_AUTHOR_MESS);
+	exportData("ProgressTextDown", PROGRESS_TEXT_COLOR_DOWN);
+	exportData("ProgressTextUp", PROGRESS_TEXT_COLOR_UP);
+	exportData("ErrorColor", ERROR_COLOR);
+	exportData("ProgressOverrideColors", PROGRESS_OVERRIDE_COLORS);
+	exportData("MenubarTwoColors", MENUBAR_TWO_COLORS);
+	exportData("MenubarLeftColor", MENUBAR_LEFT_COLOR);
+	exportData("MenubarRightColor", MENUBAR_RIGHT_COLOR);
+	exportData("MenubarBumped", MENUBAR_BUMPED);
+	exportData("Progress3DDepth", PROGRESS_3DDEPTH);
+	exportData("ProgressOverrideColors2", PROGRESS_OVERRIDE_COLORS2);
+	exportData("TextOPBackColor", TEXT_OP_BACK_COLOR);
+	exportData("TextOPForeColor", TEXT_OP_FORE_COLOR);
+	exportData("TextOPBold", TEXT_OP_BOLD);
+	exportData("TextOPItalic", TEXT_OP_ITALIC);
+	exportData("SearchAlternateColour", SEARCH_ALTERNATE_COLOUR);
+	exportData("ProgressBackColor", PROGRESS_BACK_COLOR);
+	exportData("ProgressCompressColor", PROGRESS_COMPRESS_COLOR);
+	exportData("ProgressSegmentColor", PROGRESS_SEGMENT_COLOR);
+	exportData("ColorDownloaded", COLOR_DOWNLOADED);
+	exportData("ColorRunning", COLOR_RUNNING);
+	exportData("ColorVerified", COLOR_VERIFIED);
+	exportData("ReservedSlotColor", RESERVED_SLOT_COLOR);
+	exportData("IgnoredColor", IGNORED_COLOR);
+	exportData("FavoriteColor", FAVORITE_COLOR);
+	exportData("NormalColour", NORMAL_COLOUR);
+	exportData("ClientCheckedColour", CLIENT_CHECKED_COLOUR);
+	exportData("FileListCheckedColour", FILELIST_CHECKED_COLOUR);
+	exportData("FireballColor", FIREBALL_COLOR);
+	exportData("ServerColor", SERVER_COLOR);
+	exportData("ActiveColor", ACTIVE_COLOR);
+	exportData("PasiveColor", PASIVE_COLOR);
+	exportData("OpColor", OP_COLOR);
+	exportData("FileListAndClientCheckedColour", FULL_CHECKED_COLOUR);
+	exportData("BadClientColour", BAD_CLIENT_COLOUR);
+	exportData("BadFilelistColour", BAD_FILELIST_COLOUR);
+	exportData("ProgressbaroDCStyle", PROGRESSBAR_ODC_STYLE);
 	
 	try {
 		File ff(Text::fromT(x) , File::WRITE, File::CREATE | File::TRUNCATE);
@@ -702,6 +642,7 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 void PropPageTextStyles::onResetColor(int i){
 	colours[i].value = SettingsManager::getInstance()->get((SettingsManager::IntSetting)colours[i].setting, true);
+	setForeColor(ctrlTabExample, colours[i].value);
 }
 
 LRESULT PropPageTextStyles::onTabListChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){

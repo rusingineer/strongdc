@@ -1472,7 +1472,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		lvc.pszText = headerBuf;
 		lvc.cchTextMax = 128;
 		ctrlQueue.GetColumn(cd->iSubItem, &lvc);
-		if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PROGRESS])) == 0) {
+		if(_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PROGRESS])) == 0) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
 			if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -1538,7 +1538,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		} else if(Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SEGMENTS])) == 0) {
+		} else if(_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SEGMENTS])) == 0) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {

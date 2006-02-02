@@ -16,8 +16,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(_UPLOAD_QUEUE_FRAME_H_)
-#define _UPLOAD_QUEUE_FRAME_H_
+
+#if !defined(WAITING_QUEUE_FRAME_H)
+#define WAITING_QUEUE_FRAME_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,18 +32,18 @@
 
 #define SHOWTREE_MESSAGE_MAP 12
 
-class UploadQueueFrame : public MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<UploadQueueFrame, ResourceManager::UPLOAD_QUEUE, IDC_UPLOAD_QUEUE>,
-	private UploadManagerListener, public CSplitterImpl<UploadQueueFrame>, private SettingsManagerListener
+class WaitingUsersFrame : public MDITabChildWindowImpl<WaitingUsersFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<WaitingUsersFrame, ResourceManager::WAITING_USERS, IDC_UPLOAD_QUEUE>,
+	private UploadManagerListener, public CSplitterImpl<WaitingUsersFrame>, private SettingsManagerListener
 {
 public:
-	DECLARE_FRAME_WND_CLASS_EX(_T("UploadQueueFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(_T("WaitingUsersFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
-	UploadQueueFrame() : showTree(true), closed(false), usingUserMenu(false), 
+	WaitingUsersFrame() : showTree(true), closed(false), usingUserMenu(false), 
 		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP)
 	{
 		headerBuf = new TCHAR[128];
 	}
-	virtual ~UploadQueueFrame() {
+	virtual ~WaitingUsersFrame() {
 		delete[] headerBuf;
 	}
 
@@ -53,11 +54,11 @@ public:
 		UPDATE_ITEMS
 	};
 
-	typedef MDITabChildWindowImpl<UploadQueueFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
-	typedef CSplitterImpl<UploadQueueFrame> splitBase;
+	typedef MDITabChildWindowImpl<WaitingUsersFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
+	typedef CSplitterImpl<WaitingUsersFrame> splitBase;
 
 	// Inline message map
-	BEGIN_MSG_MAP(UploadQueueFrame)
+	BEGIN_MSG_MAP(WaitingUsersFrame)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
@@ -128,19 +129,15 @@ private:
 	};
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
-	
+
+	struct UserPtr {
+		User::Ptr u;
+		UserPtr(User::Ptr u) : u(u) { }
+	};
+		
 	User::Ptr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();
-		if (!selectedItem) return NULL;
-		TCHAR nickBuf[512];
-		ctrlQueued.GetItemText(selectedItem, nickBuf, 511);
-		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-			if((WinUtil::getNicks(*i) + _T(" - ") + WinUtil::getHubNames(*i).first) == nickBuf) {
-				return *i;
-				break;
-			}
-		}
-		return NULL;
+		return selectedItem?reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(selectedItem))->u:User::Ptr(0);
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {

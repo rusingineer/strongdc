@@ -31,7 +31,7 @@ class OperaColorsPage : public CPropertyPage<IDD_OPERACOLORS>, public PropPage
 {
 public:
 	OperaColorsPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_OPERACOLORS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_OPERACOLORS)).c_str());
 		SetTitle(title);
 		hloubka = SETTING(PROGRESS_3DDEPTH);
 		m_psp.dwFlags |= PSP_RTLREADING;

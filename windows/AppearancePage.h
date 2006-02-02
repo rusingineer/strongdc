@@ -31,8 +31,7 @@ class AppearancePage : public CPropertyPage<IDD_APPEARANCEPAGE>, public PropPage
 {
 public:
 	AppearancePage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_APPEARANCE)).c_str());
-		SetTitle(title);
+		SetTitle(CTSTRING(SETTINGS_APPEARANCE));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
@@ -56,7 +55,7 @@ protected:
 	static Item items[];
 	static TextItem texts[];
 	static ListItem listItems[];
-	TCHAR* title;
+	static ListItem boldItems[];
 };
 
 #endif // !defined(APPEARANCE_PAGE_H)

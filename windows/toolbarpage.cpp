@@ -61,7 +61,7 @@ LRESULT ToolbarPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlCommands.GetClientRect(rc);
 	ctrlCommands.InsertColumn(0, _T("Dummy"), LVCFMT_LEFT, rc.Width(), 0);
 
-	ctrlCommands.SetImageList(MainFrame::getMainFrame()->largeImagesHot,LVSIL_SMALL );
+	ctrlCommands.SetImageList(MainFrame::getMainFrame()->largeImages, LVSIL_SMALL);
 		
 
 	LVITEM lvi;

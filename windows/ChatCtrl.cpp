@@ -26,6 +26,8 @@
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
+#define MAX_EMOTICONS 64
+
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 _T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://") };
 tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
@@ -221,7 +223,7 @@ void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sT
 	// cachry machry a maj s toho vylizt smajlove
 	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS) && bUseEmo) {
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
-		int smiles = 0; int nIdxFound = -1, maxsmiles = SETTING(MAX_EMOTICONS);
+		int smiles = 0; int nIdxFound = -1;
 		while(true) {
 			TCHAR Delimiter[1024] = { NULL };
 			TCHAR *rpl = NULL;
@@ -240,7 +242,7 @@ void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sT
 				}
 			}
 
-			if(rpl && (smiles < maxsmiles)) {
+			if(rpl && (smiles < MAX_EMOTICONS)) {
 				TCHAR *cmp = (TCHAR*)_tcsstr(sText, Delimiter);
 				if(cmp) {
 					_tcsncpy(beforeAppendText, sText, cmp - sText);
@@ -390,7 +392,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 	// cachry machry a maj s toho vylizt smajlove
 	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS) && bUseEmo) {
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
-		int smiles = 0; int nIdxFound = -1, maxsmiles = SETTING(MAX_EMOTICONS);
+		int smiles = 0; int nIdxFound = -1;
 		while(true) {
 			TCHAR Delimiter[1024] = { NULL };
 			TCHAR *rpl = NULL;
@@ -409,7 +411,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 				}
 			}
 
-			if(rpl && (smiles < maxsmiles)) {
+			if(rpl && (smiles < MAX_EMOTICONS)) {
 				TCHAR *cmp = (TCHAR*)_tcsstr(sText, Delimiter);
 				if(cmp) {
 					_tcsncpy(beforeAppendText, sText, cmp - sText);

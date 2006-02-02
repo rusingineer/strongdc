@@ -4,7 +4,6 @@
 	Version="8,00"
 	Name="Regex"
 	ProjectGUID="{6B5E1154-D1FC-460A-B5F4-78ACB1E96349}"
-	RootNamespace="Regex"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -117,7 +116,6 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
-				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
