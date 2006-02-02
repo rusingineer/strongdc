@@ -38,7 +38,7 @@ public:
 	typedef X<6> PartialList;
 
 	virtual void on(Added, QueueItem*) throw() { }
-	virtual void on(Finished, QueueItem*) throw() { }
+	virtual void on(Finished, QueueItem*, int64_t) throw() { }
 	virtual void on(Removed, QueueItem*) throw() { }
 	virtual void on(Moved, QueueItem*) throw() { }
 	virtual void on(SourcesUpdated, QueueItem*) throw() { }

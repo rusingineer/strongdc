@@ -270,7 +270,7 @@ public:
 	GETSET(bool, sentRaw, SentRaw);
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing
-	void matchListing(DirectoryListing* /*aDirList*/) throw();
+	void matchListing(DirectoryListing& /*aDirList*/) throw();
 
 private:
 	// @internal

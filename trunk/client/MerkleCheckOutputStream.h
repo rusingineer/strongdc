@@ -89,9 +89,7 @@ public:
 					s->flush();
 					dcassert(verified > 0);
 					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
-					if(!fileChunks->verifyBlock(offset, real)){
-						LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(offset), true);
-					}
+					fileChunks->verifyBlock(offset, real);
 				}
 				return ret;
 	        }else{
@@ -141,10 +139,7 @@ public:
 				s->flush();
 				dcassert(old > 0);
 				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
-				if(!fileChunks->verifyBlock(offset, real)){
-					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(offset), true);
-				}
-
+				fileChunks->verifyBlock(offset, real);
 			}
 		}
 		return ret;

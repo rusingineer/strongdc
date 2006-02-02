@@ -36,7 +36,7 @@
 
 BufferedSocket::BufferedSocket(char aSeparator) throw() : 
 separator(aSeparator), mode(MODE_LINE), 
-dataBytes(0), rollback(0), failed(false), inbuf(SETTING(SOCKET_IN_BUFFER)), sock(0), disconnecting(false)
+dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false)
 {
 }
 
@@ -50,10 +50,13 @@ void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketExceptio
 	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
 
 	sock->accept(srv);
-	sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-	sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
+	if(SETTING(SOCKET_IN_BUFFER) > 0)
+		sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+    if(SETTING(SOCKET_OUT_BUFFER) > 0)
+		sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
 	sock->setBlocking(false);
 
+	inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
 	try {
 		start();
 	} catch(...) {
@@ -72,9 +75,13 @@ void BufferedSocket::connect(const string& aAddress, short aPort, bool secure, b
 	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
 
 	sock->create();
-	sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-	sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
+	if(SETTING(SOCKET_IN_BUFFER) > 0)
+		sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+	if(SETTING(SOCKET_OUT_BUFFER) > 0)
+		sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
 	sock->setBlocking(false);
+
+	inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
 
 	try {
 		start();
@@ -176,6 +183,10 @@ void BufferedSocket::threadRead() throw(SocketException) {
 				left = 0;
 			}
 		} else if(mode == MODE_DATA) {
+			// disconnect when invalid data comes from some user.. test more!
+			if(disconnecting) {
+				return;
+			}
 			if(dataBytes == -1) {
 				fire(BufferedSocketListener::Data(), &inbuf[bufpos], left);
 				bufpos += (left - rollback);
@@ -205,18 +216,18 @@ void BufferedSocket::threadRead() throw(SocketException) {
 }
 
 void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
-	dcdebug("Sending file...\n");
 	dcassert(sock);
 	if(!sock)
 		return;
 	dcassert(file != NULL);
 	vector<u_int8_t> buf;
+	size_t bufSize = (size_t)sock->getSocketOptInt(SO_SNDBUF);
 
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;
 	while(true) {
-		buf.resize(SETTING(SOCKET_OUT_BUFFER));
+		buf.resize(bufSize);
 		size_t bytesRead = buf.size();
 		throttling = BOOLSETTING(THROTTLE_ENABLE);
 		if(throttling) {
@@ -227,6 +238,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				sendMaximum = bytesRead;
 			}
 			bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+			buf.resize(bytesRead);
 		}
 		size_t actual = file->read(&buf[0], bytesRead);
 		if(actual == 0) {

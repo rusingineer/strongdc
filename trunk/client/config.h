@@ -36,6 +36,8 @@
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
 //# define _STLP_DEBUG 1
+//# define _STLP_DEBUG_UNINITIALIZED 1
+//# define _STLP_DEBUG_ALLOC 1
 
 // --- Shouldn't have to change anything under here...
 
@@ -46,16 +48,12 @@
 #ifdef HAVE_STLPORT
 # define _STLP_DONT_USE_SHORT_STRING_OPTIM 1	// Lots of memory issues with this undefined...wonder what's up with that..
 # define _STLP_USE_PTR_SPECIALIZATIONS 1
-//# define _STLP_USE_TEMPLATE_EXPRESSION 1
+# define _STLP_USE_TEMPLATE_EXPRESSION 1
 # define _STLP_NO_ANACHRONISMS 1
 # define _STLP_NO_CUSTOM_IO 1
 # define _STLP_NO_IOSTREAMS 1
 # ifndef _DEBUG
 #  define _STLP_DONT_USE_EXCEPTIONS 1
-# else
-#  define _STLP_DEBUG 1
-#  define _STLP_DEBUG_UNINITIALIZED 1
-#  define _STLP_DEBUG_ALLOC 1
 # endif
 #endif
 

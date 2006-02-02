@@ -30,13 +30,10 @@ class NetworkPage : public CPropertyPage<IDD_NETWORKPAGE>, public PropPage
 {
 public:
 	NetworkPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_NETWORK)).c_str());
-		SetTitle(title);
+		SetTitle(CTSTRING(SETTINGS_NETWORK));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~NetworkPage() {
-		free(title);
-	};
+	virtual ~NetworkPage() { };
 
 	BEGIN_MSG_MAP(NetworkPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -59,7 +56,6 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	CEdit desc;
-	TCHAR* title;
 
 	void fixControls();
 };

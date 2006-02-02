@@ -51,7 +51,7 @@ PropPage::Item LimitPage::items[] = {
 	{ IDC_TIME_DOWN, SettingsManager::DOWN_TIME, PropPage::T_INT },
 	{ IDC_H_DOWN_SPEED, SettingsManager::H_DOWN_SPEED, PropPage::T_INT },
 	{ IDC_DISCONNECTING_ENABLE, SettingsManager::DISCONNECTING_ENABLE, PropPage::T_BOOL },
-	{ IDC_SEGMENTED_ONLY, SettingsManager::AUTO_DROP_SOURCE, PropPage::T_BOOL },
+	{ IDC_SEGMENTED_ONLY, SettingsManager::DROP_MULTISOURCE_ONLY, PropPage::T_BOOL },
 	{ IDC_MIN_FILE_SIZE, SettingsManager::MIN_FILE_SIZE, PropPage::T_INT },
 	{ IDC_REMOVE_IF_BELOW, SettingsManager::DISCONNECT, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }

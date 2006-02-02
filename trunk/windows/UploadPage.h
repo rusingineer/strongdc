@@ -34,14 +34,12 @@ class UploadPage : public CPropertyPage<IDD_UPLOADPAGE>, public PropPage
 {
 public:
 	UploadPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_GENERAL) + _T('\\') + TSTRING(SETTINGS_UPLOADS)).c_str());
-		SetTitle(title);
+		SetTitle(CTSTRING(SETTINGS_UPLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 	virtual ~UploadPage() {
 		ctrlDirectories.Detach();
 		ctrlTotal.Detach();
-		free(title);
 	};
 
 	BEGIN_MSG_MAP_EX(UploadPage)
@@ -73,7 +71,6 @@ protected:
 	static TextItem texts[];
 	ExListViewCtrl ctrlDirectories;
 	CStatic ctrlTotal;
-	TCHAR* title;
 
 	void addDirectory(const tstring& aPath);
 	FolderTree ft;

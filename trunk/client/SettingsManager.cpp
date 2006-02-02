@@ -49,7 +49,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent06", "KickMsgRecent07", "KickMsgRecent08", "KickMsgRecent09", "KickMsgRecent10", 
 	"KickMsgRecent11", "KickMsgRecent12", "KickMsgRecent13", "KickMsgRecent14", "KickMsgRecent15", 
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
-	"OneSegmentExtensions", "Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
+	"Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
 	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
 	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline", "SoundTypingNotify",
 	"BackgroundImage", "WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
@@ -63,7 +63,7 @@ const string SettingsManager::settingTags[] =
 	"IncomingConnections", "InPort", "Slots", "Rollback", "AutoFollow", "ClearSearch",
 	"BackgroundColor", "TextColor", "UseOemMonoFont", "ShareHidden", "FilterMessages", "MinimizeToTray",
 	"AutoSearch", "TimeStamps", "ConfirmExit", "IgnoreOffline", "PopupOffline",
-	"ListDuplicates", "BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat",
+	"BufferSize", "DownloadSlots", "MaxDownloadSpeed", "LogMainChat", "LogPrivateChat",
 	"LogDownloads", "LogUploads", "StatusInChat", "ShowJoins", "PrivateMessageBeep", "PrivateMessageBeepOpen",
 	"UseSystemIcons", "PopupPMs", "MinUploadSpeed", "GetUserInfo", "UrlHandler", "MainWindowState", 
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway",
@@ -72,10 +72,8 @@ const string SettingsManager::settingTags[] =
 	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots",
 	"SkipZeroByte", "AdlsBreakOnFirst",
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
-	"LogFilelistTransfers", "EmptyWorkingSet",
-	"ShowStatusbar",
-	"ShowToolbar", "ShowTransferview", 
-	"GetUpdateInfo", "SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
+	"LogFilelistTransfers", "ShowStatusbar", "BandwidthSettingMode", "ShowToolbar", "ShowTransferview", 
+	"SearchPassiveAlways", "SmallFileSize", "ShutdownInterval", 
 	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
 	"TextMyOwnBackColor", "TextMyOwnForeColor", "TextMyOwnBold", "TextMyOwnItalic", 
@@ -95,16 +93,14 @@ const string SettingsManager::settingTags[] =
 	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
-	"SetAutoSegment", "SetMin2", "SetMax2", "SetMin3", "SetMax3",
-	"SetMin4", "SetMax4", "SetMin6", "SetMax6", "SetMin8", "SetMaxSpeed",
-	"SegmentsType", "NumberOfSegments", "PercentFakeShareTolerated", "MaxSources",
-	"UseEmoticons", "MaxEmoticons", "SendUnknownCommands", "Disconnect",
+	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
+	"UseEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "SearchTTHOnly", "GetUserCountry", "DisableCZDiacritic",
-	"DebugCommands", "AutoSaveQueue", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
-	"FavShowJoins", "LogStatusMessages", "ShowPMLog", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
+	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
+	"FavShowJoins", "LogStatusMessages", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
-	"AutoDropSource", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction", "MagnetRegister",
+	"DropMultiSourceOnly", "DisplayCheatsInMainChat", "MagnetAsk", "MagnetAction", "MagnetRegister",
 	"DisconnectRaw", "TimeoutRaw", "FakeShareRaw", "ListLenMismatch", "FileListTooSmall", "FileListUnavailable",
 	"AddFinishedInstantly", "Away", "UseCTRLForLineHistory",
 	"PopupHubConnected", "PopupHubDisconnected", "PopupFavoriteConnected", "PopupCheatingUser", "PopupDownloadStart", 
@@ -124,7 +120,9 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl",
+	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl", "OpenWaitingUsers",
+	"BoldWaitingUsers", 
+	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -165,32 +163,26 @@ SettingsManager::SettingsManager()
 	
 	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
 	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getAppPath() + "Incomplete" PATH_SEPARATOR_STR);
-	setDefault(SLOTS, 1);
+	setDefault(SLOTS, 2);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
 	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);
-	setDefault(EMPTY_WORKING_SET, true);
-	setDefault(DONT_EXTENSIONS, "");
-	setDefault(NUMBER_OF_SEGMENTS, 4);
-	setDefault(SEGMENTS_TYPE, SEGMENT_ON_SIZE);
 	setDefault(AUTO_FOLLOW, true);
 	setDefault(CLEAR_SEARCH, true);
 	setDefault(SHARE_HIDDEN, false);
 	setDefault(FILTER_MESSAGES, true);
 	setDefault(MINIMIZE_TRAY, true);
 	setDefault(AUTO_SEARCH, true);
-	setDefault(TIME_STAMPS, false);
+	setDefault(TIME_STAMPS, true);
 	setDefault(CONFIRM_EXIT, true);
 	setDefault(IGNORE_OFFLINE, false);
 	setDefault(POPUP_OFFLINE, false);
-	setDefault(LIST_DUPES, true);
 	setDefault(BUFFER_SIZE, 64);
 	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2;http://dc.selwerd.nl/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
-	setDefault(HUB_SLOTS, 0);
 	setDefault(LOG_DIRECTORY, Util::getAppPath() + "Logs" PATH_SEPARATOR_STR);
 	setDefault(LOG_UPLOADS, false);
 	setDefault(LOG_DOWNLOADS, false);
@@ -213,7 +205,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FORMAT_SYSTEM, "[%Y-%m-%d %H:%M] %[message]");
 	setDefault(LOG_FILE_MAIN_CHAT, "%[hubURL].log");
 	setDefault(LOG_FILE_STATUS, "%[hubURL]_status.log");
-	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[userNI].log");
+	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[userNI].%[userCID].log");
 	setDefault(LOG_FILE_UPLOAD, "Uploads.log");
 	setDefault(LOG_FILE_DOWNLOAD, "Downloads.log");
 	setDefault(LOG_FILE_SYSTEM, "system.log");
@@ -230,9 +222,9 @@ SettingsManager::SettingsManager()
 	setDefault(QUEUEFRAME_SHOW_TREE, true);
 	setDefault(COMPRESS_TRANSFERS, true);
 	setDefault(SHOW_PROGRESS_BARS, true);
-	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. I might answer later if you're lucky.");
+	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. State your business and I might answer later if you're lucky.");
 	setDefault(TIME_STAMPS_FORMAT, "%H:%M:%S");
-	setDefault(MAX_TAB_ROWS, 2);
+	setDefault(MAX_TAB_ROWS, 4);
 	setDefault(MAX_COMPRESSION, 3);
 	setDefault(ANTI_FRAG, true);
 	setDefault(NO_AWAYMSG_TO_BOTS, true);
@@ -240,14 +232,11 @@ SettingsManager::SettingsManager()
 	setDefault(ADLS_BREAK_ON_FIRST, false);
 	setDefault(HUB_USER_COMMANDS, true);
 	setDefault(AUTO_SEARCH_AUTO_MATCH, false);
-	setDefault(LOG_FILELIST_TRANSFERS, true);
+	setDefault(LOG_FILELIST_TRANSFERS, false);
 	setDefault(LOG_SYSTEM, false);
 	setDefault(SEND_UNKNOWN_COMMANDS, true);
-	setDefault(AUTO_DROP_SOURCE, true);
-	setDefault(DEBUG_COMMANDS, true);
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);
-	setDefault(UPDATE_URL, "http://ghostface.asgards.org/");
 	setDefault(FAV_SHOW_JOINS, false);
 	setDefault(LOG_STATUS_MESSAGES, false);
 	setDefault(SHOW_TRANSFERVIEW, true);
@@ -260,14 +249,22 @@ SettingsManager::SettingsManager()
 	setDefault(MAGNET_ACTION, MAGNET_AUTO_SEARCH);
 	setDefault(ADD_FINISHED_INSTANTLY, false);
 	setDefault(DONT_DL_ALREADY_SHARED, false);
-	setDefault(CONFIRM_HUB_REMOVAL, false);
-	setDefault(SETTINGS_USE_CTRL_FOR_LINE_HISTORY, true);
+	setDefault(CONFIRM_HUB_REMOVAL, true);
+	setDefault(USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(JOIN_OPEN_NEW_WINDOW, false);
 	setDefault(SEARCH_ONLY_TTH, true);
+	setDefault(SHOW_LAST_LINES_LOG, 10);
+	setDefault(CONFIRM_DELETE, true);
 	setDefault(ADVANCED_RESUME, true);
 	setDefault(ADC_DEBUG, false);
 	setDefault(TOGGLE_ACTIVE_WINDOW, true);
 	setDefault(SEARCH_HISTORY, 10);
+	setDefault(SMALL_FILE_SIZE, 256);
+	setDefault(PRIO_HIGHEST_SIZE, 64);
+	setDefault(PRIO_HIGH_SIZE, 0);
+	setDefault(PRIO_NORMAL_SIZE, 0);
+	setDefault(PRIO_LOW_SIZE, 0);
+	setDefault(PRIO_LOWEST, false);
 	setDefault(OPEN_PUBLIC, false);
 	setDefault(OPEN_FAVORITE_HUBS, false);
 	setDefault(OPEN_FAVORITE_USERS, false);
@@ -277,22 +274,30 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_SEARCH_SPY, false);
 	setDefault(OPEN_NETWORK_STATISTICS, false);
 	setDefault(OPEN_NOTEPAD, false);
+	setDefault(OPEN_WAITING_USERS, false);
 	setDefault(NO_IP_OVERRIDE, false);
 	setDefault(SOCKET_IN_BUFFER, 64*1024);
 	setDefault(SOCKET_OUT_BUFFER, 64*1024);
-	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getAppPath() + "certs" PATH_SEPARATOR_STR);
+	setDefault(SSL_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR);
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
 	setDefault(BOLD_QUEUE, true);
 	setDefault(BOLD_HUB, true);
 	setDefault(BOLD_PM, true);
 	setDefault(BOLD_SEARCH, true);
+	setDefault(BOLD_WAITING_USERS, true);
 	setDefault(AUTO_REFRESH_TIME, 60);
 	setDefault(USE_SSL, false);
+
+	setDefault(NUMBER_OF_SEGMENTS, 4);
+	setDefault(SEGMENTS_MANUAL, false);
+	setDefault(HUB_SLOTS, 1);
+	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
+	setDefault(DROP_MULTISOURCE_ONLY, true);
+	setDefault(DEBUG_COMMANDS, false);
+	setDefault(UPDATE_URL, "http://ghostface.asgards.org/");	
 	setDefault(EXTRA_SLOTS, 3);
-	setDefault(SMALL_FILE_SIZE, 256);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
-	setDefault(GET_UPDATE_INFO, true);
 	setDefault(SEARCH_PASSIVE, false);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_NORMAL, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, 0);
@@ -306,7 +311,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_WEBSERVER, true);
 	setDefault(WEBSERVER_USER, "strongdc");
 	setDefault(WEBSERVER_PASS, "strongdc");
-	setDefault(AUTO_PRIORITY_DEFAULT, false);
+	setDefault(AUTO_PRIORITY_DEFAULT, true);
 	setDefault(TOOLBARIMAGE,"");
 	setDefault(TOOLBARHOTIMAGE,"");
 	setDefault(TIME_DEPENDENT_THROTTLE, false);
@@ -316,10 +321,10 @@ SettingsManager::SettingsManager()
 	setDefault(THROTTLE_ENABLE, false);
 	setDefault(EXTRA_DOWNLOAD_SLOTS, 3);
 
-	setDefault(BACKGROUND_COLOR, RGB(0,0,96));
+	setDefault(BACKGROUND_COLOR, RGB(37,60,120));
 	setDefault(TEXT_COLOR, RGB(255,255,255));
 
-	setDefault(TEXT_GENERAL_BACK_COLOR, RGB(0,0,96));
+	setDefault(TEXT_GENERAL_BACK_COLOR, RGB(37,60,120));
 	setDefault(TEXT_GENERAL_FORE_COLOR, RGB(255,255,255));
 	setDefault(TEXT_GENERAL_BOLD, false);
 	setDefault(TEXT_GENERAL_ITALIC, false);
@@ -349,7 +354,7 @@ SettingsManager::SettingsManager()
 	setDefault(TEXT_TIMESTAMP_BOLD, false);
 	setDefault(TEXT_TIMESTAMP_ITALIC, false);
 
-	setDefault(TEXT_MYNICK_BACK_COLOR, RGB(0,0,96));
+	setDefault(TEXT_MYNICK_BACK_COLOR, RGB(37,60,120));
 	setDefault(TEXT_MYNICK_FORE_COLOR, RGB(255,255,0));
 	setDefault(TEXT_MYNICK_BOLD, true);
 	setDefault(TEXT_MYNICK_ITALIC, false);
@@ -359,7 +364,7 @@ SettingsManager::SettingsManager()
 	setDefault(TEXT_FAV_BOLD, true);
 	setDefault(TEXT_FAV_ITALIC, true);
 
-	setDefault(TEXT_OP_BACK_COLOR, RGB(0,0,96));
+	setDefault(TEXT_OP_BACK_COLOR, RGB(37,60,120));
 	setDefault(TEXT_OP_FORE_COLOR, RGB(200,0,0));
 	setDefault(TEXT_OP_BOLD, true);
 	setDefault(TEXT_OP_ITALIC, false);
@@ -395,7 +400,6 @@ SettingsManager::SettingsManager()
 	setDefault(PROGRESS_TEXT_COLOR_UP, RGB(255, 255, 255));
 	setDefault(SHOW_INFOTIPS, true);
 	setDefault(MINIMIZE_ON_STARTUP, false);
-	setDefault(CONFIRM_DELETE, true);
 	setDefault(FREE_SLOTS_DEFAULT, false);
 	setDefault(USE_EXTENSION_DOWNTO, true);
 	setDefault(ERROR_COLOR, RGB(255, 0, 0));
@@ -407,32 +411,16 @@ SettingsManager::SettingsManager()
 	setDefault(DISCONNECTING_ENABLE, false);
 	setDefault(MIN_FILE_SIZE, 0);
 	setDefault(REMOVE_SLOW_USER, false);
-	setDefault(SHOW_PM_LOG, true);
-	setDefault(SHOW_LAST_LINES_LOG, 10);
     setDefault(FILE_SLOTS, 15);
-	setDefault(SET_AUTO_SEGMENT, true);
-	setDefault(SET_MIN2, 20);
-	setDefault(SET_MAX2, 40);
-	setDefault(SET_MIN3, 40);
-	setDefault(SET_MAX3, 60);
-	setDefault(SET_MIN4, 60);
-	setDefault(SET_MAX4, 80);
-	setDefault(SET_MIN6, 80);
-	setDefault(SET_MAX6, 100);
-	setDefault(SET_MIN8, 100);
-	setDefault(SET_MAXSPEED, 40);
 	setDefault(MENUBAR_TWO_COLORS, true);
 	setDefault(MENUBAR_LEFT_COLOR, RGB(254, 157, 27));
 	setDefault(MENUBAR_RIGHT_COLOR, RGB(194, 78, 7));
 	setDefault(MENUBAR_BUMPED, true);
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
-	setDefault(MAX_SOURCES, 80);
 	setDefault(USE_EMOTICONS, true);
-	setDefault(MAX_EMOTICONS, 256);
 	setDefault(CZCHARS_DISABLE, false);
 	setDefault(REPORT_ALTERNATES, true);	
-	setDefault(AUTOSAVE_QUEUE, 2);
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
@@ -441,7 +429,7 @@ SettingsManager::SettingsManager()
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
 	setDefault(UPLOADQUEUEFRAME_SHOW_TREE, true);	
 	setDefault(DONT_BEGIN_SEGMENT, true);
-	setDefault(DONT_BEGIN_SEGMENT_SPEED, 200);
+	setDefault(DONT_BEGIN_SEGMENT_SPEED, 400);
 
 	setDefault(DETECT_BADSOFT, true);
 	setDefault(BADSOFT_DETECTIONS, 0);
@@ -457,19 +445,20 @@ SettingsManager::SettingsManager()
 	setDefault(REALTIME_QUEUE_UPDATE, true);
 	setDefault(SUPPRESS_MAIN_CHAT, false);
 	
-	setDefault(BEGINFILE, "");
-	setDefault(BEEPFILE, "");
-	setDefault(FINISHFILE, "");
-	setDefault(SOURCEFILE, "");
-	setDefault(UPLOADFILE, "");
-	setDefault(FAKERFILE, "");
-	setDefault(CHATNAMEFILE, "");
-	setDefault(SOUND_TTH, "");
-	setDefault(SOUND_EXC, "");
-	setDefault(SOUND_HUBCON, "");
-	setDefault(SOUND_HUBDISCON, "");
-	setDefault(SOUND_FAVUSER, "");
-	setDefault(SOUND_TYPING_NOTIFY, "");
+	// default sounds
+	setDefault(BEGINFILE, Util::emptyString);
+	setDefault(BEEPFILE, Util::emptyString);
+	setDefault(FINISHFILE, Util::emptyString);
+	setDefault(SOURCEFILE, Util::emptyString);
+	setDefault(UPLOADFILE, Util::emptyString);
+	setDefault(FAKERFILE, Util::emptyString);
+	setDefault(CHATNAMEFILE, Util::emptyString);
+	setDefault(SOUND_TTH, Util::emptyString);
+	setDefault(SOUND_EXC, Util::emptyString);
+	setDefault(SOUND_HUBCON, Util::emptyString);
+	setDefault(SOUND_HUBDISCON, Util::emptyString);
+	setDefault(SOUND_FAVUSER, Util::emptyString);
+	setDefault(SOUND_TYPING_NOTIFY, Util::emptyString);
 
 	setDefault(POPUP_HUB_CONNECTED, false);
 	setDefault(POPUP_HUB_DISCONNECTED, false);
@@ -492,6 +481,7 @@ SettingsManager::SettingsManager()
 
 	setDefault(BACKGROUND_IMAGE, "");
 	setDefault(PROGRESS_3DDEPTH, 4);
+	setDefault(PROGRESS_OVERRIDE_COLORS, true);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
 	setDefault(SPEED_USERS, true);	
 	setDefault(MULTI_CHUNK, true);
@@ -521,7 +511,8 @@ SettingsManager::SettingsManager()
 	setDefault(EMOTICONS_FILE, "Chat (Large)");
 	setDefault(GROUP_SEARCH_RESULTS, true);
 	setDefault(TABS_ON_TOP, false);
-
+	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);
+	
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
@@ -611,12 +602,8 @@ void SettingsManager::load(string const& aFileName)
 #ifdef _DEBUG
 		set(CLIENT_ID, CID::generate().toBase32());
 #endif
-		if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
-			set(TCP_PORT, (int)Util::rand(1025, 32000));
-			set(UDP_PORT, (int)Util::rand(1025, 32000));
-		}
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
-		
+
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();
@@ -624,6 +611,11 @@ void SettingsManager::load(string const& aFileName)
 	} catch(const Exception&) {
 		if(CID(SETTING(CLIENT_ID)).isZero())
 			set(CLIENT_ID, CID::generate().toBase32());
+	}
+
+	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
+		set(TCP_PORT, (int)Util::rand(1025, 32000));
+		set(UDP_PORT, (int)Util::rand(1025, 32000));
 	}
 }
 

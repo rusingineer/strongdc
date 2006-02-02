@@ -373,7 +373,6 @@ private:
 		} else {
 			showUsers = BOOLSETTING(GET_USER_INFO);
 		}
-		headerBuf = new TCHAR[128];
 	}
 
 	virtual ~HubFrame() {
@@ -382,7 +381,6 @@ private:
 		frames.erase(server);
 
 		ClientManager::getInstance()->putClient(client);
-		delete[] headerBuf;
 	}
 
 	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
@@ -482,7 +480,6 @@ private:
 
 	bool PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu);
 	bool showUsers;
-	TCHAR * headerBuf;
 	string sColumsOrder;
     string sColumsWidth;
     string sColumsVisible;

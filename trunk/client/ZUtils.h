@@ -46,6 +46,7 @@ private:
 	z_stream zs;
 	int64_t totalIn;
 	int64_t totalOut;
+	bool compressing;
 };
 
 class UnZFilter {

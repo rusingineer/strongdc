@@ -61,7 +61,7 @@ public:
 		FLAG_TREE_TRIED = 0x200,
 		FLAG_PARTIAL_LIST = 0x400,
 		FLAG_TESTSUR = 0x800,
-		FLAG_CHECK_FILE_LIST = 0x2000,
+		FLAG_CHECK_FILE_LIST = 0x1000,
 		FLAG_MULTI_CHUNK = 0x2000,
 		FLAG_PARTIAL = 0x4000,
 		FLAG_TTH_CHECK = 0x8000
@@ -302,7 +302,7 @@ private:
 		}
 	};
 	
-	void checkDownloads(UserConnection* aConn, bool reconn = false, string aTarget = Util::emptyString);
+	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 
 	// UserConnectionListener

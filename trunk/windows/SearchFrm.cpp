@@ -96,7 +96,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsContainer.SubclassWindow(ctrlResults.m_hWnd);
 	
 	if (BOOLSETTING(USE_SYSTEM_ICONS)) {
-	ctrlResults.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
+		ctrlResults.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
 	} else {
 		images.CreateFromImage(IDB_SPEEDS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 		ctrlResults.SetImageList(images, LVSIL_SMALL);
@@ -365,6 +365,12 @@ BOOL SearchFrame::ListDraw(HWND /*hwnd*/, UINT /*uCtrlId*/, DRAWITEMSTRUCT *dis)
 void SearchFrame::onEnter() {
 	StringList clients;
 	
+	// Change Default Settings If Changed
+	if (onlyTTH != BOOLSETTING(SEARCH_ONLY_TTH))
+		SettingsManager::getInstance()->set(SettingsManager::SEARCH_ONLY_TTH, onlyTTH);
+	if (onlyFree != BOOLSETTING(FREE_SLOTS_DEFAULT))
+		SettingsManager::getInstance()->set(SettingsManager::FREE_SLOTS_DEFAULT, onlyFree);
+
 	// Start the countdown timer...
 	// Can this be done in a better way?
 	TimerManager::getInstance()->addListener(this);
@@ -1495,7 +1501,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 		lvc.pszText = headerBuf;
 		lvc.cchTextMax = 128;
 		ctrlResults.GetColumn(cd->iSubItem, &lvc);
-		if(BOOLSETTING(GET_USER_COUNTRY) && Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {
+		if(BOOLSETTING(GET_USER_COUNTRY) && _tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {
 			SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
 			ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;

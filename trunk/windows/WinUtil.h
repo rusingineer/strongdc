@@ -247,21 +247,21 @@ public:
 		return 0;
 	}
 
-	struct NmdcOnly {
-		NmdcOnly() : nmdcOnly(true) { }
-		void operator()(UserInfoBase* ui) { if(!ui->getUser()->isSet(User::NMDC)) nmdcOnly = false; }
+	struct ADCOnly {
+		ADCOnly() : adcOnly(true) { }
+		void operator()(UserInfoBase* ui) { if(!ui->getUser()->isSet(User::NMDC)) adcOnly = false; }
 
-		bool nmdcOnly;
+		bool adcOnly;
 	};
 	void checkAdcItems(CMenu& menu) {
 
 		MENUITEMINFO mii = { 0 };
 		mii.cbSize = sizeof(mii);
 		mii.fMask = MIIM_STATE;
-		if(((T*)this)->getUserList().forEachSelectedT(NmdcOnly()).nmdcOnly) {
-			menu.EnableMenuItem(IDC_BROWSELIST, MFS_DISABLED);
-		} else {
+		if(((T*)this)->getUserList().forEachSelectedT(ADCOnly()).adcOnly) {
 			menu.EnableMenuItem(IDC_BROWSELIST, MFS_ENABLED);
+		} else {
+			menu.EnableMenuItem(IDC_BROWSELIST, MFS_DISABLED);
 		}
 	}
 

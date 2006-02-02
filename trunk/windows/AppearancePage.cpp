@@ -32,10 +32,8 @@ PropPage::TextItem AppearancePage::texts[] = {
 	{ IDC_SETTINGS_TIME_STAMPS_FORMAT, ResourceManager::SETTINGS_TIME_STAMPS_FORMAT },
 	{ IDC_SETTINGS_LANGUAGE_FILE, ResourceManager::SETTINGS_LANGUAGE_FILE },
 	{ IDC_BROWSE, ResourceManager::BROWSE_ACCEL },
-	{ IDC_SETCZDC_PM_LINES, ResourceManager::SETCZDC_PM_LINES },
 	{ IDC_SETTINGS_REQUIRES_RESTART, ResourceManager::SETTINGS_REQUIRES_RESTART },
 	{ IDC_SETTINGS_GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY }, 
-	{ IDC_SETTINGS_SEARCH_HISTORY, ResourceManager::SETTINGS_SEARCH_HISTORY },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -43,8 +41,6 @@ PropPage::Item AppearancePage::items[] = {
 	{ IDC_DEFAULT_AWAY_MESSAGE, SettingsManager::DEFAULT_AWAY_MESSAGE, PropPage::T_STR },
 	{ IDC_TIME_STAMPS_FORMAT, SettingsManager::TIME_STAMPS_FORMAT, PropPage::T_STR },
 	{ IDC_LANGUAGE, SettingsManager::LANGUAGE_FILE, PropPage::T_STR },
-	{ IDC_PM_LINES, SettingsManager::SHOW_LAST_LINES_LOG, PropPage::T_INT },
-	{ IDC_SEARCH_HISTORY, SettingsManager::SEARCH_HISTORY, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -61,33 +57,35 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::USE_SYSTEM_ICONS, ResourceManager::SETTINGS_USE_SYSTEM_ICONS },
 	{ SettingsManager::USE_OEM_MONOFONT, ResourceManager::SETTINGS_USE_OEM_MONOFONT },
 	{ SettingsManager::GET_USER_COUNTRY, ResourceManager::SETTINGS_GET_USER_COUNTRY },
-	{ SettingsManager::SHOW_PM_LOG , ResourceManager::SETCZDC_PM_LOG },	
-	{ SettingsManager::BOLD_FINISHED_DOWNLOADS, ResourceManager::SETTINGS_FINISHED_DOWNLOAD_DIRTY },	
-    { SettingsManager::BOLD_FINISHED_UPLOADS, ResourceManager::SETTINGS_FINISHED_UPLOAD_DIRTY },	
-    { SettingsManager::BOLD_QUEUE, ResourceManager::SETTINGS_QUEUE_DIRTY },	
-	{ SettingsManager::BOLD_HUB, ResourceManager::SETTINGS_TAB_HUB_DIRTY },	
-	{ SettingsManager::BOLD_SEARCH, ResourceManager::SETTINGS_TAB_SEARCH_DIRTY },	
-    { SettingsManager::BOLD_PM, ResourceManager::SETTINGS_TAB_PM_DIRTY },
+	{ SettingsManager::USE_EMOTICONS, ResourceManager::ENABLE_EMOTICONS },
+	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETCZDC_CZCHARS_DISABLE },
+	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
+	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
+	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
+	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },
+	{ SettingsManager::TABS_ON_TOP, ResourceManager::TABS_ON_TOP },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
-AppearancePage::~AppearancePage(){ free(title); }
+PropPage::ListItem AppearancePage::boldItems[] = {
+	{ SettingsManager::BOLD_FINISHED_DOWNLOADS, ResourceManager::FINISHED_DOWNLOADS },
+	{ SettingsManager::BOLD_FINISHED_UPLOADS, ResourceManager::FINISHED_UPLOADS },
+	{ SettingsManager::BOLD_QUEUE, ResourceManager::DOWNLOAD_QUEUE },
+	{ SettingsManager::BOLD_HUB, ResourceManager::HUB },
+	{ SettingsManager::BOLD_PM, ResourceManager::PRIVATE_MESSAGE },
+	{ SettingsManager::BOLD_SEARCH, ResourceManager::SEARCH },
+	{ SettingsManager::BOLD_WAITING_USERS, ResourceManager::WAITING_USERS },
+	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
+};
+
+AppearancePage::~AppearancePage(){ }
 
 LRESULT AppearancePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	PropPage::translate((HWND)(*this), texts);
 
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_APPEARANCE_BOOLEANS));
-
-	CUpDownCtrl spin;
-	spin.Attach(GetDlgItem(IDC_PM_LINESSPIN));
-	spin.SetRange32(1, 999);
-	spin.Detach();
-
-	spin.Attach(GetDlgItem(IDC_SEARCH_HISTORY_SPIN));	
- 	spin.SetRange32(0, 100);	
- 	SetDlgItemText(IDC_SEARCH_HISTORY,Text::toT(Util::toString( SETTING(SEARCH_HISTORY))).c_str());
-	spin.Detach();
+	PropPage::read((HWND)*this, items, boldItems, GetDlgItem(IDC_BOLD_BOOLEANS));
 
 	// Do specialized reading here
 	return TRUE;
@@ -95,6 +93,7 @@ LRESULT AppearancePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*
 
 void AppearancePage::write() {
 	PropPage::write((HWND)*this, items, listItems, GetDlgItem(IDC_APPEARANCE_BOOLEANS));
+	PropPage::write((HWND)*this, items, boldItems, GetDlgItem(IDC_BOLD_BOOLEANS));
 }
 
 LRESULT AppearancePage::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {

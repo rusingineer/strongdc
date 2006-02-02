@@ -96,7 +96,7 @@ void shutdown() {
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
 
-	//TimerManager::getInstance()->removeListeners();
+	TimerManager::getInstance()->removeListeners();
 
 	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();

@@ -266,7 +266,7 @@ LRESULT UploadPage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	// Refresh the share. This is a blocking refresh. Might cause problems?
 	// Hopefully people won't click the checkbox enough for it to be an issue. :-)
 	ShareManager::getInstance()->setDirty();
-	ShareManager::getInstance()->refresh(true, false, true);
+	ShareManager::getInstance()->refresh(true, false, false);
 
 	if(BOOLSETTING(USE_OLD_SHARING_UI))	{
 		// Clear the GUI list, for insertion of updated shares

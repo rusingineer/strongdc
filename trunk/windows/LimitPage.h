@@ -9,7 +9,7 @@ class LimitPage : public CPropertyPage<IDD_LIMITPAGE>, public PropPage
 {
 public:
 	LimitPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_LIMIT)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_LIMIT)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

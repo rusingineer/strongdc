@@ -38,8 +38,6 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
 
-	c.addListener(this);
-
 	// Do specialized reading here
 	ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
 

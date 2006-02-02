@@ -30,7 +30,7 @@ class SDCPage : public CPropertyPage<IDD_SDCPAGE>, public PropPage
 {
 public:
 	SDCPage(SettingsManager *s) : PropPage(s) { 
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_ADVANCED)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_ADVANCED3)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
@@ -53,11 +53,11 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	TCHAR* title;
 
 	CComboBox ctrlShutdownAction;
 	CComboBox userlistaction, transferlistaction, chataction;
 
+	TCHAR* title;
 };
 
 #endif //SDCPage_H

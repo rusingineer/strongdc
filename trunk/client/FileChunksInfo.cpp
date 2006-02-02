@@ -23,6 +23,7 @@
 #include "DownloadManager.h"
 #include "FileChunksInfo.h"
 #include "SharedFileStream.h"
+#include "ResourceManager.h"
 
 vector<FileChunksInfo::Ptr> FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;
@@ -478,13 +479,13 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		dcassert(0);
 	}
 #endif
+	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start), true);
 	return false;
 }
 
 bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 {
-	if(tthBlockSize != aTree.getBlockSize())
-		return true;
+    if(tthBlockSize != aTree.getBlockSize()) return true;
 
 
 	// Convert to unverified blocks
@@ -493,30 +494,14 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 
 	{
 		Lock l(cs);
-	
-		dcdebug("doLastVerify %I64d bytes %d%% verified\n", iVerifiedSize , (int)(iVerifiedSize * 100 / iFileSize)); 
-	
-		dumpVerifiedBlocks();	
-
-   		// This is only called when download finish
-    	// Because buffer is used during download, the disk data maybe incorrect
-		dcdebug("waiting = %d, running = %d\n", waiting.size(), running.size()); 
-    	dcassert(waiting.empty() && running.size() == 1 && running.begin()->second->pos == running.begin()->second->end);
-
-
 		if(BOOLSETTING(CHECK_UNVERIFIED_ONLY) && (iVerifiedSize*4/3 >= iFileSize))
-				return true;
-
-
+			return true;
 
 		verifiedBlocks.clear();
 	}
-
-	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 	// Open file
-	char buf[512*1024];
-
 	SharedFileStream file(tempTargetName, 0, 0);
+	char buf[524288];
 	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
 	size_t n = 0;
@@ -548,8 +533,6 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 		}
 		start = end;
 	}
-
-	::SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
 	if(CorruptedBlocks.empty()){
 		dumpVerifiedBlocks();

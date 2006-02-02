@@ -150,7 +150,7 @@ public:
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
 		}
-		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || (tth == NULL) || (size < 2*1024*1024)) {
+		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (tth == NULL) || (size < 2*1024*1024)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
 		if(tth != NULL) {

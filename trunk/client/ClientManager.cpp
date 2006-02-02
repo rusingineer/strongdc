@@ -314,22 +314,16 @@ void ClientManager::privateMessage(const User::Ptr& p, const string& msg) {
 	}
 }
 
-void ClientManager::send(AdcCommand& cmd) {
+void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(cmd.getTo());
+	OnlineIter i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
 		if(cmd.getType() == AdcCommand::TYPE_UDP && !u->getIdentity().isUdpActive()) {
 			cmd.setType(AdcCommand::TYPE_DIRECT);
 		}
-
-		if(cmd.getType() == AdcCommand::TYPE_UDP) {
-			/// @todo ugly cast...
-			AdcHub* h = (AdcHub*)&u->getClient();
-			h->sendUDP(cmd);
-		} else {
-			u->getClient().send(cmd.toString());
-		}
+		cmd.setTo(u->getSID());
+		u->getClient().send(cmd);
 	}
 }
 
@@ -434,11 +428,12 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params));
 }
 
-void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc) throw() {
-	SearchManager::getInstance()->respond(adc);
+void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& from) throw() {
+	SearchManager::getInstance()->respond(adc, from);
 }
 
 Identity ClientManager::getIdentity(const User::Ptr& aUser) {
+	Lock l(cs);
 	OnlineIter i = onlineUsers.find(aUser->getCID());
 	if(i != onlineUsers.end()) {
 		return i->second->getIdentity();
@@ -492,8 +487,8 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 			(*j)->info();
 		}
 	}
-	if(BOOLSETTING(EMPTY_WORKING_SET))
-		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
+	// TODO SetProcessWorkingSetSize
+	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
 void ClientManager::on(Save, SimpleXML*) throw() {

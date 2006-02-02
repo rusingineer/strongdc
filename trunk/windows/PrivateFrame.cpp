@@ -95,9 +95,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ClientManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	if(BOOLSETTING(SHOW_PM_LOG)){
-		readLog();
-	}
+	readLog();
 
 	bHandled = FALSE;
 	return 1;
@@ -694,6 +692,8 @@ LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 }
 
 void PrivateFrame::readLog() {
+	if (SETTING(SHOW_LAST_LINES_LOG) == 0) return;
+
 	StringMap params;
 	
 	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
@@ -705,33 +705,31 @@ void PrivateFrame::readLog() {
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
 
 	try {
-		if (SETTING(SHOW_LAST_LINES_LOG) > 0) {
-			File f(path, File::READ, File::OPEN);
+		File f(path, File::READ, File::OPEN);
 		
-			int64_t size = f.getSize();
+		int64_t size = f.getSize();
 
-			if(size > 32*1024) {
-				f.setPos(size - 32*1024);
-			}
-			string buf = f.read(32*1024);
-			StringList lines;
-
-			if(Util::strnicmp(buf.c_str(), "\xef\xbb\xbf", 3) == 0)
-				lines = StringTokenizer<string>(buf.substr(3), "\r\n").getTokens();
-			else
-				lines = StringTokenizer<string>(buf, "\r\n").getTokens();
-
-			int linesCount = lines.size();
-
-			int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG)) : 0;
-
-			for(; i < linesCount; ++i){
-				if(!lines[i].empty())
-					ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
-			}
-
-			f.close();
+		if(size > 32*1024) {
+			f.setPos(size - 32*1024);
 		}
+		string buf = f.read(32*1024);
+		StringList lines;
+
+		if(Util::strnicmp(buf.c_str(), "\xef\xbb\xbf", 3) == 0)
+			lines = StringTokenizer<string>(buf.substr(3), "\r\n").getTokens();
+		else
+			lines = StringTokenizer<string>(buf, "\r\n").getTokens();
+
+		int linesCount = lines.size();
+
+		int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG)) : 0;
+
+		for(; i < linesCount; ++i){
+			if(!lines[i].empty())
+				ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
+		}
+
+		f.close();
 	} catch(FileException&){
 	}
 }

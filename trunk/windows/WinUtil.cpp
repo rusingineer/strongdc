@@ -102,7 +102,7 @@ WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
 	{IDC_QUEUE, 6, true, ResourceManager::MENU_DOWNLOAD_QUEUE},
 	{IDC_FINISHED, 7, true, ResourceManager::FINISHED_DOWNLOADS},
-	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::UPLOAD_QUEUE},
+	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::WAITING_USERS},
 	{IDC_FINISHED_UL, 9, true, ResourceManager::FINISHED_UPLOADS},
 	{ID_FILE_SEARCH, 10, false, ResourceManager::MENU_SEARCH},
 	{IDC_FILE_ADL_SEARCH, 11, true, ResourceManager::MENU_ADL_SEARCH},
@@ -406,7 +406,7 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CTSTRING(MENU_DOWNLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CTSTRING(FINISHED_DOWNLOADS));
 	transfers.AppendMenu(MF_SEPARATOR);
-	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(UPLOAD_QUEUE));
+	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(WAITING_USERS));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CTSTRING(FINISHED_UPLOADS));
 	transfers.AppendMenu(MF_SEPARATOR);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CTSTRING(MENU_NETWORK_STATISTICS));
@@ -466,6 +466,7 @@ void WinUtil::init(HWND hWnd) {
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	else 
 		createImageList1(userImages, SETTING(USERLIST_IMAGE), 16);
+	
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
 	SettingsManager::getInstance()->setDefault(SettingsManager::TEXT_FONT, Text::fromT(encodeFont(lf)));

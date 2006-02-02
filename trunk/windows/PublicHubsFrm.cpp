@@ -119,6 +119,17 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	filterContainer.SubclassWindow(ctrlFilter.m_hWnd);
 	ctrlFilter.SetFont(WinUtil::systemFont);
 	
+	ctrlFilterSel.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+		WS_HSCROLL | WS_VSCROLL | CBS_DROPDOWNLIST, WS_EX_CLIENTEDGE);
+	ctrlFilterSel.SetFont(WinUtil::systemFont, FALSE);
+
+	//populate the filter list with the column names
+	for(int j=0; j<COLUMN_LAST; j++) {
+		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
+	}
+
+	ctrlFilterSel.SetCurSel(0);
+	
 	ctrlFilterDesc.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_GROUPBOX, WS_EX_TRANSPARENT);
 	ctrlFilterDesc.SetWindowText(CTSTRING(FILTER));
@@ -210,7 +221,12 @@ LRESULT PublicHubsFrame::onEnter(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHa
 }
 
 LRESULT PublicHubsFrame::onClickedRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	Refresh();
+	ctrlHubs.DeleteAllItems();
+	users = 0;
+	visibleHubs = 0;
+	ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
+	FavoriteManager::getInstance()->refresh();
+
 	return 0;
 }
 
@@ -338,9 +354,14 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	// filter edit
 	rc.top += 16;
 	rc.bottom -= 8;
-	rc.right -= 8;
 	rc.left += 8;
+	rc.right -= ((rc.right - rc.left - 4) / 3);
 	ctrlFilter.MoveWindow(rc);
+
+	//filter sel
+	rc.right += ((rc.right - rc.left - 12) / 2) ;
+	rc.left += ((rc.right - rc.left + 8) / 3) * 2;
+	ctrlFilterSel.MoveWindow(rc);
 
 	// lists box
 	rc = rect;
@@ -387,11 +408,15 @@ void PublicHubsFrame::updateList() {
 	
 	ctrlHubs.SetRedraw(FALSE);
 	
+	double size = -1;
+	int mode = -1;
+
+	int sel = ctrlFilterSel.GetCurSel();
+
+	bool doSizeCompare = parseFilter(mode, size);
+	
 	for(HubEntry::List::const_iterator i = hubs.begin(); i != hubs.end(); ++i) {
-		if( filter.getPattern().empty() ||
-			filter.match(i->getName()) ||
-			filter.match(i->getDescription()) ||
-			filter.match(i->getServer()) ) {
+		if(matchFilter(*i, sel, doSizeCompare, mode, size)) {
 
 			TStringList l;
 			l.resize(COLUMN_LAST);
@@ -484,15 +509,124 @@ LRESULT PublicHubsFrame::onCopyHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 void PublicHubsFrame::updateDropDown() {
 	ctrlPubLists.ResetContent();
 	StringList lists(FavoriteManager::getInstance()->getHubLists());
-	for(StringList::const_iterator idx = lists.begin(); idx != lists.end(); ++idx) {
+	for(StringList::iterator idx = lists.begin(); idx != lists.end(); ++idx) {
 		ctrlPubLists.AddString(Text::toT(*idx).c_str());
 	}
 	ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
-	if(FavoriteManager::getInstance()->getSelectedHubList() < lists.size()) {
-		ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
-	} else {
-		ctrlPubLists.SetCurSel(lists.size()-1);
+}
+
+bool PublicHubsFrame::parseFilter(int& mode, double& size) {
+	string::size_type start = (string::size_type)string::npos;
+	string::size_type end = (string::size_type)string::npos;
+	int64_t multiplier = 1;
+
+	if(!filter.empty())
+	if(Util::strnicmp(filter.c_str(), ">=", 2) == 0) {
+		mode = 1;
+		start = 2;
+	} else if(Util::strnicmp(filter.c_str(), "<=", 2) == 0) {
+		mode = 2;
+		start = 2;
+	} else if(Util::strnicmp(filter.c_str(), "==", 2) == 0) {
+		mode = 0;
+		start = 2;
+	} else if(Util::strnicmp(filter.c_str(), "!=", 2) == 0) {
+		mode = 5;
+		start = 2;
+	} else if(filter[0] == '<') {
+		mode = 4;
+		start = 1;
+	} else if(filter[0] == '>') {
+		mode = 3;
+		start = 1;
+	} else if(filter[0] == '=') {
+		mode = 1;
+		start = 1;
 	}
+
+	if(start == string::npos)
+		return false;
+	if(filter.length() <= start)
+		return false;
+
+	if((end = Util::findSubString(filter, "TiB")) != tstring::npos) {
+		multiplier = 1024LL * 1024LL * 1024LL * 1024LL;
+	} else if((end = Util::findSubString(filter, "GiB")) != tstring::npos) {
+		multiplier = 1024*1024*1024;
+	} else if((end = Util::findSubString(filter, "MiB")) != tstring::npos) {
+		multiplier = 1024*1024;
+	} else if((end = Util::findSubString(filter, "KiB")) != tstring::npos) {
+		multiplier = 1024;
+	} else if((end = Util::findSubString(filter, "TB")) != tstring::npos) {
+		multiplier = 1000LL * 1000LL * 1000LL * 1000LL;
+	} else if((end = Util::findSubString(filter, "GB")) != tstring::npos) {
+		multiplier = 1000*1000*1000;
+	} else if((end = Util::findSubString(filter, "MB")) != tstring::npos) {
+		multiplier = 1000*1000;
+	} else if((end = Util::findSubString(filter, "kB")) != tstring::npos) {
+		multiplier = 1000;
+	} else if((end = Util::findSubString(filter, "B")) != tstring::npos) {
+		multiplier = 1;
+	}
+	
+
+	if(end == string::npos) {
+		end = filter.length();
+	}
+
+	string tmpSize = filter.substr(start, end-start);
+	size = Util::toDouble(tmpSize) * multiplier;
+
+	return true;
+}
+
+bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool doSizeCompare, const int& mode, const double& size) {
+	//mode
+	//0 - ==
+	//1 - >=
+	//2 - <=
+	//3 - >
+	//4 - <
+	//5 - !=
+
+	if(filter.empty())
+		return true;
+
+	double entrySize = 0;
+	string entryString = "";
+
+	switch(sel) {
+		case COLUMN_NAME: entryString = entry.getName(); doSizeCompare = false; break;
+		case COLUMN_DESCRIPTION: entryString = entry.getDescription(); doSizeCompare = false; break;
+		case COLUMN_USERS: entrySize = entry.getUsers(); break;
+		case COLUMN_SERVER: entryString = entry.getServer(); doSizeCompare = false; break;
+		case COLUMN_COUNTRY: entryString = entry.getCountry(); doSizeCompare = false; break;
+		case COLUMN_SHARED: entrySize = (double)entry.getShared(); break;
+		case COLUMN_MINSHARE: entrySize = (double)entry.getMinShare(); break;
+		case COLUMN_MINSLOTS: entrySize = entry.getMinSlots(); break;
+		case COLUMN_MAXHUBS: entrySize = entry.getMaxHubs(); break;
+		case COLUMN_MAXUSERS: entrySize = entry.getMaxUsers(); break;
+		case COLUMN_RELIABILITY: entrySize = entry.getReliability(); break;
+		case COLUMN_RATING: entryString = entry.getRating(); doSizeCompare = false; break;
+		default: break;
+	}
+
+	bool insert = false;
+	if(doSizeCompare) {
+		switch(mode) {
+			case 0: insert = (size == entrySize); break;
+			case 1: insert = (size <=  entrySize); break;
+			case 2: insert = (size >=  entrySize); break;
+			case 3: insert = (size < entrySize); break;
+			case 4: insert = (size > entrySize); break;
+			case 5: insert = (size != entrySize); break;
+		}
+	} else {
+		if(Util::findSubString(entryString, filter) != string::npos)
+			insert = true;
+	}
+
+	return insert;
 }
 
 void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
@@ -510,15 +644,6 @@ void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) thro
 		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 	}
 	updateDropDown();
-}
-
-void PublicHubsFrame::Refresh() throw() {
-	ctrlHubs.DeleteAllItems();
-	users = 0;
-	visibleHubs = 0;
-	ctrlStatus.SetText(0, CTSTRING(DOWNLOADING_HUB_LIST));
-	FavoriteManager::getInstance()->setHubList(ctrlPubLists.GetCurSel());
-	FavoriteManager::getInstance()->refresh();
 }
 
 /**

@@ -26,7 +26,7 @@ class ToolbarPage : public CPropertyPage<IDD_TOOLBARPAGE>, public PropPage
 {
 public:
 	ToolbarPage(SettingsManager *s) : PropPage(s) {
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TOOLBAR)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_TOOLBAR)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

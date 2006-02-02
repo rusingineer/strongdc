@@ -12,7 +12,7 @@ class UserListColours : public CPropertyPage<IDD_USERLIST_COLOURS>, public PropP
 public:
 
 	UserListColours(SettingsManager *s) : PropPage(s) { 
-		title = _tcsdup((TSTRING(SETTINGS_CZDC) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_USER_COLORS)).c_str());
+		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_TEXT_STYLES) + _T('\\') + TSTRING(SETTINGS_USER_COLORS)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};

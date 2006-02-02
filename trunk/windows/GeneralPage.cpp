@@ -31,7 +31,11 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_EMAIL, ResourceManager::EMAIL },
 	{ IDC_SETTINGS_DESCRIPTION, ResourceManager::DESCRIPTION },
 	{ IDC_SETTINGS_UPLOAD_SPEED, ResourceManager::SETTINGS_UPLOAD_SPEED },
+	{ IDC_SETTINGS_UPLOAD_SPEED2, ResourceManager::CONNECTION },
 	{ IDC_SETTINGS_MEBIBYES, ResourceManager::MBITSPS },
+	{ IDC_BW_SIMPLE, ResourceManager::SETTINGS_BWSINGLE },
+	{ IDC_BW_BOTH, ResourceManager::SETTINGS_BWBOTH },
+	{ IDC_SETTINGS_NOMINALBW, ResourceManager::SETTINGS_NOMINAL_BANDWIDTH },
 	{ IDC_SHOW_SPEED_CHECK, ResourceManager::SHOW_SPEED },
 	{ IDC_DU, ResourceManager::DU },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
@@ -41,6 +45,7 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_NICK,			SettingsManager::NICK,			PropPage::T_STR }, 
 	{ IDC_EMAIL,		SettingsManager::EMAIL,			PropPage::T_STR }, 
 	{ IDC_DESCRIPTION,	SettingsManager::DESCRIPTION,	PropPage::T_STR }, 
+	//{ IDC_CONNECTION,	SettingsManager::UPLOAD_SPEED,	PropPage::T_STR }, 
 	{ IDC_DOWN_COMBO,	SettingsManager::DOWN_SPEED,	PropPage::T_STR },  
 	{ IDC_UP_COMBO,		SettingsManager::UP_SPEED,		PropPage::T_STR },  
 	{ IDC_SHOW_SPEED_CHECK, SettingsManager::SHOW_DESCRIPTION_SPEED, PropPage::T_BOOL },
@@ -50,15 +55,43 @@ PropPage::Item GeneralPage::items[] = {
 void GeneralPage::write()
 {
 	PropPage::write((HWND)(*this), items);
-	settings->set(SettingsManager::UPLOAD_SPEED, SettingsManager::connectionSpeeds[ctrlConnection.GetCurSel()]);
+
+	// Save radio button
+	int bw = SettingsManager::BWSETTINGS_DEFAULT;
+
+	if(IsDlgButtonChecked(IDC_BW_BOTH))
+		bw = SettingsManager::BWSETTINGS_ADVANCED;
+
+	if (bw != SETTING(BWSETTING_MODE))
+		settings->set(SettingsManager::BWSETTING_MODE, bw);
+
+	AutoArray<TCHAR> buf(1024);
+	switch(bw) {
+		case SettingsManager::BWSETTINGS_DEFAULT: 
+			GetDlgItemText(IDC_CONNECTION, buf, 1024);
+			settings->set(SettingsManager::UPLOAD_SPEED, Text::fromT(tstring(buf)));
+			break;
+		case SettingsManager::BWSETTINGS_ADVANCED:
+			ctrlConnectionType.GetLBText(ctrlConnectionType.GetCurSel(), buf);
+			settings->set(SettingsManager::UPLOAD_SPEED, Text::fromT(tstring(buf)));
+			break;
+	}
 }
 
 LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	PropPage::translate((HWND)(*this), texts);
+
 	ctrlConnection.Attach(GetDlgItem(IDC_CONNECTION));
+	
+	for(StringIter i = SettingsManager::connectionSpeeds.begin(); i != SettingsManager::connectionSpeeds.end(); ++i)
+		ctrlConnection.AddString(Text::toT(*i).c_str());
+
+	PropPage::read((HWND)(*this), items);
+
+	ctrlConnectionType.Attach(GetDlgItem(IDC_CONNECTIONTYPE));
 	ConnTypes.CreateFromImage(IDB_USERS, 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-    ctrlConnection.SetImageList(ConnTypes);	
+    ctrlConnectionType.SetImageList(ConnTypes);	
 
 	ctrlDownloadSpeed.Attach(GetDlgItem(IDC_DOWN_COMBO));
 	ctrlUploadSpeed.Attach(GetDlgItem(IDC_UP_COMBO));
@@ -71,40 +104,45 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlDownloadSpeed.SetCurSel(ctrlDownloadSpeed.FindString(0, Text::toT(SETTING(DOWN_SPEED)).c_str()));
 	ctrlUploadSpeed.SetCurSel(ctrlUploadSpeed.FindString(0, Text::toT(SETTING(UP_SPEED)).c_str()));
 
-	int q = -1;
-	for(size_t i = 0; i < SettingsManager::connectionSpeeds.size(); i++) {
+	int q = 0;
+	int pos = 0;
+	for(size_t i = 0; i < 8; i++) {
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
-		tstring conn = Text::toT(SettingsManager::connectionSpeeds[i]); // oprava connections
-		cbitem.pszText = const_cast<TCHAR*>(conn.c_str());
+		tstring connType;
+		switch(i) {
+			case 0: q = 1; connType = _T("Modem"); break;
+			case 1: q = 2; connType = _T("ISDN"); break;
+			case 2: q = 3; connType = _T("Satellite"); break;
+			case 3: q = 4; connType = _T("Wireless"); break;
+			case 4: q = 6; connType = _T("Cable"); break;
+			case 5: q = 5; connType = _T("DSL"); break;
+			case 6: q = 7; connType = _T("LAN(T1)"); break;
+			case 7: q = 7; connType = _T("LAN(T3)"); break;
+		}
+		cbitem.pszText = const_cast<TCHAR*>(connType.c_str());
 		cbitem.iItem = i; 
-
-
-	/*	switch(i) {
-			case 0: q = 1; break;
-			case 1: q = 2; break;
-			case 2: q = 3; break;
-			case 3: q = 4; break;
-			case 4: q = 6; break;
-			case 5: q = 5; break;
-			case 6: q = 7; break;
-			case 7: q = 7; break;
-		}*/
-		
 		cbitem.iImage = q;
-
 		cbitem.iSelectedImage = q;
-		ctrlConnection.InsertItem(&cbitem);
+		ctrlConnectionType.InsertItem(&cbitem);
+
+		if(connType == Text::toT(SETTING(UPLOAD_SPEED))) pos = i;
 
 	}
 
-	PropPage::read((HWND)(*this), items);
-
-	int m = 0;
-	for (m = 0; m<8; m++) {
-		if(SettingsManager::connectionSpeeds[m] == SETTING(UPLOAD_SPEED)) break;
+	switch(SETTING(BWSETTING_MODE)) {
+		case SettingsManager::BWSETTINGS_ADVANCED: 
+			CheckDlgButton(IDC_BW_BOTH, BST_CHECKED);
+			ctrlConnectionType.SetCurSel(pos);
+			break;
+		default: 
+			CheckDlgButton(IDC_BW_SIMPLE, BST_CHECKED);
+			pos = ctrlConnection.FindString(0, Text::toT(SETTING(UPLOAD_SPEED)).c_str());
+			ctrlConnection.SetCurSel(pos == CB_ERR ? 0 : pos);
+			break;
 	}
-	ctrlConnection.SetCurSel(m);
 
+	fixControls();
+	
 	nick.Attach(GetDlgItem(IDC_NICK));
 	nick.LimitText(35);
 	CEdit desc;
@@ -152,7 +190,29 @@ LRESULT GeneralPage::onTextChanged(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl,
 	return TRUE;
 }
 
+void GeneralPage::fixControls() {
+	BOOL advanced = IsDlgButtonChecked(IDC_BW_BOTH) == BST_CHECKED;
 
+	::EnableWindow(GetDlgItem(IDC_DOWN_COMBO), advanced);
+	::EnableWindow(GetDlgItem(IDC_UP_COMBO), advanced);
+	::EnableWindow(GetDlgItem(IDC_SHOW_SPEED_CHECK), advanced);
+	::EnableWindow(GetDlgItem(IDC_SLASH), advanced);
+	::EnableWindow(GetDlgItem(IDC_DU), advanced);
+	::EnableWindow(GetDlgItem(IDC_SETTINGS_UPLOAD_SPEED2), advanced);
+	::EnableWindow(GetDlgItem(IDC_CONNECTIONTYPE), advanced);
+	::EnableWindow(GetDlgItem(IDC_SETTINGS_UPLOAD_SPEED), !advanced);
+	::EnableWindow(GetDlgItem(IDC_CONNECTION), !advanced);
+	::EnableWindow(GetDlgItem(IDC_SETTINGS_MEBIBYES), !advanced);
+
+	if(ctrlConnection.GetCurSel() == -1) ctrlConnection.SetCurSel(0);
+	if(ctrlConnectionType.GetCurSel() == -1) ctrlConnectionType.SetCurSel(0);
+
+}
+
+LRESULT GeneralPage::onClickedRadioButton(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	fixControls();
+	return 0;
+}
 /**
  * @file
  * $Id$

@@ -160,6 +160,8 @@ public:
 		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
 	}
+	virtual void send(const AdcCommand& command) = 0;
+
 	const string& getMyNick() const { return getMyIdentity().getNick(); }
 	const string& getHubName() const { return getHubIdentity().getNick().empty() ? getHubUrl() : getHubIdentity().getNick(); }
 	const string& getHubDescription() const { return getHubIdentity().getDescription(); }

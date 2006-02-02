@@ -4,7 +4,6 @@
 	Version="8,00"
 	Name="yassl"
 	ProjectGUID="{BC917BB3-5772-43A6-A88C-72310AAD5B23}"
-	RootNamespace="yassl"
 	>
 	<Platforms>
 		<Platform
@@ -16,8 +15,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\vc7\Debug\yassl"
-			IntermediateDirectory="$(SolutionDir)\vc7\Debug\yassl"
+			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -87,8 +86,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\vc7\Release\yassl"
-			IntermediateDirectory="$(SolutionDir)\vc7\Release\yassl"
+			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
