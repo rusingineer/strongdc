@@ -183,7 +183,6 @@ public:
 	GETSET(short, port, Port);	
 	static const string getRemoteHost(const string& aIp);
 	socket_t sock;
-
 protected:
 	int type;
 	bool connected;

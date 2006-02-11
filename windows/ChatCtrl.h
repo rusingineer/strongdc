@@ -61,9 +61,9 @@ public:
 	string LineFromPos(POINT p);
 
 	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
-	void AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
-	void AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), int iAuthorLen = 0, bool isMe = false, bool bUseEmo = true);
-	void AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
+	void AppendText(const Identity& i, const tstring& sMyNick, bool bMyMess, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
+	void AppendText(const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), int iAuthorLen = 0, bool isMe = false, bool bUseEmo = true);
+	void AppendTextOnly(const tstring& sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
 	void EndRedrawAppendTextOnly();
 
 	void GoToEnd();

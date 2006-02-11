@@ -30,6 +30,7 @@ public:
 	virtual ~Singleton() { }
 
 	static T* getInstance() {
+		//dcassert(instance);
 		return instance;
 	}
 	

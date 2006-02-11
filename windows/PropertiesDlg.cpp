@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,13 +83,15 @@ PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertyShee
 	m_psh.dwFlags &= ~PSH_HASHELP;
 }
 
-PropertiesDlg::~PropertiesDlg() {
+PropertiesDlg::~PropertiesDlg()
+{
 	for(int i=0; i<numPages; i++) {
 		delete pages[i];
 	}
 }
 
-void PropertiesDlg::write() {
+void PropertiesDlg::write()
+{
 	for(int i=0; i<numPages; i++)
 	{
 		// Check HWND of page to see if it has been created
@@ -100,7 +102,8 @@ void PropertiesDlg::write() {
 	}
 }
 
-LRESULT PropertiesDlg::onOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+LRESULT PropertiesDlg::onOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled)
+{
 	write();
 	bHandled = FALSE;
 	return TRUE;

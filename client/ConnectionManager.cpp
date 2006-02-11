@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -284,7 +284,7 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
 	} else {
-		if(now + FLOOD_TRIGGER < floodCounter) {
+		if(false && now + FLOOD_TRIGGER < floodCounter) {
 			Socket s;
 			try {
 				s.accept(sock);

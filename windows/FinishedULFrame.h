@@ -35,10 +35,13 @@ public:
 		columnWidth = SettingsManager::FINISHED_UL_WIDTHS;
 		columnVisible = SettingsManager::FINISHED_UL_VISIBLE;
 	};
+
 	virtual ~FinishedULFrame() { };
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedULFrame"), IDR_FINISHED_UL, 0, COLOR_3DFACE);
 		
+private:
+
 	virtual void on(AddedUl, FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 	}

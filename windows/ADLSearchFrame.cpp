@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 /*
  * Automatic Directory Listing Search
- * Henrik Engström, henrikengstrom@home.se
+ * Henrik Engström, henrikengstrom at home se
  */
 
 #include "stdafx.h"
@@ -130,7 +130,8 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 // Close window
 LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) 
-{	if(!closed) {
+{	
+	if(!closed) {
 		closed = true;		
 		ADLSearchManager::getInstance()->Save();
 		SettingsManager::getInstance()->removeListener(this);

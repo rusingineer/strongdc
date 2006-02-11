@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE|| j == COLUMN_SEGMENTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlQueue.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlQueue.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlQueue.setColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -1465,14 +1465,10 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		}
 		return CDRF_NOTIFYSUBITEMDRAW;
 
-	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
 		// Let's draw a box if needed...
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_TEXT;
-		lvc.pszText = headerBuf;
-		lvc.cchTextMax = 128;
-		ctrlQueue.GetColumn(cd->iSubItem, &lvc);
-		if(_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PROGRESS])) == 0) {
+		int colIndex = ctrlQueue.findColumn(cd->iSubItem);
+		if(colIndex == COLUMN_PROGRESS) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
 			if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -1538,7 +1534,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		} else if(_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SEGMENTS])) == 0) {
+		} else if(colIndex == COLUMN_SEGMENTS) {
 			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {
@@ -1582,6 +1578,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
 		}
+	}
 	default:
 		return CDRF_DODEFAULT;
 	}

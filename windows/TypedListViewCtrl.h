@@ -31,6 +31,7 @@ class ColumnInfo {
 public:
 	ColumnInfo(const tstring &aName, int aPos, int aFormat, int aWidth): name(aName), pos(aPos), width(aWidth), 
 		format(aFormat), visible(true) {}
+	~ColumnInfo() {}
 		tstring name;
 		bool visible;
 		int pos;
@@ -44,20 +45,16 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl<T, ctrlId>, CList
 {
 public:
 	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { };
-	~TypedListViewCtrl() {
-		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
-			delete (*i);
-		}
-	}
+	~TypedListViewCtrl() { for_each(columnList.begin(), columnList.end(), DeleteFunction()); }
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
 	typedef CListViewCtrl baseClass;
 	typedef ListViewArrows<thisClass> arrowBase;
 
 	BEGIN_MSG_MAP(thisClass)
-		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBackground)
 		MESSAGE_HANDLER(WM_MENUCOMMAND, onHeaderMenu)
 		MESSAGE_HANDLER(WM_CHAR, onChar)
+		MESSAGE_HANDLER(WM_ERASEBKGND, onEraseBkgnd)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		CHAIN_MSG_MAP(arrowBase)
 	END_MSG_MAP();
@@ -125,30 +122,7 @@ public:
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			int pos = di->item.iSubItem;
-			bool insert = false;
-			int j = 0;
-			TCHAR *buf = new TCHAR[512];
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT;
-			lvc.pszText = buf;
-			lvc.cchTextMax = 512;
-			GetColumn(pos, &lvc);
-			if(columnList.size() > 0){
-				for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i, ++j){
-					if((Util::stricmp(buf, (*i)->name.c_str()) == 0)){
-						if((*i)->visible == true)
-							insert = true;
-						break;
-					}
-				}
-			} else {
-				insert = true;
-			}
-			if(insert == true)
-				di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(j).c_str());
-
-			delete[] buf;
+			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(findColumn(di->item.iSubItem)).c_str());
 		}
 		return 0;
 	}
@@ -261,14 +235,8 @@ public:
 			pred(getItemData(i));
 		return pred;
 	}
-
 	void forEachAtPos(int iIndex, void (T::*func)()) {
 		(getItemData(iIndex)->*func)();
-	}
-	template<class _Function>
-	_Function forEachAtPosT(int iIndex, _Function pred) {
-		pred(getItemData(iIndex));
-		return pred;
 	}
 
 	void updateItem(int i) {
@@ -331,13 +299,8 @@ public:
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
 
-	void setLeftEraseBackgroundMargin(int _leftMargin) {
-		leftMargin = _leftMargin;
-	}
-
-	int insertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
-		if(nWidth == 0)
-			nWidth = 80;
+	int InsertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
+		if(nWidth == 0) nWidth = 80;
 		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
 		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
 	}
@@ -360,7 +323,7 @@ public:
 		headerMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 	}
 		
-	LRESULT onEraseBackground(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
+	LRESULT onEraseBkgnd(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 		bHandled = FALSE;
 		if(!leftMargin || !hBrBg) 
 			return 0;
@@ -373,8 +336,6 @@ public:
 		int n = GetItemCount();
 		RECT r = {0, 0, 0, 0}, full;
 		GetClientRect(&full);
-
-
 
 		if (n > 0) {
 			GetItemRect(0, &r, LVIR_BOUNDS);
@@ -404,9 +365,7 @@ public:
 		
 		return S_OK;
 	}
-	void setFlickerFree(HBRUSH flickerBrush) {
-		hBrBg = flickerBrush;
-	}
+	void setFlickerFree(HBRUSH flickerBrush) { hBrBg = flickerBrush; }
 
 	LRESULT onContextMenu(UINT /*msg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -437,9 +396,7 @@ public:
 		if(!ci->visible){
 			removeColumn(ci);
 		} else {
-			if(ci->width == 0)
-				ci->width = 80;
-			ci->pos = static_cast<int>(wParam);
+			if(ci->width == 0) ci->width = 80;
 			CListViewCtrl::InsertColumn(ci->pos, ci->name.c_str(), ci->format, ci->width, static_cast<int>(wParam));
 			LVCOLUMN lvcl = { 0 };
 			lvcl.mask = LVCF_ORDER;
@@ -483,9 +440,10 @@ public:
 			lvc.pszText = buf;
 			GetColumn(i, &lvc);
 			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
-				if(Util::stricmp(buf, (*j)->name.c_str()) == 0){
+				if(_tcscmp(buf, (*j)->name.c_str()) == 0){
 					(*j)->pos = lvc.iOrder;
 					(*j)->width = lvc.cx;
+					break;
 				}
 			}
 		}
@@ -520,8 +478,8 @@ public:
 		StringList l = tok.getTokens();
 
 		StringIter i = l.begin();
-		ColumnIter j = columnList.begin();
-		for(; j != columnList.end() && i != l.end(); ++i, ++j) {
+		for(ColumnIter j = columnList.begin(); j != columnList.end() && i != l.end(); ++i, ++j) {
+
 			if(Util::toInt(*i) == 0){
 				(*j)->visible = false;
 				removeColumn(*j);
@@ -539,38 +497,19 @@ public:
 	}
 
 	//find the current position for the column that was inserted at the specified pos
-	int findColumn(int col){
-		TCHAR *buf = new TCHAR[512];
+	inline int findColumn(int col){
 		LVCOLUMN lvcl;
-		lvcl.mask = LVCF_TEXT;
-		lvcl.pszText = buf;
-		lvcl.cchTextMax = 512;
-
+		lvcl.mask = LVCF_SUBITEM;
 		GetColumn(col, &lvcl);
-
-		int result = -1;
-
-		int i = 0;
-		for(ColumnIter j = columnList.begin(); j != columnList.end(); ++i, ++j){
-			if(Util::stricmp((*j)->name.c_str(), buf) == 0){
-				result = i;
-				break;
-			}
-		}
-
-		delete[] buf;
-
-		return result;
+		return lvcl.iSubItem;
 	}	
 	
 private:
-	CMenu headerMenu;
-
-
 	int sortColumn;
 	bool sortAscending;
 	int leftMargin;
 	HBRUSH hBrBg;
+	CMenu headerMenu;	
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
@@ -584,62 +523,40 @@ private:
 	ColumnList columnList;
 
 	void removeColumn(ColumnInfo* ci){
-		
-		int column = findColumn(ci);
-
-		if(column > -1){
-			ci->width = GetColumnWidth(column);
-
-			HDITEM hd;
-			hd.mask = HDI_ORDER;
-			GetHeader().GetItem(column, &hd);
-			ci->pos = hd.iOrder;
-
-			int itemCount = GetHeader().GetItemCount();
-			if(itemCount >= 0 && sortColumn > itemCount - 2)
-				setSortColumn(0);
-
-			if(sortColumn == ci->pos)
-				setSortColumn(0);
-
-			DeleteColumn(column);
-
-			for(int i = 0; i < GetItemCount(); ++i) {
-				LVITEM lvItem;
-				lvItem.iItem = i;
-				lvItem.iSubItem = 0;
-				lvItem.mask = LVIF_PARAM | LVIF_IMAGE;
-				GetItem(&lvItem);
-				lvItem.iImage = ((T*)lvItem.lParam)->imageIndex();
-				SetItem(&lvItem);
-			}
-
-		}		
-	}
-
-	int findColumn(ColumnInfo* ci){
 		TCHAR *buf = new TCHAR[512];
-		LVCOLUMN lvcl;
-		lvcl.mask = LVCF_TEXT;
+		LVCOLUMN lvcl = { 0 };
+		lvcl.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
 		lvcl.pszText = buf;
 		lvcl.cchTextMax = 512;
 
-		int columns = GetHeader().GetItemCount();
-
-		int result = -1;
-
-		for(int k = 0; k < columns; ++k){
-
+		for(int k = 0; k < GetHeader().GetItemCount(); ++k){
 			GetColumn(k, &lvcl);
-			if(Util::stricmp(ci->name.c_str(), lvcl.pszText) == 0){
-				result = k;
+			if(_tcscmp(ci->name.c_str(), lvcl.pszText) == 0){
+				ci->width = lvcl.cx;
+				ci->pos = lvcl.iOrder;
+
+				int itemCount = GetHeader().GetItemCount();
+				if(itemCount >= 0 && sortColumn > itemCount - 2)
+					setSortColumn(0);
+
+				if(sortColumn == ci->pos)
+					setSortColumn(0);
+	
+				DeleteColumn(k);
+
+				for(int i = 0; i < GetItemCount(); ++i) {
+					LVITEM lvItem;
+					lvItem.iItem = i;
+					lvItem.iSubItem = 0;
+					lvItem.mask = LVIF_PARAM | LVIF_IMAGE;
+					GetItem(&lvItem);
+					lvItem.iImage = ((T*)lvItem.lParam)->imageIndex();
+					SetItem(&lvItem);
+				}
 				break;
 			}
 		}
-
 		delete[] buf;
-
-		return result;
 	}
 };
 
@@ -650,9 +567,7 @@ class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId>
 public:
 
 	TypedTreeListViewCtrl() { };
-	~TypedTreeListViewCtrl() {
-		states.Destroy();
-	}
+	~TypedTreeListViewCtrl() { states.Destroy(); }
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
@@ -937,7 +852,9 @@ public:
    	TreeItem mainItems;
 
 private:
-	
+	CImageList states;
+	bool uniqueMainItem;
+		
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
 		int result = compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
@@ -952,29 +869,7 @@ private:
 
 	static int compareItems(T* a, T* b, int col) {
 		// Copyright (C) Liny, RevConnect
-/*		if(a->mainItem == b->mainItem){
 
-			// both are children with diffent mother, compare their monther
-			if(a->mainItem == false && a->main != b->main)
-				return T::compareItems(a->main, b->main, col);
-			else
-				return T::compareItems(a, b, col);
-		}
-
-
-		if(a->mainItem == false && a->main == b)
-			return 2; // ? Decided by sort order, any better way?
-
-		if(b->mainItem == false && b->main == a)
-			return -2; // b should be displayed below a
-
-		if(a->mainItem == false && a->main != b)
-			return T::compareItems(a->main, b, col);
-
-		if(b->mainItem == false && b->main != a)
-			return T::compareItems(a, b->main, col);
-
-		dcassert(0);*/
 		// both are children
 		if(a->main && b->main){
 			// different parent
@@ -996,9 +891,6 @@ private:
 
 		return T::compareItems(a, b, col);
 	}
-
-	CImageList states;
-	bool uniqueMainItem;
 };
 
 #endif // !defined(TYPED_LIST_VIEW_CTRL_H)

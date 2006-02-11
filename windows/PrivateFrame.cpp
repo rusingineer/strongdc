@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,6 @@ void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::P
 	if(i == frames.end()) {
 		p = new PrivateFrame(user);
 		frames[user] = p;
-		//p->readLog();
 		p->addLine(from, aMessage);
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
@@ -308,7 +307,7 @@ void PrivateFrame::onEnter()
 				params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 				params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 				params["userCID"] = replyTo->getCID().toBase32(); 
-				params["userNI"] = replyTo->getFirstNick();
+				params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 				params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params))));
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
@@ -361,11 +360,11 @@ void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
     addLine(i, aLine, cf);
 }
 
-void PrivateFrame::addLine(Identity& from, const tstring& aLine) {
+void PrivateFrame::addLine(const Identity& from, const tstring& aLine) {
 	addLine(from, aLine, WinUtil::m_ChatTextGeneral );
 }
 
-void PrivateFrame::addLine(Identity& from, const tstring& aLine, CHARFORMAT2& cf) {
+void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMAT2& cf) {
 	if(!created) {
 		if(BOOLSETTING(POPUNDER_PM))
 			WinUtil::hiddenCreateEx(this);
@@ -383,24 +382,17 @@ void PrivateFrame::addLine(Identity& from, const tstring& aLine, CHARFORMAT2& cf
 		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 		params["userCID"] = replyTo->getCID().toBase32(); 
-		params["userNI"] = replyTo->getFirstNick();
+		params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		LOG(LogManager::PM, params);
 	}
 
-//	LPCSTR sMyNick;
-//	if(&from) {
-//		sMyNick = from.getClient().getMyNick().c_str();
-//	} else {
-	LPCSTR sMyNick = SETTING(NICK).c_str();
-//	}
-
 	bool myMess = from.getUser() == ClientManager::getInstance()->getMe();
 
 	if(BOOLSETTING(TIME_STAMPS)) {
-		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), myMess, Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf);
 	} else {
-		ctrlClient.AppendText(from, Text::toT(sMyNick).c_str(), myMess, _T(""), aLine.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), myMess, _T(""), aLine.c_str(), cf);
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
@@ -699,7 +691,7 @@ void PrivateFrame::readLog() {
 	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	params["userCID"] = replyTo->getCID().toBase32(); 
-	params["userNI"] = replyTo->getFirstNick();
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));
@@ -739,7 +731,7 @@ LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	params["userCID"] = replyTo->getCID().toBase32(); 
-	params["userNI"] = replyTo->getFirstNick();
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params));

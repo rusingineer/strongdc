@@ -31,8 +31,7 @@ class File;
 BOOL InitSymInfo( PCSTR );
 BOOL UninitSymInfo();
 void StackTrace( HANDLE, LPCTSTR, File& file);
-void StackTrace( HANDLE, LPCTSTR, File& file, DWORD eip, DWORD esp, DWORD ebp);
-string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DWORD ebp );
+tstring StackTrace( HANDLE, LPCTSTR, File& file, DWORD eip, DWORD esp, DWORD ebp);
 
 #else
 

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "../client/pme.h"
 
 TStringList SearchFrame::lastSearches;
+int64_t SearchFrame::resultsCount = 0;
 
 int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
 	COLUMN_PATH, COLUMN_SLOTS, COLUMN_CONNECTION, COLUMN_HUB, COLUMN_EXACT_SIZE, COLUMN_UPLOAD, COLUMN_IP, COLUMN_TTH };
@@ -221,7 +222,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_EXACT_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlResults.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlResults.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 
 	ctrlResults.setColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -510,11 +511,6 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 	}
 }
 
-void SearchFrame::on(SearchManagerListener::Resort) throw() {
-	if(*this != NULL)
-		PostMessage(WM_SPEAKER, RESORT);
-}
-
 void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	if(searches > 0) {
 		int32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
@@ -749,7 +745,10 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 {
 	if(!closed) {
 		SettingsManager::getInstance()->removeListener(this);
-		if(searches != 0) TimerManager::getInstance()->removeListener(this);
+		if(searches != 0) {
+			searches--;
+			TimerManager::getInstance()->removeListener(this);
+		}
 		SearchManager::getInstance()->removeListener(this);
  		ClientManager::getInstance()->removeListener(this);
 
@@ -1088,16 +1087,18 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if(!si->getTTH().empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
-//					si->mainItem = true;
-					addEntry(si, 0);
+					addEntry(si);
 				}
 				if (BOOLSETTING(BOLD_SEARCH)) {
 					setDirty();
 				}
-				ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());
+				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
+
+				if(resultsCount % 10 == 0)
+					ctrlResults.resort();
 			} else {
 				PausedResults.push_back(si);
-				ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + "/" + Util::toString(ctrlResults.GetItemCount() + PausedResults.size()) + " " + STRING(FILES)).c_str());
+				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount-PausedResults.size()) + "/" + Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
 			}
 		}
 		break;
@@ -1149,10 +1150,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 
 			droppedResults = 0;
 		}
-		break;
-	case RESORT:
-			if(ctrlResults.GetItemCount() > 1)
-				ctrlResults.resort();
 		break;
 	}
 
@@ -1496,12 +1493,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 		return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 	}
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_TEXT;
-		lvc.pszText = headerBuf;
-		lvc.cchTextMax = 128;
-		ctrlResults.GetColumn(cd->iSubItem, &lvc);
-		if(BOOLSETTING(GET_USER_COUNTRY) && _tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0) {
+		if(BOOLSETTING(GET_USER_COUNTRY) && (ctrlResults.findColumn(cd->iSubItem) == COLUMN_IP)) {
 			SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
 			ctrlResults.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;
@@ -1549,7 +1541,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 	}
 }
 
-void SearchFrame::addEntry(SearchInfo* item, int pos) {
+void SearchFrame::addEntry(SearchInfo* item) {
 	PME reg(filter,"i");
 	bool match = true;
 	int sel = ctrlFilterSel.GetCurSel();
@@ -1557,19 +1549,13 @@ void SearchFrame::addEntry(SearchInfo* item, int pos) {
 	if(!reg.IsValid() || filter.empty()) {
 		match = true;
 	} else {
-		match = reg.match(Text::fromT(item->getText(/*columnIndexes[sel]*/sel))) > 0;
+		match = reg.match(Text::fromT(item->getText(sel))) > 0;
 	}
 
 	if(match) {
 		int image = item->imageIndex();
 
-		int k = -1;
-		if(pos == 0) {
-			k = ctrlResults.insertItem(item, image);
-		} else {
-			k = ctrlResults.insertItem(pos, item, image);
-		}
-
+		int k = ctrlResults.insertItem(item, image);
 		if(item->subItems.size() > 0) {
 			if(item->collapsed) {
 				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
@@ -1590,7 +1576,7 @@ LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*
 		free(buf);
 	
 		updateSearchList();
-		ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + ' ' + STRING(ITEMS)).c_str());
+		ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + ' ' + STRING(ITEMS)).c_str());
 	}
 
 	bHandled = false;
@@ -1607,7 +1593,7 @@ void SearchFrame::updateSearchList() {
 	for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
 	    SearchInfo* si = *i;
 		si->collapsed = true;
-		addEntry(si, 0);
+		addEntry(si);
 	}
 }
 

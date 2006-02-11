@@ -158,7 +158,7 @@ string ClientManager::findHub(const string& ipPort) {
 	if(i == string::npos) {
 		ip = ipPort;
 	} else {
-		ip = ip.substr(0, i);
+		ip = ipPort.substr(0, i);
 		port = (short)Util::toInt(ipPort.substr(i+1));
 	}
 
@@ -170,21 +170,16 @@ string ClientManager::findHub(const string& ipPort) {
 	return Util::emptyString;
 }
 
-User::Ptr ClientManager::getLegacyUser(const string& aNick) throw() {
+User::Ptr ClientManager::getLegacyUser(const string& aNick) const throw() {
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 
-	for(UserIter i = users.begin(); i != users.end(); ++i) {
-		User::Ptr& p = i->second;
-		if(p->isSet(User::NMDC) && Util::stricmp(p->getFirstNick(), aNick) == 0)
-			return p;
+	for(OnlineMap::const_iterator i = onlineUsers.begin(); i != onlineUsers.end(); ++i) {
+		const OnlineUser* ou = i->second;
+		if(ou->getUser()->isSet(User::NMDC) && Util::stricmp(ou->getIdentity().getNick(), aNick) == 0)
+			return ou->getUser();
 	}
-
-	LegacyIter li = legacyUsers.find(Text::toLower(aNick));
-	if(li != legacyUsers.end())
-		return li->second;
-
-	return legacyUsers.insert(make_pair(Text::toLower(aNick), new User(aNick))).first->second;
+	return User::Ptr();
 }
 
 User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw() {
@@ -197,17 +192,6 @@ User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) thr
 			ui->second->setFirstNick(aNick);	
 		ui->second->setFlag(User::NMDC);
 		return ui->second;
-	}
-
-	LegacyIter li = legacyUsers.find(Text::toLower(aNick));
-	if(li != legacyUsers.end()) {
-		User::Ptr p = li->second;
-		p->setCID(cid);
-		if(p->getFirstNick().empty())
-			p->setFirstNick(aNick);
-		dcassert(users.find(cid) == users.end());
-		users.insert(make_pair(cid, p));
-		return p;
 	}
 
 	User::Ptr p(new User(aNick));
@@ -257,7 +241,7 @@ CID ClientManager::makeCid(const string& aNick, const string& aHubUrl) throw() {
 	th.update(Text::toLower(aHubUrl).c_str(), aHubUrl.length());
 	// Construct hybrid CID from the first 64 bits of the tiger hash - should be
 	// fairly random, and hopefully low-collision
-	return CID(*(u_int64_t*)th.finalize());
+	return CID(th.finalize());
 }
 
 void ClientManager::putOnline(OnlineUser& ou) throw() {
@@ -495,8 +479,7 @@ void ClientManager::on(Save, SimpleXML*) throw() {
 	Lock l(cs);
 
 	try {
-
-#define CHECKESCAPE(n) SimpleXML::escape(n, tmp, true)
+		string tmp;
 
 		File ff(getUsersFile() + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
@@ -508,9 +491,9 @@ void ClientManager::on(Save, SimpleXML*) throw() {
 			if(p->isSet(User::SAVE_NICK) && !p->getCID().isZero() && !p->getFirstNick().empty()) {
 				f.write(LIT("\t<User CID=\""));
 				f.write(p->getCID().toBase32());
-				f.write(LIT("\">\r\n\t\t<Nick>"));
-				f.write(p->getFirstNick());
-				f.write(LIT("</Nick>\r\n\t</User>\r\n"));
+				f.write(LIT("\" Nick=\""));
+				f.write(SimpleXML::escape(p->getFirstNick(), tmp, true));
+				f.write(LIT("\"/>\r\n"));
 			}
 		}
 
@@ -529,11 +512,23 @@ User::Ptr& ClientManager::getMe() {
 	if(!me) {
 		Lock l(cs);
 		if(!me) {
-			me = new User(CID(SETTING(CLIENT_ID)));
+			me = new User(getMyCID());
 			me->setFirstNick(SETTING(NICK));
 		}
 	}
 	return me;
+}
+
+const CID& ClientManager::getMyPID() {
+	if(pid.isZero())
+		pid = CID(SETTING(PRIVATE_ID));
+	return pid;
+}
+
+CID ClientManager::getMyCID() {
+	TigerHash tiger;
+	tiger.update(pid.getData(), CID::SIZE);
+	return CID(tiger.finalize());
 }
 
 void ClientManager::on(Load, SimpleXML*) throw() {
@@ -545,17 +540,13 @@ void ClientManager::on(Load, SimpleXML*) throw() {
 		if(xml.findChild("Users") && xml.getChildAttrib("Version") == "1") {
 			xml.stepIn();
 			while(xml.findChild("User")) {
-				string c = xml.getChildAttrib("CID");
-				if(c.empty())
+				const string& cid = xml.getChildAttrib("CID");
+				const string& nick = xml.getChildAttrib("Nick");
+                if(cid.length() != 39 || nick.empty())
 					continue;
-
-				xml.stepIn();
-				if(xml.findChild("Nick")) {
-					User::Ptr p(new User(CID(c)));
-					p->setFirstNick(xml.getChildData());
-					users.insert(make_pair(p->getCID(), p));
-				}
-				xml.stepOut();
+				User::Ptr p(new User(CID(cid)));
+				p->setFirstNick(xml.getChildData());
+				users.insert(make_pair(p->getCID(), p));
 			}
 		}
 	} catch(const Exception& e) {
@@ -608,12 +599,17 @@ void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 }
 
 void ClientManager::setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
-	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
-	if(i != onlineUsers.end()) {
-		i->second->getIdentity().setPk(aPk);
-		i->second->getIdentity().setLock(aLock);
+	OnlineUser* ou;
+	{
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end()) return;
+
+		ou = i->second;
+		ou->getIdentity().setPk(aPk);
+		ou->getIdentity().setLock(aLock);
 	}
+	ou->getClient().updated(*ou);
 }
 
 bool ClientManager::fileListDisconnected(const User::Ptr& p) {

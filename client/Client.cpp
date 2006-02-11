@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@
 #include "Client.h"
 
 #include "BufferedSocket.h"
-#include "DebugManager.h"
 
 #include "FavoriteManager.h"
 #include "TimerManager.h"
+
+#include "DebugManager.h"
 #include "ClientManager.h"
 
 Client::Counts Client::counts;
@@ -46,7 +47,6 @@ Client::~Client() throw() {
 }
 
 void Client::reloadSettings() {
-	availableBytes = 0;
 	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
@@ -81,6 +81,8 @@ bool Client::isActive() {
 void Client::connect() {
 	if(socket)
 		BufferedSocket::putSocket(socket);
+
+	availableBytes = 0;
 
 	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings();

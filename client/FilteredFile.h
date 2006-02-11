@@ -122,9 +122,6 @@ public:
 		return written;
 	}
 
-	OutputStream* getOutputStream(){return f;};
-	void setOutputStream(OutputStream* _f){f = _f;};
-
 private:
 	enum { BUF_SIZE = 64*1024 };
 

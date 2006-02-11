@@ -73,9 +73,9 @@ public:
 			
 			try{
 				size = os->write(buf, len);
-			}catch(Exception e){
+			}catch(const Exception& e){
 				fileChunks->abandonChunk(chunk);
-				throw e;
+				throw FileException(e.getError());
 			}
 
 			if(size != len)

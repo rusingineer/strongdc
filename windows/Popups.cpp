@@ -26,6 +26,7 @@
 #include "MainFrm.h"
 
 PropPage::TextItem Popups::texts[] = {
+	{ IDC_POPUPGROUP, ResourceManager::BALLOON_POPUPS },
 	{ IDC_PREVIEW, ResourceManager::SETCZDC_PREVIEW },
 	{ IDC_POPUPTYPE, ResourceManager::POPUP_TYPE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }

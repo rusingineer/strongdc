@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ PropPage::TextItem GeneralPage::texts[] = {
 	{ IDC_SETTINGS_NICK, ResourceManager::NICK },
 	{ IDC_SETTINGS_EMAIL, ResourceManager::EMAIL },
 	{ IDC_SETTINGS_DESCRIPTION, ResourceManager::DESCRIPTION },
-	{ IDC_SETTINGS_UPLOAD_SPEED, ResourceManager::SETTINGS_UPLOAD_SPEED },
+	{ IDC_SETTINGS_UPLOAD_SPEED, ResourceManager::SETTINGS_UPLOAD_LINE_SPEED },
 	{ IDC_SETTINGS_UPLOAD_SPEED2, ResourceManager::CONNECTION },
 	{ IDC_SETTINGS_MEBIBYES, ResourceManager::MBITSPS },
 	{ IDC_BW_SIMPLE, ResourceManager::SETTINGS_BWSINGLE },
@@ -45,7 +45,6 @@ PropPage::Item GeneralPage::items[] = {
 	{ IDC_NICK,			SettingsManager::NICK,			PropPage::T_STR }, 
 	{ IDC_EMAIL,		SettingsManager::EMAIL,			PropPage::T_STR }, 
 	{ IDC_DESCRIPTION,	SettingsManager::DESCRIPTION,	PropPage::T_STR }, 
-	//{ IDC_CONNECTION,	SettingsManager::UPLOAD_SPEED,	PropPage::T_STR }, 
 	{ IDC_DOWN_COMBO,	SettingsManager::DOWN_SPEED,	PropPage::T_STR },  
 	{ IDC_UP_COMBO,		SettingsManager::UP_SPEED,		PropPage::T_STR },  
 	{ IDC_SHOW_SPEED_CHECK, SettingsManager::SHOW_DESCRIPTION_SPEED, PropPage::T_BOOL },
@@ -81,7 +80,6 @@ void GeneralPage::write()
 LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	PropPage::translate((HWND)(*this), texts);
-
 	ctrlConnection.Attach(GetDlgItem(IDC_CONNECTION));
 	
 	for(StringIter i = SettingsManager::connectionSpeeds.begin(); i != SettingsManager::connectionSpeeds.end(); ++i)
@@ -213,6 +211,7 @@ LRESULT GeneralPage::onClickedRadioButton(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	fixControls();
 	return 0;
 }
+
 /**
  * @file
  * $Id$

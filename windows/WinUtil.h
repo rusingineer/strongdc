@@ -249,7 +249,7 @@ public:
 
 	struct ADCOnly {
 		ADCOnly() : adcOnly(true) { }
-		void operator()(UserInfoBase* ui) { if(!ui->getUser()->isSet(User::NMDC)) adcOnly = false; }
+		void operator()(UserInfoBase* ui) { if(ui->getUser()->isSet(User::NMDC)) adcOnly = false; }
 
 		bool adcOnly;
 	};

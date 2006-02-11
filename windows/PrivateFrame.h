@@ -133,8 +133,8 @@ public:
   	}
 
 	void addLine(const tstring& aLine, CHARFORMAT2& cf);
-	void addLine(Identity&, const tstring& aLine);
-	void addLine(Identity&, const tstring& aLine, CHARFORMAT2& cf);
+	void addLine(const Identity&, const tstring& aLine);
+	void addLine(const Identity&, const tstring& aLine, CHARFORMAT2& cf);
 	void onEnter();
 	void UpdateLayout(BOOL bResizeBars = TRUE);	
 	void runUserCommand(UserCommand& uc);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	for(int j=0; j<COLUMN_LAST; ++j) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_TIMELEFT || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlTransfers.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlTransfers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 
 	ctrlTransfers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -263,15 +263,10 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
 		ItemInfo* ii = reinterpret_cast<ItemInfo*>(cd->nmcd.lItemlParam);
 
-		// Let's draw a box if needed...
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_TEXT;
-		lvc.pszText = headerBuf;
-		lvc.cchTextMax = 128;
-		ctrlTransfers.GetColumn(cd->iSubItem, &lvc);
+		int colIndex = ctrlTransfers.findColumn(cd->iSubItem);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if((ii->status == ItemInfo::STATUS_RUNNING) && (_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_STATUS])) == 0)) {
+		if((ii->status == ItemInfo::STATUS_RUNNING) && (colIndex == COLUMN_STATUS) ) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -408,7 +403,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				}
 			}
 			return CDRF_SKIPDEFAULT;
-		} else if(BOOLSETTING(GET_USER_COUNTRY) && (Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_IP])) == 0)) {
+		} else if(BOOLSETTING(GET_USER_COUNTRY) && (colIndex == COLUMN_IP)) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;
@@ -449,11 +444,11 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
 			}
-		} else if((Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_FILE])) == 0 || Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_SIZE])) == 0 || 
-			Util::stricmp(headerBuf, CTSTRING_I(columnNames[COLUMN_PATH])) == 0) && ii->download && ii->status != ItemInfo::STATUS_RUNNING) {
+		} else if(((colIndex == COLUMN_FILE) || (colIndex == COLUMN_SIZE) || (colIndex == COLUMN_PATH)) &&
+			ii->download && (ii->status != ItemInfo::STATUS_RUNNING)) {
 			cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.4);
 			return CDRF_NEWFONT;
-		} else if (ii->download && ii->status != ItemInfo::STATUS_RUNNING) {
+		} else if (ii->download && (ii->status != ItemInfo::STATUS_RUNNING)) {
 			cd->clrText = WinUtil::textColor;
 			return CDRF_NEWFONT;
 		}
@@ -848,7 +843,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 }
 
 void TransferView::on(DownloadManagerListener::Status, const User::Ptr& aUser, const string& aMessage) {
-	UpdateInfo* ui = new UpdateInfo(aUser, true);
+	UpdateInfo* ui = new UpdateInfo(aUser, true, aMessage != STRING(WAITING_TO_RETRY));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setStatusString(Text::toT(aMessage));
 	speak(UPDATE_ITEM, ui);
@@ -936,7 +931,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 					
 		v->push_back(ui);
 		if((u->getRunningAverage() == 0) && ((GET_TICK() - u->getStart()) > 1000)) {
-			u->getUserConnection()->disconnect();
+			u->getUserConnection()->disconnect(true);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@
 const string AdcHub::CLIENT_PROTOCOL("ADC/0.9");
 const string AdcHub::SECURE_CLIENT_PROTOCOL("ADCS/0.9");
 const string AdcHub::ADCS_FEATURE("ADC0");
+const string AdcHub::TCP4_FEATURE("TCP4");
+const string AdcHub::UDP4_FEATURE("UDP4");
 
 AdcHub::AdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '\n', secure), state(STATE_PROTOCOL), sid(0), reconnect(true) {
 	TimerManager::getInstance()->addListener(this);
@@ -73,6 +75,7 @@ void AdcHub::putUser(const u_int32_t aSID) {
 	if(i == users.end())
 		return;
 	ClientManager::getInstance()->putOffline(*i->second);
+	fire(ClientListener::UserRemoved(), this, *i->second);
 	delete i->second;
 	users.erase(i);
 }
@@ -377,6 +380,8 @@ void AdcHub::info() {
 	if(state != STATE_IDENTIFY && state != STATE_NORMAL)
 		return;
 
+	reloadSettings();
+
 	AdcCommand c(AdcCommand::CMD_INF, AdcCommand::TYPE_BROADCAST);
 	string tmp;
 
@@ -398,6 +403,8 @@ void AdcHub::info() {
 
 	updateCounts(false); \
 	
+	ADDPARAM("ID", ClientManager::getInstance()->getMyCID().toBase32());
+	ADDPARAM("PD", ClientManager::getInstance()->getMyPID().toBase32());
 	ADDPARAM("NI", getMyIdentity().getNick());
 	ADDPARAM("DE", getMyIdentity().getDescription());
 	ADDPARAM("SL", Util::toString(SETTING(SLOTS)));
@@ -409,10 +416,9 @@ void AdcHub::info() {
 	ADDPARAM("HO", Util::toString(counts.op));
 	ADDPARAM("VE", "++ " VERSIONSTRING);
 
+	string su;
 	if(SSLSocketFactory::getInstance()->hasCerts()) {
-		ADDPARAM("SU", ADCS_FEATURE);
-	} else {
-		ADDPARAM("SU", Util::emptyString);
+		su += ADCS_FEATURE + ",";
 	}
 	
 	if(isActive()) {
@@ -422,10 +428,17 @@ void AdcHub::info() {
 			ADDPARAM("I4", "0.0.0.0");
 		}
 		ADDPARAM("U4", Util::toString(SearchManager::getInstance()->getPort()));
+		su += TCP4_FEATURE + ",";
+		su += UDP4_FEATURE + ",";
 	} else {
 		ADDPARAM("I4", "");
 		ADDPARAM("U4", "");
 	}
+
+	if(!su.empty()) {
+		su.erase(su.size() - 1);
+	}
+	ADDPARAM("SU", su);
 
 #undef ADDPARAM
 
@@ -437,7 +450,7 @@ void AdcHub::info() {
 /*int64_t AdcHub::getAvailable() const {
 	Lock l(cs);
 	int64_t x = 0;
-	for(CIDMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+	for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) {
 		x+=i->second->getIdentity().getBytesShared();
 	}
 	return x;

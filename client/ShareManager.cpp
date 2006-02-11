@@ -112,7 +112,7 @@ ShareManager::Directory::~Directory() {
 	for(MapIter i = directories.begin(); i != directories.end(); ++i)
 		delete i->second;
 	for(File::Iter i = files.begin(); i != files.end(); ++i) {
-		ShareManager::getInstance()->removeTTH(i->getTTH(), i);
+		ShareManager::getInstance()->removeTTH(i->getTTH(), *i);
 	}
 }
 
@@ -328,9 +328,13 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 				depth++;
 		} else if(cur != NULL && name == "File") {
 			const string& fname = getAttrib(attribs, "Name", 0);
-			int64_t size = Util::toInt64(getAttrib(attribs, "Size", 1));
+			const string& size = getAttrib(attribs, "Size", 1);
 			const string& root = getAttrib(attribs, "TTH", 2);
-			cur->files.insert(ShareManager::Directory::File(fname, size, cur, TTHValue(root)));
+			if(fname.empty() || size.empty() || (root.size() != 39)) {
+				dcdebug("Invalid file found: %s\n", fname.c_str());
+				return;
+			}
+			cur->files.insert(ShareManager::Directory::File(fname, Util::toInt64(size), cur, TTHValue(root)));
 		}
 	}
 	virtual void endTag(const string& name, const string&) {
@@ -785,18 +789,25 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 	bloom.add(Text::toLower(f.getName()));
 }
 
-void ShareManager::removeTTH(const TTHValue& tth, const Directory::File::Iter& iter) {
-	pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
-	for(HashFileIter j = range.first; j != range.second; ++j) {
-		if(j->second == iter) {
+void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
+	// HACK for bug in hash_multimap
+	//pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
+	//for(HashFileIter j = range.first; j != range.second; ++j) {
+	for(HashFileIter j = tthIndex.find(const_cast<TTHValue*>(&tth)); j != tthIndex.end(); ++j) {
+		if(*j->second == file) {
 			tthIndex.erase(j);
-			break;
+			return;
 		}
 	}
+	dcassert(0);
 
+/*	dcdebug("%s\n", tth.toBase32().c_str());
+	for(HashFileIter j = tthIndex.begin(); j != tthIndex.end(); ++j) {
+		dcdebug("%s\n", j->first->toBase32().c_str());
+	}*/
 }
 
-void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ShareException) {
+void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ThreadException, ShareException) {
 	if(Thread::safeInc(refreshing) > 1) {
 		Thread::safeDec(refreshing);
 		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS), false);
@@ -1540,7 +1551,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
         Directory::File::Iter i = d->findFile(Util::getFileName(fname));
 		if(i != d->files.end()) {
 			if(root != i->getTTH())
-				removeTTH(i->getTTH(), i);
+				removeTTH(i->getTTH(), *i);
 			// Get rid of false constness...
 			Directory::File* f = const_cast<Directory::File*>(&(*i));
 			f->setTTH(root);

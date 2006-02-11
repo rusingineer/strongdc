@@ -44,6 +44,7 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 		case COLUMN_SHARED:
 		case COLUMN_EXACT_SHARED: return compare(a->getBytes(), b->getBytes());
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
+		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
 		case COLUMN_UPLOAD_SPEED: return compare(a->identity.getUser()->getLastDownloadSpeed(), b->identity.getUser()->getLastDownloadSpeed());
 	}
 	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	

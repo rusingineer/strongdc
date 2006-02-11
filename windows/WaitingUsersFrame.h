@@ -39,13 +39,9 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("WaitingUsersFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
 
 	WaitingUsersFrame() : showTree(true), closed(false), usingUserMenu(false), 
-		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP)
-	{
-		headerBuf = new TCHAR[128];
-	}
-	virtual ~WaitingUsersFrame() {
-		delete[] headerBuf;
-	}
+		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) { }
+	
+	virtual ~WaitingUsersFrame() { }
 
 	enum {
 		ADD_ITEM,
@@ -190,7 +186,6 @@ private:
 	bool showTree;
 	bool closed;
 	bool usingUserMenu;
-	TCHAR * headerBuf;
 	
 	User::List UQFUsers;
 

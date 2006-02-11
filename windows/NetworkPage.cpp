@@ -120,17 +120,17 @@ LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		::EnableWindow(GetDlgItem(IDC_FIREWALL_UPNP), FALSE);
 	}
 	switch(SETTING(INCOMING_CONNECTIONS)) {
-		case SettingsManager::INCOMING_DIRECT: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_DIRECT); break;
-		case SettingsManager::INCOMING_FIREWALL_UPNP: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_FIREWALL_UPNP); break;
-		case SettingsManager::INCOMING_FIREWALL_NAT: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_FIREWALL_NAT); break;
-		case SettingsManager::INCOMING_FIREWALL_PASSIVE: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_FIREWALL_PASSIVE); break;
-		default: CheckRadioButton(IDC_DIRECT, IDC_FIREWALL_PASSIVE, IDC_DIRECT); break;
+		case SettingsManager::INCOMING_DIRECT: CheckDlgButton(IDC_DIRECT, BST_CHECKED); break;
+		case SettingsManager::INCOMING_FIREWALL_UPNP: CheckDlgButton(IDC_FIREWALL_UPNP, BST_CHECKED); break;
+		case SettingsManager::INCOMING_FIREWALL_NAT: CheckDlgButton(IDC_FIREWALL_NAT, BST_CHECKED); break;
+		case SettingsManager::INCOMING_FIREWALL_PASSIVE: CheckDlgButton(IDC_FIREWALL_PASSIVE, BST_CHECKED); break;
+		default: CheckDlgButton(IDC_DIRECT, BST_CHECKED); break;
 	}
 
 	switch(SETTING(OUTGOING_CONNECTIONS)) {
-		case SettingsManager::OUTGOING_DIRECT: CheckRadioButton(IDC_DIRECT_OUT, IDC_SOCKS5, IDC_DIRECT_OUT); break;
-		case SettingsManager::OUTGOING_SOCKS5: CheckRadioButton(IDC_DIRECT_OUT, IDC_SOCKS5, IDC_SOCKS5); break;
-		default: CheckRadioButton(IDC_DIRECT_OUT, IDC_SOCKS5, IDC_DIRECT_OUT); break;
+		case SettingsManager::OUTGOING_DIRECT: CheckDlgButton(IDC_DIRECT_OUT, BST_CHECKED); break;
+		case SettingsManager::OUTGOING_SOCKS5: CheckDlgButton(IDC_SOCKS5, BST_CHECKED); break;
+		default: CheckDlgButton(IDC_DIRECT_OUT, BST_CHECKED); break;
 	}
 
 	PropPage::read((HWND)(*this), items);
@@ -153,18 +153,22 @@ LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 }
 
 void NetworkPage::fixControls() {
-	BOOL checked = IsDlgButtonChecked(IDC_FIREWALL_PASSIVE);
-	::EnableWindow(GetDlgItem(IDC_EXTERNAL_IP), !checked);
-	::EnableWindow(GetDlgItem(IDC_OVERRIDE), !checked);
-	::EnableWindow(GetDlgItem(IDC_PORT_TCP), !checked);
-	::EnableWindow(GetDlgItem(IDC_PORT_UDP), !checked);
+	BOOL direct = IsDlgButtonChecked(IDC_DIRECT) == BST_CHECKED;
+	BOOL upnp = IsDlgButtonChecked(IDC_FIREWALL_UPNP) == BST_CHECKED;
+	BOOL nat = IsDlgButtonChecked(IDC_FIREWALL_NAT) == BST_CHECKED;
 
-	checked = IsDlgButtonChecked(IDC_SOCKS5);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_PORT), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_USER), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_PASSWORD), checked);
-	::EnableWindow(GetDlgItem(IDC_SOCKS_RESOLVE), checked);
+	::EnableWindow(GetDlgItem(IDC_EXTERNAL_IP), direct || upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_OVERRIDE), direct || upnp || nat);
+
+	::EnableWindow(GetDlgItem(IDC_PORT_TCP), direct || upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_PORT_UDP), direct || upnp || nat);
+
+	BOOL socks = IsDlgButtonChecked(IDC_SOCKS5);
+	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), socks);
+	::EnableWindow(GetDlgItem(IDC_SOCKS_PORT), socks);
+	::EnableWindow(GetDlgItem(IDC_SOCKS_USER), socks);
+	::EnableWindow(GetDlgItem(IDC_SOCKS_PASSWORD), socks);
+	::EnableWindow(GetDlgItem(IDC_SOCKS_RESOLVE), socks);
 
 }
 

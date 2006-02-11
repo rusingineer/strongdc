@@ -195,7 +195,7 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void addLine(const tstring& aLine);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
-	void addLine(Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
+	void addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
 	void addClientLine(const tstring& aLine, bool inChat = true);
 	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
 	void onEnter();
@@ -478,7 +478,7 @@ private:
 	void updateUserList();
 	void filterUser(UserInfo* ui);
 
-	bool PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu);
+	bool PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMenu);
 	bool showUsers;
 	string sColumsOrder;
     string sColumsWidth;

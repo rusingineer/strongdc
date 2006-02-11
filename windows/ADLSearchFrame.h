@@ -18,7 +18,7 @@
 
 /*
  * Automatic Directory Listing Search
- * Henrik Engström, henrikengstrom@home.se
+ * Henrik Engström, henrikengstrom on home point se
  */
 
 #if !defined(ADL_SEARCH_FRAME_H)

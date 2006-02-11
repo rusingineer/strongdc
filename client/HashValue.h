@@ -31,11 +31,11 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 
 	typedef HashValue* Ptr;
 	struct PtrHash {
-		size_t operator()(const Ptr rhs) const { return *(size_t*)rhs; };
+		size_t operator()(const Ptr rhs) const { return *(size_t*)&rhs->data; };
 		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); };
 	};
 	struct PtrLess {
-		int operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); };
+		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); };
 	};
 
 	struct Hash {
@@ -43,7 +43,7 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 		bool operator()(const HashValue& lhs, const HashValue& rhs) const { return lhs == rhs; };
 	};
 	struct Less {
-		int operator()(const HashValue& lhs, const HashValue& rhs) { return lhs < rhs; };
+		bool operator()(const HashValue& lhs, const HashValue& rhs) const { return lhs < rhs; };
 	};
 
 	HashValue() { };
