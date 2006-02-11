@@ -43,7 +43,6 @@ public:
 	QueueFrame() : menuItems(0), queueSize(0), queueItems(0), spoken(false), dirty(false), 
 		usingDirMenu(false),  readdItems(0), fileLists(NULL), showTree(true), closed(false), PreviewAppsSize(0),
 		showTreeContainer(WC_BUTTON, this, SHOWTREE_MESSAGE_MAP) {
-		headerBuf = new TCHAR[128];
 	}
 
 	virtual ~QueueFrame() {
@@ -56,7 +55,6 @@ public:
 		removeAllMenu.ClearMenu();
 		pmMenu.ClearMenu();
 		readdMenu.ClearMenu();		
-		delete[] headerBuf;
 	}
 	
 	typedef MDITabChildWindowImpl<QueueFrame, RGB(0, 0, 0), IDR_QUEUE> baseClass;
@@ -412,7 +410,6 @@ private:
 	int queueItems;
 
 	bool closed;
-	TCHAR * headerBuf;
 	
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];

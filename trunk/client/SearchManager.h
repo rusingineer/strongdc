@@ -37,7 +37,6 @@
 #include "TimerManager.h"
 #include "AdcCommand.h"
 #include "ClientManager.h"
-#include "pme.h"
 #include "ResourceManager.h"
 
 class SearchManager;
@@ -135,14 +134,6 @@ private:
 	StringList hubs;
 };
 
-class ResultInfo {
-public:
-	ResultInfo(SearchResult* _sr, string _nick) : sr(_sr), nick(_nick) { }
-	~ResultInfo() { }
-	string nick;
-	SearchResult* sr;
-};
-
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
 	class ResultsQueue: public Thread
@@ -151,7 +142,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		bool stop;
 		CriticalSection cs;
 		Semaphore s;
-		deque<ResultInfo> resultList;
+		deque<SearchResult*> resultList;
 
 		ResultsQueue() : stop(false) {}
 		virtual ~ResultsQueue() throw() {
@@ -159,10 +150,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		}
 
 		int run() {
-			setThreadPriority(Thread::IDLE);
 			SearchResult* sr = NULL;
-			string nick;
-			bool resort = false;
 			stop = false;
 
 			while(true) {
@@ -172,33 +160,17 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 
 				{
 					Lock l(cs);
-					if(!resultList.empty()) {
-						sr = resultList.begin()->sr;
-						nick = resultList.begin()->nick;
-						resultList.pop_front();
-						int size = resultList.size();
-						resort = (size % 10 == 0);
-					} else {
-						sr = NULL;
-					}
+					if(resultList.empty()) continue;
+
+					sr = resultList.front();
+					resultList.pop_front();
 				}
 
-				if(sr != NULL) {
-					sr->setUser(ClientManager::getInstance()->getLegacyUser(nick));
-					
-					if(sr->getHubName().empty()) {
-						StringList names = ClientManager::getInstance()->getHubNames(sr->getUser()->getCID());
-						sr->setHubName(names.empty() ? STRING(OFFLINE) : Util::toString(names));
-					}
+				ClientManager::getInstance()->setIPUser(sr->getIP(), sr->getUser());
+				SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+				sr->decRef();
 
-					ClientManager::getInstance()->setIPUser(sr->getIP(), sr->getUser());
-
-					SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
-					sr->decRef();
-					if(resort)
-						SearchManager::getInstance()->fire(SearchManagerListener::Resort());
-				}
-				resort = false;
+				Thread::sleep(1);
 			}
 			return 0;
 		}
@@ -207,9 +179,12 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 			stop = true;
 			s.signal();
 		}
-		void addResult(SearchResult* sr, const string& aNick) {
-			Lock l(cs);
-			resultList.push_back(ResultInfo(sr, aNick));
+		void addResult(SearchResult* sr) {
+			{
+				Lock l(cs);
+				resultList.push_back(sr);
+			}
+			s.signal();
 		}
 	
 	};

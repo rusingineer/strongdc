@@ -146,7 +146,6 @@ public:
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
 	{ 
-		
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
 		}
@@ -192,7 +191,7 @@ public:
 	}
 	bool hasOnlineUsers() const { return countOnlineUsers() > 0; };
 
-	const string getSourcePath(const User::Ptr& aUser) { 
+	const string& getSourcePath(const User::Ptr& aUser) { 
 		dcassert(isSource(aUser));
 		return (*getSource(aUser, sources))->getPath();
 	}

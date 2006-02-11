@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1681,44 +1681,66 @@ string WinUtil::formatTime(long rest) {
 }
 
 int WinUtil::getImage(const Identity& u) {
-	int image;
+	int image = 12;
 
 	if(u.isOp()) {
 		image = 0;
 	} else if(u.getUser()->isSet(User::FIREBALL)) {
-		image = 9;
-	} else if(u.getUser()->isSet(User::SERVER)) {
-		image = 8;
-	} else if((u.getConnection() == "28.8Kbps") || (u.getConnection() == "33.6Kbps") ||
-		(u.getConnection() == "56Kbps") || (u.getConnection() == "Modem")) {
 		image = 1;
-	} else if(u.getConnection() == "ISDN") {
+	} else if(u.getUser()->isSet(User::SERVER)) {
 		image = 2;
-	} else if((u.getConnection() == "Satellite") || (u.getConnection() == "Microwave")) {
-		image = 3;
-	} else if(u.getConnection() == "Wireless") {
-		image = 4;
-	} else if(u.getConnection() == "DSL") {
-		image = 5;
-	} else if(u.getConnection() == "Cable") {
-		image = 6;
-	} else if((u.getConnection() == "LAN(T1)") || (u.getConnection() == "LAN(T3)")) {
-		image = 7;
 	} else {
-		image = 10;
-	}
+		string conn = u.getConnection();
 	
+		if(	(conn == "28.8Kbps") ||
+			(conn == "33.6Kbps") ||
+			(conn == "56Kbps") ||
+			(conn == "Modem") ||
+			(conn == "ISDN")) {
+			image = 6;
+		} else
+		if(	(conn == "Satellite") ||
+			(conn == "Microwave") ||
+			(conn == "Wireless")) {
+			image = 8;
+		} else
+		if(	(conn == "DSL") ||
+			(conn == "Cable")) {
+			image = 9;
+		} else
+		if(	(strncmp(conn.c_str(), "LAN", 3) == 0)) {
+			image = 11;
+		} else
+		if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
+			image = 3;
+		} else
+		if( (conn == "0.005")) {
+			image = 5;
+		} else {
+			double us = Util::toDouble(conn);
+			if(us >= 10) {
+				image = 10;
+			} else 
+			if(us > 0.1) {
+				image = 7;
+			} else
+			if(us >= 0.01) {
+				image = 4;
+			}
+		}
+	}
 	if(u.getUser()->isSet(User::AWAY)) {
-		image+=11;
+		image+=13;
 	}
 	if(u.getUser()->isSet(User::DCPLUSPLUS)) {
-		image+=22;
+		image+=26;
 	}
 
 	if(!ClientManager::getInstance()->isActive(u.getHubUrl()) && !u.isTcpActive()) {
 		// Users we can't connect to...
-		image+=44;
-	}
+		image+=52;
+	}		
+
 	return image;
 }
 

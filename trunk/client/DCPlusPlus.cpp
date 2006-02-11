@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
-#include "../windows/PopupManager.h"
+
 #include "ConnectionManager.h"
 #include "DownloadManager.h"
 #include "UploadManager.h"
@@ -34,11 +34,13 @@
 #include "FinishedManager.h"
 #include "ADLSearch.h"
 #include "SSLSocket.h"
-#include "DebugManager.h"
-#include "ClientProfileManager.h"
 
 #include "StringTokenizer.h"
+
+#include "DebugManager.h"
+#include "ClientProfileManager.h"
 #include "WebServerManager.h"
+#include "../windows/PopupManager.h"
 
 void startup(void (*f)(void*, const string&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
@@ -93,10 +95,10 @@ void startup(void (*f)(void*, const string&), void* p) {
 }
 
 void shutdown() {
+	TimerManager::getInstance()->removeListeners();
+
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
-
-	TimerManager::getInstance()->removeListeners();
 
 	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();

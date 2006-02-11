@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ const string SettingsManager::settingTags[] =
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
 	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl", "OpenWaitingUsers",
-	"BoldWaitingUsers", 
+	"BoldWaitingUsers", "AutoSearchLimit",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
@@ -288,7 +288,8 @@ SettingsManager::SettingsManager()
 	setDefault(BOLD_WAITING_USERS, true);
 	setDefault(AUTO_REFRESH_TIME, 60);
 	setDefault(USE_SSL, false);
-
+	setDefault(AUTO_SEARCH_LIMIT, 15);
+	
 	setDefault(NUMBER_OF_SEGMENTS, 4);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
@@ -528,6 +529,7 @@ SettingsManager::SettingsManager()
 	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
 	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
 	setDefault(COLOR_VERIFIED, RGB(222, 160, 0));
+	
 #endif
 }
 
@@ -582,8 +584,8 @@ void SettingsManager::load(string const& aFileName)
 		double v = Util::toDouble(SETTING(CONFIG_VERSION));
 		// if(v < 0.x) { // Fix old settings here }
 
-		if(v <= 0.674 || CID(SETTING(CLIENT_ID)).isZero()) {
-			set(CLIENT_ID, CID::generate().toBase32());
+		if(v <= 0.674 || SETTING(PRIVATE_ID).length() != 39 || CID(SETTING(PRIVATE_ID)).isZero()) {
+			set(PRIVATE_ID, CID::generate().toBase32());
 
 			// Formats changed, might as well remove these...
 			set(LOG_FORMAT_POST_DOWNLOAD, Util::emptyString);
@@ -600,7 +602,7 @@ void SettingsManager::load(string const& aFileName)
 			set(LOG_FILE_SYSTEM, Util::emptyString);
 		}
 #ifdef _DEBUG
-		set(CLIENT_ID, CID::generate().toBase32());
+		set(PRIVATE_ID, CID::generate().toBase32());
 #endif
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
 
@@ -609,8 +611,8 @@ void SettingsManager::load(string const& aFileName)
 		xml.stepOut();
 
 	} catch(const Exception&) {
-		if(CID(SETTING(CLIENT_ID)).isZero())
-			set(CLIENT_ID, CID::generate().toBase32());
+		if(CID(SETTING(PRIVATE_ID)).isZero())
+			set(PRIVATE_ID, CID::generate().toBase32());
 	}
 
 	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {

@@ -574,6 +574,9 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 							u.getIdentity().setBytesShared(Share);
 						}
 						Connection[1] = NULL; 
+        				if(Connection[0] == 'P')
+        					u.getUser()->setFlag(User::PASSIVE);			    
+        
 						Connection += 2;
 						char status = *(Email-2);
 						*(Email-2) = NULL;
@@ -643,11 +646,8 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					}
 				}
 
-				if(u.getUser() == getMyIdentity().getUser()) {
-					string oldDesc = getMyIdentity().getDescription();
+				if(u.getUser() == getMyIdentity().getUser())
 					setMyIdentity(u.getIdentity());
-					getMyIdentity().setDescription(oldDesc);
-				}
 					
 				fire(ClientListener::UserUpdated(), this, u);
 		    	return;
@@ -1106,6 +1106,8 @@ void NmdcHub::myInfo() {
 	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
 		return;
 	}
+	
+	reloadSettings();
 	
 	dcdebug("MyInfo %s...\n", getMyNick().c_str());
 	char StatusMode = '\x01';

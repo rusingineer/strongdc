@@ -68,7 +68,7 @@ public:
 	void infoUpdated(bool antispam);
 
 	User::Ptr getUser(const string& aNick, const string& aHubUrl) throw();
-	User::Ptr getLegacyUser(const string& aNick) throw();
+	User::Ptr getLegacyUser(const string& aNick) const throw();
 	User::Ptr getUser(const CID& cid) throw();
 
 	string findHub(const string& ipPort);
@@ -86,20 +86,6 @@ public:
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	void updateUser(const User::Ptr& aUser) {
-		OnlineUser* ou;
-		{
-			Lock l(cs);
-			OnlineIter i = onlineUsers.find(aUser->getCID());
-			if(i == onlineUsers.end()) return;
-
-			ou = i->second;
-		}
-		ou->getClient().updated(*ou);
-	}
-
-
-
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
 
 	/** Constructs a synthetic, hopefully unique CID */
@@ -136,7 +122,10 @@ public:
  	}
 
 	string getCachedIp() const { Lock l(cs); return cachedIp; }
-	
+
+	CID getMyCID();
+	const CID& getMyPID();
+		
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
 	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock);
@@ -157,7 +146,6 @@ private:
 	mutable CriticalSection cs;
 	
 	UserMap users;
-	LegacyMap legacyUsers;
 	OnlineMap onlineUsers;
 
 	User::Ptr me;
@@ -165,6 +153,7 @@ private:
 	Socket s;
 
 	string cachedIp;
+	CID pid;	
 	int64_t quickTick;
 	int infoTick;
 

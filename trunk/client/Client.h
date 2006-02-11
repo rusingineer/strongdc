@@ -128,8 +128,6 @@ public:
 		return string(buf, sprintf(buf, "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
 	}
 
-//	BufferedSocket* getSocket() { return socket; }
-
 	string getRawCommand(const int aRawCommand) {
 		switch(aRawCommand) {
 			case 1: return rawOne;
@@ -185,7 +183,6 @@ public:
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
 	GETSET(string, favIp, FavIp);
-	//GETSET(int, supportFlags, SupportFlags);
 
 	int supportFlags;
 	int getSupportFlags() { return supportFlags; }

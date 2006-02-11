@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,17 +58,17 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		SettingsManager::getInstance()->removeListener(this);
-	if(dirty || ctrlPad.GetModify()) {
-			AutoArray<TCHAR> buf(ctrlPad.GetWindowTextLength() + 1);
-		ctrlPad.GetWindowText(buf, ctrlPad.GetWindowTextLength() + 1);
-		try {
-			string tmp(Text::fromT(tstring(buf, ctrlPad.GetWindowTextLength())));
-			File(Util::getNotepadFile(), File::WRITE, File::CREATE | File::TRUNCATE).write(tmp);
-		} catch(const FileException&) {
-			// Oops...
+		if(dirty || ctrlPad.GetModify()) {
+				AutoArray<TCHAR> buf(ctrlPad.GetWindowTextLength() + 1);
+			ctrlPad.GetWindowText(buf, ctrlPad.GetWindowTextLength() + 1);
+			try {
+				string tmp(Text::fromT(tstring(buf, ctrlPad.GetWindowTextLength())));
+				File(Util::getNotepadFile(), File::WRITE, File::CREATE | File::TRUNCATE).write(tmp);
+			} catch(const FileException&) {
+				// Oops...
+			}
 		}
-	}
-	
+
 		closed = true;
 		CZDCLib::setButtonPressed(IDC_NOTEPAD, false);
 		PostMessage(WM_CLOSE);

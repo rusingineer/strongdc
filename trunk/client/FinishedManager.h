@@ -38,8 +38,6 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	FinishedItem::List subItems;
-
 	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
 		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 

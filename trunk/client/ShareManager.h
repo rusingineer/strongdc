@@ -60,7 +60,7 @@ public:
 	string translateTTH(const string& TTH) throw(ShareException);
 	string translateFileName(const string& aFile) throw(ShareException);
 	bool getTTH(const string& aFile, TTHValue& tth) throw();
-	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ShareException);
+	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ThreadException, ShareException);
 	void setDirty() { xmlDirty = nmdcDirty = true; };
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
@@ -140,6 +140,10 @@ private:
 			File& operator=(const File& rhs) {
 				name = rhs.name; size = rhs.size; parent = rhs.parent; tth = rhs.tth;
 				return *this;
+			}
+
+			bool operator==(const File& rhs) const {
+				return getParent() == rhs.getParent() && (Util::stricmp(getName(), rhs.getName()) == 0);
 			}
 
 			string getADCPath() const { return parent->getADCPath() + name; }
@@ -250,8 +254,7 @@ private:
 		bool isDirectory;
 	};
 
-	//typedef HASH_MULTIMAP_X(TTHValue*, Directory::File::Iter, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
-	typedef multimap<TTHValue*, Directory::File::Iter, TTHValue::PtrLess> HashFileMap;
+	typedef HASH_MULTIMAP_X(TTHValue*, Directory::File::Iter, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
 	typedef HashFileMap::iterator HashFileIter;
 
 	HashFileMap tthIndex;
@@ -304,7 +307,7 @@ private:
 	StringList notShared;
 	bool loadCache();
 
-	void removeTTH(const TTHValue& tth, const Directory::File::Iter&);
+	void removeTTH(const TTHValue& tth, const Directory::File& file);
 
 	Directory* getDirectory(const string& fname);
 

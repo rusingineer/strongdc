@@ -35,9 +35,8 @@
 #define HAVE_HASH 1
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
-//# define _STLP_DEBUG 1
-//# define _STLP_DEBUG_UNINITIALIZED 1
-//# define _STLP_DEBUG_ALLOC 1
+//#define _STLP_DEBUG 1
+//#define _STLP_USE_NEWALLOC 1
 
 // --- Shouldn't have to change anything under here...
 

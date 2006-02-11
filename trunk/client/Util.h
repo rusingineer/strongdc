@@ -501,7 +501,6 @@ public:
 	static string::size_type findSubString(const string& aString, const string& aSubString, string::size_type start = 0) throw();
 
 	/* Utf-8 versions of strnicmp and stricmp, unicode char code order (!) */
-	static int strcmp(const char* a, const char* b);
 	static int stricmp(const char* a, const char* b);
 	static int strnicmp(const char* a, const char* b, size_t n);
 

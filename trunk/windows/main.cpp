@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,16 +40,6 @@ static char tth[192*8/(5*8)+2];
 static bool firstException = true;
 
 static char buf[DEBUG_BUFSIZE];
-
-EXCEPTION_RECORD CurrExceptionRecord;
-CONTEXT CurrContext;
-int iLastExceptionDlgResult;
-
-void ExceptionFunction() {
-	if (iLastExceptionDlgResult == IDCANCEL) {
-		ExitProcess(1);
-	}
-}
 
 #ifndef _DEBUG
 
@@ -171,16 +161,13 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
     f.write(LIT("\r\n"));
     
-	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+	tstring dialogInfo = STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 
 	f.write(LIT("\r\n"));
 
 	f.close();
 
-	memcpy(&CurrExceptionRecord, e->ExceptionRecord, sizeof(EXCEPTION_RECORD));
-	memcpy(&CurrContext, e->ContextRecord, sizeof(CONTEXT));
-
-	WinUtil::exceptioninfo += Text::toT(StackTrace(GetCurrentThread(), _T(""), e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp));
+	WinUtil::exceptioninfo += dialogInfo;
 	
 	if ((!SETTING(SOUND_EXC).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(SOUND_EXC)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -197,8 +184,9 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
 	CExceptionDlg dlg;
-	iLastExceptionDlgResult = dlg.DoModal(WinUtil::mainWnd);
-	ExceptionFunction();
+	if (dlg.DoModal(WinUtil::mainWnd) == IDCANCEL) {
+		ExitProcess(1);
+	}
 
 #ifndef _DEBUG
 	EXTENDEDTRACEUNINITIALIZE();
@@ -488,7 +476,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// For SHBrowseForFolder, UPnP
 	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
 #ifdef _DEBUG
-//	EXTENDEDTRACEINITIALIZE( Util::getAppPath().c_str() );
+	EXTENDEDTRACEINITIALIZE( Util::getAppPath().c_str() );
 	//File::deleteFile(Util::getAppPath() + "exceptioninfo.txt");
 #else
 #if defined(isCVS)

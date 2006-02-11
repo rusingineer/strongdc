@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,7 +137,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     	
 	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SHARED || j == COLUMN_EXACT_SHARED || j == COLUMN_SLOTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlUsers.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlUsers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
 	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -522,7 +522,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
         tstring sCopy;
 		UserInfo* ui;
 
-		if(sSelectedUser != _T("")) {
+		if(!sSelectedUser.empty()) {
 			int i = ctrlUsers.findItem(sSelectedUser);
 			if ( i >= 0 ) {
 				ui = (UserInfo*)ctrlUsers.getItemData(i);
@@ -729,7 +729,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.identity.getNick()), WinUtil::m_ChatTextSystem);
 						}	
 
-						if(client->isOp() && !u.identity.isOp()) {
+						dcassert(!u.identity.isOp());
+						if(client->isOp()) {
 							int64_t bytesSharedInt64 = u.identity.getBytesShared();
 							if(bytesSharedInt64 > 0) {
 								string bytesShared = Util::toString(bytesSharedInt64);
@@ -1234,7 +1235,7 @@ void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = t
     addLine(i, aLine, cf, bUseEmo);
 }
 
-void HubFrame::addLine(Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	ctrlClient.AdjustTextSize();
 
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
@@ -1246,12 +1247,13 @@ void HubFrame::addLine(Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool 
 		LOG(LogManager::CHAT, params);
 	}
 
-	bool bMyMess = i.getNick() == client->getMyNick();
+	bool bMyMess = i.getUser() == ClientManager::getInstance()->getMe();
 	if(timeStamps) {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()).c_str(), bMyMess, Text::toT("[" + Util::getShortTimeString() + "] ").c_str(), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), bMyMess, Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
 	} else {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()).c_str(), bMyMess, _T(""), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), bMyMess, _T(""), aLine.c_str(), cf, bUseEmo);
 	}
+
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
@@ -1292,7 +1294,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
 	tabMenuShown = false;
 	OMenu Mnu;
-	sSelectedUser = _T("");
+	sSelectedUser = Util::emptyStringT;
 
 	ctrlUsers.GetHeader().GetWindowRect(&rc);
 		
@@ -1382,7 +1384,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			sSelectedURL = _T("");
 
 		if(PreparePopupMenu(&ctrlClient, sSelectedUser, &Mnu )) {
-			if(sSelectedUser == _T("")) {
+			if(sSelectedUser.empty()) {
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				if(copyMenu != NULL) copyMenu.DestroyMenu();
 				if(grantMenu != NULL) grantMenu.DestroyMenu();
@@ -1420,7 +1422,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 	} else {
 		int sel;
 		UserInfo* u = NULL;
-		if (sSelectedUser != _T("")) {
+		if (!sSelectedUser.empty()) {
 			sel = ctrlUsers.findItem(sSelectedUser);
 			if ( sel >= 0 ) { 
 				u = (UserInfo*)ctrlUsers.getItemData(sel);
@@ -1935,7 +1937,7 @@ LRESULT HubFrame::onRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return 1;
 }
 
-bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
+bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMenu ) {
 	if (copyMenu.m_hMenu != NULL) {
 		copyMenu.DestroyMenu();
 		copyMenu.m_hMenu = NULL;
@@ -1973,8 +1975,8 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 	pMenu->CreatePopupMenu();
 		
     bool bIsChat = (pCtrl == ((CWindow*)&ctrlClient));
-	if(sNick == _T("") && bIsChat == true) {
-		if(ChatCtrl::sSelectedIP != _T("")) {
+	if(bIsChat && sNick.empty()) {
+		if(!ChatCtrl::sSelectedIP.empty()) {
 			pMenu->InsertSeparator(0, TRUE, Text::fromT(ChatCtrl::sSelectedIP));
 			pMenu->AppendMenu(MF_STRING, IDC_WHOIS_IP, (CTSTRING(WHO_IS) + ChatCtrl::sSelectedIP).c_str() );
 			if ( client->isOp() ) {
@@ -1987,7 +1989,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 		} else pMenu->InsertSeparator(0, TRUE, "Text");
 		pMenu->AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
 		pMenu->AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
-		if(sSelectedURL != _T("")) 
+		if(!sSelectedURL.empty()) 
   			pMenu->AppendMenu(MF_STRING, IDC_COPY_URL, CTSTRING(COPY_URL));
 		pMenu->AppendMenu(MF_SEPARATOR);
 		pMenu->AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CTSTRING(SELECT_ALL));
@@ -1998,11 +2000,10 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 		if ( ctrlClient.GetAutoScroll() )
 			pMenu->CheckMenuItem(IDC_AUTOSCROLL_CHAT, MF_BYCOMMAND | MF_CHECKED);
 	} else {
-		if(sNick != _T("")) {
+		if(!sNick.empty()) {
 		    bool bIsMe = (sNick == Text::toT(client->getMyNick()));
 			// Jediny nick
-			tstring sTmp = TSTRING(USER) + _T(" ") + sNick;
-			pMenu->InsertSeparator(0, TRUE, Text::fromT(sTmp));
+			pMenu->InsertSeparator(0, TRUE, Text::fromT(sNick));
 
 			if(bIsChat) {
 				if(!BOOLSETTING(LOG_PRIVATE_CHAT)) {
@@ -2051,9 +2052,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, tstring& sNick, OMenu *pMenu ) {
 			if(bIsChat == false) {
 				// Pocet oznacenych
 				int iCount = ctrlUsers.GetSelectedCount();
-				TCHAR sTmp[256];
-				_stprintf(sTmp, _T("%i %s"), iCount, CTSTRING(HUB_USERS));
-				pMenu->InsertSeparator(0, TRUE, Text::fromT(sTmp));
+				pMenu->InsertSeparator(0, TRUE, Util::toString(iCount) + " " + STRING(HUB_USERS));
 			}
 			if (ctrlUsers.GetSelectedCount() <= 25) {
 				pMenu->AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
@@ -2115,7 +2114,7 @@ LRESULT HubFrame::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(sSelectedUser == _T("")) {
+	if(sSelectedUser.empty()) {
 		// No nick selected
 		return 0;
 	}
@@ -2144,7 +2143,7 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if ( !client->isConnected() )
 		return 0;
 
-	if(sSelectedUser != _T("")) {
+	if(!sSelectedUser.empty()) {
 		sUsers = sSelectedUser.c_str();
 	} else {
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
@@ -2235,7 +2234,7 @@ LRESULT HubFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
 	UserInfo* ui = NULL;
-	if(sSelectedUser != _T("")) {
+	if(!sSelectedUser.empty()) {
 		int k = ctrlUsers.findItem(sSelectedUser);
 		if(k != -1) ui = ctrlUsers.getItemData(k);
 	} else {

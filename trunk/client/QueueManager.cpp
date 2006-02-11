@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@
 #include "DirectoryListing.h"
 
 #include "FileChunksInfo.h"
-#include "pme.h"
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
 #include "UploadManager.h"
@@ -254,13 +253,18 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
 
+		// We prefer to search for things that are not running...
+		if((cand != NULL) && (q->getStatus() == QueueItem::STATUS_RUNNING)) 
+			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST))
 			continue;
         // No paused downloads
 		if(q->getPriority() == QueueItem::PAUSED)
 			continue;
-
+		// No files that already have more than AUTO_SEARCH_LIMIT online sources
+		if(q->countOnlineUsers() >= SETTING(AUTO_SEARCH_LIMIT))
+			continue;
 		// No files without TTH
 		if(q->getTTH() == NULL)
 			continue;
@@ -272,6 +276,9 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 			continue;
 
 		cand = q;
+
+		if(cand->getStatus() != QueueItem::STATUS_RUNNING)
+			break;
 	}
 	return cand;
 }
@@ -286,6 +293,11 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
+	} else if(cand->getStatus() == QueueItem::STATUS_RUNNING) {
+		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
+		if(cand2 != NULL && (cand2->getStatus() != QueueItem::STATUS_RUNNING)) {
+			cand = cand2;
+		}
 	}
 	return cand;
 }
@@ -629,15 +641,6 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
     
 	string target = checkTarget(aTarget, aSize, aFlags);
 
-	// Check if it's a zero-byte file, if so, create and return...
-	if(aSize == 0) {
-		if(!BOOLSETTING(SKIP_ZERO_BYTE)) {
-			File::ensureDirectory(target);
-			File f(target, File::WRITE, File::CREATE);
-		}
-		return;
-	}
-
 	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getIdentity(aUser).getHubUrl())) {
 		throw QueueException(STRING(NO_DOWNLOADS_FROM_PASSIVE));
 	}
@@ -658,21 +661,21 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 		if(q == NULL)
 			q = fileQueue.find(target);
 
+		// Check if it's a zero-byte file, if so, create and return...
+		if(aSize == 0) {
+			if(q == NULL && !BOOLSETTING(SKIP_ZERO_BYTE)) {
+				File::ensureDirectory(target);
+				File f(target, File::WRITE, File::CREATE);
+			}
+			return;
+		}
+
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
 			newItem = true;
 		} else {
-			// first source set length
-			if(q->getSize() == 0 && root && q->getTTH() && (*root == *q->getTTH())){
-				FileChunksInfo::Ptr fi = FileChunksInfo::Get(q->getTempTarget());
-				if(fi){
-					fi->setFileSize(aSize);
-					q->setSize(aSize);
-				}
-			}
-
 			if(q->getSize() != aSize) {
 				throw QueueException(STRING(FILE_WITH_DIFFERENT_SIZE));
 			}
@@ -783,6 +786,8 @@ bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser
 	} else {
 		wantConnection = false;
 	}
+
+	aUser->setFlag(User::SAVE_NICK);
 
 	fire(QueueManagerListener::SourcesUpdated(), qi);
 	setDirty();
@@ -1282,7 +1287,7 @@ void QueueManager::processList(const string& name, User::Ptr& user, int flags) {
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
 			AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
 		sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(dirList));
-		LogManager::getInstance()->message(user->getFirstNick() + ": " + string(tmp), true);			
+		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + string(tmp), true);			
 	}
 }
 
@@ -1483,14 +1488,11 @@ void QueueManager::saveQueue() throw() {
 
 	try {
 		
-#define STRINGLEN(n) n, sizeof(n)-1
-#define CHECKESCAPE(n) SimpleXML::escape(n, tmp, true)
-
 		File ff(getQueueFile() + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
 		
 		f.write(SimpleXML::utf8Header);
-		f.write(STRINGLEN("<Downloads Version=\"" VERSIONSTRING "\">\r\n"));
+		f.write(LIT("<Downloads Version=\"" VERSIONSTRING "\">\r\n"));
 		string tmp;
 		string b32tmp;
 
@@ -1499,66 +1501,62 @@ void QueueManager::saveQueue() throw() {
 			for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 				QueueItem* qi = i->second;
 				if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
-					f.write(STRINGLEN("\t<Download Target=\""));
-					f.write(CHECKESCAPE(qi->getTarget()));
-					f.write(STRINGLEN("\" Size=\""));
+					f.write(LIT("\t<Download Target=\""));
+				f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
+					f.write(LIT("\" Size=\""));
 					f.write(Util::toString(qi->getSize()));
-					f.write(STRINGLEN("\" Priority=\""));
+					f.write(LIT("\" Priority=\""));
 					f.write(Util::toString((int)qi->getPriority()));
 					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->chunkInfo) {
-						f.write(STRINGLEN("\" FreeBlocks=\""));
+						f.write(LIT("\" FreeBlocks=\""));
 						f.write(qi->chunkInfo->getFreeChunksString());
-						f.write(STRINGLEN("\" VerifiedParts=\""));
+						f.write(LIT("\" VerifiedParts=\""));
 						f.write(qi->chunkInfo->getVerifiedBlocksString());
 					}
-					f.write(STRINGLEN("\" Added=\""));
+					f.write(LIT("\" Added=\""));
 					f.write(Util::toString(qi->getAdded()));
 					if(qi->getTTH() != NULL) {
 						b32tmp.clear();
-						f.write(STRINGLEN("\" TTH=\""));
+						f.write(LIT("\" TTH=\""));
 						f.write(qi->getTTH()->toBase32(b32tmp));
 					}
 					if(qi->getDownloadedBytes() > 0) {
-						f.write(STRINGLEN("\" TempTarget=\""));
-						f.write(CHECKESCAPE(qi->getTempTarget()));
-						f.write(STRINGLEN("\" Downloaded=\""));
+						f.write(LIT("\" TempTarget=\""));
+					f.write(SimpleXML::escape(qi->getTempTarget(), tmp, true));
+						f.write(LIT("\" Downloaded=\""));
 						f.write(Util::toString(qi->getDownloadedBytes()));
 					}
-					f.write(STRINGLEN("\" AutoPriority=\""));
+					f.write(LIT("\" AutoPriority=\""));
 					f.write(Util::toString(qi->getAutoPriority()));
 					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-						f.write(STRINGLEN("\" MaxSegments=\""));
+						f.write(LIT("\" MaxSegments=\""));
 						f.write(Util::toString(qi->getMaxSegments()));
 					}
 	
-					f.write(STRINGLEN("\">\r\n"));
+					f.write(LIT("\">\r\n"));
 	
 					for(QueueItem::Source::List::const_iterator j = qi->sources.begin(); j != qi->sources.end(); ++j) {
 						QueueItem::Source* s = *j;
 
 						if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 
-						if(!s->getUser()->getCID().isZero()) {
-							s->getUser()->setFlag(User::SAVE_NICK);
-							f.write(STRINGLEN("\t\t<Source CID=\""));
-							f.write(s->getUser()->getCID().toBase32());
-						} else {
-							f.write(STRINGLEN("\t\t<Source Nick=\""));
-							f.write(CHECKESCAPE(s->getUser()->getFirstNick()));
-						}
+						f.write(LIT("\t\t<Source CID=\""));
+						f.write(s->getUser()->getCID().toBase32());
+
 						if(!s->getPath().empty() && (!s->getUser()->isSet(User::TTH_GET) || !qi->getTTH()) ) {
-							f.write(STRINGLEN("\" Path=\""));
-							f.write(CHECKESCAPE(s->getPath()));
-							f.write(STRINGLEN("\" Utf8=\""));
+							f.write(LIT("\" Path=\""));
+						f.write(SimpleXML::escape(s->getPath(), tmp, true));
+							f.write(LIT("\" Utf8=\""));
 							f.write(s->isSet(QueueItem::Source::FLAG_UTF8) ? "1" : "0", 1);
 						}
-						f.write(STRINGLEN("\"/>\r\n"));
+						f.write(LIT("\"/>\r\n"));
 					}
 
-					f.write(STRINGLEN("\t</Download>\r\n"));
+					f.write(LIT("\t</Download>\r\n"));
 				}
 			}
 		}
+		
 		f.write("</Downloads>\r\n");
 		f.flush();
 		ff.close();
@@ -1674,16 +1672,15 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			if(!simple)
 				cur = qi;
 		} else if(cur != NULL && name == sSource) {
-			const string& nick = getAttrib(attribs, sNick, 0);
-			const string& cid = getAttrib(attribs, sCID, 1);
+			const string& cid = getAttrib(attribs, sCID, 0);
+			if(cid.length() != 39) {
+				// Skip loading this source - sorry old users
+				return;
+			}
 			const string& path = getAttrib(attribs, sPath, 1);
 			const string& utf8 = getAttrib(attribs, sUtf8, 2);
 			bool isUtf8 = (utf8 == "1");
-			User::Ptr user;
-			if(!cid.empty())
-				user = ClientManager::getInstance()->getUser(CID(cid));
-			else
-				user = ClientManager::getInstance()->getLegacyUser(nick);
+			User::Ptr user = ClientManager::getInstance()->getUser(CID(cid));
 
 			try {
 				if(qm->addSource(cur, path, user, 0, isUtf8) && user->isOnline())
@@ -1723,11 +1720,12 @@ void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
 			// Size compare to avoid popular spoof
 			bool found = (*qi->getTTH() == *sr->getTTH()) && (qi->getSize() == sr->getSize());
 
-			if(found) {
+			if(found && !qi->isSource(sr->getUser())) {
 				try {
-					wantConnection = addSource(qi, sr->getFile(), sr->getUser(), 0, false);
-					added = true;
 					users = qi->countOnlineUsers();
+					if(!BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) || (users >= SETTING(MAX_AUTO_MATCH_SOURCES)))
+						wantConnection = addSource(qi, sr->getFile(), sr->getUser(), 0, false);
+					added = true;
 				} catch(const Exception&) {
 					// ...
 				}

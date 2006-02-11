@@ -148,11 +148,6 @@ public:
 		return (*currentChild)->data;
 	}
 
-	StringList getChildAttribs() {
-		checkChildSelected();
-		return (*currentChild)->getAttribs();
-	}
-
 	const string& getChildAttrib(const string& aName, const string& aDefault = Util::emptyString) throw(SimpleXMLException) {
 		checkChildSelected();
 		return (*currentChild)->getAttrib(aName, aDefault);
@@ -232,15 +227,6 @@ private:
 			StringPairIter i = find_if(attribs.begin(), attribs.end(), CompareFirst<string,string>(aName));
 			return (i == attribs.end()) ? aDefault : i->second; 
 		}
-
-		StringList getAttribs() {
-			StringList d;
-			for(StringPairList::const_iterator i = attribs.begin(); i != attribs.end(); ++i) {
-				d.push_back(i->first);
-			}
-			return d;
-		}
-
 		void toXML(int indent, OutputStream* f);
 		
 		void appendAttribString(string& tmp);

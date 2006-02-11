@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -574,7 +574,7 @@ void FavoriteManager::load(SimpleXML* aXml) {
 			const string& nick = aXml->getChildAttrib("Nick");
 			const string& hubUrl = aXml->getChildAttrib("URL");
 
-			if(cid.empty()) {
+			if(cid.length() != 39) {
 				if(nick.empty() || hubUrl.empty())
 					continue;
 				u = ClientManager::getInstance()->getUser(nick, hubUrl);
@@ -737,8 +737,10 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
         if( (uc.getCtx() & ctx) && 
-			(uc.getHub().empty() || (op && uc.getHub() == "op") ||
-			(find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end())) )
+			(	uc.getHub().empty() ||
+				 (op && uc.getHub() == "op") ||
+				(find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end())
+			) )
 		{
 			lst.push_back(*i);
 		}

@@ -54,6 +54,7 @@
 #define IDD_UPLOADPAGE                  212
 #define IDB_TOOLBAR                     213
 #define IDD_APPEARANCEPAGE              213
+#define IDR_FLATTAB                     214
 #define IDR_PUBLICHUBS                  215
 #define IDR_SEARCH                      216
 #define IDR_FAVORITES                   217
@@ -511,11 +512,14 @@
 #define IDC_ROLLBACK_SPIN               1302
 #define IDC_FIREWALL_UPNP               1303
 #define IDC_PRIO_LOW_SIZE               1303
+#define IDC_SHUTDOWNACTION              1303
 #define IDC_FIREWALL_NAT                1304
 #define IDC_SETTINGS_PRIO_HIGHEST       1304
 #define IDC_READ_SPIN                   1304
+#define IDC_POPUPGROUP                  1304
 #define IDC_FIREWALL_PASSIVE            1305
 #define IDC_SETTINGS_PRIO_HIGH          1305
+#define IDC_AUTO_SEARCH_LIMIT_SPIN      1305
 #define IDC_DIRECT_OUT                  1306
 #define IDC_SETTINGS_PRIO_NORMAL        1306
 #define IDC_TAB_SPIN                    1306
@@ -551,6 +555,8 @@
 #define IDC_SSL_TRUSTED_CERTIFICATES_PATH 1415
 #define IDC_AUTO_REFRESH_TIME           1419
 #define IDC_SETTINGS_AUTO_REFRESH_TIME  1420
+#define IDC_AUTO_SEARCH_LIMIT           1421
+#define IDC_SETTINGS_AUTO_SEARCH_LIMIT  1422
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447
@@ -767,7 +773,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1302
+#define _APS_NEXT_CONTROL_VALUE         1306
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

@@ -718,7 +718,7 @@ private:
 
 class FlatTabCtrl : public FlatTabCtrlImpl<FlatTabCtrl> {
 public:
-	DECLARE_FRAME_WND_CLASS_EX(GetWndClassName(), IDR_QUEUE, 0, COLOR_3DFACE);
+	DECLARE_FRAME_WND_CLASS_EX(GetWndClassName(), IDR_FLATTAB, 0, COLOR_3DFACE);
 };
 
 template <class T, int C = RGB(128, 128, 128), long I = 0, long I_state = 0, class TBase = CMDIWindow, class TWinTraits = CMDIChildWinTraits>

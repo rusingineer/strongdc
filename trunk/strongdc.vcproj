@@ -75,11 +75,13 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Deleting old pdb file..."
+				CommandLine="cmd.exe /c del &quot;$(SolutionDir)compiled\$(ProjectName).pdb&quot;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="unicows.lib ws2_32.lib winmm.lib powrprof.lib"
+				AdditionalDependencies="libunicows.lib ws2_32.lib winmm.lib powrprof.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -126,6 +128,7 @@
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -180,11 +183,13 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Deleting old pdb file..."
+				CommandLine="cmd.exe /c del &quot;$(SolutionDir)compiled\$(ProjectName).pdb&quot;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="unicows.lib ws2_32.lib winmm.lib powrprof.lib"
+				AdditionalDependencies="libunicows.lib ws2_32.lib winmm.lib powrprof.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				Version=""
 				LinkIncremental="1"
@@ -194,7 +199,7 @@
 				DelayLoadDLLs="dbghelp.dll;oleaut32.dll;winmm.dll"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)compiled/$(ProjectName).pdb"
-				GenerateMapFile="true"
+				GenerateMapFile="false"
 				MapFileName=""
 				SubSystem="2"
 				OptimizeReferences="2"

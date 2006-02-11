@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,13 +51,15 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aU
 			i->second->MDIActivate(i->second->m_hWnd);
 		}
 	} else {
+		HWND aHWND = NULL;
 		DirectoryListingFrame* frame = new DirectoryListingFrame(aUser, aSpeed);
 		if(BOOLSETTING(POPUNDER_FILELIST)) {
-			WinUtil::hiddenCreateEx(frame);
+			aHWND = WinUtil::hiddenCreateEx(frame);
 		} else {
-			frame->CreateEx(WinUtil::mdiClient);
+			aHWND = frame->CreateEx(WinUtil::mdiClient);
 		}
-		frame->loadFile(aFile);
+		if(aHWND != 0)
+			frame->loadFile(aFile);
 	}
 }
 
@@ -107,7 +109,6 @@ void DirectoryListingFrame::loadXML(const string& txt) {
 }
 
 LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 	statusContainer.SubclassWindow(ctrlStatus.m_hWnd);
@@ -128,7 +129,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	for(int j = 0; j < COLUMN_LAST; j++) 
 	{
 		int fmt = ((j == COLUMN_SIZE) || (j == COLUMN_EXACTSIZE) || (j == COLUMN_TYPE)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 
@@ -160,8 +161,8 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	SetSplitterPanes(ctrlTree.m_hWnd, ctrlList.m_hWnd);
 	m_nProportionalPos = 2500;
-	
-	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(dl->getUser()->getFirstNick()).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);
+	string nick = ClientManager::getInstance()->getNicks(dl->getUser()->getCID())[0];
+	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(nick).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);
 
 	memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[STATUS_FILE_LIST_DIFF] = WinUtil::getTextWidth(TSTRING(FILE_LIST_DIFF), m_hWnd) + 8;
@@ -624,7 +625,6 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 	fileMenu.RemoveMenu(IDC_GO_TO_DIRECTORY, MF_BYCOMMAND);
 
 	if (reinterpret_cast<HWND>(wParam) == ctrlList && ctrlList.GetSelectedCount() > 0) {
-		User::Ptr pUser = dl->getUser();
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
 		if(pt.x == -1 && pt.y == -1) {

@@ -31,7 +31,7 @@
 
 static void checkBuggyLibrary(PCSTR library) {
 	map<string, string> libraries;
-	libraries.insert(make_pair("Vslp", "V-One Smartpass"));
+	libraries.insert(make_pair("Vlsp", "V-One Smartpass"));
 	libraries.insert(make_pair("mclsp", "McAfee AV"));
 	libraries.insert(make_pair("Niphk", "Norman AV"));
 	libraries.insert(make_pair("aslsp", "Aventail Corporation VPN"));
@@ -56,6 +56,7 @@ static void checkBuggyLibrary(PCSTR library) {
 	libraries.insert(make_pair("UPS10", "Uniscribe Unicode Script Processor Library"));
 	libraries.insert(make_pair("SOCKS32", "Sockscap [?]"));
 	libraries.insert(make_pair("___j", "Worm: W32.Maslan.C@mm"));
+	libraries.insert(make_pair("nvappfilter", "NVidia Nforce Network Access Manager"));
 
 	for(map<string, string>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
 		string lib = i->first; string app = i->second;
@@ -64,6 +65,7 @@ static void checkBuggyLibrary(PCSTR library) {
 			_stprintf(buf, CTSTRING(LIB_CRASH), Text::toT(app).c_str());
 		
 			MessageBox(0, buf, _T("Unhandled exception"), MB_OK);
+			exit(1);
 		}
 	}
 }
@@ -308,13 +310,14 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 	return ret;
 }
 
-void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD esp, DWORD ebp )
+tstring StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD esp, DWORD ebp )
 {
 	STACKFRAME     callStack;
 	BOOL           bResult;
 	TCHAR          symInfo[BUFFERSIZE] = _T("?");
 	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
 	HANDLE         hProcess = GetCurrentProcess();
+	tstring		   vypis;
 
 	// If it's not this thread, let's suspend it, and resume it at the end
 	if ( hThread != GetCurrentThread() )
@@ -322,7 +325,8 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 		{
 			// whaaat ?!
 			f.write(LIT("No call stack\r\n"));
-			return;
+			vypis = LIT(_T("No call stack\r\n"));
+			return vypis;
 		}
 
 		::ZeroMemory( &callStack, sizeof(callStack) );
@@ -342,72 +346,6 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD 
 		f.write(LIT(": "));
 		f.write(Text::fromT(symInfo));
 		f.write(LIT("\r\n"));
-
-		// Max 100 stack lines...
-		for( ULONG index = 0; index < 100; index++ ) 
-		{
-			bResult = StackWalk(
-				IMAGE_FILE_MACHINE_I386,
-				hProcess,
-				hThread,
-				&callStack,
-				NULL, 
-				NULL,
-				SymFunctionTableAccess,
-				SymGetModuleBase,
-				NULL);
-
-			if ( index == 0 )
-				continue;
-
-			if( !bResult || callStack.AddrFrame.Offset == 0 ) 
-				break;
-
-			GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
-			GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
-
-			f.write(Text::fromT(srcInfo));
-			f.write(LIT(": "));
-			f.write(Text::fromT(symInfo));
-			f.write(LIT("\r\n"));
-		}
-
-		if ( hThread != GetCurrentThread() )
-			ResumeThread( hThread );
-
-}
-
-string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DWORD ebp )
-{
-	STACKFRAME     callStack;
-	BOOL           bResult;
-	TCHAR          symInfo[BUFFERSIZE] = _T("?");
-	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
-	HANDLE         hProcess = GetCurrentProcess();
-
-	tstring	vypis;
-
-	// If it's not this thread, let's suspend it, and resume it at the end
-	if ( hThread != GetCurrentThread() )
-		if ( SuspendThread( hThread ) == -1 )
-		{
-			// whaaat ?!
-			vypis = LIT(_T("No call stack\r\n"));
-			return Text::fromT(vypis);
-		}
-
-		::ZeroMemory( &callStack, sizeof(callStack) );
-		callStack.AddrPC.Offset    = eip;
-		callStack.AddrStack.Offset = esp;
-		callStack.AddrFrame.Offset = ebp;
-		callStack.AddrPC.Mode      = AddrModeFlat;
-		callStack.AddrStack.Mode   = AddrModeFlat;
-		callStack.AddrFrame.Mode   = AddrModeFlat;
-
-		vypis = lpszMessage;
-
-		GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
-		GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
 		vypis += srcInfo;
 		vypis += LIT(_T(": "));
@@ -437,6 +375,11 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 			GetFunctionInfoFromAddresses( callStack.AddrPC.Offset, callStack.AddrFrame.Offset, symInfo );
 			GetSourceInfoFromAddress( callStack.AddrPC.Offset, srcInfo );
 
+			f.write(Text::fromT(srcInfo));
+			f.write(LIT(": "));
+			f.write(Text::fromT(symInfo));
+			f.write(LIT("\r\n"));
+
 			vypis += srcInfo;
 			vypis += LIT(_T(": "));
 			vypis += symInfo;
@@ -444,7 +387,8 @@ string StackTrace( HANDLE hThread, LPCTSTR lpszMessage, DWORD eip, DWORD esp, DW
 		}
 		if ( hThread != GetCurrentThread() )
 			ResumeThread( hThread );
-		return Text::fromT(vypis);
+		
+		return vypis;
 }
 
 #endif //_DEBUG && _WIN32

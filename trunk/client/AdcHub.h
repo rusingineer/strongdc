@@ -48,7 +48,6 @@ public:
 	virtual void cheatMessage(const string&) { } 
 
 	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
-	//virtual int64_t getAvailable() const;
 
 	template<typename T> void handle(T, AdcCommand&) { 
 		//Speaker<AdcHubListener>::fire(t, this, c);
@@ -69,7 +68,7 @@ public:
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
-	void refreshUserList(bool /*unknownOnly = false */) { }
+	void refreshUserList(bool) { }
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
 private:
@@ -104,6 +103,8 @@ private:
 	static const string CLIENT_PROTOCOL;
 	static const string SECURE_CLIENT_PROTOCOL;
 	static const string ADCS_FEATURE;
+	static const string TCP4_FEATURE;
+	static const string UDP4_FEATURE;
 	 
 	virtual string checkNick(const string& nick);
 

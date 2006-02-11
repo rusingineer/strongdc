@@ -68,7 +68,7 @@ void ChatCtrl::AdjustTextSize(LPCTSTR lpstrTextToAdd) {
 	SendMessage(EM_SETEVENTMASK, 0, (LPARAM)ENM_MOUSEEVENTS);
 }
 
-void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, bool bMyMess, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
 	long lSelBeginSaved, lSelEndSaved;
 	GetSel(lSelBeginSaved, lSelEndSaved);
@@ -86,7 +86,7 @@ void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sT
 	if(sTime != Util::emptyStringT) {
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(sTime, false);
+		ReplaceSel(sTime.c_str(), false);
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelBegin, lSelEnd - 1);
 		SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
@@ -274,7 +274,7 @@ void ChatCtrl::AppendText(Identity& i, LPCTSTR sMyNick, bool bMyMess, LPCTSTR sT
 	EndRedrawAppendTextOnly();
 }
 
-void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor, int iAuthorLen, bool isMe, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor, int iAuthorLen, bool isMe, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
 	long lSelBeginSaved, lSelEndSaved;
 	GetSel(lSelBeginSaved, lSelEndSaved);
@@ -292,7 +292,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 	if(sTime != Util::emptyStringT) {
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(sTime, false);
+		ReplaceSel(sTime.c_str(), false);
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelBegin, lSelEnd - 1);
 		SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
@@ -310,7 +310,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_PRECISE);
 		SetSel(lSelEnd, lSelEnd);
 		ReplaceSel(msg.c_str(), false);
-		if(_tcsicmp(sMyNick, sAuthor) == 0) {
+		if(_tcsicmp(sMyNick.c_str(), sAuthor) == 0) {
 			myMess = true;
 			SetSel(lSelBegin, lSelBegin+iLen+1);
 			SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
@@ -443,7 +443,7 @@ void ChatCtrl::AppendText(LPCTSTR sMyNick, LPCTSTR sTime, LPCTSTR sMsg, CHARFORM
 	EndRedrawAppendTextOnly();
 }
 
-void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor) {
+void ChatCtrl::AppendTextOnly(const tstring& sMyNick, LPCTSTR sText, CHARFORMAT2& cf, LPCTSTR sAuthor) {
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
@@ -460,7 +460,7 @@ void ChatCtrl::AppendTextOnly(LPCTSTR sMyNick, LPCTSTR sText, CHARFORMAT2& cf, L
 	long lMyNickStart = -1, lMyNickEnd = -1;
 	CAtlString sMsgLower = sText;
 	sMsgLower.MakeLower();
-	CAtlString sNick = sMyNick;
+	CAtlString sNick = sMyNick.c_str();
 	if(myMess == true) {
 		// Moje vlastni zprava
 		lSelEnd = GetTextLengthEx(GTL_PRECISE);

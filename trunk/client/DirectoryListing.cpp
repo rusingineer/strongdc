@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ User::Ptr DirectoryListing::getUserFromFilename(const string& fileName) {
 	}
 
 	size_t n = name.length() - (i + 1);
-	// CID's always 13 chars long...
-	if(n != 13)
+	// CID's always 39 chars long...
+	if(n != 39)
 		return NULL;
 
 	CID cid(name.substr(i + 1));

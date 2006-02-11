@@ -166,10 +166,7 @@ private:
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
 
-	virtual ~ConnectionManager() throw() { 
-		shutdown();
-		TimerManager::getInstance()->removeListener(this);
-	};
+	virtual ~ConnectionManager() throw() { shutdown(); };
 	
 	UserConnection* getConnection(bool aNmdc, bool secure) throw();
 	void putConnection(UserConnection* aConn);

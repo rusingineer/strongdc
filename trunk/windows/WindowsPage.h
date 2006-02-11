@@ -66,4 +66,3 @@ protected:
  * @file
  * $Id$
  */
-

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -189,7 +189,7 @@ void SearchManager::disconnect() throw() {
 	}
 }
 
-#define BUFSIZE 16384
+#define BUFSIZE 8192
 int SearchManager::run() {
 	
 	AutoArray<u_int8_t> buf(BUFSIZE);
@@ -235,7 +235,6 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 			return;
 		}
 		string nick = Text::acpToUtf8(x.substr(i, j-i));
-		//User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
 		i = j + 1;
 
 		// A file has 2 0x05, a directory only one
@@ -288,24 +287,27 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 			return;
 		}
 		string hubName = Text::acpToUtf8(x.substr(i, j-i));
-		string tth;
-		if(hubName.compare(0, 4, "TTH:") == 0) {
-			tth = hubName.substr(4);
-			/*StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
-			hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);*/
-			hubName = Util::emptyString;
-		}
 		i = j + 2;
 		if( (j = x.rfind(')')) == string::npos) {
 			return;
 		}
 		string hubIpPort = x.substr(i, j-i);
 		string url = ClientManager::getInstance()->findHub(hubIpPort);
-		SearchResult* sr = new SearchResult(NULL, type, slots, freeSlots, size,
-			file, hubName, url, remoteIp, tth.empty() ? NULL : new TTHValue(tth), false);
 
-		queue.addResult(sr, nick);
-		queue.s.signal();
+		User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
+		if(!user)
+			return;
+
+		string tth;
+		if(hubName.compare(0, 4, "TTH:") == 0) {
+			tth = hubName.substr(4);
+			StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
+			hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
+		}
+
+		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
+			file, hubName, url, remoteIp, tth.empty() ? NULL : new TTHValue(tth), false);
+		queue.addResult(sr);
 	} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
 		AdcCommand c(x.substr(0, x.length()-1));
 		if(c.getParameters().empty())
@@ -412,6 +414,10 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		}
 
 		User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
+		if(!user) {
+			dcdebug("Search result from unknown legacy user");
+			return;
+		}
 		PartsInfo outPartialInfo;
 		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
 		

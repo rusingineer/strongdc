@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -693,24 +693,6 @@ string::size_type Util::findSubString(const string& aString, const string& aSubS
 		}
 	}
 	return (string::size_type)string::npos;
-}
-
-int Util::strcmp(const char* a, const char* b) {
-	while(*a) {
-			wchar_t ca = 0, cb = 0;
-			int na = Text::utf8ToWc(a, ca);
-			int nb = Text::utf8ToWc(b, cb);
-			if(ca != cb) {
-			return (int)ca - (int)cb;
-			}
-		a += abs(na);
-		b += abs(nb);
-	}
-	wchar_t ca = 0, cb = 0;
-	Text::utf8ToWc(a, ca);
-	Text::utf8ToWc(b, cb);
-
-	return (int)ca - (int)cb;
 }
 
 int Util::stricmp(const char* a, const char* b) {

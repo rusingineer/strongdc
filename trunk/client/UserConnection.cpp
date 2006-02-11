@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -297,7 +297,6 @@ void UserConnection::connect(const string& aServer, short aPort) throw(SocketExc
 
 void UserConnection::accept(const Socket& aServer) throw(SocketException, ThreadException) {
 	dcassert(!socket);
-
 	socket = BufferedSocket::getSocket(0);
 	socket->addListener(this);
 	socket->accept(aServer, secure);

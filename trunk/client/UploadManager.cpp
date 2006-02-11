@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -640,7 +640,7 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr&
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
 					reserveSlot(u->getUser());
-				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + aUser->getFirstNick(), true);
+				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(aUser->getCID())), true);
 			}
 		}
 	}

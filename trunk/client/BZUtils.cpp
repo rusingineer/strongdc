@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include "Exception.h"
 #include "ResourceManager.h"
 
-BZFilter::BZFilter() throw(Exception) {
+BZFilter::BZFilter() {
 	memset(&zs, 0, sizeof(zs));
 
 	if(BZ2_bzCompressInit(&zs, 9, 0, 30) != BZ_OK) {
@@ -36,7 +36,7 @@ BZFilter::~BZFilter() {
 	BZ2_bzCompressEnd(&zs);
 }
 
-bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
+bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
 	if(outsize == 0)
 		return 0;
 
@@ -64,7 +64,7 @@ bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& out
 	}
 }
 
-UnBZFilter::UnBZFilter() throw(Exception) {
+UnBZFilter::UnBZFilter() {
 	memset(&zs, 0, sizeof(zs));
 
 	if(BZ2_bzDecompressInit(&zs, 0, 0) != BZ_OK) 
@@ -77,7 +77,7 @@ UnBZFilter::~UnBZFilter() {
 	BZ2_bzDecompressEnd(&zs);
 }
 
-bool UnBZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) throw(Exception) {
+bool UnBZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outsize) {
 	if(outsize == 0)
 		return 0;
 

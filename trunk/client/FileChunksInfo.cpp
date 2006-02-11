@@ -474,7 +474,7 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		string filename = Util::getAppPath() + aTree.getRoot().toBase32() + "." + Util::toString(start) + "." + Util::toString(end) + "." + "dat";
 		File f(filename, File::WRITE, File::CREATE | File::TRUNCATE);
 		f.write(data, len);
-	}catch(FileException e){
+	}catch(const FileException& e){
 		dcdebug("%s\n", e.getError().c_str());
 		dcassert(0);
 	}
@@ -485,8 +485,11 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 
 bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
 {
-    if(tthBlockSize != aTree.getBlockSize()) return true;
-
+	if(tthBlockSize != aTree.getBlockSize()) {
+		dcassert(tthBlockSize == aTree.getBlockSize());
+		dcdebug("%d != %d\n", tthBlockSize, aTree.getBlockSize());
+		return true;
+	}
 
 	// Convert to unverified blocks
 	vector<int64_t> CorruptedBlocks;

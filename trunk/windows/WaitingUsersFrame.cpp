@@ -61,7 +61,7 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	// column names, sizes
 	for (int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_TRANSFERRED || j == COLUMN_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
-		ctrlList.insertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
+		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 		
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
@@ -577,12 +577,7 @@ LRESULT WaitingUsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHan
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
 		// Let's draw a box if needed...
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_TEXT;
-		lvc.pszText = headerBuf;
-		lvc.cchTextMax = 128;
-		ctrlList.GetColumn(cd->iSubItem, &lvc);
-		if(_tcscmp(headerBuf, CTSTRING_I(columnNames[COLUMN_TRANSFERRED])) == 0 ) {
+		if(ctrlList.findColumn(cd->iSubItem) == COLUMN_TRANSFERRED) {
 			// draw something nice...
 				TCHAR buf[256];
 				UploadQueueItem *ii = (UploadQueueItem*)cd->nmcd.lItemlParam;

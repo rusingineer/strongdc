@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,7 @@ int ExListViewCtrl::moveItem(int oldPos, int newPos) {
 	GetItem(&lvi);
 	TStringList l;
 
-	int j;
-	for(j = 0; j < GetHeader().GetItemCount(); j++) {
+	for(int j = 0; j < GetHeader().GetItemCount(); j++) {
 		GetItemText(oldPos, j, buf, 512);
 		l.push_back(buf);
 	}
@@ -46,7 +45,7 @@ int ExListViewCtrl::moveItem(int oldPos, int newPos) {
 	lvi.iItem = newPos;
 	}
 	int i = InsertItem(&lvi);
-	j = 0;
+	int j = 0;
 	for(TStringIter k = l.begin(); k != l.end(); ++k, j++) {
 		SetItemText(i, j, k->c_str());
 	}
@@ -67,6 +66,7 @@ int ExListViewCtrl::moveItem(int oldPos, int newPos) {
 }
 
 int ExListViewCtrl::insert(TStringList& aList, int iImage, LPARAM lParam) {
+
 	TCHAR buf[128];
 	int loc = 0;
 	int count = GetItemCount();

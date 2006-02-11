@@ -136,15 +136,12 @@ public:
 		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(BOOLSETTING(SEARCH_ONLY_TTH)), searches(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
-
-		headerBuf = new TCHAR[128];
 		useGrouping = BOOLSETTING(GROUP_SEARCH_RESULTS);
 	}
 
 	virtual ~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
-		delete[] headerBuf;
 	}
 
 	LRESULT onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
@@ -266,7 +263,7 @@ public:
 	
 private:
 	class SearchInfo;
-	TCHAR * headerBuf;
+
 public:
 	TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; };
 
@@ -307,9 +304,11 @@ private:
 		SearchInfo::List subItems;
 
 		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), main(NULL) { 
+			resultsCount++;
 			sr->incRef(); update();
 		};
-		~SearchInfo() { 
+		~SearchInfo() {
+			resultsCount--;
 			sr->decRef(); 
 		};
 
@@ -478,8 +477,7 @@ private:
 		HUB_CHANGED,
 		HUB_REMOVED,
 		QUEUE_STATS,
-		SEARCH_START,
-		RESORT
+		SEARCH_START
 	};
 
 	tstring initialString;
@@ -550,6 +548,7 @@ private:
 	bool exactSize1;
 	bool useGrouping;
 	int64_t exactSize2;
+	static int64_t resultsCount;
 
 	CriticalSection cs;
 
@@ -574,7 +573,6 @@ private:
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
-	virtual void on(SearchManagerListener::Resort) throw();
 
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
@@ -588,7 +586,7 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
-	void addEntry(SearchInfo* item, int pos);
+	void addEntry(SearchInfo* item);
 	void updateSearchList();
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
