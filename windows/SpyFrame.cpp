@@ -142,7 +142,8 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			n = ++((it2->second).i);
 		}
 
-//		if (x->seeker.find("Hub:")) x->seeker = ClientManager::getInstance()->getIPNick(x->seeker.substr(0, x->seeker.find(':')));
+		if (x->seeker.find("Hub:")) x->seeker = ClientManager::getInstance()->getIPNick(x->seeker.substr(0, x->seeker.find(':')));
+		
 		int k;
 		for (k = 0; k < 3; ++k)
 			if (x->seeker == (searches[x->s].seekers)[k])

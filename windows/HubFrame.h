@@ -262,7 +262,7 @@ public:
 	}
 
 	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		client->disconnect(false);
+		client->disconnect(true);
 		clearUserList();
 		client->connect();
 		return 0;
@@ -445,7 +445,7 @@ private:
 	bool tabMenuShown;
 
 	typedef vector<pair<UpdateInfo, Speakers> > UpdateList;
-	typedef UpdateList::const_iterator UpdateIter;
+	typedef UpdateList::iterator UpdateIter;
 	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 

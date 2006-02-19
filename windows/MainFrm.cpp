@@ -105,8 +105,6 @@ DWORD WINAPI MainFrame::stopper(void* p) {
 		}
 	}
 
-	shutdown();
-	
 	mf->PostMessage(WM_CLOSE);	
 	return 0;
 }
@@ -955,9 +953,6 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			transferView.prepareClose();
 			
 			WebServerManager::getInstance()->removeListener(this);
-			TimerManager::getInstance()->removeListener(this);
-			QueueManager::getInstance()->removeListener(this);
-			LogManager::getInstance()->removeListener(this);
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
 			listQueue.shutdown();
@@ -1423,6 +1418,19 @@ int MainFrame::FileListQueue::run() {
 	}
 	return 0;
 }
+
+LRESULT MainFrame::onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	LogManager::getInstance()->removeListener(this);
+	QueueManager::getInstance()->removeListener(this);
+	TimerManager::getInstance()->removeListener(this);
+
+	if(bTrayIcon) {
+		updateTray(false);
+	}
+	bHandled = FALSE;
+	return 0;
+}
+
 /**
  * @file
  * $Id: MainFrm.cpp,v 1.20 2004/07/21 13:15:15 bigmuscle Exp

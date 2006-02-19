@@ -111,7 +111,7 @@ public:
 
 	Identity() { }
 	Identity(const User::Ptr& ptr, const string& aHubUrl) : user(ptr), hubUrl(aHubUrl) { }
-	Identity(const Identity& rhs) : user(rhs.user), hubUrl(rhs.hubUrl), info(rhs.info) { }
+	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), hubUrl(rhs.hubUrl), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { user = rhs.user; hubUrl = rhs.hubUrl; info = rhs.info; return *this; }
 
 #define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
@@ -203,7 +203,7 @@ public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
-	OnlineUser() : client(NULL), sid(0) { }
+	OnlineUser() : sid(0), client(NULL) { }
 	OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_);
 
 	operator User::Ptr&() { return user; }

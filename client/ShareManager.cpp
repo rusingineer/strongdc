@@ -791,9 +791,9 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 
 void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
 	// HACK for bug in hash_multimap
-	//pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
-	//for(HashFileIter j = range.first; j != range.second; ++j) {
-	for(HashFileIter j = tthIndex.find(const_cast<TTHValue*>(&tth)); j != tthIndex.end(); ++j) {
+	pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
+	for(HashFileIter j = range.first; j != range.second; ++j) {
+	//for(HashFileIter j = tthIndex.find(const_cast<TTHValue*>(&tth)); j != tthIndex.end(); ++j) {
 		if(*j->second == file) {
 			tthIndex.erase(j);
 			return;
@@ -822,11 +822,15 @@ void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, b
 		cached = loadCache();
 		initial = false;
 	}
-	start();
-	if(block && !cached) {
-		join();
-	} else {
-		setThreadPriority(Thread::LOW);
+	try {
+		start();
+		if(block && !cached) {
+			join();
+		} else {
+			setThreadPriority(Thread::LOW);
+		}
+	} catch(const ThreadException& e) {
+		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FAILED) + e.getError(), true);
 	}
 }
 
@@ -1067,10 +1071,10 @@ MemoryInputStream* ShareManager::getTree(const string& aFile) {
 }
 
 static const string& escaper(const string& n, string& tmp) {
-	if(SimpleXML::needsEscape(n, false, false)) {
+	if(SimpleXML::needsEscape(n, true, false)) {
 		tmp.clear();
 		tmp.append(n);
-		return SimpleXML::escape(tmp, false, false);
+		return SimpleXML::escape(tmp, true, false);
 	}
 	return n;
 }
@@ -1391,20 +1395,20 @@ ShareManager::AdcSearch::AdcSearch(const StringList& params) : include(&includeX
 			hasRoot = true;
 			root = TTHValue(p.substr(2));
 			return;
-		} else if(toCode('+', '+') == cmd) {
+		} else if(toCode('A', 'N') == cmd) {
 			includeX.push_back(StringSearch(p.substr(2)));		
-		} else if(toCode('-', '-') == cmd) {
+		} else if(toCode('N', 'O') == cmd) {
 			exclude.push_back(StringSearch(p.substr(2)));
 		} else if(toCode('E', 'X') == cmd) {
 			ext.push_back(p.substr(2));
-		} else if(toCode('>', '=') == cmd) {
+		} else if(toCode('G', 'E') == cmd) {
 			gt = Util::toInt64(p.substr(2));
-		} else if(toCode('<', '=') == cmd) {
+		} else if(toCode('L', 'E') == cmd) {
 			lt = Util::toInt64(p.substr(2));
-		} else if(toCode('=', '=') == cmd) {
+		} else if(toCode('E', 'Q') == cmd) {
 			lt = gt = Util::toInt64(p.substr(2));
-		} else if(toCode('D', 'O') == cmd) {
-			isDirectory = (p[2] != '0');
+		} else if(toCode('T', 'Y') == cmd) {
+			isDirectory = (p[2] == '2');
 		}
 	}
 }

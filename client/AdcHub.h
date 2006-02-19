@@ -57,6 +57,7 @@ public:
 	void sendUDP(const AdcCommand& cmd);
 
 	void handle(AdcCommand::SUP, AdcCommand& c) throw();
+	void handle(AdcCommand::SID, AdcCommand& c) throw();
 	void handle(AdcCommand::MSG, AdcCommand& c) throw();
 	void handle(AdcCommand::INF, AdcCommand& c) throw();
 	void handle(AdcCommand::GPA, AdcCommand& c) throw();
@@ -66,7 +67,6 @@ public:
 	void handle(AdcCommand::STA, AdcCommand& c) throw();
 	void handle(AdcCommand::SCH, AdcCommand& c) throw();
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
-
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); };
 	void refreshUserList(bool) { }
 

@@ -611,8 +611,8 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	int line = ctrlClient.LineFromChar(i);
 	int c = LOWORD(i) - ctrlClient.LineIndex(line);
 	int len = ctrlClient.LineLength(i) + 1;
-	if ( len < 3 )
-		return 0;
+//	if ( len < 3 )
+//		return 0;
 	TCHAR* buf = new TCHAR[len];
 	ctrlClient.GetLine(line, buf, len);
 	tstring x = tstring(buf, len-1);

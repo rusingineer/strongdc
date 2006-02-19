@@ -64,6 +64,12 @@ extern "C" void bz_internal_error(int errcode) {
 	dcdebug("bzip2 internal error: %d\n", errcode); 
 }
 
+#if defined(_WIN32) && _MSC_VER == 1400
+void WINAPI invalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
+	//do nothing, this exist because vs2k5 crt needs it not to crash on errors.
+}
+#endif
+
 int arrayutf[96] = {-61, -127, -60, -116, -60, -114, -61, -119, -60, -102, -61, -115, -60, -67, -59, -121, -61, -109, -59, -104, -59, -96, -59, -92, -61, -102, -59, -82, -61, -99, -59, -67, -61, -95, -60, -115, -60, -113, -61, -87, -60, -101, -61, -83, -60, -66, -59, -120, -61, -77, -59, -103, -59, -95, -59, -91, -61, -70, -59, -81, -61, -67, -59, -66, -61, -124, -61, -117, -61, -106, -61, -100, -61, -92, -61, -85, -61, -74, -61, -68, -61, -76, -61, -108, -60, -71, -60, -70, -60, -67, -60, -66, -59, -108, -59, -107};
 int arraywin[48] = {65, 67, 68, 69, 69, 73, 76, 78, 79, 82, 83, 84, 85, 85, 89, 90, 97, 99, 100, 101, 101, 105, 108, 110, 111, 114, 115, 116, 117, 117, 121, 122, 65, 69, 79, 85, 97, 101, 111, 117, 111, 111, 76, 108, 76, 108, 82, 114};
 
@@ -230,6 +236,11 @@ void Util::initialize() {
 	GetModuleFileName(NULL, buf, MAX_PATH);
 	appPath = Text::fromT(buf);
 	appPath.erase(appPath.rfind('\\') + 1);
+
+#if _MSC_VER == 1400
+	_set_invalid_parameter_handler(reinterpret_cast<_invalid_parameter_handler>(invalidParameterHandler));
+#endif
+
 #else // _WIN32
 	char* home = getenv("HOME");
 	if (home) {

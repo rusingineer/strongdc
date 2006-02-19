@@ -38,10 +38,14 @@ BufferedSocket::BufferedSocket(char aSeparator) throw() :
 separator(aSeparator), mode(MODE_LINE), 
 dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false)
 {
+	sockets++;
 }
+
+size_t BufferedSocket::sockets = 0;
 
 BufferedSocket::~BufferedSocket() throw() {
 	delete sock;
+	sockets--;
 }
 
 void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketException, ThreadException) {
@@ -225,7 +229,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		return;
 	dcassert(file != NULL);
 	size_t sockSize = (size_t)sock->getSocketOptInt(SO_SNDBUF);
-	size_t bufSize =  sockSize * 16;		// Perhaps make this a setting?
+	size_t bufSize = max(sockSize, (size_t)64*1024);
+	dcdebug("threadSendFile buffer size: %lu\n", bufSize);
 	AutoArray<u_int8_t> buf(bufSize);
 
 	UploadManager *um = UploadManager::getInstance();
@@ -250,30 +255,32 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		}
 
 		size_t done = 0;
+		size_t doneRead = 0;
 		while(done < actual) {
 			if(disconnecting)
 				return;
 
-			int w = sock->wait(POLL_TIMEOUT, Socket::WAIT_WRITE | Socket::WAIT_READ);
-			if(w & Socket::WAIT_READ) {
-				threadRead();
-			}
-			if(w & Socket::WAIT_WRITE) {
-				int written = sock->write(buf + done, min(sockSize, actual - done));
-				if(written > 0) {
-					done += written;
+			int written = sock->write(buf + done, min(sockSize, actual - done));
+			if(written > 0) {
+				done += written;
 
-					if (throttling) {
-						int32_t cycle_time = um->throttleCycleTime();
-						current = TimerManager::getTick();
-						int32_t sleep_time = cycle_time - (current - start);
-						if (sleep_time > 0 && sleep_time <= cycle_time) {
-							Thread::sleep(sleep_time);
-						}
+				if (throttling) {
+					int32_t cycle_time = um->throttleCycleTime();
+					current = TimerManager::getTick();
+					int32_t sleep_time = cycle_time - (current - start);
+					if (sleep_time > 0 && sleep_time <= cycle_time) {
+						Thread::sleep(sleep_time);
 					}
+				}
 
-					fire(BufferedSocketListener::BytesSent(), bytesRead > 0 ? written + (bytesRead - actual) : written, written);
-					bytesRead = 0;		// Make sure we only report the bytes we actually read just once...
+				size_t doneReadNow = static_cast<size_t>((static_cast<double>(done)/actual) * bytesRead);
+
+				fire(BufferedSocketListener::BytesSent(), doneReadNow - doneRead, written);
+				doneRead = doneReadNow;
+			} else if(written == -1) {
+				int w = sock->wait(POLL_TIMEOUT, Socket::WAIT_WRITE | Socket::WAIT_READ);
+				if(w & Socket::WAIT_READ) {
+					threadRead();
 				}	
 			}
 		}

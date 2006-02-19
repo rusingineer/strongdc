@@ -108,14 +108,14 @@ LRESULT GeneralPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 		COMBOBOXEXITEM cbitem = {CBEIF_TEXT|CBEIF_IMAGE|CBEIF_SELECTEDIMAGE};
 		tstring connType;
 		switch(i) {
-			case 0: q = 1; connType = _T("Modem"); break;
-			case 1: q = 2; connType = _T("ISDN"); break;
-			case 2: q = 3; connType = _T("Satellite"); break;
-			case 3: q = 4; connType = _T("Wireless"); break;
-			case 4: q = 6; connType = _T("Cable"); break;
-			case 5: q = 5; connType = _T("DSL"); break;
-			case 6: q = 7; connType = _T("LAN(T1)"); break;
-			case 7: q = 7; connType = _T("LAN(T3)"); break;
+			case 0: q = 6; connType = _T("Modem"); break;
+			case 1: q = 6; connType = _T("ISDN"); break;
+			case 2: q = 8; connType = _T("Satellite"); break;
+			case 3: q = 8; connType = _T("Wireless"); break;
+			case 4: q = 9; connType = _T("Cable"); break;
+			case 5: q = 9; connType = _T("DSL"); break;
+			case 6: q = 11; connType = _T("LAN(T1)"); break;
+			case 7: q = 11; connType = _T("LAN(T3)"); break;
 		}
 		cbitem.pszText = const_cast<TCHAR*>(connType.c_str());
 		cbitem.iItem = i; 

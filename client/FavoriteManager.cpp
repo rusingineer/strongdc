@@ -731,14 +731,23 @@ void FavoriteManager::refresh() {
 	}
 }
 
-UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hubs, bool op) {
+UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hubs, bool& op) {
+	bool isOp = false;
+	for(StringIterC i = hubs.begin(); i != hubs.end(); ++i) {
+		if(ClientManager::getInstance()->isOp(ClientManager::getInstance()->getMe(), *i)) {
+			isOp = true;
+			op = true;
+			break;
+		}
+	}
+
 	Lock l(cs);
 	UserCommand::List lst;
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
         if( (uc.getCtx() & ctx) && 
 			(	uc.getHub().empty() ||
-				 (op && uc.getHub() == "op") ||
+				(uc.getHub() == "op" && isOp) ||
 				(find_if(hubs.begin(), hubs.end(), bind1st(equal_to<string>(), uc.getHub())) != hubs.end())
 			) )
 		{

@@ -180,6 +180,7 @@ public:
 	static const string FEATURE_ZLIB_GET;
 	static const string FEATURE_TTHL;
 	static const string FEATURE_TTHF;
+	static const string FEATURE_ADC_BASE;
 
 	static const string FILE_NOT_AVAILABLE;
 	
@@ -259,7 +260,7 @@ public:
 	void get(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_GET).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
 	void snd(const string& aType, const string& aName, const int64_t aStart, const int64_t aBytes) {  send(AdcCommand(AdcCommand::CMD_SND).addParam(aType).addParam(aName).addParam(Util::toString(aStart)).addParam(Util::toString(aBytes))); }
 
-	void send(const AdcCommand& c) { send(c.toString(isSet(FLAG_NMDC), isSet(FLAG_SUPPORTS_ADCGET))); }
+	void send(const AdcCommand& c) { send(c.toString(0, isSet(FLAG_NMDC))); }
 
 	void supports(const StringList& feat) { 
 		string x;

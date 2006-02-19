@@ -73,7 +73,7 @@ public:
 	virtual void on(NickTaken, Client*) throw() { }
 	virtual void on(SearchFlood, Client*, const string&) throw() { }
 	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&, bool) throw() { }
-	virtual void on(AdcSearch, Client*, const AdcCommand&) throw() { }
+	virtual void on(AdcSearch, Client*, const AdcCommand&, const CID&) throw() { }
 	virtual void on(CheatMessage, Client*, const string&) throw() { }
 };
 

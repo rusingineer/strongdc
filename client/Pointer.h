@@ -159,7 +159,7 @@ bool operator>(T* lhs, const Pointer<T>& rhs) { return rhs < lhs; }
 
 struct DeleteFunction {
 	template<typename T>
-	void operator()(const T& p) const { delete p; };
+	void operator()(const T& p) const { delete p; }
 };
 
 #endif // !defined(POINTER_H)
