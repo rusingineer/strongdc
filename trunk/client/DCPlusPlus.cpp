@@ -95,11 +95,12 @@ void startup(void (*f)(void*, const string&), void* p) {
 }
 
 void shutdown() {
-	TimerManager::getInstance()->removeListeners();
-
+	TimerManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
 
+	BufferedSocket::waitShutdown();
+	
 	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();
 

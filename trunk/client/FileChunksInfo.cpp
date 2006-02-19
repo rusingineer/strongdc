@@ -225,7 +225,7 @@ int FileChunksInfo::findChunk(const PartsInfo& partialInfo, int64_t _speed) {
 	return 1;
 }
 
-int64_t FileChunksInfo::getChunk(int64_t _speed)
+int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 {
 	Chunk* chunk = NULL;
 
@@ -233,6 +233,8 @@ int64_t FileChunksInfo::getChunk(int64_t _speed)
 
 	Lock l(cs);
 	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
+
+	useChunks = (waiting.size() + running.size()) > 2;
 
 	// if there is any waiting chunk, return it
 	if(!waiting.empty()){

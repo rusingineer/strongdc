@@ -965,6 +965,7 @@ void DownloadManager::moveFile(const string& source, const string& target) {
 			}
 		}
 	}
+
 }
 
 void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource) throw() { 
@@ -1225,18 +1226,19 @@ void DownloadManager::throttleSetup() {
 // called once a second, plus when a download starts
 // from the constructor to BufferedSocket
 // with 64k, a few people get winsock error 0x2747
+	size_t INBUFSIZE = SETTING(SOCKET_IN_BUFFER) * 1024;
 	unsigned int num_transfers = downloads.size();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-			if (mDownloadLimit <= (SETTING(SOCKET_IN_BUFFER) * 10 * num_transfers)) {
+			if (mDownloadLimit <= (INBUFSIZE * 10 * num_transfers)) {
 				mByteSlice = mDownloadLimit / (7 * num_transfers);
-				if (mByteSlice > (unsigned int)SETTING(SOCKET_IN_BUFFER))
-					mByteSlice = SETTING(SOCKET_IN_BUFFER);
+				if (mByteSlice > INBUFSIZE)
+					mByteSlice = INBUFSIZE;
 				mCycleTime = 1000 / 10;
 				} else {
-				mByteSlice = SETTING(SOCKET_IN_BUFFER);
-				mCycleTime = 1000 * SETTING(SOCKET_IN_BUFFER) / mDownloadLimit;
+				mByteSlice = INBUFSIZE;
+				mCycleTime = 1000 * INBUFSIZE / mDownloadLimit;
 			}
 		}
 }

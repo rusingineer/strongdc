@@ -74,7 +74,6 @@ public:
 	}    
 
 	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
-	//virtual int64_t getAvailable() const;
 
 	virtual string escape(string const& str) const { return Util::validateMessage(str, false); };
 
@@ -115,7 +114,6 @@ public:
 		send("$Supports " + x + '|');
 	}
 
-	//GETSET(int, supportFlags, SupportFlags);
 private:
 	enum States {
 		STATE_CONNECT,

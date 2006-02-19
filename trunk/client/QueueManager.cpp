@@ -1048,13 +1048,14 @@ again:
 	int64_t freeBlock = 0;
 
 	QueueItem::Source* source = *(q->getSource(aUser));
+	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		dcassert(!q->getTempTarget().empty());
 
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
 			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {
-			freeBlock = q->chunkInfo->getChunk(aUser->getLastDownloadSpeed());
+			freeBlock = q->chunkInfo->getChunk(useChunks, aUser->getLastDownloadSpeed());
 		}
 
 		if(freeBlock < 0) {
@@ -1101,8 +1102,7 @@ again:
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
-		supportsChunks = supportsChunks && (!(&ou) || !ou.getClient().getStealth()) && !source->isSet(QueueItem::Source::FLAG_PARTIAL) &&
-			((q->chunkInfo->getDownloadedSize() > 0.85*q->getSize()) || (q->getCurrents().size() > 2));
+		supportsChunks = supportsChunks && (!(&ou) || !ou.getClient().getStealth()) && useChunks;
 		d->setStartPos(freeBlock);
 		q->chunkInfo->setDownload(freeBlock, d, supportsChunks);
 	} else {

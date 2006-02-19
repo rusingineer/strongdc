@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2004 Jacek Sieka, j_s at telia com
+ * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,7 @@
 #include "cvsversion.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), state(STATE_CONNECT),
-	reconnect(true),
-	lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
+	reconnect(true), lastbytesshared(0), validatenicksent(false), bFirstOpList(true), PtokaX(false),
     YnHub(false) {
 	TimerManager::getInstance()->addListener(this);
 }
@@ -75,15 +74,6 @@ void NmdcHub::connect(const OnlineUser& aUser) {
 		revConnectToMe(aUser);
 	}
 }
-
-/*int64_t NmdcHub::getAvailable() const {
-	Lock l(cs);
-	int64_t x = 0;
-	for(NickMap::const_iterator i = users.begin(); i != users.end(); ++i) {
-		x+=i->second->getIdentity().getBytesShared();
-	}
-	return x;
-}*/
 
 void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
 	if(unknownOnly) {
@@ -400,12 +390,16 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				{
 					Lock l(cs);
 					u_int32_t tick = GET_TICK();
+
 					seekers.push_back(make_pair(seeker, tick));
+
 					// First, check if it's a flooder
         			for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
-						if(fi->first == seeker)
+						if(fi->first == seeker) {
 							return;
+						}
 					}
+
 					int count = 0;
         			for(FloodIter fi = seekers.begin(); fi != seekers.end(); ++fi) {
 						if(fi->first == seeker)
@@ -425,6 +419,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						}
 					}
 				}
+
 				int a;
 				if(temp[0] == 'F') {
 					a = SearchManager::SIZE_DONTCARE;
@@ -983,7 +978,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				fire(ClientListener::UsersUpdated(), this, v);
     			return;
 	        }
-            
+
             dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
             return;
         case 'O':

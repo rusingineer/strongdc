@@ -68,13 +68,13 @@ public:
 	void infoUpdated(bool antispam);
 
 	User::Ptr getUser(const string& aNick, const string& aHubUrl) throw();
-	User::Ptr getLegacyUser(const string& aNick) const throw();
 	User::Ptr getUser(const CID& cid) throw();
 
 	string findHub(const string& ipPort);
 
 	User::Ptr findUser(const string& aNick, const string& aHubUrl) throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	User::Ptr findUser(const CID& cid) throw();
+	User::Ptr findLegacyUser(const string& aNick) const throw();
 
 	bool isOnline(const User::Ptr& aUser) {
 		Lock l(cs);
@@ -82,10 +82,19 @@ public:
 	}
 	
 	void setIPUser(const string& IP, User::Ptr user) {
+		ipList[IP] = user->getFirstNick();
 		OnlinePair p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
+	const string& getIPNick(const string& IP) const {
+		NickMap::const_iterator it;
+		if ((it = ipList.find(IP)) != ipList.end() && !it->second.empty())
+			return it->second;
+		else
+			return IP;
+	}
+
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
 
 	/** Constructs a synthetic, hopefully unique CID */
@@ -141,9 +150,11 @@ private:
 
 	typedef HASH_MAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
 	typedef UserMap::iterator UserIter;
+	typedef map<string, string, noCaseStringLess> NickMap;
 
 	Client::List clients;
 	mutable CriticalSection cs;
+	NickMap ipList;
 	
 	UserMap users;
 	OnlineMap onlineUsers;

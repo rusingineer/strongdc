@@ -55,13 +55,13 @@ public:
 	}
 
 	void prepareMenu(CMenu& menu, int ctx, const StringList& hubs) {
-		bool op = !hubs.empty() && ClientManager::getInstance()->isOp(ClientManager::getInstance()->getMe(), hubs[0]);
+		bool op = false;
 		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, op);
 		int n = 0;
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
-			if(op) {
+			if(op && (ctx != UserCommand::CONTEXT_HUB)) {
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				menu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));

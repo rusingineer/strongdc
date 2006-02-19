@@ -689,18 +689,21 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 }
 
 void UploadManager::throttleSetup() {
+// called once a second, plus when uploads start
+// from the constructor to BufferedSocket
+	size_t INBUFSIZE = SETTING(SOCKET_OUT_BUFFER) * 1024;	
 	unsigned int num_transfers = uploads.size();
 	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-		if (mUploadLimit <= (SETTING(SOCKET_OUT_BUFFER) * 10 * num_transfers)) {
+		if (mUploadLimit <= (INBUFSIZE * 10 * num_transfers)) {
 			mByteSlice = mUploadLimit / (5 * num_transfers);
-			if (mByteSlice > (size_t)SETTING(SOCKET_OUT_BUFFER))
-				mByteSlice = SETTING(SOCKET_OUT_BUFFER);
+			if (mByteSlice > INBUFSIZE)
+				mByteSlice = INBUFSIZE;
 			mCycleTime = 1000 / 10;
 		} else {
-			mByteSlice = SETTING(SOCKET_OUT_BUFFER);
-			mCycleTime = 1000 * SETTING(SOCKET_OUT_BUFFER) / mUploadLimit;
+			mByteSlice = INBUFSIZE;
+			mCycleTime = 1000 * INBUFSIZE / mUploadLimit;
 		}
 	}
 }

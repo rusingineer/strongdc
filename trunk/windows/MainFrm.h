@@ -258,13 +258,7 @@ public:
 		return 0;
 	}
 	
-	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-		if(bTrayIcon) {
-			updateTray(false);
-		}
-		bHandled = FALSE;
-		return 0;
-	}
+	LRESULT onDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	
 	LRESULT OnEraseBackground(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		return 0;

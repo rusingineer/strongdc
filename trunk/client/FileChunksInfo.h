@@ -118,7 +118,7 @@ public:
 	/**
      * Get start offset of a free chunk, the end offset of chunk is unpredictable
      */
-	int64_t getChunk(int64_t _speed = DEFAULT_SPEED);
+	int64_t getChunk(bool& useChunks, int64_t _speed = DEFAULT_SPEED);
 
 	/**
 	 * Compute download start position by source's parts info

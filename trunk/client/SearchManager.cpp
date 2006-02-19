@@ -295,8 +295,12 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		string url = ClientManager::getInstance()->findHub(hubIpPort);
 
 		User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
-		if(!user)
-			return;
+		if(!user) {
+			// Could happen if hub has multiple URLs / IPs
+			user = ClientManager::getInstance()->findLegacyUser(nick);
+			if(!user)
+				return;
+		}
 
 		string tth;
 		if(hubName.compare(0, 4, "TTH:") == 0) {
@@ -312,9 +316,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		AdcCommand c(x.substr(0, x.length()-1));
 		if(c.getParameters().empty())
 			return;
-		string cid;
-		if(!c.getParam("ID", 0, cid))
-			return;
+		string cid = c.getParam(0);
 		if(cid.size() != 39)
 			return;
 
@@ -327,7 +329,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		string file;
 		string tth;
 
-		for(StringIter i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
+		for(StringIter i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i) {
 			string& str = *i;
 			if(str.compare(0, 2, "FN") == 0) {
 				file = Util::toNmdcFile(str.substr(2));
@@ -413,7 +415,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 			return;
 		}
 
-		User::Ptr user = ClientManager::getInstance()->getLegacyUser(nick);
+		User::Ptr user = ClientManager::getInstance()->findLegacyUser(nick);
 		if(!user) {
 			dcdebug("Search result from unknown legacy user");
 			return;

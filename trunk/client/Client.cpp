@@ -47,7 +47,6 @@ Client::~Client() throw() {
 }
 
 void Client::reloadSettings() {
-	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
 	string speedDescription = Util::emptyString;
@@ -82,6 +81,8 @@ void Client::connect() {
 	if(socket)
 		BufferedSocket::putSocket(socket);
 
+	// TODO should this be done also on disconnect ???
+	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	availableBytes = 0;
 
 	setReconnDelay(120 + Util::rand(0, 60));

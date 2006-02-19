@@ -78,6 +78,11 @@ public:
 		aSock->shutdown();
 	};
 
+	static void waitShutdown() {
+		while(sockets)
+			Thread::sleep(100);
+	}
+
 	void accept(const Socket& srv, bool secure) throw(SocketException, ThreadException);
 	void connect(const string& aAddress, short aPort, bool secure, bool proxy) throw(SocketException, ThreadException);
 
@@ -129,7 +134,7 @@ private:
 		InputStream* stream;
 	};
 
-	BufferedSocket(char aSeparator) throw(ThreadException);
+	BufferedSocket(char aSeparator) throw();
 
 	// Dummy...
 	BufferedSocket(const BufferedSocket&);
@@ -168,6 +173,8 @@ private:
 		fire(BufferedSocketListener::Failed(), aError);
 		failed = true;
 	}
+
+	static size_t sockets;
 
 	bool checkEvents();
 	void checkSocket();

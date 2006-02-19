@@ -47,6 +47,11 @@ public:
 class TimerManager : public Speaker<TimerManagerListener>, public Singleton<TimerManager>, public Thread
 {
 public:
+	void shutdown() {
+		s.signal();
+		join();
+	}
+
 	static time_t getTime() {
 		return (time_t)time(NULL);
 	}
@@ -72,8 +77,7 @@ private:
 	
 	virtual ~TimerManager() throw() {
 		dcassert(listeners.empty());
-		s.signal();
-		join();
+		shutdown();
 	};
 	
 	virtual int run();

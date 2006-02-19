@@ -178,6 +178,7 @@ enum Strings { // @DontAdd
 	FAVUSER_ONLINE, // "Favorite user online"
 	FILE, // "File"
 	FILE_LIST_DIFF, // "Subtract list"
+	FILE_LIST_REFRESH_FAILED, // "File list refresh failed: "
 	FILE_LIST_REFRESH_FINISHED, // "File list refresh finished"
 	FILE_LIST_REFRESH_IN_PROGRESS, // "File list refresh in progress, please wait for it to finish before trying to refresh again"
 	FILE_LIST_REFRESH_INITIATED, // "File list refresh initiated"

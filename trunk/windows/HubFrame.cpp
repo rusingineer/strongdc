@@ -713,7 +713,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		{
 			Lock l(updateCS);
 			for(UpdateIter i = updateList.begin(); i != updateList.end(); ++i) {
-				UpdateInfo& u = const_cast<UpdateInfo&>(i->first);
+				UpdateInfo& u = i->first;
 				switch(i->second) {
 				case UPDATE_USER:
 					if(updateUser(u)) {
@@ -729,7 +729,6 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 						 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.identity.getNick()), WinUtil::m_ChatTextSystem);
 						}	
 
-						dcassert(!u.identity.isOp());
 						if(client->isOp()) {
 							int64_t bytesSharedInt64 = u.identity.getBytesShared();
 							if(bytesSharedInt64 > 0) {

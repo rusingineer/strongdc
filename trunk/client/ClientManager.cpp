@@ -115,6 +115,8 @@ StringList ClientManager::getNicks(const CID& cid) {
 		UserIter i = users.find(cid);
 		if(i != users.end())
 			lst.push_back(i->second->getFirstNick());
+		else
+			lst.push_back('{' + cid.toBase32() + '}');
 	}
 	return lst;
 }
@@ -162,15 +164,23 @@ string ClientManager::findHub(const string& ipPort) {
 		port = (short)Util::toInt(ipPort.substr(i+1));
 	}
 
+	string url;
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		Client* c = *i;
-		if(c->getPort() == port && c->getIp() == ip)
+		if(c->getIp() == ip) {
+			// If exact match is found, return it
+			if(c->getPort() == port)
 			return c->getHubUrl();
+
+			// Port is not always correct, so use this as a best guess...
+			url = c->getHubUrl();
+		}
 	}
-	return Util::emptyString;
+
+	return url;
 }
 
-User::Ptr ClientManager::getLegacyUser(const string& aNick) const throw() {
+User::Ptr ClientManager::findLegacyUser(const string& aNick) const throw() {
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 
@@ -527,7 +537,7 @@ const CID& ClientManager::getMyPID() {
 
 CID ClientManager::getMyCID() {
 	TigerHash tiger;
-	tiger.update(pid.getData(), CID::SIZE);
+	tiger.update(getMyPID().getData(), CID::SIZE);
 	return CID(tiger.finalize());
 }
 
