@@ -32,8 +32,8 @@ public:
 	NetworkPage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_NETWORK));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
-	virtual ~NetworkPage() { };
+	}
+	virtual ~NetworkPage() { }
 
 	BEGIN_MSG_MAP(NetworkPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

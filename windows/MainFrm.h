@@ -122,9 +122,7 @@ public:
 		MESSAGE_HANDLER(IDC_REBUILD_TOOLBAR, OnCreateToolbar)
 		MESSAGE_HANDLER(WEBSERVER_SOCKET_MESSAGE, onWebServerSocket)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
-		COMMAND_ID_HANDLER(ID_FILE_CONNECT, OnFileConnect)
 		COMMAND_ID_HANDLER(ID_FILE_SETTINGS, OnFileSettings)
-		COMMAND_ID_HANDLER(ID_FILE_SEARCH, OnFileSearch)
 		COMMAND_ID_HANDLER(ID_VIEW_TOOLBAR, OnViewToolBar)
 		COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
 		COMMAND_ID_HANDLER(ID_VIEW_TRANSFER_VIEW, OnViewTransferView)
@@ -134,17 +132,20 @@ public:
 		COMMAND_ID_HANDLER(ID_WINDOW_TILE_HORZ, OnWindowTile)
 		COMMAND_ID_HANDLER(ID_WINDOW_TILE_VERT, OnWindowTileVert)
 		COMMAND_ID_HANDLER(ID_WINDOW_ARRANGE, OnWindowArrangeIcons)
-		COMMAND_ID_HANDLER(IDC_RECENTS, onRecents)
-		COMMAND_ID_HANDLER(IDC_FAVORITES, onFavorites)
-		COMMAND_ID_HANDLER(IDC_FAVUSERS, onFavoriteUsers)
-		COMMAND_ID_HANDLER(IDC_NOTEPAD, onNotepad)
-		COMMAND_ID_HANDLER(IDC_AWAY, onAway)
-		COMMAND_ID_HANDLER(IDC_LIMITER, onLimiter)
-		COMMAND_ID_HANDLER(IDC_QUEUE, onQueue)
-		COMMAND_ID_HANDLER(IDC_SEARCH_SPY, onSearchSpy)
-		COMMAND_ID_HANDLER(IDC_FILE_ADL_SEARCH, onFileADLSearch)
-		COMMAND_ID_HANDLER(IDC_NET_STATS, onNetStats)
-		COMMAND_ID_HANDLER(IDC_CDMDEBUG_WINDOW, onCDMDebugWindow)
+		COMMAND_ID_HANDLER(IDC_RECENTS, onOpenWindows)
+		COMMAND_ID_HANDLER(ID_FILE_CONNECT, onOpenWindows)
+		COMMAND_ID_HANDLER(ID_FILE_SEARCH, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_FAVORITES, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_FAVUSERS, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_NOTEPAD, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_QUEUE, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_SEARCH_SPY, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_FILE_ADL_SEARCH, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_NET_STATS, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_FINISHED, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_FINISHED_UL, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_UPLOAD_QUEUE, onOpenWindows)
+		COMMAND_ID_HANDLER(IDC_CDMDEBUG_WINDOW, onOpenWindows)
 		COMMAND_ID_HANDLER(IDC_HELP_HOMEPAGE, onLink)
 		COMMAND_ID_HANDLER(IDC_HELP_GEOIPFILE, onLink)
 		COMMAND_ID_HANDLER(IDC_HELP_DISCUSS, onLink)
@@ -153,9 +154,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_TRAY_SHOW, onAppShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE_ALL, onWindowMinimizeAll)
 		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE_ALL, onWindowRestoreAll)
-		COMMAND_ID_HANDLER(IDC_FINISHED, onFinished)
-		COMMAND_ID_HANDLER(IDC_FINISHED_UL, onFinishedUploads)
-		COMMAND_ID_HANDLER(IDC_UPLOAD_QUEUE, onUploadQueue);
 		COMMAND_ID_HANDLER(IDC_SHUTDOWN, onShutDown)
 		COMMAND_ID_HANDLER(IDC_UPDATE, onUpdate)
 		COMMAND_ID_HANDLER(IDC_DISABLE_SOUNDS, onDisableSounds)
@@ -180,21 +178,12 @@ public:
 
 	LRESULT onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT onNotepad(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onHashProgress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onFavoriteUsers(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onEndSession(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT OnFileConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onSearchSpy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onNetStats(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onFileADLSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnFileSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onLink(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onOpenFileList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -203,9 +192,6 @@ public:
 	LRESULT OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/);
-	LRESULT onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onCloseDisconnected(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onServerSocket(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -216,10 +202,9 @@ public:
 	LRESULT onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onAway(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onLimiter(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onRecents(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCDMDebugWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onOpenWindows(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	static DWORD WINAPI stopper(void* p);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
@@ -236,7 +221,7 @@ public:
 		bTrayIcon = false;
 		updateTray(true); 
 		return 0;
-	};
+	}
 
 	LRESULT onRowsChanged(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		UpdateLayout();
@@ -364,14 +349,14 @@ private:
 
 	class DirectoryListInfo {
 	public:
-		DirectoryListInfo(const User::Ptr& aUser, const tstring& aFile, int64_t aSpeed) : user(aUser), file(aFile), speed(aSpeed) { };
+		DirectoryListInfo(const User::Ptr& aUser, const tstring& aFile, int64_t aSpeed) : user(aUser), file(aFile), speed(aSpeed) { }
 		User::Ptr user;
 		tstring file;
 		int64_t speed;
 	};
 	class DirectoryBrowseInfo {
 	public:
-		DirectoryBrowseInfo(const User::Ptr& ptr, string aText) : user(ptr), text(aText) { };
+		DirectoryBrowseInfo(const User::Ptr& ptr, string aText) : user(ptr), text(aText) { }
 		User::Ptr user;
 		string text;
 	};
@@ -463,10 +448,10 @@ private:
 	void autoConnect(const FavoriteHubEntry::List& fl);
 	void startSocket();
 
-	MainFrame(const MainFrame&) { dcassert(0); };
+	MainFrame(const MainFrame&) { dcassert(0); }
 
 	// LogManagerListener
-	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); };
+	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); }
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();

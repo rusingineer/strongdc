@@ -47,7 +47,7 @@ public:
 
 	TransferView() : PreviewAppsSize(0) {
 		headerBuf = new TCHAR[128];
-	};
+	}
 	virtual ~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
@@ -147,7 +147,7 @@ private:
 	class ItemInfo;	
 	int PreviewAppsSize;
 public:
-	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; };
+	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; }
 private:
 	enum {
 		ADD_ITEM,
@@ -369,7 +369,6 @@ private:
 	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
 	virtual void on(DownloadManagerListener::Status, const User::Ptr&, const string& aMessage) throw();
-	virtual void on(DownloadManagerListener::Verifying, const string& fileName, int64_t) throw();
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();

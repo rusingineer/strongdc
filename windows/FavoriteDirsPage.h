@@ -35,11 +35,11 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_DOWNLOADS) + _T('\\') + TSTRING(SETTINGS_FAVORITE_DIRS_PAGE)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 	virtual ~FavoriteDirsPage() {
 		ctrlDirectories.Detach();
 		free(title);
-	};
+	}
 
 	BEGIN_MSG_MAP_EX(FavoriteDirsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

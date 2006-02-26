@@ -387,12 +387,10 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 		LOG(LogManager::PM, params);
 	}
 
-	bool myMess = from.getUser() == ClientManager::getInstance()->getMe();
-
 	if(BOOLSETTING(TIME_STAMPS)) {
-		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), myMess, Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf);
 	} else {
-		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), myMess, _T(""), aLine.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), _T(""), aLine.c_str(), cf);
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 
@@ -445,7 +443,7 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 		return;
 
 	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams, true);
-};
+}
 
 LRESULT PrivateFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
@@ -611,8 +609,8 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	int line = ctrlClient.LineFromChar(i);
 	int c = LOWORD(i) - ctrlClient.LineIndex(line);
 	int len = ctrlClient.LineLength(i) + 1;
-//	if ( len < 3 )
-//		return 0;
+	if ( len < 3 )
+		return 0;
 	TCHAR* buf = new TCHAR[len];
 	ctrlClient.GetLine(line, buf, len);
 	tstring x = tstring(buf, len-1);
@@ -718,7 +716,7 @@ void PrivateFrame::readLog() {
 
 		for(; i < linesCount; ++i){
 			if(!lines[i].empty())
-				ctrlClient.AppendText(_T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, _T(""));
+				ctrlClient.AppendText(Identity(NULL, Util::emptyString), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
 		}
 
 		f.close();

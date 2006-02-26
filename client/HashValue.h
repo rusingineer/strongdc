@@ -31,32 +31,28 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 
 	typedef HashValue* Ptr;
 	struct PtrHash {
-		size_t operator()(const Ptr rhs) const { return *(size_t*)&rhs->data; };
-		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); };
+		size_t operator()(const Ptr rhs) const { return *(size_t*)rhs; }
+		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); }
 	};
 	struct PtrLess {
-		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); };
+		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); }
 	};
 
 	struct Hash {
-		size_t operator()(const HashValue& rhs) const { return *(size_t*)&rhs; };
-		bool operator()(const HashValue& lhs, const HashValue& rhs) const { return lhs == rhs; };
-	};
-	struct Less {
-		bool operator()(const HashValue& lhs, const HashValue& rhs) const { return lhs < rhs; };
+		size_t operator()(const HashValue& rhs) const { return *(size_t*)&rhs; }
 	};
 
-	HashValue() { };
+	HashValue() { }
 	explicit HashValue(u_int8_t* aData) { memcpy(data, aData, SIZE); }
-	explicit HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); };
+	explicit HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); }
 	HashValue(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); }
 	HashValue& operator=(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); return *this; }
 	bool operator!=(const HashValue& rhs) const { return !(*this == rhs); }
 	bool operator==(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) == 0; }
 	bool operator<(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) < 0; }
 
-	string toBase32() const { return Encoder::toBase32(data, SIZE); };
-	string& toBase32(string& tmp) const { return Encoder::toBase32(data, SIZE, tmp); };
+	string toBase32() const { return Encoder::toBase32(data, SIZE); }
+	string& toBase32(string& tmp) const { return Encoder::toBase32(data, SIZE, tmp); }
 
 	u_int8_t data[SIZE];
 };

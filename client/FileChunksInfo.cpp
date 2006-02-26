@@ -485,61 +485,105 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 	return false;
 }
 
-bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
+bool FileChunksInfo::doLastVerify(const TigerTree& aTree)
 {
-	if(tthBlockSize != aTree.getBlockSize()) {
-		dcassert(tthBlockSize == aTree.getBlockSize());
-		dcdebug("%d != %d\n", tthBlockSize, aTree.getBlockSize());
-		return true;
-	}
+    dcassert(tthBlockSize == aTree.getBlockSize());
+	Lock l(cs);
 
+
+
+	// for exception free
+	auto_ptr<unsigned char> buf(new unsigned char[tthBlockSize]);
+
+ 
 	// Convert to unverified blocks
-	vector<int64_t> CorruptedBlocks;
+    map<int64_t, int64_t> unVerifiedBlocks;
 	int64_t start = 0;
 
+	BlockMap::iterator i = verifiedBlocks.begin();
+	for(; i != verifiedBlocks.end(); i++)
 	{
-		Lock l(cs);
-		if(BOOLSETTING(CHECK_UNVERIFIED_ONLY) && (iVerifiedSize*4/3 >= iFileSize))
-			return true;
+		int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
+		int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
+		
+		second = min(second, iFileSize);
 
-		verifiedBlocks.clear();
+		if(first > start){
+            unVerifiedBlocks.insert(make_pair(start, first));
+        }else{
+            dcassert(start == 0);
+        }
+		start = second;
 	}
+
+	if(start < iFileSize)
+        unVerifiedBlocks.insert(make_pair(start, iFileSize));
+
 	// Open file
 	SharedFileStream file(tempTargetName, 0, 0);
-	char buf[524288];
-	TigerTree tth(max((int64_t)TigerTree::calcBlockSize(file.getSize(), 10), (int64_t)tthBlockSize));
 
-	size_t n = 0;
-	size_t n2 = 524288;
-	int64_t hashed = 0;
-	while( (n = file.read(buf, n2)) > 0) {
-		tth.update(buf, n);
-		n2 = 524288;
-		hashed = hashed + n;
-		DownloadManager::getInstance()->fire(DownloadManagerListener::Verifying(), aTarget, hashed);
-	}
-	tth.finalize();
+	for(map<int64_t, int64_t>::iterator i = unVerifiedBlocks.begin();
+        								i != unVerifiedBlocks.end();
+                                        i++)
+	{
+        int64_t end = i->first;
 
-	int64_t end;
-	for(unsigned int i = 0; i < tth.getLeaves().size(); ++i) {
-		end = min(start + tth.getBlockSize(), file.getSize());
-		if(!(tth.getLeaves()[i] == aTree.getLeaves()[i])) {
-       		if(!CorruptedBlocks.empty() && *(CorruptedBlocks.rbegin()) == start) {
-				*(CorruptedBlocks.rbegin()) = end;
-	        } else {
-				CorruptedBlocks.push_back(start);
-	        	CorruptedBlocks.push_back(end);
-	        }
-			iDownloadedSize -= (end - start);
-        } else {
-			u_int16_t s = (u_int16_t)(start / tthBlockSize);
-			u_int16_t e = (u_int16_t)((end - 1) / tthBlockSize + 1);
-        	markVerifiedBlock(s, e);
+		while(end < i->second)
+        {
+            start = end;
+            end = min(start + tthBlockSize, i->second);
+
+            file.setPos(start);
+			size_t len = (size_t)(end - start);
+			file.read(buf.get(), len);
+
+			dcassert(end - start == len);
+
+			TigerTree cur(tthBlockSize);
+            cur.update(buf.get(), len);
+			cur.finalize();
+
+			dcassert(cur.getLeaves().size() == 1);
+
+			// Fail!
+        	if(!(cur.getLeaves()[0] == aTree.getLeaves()[(size_t)(start / tthBlockSize)]))
+        	{
+
+	       		if(!waiting.empty() && waiting.rbegin()->second->end == start){
+					waiting.rbegin()->second->end = end;
+
+	            }else{
+					bool merged = false;
+					// try to merge with running first
+					for(Chunk::Iter j = running.begin(); j != running.end(); j++){
+						if(j->first == start){
+							dcassert(j->second->pos == j->second->end);
+							j->second->pos = start;
+							j->second->end = end;
+							merged = true;
+						}else if(j->second->end == start){
+							j->second->end = end;
+							merged = true;
+						}
+					}
+					
+					if(!merged)
+						waiting.insert(make_pair(start, new Chunk(start, end)));
+				}
+
+				iDownloadedSize -= (end - start);
+        	}else{
+				u_int16_t s = (u_int16_t)(start / tthBlockSize);
+				u_int16_t e = (u_int16_t)((end - 1) / tthBlockSize + 1);
+        		markVerifiedBlock(s, e);
+        	}
+
 		}
-		start = end;
-	}
 
-	if(CorruptedBlocks.empty()){
+		dcassert(end == i->second);
+    }
+
+	if(waiting.empty()){
 		dumpVerifiedBlocks();
 
 		dcassert(verifiedBlocks.size() == 1 && 
@@ -549,15 +593,8 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, string aTarget)
         return true;
     }
 
-	{
-		Lock l(cs);
-		for(vector<int64_t>::const_iterator i = CorruptedBlocks.begin(); i != CorruptedBlocks.end(); ++i, ++i) {
-			waiting.insert(make_pair(*i, new Chunk(*i, *(i+1))));
-		}
-
-		// double smallest size when last verify failed
-		minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
-	}
+	// double smallest size when last verify failed
+	minChunkSize = min(minChunkSize * 2, (int64_t)tthBlockSize);
 
 	return false;
 }

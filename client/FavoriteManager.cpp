@@ -313,7 +313,7 @@ void FavoriteManager::onHttpFinished() throw() {
 
 class XmlListLoader : public SimpleXMLReader::CallBack {
 public:
-	XmlListLoader(HubEntry::List& lst) : publicHubs(lst) { };
+	XmlListLoader(HubEntry::List& lst) : publicHubs(lst) { }
 	virtual ~XmlListLoader() { }
 	virtual void startTag(const string& name, StringPairList& attribs, bool) {
 		if(name == "Hub") {

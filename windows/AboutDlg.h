@@ -35,8 +35,8 @@ public:
 	enum { IDD = IDD_ABOUTBOX };
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
-	AboutDlg() { };
-	virtual ~AboutDlg() { };
+	AboutDlg() { }
+	virtual ~AboutDlg() { }
 
 	BEGIN_MSG_MAP(AboutDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -85,7 +85,7 @@ public:
 private:
 	HttpConnection c;
 
-	AboutDlg(const AboutDlg&) { dcassert(0); };
+	AboutDlg(const AboutDlg&) { dcassert(0); }
 	
 	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);

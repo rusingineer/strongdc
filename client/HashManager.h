@@ -38,6 +38,7 @@ class File;
 
 class HashManagerListener {
 public:
+	virtual ~HashManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> TTHDone;
@@ -196,7 +197,7 @@ private:
 		void addTree(const TigerTree& tt);
 		const TTHValue* getTTH(const string& aFileName);
 		bool getTree(const TTHValue& root, TigerTree& tth);
-		bool isDirty() { return dirty; };
+		bool isDirty() { return dirty; }
 	private:
 		/** Root -> tree mapping info, we assume there's only one tree for each root (a collision would mean we've broken tiger...) */
 		struct TreeInfo {
@@ -230,7 +231,7 @@ private:
 		typedef HASH_MAP<string, FileInfoList> DirMap;
 		typedef DirMap::iterator DirIter;
 
-		typedef HASH_MAP_X(TTHValue, TreeInfo, TTHValue::Hash, TTHValue::Hash, TTHValue::Less) TreeMap;
+		typedef HASH_MAP_X(TTHValue, TreeInfo, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) TreeMap;
 		typedef TreeMap::iterator TreeIter;
 
 		friend class HashLoader;

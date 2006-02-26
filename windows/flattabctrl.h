@@ -52,7 +52,7 @@ public:
 
 	FlatTabCtrlImpl() : closing(NULL), rows(1), height(0), active(NULL), moving(NULL), inTab(false) { 
 		black.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-	};
+	}
 	virtual ~FlatTabCtrlImpl() { }
 
 	static LPCTSTR GetWndClassName()
@@ -300,11 +300,11 @@ public:
 		return 0;
 	}
 
-	int getTabHeight() { return height; };
-	int getHeight() { return (getRows() * getTabHeight())+1; };
-	int getFill() { return (getTabHeight() + 1) / 2; };
+	int getTabHeight() { return height; }
+	int getHeight() { return (getRows() * getTabHeight())+1; }
+	int getFill() { return (getTabHeight() + 1) / 2; }
 
-	int getRows() { return rows; };
+	int getRows() { return rows; }
 
 	void calcRows(bool inval = true) {
 		CRect rc;
@@ -514,7 +514,7 @@ private:
 			memset(&boldSize, 0, sizeof(boldSize));
 			name[0] = 0;
 			update();
-		};
+		}
 
 		~TabInfo() {
 			if (hIcon == hStateIcon)
@@ -563,7 +563,7 @@ private:
 			dc.SelectFont(f);		
 			::ReleaseDC(hWnd, dc);
 			return true;
-		};
+		}
 
 		bool updateText(LPCTSTR text) {
 			len = _tcslen(text);
@@ -585,7 +585,7 @@ private:
 			dc.SelectFont(f);		
 			::ReleaseDC(hWnd, dc);
 			return true;
-		};
+		}
 
 		int getWidth() {
 			return (dirty ? boldSize.cx : size.cx) + FT_EXTRA_SPACE + (hIcon != NULL ? 10 : 0);
@@ -713,7 +713,7 @@ private:
 			DrawIconEx(dc.m_hDC, pos - 18, ypos, tab->bState ? tab->hStateIcon : tab->hIcon, 16, 16, NULL, hBr, DI_NORMAL | DI_COMPAT);
 		}
 		dc.SetTextColor(oldclr);
-	};
+	}
 };
 
 class FlatTabCtrl : public FlatTabCtrlImpl<FlatTabCtrl> {
@@ -725,8 +725,8 @@ template <class T, int C = RGB(128, 128, 128), long I = 0, long I_state = 0, cla
 class ATL_NO_VTABLE MDITabChildWindowImpl : public CMDIChildWindowImpl<T, TBase, TWinTraits> {
 public:
 
-	MDITabChildWindowImpl() : created(false) { };
-	FlatTabCtrl* getTab() { return WinUtil::tabCtrl; };
+	MDITabChildWindowImpl() : created(false) { }
+	FlatTabCtrl* getTab() { return WinUtil::tabCtrl; }
 
 	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
 	

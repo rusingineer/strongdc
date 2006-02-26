@@ -30,10 +30,11 @@
 
 class LogManagerListener {
 public:
+	virtual ~LogManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Message;
-	virtual void on(Message, const string&) throw() { };
+	virtual void on(Message, const string&) throw() { }
 };
 
 class LogManager : public Singleton<LogManager>, public Speaker<LogManagerListener>
@@ -106,8 +107,8 @@ private:
 		logOptions[STATUS][FORMAT]		= SettingsManager::LOG_FORMAT_STATUS;
 		logOptions[WEBSERVER][FILE]		= SettingsManager::LOG_FILE_WEBSERVER;
 		logOptions[WEBSERVER][FORMAT]	= SettingsManager::WEBSERVER_FORMAT;
-	};
-	virtual ~LogManager() throw() { };
+	}
+	virtual ~LogManager() throw() { }
 
 };
 

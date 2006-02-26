@@ -484,6 +484,7 @@
 #define IDC_SECOND                      1288
 #define IDC_S                           1290
 #define IDC_FLAT                        1291
+#define IDC_S2                          1291
 #define IDC_FLAT_SPIN                   1292
 #define IDC_DEFAULT                     1293
 #define IDC_CONN_BORDER                 1294

@@ -30,7 +30,7 @@
 
 class Client;
 class AdcCommand;
-
+class ClientManager;
 class ClientListener  
 {
 public:
@@ -84,12 +84,8 @@ public:
 	typedef list<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	Client(const string& hubURL, char separator, bool secure_);
-	virtual ~Client() throw();
-
 	virtual void connect();
-	bool isConnected() const { return socket && socket->isConnected(); }
-	void disconnect(bool graceless) { if(socket) socket->disconnect(graceless); }
+	virtual void disconnect(bool graceless) { if(socket) socket->disconnect(graceless); }
 
 	virtual void connect(const OnlineUser& user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
@@ -103,6 +99,11 @@ public:
 	virtual size_t getUserCount() const = 0;
 	int64_t getAvailable() const { return availableBytes; };
 	
+	virtual void send(const AdcCommand& command) = 0;
+
+	virtual string escape(string const& str) const { return str; }
+
+	bool isConnected() const { return socket && socket->isConnected(); }
 	bool isOp() const { return getMyIdentity().isOp(); }
 
 	virtual void refreshUserList(bool unknownOnly = false) = 0;
@@ -110,17 +111,14 @@ public:
 	short getPort() const { return port; }
 	const string& getAddress() const { return address; }
 
-	const string& getIp() const { return (!socket || socket->getIp().empty()) ? getAddress() : socket->getIp(); };
-	string getIpPort() const { return getIp() + ':' + Util::toString(port); };
+	const string& getIp() const { return (!socket || socket->getIp().empty()) ? getAddress() : socket->getIp(); }
+	string getIpPort() const { return getIp() + ':' + Util::toString(port); }
 	string getLocalIp() const;
 
-	void updated(const OnlineUser& aUser) { 
-		fire(ClientListener::UserUpdated(), this, aUser);
-	}
+	void updated(const OnlineUser& aUser) { fire(ClientListener::UserUpdated(), this, aUser); }
 
 	static int getTotalCounts(){
 		return counts.normal + counts.registered + counts.op;
-		
 	}
 
 	static string getCounts() {
@@ -138,8 +136,6 @@ public:
 		}
 		return Util::emptyString;
 	}
-
-	virtual string escape(string const& str) const { return str; };
 	StringMap& escapeParams(StringMap& sm) {
 		for(StringMapIter i = sm.begin(); i != sm.end(); ++i) {
 			i->second = escape(i->second);
@@ -147,6 +143,7 @@ public:
 		return sm;
 	}
 
+	void shutdown();
 	bool isActive();
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
@@ -158,7 +155,6 @@ public:
 		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
 	}
-	virtual void send(const AdcCommand& command) = 0;
 
 	const string& getMyNick() const { return getMyIdentity().getNick(); }
 	const string& getHubName() const { return getHubIdentity().getNick().empty() ? getHubUrl() : getHubIdentity().getNick(); }
@@ -189,12 +185,15 @@ public:
 	int64_t availableBytes;
 
 protected:
+	friend class ClientManager;
+	Client(const string& hubURL, char separator, bool secure_);
+	virtual ~Client() throw();
 	struct Counts {
-		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { };
+		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { }
 		volatile long normal;
 		volatile long registered;
 		volatile long op;
-		bool operator !=(const Counts& rhs) { return normal != rhs.normal || registered != rhs.registered || op != rhs.op; };
+		bool operator !=(const Counts& rhs) { return normal != rhs.normal || registered != rhs.registered || op != rhs.op; }
 	};
 
 	BufferedSocket* socket;

@@ -42,7 +42,7 @@ public:
 	/** Call once all data has been processed. */
 	u_int8_t* finalize();
 
-	u_int8_t* getResult() { return (u_int8_t*) res; };
+	u_int8_t* getResult() { return (u_int8_t*) res; }
 private:
 	enum { BLOCK_SIZE = 512/8 };
 	/** 512 bit blocks for the compress function */

@@ -87,13 +87,13 @@ public:
 	void decRef() { 
 		if(Thread::safeDec(ref) == 0) 
 			delete this; 
-	};
+	}
 
 private:
 	friend class SearchManager;
 
 	SearchResult();
-	~SearchResult() { delete tth; };
+	~SearchResult() { delete tth; }
 
 	SearchResult(const SearchResult& rhs);
 
@@ -250,7 +250,7 @@ private:
 
 	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
 		TimerManager::getInstance()->addListener(this);
-	};
+	}
 
 	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
@@ -266,7 +266,7 @@ private:
 #endif
 			delete socket;
 		}
-	};
+	}
 
 	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
 	void onData(const u_int8_t* buf, size_t aLen, const string& address);	

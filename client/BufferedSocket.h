@@ -27,6 +27,7 @@
 #include "Thread.h"
 #include "Speaker.h"
 #include "Util.h"
+#include "ZUtils.h"
 #include "Socket.h"
 
 class InputStream;
@@ -35,6 +36,7 @@ class SocketException;
 
 class BufferedSocketListener {
 public:
+	virtual ~BufferedSocketListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Connecting;
@@ -61,6 +63,7 @@ class BufferedSocket : public Speaker<BufferedSocketListener>, public Thread
 public:
 	enum Modes {
 		MODE_LINE,
+		MODE_ZPIPE,
 		MODE_DATA
 	};
 
@@ -71,12 +74,12 @@ public:
 	 */
 	static BufferedSocket* getSocket(char sep) throw() { 
 		return new BufferedSocket(sep); 
-	};
+	}
 
 	static void putSocket(BufferedSocket* aSock) { 
 		aSock->removeListeners(); 
 		aSock->shutdown();
-	};
+	}
 
 	static void waitShutdown() {
 		while(sockets)
@@ -93,8 +96,9 @@ public:
 	 * should be treated as data.
 	 * Must be called from within onData. 
 	 */
-	void setLineMode(size_t aRollback) { mode = MODE_LINE; rollback = aRollback; }
-	Modes getMode() const { return mode; };
+	void setLineMode(size_t aRollback) { setMode (MODE_LINE, aRollback);}
+	void setMode(Modes mode, size_t aRollback = 0);
+	Modes getMode() const { return mode; }
 	const string& getIp() { return sock ? sock->getIp() : Util::emptyString; }
 	const short getPort() { return sock ? sock->getPort() : 0; }
 	const string getRemoteHost(const string& aIp) { return sock ? sock->getRemoteHost(aIp) : Util::emptyString; }
@@ -121,7 +125,7 @@ private:
 	};
 
 	struct TaskData { 
-		virtual ~TaskData() { };
+		virtual ~TaskData() { }
 	};
 	struct ConnectInfo : public TaskData {
 		ConnectInfo(string addr_, short port_, bool proxy_) : addr(addr_), port(port_), proxy(proxy_) { }
@@ -148,6 +152,7 @@ private:
 	vector<pair<Tasks, TaskData*> > tasks;
 
 	Modes mode;
+	UnZFilter *filterIn;
 	int64_t dataBytes;
 	size_t rollback;
 	bool failed;

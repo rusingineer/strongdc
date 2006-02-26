@@ -32,10 +32,8 @@ public:
 	GeneralPage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_GENERAL));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
-	virtual ~GeneralPage() {
-		ConnTypes.Destroy();
-	};
+	}
+	virtual ~GeneralPage() { ConnTypes.Destroy(); }
 
 	BEGIN_MSG_MAP_EX(GeneralPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

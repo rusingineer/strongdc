@@ -39,10 +39,9 @@ class PublicHubsFrame : public MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 
 public:
 	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(""),
 		filterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP) {
-	};
+	}
 
-	virtual ~PublicHubsFrame() {
-	};
+	virtual ~PublicHubsFrame() { }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("PublicHubsFrame"), IDR_PUBLICHUBS, 0, COLOR_3DFACE);
 		
@@ -100,7 +99,7 @@ public:
 		}
 		bHandled = FALSE;
 		return FALSE;
-	};
+	}
 	
 	LRESULT onSetFocus(UINT /* uMsg */, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlHubs.SetFocus();

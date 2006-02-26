@@ -309,13 +309,13 @@ LRESULT SearchFrame::onMeasure(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	HWND hwnd = 0;
 	if(wParam == IDC_FILETYPES) return ListMeasure(hwnd, wParam, (MEASUREITEMSTRUCT *)lParam);
 		else return OMenu::onMeasureItem(hwnd, uMsg, wParam, lParam, bHandled);
-};
+}
 
 LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
 	if(wParam == IDC_FILETYPES) return ListDraw(hwnd, wParam, (DRAWITEMSTRUCT*)lParam);
 		else return OMenu::onDrawItem(hwnd, uMsg, wParam, lParam, bHandled);
-};
+}
 
 
 BOOL SearchFrame::ListMeasure(HWND /*hwnd*/, UINT /*uCtrlId*/, MEASUREITEMSTRUCT *mis) {
@@ -976,8 +976,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		StringMap tmp = ucParams;
 		ClientManager::getInstance()->userCommand(sr->getUser(), uc, tmp, true);
 	}
-	return;
-};
+}
 
 LRESULT SearchFrame::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	HWND hWnd = (HWND)lParam;
@@ -993,7 +992,7 @@ LRESULT SearchFrame::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		::SetTextColor(hDC, WinUtil::textColor);
 		return (LRESULT)WinUtil::bgBrush;
 	}
-};
+}
 
 LRESULT SearchFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	switch(wParam) {

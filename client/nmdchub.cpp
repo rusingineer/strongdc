@@ -45,8 +45,6 @@ NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), state(STA
 
 NmdcHub::~NmdcHub() throw() {
 	TimerManager::getInstance()->removeListener(this);
-
-	socket->removeListener(this); 
 	clearUsers();
 }
 
@@ -64,6 +62,8 @@ void NmdcHub::connect() {
 
 	Client::connect();
 }
+
+#define checkstate() if(state != STATE_CONNECTED) return
 
 void NmdcHub::connect(const OnlineUser& aUser) {
 	checkstate(); 
@@ -112,6 +112,14 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 
 	ClientManager::getInstance()->putOnline(*u);
 	return *u;
+}
+
+void NmdcHub::supports(const StringList& feat) { 
+	string x;
+	for(StringList::const_iterator i = feat.begin(); i != feat.end(); ++i) {
+		x+= *i + ' ';
+	}
+	send("$Supports " + x + '|');
 }
 
 OnlineUser* NmdcHub::findUser(const string& aNick) {
@@ -902,7 +910,8 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					feat.push_back("NoHello");
 					feat.push_back("UserIP2");
 					feat.push_back("TTHSearch");
-
+					feat.push_back("ZPipe");
+				
 					if (getStealth() == false) {
 						feat.push_back("QuickList");
 						feat.push_back("ZLine");
@@ -1068,6 +1077,12 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
             
             dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
             return;
+        case 'Z':
+        	// $ZOn
+        	if(strcmp(aLine+2, "On") == 0) {
+        		socket->setMode (BufferedSocket::MODE_ZPIPE);
+        	}
+        	return;
     	default:
 			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
 			return;
@@ -1095,6 +1110,11 @@ void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::revConnectToMe %s\n", aUser.getIdentity().getNick().c_str());
 	send("$RevConnectToMe " + toNmdc(getMyNick()) + " " + toNmdc(aUser.getIdentity().getNick()) + "|");
+}
+
+void NmdcHub::hubMessage(const string& aMessage) { 
+	checkstate(); 
+	send(toNmdc( "<" + getMyNick() + "> " + Util::validateMessage(aMessage, false) + "|" ) ); 
 }
 
 void NmdcHub::myInfo() {

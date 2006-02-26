@@ -35,8 +35,8 @@ class MagnetDlg : public CDialogImpl<MagnetDlg > {
 public:
 	enum { IDD = IDD_MAGNET };
 
-	MagnetDlg(const tstring& aHash, const tstring& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { };
-	virtual ~MagnetDlg() { };
+	MagnetDlg(const tstring& aHash, const tstring& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { }
+	virtual ~MagnetDlg() { }
 
 	BEGIN_MSG_MAP(MagnetDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

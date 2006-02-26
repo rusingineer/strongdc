@@ -200,8 +200,7 @@ LRESULT PropPageTextStyles::onEditTextStyle(WORD /*wNotifyCode*/, WORD /*wID*/, 
 		_tcscpy( TextStyles[ iNdx ].szFaceName, m_Font.lfFaceName );
 		TextStyles[ i ].bCharSet = m_Font.lfCharSet;
 		TextStyles[ i ].yHeight = m_Font.lfHeight;
-		m_Preview.AppendText(_T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), 
-			TextStyles[i]);
+// TODO		m_Preview.AppendText(_T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), TextStyles[i]);
 	}
 
 	RefreshPreview();
@@ -214,9 +213,9 @@ void PropPageTextStyles::RefreshPreview() {
 	m_Preview.SetWindowText(_T(""));
 
 	string sText;
+	Identity id = Identity(NULL, Util::emptyString);
 	for ( int i = 0; i < TS_LAST; i++ ) {
-		m_Preview.AppendText(_T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), 
-		TextStyles[i] );
+		m_Preview.AppendText(id, _T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), TextStyles[i], false);
 	}
 	m_Preview.InvalidateRect( NULL );
 }

@@ -27,6 +27,7 @@ class ConnectionQueueItem;
 
 class ConnectionManagerListener {
 public:
+	virtual ~ConnectionManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Added;
@@ -35,11 +36,11 @@ public:
 	typedef X<3> Failed;
 	typedef X<4> StatusChanged;
 
-	virtual void on(Added, ConnectionQueueItem*) throw() { };
-	virtual void on(Connected, ConnectionQueueItem*) throw() { };
-	virtual void on(Removed, ConnectionQueueItem*) throw() { };
-	virtual void on(Failed, ConnectionQueueItem*, const string&) throw() { };
-	virtual void on(StatusChanged, ConnectionQueueItem*) throw() { };
+	virtual void on(Added, ConnectionQueueItem*) throw() { }
+	virtual void on(Connected, ConnectionQueueItem*) throw() { }
+	virtual void on(Removed, ConnectionQueueItem*) throw() { }
+	virtual void on(Failed, ConnectionQueueItem*, const string&) throw() { }
+	virtual void on(StatusChanged, ConnectionQueueItem*) throw() { }
 };
 
 #endif // !defined(CONNECTION_MANAGER_LISTENER_H)

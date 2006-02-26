@@ -50,7 +50,7 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S);
 
 class UserInfoBase {
 public:
-	UserInfoBase(const User::Ptr& u) : user(u) { };
+	UserInfoBase(const User::Ptr& u) : user(u) { }
 	
 	void getList();
 	void browseList();
@@ -285,7 +285,7 @@ class UserCommand;
 template<class T, int title, int ID = -1>
 class StaticFrame {
 public:
-	virtual ~StaticFrame() { frame = NULL; };
+	virtual ~StaticFrame() { frame = NULL; }
 
 	static T* frame;
 	static void openWindow() {

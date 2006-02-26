@@ -34,9 +34,9 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_CERTIFICATES)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 
-	virtual ~CertificatesPage() { free(title); };
+	virtual ~CertificatesPage() { free(title); }
 
 	BEGIN_MSG_MAP(CertificatesPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

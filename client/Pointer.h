@@ -46,7 +46,7 @@ public:
 	}
 	
 protected:
-	PointerBase() throw() : ref(0) { };
+	PointerBase() throw() : ref(0) { }
 	
 	virtual ~PointerBase() throw() {
 		dcassert(!ref);
@@ -114,14 +114,14 @@ public:
 	
 	operator		  bool()  const   { return base != NULL; }
 	
-	bool operator==(T* rhs) const { return (T*)base == rhs; };
-	bool operator==(const Pointer& rhs) const { return base == rhs.base; };
-	bool operator!=(T* rhs) const { return (T*)base != rhs; };
-	bool operator!=(const Pointer& rhs) const { return base != rhs.base; };
-	bool operator<(T* rhs) const { return (T*)base < rhs; };
-	bool operator<(const Pointer& rhs) const { return base < rhs.base; };
-	bool operator>(T* rhs) const { return (T*)base > rhs; };
-	bool operator>(const Pointer& rhs) const { return base > rhs.base; };
+	bool operator==(T* rhs) const { return (T*)base == rhs; }
+	bool operator==(const Pointer& rhs) const { return base == rhs.base; }
+	bool operator!=(T* rhs) const { return (T*)base != rhs; }
+	bool operator!=(const Pointer& rhs) const { return base != rhs.base; }
+	bool operator<(T* rhs) const { return (T*)base < rhs; }
+	bool operator<(const Pointer& rhs) const { return base < rhs.base; }
+	bool operator>(T* rhs) const { return (T*)base > rhs; }
+	bool operator>(const Pointer& rhs) const { return base > rhs.base; }
 	
 
 	static void swap ( Pointer &lhs, Pointer &rhs ) {

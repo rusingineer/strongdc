@@ -47,13 +47,13 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 	
-	Upload() : tth(NULL), file(NULL) { };
+	Upload() : tth(NULL), file(NULL) { }
 	virtual ~Upload() { 
 		delete file;
 		delete tth;
-	};
+	}
 	
-	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); };
+	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); }
 	
 	GETSET(string, fileName, FileName);
 	GETSET(string, localFileName, LocalFileName);
@@ -64,6 +64,7 @@ public:
 class UploadManagerListener {
 	friend class UploadQueueItem; 
 public:
+	virtual ~UploadManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 	
 	typedef X<0> Complete;
@@ -75,22 +76,22 @@ public:
 	typedef X<6> QueueItemRemove;
 	typedef X<7> QueueUpdate;
 
-	virtual void on(Starting, Upload*) throw() { };
-	virtual void on(Tick, const Upload::List&) throw() { };
-	virtual void on(Complete, Upload*) throw() { };
-	virtual void on(Failed, Upload*, const string&) throw() { };
-	virtual void on(QueueAdd, UploadQueueItem*) throw() { };
-	virtual void on(QueueRemove, const User::Ptr&) throw() { };
-	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { };
-	virtual void on(QueueUpdate) throw() { };
+	virtual void on(Starting, Upload*) throw() { }
+	virtual void on(Tick, const Upload::List&) throw() { }
+	virtual void on(Complete, Upload*) throw() { }
+	virtual void on(Failed, Upload*, const string&) throw() { }
+	virtual void on(QueueAdd, UploadQueueItem*) throw() { }
+	virtual void on(QueueRemove, const User::Ptr&) throw() { }
+	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { }
+	virtual void on(QueueUpdate) throw() { }
 
 };
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
 public:
 	UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, time_t itime) :
-		User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { inc(); };
-	virtual ~UploadQueueItem() throw() { };
+		User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
+	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
@@ -148,7 +149,7 @@ class UploadManager : private ClientManagerListener, private UserConnectionListe
 public:
 	
 	/** @return Number of uploads. */ 
-	size_t getUploadCount() { Lock l(cs); return uploads.size(); };
+	size_t getUploadCount() { Lock l(cs); return uploads.size(); }
 
 	/**
 	 * @remarks This is only used in the tray icons. Could be used in
@@ -192,7 +193,7 @@ public:
 	}
 
 	/** @internal */
-	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); };
+	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
 	void reserveSlot(User::Ptr& aUser) {
@@ -229,7 +230,7 @@ public:
 		}
 		if(aUser->isOnline())
 			ClientManager::getInstance()->connect(aUser);	
-}
+	}
 
 	void unreserveSlot(const User::Ptr& aUser) {
 		SlotIter uis = reservedSlots.find(aUser);
@@ -256,8 +257,8 @@ public:
 	UploadQueueItem::UserMap getQueue();
 	void clearUserFiles(const User::Ptr&);
 	UploadQueueItem::UserMap UploadQueueItems;
-	static bool getFireballStatus() { return m_boFireball; };
-	static bool getFileServerStatus() { return m_boFileServer; };
+	static bool getFireballStatus() { return m_boFireball; }
+	static bool getFileServerStatus() { return m_boFileServer; }
 	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
 private:
 	void throttleZeroCounters();

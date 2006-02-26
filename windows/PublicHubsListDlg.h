@@ -33,10 +33,8 @@ class PublicHubListDlg : public CDialogImpl<PublicHubListDlg> {
 public:
 	enum { IDD = IDD_HUB_LIST };
 
-	PublicHubListDlg() { };
-	virtual ~PublicHubListDlg() {
-		ctrlList.Detach();
-	};
+	PublicHubListDlg() { }
+	virtual ~PublicHubListDlg() { ctrlList.Detach(); }
 
 	BEGIN_MSG_MAP(PublicHubListDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

@@ -1163,7 +1163,7 @@ void WinUtil::registerMagnetHandler() {
 	}
 	magnetLoc = buf;
 	string::size_type i;
-	if (magnetLoc[0]==_T('"') && string::npos != (i = magnetLoc.find(_T('"'), 1))) {
+	if (!magnetLoc.empty() && magnetLoc[0]==_T('"') && string::npos != (i = magnetLoc.find(_T('"'), 1))) {
 		magnetExe = magnetLoc.substr(1, i-1);
 	}
 	// check for the existence of magnet.exe

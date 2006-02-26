@@ -226,8 +226,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 		
 		ClientManager::getInstance()->userCommand(itemI->user, uc, tmp, true);
 	}
-	return;
-};
+}
 
 LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
@@ -505,7 +504,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == REMOVE_ITEM) {
 		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
 		if(ui->download) {
-			for(ItemInfo::List::iterator i = transferItems.begin(); i < transferItems.end(); ++i) {
+			for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
 				ItemInfo* ii = *i;
 				if(*ui == *ii) {
 					transferItems.erase(i);
@@ -528,7 +527,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	} else if(wParam == UPDATE_ITEM) {
 		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
 		if(ui->download) {
-			for(ItemInfo::Iter i = transferItems.begin(); i < transferItems.end(); ++i) {
+			for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
 				ItemInfo* ii = *i;
 				if(ii->download == ui->download && ii->user == ui->user) {
 					ii->update(*ui);
@@ -592,7 +591,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		auto_ptr<vector<UpdateInfo*> > v(reinterpret_cast<vector<UpdateInfo*>* >(lParam));
 		set<ItemInfo*> mainItems;
 		ctrlTransfers.SetRedraw(FALSE);
-		for(ItemInfo::Iter i = transferItems.begin(); i < transferItems.end(); ++i) {
+		for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
 			ItemInfo* ii = *i;
 			for(vector<UpdateInfo*>::const_iterator j = v->begin(); j != v->end(); ++j) {
 				UpdateInfo* ui = *j;
@@ -627,7 +626,7 @@ TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoB
 { 
 	columns[COLUMN_USER] = WinUtil::getNicks(u);
 	columns[COLUMN_HUB] = WinUtil::getHubNames(u).first;
-};
+}
 
 void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	if(ui.updateMask & UpdateInfo::MASK_STATUS) {
@@ -843,28 +842,20 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 }
 
 void TransferView::on(DownloadManagerListener::Status, const User::Ptr& aUser, const string& aMessage) {
+	{
+		Lock l(cs);
+		for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
+			ItemInfo* ii = *i;
+			if(ii->download && (ii->user == aUser)) {
+				if(ii->status == ItemInfo::STATUS_WAITING) return;
+				break;
+			}
+		}
+	}
 	UpdateInfo* ui = new UpdateInfo(aUser, true, aMessage != STRING(WAITING_TO_RETRY));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setStatusString(Text::toT(aMessage));
 	speak(UPDATE_ITEM, ui);
-}
-
-void TransferView::on(DownloadManagerListener::Verifying, const string& fileName, int64_t verified) {
-	ItemInfo* i = NULL;
-
-	{
-		Lock l(cs);
-
-		i = ctrlTransfers.findMainItem(fileName);
-		
-		if(i == NULL)
-			return;
-
-		i->pos = verified;
-		i->actual = verified;
-		i->start = -1;
-		i->columns[COLUMN_STATUS] = TSTRING(CHECKING_TTH) + Text::toT(Util::toString(i->size > 0 ? verified * 100 / i->size : 0) + "%");
-	}
 }
 
 void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
@@ -1168,27 +1159,25 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 		if(fileSize == -1) return true;
 
-		if(main->start != -1) {
-			if(main->status == ItemInfo::DOWNLOAD_STARTING) {
-				main->status = ItemInfo::STATUS_RUNNING;
-				main->columns[COLUMN_STATUS] = TSTRING(DOWNLOAD_STARTING);
-			} else {
-				AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);		
-					_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
-					(double)total*100.0/(double)fileSize, Text::toT(Util::formatSeconds((GET_TICK() - main->fileBegin)/1000)).c_str());
+		if(main->status == ItemInfo::DOWNLOAD_STARTING) {
+			main->status = ItemInfo::STATUS_RUNNING;
+			main->columns[COLUMN_STATUS] = TSTRING(DOWNLOAD_STARTING);
+		} else {
+			AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);		
+				_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
+				(double)total*100.0/(double)fileSize, Text::toT(Util::formatSeconds((GET_TICK() - main->fileBegin)/1000)).c_str());
 
-				tstring statusString;
+			tstring statusString;
 
-				// hack to display whether file is compressed
-				if(ratio < 1.000) {
-					statusString = _T("[Z] ");
-				}
-				statusString += buf;
-				main->columns[COLUMN_STATUS] = statusString;
-			
-				main->actual = (int64_t)(total * ratio);
-				main->pos = total;
+			// hack to display whether file is compressed
+			if(ratio < 1.000) {
+				statusString = _T("[Z] ");
 			}
+			statusString += buf;
+			main->columns[COLUMN_STATUS] = statusString;
+			
+			main->actual = (int64_t)(total * ratio);
+			main->pos = total;
 		}
 		main->size = fileSize;
 		

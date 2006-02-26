@@ -29,6 +29,7 @@ class HttpConnection;
 
 class HttpConnectionListener {
 public:
+	virtual ~HttpConnectionListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Data;
@@ -50,7 +51,7 @@ class HttpConnection : BufferedSocketListener, public Speaker<HttpConnectionList
 {
 public:
 	void downloadFile(const string& aUrl);
-	HttpConnection() : ok(false), port(80), size(-1), moved302(false), socket(NULL) { };
+	HttpConnection() : ok(false), port(80), size(-1), moved302(false), socket(NULL) { }
 	virtual ~HttpConnection() throw() { 
 		if(socket) {
 			socket->removeListener(this); 

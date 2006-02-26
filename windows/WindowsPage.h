@@ -33,11 +33,9 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_APPEARANCE) + _T('\\') + TSTRING(SETTINGS_WINDOWS)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 
-	virtual ~WindowsPage() {
-		free(title);
-	};
+	virtual ~WindowsPage() { free(title); }
 
 	BEGIN_MSG_MAP(WindowsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

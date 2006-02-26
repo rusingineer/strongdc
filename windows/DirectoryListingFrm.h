@@ -266,7 +266,7 @@ private:
 			columns[COLUMN_SIZE] =  Text::toT(Util::formatBytes(f->getSize()));
 			if(f->getTTH() != NULL)
 				columns[COLUMN_TTH] = Text::toT(f->getTTH()->toBase32());
-		};
+		}
 		ItemInfo(DirectoryListing::Directory* d, bool utf8) : type(DIRECTORY), dir(d) { 
 			if(utf8) {
 				columns[COLUMN_FILENAME] = Text::toT(d->getName());
@@ -275,7 +275,7 @@ private:
 			}
 			columns[COLUMN_EXACTSIZE] = Text::toT(Util::formatExactSize(d->getTotalSize()));
 			columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(d->getTotalSize()));
-		};
+		}
 
 		const tstring& getText(int col) {
 			return columns[col];

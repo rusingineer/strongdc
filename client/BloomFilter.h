@@ -34,8 +34,8 @@ private:
 template<size_t N, class HashFunc = CRC32Hash>
 class BloomFilter {
 public:
-	BloomFilter(size_t tableSize) { table.resize(tableSize); };
-	~BloomFilter() { };
+	BloomFilter(size_t tableSize) { table.resize(tableSize); }
+	~BloomFilter() { }
 
 	void add(const string& s) { xadd(s, N); }
 	bool match(const StringList& s) { 

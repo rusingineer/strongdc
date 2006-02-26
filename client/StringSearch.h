@@ -39,10 +39,10 @@ public:
 
 	explicit StringSearch(const string& aPattern) throw() : pattern(Text::toLower(aPattern)) { 
 		initDelta1();
-	};
+	}
 	StringSearch(const StringSearch& rhs) throw() : pattern(rhs.pattern) { 
 		memcpy(delta1, rhs.delta1, sizeof(delta1));
-	};
+	}
 	const StringSearch& operator=(const StringSearch& rhs) {
 		memcpy(delta1, rhs.delta1, sizeof(delta1));
 		pattern = rhs.pattern;
@@ -54,9 +54,9 @@ public:
 		return *this;
 	}
 
-	bool operator==(const StringSearch& rhs) { return pattern == rhs.pattern; };
+	bool operator==(const StringSearch& rhs) { return pattern == rhs.pattern; }
 
-	const string& getPattern() const { return pattern; };
+	const string& getPattern() const { return pattern; }
 
 	/** Match a text against the pattern */
 	bool match(const string& aText) const throw() {
