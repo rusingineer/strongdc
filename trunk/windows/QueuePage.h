@@ -34,11 +34,8 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_DOWNLOADS) + _T('\\') + TSTRING(SETTINGS_QUEUE)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
-
-	virtual ~QueuePage() {
-		free(title);
-	};
+	}
+	virtual ~QueuePage() { free(title);	}
 
 	BEGIN_MSG_MAP(QueuePage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

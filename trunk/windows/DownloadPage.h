@@ -32,8 +32,8 @@ public:
 	DownloadPage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_DOWNLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
-	virtual ~DownloadPage() { };
+	}
+	virtual ~DownloadPage() { }
 
 	BEGIN_MSG_MAP_EX(DownloadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

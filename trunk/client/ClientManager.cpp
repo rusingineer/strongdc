@@ -56,7 +56,8 @@ Client* ClientManager::getClient(const string& aHubURL) {
 }
 
 void ClientManager::putClient(Client* aClient) {
-	aClient->disconnect(true);
+	aClient->shutdown();
+
 	fire(ClientManagerListener::ClientDisconnected(), aClient);
 	aClient->removeListeners();
 
@@ -757,7 +758,7 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 			ou->getIdentity().sendRawCommand(ou->getClient(), aRawCommand);
 	}
 	ou->getClient().updated(*ou);
-	if(!report.empty())
+	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
 }
 

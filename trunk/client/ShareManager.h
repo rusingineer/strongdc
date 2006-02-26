@@ -61,7 +61,7 @@ public:
 	string translateFileName(const string& aFile) throw(ShareException);
 	bool getTTH(const string& aFile, TTHValue& tth) throw();
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ThreadException, ShareException);
-	void setDirty() { xmlDirty = nmdcDirty = true; };
+	void setDirty() { xmlDirty = nmdcDirty = true; }
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
@@ -82,11 +82,11 @@ public:
 
 	size_t getSharedFiles() throw();
 
-	string getShareSizeString() { return Util::toString(getShareSize()); };
-	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); };
+	string getShareSizeString() { return Util::toString(getShareSize()); }
+	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); }
 	
-	int64_t getListLen() { return generateNmdcList(), listLen; };
-	string getListLenString() { return Util::toString(getListLen()); };
+	int64_t getListLen() { return generateNmdcList(), listLen; }
+	string getListLenString() { return Util::toString(getListLen()); }
 	
 	SearchManager::TypeModes getType(const string& fileName);
 
@@ -129,11 +129,11 @@ private:
 			typedef set<File, FileLess> Set;
 			typedef Set::const_iterator Iter;
 
-			File() : size(0), parent(NULL) { };
+			File() : size(0), parent(NULL) { }
 			File(const string& aName, int64_t aSize, Directory* aParent, const TTHValue& aRoot) : 
-			name(aName), tth(aRoot), size(aSize), parent(aParent) { };
+			name(aName), tth(aRoot), size(aSize), parent(aParent) { }
 			File(const File& rhs) : 
-			name(rhs.getName()), tth(rhs.getTTH()), size(rhs.getSize()), parent(rhs.getParent()) { };
+			name(rhs.getName()), tth(rhs.getTTH()), size(rhs.getSize()), parent(rhs.getParent()) { }
 
 			~File() { }
 
@@ -165,7 +165,7 @@ private:
 
 		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
 			size(0), name(aName), parent(aParent), fileTypes(0) { 
-		};
+		}
 
 		~Directory();
 

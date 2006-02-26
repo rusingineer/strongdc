@@ -26,10 +26,10 @@
 class Exception  
 {
 public:
-	Exception() { };
-	Exception(const string& aError) throw() : error(aError) { dcdrun(if(error.size()>0)) dcdebug("Thrown: %s\n", error.c_str()); };
-	virtual ~Exception() throw() { };
-	virtual const string& getError() const throw() { return error; };
+	Exception() { }
+	Exception(const string& aError) throw() : error(aError) { dcdrun(if(error.size()>0)) dcdebug("Thrown: %s\n", error.c_str()); }
+	virtual ~Exception() throw() { }
+	virtual const string& getError() const throw() { return error; }
 protected:
 	string error;
 };

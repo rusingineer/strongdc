@@ -44,7 +44,7 @@ class TypedListViewCtrl : public CWindowImpl<TypedListViewCtrl<T, ctrlId>, CList
 	public ListViewArrows<TypedListViewCtrl<T, ctrlId> >
 {
 public:
-	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { };
+	TypedListViewCtrl() : sortColumn(-1), sortAscending(true), hBrBg(WinUtil::bgBrush), leftMargin(0) { }
 	~TypedListViewCtrl() { for_each(columnList.begin(), columnList.end(), DeleteFunction()); }
 
 	typedef TypedListViewCtrl<T, ctrlId> thisClass;
@@ -73,8 +73,8 @@ public:
 			return cur - rhs.cur;
 		}
 
-		iterator& operator+=(int n) { cur += n; return *this; };
-		iterator& operator-=(int n) { return (cur += -n); };
+		iterator& operator+=(int n) { cur += n; return *this; }
+		iterator& operator-=(int n) { return (cur += -n); }
 		
 		T& operator*() { return *typedList->getItemData(cur); }
 		T* operator->() { return &(*(*this)); }
@@ -244,8 +244,8 @@ public:
 		for(int j = 0; j < k; ++j)
 			SetItemText(i, j, LPSTR_TEXTCALLBACK);
 	}
-	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); };
-	void deleteItem(T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); };
+	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
+	void deleteItem(T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
 	int getSortPos(T* a) {
 		int high = GetItemCount();

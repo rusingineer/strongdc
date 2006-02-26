@@ -920,7 +920,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 	}
 
 	return 0;
-};
+}
 
 void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	RECT rect;
@@ -1246,11 +1246,10 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 		LOG(LogManager::CHAT, params);
 	}
 
-	bool bMyMess = i.getUser() == ClientManager::getInstance()->getMe();
 	if(timeStamps) {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), bMyMess, Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
 	} else {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), bMyMess, _T(""), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), _T(""), aLine.c_str(), cf, bUseEmo);
 	}
 
 	if (BOOLSETTING(BOLD_HUB)) {
@@ -1306,9 +1305,6 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		if ( ctrlUsers.GetSelectedCount() == 1 ) {
 			if(pt.x == -1 && pt.y == -1) {
 				WinUtil::getContextMenuPos(ctrlUsers, pt);
-	
-	
-	
 			}
 			int i = -1;
 			i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
@@ -1447,8 +1443,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			}
 		}
 	}
-	return;
-};
+}
 
 void HubFrame::onTab() {
 	HWND focus = GetFocus();
@@ -1793,7 +1788,7 @@ void HubFrame::closeDisconnected() {
 			i->second->PostMessage(WM_CLOSE);
 		}
 	}
-};
+}
 
 void HubFrame::on(TimerManagerListener::Second, DWORD /*aTick*/) throw() {
 	if(updateUsers) {

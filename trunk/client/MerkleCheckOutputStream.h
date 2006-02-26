@@ -54,7 +54,7 @@ public:
 			verified = cur.getLeaves().size();
 	}
 
-	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; };
+	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
 	virtual size_t flush() throw(FileException) {
 		if(!multiSourceChecking) {

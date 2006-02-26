@@ -44,9 +44,8 @@
 #include <limits>
 
 ShareManager::ShareManager() : hits(0), listLen(0), bzXmlListLen(0),
-	xmlDirty(true), nmdcDirty(false), refreshDirs(false), update(false), initial(true), listN(0), lFile(NULL), 
-	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0),
-	refreshing(0)
+	xmlDirty(true), nmdcDirty(false), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0), lFile(NULL), 
+	xFile(NULL), lastXmlUpdate(0), lastNmdcUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -790,21 +789,13 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 }
 
 void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
-	// HACK for bug in hash_multimap
 	pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
 	for(HashFileIter j = range.first; j != range.second; ++j) {
-	//for(HashFileIter j = tthIndex.find(const_cast<TTHValue*>(&tth)); j != tthIndex.end(); ++j) {
 		if(*j->second == file) {
 			tthIndex.erase(j);
 			return;
 		}
 	}
-	dcassert(0);
-
-/*	dcdebug("%s\n", tth.toBase32().c_str());
-	for(HashFileIter j = tthIndex.begin(); j != tthIndex.end(); ++j) {
-		dcdebug("%s\n", j->first->toBase32().c_str());
-	}*/
 }
 
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ThreadException, ShareException) {

@@ -304,7 +304,7 @@ public:
 		return 0;
 	}
 
-	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; };
+	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; }
 private:
 	enum {
 		COLUMN_FIRST,
@@ -338,7 +338,7 @@ private:
 
 	class MessageInfo {
 	public:
-		MessageInfo(Identity from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { };
+		MessageInfo(Identity from_, const User::Ptr& to_, const User::Ptr& replyTo_, const string& m) : from(from_), to(to_), replyTo(replyTo_), msg(Text::toT(m)) { }
 		Identity from;
 		User::Ptr to;
 		User::Ptr replyTo;
@@ -510,14 +510,14 @@ private:
 	virtual void on(SearchFlood, Client*, const string&) throw();
 	virtual void on(CheatMessage, Client*, const string&) throw();	
 
-	void speak(Speakers s) { PostMessage(WM_SPEAKER, (WPARAM)s); };
-	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new tstring(Text::toT(msg))); };
+	void speak(Speakers s) { PostMessage(WM_SPEAKER, (WPARAM)s); }
+	void speak(Speakers s, const string& msg) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new tstring(Text::toT(msg))); }
 	void speak(Speakers s, const OnlineUser& u) { 
 		Lock l(updateCS);
 		updateList.push_back(make_pair(UpdateInfo(u), s));
 		updateUsers = true;
-	};
-	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(&from ? from.getIdentity() : Identity(NULL, Util::emptyString), to, replyTo, line)); };
+	}
+	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { PostMessage(WM_SPEAKER, (WPARAM)s, (LPARAM)new MessageInfo(&from ? from.getIdentity() : Identity(NULL, Util::emptyString), to, replyTo, line)); }
 
 };
 

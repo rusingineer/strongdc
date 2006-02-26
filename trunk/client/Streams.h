@@ -49,7 +49,7 @@ public:
 	 */
 	virtual size_t flush() throw(Exception) = 0;
 
-	size_t write(const string& str) throw(Exception) { return write(str.c_str(), str.size()); };
+	size_t write(const string& str) throw(Exception) { return write(str.c_str(), str.size()); }
 private:
 	OutputStream(const OutputStream&);
 	OutputStream& operator=(const OutputStream&);

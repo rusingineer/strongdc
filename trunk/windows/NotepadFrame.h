@@ -67,7 +67,7 @@ public:
 		}
 		bHandled = FALSE;
 		return FALSE;
-	};
+	}
 	
 	
 	LRESULT OnFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {

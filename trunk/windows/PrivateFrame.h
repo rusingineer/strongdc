@@ -43,7 +43,7 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 public:
 	static void gotMessage(Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
 	static void openWindow(const User::Ptr& replyTo, const tstring& aMessage = Util::emptyStringT);
-	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); };
+	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); }
 
 	enum {
 		USER_UPDATED
@@ -167,7 +167,7 @@ public:
 		}
 		bHandled = FALSE;
 		return FALSE;
-	};
+	}
 
 	LRESULT onFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
@@ -187,7 +187,7 @@ public:
 	
 	void sendMessage(const tstring& msg);
 	
-	User::Ptr& getUser() { return replyTo; };
+	User::Ptr& getUser() { return replyTo; }
 private:
 	PrivateFrame(const User::Ptr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  

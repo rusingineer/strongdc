@@ -41,7 +41,7 @@ public:
 	
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
 	name(aName), server(aServer), description(aDescription), country(Util::emptyString), 
-	rating(Util::emptyString), reliability(0.0), shared(0), minShare(0), users(Util::toInt(aUsers)), minSlots(0), maxHubs(0), maxUsers(0) { };
+	rating(Util::emptyString), reliability(0.0), shared(0), minShare(0), users(Util::toInt(aUsers)), minSlots(0), maxHubs(0), maxUsers(0) { }
 
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers, const string& aCountry,
 		const string& aShared, const string& aMinShare, const string& aMinSlots, const string& aMaxHubs, const string& aMaxUsers,
@@ -52,12 +52,12 @@ public:
 
 	}
 
-	HubEntry() throw() { };
+	HubEntry() throw() { }
 	HubEntry(const HubEntry& rhs) throw() : name(rhs.name), server(rhs.server), description(rhs.description), country(rhs.country), 
 		rating(rhs.rating), reliability(rhs.reliability), shared(rhs.shared), minShare(rhs.minShare), users(rhs.users), minSlots(rhs.minSlots),
 		maxHubs(rhs.maxHubs), maxUsers(rhs.maxUsers) { }
 
-	~HubEntry() throw() { };
+	~HubEntry() throw() { }
 
 	GETSET(string, name, Name);
 	GETSET(string, server, Server);
@@ -80,23 +80,23 @@ public:
 	typedef List::const_iterator Iter;
 
 	FavoriteHubEntry() throw() : connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), 
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { };
+		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
 		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip),
-		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { };
+		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { }
 	~FavoriteHubEntry() throw() { }
 	
 	const string& getNick(bool useDefault = true) const { 
 		return (!nick.empty() || !useDefault) ? nick : SETTING(NICK);
 	}
 
-	void setNick(const string& aNick) { nick = aNick; };
+	void setNick(const string& aNick) { nick = aNick; }
 
 	GETSET(string, userdescription, UserDescription);
 	GETSET(string, name, Name);
@@ -160,6 +160,7 @@ public:
 
 class FavoriteManagerListener {
 public:
+	virtual ~FavoriteManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> DownloadStarting;
@@ -203,19 +204,19 @@ public:
 	};
 	StringList getHubLists();
 	bool setHubList(int /*aHubList*/);
-	unsigned int getSelectedHubList() { return lastServer; };
+	unsigned int getSelectedHubList() { return lastServer; }
 	void refresh();
-	HubTypes getHubListType() { return listType; };
+	HubTypes getHubListType() { return listType; }
 	HubEntry::List getPublicHubs() {
 		Lock l(cs);
 		return publicListMatrix[publicListServer];
 	}
-	bool isDownloading() { return running; };
+	bool isDownloading() { return running; }
 
 // Favorite Users
 	typedef HASH_MAP_X(CID, FavoriteUser, CID::Hash, equal_to<CID>, less<CID>) FavoriteMap;
-	FavoriteMap getFavoriteUsers() { Lock l(cs); return users; };
-	PreviewApplication::List& getPreviewApps() { return previewApplications; };
+	FavoriteMap getFavoriteUsers() { Lock l(cs); return users; }
+	PreviewApplication::List& getPreviewApps() { return previewApplications; }
 
 	void addFavoriteUser(User::Ptr& aUser);
 	bool isFavoriteUser(const User::Ptr& aUser) const { Lock l(cs); return users.find(aUser->getCID()) != users.end(); }
@@ -227,7 +228,7 @@ public:
 	void userUpdated(const OnlineUser& info);
 	time_t getLastSeen(const User::Ptr& aUser) const;
 // Favorite Hubs
-	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; };
+	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; }
 
 	void addFavorite(const FavoriteHubEntry& aEntry);
 	void removeFavorite(FavoriteHubEntry* entry);
@@ -295,7 +296,7 @@ public:
 	void removeUserCommand(const string& srv);
 	void removeHubUserCommands(int ctx, const string& hub);
 
-	UserCommand::List getUserCommands() { Lock l(cs); return userCommands; };
+	UserCommand::List getUserCommands() { Lock l(cs); return userCommands; }
 	UserCommand::List getUserCommands(int ctx, const StringList& hub, bool& op);
 
 	void load();

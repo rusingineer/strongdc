@@ -77,7 +77,7 @@ public:
 	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
 	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
 
-	virtual ~User() throw() { };
+	virtual ~User() throw() { }
 
 	operator CID() { return cid; }
 
@@ -203,7 +203,6 @@ public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
-	OnlineUser() : sid(0), client(NULL) { }
 	OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_);
 
 	operator User::Ptr&() { return user; }

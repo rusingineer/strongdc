@@ -36,12 +36,12 @@ public:
 		title = _tcsdup((TSTRING(SETTINGS_ADVANCED) + _T('\\') + TSTRING(SETTINGS_USER_COMMANDS)).c_str());
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 
 	virtual ~UCPage() {
 		ctrlCommands.Detach();
 		free(title);
-	};
+	}
 
 	BEGIN_MSG_MAP_EX(UCPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

@@ -26,8 +26,8 @@
 class BitOutputStream
 {
 public:
-	BitOutputStream(string& aStream) : is(aStream), bitPos(0), next(0) { };
-	~BitOutputStream() { };
+	BitOutputStream(string& aStream) : is(aStream), bitPos(0), next(0) { }
+	~BitOutputStream() { }
 	
 	void put(vector<u_int8_t>& b) {
 		for(vector<u_int8_t>::const_iterator i = b.begin(); i != b.end(); ++i) {

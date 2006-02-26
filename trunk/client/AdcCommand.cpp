@@ -131,6 +131,24 @@ string AdcCommand::toString(u_int32_t sid /* = 0 */, bool nmdc /* = false */) co
 	return getHeaderString(sid, nmdc) + getParamString(nmdc);
 }
 
+string AdcCommand::escape(const string& str, bool old) {
+	string tmp = str;
+	string::size_type i = 0;
+	while( (i = tmp.find_first_of(" \n\\", i)) != string::npos) {
+		if(old) {
+			tmp.insert(i, "\\");
+		} else {
+			switch(tmp[i]) {
+				case ' ': tmp.replace(i, 1, "\\s"); break;
+				case '\n': tmp.replace(i, 1, "\\n"); break;
+				case '\\': tmp.replace(i, 1, "\\\\"); break;
+			}
+		}
+		i+=2;
+	}
+	return tmp;
+}
+
 string AdcCommand::getHeaderString(u_int32_t sid, bool nmdc) const {
 	string tmp;
 	if(nmdc) {

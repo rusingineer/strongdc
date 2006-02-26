@@ -36,7 +36,7 @@
 
 BufferedSocket::BufferedSocket(char aSeparator) throw() : 
 separator(aSeparator), mode(MODE_LINE), 
-dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false)
+dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false), filterIn(NULL)
 {
 	sockets++;
 }
@@ -45,13 +45,39 @@ size_t BufferedSocket::sockets = 0;
 
 BufferedSocket::~BufferedSocket() throw() {
 	delete sock;
+	if (filterIn) delete filterIn;
 	sockets--;
+}
+
+void BufferedSocket::setMode (Modes aMode, size_t aRollback) {
+	if (mode == aMode) {
+		dcdebug ("WARNING: Re-entering mode %d\n", mode);
+		return;
+	}
+
+	if (mode == MODE_ZPIPE) {
+		// should not happen!
+		if (filterIn) {
+			delete filterIn;
+			filterIn = NULL;
+		}
+	}
+
+	mode = aMode;
+	switch (aMode) {
+		case MODE_LINE:
+			rollback = aRollback;
+			break;
+		case MODE_ZPIPE:
+			filterIn = new UnZFilter;
+			break;
+	}
 }
 
 void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketException, ThreadException) {
 	dcassert(!sock);
 
-	dcdebug("BufferedSocket::accept() %p\n", this);
+	dcdebug("BufferedSocket::accept() %p\n", (void*)this);
 	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
 
 	sock->accept(srv);
@@ -79,7 +105,7 @@ void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketExceptio
 void BufferedSocket::connect(const string& aAddress, short aPort, bool secure, bool proxy) throw(SocketException, ThreadException) {
 	dcassert(!sock);
 
-	dcdebug("BufferedSocket::connect() %p\n", this);
+	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
 	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
 
 	sock->create();
@@ -160,65 +186,98 @@ void BufferedSocket::threadRead() throw(SocketException) {
 		// This socket has been closed...
 		throw SocketException(STRING(CONNECTION_CLOSED));
 	}
-
-	int bufpos = 0;
+    size_t used;
+	string::size_type pos = 0;
+    // always uncompressed data
 	string l;
+	int bufpos = 0, total = left;
+
 	while(left > 0) {
-		if(mode == MODE_LINE) {
-			// Special to autodetect nmdc connections...
-			if(separator == 0) {
-				if(inbuf[0] == '$') {
-					separator = '|';
-				} else {
-					separator = '\n';
+		switch (mode) {
+			case MODE_ZPIPE:
+				if (filterIn != NULL){
+				    const int BufSize = 1024;
+					// Special to autodetect nmdc connections...
+					string::size_type pos = 0;
+					AutoArray<u_int8_t> buffer (BufSize);
+					size_t in;
+					// decompress all input data and store in l.
+					while (left) {
+						in = BufSize;
+						used = left;
+						bool ret = (*filterIn) ((void *)(&inbuf[0] + total - left), used, &buffer[0], in);
+						left -= used;
+						l.append ((const char *)&buffer[0], in);
+						// if the stream ends before the data runs out, keep remainder of data in inbuf
+						if (!ret) {
+							bufpos = total-left;
+							setMode (MODE_LINE, rollback);
+							break;
+						}
+					}
+					// process all lines
+					while ((pos = l.find(separator)) != string::npos) {
+						fire(BufferedSocketListener::Line(), l.substr(0, pos));
+						l.erase (0, pos + 1 /* seperator char */);
+					}
+					// store remainder
+					line += l;
+
+					break;
 				}
-			}
-			string::size_type pos = 0;
-
-			l = string((char*)&inbuf[0] + bufpos, left);
-
-			if((pos = l.find(separator)) != string::npos) {
-				if(!line.empty()) {
-					fire(BufferedSocketListener::Line(), line + l.substr(0, pos));
-					line.clear();
-				} else {
+			case MODE_LINE:
+				// Special to autodetect nmdc connections...
+				if(separator == 0) {
+					if(inbuf[0] == '$') {
+						separator = '|';
+					} else {
+						separator = '\n';
+					}
+				}
+				l = line + string ((char*)&inbuf[bufpos], left);
+				while ((pos = l.find(separator)) != string::npos) {
 					fire(BufferedSocketListener::Line(), l.substr(0, pos));
+					l.erase (0, pos + 1 /* separator char */);
+					if (l.length() < (size_t)left) left = l.length();
+					if (mode != MODE_LINE) {
+						// we changed mode; remainder of l is invalid.
+						l.clear();
+						bufpos = total - left;
+						break;
+					}
 				}
-				left -= (pos + sizeof(separator));
-				bufpos += (pos + sizeof(separator));
-			} else {
-				line += l;
-				left = 0;
-			}
-		} else if(mode == MODE_DATA) {
-			// disconnect when invalid data comes from some user.. test more!
-			if(disconnecting) {
-				return;
-			}
-			if(dataBytes == -1) {
-				fire(BufferedSocketListener::Data(), &inbuf[bufpos], left);
-				bufpos += (left - rollback);
-				left = rollback;
-				rollback = 0;
-			} else {
-				int high = (int)min(dataBytes, (int64_t)left);
-				fire(BufferedSocketListener::Data(), &inbuf[bufpos], high);
-				bufpos += high;
-				left -= high;
+				if (pos == string::npos) 
+					left = 0;
+				line = l;
+				break;
+			case MODE_DATA:
+				while(left > 0) {
+					if(dataBytes == -1) {
+						fire(BufferedSocketListener::Data(), &inbuf[bufpos], left);
+						bufpos += (left - rollback);
+						left = rollback;
+						rollback = 0;
+					} else {
+						int high = (int)min(dataBytes, (int64_t)left);
+						fire(BufferedSocketListener::Data(), &inbuf[bufpos], high);
+						bufpos += high;
+						left -= high;
 
-				dataBytes -= high;
-				if(dataBytes == 0) {
-					mode = MODE_LINE;
-					fire(BufferedSocketListener::ModeChange());
+						dataBytes -= high;
+						if(dataBytes == 0) {
+							mode = MODE_LINE;
+							fire(BufferedSocketListener::ModeChange());
+						}
+					}
+					if (throttling) {
+						if (left > 0 && left < (int)readsize) {
+							dm->throttleReturnBytes(left - readsize);
+						}
+						u_int32_t sleep_interval =  dm->throttleCycleTime();
+						Thread::sleep(sleep_interval);
+					}
 				}
-			}
-			if (throttling) {
-				if (left > 0 && left < (int)readsize) {
-					dm->throttleReturnBytes(left - readsize);
-				}
-				u_int32_t sleep_interval =  dm->throttleCycleTime();
-				Thread::sleep(sleep_interval);
-			}
+				break;
 		}
 	}
 }
@@ -391,7 +450,7 @@ void BufferedSocket::checkSocket() {
  * @todo Fix the polling...
  */
 int BufferedSocket::run() {
-	dcdebug("BufferedSocket::run() start %p\n", this);
+	dcdebug("BufferedSocket::run() start %p\n", (void*)this);
 	while(true) {
 		try {
 			if(!checkEvents())
@@ -401,7 +460,7 @@ int BufferedSocket::run() {
 			fail(e.getError());
 		}
 	}
-	dcdebug("BufferedSocket::run() end %p\n", this);
+	dcdebug("BufferedSocket::run() end %p\n", (void*)this);
 	delete this;
 	return 0;
 }
@@ -415,7 +474,6 @@ void BufferedSocket::shutdown() {
 		// Socket thread not running yet, disconnect...
 		delete this;
 	}
-
 }
 
 /**

@@ -46,8 +46,8 @@ class FinishedFrameBase : public MDITabChildWindowImpl<T, RGB(0, 0, 0), icon>, p
 public:
 	typedef MDITabChildWindowImpl<T, RGB(0, 0, 0), icon> baseClass;
 
-	FinishedFrameBase() : totalBytes(0), totalTime(0), closed(false) { };
-	virtual ~FinishedFrameBase() { };
+	FinishedFrameBase() : totalBytes(0), totalTime(0), closed(false) { }
+	virtual ~FinishedFrameBase() { }
 
 	BEGIN_MSG_MAP(T)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -446,7 +446,7 @@ int FinishedFrameBase<T, title, id, icon>::columnIndexes[] = { COLUMN_DONE, COLU
 template <class T, int title, int id, int icon>
 int FinishedFrameBase<T, title, id, icon>::columnSizes[] = { 100, 110, 290, 125, 80, 80, 80 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
-ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED
+ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED, ResourceManager::CRC_CHECKED
 };
 
 #endif // !defined(FINISHED_FRAME_BASE_H)

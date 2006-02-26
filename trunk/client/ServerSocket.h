@@ -28,6 +28,7 @@
 
 class ServerSocketListener {
 public:
+	virtual ~ServerSocketListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> IncomingConnection;
@@ -36,7 +37,7 @@ public:
 
 class ServerSocket : public Speaker<ServerSocketListener> {
 public:
-	ServerSocket() throw() { };
+	ServerSocket() throw() { }
 
 	void listen(short port) throw(SocketException);
 	void disconnect() throw() { socket.disconnect(); }

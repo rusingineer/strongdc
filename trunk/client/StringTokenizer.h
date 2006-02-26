@@ -52,10 +52,9 @@ public:
 			tokens.push_back(aString.substr(j, aString.size()-j));
 	}
 
-	vector<T>& getTokens() { return tokens; };
+	vector<T>& getTokens() { return tokens; }
 
-	~StringTokenizer() { };
-
+	~StringTokenizer() { }
 };
 
 #endif // !defined(STRING_TOKENIZER_H)

@@ -37,6 +37,7 @@ class UserConnection;
 
 class UserConnectionListener {
 public:
+	virtual ~UserConnectionListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> BytesSent;
@@ -100,27 +101,27 @@ class ConnectionQueueItem;
 class Transfer {
 public:
 	Transfer() : userConnection(NULL), start(0), lastTick(GET_TICK()), runningAverage(0), 
-		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1) { };
-	virtual ~Transfer() { };
+		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1) { }
+	virtual ~Transfer() { }
 	
-	int64_t getPos() const { return pos; };
-	void setPos(int64_t aPos) { pos = aPos; };
+	int64_t getPos() const { return pos; }
+	void setPos(int64_t aPos) { pos = aPos; }
 
-	void resetPos() { pos = getStartPos(); };
-	void setStartPos(int64_t aPos) { startPos = aPos; pos = aPos; };
+	void resetPos() { pos = getStartPos(); }
+	void setStartPos(int64_t aPos) { startPos = aPos; pos = aPos; }
 	int64_t getStartPos() const { return startPos; }
 
-	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; };
+	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; }
 
 	enum { AVG_PERIOD = 30000 };
 	void updateRunningAverage();
 
-	int64_t getTotal() const { return getPos() - getStartPos(); };
-	int64_t getActual() const { return actual; };
+	int64_t getTotal() const { return getPos() - getStartPos(); }
+	int64_t getActual() const { return actual; }
 	
-	int64_t getSize() const { return size; };
-	void setSize(int64_t aSize) { size = aSize; };
-	void setSize(const string& aSize) { setSize(Util::toInt64(aSize)); };
+	int64_t getSize() const { return size; }
+	void setSize(int64_t aSize) { size = aSize; }
+	void setSize(const string& aSize) { setSize(Util::toInt64(aSize)); }
 
 	int64_t getAverageSpeed() const {
 		int64_t diff = (int64_t)(GET_TICK() - getStart());
@@ -230,24 +231,24 @@ public:
 
 	};
 
-	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); };
+	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); }
 
 	// NMDC stuff
 	void myNick(const string& aNick) { send("$MyNick " + Text::utf8ToAcp(aNick) + '|'); }
 	void lock(const string& aLock, const string& aPk) { send ("$Lock " + aLock + " Pk=" + aPk + '|'); }
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
-	void get(const string& aFile, int64_t aResume) { send("$Get " + aFile + "$" + Util::toString(aResume + 1) + '|'); }; 	// No acp - utf conversion here...
-	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); };
+	void get(const string& aFile, int64_t aResume) { send("$Get " + aFile + "$" + Util::toString(aResume + 1) + '|'); } 	// No acp - utf conversion here...
+	void getZBlock(const string& aFile, int64_t aResume, int64_t aBytes, bool utf8) { send((utf8 ? "$UGetZBlock " : "$GetZBlock ") + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
 	void uGetBlock(const string& aFile, int64_t aResume, int64_t aBytes) { send("$UGetBlock " + Util::toString(aResume) + ' ' + Util::toString(aBytes) + ' ' + aFile + '|'); }
 	void fileLength(const string& aLength) { send("$FileLength " + aLength + '|'); }
 	void startSend() { send("$Send|"); }
-	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); };
-	void error(const string& aError) { send("$Error " + aError + '|'); };
-	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); };
-	void maxedOut() { isSet(FLAG_NMDC) ? send("$MaxedOut|") : send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full")); };
+	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); }
+	void error(const string& aError) { send("$Error " + aError + '|'); }
+	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); }
+	void maxedOut() { isSet(FLAG_NMDC) ? send("$MaxedOut|") : send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full")); }
 	void fileNotAvail() { isSet(FLAG_NMDC) ? send("$Error " + FILE_NOT_AVAILABLE + "|") : send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_FILE_NOT_AVAILABLE, FILE_NOT_AVAILABLE)); }
-	void getListLen() { send("$GetListLen|"); };
+	void getListLen() { send("$GetListLen|"); }
 
 	// ADC Stuff
 	void sup(const StringList& features) { 
@@ -271,7 +272,6 @@ public:
 	}
 	void setDataMode(int64_t aBytes = -1) { dcassert(socket); socket->setDataMode(aBytes); }
 	void setLineMode(size_t rollback) { dcassert(socket); socket->setLineMode(rollback); }
-	void sendRaw(const string& raw) { send(raw); }
 
 	void connect(const string& aServer, short aPort) throw(SocketException, ThreadException);
 	void accept(const Socket& aServer) throw(SocketException, ThreadException);
@@ -345,11 +345,11 @@ private:
 	// We only want ConnectionManager to create this...
 	UserConnection(bool secure_) throw() : /*cqi(NULL),*/ state(STATE_UNCONNECTED), lastActivity(0), 
 		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString), ucNumber(0) { 
-	};
+	}
 
 	virtual ~UserConnection() throw() {
 		BufferedSocket::putSocket(socket);
-	};
+	}
 	friend struct DeleteFunction;
 
 	UserConnection(const UserConnection&);
@@ -357,7 +357,7 @@ private:
 
 	void setUser(const User::Ptr& aUser) {
 		user = aUser;
-	};
+	}
 
 	void onLine(const char* aLine, int iLineLen) throw();
 	

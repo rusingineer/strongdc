@@ -222,7 +222,7 @@ typedef TigerTree::MerkleValue TTHValue;
 
 template<int64_t aBlockSize>
 struct TTFilter {
-	TTFilter() : tt(aBlockSize) { };
+	TTFilter() : tt(aBlockSize) { }
 	void operator()(const void* data, size_t len) { tt.update(data, len); }
 	TigerTree& getTree() { return tt; }
 private:

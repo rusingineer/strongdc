@@ -30,7 +30,7 @@
 template<class T>
 class UCHandler {
 public:
-	UCHandler() : menuPos(0) { };
+	UCHandler() : menuPos(0) { }
 
 	typedef UCHandler<T> thisClass;
 	BEGIN_MSG_MAP(thisClass)

@@ -472,7 +472,7 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 
 class RollbackException : public FileException {
 public:
-	RollbackException (const string& aError) : FileException(aError) { };
+	RollbackException (const string& aError) : FileException(aError) { }
 };
 
 template<bool managed>
@@ -483,7 +483,7 @@ public:
 		f->read(buf, n);
 		f->movePos(-((int64_t)bytes));
 	}
-	virtual ~RollbackOutputStream() throw() { delete[] buf; if(managed) delete s; };
+	virtual ~RollbackOutputStream() throw() { delete[] buf; if(managed) delete s; }
 
 	virtual size_t flush() throw(FileException) {
 		return s->flush();
@@ -706,8 +706,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
-					d->setPos(d->getStartPos());
-					if(!lpFileDataInfo->doLastVerify(d->getTigerTree(), d->getTarget())) {
+					if(!lpFileDataInfo->doLastVerify(d->getTigerTree())) {
 						dcdebug("last verify failed .....\n");
 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))

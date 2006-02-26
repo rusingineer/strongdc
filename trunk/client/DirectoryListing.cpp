@@ -172,7 +172,7 @@ void DirectoryListing::load(const string& in) {
 class ListLoader : public SimpleXMLReader::CallBack {
 public:
 	ListLoader(DirectoryListing::Directory* root, bool aUpdating, const User::Ptr& user) : cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
-	};
+	}
 
 	virtual ~ListLoader() { }
 
@@ -376,8 +376,8 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 }
 
 struct HashContained {
-	HashContained(const HASH_SET<TTHValue, TTHValue::Hash>& l) : tl(l) { }
-	const HASH_SET<TTHValue, TTHValue::Hash>& tl;
+	HashContained(const HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l) : tl(l) { }
+	const HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& tl;
 	bool operator()(const DirectoryListing::File::Ptr i) const {
 		return tl.count(*(i->getTTH())) && (DeleteFunction()(i), true);
 	}
@@ -396,18 +396,18 @@ struct DirectoryEmpty {
 void DirectoryListing::Directory::filterList(DirectoryListing& dirList) {
 		DirectoryListing::Directory* d = dirList.getRoot();
 
-		HASH_SET<TTHValue, TTHValue::Hash> l;
+		HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) l;
 		d->getHashList(l);
 		filterList(l);
 }
 
-void DirectoryListing::Directory::filterList(const HASH_SET<TTHValue, TTHValue::Hash>& l) {
+void DirectoryListing::Directory::filterList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l) {
 	for(Iter i = directories.begin(); i != directories.end(); ++i) (*i)->filterList(l);
 	directories.erase(std::remove_if(directories.begin(),directories.end(),DirectoryEmpty()),directories.end());
 	files.erase(std::remove_if(files.begin(),files.end(),HashContained(l)),files.end());
 }
 
-void DirectoryListing::Directory::getHashList(HASH_SET<TTHValue, TTHValue::Hash>& l) {
+void DirectoryListing::Directory::getHashList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l) {
 	for(Iter i = directories.begin(); i != directories.end(); ++i) (*i)->getHashList(l);
 	for(DirectoryListing::File::Iter i = files.begin(); i != files.end(); ++i) l.insert(*(*i)->getTTH());
 }

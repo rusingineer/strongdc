@@ -36,11 +36,11 @@ public:
 	UploadPage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_UPLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 	virtual ~UploadPage() {
 		ctrlDirectories.Detach();
 		ctrlTotal.Detach();
-	};
+	}
 
 	BEGIN_MSG_MAP_EX(UploadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

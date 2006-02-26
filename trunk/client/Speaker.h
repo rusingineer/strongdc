@@ -31,8 +31,8 @@ class Speaker {
 	typedef typename ListenerList::const_iterator ListenerIter;
 
 public:
-	Speaker() throw() { };
-	virtual ~Speaker() throw() { };
+	Speaker() throw() { }
+	virtual ~Speaker() throw() { }
 
 	template<typename T0>
 	void fire(T0 type) throw() {

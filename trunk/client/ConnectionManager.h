@@ -46,7 +46,7 @@ public:
 		ACTIVE						// In one up/downmanager
 	};
 
-	ConnectionQueueItem(const User::Ptr& aUser, bool aDownload) : state(WAITING), lastAttempt(0), download(aDownload), user(aUser) { };
+	ConnectionQueueItem(const User::Ptr& aUser, bool aDownload) : state(WAITING), lastAttempt(0), download(aDownload), user(aUser) { }
 	
 	User::Ptr& getUser() { return user; }
 	const User::Ptr& getUser() const { return user; }
@@ -166,7 +166,7 @@ private:
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
 
-	virtual ~ConnectionManager() throw() { shutdown(); };
+	virtual ~ConnectionManager() throw() { shutdown(); }
 	
 	UserConnection* getConnection(bool aNmdc, bool secure) throw();
 	void putConnection(UserConnection* aConn);

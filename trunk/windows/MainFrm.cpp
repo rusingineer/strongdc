@@ -77,7 +77,7 @@ closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util
 bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
 		memset(statusSizes, 0, sizeof(statusSizes));
 		anyMF = this;
-};
+}
 
 MainFrame::~MainFrame() {
 	m_CmdBar.m_hImageList = NULL;
@@ -576,70 +576,35 @@ LRESULT MainFrame::onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return true;
 }
 
-LRESULT MainFrame::OnFileSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	SearchFrame::openWindow();
-	return 0;
-}	
-
-LRESULT MainFrame::onRecents(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	RecentHubsFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	FavoriteHubsFrame::openWindow();
-	return 0;
-}
-
 LRESULT MainFrame::onHashProgress(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	HashProgressDlg(false).DoModal(m_hWnd);
-	return 0;
-}
-
-LRESULT MainFrame::onFavoriteUsers(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UsersFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onNotepad(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	NotepadFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	QueueFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::OnFileConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	PublicHubsFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onSearchSpy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	SpyFrame::openWindow();
-	return 0;
-}
-	
-LRESULT MainFrame::onNetStats(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	StatsFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onFileADLSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ADLSearchFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onCDMDebugWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) 
-{
-	CDMDebugFrame::openWindow();
 	return 0;
 }
 
 LRESULT MainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	AboutDlg dlg;
 	dlg.DoModal(m_hWnd);
+	return 0;
+}
+
+LRESULT MainFrame::onOpenWindows(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	switch(wID) {
+		case ID_FILE_SEARCH: SearchFrame::openWindow(); break;
+		case ID_FILE_CONNECT: PublicHubsFrame::openWindow(); break;
+		case IDC_FAVORITES: FavoriteHubsFrame::openWindow(); break;
+		case IDC_FAVUSERS: UsersFrame::openWindow(); break;
+		case IDC_NOTEPAD: NotepadFrame::openWindow(); break;
+		case IDC_QUEUE: QueueFrame::openWindow(); break;
+		case IDC_SEARCH_SPY: SpyFrame::openWindow(); break;
+		case IDC_FILE_ADL_SEARCH: ADLSearchFrame::openWindow(); break;
+		case IDC_NET_STATS: StatsFrame::openWindow(); break; 
+		case IDC_FINISHED: FinishedFrame::openWindow(); break;
+		case IDC_FINISHED_UL: FinishedULFrame::openWindow(); break;
+		case IDC_UPLOAD_QUEUE: WaitingUsersFrame::openWindow(); break;
+		case IDC_CDMDEBUG_WINDOW: CDMDebugFrame::openWindow(); break;
+		case IDC_RECENTS: RecentHubsFrame::openWindow(); break;
+		default: dcassert(0); break;
+	}
 	return 0;
 }
 
@@ -1181,21 +1146,6 @@ LRESULT MainFrame::OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	UISetCheck(ID_VIEW_TRANSFER_VIEW, bVisible);
 	UpdateLayout();
 	SettingsManager::getInstance()->set(SettingsManager::SHOW_TRANSFERVIEW, bVisible);
-	return 0;
-}
-
-LRESULT MainFrame::onFinished(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	FinishedFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onUploadQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	WaitingUsersFrame::openWindow();
-	return 0;
-}
-
-LRESULT MainFrame::onFinishedUploads(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
- 	FinishedULFrame::openWindow();
 	return 0;
 }
 

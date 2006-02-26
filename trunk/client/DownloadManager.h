@@ -70,6 +70,8 @@ public:
 	Download() throw();
 	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw();
 
+	virtual ~Download() { }
+
 	/**
 	 * @remarks This function is only used from DownloadManager but its
 	 * functionality could be useful in TransferView.
@@ -136,6 +138,7 @@ private:
  */
 class DownloadManagerListener {
 public:
+	virtual ~DownloadManagerListener() { }
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Complete;
@@ -143,24 +146,23 @@ public:
 	typedef X<2> Starting;
 	typedef X<3> Tick;
 	typedef X<4> Status;
-	typedef X<5> Verifying;
 
 	/** 
 	 * This is the first message sent before a download starts. 
 	 * No other messages will be sent before.
 	 */
-	virtual void on(Starting, Download*) throw() { };
+	virtual void on(Starting, Download*) throw() { }
 
 	/**
 	 * Sent once a second if something has actually been downloaded.
 	 */
-	virtual void on(Tick, const Download::List&) throw() { };
+	virtual void on(Tick, const Download::List&) throw() { }
 
 	/** 
 	 * This is the last message sent before a download is deleted. 
 	 * No more messages will be sent after it.
 	 */
-	virtual void on(Complete, Download*, bool) throw() { };
+	virtual void on(Complete, Download*, bool) throw() { }
 
 	/** 
 	 * This indicates some sort of failure with a particular download.
@@ -169,9 +171,8 @@ public:
 	 * @remarks Should send an error code instead of a string and let the GUI
 	 * display an error string.
 	 */
-	virtual void on(Failed, Download*, const string&) throw() { };
-	virtual void on(Status, const User::Ptr&, const string&) throw() { };
-	virtual void on(Verifying, const string&, int64_t) throw() { };
+	virtual void on(Failed, Download*, const string&) throw() { }
+	virtual void on(Status, const User::Ptr&, const string&) throw() { }
 };
 
 
@@ -252,8 +253,8 @@ private:
 	enum { MOVER_LIMIT = 10*1024*1024 };
 	class FileMover : public Thread {
 	public:
-		FileMover() : active(false) { };
-		virtual ~FileMover() { join(); };
+		FileMover() : active(false) { }
+		virtual ~FileMover() { join(); }
 
 		void moveFile(const string& source, const string& target);
 		virtual int run();
@@ -288,7 +289,7 @@ private:
 		mDownloadLimit = 0; mBytesSent = 0; mBytesSpokenFor = 0; mCycleTime = 0; mByteSlice = 0;
 		mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
 		throttleZeroCounters();
-	};
+	}
 
 	virtual ~DownloadManager() throw() {
 		TimerManager::getInstance()->removeListener(this);
@@ -300,7 +301,7 @@ private:
 			}
 			Thread::sleep(100);
 		}
-	};
+	}
 	
 	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);

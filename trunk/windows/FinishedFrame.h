@@ -34,8 +34,8 @@ public:
 		columnOrder = SettingsManager::FINISHED_ORDER;
 		columnWidth = SettingsManager::FINISHED_WIDTHS;
 		columnVisible = SettingsManager::FINISHED_VISIBLE;
-	};
-	virtual ~FinishedFrame() { };
+	}
+	virtual ~FinishedFrame() { }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedFrame"), IDR_FINISHED_DL, 0, COLOR_3DFACE);
 		

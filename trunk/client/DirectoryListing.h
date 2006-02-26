@@ -48,9 +48,9 @@ public:
 		typedef List::const_iterator Iter;
 		
 		File(Directory* aDir, const string& aName, int64_t aSize, const string& aTTH) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH)), adls(false) { };
+			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH)), adls(false) { }
 		File(Directory* aDir, const string& aName, int64_t aSize) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(NULL), adls(false) { };
+			name(aName), size(aSize), parent(aDir), tthRoot(NULL), adls(false) { }
 
 		File(const File& rhs, bool _adls = false) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), adls(_adls) { }
 
@@ -85,7 +85,7 @@ public:
 		File::List files;
 		
 		Directory(Directory* aParent, const string& aName, bool _adls, bool aComplete) 
-			: name(aName), parent(aParent), adls(_adls), complete(aComplete) { };
+			: name(aName), parent(aParent), adls(_adls), complete(aComplete) { }
 		
 		virtual ~Directory() {
 			for_each(directories.begin(), directories.end(), DeleteFunction());
@@ -95,10 +95,10 @@ public:
 		size_t getTotalFileCount(bool adls = false);		
 		int64_t getTotalSize(bool adls = false);
 		void filterList(DirectoryListing& dirList);
-		void filterList(const HASH_SET<TTHValue, TTHValue::Hash>& l);
-		void getHashList(HASH_SET<TTHValue, TTHValue::Hash>& l);
+		void filterList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l);
+		void getHashList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l);
 		
-		size_t getFileCount() { return files.size(); };
+		size_t getFileCount() { return files.size(); }
 		
 		int64_t getSize() {
 			int64_t x = 0;
@@ -144,8 +144,8 @@ public:
 	string getPath(const Directory* d) const;
 	string getPath(const File* f) const { return getPath(f->getParent()); }
 
-	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); };
-	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); };
+	int64_t getTotalSize(bool adls = false) { return root->getTotalSize(adls); }
+	size_t getTotalFileCount(bool adls = false) { return root->getTotalFileCount(adls); }
 
 	const Directory* getRoot() const { return root; }
 	Directory* getRoot() { return root; }

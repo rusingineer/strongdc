@@ -44,7 +44,7 @@ protected:
 	IRichEditOle* GetIRichEditOle() const;
 
 	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
-	bool m_boAutoScroll, myMess;
+	bool m_boAutoScroll;
 	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
 	int g_BufTemplen, AppendTextlen;
 public:
@@ -60,10 +60,9 @@ public:
 
 	string LineFromPos(POINT p);
 
-	void AdjustTextSize(LPCTSTR lpstrTextToAdd = _T(""));
-	void AppendText(const Identity& i, const tstring& sMyNick, bool bMyMess, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
-	void AppendText(const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""), int iAuthorLen = 0, bool isMe = false, bool bUseEmo = true);
-	void AppendTextOnly(const tstring& sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, LPCTSTR sAuthor = _T(""));
+	void AdjustTextSize();
+	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
+	void AppendTextOnly(const tstring& sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
 	void EndRedrawAppendTextOnly();
 
 	void GoToEnd();

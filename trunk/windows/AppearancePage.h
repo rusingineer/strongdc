@@ -33,7 +33,7 @@ public:
 	AppearancePage(SettingsManager *s) : PropPage(s) {
 		SetTitle(CTSTRING(SETTINGS_APPEARANCE));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	};
+	}
 
 	virtual ~AppearancePage();
 
