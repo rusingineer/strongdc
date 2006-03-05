@@ -36,6 +36,9 @@
 #include "../client/DirectoryListing.h"
 #include "../client/StringSearch.h"
 #include "../client/ShareManager.h"
+#include "../client/ADLSearch.h"
+
+class ThreadedDirectoryListing;
 
 #define STATUS_MESSAGE_MAP 9
 
@@ -235,6 +238,8 @@ public:
 	}
 
 private:
+	friend class ThreadedDirectoryListing;
+	
 	void changeDir(DirectoryListing::Directory* d, BOOL enableRedraw);
 	HTREEITEM findFile(const StringSearch& str, HTREEITEM root, int &foundFile, int &skipHits);
 	void updateStatus();
@@ -353,6 +358,7 @@ private:
 	bool updating;
 	bool searching;
 	bool closed;
+	bool canBeClosed;
 
 	int statusSizes[10];
 	
@@ -367,6 +373,49 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+};
+
+class ThreadedDirectoryListing : public Thread
+{
+public:
+	ThreadedDirectoryListing(DirectoryListingFrame* pWindow, 
+		const string& pFile, const string& pTxt) : mWindow(pWindow),
+		mFile(pFile), mTxt(pTxt)
+	{ }
+
+protected:
+	DirectoryListingFrame* mWindow;
+	string mFile;
+	string mTxt;
+
+private:
+	virtual int run()
+	{
+		mWindow->canBeClosed = false;
+		try
+		{
+			if(!mFile.empty()) {
+				mWindow->dl->loadFile(mFile);
+				ADLSearchManager::getInstance()->matchListing(*mWindow->dl);
+				mWindow->refreshTree(Text::toT(WinUtil::getInitialDir(mWindow->dl->getUser())));
+			} else {
+				mWindow->refreshTree(Text::toT(Util::toNmdcFile(mWindow->dl->loadXML(mTxt, true))));
+			}
+		} catch(const Exception& e) {
+			mWindow->error = WinUtil::getNicks(mWindow->dl->getUser()) + Text::toT(": " + e.getError());
+		}
+
+		mWindow->initStatus();
+		mWindow->ctrlStatus.SetText(0, CTSTRING(LOADED_FILE_LIST));
+		//notify the user that we've loaded the list
+		mWindow->setDirty();
+
+		//cleanup the thread object
+		delete this;
+
+		mWindow->canBeClosed = true;
+		return 0;
+	}
 };
 
 #endif // !defined(DIRECTORY_LISTING_FRM_H)

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ void NmdcHub::connect() {
 
 void NmdcHub::connect(const OnlineUser& aUser) {
 	checkstate(); 
-	dcdebug("NmdcHub::connectToMe %s\n", aUser.getIdentity().getNick().c_str());
+	dcdebug("NmdcHub::connect %s\n", aUser.getIdentity().getNick().c_str());
 	if(isActive()) {
 		connectToMe(aUser);
 	} else {
@@ -97,15 +97,19 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		NickIter i = users.find(aNick);
 		if(i != users.end())
 			return *i->second;
+	}
 
-		User::Ptr p;
-		if(aNick == getMyNick()) {
-			p = ClientManager::getInstance()->getMe();
-			getMyIdentity().setUser(p);
-			getMyIdentity().setHubUrl(getHubUrl());
-		} else {
-			p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
-		}
+	User::Ptr p;
+	if(aNick == getMyNick()) {
+		p = ClientManager::getInstance()->getMe();
+		getMyIdentity().setUser(p);
+		getMyIdentity().setHubUrl(getHubUrl());
+	} else {
+		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
+	}
+
+	{
+		Lock l(cs);
 		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
 		u->getIdentity().setNick(aNick);
 	}
@@ -149,6 +153,7 @@ void NmdcHub::clearUsers() {
 		Lock l(cs);
 		u2 = users;
 		users.clear();
+		availableBytes = 0;
 	}
 	
 	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
@@ -910,7 +915,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					feat.push_back("NoHello");
 					feat.push_back("UserIP2");
 					feat.push_back("TTHSearch");
-					feat.push_back("ZPipe");
+					feat.push_back("ZPipe0");
 				
 					if (getStealth() == false) {
 						feat.push_back("QuickList");
@@ -937,7 +942,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
                 
 				aLine += 11;
 
-				disconnect(false);
+				socket->disconnect(false);
 				fire(ClientListener::Redirect(), this, aLine);
     			return;
         	}
@@ -947,7 +952,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
         case 'V':
 	    	// $ValidateDenide
     		if(strncmp(aLine+2, "alidateDenide", 13) == 0) {
-				disconnect(false);
+				socket->disconnect(false);
 				fire(ClientListener::NickTaken(), this);
 	    		return;
     	    }
@@ -1122,7 +1127,7 @@ void NmdcHub::myInfo() {
 		return;
 	}
 	
-	reloadSettings();
+	reloadSettings(false);
 	
 	dcdebug("MyInfo %s...\n", getMyNick().c_str());
 	char StatusMode = '\x01';
@@ -1198,6 +1203,7 @@ void NmdcHub::myInfo() {
 }
 
 void NmdcHub::disconnect(bool graceless) throw() {
+	Client::disconnect(graceless);
 	state = STATE_CONNECT;
 	Client::disconnect(graceless);
 	clearUsers();

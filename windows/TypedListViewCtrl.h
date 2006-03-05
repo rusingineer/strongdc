@@ -122,7 +122,7 @@ public:
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(findColumn(di->item.iSubItem)).c_str());
+			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(columnIndexes[di->item.iSubItem]).c_str());
 		}
 		return 0;
 	}
@@ -302,6 +302,7 @@ public:
 	int InsertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
 		if(nWidth == 0) nWidth = 80;
 		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
+		columnIndexes.push_back(nCol);
 		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
 	}
 
@@ -414,6 +415,8 @@ public:
 			}
 		}
 
+		updateColumnIndexes();
+
 		SetRedraw();
 		Invalidate();
 		UpdateWindow();
@@ -485,6 +488,8 @@ public:
 				removeColumn(*j);
 			}
 		}
+
+		updateColumnIndexes();
 	}
 
 	void setColumnOrderArray(int iCount, LPINT piArray ) {
@@ -496,12 +501,9 @@ public:
 		}
 	}
 
-	//find the current position for the column that was inserted at the specified pos
-	inline int findColumn(int col){
-		LVCOLUMN lvcl;
-		lvcl.mask = LVCF_SUBITEM;
-		GetColumn(col, &lvcl);
-		return lvcl.iSubItem;
+	//find the original position of the column at the current position.
+	int findColumn(int col){
+		return columnIndexes[col];
 	}	
 	
 private:
@@ -521,6 +523,7 @@ private:
 	typedef ColumnList::const_iterator ColumnIter;
 
 	ColumnList columnList;
+	vector<int> columnIndexes;
 
 	void removeColumn(ColumnInfo* ci){
 		TCHAR *buf = new TCHAR[512];
@@ -558,6 +561,30 @@ private:
 		}
 		delete[] buf;
 	}
+
+	void updateColumnIndexes() {
+		columnIndexes.clear();
+		
+		int columns = GetHeader().GetItemCount();
+		
+		columnIndexes.reserve(columns);
+
+		TCHAR *buf = new TCHAR[100];
+		LVCOLUMN lvcl;
+
+		for(int i = 0; i < columns; ++i) {
+			lvcl.mask = LVCF_TEXT;
+			lvcl.pszText = buf;
+			lvcl.cchTextMax = 100;
+			GetColumn(i, &lvcl);
+			for(u_int32_t j = 0; j < columnList.size(); ++j) {
+				if(Util::stricmp(columnList[j]->name.c_str(), lvcl.pszText) == 0) {
+					columnIndexes.push_back(static_cast<int>(j));
+					break;
+				}
+			}
+		}
+	}	
 };
 
 // Copyright (C) 2005 Big Muscle, StrongDC++

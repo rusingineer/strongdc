@@ -1128,6 +1128,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchQueueItem* aSearch = (SearchQueueItem*)(lParam);
 
 			ctrlResults.deleteAllItems();
+			resultsCount = 0;
 
 			{
 				Lock l(cs);
