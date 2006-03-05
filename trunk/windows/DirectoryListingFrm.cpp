@@ -80,32 +80,24 @@ void DirectoryListingFrame::openWindow(const User::Ptr& aUser, const string& txt
 }
 
 DirectoryListingFrame::DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed) :
-	statusContainer(STATUSCLASSNAME, this, STATUS_MESSAGE_MAP),
+	statusContainer(STATUSCLASSNAME, this, STATUS_MESSAGE_MAP), canBeClosed(true),
 		treeRoot(NULL), skipHits(0), files(0), speed(aSpeed), updating(false), dl(new DirectoryListing(aUser)), searching(false)
 {
 	lists.insert(make_pair(aUser, this));
 }
 
 void DirectoryListingFrame::loadFile(const tstring& name) {
-	try {
-		dl->loadFile(Text::fromT(name));
-		ADLSearchManager::getInstance()->matchListing(*dl);
-		refreshTree(Text::toT(WinUtil::getInitialDir(dl->getUser())));
-	} catch(const Exception& e) {
-		error = WinUtil::getNicks(dl->getUser()) + Text::toT(": " + e.getError());
-	}
-
-	initStatus();
+	ctrlStatus.SetText(0, CTSTRING(LOADING_FILE_LIST));
+	//don't worry about cleanup, the object will delete itself once the thread has finished it's job
+	ThreadedDirectoryListing* tdl = new ThreadedDirectoryListing(this, Text::fromT(name), Util::emptyString);
+	tdl->start();
 }
 
 void DirectoryListingFrame::loadXML(const string& txt) {
-	try {
-		refreshTree(Text::toT(Util::toNmdcFile(dl->loadXML(txt, true))));
-	} catch(const Exception& e) {
-		error = WinUtil::getNicks(dl->getUser()) + Text::toT(": " + e.getError());
-	}
-
-	initStatus();
+	ctrlStatus.SetText(0, CTSTRING(LOADING_FILE_LIST));
+	//don't worry about cleanup, the object will delete itself once the thread has finished it's job
+	ThreadedDirectoryListing* tdl = new ThreadedDirectoryListing(this, Util::emptyString, txt);
+	tdl->start();
 }
 
 LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -1147,6 +1139,10 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 }
 
 LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	if(!canBeClosed) {
+		bHandled = TRUE;
+		return 0;
+	}
 	if(!closed) {
 		SettingsManager::getInstance()->removeListener(this);
 		ctrlList.SetRedraw(FALSE);

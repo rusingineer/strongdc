@@ -85,7 +85,7 @@ public:
 	typedef List::const_iterator Iter;
 
 	virtual void connect();
-	virtual void disconnect(bool graceless) { if(socket) socket->disconnect(graceless); }
+	virtual void disconnect(bool graceless);
 
 	virtual void connect(const OnlineUser& user) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
@@ -204,8 +204,8 @@ protected:
 	void updateCounts(bool aRemove);
 	void updateActivity();
 
-	// reload nick from settings, other details from favmanager
-	void reloadSettings();
+	/** Reload details from favmanager or settings */
+	void reloadSettings(bool updateNick);
 
 	virtual string checkNick(const string& nick) = 0;
 

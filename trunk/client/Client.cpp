@@ -52,7 +52,7 @@ void Client::shutdown() {
 	}
 }
 
-void Client::reloadSettings() {
+void Client::reloadSettings(bool updateNick) {
 	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
 	string speedDescription = Util::emptyString;
@@ -60,7 +60,8 @@ void Client::reloadSettings() {
 		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
 
 	if(hub) {
-		getMyIdentity().setNick(checkNick(hub->getNick(true)));
+		if(updateNick)
+			getMyIdentity().setNick(checkNick(hub->getNick(true)));
 		if(!hub->getUserDescription().empty()) {
 			getMyIdentity().setDescription(speedDescription + hub->getUserDescription());
 		} else {
@@ -92,7 +93,7 @@ void Client::connect() {
 	availableBytes = 0;
 
 	setReconnDelay(120 + Util::rand(0, 60));
-	reloadSettings();
+	reloadSettings(true);
 	setRegistered(false);
 
 	try {
@@ -107,6 +108,13 @@ void Client::connect() {
 		fire(ClientListener::Failed(), this, e.getError());
 	}
 	updateActivity();
+}
+
+void Client::disconnect(bool graceLess) {
+	if(!socket)
+		return;
+	socket->removeListener(this);
+	socket->disconnect(graceLess);
 }
 
 void Client::updateActivity() {

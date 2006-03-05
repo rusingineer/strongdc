@@ -27,7 +27,7 @@
 #include "../client/SimpleXML.h"
 
 static const TCHAR thanks[] = 
-_T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman (for startup logo), Blackrabbit, Chmelic, Cinique, Corvik, FarCry, GargoyleMT, Gulag (for Czech translation), Ice, King Wenceslas, Liny, Naga, popKorn, Pothead, ProLogic, Testament, Warrior, xAyiDe a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
+_T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman (for startup logo), Atom, Blackrabbit, Chmelic, Cinique, Corvik, Crakter, Dreamveawer, FarCry, GargoyleMT, Gulag (for Czech translation), Ice, Jove, King Wenceslas, Legolas, Liny, Mlok, Naga, popKorn, Pothead, ProLogic, Rm., Testament, ToH, Warrior, WereWiking, xAyiDe, XiND a samozøejmì PPK, že mì nechal opsat vìtšinu vìcí z jeho klienta :-)");
 
 class AboutDlg : public CDialogImpl<AboutDlg>, private HttpConnectionListener
 {
