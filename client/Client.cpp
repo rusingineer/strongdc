@@ -18,14 +18,10 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
-
 #include "Client.h"
-
 #include "BufferedSocket.h"
-
 #include "FavoriteManager.h"
 #include "TimerManager.h"
-
 #include "DebugManager.h"
 #include "ClientManager.h"
 
@@ -34,8 +30,7 @@ Client::Counts Client::counts;
 Client::Client(const string& hubURL, char separator_, bool secure_) : 
 	reconnDelay(120), lastActivity(0), registered(false), socket(NULL),
 	hubUrl(hubURL), port(0), separator(separator_),
-	secure(secure_), countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0)
-{
+	secure(secure_), countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0) {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
 }

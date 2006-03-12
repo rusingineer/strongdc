@@ -918,7 +918,6 @@ public:
 		dcassert(getTab());
 		getTab()->unsetIconState(m_hWnd);
 	}
-
 private:
 	bool created;
 };

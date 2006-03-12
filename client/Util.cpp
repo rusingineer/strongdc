@@ -555,6 +555,24 @@ string Util::formatBytes(int64_t aBytes) {
 	return buf;
 }
 
+double Util::toBytes(TCHAR* aSize) {
+	double bytes = _tstof(aSize);
+
+	if (_tcsstr(aSize, CTSTRING(PB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(TB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(GB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(MB))) {
+		return bytes * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(KB))) {
+		return bytes * 1024.0;
+	} else {
+		return bytes;
+	}
+}
+
 string Util::formatExactSize(int64_t aBytes) {
 #ifdef _WIN32
 		TCHAR buf[64];

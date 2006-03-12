@@ -248,16 +248,31 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue& tth) {
 	}
 }
 
+bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
+	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) return (qi->getStatus() != QueueItem::STATUS_RUNNING);
+
+	switch(aUser ? qi->chunkInfo->findChunk((*qi->getSource(aUser))->getPartialInfo(), aUser->getLastDownloadSpeed()) : 1) {
+		case 0: return false;
+		case 1:	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
+					((qi->getCurrents().size() < qi->getMaxSegments()) &&
+					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
+		case 2: return true; // need testing, whether it will be really overlapped.
+		default:
+			dcassert(0);
+	}
+	return false;	
+}
+
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
 	QueueItem* cand = NULL;
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
 
 		// We prefer to search for things that are not running...
-		if((cand != NULL) && (q->getStatus() == QueueItem::STATUS_RUNNING)) 
+		if((cand != NULL) && !hasFreeSegments(q, NULL)) 
 			continue;
 		// No user lists
-		if(q->isSet(QueueItem::FLAG_USER_LIST))
+		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
 			continue;
         // No paused downloads
 		if(q->getPriority() == QueueItem::PAUSED)
@@ -272,12 +287,9 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
         if(find(recent.begin(), recent.end(), q->getTarget()) != recent.end())
 			continue;
 
-		if(q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
-			continue;
-
 		cand = q;
 
-		if(cand->getStatus() != QueueItem::STATUS_RUNNING)
+		if(hasFreeSegments(cand, NULL))
 			break;
 	}
 	return cand;
@@ -293,9 +305,9 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
-	} else if(cand->getStatus() == QueueItem::STATUS_RUNNING) {
+	} else if(!hasFreeSegments(cand, NULL)) {
 		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
-		if(cand2 != NULL && (cand2->getStatus() != QueueItem::STATUS_RUNNING)) {
+		if(cand2 != NULL && hasFreeSegments(cand2, NULL)) {
 			cand = cand2;
 		}
 	}
@@ -327,27 +339,9 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
-inline bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
-	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) return true;
-
-	switch(qi->chunkInfo->findChunk((*qi->getSource(aUser))->getPartialInfo(), aUser->getLastDownloadSpeed())) {
-		case 0: return false;
-		case 1:	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
-					((qi->getCurrents().size() < qi->getMaxSegments()) &&
-					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
-		case 2: return true; // need testing, whether it will be really overlapped.
-		default:
-			dcassert(0);
-	}
-	return false;	
-}
-
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
-#ifdef _DEBUG
-	QueueItem* next = pNext;
-#endif
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
@@ -358,7 +352,6 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			bool freeSegments = hasFreeSegments(found, aUser);
 
 			if(freeSegments && (pNext == NULL || fNext)) {
-				dcassert(found != next);
 				return found;
 			}else{
 				if(!freeSegments) {
@@ -374,7 +367,6 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	
 					iQi++;
 					if((iQi != i->second.end()) && hasFreeSegments(*iQi, aUser)) {
-						dcassert(*iQi != next);
 						return *iQi;
 					}
 				}
@@ -588,8 +580,6 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 				nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 				if(BOOLSETTING(REPORT_ALTERNATES))
 					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()), true);		
-			} else {
-				recent.clear();
 			}
 		}
 	}
@@ -1391,6 +1381,7 @@ endCheck:
 
 void QueueManager::removeSource(User::Ptr aUser, int reason) throw() {
 	string x;
+	string removeRunning;
 	{
 		Lock l(cs);
 		QueueItem* qi = NULL;
@@ -1408,7 +1399,7 @@ void QueueManager::removeSource(User::Ptr aUser, int reason) throw() {
 		qi = userQueue.getRunning(aUser);
 		if(qi != NULL) {
 			if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
-				remove(qi->getTarget());
+				removeRunning = qi->getTarget();
 			} else {
 				userQueue.setWaiting(qi, aUser);
 				userQueue.remove(qi, aUser);
@@ -1423,6 +1414,9 @@ void QueueManager::removeSource(User::Ptr aUser, int reason) throw() {
 	if(!x.empty()) {
 		DownloadManager::getInstance()->abortDownload(x, aUser);
 	}
+	if(!removeRunning.empty()) {
+		remove(removeRunning);
+	}	
 }
 
 void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) throw() {

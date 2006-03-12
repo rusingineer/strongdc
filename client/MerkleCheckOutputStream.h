@@ -36,7 +36,7 @@ public:
 				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
 			fileChunks = FileChunksInfo::Get(tempTarget);
-		dcassert(!(fileChunks == (FileChunksInfo*)NULL));
+			dcassert(!(fileChunks == (FileChunksInfo*)NULL));
 			bufPos = 0;
 			start = start + skippingBytes;
 			multiSourceChecking = true;
@@ -165,9 +165,10 @@ private:
 			if(cur.getLeaves().size() > real.getLeaves().size() ||
 				!(cur.getLeaves()[verified] == real.getLeaves()[verified])) 
 			{
-				dcassert(cur.getLeaves().size() <= real.getLeaves().size());
-				LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified), true);
-
+				if(multiSourceChecking) {
+					dcassert(cur.getLeaves().size() <= real.getLeaves().size());
+					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified), true);
+				}
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
 			verified++;

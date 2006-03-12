@@ -305,6 +305,8 @@ public:
 		return formatBytes(toInt64(aString));
 	}
 
+	static double toBytes(TCHAR* aSize);
+
 	static string toDOS(const string& tmp);
 
 	static string getShortTimeString();

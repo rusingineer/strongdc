@@ -39,18 +39,6 @@ class ClientManager : public Speaker<ClientManagerListener>,
 	private TimerManagerListener, private SettingsManagerListener
 {
 public:
-	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
-	typedef OnlineMap::const_iterator OnlineIter;
-	typedef pair<OnlineIter, OnlineIter> OnlinePair;
-
-	OnlineUser& getOnlineUser(const User::Ptr& p) {
-		OnlineIter i = onlineUsers.find(p->getCID());
-		if(i != onlineUsers.end()) {
-			return *i->second;
-		}
-		return *(OnlineUser*)NULL;
-	}
-
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
@@ -93,6 +81,14 @@ public:
 			return it->second;
 		else
 			return IP;
+	}
+
+	OnlineUser& getOnlineUser(const User::Ptr& p) {
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			return *i->second;
+		}
+		return *(OnlineUser*)NULL;
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
@@ -152,6 +148,10 @@ private:
 	typedef UserMap::iterator UserIter;
 	typedef map<string, string, noCaseStringLess> NickMap;
 
+	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
+	typedef OnlineMap::const_iterator OnlineIter;
+	typedef pair<OnlineIter, OnlineIter> OnlinePair;
+
 	Client::List clients;
 	mutable CriticalSection cs;
 	NickMap ipList;
@@ -165,6 +165,7 @@ private:
 
 	string cachedIp;
 	CID pid;	
+
 	int64_t quickTick;
 	int infoTick;
 

@@ -94,7 +94,7 @@ void DirectoryListing::loadFile(const string& name) {
 	if(Util::stricmp(ext, ".bz2") == 0) {
 		::File ff(name, ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
-		const size_t BUF_SIZE = 512*1024;
+		const size_t BUF_SIZE = 64*1024;
 		char buf[BUF_SIZE];
 		size_t len;
 		for(;;) {
@@ -171,7 +171,7 @@ void DirectoryListing::load(const string& in) {
 
 class ListLoader : public SimpleXMLReader::CallBack {
 public:
-	ListLoader(DirectoryListing::Directory* root, bool aUpdating, const User::Ptr& user) : cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
+	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const User::Ptr& user) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
 	}
 
 	virtual ~ListLoader() { }
@@ -181,6 +181,7 @@ public:
 
 	const string& getBase() const { return base; }
 private:
+	DirectoryListing* list;
 	DirectoryListing::Directory* cur;
 	User::Ptr uziv;
 
@@ -193,7 +194,7 @@ private:
 string DirectoryListing::loadXML(const string& xml, bool updating) {
 	setUtf8(true);
 
-	ListLoader ll(getRoot(), updating, getUser());
+	ListLoader ll(this, getRoot(), updating, getUser());
 	SimpleXMLReader(&ll).fromXML(xml);
 	return ll.getBase();
 }
@@ -209,6 +210,10 @@ static const string sSize = "Size";
 static const string sTTH = "TTH";
 
 void ListLoader::startTag(const string& name, StringPairList& attribs, bool simple) {
+	if(list->getAbort()) {
+		throw AbortException();
+	}
+
 	if(inListing) {
 		if(name == sFile) {
 			const string& n = getAttrib(attribs, sName, 0);

@@ -593,7 +593,7 @@ class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId>
 {
 public:
 
-	TypedTreeListViewCtrl() { };
+	TypedTreeListViewCtrl() { }
 	~TypedTreeListViewCtrl() { states.Destroy(); }
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;

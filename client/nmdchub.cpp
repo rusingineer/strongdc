@@ -57,6 +57,7 @@ void NmdcHub::connect() {
 	bFirstOpList = true;
 	PtokaX = false;
     YnHub = false;
+	getMyIdentity().setOp(false);
 
 	state = STATE_LOCK;
 
@@ -355,6 +356,7 @@ void NmdcHub::ChatLine(char* aLine) throw() {
     }
 
     OnlineUser* u = NULL;
+
     if(nick != Util::emptyString) {
        	u = findUser(nick);
     }
@@ -366,6 +368,14 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 	char *temp, *temp1;
 
 	switch(aLine[1]) {
+        case 'Z':
+        	// $ZOn
+        	if(strcmp(aLine+2, "On") == 0) {
+        		socket->setMode (BufferedSocket::MODE_ZPIPE);
+				return;
+        	}
+			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
+        	return;
         case 'S':
 	    	// $Search
     		if(strncmp(aLine+2, "earch ", 6) == 0) {
@@ -403,16 +413,12 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				{
 					Lock l(cs);
 					u_int32_t tick = GET_TICK();
-
 					seekers.push_back(make_pair(seeker, tick));
-
 					// First, check if it's a flooder
         			for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
-						if(fi->first == seeker) {
+						if(fi->first == seeker)
 							return;
-						}
 					}
-
 					int count = 0;
         			for(FloodIter fi = seekers.begin(); fi != seekers.end(); ++fi) {
 						if(fi->first == seeker)
@@ -432,7 +438,6 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						}
 					}
 				}
-
 				int a;
 				if(temp[0] == 'F') {
 					a = SearchManager::SIZE_DONTCARE;
@@ -455,9 +460,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					if(bPassive == true && iseekerLen > 4) {
 						OnlineUser* u = findUser(seeker.substr(4));
 
-						if(u == NULL) {
-							return;
-						}
+						if(u == NULL) return;
 
 						if(!u->getUser()->isSet(User::PASSIVE)) {
 							u->getUser()->setFlag(User::PASSIVE);
@@ -582,8 +585,12 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 							u.getIdentity().setBytesShared(Share);
 						}
 						Connection[1] = NULL; 
-        				if(Connection[0] == 'P')
-        					u.getUser()->setFlag(User::PASSIVE);			    
+        				if(Connection[0] != ' ') {
+            				if(Connection[0] == 'A')
+            					u.getUser()->unsetFlag(User::PASSIVE);
+            				else
+        						u.getUser()->setFlag(User::PASSIVE);
+        				}
         
 						Connection += 2;
 						char status = *(Email-2);
@@ -643,7 +650,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				}
 
 				if(state == STATE_MYINFO) {
-					if(Util::stricmp(u.getIdentity().getNick().c_str(), getMyNick().c_str()) == 0) {
+					if(u.getUser() == getMyIdentity().getUser()) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -654,8 +661,10 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					}
 				}
 
-				if(u.getUser() == getMyIdentity().getUser())
+				if(u.getUser() == getMyIdentity().getUser()) {
+					u.getIdentity().setOp(getMyIdentity().isOp());
 					setMyIdentity(u.getIdentity());
+				}
 					
 				fire(ClientListener::UserUpdated(), this, u);
 		    	return;
@@ -671,12 +680,13 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				aLine += 6;
 
 				OnlineUser* u = findUser(aLine);
-				if(u == NULL)
-					return;
+
+				if(u == NULL) return;
 
 				fire(ClientListener::UserRemoved(), this, *u);
 
 				putUser(aLine);
+
     			return;
         	}
             
@@ -718,9 +728,12 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				temp[0] = NULL; temp += 1;
         		if(aLine[0] == NULL) return;
 
+        		if(Util::stricmp(temp, getMyNick().c_str()) != 0) // Check nick... is RCTM really for me ? ;-)
+        			return;
+        		
 				OnlineUser* u = findUser(aLine);
-				if(u == NULL)
-					return;
+				
+				if(u == NULL) return;
 
 				if(isActive()) {
 					connectToMe(*u);	
@@ -732,6 +745,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						updated(*u);
 					}
 				}
+				
     			return;
 	        }
             
@@ -757,7 +771,6 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					getHubIdentity().setNick(aLine);
 					getHubIdentity().setDescription(temp);
 				}
-
 				fire(ClientListener::HubUpdated(), this);
 				return;
 			}
@@ -769,9 +782,10 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
         		if(aLine[0] == NULL) return;
 	
      			string nick = aLine;
+
 				OnlineUser& u = getUser(nick);
  				if(state == STATE_HELLO) {
-       		   		if(Util::stricmp(getMyNick().c_str(), nick.c_str()) == NULL) {
+            		if(u.getUser() == getMyIdentity().getUser()) {
 						state = STATE_CONNECTED;
 						updateCounts(false);
 						u.getUser()->setFlag(User::DCPLUSPLUS);
@@ -872,8 +886,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 			
 					OnlineUser* u = findUser(aLine);
 				
-					if(u == NULL)
-						continue;
+					if(u == NULL) continue;
 
 					u->getIdentity().setIp(temp);
 					v.push_back(u);
@@ -972,6 +985,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					if(aLine[0] == NULL) break;
 
 					v.push_back(&getUser(aLine));
+
 					aLine = temp+2;
 				}
 		
@@ -1010,7 +1024,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					OnlineUser& ou = getUser(aLine);
 					ou.getIdentity().setOp(true);
 
-					if(ou.getIdentity().getNick() == getMyIdentity().getNick())
+					if(ou.getUser() == getMyIdentity().getUser())
 						getMyIdentity().setOp(true);
 
 					v.push_back(&ou);
@@ -1082,12 +1096,6 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
             
             dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
             return;
-        case 'Z':
-        	// $ZOn
-        	if(strcmp(aLine+2, "On") == 0) {
-        		socket->setMode (BufferedSocket::MODE_ZPIPE);
-        	}
-        	return;
     	default:
 			dcdebug("NmdcHub::onLine Unknown command %s\n", aLine);
 			return;
@@ -1119,7 +1127,9 @@ void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 
 void NmdcHub::hubMessage(const string& aMessage) { 
 	checkstate(); 
-	send(toNmdc( "<" + getMyNick() + "> " + Util::validateMessage(aMessage, false) + "|" ) ); 
+	char buf[256];
+	sprintf(buf, "<%s> ", getMyNick().c_str());
+	send(toNmdc(string(buf)+Util::validateChatMessage(aMessage)+"|"));
 }
 
 void NmdcHub::myInfo() {

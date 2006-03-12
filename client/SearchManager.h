@@ -136,8 +136,7 @@ private:
 
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
-	class ResultsQueue: public Thread
-	{
+	class ResultsQueue: public Thread {
 	public:
 		bool stop;
 		CriticalSection cs;
@@ -169,7 +168,6 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 				ClientManager::getInstance()->setIPUser(sr->getIP(), sr->getUser());
 				SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				sr->decRef();
-
 				Thread::sleep(1);
 			}
 			return 0;

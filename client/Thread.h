@@ -73,8 +73,8 @@ public:
 		if (millis % 10 != 0) { // default precision ~10ms - don't use mm timers if not needed
 			timeBeginPeriod(1);
 			::Sleep(millis);
-			timeEndPeriod(1);}
-		else { 
+			timeEndPeriod(1);
+		} else { 
 			::Sleep(millis);
 		}
 	}
