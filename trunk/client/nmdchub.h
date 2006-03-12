@@ -120,10 +120,19 @@ private:
 	string fromNmdc(const string& str) const { return Text::acpToUtf8(str); }
 	string toNmdc(const string& str) const { return Text::utf8ToAcp(str); }
 
-	void validateNick(const string& aNick) { send("$ValidateNick " + toNmdc(aNick) + "|"); }
+	void validateNick(const string& aNick) {
+		if(validatenicksent == false) {
+			send("$ValidateNick " + toNmdc(aNick) + "|");
+			validatenicksent = true;
+		}
+	}
 	void key(const string& aKey) { send("$Key " + aKey + "|"); }
 	void version() { send("$Version 1,0091|"); }
-	void getNickList() { send("$GetNickList|"); }
+	void getNickList() {
+		if(state == STATE_CONNECTED || state == STATE_MYINFO) {
+			send("$GetNickList|");
+		}
+	}
 	void connectToMe(const OnlineUser& aUser);
 	void revConnectToMe(const OnlineUser& aUser);
 	void myInfo();

@@ -31,6 +31,8 @@
 
 class ListLoader;
 
+STANDARD_EXCEPTION(AbortException);
+
 class DirectoryListing  
 {
 public:
@@ -125,7 +127,7 @@ public:
 		GETSET(string, fullPath, FullPath);
 	};
 
-	DirectoryListing(const User::Ptr& aUser) : user(aUser), utf8(false), root(new Directory(NULL, Util::emptyString, false, false)) {
+	DirectoryListing(const User::Ptr& aUser) : user(aUser), abort(false), utf8(false), root(new Directory(NULL, Util::emptyString, false, false)) {
 	}
 	
 	~DirectoryListing() {
@@ -154,7 +156,8 @@ public:
 
 	GETSET(User::Ptr, user, User);
 	GETSET(bool, utf8, Utf8);
-
+	GETSET(bool, abort, Abort);
+	
 private:
 	friend class ListLoader;
 

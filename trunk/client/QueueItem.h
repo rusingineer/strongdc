@@ -262,8 +262,6 @@ public:
 		}
 	}
 
-	string getSearchString() const;
-
 	const string& getTempTarget();
 	void setTempTarget(const string& aTempTarget) {
 		tempTarget = aTempTarget;
@@ -358,7 +356,7 @@ private:
 	static Source::ConstIter getSource(const User::Ptr& aUser, const Source::List& lst) { 
 		for(Source::ConstIter i = lst.begin(); i != lst.end(); ++i) {
 			const Source* s = *i;
-			if( (s->getUser() == aUser) )
+			if(s->getUser() == aUser)
 				return i;
 		}
 
@@ -367,7 +365,7 @@ private:
 	static bool isSource(const User::Ptr& aUser, const Source::List& lst) {
 		for(Source::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
 			const Source* s = *i;
-			if( (s->getUser() == aUser)  )
+			if(s->getUser() == aUser)
 				return true;
 		}
 		return false;

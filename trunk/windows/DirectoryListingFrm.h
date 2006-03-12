@@ -77,6 +77,11 @@ public:
 		STATUS_LAST
 	};
 	
+	enum {
+		FINISHED,
+		ABORTED
+	};	
+	
 	DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed);
 	virtual ~DirectoryListingFrame() { 
 		dcassert(lists.find(dl->getUser()) != lists.end());
@@ -100,6 +105,7 @@ public:
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_SETFOCUS, onSetFocus)
 		MESSAGE_HANDLER(FTM_CONTEXTMENU, onTabContextMenu)
+		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		COMMAND_ID_HANDLER(IDC_DOWNLOAD, onDownload)
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIR, onDownloadDir)
 		COMMAND_ID_HANDLER(IDC_DOWNLOADDIRTO, onDownloadDirTo)
@@ -132,6 +138,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadWithPrio(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -358,7 +365,7 @@ private:
 	bool updating;
 	bool searching;
 	bool closed;
-	bool canBeClosed;
+	bool loading;
 
 	int statusSizes[10];
 	
@@ -391,7 +398,6 @@ protected:
 private:
 	virtual int run()
 	{
-		mWindow->canBeClosed = false;
 		try
 		{
 			if(!mFile.empty()) {
@@ -401,19 +407,17 @@ private:
 			} else {
 				mWindow->refreshTree(Text::toT(Util::toNmdcFile(mWindow->dl->loadXML(mTxt, true))));
 			}
+
+			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::FINISHED);
+		}catch(const AbortException) {
+			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		} catch(const Exception& e) {
 			mWindow->error = WinUtil::getNicks(mWindow->dl->getUser()) + Text::toT(": " + e.getError());
 		}
 
-		mWindow->initStatus();
-		mWindow->ctrlStatus.SetText(0, CTSTRING(LOADED_FILE_LIST));
-		//notify the user that we've loaded the list
-		mWindow->setDirty();
-
 		//cleanup the thread object
 		delete this;
 
-		mWindow->canBeClosed = true;
 		return 0;
 	}
 };

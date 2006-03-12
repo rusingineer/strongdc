@@ -75,7 +75,6 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
 	} else {
 		// We shouldn't be here?
 		if(getUser()) {
-			dcdebug("%s - ", getUser()->getFirstNick().c_str());
 			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
 			if(&ou && strlen(aLine) < 255)
 				ou.getIdentity().setUnknownCommand(aLine);
@@ -277,7 +276,6 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
 		    return;
     	default:
 			if(getUser()) {
-				dcdebug("%s - ", getUser()->getFirstNick().c_str());
 				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
 				if(&ou && strlen(aLine) < 255)
 					ou.getIdentity().setUnknownCommand(aLine);
