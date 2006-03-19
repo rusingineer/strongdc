@@ -28,13 +28,36 @@
 
 #include "../client/FastAlloc.h"
 
-struct UpdateInfo {
-	UpdateInfo() { }
-	UpdateInfo(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
+	enum Speakers { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
+		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
+		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
+		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
+	};
 
-	User::Ptr user;
-	Identity identity;
-};
+	struct Task {
+		Task(Speakers speaker_) : speaker(speaker_) { }
+		virtual ~Task() { }
+		Speakers speaker;
+	};
+
+	struct UserTask : public Task {
+		UserTask(Speakers speaker_, const OnlineUser& ou) : Task(speaker_), user(ou.getUser()), identity(ou.getIdentity()) { }
+
+		User::Ptr user;
+		Identity identity;
+	};
+
+	struct StringTask : public Task {
+		StringTask(Speakers speaker_, const tstring& msg_) : Task(speaker_), msg(msg_) { }
+		tstring msg;
+	};
+
+	struct MessageTask : public StringTask {
+		MessageTask(Speakers speaker_, const Identity& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const tstring& m) : StringTask(speaker_, m), from(from_), to(to_), replyTo(replyTo_) { }
+		Identity from;
+		User::Ptr to;
+		User::Ptr replyTo;
+	};
 
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
 friend struct CompareItems;
@@ -60,7 +83,7 @@ public:
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
-	UserInfo(const UpdateInfo& u) : UserInfoBase(u.user) { 
+	UserInfo(const UserTask& u) : UserInfoBase(u.user) {
 		update(u.identity, -1); 
 	};
 	const tstring& getText(int col) const;

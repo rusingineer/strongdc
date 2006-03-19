@@ -241,6 +241,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlHubs.SetTextBkColor(WinUtil::bgColor);
 	ctrlHubs.SetTextColor(WinUtil::textColor);
 	ctrlHubs.SetFont(WinUtil::systemFont, FALSE);	// use Util::font instead to obey Appearace settings
+
 	initHubs();
 
 	copyMenu.CreatePopupMenu();
@@ -379,7 +380,7 @@ void SearchFrame::onEnter() {
 	int n = ctrlHubs.GetItemCount();
 	for(int i = 0; i < n; i++) {
 		if(ctrlHubs.GetCheckState(i)) {
-			clients.push_back(Text::fromT(ctrlHubs.getItemData(i)->ipPort));
+			clients.push_back(Text::fromT(ctrlHubs.getItemData(i)->url));
 		}
 	}
 
@@ -1093,7 +1094,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				}
 				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
 
-				if(resultsCount % 10 == 0)
+				if(resultsCount % 13 == 0)
 					ctrlResults.resort();
 			} else {
 				PausedResults.push_back(si);
@@ -1298,7 +1299,7 @@ void SearchFrame::initHubs() {
 		if (!client->isConnected())
 			continue;
 
-		onHubAdded(new HubInfo(Text::toT(client->getIpPort()), Text::toT(client->getHubName()), client->getMyIdentity().isOp()));
+		onHubAdded(new HubInfo(Text::toT(client->getHubUrl()), Text::toT(client->getHubName()), client->getMyIdentity().isOp()));
 	}
 
 	clientMgr->unlock();
@@ -1316,7 +1317,7 @@ void SearchFrame::onHubChanged(HubInfo* info) {
 	int nItem = 0;
 	int n = ctrlHubs.GetItemCount();
 	for(; nItem < n; nItem++) {
-		if(ctrlHubs.getItemData(nItem)->ipPort == info->ipPort)
+		if(ctrlHubs.getItemData(nItem)->url == info->url)
 			break;
 	}
 	if (nItem == n)
@@ -1336,7 +1337,7 @@ void SearchFrame::onHubRemoved(HubInfo* info) {
 	int nItem = 0;
 	int n = ctrlHubs.GetItemCount();
 	for(; nItem < n; nItem++) {
-		if(ctrlHubs.getItemData(nItem)->ipPort == info->ipPort)
+		if(ctrlHubs.getItemData(nItem)->url == info->url)
 			break;
 	}
 	if (nItem == n)
@@ -1382,7 +1383,6 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
-
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
 			fileName = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 		} else {

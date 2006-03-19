@@ -111,7 +111,7 @@ public:
 	short getPort() const { return port; }
 	const string& getAddress() const { return address; }
 
-	const string& getIp() const { return (!socket || socket->getIp().empty()) ? getAddress() : socket->getIp(); }
+	const string& getIp() const { return ip; }
 	string getIpPort() const { return getIp() + ':' + Util::toString(port); }
 	string getLocalIp() const;
 
@@ -223,6 +223,7 @@ private:
 
 	string hubUrl;
 	string address;
+	string ip;
 	u_int16_t port;
 	char separator;
 	bool secure;
@@ -231,7 +232,7 @@ private:
 
 	// BufferedSocketListener
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
-	virtual void on(Connected) throw() { updateActivity(); fire(ClientListener::Connected(), this); }
+	virtual void on(Connected) throw() { updateActivity(); ip = socket->getIp(); fire(ClientListener::Connected(), this); }
 };
 
 #endif // !defined(CLIENT_H)

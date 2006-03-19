@@ -168,7 +168,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 				ClientManager::getInstance()->setIPUser(sr->getIP(), sr->getUser());
 				SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				sr->decRef();
-				Thread::sleep(1);
+				Thread::sleep(2);
 			}
 			return 0;
 		}
