@@ -368,6 +368,7 @@ void Socket::writeTo(const string& aAddr, short aPort, const void* aBuffer, int 
 	u_int8_t* buf = (u_int8_t*)aBuffer;
 	if(sock == INVALID_SOCKET) {
 		create(TYPE_UDP);
+		setSocketOpt(SO_SNDTIMEO, 250);
 	}
 
 	dcassert(type == TYPE_UDP);

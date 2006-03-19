@@ -576,10 +576,7 @@ void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
 	{
 		Lock l(cs);
 		QueueIter i = queue.find(aQI);
-		
-		if(i == queue.end())
-			return;
-
+		dcassert(i != queue.end());
 		qi = i->second;
 		qi->qi = NULL;
 		queue.erase(i);
@@ -609,10 +606,6 @@ void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
 	QueueItemInfo* ii = NULL;
 	{
 		Lock l(cs);
-
-		if(queue.find(aQI) == queue.end())
-			return;
-		
 		dcassert(queue.find(aQI) != queue.end());
 		ii = queue[aQI];
 
@@ -706,7 +699,10 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			QueueItemInfo* ii = (QueueItemInfo*)ti->second;
 			if(!showTree || isCurDir(ii->getPath())) {
 				dcassert(ctrlQueue.findItem(ii) != -1);
-				ii->update();
+				{
+					Lock l(cs);
+					ii->update();
+				}
 				ctrlQueue.updateItem(ii);
 			}
 		}

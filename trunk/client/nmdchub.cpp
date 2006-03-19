@@ -107,6 +107,8 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		getMyIdentity().setHubUrl(getHubUrl());
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
+		// In NMDC, everyone's a bot until they show a good myinfo
+		p->setFlag(User::BOT);
 	}
 
 	{
@@ -555,6 +557,8 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 		    	     return;
 	    
 				OnlineUser& u = getUser(aLine);
+				
+				u.getUser()->unsetFlag(User::BOT);
 
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
@@ -644,8 +648,6 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 						}
 						u.getIdentity().setStatus(Util::toString(status));
 						u.getIdentity().setConnection(Connection);
-						if(strlen(Connection) == 0)
-							u.getUser()->setFlag(User::BOT);
 					}
 				}
 

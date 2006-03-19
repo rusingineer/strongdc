@@ -186,7 +186,7 @@ public:
 	User::Ptr& getUser() { return user; }
 	GETSET(User::Ptr, user, User);
 	GETSET(string, hubUrl, HubUrl);
-private:
+//private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 

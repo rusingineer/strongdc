@@ -75,6 +75,7 @@ enum Strings { // @DontAdd
 	CONFIGURED_HUB_LISTS, // "Configured Public Hub Lists"
 	CONNECT, // "&Connect"
 	CONNECT_ALL, // "Connect to all users"
+	CONNECT_FAVUSER_HUB, // "Connect to hub"	
 	CONNECTED, // "Connected"
 	CONNECTING, // "Connecting..."
 	CONNECTING_FORCED, // "Connecting (forced)..."

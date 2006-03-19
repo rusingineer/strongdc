@@ -451,7 +451,7 @@ private:
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
-		HubInfo(const tstring& aIpPort, const tstring& aName, bool aOp) : ipPort(aIpPort),
+		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
 
 		const tstring& getText(int col) const {
@@ -464,7 +464,7 @@ private:
 			return 0;
 		}
 
-		tstring ipPort;
+		tstring url;
 		tstring name;
 		bool op;
 	};
@@ -592,7 +592,7 @@ private:
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
 	void speak(Speakers s, Client* aClient) {
-		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getIpPort()), Text::toT(aClient->getHubName()), aClient->getMyIdentity().isOp());
+		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getHubUrl()), Text::toT(aClient->getHubName()), aClient->getMyIdentity().isOp());
 		PostMessage(WM_SPEAKER, WPARAM(s), LPARAM(hubInfo)); 
 	}
 };

@@ -45,7 +45,7 @@ size_t BufferedSocket::sockets = 0;
 
 BufferedSocket::~BufferedSocket() throw() {
 	delete sock;
-	if (filterIn) delete filterIn;
+	delete filterIn;
 	sockets--;
 }
 
@@ -314,6 +314,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 					throttling = false;
 					sendMaximum = bytesRead;
 				}
+				bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
 			}
 			size_t actual = file->read(&readBuf[readPos], bytesRead);
 
@@ -349,19 +350,19 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				writePos += written;
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
-
-				if (throttling) {
-					int32_t cycle_time = um->throttleCycleTime();
-					current = TimerManager::getTick();
-					int32_t sleep_time = cycle_time - (current - start);
-					if (sleep_time > 0 && sleep_time <= cycle_time) {
-						Thread::sleep(sleep_time);
-					}
-				}
 			} else if(written == -1) {
 				if(readPos < readBuf.size()) {
 					// Read a little since we're blocking anyway...
 					size_t bytesRead = min(readBuf.size() - readPos, readBuf.size() / 2);
+					if(throttling) {
+						start = TimerManager::getTick();
+						sendMaximum = um->throttleGetSlice();
+						if (sendMaximum < 0) {
+							throttling = false;
+							sendMaximum = bytesRead;
+						}
+						bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+					}
 					size_t actual = file->read(&readBuf[readPos], bytesRead);
 
 					if(bytesRead > 0) {
@@ -379,6 +380,14 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 						threadRead();
 					}
 				}	
+			}
+			if (throttling) {
+				int32_t cycle_time = um->throttleCycleTime();
+				current = TimerManager::getTick();
+				int32_t sleep_time = cycle_time - (current - start);
+				if (sleep_time > 0 && sleep_time <= cycle_time) {
+					Thread::sleep(sleep_time);
+				}
 			}
 		}
 	}
