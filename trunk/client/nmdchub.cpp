@@ -193,7 +193,9 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			}
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
-			id.getUser()->setLastDownloadSpeed((Util::toInt64(*i)*1024) / Util::toInt64(id.get("SL")));
+			int64_t slots = Util::toInt64(id.get("SL"));
+			if(slots > 0)
+				id.getUser()->setLastDownloadSpeed((Util::toInt64(*i)*1024) / slots);
 		}
 	}
 	/// @todo Think about this

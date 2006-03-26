@@ -291,10 +291,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	size_t sockSize = (size_t)sock->getSocketOptInt(SO_SNDBUF);
 	size_t bufSize = max(sockSize, (size_t)64*1024);
 
-	UploadManager *um = UploadManager::getInstance();
-	size_t sendMaximum, start = 0, current= 0;
-	bool throttling;
-
 	vector<u_int8_t> readBuf(bufSize);
 	vector<u_int8_t> writeBuf(bufSize);
 
@@ -302,6 +298,9 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 
 	bool readDone = false;
 	dcdebug("Starting threadSend");
+	UploadManager *um = UploadManager::getInstance();
+	size_t sendMaximum, start = 0, current= 0;
+	bool throttling;
 	while(true) {
 		throttling = BOOLSETTING(THROTTLE_ENABLE);
 		if(!readDone && readBuf.size() > readPos) {

@@ -862,7 +862,6 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 	        } else {
     			addLine(km.from, km.msg, WinUtil::m_ChatTextServer, false);
         	}
-	        delete i;
 		} else if(task->speaker == CHEATING_USER) {
 			CHARFORMAT2 cf;
 			memset(&cf, 0, sizeof(CHARFORMAT2));
