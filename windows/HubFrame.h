@@ -64,6 +64,7 @@ public:
 		NOTIFY_HANDLER(IDC_USERS, NM_DBLCLK, onDoubleClickUsers)	
 		NOTIFY_HANDLER(IDC_USERS, LVN_KEYDOWN, onKeyDownUsers)
 		NOTIFY_HANDLER(IDC_USERS, NM_RETURN, onEnterUsers)
+		NOTIFY_HANDLER(IDC_USERS, LVN_ITEMCHANGED, onItemChanged)		
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
 		NOTIFY_CODE_HANDLER(TTN_GETDISPINFO, onGetToolTip)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
@@ -77,7 +78,7 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEMOVE, onStyleChange)
 		MESSAGE_HANDLER(WM_CAPTURECHANGED, onStyleChanged)
 		MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, onSizeMove)
-		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, OnFileReconnect)
+		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, onFileReconnect)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
 		COMMAND_ID_HANDLER(IDC_FOLLOW, onFollow)
 		COMMAND_ID_HANDLER(IDC_SEND_MESSAGE, onSendMessage)
@@ -145,6 +146,7 @@ public:
 	LRESULT onEnterUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
+	LRESULT onFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
@@ -254,11 +256,8 @@ public:
 		return 0;
 	}
 
-	LRESULT OnFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		client->disconnect(false);
-		clearUserList();
-		clearTaskList();
-		client->connect();
+	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
+		updateStatusBar();
 		return 0;
 	}
 
@@ -368,6 +367,11 @@ private:
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
+	typedef vector<Task*> TaskList;
+	typedef TaskList::iterator TaskIter;
+	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
+	typedef UserMap::const_iterator UserMapIter;
+
 	tstring redirect;
 	bool timeStamps;
 	bool showJoins;
@@ -424,11 +428,6 @@ private:
 
 	TStringMap tabParams;
 	bool tabMenuShown;
-
-	typedef vector<Task*> TaskList;
-	typedef TaskList::iterator TaskIter;
-	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
-	typedef UserMap::const_iterator UserMapIter;
 
 	UserMap userMap;
 	TaskList taskList;
@@ -492,7 +491,7 @@ private:
 	void speak(Speakers s) { Lock l(taskCS); taskList.push_back(new Task(s)); PostMessage(WM_SPEAKER); }
 	void speak(Speakers s, const string& msg) { Lock l(taskCS); taskList.push_back(new StringTask(s, Text::toT(msg))); PostMessage(WM_SPEAKER); }
 	void speak(Speakers s, const OnlineUser& u) { Lock l(taskCS); taskList.push_back(new UserTask(s, u)); updateUsers = true; }
-	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { Lock l(taskCS); taskList.push_back(new MessageTask(s, &from ? from.getIdentity() : Identity(NULL, Util::emptyString), to, replyTo, Text::toT(line))); }
+	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { Lock l(taskCS); taskList.push_back(new MessageTask(s, &from ? from.getIdentity() : Identity(NULL, Util::emptyString), to, replyTo, Text::toT(line)));  PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

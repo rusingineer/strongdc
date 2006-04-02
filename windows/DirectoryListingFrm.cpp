@@ -103,6 +103,7 @@ void DirectoryListingFrame::loadXML(const string& txt) {
 }
 
 LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 	ctrlStatus.SetFont(WinUtil::boldFont);
@@ -220,6 +221,8 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	priorityDirMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH+90, CTSTRING(HIGH));
 	priorityDirMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST+90, CTSTRING(HIGHEST));
 
+	ctrlTree.EnableWindow(FALSE);
+	
 	SettingsManager::getInstance()->addListener(this);
 	closed = false;
 	
@@ -379,6 +382,16 @@ void DirectoryListingFrame::changeDir(DirectoryListing::Directory* d, BOOL enabl
 			ctrlStatus.SetText(STATUS_TEXT, CTSTRING(USER_OFFLINE));
 		}
 	}
+}
+
+void DirectoryListingFrame::up() {
+	HTREEITEM t = ctrlTree.GetSelectedItem();
+	if(t == NULL)
+		return;
+	t = ctrlTree.GetParentItem(t);
+	if(t == NULL)
+		return;
+	ctrlTree.SelectItem(t);
 }
 
 void DirectoryListingFrame::back() {
@@ -914,15 +927,13 @@ LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/,
 LRESULT DirectoryListingFrame::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
 	if(kd->wVKey == VK_BACK) {
-		HTREEITEM cur = ctrlTree.GetSelectedItem();
-		if(cur != NULL)
-		{
-			HTREEITEM parent = ctrlTree.GetParentItem(cur);
-			if(parent != NULL)
-				ctrlTree.SelectItem(parent);
-		}
+		up();
 	} else if(kd->wVKey == VK_TAB) {
 		onTab();
+	} else if(kd->wVKey == VK_LEFT && WinUtil::isAlt()) {
+		back();
+	} else if(kd->wVKey == VK_RIGHT && WinUtil::isAlt()) {
+		forward();
 	} else if(kd->wVKey == VK_RETURN) {
 		if(ctrlList.GetSelectedCount() == 1) {
 			ItemInfo* ii = (ItemInfo*)ctrlList.GetItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
@@ -1252,7 +1263,7 @@ LRESULT DirectoryListingFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM /*
 			initStatus();
 			ctrlStatus.SetFont(WinUtil::systemFont);
 			ctrlStatus.SetText(0, CTSTRING(LOADED_FILE_LIST));
-			//EnableWindow(true);
+			ctrlTree.EnableWindow(TRUE);
 
 			//notify the user that we've loaded the list
 			setDirty();

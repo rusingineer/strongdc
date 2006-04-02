@@ -350,7 +350,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
 			} else if(written == -1) {
-				if(readPos < readBuf.size()) {
+				if(!readDone && readPos < readBuf.size()) {
 					// Read a little since we're blocking anyway...
 					size_t bytesRead = min(readBuf.size() - readPos, readBuf.size() / 2);
 					if(throttling) {
@@ -374,9 +374,14 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 						readPos += actual;
 					}
 				} else {
-					int w = sock->wait(POLL_TIMEOUT, Socket::WAIT_WRITE | Socket::WAIT_READ);
-					if(w & Socket::WAIT_READ) {
-						threadRead();
+					while(!disconnecting) {
+						int w = sock->wait(POLL_TIMEOUT, Socket::WAIT_WRITE | Socket::WAIT_READ);
+						if(w & Socket::WAIT_READ) {
+							threadRead();
+						}
+						if(w & Socket::WAIT_WRITE) {
+							break;
+						}
 					}
 				}	
 			}

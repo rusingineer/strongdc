@@ -1031,11 +1031,11 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 }
 
 void HubFrame::clearUserList() {
+	ctrlUsers.DeleteAllItems();
 	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
 		delete i->second;
 	}
 	userMap.clear();
-	ctrlUsers.DeleteAllItems();
 }
 
 void HubFrame::clearTaskList() {
@@ -1519,6 +1519,14 @@ void HubFrame::onTab() {
 	} 
 }
 
+LRESULT HubFrame::onFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	client->disconnect(false);
+	clearUserList();
+	clearTaskList();
+	client->connect();
+	return 0;
+}
+
 LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!complete.empty() && wParam != VK_TAB && uMsg == WM_KEYDOWN)
 		complete.clear();
@@ -1673,6 +1681,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		ctrlUsers.resort();
 	} else {
 		showUsers = false;
+		ctrlUsers.DeleteAllItems();
 	}
 
 	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);
