@@ -508,7 +508,7 @@ SettingsManager::SettingsManager()
 	setDefault(FINISHED_UL_VISIBLE, "1,1,1,1,1,1,1");
 	setDefault(ACCEPTED_DISCONNECTS, 5);
 	setDefault(ACCEPTED_TIMEOUTS, 10);
-	setDefault(EMOTICONS_FILE, "Chat (Large)");
+	setDefault(EMOTICONS_FILE, "Kolobok");
 	setDefault(GROUP_SEARCH_RESULTS, true);
 	setDefault(TABS_ON_TOP, false);
 	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);

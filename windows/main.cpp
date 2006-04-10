@@ -327,7 +327,7 @@ void callBack(void* x, const string& a) {
 	HDC comp=CreateCompatibleDC(dc);
 	SelectObject(comp,hi);	
 
-	BitBlt(dc,0, 100 , 350, 120,comp,0, 100,SRCCOPY);
+	BitBlt(dc,0, 0 , 350, 120,comp,0, 0,SRCCOPY);
 
 	DeleteObject(hi);
 	DeleteObject(comp);

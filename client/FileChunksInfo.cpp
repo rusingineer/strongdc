@@ -487,7 +487,12 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 
 bool FileChunksInfo::doLastVerify(const TigerTree& aTree)
 {
-    dcassert(tthBlockSize == aTree.getBlockSize());
+    //dcassert(tthBlockSize == aTree.getBlockSize());
+	if(tthBlockSize != aTree.getBlockSize()) {
+		char buf[256];
+		sprintf(buf, "tthBlockSize: %d\naTree.blockSize: %d", tthBlockSize, aTree.getBlockSize());
+		MessageBoxA(0, buf, "DEBUG DATA", MB_OK);
+	}
 	Lock l(cs);
 
 

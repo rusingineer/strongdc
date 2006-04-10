@@ -70,7 +70,6 @@ public:
 		SUPPORTS_NOGETINFO = 0x02,
 		SUPPORTS_USERIP2 = 0x04,
 		SUPPORTS_QUICKLIST = 0x08,
-		SUPPORTS_ZLINE = 0x10
 	};
 private:
 	friend class ClientManager;
@@ -109,9 +108,6 @@ private:
 	NmdcHub& operator=(const NmdcHub&);
 
 	void clearUsers();
-	void ZLine(char* aLine, int iaLineLen) throw();
-	void ChatLine(char* aLine) throw();
-	void DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) throw();
 
 	OnlineUser& getUser(const string& aNick);
 	OnlineUser* findUser(const string& aNick);

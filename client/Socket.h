@@ -79,8 +79,8 @@ public:
 		TYPE_UDP
 	};
 
-	Socket() throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true), ip(Util::emptyString) { }
-	Socket(const string& aIp, short aPort) throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true), ip(aIp) { connect(aIp, aPort); }
+	Socket() throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true) { }
+	Socket(const string& aIp, short aPort) throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true) { connect(aIp, aPort); }
 	virtual ~Socket() throw() { Socket::disconnect(); }
 
 	/**

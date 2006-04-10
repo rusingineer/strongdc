@@ -339,6 +339,21 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	}
 }
 
+QueueItem* QueueManager::UserQueue::getNextAll(const User::Ptr& aUser, QueueItem::Priority minPrio) {
+	int p = QueueItem::LAST - 1;
+
+	do {
+		QueueItem::UserListIter i = userQueue[p].find(aUser);
+		if(i != userQueue[p].end()) {
+			dcassert(!i->second.empty());
+			return i->second.front();
+		}
+		p--;
+	} while(p >= minPrio);
+
+	return NULL;
+}
+
 QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
@@ -421,13 +436,13 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 
 	// Remove the download from running
 	running.erase(aUser);
-	
+	qi->removeCurrent(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ? aUser : qi->getCurrents()[0]->getUser());
+
 	// Set flag to waiting
 	if(qi->getCurrents().empty() || !qi->isSet(QueueItem::FLAG_MULTI_SOURCE)){
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setAverageSpeed(0);
 	}
-	qi->removeCurrent(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ? aUser : qi->getCurrents()[0]->getUser());
 	qi->setCurrentDownload(NULL);	
 
    	// Add to the userQueue
@@ -943,7 +958,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 
 bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw() {
     Lock l(cs);
-    QueueItem* qi = userQueue.getNext(aUser);
+    QueueItem* qi = userQueue.getNextAll(aUser);
 	if(qi == NULL)
 		return false;
 
@@ -1307,9 +1322,6 @@ void QueueManager::remove(const string& aTarget) throw() {
 			File::deleteFile(q->getTempTarget());
 		}
 
-		if(q->isSet(QueueItem::FLAG_TESTSUR))
-			q->getSources()[0]->getUser()->hasTestSURinQueue = false;
-
 		fire(QueueManagerListener::Removed(), q);
 
 		userQueue.remove(q);
@@ -1385,7 +1397,7 @@ void QueueManager::removeSource(User::Ptr aUser, int reason) throw() {
 	{
 		Lock l(cs);
 		QueueItem* qi = NULL;
-		while( (qi = userQueue.getNext(aUser, QueueItem::PAUSED)) != NULL) {
+		while( (qi = userQueue.getNextAll(aUser, QueueItem::PAUSED)) != NULL) {
 			if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 				remove(qi->getTarget());
 			} else {
@@ -1771,7 +1783,21 @@ void QueueManager::on(ClientManagerListener::UserConnected, const User::Ptr& aUs
 }
 
 void QueueManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
-	if(aUser->hasTestSURinQueue)
+	bool hasTestSURinQueue = false;
+	{
+		Lock l(cs);
+		for(int i = 0; i < QueueItem::LAST; ++i) {
+			QueueItem::UserListIter j = userQueue.getList(i).find(aUser);
+			if(j != userQueue.getList(i).end()) {
+				for(QueueItem::Iter m = j->second.begin(); m != j->second.end(); ++m) {
+					if((*m)->isSet(QueueItem::FLAG_TESTSUR))  hasTestSURinQueue = true;
+					fire(QueueManagerListener::StatusUpdated(), *m);
+				}
+			}
+		}
+	}
+	
+	if(hasTestSURinQueue)
 		removeTestSUR(aUser);
 }
 

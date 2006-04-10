@@ -204,172 +204,72 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 
 void NmdcHub::on(Line, const string& l) throw() {
     updateActivity();
-
-	if(l.length() == 0) 
-		return;
-
-	if(l[0] == '$') {
-		if(l[1] == 'Z' && l[2] == ' ') {
-			COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
-			ZLine((char *)l.c_str(), l.size());
-			return;
-		} else {
-			string line = fromNmdc(l);
-			char *sLine = (char *)line.c_str();
-			COMMAND_DEBUG(sLine, DebugManager::HUB_IN, getIpPort());
-			DcLine(sLine, line.size(), (char *)l.c_str(), l.size());
-            return;
-		}
-    } else {
-		string line = fromNmdc(l);
-		char *sLine = (char *)line.c_str();
-		COMMAND_DEBUG(sLine, DebugManager::HUB_IN, getIpPort());
-        ChatLine(sLine);
-        return;
-    }
-}
-
-void NmdcHub::ZLine(char* aLine, int iaLineLen) throw() {
-    if(iaLineLen < 5) return;
     
-    aLine += 3; char *sTemp = aLine; 
-    size_t iLen = iaLineLen-3, 
-		ipLen = sTemp-aLine;
-	bool corrupt = false;
+	COMMAND_DEBUG(l, DebugManager::HUB_IN, getIpPort());
 
-	// unescape \\ to \ and \P to |
-	while((sTemp = (char *)memchr(sTemp, '\\', iLen-(ipLen))) != NULL) {
-		ipLen = sTemp-aLine;
-        if(ipLen < iLen) {
-    		switch(sTemp[1]) {
-    			case '\\':
-                    memmove(sTemp, sTemp+1, iLen-(ipLen));
-                    iLen--; sTemp++; ipLen++;
-    				continue;
-    			case 'P':
-                    memmove(sTemp, sTemp+1, iLen-(ipLen));
-    				sTemp[0] = '|';
-    				iLen--; sTemp++; ipLen++;
-    				continue;
-    			default:
-    				corrupt = true;
-    				break;
-    		}
-        } else {
-            corrupt = true;
-        }
-		break;
-	}
-
-	if(!corrupt) {
-		// unzip the ZBlock
-		UnZFilter filter;
-		string lines = "";
-		bool more = true;
-		string::size_type j, readFromPos = 0, estOutSize = iLen * 4;
-		AutoArray<u_int8_t> temp(estOutSize);
-
-		while(more) {
-			j = estOutSize;
-			try {
-				more = filter((const char *)aLine+readFromPos, iLen, temp, j);
-			} catch(...) {
-				dcdebug("Error during Zline decompression\n");
-				break;
-			}
-			lines += string((char*)(u_int8_t*)temp, j);
-			readFromPos += iLen;
-			
-			char * sLines = (char *)lines.c_str();
-
-			// split lines up into indiviual commands
-            while((sTemp = strchr(sLines, '|')) != NULL) {
-                sTemp[0] = '\0';
-				string line = fromNmdc(sLines);
-				char *sLine = (char *)line.c_str();
-				// "fire" the line
-                COMMAND_DEBUG("ZLine " + string(sLine), DebugManager::HUB_IN, getIpPort());
-            	switch(sLine[0]) {
-                    case '$':
-                        DcLine(sLine, line.size(), sLines, (sTemp-sLines));
-						break;
-                    default:
-                        ChatLine(sLine);
-                        break;
-                }
-        		sLines = sTemp+1;
-        	}
-        	
-        	// last token, roll over if more data to decompress
-            if(sLines[0] != NULL)
-        	   lines = string(sLines);
-
-			// a nmdc command over 1mb ?
-			if(lines.size() > 1048576) {
-				dcdebug("Malicious data found during ZLine decompression\n");
-				break;
-			}
-		}
-	} else {
-		dcdebug("Corrupt Zline datastream\n");
-	}
-}
-
-void NmdcHub::ChatLine(char* aLine) throw() {
 	char *temp;
 
-	if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!isOp())) {
+    string line = fromNmdc(l);
+    char* aLine = (char *)line.c_str();
+    int iaLineLen = line.size();
+
+	if(iaLineLen == 0)
+		return;
+
+	if(aLine[0] != '$') {
+		if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!isOp())) {
+			return;
+		}
+		// Check if we're being banned...
+		if(state != STATE_CONNECTED) {
+			if(strstr(aLine, "banned") != 0) {
+				reconnect = false;
+			}
+		}
+		
+    	string nick = Util::emptyString;
+	
+		switch(aLine[0]) {
+    	    case '<':
+	            if((temp = strchr(aLine+1, '>')) != NULL) {
+                	temp[0] = NULL;
+            	    nick = aLine+1;
+        	        if(temp[1] == ' ' && temp[2] == '/' && tolower(temp[3]) == 'm' && tolower(temp[4]) == 'e' && temp[5] == ' ' && temp[6] != NULL) {
+    	                for(int iNickLen = (temp - aLine); iNickLen > 1; iNickLen--) {
+	                        aLine[iNickLen+4] = aLine[iNickLen-1];
+                    	}
+						aLine[5] = ' ';
+						aLine[4] = '*';
+						aLine += 4;
+    	            } else {
+	                    temp[0] = '>';
+                	}
+            	}
+        	        break;
+    	    case '*':
+	            if((temp = strchr(aLine+2, ' ')) != NULL) {
+            	    temp[0] = NULL;
+        	        nick = aLine+2;
+    	            temp[0] = ' ';
+	            }
+            	break;
+        	    default:
+    	            break;
+	    }
+
+    	OnlineUser* u = NULL;
+
+	    if(nick != Util::emptyString) {
+       		u = findUser(nick);
+    	}
+
+	    fire(ClientListener::Message(), this, *u, Util::validateMessage(aLine, true).c_str());
 		return;
 	}
 
-	// Check if we're being banned...
-	if(state != STATE_CONNECTED) {
-		if(strstr(aLine, "banned") != 0) {
-			reconnect = false;
-		}
-	}
-		
-    string nick = Util::emptyString;
-
-	switch(aLine[0]) {
-        case '<':
-            if((temp = strchr(aLine+1, '>')) != NULL) {
-                temp[0] = NULL;
-                nick = aLine+1;
-                if(temp[1] == ' ' && temp[2] == '/' && tolower(temp[3]) == 'm' && tolower(temp[4]) == 'e' && temp[5] == ' ' && temp[6] != NULL) {
-                    for(int iNickLen = (temp - aLine); iNickLen > 1; iNickLen--) {
-                        aLine[iNickLen+4] = aLine[iNickLen-1];
-                    }
-					aLine[5] = ' ';
-					aLine[4] = '*';
-					aLine += 4;
-                } else {
-                    temp[0] = '>';
-                }
-            }
-                break;
-        case '*':
-            if((temp = strchr(aLine+2, ' ')) != NULL) {
-                temp[0] = NULL;
-                nick = aLine+2;
-                temp[0] = ' ';
-            }
-            break;
-            default:
-                break;
-    }
-
-    OnlineUser* u = NULL;
-
-    if(nick != Util::emptyString) {
-       	u = findUser(nick);
-    }
-
-    fire(ClientListener::Message(), this, *u, Util::validateMessage(aLine, true).c_str());
-}
-
-void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) throw() {
-	char *temp, *temp1;
+	char* bLine = (char *)l.c_str();
+    int ibLineLen = l.size();
+	char *temp1;
 
 	switch(aLine[1]) {
         case 'Z':
@@ -462,7 +362,7 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 				int type = atoi(temp1+1) - 1; temp1 += 3;
 				if(temp1[0] != NULL) {
 					if(bPassive == true && iseekerLen > 4) {
-						OnlineUser* u = findUser(seeker.substr(4));
+        				OnlineUser* u = findUser(seeker.c_str()+4);
 
 						if(u == NULL) return;
 
@@ -523,11 +423,6 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 								}
 							}
                 			break;
-						case 'Z':
-							if((strcmp(aLine+1, "Line")) == 0) {
-								supportFlags |= SUPPORTS_ZLINE;
-							}
-							break;
                 		default:
                             dcdebug("NmdcHub::onLine Unknown supports %s\n", aLine);
                             break;
@@ -895,6 +790,10 @@ void NmdcHub::DcLine(char* aLine, int iaLineLen, char* bLine, int ibLineLen) thr
 					u->getIdentity().setIp(temp);
 					v.push_back(u);
 
+                    if(temp1 == NULL) {
+                        break;
+                    }
+
 					aLine = temp1+2;
 				}
 				fire(ClientListener::UsersUpdated(), this, v);
@@ -1198,7 +1097,7 @@ void NmdcHub::myInfo() {
 		}
 	} else {
 		if (connection == "Modem") { connection = "56Kbps"; }
-		if (connection == "Wireless") { connection = "Satellite"; }
+		else if (connection == "Wireless") { connection = "Satellite"; }
 	}
 
 	char myinfo[512];
