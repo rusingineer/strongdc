@@ -74,8 +74,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0), hasTestSURinQueue(false) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
 
 	virtual ~User() throw() { }
 
@@ -83,8 +83,6 @@ public:
 
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
-
-	bool hasTestSURinQueue;
 
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);

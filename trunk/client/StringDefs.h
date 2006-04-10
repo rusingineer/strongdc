@@ -491,6 +491,7 @@ enum Strings { // @DontAdd
 	SEPARATOR, // "Separator"
 	SERVER, // "Server"
 	SET_PRIORITY, // "Set priority"
+	SETCZDC_ALTERNATE_LIMITING, // "Use Alternate Limiting from"		
 	SETCZDC_BACK_COLOR, // "Back color"
 	SETCZDC_BLACK_WHITE, // "Black & white"
 	SETCZDC_BOLD, // "Bold Authors of messages in chat"

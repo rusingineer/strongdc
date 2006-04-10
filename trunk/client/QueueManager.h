@@ -90,7 +90,6 @@ public:
 		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick())  + "." + aUser->getCID().toBase32();
 		string target = Util::getAppPath() + "TestSURs\\" + fileName;
 		add(target, -1, NULL, aUser, fileName, false, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
-		aUser->hasTestSURinQueue = true;
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
@@ -225,6 +224,7 @@ private:
 		void add(QueueItem* qi);
 		void add(QueueItem* qi, const User::Ptr& aUser);
 		QueueItem* getNext(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST, QueueItem* pNext = NULL);
+		QueueItem* getNextAll(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST);
 		QueueItem* getRunning(const User::Ptr& aUser);
 		void setRunning(QueueItem* qi, const User::Ptr& aUser);
 		void setWaiting(QueueItem* qi, const User::Ptr& aUser);
