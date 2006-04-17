@@ -671,14 +671,12 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
-				dcdebug("%s - Chunk finished\n", aSource->getUser()->getFirstNick().c_str());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
-				dcdebug("%s - Chunk disconnected\n", aSource->getUser()->getFirstNick().c_str());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				fire(DownloadManagerListener::Failed(), d, e.getError());
