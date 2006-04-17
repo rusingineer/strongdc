@@ -163,9 +163,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	{
 		Lock l(cs);
 
-		int attemptCycle = (60 + (int)(max((int)downloads.size() - 120, 0) / 2)) * 1000;
-		bool attemptDone = false;
-
 		idlers = checkIdle;
 		checkIdle.clear();
 
@@ -185,7 +182,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + attemptCycle) < aTick) && !attemptDone ) {
+				if( ((cqi->getLastAttempt() + 100*1000) < aTick)) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
@@ -206,7 +203,6 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 							cqi->setState(ConnectionQueueItem::CONNECTING);
 							ClientManager::getInstance()->connect(cqi->getUser());
 							fire(ConnectionManagerListener::StatusChanged(), cqi);
-							attemptDone = true;
 						} else {
 							cqi->setState(ConnectionQueueItem::NO_DOWNLOAD_SLOTS);
 							fire(ConnectionManagerListener::Failed(), cqi, STRING(ALL_DOWNLOAD_SLOTS_TAKEN));

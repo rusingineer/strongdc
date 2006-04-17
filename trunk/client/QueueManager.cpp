@@ -1084,6 +1084,7 @@ again:
 		if(HashManager::getInstance()->getTree(*d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
 			q->setHasTree(true);
+			dcassert(!q->chunkInfo || (q->chunkInfo->tthBlockSize == d->getTigerTree().getBlockSize()));
 		} else if(supportsTrees && !source->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			d->setFlag(Download::FLAG_TREE_DOWNLOAD);
@@ -1093,10 +1094,9 @@ again:
 			d->unsetFlag(Download::FLAG_RESUME);
 			
 			if(q->chunkInfo) {
-				dcdebug("put tree chunk %I64d\n", freeBlock);
 				q->chunkInfo->putChunk(freeBlock);
 			}
-		} else {
+		} else if (!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 			// Use the root as tree to get some sort of validation at least...
 			d->getTigerTree() = TigerTree(d->getSize(), d->getSize(), *d->getTTH());
 			d->setTreeValid(true);
@@ -1328,7 +1328,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 		fileQueue.remove(q);
 
 		setDirty();
-		}
+	}
 
 	if(!x.empty()) {
 		DownloadManager::getInstance()->abortDownload(x);

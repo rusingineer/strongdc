@@ -878,8 +878,12 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 
 			addLine(static_cast<StringTask*>(task)->msg, cf);
 		}
-		
-		delete task;
+	}
+
+	{
+		Lock l(taskCS);
+		for_each(t.begin(), t.end(), DeleteFunction());
+		t.clear();
 	}
 	
 	if(resort && showUsers) {
