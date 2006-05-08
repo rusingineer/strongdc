@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ typedef unsigned __int64 u_int64_t;
 
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0501
-# define _WIN32_IE	0x0500
+# define _WIN32_IE	0x0601
 # define _RICHEDIT_VER 0x0300
 #endif
 

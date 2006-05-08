@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -865,7 +865,6 @@ _T("\r\n-- I share, therefore I am.\r\n") LINE2,
 _T("\r\n-- I came, I searched, I found...\r\n") LINE2,
 _T("\r\n-- I came, I shared, I sent...\r\n") LINE2,
 _T("\r\n-- I can add multiple users to the same file and download from them simultaneously :)\r\n") LINE2,
-_T("\r\n-- My client supports TTH hashes, does yours?\r\n") LINE2,
 _T("\r\n-- Ja jsem byl prvni klient, ktery nemuze ztratit slot pri segmentovem stahovani :-P\r\n") LINE2,
 _T("\r\n-- Ja jsem byl prvni klient, ktery umi seskupovat prenosy se stejnym nazvem souboru :-P\r\n") LINE2,
 _T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
@@ -873,8 +872,7 @@ _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;
 _T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,
 _T("\r\n-- Kontroluji data behem prenosu a zarucim spravnou integritu dat :)\r\n") LINE2,
 _T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE2,
-_T("\r\n-- Podporuju magnet-linky, takze muzu zarucit, ze nestahnu zadne falesne soubory :-))\r\n") LINE2,
-_T("\r\n-- Muzu omezit rychlost sveho downloadu aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE2
+_T("\r\n-- Muzu omezit rychlost sveho downloadu, aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE2
 };
 
 #define MSGS 16
@@ -1018,7 +1016,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			params["bitrate"] = Util::toString(waBitRate) + "kbps";
 			params["sample"] = Util::toString(waSampleRate) + "kHz";
 			params["channels"] = (waChannels==2?"stereo":"mono"); // 3+ channels? 0 channels?
-			message = Text::toT(Util::formatParams(SETTING(WINAMP_FORMAT), params));
+			message = Text::toT(Util::formatParams(SETTING(WINAMP_FORMAT), params, false));
 		} else {
 			status = _T("Supported version of Winamp is not running");
 		}
@@ -1616,14 +1614,14 @@ void WinUtil::RunPreviewCommand(unsigned int index, string target){
 	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();
 
 	if(index <= lst.size()) {
-	string application = lst[index]->getApplication();
-	string arguments = lst[index]->getArguments();
-	StringMap ucParams;				
+		string application = lst[index]->getApplication();
+		string arguments = lst[index]->getArguments();
+		StringMap ucParams;				
 	
-	ucParams["file"] = "\"" + target + "\"";
-	ucParams["dir"] = "\"" + Util::getFilePath(target) + "\"";
+		ucParams["file"] = "\"" + target + "\"";
+		ucParams["dir"] = "\"" + Util::getFilePath(target) + "\"";
 
-		::ShellExecute(NULL, NULL, Text::toT(application).c_str(), Text::toT(Util::formatParams(arguments, ucParams)).c_str(), Text::toT(ucParams["dir"]).c_str(), SW_SHOWNORMAL);
+		::ShellExecute(NULL, NULL, Text::toT(application).c_str(), Text::toT(Util::formatParams(arguments, ucParams, false)).c_str(), Text::toT(ucParams["dir"]).c_str(), SW_SHOWNORMAL);
 	}
 }
 

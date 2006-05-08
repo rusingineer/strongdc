@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -305,7 +305,7 @@ void CryptoManager::buildLookup(vector<u_int8_t>* table, Node* aRoot) {
 struct greaterNode { 
 	bool operator() (const Node* a, const Node* b) const { 
 		return *a < *b; 
-	};
+	}
 };
 
 /**

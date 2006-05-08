@@ -835,7 +835,6 @@ void NmdcHub::on(Line, const string& l) throw() {
 				
 					if (getStealth() == false) {
 						feat.push_back("QuickList");
-						feat.push_back("ZLine");
 					}
 
 					if(BOOLSETTING(COMPRESS_TRANSFERS))

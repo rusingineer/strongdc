@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -680,16 +680,16 @@ public:
 		InsertItem(&lvi);
 	}
 
-	struct StringComp {
-		StringComp(const string& s) : a(s) { }
+	struct TStringComp {
+		TStringComp(const tstring& s) : a(s) { }
 		bool operator()(T* b) const { return b->getGroupingString() == a; }
-		const string& a;
+		const tstring& a;
 	private:
-		StringComp& operator=(const StringComp&);
+		TStringComp& operator=(const TStringComp&);
 	};
 
-	inline T* findMainItem(const string& groupingString) {
-		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), StringComp(groupingString));
+	inline T* findMainItem(const tstring& groupingString) {
+		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
 		return j != mainItems.end() ? *j : NULL;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,11 +65,12 @@ public:
 	User::Ptr findLegacyUser(const string& aNick) const throw();
 
 	bool isOnline(const User::Ptr& aUser) {
-		Lock l(cs);
+		RLock<> l(cs);
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
 	void setIPUser(const string& IP, User::Ptr user) {
+		RLock<> l(cs);
 		ipList[IP] = user->getFirstNick();
 		OnlinePair p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
@@ -84,6 +85,7 @@ public:
 	}
 
 	OnlineUser& getOnlineUser(const User::Ptr& p) {
+		RLock<> l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			return *i->second;
@@ -110,15 +112,15 @@ public:
 	int getMode(const string& aHubUrl);
 	bool isActive(const string& aHubUrl) { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
-	void lock() throw() { cs.enter(); }
-	void unlock() throw() { cs.leave(); }
+	void lock() throw() { cs.enterRead(); }
+	void unlock() throw() { cs.leaveRead(); }
 
 	Identity getIdentity(const User::Ptr& aUser);
 
 	Client::List& getClients() { return clients; }
 
  	void removeClientListener(ClientListener* listener) {
- 		Lock l(cs);
+ 		RLock<> l(cs);
  		Client::Iter endIt = clients.end();
  		for(Client::Iter it = clients.begin(); it != endIt; ++it) {
  			Client* client = *it;
@@ -126,10 +128,12 @@ public:
  		}
  	}
 
-	string getCachedIp() const { Lock l(cs); return cachedIp; }
+	string getCachedIp() const { RLock<> l(cs); return cachedIp; }
 
 	CID getMyCID();
 	const CID& getMyPID();
+	
+	void save();
 		
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
@@ -153,7 +157,7 @@ private:
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;
 
 	Client::List clients;
-	mutable CriticalSection cs;
+	mutable RWLock<> cs;
 	NickMap ipList;
 	
 	UserMap users;

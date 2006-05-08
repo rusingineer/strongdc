@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ const string Identity::setCheat(Client& c, const string& aCheatDescription, bool
 		
 	StringMap ucParams;
 	getParams(ucParams, "user", true);
-	string cheat = Util::formatParams(aCheatDescription, ucParams);
+	string cheat = Util::formatParams(aCheatDescription, ucParams, false);
 	
 	setCheatingString(cheat);
 	setBadClient(Util::toString(aBadClient));

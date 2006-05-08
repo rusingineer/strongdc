@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ Client* ClientManager::getClient(const string& aHubURL) {
 	}
 
 	{
-		Lock l(cs);
+		WLock<> l(cs);
 		clients.push_back(c);
 	}
 
@@ -62,7 +62,7 @@ void ClientManager::putClient(Client* aClient) {
 	aClient->removeListeners();
 
 	{
-		Lock l(cs);
+		WLock<> l(cs);
 
 		// Either I'm stupid or the msvc7 optimizer is doing something _very_ strange here...
 		// STL-port -D_STL_DEBUG complains that .begin() and .end() don't have the same owner (!)
@@ -80,12 +80,12 @@ void ClientManager::putClient(Client* aClient) {
 }
 
 size_t ClientManager::getUserCount() {
-	Lock l(cs);
+	RLock<> l(cs);
 	return onlineUsers.size();
 }
 
 StringList ClientManager::getHubs(const CID& cid) {
-	Lock l(cs);
+	RLock<> l(cs);
 	StringList lst;
 	OnlinePair op = onlineUsers.equal_range(cid);
 	for(OnlineIter i = op.first; i != op.second; ++i) {
@@ -95,7 +95,7 @@ StringList ClientManager::getHubs(const CID& cid) {
 }
 
 StringList ClientManager::getHubNames(const CID& cid) {
-	Lock l(cs);
+	RLock<> l(cs);
 	StringList lst;
 	OnlinePair op = onlineUsers.equal_range(cid);
 	for(OnlineIter i = op.first; i != op.second; ++i) {
@@ -105,7 +105,7 @@ StringList ClientManager::getHubNames(const CID& cid) {
 }
 
 StringList ClientManager::getNicks(const CID& cid) {
-	Lock l(cs);
+	RLock<> l(cs);
 	StringList lst;
 	OnlinePair op = onlineUsers.equal_range(cid);
 	for(OnlineIter i = op.first; i != op.second; ++i) {
@@ -114,16 +114,17 @@ StringList ClientManager::getNicks(const CID& cid) {
 	if(lst.empty()) {
 		// Offline perhaps?
 		UserIter i = users.find(cid);
-		if(i != users.end())
+		if(i != users.end() && !i->second->getFirstNick().empty()) {
 			lst.push_back(i->second->getFirstNick());
-		else
+		} else {
 			lst.push_back('{' + cid.toBase32() + '}');
+		}
 	}
 	return lst;
 }
 
 string ClientManager::getConnection(const CID& cid) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
 		return i->second->getIdentity().getConnection();
@@ -132,7 +133,7 @@ string ClientManager::getConnection(const CID& cid) {
 }
 
 int64_t ClientManager::getAvailable() {
-	Lock l(cs);
+	RLock<> l(cs);
 	int64_t bytes = 0;
 	for(OnlineIter i = onlineUsers.begin(); i != onlineUsers.end(); ++i) {
 		bytes += i->second->getIdentity().getBytesShared();
@@ -142,7 +143,7 @@ int64_t ClientManager::getAvailable() {
 }
 
 bool ClientManager::isConnected(const string& aUrl) {
-	Lock l(cs);
+	RLock<> l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->getHubUrl() == aUrl) {
@@ -153,7 +154,7 @@ bool ClientManager::isConnected(const string& aUrl) {
 }
 
 string ClientManager::findHub(const string& ipPort) {
-	Lock l(cs);
+	RLock<> l(cs);
 
 	string ip;
 	short port = 411;
@@ -182,7 +183,7 @@ string ClientManager::findHub(const string& ipPort) {
 }
 
 User::Ptr ClientManager::findLegacyUser(const string& aNick) const throw() {
-	Lock l(cs);
+	RLock<> l(cs);
 	dcassert(aNick.size() > 0);
 
 	for(OnlineMap::const_iterator i = onlineUsers.begin(); i != onlineUsers.end(); ++i) {
@@ -195,7 +196,7 @@ User::Ptr ClientManager::findLegacyUser(const string& aNick) const throw() {
 
 User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw() {
 	CID cid = makeCid(aNick, aHubUrl);
-	Lock l(cs);
+	WLock<> l(cs);
 
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
@@ -214,7 +215,7 @@ User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) thr
 }
 
 User::Ptr ClientManager::getUser(const CID& cid) throw() {
-	Lock l(cs);
+	WLock<> l(cs);
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
 		return ui->second;
@@ -226,7 +227,7 @@ User::Ptr ClientManager::getUser(const CID& cid) throw() {
 }
 
 User::Ptr ClientManager::findUser(const CID& cid) throw() {
-	Lock l(cs);
+	RLock<> l(cs);
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
 		return ui->second;
@@ -235,7 +236,7 @@ User::Ptr ClientManager::findUser(const CID& cid) throw() {
 }
 
 bool ClientManager::isOp(const User::Ptr& user, const string& aHubUrl) {
-	Lock l(cs);
+	RLock<> l(cs);
 	pair<OnlineIter, OnlineIter> p = onlineUsers.equal_range(user->getCID());
 	for(OnlineIter i = p.first; i != p.second; ++i) {
 		if(i->second->getClient().getHubUrl() == aHubUrl) {
@@ -257,7 +258,7 @@ CID ClientManager::makeCid(const string& aNick, const string& aHubUrl) throw() {
 
 void ClientManager::putOnline(OnlineUser& ou) throw() {
 	{
-		Lock l(cs);
+		WLock<> l(cs);
 		dcassert(!ou.getUser()->getCID().isZero());
 		onlineUsers.insert(make_pair(ou.getUser()->getCID(), &ou));
 	}
@@ -271,7 +272,7 @@ void ClientManager::putOnline(OnlineUser& ou) throw() {
 void ClientManager::putOffline(OnlineUser& ou) throw() {
 	bool lastUser = false;
 	{
-		Lock l(cs);
+		WLock<> l(cs);
 		pair<OnlineMap::iterator, OnlineMap::iterator> op = onlineUsers.equal_range(ou.getUser()->getCID());
 		dcassert(op.first != op.second);
 		for(OnlineMap::iterator i = op.first; i != op.second; ++i) {
@@ -292,7 +293,7 @@ void ClientManager::putOffline(OnlineUser& ou) throw() {
 }
 
 void ClientManager::connect(const User::Ptr& p) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
@@ -301,7 +302,7 @@ void ClientManager::connect(const User::Ptr& p) {
 }
 
 void ClientManager::privateMessage(const User::Ptr& p, const string& msg) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
@@ -310,7 +311,7 @@ void ClientManager::privateMessage(const User::Ptr& p, const string& msg) {
 }
 
 void ClientManager::send(AdcCommand& cmd, const CID& cid) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
@@ -324,7 +325,7 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 
 void ClientManager::infoUpdated(bool antispam) {
 	if(GET_TICK() > (quickTick + 10000) || antispam == false) {
-		Lock l(cs);
+		RLock<> l(cs);
 		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 			if((*i)->isConnected()) {
 				(*i)->info();
@@ -413,6 +414,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 }
 
 void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility) {
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i == onlineUsers.end())
 		return;
@@ -422,7 +424,7 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().getHubIdentity().getParams(params, "hub", false);
 	ou.getClient().getMyIdentity().getParams(params, "my", compatibility);
 	ou.getClient().escapeParams(params);
-	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params));
+	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params, false));
 }
 
 void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& from) throw() {
@@ -430,7 +432,7 @@ void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& fro
 }
 
 Identity ClientManager::getIdentity(const User::Ptr& aUser) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(aUser->getCID());
 	if(i != onlineUsers.end()) {
 		return i->second->getIdentity();
@@ -439,7 +441,7 @@ Identity ClientManager::getIdentity(const User::Ptr& aUser) {
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
-	Lock l(cs);
+	RLock<> l(cs);
 
 	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
 
@@ -451,7 +453,7 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 }
 
 void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
-	Lock l(cs);
+	RLock<> l(cs);
 
 	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
 
@@ -468,7 +470,7 @@ void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aF
 
 void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) throw() {
 	{
-		Lock l(cs);
+		WLock<> l(cs);
 
 		// Collect some garbage...
 		UserIter i = users.begin();
@@ -488,8 +490,8 @@ void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) thro
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
-void ClientManager::on(Save, SimpleXML*) throw() {
-	Lock l(cs);
+void ClientManager::save() {
+	RLock<> l(cs);
 
 	try {
 		string tmp;
@@ -521,9 +523,13 @@ void ClientManager::on(Save, SimpleXML*) throw() {
 	}
 }
 
+void ClientManager::on(Save, SimpleXML*) throw() {
+	save();
+}
+
 User::Ptr& ClientManager::getMe() {
 	if(!me) {
-		Lock l(cs);
+		WLock<> l(cs);
 		if(!me) {
 			me = new User(getMyCID());
 			me->setFirstNick(SETTING(NICK));
@@ -604,7 +610,7 @@ void ClientManager::updateCachedIp() {
 }
 
 void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
-	Lock l(cs);
+	RLock<> l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		i->second->getIdentity().setListLength(listLen);
@@ -614,7 +620,7 @@ void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 void ClientManager::setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
 	OnlineUser* ou;
 	{
-		Lock l(cs);
+		RLock<> l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 
@@ -629,7 +635,7 @@ bool ClientManager::fileListDisconnected(const User::Ptr& p) {
 	string report = Util::emptyString;
 	Client* c = NULL;
 	{
-		Lock l(cs);
+		RLock<> l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
@@ -658,7 +664,7 @@ bool ClientManager::connectionTimeout(const User::Ptr& p) {
 	string report = Util::emptyString;
 	Client* c = NULL;
 	{
-		Lock l(cs);
+		RLock<> l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
@@ -691,7 +697,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 	string report = Util::emptyString;
 	OnlineUser* ou = NULL;
 	{
-		Lock l(cs);
+		RLock<> l(cs);
 
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end())
@@ -742,7 +748,7 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 	OnlineUser* ou = NULL;
 	string report = Util::emptyString;
 	{
-		Lock l(cs);
+		RLock<> l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 		

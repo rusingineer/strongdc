@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ private:
 	friend class Singleton<CryptoManager>;
 	
 	CryptoManager() : lock("EXTENDEDPROTOCOLABCABCABCABCABCABC"), pk("DCPLUSPLUS" DCVERSIONSTRING "ABCABC") { }
-	virtual ~CryptoManager() { };
+	virtual ~CryptoManager() { }
 
 	class Leaf : public FastAlloc<Leaf> {
 	public:

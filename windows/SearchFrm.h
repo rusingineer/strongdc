@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -295,8 +295,6 @@ private:
 
 	class SearchInfo : public UserInfoBase {
 	public:
-		SearchResult* sr;
-
 		typedef SearchInfo* Ptr;
 		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
@@ -347,24 +345,7 @@ private:
 			tstring tth;
 		};
         
-		const tstring& getText(int col) const {
-			switch(col) {
-				case COLUMN_NICK: return nick;
-				case COLUMN_FILENAME: return fileName;
-				case COLUMN_TYPE: return type;
-				case COLUMN_SIZE: return size;
-				case COLUMN_PATH: return path;
-				case COLUMN_SLOTS: return slots;
-				case COLUMN_CONNECTION: return connection;
-				case COLUMN_HUB: return hubName;
-				case COLUMN_EXACT_SIZE: return exactSize;
-				case COLUMN_UPLOAD: return uploadSpeed;
-				case COLUMN_IP: return ip;
-				case COLUMN_TTH: return tth;
-				case COLUMN_HITS: return totalUsers;
-				default: return Util::emptyStringT;
-			}
-		}
+		const tstring& getText(int col) const { return columns[col]; }
 
 		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
 			if(!a->sr || !b->sr)
@@ -373,7 +354,7 @@ private:
 			switch(col) {
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
-						return lstrcmpi(a->type.c_str(), b->type.c_str());
+						return lstrcmpi(a->columns[COLUMN_TYPE].c_str(), b->columns[COLUMN_TYPE].c_str());
 					else
 						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
 				case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
@@ -384,7 +365,7 @@ private:
 						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
 				case COLUMN_SIZE:
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_UPLOAD: return compare(a->uploadSpeed,b->uploadSpeed);
+				case COLUMN_UPLOAD: return compare(a->columns[COLUMN_UPLOAD],b->columns[COLUMN_UPLOAD]);
 				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}
@@ -419,35 +400,24 @@ private:
 		void update();
 		
 		SearchInfo* createMainItem() { return this; }
-		const string getGroupingString() { return Text::fromT(tth); }
+		const tstring getGroupingString() { return columns[COLUMN_TTH]; }
 		void updateMainItem() {
 			u_int32_t total = main->subItems.size();
 			if(total != 0) {
 				TCHAR buf[256];
 				_sntprintf(buf, 255, _T("%d %s"), total + 1, CTSTRING(USERS));
 				buf[255] = NULL;
-				main->totalUsers = buf;
+				main->columns[COLUMN_HITS] = buf;
 				if(total == 1)
-					main->size = size;
+					main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
 			} else {
-				main->totalUsers = Util::emptyStringT;
+				main->columns[COLUMN_HITS] = Util::emptyStringT;
 			}
 		}
 
-		GETSET(tstring, nick, Nick);
-		GETSET(tstring, connection, Connection)
-		GETSET(tstring, fileName, FileName);
-		GETSET(tstring, path, Path);
-		GETSET(tstring, type, Type);
-		GETSET(tstring, hubName, HubName);
-		GETSET(tstring, size, Size);
-		GETSET(tstring, slots, Slots);
-		GETSET(tstring, exactSize, ExactSize);
-		GETSET(tstring, ip, IP);
-		GETSET(tstring, tth, TTH);
 		GETSET(int, flagimage, flagImage);
-		GETSET(tstring, uploadSpeed, UploadSpeed);
-		tstring totalUsers;
+		SearchResult* sr;
+		tstring columns[COLUMN_LAST];
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
