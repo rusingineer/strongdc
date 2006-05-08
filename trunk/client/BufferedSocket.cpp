@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -297,7 +297,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	size_t readPos = 0;
 
 	bool readDone = false;
-	dcdebug("Starting threadSend");
+	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -209,7 +209,7 @@ private:
 		int64_t actual;
 		int64_t speed;
 		int64_t timeLeft;
-		string Target;
+		tstring Target;
 		time_t fileBegin;
 		bool multiSource;
 
@@ -259,14 +259,14 @@ private:
 		ItemInfo* createMainItem() {
 	  		ItemInfo* h = new ItemInfo(user, true);
 			h->Target = Target;
-			h->columns[COLUMN_FILE] = Text::toT(Util::getFileName(h->Target));
-			h->columns[COLUMN_PATH] = Text::toT(Util::getFilePath(h->Target));
+			h->columns[COLUMN_FILE] = Util::getFileName(h->Target);
+			h->columns[COLUMN_PATH] = Util::getFilePath(h->Target);
 			h->columns[COLUMN_STATUS] = TSTRING(CONNECTING);
 			h->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
 
 			return h;
 		}
-		const string getGroupingString() { return Target; }
+		const tstring getGroupingString() { return Target; }
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
 				ItemInfo* i = main->subItems.front();

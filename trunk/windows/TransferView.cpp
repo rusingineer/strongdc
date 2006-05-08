@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,26 +154,33 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 			transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 
-			if(ii->download && !ii->Target.empty()) {
-				string ext = Util::getFileExt(ii->Target);
-				if(ext.size()>1) ext = ext.substr(1);
-				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+			if(ii->download) {
+				transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_ENABLED);
+				transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_ENABLED);
+				if(!ii->Target.empty()) {
+					string target = Text::fromT(ii->Target);
+					string ext = Util::getFileExt(target);
+					if(ext.size()>1) ext = ext.substr(1);
+					PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 
-				QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+					QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-				string tmp = ii->Target;
-				QueueItem::StringIter qi = queue.find(&tmp);
+					QueueItem::StringIter qi = queue.find(&target);
 
-				bool slowDisconnect = false;
-				if(qi != queue.end())
-					slowDisconnect = qi->second->isSet(QueueItem::FLAG_AUTODROP);
+					bool slowDisconnect = false;
+					if(qi != queue.end())
+						slowDisconnect = qi->second->isSet(QueueItem::FLAG_AUTODROP);
 
-				QueueManager::getInstance()->unlockQueue();
+					QueueManager::getInstance()->unlockQueue();
 
-				if(slowDisconnect) {
-					segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
-					transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+					if(slowDisconnect) {
+						segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+						transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
+					}
 				}
+			} else {
+				transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_DISABLED);
+				transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_DISABLED);
 			}
 
 			if(previewMenu.GetMenuItemCount() > 0) {
@@ -219,7 +226,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 			continue;
 
 		StringMap tmp = ucParams;
-		ucParams["fileFN"] = itemI->Target;
+		ucParams["fileFN"] = Text::fromT(itemI->Target);
 
 		// compatibility with 0.674 and earlier
 		ucParams["file"] = ucParams["fileFN"];
@@ -244,7 +251,7 @@ void TransferView::ItemInfo::removeAll() {
 		QueueManager::getInstance()->removeSource(user, QueueItem::Source::FLAG_REMOVED);
 	} else {
 		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, _T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-			QueueManager::getInstance()->remove(Target);
+			QueueManager::getInstance()->remove(Text::fromT(Target));
 	}
 }
 
@@ -549,7 +556,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 
 									if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
 										MainFrame::getMainFrame()->ShowBalloonTip((
-											TSTRING(FILE) + _T(": ")+ Text::toT(Util::getFileName(ii->Target)) + _T("\n")+
+											TSTRING(FILE) + _T(": ")+ Util::getFileName(ii->Target) + _T("\n")+
 											TSTRING(USER) + _T(": ") + Text::toT(ii->user->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
 									}
 									main->start = 0;
@@ -621,7 +628,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 }
 
 TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload), transferFailed(false),
-	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0), Target(Util::emptyString), flagImage(0),
+	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0), Target(Util::emptyStringT), flagImage(0),
 	collapsed(true), main(NULL)
 { 
 	columns[COLUMN_USER] = WinUtil::getNicks(u);
@@ -659,7 +666,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 		columns[COLUMN_SPEED] = Util::emptyStringT;
 	}
 	if(ui.updateMask & UpdateInfo::MASK_FILE) {
-		if(ui.download) Target = Text::fromT(ui.target);
+		if(ui.download) Target = ui.target;
 		columns[COLUMN_FILE] = ui.file;
 		columns[COLUMN_PATH] = ui.path;
 	}
@@ -964,7 +971,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-		string tmp = ii->Target;
+		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
 
 		//create a copy of the tth to avoid holding the filequeue lock while calling
@@ -992,7 +999,7 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-		string tmp = ii->Target;
+		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
 
 		string aTempTarget;
@@ -1065,7 +1072,7 @@ LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 
-		string tmp = ii->Target;
+		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
 
 		if(qi != queue.end()) {
@@ -1147,7 +1154,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		int64_t total = 0;
 		int64_t fileSize = -1;
 
-		string tmp = main->Target;
+		string tmp = Text::fromT(main->Target);
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
 		QueueItem::StringIter qi = queue.find(&tmp);
 		if(qi != queue.end()) {

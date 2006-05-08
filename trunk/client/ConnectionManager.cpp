@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -722,13 +722,16 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
 		} else if(*i == UserConnection::FEATURE_TTHF) {
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
-			conn->getUser()->setFlag(User::TTH_GET);
+			if(conn->getUser()) 
+				conn->getUser()->setFlag(User::TTH_GET);
 		}
 	}
 
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(conn->getUser());
-	if(&ou) {
-		ou.getIdentity().setSupports(sup);
+	if(conn->getUser()) {
+		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(conn->getUser());
+		if(&ou) {
+			ou.getIdentity().setSupports(sup);
+		}
 	}
 }
 

@@ -59,6 +59,7 @@ enum Strings { // @DontAdd
 	BROWSE_FILE_LIST, // "Browse file list"
 	BUMPED, // "Bumped"
 	CANCEL, // "Cancel"
+	CID, // "CID"	
 	CLEAR, // "Clear chat"
 	CLIENTID, // "Client"
 	CLOSE, // "Close"
