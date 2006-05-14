@@ -65,12 +65,12 @@ public:
 	User::Ptr findLegacyUser(const string& aNick) const throw();
 
 	bool isOnline(const User::Ptr& aUser) {
-		RLock<> l(cs);
+		Lock l(cs);
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
 	void setIPUser(const string& IP, User::Ptr user) {
-		RLock<> l(cs);
+		Lock l(cs);
 		ipList[IP] = user->getFirstNick();
 		OnlinePair p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
@@ -85,7 +85,7 @@ public:
 	}
 
 	OnlineUser& getOnlineUser(const User::Ptr& p) {
-		RLock<> l(cs);
+		Lock l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			return *i->second;
@@ -112,15 +112,15 @@ public:
 	int getMode(const string& aHubUrl);
 	bool isActive(const string& aHubUrl) { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
-	void lock() throw() { cs.enterRead(); }
-	void unlock() throw() { cs.leaveRead(); }
+	void lock() throw() { cs.enter(); }
+	void unlock() throw() { cs.leave(); }
 
 	Identity getIdentity(const User::Ptr& aUser);
 
 	Client::List& getClients() { return clients; }
 
  	void removeClientListener(ClientListener* listener) {
- 		RLock<> l(cs);
+ 		Lock l(cs);
  		Client::Iter endIt = clients.end();
  		for(Client::Iter it = clients.begin(); it != endIt; ++it) {
  			Client* client = *it;
@@ -128,7 +128,7 @@ public:
  		}
  	}
 
-	string getCachedIp() const { RLock<> l(cs); return cachedIp; }
+	string getCachedIp() const { Lock l(cs); return cachedIp; }
 
 	CID getMyCID();
 	const CID& getMyPID();
@@ -157,7 +157,7 @@ private:
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;
 
 	Client::List clients;
-	mutable RWLock<> cs;
+	mutable CriticalSection cs;
 	NickMap ipList;
 	
 	UserMap users;

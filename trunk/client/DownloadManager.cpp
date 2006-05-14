@@ -307,8 +307,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				d->setFlag(Download::FLAG_ANTI_FRAG);
 			}
 
-			if(d->getTreeValid() && start > 0 && 
-			  (d->getTigerTree().getLeaves().size() > 1 || aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL))) {
+			if(d->getTreeValid() && start > 0 &&
+			  (d->getTigerTree().getLeaves().size() > 32 || // 32 leaves is 5 levels
+			   d->getTigerTree().getBlockSize() * 10 < d->getSize())) {
 				d->setStartPos(getResumePos(d->getDownloadTarget(), d->getTigerTree(), start));
 			} else {
 				int rollback = SETTING(ROLLBACK);

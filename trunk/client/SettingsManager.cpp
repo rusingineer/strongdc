@@ -121,7 +121,7 @@ const string SettingsManager::settingTags[] =
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
 	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl", "OpenWaitingUsers",
-	"BoldWaitingUsers", "AutoSearchLimit",
+	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
@@ -289,7 +289,8 @@ SettingsManager::SettingsManager()
 	setDefault(AUTO_REFRESH_TIME, 60);
 	setDefault(USE_SSL, false);
 	setDefault(AUTO_SEARCH_LIMIT, 15);
-	
+	setDefault(AUTO_KICK_NO_FAVS, false);
+		
 	setDefault(NUMBER_OF_SEGMENTS, 4);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
