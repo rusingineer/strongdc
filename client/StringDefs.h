@@ -544,6 +544,7 @@ enum Strings { // @DontAdd
 	SETTINGS_AUTO_DROP_SEGMENTED_SOURCE, // "When segmented downloading only (more than 2 active sources)"
 	SETTINGS_AUTO_FOLLOW, // "Automatically follow redirects"
 	SETTINGS_AUTO_KICK, // "Automatically disconnect users who leave the hub"
+	SETTINGS_AUTO_KICK_NO_FAVS, // "Don't automatically disconnect favorite users who leave the hub"
 	SETTINGS_AUTO_OPEN, // "Auto-open at startup"
 	SETTINGS_AUTO_PRIORITY_DEFAULT, // "Use Auto Priority by default"
 	SETTINGS_AUTO_REFRESH_TIME, // "Auto refresh time"
