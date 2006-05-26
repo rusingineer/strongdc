@@ -70,6 +70,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	transferMenu.CreatePopupMenu();
 	appendUserItems(transferMenu);
+	transferMenu.AppendMenu(MF_SEPARATOR);
 	transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CTSTRING(FORCE_ATTEMPT));
 	transferMenu.AppendMenu(MF_SEPARATOR);
 	transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
@@ -144,7 +145,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				itemI = ctrlTransfers.getItemData(i);
 				bCustomMenu = true;
 	
-				usercmdsMenu.InsertSeparatorFirst(STRING(SETTINGS_USER_COMMANDS));
+				usercmdsMenu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
 	
 				if(itemI->user != (User::Ptr)NULL)
 					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(itemI->user->getCID()));
@@ -191,15 +192,15 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 			}
 
-			previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
+			previewMenu.InsertSeparatorFirst(TSTRING(PREVIEW_MENU));
 				
 			if(!main) {
 				checkAdcItems(transferMenu);
-				transferMenu.InsertSeparatorFirst(STRING(MENU_TRANSFERS));
+				transferMenu.InsertSeparatorFirst(TSTRING(MENU_TRANSFERS));
 				transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				transferMenu.RemoveFirstItem();
 			} else {
-				segmentedMenu.InsertSeparatorFirst(STRING(SETTINGS_SEGMENT));
+				segmentedMenu.InsertSeparatorFirst(TSTRING(SETTINGS_SEGMENT));
 				segmentedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				segmentedMenu.RemoveFirstItem();
 			}
@@ -215,9 +216,10 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 }
 
 void TransferView::runUserCommand(UserCommand& uc) {
-	StringMap ucParams;
-	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucLineParams))
 		return;
+
+	StringMap ucParams = ucLineParams;
 
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {

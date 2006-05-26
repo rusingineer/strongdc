@@ -272,7 +272,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(resultsMenu);
-	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-2, MF_BYPOSITION);
+	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-3, MF_BYPOSITION);
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
@@ -941,9 +941,11 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 }
 
 void SearchFrame::runUserCommand(UserCommand& uc) {
-	StringMap ucParams;
-	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucLineParams))
 		return;
+
+	StringMap ucParams = ucLineParams;
+
 	set<CID> users;
 
 	int sel = -1;
@@ -1176,7 +1178,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 
 			int n = 0;
 
-			targetMenu.InsertSeparatorFirst(STRING(DOWNLOAD_TO));
+			targetMenu.InsertSeparatorFirst(TSTRING(DOWNLOAD_TO));
 			//Append favorite download dirs
 			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			if (spl.size() > 0) {
@@ -1190,7 +1192,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
-				targetMenu.InsertSeparatorLast(STRING(PREVIOUS_FOLDERS));
+				targetMenu.InsertSeparatorLast(TSTRING(PREVIOUS_FOLDERS));
 				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, i->c_str());
 					n++;
@@ -1210,7 +1212,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 					}
 
 				if(targets.size() > 0) {
-					targetMenu.InsertSeparatorLast(STRING(ADD_AS_SOURCE));
+					targetMenu.InsertSeparatorLast(TSTRING(ADD_AS_SOURCE));
 					for(StringIter i = targets.begin(); i != targets.end(); ++i) {
 						targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, Text::toT(*i).c_str());
 						n++;
@@ -1219,7 +1221,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}
 
 			n = 0;
-			targetDirMenu.InsertSeparatorFirst(STRING(DOWNLOAD_WHOLE_DIR_TO));
+			targetDirMenu.InsertSeparatorFirst(TSTRING(DOWNLOAD_WHOLE_DIR_TO));
 			//Append favorite download dirs
 			if (spl.size() > 0) {
 				for(StringPairIter i = spl.begin(); i != spl.end(); ++i) {
@@ -1261,9 +1263,9 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}
 			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 			checkAdcItems(resultsMenu);
-			resultsMenu.InsertSeparatorFirst(sr->getFileName());
-			copyMenu.InsertSeparatorFirst(STRING(USERINFO));
-			grantMenu.InsertSeparatorFirst(STRING(GRANT_SLOTS_MENU));	
+			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
+			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
+			grantMenu.InsertSeparatorFirst(TSTRING(GRANT_SLOTS_MENU));	
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 			resultsMenu.RemoveFirstItem();

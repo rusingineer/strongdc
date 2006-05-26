@@ -1123,9 +1123,11 @@ void DirectoryListingFrame::findFile(bool findNext)
 }
 
 void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
-	StringMap ucParams;
-	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucLineParams))
 		return;
+
+	StringMap ucParams = ucLineParams;
+
 	set<User::Ptr> nicks;
 
 	int sel = -1;
@@ -1227,10 +1229,10 @@ LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 LRESULT DirectoryListingFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 
-	string nick = "";
+	tstring nick = _T("");
 	User::Ptr pUser = dl->getUser();
 	if(pUser != (User*) NULL)
-		nick = pUser->getFirstNick();
+		nick = Text::toT(pUser->getFirstNick());
 
 	tabMenu.InsertSeparatorFirst(nick);
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

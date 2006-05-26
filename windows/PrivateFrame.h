@@ -220,6 +220,8 @@ private:
 	bool closed;
 	bool isoffline;
 
+	StringMap ucLineParams;
+
 	void updateTitle();
 	
 	TStringList prevCommands;

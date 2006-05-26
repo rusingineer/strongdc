@@ -433,7 +433,6 @@ private:
 	FileListQueue listQueue;
 	bool missedAutoConnect;
 	HWND createToolbar();
-	void buildMenu();
 	void updateTray(bool add = true);
 	void setNormalTrayIcon() {
 		PostMessage(WM_SPEAKER, SET_NORMAL_TRAY_ICON);

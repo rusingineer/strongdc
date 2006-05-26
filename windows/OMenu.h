@@ -26,7 +26,7 @@ struct OMenuItem {
 	typedef List::iterator Iter;
 
 	bool ownerdrawn;
-	string text;
+	tstring text;
 	OMenu* parent;
 	void* data;
 	OMenuItem() : ownerdrawn(true), text(), parent(NULL), data(NULL) {}
@@ -42,11 +42,11 @@ public:
 
 	BOOL CreatePopupMenu();
 
-	void InsertSeparator(UINT uItem, BOOL byPosition, const string& caption, bool accels = false);
-	inline void InsertSeparatorFirst(const string& caption/*, bool accels = false*/) {
+	void InsertSeparator(UINT uItem, BOOL byPosition, const tstring& caption, bool accels = false);
+	inline void InsertSeparatorFirst(const tstring& caption/*, bool accels = false*/) {
 		InsertSeparator(0, TRUE, caption);
 	}
-	inline void InsertSeparatorLast(const string& caption/*, bool accels = false*/) {
+	inline void InsertSeparatorLast(const tstring& caption/*, bool accels = false*/) {
 		InsertSeparator(GetMenuItemCount(), TRUE, caption);
 	}
 

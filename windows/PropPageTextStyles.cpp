@@ -217,7 +217,7 @@ void PropPageTextStyles::RefreshPreview() {
 	m_Preview.SetWindowText(_T(""));
 
 	string sText;
-	Identity id = Identity(NULL, Util::emptyString);
+	Identity id = Identity(NULL, Util::emptyString, 0);
 	for ( int i = 0; i < TS_LAST; i++ ) {
 		m_Preview.AppendText(id, _T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), TextStyles[i], false);
 	}

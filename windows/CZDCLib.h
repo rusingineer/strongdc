@@ -18,7 +18,7 @@ public:
 
 	static int getFirstSelectedIndex(CListViewCtrl& list);
 	static int setButtonPressed(int nID, bool bPressed = true);
-	static void CalcTextSize(const string& text, HFONT font, LPSIZE size);
+	static void CalcTextSize(const tstring& text, HFONT font, LPSIZE size);
 
 private:
 	static bool bIsXP;

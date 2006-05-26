@@ -61,7 +61,7 @@ public:
 	string translateFileName(const string& aFile) throw(ShareException);
 	bool getTTH(const string& aFile, TTHValue& tth) throw();
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ThreadException, ShareException);
-	void setDirty() { xmlDirty = nmdcDirty = true; }
+	void setDirty() { xmlDirty = true; }
 	
 	bool shareFolder(const string& path, bool thoroughCheck = false);
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
@@ -84,9 +84,6 @@ public:
 
 	string getShareSizeString() { return Util::toString(getShareSize()); }
 	string getShareSizeString(const string& aDir) { return Util::toString(getShareSize(aDir)); }
-	
-	int64_t getListLen() { return generateNmdcList(), listLen; }
-	string getListLenString() { return Util::toString(getListLen()); }
 	
 	SearchManager::TypeModes getType(const string& fileName);
 
@@ -265,7 +262,6 @@ private:
 	TTHValue xmlRoot;
 
 	bool xmlDirty;
-	bool nmdcDirty;
 	bool refreshDirs;
 	bool update;
 	bool initial;
@@ -278,7 +274,6 @@ private:
 	File* xFile;
 
 	u_int32_t lastXmlUpdate;
-	u_int32_t lastNmdcUpdate;
 	u_int32_t lastFullUpdate;
 
 	mutable RWLock<> cs;
@@ -302,7 +297,6 @@ private:
 	Directory* buildTree(const string& aName, Directory* aParent);
 	void addTree(Directory* aDirectory);
 	void addFile(Directory* dir, Directory::File::Iter i);
-	void generateNmdcList();
 	void generateXmlList();
 	StringList notShared;
 	bool loadCache();

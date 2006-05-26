@@ -35,6 +35,7 @@
 #include "../client/ShareManager.h"
 #include "../client/FavoriteManager.h"
 #include "../client/QueueManager.h"
+#include "../client/StringTokenizer.h"
 
 PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
@@ -356,7 +357,7 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 }
 
 void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
-	Identity i = Identity(NULL, Util::emptyString);
+	Identity i = Identity(NULL, Util::emptyString, 0);
     addLine(i, aLine, cf);
 }
 
@@ -428,7 +429,7 @@ LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 		tabMenu.AppendMenu(MF_SEPARATOR);
 	}
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
-	tabMenu.InsertSeparatorFirst(replyTo->getFirstNick());	
+	tabMenu.InsertSeparatorFirst(Text::toT(replyTo->getFirstNick()));	
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 	tabMenu.RemoveFirstItem();
 	tabMenu.DeleteMenu(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION);
@@ -438,9 +439,11 @@ LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 }
 
 void PrivateFrame::runUserCommand(UserCommand& uc) {
-	StringMap ucParams;
-	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucLineParams))
 		return;
+
+	StringMap ucParams = ucLineParams;
 
 	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams, true);
 }
@@ -599,7 +602,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			} while(FindNextFile(hFind, &data));
 			FindClose(hFind);
 		}
-		emoMenu.InsertSeparatorFirst("Emoticons Pack");
+		emoMenu.InsertSeparatorFirst(_T("Emoticons Pack"));
 		if(menuItems>0) emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		emoMenu.RemoveFirstItem();
 		return TRUE;
@@ -626,7 +629,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			tabMenu.AppendMenu(MF_SEPARATOR);
 		}
-		tabMenu.InsertSeparatorFirst(Text::fromT(nick));
+		tabMenu.InsertSeparatorFirst(nick);
 		tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 		tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpt.x, cpt.y, m_hWnd);
 		tabMenu.RemoveFirstItem();
@@ -716,7 +719,7 @@ void PrivateFrame::readLog() {
 
 		for(; i < linesCount; ++i){
 			if(!lines[i].empty())
-				ctrlClient.AppendText(Identity(NULL, Util::emptyString), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
+				ctrlClient.AppendText(Identity(NULL, Util::emptyString, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
 		}
 
 		f.close();

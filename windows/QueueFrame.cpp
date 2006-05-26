@@ -822,8 +822,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 				previewMenu.RemoveMenu(0, MF_BYPOSITION);
 			}		
 
-		singleMenu.InsertSeparatorFirst(STRING(FILE));
-		multiMenu.InsertSeparatorFirst(STRING(FILES));			
+		singleMenu.InsertSeparatorFirst(TSTRING(FILE));
+		multiMenu.InsertSeparatorFirst(TSTRING(FILES));			
 		
 		if(ctrlQueue.GetSelectedCount() == 1) {
 			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
@@ -847,7 +847,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 				} else {
 					singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 				}
-				previewMenu.InsertSeparatorFirst(STRING(PREVIEW_MENU));
+				previewMenu.InsertSeparatorFirst(TSTRING(PREVIEW_MENU));
 			}
 
 			menuItems = 0;
@@ -945,13 +945,13 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			if(ii->getAutoPriority())
 				priorityMenu.CheckMenuItem(6, MF_BYPOSITION | MF_CHECKED);
 
-				browseMenu.InsertSeparatorFirst(STRING(GET_FILE_LIST));
-				removeMenu.InsertSeparatorFirst(STRING(REMOVE_SOURCE));
-				removeAllMenu.InsertSeparatorFirst(STRING(REMOVE_FROM_ALL));
-				pmMenu.InsertSeparatorFirst(STRING(SEND_PRIVATE_MESSAGE));
-				readdMenu.InsertSeparatorFirst(STRING(READD_SOURCE));
-				segmentsMenu.InsertSeparatorFirst(STRING(MAX_SEGMENTS_NUMBER));
-				priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
+				browseMenu.InsertSeparatorFirst(TSTRING(GET_FILE_LIST));
+				removeMenu.InsertSeparatorFirst(TSTRING(REMOVE_SOURCE));
+				removeAllMenu.InsertSeparatorFirst(TSTRING(REMOVE_FROM_ALL));
+				pmMenu.InsertSeparatorFirst(TSTRING(SEND_PRIVATE_MESSAGE));
+				readdMenu.InsertSeparatorFirst(TSTRING(READD_SOURCE));
+				segmentsMenu.InsertSeparatorFirst(TSTRING(MAX_SEGMENTS_NUMBER));
+				priorityMenu.InsertSeparatorFirst(TSTRING(PRIORITY));
 
 				singleMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
@@ -963,7 +963,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 				pmMenu.RemoveFirstItem();
 				readdMenu.RemoveFirstItem();
 			} else {
-				priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
+				priorityMenu.InsertSeparatorFirst(TSTRING(PRIORITY));
 				multiMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				priorityMenu.RemoveFirstItem();
 			}
@@ -989,8 +989,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		}
 		usingDirMenu = true;
 		
-		priorityMenu.InsertSeparatorFirst(STRING(PRIORITY));
-		dirMenu.InsertSeparatorFirst(STRING(FOLDER));
+		priorityMenu.InsertSeparatorFirst(TSTRING(PRIORITY));
+		dirMenu.InsertSeparatorFirst(TSTRING(FOLDER));
 		dirMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		priorityMenu.RemoveFirstItem();
 		dirMenu.RemoveFirstItem();
@@ -1390,6 +1390,17 @@ LRESULT QueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bH
 	return 0;
 }
 
+void QueueFrame::onTab() {
+	if(showTree) {
+		HWND focus = ::GetFocus();
+		if(focus == ctrlDirs.m_hWnd) {
+			ctrlQueue.SetFocus();
+		} else if(focus == ctrlQueue.m_hWnd) {
+			ctrlDirs.SetFocus();
+		}
+	}
+}
+
 void QueueFrame::updateQueue() {
 	Lock l(cs);
 
@@ -1412,6 +1423,15 @@ void QueueFrame::updateQueue() {
 	ctrlQueue.SetRedraw(TRUE);
 	curDir = getSelectedDir();
 	updateStatus();
+}
+
+void QueueFrame::clearTree(HTREEITEM item) {
+	HTREEITEM next = ctrlDirs.GetChildItem(item);
+	while(next != NULL) {
+		clearTree(next);
+		next = ctrlDirs.GetNextSiblingItem(next);
+	}
+	delete (tstring*)ctrlDirs.GetItemData(item);
 }
 
 // Put it here to avoid a copy for each recursion...
