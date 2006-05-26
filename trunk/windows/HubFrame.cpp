@@ -826,10 +826,24 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				client->password(client->getPassword());
 				addClientLine(TSTRING(STORED_PASSWORD_SENT), WinUtil::m_ChatTextSystem);
 			} else {
-				ctrlMessage.SetWindowText(_T("/password "));
-				ctrlMessage.SetFocus();
-				ctrlMessage.SetSel(10, 10);
-				waitingForPW = true;
+				if(!BOOLSETTING(PROMPT_PASSWORD)) {
+					ctrlMessage.SetWindowText(_T("/password "));
+					ctrlMessage.SetFocus();
+					ctrlMessage.SetSel(10, 10);
+					waitingForPW = true;
+				} else {
+					LineDlg linePwd;
+					linePwd.title = CTSTRING(ENTER_PASSWORD);
+					linePwd.description = CTSTRING(ENTER_PASSWORD);
+					linePwd.password = true;
+					if(linePwd.DoModal(m_hWnd) == IDOK) {
+						client->setPassword(Text::fromT(linePwd.line));
+						client->password(Text::fromT(linePwd.line));
+						waitingForPW = false;
+					} else {
+						client->disconnect(true);
+					}
+				}
 			}
 		} else if(task->speaker == PRIVATE_MESSAGE) {
 			MessageTask& pm = *static_cast<MessageTask*>(task);
@@ -1208,11 +1222,11 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 }
 
 void HubFrame::addLine(const tstring& aLine) {
-	addLine(Identity(NULL, Util::emptyString), aLine, WinUtil::m_ChatTextGeneral );
+	addLine(Identity(NULL, Util::emptyString, 0), aLine, WinUtil::m_ChatTextGeneral );
 }
 
 void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
-    addLine(Identity(NULL, Util::emptyString), aLine, cf, bUseEmo);
+    addLine(Identity(NULL, Util::emptyString, 0), aLine, cf, bUseEmo);
 }
 
 void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
@@ -1241,8 +1255,8 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	tabMenuShown = true;
 	CMenu hSysMenu;
-	tabMenu.InsertSeparatorFirst((client->getHubName() != "") ? (client->getHubName().size() > 50 ? client->getHubName().substr(0, 50) : client->getHubName()) : client->getHubUrl());	
-	copyHubMenu.InsertSeparatorFirst(STRING(COPY));
+	tabMenu.InsertSeparatorFirst(Text::toT((client->getHubName() != "") ? (client->getHubName().size() > 50 ? client->getHubName().substr(0, 50) : client->getHubName()) : client->getHubUrl()));	
+	copyHubMenu.InsertSeparatorFirst(TSTRING(COPY));
 	
 	if(!client->isConnected())
 		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_GRAYED);
@@ -1342,7 +1356,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			} while(FindNextFile(hFind, &data));
 			FindClose(hFind);
 		}
-		emoMenu.InsertSeparatorFirst("Emoticons Pack");
+		emoMenu.InsertSeparatorFirst(_T("Emoticons Pack"));
 		if(menuItems>0) emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		emoMenu.RemoveFirstItem();
 		return TRUE;
@@ -1391,9 +1405,10 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 }
 
 void HubFrame::runUserCommand(::UserCommand& uc) {
-	StringMap ucParams;
-	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucLineParams))
 		return;
+
+	StringMap ucParams = ucLineParams;
 
 	client->getMyIdentity().getParams(ucParams, "my", true);
 	client->getHubIdentity().getParams(ucParams, "hub", false);
@@ -1953,7 +1968,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
 
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
-	copyMenu.InsertSeparator(0, TRUE, STRING(COPY));
+	copyMenu.InsertSeparator(0, TRUE, TSTRING(COPY));
 
 	grantMenu.CreatePopupMenu();
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
@@ -1962,14 +1977,14 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
 	grantMenu.AppendMenu(MF_SEPARATOR);
 	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
-	grantMenu.InsertSeparator(0, TRUE, STRING(GRANT_SLOTS_MENU));
+	grantMenu.InsertSeparator(0, TRUE, TSTRING(GRANT_SLOTS_MENU));
 
 	pMenu->CreatePopupMenu();
 		
     bool bIsChat = (pCtrl == ((CWindow*)&ctrlClient));
 	if(bIsChat && sNick.empty()) {
 		if(!ChatCtrl::sSelectedIP.empty()) {
-			pMenu->InsertSeparator(0, TRUE, Text::fromT(ChatCtrl::sSelectedIP));
+			pMenu->InsertSeparator(0, TRUE, ChatCtrl::sSelectedIP);
 			pMenu->AppendMenu(MF_STRING, IDC_WHOIS_IP, (CTSTRING(WHO_IS) + ChatCtrl::sSelectedIP).c_str() );
 			if ( client->isOp() ) {
 				pMenu->AppendMenu(MF_SEPARATOR);
@@ -1978,7 +1993,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 				pMenu->AppendMenu(MF_STRING, IDC_UNBAN_IP, (_T("!unban ") + ChatCtrl::sSelectedIP).c_str());
 				pMenu->AppendMenu(MF_SEPARATOR);
 			}
-		} else pMenu->InsertSeparator(0, TRUE, "Text");
+		} else pMenu->InsertSeparator(0, TRUE, _T("Text"));
 		pMenu->AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
 		pMenu->AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
 		if(!sSelectedURL.empty()) 
@@ -1995,7 +2010,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 		if(!sNick.empty()) {
 		    bool bIsMe = (sNick == Text::toT(client->getMyNick()));
 			// Jediny nick
-			pMenu->InsertSeparator(0, TRUE, Text::fromT(sNick));
+			pMenu->InsertSeparator(0, TRUE, sNick);
 
 			if(bIsChat) {
 				if(!BOOLSETTING(LOG_PRIVATE_CHAT)) {
@@ -2044,7 +2059,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 			if(bIsChat == false) {
 				// Pocet oznacenych
 				int iCount = ctrlUsers.GetSelectedCount();
-				pMenu->InsertSeparator(0, TRUE, Util::toString(iCount) + " " + STRING(HUB_USERS));
+				pMenu->InsertSeparator(0, TRUE, Text::toT(Util::toString(iCount)) + _T(" ") + TSTRING(HUB_USERS));
 			}
 			if (ctrlUsers.GetSelectedCount() <= 25) {
 				pMenu->AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));

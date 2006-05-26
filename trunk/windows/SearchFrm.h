@@ -529,7 +529,8 @@ private:
 	int searches;
 
 	COLORREF barva;
-	
+	StringMap ucLineParams;
+		
 	static int columnIndexes[];
 	static int columnSizes[];
 

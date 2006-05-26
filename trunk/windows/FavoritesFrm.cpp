@@ -165,12 +165,12 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 		hubsMenu.EnableMenuItem(IDC_MOVE_UP, status);
 		hubsMenu.EnableMenuItem(IDC_MOVE_DOWN, status);
 
-		string x;
+		tstring x;
 		if (ctrlHubs.GetSelectedCount() == 1) {
 			FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(CZDCLib::getFirstSelectedIndex(ctrlHubs));
-			x = f->getName();
+			x = Text::toT(f->getName());
 		} else {
-			x = "";
+			x = _T("");
 		}
 		if (!x.empty())
 			hubsMenu.InsertSeparatorFirst(x);

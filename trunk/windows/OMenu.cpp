@@ -64,16 +64,16 @@ BOOL OMenu::CreatePopupMenu() {
 	return b;
 }
 
-void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const string& caption, bool accels /*= false*/) {
+void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const tstring& caption, bool accels /*= false*/) {
 	OMenuItem* mi = new OMenuItem();
 	mi->text = caption;
-	string::size_type i = 0;
+	tstring::size_type i = 0;
 	if (!accels)
-		while ((i = mi->text.find('&')) != string::npos)
+		while ((i = mi->text.find('&')) != tstring::npos)
 			mi->text.erase(i, i+1);
 
 	if(mi->text.length() > 25) {
-		mi->text = mi->text.substr(0, 25) + "...";
+		mi->text = mi->text.substr(0, 25) + _T("...");
 	}
 	mi->parent = this;
 	items.push_back(mi);
@@ -154,7 +154,7 @@ LRESULT OMenu::onMeasureItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM
 			OMenuItem* mi = (OMenuItem*)mis->itemData;
 			if (mi) {
 				bHandled = TRUE;
-				string& text = mi->text;
+				tstring& text = mi->text;
 
 				SIZE size;
 				CZDCLib::CalcTextSize(text, WinUtil::boldFont, &size);
@@ -191,7 +191,7 @@ LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 				dc.SetBkMode(TRANSPARENT);
 				dc.SetTextColor(OperaColors::TextFromBackground(SETTING(MENUBAR_LEFT_COLOR)));
 				HFONT oldFont = dc.SelectFont(WinUtil::boldFont);
-				tstring buf = Text::toT(mi->text);
+				tstring buf = mi->text;
 				dc.DrawText(buf.c_str(), _tcslen(buf.c_str()), rc, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 				dc.SelectFont(oldFont);
 

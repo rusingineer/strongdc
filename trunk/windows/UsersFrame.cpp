@@ -94,11 +94,11 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 	
 		checkAdcItems(usersMenu);
 		
-		string x;
+		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick();
+			x = Text::toT(ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick());
 		} else {
-			x = "";
+			x = _T("");
 		}
 
 		if (!x.empty())

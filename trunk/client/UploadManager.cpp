@@ -157,7 +157,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			aSource->fileNotAvail();
 			return false;
 		}
-	} catch(const ShareException&) {
+	} catch(const ShareException& e) {
 		// -- Added by RevConnect : Partial file sharing upload
 		if(aFile.compare(0, 4, "TTH/") == 0) {
 
@@ -191,7 +191,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 							partialShare = true;
 							goto ok;
-						}catch(const Exception&){							
+						}catch(const Exception&) {
 							aSource->fileNotAvail();
 							aSource->disconnect();
 							delete is;
@@ -229,7 +229,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		}
 		// --
 		dcdebug("File not avail : %s\n", aFile.c_str());
-		aSource->fileNotAvail();
+		aSource->fileNotAvail(e.getError());
 		return false;
 	}
 
@@ -507,7 +507,7 @@ void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 }
 
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
-	conn->listLen(ShareManager::getInstance()->getListLenString()); 
+	conn->listLen("42");
 }
 
 void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) throw() {

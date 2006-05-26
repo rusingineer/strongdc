@@ -224,10 +224,10 @@ int CZDCLib::getFirstSelectedIndex(CListViewCtrl& list) {
 	return -1;
 }
 
-void CZDCLib::CalcTextSize(const string& text, HFONT font, LPSIZE size) {
+void CZDCLib::CalcTextSize(const tstring& text, HFONT font, LPSIZE size) {
 	HDC dc = CreateCompatibleDC(NULL);
 	HGDIOBJ old = SelectObject(dc, font);
-	::GetTextExtentPoint32(dc, Text::toT(text).c_str(), MIN(text.size(), 8192), size);
+	::GetTextExtentPoint32(dc, text.c_str(), MIN(text.size(), 8192), size);
 	SelectObject(dc, old);
 	DeleteDC(dc);
 }
