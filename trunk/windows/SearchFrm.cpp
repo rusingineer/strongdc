@@ -43,10 +43,19 @@ static ResourceManager::Strings columnNames[] = {ResourceManager::FILE,  Resourc
 	ResourceManager::PATH, ResourceManager::SLOTS, ResourceManager::CONNECTION, 
 	ResourceManager::HUB, ResourceManager::EXACT_SIZE, ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::TTH_ROOT };
 
+SearchFrame::FrameMap SearchFrame::frames;
+
 void SearchFrame::openWindow(const tstring& str /* = Util::emptyString */, LONGLONG size /* = 0 */, SearchManager::SizeModes mode /* = SearchManager::SIZE_ATLEAST */, SearchManager::TypeModes type /* = SearchManager::TYPE_ANY */) {
 	SearchFrame* pChild = new SearchFrame();
 	pChild->setInitial(str, size, mode, type);
 	pChild->CreateEx(WinUtil::mdiClient);
+
+	frames.insert( FramePair(pChild->m_hWnd, pChild) );
+}
+
+void SearchFrame::closeAll() {
+	for(FrameIter i = frames.begin(); i != frames.end(); ++i)
+		::PostMessage(i->first, WM_CLOSE, 0, 0);
 }
 
 LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -272,7 +281,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(resultsMenu);
-	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-3, MF_BYPOSITION);
+	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-4, MF_BYPOSITION);
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
@@ -752,13 +761,21 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		}
 		SearchManager::getInstance()->removeListener(this);
  		ClientManager::getInstance()->removeListener(this);
+		frames.erase(m_hWnd);
 
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
-
+		ctrlResults.SetRedraw(FALSE);
+		filter = Util::emptyStringT;
+		updateSearchList();
 		ctrlResults.deleteAllItems();
+		ctrlResults.SetRedraw(TRUE);
+
+		for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
+			delete *i;
+		}
 
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
@@ -1005,9 +1022,7 @@ LRESULT SearchFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& b
 		}
 		break;
 	case VK_RETURN:
-		if( (GetKeyState(VK_SHIFT) & 0x8000) || 
-			(GetKeyState(VK_CONTROL) & 0x8000) || 
-			(GetKeyState(VK_MENU) & 0x8000) ) {
+		if( WinUtil::isShift() || WinUtil::isCtrl() || WinUtil::isAlt() ) {
 			bHandled = FALSE;
 		} else {
 			if(uMsg == WM_KEYDOWN) {
@@ -1086,18 +1101,31 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				}	 	
             }
 			if(bPaused == false) {
+				bool resort = false;
+				if(resultsCount % 13 == 0) {
+					ctrlResults.SetRedraw(FALSE);
+					resort = true;
+				}
+
 				if(!si->columns[COLUMN_TTH].empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
-					addEntry(si);
+					ctrlResults.insertItem(si, si->imageIndex());
+					ctrlResults.mainItems.push_back(si);
 				}
+
+				if(!filter.empty())
+					updateSearchList(si);
+
 				if (BOOLSETTING(BOLD_SEARCH)) {
 					setDirty();
 				}
 				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
 
-				if(resultsCount % 13 == 0)
+				if(resort) {
 					ctrlResults.resort();
+					ctrlResults.SetRedraw(TRUE);
+				}
 			} else {
 				PausedResults.push_back(si);
 				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount-PausedResults.size()) + "/" + Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
@@ -1529,7 +1557,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 					top = rc2.top + 1;
 
 				POINT p = { rc2.left, top };
-				WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getflagImage(), p, LVSIL_SMALL);
+				WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getFlagImage(), p, LVSIL_SMALL);
 				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
 				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
@@ -1541,42 +1569,14 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 	}
 }
 
-void SearchFrame::addEntry(SearchInfo* item) {
-	PME reg(filter,"i");
-	bool match = true;
-	int sel = ctrlFilterSel.GetCurSel();
-
-	if(!reg.IsValid() || filter.empty()) {
-		match = true;
-	} else {
-		match = reg.match(Text::fromT(item->getText(sel))) > 0;
-	}
-
-	if(match) {
-		int image = item->imageIndex();
-
-		int k = ctrlResults.insertItem(item, image);
-		if(item->subItems.size() > 0) {
-			if(item->collapsed) {
-				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
-			} else {
-				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
-			}
-		} else {
-			ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
-		}
-	}
-}
-
 LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(wParam == VK_RETURN) {
 		TCHAR *buf = new TCHAR[ctrlFilter.GetWindowTextLength()+1];
 		ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
-		filter = Text::fromT(buf);
-		free(buf);
+		filter = buf;
+		delete[] buf;
 	
 		updateSearchList();
-		ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + ' ' + STRING(ITEMS)).c_str());
 	}
 
 	bHandled = false;
@@ -1584,24 +1584,138 @@ LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*
 	return 0;
 }
 
-void SearchFrame::updateSearchList() {
-
-	while(ctrlResults.GetItemCount() > 0) {
-		ctrlResults.DeleteItem(0);
+bool SearchFrame::parseFilter(FilterModes& mode, int64_t& size) {
+	tstring::size_type start = (tstring::size_type)tstring::npos;
+	tstring::size_type end = (tstring::size_type)tstring::npos;
+	int64_t multiplier = 1;
+	
+	if(filter.compare(0, 2, _T(">=")) == 0) {
+		mode = GREATER_EQUAL;
+		start = 2;
+	} else if(filter.compare(0, 2, _T("<=")) == 0) {
+		mode = LESS_EQUAL;
+		start = 2;
+	} else if(filter.compare(0, 2, _T("==")) == 0) {
+		mode = EQUAL;
+		start = 2;
+	} else if(filter.compare(0, 2, _T("!=")) == 0) {
+		mode = NOT_EQUAL;
+		start = 2;
+	} else if(filter[0] == _T('<')) {
+		mode = LESS;
+		start = 1;
+	} else if(filter[0] == _T('>')) {
+		mode = GREATER;
+		start = 1;
+	} else if(filter[0] == _T('=')) {
+		mode = EQUAL;
+		start = 1;
 	}
 
-	for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
-	    SearchInfo* si = *i;
-		si->collapsed = true;
-		addEntry(si);
+	if(start == tstring::npos)
+		return false;
+	if(filter.length() <= start)
+		return false;
+
+	if((end = Util::findSubString(filter, _T("TiB"))) != tstring::npos) {
+		multiplier = 1024LL * 1024LL * 1024LL * 1024LL;
+	} else if((end = Util::findSubString(filter, _T("GiB"))) != tstring::npos) {
+		multiplier = 1024*1024*1024;
+	} else if((end = Util::findSubString(filter, _T("MiB"))) != tstring::npos) {
+		multiplier = 1024*1024;
+	} else if((end = Util::findSubString(filter, _T("KiB"))) != tstring::npos) {
+		multiplier = 1024;
+	} else if((end = Util::findSubString(filter, _T("TB"))) != tstring::npos) {
+		multiplier = 1000LL * 1000LL * 1000LL * 1000LL;
+	} else if((end = Util::findSubString(filter, _T("GB"))) != tstring::npos) {
+		multiplier = 1000*1000*1000;
+	} else if((end = Util::findSubString(filter, _T("MB"))) != tstring::npos) {
+		multiplier = 1000*1000;
+	} else if((end = Util::findSubString(filter, _T("kB"))) != tstring::npos) {
+		multiplier = 1000;
+	} else if((end = Util::findSubString(filter, _T("B"))) != tstring::npos) {
+		multiplier = 1;
+	}
+
+
+	if(end == tstring::npos) {
+		end = filter.length();
+	}
+	
+	tstring tmpSize = filter.substr(start, end-start);
+	size = static_cast<int64_t>(Util::toDouble(Text::fromT(tmpSize)) * multiplier);
+	
+	return true;
+}
+
+bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, FilterModes mode, int64_t size) {
+	bool insert = false;
+
+	if(doSizeCompare) {
+		switch(mode) {
+			case EQUAL: insert = (size == si->sr->getSize()); break;
+			case GREATER_EQUAL: insert = (size <=  si->sr->getSize()); break;
+			case LESS_EQUAL: insert = (size >=  si->sr->getSize()); break;
+			case GREATER: insert = (size < si->sr->getSize()); break;
+			case LESS: insert = (size > si->sr->getSize()); break;
+			case NOT_EQUAL: insert = (size != si->sr->getSize()); break;
+		}
+	} else {
+		PME reg(Text::fromT(filter),"i");
+		if(filter.empty() || !reg.IsValid()) {
+			insert = true;
+		} else {
+			insert = reg.match(Text::fromT(si->getText(sel))) > 0;
+		}
+	}
+
+	if(insert) {
+		if(ctrlResults.findItem(si) == -1) {
+			int k = ctrlResults.insertItem(si, si->imageIndex());
+			if(si->subItems.size() > 0) {
+				if(si->collapsed) {
+					ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+				} else {
+					ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
+				}
+			} else {
+				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
+			}
+		}
+	}
+	
+	return insert;
+}
+	
+
+void SearchFrame::updateSearchList(SearchInfo* si) {
+	int64_t size = -1;
+	FilterModes mode = NONE;
+
+	int sel = ctrlFilterSel.GetCurSel();
+	bool doSizeCompare = sel == COLUMN_SIZE && parseFilter(mode, size);
+
+	if(si != NULL) {
+		if(!matchFilter(si, sel, doSizeCompare, mode, size))
+			ctrlResults.deleteItem(si);
+	} else {
+		ctrlResults.SetRedraw(FALSE);
+		ctrlResults.DeleteAllItems();
+
+		for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+			SearchInfo* si = *i;
+			si->collapsed = true;
+			matchFilter(si, sel, doSizeCompare, mode, size);
+		}
+		ctrlResults.SetRedraw(TRUE);
 	}
 }
 
 LRESULT SearchFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
 	TCHAR *buf = new TCHAR[ctrlFilter.GetWindowTextLength()+1];
 	ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
-	filter = Text::fromT(buf);
-	free(buf);
+	filter = buf;
+	delete[] buf;
 	
 	updateSearchList();
 	

@@ -1514,7 +1514,7 @@ void QueueManager::saveQueue() throw() {
 				QueueItem* qi = i->second;
 				if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 					f.write(LIT("\t<Download Target=\""));
-				f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
+					f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
 					f.write(LIT("\" Size=\""));
 					f.write(Util::toString(qi->getSize()));
 					f.write(LIT("\" Priority=\""));
@@ -1534,7 +1534,7 @@ void QueueManager::saveQueue() throw() {
 					}
 					if(qi->getDownloadedBytes() > 0) {
 						f.write(LIT("\" TempTarget=\""));
-					f.write(SimpleXML::escape(qi->getTempTarget(), tmp, true));
+						f.write(SimpleXML::escape(qi->getTempTarget(), tmp, true));
 						f.write(LIT("\" Downloaded=\""));
 						f.write(Util::toString(qi->getDownloadedBytes()));
 					}

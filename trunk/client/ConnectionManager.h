@@ -100,8 +100,8 @@ public:
 		expectedConnections.add(aNick, aMyNick, aHubUrl);
 	}
 
-	void nmdcConnect(const string& aServer, short aPort, const string& aMyNick, const string& hubUrl);
-	void adcConnect(const OnlineUser& aUser, short aPort, const string& aToken, bool secure);
+	void nmdcConnect(const string& aServer, unsigned short aPort, const string& aMyNick, const string& hubUrl);
+	void adcConnect(const OnlineUser& aUser, unsigned short aPort, const string& aToken, bool secure);
 
 	void getDownloadConnection(const User::Ptr& aUser);
 	
@@ -121,12 +121,11 @@ public:
 
 	unsigned short getPort() { return port; }
 	unsigned short getSecurePort() { return securePort;	}
-	static int iConnToMeCount;
 private:
 
 	class Server : public Thread {
 	public:
-		Server(bool secure_, short port, const string& ip = "0.0.0.0");
+		Server(bool secure_, unsigned short port, const string& ip = "0.0.0.0");
 		virtual ~Server() { die = true; join(); }
 	private:
 		virtual int run() throw();
@@ -139,8 +138,8 @@ private:
 	friend class Server;
 
 	CriticalSection cs;
-	short port;
-	short securePort;
+	unsigned short port;
+	unsigned short securePort;
 
 	/** All ConnectionQueueItems */
 	ConnectionQueueItem::List downloads;

@@ -35,7 +35,7 @@
 #define POLL_TIMEOUT 250
 
 BufferedSocket::BufferedSocket(char aSeparator) throw() : 
-separator(aSeparator), mode(MODE_LINE), 
+separator(aSeparator), mode(MODE_LINE),
 dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false), filterIn(NULL)
 {
 	sockets++;
@@ -302,19 +302,9 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;
 	while(true) {
-		throttling = BOOLSETTING(THROTTLE_ENABLE);
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer
 			size_t bytesRead = readBuf.size() - readPos;
-			if(throttling) {
-				start = TimerManager::getTick();
-				sendMaximum = um->throttleGetSlice();
-				if (sendMaximum < 0) {
-					throttling = false;
-					sendMaximum = bytesRead;
-				}
-				bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
-			}
 			size_t actual = file->read(&readBuf[readPos], bytesRead);
 
 			if(bytesRead > 0) {
@@ -343,25 +333,40 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		while(writePos < writeBuf.size()) {
 			if(disconnecting)
 				return;
-			size_t writeSize = min(sockSize / 2, writeBuf.size() - writePos);
+				
+			throttling = BOOLSETTING(THROTTLE_ENABLE);
+			size_t writeSize;
+    		if(throttling) {
+    			start = TimerManager::getTick();
+    			sendMaximum = um->throttleGetSlice();
+    			if(sendMaximum < 0) {
+    				throttling = false;
+					writeSize = min(sockSize / 2, writeBuf.size() - writePos);
+				} else {
+					writeSize = min(min(sockSize / 2, writeBuf.size() - writePos), sendMaximum);
+				}
+			} else {
+				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
+			}
+
 			int written = sock->write(&writeBuf[writePos], writeSize);
 			if(written > 0) {
 				writePos += written;
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
+
+				if(throttling) {
+					int32_t cycle_time = um->throttleCycleTime();
+					current = TimerManager::getTick();
+					int32_t sleep_time = cycle_time - (current - start);
+					if (sleep_time > 0 && sleep_time <= cycle_time) {
+						Thread::sleep(sleep_time);
+					}
+				}
 			} else if(written == -1) {
 				if(!readDone && readPos < readBuf.size()) {
 					// Read a little since we're blocking anyway...
 					size_t bytesRead = min(readBuf.size() - readPos, readBuf.size() / 2);
-					if(throttling) {
-						start = TimerManager::getTick();
-						sendMaximum = um->throttleGetSlice();
-						if (sendMaximum < 0) {
-							throttling = false;
-							sendMaximum = bytesRead;
-						}
-						bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
-					}
 					size_t actual = file->read(&readBuf[readPos], bytesRead);
 
 					if(bytesRead > 0) {
@@ -384,14 +389,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 						}
 					}
 				}	
-			}
-			if (throttling) {
-				int32_t cycle_time = um->throttleCycleTime();
-				current = TimerManager::getTick();
-				int32_t sleep_time = cycle_time - (current - start);
-				if (sleep_time > 0 && sleep_time <= cycle_time) {
-					Thread::sleep(sleep_time);
-				}
 			}
 		}
 	}
@@ -453,33 +450,37 @@ bool BufferedSocket::checkEvents() {
 			p = tasks.front();
 			tasks.erase(tasks.begin());
 		}
-		if(failed && p.first != SHUTDOWN) {
-			dcdebug("BufferedSocket: New command when already failed: %d\n", p.first);
-			fail(STRING(DISCONNECTED));
-			delete p.second;
-			continue;
-		}
+		try {
+			if(failed && p.first != SHUTDOWN) {
+				dcdebug("BufferedSocket: New command when already failed: %d\n", p.first);
+				fail(STRING(DISCONNECTED));
+				delete p.second;
+				continue;
+			}
 
-		switch(p.first) {
-			case SEND_DATA:
-				threadSendData(); break;
-			case SEND_FILE:
-				threadSendFile(((SendFileInfo*)p.second)->stream); break;
-			case CONNECT: 
-				{
-					ConnectInfo* ci = (ConnectInfo*)p.second;
-					threadConnect(ci->addr, ci->port, ci->proxy); 
+			switch(p.first) {
+				case SEND_DATA:
+					threadSendData(); break;
+				case SEND_FILE:
+					threadSendFile(((SendFileInfo*)p.second)->stream); break;
+				case CONNECT: 
+					{
+						ConnectInfo* ci = (ConnectInfo*)p.second;
+						threadConnect(ci->addr, ci->port, ci->proxy); 
+						break;
+					}
+				case DISCONNECT:  
+					if(isConnected())
+						fail(STRING(DISCONNECTED)); 
 					break;
-				}
-			case DISCONNECT:  
-				if(isConnected())
-					fail(STRING(DISCONNECTED)); 
-				break;
-			case SHUTDOWN:
-				return false;
+				case SHUTDOWN:
+					return false;
+			}
+			delete p.second;
+		} catch(const Exception& e) {
+			delete p.second;
+			fail(e.getError());
 		}
-			
-		delete p.second;
 	}
 	return true;
 }

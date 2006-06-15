@@ -506,7 +506,11 @@ bool HashManager::Hasher::fastHash(const string& fname, u_int8_t* buf, TigerTree
 		}
 
 		tth.update(hbuf, hn);
-		total -= hn;
+	
+		{
+			Lock l(cs);
+			currentSize = max(currentSize - hn, _LL(0));
+		}
 
 		if(size == 0) {
 			ok = true;
@@ -549,11 +553,7 @@ int HashManager::Hasher::run() {
 	bool virtualBuf = true;
 
 	string fname;
-	int64_t speed = 0;
 	bool last = false;
-	unsigned int procenta = 0;
-	unsigned int pocetHashu = 0;
-
 	for(;;) {
 		s.wait();
 		if(stop)
@@ -567,17 +567,9 @@ int HashManager::Hasher::run() {
 		{
 			Lock l(cs);
 			if(!w.empty()) {
-				file = fname = w.begin()->first;
+				currentFile = fname = w.begin()->first;
+				currentSize = w.begin()->second;
 				w.erase(w.begin());
-				unsigned int k = w.size();
-				if(k > pocetHashu) pocetHashu = k;
-				if(k != 0) {
-					procenta = ((pocetHashu-k)*100) / pocetHashu;
-					string rychlost = Util::emptyString;
-					if(speed > 0)				
-						rychlost = ", "+Util::formatBytes(speed) + "/s ";
-					LogManager::getInstance()->message(STRING(CREATING_HASH)+" ( "+Util::toString(procenta)+"%, "+Util::toString(k)+rychlost+")....",true);
-				}
 				last = w.empty();
 			} else {
 				last = true;
@@ -602,9 +594,7 @@ int HashManager::Hasher::run() {
 			try {
 				File f(fname, File::READ, File::OPEN);
 				int64_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), MIN_BLOCK_SIZE);
-#ifdef _WIN32
 				u_int32_t start = GET_TICK();
-#endif
 				u_int32_t timestamp = f.getLastModified();
 				TigerTree slowTTH(bs);
 				TigerTree* tth = &slowTTH;
@@ -629,7 +619,10 @@ int HashManager::Hasher::run() {
 						n = f.read(buf, bufSize);
 						tth->update(buf, n);
 
-						total -= n;
+						{
+							Lock l(cs);
+							currentSize = max(static_cast<u_int64_t>(currentSize - n), static_cast<u_int64_t>(0));
+						}
 						sizeLeft -= n;
 					} while (n > 0 && !stop);
 #ifdef _WIN32
@@ -639,22 +632,21 @@ int HashManager::Hasher::run() {
 #endif
 				f.close();
 				tth->finalize();
-#ifdef _WIN32
 				u_int32_t end = GET_TICK();
-				speed = 0;
-				if(end > start) {
-					speed = size * 1000LL / (end - start);
-				}
-#else
 				int64_t speed = 0;
-#endif				
+				if(end > start) {
+					speed = size * _LL(1000) / (end - start);
+				}
 				HashManager::getInstance()->hashDone(fname, timestamp, *tth, speed);
 			} catch(const FileException& e) {
 				LogManager::getInstance()->message(STRING(ERROR_HASHING) + fname + ": " + e.getError(), true);
 			}
-
-			total -= sizeLeft;
 		}
+		{
+			Lock l(cs);
+			currentFile.clear();
+			currentSize = 0;
+		}		
 		running = false;
 		if(buf != NULL && (last || stop)) {
 			if(virtualBuf) {
@@ -665,9 +657,6 @@ int HashManager::Hasher::run() {
 				delete buf;
 			}
 			buf = NULL;
-			if(stop == false && w.empty()) {
-				procenta = 0;
-			}
 		}
 	}
 	return 0;

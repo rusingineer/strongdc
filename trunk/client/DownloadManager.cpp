@@ -309,7 +309,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 			if(d->getTreeValid() && start > 0 &&
 			  (d->getTigerTree().getLeaves().size() > 32 || // 32 leaves is 5 levels
-			   d->getTigerTree().getBlockSize() * 10 < d->getSize())) {
+		       d->getTigerTree().getBlockSize() * 10 < d->getSize())) 
+			{
 				d->setStartPos(getResumePos(d->getDownloadTarget(), d->getTigerTree(), start));
 			} else {
 				int rollback = SETTING(ROLLBACK);
@@ -369,9 +370,10 @@ public:
 
 int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, int64_t startPos) {
 	// Always discard data until the last block
-	startPos = startPos - (startPos % tt.getBlockSize());
 	if(startPos < tt.getBlockSize())
 		return 0;
+
+	startPos -= (startPos % tt.getBlockSize());
 
 	DummyOutputStream dummy;
 
@@ -379,9 +381,10 @@ int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, i
 
 	do {
 		int64_t blockPos = startPos - tt.getBlockSize();
-		MerkleCheckOutputStream<TigerTree, false> check(tt, &dummy, blockPos);
 
 		try {
+			MerkleCheckOutputStream<TigerTree, false> check(tt, &dummy, blockPos);
+
 			File inFile(file, File::READ, File::OPEN);
 			inFile.setPos(blockPos);
 			int64_t bytesLeft = tt.getBlockSize();

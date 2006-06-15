@@ -111,6 +111,7 @@ void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::P
 	if(i == frames.end()) {
 		p = new PrivateFrame(user);
 		frames[user] = p;
+		//p->readLog();
 		p->addLine(from, aMessage);
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
@@ -169,7 +170,7 @@ LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& 
 	if (uMsg != WM_KEYDOWN) {
 		switch(wParam) {
 			case VK_RETURN:
-				if( (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) ) {
+				if( WinUtil::isShift() || WinUtil::isCtrl() ||  WinUtil::isAlt() ) {
 					bHandled = FALSE;
 				}
 				break;
@@ -724,6 +725,18 @@ void PrivateFrame::readLog() {
 
 		f.close();
 	} catch(FileException&){
+	}
+}
+
+void PrivateFrame::closeAll(){
+	for(FrameIter i = frames.begin(); i != frames.end(); ++i)
+		i->second->PostMessage(WM_CLOSE, 0, 0);
+}
+
+void PrivateFrame::closeAllOffline() {
+	for(FrameIter i = frames.begin(); i != frames.end(); ++i) {
+		if(!i->first->isOnline())
+			i->second->PostMessage(WM_CLOSE, 0, 0);
 	}
 }
 

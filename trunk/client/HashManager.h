@@ -117,13 +117,12 @@ private:
 
 	class Hasher : public Thread {
 	public:
-		Hasher() : stop(false), running(false), rebuild(false), total(0) { }
+		Hasher() : stop(false), running(false), rebuild(false), currentSize(0) { }
 
 		void hashFile(const string& fileName, int64_t size) {
 			Lock l(cs);
 			if(w.insert(make_pair(fileName, size)).second) {
 				s.signal();
-				total += size;
 			}
 		}
 
@@ -131,7 +130,6 @@ private:
 			Lock l(cs);
 			for(WorkIter i = w.begin(); i != w.end(); ) {
 				if(Util::strnicmp(baseDir, i->first, baseDir.length()) == 0) {
-					total -= i->second;
 					w.erase(i++);
 				} else {
 					++i;
@@ -145,14 +143,15 @@ private:
 #endif
 		void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft) {
 			Lock l(cs);
-			curFile = file;
+			curFile = currentFile;
 			filesLeft = w.size();
 			if(running)
 				filesLeft++;
-			// Just in case...
-			if(total < 0)
-				total = 0;
-			bytesLeft = total;
+			bytesLeft = 0;
+			for(WorkMap::const_iterator i = w.begin(); i != w.end(); ++i) {
+				bytesLeft += i->second;
+			}
+			bytesLeft += currentSize;
 		}
 		void shutdown() {
 			stop = true;
@@ -176,8 +175,8 @@ private:
 		bool stop;
 		bool running;
 		bool rebuild;
-		int64_t total;
-		string file;
+		string currentFile;
+		int64_t currentSize;
 	};
 
 	friend class Hasher;

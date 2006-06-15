@@ -17,6 +17,15 @@
  */
 
 #include "stdafx.h"
+
+/** 
+	Memory leak detector
+	You can remove following 3 lines if you don't want to detect memory leaks.
+ */
+#define VLD_MAX_DATA_DUMP 0
+#define VLD_AGGREGATE_DUPLICATES
+#include <vld.h>
+
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 

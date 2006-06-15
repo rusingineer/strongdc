@@ -35,6 +35,7 @@
 #include "../client/User.h"
 #include "../client/ClientManager.h"
 
+DirectoryListingFrame::FrameMap DirectoryListingFrame::frames;
 int DirectoryListingFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_TYPE, COLUMN_EXACTSIZE, COLUMN_SIZE, COLUMN_TTH };
 int DirectoryListingFrame::columnSizes[] = { 300, 60, 100, 100, 200 };
 
@@ -59,6 +60,7 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aU
 		}
 		if(aHWND != 0)
 			frame->loadFile(aFile);
+		frames.insert( FramePair( frame->m_hWnd, frame ) );
 	}
 }
 
@@ -75,6 +77,7 @@ void DirectoryListingFrame::openWindow(const User::Ptr& aUser, const string& txt
 			frame->CreateEx(WinUtil::mdiClient);
 		}
 		frame->loadXML(txt);
+		frames.insert( FramePair( frame->m_hWnd, frame ) );
 	}
 }
 
@@ -1169,6 +1172,11 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 	}
 }
 
+void DirectoryListingFrame::closeAll(){
+	for(FrameIter i = frames.begin(); i != frames.end(); ++i)
+		i->second->PostMessage(WM_CLOSE, 0, 0);
+}
+
 LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	string sCopy;
 	if(ctrlList.GetSelectedCount() == 1) {
@@ -1216,6 +1224,7 @@ LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 		SettingsManager::getInstance()->removeListener(this);
 		ctrlList.SetRedraw(FALSE);
 		clearList();
+		frames.erase(m_hWnd);
 		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::DIRECTORLISTINGFRAME_ORDER, SettingsManager::DIRECTORLISTINGFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
 		closed = true;
 		PostMessage(WM_CLOSE);

@@ -47,6 +47,7 @@ class SearchFrame : public MDITabChildWindowImpl<SearchFrame, RGB(127, 127, 255)
 {
 public:
 	static void openWindow(const tstring& str = Util::emptyStringW, LONGLONG size = 0, SearchManager::SizeModes mode = SearchManager::SIZE_ATLEAST, SearchManager::TypeModes type = SearchManager::TYPE_ANY);
+	static void closeAll();
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("SearchFrame"), IDR_SEARCH, 0, COLOR_3DFACE)
 
@@ -142,6 +143,7 @@ public:
 	virtual ~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
+		dcassert(resultsCount == 0);
 	}
 
 	LRESULT onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
@@ -293,6 +295,16 @@ private:
 		IMAGE_FAST
 	};
 
+	enum FilterModes{
+		NONE,
+		EQUAL,
+		GREATER_EQUAL,
+		LESS_EQUAL,
+		GREATER,
+		LESS,
+		NOT_EQUAL
+	};
+
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
@@ -415,7 +427,7 @@ private:
 			}
 		}
 
-		GETSET(int, flagimage, flagImage);
+		GETSET(int, flagimage, FlagImage);
 		SearchResult* sr;
 		tstring columns[COLUMN_LAST];
 	};
@@ -486,7 +498,7 @@ private:
 	CContainedWindow purgeContainer;
 	CContainedWindow ctrlFilterContainer;
 	CContainedWindow ctrlFilterSelContainer;
-	string filter;
+	tstring filter;
 	
 	CStatic searchLabel, sizeLabel, optionLabel, typeLabel, hubsLabel, srLabel;
 	CButton ctrlSlots, ctrlShowUI, ctrlTTH, ctrlCollapsed;
@@ -534,6 +546,11 @@ private:
 	static int columnIndexes[];
 	static int columnSizes[];
 
+	typedef map<HWND, SearchFrame*> FrameMap;
+	typedef FrameMap::iterator FrameIter;
+	typedef pair<HWND, SearchFrame*> FramePair;
+
+	static FrameMap frames;
 
 	void downloadSelected(const tstring& aDir, bool view = false); 
 	void downloadWholeSelected(const tstring& aDir);
@@ -557,8 +574,9 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
-	void addEntry(SearchInfo* item);
-	void updateSearchList();
+	bool matchFilter(SearchInfo* si, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
+	bool parseFilter(FilterModes& mode, int64_t& size);
+	void updateSearchList(SearchInfo* si = NULL);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 

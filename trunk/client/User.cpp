@@ -63,8 +63,8 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 	}
 }
 
-const bool Identity::supports(const string& name) const {
-	string su = get("SU");
+bool Identity::supports(const string& name) const {
+	const string& su = get("SU");
 	StringTokenizer<string> st(su, ',');
 	for(StringIter i = st.getTokens().begin(); i != st.getTokens().end(); ++i) {
 		if(*i == name)
@@ -93,11 +93,11 @@ const string Identity::setCheat(Client& c, const string& aCheatDescription, bool
 const string Identity::getReport()
 {
 	string report = "\r\nClient:		" + getClientType();
-	report += "\r\nXML Generator:	" + (getGenerator().empty() ? "N/A" : getGenerator());
-	report += "\r\nLock:		" + getLock();
-	report += "\r\nPk:		" + getPk();
+	report += "\r\nXML Generator:	" + (user->getGenerator().empty() ? "N/A" : user->getGenerator());
+	report += "\r\nLock:		" + user->getLock();
+	report += "\r\nPk:		" + user->getPk();
 	report += "\r\nTag:		" + getTag();
-	report += "\r\nSupports:		" + getSupports();
+	report += "\r\nSupports:		" + user->getSupports();
 	report += "\r\nStatus:		" + Util::formatStatus(Util::toInt(getStatus()));
 	report += "\r\nTestSUR:		" + getTestSUR();
 	report += "\r\nDisconnects:	" + getFileListDisconnects();
@@ -108,7 +108,7 @@ const string Identity::getReport()
 	report += "\r\nDescription:	" + getDescription();
 	report += "\r\nEmail:		" + getEmail();
 	report += "\r\nConnection:	" + getConnection();
-	report += "\r\nCommands:	" + getUnknownCommand();
+	report += "\r\nCommands:	" + user->getUnknownCommand();
 
 	int64_t listSize = Util::toInt64(getFileListSize());
 	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Util::formatExactSize(listSize) + " )") : "N/A");
@@ -165,19 +165,19 @@ const string Identity::updateClientType(OnlineUser& ou) {
 
 		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
 
-		if (!matchProfile(getLock(), cp.getLock())) { continue; }
+		if (!matchProfile(user->getLock(), cp.getLock())) { continue; }
 		if (!matchProfile(getTag(), formattedTagExp)) { continue; } 
-		if (!matchProfile(getPk(), formattedPkExp)) { continue; }
-		if (!matchProfile(getSupports(), cp.getSupports())) { continue; }
+		if (!matchProfile(user->getPk(), formattedPkExp)) { continue; }
+		if (!matchProfile(user->getSupports(), cp.getSupports())) { continue; }
 		if (!matchProfile(getTestSUR(), cp.getTestSUR())) { continue; }
 		if (!matchProfile(getStatus(), cp.getStatus())) { continue; }
-		if (!matchProfile(getUnknownCommand(), cp.getUserConCom())) { continue; }
+		if (!matchProfile(user->getUnknownCommand(), cp.getUserConCom())) { continue; }
 		if (!matchProfile(getDescription(), formattedExtTagExp))	{ continue; }
 		if (!matchProfile(getConnection(), cp.getConnection()))	{ continue; }
 
 		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, getTag()); }
 		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, getDescription()); }
-		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, getPk()); }
+		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, user->getPk()); }
 
 		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
 

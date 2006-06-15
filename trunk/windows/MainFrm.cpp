@@ -42,6 +42,7 @@
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
 #include "UPnP.h"
+#include "PrivateFrame.h"
 #include "WaitingUsersFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
@@ -269,7 +270,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(!BOOLSETTING(SHOW_TOOLBAR)) PostMessage(WM_COMMAND, ID_VIEW_TOOLBAR);
 	if(!BOOLSETTING(SHOW_TRANSFERVIEW))	PostMessage(WM_COMMAND, ID_VIEW_TRANSFER_VIEW);
 
-	if(!(GetAsyncKeyState(VK_SHIFT) & 0x8000))
+	if(!WinUtil::isShift())
 		PostMessage(WM_SPEAKER, AUTO_CONNECT);
 
 	PostMessage(WM_SPEAKER, PARSE_COMMAND_LINE);
@@ -669,22 +670,22 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 		xml.fromXML(versionInfo);
 		xml.stepIn();
 
-				string url;
-				if(xml.findChild("URL")) {
-					url = xml.getChildData();
-				}
+		string url;
+		if(xml.findChild("URL")) {
+			url = xml.getChildData();
+		}
 
 		xml.resetCurrentChild();
 		if(xml.findChild("DCVersion")) {
-			if(atof(xml.getChildData().c_str()) > DCVERSIONFLOAT) {
+			if(Util::toDouble(xml.getChildData()) > DCVERSIONFLOAT) {
 				xml.resetCurrentChild();
 				xml.resetCurrentChild();
 				if(xml.findChild("Title")) {
 					const string& title = xml.getChildData();
 					xml.resetCurrentChild();
-				if(xml.findChild("Message")) {
+					if(xml.findChild("Message")) {
 						if(url.empty()) {
-					const string& msg = xml.getChildData();
+							const string& msg = xml.getChildData();
 							MessageBox(Text::toT(msg).c_str(), Text::toT(title).c_str(), MB_OK);
 						} else {
 							string msg = xml.getChildData() + "\r\n" + STRING(OPEN_DOWNLOAD_PAGE);
@@ -695,21 +696,21 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 				}
 				xml.resetCurrentChild();
 				if(xml.findChild("VeryOldVersion")) {
-					if(atof(xml.getChildData().c_str()) >= VERSIONFLOAT) {
+					if(Util::toDouble(xml.getChildData()) >= VERSIONFLOAT) {
 						string msg = xml.getChildAttrib("Message", "Your version of StrongDC++ contains a serious bug that affects all users of the DC network or the security of your computer.");
 						MessageBox(Text::toT(msg + "\r\nPlease get a new one at " + url).c_str());
 						oldshutdown = true;
 						PostMessage(WM_CLOSE);
 					}
 				}
-						xml.resetCurrentChild();
-				if(xml.findChild("BadVersions")) {
+				xml.resetCurrentChild();
+				if(xml.findChild("BadVersion")) {
 					xml.stepIn();
 					while(xml.findChild("BadVersion")) {
-						double v = atof(xml.getChildAttrib("Version").c_str());
+						double v = Util::toDouble(xml.getChildAttrib("Version"));
 						if(v == VERSIONFLOAT) {
 							string msg = xml.getChildAttrib("Message", "Your version of DC++ contains a serious bug that affects all users of the DC network or the security of your computer.");
-						MessageBox(Text::toT(msg + "\r\nPlease get a new one at " + url).c_str(), _T("Bad DC++ version"), MB_OK | MB_ICONEXCLAMATION);
+							MessageBox(Text::toT(msg + "\r\nPlease get a new one at " + url).c_str(), _T("Bad DC++ version"), MB_OK | MB_ICONEXCLAMATION);
 							oldshutdown = true;
 							PostMessage(WM_CLOSE);
 						}
@@ -832,7 +833,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 		}
 
 		bAppMinimized = true;
-		if(BOOLSETTING(MINIMIZE_TRAY)) {
+		if(BOOLSETTING(MINIMIZE_TRAY) != WinUtil::isShift()) {
 			updateTray(true);
 			ShowWindow(SW_HIDE);
 		} else {
@@ -1151,8 +1152,14 @@ LRESULT MainFrame::OnViewTransferView(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	return 0;
 }
 
-LRESULT MainFrame::onCloseDisconnected(WORD , WORD , HWND , BOOL& ) {
-	HubFrame::closeDisconnected();
+LRESULT MainFrame::onCloseWindows(WORD , WORD wID, HWND , BOOL& ) {
+	switch(wID) {
+	case IDC_CLOSE_DISCONNECTED:		HubFrame::closeDisconnected();		break;
+	case IDC_CLOSE_ALL_PM:				PrivateFrame::closeAll();			break;
+	case IDC_CLOSE_ALL_OFFLINE_PM:		PrivateFrame::closeAllOffline();	break;
+	case IDC_CLOSE_ALL_DIR_LIST:		DirectoryListingFrame::closeAll();	break;
+	case IDC_CLOSE_ALL_SEARCH_FRAME:	SearchFrame::closeAll();			break;
+	}
 	return 0;
 }
 

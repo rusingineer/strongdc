@@ -74,8 +74,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { }
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { clearUserData(); }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { clearUserData(); }
 
 	virtual ~User() throw() { }
 
@@ -84,9 +84,24 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
+	void clearUserData() {
+		generator = Util::emptyString;
+		supports = Util::emptyString;
+		lock = Util::emptyString;
+		pk = Util::emptyString;
+		unknownCommand = Util::emptyString;
+	}
+
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
 	GETSET(int64_t, lastDownloadSpeed, LastDownloadSpeed);
+
+	GETSET(string, generator, Generator);
+	GETSET(string, supports, Supports);
+	GETSET(string, lock, Lock);
+	GETSET(string, pk, Pk);
+	GETSET(string, unknownCommand, UnknownCommand);
+
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -133,12 +148,7 @@ public:
 	GS(RealBytesShared, "RS");
 	GS(CheatingString, "CS");
 	GS(ClientType, "CT");
-	GS(Generator, "GE");
-	GS(Supports, "SP");
-	GS(Lock, "LO");
-	GS(Pk, "PK");
 	GS(TestSUR, "TS");
-	GS(UnknownCommand, "UC");
 	GS(Comment, "CM");	
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
@@ -155,12 +165,13 @@ public:
 			get("HR") + "/" + get("HO") + ",S:" + get("SL") + ">";
 	}
 
-	const bool supports(const string& name) const;
-	const bool isHub() const { return !get("HU").empty(); }
-	const bool isOp() const { return !get("OP").empty(); }
-	const bool isHidden() const { return !get("HI").empty(); }
-	const bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
-	const bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
+	bool supports(const string& name) const;
+	bool isHub() const { return !get("HU").empty(); }
+	bool isOp() const { return !get("OP").empty(); }
+	bool isHidden() const { return !get("HI").empty(); }
+	bool isBot() const { return !get("BO").empty(); }
+	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
+	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
 	void sendRawCommand(Client& c, const int aRawCommand);
 	const string setCheat(Client& c, const string& aCheatDescription, bool aBadClient);

@@ -274,12 +274,10 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 			cur = d;
 		}
 		cur->setComplete(true);
-		const string& generator = getAttrib(attribs, sGenerator, 2);
 
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(uziv);
-		if(&ou) {
-			ou.getIdentity().setGenerator(generator);
-		}
+		string generator = getAttrib(attribs, sGenerator, 2);
+		uziv->setGenerator(generator);
+
 		inListing = true;
 
 		if(simple) {

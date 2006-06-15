@@ -45,10 +45,14 @@ public:
 		}
 		// Only start at block boundaries
 		dcassert(start % aTree.getBlockSize() == 0);
-		// Sanity check
-		dcassert(aTree.getLeaves().size() >= (size_t)(start / aTree.getBlockSize()));
 		cur.setFileSize(start);
-		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + (size_t)(start / aTree.getBlockSize()));
+
+		size_t nBlocks = static_cast<size_t>(start / aTree.getBlockSize());
+		if(nBlocks > aTree.getLeaves().size()) {
+			dcdebug("Invalid tree / parameters");
+			return;
+		}
+		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + nBlocks);
 		
 		if(multiSourceChecking)
 			verified = cur.getLeaves().size();

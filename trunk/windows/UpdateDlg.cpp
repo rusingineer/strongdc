@@ -119,7 +119,7 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 				xml.stepIn();
 				if (xml.findChild("DCVersion")) {
 					s_latestVersion = xml.getChildData();
-					latestVersion = atof(s_latestVersion.c_str());
+					latestVersion = Util::toDouble(s_latestVersion);
 					xml.resetCurrentChild();
 				} else
 					throw Exception();
@@ -131,7 +131,7 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 
 				PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new tstring(Text::toT(s_latestVersion)));
 				if (xml.findChild("VeryOldVersion")) {
-					oldVersion = atof(xml.getChildData().c_str());					
+					oldVersion = Util::toDouble(xml.getChildData());					
 				}
 				xml.resetCurrentChild();
 				if (xml.findChild("URL")) {

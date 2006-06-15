@@ -188,30 +188,32 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 }
 
 LRESULT FavoriteHubsFrame::onDoubleClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	if(!checkNick())
-		return 0;
-	
 	NMITEMACTIVATE* item = (NMITEMACTIVATE*) pnmh;
 
-	if(item->iItem != -1) {
-		FavoriteHubEntry* entry = (FavoriteHubEntry*)ctrlHubs.GetItemData(item->iItem);
-		RecentHubEntry r;
-		r.setName(entry->getName());
-		r.setDescription(entry->getDescription());
-		r.setUsers("*");
-		r.setShared("*");
-		r.setServer(entry->getServer());
-		FavoriteManager::getInstance()->addRecent(r);
-		HubFrame::openWindow(Text::toT(entry->getServer())
-			, Text::toT(entry->getRawOne())
-			, Text::toT(entry->getRawTwo())
-			, Text::toT(entry->getRawThree())
-			, Text::toT(entry->getRawFour())
-			, Text::toT(entry->getRawFive())	
-			, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), 
-			entry->getChatUserSplit(), entry->getUserListState());
+	if(item->iItem == -1) {
+		PostMessage(WM_COMMAND, IDC_NEWFAV, 0);
+	} else {
+		PostMessage(WM_COMMAND, IDC_CONNECT, 0);
 	}
 
+	return 0;
+}
+
+LRESULT FavoriteHubsFrame::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
+	switch(kd->wVKey) {
+	case VK_INSERT:
+		PostMessage(WM_COMMAND, IDC_NEWFAV, 0);
+		break;
+	case VK_DELETE:
+		PostMessage(WM_COMMAND, IDC_REMOVE, 0);
+		break;
+	case VK_RETURN:
+		PostMessage(WM_COMMAND, IDC_CONNECT, 0);
+		break;
+	default:
+		bHandled = FALSE;
+	}
 	return 0;
 }
 

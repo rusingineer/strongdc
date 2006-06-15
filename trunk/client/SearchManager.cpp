@@ -143,12 +143,12 @@ string SearchResult::getFileName() const {
 }
 
 void SearchManager::listen() throw(Exception) {
-	short lastPort = (short)SETTING(UDP_PORT);
+	unsigned short lastPort = (unsigned short)SETTING(UDP_PORT);
 
 	if(lastPort == 0)
-		lastPort = (short)Util::rand(1025, 32000);
+		lastPort = (unsigned short)Util::rand(1025, 32000);
 
-	short firstPort = lastPort;
+	unsigned short firstPort = lastPort;
 
 	disconnect();
 
@@ -165,7 +165,7 @@ void SearchManager::listen() throw(Exception) {
 			port = lastPort;
 			break;
 		} catch(const Exception&) {
-			short newPort = (short)((lastPort == 32000) ? 1025 : lastPort + 1);
+			unsigned short newPort = (unsigned short)((lastPort == 32000) ? 1025 : lastPort + 1);
 			if(!SettingsManager::getInstance()->isDefault(SettingsManager::UDP_PORT) || (firstPort == newPort)) {
 				throw Exception("Could not find a suitable free port");
 			}
@@ -310,7 +310,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		}
 
 		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-			file, hubName, url, remoteIp, tth.empty() ? NULL : new TTHValue(tth), false);
+			file, hubName, url, remoteIp, tth, false, Util::emptyString);
 		queue.addResult(sr);
 	} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
 		AdcCommand c(x.substr(0, x.length()-1));
@@ -324,45 +324,18 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		if(!user)
 			return;
 
-		int freeSlots = -1;
-		int64_t size = -1;
-		string file;
-		string tth;
+		// This should be handled by AdcCommand really...
+		c.getParameters().erase(c.getParameters().begin());
 
-		for(StringIter i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i) {
-			string& str = *i;
-			if(str.compare(0, 2, "FN") == 0) {
-				file = Util::toNmdcFile(str.substr(2));
-			} else if(str.compare(0, 2, "SL") == 0) {
-				freeSlots = Util::toInt(str.substr(2));
-			} else if(str.compare(0, 2, "SI") == 0) {
-				size = Util::toInt64(str.substr(2));
-			} else if(str.compare(0, 2, "TR") == 0) {
-				tth = str.substr(2);
-			}
-		}
+		onRES(c, user, remoteIp);
 
-		if(!file.empty() && freeSlots != -1 && size != -1) {
-
-			StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
-			string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
-			StringList hubs = ClientManager::getInstance()->getHubs(user->getCID());
-			string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
-
-			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
-			/// @todo Something about the slots
-			SearchResult* sr = new SearchResult(user, type, 0, freeSlots, size, 
-				file, hubName, hub, remoteIp, tth.empty() ? NULL : new TTHValue(tth), true);
-			fire(SearchManagerListener::SR(), sr);
-			sr->decRef();
-		}
 	} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 		try {
 			respond(AdcCommand(x.substr(0, x.length()-1)));
 		} catch(ParseException& ) {
 		}
 	}*/ // Needs further DoS investigation
-	 else if(x.compare(0, 5, "$PSR ") == 0) {
+	else if(x.compare(0, 5, "$PSR ") == 0) {
 		string::size_type i, j;
 		// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
 		i = 5;
@@ -375,7 +348,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		if( (j = x.find('$', i)) == string::npos) {
 			return;
 		}
-		short UdpPort = (short)Util::toInt(x.substr(i, j-i));
+		unsigned short UdpPort = (unsigned short)Util::toInt(x.substr(i, j-i));
 		i = j + 1;
 
 		if( (j = x.find('$', i)) == string::npos) {
@@ -432,7 +405,45 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 				Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
 			}
 		}
-	}
+	}	
+}
+
+void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const string& remoteIp) {
+		int freeSlots = -1;
+		int64_t size = -1;
+		string file;
+		string tth;
+	string token;
+
+	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
+		const string& str = *i;
+			if(str.compare(0, 2, "FN") == 0) {
+				file = Util::toNmdcFile(str.substr(2));
+			} else if(str.compare(0, 2, "SL") == 0) {
+				freeSlots = Util::toInt(str.substr(2));
+			} else if(str.compare(0, 2, "SI") == 0) {
+				size = Util::toInt64(str.substr(2));
+			} else if(str.compare(0, 2, "TR") == 0) {
+				tth = str.substr(2);
+		} else if(str.compare(0, 2, "TO") == 0) {
+			token = str.substr(2);
+			}
+		}
+
+		if(!file.empty() && freeSlots != -1 && size != -1) {
+
+		StringList names = ClientManager::getInstance()->getHubNames(from->getCID());
+			string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
+		StringList hubs = ClientManager::getInstance()->getHubs(from->getCID());
+			string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
+
+			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
+			/// @todo Something about the slots
+		SearchResult* sr = new SearchResult(from, type, 0, freeSlots, size, 
+			file, hubName, hub, remoteIp, tth, true, token);
+			fire(SearchManagerListener::SR(), sr);
+			sr->decRef();
+		}
 }
 
 void SearchManager::respond(const AdcCommand& adc, const CID& from) {
@@ -456,7 +467,6 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 
 	for(SearchResult::Iter i = results.begin(); i != results.end(); ++i) {
 		AdcCommand cmd = (*i)->toRES(AdcCommand::TYPE_UDP);
-		cmd.setTo(adc.getFrom());
 		if(!token.empty())
 			cmd.addParam("TO", token);
 		ClientManager::getInstance()->send(cmd, from);

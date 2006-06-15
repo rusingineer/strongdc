@@ -59,6 +59,7 @@
 		User::Ptr replyTo;
 	};
 
+
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
 friend struct CompareItems;
 public:

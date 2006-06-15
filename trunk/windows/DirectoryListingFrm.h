@@ -49,6 +49,7 @@ class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame
 public:
 	static void openWindow(const tstring& aFile, const User::Ptr& aUser, int64_t aSpeed);
 	static void openWindow(const User::Ptr& aUser, const string& txt, int64_t aSpeed);
+	static void closeAll();
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
 	typedef UCHandler<DirectoryListingFrame> ucBase;
@@ -392,6 +393,12 @@ private:
 
 	static int columnIndexes[COLUMN_LAST];
 	static int columnSizes[COLUMN_LAST];
+
+	typedef map< HWND , DirectoryListingFrame* > FrameMap;
+	typedef pair< HWND , DirectoryListingFrame* > FramePair;
+	typedef FrameMap::iterator FrameIter;
+
+	static FrameMap frames;
 	
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };

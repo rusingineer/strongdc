@@ -127,8 +127,8 @@ LRESULT PublicHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	for(int j=0; j<COLUMN_LAST; j++) {
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
-
-	ctrlFilterSel.SetCurSel(0);
+	ctrlFilterSel.AddString(CTSTRING(ANY));
+	ctrlFilterSel.SetCurSel(COLUMN_LAST);
 	
 	ctrlFilterDesc.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_GROUPBOX, WS_EX_TRANSPARENT);
@@ -412,7 +412,7 @@ void PublicHubsFrame::updateList() {
 	ctrlHubs.SetRedraw(FALSE);
 	
 	double size = -1;
-	int mode = -1;
+	FilterModes mode = NONE;
 
 	int sel = ctrlFilterSel.GetCurSel();
 
@@ -518,32 +518,31 @@ void PublicHubsFrame::updateDropDown() {
 	ctrlPubLists.SetCurSel(FavoriteManager::getInstance()->getSelectedHubList());
 }
 
-bool PublicHubsFrame::parseFilter(int& mode, double& size) {
+bool PublicHubsFrame::parseFilter(FilterModes& mode, double& size) {
 	string::size_type start = (string::size_type)string::npos;
 	string::size_type end = (string::size_type)string::npos;
 	int64_t multiplier = 1;
 
-	if(!filter.empty())
-	if(Util::strnicmp(filter.c_str(), ">=", 2) == 0) {
-		mode = 1;
+	if(filter.compare(0, 2, ">=") == 0) {
+		mode = GREATER_EQUAL;
 		start = 2;
-	} else if(Util::strnicmp(filter.c_str(), "<=", 2) == 0) {
-		mode = 2;
+	} else if(filter.compare(0, 2, "<=") == 0) {
+		mode = LESS_EQUAL;
 		start = 2;
-	} else if(Util::strnicmp(filter.c_str(), "==", 2) == 0) {
-		mode = 0;
+	} else if(filter.compare(0, 2, "==") == 0) {
+		mode = EQUAL;
 		start = 2;
-	} else if(Util::strnicmp(filter.c_str(), "!=", 2) == 0) {
-		mode = 5;
+	} else if(filter.compare(0, 2, "!=") == 0) {
+		mode = NOT_EQUAL;
 		start = 2;
-	} else if(filter[0] == '<') {
-		mode = 4;
+	} else if(filter[0] == _T('<')) {
+		mode = LESS;
 		start = 1;
-	} else if(filter[0] == '>') {
-		mode = 3;
+	} else if(filter[0] == _T('>')) {
+		mode = GREATER;
 		start = 1;
-	} else if(filter[0] == '=') {
-		mode = 1;
+	} else if(filter[0] == _T('=')) {
+		mode = EQUAL;
 		start = 1;
 	}
 
@@ -583,15 +582,7 @@ bool PublicHubsFrame::parseFilter(int& mode, double& size) {
 	return true;
 }
 
-bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool doSizeCompare, const int& mode, const double& size) {
-	//mode
-	//0 - ==
-	//1 - >=
-	//2 - <=
-	//3 - >
-	//4 - <
-	//5 - !=
-
+bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool doSizeCompare, const FilterModes& mode, const double& size) {
 	if(filter.empty())
 		return true;
 
@@ -617,14 +608,23 @@ bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool do
 	bool insert = false;
 	if(doSizeCompare) {
 		switch(mode) {
-			case 0: insert = (size == entrySize); break;
-			case 1: insert = (size <=  entrySize); break;
-			case 2: insert = (size >=  entrySize); break;
-			case 3: insert = (size < entrySize); break;
-			case 4: insert = (size > entrySize); break;
-			case 5: insert = (size != entrySize); break;
+			case EQUAL: insert = (size == entrySize); break;
+			case GREATER_EQUAL: insert = (size <=  entrySize); break;
+			case LESS_EQUAL: insert = (size >=  entrySize); break;
+			case GREATER: insert = (size < entrySize); break;
+			case LESS: insert = (size > entrySize); break;
+			case NOT_EQUAL: insert = (size != entrySize); break;
 		}
 	} else {
+		if(sel >= COLUMN_LAST) {
+			if( Util::findSubString(entry.getName(), filter) != string::npos ||
+				Util::findSubString(entry.getDescription(), filter) != string::npos ||
+				Util::findSubString(entry.getServer(), filter) != string::npos ||
+				Util::findSubString(entry.getCountry(), filter) != string::npos ||
+				Util::findSubString(entry.getRating(), filter) != string::npos ) {
+					insert = true;
+				}
+		}
 		if(Util::findSubString(entryString, filter) != string::npos)
 			insert = true;
 	}

@@ -92,7 +92,7 @@ private:
 	virtual string checkNick(const string& nick);
 
 	OnlineUser& getUser(const u_int32_t aSID, const CID& aCID);
-	OnlineUser* findUser(const u_int32_t sid);
+	OnlineUser* findUser(const u_int32_t sid) const;
 	void putUser(const u_int32_t sid);
 
 	void clearUsers();
@@ -108,6 +108,7 @@ private:
 	void handle(AdcCommand::STA, AdcCommand& c) throw();
 	void handle(AdcCommand::SCH, AdcCommand& c) throw();
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
+	void handle(AdcCommand::RES, AdcCommand& c) throw();
 
 	template<typename T> void handle(T, AdcCommand&) { 
 		//Speaker<AdcHubListener>::fire(t, this, c);

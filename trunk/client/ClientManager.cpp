@@ -240,7 +240,7 @@ bool ClientManager::isOp(const User::Ptr& user, const string& aHubUrl) {
 	pair<OnlineIter, OnlineIter> p = onlineUsers.equal_range(user->getCID());
 	for(OnlineIter i = p.first; i != p.second; ++i) {
 		if(i->second->getClient().getHubUrl() == aHubUrl) {
-			return i->second->getClient().getMyIdentity().isOp();
+			return i->second->getIdentity().isOp();
 		}
 	}
 	return false;
@@ -314,12 +314,18 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	Lock l(cs);
 	OnlineIter i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
-		OnlineUser* u = i->second;
-		if(cmd.getType() == AdcCommand::TYPE_UDP && !u->getIdentity().isUdpActive()) {
+		OnlineUser& u = *i->second;
+		if(cmd.getType() == AdcCommand::TYPE_UDP && !u.getIdentity().isUdpActive()) {
 			cmd.setType(AdcCommand::TYPE_DIRECT);
+			cmd.setTo(u.getIdentity().getSID());
+			u.getClient().send(cmd);
+		} else {
+			try {
+				s.writeTo(u.getIdentity().getIp(), static_cast<short>(Util::toInt(u.getIdentity().getUdpPort())), cmd.toString(getMe()->getCID()));
+			} catch(const SocketException&) {
+				dcdebug("Socket exception sending ADC UDP command\n");
+			}
 		}
-		cmd.setTo(u->getIdentity().getSID());
-		u->getClient().send(cmd);
 	}
 }
 
@@ -546,7 +552,7 @@ const CID& ClientManager::getMyPID() {
 
 CID ClientManager::getMyCID() {
 	TigerHash tiger;
-	tiger.update(getMyPID().getData(), CID::SIZE);
+	tiger.update(getMyPID().data(), CID::SIZE);
 	return CID(tiger.finalize());
 }
 
@@ -617,20 +623,6 @@ void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 	}
 }
 
-void ClientManager::setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
-	OnlineUser* ou;
-	{
-		Lock l(cs);
-		OnlineIter i = onlineUsers.find(p->getCID());
-		if(i == onlineUsers.end()) return;
-
-		ou = i->second;
-		ou->getIdentity().setPk(aPk);
-		ou->getIdentity().setLock(aLock);
-	}
-	ou->getClient().updated(*ou);
-}
-
 bool ClientManager::fileListDisconnected(const User::Ptr& p) {
 	string report = Util::emptyString;
 	Client* c = NULL;
@@ -662,6 +654,7 @@ bool ClientManager::fileListDisconnected(const User::Ptr& p) {
 
 bool ClientManager::connectionTimeout(const User::Ptr& p) {
 	string report = Util::emptyString;
+	bool remove = false;
 	Client* c = NULL;
 	{
 		Lock l(cs);
@@ -678,12 +671,15 @@ bool ClientManager::connectionTimeout(const User::Ptr& p) {
 			if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 				c = &ou.getClient();
 				report = ou.getIdentity().setCheat(ou.getClient(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
-				try {
-					QueueManager::getInstance()->removeTestSUR(p);
-				} catch(...) {
-				}
+				remove = true;
 				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(TIMEOUT_RAW));
 			}
+		}
+	}
+	if(remove) {
+		try {
+			QueueManager::getInstance()->removeTestSUR(p);
+		} catch(...) {
 		}
 	}
 	if(c && !report.empty()) {

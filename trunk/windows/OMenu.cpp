@@ -92,14 +92,13 @@ void OMenu::CheckOwnerDrawn(UINT uItem, BOOL byPosition) {
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_TYPE | MIIM_DATA;
 	GetMenuItemInfo(uItem, byPosition, &mii);
-	if ((mii.fType &= MFT_OWNERDRAW) && (mii.dwItemData != NULL)) {
+	if (mii.dwItemData != NULL) {
 		OMenuItem* mi = (OMenuItem*)mii.dwItemData;
-		mii.dwItemData = NULL;
-		OMenuItem::Iter i = find(items.begin(), items.end(), mi);
-		if (i != items.end()) {
+		if(mii.fType &= MFT_OWNERDRAW) {
+			OMenuItem::Iter i = find(items.begin(), items.end(), mi);
 			items.erase(i);
-			delete mi;
 		}
+		delete mi;
 	}
 }
 
