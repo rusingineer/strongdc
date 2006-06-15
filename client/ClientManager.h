@@ -85,7 +85,7 @@ public:
 	}
 
 	OnlineUser& getOnlineUser(const User::Ptr& p) {
-		Lock l(cs);
+		// this method is unsafe, but try it 
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			return *i->second;
@@ -128,7 +128,6 @@ public:
 		
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
-	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock);
 	bool fileListDisconnected(const User::Ptr& p);
 	bool connectionTimeout(const User::Ptr& p);
 	void checkCheating(const User::Ptr& p, DirectoryListing* dl);

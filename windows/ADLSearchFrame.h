@@ -34,8 +34,6 @@
 
 #include "../client/ADLSearch.h"
 
-#define ADLLIST_MESSAGE_MAP 6
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Class that represent an ADL search manager interface
@@ -50,7 +48,7 @@ public:
 	typedef MDITabChildWindowImpl<ADLSearchFrame, RGB(0, 0, 0), IDR_ADLSEARCH> baseClass;
 
 	// Constructor/destructor
-	ADLSearchFrame() : closed(false), listContainer(WC_LISTBOX, this, ADLLIST_MESSAGE_MAP) {}
+	ADLSearchFrame() : closed(false) {}
 	virtual ~ADLSearchFrame() { }
 
 	// Frame window declaration
@@ -71,9 +69,8 @@ public:
 		COMMAND_ID_HANDLER(IDC_MOVE_DOWN, onMoveDown)
 		NOTIFY_HANDLER(IDC_ADLLIST, NM_DBLCLK, onDoubleClickList)
 		NOTIFY_HANDLER(IDC_ADLLIST, LVN_ITEMCHANGED, onItemChanged)
+		NOTIFY_HANDLER(IDC_ADLLIST, LVN_KEYDOWN, onKeyDown)
 		CHAIN_MSG_MAP(baseClass)
-	ALT_MSG_MAP(ADLLIST_MESSAGE_MAP)
-		MESSAGE_HANDLER(WM_KEYDOWN, onChar)
 	END_MSG_MAP()
 
 	// Message handlers
@@ -87,6 +84,7 @@ public:
 	LRESULT onMoveDown(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT onDoubleClickList(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
+	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 	LRESULT onChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
 	
@@ -124,7 +122,6 @@ private:
 	CButton ctrlMoveDown;
 	CButton ctrlHelp;
 	CMenu contextMenu;
-	CContainedWindow listContainer;
 
 	bool closed;
 

@@ -584,6 +584,7 @@ private:
 				}
 			}
 		}
+		delete[] buf;
 	}	
 };
 
@@ -796,12 +797,14 @@ public:
 	}
 
 	void deleteAllItems() {
-		for(TreeItem::const_iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-			T* si =  *i;
-			unsigned int q = 0;
+		for(int i = 0; i < GetItemCount(); i++) {
+			T* si = getItemData(i);
+			size_t q = 0;
 			while(q < si->subItems.size()) {
 				T* j = si->subItems[q];
-				delete j;
+				
+				if(si != j) delete j;
+				
 				++q;
 			}
 			delete si;

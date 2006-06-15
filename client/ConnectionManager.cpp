@@ -30,8 +30,6 @@
 
 #include "UserConnection.h"
 
-int ConnectionManager::iConnToMeCount = 0;
-
 ConnectionManager::ConnectionManager() : port(0), securePort(0), floodCounter(0), server(0), secureServer(0), shuttingDown(false) {
 	TimerManager::getInstance()->addListener(this);
 
@@ -45,12 +43,12 @@ ConnectionManager::ConnectionManager() : port(0), securePort(0), floodCounter(0)
 }
 // @todo clean this up
 void ConnectionManager::listen() throw(Exception){
-	short lastPort = (short)SETTING(TCP_PORT);
+	unsigned short lastPort = (unsigned short)SETTING(TCP_PORT);
 	
 	if(lastPort == 0)
-		lastPort = (short)Util::rand(1025, 32000);
+		lastPort = (unsigned short)Util::rand(1025, 32000);
 
-	short firstPort = lastPort;
+	unsigned short firstPort = lastPort;
 
 	disconnect();
 
@@ -60,7 +58,7 @@ void ConnectionManager::listen() throw(Exception){
 			port = lastPort;
 			break;
 		} catch(const Exception&) {
-			short newPort = (short)((lastPort == 32000) ? 1025 : lastPort + 1);
+			unsigned short newPort = (unsigned short)((lastPort == 32000) ? 1025 : lastPort + 1);
 			if(!SettingsManager::getInstance()->isDefault(SettingsManager::TCP_PORT) || (firstPort == newPort)) {
 				throw Exception("Could not find a suitable free port");
 			}
@@ -77,7 +75,7 @@ void ConnectionManager::listen() throw(Exception){
 			securePort = lastPort;
 			break;
 		} catch(const Exception&) {
-			short newPort = (short)((lastPort == 32000) ? 1025 : lastPort + 1);
+			unsigned short newPort = (unsigned short)((lastPort == 32000) ? 1025 : lastPort + 1);
 			if(!SettingsManager::getInstance()->isDefault(SettingsManager::TCP_PORT) || (firstPort == newPort)) {
 				throw Exception("Could not find a suitable free port");
 			}
@@ -117,7 +115,7 @@ ConnectionQueueItem* ConnectionManager::getCQI(const User::Ptr& aUser, bool down
 	}
 
 	fire(ConnectionManagerListener::Added(), cqi);
-		return cqi;
+	return cqi;
 }
 
 void ConnectionManager::putCQI(ConnectionQueueItem* cqi) {
@@ -163,6 +161,8 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	{
 		Lock l(cs);
 
+		bool attemptDone = false;
+
 		idlers = checkIdle;
 		checkIdle.clear();
 
@@ -182,7 +182,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + 100*1000) < aTick)) {
+				if( ((cqi->getLastAttempt() + 60*1000) < aTick) && !attemptDone ) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
@@ -203,6 +203,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 							cqi->setState(ConnectionQueueItem::CONNECTING);
 							ClientManager::getInstance()->connect(cqi->getUser());
 							fire(ConnectionManagerListener::StatusChanged(), cqi);
+							attemptDone = true;
 						} else {
 							cqi->setState(ConnectionQueueItem::NO_DOWNLOAD_SLOTS);
 							fire(ConnectionManagerListener::Failed(), cqi, STRING(ALL_DOWNLOAD_SLOTS_TAKEN));
@@ -247,7 +248,7 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 static const u_int32_t FLOOD_TRIGGER = 20000;
 static const u_int32_t FLOOD_ADD = 2000;
 
-ConnectionManager::Server::Server(bool secure_, short port, const string& ip /* = "0.0.0.0" */) : secure(secure_), die(false) {
+ConnectionManager::Server::Server(bool secure_, unsigned short port, const string& ip /* = "0.0.0.0" */) : secure(secure_), die(false) {
 	sock.create();
 	sock.bind(port, ip);
 	sock.listen();
@@ -274,9 +275,6 @@ int ConnectionManager::Server::run() throw() {
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	u_int32_t now = GET_TICK();
 
-	if(iConnToMeCount > 0)
-		iConnToMeCount--;
-
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
 	} else {
@@ -290,8 +288,7 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 			dcdebug("Connection flood detected!\n");
 			return;
 		} else {
-			if(iConnToMeCount <= 0)
-				floodCounter += FLOOD_ADD;
+			floodCounter += FLOOD_ADD;
 		}
 	}
 	UserConnection* uc = getConnection(false, secure);
@@ -306,7 +303,7 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	}
 }
 
-void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const string& aNick, const string& hubUrl) {
+void ConnectionManager::nmdcConnect(const string& aServer, unsigned short aPort, const string& aNick, const string& hubUrl) {
 	if(shuttingDown)
 		return;
 
@@ -316,7 +313,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 		// We don't want to be used as flooding instruments
 		unsigned count = 0;
 		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
-			if((*j)->getRemoteIp() == aServer && (*j)->getPort() == aPort) {
+			if(((*j)->getPort() == aPort) && ((*j)->getRemoteIp() == aServer)) {
 				if(++count >= 5) {
 					// More than 5 outbound connections to the same addr/port? Can't trust that..
 					dcdebug("ConnectionManager::connect Tried to connect more than 2 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
@@ -338,7 +335,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, short aPort, const st
 	}
 }
 
-void ConnectionManager::adcConnect(const OnlineUser& aUser, short aPort, const string& aToken, bool secure) {
+void ConnectionManager::adcConnect(const OnlineUser& aUser, unsigned short aPort, const string& aToken, bool secure) {
 	if(shuttingDown)
 		return;
 
@@ -506,7 +503,10 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
 
-	ClientManager::getInstance()->setPkLock(aSource->getUser(), aPk, aLock);
+	if(aSource->getUser()) {
+		aSource->getUser()->setPk(aPk);
+		aSource->getUser()->setLock(aLock);
+	}
 }
 
 void ConnectionManager::on(UserConnectionListener::Direction, UserConnection* aSource, const string& dir, const string& num) throw() {
@@ -727,12 +727,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 		}
 	}
 
-	if(conn->getUser()) {
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(conn->getUser());
-		if(&ou) {
-			ou.getIdentity().setSupports(sup);
-		}
-	}
+	if(conn->getUser())
+		conn->getUser()->setSupports(sup);
 }
 
 /**

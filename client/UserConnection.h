@@ -288,7 +288,7 @@ public:
 	bool isSecure() const { return secure; }
 
 	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
-	short getPort() const { return socket->getPort(); }
+	short getPort() const { if(socket) return socket->getPort(); else return 0; }
 	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; }
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; }

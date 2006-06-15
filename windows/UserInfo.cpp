@@ -79,9 +79,9 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	columns[COLUMN_HUBS] = Text::toT(Util::toString(Util::toInt(identity.get("HN"))+Util::toInt(identity.get("HR"))+Util::toInt(identity.get("HO"))));
 	columns[COLUMN_SLOTS] = Text::toT(identity.get("SL"));
 	columns[COLUMN_IP] = Text::toT(identity.getIp());
-	columns[COLUMN_PK] = Text::toT(identity.getPk());
-	columns[COLUMN_LOCK] = Text::toT(identity.getLock());
-	columns[COLUMN_SUPPORTS] = Text::toT(identity.getSupports());
+	columns[COLUMN_PK] = Text::toT(identity.getUser()->getPk());
+	columns[COLUMN_LOCK] = Text::toT(identity.getUser()->getLock());
+	columns[COLUMN_SUPPORTS] = Text::toT(identity.getUser()->getSupports());
 	columns[COLUMN_CLIENTID] = Text::toT(identity.getClientType());
 
 	if(sortCol != -1) {

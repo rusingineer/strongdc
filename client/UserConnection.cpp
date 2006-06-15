@@ -74,11 +74,8 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
 		setFlag(FLAG_NMDC);
 	} else {
 		// We shouldn't be here?
-		if(getUser()) {
-			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
-			if(&ou && strlen(aLine) < 255)
-				ou.getIdentity().setUnknownCommand(aLine);
-		}
+		if(getUser() && strlen(aLine) < 255)
+			getUser()->setUnknownCommand(aLine);
 		ucNumber++;
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
 		return;
@@ -205,7 +202,7 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
      		if(strncmp(aLine+2, "ey ", 3) == 0) {
 				if(iLineLen < 6) return;
                 
-        		fire(UserConnectionListener::Key(), this, aLine+5);
+        		fire(UserConnectionListener::Key(), this, string(aLine+5, iLineLen-5));
     			return;
       		}
 			ucNumber++;            
@@ -275,11 +272,8 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
  	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		    return;
     	default:
-			if(getUser()) {
-				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(getUser());
-				if(&ou && strlen(aLine) < 255)
-					ou.getIdentity().setUnknownCommand(aLine);
-			}
+			if(getUser() && strlen(aLine) < 255)
+				getUser()->setUnknownCommand(aLine);
 			ucNumber++;
 			dcdebug("Unknown NMDC command: %.50s\n", aLine);
 		return;

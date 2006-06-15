@@ -53,26 +53,13 @@ public:
 	void CheckOwnerDrawn(UINT uItem, BOOL byPosition);
 
 	inline void RemoveFirstItem() {
-		CheckOwnerDrawn(0, TRUE);
 		RemoveMenu(0, MF_BYPOSITION);
 	}
 	inline void RemoveFirstItem(int amount) {
 		for (int i = 0; i < amount; ++i) {
-			//CheckOwnerDrawn(0, TRUE);
 			RemoveMenu(0, MF_BYPOSITION);
 		}
 	}
-	inline void RemoveLastItem() {
-		CheckOwnerDrawn(GetMenuItemCount() - 1, TRUE);
-		RemoveMenu(GetMenuItemCount() - 1, MF_BYPOSITION);
-	}
-	inline void RemoveLastItem(int amount) {
-		for (int i = 0; i < amount; ++i) {
-			CheckOwnerDrawn(GetMenuItemCount() - 1, TRUE);
-			RemoveMenu(GetMenuItemCount() - 1, MF_BYPOSITION);
-		}
-	}
-
 	BOOL DeleteMenu(UINT nPosition, UINT nFlags) {
 		CheckOwnerDrawn(nPosition, nFlags & MF_BYPOSITION);
 		return CMenu::DeleteMenu(nPosition, nFlags);
@@ -101,8 +88,6 @@ private:
 
 	void pMap();
 	void pUnMap();
-
-//	static map<HMENU, bool> fixedMenus;
 };
 
 #define MESSAGE_HANDLER_HWND(msg, func) \

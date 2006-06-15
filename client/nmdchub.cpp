@@ -107,8 +107,6 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		getMyIdentity().setHubUrl(getHubUrl());
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
-		// In NMDC, everyone's a bot until they show a good myinfo
-		p->setFlag(User::BOT);
 	}
 
 	{
@@ -455,8 +453,6 @@ void NmdcHub::on(Line, const string& l) throw() {
 	    
 				OnlineUser& u = getUser(aLine);
 				
-				u.getUser()->unsetFlag(User::BOT);
-
 			    Connection = strchr(Description, '$');
 	    		if(Connection && Connection+1 && Connection+2 && Connection+3) {
 					Connection[0] = NULL;
@@ -544,6 +540,13 @@ void NmdcHub::on(Line, const string& l) throw() {
                                 break;
 						}
 						u.getIdentity().setStatus(Util::toString(status));
+						
+						if(strlen(Connection) == 0) {
+							// No connection = bot...
+							u.getUser()->setFlag(User::BOT);
+						} else {
+							u.getUser()->unsetFlag(User::BOT);
+						}
 						u.getIdentity().setConnection(Connection);
 					}
 				}
@@ -1014,11 +1017,11 @@ string NmdcHub::checkNick(const string& aNick) {
 }
 
 void NmdcHub::connectToMe(const OnlineUser& aUser) {
-	checkstate(); 
-	dcdebug("NmdcHub::connectToMe %s\n", aUser.getIdentity().getNick().c_str());
-	ConnectionManager::getInstance()->nmdcExpect(aUser.getIdentity().getNick(), getMyNick(), getHubUrl());
-	send("$ConnectToMe " + toNmdc(aUser.getIdentity().getNick()) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
-	ConnectionManager::iConnToMeCount++;
+	checkstate();
+	string userNick = aUser.getIdentity().getNick();
+	dcdebug("NmdcHub::connectToMe %s\n", userNick.c_str());
+	ConnectionManager::getInstance()->nmdcExpect(userNick, getMyNick(), getHubUrl());
+	send("$ConnectToMe " + toNmdc(userNick) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
 }
 
 void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
