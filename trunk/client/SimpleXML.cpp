@@ -18,6 +18,7 @@
 
 #include "stdinc.h"
 #include "DCPlusPlus.h"
+#include "ConnectionManager.h"
 
 #include "SimpleXML.h"
 
@@ -189,6 +190,10 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 }
 
 string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, string::size_type start, int depth) throw(SimpleXMLException) {
+	if(ConnectionManager::getInstance()->isShuttingDown()) {
+		throw SimpleXMLException("Shutting down...");
+	}
+
 	string::size_type i = start;
 	string::size_type j;
 

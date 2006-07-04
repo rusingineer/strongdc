@@ -68,7 +68,7 @@
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
-u_int32_t MainFrame::iCurrentShutdownTime = 0;
+time_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
@@ -333,7 +333,7 @@ void MainFrame::startUPnP() {
 		
 		if ( FAILED(UPnP_UDPConnection->OpenPorts()) || FAILED(UPnP_TCPConnection->OpenPorts()) )
 		{
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS), true);
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
 			MessageBox(CTSTRING(UPNP_FAILED_TO_CREATE_MAPPINGS), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
 				
 			// We failed! thus reset the objects
@@ -352,7 +352,7 @@ void MainFrame::startUPnP() {
 				} else {
 					//:-(  Looks like we have to rely on the user setting the external IP manually
 					// no need to do cleanup here because the mappings work
-					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), true);
+					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_GET_EXTERNAL_IP));
 					MessageBox(CTSTRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
 				}
 			}
@@ -366,7 +366,7 @@ void MainFrame::stopUPnP() {
 	{
 		if (FAILED(UPnP_TCPConnection->ClosePorts()) )
 		{
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS), true);
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
 		}
 		delete UPnP_TCPConnection;
 	}
@@ -374,7 +374,7 @@ void MainFrame::stopUPnP() {
 	{
 		if (FAILED(UPnP_UDPConnection->ClosePorts()) )
 		{
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS), true);
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
 		}
 		delete UPnP_UDPConnection;
 	}
@@ -466,8 +466,8 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		if (bShutdown) {
-			u_int32_t aTick = (u_int32_t)GET_TICK();
-			u_int32_t iSec = (aTick / 1000);
+			time_t aTick = (u_int32_t)GET_TICK();
+			time_t iSec = (aTick / 1000);
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
@@ -615,8 +615,8 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 {
 	PropertiesDlg dlg(m_hWnd, SettingsManager::getInstance());
 
-	short lastPort = (short)SETTING(TCP_PORT);
-	short lastUDP = (short)SETTING(UDP_PORT);
+	unsigned short lastPort = (unsigned short)SETTING(TCP_PORT);
+	unsigned short lastUDP = (unsigned short)SETTING(UDP_PORT);
 	int lastConn = SETTING(INCOMING_CONNECTIONS);
 
 	if(dlg.DoModal(m_hWnd) == IDOK) {
@@ -1197,7 +1197,7 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void MainFrame::on(TimerManagerListener::Second, time_t aTick) throw() {
 		Util::increaseUptime();
 		int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 		int64_t updiff = Socket::getTotalUp() - lastUp;

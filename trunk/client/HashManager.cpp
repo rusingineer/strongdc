@@ -53,12 +53,12 @@ bool HashManager::getTree(const TTHValue& root, TigerTree& tt) {
 	return store.getTree(root, tt);
 }
 
-void HashManager::hashDone(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, int64_t speed) {
+void HashManager::hashDone(const string& aFileName, time_t aTimeStamp, const TigerTree& tth, int64_t speed) {
 	try {
 		Lock l(cs);
 		store.addFile(aFileName, aTimeStamp, tth, true);
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(STRING(HASHING_FAILED) + e.getError(), true);
+		LogManager::getInstance()->message(STRING(HASHING_FAILED) + e.getError());
 		return;
 	}
 
@@ -72,13 +72,13 @@ void HashManager::hashDone(const string& aFileName, u_int32_t aTimeStamp, const 
 		fn.insert(0, "...");
 	}
 	if(speed > 0) {
-		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn + " (" + Util::formatBytes(speed) + "/s)", true);
+		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn + " (" + Util::formatBytes(speed) + "/s)");
 	} else {
-		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn, true);
+		LogManager::getInstance()->message(STRING(HASHING_FINISHED) + fn);
 	}
 }
 
-void HashManager::HashStore::addFile(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, bool aUsed) {
+void HashManager::HashStore::addFile(const string& aFileName, time_t aTimeStamp, const TigerTree& tth, bool aUsed) {
 	addTree(tth);
 
 	string fname = Text::toLower(Util::getFileName(aFileName));
@@ -95,16 +95,20 @@ void HashManager::HashStore::addFile(const string& aFileName, u_int32_t aTimeSta
 	dirty = true;
 }
 
-void HashManager::HashStore::addTree(const TigerTree& tt) {
+void HashManager::HashStore::addTree(const TigerTree& tt) throw() {
 	if(treeIndex.find(tt.getRoot()) == treeIndex.end()) {
-		File f(getDataFile(), File::READ|File::WRITE, File::OPEN);
-		int64_t index = saveTree(f, tt);
-		treeIndex.insert(make_pair(tt.getRoot(), TreeInfo(tt.getFileSize(), index, tt.getBlockSize())));
-		dirty = true;
+		try {
+			File f(getDataFile(), File::READ|File::WRITE, File::OPEN);
+			int64_t index = saveTree(f, tt);
+			treeIndex.insert(make_pair(tt.getRoot(), TreeInfo(tt.getFileSize(), index, tt.getBlockSize())));
+			dirty = true;
+		} catch(const FileException& e) {
+			LogManager::getInstance()->message(STRING(ERROR_SAVING_HASH) + e.getError());
+		}
 	}
 }
 
-int64_t HashManager::HashStore::saveTree(File& f, const TigerTree& tt) {
+int64_t HashManager::HashStore::saveTree(File& f, const TigerTree& tt) throw(FileException) {
 	if(tt.getLeaves().size() == 1)
 		return SMALL_TREE;
 
@@ -255,7 +259,7 @@ void HashManager::HashStore::rebuild() {
 		dirty = true;
 		save();
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(STRING(HASHING_FAILED) + e.getError(), true);
+		LogManager::getInstance()->message(STRING(HASHING_FAILED) + e.getError());
 	}
 }
 
@@ -310,8 +314,8 @@ void HashManager::HashStore::save() {
 			File::renameFile(getIndexFile() + ".tmp", getIndexFile());
 
 			dirty = false;
-		} catch(const FileException&) {
-			// Too bad...
+		} catch(const FileException& e) {
+			LogManager::getInstance()->message(STRING(ERROR_SAVING_HASH) + e.getError());
 		}
 	}
 }
@@ -405,7 +409,7 @@ void HashLoader::endTag(const string& name, const string&) {
 
 HashManager::HashStore::HashStore() : dirty(false) 
 { 
-	if(File::getSize(getDataFile()) <= sizeof(int64_t)) {
+	if(File::getSize(getDataFile()) <= static_cast<int64_t>(sizeof(int64_t))) {
 		try {
 			createDataFile(getDataFile());
 		} catch(const FileException&) {
@@ -434,7 +438,7 @@ void HashManager::HashStore::createDataFile(const string& name) {
 		dat.write(&start, sizeof(start));
 
 	} catch(const FileException& e) {
-		LogManager::getInstance()->message(STRING(ERROR_CREATING_HASH_DATA_FILE) + e.getError(), true);
+		LogManager::getInstance()->message(STRING(ERROR_CREATING_HASH_DATA_FILE) + e.getError());
 	}
 }
 
@@ -465,7 +469,7 @@ bool HashManager::Hasher::fastHash(const string& fname, u_int8_t* buf, TigerTree
 	
 	bool ok = false;
 
-	u_int32_t lastRead = GET_TICK();
+	time_t lastRead = GET_TICK();
 	if(!::ReadFile(h, hbuf, BUF_SIZE, &hn, &over)) {
 		if(GetLastError() == ERROR_HANDLE_EOF) {
 			hn = 0;
@@ -490,11 +494,11 @@ bool HashManager::Hasher::fastHash(const string& fname, u_int8_t* buf, TigerTree
 			// Start a new overlapped read
 			ResetEvent(over.hEvent);
 			if(SETTING(MAX_HASH_SPEED) > 0) {
-				u_int32_t now = GET_TICK();
-				u_int32_t minTime = hn * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
+				time_t now = GET_TICK();
+				time_t minTime = hn * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
 				if(lastRead + minTime > now) {
-					u_int32_t diff = now - lastRead;
-					Thread::sleep(minTime - diff);
+					time_t diff = now - lastRead;
+					Thread::sleep(static_cast<u_int32_t>(minTime - diff));
 				} 
 				lastRead = lastRead + minTime;
 			} else {
@@ -561,7 +565,7 @@ int HashManager::Hasher::run() {
 		if(rebuild) {
 			HashManager::getInstance()->doRebuild();
 			rebuild = false;
-			LogManager::getInstance()->message(STRING(HASH_REBUILT), true);
+			LogManager::getInstance()->message(STRING(HASH_REBUILT));
 			continue;
 		}
 		{
@@ -594,8 +598,8 @@ int HashManager::Hasher::run() {
 			try {
 				File f(fname, File::READ, File::OPEN);
 				int64_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), MIN_BLOCK_SIZE);
-				u_int32_t start = GET_TICK();
-				u_int32_t timestamp = f.getLastModified();
+				time_t start = GET_TICK();
+				time_t timestamp = f.getLastModified();
 				TigerTree slowTTH(bs);
 				TigerTree* tth = &slowTTH;
 				size_t n = 0;
@@ -605,16 +609,19 @@ int HashManager::Hasher::run() {
 				if(!virtualBuf || !fastHash(fname, buf, fastTTH, size)) {
 					tth = &slowTTH;
 #endif
-					u_int32_t lastRead = GET_TICK();
+					time_t lastRead = GET_TICK();
 
 					do {
 						size_t bufSize = BUF_SIZE;
 						if(SETTING(MAX_HASH_SPEED) > 0) {
-							u_int32_t now = GET_TICK();
-							u_int32_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
+							time_t now = GET_TICK();
+							time_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
 							if(lastRead + minTime > now) {
-								Thread::sleep(minTime - (now - lastRead));
+								Thread::sleep(static_cast<u_int32_t>(minTime - (now - lastRead)));
 							}
+							lastRead = lastRead + minTime;
+						} else {
+							lastRead = GET_TICK();
 						}
 						n = f.read(buf, bufSize);
 						tth->update(buf, n);
@@ -632,14 +639,14 @@ int HashManager::Hasher::run() {
 #endif
 				f.close();
 				tth->finalize();
-				u_int32_t end = GET_TICK();
+				time_t end = GET_TICK();
 				int64_t speed = 0;
 				if(end > start) {
 					speed = size * _LL(1000) / (end - start);
 				}
 				HashManager::getInstance()->hashDone(fname, timestamp, *tth, speed);
 			} catch(const FileException& e) {
-				LogManager::getInstance()->message(STRING(ERROR_HASHING) + fname + ": " + e.getError(), true);
+				LogManager::getInstance()->message(STRING(ERROR_HASHING) + fname + ": " + e.getError());
 			}
 		}
 		{

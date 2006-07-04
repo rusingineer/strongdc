@@ -104,7 +104,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 	popups.push_back(p);
 }
 
-void PopupManager::on(TimerManagerListener::Second /*type*/, u_int32_t /*tick*/) {
+void PopupManager::on(TimerManagerListener::Second /*type*/, time_t /*tick*/) {
 
 	//post a message and let the main window thread take care of the window
 	::PostMessage(WinUtil::mainWnd, WM_SPEAKER, MainFrame::REMOVE_POPUP, 0);

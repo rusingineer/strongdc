@@ -33,7 +33,6 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
-#include "SSLSocket.h"
 
 #include "StringTokenizer.h"
 
@@ -42,7 +41,14 @@
 #include "WebServerManager.h"
 #include "../windows/PopupManager.h"
 
-void startup(void (*f)(void*, const string&), void* p) {
+#ifdef _STLP_DEBUG
+void __stl_debug_terminate() {
+	int* x = 0;
+	*x = 0;
+}
+#endif
+
+void startup(void (*f)(void*, const tstring&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
 	// Nev's great contribution to dc++
 	while(1) break;
@@ -66,7 +72,6 @@ void startup(void (*f)(void*, const string&), void* p) {
 	QueueManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
-	SSLSocketFactory::newInstance();	
 	DebugManager::newInstance();
 	ClientProfileManager::newInstance();	
 	PopupManager::newInstance();
@@ -78,18 +83,18 @@ void startup(void (*f)(void*, const string&), void* p) {
 	}
 
 	FavoriteManager::getInstance()->load();
-	SSLSocketFactory::getInstance()->loadCertificates();
+	CryptoManager::getInstance()->loadCertificates();
 	ClientProfileManager::getInstance()->load();	
 	WebServerManager::newInstance();
 
 	if(f != NULL)
-		(*f)(p, STRING(HASH_DATABASE));
+		(*f)(p, TSTRING(HASH_DATABASE));
 	HashManager::getInstance()->startup();
 	if(f != NULL)
-		(*f)(p, STRING(SHARED_FILES));
+		(*f)(p, TSTRING(SHARED_FILES));
 	ShareManager::getInstance()->refresh(true, false, true);
 	if(f != NULL)
-		(*f)(p, STRING(DOWNLOAD_QUEUE));
+		(*f)(p, TSTRING(DOWNLOAD_QUEUE));
 	QueueManager::getInstance()->loadQueue();
 
 }
@@ -107,7 +112,6 @@ void shutdown() {
 	WebServerManager::deleteInstance();
 	ClientProfileManager::deleteInstance();	
 	PopupManager::deleteInstance();
-	SSLSocketFactory::deleteInstance();	
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();

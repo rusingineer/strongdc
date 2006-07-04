@@ -42,9 +42,9 @@ const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
 
 void Transfer::updateRunningAverage() {
-	u_int32_t tick = GET_TICK();
+	time_t tick = GET_TICK();
 	if(tick > lastTick) {
-		u_int32_t diff = tick - lastTick;
+		time_t diff = tick - lastTick;
 		int64_t tot = getTotal();
 		if(diff == 0) {
 			// No time passed, don't update runningAverage;
@@ -65,8 +65,13 @@ void Transfer::updateRunningAverage() {
 	lastTick = tick;
 }
 
-void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
+void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 
+	if(aLine.length() < 2)
+		return;
+
+	COMMAND_DEBUG(aLine, DebugManager::CLIENT_IN, getRemoteIp());
+	
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		dispatch(aLine);
 		return;
@@ -74,209 +79,112 @@ void UserConnection::onLine(const char* aLine, int iLineLen) throw() {
 		setFlag(FLAG_NMDC);
 	} else {
 		// We shouldn't be here?
-		if(getUser() && strlen(aLine) < 255)
+		if(getUser() && aLine.length() < 255)
 			getUser()->setUnknownCommand(aLine);
-		ucNumber++;
-		dcdebug("Unknown UserConnection command: %.50s\n", aLine);
+		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
 		return;
 	}
+	string cmd;
+	string param;
 
-	char *temp;
-	switch(aLine[1]) {
-        case 'M':
-	    	// $MyNick
-    		if(strncmp(aLine+2, "yNick ", 6) == 0) {
-                if(iLineLen < 9) return;
+	string::size_type x;
                 
-        		fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(aLine+8));
-    	        return;
-	       }
-       
-    		if(strcmp(aLine+2, "axedOut") == 0) {
-    			fire(UserConnectionListener::MaxedOut(), this);
-    			return;
-	        }
- 			ucNumber++;           
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'D':
-	        // $Direction
-    	    if(strncmp(aLine+2, "irection ", 9) == 0) {
-                if(iLineLen < 12) return;
-                
-    			aLine += 11;
+	if( (x = aLine.find(' ')) == string::npos) {
+		cmd = aLine;
+	} else {
+		cmd = aLine.substr(0, x);
+		param = aLine.substr(x+1);
+    }
     
-        		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
-    				temp[0] = NULL, temp += 1;
-        			if(aLine[0] == NULL) return;
-    
-    				fire(UserConnectionListener::Direction(), this, aLine, temp);
-	    		}
-    			return;
-        	}
- 			ucNumber++;           
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'E':
-			// $Error
-    	    if(strncmp(aLine+2, "rror ", 5) == 0) {
-                if(iLineLen < 8) return;
-                
-    			aLine += 7;
-   
-	    		if(_stricmp(aLine, FILE_NOT_AVAILABLE.c_str()) == 0 || 
-    				strstr(aLine, /*path/file*/" no more exists") != 0) {
+	if(cmd == "$MyNick") {
+		if(!param.empty())
+			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(param));
+	} else if(cmd == "$Direction") {
+		x = param.find(" ");
+		if(x != string::npos) {
+			fire(UserConnectionListener::Direction(), this, param.substr(0, x), param.substr(x+1));
+		}
+	} else if(cmd == "$Error") {
+		if(Util::stricmp(param.c_str(), FILE_NOT_AVAILABLE) == 0 || 
+			param.rfind(/*path/file*/" no more exists") != string::npos) { 
     				fire(UserConnectionListener::FileNotAvailable(), this);
     			} else {
-    				fire(UserConnectionListener::Failed(), this, aLine);
+			fire(UserConnectionListener::Failed(), this, param);
 	    		}
-    			return;
-        	}
- 			ucNumber++;          
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'F':
-			// $FileLength
-    	    if(strncmp(aLine+2, "ileLength ", 10) == 0) {
-                if(iLineLen < 13) return;
-                
-        		fire(UserConnectionListener::FileLength(), this, _atoi64(aLine+12));
-    			return;
-        	}
- 			ucNumber++;           
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'G':
-	        // $Get
-    		if(strncmp(aLine+2, "et ", 3) == 0) {
-                if(iLineLen < 6) return;
-                
-    			aLine += 5;
-    
-        		if((temp = strchr((char *)aLine, '$')) != NULL && temp[1] != NULL)  {
-    				temp[0] = NULL; temp += 1;
-        			if(aLine[0] == NULL) return;
-    
-    				fire(UserConnectionListener::Get(), this, Text::acpToUtf8(aLine), _atoi64(temp) - (int64_t)1);
-	    		}
-    			return;
-        	}
-        
-	        // $GetListLen
-    	    if(strcmp(aLine+2, "etListLen") == 0) {
+	} else if(cmd == "$FileLength") {
+		if(!param.empty())
+			fire(UserConnectionListener::FileLength(), this, Util::toInt64(param));
+	} else if(cmd == "$GetListLen") {
     			fire(UserConnectionListener::GetListLength(), this);
-    			return;
-	        }
-        
-            // $GetZBlock
-    		if(strncmp(aLine+2, "etZBlock ", 9) == 0) {
-                if(iLineLen < 12) return;
-                
-        		processBlock((char *)aLine+11, 1);
-    			return;
-	        }
-			ucNumber++;            
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'U':
-       		// $UGetZBLock
-	        if(strncmp(aLine+2, "GetZBlock ", 10) == 0) {
-                if(iLineLen < 13) return;
-                
-        		processBlock((char *)aLine+12, 2);
-    			return;
-        	}
-        
-	        // $UGetBlock
-    		if(strncmp(aLine+2, "GetBlock ", 9) == 0) {
-                if(iLineLen < 12) return;
-                
-        		processBlock((char *)aLine+11, 3);
-    			return;
-	        }
-			ucNumber++;            
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'K':
-  			// $Key
-     		if(strncmp(aLine+2, "ey ", 3) == 0) {
-				if(iLineLen < 6) return;
-                
-        		fire(UserConnectionListener::Key(), this, string(aLine+5, iLineLen-5));
-    			return;
-      		}
-			ucNumber++;            
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'L':
-        	// $Lock
-        	if(strncmp(aLine+2, "ock ", 4) == 0) {
-                if(iLineLen < 7) return;
-                
-    			aLine += 6;
-     
-        		if((temp = strchr((char *)aLine, ' ')) != NULL && temp[1] != NULL) {
-        			temp[0] = NULL; temp += 4;
-        			if(aLine[0] == NULL) return;
-                
-    				fire(UserConnectionListener::CLock(), this, aLine, temp);
+	} else if(cmd == "$Get") {
+		x = param.find('$');
+		if(x != string::npos) {
+			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(param.substr(0, x)), Util::toInt64(param.substr(x+1)) - (int64_t)1);
+	    }
+	} else if(cmd == "$GetZBlock" || cmd == "$UGetZBlock" || cmd == "$UGetBlock") {
+		string::size_type i = param.find(' ');
+		if(i == string::npos)
+    		return;
+		int64_t start = Util::toInt64(param.substr(0, i));
+		if(start < 0) {
+			disconnect();
+    		return;
+        }
+		i++;
+		string::size_type j = param.find(' ', i);
+		if(j == string::npos)
+			return;
+		int64_t bytes = Util::toInt64(param.substr(i, j-i));
+		string name = param.substr(j+1);
+		if(cmd == "$GetZBlock")
+			name = Text::acpToUtf8(name);
+		if(cmd == "$UGetBlock") {
+			fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
+		} else {
+			fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
+	       }
+	} else if(cmd == "$Key") {
+		if(!param.empty())
+			fire(UserConnectionListener::Key(), this, param);
+	} else if(cmd == "$Lock") {
+		if(!param.empty()) {
+			x = param.find(" Pk=");
+			if(x != string::npos) {
+				fire(UserConnectionListener::CLock(), this, param.substr(0, x), param.substr(x + 4));
+			} else {
+				// Workaround for faulty linux clients...
+				x = param.find(' ');
+				if(x != string::npos) {
+					setFlag(FLAG_INVALIDKEY);
+					fire(UserConnectionListener::CLock(), this, param.substr(0, x), Util::emptyString);
 	    		} else {
-    				fire(UserConnectionListener::CLock(), this, aLine, Util::emptyString);
+					fire(UserConnectionListener::CLock(), this, param, Util::emptyString);
     			}
-    			return;
 	        }
-
-			// $ListLen
-			if(strncmp(aLine+2, "istLen ", 7) == 0) {
-                if(iLineLen < 8) return;
-               
-				aLine += 9;	 	
-				fire(UserConnectionListener::ListLength(), this, aLine);	
-
-				return;
-        	}
-			ucNumber++; 
-			dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'S':
-	       	// $Send
-    	   	if(strcmp(aLine+2, "end") == 0) {
-    			fire(UserConnectionListener::Send(), this);
-    			return;
-	        }
-        
-    	    // $Sending
-    		if(strncmp(aLine+2, "ending ", 7) == 0) {
-                if(iLineLen < 10) return;
-                
-        		fire(UserConnectionListener::Sending(), this, _atoi64(aLine+9));
-    			return;
-	        }
-        
-    	    // $Supports
-    		if(strncmp(aLine+2, "upports ", 8) == 0) {
-                if(iLineLen < 11) return;
-
-        		fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(aLine+10, ' ').getTokens());
-    			return;
-	        }
-  			ucNumber++;          
-            dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	case 'A':
-        	if(strncmp(aLine+2, "DC", 2) == 0) {
-    			dispatch(aLine, true);
-    			return;
-        	}
-			ucNumber++;
- 	        dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		    return;
-    	default:
-			if(getUser() && strlen(aLine) < 255)
-				getUser()->setUnknownCommand(aLine);
-			ucNumber++;
-			dcdebug("Unknown NMDC command: %.50s\n", aLine);
-		return;
+       	}
+	} else if(cmd == "$Send") {
+    	fire(UserConnectionListener::Send(), this);
+	} else if(cmd == "$Sending") {
+		int64_t bytes = -1;
+		if(!param.empty())
+			bytes = Util::toInt64(param);
+		fire(UserConnectionListener::Sending(), this, bytes);
+	} else if(cmd == "$MaxedOut") {
+		fire(UserConnectionListener::MaxedOut(), this);
+	} else if(cmd == "$Supports") {
+		if(!param.empty()) {
+			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(param, ' ').getTokens());
+	    }
+	} else if(cmd.compare(0, 4, "$ADC") == 0) {
+    	dispatch(aLine, true);
+	} else if (cmd == "$ListLen") {
+		if(!param.empty()) {
+			fire(UserConnectionListener::ListLength(), this, param);
+		}
+	} else {
+		if(getUser() && aLine.length() < 255)
+			getUser()->setUnknownCommand(aLine);
+		dcdebug("Unknown NMDC command: %.50s\n", aLine);
 	}
 }
 
@@ -309,36 +217,6 @@ void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) thr
 	fire(UserConnectionListener::Failed(), this, aLine);
 
 	delete this;	
-}
-
-void UserConnection::processBlock(char* param, int type) throw() {
-	char *temp, *temp1;
-	if((temp = strchr((char *)param, ' ')) == NULL || temp[1] == NULL) return;
-
-	temp[0] = NULL; temp += 1;
-	if(param[0] == NULL) return;
-
-	int64_t start = _atoi64(param);
-	if(start < 0) {
-		disconnect();
-		return;
-	}
-
-	if((temp1 = strchr(temp, ' ')) == NULL || temp1[1] == NULL) return;
-
-	temp1[0] = NULL; temp1 += 1;
-	if(temp[0] == NULL) return;
-
-	int64_t bytes = _atoi64(temp);
-
-	string name = temp1;
-	if(type == 2 || type == 3)
-	Text::acpToUtf8(name);
-	if(type == 3) {
-		fire(UserConnectionListener::GetBlock(), this, name, start, bytes);
-	} else {
-		fire(UserConnectionListener::GetZBlock(), this, name, start, bytes);
-	}
 }
 
 /**

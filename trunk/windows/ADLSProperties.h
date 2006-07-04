@@ -56,6 +56,15 @@ private:
 
 	// Current search
 	ADLSearch* search;
+
+	CEdit ctrlSearch;
+	CEdit ctrlDestDir;
+	CEdit ctrlMinSize;
+	CEdit ctrlMaxSize;
+	CButton ctrlActive;
+	CButton ctrlAutoQueue;
+	CComboBox ctrlSearchType;
+	CComboBox ctrlSizeType;
 	CComboBox cRaw;
 };
 

@@ -25,25 +25,37 @@
 
 #include "FavoriteManager.h"
 #include "TimerManager.h"
+#include "ResourceManager.h"
 #include "DebugManager.h"
 #include "ClientManager.h"
 
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator_, bool secure_) : 
-	reconnDelay(120), lastActivity(0), registered(false), socket(NULL),
+	myIdentity(ClientManager::getInstance()->getMe(), 0),
+	reconnDelay(120), lastActivity(GET_TICK()), registered(false), autoReconnect(true), reconnecting(false), socket(0), 
 	hubUrl(hubURL), port(0), separator(separator_),
 	secure(secure_), countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0) {
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
+
+	TimerManager::getInstance()->addListener(this);
 }
 
 Client::~Client() throw() {
 	dcassert(!socket);
+	TimerManager::getInstance()->removeListener(this);
 	updateCounts(true);
 }
 
+void Client::reconnect() {
+	disconnect(true);
+	setAutoReconnect(true);
+	setReconnecting(true);
+}
+
 void Client::shutdown() {
+
 	if(socket) {
 		BufferedSocket::putSocket(socket);
 		socket = 0;
@@ -58,24 +70,26 @@ void Client::reloadSettings(bool updateNick) {
 		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
 
 	if(hub) {
-		if(updateNick)
-			getMyIdentity().setNick(checkNick(hub->getNick(true)));
+		if(updateNick) {
+			setCurrentNick(checkNick(hub->getNick(true)));
+		}		
+
 		if(!hub->getUserDescription().empty()) {
-			getMyIdentity().setDescription(speedDescription + hub->getUserDescription());
+			setCurrentDescription(speedDescription + hub->getUserDescription());
 		} else {
-			getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
+			setCurrentDescription(speedDescription + SETTING(DESCRIPTION));
 		}
 		setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
 		setFavIp(hub->getIP());
 	} else {
-		getMyIdentity().setNick(checkNick(SETTING(NICK)));
-		getMyIdentity().setDescription(speedDescription + SETTING(DESCRIPTION));
+		if(updateNick) {
+			setCurrentNick(checkNick(SETTING(NICK)));
+		}
+		setCurrentDescription(speedDescription + SETTING(DESCRIPTION));
 		setStealth(true);
 		setFavIp(Util::emptyString);
 	}
-	getMyIdentity().setUser(ClientManager::getInstance()->getMe());
-	getMyIdentity().setHubUrl(getHubUrl());	
 }
 
 bool Client::isActive() {
@@ -90,9 +104,13 @@ void Client::connect() {
 	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	availableBytes = 0;
 
+	setAutoReconnect(true);
+	setReconnecting(false);
 	setReconnDelay(120 + Util::rand(0, 60));
 	reloadSettings(true);
 	setRegistered(false);
+	setMyIdentity(Identity(ClientManager::getInstance()->getMe(), 0));
+	setHubIdentity(Identity());
 
 	try {
 		socket = BufferedSocket::getSocket(separator);
@@ -101,22 +119,29 @@ void Client::connect() {
 	} catch(const Exception& e) {
 		if(socket) {
 			BufferedSocket::putSocket(socket);
-			socket = NULL;
+			socket = 0;
 		}
 		fire(ClientListener::Failed(), this, e.getError());
 	}
 	updateActivity();
 }
 
+void Client::on(Connected) throw() {
+	if(socket->isSecure() && !socket->isTrusted() && !BOOLSETTING(ALLOW_UNTRUSTED_HUBS)) {
+		fire(ClientListener::Message(), this, *(OnlineUser*)NULL, STRING(CERTIFICATE_NOT_TRUSTED));
+		disconnect(true);
+		return;
+	}
+
+	updateActivity(); 
+	ip = socket->getIp(); 
+	fire(ClientListener::Connected(), this);
+}
+
 void Client::disconnect(bool graceLess) {
 	if(!socket)
 		return;
-	socket->removeListener(this);
 	socket->disconnect(graceLess);
-}
-
-void Client::updateActivity() {
-	lastActivity = GET_TICK();
 }
 
 void Client::updateCounts(bool aRemove) {
@@ -135,7 +160,7 @@ void Client::updateCounts(bool aRemove) {
 		if(getMyIdentity().isOp()) {
 			Thread::safeInc(counts.op);
 			countType = COUNT_OP;
-		} else if(registered) {
+		} else if(getMyIdentity().isRegistered()) {
 			Thread::safeInc(counts.registered);
 			countType = COUNT_REGISTERED;
 		} else {
@@ -166,6 +191,9 @@ string Client::getLocalIp() const {
 	if(lip.empty())
 		return Util::getLocalIp();
 	return lip;
+}
+
+void Client::on(Second, time_t) throw() {
 }
 
 /**

@@ -306,8 +306,7 @@ public:
 		return formatBytes(toInt64(aString));
 	}
 
-	static double toBytes(TCHAR* aSize);
-
+	static string formatMessage(const string& message);
 	static string toDOS(const string& tmp);
 
 	static string getShortTimeString();
@@ -526,7 +525,6 @@ public:
 	static int strnicmp(const wstring& a, const wstring& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); }
 
 	static string Util::disableCzChars(string message);
-	static string validateMessage(string tmp, bool reverse, bool checkNewLines = true);
 	static string validateChatMessage(string tmp);
 
 	static string getOsVersion();

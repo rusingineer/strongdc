@@ -171,7 +171,7 @@ private:
 			{
 				if(multiSourceChecking) {
 					dcassert(cur.getLeaves().size() <= real.getLeaves().size());
-					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified), true);
+					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified));
 				}
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}

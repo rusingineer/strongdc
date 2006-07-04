@@ -273,8 +273,8 @@ private:
 	File* lFile;
 	File* xFile;
 
-	u_int32_t lastXmlUpdate;
-	u_int32_t lastFullUpdate;
+	time_t lastXmlUpdate;
+	time_t lastFullUpdate;
 
 	mutable RWLock<> cs;
 	CriticalSection listGenLock;
@@ -322,7 +322,7 @@ private:
 	}
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, u_int32_t tick) throw();
+	virtual void on(TimerManagerListener::Minute, time_t tick) throw();
 	void load(SimpleXML* aXml);
 	void save(SimpleXML* aXml);
 	

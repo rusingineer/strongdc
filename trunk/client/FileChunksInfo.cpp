@@ -481,7 +481,7 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		dcassert(0);
 	}
 #endif
-	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start), true);
+	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
 	return false;
 }
 

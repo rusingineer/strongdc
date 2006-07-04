@@ -500,6 +500,8 @@ public:
 	static int getDirIconIndex() { return dirIconIndex; }
 	static int getDirMaskedIndex() { return dirMaskedIndex; }
 	
+	static double toBytes(TCHAR* aSize);
+	
 	static int getOsMajor();
 	static int getOsMinor();
 	
@@ -566,7 +568,7 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, string target);
 	static string formatTime(long rest);
-	static int getImage(const Identity& u);
+	static int getImage(const Identity& u, const string& aHubUrl);
 	static int getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
 private:

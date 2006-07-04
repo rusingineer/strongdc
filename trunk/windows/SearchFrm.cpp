@@ -33,7 +33,6 @@
 #include "../client/pme.h"
 
 TStringList SearchFrame::lastSearches;
-int64_t SearchFrame::resultsCount = 0;
 
 int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
 	COLUMN_PATH, COLUMN_SLOTS, COLUMN_CONNECTION, COLUMN_HUB, COLUMN_EXACT_SIZE, COLUMN_UPLOAD, COLUMN_IP, COLUMN_TTH };
@@ -521,9 +520,9 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 	}
 }
 
-void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void SearchFrame::on(TimerManagerListener::Second, time_t aTick) throw() {
 	if(searches > 0) {
-		int32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
+		time_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
 		TCHAR buf[64];
 		_stprintf(buf, CTSTRING(WAITING_FOR), waitFor);
 		PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));
@@ -1102,7 +1101,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
             }
 			if(bPaused == false) {
 				bool resort = false;
-				if(resultsCount % 13 == 0) {
+				if(resultsCount++ % 13 == 0) {
 					ctrlResults.SetRedraw(FALSE);
 					resort = true;
 				}
@@ -1370,6 +1369,9 @@ void SearchFrame::onHubRemoved(HubInfo* info) {
 		if(ctrlHubs.getItemData(nItem)->url == info->url)
 			break;
 	}
+
+	delete info;
+
 	if (nItem == n)
 		return;
 
@@ -1651,7 +1653,9 @@ bool SearchFrame::parseFilter(FilterModes& mode, int64_t& size) {
 bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, FilterModes mode, int64_t size) {
 	bool insert = false;
 
-	if(doSizeCompare) {
+	if(filter.empty()) {
+		insert = true;
+	} else if(doSizeCompare) {
 		switch(mode) {
 			case EQUAL: insert = (size == si->sr->getSize()); break;
 			case GREATER_EQUAL: insert = (size <=  si->sr->getSize()); break;
@@ -1662,7 +1666,7 @@ bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, Filte
 		}
 	} else {
 		PME reg(Text::fromT(filter),"i");
-		if(filter.empty() || !reg.IsValid()) {
+		if(!reg.IsValid()) {
 			insert = true;
 		} else {
 			insert = reg.match(Text::fromT(si->getText(sel))) > 0;

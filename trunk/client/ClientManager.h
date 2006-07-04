@@ -115,7 +115,7 @@ public:
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 
-	Identity getIdentity(const User::Ptr& aUser);
+	string getHubUrl(const User::Ptr& aUser);
 
 	Client::List& getClients() { return clients; }
 
@@ -128,11 +128,10 @@ public:
 		
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
-	bool fileListDisconnected(const User::Ptr& p);
-	bool connectionTimeout(const User::Ptr& p);
+	void fileListDisconnected(const User::Ptr& p);
+	void connectionTimeout(const User::Ptr& p);
 	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
 	void setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
-
 
 private:
 	typedef HASH_MAP<string, User::Ptr> LegacyMap;
@@ -196,7 +195,7 @@ private:
 		int aFileType, const string& aString, bool) throw();
 	virtual void on(AdcSearch, Client* c, const AdcCommand& adc, const CID& from) throw();
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
 };
 
 #endif // !defined(CLIENT_MANAGER_H)

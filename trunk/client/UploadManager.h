@@ -248,7 +248,7 @@ public:
 
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);
-	GETSET(u_int32_t, lastGrant, LastGrant);
+	GETSET(time_t, lastGrant, LastGrant);
 
 	// Upload throttling
 	size_t throttleGetSlice();
@@ -276,7 +276,7 @@ private:
 	
 	// Variables for Fireball detecting
 	bool m_boLastTickHighSpeed;
-	u_int32_t m_iHighSpeedStartTick;
+	time_t m_iHighSpeedStartTick;
 	bool boFireballSent;
 
 	// Main fileserver flag
@@ -286,7 +286,7 @@ private:
 	Upload::List uploads;
 	CriticalSection cs;
 
-	typedef HASH_MAP<User::Ptr, u_int32_t, User::HashFunction> SlotMap;
+	typedef HASH_MAP<User::Ptr, time_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
@@ -303,8 +303,8 @@ private:
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
 
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();

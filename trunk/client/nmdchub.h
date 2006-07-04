@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2005 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,32 +37,33 @@
 
 class ClientManager;
 
-class NmdcHub : public Client, private TimerManagerListener, private Flags
+class NmdcHub : public Client, private Flags
 {
 public:
 	using Client::send;
 
 	virtual void connect();
 	virtual void connect(const OnlineUser& aUser);
-	virtual void disconnect(bool graceless) throw();
 
 	virtual void hubMessage(const string& aMessage);
 	virtual void privateMessage(const OnlineUser& aUser, const string& aMessage);
-	virtual void sendUserCmd(const string& aUserCmd) throw() { send(toNmdc(aUserCmd)); }
+	virtual void sendUserCmd(const string& aUserCmd) throw() { send(toAcp(aUserCmd)); }
 	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
-	virtual void password(const string& aPass) { send("$MyPass " + toNmdc(aPass) + "|"); }
+	virtual void password(const string& aPass) { send("$MyPass " + toAcp(aPass) + "|"); }
 	virtual void info() { myInfo(); }
 
 	virtual void cheatMessage(const string& aLine) {
-		fire(ClientListener::CheatMessage(), this, Util::validateMessage(aLine, true));
+		fire(ClientListener::CheatMessage(), this, unescape(aLine));
 	}    
 
 	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
 
-	virtual string escape(string const& str) const { return Util::validateMessage(str, false); }
+	virtual string escape(string const& str) const { return validateMessage(str, false); }
+	static string unescape(const string& str) { return validateMessage(str, true); }
 
 	virtual void send(const AdcCommand&) { dcassert(0); }
 
+	static string validateMessage(string tmp, bool reverse);
 	void refreshUserList(bool unknownOnly = false);
 	
 	enum SupportFlags {
@@ -89,13 +90,10 @@ private:
 
 	NickMap users;
 
-	bool reconnect;
 	string lastmyinfo;
-	bool validatenicksent, bFirstOpList;
 	int64_t lastbytesshared;
-	bool PtokaX, YnHub;
 
-	typedef list<pair<string, u_int32_t> > FloodMap;
+	typedef list<pair<string, time_t> > FloodMap;
 	typedef FloodMap::const_iterator FloodIter;
 	FloodMap seekers;
 	FloodMap flooders;
@@ -108,20 +106,16 @@ private:
 	NmdcHub& operator=(const NmdcHub&);
 
 	void clearUsers();
+	void onLine(const string& aLine) throw();
 
 	OnlineUser& getUser(const string& aNick);
 	OnlineUser* findUser(const string& aNick);
 	void putUser(const string& aNick);
 	
-	string fromNmdc(const string& str) const { return Text::acpToUtf8(str); }
-	string toNmdc(const string& str) const { return Text::utf8ToAcp(str); }
+	string fromAcp(const string& str) const { return Text::acpToUtf8(str); }
+	string toAcp(const string& str) const { return Text::utf8ToAcp(str); }
 
-	void validateNick(const string& aNick) {
-		if(validatenicksent == false) {
-			send("$ValidateNick " + toNmdc(aNick) + "|");
-			validatenicksent = true;
-		}
-	}
+	void validateNick(const string& aNick) { send("$ValidateNick " + toAcp(aNick) + "|"); }
 	void key(const string& aKey) { send("$Key " + aKey + "|"); }
 	void version() { send("$Version 1,0091|"); }
 	void getNickList() {
@@ -133,16 +127,16 @@ private:
 	void revConnectToMe(const OnlineUser& aUser);
 	void myInfo();
 	void supports(const StringList& feat);
-	void getInfo(const OnlineUser& aUser) { send("$GetINFO " + toNmdc(aUser.getIdentity().getNick()) + " " + toNmdc(getMyNick()) + "|"); };
+	void getInfo(const OnlineUser& aUser) { send("$GetINFO " + toAcp(aUser.getIdentity().getNick()) + " " + toAcp(getMyNick()) + "|"); };
 
 	void updateFromTag(Identity& id, const string& tag);
 
 	virtual string checkNick(const string& aNick);
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(Second, time_t aTick) throw();
 
-	virtual void on(Line, const string& l) throw();
+	virtual void on(Line, const string& l) throw() { onLine(l); }
 	virtual void on(Failed, const string&) throw();
 
 };

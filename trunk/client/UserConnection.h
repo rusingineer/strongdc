@@ -139,8 +139,8 @@ public:
 	}
 
 	GETSET(UserConnection*, userConnection, UserConnection);
-	GETSET(u_int32_t, start, Start);
-	GETSET(u_int32_t, lastTick, LastTick);
+	GETSET(time_t, start, Start);
+	GETSET(time_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
 	GETSET(int64_t, fileSize, FileSize);
 private:
@@ -285,7 +285,8 @@ public:
 	}
 
 	User::Ptr& getUser() { return user; }
-	bool isSecure() const { return secure; }
+	bool isSecure() const { return socket && socket->isSecure(); }
+	bool isTrusted() const { return socket && socket->isTrusted(); }
 
 	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
 	short getPort() const { if(socket) return socket->getPort(); else return 0; }
@@ -316,7 +317,7 @@ public:
 	GETSET(string, token, Token);
 	//GETSET(ConnectionQueueItem*, cqi, CQI);
 	GETSET(States, state, State);
-	GETSET(u_int32_t, lastActivity, LastActivity);
+	GETSET(time_t, lastActivity, LastActivity);
 	GETSET(string, unknownCommand, UnknownCommand);
 
 	BufferedSocket const* getSocket() { return socket; } 
@@ -331,10 +332,9 @@ public:
 
 private:
 	BufferedSocket* socket;
-	User::Ptr user;
 	bool secure;
-	int ucNumber;
-	
+	User::Ptr user;
+
 	static const string UPLOAD, DOWNLOAD;
 	
 	union {
@@ -343,8 +343,8 @@ private:
 	};
 
 	// We only want ConnectionManager to create this...
-	UserConnection(bool secure_) throw() : /*cqi(NULL),*/ state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString), ucNumber(0) { 
+	UserConnection(bool secure_) throw() : state(STATE_UNCONNECTED), lastActivity(0), 
+		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString) { 
 	}
 
 	virtual ~UserConnection() throw() {
@@ -359,7 +359,7 @@ private:
 		user = aUser;
 	}
 
-	void onLine(const char* aLine, int iLineLen) throw();
+	void onLine(const string& aLine) throw();
 	
 	void send(const string& aString) {
 		lastActivity = GET_TICK();
@@ -371,12 +371,7 @@ private:
         lastActivity = GET_TICK();
         fire(UserConnectionListener::Connected(), this); 
     }
-	virtual void on(Line, const string& line) throw() {
-		COMMAND_DEBUG(line, DebugManager::CLIENT_IN, getRemoteIp());
-        onLine(line.c_str(), line.size());
-
-		if(ucNumber > 3) disconnect();
-	}
+	virtual void on(Line, const string&) throw();
 	virtual void on(Data, u_int8_t* data, size_t len) throw() { 
         lastActivity = GET_TICK(); 
         fire(UserConnectionListener::Data(), this, data, len); 
@@ -391,8 +386,6 @@ private:
     }
 	virtual void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
 	virtual void on(Failed, const string&) throw();
-
-	void processBlock(char* param, int type) throw();
 };
 
 #endif // !defined(USER_CONNECTION_H)

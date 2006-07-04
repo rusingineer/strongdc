@@ -24,7 +24,7 @@
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
-#include <vld.h>
+//#include <vld.h>
 
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -76,7 +76,7 @@ string getExceptionName(DWORD code) {
 		case EXCEPTION_FLT_STACK_CHECK:         return "Floating-point operation caused stack overflow"; break; 
 		case EXCEPTION_FLT_UNDERFLOW:         return "Floating-point underflow"; break; 
 		case EXCEPTION_ILLEGAL_INSTRUCTION:      return "Illegal instruction"; break; 
-		case EXCEPTION_IN_PAGE_ERROR:         return "Page erro"; break; 
+		case EXCEPTION_IN_PAGE_ERROR:         return "Page error"; break; 
 		case EXCEPTION_INT_DIVIDE_BY_ZERO:      return "Integer division by zero"; break; 
 		case EXCEPTION_INT_OVERFLOW:         return "Integer overflow"; break; 
 		case EXCEPTION_INVALID_DISPOSITION:      return "Invalid disposition"; break; 
@@ -271,9 +271,9 @@ static void checkCommonControls() {
 	}
 }
 
-static string sTitle;
 static HWND hWnd;
-static bool bGotTitle;
+static tstring sText;
+static tstring sTitle;
 
 LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_PAINT) {
@@ -307,52 +307,34 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		hFont = CreateFontIndirect(&logFont);		
 		SelectObject(dc, hFont);
 		::SetTextColor(dc, RGB(255,255,255));
-		::DrawText(dc, Text::toT(sTitle).c_str(), _tcslen(Text::toT(sTitle).c_str()), &rc2, DT_RIGHT);
+		::DrawText(dc, sTitle.c_str(), _tcslen(sTitle.c_str()), &rc2, DT_RIGHT);
 		DeleteObject(hFont);
+
+		if(!sText.empty()) {
+			rc2 = rc;
+			rc2.top = rc2.bottom - 15;
+			GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(logFont), &logFont);
+			lstrcpy(logFont.lfFaceName, TEXT("Tahoma"));
+			logFont.lfHeight = 12;
+			logFont.lfWeight = 700;
+			hFont = CreateFontIndirect(&logFont);		
+			SelectObject(dc, hFont);
+			::SetTextColor(dc, RGB(255,255,255));
+			::DrawText(dc, (_T(".:: ") + sText + _T(" ::.")).c_str(), _tcslen((_T(".:: ") + sText + _T(" ::.")).c_str()), &rc2, DT_CENTER);
+			DeleteObject(hFont);
+		}
+
 		ReleaseDC(hwnd, dc);
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-void callBack(void* x, const string& a) {
-	if (!bGotTitle) {
-		string sTmp = VERSIONSTRING;
-		bGotTitle = true;
-		sTitle = sTmp;
-	}
-	HWND hwnd = (HWND)x;
-	HDC dc = GetDC(hwnd);
-	RECT rc;
-	GetWindowRect(hwnd, &rc);
-	OffsetRect(&rc, -rc.left, -rc.top);
-	RECT rc2 = rc;
-	rc2.top = rc2.bottom - 15; 
-	::SetBkMode(dc, TRANSPARENT);
-		
-	HBITMAP hi;
-	hi = (HBITMAP)LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 350, 120, LR_SHARED);
-			 
-	HDC comp=CreateCompatibleDC(dc);
-	SelectObject(comp,hi);	
-
-	BitBlt(dc,0, 0 , 350, 120,comp,0, 0,SRCCOPY);
-
-	DeleteObject(hi);
-	DeleteObject(comp);
-	LOGFONT logFont;
-	HFONT hFont;
-	GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(logFont), &logFont);
-	lstrcpy(logFont.lfFaceName, TEXT("Tahoma"));
-	logFont.lfHeight = 12;
-	logFont.lfWeight = 700;
-	hFont = CreateFontIndirect(&logFont);		
-	SelectObject(dc, hFont);
-	::SetTextColor(dc, RGB(255,255,255));
-	::DrawText(dc, Text::toT(".:: " + a + " ::.").c_str(), _tcslen(Text::toT(".:: " + a + " ::.").c_str()), &rc2, DT_CENTER);
-	DeleteObject(hFont);
-	ReleaseDC(hwnd, dc);
+void callBack(void* x, const tstring& a) {
+	sText = a;
+	SendMessage((HWND)x, WM_PAINT, 0, 0);
 }
+
 static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
 	checkCommonControls();
@@ -385,18 +367,19 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.SetWindowPos(NULL, &rc, SWP_SHOWWINDOW);
 	splash.SetWindowLong(GWL_WNDPROC, (LONG)&splashCallback);
 	splash.CenterWindow();
-	sTitle = VERSIONSTRING "" STRONGDCVERSIONSTRING;
+
+	sTitle = Text::toT(VERSIONSTRING "" STRONGDCVERSIONSTRING);
 	switch (get_cpu_type())
 	{
 		case 2:
-			sTitle += " MMX";
+			sTitle += _T(" MMX");
 			break;
 		case 3:
-			sTitle += " AMD";
+			sTitle += _T(" AMD");
 			break;
 		case 4:
 		case 5:
-			sTitle += " SSE";
+			sTitle += _T(" SSE");
 			break;
 	}
 

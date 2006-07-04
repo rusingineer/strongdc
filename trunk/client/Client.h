@@ -26,6 +26,7 @@
 #include "User.h"
 #include "BufferedSocket.h"
 #include "SettingsManager.h"
+#include "TimerManager.h"
 #include "DebugManager.h"
 
 class Client;
@@ -47,14 +48,15 @@ public:
 	typedef X<8> GetPassword;
 	typedef X<9> HubUpdated;
 	typedef X<11> Message;
-	typedef X<12> PrivateMessage;
-	typedef X<13> UserCommand;
-	typedef X<14> HubFull;
-	typedef X<15> NickTaken;
-	typedef X<16> SearchFlood;
-	typedef X<17> NmdcSearch;
-	typedef X<18> AdcSearch;
-	typedef X<19> CheatMessage;
+	//typedef X<12> StatusMessage;
+	typedef X<13> PrivateMessage;
+	typedef X<14> UserCommand;
+	typedef X<15> HubFull;
+	typedef X<16> NickTaken;
+	typedef X<17> SearchFlood;
+	typedef X<18> NmdcSearch;
+	typedef X<19> AdcSearch;
+	typedef X<20> CheatMessage;
 
 	virtual void on(Connecting, Client*) throw() { }
 	virtual void on(Connected, Client*) throw() { }
@@ -66,7 +68,8 @@ public:
 	virtual void on(Failed, Client*, const string&) throw() { }
 	virtual void on(GetPassword, Client*) throw() { }
 	virtual void on(HubUpdated, Client*) throw() { }
-	virtual void on(Message, Client*, const OnlineUser&, const char*) throw() { }
+	virtual void on(Message, Client*, const OnlineUser&, const string&) throw() { }
+	//virtual void on(StatusMessage, Client*, const string&) throw() { }
 	virtual void on(PrivateMessage, Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw() { }
 	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, Client*) throw() { }
@@ -78,7 +81,7 @@ public:
 };
 
 /** Yes, this should probably be called a Hub */
-class Client : public Speaker<ClientListener>, public BufferedSocketListener {
+class Client : public Speaker<ClientListener>, public BufferedSocketListener, protected TimerManagerListener {
 public:
 	typedef Client* Ptr;
 	typedef list<Ptr> List;
@@ -143,6 +146,7 @@ public:
 		return sm;
 	}
 
+	void reconnect();
 	void shutdown();
 	bool isActive();
 
@@ -160,7 +164,6 @@ public:
 	const string& getHubName() const { return getHubIdentity().getNick().empty() ? getHubUrl() : getHubIdentity().getNick(); }
 	const string& getHubDescription() const { return getHubIdentity().getDescription(); }
 
-	Identity& getMyIdentity() { return myIdentity; }
 	Identity& getHubIdentity() { return hubIdentity; }
 
 	const string& getHubUrl() const { return hubUrl; }
@@ -169,9 +172,15 @@ public:
 	GETSET(Identity, hubIdentity, HubIdentity);
 
 	GETSET(string, defpassword, Password);
-	GETSET(u_int32_t, reconnDelay, ReconnDelay);
-	GETSET(u_int32_t, lastActivity, LastActivity);
+	GETSET(time_t, reconnDelay, ReconnDelay);
+	GETSET(time_t, lastActivity, LastActivity);
 	GETSET(bool, registered, Registered);
+	GETSET(bool, autoReconnect, AutoReconnect);
+	GETSET(bool, reconnecting, Reconnecting);
+	
+	GETSET(string, currentNick, CurrentNick);
+	GETSET(string, currentDescription, CurrentDescription);
+		
 	GETSET(bool, stealth, Stealth);
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
@@ -183,7 +192,6 @@ public:
 	int supportFlags;
 	int getSupportFlags() { return supportFlags; }
 	int64_t availableBytes;
-
 protected:
 	friend class ClientManager;
 	Client(const string& hubURL, char separator, bool secure_);
@@ -202,12 +210,15 @@ protected:
 	Counts lastCounts;
 
 	void updateCounts(bool aRemove);
-	void updateActivity();
+	void updateActivity() { lastActivity = GET_TICK(); }
 
 	/** Reload details from favmanager or settings */
 	void reloadSettings(bool updateNick);
 
 	virtual string checkNick(const string& nick) = 0;
+
+	// TimerManagerListener
+	virtual void on(Second, time_t aTick) throw();
 
 private:
 
@@ -227,12 +238,13 @@ private:
 	u_int16_t port;
 	char separator;
 	bool secure;
-
 	CountType countType;
 
 	// BufferedSocketListener
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
-	virtual void on(Connected) throw() { updateActivity(); ip = socket->getIp(); fire(ClientListener::Connected(), this); }
+	virtual void on(Connected) throw();
+
+
 };
 
 #endif // !defined(CLIENT_H)

@@ -133,7 +133,7 @@ public:
 		ctrlFilterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP),
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
-		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0),
+		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0), resultsCount(0),
 		expandSR(false), exactSize1(false), exactSize2(0), onlyTTH(BOOLSETTING(SEARCH_ONLY_TTH)), searches(0)
 	{	
 		SearchManager::getInstance()->addListener(this);
@@ -143,7 +143,6 @@ public:
 	virtual ~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
-		dcassert(resultsCount == 0);
 	}
 
 	LRESULT onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
@@ -314,11 +313,9 @@ private:
 		SearchInfo::List subItems;
 
 		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), main(NULL) { 
-			resultsCount++;
 			sr->incRef(); update();
 		}
 		~SearchInfo() {
-			resultsCount--;
 			sr->decRef(); 
 		}
 
@@ -387,7 +384,7 @@ private:
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
 			} else {
-				string tmp = ClientManager::getInstance()->getIdentity(sr->getUser()).getConnection();
+				string tmp = ClientManager::getInstance()->getConnection(sr->getUser()->getCID());
 				if( (tmp == "28.8Kbps") ||
 					(tmp == "33.6Kbps") ||
 					(tmp == "56Kbps") ||
@@ -530,7 +527,7 @@ private:
 	bool exactSize1;
 	bool useGrouping;
 	int64_t exactSize2;
-	static int64_t resultsCount;
+	int64_t resultsCount;
 
 	CriticalSection cs;
 
@@ -562,7 +559,7 @@ private:
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
 
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
 
 	// ClientManagerListener
 	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }

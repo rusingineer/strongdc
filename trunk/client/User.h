@@ -41,7 +41,7 @@ public:
 		HUB_BIT,
 		TTH_GET_BIT,
 		SAVE_NICK_BIT,
-		SSL_BIT,
+		TLS_BIT,
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
@@ -57,7 +57,7 @@ public:
 		HUB = 1<<HUB_BIT,
 		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
 		SAVE_NICK = 1<<SAVE_NICK_BIT,	//< Save cid->nick association
-		SSL = 1<<SSL_BIT,				//< Client supports SSL
+		TLS = 1<<TLS_BIT,				//< Client supports SSL
 		AWAY = 1 << AWAY_BIT,
 		SERVER = 1 << SERVER_BIT,
 		FIREBALL = 1 << FIREBALL_BIT
@@ -123,9 +123,9 @@ public:
 	};
 
 	Identity() : sid(0) { }
-	Identity(const User::Ptr& ptr, const string& aHubUrl, u_int32_t aSID) : user(ptr), hubUrl(aHubUrl), sid(aSID) { }
-	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), hubUrl(rhs.hubUrl), sid(rhs.sid), info(rhs.info) { }
-	Identity& operator=(const Identity& rhs) { user = rhs.user; hubUrl = rhs.hubUrl; sid = rhs.sid; info = rhs.info; return *this; }
+	Identity(const User::Ptr& ptr, u_int32_t aSID) : user(ptr), sid(aSID) { }
+	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), sid(rhs.sid), info(rhs.info) { }
+	Identity& operator=(const Identity& rhs) { user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
 #define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
@@ -168,8 +168,10 @@ public:
 	bool supports(const string& name) const;
 	bool isHub() const { return !get("HU").empty(); }
 	bool isOp() const { return !get("OP").empty(); }
+	bool isRegistered() const { return !get("RG").empty(); }
 	bool isHidden() const { return !get("HI").empty(); }
 	bool isBot() const { return !get("BO").empty(); }
+	bool isAway() const { return !get("AW").empty(); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 
@@ -198,12 +200,10 @@ public:
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
 	User::Ptr& getUser() { return user; }
 	GETSET(User::Ptr, user, User);
-	GETSET(string, hubUrl, HubUrl);
 	GETSET(u_int32_t, sid, SID);
 private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
-
 	InfMap info;
 
 	string getVersion(const string& aExp, const string& aTag);
@@ -219,15 +219,15 @@ public:
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_);
 
-	operator User::Ptr&() { return user; }
-	operator const User::Ptr&() const { return user; }
+	operator User::Ptr&() { return getUser(); }
+	operator const User::Ptr&() const { return getUser(); }
 
-	User::Ptr& getUser() { return user; }
+	User::Ptr& getUser() { return getIdentity().getUser(); }
+	const User::Ptr& getUser() const { return getIdentity().getUser(); }
 	Identity& getIdentity() { return identity; }
 	Client& getClient() { return *client; }
 	const Client& getClient() const { return *client; }
 
-	GETSET(User::Ptr, user, User);
 	GETSET(Identity, identity, Identity);
 private:
 	friend class NmdcHub;
