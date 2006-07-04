@@ -237,7 +237,7 @@ public:
 
 	void onRES(const AdcCommand& cmd, const User::Ptr& from, const string& removeIp = Util::emptyString);
 
-	u_int32_t getLastSearch();
+	time_t getLastSearch();
 	int getSearchQueueNumber(int* aWindow);
 	ResultsQueue queue;
 
@@ -246,7 +246,7 @@ private:
 	Socket* socket;
 	unsigned short port;
 	bool stop;
-	u_int32_t lastSearch;
+	time_t lastSearch;
 	friend class Singleton<SearchManager>;
 	SearchQueueItemList searchQueue;
 
@@ -254,7 +254,7 @@ private:
 		TimerManager::getInstance()->addListener(this);
 	}
 
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
 
 	virtual int run();
 
@@ -270,7 +270,7 @@ private:
 		}
 	}
 
-	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
+	void setLastSearch(time_t aTime) { lastSearch = aTime; };
 	void onData(const u_int8_t* buf, size_t aLen, const string& address);	
 };
 

@@ -91,10 +91,13 @@ public:
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
 	int imageIndex() {
-		return WinUtil::getImage(identity);
+		return WinUtil::getImage(identity, Util::emptyString); // TODO get hub url
 	}
 
 	bool update(const Identity& identity, int sortCol);
+
+	const string& getNick() const { return identity.getNick(); }
+	bool isHidden() const { return identity.isHidden(); }
 
 	tstring columns[COLUMN_LAST];
 	GETSET(Identity, identity, Identity);

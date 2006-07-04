@@ -481,7 +481,6 @@
 #define IDC_STATIC1                     1287
 #define IDC_SETTINGS_BIND_ADDRESS_HELP  1287
 #define IDC_REGEXP_TESTER_BUTTON        1288
-#define IDC_SECOND                      1288
 #define IDC_S                           1290
 #define IDC_FLAT                        1291
 #define IDC_S2                          1291
@@ -541,7 +540,7 @@
 #define IDC_CONFIRM_OPTIONS             1316
 #define IDC_SOCKET_IN_BUFFER            1317
 #define IDC_SOCKET_OUT_BUFFER           1318
-#define IDC_SSL_CERTIFICATE_FILE        1318
+#define IDC_TLS_CERTIFICATE_FILE        1318
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_BW_SIMPLE                   1324
@@ -552,11 +551,12 @@
 #define IDC_SETTINGS_MEBIBYES           1406
 #define IDC_STYLES                      1408
 #define IDC_AVAILABLE_STYLES            1409
-#define IDC_SSL_PRIVATE_KEY_FILE        1414
-#define IDC_SSL_TRUSTED_CERTIFICATES_PATH 1415
+#define IDC_TLS_PRIVATE_KEY_FILE        1414
+#define IDC_TLS_TRUSTED_CERTIFICATES_PATH 1415
 #define IDC_AUTO_REFRESH_TIME           1419
 #define IDC_SETTINGS_AUTO_REFRESH_TIME  1420
 #define IDC_AUTO_SEARCH_LIMIT           1421
+#define IDC_TLS_OPTIONS                 1421
 #define IDC_SETTINGS_AUTO_SEARCH_LIMIT  1422
 #define IDC_CLOSE_ALL_PM                1423
 #define IDC_CLOSE_ALL_OFFLINE_PM        1424

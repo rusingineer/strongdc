@@ -96,8 +96,6 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ClientManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	readLog();
-
 	bHandled = FALSE;
 	return 1;
 }
@@ -111,7 +109,7 @@ void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::P
 	if(i == frames.end()) {
 		p = new PrivateFrame(user);
 		frames[user] = p;
-		//p->readLog();
+		p->readLog();
 		p->addLine(from, aMessage);
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
@@ -358,7 +356,7 @@ LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 }
 
 void PrivateFrame::addLine(const tstring& aLine, CHARFORMAT2& cf) {
-	Identity i = Identity(NULL, Util::emptyString, 0);
+	Identity i = Identity(NULL, 0);
     addLine(i, aLine, cf);
 }
 
@@ -720,7 +718,7 @@ void PrivateFrame::readLog() {
 
 		for(; i < linesCount; ++i){
 			if(!lines[i].empty())
-				ctrlClient.AppendText(Identity(NULL, Util::emptyString, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
+				ctrlClient.AppendText(Identity(NULL, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
 		}
 
 		f.close();

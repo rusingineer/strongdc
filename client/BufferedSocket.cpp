@@ -27,6 +27,7 @@
 
 #include "Streams.h"
 #include "SSLSocket.h"
+#include "CryptoManager.h"
 
 #include "UploadManager.h"
 #include "DownloadManager.h"
@@ -78,7 +79,7 @@ void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketExceptio
 	dcassert(!sock);
 
 	dcdebug("BufferedSocket::accept() %p\n", (void*)this);
-	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
+	sock = secure ? CryptoManager::getInstance()->getClientSocket() : new Socket;
 
 	sock->accept(srv);
 	if(SETTING(SOCKET_IN_BUFFER) > 1023)
@@ -106,7 +107,7 @@ void BufferedSocket::connect(const string& aAddress, short aPort, bool secure, b
 	dcassert(!sock);
 
 	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
-	sock = secure ? SSLSocketFactory::getInstance()->getClientSocket() : new Socket;
+	sock = secure ? CryptoManager::getInstance()->getClientSocket() : new Socket;
 
 	sock->create();
 	if(SETTING(SOCKET_IN_BUFFER) >= 1024)
@@ -137,7 +138,7 @@ void BufferedSocket::threadConnect(const string& aAddr, short aPort, bool proxy)
 		return;
 	fire(BufferedSocketListener::Connecting());
 
-	u_int32_t startTime = GET_TICK();
+	time_t startTime = GET_TICK();
 	if(proxy) {
 		sock->socksConnect(aAddr, aPort, CONNECT_TIMEOUT);
 	} else {
@@ -173,7 +174,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 			getMaximum = dm->throttleGetSlice();
 			readsize = (u_int32_t)min((int64_t)inbuf.size(), (int64_t)getMaximum);
 			if (readsize <= 0  || readsize > inbuf.size()) { // FIX
-				sleep(dm->throttleCycleTime());
+				Thread::sleep(static_cast<u_int32_t>(dm->throttleCycleTime()));
 				return;
 			}
 		}
@@ -218,7 +219,8 @@ void BufferedSocket::threadRead() throw(SocketException) {
 					}
 					// process all lines
 					while ((pos = l.find(separator)) != string::npos) {
-						fire(BufferedSocketListener::Line(), l.substr(0, pos));
+                       	if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
+							fire(BufferedSocketListener::Line(), l.substr(0, pos));
 						l.erase (0, pos + 1 /* seperator char */);
 					}
 					// store remainder
@@ -237,7 +239,8 @@ void BufferedSocket::threadRead() throw(SocketException) {
 				}
 				l = line + string ((char*)&inbuf[bufpos], left);
 				while ((pos = l.find(separator)) != string::npos) {
-					fire(BufferedSocketListener::Line(), l.substr(0, pos));
+	                if(pos > 0) // check empty (only pipe) command and don't waste cpu with it ;o)
+						fire(BufferedSocketListener::Line(), l.substr(0, pos));
 					l.erase (0, pos + 1 /* separator char */);
 					if (l.length() < (size_t)left) left = l.length();
 					if (mode != MODE_LINE) {
@@ -274,13 +277,17 @@ void BufferedSocket::threadRead() throw(SocketException) {
 						if (left > 0 && left < (int)readsize) {
 							dm->throttleReturnBytes(left - readsize);
 						}
-						u_int32_t sleep_interval =  dm->throttleCycleTime();
-						Thread::sleep(sleep_interval);
+						time_t sleep_interval =  dm->throttleCycleTime();
+						Thread::sleep(static_cast<u_int32_t>(sleep_interval));
 					}
 				}
 				break;
 		}
 	}
+	
+	if(mode == MODE_LINE && line.size() > 16*1024*1024) {
+		throw SocketException(STRING(COMMAND_TOO_LONG));
+	}	
 }
 
 void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
@@ -299,7 +306,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	bool readDone = false;
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
-	size_t sendMaximum, start = 0, current= 0;
+	size_t sendMaximum;
+	time_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
 		if(!readDone && readBuf.size() > readPos) {
@@ -356,11 +364,11 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				fire(BufferedSocketListener::BytesSent(), 0, written);
 
 				if(throttling) {
-					int32_t cycle_time = um->throttleCycleTime();
+					time_t cycle_time = um->throttleCycleTime();
 					current = TimerManager::getTick();
-					int32_t sleep_time = cycle_time - (current - start);
+					time_t sleep_time = cycle_time - (current - start);
 					if (sleep_time > 0 && sleep_time <= cycle_time) {
-						Thread::sleep(sleep_time);
+						Thread::sleep(static_cast<u_int32_t>(sleep_time));
 					}
 				}
 			} else if(written == -1) {
@@ -476,6 +484,7 @@ bool BufferedSocket::checkEvents() {
 				case SHUTDOWN:
 					return false;
 			}
+
 			delete p.second;
 		} catch(const Exception& e) {
 			delete p.second;
@@ -515,6 +524,16 @@ int BufferedSocket::run() {
 	dcdebug("BufferedSocket::run() end %p\n", (void*)this);
 	delete this;
 	return 0;
+}
+
+void BufferedSocket::fail(const string& aError) {
+	if(sock) {
+		sock->disconnect();
+	}
+	if(!failed) {
+		failed = true;
+		fire(BufferedSocketListener::Failed(), aError);
+	}
 }
 
 void BufferedSocket::shutdown() { 

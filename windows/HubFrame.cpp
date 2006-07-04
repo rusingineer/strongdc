@@ -187,7 +187,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.AddString(CTSTRING(ANY));
-	ctrlFilterSel.SetCurSel(COLUMN_LAST);
+	ctrlFilterSel.SetCurSel(0);
 
 	bHandled = FALSE;
 
@@ -569,7 +569,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				ctrlUsers.getItemData(item->iItem)->getList();
 		        break;
 		    case 1: {
-				CAtlString sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getIdentity().getNick()).c_str();
+				CAtlString sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getNick()).c_str();
 	            CAtlString sText = "";
 	            int iSelBegin, iSelEnd;
 	            ctrlMessage.GetSel(iSelBegin, iSelEnd);
@@ -640,8 +640,8 @@ bool HubFrame::updateUser(const UserTask& u) {
 	if(i == userMap.end()) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u.user, ui));
-		if(!ui->getIdentity().isHidden() && showUsers)
-			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity));
+		if(!ui->isHidden() && showUsers)
+			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity, client->getHubUrl()));
 
 		if(!filter.empty())
 			updateUserList(ui);
@@ -650,7 +650,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 		return true;
 	} else {
 		UserInfo* ui = i->second;
-		if(!ui->getIdentity().isHidden() && u.identity.isHidden() && showUsers) {
+		if(!ui->isHidden() && u.identity.isHidden() && showUsers) {
 			ctrlUsers.deleteItem(ui);
 		}
 		
@@ -662,7 +662,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 			int pos = ctrlUsers.findItem(ui);
 			if(pos != -1) {
 				ctrlUsers.updateItem(pos);
-				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity, client->getHubUrl()), 0, 0, NULL);
 			}
 
 			updateUserList(ui);
@@ -681,7 +681,7 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	}
 
 	UserInfo* ui = i->second;
-	if(!ui->getIdentity().isHidden() && showUsers)
+	if(!ui->isHidden() && showUsers)
 		ctrlUsers.deleteItem(ui);
 
 	client->availableBytes -= ui->getBytes();
@@ -740,7 +740,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 						if(samenumbers) {
 							string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
 							u.identity.setBadFilelist("1");
-							u.identity.setCheat(*client, Util::validateMessage(detectString, false), false);
+							u.identity.setCheat(*client, detectString, false);
 							
 							CHARFORMAT2 cf;
 							memset(&cf, 0, sizeof(CHARFORMAT2));
@@ -1229,11 +1229,11 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 }
 
 void HubFrame::addLine(const tstring& aLine) {
-	addLine(Identity(NULL, Util::emptyString, 0), aLine, WinUtil::m_ChatTextGeneral );
+	addLine(Identity(NULL, 0), aLine, WinUtil::m_ChatTextGeneral );
 }
 
 void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
-    addLine(Identity(NULL, Util::emptyString, 0), aLine, cf, bUseEmo);
+    addLine(Identity(NULL, 0), aLine, cf, bUseEmo);
 }
 
 void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
@@ -1317,7 +1317,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			int i = -1;
 			i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
 			if ( i >= 0 ) {
-				sSelectedUser = Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getIdentity().getNick());
+				sSelectedUser = Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
 			}
 		}
 
@@ -1538,10 +1538,7 @@ void HubFrame::onTab() {
 }
 
 LRESULT HubFrame::onFileReconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	client->disconnect(false);
-	clearUserList();
-	clearTaskList();
-	client->connect();
+	client->reconnect();
 	return 0;
 }
 
@@ -1693,8 +1690,8 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		
 		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
 			UserInfo* ui = i->second;
-			if(!ui->getIdentity().isHidden())
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+			if(!ui->isHidden())
+				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
 		}
 
 		ctrlUsers.SetRedraw(TRUE);
@@ -1808,7 +1805,7 @@ void HubFrame::closeDisconnected() {
 	}
 }
 
-void HubFrame::on(TimerManagerListener::Second, DWORD /*aTick*/) throw() {
+void HubFrame::on(Second, time_t /*aTick*/) throw() {
 	if(updateUsers) {
 		updateStatusBar();
 		updateUsers = false;
@@ -1866,32 +1863,27 @@ void HubFrame::on(GetPassword, Client*) throw() {
 	speak(GET_PASSWORD);
 }
 void HubFrame::on(HubUpdated, Client*) throw() { 
-	speak(SET_WINDOW_TITLE, Util::validateMessage(client->getHubName() + " " + client->getHubDescription(), true, false) + " (" + client->getHubUrl() + ")");
+	string hubName = client->getHubName();
+	if(!client->getHubDescription().empty()) {
+		hubName += " - " + client->getHubDescription();
+	}
+	hubName += " (" + client->getHubUrl() + ")";
+	speak(SET_WINDOW_TITLE, hubName);
 }
-void HubFrame::on(Message, Client*, const OnlineUser& from, const char* line) throw() {
-    char *temp, *chatline = (char *)line;
-	if(!(&from) || from.getIdentity().isOp()) {
-		if((temp = strchr(chatline, '\n')) != NULL) {
-            temp[0] = NULL;
- 	     	if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
-			  (strstr(chatline, "was kicked by") != NULL)) {
-    			temp[0] = '\n';
-				speak(KICK_MSG, from, NULL, NULL, Util::toDOS(line));
-			    return;
-  			}
- 	       temp[0] = '\n';
-		} else if((strstr(chatline, "is kicking") != NULL) && (strstr(chatline, "because:") != NULL) || 
-			(strstr(chatline, "was kicked by") != NULL)) {
-			speak(KICK_MSG, from, NULL, NULL, Util::toDOS(line));
- 	       return;	
+void HubFrame::on(Message, Client*, const OnlineUser& from, const string& msg) throw() {
+	if(&from == NULL || from.getIdentity().isOp()) {
+		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
+			// Do nothing...
+		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
+			speak(KICK_MSG, from, NULL, NULL, Util::toDOS(msg));
+			return;
 		}
-    }
-	
-	speak(ADD_CHAT_LINE, from, NULL, NULL, Util::toDOS(line));
+	}
+	speak(ADD_CHAT_LINE, from, NULL, NULL, Util::formatMessage(msg));
 }
 
 void HubFrame::on(PrivateMessage, Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::toDOS("<" + from.getIdentity().getNick() + "> " + line));
+	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(line));
 }
 void HubFrame::on(NickTaken, Client*) throw() { 
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
@@ -1941,6 +1933,9 @@ bool HubFrame::parseFilter(FilterModes& mode, int64_t& size) {
 	tstring::size_type end = (tstring::size_type)tstring::npos;
 	int64_t multiplier = 1;
 	
+	if(filter.empty()) {
+		return false;
+	}
 	if(filter.compare(0, 2, _T(">=")) == 0) {
 		mode = GREATER_EQUAL;
 		start = 2;
@@ -1989,7 +1984,6 @@ bool HubFrame::parseFilter(FilterModes& mode, int64_t& size) {
 		multiplier = 1;
 	}
 
-
 	if(end == tstring::npos) {
 		end = filter.length();
 	}
@@ -2008,9 +2002,12 @@ void HubFrame::updateUserList(UserInfo* ui) {
 	//avoid refreshing the whole list and just update the current item
 	//instead
 	if(ui != NULL) {
+		if(ui->isHidden()) {
+			return;
+		}
 		if(filter.empty()) {
 			if(ctrlUsers.findItem(ui) == -1) {
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -2018,7 +2015,7 @@ void HubFrame::updateUserList(UserInfo* ui) {
 
 			if(matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 				if(ctrlUsers.findItem(ui) == -1) {
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
 				}
 			} else {
 				//deleteItem checks to see that the item exists in the list
@@ -2032,18 +2029,18 @@ void HubFrame::updateUserList(UserInfo* ui) {
 
 		if(filter.empty()) {
 			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i){
-				if(i->second != NULL)
-					ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->getIdentity()));	
+				UserInfo* ui = i->second;
+				if(!ui->isHidden())
+					ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->getIdentity(), client->getHubUrl()));	
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
 			bool doSizeCompare = sel == COLUMN_SHARED && parseFilter(mode, size);
 
-			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i){
-				if( i->second != NULL ) {
-					if(matchFilter(*i->second, sel, doSizeCompare, mode, size)) {
-						ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->getIdentity()));	
-					}
+			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+				UserInfo* ui = i->second;
+				if(!ui->isHidden() && matchFilter(*ui, sel, doSizeCompare, mode, size)) {
+					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
 				}
 			}
 		}
@@ -2100,8 +2097,7 @@ bool HubFrame::matchFilter(const UserInfo& ui, int sel, bool doSizeCompare, Filt
 		PME reg(Text::fromT(filter),"i");
 		if(!reg.IsValid()) { 
 			insert = true;
-		} else
-		if(sel >= COLUMN_LAST) {
+		} else if(sel >= COLUMN_LAST) {
 			for(int i = COLUMN_FIRST; i < COLUMN_LAST; ++i) {
 				//if(Util::findSubString(ui.getText(i), filter) != string::npos) {
 				if(reg.match(Text::fromT(ui.getText(i)))) {
@@ -2374,7 +2370,7 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			if ( sUsers.GetLength() > 0 )
   				sUsers += ", ";
-			sUsers += Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getIdentity().getNick()).c_str();
+			sUsers += Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick()).c_str();
 		}
 	}
 
@@ -2471,7 +2467,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 
 	if(ui == NULL) return 0;
 
-	params["userNI"] = ui->getIdentity().getNick();
+	params["userNI"] = ui->getNick();
 	params["hubNI"] = client->getHubName();
 	params["myNI"] = client->getMyNick();
 	params["userCID"] = ui->user->getCID().toBase32();

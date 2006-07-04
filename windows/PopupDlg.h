@@ -107,7 +107,7 @@ public:
 	}
 
 	u_int32_t id;
-	u_int32_t visible;
+	time_t visible;
 
 private:
 	string  msg, title;

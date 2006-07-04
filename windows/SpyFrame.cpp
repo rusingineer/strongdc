@@ -47,7 +47,7 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlIgnoreTth.Create(ctrlStatus.m_hWnd, rcDefault, CTSTRING(IGNORE_TTH_SEARCHES), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlIgnoreTth.SetButtonStyle(BS_AUTOCHECKBOX, false);
 	ctrlIgnoreTth.SetFont(WinUtil::systemFont);
-	ctrlIgnoreTth.SetCheck(false);
+	ctrlIgnoreTth.SetCheck(ignoreTth);
 	ignoreTthContainer.SubclassWindow(ctrlIgnoreTth.m_hWnd);
 
 	WinUtil::splitTokens(columnIndexes, SETTING(SPYFRAME_ORDER), COLUMN_LAST);
@@ -76,6 +76,8 @@ LRESULT SpyFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		return 0;
 	} else {
 		WinUtil::saveHeaderOrder(ctrlSearches, SettingsManager::SPYFRAME_ORDER, SettingsManager::SPYFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+		if (ignoreTth != BOOLSETTING(SPY_FRAME_IGNORE_TTH_SEARCHES))
+			SettingsManager::getInstance()->set(SettingsManager::SPY_FRAME_IGNORE_TTH_SEARCHES, ignoreTth);
 
 		CZDCLib::setButtonPressed(IDC_SEARCH_SPY, false);
 		bHandled = FALSE;
@@ -248,7 +250,7 @@ void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& user, con
 	PostMessage(WM_SPEAKER, SEARCH, (LPARAM)x);
 }
 
-void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
+void SpyFrame::on(TimerManagerListener::Second, time_t) throw() {
 		float* f = new float(0.0);
 		for(int i = 0; i < AVG_TIME; ++i) {
 			(*f) += (float)perSecond[i];

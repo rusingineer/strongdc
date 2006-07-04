@@ -27,6 +27,7 @@
 #include "CryptoManager.h"
 #include "ClientManager.h"
 #include "QueueManager.h"
+#include "LogManager.h"
 
 #include "UserConnection.h"
 
@@ -122,10 +123,10 @@ void ConnectionManager::putCQI(ConnectionQueueItem* cqi) {
 	fire(ConnectionManagerListener::Removed(), cqi);
 	if(cqi->getDownload()) {
 		dcassert(find(downloads.begin(), downloads.end(), cqi) != downloads.end());
-		downloads.erase(find(downloads.begin(), downloads.end(), cqi));
+		downloads.erase(remove(downloads.begin(), downloads.end(), cqi), downloads.end());
 	} else {
 		dcassert(find(uploads.begin(), uploads.end(), cqi) != uploads.end());
-		uploads.erase(find(uploads.begin(), uploads.end(), cqi));
+		uploads.erase(remove(uploads.begin(), uploads.end(), cqi), uploads.end());
 	}
 	delete cqi;
 }
@@ -150,7 +151,7 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	userConnections.erase(remove(userConnections.begin(), userConnections.end(), aConn), userConnections.end());
 }
 
-void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
 	User::List idlers;
@@ -176,7 +177,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 					continue;
 				} 
 				
-				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getIdentity(cqi->getUser()).getHubUrl())) {
+				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(cqi->getUser()))) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
@@ -235,7 +236,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	}
 }
 
-void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
+void ConnectionManager::on(TimerManagerListener::Minute, time_t aTick) throw() {	
 	Lock l(cs);
 
 	for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
@@ -273,7 +274,7 @@ int ConnectionManager::Server::run() throw() {
  * It's always the other fellow that starts sending if he made the connection.
  */
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
-	u_int32_t now = GET_TICK();
+	time_t now = GET_TICK();
 
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
@@ -297,6 +298,10 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	uc->setLastActivity(GET_TICK());
 	try { 
 		uc->accept(sock);
+		if(!BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS) && uc->isSecure() && !uc->isTrusted()) {
+			putConnection(uc);
+			LogManager::getInstance()->message(STRING(CERTIFICATE_NOT_TRUSTED));
+		}
 	} catch(const Exception&) {
 		putConnection(uc);
 		delete uc;
@@ -307,21 +312,6 @@ void ConnectionManager::nmdcConnect(const string& aServer, unsigned short aPort,
 	if(shuttingDown)
 		return;
 
-	{
-		Lock l(cs);
-
-		// We don't want to be used as flooding instruments
-		unsigned count = 0;
-		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
-			if(((*j)->getPort() == aPort) && ((*j)->getRemoteIp() == aServer)) {
-				if(++count >= 5) {
-					// More than 5 outbound connections to the same addr/port? Can't trust that..
-					dcdebug("ConnectionManager::connect Tried to connect more than 2 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
-					return;
-				}
-			}
-		}
-	}
 	UserConnection* uc = getConnection(true, false);
 	uc->setToken(aNick);
 	uc->setHubUrl(hubUrl);
@@ -396,6 +386,12 @@ void ConnectionManager::on(AdcCommand::STA, UserConnection*, const AdcCommand&) 
 }
 
 void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aSource) throw() {
+	if(aSource->isSecure() && !aSource->isTrusted() && !BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS)) {
+		putConnection(aSource);
+		LogManager::getInstance()->message(STRING(CERTIFICATE_NOT_TRUSTED));
+		return;
+	}
+
 	dcassert(aSource->getState() == UserConnection::STATE_CONNECT);
 	if (SETTING(GARBAGE_COMMAND_OUTGOING))
 		aSource->garbageCommand();

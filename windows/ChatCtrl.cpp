@@ -314,12 +314,15 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, LPCTSTR sText, CHARFORMAT2
 
 	CAtlString autor = sAuthor.c_str();
 	autor.MakeLower();
+	
+	if(sNick.GetLength() > 0)
 	while(true) {
 		lMyNickStart = sMsgLower.Find( sNick, lSearchFrom );
 		if ( lMyNickStart < 0 ) 
 			break;
 
 		lMyNickEnd = lMyNickStart + sNick.GetLength();
+
 		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 		SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		lSearchFrom = lMyNickEnd;

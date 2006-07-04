@@ -86,7 +86,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		_snprintf(buf, STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
 			d->getUserConnection()->getUser()->getFirstNick().c_str());
 		buf[STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 127] = 0;
-		LogManager::getInstance()->message(buf, true);
+		LogManager::getInstance()->message(buf);
 		delete[] buf;
 	}
 }
@@ -112,7 +112,7 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 		char* buf = new char[STRING(FINISHED_UPLOAD).size() + MAX_PATH + 128];
 		sprintf_s(buf, STRING(FINISHED_UPLOAD).size() + MAX_PATH + 128, CSTRING(FINISHED_UPLOAD), (Util::getFileName(u->getLocalFileName())).c_str(), 
 			u->getUserConnection()->getUser()->getFirstNick().c_str());
-		LogManager::getInstance()->message(buf, false);
+		LogManager::getInstance()->message(buf);
 		delete[] buf;		
 	}
 }

@@ -126,7 +126,7 @@ public:
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
 	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message) throw();
-	void putDownload(Download* aDownload, bool finished, bool removeSegment = true) throw();
+	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
 		Lock l(cs);
@@ -166,7 +166,7 @@ public:
 		
 	}
 	
-	GETSET(u_int32_t, lastSave, LastSave);
+	GETSET(time_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
 	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;
@@ -262,7 +262,7 @@ private:
 	/** The queue needs to be saved */
 	bool dirty;
 	/** Next search */
-	u_int32_t nextSearch;
+	time_t nextSearch;
 	
 	static const string USER_LIST_NAME;
 
@@ -284,8 +284,8 @@ private:
 	}
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
 	
 	// SearchManagerListener
 	virtual void on(SearchManagerListener::SR, SearchResult*) throw();

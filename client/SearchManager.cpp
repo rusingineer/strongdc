@@ -489,7 +489,7 @@ string SearchManager::clean(const string& aSearchString) {
 	return tmp;
 }
 
-void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void SearchManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();
@@ -501,11 +501,11 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
 			fire(SearchManagerListener::Searching(), &sqi);
 		}
-		setLastSearch( GET_TICK() );
+		setLastSearch(aTick);
 	}
 }
 
-u_int32_t SearchManager::getLastSearch() {
+time_t SearchManager::getLastSearch() {
 	return lastSearch; 
 }
 

@@ -247,7 +247,7 @@ void UserInfoBase::matchQueue() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_MATCH_QUEUE);
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError(), true);
+		LogManager::getInstance()->message(e.getError());
 	}
 }
 
@@ -255,7 +255,7 @@ void UserInfoBase::getUserResponses() {
 	try {
 		QueueManager::getInstance()->addTestSUR(user, false);
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError(), true);		
+		LogManager::getInstance()->message(e.getError());		
 	}
 }
 
@@ -269,7 +269,7 @@ void UserInfoBase::getList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError(), true);		
+		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::browseList() {
@@ -278,14 +278,14 @@ void UserInfoBase::browseList() {
 	try {
 		QueueManager::getInstance()->addPfs(user, "");
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError(), true);		
+		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::checkList() {
 	try {
 		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError(), true);		
+		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::addFav() {
@@ -1079,7 +1079,7 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 
 	if(Util::stricmp(app.c_str(), Buf) != 0) {
 		if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("dchub"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
-			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_DCHUB), true);
+			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_DCHUB));
 			return;
 		}
 	
@@ -1118,7 +1118,7 @@ void WinUtil::bitziLink(const TTHValue* aHash) {
 
 	 if(Util::stricmp(app.c_str(), Buf) != 0) {
 		 if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("adc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
-			 LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_ADC), true);
+			 LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_ADC));
 			 return;
 		 }
 
@@ -1178,7 +1178,7 @@ void WinUtil::registerMagnetHandler() {
 		} else {
 			// set Magnet\Location
 			if (::RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
-				LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET), true);
+				LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET));
 				return;
 			}
 
@@ -1191,7 +1191,7 @@ void WinUtil::registerMagnetHandler() {
 	if(BOOLSETTING(MAGNET_REGISTER) && (Util::strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
 		SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
 		if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("magnet"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
-			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET), true);
+			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET));
 			return;
 		}
 		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_SHELL_DESC), sizeof(TCHAR)*(TSTRING(MAGNET_SHELL_DESC).length()+1));
@@ -1346,7 +1346,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 	//  dn = display name
 	//  xl = exact length
 	if (Util::strnicmp(aUrl.c_str(), _T("magnet:?"), 8) == 0) {
-		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + Text::fromT(aUrl), true);
+		LogManager::getInstance()->message(STRING(MAGNET_DLG_TITLE) + ": " + Text::fromT(aUrl));
 		StringTokenizer<tstring> mag(aUrl.substr(8), _T('&'));
 		typedef map<tstring, tstring> MagMap;
 		MagMap hashes;
@@ -1502,6 +1502,24 @@ int WinUtil::getIconIndex(const tstring& aFileName) {
 		return fileImageCount - 1;
 	} else {
 		return 2;
+	}
+}
+
+double WinUtil::toBytes(TCHAR* aSize) {
+	double bytes = _tstof(aSize);
+
+	if (_tcsstr(aSize, CTSTRING(PB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(TB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(GB))) {
+		return bytes * 1024.0 * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(MB))) {
+		return bytes * 1024.0 * 1024.0;
+	} else if (_tcsstr(aSize, CTSTRING(KB))) {
+		return bytes * 1024.0;
+	} else {
+		return bytes;
 	}
 }
 
@@ -1684,7 +1702,7 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-int WinUtil::getImage(const Identity& u) {
+int WinUtil::getImage(const Identity& u, const string& aHubUrl) {
 	int image = 12;
 
 	if(u.isOp()) {
@@ -1740,7 +1758,7 @@ int WinUtil::getImage(const Identity& u) {
 		image+=26;
 	}
 
-	if(!ClientManager::getInstance()->isActive(u.getHubUrl()) && !u.isTcpActive()) {
+	if(!ClientManager::getInstance()->isActive(aHubUrl) && !u.isTcpActive()) {
 		// Users we can't connect to...
 		image+=52;
 	}		

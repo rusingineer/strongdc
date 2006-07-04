@@ -53,7 +53,7 @@ public:
 		log(path, msg);
 	}
 
-	void message(const string& msg, bool /*logit*/) {
+	void message(const string& msg) {
 		if(BOOLSETTING(LOG_SYSTEM)) {
 			StringMap params;
 			params["message"] = msg;

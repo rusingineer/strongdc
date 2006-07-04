@@ -1,3 +1,21 @@
+	-- StrongDC++ 1.00 next version --
+
+* zmìnìna grafika
+* rozdìlování segmentù s ohledem na rychlost stahování
+* ovìøení staženého bloku na konci segmentu
+* opravena spousta deadlockù
+* opravena spousta pádù
+* opravena spousta memory leakù
+* aktualizováno na poslední DC++ SVN
+* aktualizováno na STLPort CVS a WTL CVS
+* pøidány nìjaké AMD/MMX/SSE CPU optimalizace
+* mìla by bìžet na Win9x
+* pøidáno sdílení dokonèených souborù
+* zlepšení výkonu
+* odstranìný nìkteré staré funkce (Info o MP3, Kontrola SFV...)
+* projekt portován na Visual Studio .net 2005
+* pro kompletni changelog viz cvs-changelog.txt
+
 	-- StrongDC++ 1.00 RC10 --
 
 * opraven problém s mezinárodními pøezdívkami

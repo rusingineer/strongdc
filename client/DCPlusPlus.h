@@ -85,6 +85,9 @@ typedef StringPairList::iterator StringPairIter;
 typedef HASH_MAP<string, string> StringMap;
 typedef StringMap::iterator StringMapIter;
 
+typedef HASH_SET<string> StringSet;
+typedef StringSet::iterator StringSetIter;
+
 typedef vector<wstring> WStringList;
 typedef WStringList::iterator WStringIter;
 typedef WStringList::const_iterator WStringIterC;
@@ -121,7 +124,7 @@ typedef StringMap TStringMap;
 typedef StringMapIter TStringMapIter;
 #endif
 
-extern void startup(void (*f)(void*, const string&), void* p);
+extern void startup(void (*f)(void*, const tstring&), void* p);
 extern void shutdown();
 
 #endif // !defined(DC_PLUS_PLUS_H)

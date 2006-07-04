@@ -19,12 +19,13 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
-#include "../client/ResourceManager.h"
 
+#include "../client/ResourceManager.h"
 #include "../client/UserCommand.h"
+#include "../client/NmdcHub.h"
 
+#include "WinUtil.h"
 #include "CommandDlg.h"
-#include "../client/ResourceManager.h"
 
 WinUtil::TextItem CommandDlg::texts[] = {
 	{ IDOK, ResourceManager::OK },
@@ -113,7 +114,7 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 			dcassert(i != string::npos);
 			tstring to = command.substr(5, i-5);
 			string::size_type cmd_pos = command.find(_T('>'), 5) + 2;
-			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true, false));
+			tstring cmd = Text::toT(NmdcHub::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true));
 			ctrlPM.SetCheck(BST_CHECKED);
 			ctrlNick.SetWindowText(to.c_str());
 			ctrlCommand.SetWindowText(cmd.c_str());
@@ -123,7 +124,7 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 		{
 			// Looks like a chat thing...
 			string::size_type cmd_pos = command.find(_T('>')) + 2;
-			tstring cmd = Text::toT(Util::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true, false));
+			tstring cmd = Text::toT(NmdcHub::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true));
 			ctrlChat.SetCheck(BST_CHECKED);
 			ctrlCommand.SetWindowText(cmd.c_str());
 		} else {
@@ -211,6 +212,59 @@ void CommandDlg::updateContext() {
 		ctx |= UserCommand::CONTEXT_SEARCH;
 	if(ctrlFilelistMenu.GetCheck() & BST_CHECKED)
 		ctx |= UserCommand::CONTEXT_FILELIST;
+}
+
+
+void CommandDlg::updateType() {
+	if(ctrlSeparator.GetCheck() == BST_CHECKED) {
+		type = 0;
+	} else if(ctrlRaw.GetCheck() == BST_CHECKED) {
+		type = 1;
+	} else if(ctrlChat.GetCheck() == BST_CHECKED) {
+		type = 2;
+	} else if(ctrlPM.GetCheck() == BST_CHECKED) {
+		type = 3;
+	}
+}
+
+void CommandDlg::updateCommand() {
+	static const size_t BUF_LEN = 1024;
+	TCHAR buf[BUF_LEN];
+	if(type == 0) {
+		command.clear();
+	} else if(type == 1) {
+		ctrlCommand.GetWindowText(buf, BUF_LEN-1);
+		command = buf;
+	} else if(type == 2) {
+		ctrlCommand.GetWindowText(buf, BUF_LEN - 1);
+		command = Text::toT("<%[myNI]> " + NmdcHub::validateMessage(Text::fromT(buf), false) + "|");
+	} else if(type == 3) {
+		ctrlNick.GetWindowText(buf, BUF_LEN - 1);
+		tstring to(buf);
+		ctrlCommand.GetWindowText(buf, BUF_LEN - 1);
+		command = _T("$To: ") + to + _T(" From: %[myNI] $<%[myNI]> ") + Text::toT(NmdcHub::validateMessage(Text::fromT(buf), false)) + _T("|");
+	}
+}
+
+void CommandDlg::updateControls() {
+	switch(type) {
+		case 0:
+			ctrlName.EnableWindow(FALSE);
+			ctrlCommand.EnableWindow(FALSE);
+			ctrlNick.EnableWindow(FALSE);
+			break;
+		case 1:
+		case 2:
+			ctrlName.EnableWindow(TRUE);
+			ctrlCommand.EnableWindow(TRUE);
+			ctrlNick.EnableWindow(FALSE);
+			break;
+		case 3:
+			ctrlName.EnableWindow(TRUE);
+			ctrlCommand.EnableWindow(TRUE);
+			ctrlNick.EnableWindow(TRUE);
+			break;
+	}
 }
 
 /**

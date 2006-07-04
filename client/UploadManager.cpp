@@ -309,7 +309,7 @@ ok:
 void UploadManager::removeUpload(Upload* aUpload) {
 	Lock l(cs);
 	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
-	uploads.erase(find(uploads.begin(), uploads.end(), aUpload));
+	uploads.erase(remove(uploads.begin(), uploads.end(), aUpload), uploads.end());
 	throttleSetup();
 	aUpload->setUserConnection(NULL);
 	delete aUpload;
@@ -495,7 +495,7 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn) {
 	}
 }
 
-void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
 	Lock l(cs);
 	for(SlotIter j = reservedSlots.begin(); j != reservedSlots.end();) {
 		if(j->second < aTick) {
@@ -575,7 +575,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();
@@ -588,9 +588,9 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	}
 	if(!m_boFireball) {
 		if(getAverageSpeed() >= 102400) {
-			u_int32_t iActTicks = aTick;
+			time_t iActTicks = aTick;
 			if ( m_boLastTickHighSpeed ) {
-				u_int32_t iHighSpeedTicks = 0;
+				time_t iHighSpeedTicks = 0;
 				if ( iActTicks >= m_iHighSpeedStartTick ) 
 					iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
 				else
@@ -640,7 +640,7 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr&
 				// But let's grant him/her a free slot just in case...
 				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
 					reserveSlot(u->getUser());
-				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(aUser->getCID())), true);
+				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(aUser->getCID())));
 			}
 		}
 	}

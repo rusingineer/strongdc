@@ -702,7 +702,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 		if(name == "." || name == "..")
 			continue;
 		if(name.find('$') != string::npos) {
-			LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_FILE) + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
+			LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_FILE) + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")");
 			continue;
 		}
 		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
@@ -718,7 +718,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 				(name.find("__INCOMPLETE__") == 0) ||		//winmx
 				(name.find("__incomplete__") == 0) ||		//winmx
 				(nameLen >= 28 && name.find("download") == 0 && name.rfind(".dat") == nameLen - 4 && Util::toInt64(name.substr(8, 16)))) {		//kazaa temps
-					LogManager::getInstance()->message("Forbidden file will not be shared: " + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")", true);
+					LogManager::getInstance()->message("Forbidden file will not be shared: " + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")");
 					continue;
 			}
 		}
@@ -790,7 +790,7 @@ void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ThreadException, ShareException) {
 	if(Thread::safeInc(refreshing) > 1) {
 		Thread::safeDec(refreshing);
-		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS), false);
+		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS));
 		return;
 	}
 
@@ -810,12 +810,12 @@ void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, b
 			setThreadPriority(Thread::LOW);
 		}
 	} catch(const ThreadException& e) {
-		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FAILED) + e.getError(), true);
+		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FAILED) + e.getError());
 	}
 }
 
 int ShareManager::run() {
-	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED), true);
+	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED));
 	{
 		if(refreshDirs) {
 			sharedSize = 0;
@@ -854,7 +854,7 @@ int ShareManager::run() {
 
 	Thread::safeDec(refreshing);
 	
-	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED), true);
+	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED));
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);
 	}
@@ -1233,8 +1233,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 			if(!newStr.get()) {
 				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(aStrings));
 			}
-			dcassert(find(newStr->begin(), newStr->end(), *k) != newStr->end());
-			newStr->erase(find(newStr->begin(), newStr->end(), *k));
+			newStr->erase(remove(newStr->begin(), newStr->end(), *k), newStr->end());
 		}
 	}
 
@@ -1365,8 +1364,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, AdcSearch& aS
 			if(!newStr.get()) {
 				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(*cur));
 			}
-			dcassert(find(newStr->begin(), newStr->end(), *k) != newStr->end());
-			newStr->erase(find(newStr->begin(), newStr->end(), *k));
+			newStr->erase(remove(newStr->begin(), newStr->end(), *k), newStr->end());
 		}
 	}
 
@@ -1510,7 +1508,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 	}
 }
 
-void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
+void ShareManager::on(TimerManagerListener::Minute, time_t tick) throw() {
 	if(SETTING(AUTO_REFRESH_TIME) > 0) {
 		if(lastFullUpdate + SETTING(AUTO_REFRESH_TIME) * 60 * 1000 < tick) {
 			try {

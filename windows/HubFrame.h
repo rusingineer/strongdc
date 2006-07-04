@@ -485,7 +485,7 @@ private:
 	void updateStatusBar() { if(m_hWnd) speak(STATS); }
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, DWORD /*aTick*/) throw();
+	virtual void on(TimerManagerListener::Second, time_t /*aTick*/) throw();
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	// ClientListener
@@ -499,7 +499,7 @@ private:
 	virtual void on(Failed, Client*, const string&) throw();
 	virtual void on(GetPassword, Client*) throw();
 	virtual void on(HubUpdated, Client*) throw();
-	virtual void on(Message, Client*, const OnlineUser&, const char*) throw();
+	virtual void on(Message, Client*, const OnlineUser&, const string&) throw();
 	virtual void on(PrivateMessage, Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
 	virtual void on(NickTaken, Client*) throw();
 	virtual void on(SearchFlood, Client*, const string&) throw();
@@ -508,7 +508,7 @@ private:
 	void speak(Speakers s) { Lock l(taskCS); taskList.push_back(new Task(s)); PostMessage(WM_SPEAKER); }
 	void speak(Speakers s, const string& msg) { Lock l(taskCS); taskList.push_back(new StringTask(s, Text::toT(msg))); PostMessage(WM_SPEAKER); }
 	void speak(Speakers s, const OnlineUser& u) { Lock l(taskCS); taskList.push_back(new UserTask(s, u)); updateUsers = true; }
-	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { Lock l(taskCS); taskList.push_back(new MessageTask(s, &from ? from.getIdentity() : Identity(NULL, Util::emptyString, 0), to, replyTo, Text::toT(line)));  PostMessage(WM_SPEAKER); }
+	void speak(Speakers s, const OnlineUser& from, const User::Ptr& to, const User::Ptr& replyTo, const string& line) { Lock l(taskCS); taskList.push_back(new MessageTask(s, &from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, Text::toT(line)));  PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

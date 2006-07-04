@@ -41,8 +41,8 @@ public:
 	typedef X<1> Minute;
 
 	// We expect everyone to implement this...
-	virtual void on(Second, u_int32_t) throw() { }
-	virtual void on(Minute, u_int32_t) throw() { }
+	virtual void on(Second, time_t) throw() { }
+	virtual void on(Minute, time_t) throw() { }
 };
 
 class TimerManager : public Speaker<TimerManagerListener>, public Singleton<TimerManager>, public Thread
@@ -56,9 +56,13 @@ public:
 	static time_t getTime() {
 		return (time_t)time(NULL);
 	}
-	static u_int32_t getTick() { 
+	static time_t getTick() { 
 #ifdef _WIN32
-		return GetTickCount(); 
+		FILETIME ft;
+		GetSystemTimeAsFileTime(&ft);
+		//convert to millisecond resolution, don't care about nanoseconds but don't want
+		//the overflow with GetTickCount
+		return ( ((time_t)ft.dwHighDateTime) << 32 | (time_t)ft.dwLowDateTime ) / 10000; 
 #else
 		timeval tv2;
 		gettimeofday(&tv2, NULL);

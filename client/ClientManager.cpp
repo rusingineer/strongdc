@@ -31,6 +31,7 @@
 #include "SimpleXML.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"
+#include "LogManager.h"
 
 #include "AdcHub.h"
 #include "NmdcHub.h"
@@ -63,18 +64,7 @@ void ClientManager::putClient(Client* aClient) {
 
 	{
 		Lock l(cs);
-
-		// Either I'm stupid or the msvc7 optimizer is doing something _very_ strange here...
-		// STL-port -D_STL_DEBUG complains that .begin() and .end() don't have the same owner (!)
-		//		dcassert(find(clients.begin(), clients.end(), aClient) != clients.end());
-		//		clients.erase(find(clients.begin(), clients.end(), aClient));
-		
-		for(Client::List::iterator i = clients.begin(); i != clients.end(); ++i) {
-			if(*i == aClient) {
-				clients.erase(i);
-				break;
-			}
-		}
+		clients.erase(remove(clients.begin(), clients.end(), aClient), clients.end());
 	}
 	delete aClient;
 }
@@ -106,21 +96,25 @@ StringList ClientManager::getHubNames(const CID& cid) {
 
 StringList ClientManager::getNicks(const CID& cid) {
 	Lock l(cs);
-	StringList lst;
+	StringSet nicks;
 	OnlinePair op = onlineUsers.equal_range(cid);
 	for(OnlineIter i = op.first; i != op.second; ++i) {
-		lst.push_back(i->second->getIdentity().getNick());
+		nicks.insert(i->second->getIdentity().getNick());
 	}
-	if(lst.empty()) {
+	if(nicks.empty()) {
 		// Offline perhaps?
 		UserIter i = users.find(cid);
 		if(i != users.end() && !i->second->getFirstNick().empty()) {
-			lst.push_back(i->second->getFirstNick());
+			nicks.insert(i->second->getFirstNick());
 		} else {
-			lst.push_back('{' + cid.toBase32() + '}');
+			nicks.insert('{' + cid.toBase32() + '}');
 		}
 	}
-	return lst;
+	
+	StringList sl;
+	for(StringSet::const_iterator i = nicks.begin(); i != nicks.end(); i++) sl.push_back(*i);
+
+	return sl;
 }
 
 string ClientManager::getConnection(const CID& cid) {
@@ -377,13 +371,25 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				u_int16_t port = 0;
 				Util::decodeUrl(aSeeker, ip, port, file);
 				ip = Socket::resolve(ip);
-				if(port == 0) port = 412;
+				
+				// Temporary fix to avoid spamming hublist.org and dcpp.net
+				if(ip == "70.85.55.252" || ip == "207.44.220.108") {
+					LogManager::getInstance()->message("Someone is trying to use your client to spam " + ip + ", please urge hub owner to fix this");
+					return;
+				}
+				
+				if(port == 0) 
+					port = 412;
 				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
 					SearchResult* sr = *i;
 					s.writeTo(ip, port, sr->toSR(*aClient));
 					sr->decRef();
 				}
 			} catch(const SocketException& /* e */) {
+				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
+					SearchResult* sr = *i;
+					sr->decRef();
+				}
 				s.disconnect();
 				dcdebug("Search caught error\n");
 			}
@@ -437,13 +443,13 @@ void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& fro
 	SearchManager::getInstance()->respond(adc, from);
 }
 
-Identity ClientManager::getIdentity(const User::Ptr& aUser) {
+string ClientManager::getHubUrl(const User::Ptr& aUser) {
 	Lock l(cs);
 	OnlineIter i = onlineUsers.find(aUser->getCID());
 	if(i != onlineUsers.end()) {
-		return i->second->getIdentity();
+		return i->second->getClient().getHubUrl();
 	}
-	return Identity(aUser, Util::emptyString, 0);
+	return Util::emptyString;
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
@@ -474,7 +480,7 @@ void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aF
 	}
 }
 
-void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) throw() {
+void ClientManager::on(TimerManagerListener::Minute, time_t /* aTick */) throw() {
 	{
 		Lock l(cs);
 
@@ -623,7 +629,7 @@ void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 	}
 }
 
-bool ClientManager::fileListDisconnected(const User::Ptr& p) {
+void ClientManager::fileListDisconnected(const User::Ptr& p) {
 	string report = Util::emptyString;
 	Client* c = NULL;
 	{
@@ -636,7 +642,7 @@ bool ClientManager::fileListDisconnected(const User::Ptr& p) {
 			ou.getIdentity().setFileListDisconnects(Util::toString(fileListDisconnects));
 
 			if(SETTING(ACCEPTED_DISCONNECTS) == 0)
-				return false;
+				return;
 
 			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 				c = &ou.getClient();
@@ -647,12 +653,10 @@ bool ClientManager::fileListDisconnected(const User::Ptr& p) {
 	}
 	if(c && !report.empty()) {
 		c->cheatMessage(report);
-		return true;
 	}
-	return false;
 }
 
-bool ClientManager::connectionTimeout(const User::Ptr& p) {
+void ClientManager::connectionTimeout(const User::Ptr& p) {
 	string report = Util::emptyString;
 	bool remove = false;
 	Client* c = NULL;
@@ -666,7 +670,7 @@ bool ClientManager::connectionTimeout(const User::Ptr& p) {
 			ou.getIdentity().setConnectionTimeouts(Util::toString(connectionTimeouts));
 	
 			if(SETTING(ACCEPTED_TIMEOUTS) == 0)
-				return false;
+				return;
 	
 			if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 				c = &ou.getClient();
@@ -684,9 +688,7 @@ bool ClientManager::connectionTimeout(const User::Ptr& p) {
 	}
 	if(c && !report.empty()) {
 		c->cheatMessage(report);
-		return true;
 	}
-	return false;
 }
 
 void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
@@ -730,7 +732,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 			}
 			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 
-			report = ou->getIdentity().setCheat(ou->getClient(), Util::validateMessage(detectString, false), false);
+			report = ou->getIdentity().setCheat(ou->getClient(), detectString, false);
 			ou->getIdentity().sendRawCommand(ou->getClient(), SETTING(FAKESHARE_RAW));
 		}
 		ou->getIdentity().setFilelistComplete("1");

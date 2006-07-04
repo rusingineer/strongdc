@@ -196,9 +196,7 @@ public:
 
 	/** @internal */
 	void abortDownload(const string& aTarget);
-	void abortDownload(const string& aTarget, User::Ptr& aUser);
 	void abortDownloadExcept(const string& aTarget, Download*);
-	
 
 	/**
 	 * @remarks This is only used in the tray icons. In MainFrame this is
@@ -237,19 +235,19 @@ public:
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
 	size_t throttleGetSlice();
-	size_t throttleCycleTime();
+	time_t throttleCycleTime();
 
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
+	time_t mCycleTime;
 	size_t mBytesSent,
 		   mBytesSpokenFor,
 		   mDownloadLimit,
-		   mCycleTime,
 		   mByteSlice;
-
+	
 	enum { MOVER_LIMIT = 10*1024*1024 };
 	class FileMover : public Thread {
 	public:
@@ -282,6 +280,8 @@ private:
 	void moveFile(const string& source, const string&target);
 	void logDownload(UserConnection* aSource, Download* d);
 	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
+
+	void failDownload(UserConnection* aSource, const string& reason, bool connectSources = true);
 
 	friend class Singleton<DownloadManager>;
 	DownloadManager() { 
@@ -320,7 +320,7 @@ private:
 
 	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
 };
 
 #endif // !defined(DOWNLOAD_MANAGER_H)
