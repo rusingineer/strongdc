@@ -109,7 +109,7 @@ public:
 	bool isConnected() const { return socket && socket->isConnected(); }
 	bool isOp() const { return getMyIdentity().isOp(); }
 
-	virtual void refreshUserList(bool unknownOnly = false) = 0;
+	virtual void refreshUserList() = 0;
 
 	short getPort() const { return port; }
 	const string& getAddress() const { return address; }
@@ -188,9 +188,6 @@ public:
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
 	GETSET(string, favIp, FavIp);
-
-	int supportFlags;
-	int getSupportFlags() { return supportFlags; }
 	int64_t availableBytes;
 protected:
 	friend class ClientManager;

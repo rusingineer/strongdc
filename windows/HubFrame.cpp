@@ -311,7 +311,12 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(showUsers ? BST_UNCHECKED : BST_CHECKED);
 			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
-				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + STRING(PORT) + Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + Util::toString(SearchManager::getInstance()->getPort()))), WinUtil::m_ChatTextSystem);
+				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + 
+					STRING(PORT) + 
+					Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + 
+					Util::toString(SearchManager::getInstance()->getPort()) + "/" +
+					Util::toString(ConnectionManager::getInstance()->getSecurePort())))
+					, WinUtil::m_ChatTextSystem);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
 			} else if((Util::stricmp(s.c_str(), _T("removefavorite")) == 0) || (Util::stricmp(s.c_str(), _T("removefav")) == 0)) {
@@ -1324,12 +1329,10 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		if(PreparePopupMenu(&ctrlUsers, sSelectedUser, &Mnu)) {
 			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
 			
-			if(!(client->getSupportFlags() & NmdcHub::SUPPORTS_QUICKLIST)) {
-				if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-					Mnu.AppendMenu(MF_SEPARATOR);
-				}
-				Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
+			if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
+				Mnu.AppendMenu(MF_SEPARATOR);
 			}
+			Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
 
 			if(ctrlUsers.GetSelectedCount() > 0)
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

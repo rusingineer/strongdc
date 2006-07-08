@@ -64,22 +64,21 @@ public:
 	virtual void send(const AdcCommand&) { dcassert(0); }
 
 	static string validateMessage(string tmp, bool reverse);
-	void refreshUserList(bool unknownOnly = false);
+	void refreshUserList();
 	
+	GETSET(int, supportFlags, SupportFlags);
+private:
+	friend class ClientManager;
 	enum SupportFlags {
 		SUPPORTS_USERCOMMAND = 0x01,
 		SUPPORTS_NOGETINFO = 0x02,
-		SUPPORTS_USERIP2 = 0x04,
-		SUPPORTS_QUICKLIST = 0x08,
-	};
-private:
-	friend class ClientManager;
+		SUPPORTS_USERIP2 = 0x04
+	};	
 
 	enum States {
 		STATE_CONNECT,
 		STATE_LOCK,
 		STATE_HELLO,
-		STATE_MYINFO,
 		STATE_CONNECTED
 	} state;
 
@@ -118,16 +117,11 @@ private:
 	void validateNick(const string& aNick) { send("$ValidateNick " + toAcp(aNick) + "|"); }
 	void key(const string& aKey) { send("$Key " + aKey + "|"); }
 	void version() { send("$Version 1,0091|"); }
-	void getNickList() {
-		if(state == STATE_CONNECTED || state == STATE_MYINFO) {
-			send("$GetNickList|");
-		}
-	}
+	void getNickList() { send("$GetNickList|"); }
 	void connectToMe(const OnlineUser& aUser);
 	void revConnectToMe(const OnlineUser& aUser);
 	void myInfo();
 	void supports(const StringList& feat);
-	void getInfo(const OnlineUser& aUser) { send("$GetINFO " + toAcp(aUser.getIdentity().getNick()) + " " + toAcp(getMyNick()) + "|"); };
 
 	void updateFromTag(Identity& id, const string& tag);
 

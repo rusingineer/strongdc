@@ -174,6 +174,7 @@ LRESULT ClientsPage::onReload(WORD , WORD , HWND , BOOL& ) {
 }
 
 LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
+	::EnableWindow(GetDlgItem(IDC_UPDATE), false);
 	c.downloadFile(SETTING(UPDATE_URL) + "Profiles.xml");
 	return 0;
 }

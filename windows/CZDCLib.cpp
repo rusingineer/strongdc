@@ -60,13 +60,13 @@ bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
 		case 3: { SetSuspendState(false, false, false); return true; }
 		case 4: { SetSuspendState(true, false, false); return true; }
 		case 5: { 
-					if(LOBYTE(LOWORD(GetVersion())) >= 5) {
-						typedef bool (CALLBACK* LPLockWorkStation)(void);
-						LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
-						_d_LockWorkStation();
-					}
-					return true;
-				}
+			if(LOBYTE(LOWORD(GetVersion())) >= 5) {
+				typedef bool (CALLBACK* LPLockWorkStation)(void);
+				LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
+				_d_LockWorkStation();
+			}
+			return true;
+		}
 	}
 
 	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
@@ -77,7 +77,6 @@ bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
 	}
 }
 
-#define MAX(a,b)            (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
 #define MIN3(a, b, c) (((a) < (b)) ? ((((a) < (c)) ? (a) : (c))) : ((((b) < (c)) ? (b) : (c))))
 #define MAX3(a, b, c) (((a) > (b)) ? ((((a) > (c)) ? (a) : (c))) : ((((b) > (c)) ? (b) : (c))))

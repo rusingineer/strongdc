@@ -541,6 +541,7 @@
 #define IDC_SOCKET_IN_BUFFER            1317
 #define IDC_SOCKET_OUT_BUFFER           1318
 #define IDC_TLS_CERTIFICATE_FILE        1318
+#define IDC_PORT_TLS                    1318
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_BW_SIMPLE                   1324
@@ -558,10 +559,15 @@
 #define IDC_AUTO_SEARCH_LIMIT           1421
 #define IDC_TLS_OPTIONS                 1421
 #define IDC_SETTINGS_AUTO_SEARCH_LIMIT  1422
+#define IDC_GENERATE_CERTS              1422
 #define IDC_CLOSE_ALL_PM                1423
+#define IDC_BROWSE_PRIVATE_KEY          1423
 #define IDC_CLOSE_ALL_OFFLINE_PM        1424
+#define IDC_BROWSE_CERTIFICATE          1424
 #define IDC_CLOSE_ALL_DIR_LIST          1425
+#define IDC_BROWSE_TRUSTED_PATH         1425
 #define IDC_CLOSE_ALL_SEARCH_FRAME      1426
+#define IDC_SETTINGS_PORT_TLS           1427
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447

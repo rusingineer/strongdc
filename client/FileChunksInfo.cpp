@@ -471,16 +471,6 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 	iDownloadedSize -= (end - start);
 	selfCheck();
 
-#ifdef _DEBUG
-	try{
-		string filename = Util::getAppPath() + aTree.getRoot().toBase32() + "." + Util::toString(start) + "." + Util::toString(end) + "." + "dat";
-		File f(filename, File::WRITE, File::CREATE | File::TRUNCATE);
-		f.write(data, len);
-	}catch(const FileException& e){
-		dcdebug("%s\n", e.getError().c_str());
-		dcassert(0);
-	}
-#endif
 	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
 	return false;
 }
@@ -777,6 +767,8 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 					chunk->end = b;
 				}else{
 					waiting.erase(i);
+					// HACK
+					delete chunk;
 				}
 
 				running.insert(make_pair(b, new Chunk(b, e)));

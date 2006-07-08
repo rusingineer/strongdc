@@ -165,7 +165,10 @@ string::size_type SimpleXMLReader::loadAttribs(const string& name, const string&
 	string::size_type j;
 
 	for(;;) {
-		if((j = tmp.find('=', i)) == string::npos) {
+		if((j = tmp.find_first_of("= \"'/>", i)) == string::npos) {
+			throw SimpleXMLException("Missing '=' in " + name);
+		}
+		if(tmp[j] != '=') {
 			throw SimpleXMLException("Missing '=' in " + name);
 		}
 
@@ -253,12 +256,12 @@ string::size_type SimpleXMLReader::fromXML(const string& tmp, const string& n, s
 					SimpleXML::escape(data, false, true, utf8);
 				} else {
 					data.clear();
-			}
+				}
 				return i + n.length() + 1;
 			} else {
 				throw SimpleXMLException("Missing end tag in " + n);
 			}
-			}
+		}
 
 		// Alright, we have a real tag for sure...now get the name of it.
 		if((j = tmp.find_first_of(" />", i)) == string::npos) {
