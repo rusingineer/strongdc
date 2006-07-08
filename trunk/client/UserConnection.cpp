@@ -107,15 +107,15 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 	} else if(cmd == "$Error") {
 		if(Util::stricmp(param.c_str(), FILE_NOT_AVAILABLE) == 0 || 
 			param.rfind(/*path/file*/" no more exists") != string::npos) { 
-    				fire(UserConnectionListener::FileNotAvailable(), this);
-    			} else {
+    		fire(UserConnectionListener::FileNotAvailable(), this);
+    	} else {
 			fire(UserConnectionListener::Failed(), this, param);
-	    		}
+	    }
 	} else if(cmd == "$FileLength") {
 		if(!param.empty())
 			fire(UserConnectionListener::FileLength(), this, Util::toInt64(param));
 	} else if(cmd == "$GetListLen") {
-    			fire(UserConnectionListener::GetListLength(), this);
+    	fire(UserConnectionListener::GetListLength(), this);
 	} else if(cmd == "$Get") {
 		x = param.find('$');
 		if(x != string::npos) {
@@ -184,7 +184,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 	} else {
 		if(getUser() && aLine.length() < 255)
 			getUser()->setUnknownCommand(aLine);
-		dcdebug("Unknown NMDC command: %.50s\n", aLine);
+		dcdebug("Unknown NMDC command: %.50s\n", aLine.c_str());
 	}
 }
 
@@ -193,14 +193,14 @@ void UserConnection::connect(const string& aServer, short aPort) throw(SocketExc
 
 	socket = BufferedSocket::getSocket(0);
 	socket->addListener(this);
-	socket->connect(aServer, aPort, secure, true);
+	socket->connect(aServer, aPort, secure, BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS), true);
 }
 
 void UserConnection::accept(const Socket& aServer) throw(SocketException, ThreadException) {
 	dcassert(!socket);
 	socket = BufferedSocket::getSocket(0);
 	socket->addListener(this);
-	socket->accept(aServer, secure);
+	socket->accept(aServer, secure, BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS));
 }
 
 void UserConnection::inf(bool withToken) { 

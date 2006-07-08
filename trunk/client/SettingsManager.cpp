@@ -56,7 +56,7 @@ const string SettingsManager::settingTags[] =
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
-	"EmoticonsFile", 	"SslPrivateKeyFile", "SslCertificateFile", "SslTrustedCertificatesPath",
+	"EmoticonsFile", 	"TLSPrivateKeyFile", "TLSCertificateFile", "TLSTrustedCertificatesPath",
 	"FinishedVisible", "FinishedULVisible",
 	"SENTRY", 
 	// Ints
@@ -120,9 +120,9 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseSsl", "OpenWaitingUsers",
+	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
- 	"AllowUntrustedHubs", "AllowUntrustedClients", "TlsPort",
+ 	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
@@ -167,6 +167,7 @@ SettingsManager::SettingsManager()
 	setDefault(SLOTS, 2);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
+	setDefault(TLS_PORT, 0);
 	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);
@@ -280,6 +281,8 @@ SettingsManager::SettingsManager()
 	setDefault(SOCKET_IN_BUFFER, 64*1024);
 	setDefault(SOCKET_OUT_BUFFER, 64*1024);
 	setDefault(TLS_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR);
+	setDefault(TLS_PRIVATE_KEY_FILE, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR "client.key");
+	setDefault(TLS_CERTIFICATE_FILE, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR "client.crt");
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
 	setDefault(BOLD_QUEUE, true);
@@ -288,7 +291,7 @@ SettingsManager::SettingsManager()
 	setDefault(BOLD_SEARCH, true);
 	setDefault(BOLD_WAITING_USERS, true);
 	setDefault(AUTO_REFRESH_TIME, 60);
-	setDefault(USE_TLS, false);
+	setDefault(USE_TLS, true);
 	setDefault(AUTO_SEARCH_LIMIT, 15);
 	setDefault(AUTO_KICK_NO_FAVS, false);
 	setDefault(PROMPT_PASSWORD, true);
@@ -609,6 +612,8 @@ void SettingsManager::load(string const& aFileName)
 #endif
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
 
+		File::ensureDirectory(SETTING(TLS_TRUSTED_CERTIFICATES_PATH));
+		
 		fire(SettingsManagerListener::Load(), &xml);
 
 		xml.stepOut();

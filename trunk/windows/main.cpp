@@ -24,7 +24,7 @@
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
-//#include <vld.h>
+#include <vld.h>
 
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"

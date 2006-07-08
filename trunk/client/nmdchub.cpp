@@ -37,9 +37,9 @@
 
 #include "cvsversion.h"
 
-NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), state(STATE_CONNECT),
-	lastbytesshared(0) {
-	TimerManager::getInstance()->addListener(this);
+NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0), state(STATE_CONNECT),
+	lastbytesshared(0)
+{
 }
 
 NmdcHub::~NmdcHub() throw() {
@@ -68,18 +68,9 @@ void NmdcHub::connect(const OnlineUser& aUser) {
 	}
 }
 
-void NmdcHub::refreshUserList(bool unknownOnly /* = false */) {
-	if(unknownOnly) {
-		Lock l(cs);
-		for(NickIter i = users.begin(); i != users.end(); ++i) {
-			if(!i->second->getIdentity().isSet(Identity::GOT_INF)) {
-				getInfo(*i->second);
-			}
-		}
-	} else {
-		clearUsers();
-		getNickList();
-	}
+void NmdcHub::refreshUserList() {
+	clearUsers();
+	getNickList();
 }
 
 OnlineUser& NmdcHub::getUser(const string& aNick) {
@@ -513,13 +504,13 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		SearchManager::getInstance()->onSearchResult(aLine);
 	} else if(cmd == "$HubName") {
 		// Hack - first word goes to hub name, rest to description
-		string::size_type i = param.find(' ');
+		string::size_type i = param.find(" - ");
 		if(i == string::npos) {
 			getHubIdentity().setNick(unescape(param));
 			getHubIdentity().setDescription(Util::emptyString);			
 		} else {
 			getHubIdentity().setNick(unescape(param.substr(0, i)));
-			getHubIdentity().setDescription(unescape(param.substr(i+1)));
+			getHubIdentity().setDescription(unescape(param.substr(i+3)));
 		}
 		fire(ClientListener::HubUpdated(), this);
 	} else if(cmd == "$Supports") {
@@ -532,8 +523,6 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				supportFlags |= SUPPORTS_NOGETINFO;
 			} else if(*i == "UserIP2") {
 				supportFlags |= SUPPORTS_USERIP2;
-			} else if(*i == "QuickList") {
-				supportFlags |= SUPPORTS_QUICKLIST;
 			}
 		}
 	} else if(cmd == "$UserCommand") {
@@ -794,9 +783,7 @@ void NmdcHub::hubMessage(const string& aMessage) {
 }
 
 void NmdcHub::myInfo() {
-	if(state != STATE_CONNECTED && state != STATE_MYINFO) {
-		return;
-	}
+	checkstate();
 	
 	reloadSettings(false);
 	

@@ -654,7 +654,7 @@ public:
 	}
 
 	void Expand(T* i, int a) {
-		if(i->subItems.size() > (unsigned int)(uniqueMainItem ? 1 : 0)) {
+		if(i->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
 			size_t q = 0;
 			i->collapsed = false;
 			while(q < i->subItems.size()) {
@@ -740,18 +740,14 @@ public:
 	}
 
 	void removeMainItem(T* s) {
-		if(s->subItems.size() > 0) {
-			unsigned int q = 0;
-			while(q < s->subItems.size()) {
-				T* j = s->subItems[q];
-				int p = findItem(j);
-				if(p != -1)
-					DeleteItem(p);
-				delete j;
-				++q;
-			}
-			s->subItems.clear();
+		size_t q = 0;
+		while(q < s->subItems.size()) {
+			T* j = s->subItems[q];
+			deleteItem(j);
+			delete j;
+			++q;
 		}
+		s->subItems.clear();
 		mainItems.remove(s);
 	}
 
@@ -773,7 +769,7 @@ public:
 				} else if(s->main->subItems.size() == 0) {
 					T* main = s->main;
 					removeMainItem(main);
-					DeleteItem(findItem(main));
+					deleteItem(main);
 					s->main = NULL;
 					delete main;
 				}
@@ -788,25 +784,25 @@ public:
 			}
 		}
 
-		int p = findItem(s);
-		if(p != -1)
-			DeleteItem(p);
+		deleteItem(s);
 
 		if(removeFromMemory)
 			delete s;
 	}
 
 	void deleteAllItems() {
+		// HACK: ugly hack but at least it doesn't crash and there's no memory leak
+		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			for(T::List::iterator j = (*i)->subItems.begin(); j != (*i)->subItems.end(); j++) {
+				deleteItem(*j);
+				delete *j;
+			}
+			deleteItem(*i);
+			delete *i;
+		}
 		for(int i = 0; i < GetItemCount(); i++) {
 			T* si = getItemData(i);
-			size_t q = 0;
-			while(q < si->subItems.size()) {
-				T* j = si->subItems[q];
-				
-				if(si != j) delete j;
-				
-				++q;
-			}
+			dcassert(si->subItems.size() == 0);
 			delete si;
 		}
 
@@ -856,7 +852,7 @@ public:
 			} else if(comp < 0) {
 				high = mid - 1;
 			} else if(comp > 0) {
-					low = mid + 1;
+				low = mid + 1;
 			} else if(comp == 2){
 				if(isAscending())
 					low = mid + 1;

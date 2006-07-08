@@ -87,6 +87,7 @@ private:
 				reloadFromHttp();
 			MessageBox(_T("Client profiles now updated."), _T("Updated"), MB_OK);
 		}
+		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
 
 	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
@@ -95,6 +96,7 @@ private:
 			string msg = "Client profiles download failed.\r\n" + aLine;
 			MessageBox(Text::toT(msg).c_str(), _T("Failed"), MB_OK);
 		}
+		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
 	void reload();
 	void reloadFromHttp();

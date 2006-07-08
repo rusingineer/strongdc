@@ -39,15 +39,15 @@ BufferedSocket::BufferedSocket(char aSeparator) throw() :
 separator(aSeparator), mode(MODE_LINE),
 dataBytes(0), rollback(0), failed(false), sock(0), disconnecting(false), filterIn(NULL)
 {
-	sockets++;
+	Thread::safeInc(sockets);
 }
 
-size_t BufferedSocket::sockets = 0;
+volatile long BufferedSocket::sockets = 0;
 
 BufferedSocket::~BufferedSocket() throw() {
 	delete sock;
 	delete filterIn;
-	sockets--;
+	Thread::safeDec(sockets);
 }
 
 void BufferedSocket::setMode (Modes aMode, size_t aRollback) {
@@ -75,24 +75,23 @@ void BufferedSocket::setMode (Modes aMode, size_t aRollback) {
 	}
 }
 
-void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketException, ThreadException) {
+void BufferedSocket::accept(const Socket& srv, bool secure, bool allowUntrusted) throw(SocketException, ThreadException) {
 	dcassert(!sock);
-
-	dcdebug("BufferedSocket::accept() %p\n", (void*)this);
-	sock = secure ? CryptoManager::getInstance()->getClientSocket() : new Socket;
-
-	sock->accept(srv);
-	if(SETTING(SOCKET_IN_BUFFER) > 1023)
-		sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-    if(SETTING(SOCKET_OUT_BUFFER) > 1023)
-		sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
-	sock->setBlocking(false);
-
-	inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
-
-	// This lock prevents the shutdown task from being added and executed before we're done initializing the socket
-	Lock l(cs);
 	try {
+		dcdebug("BufferedSocket::accept() %p\n", (void*)this);
+		sock = secure ? CryptoManager::getInstance()->getServerSocket(allowUntrusted) : new Socket;
+
+		sock->accept(srv);
+		if(SETTING(SOCKET_IN_BUFFER) > 1023)
+			sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+    	if(SETTING(SOCKET_OUT_BUFFER) > 1023)
+			sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
+		sock->setBlocking(false);
+
+		inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
+
+		// This lock prevents the shutdown task from being added and executed before we're done initializing the socket
+		Lock l(cs);
 		start();
 	} catch(...) {
 		delete sock;
@@ -103,23 +102,23 @@ void BufferedSocket::accept(const Socket& srv, bool secure) throw(SocketExceptio
 	addTask(ACCEPTED, 0);
 }
 
-void BufferedSocket::connect(const string& aAddress, short aPort, bool secure, bool proxy) throw(SocketException, ThreadException) {
+void BufferedSocket::connect(const string& aAddress, short aPort, bool secure, bool allowUntrusted, bool proxy) throw(SocketException, ThreadException) {
 	dcassert(!sock);
 
-	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
-	sock = secure ? CryptoManager::getInstance()->getClientSocket() : new Socket;
-
-	sock->create();
-	if(SETTING(SOCKET_IN_BUFFER) >= 1024)
-		sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-	if(SETTING(SOCKET_OUT_BUFFER) >= 1024)
-		sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
-	sock->setBlocking(false);
-
-	inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
-
-	Lock l(cs);
 	try {
+		dcdebug("BufferedSocket::connect() %p\n", (void*)this);
+		sock = secure ? CryptoManager::getInstance()->getClientSocket(allowUntrusted) : new Socket;
+
+		sock->create();
+		if(SETTING(SOCKET_IN_BUFFER) >= 1024)
+			sock->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+		if(SETTING(SOCKET_OUT_BUFFER) >= 1024)
+			sock->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
+		sock->setBlocking(false);
+
+		inbuf.resize(sock->getSocketOptInt(SO_RCVBUF));
+
+		Lock l(cs);
 		start();
 	} catch(...) {
 		delete sock;
@@ -193,7 +192,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 	string l;
 	int bufpos = 0, total = left;
 
-	while(left > 0) {
+	while (left > 0) {
 		switch (mode) {
 			case MODE_ZPIPE:
 				if (filterIn != NULL){
@@ -310,9 +309,19 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	time_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
+		throttling = BOOLSETTING(THROTTLE_ENABLE);
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer
 			size_t bytesRead = readBuf.size() - readPos;
+			if(throttling) {
+				start = TimerManager::getTick();
+				sendMaximum = um->throttleGetSlice();
+				if (sendMaximum < 0) {
+					throttling = false;
+					sendMaximum = bytesRead;
+				}
+				bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+			}
 			size_t actual = file->read(&readBuf[readPos], bytesRead);
 
 			if(bytesRead > 0) {
@@ -341,40 +350,25 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		while(writePos < writeBuf.size()) {
 			if(disconnecting)
 				return;
-				
-			throttling = BOOLSETTING(THROTTLE_ENABLE);
-			size_t writeSize;
-    		if(throttling) {
-    			start = TimerManager::getTick();
-    			sendMaximum = um->throttleGetSlice();
-    			if(sendMaximum < 0) {
-    				throttling = false;
-					writeSize = min(sockSize / 2, writeBuf.size() - writePos);
-				} else {
-					writeSize = min(min(sockSize / 2, writeBuf.size() - writePos), sendMaximum);
-				}
-			} else {
-				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
-			}
-
+			size_t writeSize = min(sockSize / 2, writeBuf.size() - writePos);
 			int written = sock->write(&writeBuf[writePos], writeSize);
 			if(written > 0) {
 				writePos += written;
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
-
-				if(throttling) {
-					time_t cycle_time = um->throttleCycleTime();
-					current = TimerManager::getTick();
-					time_t sleep_time = cycle_time - (current - start);
-					if (sleep_time > 0 && sleep_time <= cycle_time) {
-						Thread::sleep(static_cast<u_int32_t>(sleep_time));
-					}
-				}
 			} else if(written == -1) {
 				if(!readDone && readPos < readBuf.size()) {
 					// Read a little since we're blocking anyway...
 					size_t bytesRead = min(readBuf.size() - readPos, readBuf.size() / 2);
+					if(throttling) {
+						start = TimerManager::getTick();
+						sendMaximum = um->throttleGetSlice();
+						if (sendMaximum < 0) {
+							throttling = false;
+							sendMaximum = bytesRead;
+						}
+						bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+					}
 					size_t actual = file->read(&readBuf[readPos], bytesRead);
 
 					if(bytesRead > 0) {
@@ -397,6 +391,14 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 						}
 					}
 				}	
+			}
+			if(throttling) {
+				time_t cycle_time = um->throttleCycleTime();
+				current = TimerManager::getTick();
+				time_t sleep_time = cycle_time - (current - start);
+				if (sleep_time > 0 && sleep_time <= cycle_time) {
+					Thread::sleep(static_cast<u_int32_t>(sleep_time));
+				}
 			}
 		}
 	}

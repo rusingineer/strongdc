@@ -128,7 +128,8 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 		} else if(aType == "tthl") {
 			// TTH Leaves...
 			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
-			file = ShareManager::getInstance()->translateFileName(aFile);
+			//file = ShareManager::getInstance()->translateFileName(aFile);
+			file = aFile;
 			if(mis == NULL) {
 				aSource->fileNotAvail();
 				return false;
@@ -183,7 +184,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							}
 							is = ss;
 							size = chunksInfo->iFileSize;
-							free = false;
+							free = (size <= (int64_t)(64 * 1024));
 
 							if((aStartPos + aBytes) < size) {
 								is = new LimitedInputStream<true>(is, aBytes);
@@ -197,7 +198,9 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 							delete is;
 							return false;
 						}
-					} else {
+					}else{
+						// Hit this when user readd partial source without partial info
+						//dcassert(0);
 					}
 				}
 			// Share finished file
@@ -210,7 +213,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 						try{
 							is = new SharedFileStream(file, aStartPos, 0, true);
 							size = File::getSize(file);
-							free = false;
+							free = (size <= (int64_t)(64 * 1024));
 
 							if((aStartPos + aBytes) < size) {
 								is = new LimitedInputStream<true>(is, aBytes);
@@ -234,6 +237,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	}
 
 ok:
+
 	Lock l(cs);
 
 	bool extraSlot = false;

@@ -53,8 +53,6 @@ PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertyShee
 	pages[n++] = new GeneralPage(s);
 	pages[n++] = new NetworkPage(s);
 	pages[n++] = new DownloadPage(s);
-	pages[n++] = new FavoriteDirsPage(s);
-	pages[n++] = new QueuePage(s);
 	pages[n++] = new UploadPage(s);
 	pages[n++] = new AppearancePage(s);
 	pages[n++] = new PropPageTextStyles(s);
@@ -68,7 +66,9 @@ PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertyShee
 	pages[n++] = new SDCPage(s);
 	pages[n++] = new LogPage(s);
 	pages[n++] = new UCPage(s);
+	pages[n++] = new FavoriteDirsPage(s);
 	pages[n++] = new AVIPreview(s);	
+	pages[n++] = new QueuePage(s);
 	pages[n++] = new LimitPage(s);
 	pages[n++] = new FakeDetect(s);	
 	pages[n++] = new ClientsPage(s);	

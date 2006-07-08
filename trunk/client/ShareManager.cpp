@@ -304,13 +304,13 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 						break;
 					}
 				}
-			} else if(cur != NULL) {
+			} else if(cur != 0) {
 				cur = new ShareManager::Directory(getAttrib(attribs, "Name", 0), cur);
 				cur->addType(SearchManager::TYPE_DIRECTORY); // needed since we match our own name in directory searches
 				cur->getParent()->directories[cur->getName()] = cur;
 			}
 
-			if(simple)
+			if(simple && cur)
 				cur = cur->getParent();
 			else
 				depth++;
@@ -737,6 +737,9 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 
 				int64_t size = i->getSize();
 				string fileName = aName + name;
+				if(Util::stricmp(fileName, SETTING(TLS_PRIVATE_KEY_FILE)) == 0) {
+					continue;
+				}
 				try {
 					if(HashManager::getInstance()->checkTTH(fileName, size, i->getLastWriteTime()))
 						lastFileIter = dir->files.insert(lastFileIter, Directory::File(name, size, dir, HashManager::getInstance()->getTTH(fileName, size)));
@@ -1007,7 +1010,7 @@ MemoryInputStream* ShareManager::getTree(const string& aFile) {
 	}
 
 	vector<u_int8_t> buf = tree.getLeafData();
-	return new MemoryInputStream(&buf[0], buf.size());
+	return new MemoryInputStream(&buf[0], buf.size()); // <-- memory leak!!!
 }
 
 static const string& escaper(const string& n, string& tmp) {

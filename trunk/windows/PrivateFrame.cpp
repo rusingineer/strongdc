@@ -96,6 +96,8 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ClientManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
+	readLog();
+
 	bHandled = FALSE;
 	return 1;
 }
@@ -109,7 +111,6 @@ void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::P
 	if(i == frames.end()) {
 		p = new PrivateFrame(user);
 		frames[user] = p;
-		p->readLog();
 		p->addLine(from, aMessage);
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))

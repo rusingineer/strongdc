@@ -50,7 +50,7 @@ public:
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); }
 	virtual void send(const AdcCommand& cmd);
-	void refreshUserList(bool) { }
+	void refreshUserList() { }
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
 private:

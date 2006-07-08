@@ -35,7 +35,8 @@ Client::Client(const string& hubURL, char separator_, bool secure_) :
 	myIdentity(ClientManager::getInstance()->getMe(), 0),
 	reconnDelay(120), lastActivity(GET_TICK()), registered(false), autoReconnect(true), reconnecting(false), socket(0), 
 	hubUrl(hubURL), port(0), separator(separator_),
-	secure(secure_), countType(COUNT_UNCOUNTED), supportFlags(0), availableBytes(0) {
+	secure(secure_), countType(COUNT_UNCOUNTED), availableBytes(0)
+{
 	string file;
 	Util::decodeUrl(hubURL, address, port, file);
 
@@ -115,7 +116,7 @@ void Client::connect() {
 	try {
 		socket = BufferedSocket::getSocket(separator);
 		socket->addListener(this);
-		socket->connect(address, port, secure, true);
+		socket->connect(address, port, secure, BOOLSETTING(ALLOW_UNTRUSTED_HUBS), true);
 	} catch(const Exception& e) {
 		if(socket) {
 			BufferedSocket::putSocket(socket);
@@ -127,12 +128,6 @@ void Client::connect() {
 }
 
 void Client::on(Connected) throw() {
-	if(socket->isSecure() && !socket->isTrusted() && !BOOLSETTING(ALLOW_UNTRUSTED_HUBS)) {
-		fire(ClientListener::Message(), this, *(OnlineUser*)NULL, STRING(CERTIFICATE_NOT_TRUSTED));
-		disconnect(true);
-		return;
-	}
-
 	updateActivity(); 
 	ip = socket->getIp(); 
 	fire(ClientListener::Connected(), this);
