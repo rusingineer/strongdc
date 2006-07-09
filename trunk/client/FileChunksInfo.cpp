@@ -767,7 +767,6 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 					chunk->end = b;
 				}else{
 					waiting.erase(i);
-					// HACK
 					delete chunk;
 				}
 
