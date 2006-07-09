@@ -111,6 +111,7 @@ StringList ClientManager::getNicks(const CID& cid) {
 		}
 	}
 	
+	// HACK: STLPort bug?
 	StringList sl;
 	for(StringSet::const_iterator i = nicks.begin(); i != nicks.end(); i++) sl.push_back(*i);
 

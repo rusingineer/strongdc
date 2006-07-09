@@ -1010,7 +1010,7 @@ MemoryInputStream* ShareManager::getTree(const string& aFile) {
 	}
 
 	vector<u_int8_t> buf = tree.getLeafData();
-	return new MemoryInputStream(&buf[0], buf.size()); // <-- memory leak!!!
+	return new MemoryInputStream(&buf[0], buf.size());
 }
 
 static const string& escaper(const string& n, string& tmp) {
