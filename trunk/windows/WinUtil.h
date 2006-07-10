@@ -361,7 +361,6 @@ public:
 	static HHOOK hook;
 	static tstring tth;
 	static StringPairList initialDirs;	
-	static tstring exceptioninfo;
 	static DWORD helpCookie;	
 	static bool isAppActive;
 	static CHARFORMAT2 m_TextStyleTimestamp;

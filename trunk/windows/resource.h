@@ -12,11 +12,8 @@
 #define IDC_CONNECT_ALL                 106
 #define IDD_GENERALPAGE                 107
 #define IDC_DISCONNECT_ALL              107
-#define IDD_EXCEPTION                   108
 #define IDC_COLLAPSE_ALL                108
-#define IDC_EXCEPTION_DETAILS           109
 #define IDC_EXPAND_ALL                  109
-#define IDC_COPY_EXCEPTION              110
 #define IDC_SEGMENTONE                  110
 #define IDC_SEGMENTTWO                  111
 #define IDC_SEGMENTTHREE                112
@@ -95,7 +92,6 @@
 #define IDD_CLIENTS_PAGE                264
 #define IDB_SPEEDS                      266
 #define IDR_CDM                         270
-#define IDR_STOP                        273
 #define IDD_UPDATE                      274
 #define IDR_UPDATE                      276
 #define IDB_FAVSTATES                   277
@@ -335,7 +331,6 @@
 #define IDC_PREVIEW_ARGUMENTS           1214
 #define IDC_SETTINGS_DOWNLOAD_BAR_COLOR 1215
 #define IDC_PREVIEW_EXTENSION           1215
-#define IDC_CHECK1                      1216
 #define IDC_AUTOSEGMENT                 1216
 #define IDC_SETTINGS_SEGMENT_BAR_COLOR  1216
 #define IDC_COPY_TTH                    1217

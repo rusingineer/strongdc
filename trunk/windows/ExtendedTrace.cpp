@@ -310,14 +310,13 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 	return ret;
 }
 
-tstring StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD esp, DWORD ebp )
+void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD esp, DWORD ebp )
 {
 	STACKFRAME     callStack;
 	BOOL           bResult;
 	TCHAR          symInfo[BUFFERSIZE] = _T("?");
 	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
 	HANDLE         hProcess = GetCurrentProcess();
-	tstring		   vypis;
 
 	// If it's not this thread, let's suspend it, and resume it at the end
 	if ( hThread != GetCurrentThread() )
@@ -325,8 +324,7 @@ tstring StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWO
 		{
 			// whaaat ?!
 			f.write(LIT("No call stack\r\n"));
-			vypis = LIT(_T("No call stack\r\n"));
-			return vypis;
+			return;
 		}
 
 		::ZeroMemory( &callStack, sizeof(callStack) );
@@ -346,11 +344,6 @@ tstring StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWO
 		f.write(LIT(": "));
 		f.write(Text::fromT(symInfo));
 		f.write(LIT("\r\n"));
-
-		vypis += srcInfo;
-		vypis += LIT(_T(": "));
-		vypis += symInfo;
-		vypis += LIT(_T("\r\n"));
 
 		// Max 100 stack lines...
 		for( ULONG index = 0; index < 100; index++ ) 
@@ -380,15 +373,9 @@ tstring StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWO
 			f.write(Text::fromT(symInfo));
 			f.write(LIT("\r\n"));
 
-			vypis += srcInfo;
-			vypis += LIT(_T(": "));
-			vypis += symInfo;
-			vypis += LIT(_T("\r\n"));
 		}
 		if ( hThread != GetCurrentThread() )
 			ResumeThread( hThread );
-		
-		return vypis;
 }
 
 #endif //_DEBUG && _WIN32

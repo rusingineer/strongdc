@@ -78,7 +78,6 @@ tstring WinUtil::tth;
 StringPairList WinUtil::initialDirs;
 bool WinUtil::urlDcADCRegistered = false;
 bool WinUtil::urlMagnetRegistered = false;
-tstring WinUtil::exceptioninfo;
 bool WinUtil::isAppActive = false;
 CHARFORMAT2 WinUtil::m_TextStyleTimestamp;
 CHARFORMAT2 WinUtil::m_ChatTextGeneral;

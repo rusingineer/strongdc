@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="yassl"
 	ProjectGUID="{BC917BB3-5772-43A6-A88C-72310AAD5B23}"
+	RootNamespace="yassl"
 	>
 	<Platforms>
 		<Platform
@@ -121,14 +122,16 @@
 				AdditionalIncludeDirectories="include,taocrypt\include,mySTL"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
+				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="false"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=""
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CallingConvention="1"
 			/>
 			<Tool
