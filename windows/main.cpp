@@ -24,7 +24,7 @@
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
-#include <vld.h>
+//#include <vld.h>
 
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -33,7 +33,6 @@
 #include "ExtendedTrace.h"
 #include "WinUtil.h"
 #include "SingleInstance.h"
-#include "ExceptionDlg.h"
 #include "../client/cvsversion.h"
 #include "../client/MerkleTree.h"
 #include "PopupManager.h"
@@ -60,7 +59,7 @@ FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
 #endif
 
 #include "../client/SSLSocket.h"
-
+/*
 string getExceptionName(DWORD code) {
 	switch(code)
     { 
@@ -87,7 +86,7 @@ string getExceptionName(DWORD code) {
 	}
 	return "";
 }
-
+*/
 LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 {	
 	Lock l(cs);
@@ -116,7 +115,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
 	if(File::getSize(Util::getAppPath() + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
-		::MessageBox(WinUtil::mainWnd, _T("StrongDC++ has crashed and you don't have debug symbols installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution..."), _T("StrongDC++ has crashed"), MB_OK);
+		::MessageBox(WinUtil::mainWnd, _T("StrongDC++ has crashed and you don't have StrongDC.pdb file installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution..."), _T("StrongDC++ has crashed"), MB_OK);
 #ifndef _DEBUG
 		exit(1);
 #else
@@ -129,18 +128,14 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
-	sprintf(buf, "Code: %s %x\r\nVersion: %s%s\r\n", 
-		getExceptionName(exceptionCode).c_str(), exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
+	sprintf(buf, "Code: %x\r\nVersion: %s%s\r\n", 
+		exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
 
 	f.write(buf, strlen(buf));
-
-	WinUtil::exceptioninfo = Text::toT(buf);
-
 #if defined(isCVS)
 	sprintf(buf, "CVS: %s\r\n", 
 		CVSVERSION);	
 	f.write(buf, strlen(buf));
-	WinUtil::exceptioninfo += Text::toT(buf);
 #endif	
 	
 	OSVERSIONINFOEX ver;
@@ -150,19 +145,12 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		(DWORD)ver.dwMajorVersion, (DWORD)ver.dwMinorVersion, (DWORD)ver.dwBuildNumber,
 		(DWORD)ver.wServicePackMajor, (DWORD)ver.wProductType);
 
-	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
 	time_t now;
 	time(&now);
 	strftime(buf, DEBUG_BUFSIZE, "Time: %Y-%m-%d %H:%M:%S\r\n", localtime(&now));
 
-	WinUtil::exceptioninfo += Text::toT(buf);
 	f.write(buf, strlen(buf));
-
-	WinUtil::exceptioninfo += LIT(_T("TTH: "));
-	WinUtil::exceptioninfo += Text::toT(tth);
-	WinUtil::exceptioninfo += LIT(_T("\r\n"));
-	WinUtil::exceptioninfo += LIT(_T("\r\n"));
 
 	f.write(LIT("TTH: "));
 	f.write(tth, strlen(tth));
@@ -170,14 +158,12 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 
     f.write(LIT("\r\n"));
     
-	tstring dialogInfo = STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+	STACKTRACE2(f, e->ContextRecord->Eip, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 
 	f.write(LIT("\r\n"));
 
 	f.close();
 
-	WinUtil::exceptioninfo += dialogInfo;
-	
 	if ((!SETTING(SOUND_EXC).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 		PlaySound(Text::toT(SETTING(SOUND_EXC)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
@@ -192,15 +178,14 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	_tcscpy(m_nid.szInfoTitle, _T("StrongDC++ has crashed"));
 	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
-	CExceptionDlg dlg;
-	if (dlg.DoModal(WinUtil::mainWnd) == IDCANCEL) {
-		ExitProcess(1);
+	if(MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered a fatal bug and should have written an exceptioninfo.txt the same directory as the executable. You can upload this file at http://strongdc.berlios.de/forum/ to help us find out what happened. Go there now?"), _T("StrongDC++ Has Crashed"), MB_YESNO | MB_ICONERROR) == IDYES) {
+		WinUtil::openLink(_T("http://strongdc.berlios.de/forum/"));
 	}
 
 #ifndef _DEBUG
 	EXTENDEDTRACEUNINITIALIZE();
 	
-	return EXCEPTION_CONTINUE_EXECUTION;
+	exit(-1);
 #else
 	return EXCEPTION_CONTINUE_SEARCH;
 #endif

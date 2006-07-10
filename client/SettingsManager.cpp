@@ -198,7 +198,7 @@ SettingsManager::SettingsManager()
 	setDefault(USE_SYSTEM_ICONS, true);
 	setDefault(USE_OEM_MONOFONT, false);
 	setDefault(POPUP_PMS, true);
-	setDefault(MIN_UPLOAD_SPEED, 0);
+	setDefault(MIN_UPLOAD_SPEED, 1);
 	setDefault(LOG_FORMAT_POST_DOWNLOAD, "%Y-%m-%d %H:%M: %[target]" + STRING(DOWNLOADED_FROM) + "%[userNI] (%[userCID]), %[fileSI] (%[fileSIchunk]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_POST_UPLOAD, "%Y-%m-%d %H:%M: %[source]" + STRING(UPLOADED_TO) + "%[userNI] (%[userCID]), %[fileSI] (%[fileSIchunk]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_MAIN_CHAT, "[%Y-%m-%d %H:%M] %[message]");
@@ -227,7 +227,7 @@ SettingsManager::SettingsManager()
 	setDefault(DEFAULT_AWAY_MESSAGE, "I'm away. State your business and I might answer later if you're lucky.");
 	setDefault(TIME_STAMPS_FORMAT, "%H:%M:%S");
 	setDefault(MAX_TAB_ROWS, 4);
-	setDefault(MAX_COMPRESSION, 3);
+	setDefault(MAX_COMPRESSION, 5);
 	setDefault(ANTI_FRAG, true);
 	setDefault(NO_AWAYMSG_TO_BOTS, true);
 	setDefault(SKIP_ZERO_BYTE, false);
@@ -236,7 +236,7 @@ SettingsManager::SettingsManager()
 	setDefault(AUTO_SEARCH_AUTO_MATCH, false);
 	setDefault(LOG_FILELIST_TRANSFERS, false);
 	setDefault(LOG_SYSTEM, false);
-	setDefault(SEND_UNKNOWN_COMMANDS, true);
+	setDefault(SEND_UNKNOWN_COMMANDS, false);
 	setDefault(MAX_HASH_SPEED, 0);
 	setDefault(GET_USER_COUNTRY, true);
 	setDefault(FAV_SHOW_JOINS, false);
@@ -298,7 +298,7 @@ SettingsManager::SettingsManager()
 	setDefault(SPY_FRAME_IGNORE_TTH_SEARCHES, false);
 	setDefault(ALLOW_UNTRUSTED_HUBS, true);
 	setDefault(ALLOW_UNTRUSTED_CLIENTS, true);		
-	setDefault(NUMBER_OF_SEGMENTS, 4);
+	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
@@ -428,7 +428,7 @@ SettingsManager::SettingsManager()
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
 	setDefault(USE_EMOTICONS, true);
-	setDefault(CZCHARS_DISABLE, false);
+	setDefault(CZCHARS_DISABLE, true);
 	setDefault(REPORT_ALTERNATES, true);	
 	setDefault(USE_OLD_SHARING_UI, false);
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
@@ -438,7 +438,7 @@ SettingsManager::SettingsManager()
 	setDefault(GARBAGE_COMMAND_OUTGOING, false);
 	setDefault(UPLOADQUEUEFRAME_SHOW_TREE, true);	
 	setDefault(DONT_BEGIN_SEGMENT, true);
-	setDefault(DONT_BEGIN_SEGMENT_SPEED, 400);
+	setDefault(DONT_BEGIN_SEGMENT_SPEED, 512);
 
 	setDefault(DETECT_BADSOFT, true);
 	setDefault(BADSOFT_DETECTIONS, 0);
@@ -626,6 +626,7 @@ void SettingsManager::load(string const& aFileName)
 	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
 		set(TCP_PORT, (int)Util::rand(1025, 32000));
 		set(UDP_PORT, (int)Util::rand(1025, 32000));
+		set(TLS_PORT, (int)Util::rand(1025, 32000));
 	}
 }
 

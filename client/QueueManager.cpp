@@ -967,23 +967,23 @@ int QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
 	if(BOOLSETTING(SEGMENTS_MANUAL)) {
 		MaxSegments = min(SETTING(NUMBER_OF_SEGMENTS), 10);
 	} else {
-		if((filesize >= 2*1048576) && (filesize < 10*1048576)) {
+		if((filesize >= 10*1048576) && (filesize < 20*1048576)) {
 			MaxSegments = 2;
-		} else if((filesize >= 10*1048576) && (filesize < 30*1048576)) {
+		} else if((filesize >= (int64_t)20*1048576) && (filesize < (int64_t)40*1048576)) {
 			MaxSegments = 3;
-		} else if((filesize >= 30*1048576) && (filesize < 50*1048576)) {
+		} else if((filesize >= (int64_t)40*1048576) && (filesize < (int64_t)80*1048576)) {
 			MaxSegments = 4;
-		} else if((filesize >= 50*1048576) && (filesize < 80*1048576)) {
+		} else if((filesize >= (int64_t)80*1048576) && (filesize < (int64_t)160*1048576)) {
 			MaxSegments = 5;
-		} else if((filesize >= 80*1048576) && (filesize < 120*1048576)) {
+		} else if((filesize >= (int64_t)160*1048576) && (filesize < (int64_t)320*1048576)) {
 			MaxSegments = 6;
-		} else if((filesize >= 120*1048576) && (filesize < 200*1048576)) {
+		} else if((filesize >= (int64_t)320*1048576) && (filesize < (int64_t)640*1048576)) {
 			MaxSegments = 7;
-		} else if((filesize >= 200*1048576) && (filesize < 500*1048576)) {
+		} else if((filesize >= (int64_t)640*1048576) && (filesize < (int64_t)1280*1048576)) {
 			MaxSegments = 8;
-		} else if((filesize >= 500*1048576) && (filesize < 1000*1048576)) {
+		} else if((filesize >= (int64_t)1280*1048576) && (filesize < (int64_t)2560*1048576)) {
 			MaxSegments = 9;
-		} else if(filesize >= 1000*1048576) {
+		} else if(filesize >= (int64_t)2560*1048576) {
 			MaxSegments = 10;
 		}
 	}

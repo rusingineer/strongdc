@@ -122,13 +122,15 @@
 				AdditionalIncludeDirectories="include,..\mySTL"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
+				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="false"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CallingConvention="1"
 			/>
 			<Tool
