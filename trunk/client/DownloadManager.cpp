@@ -1134,21 +1134,21 @@ void DownloadManager::throttleSetup() {
 // called once a second, plus when a download starts
 // from the constructor to BufferedSocket
 // with 64k, a few people get winsock error 0x2747
-	size_t INBUFSIZE = SETTING(SOCKET_IN_BUFFER) * 1024;
 	unsigned int num_transfers = downloads.size();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-			if (mDownloadLimit <= (INBUFSIZE * 10 * num_transfers)) {
-				mByteSlice = mDownloadLimit / (7 * num_transfers);
-				if (mByteSlice > INBUFSIZE)
-					mByteSlice = INBUFSIZE;
-				mCycleTime = 1000 / 10;
-				} else {
-				mByteSlice = INBUFSIZE;
-				mCycleTime = 1000 * INBUFSIZE / mDownloadLimit;
-			}
+		size_t inbufSize = SETTING(SOCKET_IN_BUFFER);
+		if (mDownloadLimit <= (inbufSize * 10 * num_transfers)) {
+			mByteSlice = mDownloadLimit / (7 * num_transfers);
+			if (mByteSlice > inbufSize)
+				mByteSlice = inbufSize;
+			mCycleTime = 100;
+			} else {
+			mByteSlice = inbufSize;
+			mCycleTime = 1000 * inbufSize / mDownloadLimit;
 		}
+	}
 }
 
 /**

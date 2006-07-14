@@ -100,7 +100,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 
 				size = f->getSize();
 
-				free = userlist || (size <= (int64_t)(SETTING(SMALL_FILE_SIZE) * 1024));
+				free = userlist || (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
 	
 				if(aBytes == -1) {
 					aBytes = size - aStartPos;
@@ -508,6 +508,28 @@ void UploadManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
 			++j;
 		}
 	}
+	
+	if( BOOLSETTING(AUTO_KICK) ) {
+		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+			Upload* u = *i;
+			if(u->getUser()->isOnline()) {
+				u->unsetFlag(Upload::FLAG_PENDING_KICK);
+				continue;
+			}
+
+			if(u->isSet(Upload::FLAG_PENDING_KICK)) {
+				u->getUserConnection()->disconnect(true);
+				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(u->getUser()->getCID())));
+			}
+
+			if(BOOLSETTING(AUTO_KICK_NO_FAVS) && FavoriteManager::getInstance()->isFavoriteUser(u->getUser())) {
+				continue;
+			}
+
+			u->setFlag(Upload::FLAG_PENDING_KICK);
+		}
+	}
+		
 }
 
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
@@ -631,25 +653,6 @@ void UploadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 }
 
 void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
-
-	/// @todo Don't kick when /me disconnects
-	if( BOOLSETTING(AUTO_KICK) && !(BOOLSETTING(AUTO_KICK_NO_FAVS) && FavoriteManager::getInstance()->isFavoriteUser(aUser)) ) {
-
-		Lock l(cs);
-		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-			Upload* u = *i;
-			if(u->getUser() == aUser) {
-				// Oops...adios...
-				u->getUserConnection()->disconnect(true);
-				// But let's grant him/her a free slot just in case...
-				if (!u->getUserConnection()->isSet(UserConnection::FLAG_HASEXTRASLOT))
-					reserveSlot(u->getUser());
-				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(aUser->getCID())));
-			}
-		}
-	}
-
-	//Remove references to them.
 	if(!aUser->isOnline()) {
 		Lock l(cs);
 		clearUserFiles(aUser);
@@ -695,19 +698,19 @@ void UploadManager::throttleBytesTransferred(u_int32_t i)  {
 void UploadManager::throttleSetup() {
 // called once a second, plus when uploads start
 // from the constructor to BufferedSocket
-	size_t INBUFSIZE = SETTING(SOCKET_OUT_BUFFER) * 1024;	
 	unsigned int num_transfers = uploads.size();
 	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
-		if (mUploadLimit <= (INBUFSIZE * 10 * num_transfers)) {
+		size_t inbufSize = SETTING(SOCKET_OUT_BUFFER);	
+		if (mUploadLimit <= (inbufSize * 10 * num_transfers)) {
 			mByteSlice = mUploadLimit / (5 * num_transfers);
-			if (mByteSlice > INBUFSIZE)
-				mByteSlice = INBUFSIZE;
-			mCycleTime = 1000 / 10;
+			if (mByteSlice > inbufSize)
+				mByteSlice = inbufSize;
+			mCycleTime = 100;
 		} else {
-			mByteSlice = INBUFSIZE;
-			mCycleTime = 1000 * INBUFSIZE / mUploadLimit;
+			mByteSlice = inbufSize;
+			mCycleTime = 1000 * inbufSize / mUploadLimit;
 		}
 	}
 }

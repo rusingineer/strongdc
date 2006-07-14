@@ -122,7 +122,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	QueueManager::getInstance()->addListener(this);
 	LogManager::getInstance()->addListener(this);
 	WebServerManager::getInstance()->addListener(this);
-
+	
+	if(BOOLSETTING(WEBSERVER))
+		WebServerManager::getInstance()->Start();
+	
 	WinUtil::init(m_hWnd);
 
 	//trayMessage = RegisterWindowMessage(_T("TaskbarCreated"));

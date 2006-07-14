@@ -53,7 +53,7 @@ PropPage::Item UploadPage::items[] = {
 	{ IDC_SHAREHIDDEN, SettingsManager::SHARE_HIDDEN, PropPage::T_BOOL },
 	{ IDC_MIN_UPLOAD_SPEED, SettingsManager::MIN_UPLOAD_SPEED, PropPage::T_INT },
 	{ IDC_EXTRA_SLOTS, SettingsManager::EXTRA_SLOTS, PropPage::T_INT },
-	{ IDC_SMALL_FILE_SIZE, SettingsManager::SMALL_FILE_SIZE, PropPage::T_INT },
+	{ IDC_SMALL_FILE_SIZE, SettingsManager::SET_MINISLOT_SIZE, PropPage::T_INT },
 	{ IDC_EXTRA_SLOTS2, SettingsManager::HUB_SLOTS, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
@@ -146,8 +146,8 @@ void UploadPage::write()
 	if(SETTING(EXTRA_SLOTS) < 3)
 		settings->set(SettingsManager::EXTRA_SLOTS, 3);
 
-	if(SETTING(SMALL_FILE_SIZE) < 64)
-		settings->set(SettingsManager::SMALL_FILE_SIZE, 64);
+	if(SETTING(SET_MINISLOT_SIZE) < 64)
+		settings->set(SettingsManager::SET_MINISLOT_SIZE, 64);
 
 	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
 		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * SETTING(SLOTS)) + 3) ) {

@@ -53,10 +53,15 @@
 	};
 
 	struct MessageTask : public StringTask {
-		MessageTask(Speakers speaker_, const Identity& from_, const User::Ptr& to_, const User::Ptr& replyTo_, const tstring& m) : StringTask(speaker_, m), from(from_), to(to_), replyTo(replyTo_) { }
+		MessageTask(Speakers speaker_, const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const tstring& m) : StringTask(speaker_, m),
+			from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
+			hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
 		Identity from;
 		User::Ptr to;
 		User::Ptr replyTo;
+
+		bool hub;
+		bool bot;
 	};
 
 

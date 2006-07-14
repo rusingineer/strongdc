@@ -603,7 +603,11 @@ void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueExcept
 	add(target, -1, NULL, aUser, USER_LIST_NAME, true, QueueItem::FLAG_USER_LIST | aFlags);
 }
 
-void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw() {
+void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw(QueueException) {
+	if(aUser == ClientManager::getInstance()->getMe()) {
+		throw QueueException(STRING(NO_DOWNLOADS_FROM_SELF));
+	}
+
 	if(!aUser->isOnline() || aUser->getCID().isZero())
 		return;
 
@@ -902,7 +906,7 @@ int QueueManager::matchListing(const DirectoryListing& dl) throw() {
 
 void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	string target = Util::validateFileName(aTarget);
-	if(Util::stricmp(aSource, target) == 0)
+	if(aSource == target)
 		return;
 
 	bool delSource = false;
@@ -920,7 +924,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 
 		// Let's see if the target exists...then things get complicated...
 		QueueItem* qt = fileQueue.find(target);
-		if(qt == NULL) {
+		if(qt == NULL || Util::stricmp(aSource, target) == 0) {
 			// Good, update the target and move in the queue...
 			fileQueue.move(qs, target);
 			fire(QueueManagerListener::Moved(), qs);

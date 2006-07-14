@@ -80,7 +80,8 @@ void Client::reloadSettings(bool updateNick) {
 		} else {
 			setCurrentDescription(speedDescription + SETTING(DESCRIPTION));
 		}
-		setPassword(hub->getPassword());
+		if(!hub->getPassword().empty())
+			setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
 		setFavIp(hub->getIP());
 	} else {

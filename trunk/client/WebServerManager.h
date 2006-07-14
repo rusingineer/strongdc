@@ -48,7 +48,7 @@ public:
 		return socket;
 	}
 
-	string getPage(string file);
+	string getPage(string file, string IP);
 	string getLoginPage();
 
 
@@ -66,7 +66,8 @@ public:
 	}
 		
 	void onSearchResult(SearchResult* aResult) throw();
-
+	
+	void Start();
 	void Restart(){		
 		Stop();
 		Start();
@@ -81,7 +82,7 @@ private:
 	WebServerManager(void);
 	~WebServerManager(void);
 
-	void Start();
+	
 	void Stop(); 
 
 
@@ -94,6 +95,7 @@ private:
 		SEARCH,
 		LOG,
 		SYSLOG,
+		LOGOUT,
 		PAGE_404
 	};
 
@@ -136,7 +138,7 @@ private:
 	int row;
 public:
 	void login(string ip){
-		loggedin[ip] = time(NULL);
+		loggedin[ip] = GET_TICK();
 	}
 	void search(string search_str, int search_type) {
 		if(sended_search == false) {
@@ -164,7 +166,7 @@ public:
 	bool isloggedin(string ip) {
 		map<string,time_t>::iterator i;
 		if((i = loggedin.find(ip)) != loggedin.end()) {
-            time_t elapsed = time(NULL) - loggedin[ip];
+            time_t elapsed = (GET_TICK() - loggedin[ip]) / 1000;
 			if(elapsed > 300) {
 				loggedin.erase(i);
 				return false;

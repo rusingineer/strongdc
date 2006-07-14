@@ -32,7 +32,6 @@ WebServerManager* Singleton<WebServerManager>::instance = NULL;
 WebServerManager::WebServerManager(void) : started(false), page404(NULL) {
 	SettingsManager::getInstance()->addListener(this);
 	sended_search = false;
-	if(BOOLSETTING(WEBSERVER))Start();
 }
 
 WebServerManager::~WebServerManager(void){
@@ -59,6 +58,7 @@ void WebServerManager::Start(){
 	pages["/weblog.html"] = new WebPageInfo(LOG, "Logs");
 	pages["/syslog.html"] = new WebPageInfo(SYSLOG, "System Logs");
 	pages["/search.html"] = new WebPageInfo(SEARCH, "Search");
+	pages["/logout.html"] = new WebPageInfo(LOGOUT, "Logout");
 
 #ifdef _DEBUG  
 	//AllocConsole();
@@ -111,7 +111,7 @@ string WebServerManager::getLoginPage(){
     pagehtml += "<h1>StrongDC++ Webserver</h1>";
     pagehtml += "<div id='index_logo'></div>";
     pagehtml += "	<div id='login'>";
-    pagehtml += "		<form method='get' action='index.htm'>";
+    pagehtml += "		<form method='get' action='index.htm' enctype='multipart/form-data'>";
     pagehtml += "			<p><strong>Username: </strong><input type='text' name='user'  size='10'/></p>";
     pagehtml += "			<p><strong>Password: </strong><input type='password' name='pass' size='10'></p>";
     pagehtml += "			<p><input class='tlacitko' type='submit' value='Login'></p>";
@@ -129,7 +129,7 @@ string WebServerManager::getLoginPage(){
 	return header + pagehtml;
 }
 
-string WebServerManager::getPage(string file){
+string WebServerManager::getPage(string file, string IP) {
 	printf("requested: '%s'\n",file.c_str()); 
 	string header = "HTTP/1.0 200 OK\r\n";
 	string pagehtml = "";
@@ -140,7 +140,7 @@ string WebServerManager::getPage(string file){
     pagehtml = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.1//EN' 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'>";
     pagehtml += "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='cs'>";
     pagehtml += "<head>";
-    pagehtml += "    <title>Strongdc++ webserver - System Log</title>";
+    pagehtml += "    <title>Strongdc++ webserver</title>";
 	
     pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
     pagehtml += "    <meta http-equiv='pragma' content='no-cache'>";
@@ -160,6 +160,7 @@ string WebServerManager::getPage(string file){
     pagehtml += "		<a href='dlqueue.html'>Download Queue</a>";
     pagehtml += "		<a href='dlfinished.html'>Finished Downloads</a>";
     pagehtml += "		<a href='search.html'>Search</a>";
+    pagehtml += "		<a href='logout.html'>Log out</a>";
     pagehtml += "	</div>";
 
 	if((page->id == SEARCH) && (sended_search == true)) {
@@ -202,6 +203,14 @@ string WebServerManager::getPage(string file){
 			pagehtml+=getSysLogs();
 			break;
 
+		case LOGOUT: {
+			map<string,time_t>::iterator i;
+			if((i = loggedin.find(IP)) != loggedin.end())
+				loggedin.erase(i);
+
+			pagehtml = getLoginPage();
+			return pagehtml;
+		}
 		case PAGE_404:
 		default:
 			int action = 0;
@@ -249,7 +258,7 @@ string WebServerManager::getLogs(){
 	//ret += LOGTAIL(WEBSERVER_AREA, 10);
 
 	StringMap params;	
-/*	params["user"] = user->getNick();	
+	/*params["user"] = user->getFirstNick();	
 	params["hub"] = user->getClientName();
 	params["mynick"] = user->getClientNick();	
 	params["mycid"] = user->getClientCID().toBase32();	
@@ -461,7 +470,7 @@ StringMap WebServerSocket::getArgs(string arguments) {
 }
 
 int WebServerSocket::run(){
-	char buff[512];
+	char buff[8192];
 	int test = 0;
 	ZeroMemory(&buff, sizeof(buff));
 	while(true) {
@@ -479,7 +488,7 @@ int WebServerSocket::run(){
 
 		string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
 
-		printf("%s\n", header.c_str());	
+		dcdebug("%s\n", header.c_str());	
 
 		if(((start = header.find("GET ")) != string::npos) && (end = header.substr(start+4).find(" ")) != string::npos ){
 			if(BOOLSETTING(LOG_WEBSERVER)) {
@@ -517,7 +526,7 @@ int WebServerSocket::run(){
 				toSend = WebServerManager::getInstance()->getLoginPage();
 			} else {
 				//if(!check || (WebServerManager::getInstance()->getResults() != Util::emptyString))
-					toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header));
+					toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header, IP));
 				/*else
 					break;*/
 			}
