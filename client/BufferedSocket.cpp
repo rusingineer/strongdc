@@ -274,15 +274,14 @@ void BufferedSocket::threadRead() throw(SocketException) {
 						if (left > 0 && left < (int)readsize) {
 							dm->throttleReturnBytes(left - readsize);
 						}
-						time_t sleep_interval =  dm->throttleCycleTime();
-						Thread::sleep(static_cast<u_int32_t>(sleep_interval));
+						Thread::sleep(static_cast<u_int32_t>(dm->throttleCycleTime()));
 					}
 				}
 				break;
 		}
 	}
 	
-	if(mode == MODE_LINE && line.size() > 16*1024*1024) {
+	if(mode == MODE_LINE && line.size() > 16777216) {
 		throw SocketException(STRING(COMMAND_TOO_LONG));
 	}	
 }

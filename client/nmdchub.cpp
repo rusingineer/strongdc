@@ -214,7 +214,17 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		string nick = line.substr(1, i-1);
 		OnlineUser* ou = findUser(nick);
-		fire(ClientListener::Message(), this, *ou, unescape(line));
+		if(ou) {
+			fire(ClientListener::Message(), this, *ou, unescape(line));
+		} else {
+			OnlineUser& o = getUser(nick);
+			// Assume that messages from unknown users come from the hub
+			o.getIdentity().setHub(true);
+			o.getIdentity().setHidden(true);
+			fire(ClientListener::UserUpdated(), this, o);
+
+			fire(ClientListener::Message(), this, o, unescape(line));
+		}
 		return;
     }
 
@@ -286,6 +296,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 						else
 							fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
 					}
+					
 					flooders.push_back(make_pair(seeker, tick));
 					return;
 				}
@@ -369,9 +380,13 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		if(connection.empty()) {
 			// No connection = bot...
 			u.getUser()->setFlag(User::BOT);
+			u.getIdentity().setBot(true);
 		} else {
 			u.getUser()->unsetFlag(User::BOT);
+			u.getIdentity().setBot(false);
 		}
+
+		u.getIdentity().setHub(false);
 
 		u.getIdentity().setConnection(connection);
 
@@ -730,20 +745,38 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
         OnlineUser* replyTo = findUser(rtNick);
 		OnlineUser* from = findUser(fromNick);
-		OnlineUser* to = findUser(getMyNick());
+		OnlineUser& to = getUser(getMyNick());
 
-		if(replyTo == NULL || from == NULL || to == NULL) {
-			fire(ClientListener::Message(), this, *(OnlineUser*)NULL, unescape(param.substr(i)));
-		} else {
-			fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, unescape(param.substr(i)));
+		string msg = param.substr(i);
+		if(replyTo == NULL || from == NULL) {
+			if(replyTo == 0) {
+				// Assume it's from the hub
+				replyTo = &getUser(rtNick);
+				replyTo->getIdentity().setHub(true);
+				replyTo->getIdentity().setHidden(true);
+				fire(ClientListener::UserUpdated(), this, *replyTo);
+			}
+			if(from == 0) {
+				// Assume it's from the hub
+				from = &getUser(rtNick);
+				from->getIdentity().setHub(true);
+				from->getIdentity().setHidden(true);
+				fire(ClientListener::UserUpdated(), this, *from);
+			}
+			
+			// Update pointers just in case they've been invalidated
+			replyTo = findUser(rtNick);
+			from = findUser(fromNick);
+
 		}
+		fire(ClientListener::PrivateMessage(), this, *from, to, *replyTo, unescape(msg));
 	} else if(cmd == "$GetPass") {
 		OnlineUser& ou = getUser(getMyNick());
 		ou.getIdentity().set("RG", "1");
 		setMyIdentity(ou.getIdentity());
 		fire(ClientListener::GetPassword(), this);
 	} else if(cmd == "$BadPass") {
-		fire(ClientListener::BadPassword(), this);
+		setPassword(Util::emptyString);
 	} else if(cmd == "$ZOn") {
 		socket->setMode(BufferedSocket::MODE_ZPIPE);
 	} else {

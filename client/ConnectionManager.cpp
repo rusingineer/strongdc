@@ -483,11 +483,12 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		dcdebug("CM::onLock %p received lock twice, ignoring\n", (void*)aSource);
 		return;
 	}
-	
+	bool updateUser = false;
 	if( CryptoManager::getInstance()->isExtended(aLock) ) {
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
 			aSource->getUser()->setFlag(User::DCPLUSPLUS);
+			updateUser = true;
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
@@ -505,6 +506,9 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	if(aSource->getUser()) {
 		aSource->getUser()->setPk(aPk);
 		aSource->getUser()->setLock(aLock);
+		
+		if(updateUser)
+			ClientManager::getInstance()->updateUser(aSource->getUser());
 	}
 }
 

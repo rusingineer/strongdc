@@ -40,7 +40,8 @@ public:
 		FLAG_TTH_LEAVES = 0x02,
 		FLAG_ZUPLOAD = 0x04,
 		FLAG_PARTIAL_LIST = 0x08,
-		FLAG_PARTIAL_SHARE = 0x10
+		FLAG_PENDING_KICK = 0x10,
+		FLAG_PARTIAL_SHARE = 0x20
 	};
 
 	typedef Upload* Ptr;
@@ -188,7 +189,7 @@ public:
 		/** Only grant one slot per 30 sec */
 		if(GET_TICK() < getLastGrant() + 30*1000)
 			return false;
-		/** Grant if uploadspeed is less than the threshold speed */
+		/** Grant if upload speed is less than the threshold speed */
 		return getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
 	}
 
@@ -303,8 +304,8 @@ private:
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
+	virtual void on(Second, time_t aTick) throw();
+	virtual void on(Minute, time_t aTick) throw();
 
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();

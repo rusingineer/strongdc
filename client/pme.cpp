@@ -232,8 +232,12 @@ PME::PME(const PME & r ///< PME object to make copy of
 
 PME::~PME()
 {
-	if ( re )
+	if ( re ) {
 		pcre_free ( re );
+	}
+	if ( extra ) {
+ 	    pcre_free ( extra );
+ 	}
 }
 
 

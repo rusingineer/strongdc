@@ -18,13 +18,15 @@
 
 #include "stdafx.h"
 
+#ifdef _DEBUG
 /** 
 	Memory leak detector
 	You can remove following 3 lines if you don't want to detect memory leaks.
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
-//#include <vld.h>
+#include <vld.h>
+#endif
 
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
@@ -33,6 +35,7 @@
 #include "ExtendedTrace.h"
 #include "WinUtil.h"
 #include "SingleInstance.h"
+
 #include "../client/cvsversion.h"
 #include "../client/MerkleTree.h"
 #include "PopupManager.h"

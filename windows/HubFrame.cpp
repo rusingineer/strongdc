@@ -353,7 +353,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(s.c_str(), _T("smallfilesize"))==0) {
 				int j = Util::toInt(Text::fromT(param));
 				if(j >= 64) {
-					SettingsManager::getInstance()->set(SettingsManager::SMALL_FILE_SIZE, j);
+					SettingsManager::getInstance()->set(SettingsManager::SET_MINISLOT_SIZE, j);
 					addClientLine(TSTRING(SMALL_FILE_SIZE_SET), WinUtil::m_ChatTextSystem );
 				} else {
 					addClientLine(TSTRING(INVALID_SIZE), WinUtil::m_ChatTextSystem );
@@ -861,24 +861,32 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			MessageTask& pm = *static_cast<MessageTask*>(task);
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!ignoreList.count(nick) || (pm.from.isOp() && !client->isOp())) {
-				if(pm.replyTo->isOnline()) {
-					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
-							PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
-						} else {
-							addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
-						}
-					if(BOOLSETTING(MINIMIZE_TRAY) && !pm.from.getConnection().empty()) {
-						HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
-						::PostMessage(hMainWnd, WM_SPEAKER, MainFrame::SET_PM_TRAY_ICON, NULL);
-					}
-				} else {
-					if(BOOLSETTING(IGNORE_OFFLINE)) {
-						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, WinUtil::m_ChatTextPrivate, false);
-					} else if(BOOLSETTING(POPUP_OFFLINE)) {
+				if(pm.hub) {
+					if(BOOLSETTING(IGNORE_HUB_PMS)) {
+						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, false);
+					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
 					}
+				} else if(pm.bot) {
+					if(BOOLSETTING(IGNORE_BOT_PMS)) {
+						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, WinUtil::m_ChatTextPrivate, false);
+					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
+					} else {
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
+					}
+				} else {
+					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
+					} else {
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
+					}
+					if(BOOLSETTING(MINIMIZE_TRAY)) {
+						HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
+						::PostMessage(hMainWnd, WM_SPEAKER, MainFrame::SET_PM_TRAY_ICON, NULL);
+					}										
 				}
 			}
 		} else if(task->speaker == KICK_MSG) {
@@ -904,12 +912,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 
 			addLine(static_cast<StringTask*>(task)->msg, cf);
 		}
-	}
 
-	{
-		Lock l(taskCS);
-		for_each(t.begin(), t.end(), DeleteFunction());
-		t.clear();
+		delete task;
 	}
 	
 	if(resort && showUsers) {
@@ -1826,9 +1830,6 @@ void HubFrame::on(Connecting, Client*) throw() {
 void HubFrame::on(Connected, Client*) throw() { 
 	speak(CONNECTED);
 }
-void HubFrame::on(BadPassword, Client*) throw() { 
-	client->setPassword(Util::emptyString);
-}
 void HubFrame::on(UserUpdated, Client*, const OnlineUser& user) throw() { 
 	speak(UPDATE_USER_JOIN, user);
 }
@@ -1878,11 +1879,11 @@ void HubFrame::on(Message, Client*, const OnlineUser& from, const string& msg) t
 		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
 			// Do nothing...
 		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
-			speak(KICK_MSG, from, NULL, NULL, Util::toDOS(msg));
+			speak(KICK_MSG, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Util::toDOS(msg));
 			return;
 		}
 	}
-	speak(ADD_CHAT_LINE, from, NULL, NULL, Util::formatMessage(msg));
+	speak(ADD_CHAT_LINE, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Util::formatMessage(msg));
 }
 
 void HubFrame::on(PrivateMessage, Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 

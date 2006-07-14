@@ -93,6 +93,15 @@ public:
 		return *(OnlineUser*)NULL;
 	}
 
+	void updateUser(const User::Ptr& p) {
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i != onlineUsers.end()) {
+			OnlineUser& ou = *i->second;
+			ou.getClient().updated(ou);
+		}
+	}
+
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
 
 	/** Constructs a synthetic, hopefully unique CID */
