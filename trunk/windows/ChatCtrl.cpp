@@ -432,7 +432,7 @@ bool ChatCtrl::HitNick(POINT p, CAtlString *sNick, int *piBegin, int *piEnd) {
 		return false;
 
 	if(m_pUsers->findItem((tstring)sN) >= 0) {
-			*sNick = sN;
+		*sNick = sN;
 		if(piBegin && piEnd) {
 			*piBegin = lSelBegin + iLeft;
 			*piEnd = lSelBegin + iLeft + iCRLF;
@@ -440,30 +440,30 @@ bool ChatCtrl::HitNick(POINT p, CAtlString *sNick, int *piBegin, int *piEnd) {
 		return true;
 	}
     
-		// Jeste pokus odmazat eventualni koncovou ':' nebo '>' 
-		// Nebo pro obecnost posledni znak 
-		// A taky prvni znak 
-		// A pak prvni i posledni :-)
+	// Jeste pokus odmazat eventualni koncovou ':' nebo '>' 
+	// Nebo pro obecnost posledni znak 
+	// A taky prvni znak 
+	// A pak prvni i posledni :-)
 	if(iCRLF > 1) {
 		sN = sText.Mid(iLeft, iCRLF - 1);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
-				*sNick = sN;
-       			if(piBegin && piEnd) {
-       				*piBegin = lSelBegin + iLeft;
-       				*piEnd = lSelBegin + iLeft + iCRLF - 1;
-        			}
-				return true;
-			}
+			*sNick = sN;
+       		if(piBegin && piEnd) {
+       			*piBegin = lSelBegin + iLeft;
+       			*piEnd = lSelBegin + iLeft + iCRLF - 1;
+        		}
+			return true;
+		}
 
 		sN = sText.Mid(iLeft + 1, iCRLF - 1);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
-        		*sNick = sN;
-       			if(piBegin && piEnd) {
-					*piBegin = lSelBegin + iLeft + 1;
-					*piEnd = lSelBegin + iLeft + iCRLF;
-        			}
-				return true;
-			}
+        	*sNick = sN;
+       		if(piBegin && piEnd) {
+				*piBegin = lSelBegin + iLeft + 1;
+				*piEnd = lSelBegin + iLeft + iCRLF;
+        		}
+			return true;
+		}
 
 		sN = sText.Mid(iLeft + 1, iCRLF - 2);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
