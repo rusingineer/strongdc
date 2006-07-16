@@ -376,7 +376,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		if(j == string::npos)
 			return;
 
-		string connection = param.substr(i, j-i-1);
+		string connection = (i == j) ? Util::emptyString : param.substr(i, j-i-1);
 		if(connection.empty()) {
 			// No connection = bot...
 			u.getUser()->setFlag(User::BOT);
