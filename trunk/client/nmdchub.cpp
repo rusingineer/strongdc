@@ -214,6 +214,11 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		string nick = line.substr(1, i-1);
 		OnlineUser* ou = findUser(nick);
+
+		if(Text::toLower(line.substr(i+2, 3)) == "/me") {
+			line = "* " + nick + line.substr(i+5);
+		}
+
 		if(ou) {
 			fire(ClientListener::Message(), this, *ou, unescape(line));
 		} else {
@@ -822,18 +827,8 @@ void NmdcHub::myInfo() {
 	
 	dcdebug("MyInfo %s...\n", getMyNick().c_str());
 	char StatusMode = '\x01';
-	string tmp0 = "<++";
-	string tmp1 = "\x1fU9";
-	string tmp2 = "+L9";
-	string tmp3 = "+G9";
-	string tmp4 = "+R9";
-	string tmp5 = "+K9";
-	string::size_type i;
-	
-	for(i = 0; i < 3; i++) {
-		tmp1[i]++;tmp2[i]++; tmp3[i]++; tmp4[i]++; tmp5[i]++;
-	}
 	char modeChar = '?';
+
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
 		modeChar = '5';
 	else if(isActive())
@@ -842,28 +837,18 @@ void NmdcHub::myInfo() {
 		modeChar = 'P';
 	
 	char tag[256];
-	string version = DCVERSIONSTRING;	
+	string dc;
+	string version = DCVERSIONSTRING;
+	int NetLimit = Util::getNetLimiterLimit();
+	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(UPLOAD_SPEED);
+
 	if (getStealth() == false) {
-		tmp0 = "<StrgDC++";
+		dc = "<StrgDC++";
 #ifdef isCVS
 		version = VERSIONSTRING STRONGDCVERSIONSTRING CVSVERSION;
 #else
 		version = VERSIONSTRING STRONGDCVERSIONSTRING;
 #endif
-	}
-
-	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		sprintf(tag, "%s%s%s%s%c%s%s%s%s%s%s>", tmp0.c_str(), tmp1.c_str(), version.c_str(), tmp2.c_str(), modeChar, tmp3.c_str(), 
-		getCounts().c_str(), tmp4.c_str(), Util::toString(UploadManager::getInstance()->getSlots()).c_str(), tmp5.c_str(), Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)).c_str());
-	} else {
-		sprintf(tag, "%s%s%s%s%c%s%s%s%s>", tmp0.c_str(), tmp1.c_str(), version.c_str(), tmp2.c_str(), modeChar, tmp3.c_str(), 
-		getCounts().c_str(), tmp4.c_str(), Util::toString(UploadManager::getInstance()->getSlots()).c_str());
-	}
-
-	int NetLimit = Util::getNetLimiterLimit();
-	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(UPLOAD_SPEED);
-
-	if(getStealth() == false) {
 		if (UploadManager::getFireballStatus()) {
 			StatusMode += 8;
 		} else if (UploadManager::getFileServerStatus()) {
@@ -874,8 +859,15 @@ void NmdcHub::myInfo() {
 			StatusMode += 2;
 		}
 	} else {
+		dc = "<++";
 		if (connection == "Modem") { connection = "56Kbps"; }
 		else if (connection == "Wireless") { connection = "Satellite"; }
+	}
+
+	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+		sprintf(tag, "%s V:%s,M:%c,H:%s,S:%d,L:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots(), SETTING(MAX_UPLOAD_SPEED_LIMIT));
+	} else {
+		sprintf(tag, "%s V:%s,M:%c,H:%s,S:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots());
 	}
 
 	char myinfo[512];
