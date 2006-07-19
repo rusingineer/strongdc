@@ -162,8 +162,9 @@ void NetworkPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_EXTERNAL_IP), direct || upnp || nat);
 	::EnableWindow(GetDlgItem(IDC_OVERRIDE), direct || upnp || nat);
 
-	::EnableWindow(GetDlgItem(IDC_PORT_TCP), direct || upnp || nat);
-	::EnableWindow(GetDlgItem(IDC_PORT_UDP), direct || upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_PORT_TCP), upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_PORT_UDP), upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_PORT_TLS), upnp || nat);
 
 	BOOL socks = IsDlgButtonChecked(IDC_SOCKS5);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), socks);

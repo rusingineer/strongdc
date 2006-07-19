@@ -668,6 +668,7 @@ enum Strings { // @DontAdd
 	SETTINGS_POPUP_HUB_PMS, // "Open private messages from bots in their own window"
 	SETTINGS_POPUP_PMS, // "Open private messages in their own window"
 	SETTINGS_PORTS, // "Ports"
+	SETTINGS_PRIO_AUTOPRIO, // "Autoprio settings - Auto priority option must be OFF!"
 	SETTINGS_PRIO_HIGH, // "High prio max size"
 	SETTINGS_PRIO_HIGHEST, // "Highest prio max size"
 	SETTINGS_PRIO_LOW, // "Low prio max size"

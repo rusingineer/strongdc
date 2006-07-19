@@ -14,7 +14,7 @@
 * zlepšení výkonu
 * odstranìný nìkteré staré funkce (Info o MP3, Kontrola SFV...)
 * projekt portován na Visual Studio .net 2005
-* pro kompletni changelog viz cvs-changelog.txt
+* pro kompletní changelog viz cvs-changelog.txt
 
 	-- StrongDC++ 1.00 RC10 --
 

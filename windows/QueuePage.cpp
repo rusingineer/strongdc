@@ -27,6 +27,7 @@
 #include "WinUtil.h"
 
 PropPage::TextItem QueuePage::texts[] = {
+	{ IDC_SETTINGS_AUTOPRIO, ResourceManager::SETTINGS_PRIO_AUTOPRIO },
 	{ IDC_SETTINGS_PRIO_HIGHEST, ResourceManager::SETTINGS_PRIO_HIGHEST },
 	{ IDC_SETTINGS_KB3, ResourceManager::KB },
 	{ IDC_SETTINGS_PRIO_HIGH, ResourceManager::SETTINGS_PRIO_HIGH },
@@ -101,6 +102,8 @@ LRESULT QueuePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 }
 
 void QueuePage::write() {
+	settings->set(SettingsManager::MULTI_CHUNK, ctrlMultiSource.GetCurSel());
+
 	PropPage::write((HWND)*this, items, 0, 0);
 	PropPage::write((HWND)*this, items, optionItems, GetDlgItem(IDC_OTHER_QUEUE_OPTIONS));
 }

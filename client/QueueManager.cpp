@@ -1038,7 +1038,7 @@ again:
 		return NULL;
 
 	if((SETTING(FILE_SLOTS) != 0) && (q->getStatus() == QueueItem::STATUS_WAITING) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
-		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (unsigned int)SETTING(FILE_SLOTS))) {
+		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
 		message = STRING(ALL_FILE_SLOTS_TAKEN);
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto again;

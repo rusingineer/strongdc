@@ -156,6 +156,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
+				EnableFiberSafeOptimizations="false"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
 				PreprocessorDefinitions="HAVE_STLPORT"
 				StringPooling="true"
