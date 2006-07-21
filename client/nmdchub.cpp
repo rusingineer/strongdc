@@ -392,6 +392,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 
 		u.getIdentity().setHub(false);
+		u.getIdentity().setHidden(false);
 
 		u.getIdentity().setConnection(connection);
 

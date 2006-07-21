@@ -143,46 +143,22 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		bool stop;
 		CriticalSection cs;
 		Semaphore s;
-		deque<SearchResult*> resultList;
+		deque<pair<string, string>> resultList;
 
 		ResultsQueue() : stop(false) {}
 		virtual ~ResultsQueue() throw() {
 			shutdown();
 		}
 
-		int run() {
-			SearchResult* sr = NULL;
-			stop = false;
-
-			while(true) {
-				s.wait();
-				if(stop)
-					break;
-
-				{
-					Lock l(cs);
-					if(resultList.empty()) continue;
-
-					sr = resultList.front();
-					resultList.pop_front();
-				}
-
-				ClientManager::getInstance()->setIPUser(sr->getIP(), sr->getUser());
-				SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
-				sr->decRef();
-				Thread::sleep(4);
-			}
-			return 0;
-		}
-
+		int run();
 		void shutdown() {
 			stop = true;
 			s.signal();
 		}
-		void addResult(SearchResult* sr) {
+		void addResult(const string& buf, const string& ip) {
 			{
 				Lock l(cs);
-				resultList.push_back(sr);
+				resultList.push_back(make_pair(buf, ip));
 			}
 			s.signal();
 		}
