@@ -189,7 +189,7 @@ void SearchManager::disconnect() throw() {
 	}
 }
 
-#define BUFSIZE 8192
+#define BUFSIZE 16384
 int SearchManager::run() {
 	
 	AutoArray<u_int8_t> buf(BUFSIZE);
@@ -224,95 +224,194 @@ int SearchManager::run() {
 	return 0;
 }
 
+int SearchManager::ResultsQueue::run() {
+	string x = Util::emptyString;
+	string remoteIp = Util::emptyString;
+	stop = false;
+
+	while(true) {
+		s.wait();
+		if(stop)
+			break;
+
+		{
+			Lock l(cs);
+			if(resultList.empty()) continue;
+
+			x = resultList.front().first;
+			remoteIp = resultList.front().second;
+			resultList.pop_front();
+		}
+
+		if(x.compare(0, 4, "$SR ") == 0) {
+			string::size_type i, j;
+			// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
+			// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
+			i = 4;
+			if( (j = x.find(' ', i)) == string::npos) {
+				continue;
+			}
+			string nick = Text::acpToUtf8(x.substr(i, j-i));
+			i = j + 1;
+
+			// A file has 2 0x05, a directory only one
+			size_t cnt = count(x.begin() + j, x.end(), 0x05);
+	
+			SearchResult::Types type = SearchResult::TYPE_FILE;
+			string file;
+			int64_t size = 0;
+
+			if(cnt == 1) {
+				// We have a directory...find the first space beyond the first 0x05 from the back 
+				// (dirs might contain spaces as well...clever protocol, eh?)
+				type = SearchResult::TYPE_DIRECTORY;
+				// Get past the hubname that might contain spaces
+				if((j = x.rfind(0x05)) == string::npos) {
+					continue;
+				}
+				// Find the end of the directory info
+				if((j = x.rfind(' ', j-1)) == string::npos) {
+					continue;
+				}
+				if(j < i + 1) {
+					continue;
+				}	
+				file = x.substr(i, j-i) + '\\';
+			} else if(cnt == 2) {
+				if( (j = x.find((char)5, i)) == string::npos) {
+					continue;
+				}
+				file = x.substr(i, j-i);
+				i = j + 1;
+				if( (j = x.find(' ', i)) == string::npos) {
+					continue;
+				}
+				size = Util::toInt64(x.substr(i, j-i));
+			}	
+			i = j + 1;
+		
+			if( (j = x.find('/', i)) == string::npos) {
+				continue;
+			}
+			int freeSlots = Util::toInt(x.substr(i, j-i));
+			i = j + 1;
+			if( (j = x.find((char)5, i)) == string::npos) {
+				continue;
+			}
+			int slots = Util::toInt(x.substr(i, j-i));
+			i = j + 1;
+			if( (j = x.rfind(" (")) == string::npos) {
+				continue;
+			}
+			string hubName = Text::acpToUtf8(x.substr(i, j-i));
+			i = j + 2;
+			if( (j = x.rfind(')')) == string::npos) {
+				continue;
+			}
+			string hubIpPort = x.substr(i, j-i);
+			string url = ClientManager::getInstance()->findHub(hubIpPort);
+
+			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
+			if(!user) {
+				// Could happen if hub has multiple URLs / IPs
+				user = ClientManager::getInstance()->findLegacyUser(nick);
+				if(!user)
+					continue;
+			}
+			ClientManager::getInstance()->setIPUser(remoteIp, user);
+
+			string tth;
+			if(hubName.compare(0, 4, "TTH:") == 0) {
+				tth = hubName.substr(4);
+				StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
+				hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
+			}
+
+			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
+				file, hubName, url, remoteIp, tth, false, Util::emptyString);
+
+			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+			sr->decRef();
+		} else if(x.compare(0, 5, "$PSR ") == 0) {
+			string::size_type i, j;
+			// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
+			i = 5;
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			string nick = Text::acpToUtf8(x.substr(i, j-i));
+			i = j + 1;
+
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			unsigned short UdpPort = (unsigned short)Util::toInt(x.substr(i, j-i));
+			i = j + 1;
+
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			string hubIpPort = x.substr(i, j-i);
+			i = j + 1;
+
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			string tth = x.substr(i, j-i);
+			i = j + 1;
+
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			u_int32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
+			i = j + 1;
+
+			if( (j = x.find('$', i)) == string::npos) {
+				continue;
+			}
+			string partialInfoBlocks = x.substr(i, j-i);
+
+			PartsInfo partialInfo;
+			i = 0; j = 0;
+			while(j != string::npos) {
+				j = partialInfoBlocks.find(',', i);
+				partialInfo.push_back((u_int16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
+				i = j + 1;
+			}
+			dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
+		
+			if(partialInfo.size() != partialCount) {
+				// what to do now ? just ignore partial search result :-/
+				continue;
+			}
+
+			User::Ptr user = ClientManager::getInstance()->findLegacyUser(nick);
+			if(!user) {
+				dcdebug("Search result from unknown legacy user");
+				continue;
+			}
+			PartsInfo outPartialInfo;
+			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
+		
+			if((UdpPort > 0) && !outPartialInfo.empty()) {
+				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
+				if(&ou) {
+					char buf[1024];
+					_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou.getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
+					buf[1023] = NULL;
+					Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
+				}
+			}
+		}	
+		Thread::sleep(4);
+	}
+	return 0;
+}
+
 void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remoteIp) {
 	string x((char*)buf, aLen);
-	if(x.compare(0, 4, "$SR ") == 0) {
-		string::size_type i, j;
-		// Directories: $SR <nick><0x20><directory><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-		// Files:       $SR <nick><0x20><filename><0x05><filesize><0x20><free slots>/<total slots><0x05><Hubname><0x20>(<Hubip:port>)
-		i = 4;
-		if( (j = x.find(' ', i)) == string::npos) {
-			return;
-		}
-		string nick = Text::acpToUtf8(x.substr(i, j-i));
-		i = j + 1;
 
-		// A file has 2 0x05, a directory only one
-		size_t cnt = count(x.begin() + j, x.end(), 0x05);
-	
-		SearchResult::Types type = SearchResult::TYPE_FILE;
-		string file;
-		int64_t size = 0;
-
-		if(cnt == 1) {
-			// We have a directory...find the first space beyond the first 0x05 from the back 
-			// (dirs might contain spaces as well...clever protocol, eh?)
-			type = SearchResult::TYPE_DIRECTORY;
-			// Get past the hubname that might contain spaces
-			if((j = x.rfind(0x05)) == string::npos) {
-				return;
-			}
-			// Find the end of the directory info
-			if((j = x.rfind(' ', j-1)) == string::npos) {
-				return;
-			}
-			if(j < i + 1) {
-				return;
-			}	
-			file = x.substr(i, j-i) + '\\';
-		} else if(cnt == 2) {
-			if( (j = x.find((char)5, i)) == string::npos) {
-				return;
-			}
-			file = x.substr(i, j-i);
-			i = j + 1;
-			if( (j = x.find(' ', i)) == string::npos) {
-				return;
-			}
-			size = Util::toInt64(x.substr(i, j-i));
-		}	
-		i = j + 1;
-		
-		if( (j = x.find('/', i)) == string::npos) {
-			return;
-		}
-		int freeSlots = Util::toInt(x.substr(i, j-i));
-		i = j + 1;
-		if( (j = x.find((char)5, i)) == string::npos) {
-			return;
-		}
-		int slots = Util::toInt(x.substr(i, j-i));
-		i = j + 1;
-		if( (j = x.rfind(" (")) == string::npos) {
-			return;
-		}
-		string hubName = Text::acpToUtf8(x.substr(i, j-i));
-		i = j + 2;
-		if( (j = x.rfind(')')) == string::npos) {
-			return;
-		}
-		string hubIpPort = x.substr(i, j-i);
-		string url = ClientManager::getInstance()->findHub(hubIpPort);
-
-		User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
-		if(!user) {
-			// Could happen if hub has multiple URLs / IPs
-			user = ClientManager::getInstance()->findLegacyUser(nick);
-			if(!user)
-				return;
-		}
-
-		string tth;
-		if(hubName.compare(0, 4, "TTH:") == 0) {
-			tth = hubName.substr(4);
-			StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
-			hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
-		}
-
-		SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-			file, hubName, url, remoteIp, tth, false, Util::emptyString);
-		queue.addResult(sr);
-	} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
+	if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
 		AdcCommand c(x.substr(0, x.length()-1));
 		if(c.getParameters().empty())
 			return;
@@ -335,84 +434,16 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		} catch(ParseException& ) {
 		}
 	}*/ // Needs further DoS investigation
-	else if(x.compare(0, 5, "$PSR ") == 0) {
-		string::size_type i, j;
-		// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
-		i = 5;
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		string nick = Text::acpToUtf8(x.substr(i, j-i));
-		i = j + 1;
-
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		unsigned short UdpPort = (unsigned short)Util::toInt(x.substr(i, j-i));
-		i = j + 1;
-
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		string hubIpPort = x.substr(i, j-i);
-		i = j + 1;
-
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		string tth = x.substr(i, j-i);
-		i = j + 1;
-
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		u_int32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
-		i = j + 1;
-
-		if( (j = x.find('$', i)) == string::npos) {
-			return;
-		}
-		string partialInfoBlocks = x.substr(i, j-i);
-
-		PartsInfo partialInfo;
-		i = 0; j = 0;
-		while(j != string::npos) {
-			j = partialInfoBlocks.find(',', i);
-			partialInfo.push_back((u_int16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
-			i = j + 1;
-		}
-		dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
-		
-		if(partialInfo.size() != partialCount) {
-			// what to do now ? just ignore partial search result :-/
-			return;
-		}
-
-		User::Ptr user = ClientManager::getInstance()->findLegacyUser(nick);
-		if(!user) {
-			dcdebug("Search result from unknown legacy user");
-			return;
-		}
-		PartsInfo outPartialInfo;
-		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
-		
-		if((UdpPort > 0) && !outPartialInfo.empty()) {
-			OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-			if(&ou) {
-				char buf[1024];
-				_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou.getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
-				buf[1023] = NULL;
-				Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
-			}
-		}
-	}	
+	else {
+		queue.addResult(x, remoteIp);
+	}
 }
 
 void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const string& remoteIp) {
-		int freeSlots = -1;
-		int64_t size = -1;
-		string file;
-		string tth;
+	int freeSlots = -1;
+	int64_t size = -1;
+	string file;
+	string tth;
 	string token;
 
 	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {

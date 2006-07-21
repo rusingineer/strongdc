@@ -182,19 +182,19 @@ void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
 	if(!from)
 		return;
 
+	string msg = '<' + from->getIdentity().getNick() + "> " + c.getParam(0);
 	string pmFrom;
 	if(c.getParam("PM", 1, pmFrom)) { // add PM<group-cid> as well
-	OnlineUser* to = findUser(c.getTo());
-	if(!to)
-		return;
+		OnlineUser* to = findUser(c.getTo());
+		if(!to)
+			return;
 
 		OnlineUser* replyTo = findUser(AdcCommand::toSID(pmFrom));
 		if(!replyTo)
 			return;
 
-		fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, c.getParam(0));
+		fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, msg);
 	} else {
-		string msg = '<' + from->getIdentity().getNick() + "> " + c.getParam(0);
 		fire(ClientListener::Message(), this, *from, msg);
 	}		
 }

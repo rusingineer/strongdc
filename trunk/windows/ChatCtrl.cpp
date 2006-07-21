@@ -26,7 +26,7 @@
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
-#define MAX_EMOTICONS 64
+#define MAX_EMOTICONS 32
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 _T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://") };
@@ -37,11 +37,11 @@ tstring ChatCtrl::sTempSelectedUser = Util::emptyStringT;
 ChatCtrl::ChatCtrl() {
 	m_boAutoScroll = true;
 	m_pUsers = NULL;
-	g_BufTemp = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
-	g_BufTemplen = 1023;
-	beforeAppendText = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
-	afterAppendText = (TCHAR *) calloc(1024, sizeof(TCHAR)); 
-	AppendTextlen = 1023;
+	g_BufTemp = (TCHAR *) calloc(512, sizeof(TCHAR)); 
+	g_BufTemplen = 511;
+	beforeAppendText = (TCHAR *) calloc(512, sizeof(TCHAR)); 
+	afterAppendText = (TCHAR *) calloc(512, sizeof(TCHAR)); 
+	AppendTextlen = 511;
 }
 
 ChatCtrl::~ChatCtrl() {

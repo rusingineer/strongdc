@@ -478,7 +478,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(!i->multiSource) {
+		if(i->subItems.size() == 0) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					ctrlTransfers.getItemData(item->iItem)->pm();
@@ -1133,6 +1133,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->actual = 0;
 		main->status = ItemInfo::STATUS_WAITING;
 		main->fileBegin = 0;
+		main->timeLeft = 0;
+		main->speed = 0;
 		main->columns[COLUMN_TIMELEFT] = Util::emptyStringT;
 		main->columns[COLUMN_SPEED] = Util::emptyStringT;
 		main->columns[COLUMN_RATIO] = Util::emptyStringT;
@@ -1144,11 +1146,13 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
  		main->status = l->status;
 		main->size = l->size;
 		main->pos = l->pos;
-		main->actual = l ->actual;
+		main->actual = l->actual;
+		main->speed = l->speed;
+		main->timeLeft = l->timeLeft;
 		main->columns[COLUMN_HUB] = l->columns[COLUMN_HUB];
 		main->columns[COLUMN_STATUS] = l->columns[COLUMN_STATUS];
 		main->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(l->size));
-		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(l->speed) + "/s");
+		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(l->speed)) + _T("/s");
 		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(l->timeLeft));
 		main->columns[COLUMN_RATIO] = Text::toT(Util::toString(l->getRatio()));
 		return false;
@@ -1198,7 +1202,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 			main->columns[COLUMN_HUB] = Text::toT(Util::toString(segs)) + _T(" ") + TSTRING(NUMBER_OF_SEGMENTS);
 		}
 		main->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(fileSize));
-		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(totalSpeed) + "/s");
+		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(totalSpeed)) + _T("/s");
 		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds((totalSpeed > 0) ? ((fileSize - main->pos) / totalSpeed) : 0));
 		main->columns[COLUMN_RATIO] = Text::toT(Util::toString(ratio));
 		return false;
