@@ -200,7 +200,7 @@ SettingsManager::SettingsManager()
 	setDefault(USE_SYSTEM_ICONS, true);
 	setDefault(USE_OEM_MONOFONT, false);
 	setDefault(POPUP_PMS, true);
-	setDefault(MIN_UPLOAD_SPEED, 1);
+	setDefault(MIN_UPLOAD_SPEED, 0);
 	setDefault(LOG_FORMAT_POST_DOWNLOAD, "%Y-%m-%d %H:%M: %[target]" + STRING(DOWNLOADED_FROM) + "%[userNI] (%[userCID]), %[fileSI] (%[fileSIchunk]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_POST_UPLOAD, "%Y-%m-%d %H:%M: %[source]" + STRING(UPLOADED_TO) + "%[userNI] (%[userCID]), %[fileSI] (%[fileSIchunk]), %[speed], %[time]");
 	setDefault(LOG_FORMAT_MAIN_CHAT, "[%Y-%m-%d %H:%M] %[message]");

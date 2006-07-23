@@ -17,8 +17,8 @@
  */
 
 #define APPNAME "StrongDC++"
-#define VERSIONSTRING "1.00"
-#define VERSIONFLOAT 1.002
+#define VERSIONSTRING "2.00"
+#define VERSIONFLOAT 2.000
 
 #define DCVERSIONSTRING "0.694"
 #define DCVERSIONFLOAT 0.694
