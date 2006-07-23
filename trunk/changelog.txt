@@ -1,4 +1,6 @@
-	-- StrongDC++ 1.00 next version --
+	-- StrongDC++ 2.00 --
+
+!!! Tato verze poruší zdroje u vašich souborù ve frontì a oblíbené uživatele, takže o nì pøijdete !!!
 
 * zmìnìna grafika
 * rozdìlování segmentù s ohledem na rychlost stahování
