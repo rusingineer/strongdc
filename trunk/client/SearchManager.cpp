@@ -26,6 +26,7 @@
 #include "ShareManager.h"
 #include "FileChunksInfo.h"
 #include "QueueManager.h"
+#include "ResourceManager.h"
 
 SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH) :
 	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
@@ -99,7 +100,6 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 		// Insert last (automatic search)
 		searchQueue.push_back(sqi);
 	}
-
 }
 
 void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
@@ -189,7 +189,7 @@ void SearchManager::disconnect() throw() {
 	}
 }
 
-#define BUFSIZE 16384
+#define BUFSIZE 8192
 int SearchManager::run() {
 	
 	AutoArray<u_int8_t> buf(BUFSIZE);
@@ -329,7 +329,6 @@ int SearchManager::ResultsQueue::run() {
 
 			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 				file, hubName, url, remoteIp, tth, false, Util::emptyString);
-
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		} else if(x.compare(0, 5, "$PSR ") == 0) {

@@ -12,8 +12,9 @@
 * mìla by bìžet na Win9x
 * pøidáno sdílení dokonèených souborù
 * zlepšení výkonu
-* odstranìný nìkteré staré funkce (Info o MP3, Kontrola SFV...)
+* odstranìny nìkteré staré funkce (Info o MP3, Kontrola SFV...)
 * projekt portován na Visual Studio .net 2005
+* pøedìlán user filter - pro aktivaci filtrování je vždy tøeba zmáèknout Enter
 * pro kompletní changelog viz cvs-changelog.txt
 
 	-- StrongDC++ 1.00 RC10 --

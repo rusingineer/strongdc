@@ -1163,6 +1163,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 		int64_t total = 0;
 		int64_t fileSize = -1;
+		bool hasTree = false;
 
 		string tmp = Text::fromT(main->Target);
 		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
@@ -1170,6 +1171,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		if(qi != queue.end()) {
 			total = qi->second->getDownloadedBytes();
 			fileSize = qi->second->getSize();
+			hasTree = qi->second->getHasTree();
 			qi->second->setAverageSpeed(totalSpeed);
 		}
 		QueueManager::getInstance()->unlockQueue();
@@ -1186,9 +1188,13 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 			tstring statusString;
 
+			if(hasTree) {
+				statusString += _T("[T]");
+			}
+
 			// hack to display whether file is compressed
-			if(ratio < 1.000) {
-				statusString = _T("[Z] ");
+			if(ratio < 1.0000) {
+				statusString += _T("[Z] ");
 			}
 			statusString += buf;
 			main->columns[COLUMN_STATUS] = statusString;

@@ -957,6 +957,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
 	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
 	case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
+	case IDC_HELP_DONATE: site = Text::toT("http://strongdc.berlios.de/donate.php"); break;
 	default: dcassert(0);
 	}
 
