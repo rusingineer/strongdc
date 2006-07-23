@@ -234,7 +234,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	Lock l(cs);
 	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
 
-	useChunks = (waiting.size() + running.size()) > 2;
+	useChunks = (waiting.size() + running.size()) > 1;
 
 	// if there is any waiting chunk, return it
 	if(!waiting.empty()){

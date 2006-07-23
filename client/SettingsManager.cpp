@@ -122,7 +122,7 @@ const string SettingsManager::settingTags[] =
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
 	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
- 	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort",
+ 	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
@@ -300,6 +300,7 @@ SettingsManager::SettingsManager()
 	setDefault(SPY_FRAME_IGNORE_TTH_SEARCHES, false);
 	setDefault(ALLOW_UNTRUSTED_HUBS, true);
 	setDefault(ALLOW_UNTRUSTED_CLIENTS, true);		
+	setDefault(FAST_HASH, true);
 	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);

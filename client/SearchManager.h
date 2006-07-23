@@ -37,7 +37,6 @@
 #include "TimerManager.h"
 #include "AdcCommand.h"
 #include "ClientManager.h"
-#include "ResourceManager.h"
 
 class SearchManager;
 
@@ -51,7 +50,6 @@ public:
 
 	typedef SearchResult* Ptr;
 	typedef vector<Ptr> List;
-	typedef map<Ptr, string> Map;
 	typedef List::const_iterator Iter;
 	
 	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue* aTTH);
@@ -68,13 +66,11 @@ public:
 	AdcCommand toRES(char type) const;
 
 	User::Ptr& getUser() { return user; }
-	void setUser(const User::Ptr& u) { user = u; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
 
 	const string& getFile() const { return file; }
 	const string& getHubURL() const { return hubURL; }
 	const string& getHubName() const { return hubName; }
-	void setHubName(const string& aHubName) { hubName = aHubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
 	int getSlots() const { return slots; }
@@ -187,13 +183,13 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T(""));
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T("")) {
+	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT);
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT) {
 		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
 	}
 
-	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T(""));
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = _T("")) {
+	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT);
+	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT) {
 		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
  	}
 	static string clean(const string& aSearchString);

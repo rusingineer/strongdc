@@ -855,7 +855,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			if(ii) {
 				QueueItemInfo::SourceIter i;
 				for(i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
-				tstring nick = WinUtil::getNicks(i->getUser());
+					tstring nick = WinUtil::escapeMenu(WinUtil::getNicks(i->getUser()));
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -873,7 +873,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					}
 					menuItems++;
 				}
-
 				readdItems = 0;
 				for(i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
 					tstring nick = WinUtil::getNicks(i->getUser());

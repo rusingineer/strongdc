@@ -303,6 +303,7 @@
 #define IDC_SETTINGS_KBPS               1174
 #define IDC_ADD_AS_FAVORITE             1175
 #define IDC_SETTINGS_SEARCH_HISTORY     1178
+#define IDC_HELP_DONATE                 1179
 #define IDC_ADLSP_SEARCH                1184
 #define IDC_ADLSP_TYPE                  1185
 #define IDC_ADLSP_SIZE_MIN              1186

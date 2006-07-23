@@ -23,7 +23,7 @@
 #define DCVERSIONSTRING "0.694"
 #define DCVERSIONFLOAT 0.694
 
-#define STRONGDCVERSIONSTRING " RC11"
+#define STRONGDCVERSIONSTRING ""
 
 
 /* Update the .rc file as well... */

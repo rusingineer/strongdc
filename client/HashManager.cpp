@@ -606,7 +606,7 @@ int HashManager::Hasher::run() {
 #ifdef _WIN32
 				TigerTree fastTTH(bs);
 				tth = &fastTTH;
-				if(!virtualBuf || !fastHash(fname, buf, fastTTH, size)) {
+				if(!virtualBuf || !BOOLSETTING(FAST_HASH) || !fastHash(fname, buf, fastTTH, size)) {
 					tth = &slowTTH;
 #endif
 					time_t lastRead = GET_TICK();

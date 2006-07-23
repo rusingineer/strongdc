@@ -661,7 +661,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false, false);
+				QueueManager::getInstance()->putDownload(d, false);
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{

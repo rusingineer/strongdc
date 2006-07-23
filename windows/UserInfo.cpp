@@ -66,6 +66,9 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	}
 
 	bytes = identity.getBytesShared();
+	string hn = identity.get("HN");
+	string hr = identity.get("HR");
+	string ho = identity.get("HO");
 
 	columns[COLUMN_NICK] = Text::toT(identity.getNick());
 	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(bytes));
@@ -75,8 +78,8 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	columns[COLUMN_EMAIL] = Text::toT(identity.getEmail());
 	columns[COLUMN_CONNECTION] = Text::toT(identity.getConnection());
 	columns[COLUMN_VERSION] = Text::toT(identity.get("VE"));
-	columns[COLUMN_MODE] = Text::toT(identity.isTcpActive() ? "A" : "P");
-	columns[COLUMN_HUBS] = Text::toT(Util::toString(Util::toInt(identity.get("HN"))+Util::toInt(identity.get("HR"))+Util::toInt(identity.get("HO"))));
+	columns[COLUMN_MODE] = identity.isTcpActive() ? _T("A") : _T("P");
+	columns[COLUMN_HUBS] = hn.empty() ? Util::emptyStringT : Text::toT(hn + "/" + hr + "/" + ho);
 	columns[COLUMN_SLOTS] = Text::toT(identity.get("SL"));
 	columns[COLUMN_IP] = Text::toT(identity.getIp());
 	columns[COLUMN_PK] = Text::toT(identity.getUser()->getPk());
