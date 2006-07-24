@@ -76,6 +76,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	
 	ctrlQueue.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlQueue.setSortColumn(COLUMN_TARGET);
+	ctrlQueue.setVisible(SETTING(QUEUEFRAME_VISIBLE));
 	
 	ctrlQueue.SetBkColor(WinUtil::bgColor);
 	ctrlQueue.SetTextBkColor(WinUtil::bgColor);

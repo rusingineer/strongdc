@@ -481,7 +481,8 @@ public:
 		StringList l = tok.getTokens();
 
 		StringIter i = l.begin();
-		for(ColumnIter j = columnList.begin(); j != columnList.end() && i != l.end(); ++i, ++j) {
+		ColumnIter j = columnList.begin();		
+		for(; j != columnList.end() && i != l.end(); ++i, ++j) {
 
 			if(Util::toInt(*i) == 0){
 				(*j)->visible = false;

@@ -139,11 +139,11 @@ const string Identity::updateClientType(OnlineUser& ou) {
 		sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
 		return report;
 	} else if( getUser()->isSet(User::DCPLUSPLUS) &&
-		Util::toDouble(get("VE")) >= 0.69 &&
+		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
 		getListLength() != "42") {
 			string report = setCheat(ou.getClient(), "Fake file list" , true);
 			setClientType("Fake DC++");
-			setComment("Upload limiter, supports corrupted files...");
+			setComment("Supports corrupted files...");
 			setBadClient("1");
 			setBadFilelist("1");
 			sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));

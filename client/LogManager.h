@@ -47,7 +47,7 @@ public:
 		string path = SETTING(LOG_DIRECTORY);
 		string msg;
 	
-		path += Util::formatParams(getSetting(area, FILE), params, true);
+		path += Util::formatParams(getSetting(area, FILE), params, false);
 		msg = Util::formatParams(getSetting(area, FORMAT), params, false);
 
 		log(path, msg);

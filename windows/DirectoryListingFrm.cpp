@@ -620,7 +620,9 @@ LRESULT DirectoryListingFrame::onListDiff(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 		DirectoryListing dirList(dl->getUser());
 		dirList.loadFile(Text::fromT(file));
 		dl->getRoot()->filterList(dirList);
+		loading = true;
 		refreshTree(Util::emptyStringT);
+		loading = false;
 		initStatus();
 		updateStatus();
 	}
