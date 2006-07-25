@@ -1469,7 +1469,7 @@ ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
 	return NULL;
 }
 
-void ShareManager::on(DownloadManagerListener::Complete, Download* d) throw() {
+void ShareManager::on(DownloadManagerListener::Complete, Download* d, bool) throw() {
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		WLock<> l(cs);

@@ -141,11 +141,10 @@ const string Identity::updateClientType(OnlineUser& ou) {
 	} else if( getUser()->isSet(User::DCPLUSPLUS) &&
 		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
 		getListLength() != "42") {
-			string report = setCheat(ou.getClient(), "Fake file list" , true);
-			setClientType("Fake DC++");
+			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
+			setClientType("Faked DC++");
 			setComment("Supports corrupted files...");
 			setBadClient("1");
-			setBadFilelist("1");
 			sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
 			return report;
 	}

@@ -600,7 +600,7 @@ void QueueManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
 	string target = Util::getListPath() + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
-	add(target, -1, NULL, aUser, USER_LIST_NAME, false, QueueItem::FLAG_USER_LIST | aFlags);
+	add(target, -1, NULL, aUser, USER_LIST_NAME, !aUser->isSet(User::NMDC), QueueItem::FLAG_USER_LIST | aFlags);
 }
 
 void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw(QueueException) {

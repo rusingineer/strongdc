@@ -730,7 +730,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.identity.getNick()), WinUtil::m_ChatTextSystem);
 				}	
 
-				if(client->isOp()) {
+				if(client->isOp() && !u.identity.isBot() && !u.identity.isHub()) {
 					int64_t bytesSharedInt64 = u.identity.getBytesShared();
 					if(bytesSharedInt64 > 0) {
 						string bytesShared = Util::toString(bytesSharedInt64);

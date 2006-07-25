@@ -92,7 +92,7 @@ const string SettingsManager::settingTags[] =
 	"ExtensionDownTo", "ErrorColor", "ExpandQueue", "TransferSplitSize", "IDownSpeed", "HDownSpeed", "DownTime", 
 	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
-	"DisconnectingEnable", "MinFileSize", "RemoveSlowUser", "UploadQueueFrameShowTree",
+	"DisconnectingEnable", "MinFileSize", "UploadQueueFrameShowTree",
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
 	"UseEmoticons", "SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "SearchTTHOnly", "GetUserCountry", "DisableCZDiacritic",
@@ -417,12 +417,12 @@ SettingsManager::SettingsManager()
 	setDefault(ERROR_COLOR, RGB(255, 0, 0));
 	setDefault(EXPAND_QUEUE, true);
 	setDefault(TRANSFER_SPLIT_SIZE, 8000);
-	setDefault(I_DOWN_SPEED, 0);
-	setDefault(H_DOWN_SPEED, 0);
-	setDefault(DOWN_TIME, 1);
+	setDefault(I_DOWN_SPEED, 5);
+	setDefault(H_DOWN_SPEED, 10);
+	setDefault(DOWN_TIME, 20);
 	setDefault(DISCONNECTING_ENABLE, false);
-	setDefault(MIN_FILE_SIZE, 0);
-	setDefault(REMOVE_SLOW_USER, false);
+	setDefault(MIN_FILE_SIZE, 10);
+    setDefault(DISCONNECT, 2);
     setDefault(FILE_SLOTS, 15);
 	setDefault(MENUBAR_TWO_COLORS, true);
 	setDefault(MENUBAR_LEFT_COLOR, RGB(254, 157, 27));

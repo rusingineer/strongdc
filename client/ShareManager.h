@@ -308,7 +308,7 @@ private:
 	virtual int run();
 
 	// DownloadManagerListener
-	virtual void on(DownloadManagerListener::Complete, Download* d) throw();
+	virtual void on(DownloadManagerListener::Complete, Download* d, bool) throw();
 
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
