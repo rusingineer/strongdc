@@ -1458,14 +1458,7 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 	CRect rc;
-	LPNMLVCUSTOMDRAW cd = (LPNMLVCUSTOMDRAW)pnmh;
-
-	if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
-		if (cd->nmcd.dwDrawStage != (CDDS_ITEMPREPAINT)) {
-			bHandled = FALSE;
-			return 0;
-		}
-	}
+	NMLVCUSTOMDRAW* cd = (NMLVCUSTOMDRAW*)pnmh;
 
 	switch(cd->nmcd.dwDrawStage) {
 	case CDDS_PREPAINT:
@@ -1482,15 +1475,20 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_NOTIFYSUBITEMDRAW;
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-		// Let's draw a box if needed...
+		if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+			bHandled = FALSE;
+			return 0;
+		}
+		
+		QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+		if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
+			bHandled = FALSE;
+			return 0;
+		}
+
 		int colIndex = ctrlQueue.findColumn(cd->iSubItem);
 		if(colIndex == COLUMN_PROGRESS) {
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			// draw something nice...
-			if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
-				bHandled = FALSE;
-				return 0;
-			}
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 
 			CRect real_rc = rc;
@@ -1551,7 +1549,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			return CDRF_SKIPDEFAULT;
 		} else if(colIndex == COLUMN_SEGMENTS) {
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {
 					barva = GetSysColor(COLOR_HIGHLIGHT);

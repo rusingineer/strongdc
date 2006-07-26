@@ -343,8 +343,9 @@ private:
 		, const tstring& aRawFive
 		, int chatusersplit, bool userliststate) : 
 		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
-		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false), curCommandPosition(0), currentNeedlePos(-1),
-		timeStamps(BOOLSETTING(TIME_STAMPS)), hubchatusersplit(chatusersplit), menuItems(0),
+		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false),
+		curCommandPosition(0), timeStamps(BOOLSETTING(TIME_STAMPS)), 
+		hubchatusersplit(chatusersplit), menuItems(0), currentNeedlePos(-1),
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
 		clientContainer(WC_EDIT, this, EDIT_MESSAGE_MAP),
@@ -352,7 +353,8 @@ private:
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP)
 	{
 		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
-
+		client->addListener(this);
+		
 		client->setRawOne(Text::fromT(aRawOne));
 		client->setRawTwo(Text::fromT(aRawTwo));
 		client->setRawThree(Text::fromT(aRawThree));

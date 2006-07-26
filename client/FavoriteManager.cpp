@@ -833,8 +833,6 @@ void FavoriteManager::on(UserConnected, const User::Ptr& user) throw() {
 }
 
 void FavoriteManager::previewload(SimpleXML* aXml){
-	WLock<> l(rwcs);
-
 	aXml->resetCurrentChild();
 	if(aXml->findChild("PreviewApps")) {
 		aXml->stepIn();
@@ -847,7 +845,6 @@ void FavoriteManager::previewload(SimpleXML* aXml){
 }
 
 void FavoriteManager::previewsave(SimpleXML* aXml){
-	RLock<> l(rwcs);
 	aXml->addTag("PreviewApps");
 	aXml->stepIn();
 	for(PreviewApplication::Iter i = previewApplications.begin(); i != previewApplications.end(); ++i) {

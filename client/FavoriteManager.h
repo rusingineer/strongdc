@@ -313,7 +313,6 @@ private:
 
 	FavoriteMap users;
 
-	RWLock<> rwcs;
 	mutable CriticalSection cs;
 
 	// Public Hubs
