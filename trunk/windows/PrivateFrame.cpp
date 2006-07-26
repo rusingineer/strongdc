@@ -266,8 +266,6 @@ void PrivateFrame::onEnter()
 		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
 		tstring s(msg, ctrlMessage.GetWindowTextLength());
 
-		if(BOOLSETTING(CZCHARS_DISABLE))
-			s = Text::toT(Util::disableCzChars(Text::fromT(s)));
 		// save command in history, reset current buffer pointer to the newest command
 		curCommandPosition = prevCommands.size();		//this places it one position beyond a legal subscript
 		if (!curCommandPosition || curCommandPosition > 0 && prevCommands[curCommandPosition - 1] != s) {
@@ -325,6 +323,9 @@ void PrivateFrame::onEnter()
 			}
 		} else {
 			if(replyTo->isOnline()) {
+				if(BOOLSETTING(CZCHARS_DISABLE))
+					s = Text::toT(WinUtil::disableCzChars(Text::fromT(s)));
+
 				sendMessage(s);
 			} else {
 				ctrlStatus.SetText(0, CTSTRING(USER_WENT_OFFLINE));

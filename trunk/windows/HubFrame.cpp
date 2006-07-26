@@ -126,7 +126,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	showUsersContainer.SubclassWindow(ctrlShowUsers.m_hWnd);
 
 	FavoriteHubEntry *fhe = FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
-
 	if(fhe) {
 		WinUtil::splitTokens(columnIndexes, fhe->getHeaderOrder(), COLUMN_LAST);
 		WinUtil::splitTokens(columnSizes, fhe->getHeaderWidths(), COLUMN_LAST);
@@ -190,8 +189,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlFilterSel.SetCurSel(0);
 
 	bHandled = FALSE;
-
-	client->addListener(this);
 	client->connect();
 
     TimerManager::getInstance()->addListener(this);
@@ -404,12 +401,8 @@ void HubFrame::onEnter() {
 				m_bVertical = !m_bVertical;
 				if(m_bVertical) {
 					SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
-//					horPos = m_nProportionalPos;
-//					m_nProportionalPos = verPos;
 				} else {
 					SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
-//					verPos = m_nProportionalPos;
-//					m_nProportionalPos = horPos;
 				}
 				UpdateLayout();
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
@@ -431,6 +424,9 @@ void HubFrame::onEnter() {
 			ctrlMessage.SetFocus();
 			ctrlMessage.SetSel(10, 10);
 		} else {
+			if(BOOLSETTING(CZCHARS_DISABLE))
+				s = Text::toT(WinUtil::disableCzChars(Text::fromT(s)));
+
 			client->hubMessage(Text::fromT(s));
 			ctrlMessage.SetWindowText(_T(""));
 		}
@@ -1878,7 +1874,7 @@ void HubFrame::on(Message, Client*, const OnlineUser& from, const string& msg) t
 	if(&from == NULL || from.getIdentity().isOp()) {
 		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
 			// Do nothing...
-		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
+		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos) || (msg.find("banned") != string::npos)) {
 			speak(KICK_MSG, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Util::toDOS(msg));
 			return;
 		}

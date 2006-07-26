@@ -578,6 +578,7 @@ public:
 	static int getImage(const Identity& u, const string& aHubUrl);
 	static int getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
+	static string disableCzChars(string message);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };
