@@ -382,7 +382,7 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	string::size_type i = line.find('>', 2);
 	if(i != string::npos) {
 		tstring nick = line.substr(1, i-1);
-		if(line.size() > i+5 && Util::stricmp(line.substr(i+2, 3), _T("/me")) == 0) {
+		if((line.size() > i+5) && Util::stricmp(line.substr(i+2, 3), _T("/me")) == 0) {
 			line = _T("* ") + nick + line.substr(i+5);
 		}
 	}
