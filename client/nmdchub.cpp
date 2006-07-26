@@ -215,7 +215,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		string nick = line.substr(1, i-1);
 		OnlineUser* ou = findUser(nick);
 
-		if(/*line.size() > i+5 && */Util::stricmp(line.substr(i+2, 3), "/me") == 0) {
+		if(line.size() > i+5 && Util::stricmp(line.substr(i+2, 3), "/me") == 0) {
 			line = "* " + nick + line.substr(i+5);
 		}
 

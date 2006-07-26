@@ -1,3 +1,22 @@
+	-- StrongDC++ 2.01 --
+
+*** WARNING ***
+  Tato verze opravuje bezpeènostní chybu, aktualizujte pokud nechcete zaèít runtime chyby
+*** WARNING ***
+
+* opraven bug pøi detekci faku
+* opraven bug, že teèky v názvech log souborù byli pøevedeny na _
+* opraven pád pøi porovnávání filelistù
+* opraveno naèítání skrytých sloupcù ve frontì
+* boti by nemìli být kontrolováni pøi vstupu
+* pøidán dùvod do menu Znovu pøidat zdroj, pokud nastane TTH inconsistency
+* opravena runtime chyba, když pouze <nick> bez zprávy pøijde do mainchatu (THX darwusch)
+* používáno UTF8 pro získání seznamu souborù od ADC uživatelù
+* opraveno sdílení dokonèených souborù (THX MaynardK)
+* opraveno odstraòování diakritiky z národních znakù
+* vždy se používají STL výjimky, aby se pøedešlo runtime chybám
+* soubory *.antifrag a *.dctmp jsou vždy odsdíleny bez ohledu na nastavení "Odstranit zakázané"
+
 	-- StrongDC++ 2.00 --
 
 !!! Tato verze poruší zdroje u vašich souborù ve frontì a oblíbené uživatele, takže o nì pøijdete !!!
