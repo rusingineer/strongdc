@@ -1949,15 +1949,19 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 		if(si == qi->getSources().end()){
 			si = qi->getBadSource(aUser);
 
-		if(si != qi->getBadSources().end() && (*si)->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY))
-			return false;
+			if(si != qi->getBadSources().end() && (*si)->isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY))
+				return false;
 
-		if(!wantConnection){
+			if(!wantConnection){
 				if(si == qi->getBadSources().end())
 					return false;
 			}else{
 				// add this user as partial file sharing source
-				qi->addSource(aUser, qi->getTarget());
+				if(qi->getTTH() && aUser->isSet(User::TTH_GET))
+					qi->addSource(aUser, Util::emptyString);
+				else
+					qi->addSource(aUser, qi->getTarget());
+				
 				si = qi->getSource(aUser);
 				(*si)->setFlag(QueueItem::Source::FLAG_PARTIAL);
 				userQueue.add(qi, aUser);

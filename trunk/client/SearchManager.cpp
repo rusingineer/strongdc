@@ -402,7 +402,7 @@ int SearchManager::ResultsQueue::run() {
 				}
 			}
 		}	
-		Thread::sleep(4);
+		Thread::sleep(5);
 	}
 	return 0;
 }

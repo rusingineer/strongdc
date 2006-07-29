@@ -113,7 +113,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
 		m_nProportionalPos = 2500;
 	}
-
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 
 	if(hubchatusersplit)
@@ -252,19 +251,18 @@ void HubFrame::onEnter() {
 
 		// Special command
 		if(s[0] == _T('/')) {
-			tstring m = s;
+			tstring cmd = s;
 			tstring param;
 			tstring message;
 			tstring status;
-
-			if(WinUtil::checkCommand(s, param, message, status)) {
+			if(WinUtil::checkCommand(cmd, param, message, status)) {
 				if(!message.empty()) {
 					client->hubMessage(Text::fromT(message));
 				}
 				if(!status.empty()) {
 					addClientLine(status, WinUtil::m_ChatTextSystem);
 				}
-			} else if(Util::stricmp(s.c_str(), _T("join"))==0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("join"))==0) {
 				if(!param.empty()) {
 					redirect = param;
 					if(BOOLSETTING(JOIN_OPEN_NEW_WINDOW)) {
@@ -276,70 +274,70 @@ void HubFrame::onEnter() {
 				} else {
 					addClientLine(TSTRING(SPECIFY_SERVER), WinUtil::m_ChatTextSystem);
 				}
-			} else if((Util::stricmp(s.c_str(), _T("clear")) == 0) || (Util::stricmp(s.c_str(), _T("cls")) == 0)) {
+			} else if((Util::stricmp(cmd.c_str(), _T("clear")) == 0) || (Util::stricmp(cmd.c_str(), _T("cls")) == 0)) {
 				ctrlClient.SetWindowText(_T(""));
-			} else if(Util::stricmp(s.c_str(), _T("ts")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("ts")) == 0) {
 				timeStamps = !timeStamps;
 				if(timeStamps) {
 					addClientLine(TSTRING(TIMESTAMPS_ENABLED), WinUtil::m_ChatTextSystem);
 				} else {
 					addClientLine(TSTRING(TIMESTAMPS_DISABLED), WinUtil::m_ChatTextSystem);
 				}
-			} else if( (Util::stricmp(s.c_str(), _T("password")) == 0) && waitingForPW ) {
+			} else if( (Util::stricmp(cmd.c_str(), _T("password")) == 0) && waitingForPW ) {
 				client->setPassword(Text::fromT(param));
 				client->password(Text::fromT(param));
 				waitingForPW = false;
-			} else if( Util::stricmp(s.c_str(), _T("showjoins")) == 0 ) {
+			} else if( Util::stricmp(cmd.c_str(), _T("showjoins")) == 0 ) {
 				showJoins = !showJoins;
 				if(showJoins) {
 					addClientLine(TSTRING(JOIN_SHOWING_ON), WinUtil::m_ChatTextSystem);
 				} else {
 					addClientLine(TSTRING(JOIN_SHOWING_OFF), WinUtil::m_ChatTextSystem);
 				}
-			} else if( Util::stricmp(s.c_str(), _T("favshowjoins")) == 0 ) {
+			} else if( Util::stricmp(cmd.c_str(), _T("favshowjoins")) == 0 ) {
 				favShowJoins = !favShowJoins;
 				if(favShowJoins) {
 					addClientLine(TSTRING(FAV_JOIN_SHOWING_ON), WinUtil::m_ChatTextSystem);
 				} else {
 					addClientLine(TSTRING(FAV_JOIN_SHOWING_OFF), WinUtil::m_ChatTextSystem);
 				}
-			} else if(Util::stricmp(s.c_str(), _T("close")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("close")) == 0) {
 				PostMessage(WM_CLOSE);
-			} else if(Util::stricmp(s.c_str(), _T("userlist")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(showUsers ? BST_UNCHECKED : BST_CHECKED);
-			} else if(Util::stricmp(s.c_str(), _T("connection")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("connection")) == 0) {
 				addClientLine(Text::toT((STRING(IP) + client->getLocalIp() + ", " + 
 					STRING(PORT) + 
 					Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + 
 					Util::toString(SearchManager::getInstance()->getPort()) + "/" +
 					Util::toString(ConnectionManager::getInstance()->getSecurePort())))
 					, WinUtil::m_ChatTextSystem);
-			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
+			} else if((Util::stricmp(cmd.c_str(), _T("favorite")) == 0) || (Util::stricmp(cmd.c_str(), _T("fav")) == 0)) {
 				addAsFavorite();
-			} else if((Util::stricmp(s.c_str(), _T("removefavorite")) == 0) || (Util::stricmp(s.c_str(), _T("removefav")) == 0)) {
+			} else if((Util::stricmp(cmd.c_str(), _T("removefavorite")) == 0) || (Util::stricmp(cmd.c_str(), _T("removefav")) == 0)) {
 				removeFavoriteHub();
-			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0){
+			} else if(Util::stricmp(cmd.c_str(), _T("getlist")) == 0){
 				if( !param.empty() ){
 					UserInfo* ui = findUser(param);
 					if(ui) {
 						ui->getList();
 					}
 				}
-			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
 				params["hubNI"] = client->getHubName();
 				params["hubURL"] = client->getHubUrl();
 				params["myNI"] = client->getMyNick(); 
 				if(param.empty()) {
-					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, true))));
+					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, false))));
 				} else if(Util::stricmp(param.c_str(), _T("status")) == 0) {
-					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params, true))));
+					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params, false))));
 				}
-			} else if(Util::stricmp(s.c_str(), _T("f")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("f")) == 0) {
 				if(param.empty())
 					param = findTextPopup();
 				findText(param);
-			} else if(Util::stricmp(s.c_str(), _T("extraslots"))==0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("extraslots"))==0) {
 				int j = Util::toInt(Text::fromT(param));
 				if(j > 0) {
 					SettingsManager::getInstance()->set(SettingsManager::EXTRA_SLOTS, j);
@@ -347,7 +345,7 @@ void HubFrame::onEnter() {
 				} else {
 					addClientLine(TSTRING(INVALID_NUMBER_OF_SLOTS), WinUtil::m_ChatTextSystem );
 				}
-			} else if(Util::stricmp(s.c_str(), _T("smallfilesize"))==0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("smallfilesize"))==0) {
 				int j = Util::toInt(Text::fromT(param));
 				if(j >= 64) {
 					SettingsManager::getInstance()->set(SettingsManager::SET_MINISLOT_SIZE, j);
@@ -355,29 +353,29 @@ void HubFrame::onEnter() {
 				} else {
 					addClientLine(TSTRING(INVALID_SIZE), WinUtil::m_ChatTextSystem );
 				}
-			} else if(Util::stricmp(s.c_str(), _T("savequeue")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("savequeue")) == 0) {
 				QueueManager::getInstance()->saveQueue();
 				addClientLine(_T("Queue saved."), WinUtil::m_ChatTextSystem );
-			} else if(Util::stricmp(s.c_str(), _T("whois")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("whois")) == 0) {
 				WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + Text::toT(Util::encodeURI(Text::fromT(param))));
-			} else if(Util::stricmp(s.c_str(), _T("ignorelist"))==0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
 				for(TStringHash::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
 					ignorelist += _T(" ") + *i;
 				addLine(ignorelist, WinUtil::m_ChatTextSystem);
-			} else if(Util::stricmp(s.c_str(), _T("log")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
 				params["hubNI"] = client->getHubName();
 				params["hubURL"] = client->getHubUrl();
 				params["myNI"] = client->getMyNick(); 
 				if(param.empty()) {
-					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, true))));
+					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, false))));
 				} else if(Util::stricmp(param.c_str(), _T("status")) == 0) {
-					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params, true))));
+					WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_STATUS), params, false))));
 				}
-			} else if(Util::stricmp(s.c_str(), _T("help")) == 0) {
-				addLine(_T("*** ") + WinUtil::commands + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /showblockedipports, /whois [IP], /ignorelist, /removefavorite"), WinUtil::m_ChatTextSystem);
-			} else if(Util::stricmp(s.c_str(), _T("pm")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("help")) == 0) {
+				addLine(_T("*** ") + WinUtil::commands + _T(", /smallfilesize #, /extraslots #, /savequeue, /join <hub-ip>, /clear, /ts, /showjoins, /favshowjoins, /close, /userlist, /connection, /favorite, /pm <user> [message], /getlist <user>, /winamp, /whois [IP], /ignorelist, /removefavorite"), WinUtil::m_ChatTextSystem);
+			} else if(Util::stricmp(cmd.c_str(), _T("pm")) == 0) {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
 					tstring nick = param.substr(0, j);
@@ -395,9 +393,9 @@ void HubFrame::onEnter() {
 						PrivateFrame::openWindow(ui->user);
 					}
 				}
-			} else if(Util::stricmp(s.c_str(), _T("me")) == 0) {
-				client->hubMessage(Text::fromT(m));
-			} else if(Util::stricmp(s.c_str(), _T("switch")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
+				client->hubMessage(Text::fromT(s));
+			} else if(Util::stricmp(cmd.c_str(), _T("switch")) == 0) {
 				m_bVertical = !m_bVertical;
 				if(m_bVertical) {
 					SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
@@ -405,16 +403,16 @@ void HubFrame::onEnter() {
 					SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
 				}
 				UpdateLayout();
-			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
+			} else if(Util::stricmp(cmd.c_str(), _T("stats")) == 0) {
 			    if(client->isOp())
 					client->hubMessage(WinUtil::generateStats());
 			    else
 					addLine(Text::toT(WinUtil::generateStats()));
 			} else {
 				if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
-					client->hubMessage(Text::fromT(m));
+					client->hubMessage(Text::fromT(s));
 				} else {
-					addClientLine(TSTRING(UNKNOWN_COMMAND) + s);
+					addClientLine(TSTRING(UNKNOWN_COMMAND) + cmd);
 				}
 			}
 			ctrlMessage.SetWindowText(_T(""));
@@ -509,46 +507,46 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 		if(ui) {
 			switch (wID) {
 				case IDC_COPY_NICK:
-					sCopy += ui->columns[COLUMN_NICK];
+					sCopy += Text::toT(ui->getNick());
 					break;
 				case IDC_COPY_EXACT_SHARE:
 					sCopy += Text::toT(Util::formatExactSize(ui->getBytes()));
 					break;
 				case IDC_COPY_DESCRIPTION:
-					sCopy += ui->columns[COLUMN_DESCRIPTION];
+					sCopy += Text::toT(ui->getIdentity().getDescription());
 					break;
 				case IDC_COPY_TAG:
-					sCopy += ui->columns[COLUMN_TAG];
+					sCopy += Text::toT(ui->getIdentity().getTag());
 					break;
 				case IDC_COPY_EMAIL_ADDRESS:
-					sCopy += ui->columns[COLUMN_EMAIL];
+					sCopy += Text::toT(ui->getIdentity().getEmail());
 					break;
 				case IDC_COPY_IP:
-					sCopy +=  ui->columns[COLUMN_IP];
+					sCopy += Text::toT(ui->getIdentity().getIp());
 					break;
 				case IDC_COPY_NICK_IP:
 					sCopy += _T("Info User:\r\n")
-						_T("\tNick: ") + ui->columns[COLUMN_NICK] + _T("\r\n") + 
-						_T("\tIP: ") +  ui->columns[COLUMN_IP] + _T("\r\n"); 
+						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
+						_T("\tIP: ") +  Text::toT(ui->getIdentity().getIp()) + _T("\r\n"); 
 					break;
 				case IDC_COPY_ALL:
 					sCopy += _T("Info User:\r\n")
-						_T("\tNick: ") + ui->columns[COLUMN_NICK] + _T("\r\n") + 
+						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
 						_T("\tShare: ") + Text::toT(Util::formatBytes(ui->getBytes())) + _T("\r\n") + 
-						_T("\tDescription: ") + ui->columns[COLUMN_DESCRIPTION] + _T("\r\n") +
-						_T("\tTag: ") + ui->columns[COLUMN_TAG] + _T("\r\n") +
-						_T("\tConnection: ") + ui->columns[COLUMN_CONNECTION] + _T("\r\n") + 
-						_T("\tE-Mail: ") + ui->columns[COLUMN_EMAIL] + _T("\r\n") +
-						_T("\tClient: ") + ui->columns[COLUMN_CLIENTID] + _T("\r\n") + 
-						_T("\tVersion: ") + ui->columns[COLUMN_VERSION] + _T("\r\n") +
+						_T("\tDescription: ") + Text::toT(ui->getIdentity().getDescription()) + _T("\r\n") +
+						_T("\tTag: ") + Text::toT(ui->getIdentity().getTag()) + _T("\r\n") +
+						_T("\tConnection: ") + Text::toT(ui->getIdentity().getConnection()) + _T("\r\n") + 
+						_T("\tE-Mail: ") + Text::toT(ui->getIdentity().getEmail()) + _T("\r\n") +
+						_T("\tClient: ") + Text::toT(ui->getIdentity().getClientType()) + _T("\r\n") + 
+						_T("\tVersion: ") + Text::toT(ui->getIdentity().get("VE")) + _T("\r\n") +
 						_T("\tMode: ") + ui->columns[COLUMN_MODE] + _T("\r\n") +
 						_T("\tHubs: ") + ui->columns[COLUMN_HUBS] + _T("\r\n") +
 						_T("\tSlots: ") + ui->columns[COLUMN_SLOTS] + _T("\r\n") +
 						_T("\tUpLimit: ") + ui->columns[COLUMN_UPLOAD_SPEED] + _T("\r\n") +
-						_T("\tIP: ") + ui->columns[COLUMN_IP] + _T("\r\n") +
-						_T("\tPk String: ") + ui->columns[COLUMN_PK] + _T("\r\n") +
-						_T("\tLock: " )+ ui->columns[COLUMN_LOCK] + _T("\r\n")+
-						_T("\tSupports: ") + ui->columns[COLUMN_SUPPORTS];
+						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
+						_T("\tPk String: ") + Text::toT(ui->getUser()->getPk()) + _T("\r\n") +
+						_T("\tLock: " )+ Text::toT(ui->getUser()->getLock()) + _T("\r\n")+
+						_T("\tSupports: ") + Text::toT(ui->getUser()->getSupports());
 					break;		
 				default:
 					dcdebug("HUBFRAME DON'T GO HERE\n");
@@ -2472,7 +2470,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	params["myNI"] = client->getMyNick();
 	params["userCID"] = ui->user->getCID().toBase32();
 	params["hubURL"] = client->getHubUrl();
-	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, true)));
+	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false)));
 	if(Util::fileExists(Text::fromT(file))) {
 		ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	} else {
@@ -2486,7 +2484,7 @@ LRESULT HubFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	params["hubNI"] = client->getHubName();
 	params["hubURL"] = client->getHubUrl();
 	params["myNI"] = client->getMyNick(); 
-	tstring filename = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, true)));
+	tstring filename = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_MAIN_CHAT), params, false)));
 	if(Util::fileExists(Text::fromT(filename))){
 		ShellExecute(NULL, NULL, filename.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	} else {

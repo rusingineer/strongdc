@@ -431,8 +431,6 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 }
 
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
-	string path = Util::getFilePath(file);
-	string filename = Util::getFileName(file);
 	time_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
@@ -446,7 +444,7 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 		}
 	}
 	if(found == false) {
-		UploadQueueItem* qi = new UploadQueueItem(User, file, path, filename, pos, size, itime);
+		UploadQueueItem* qi = new UploadQueueItem(User, file, pos, size, itime);
 		{
 		UploadQueueItem::UserMap::iterator i = UploadQueueItems.find(User);
 			if(i == UploadQueueItems.end()) {
@@ -733,7 +731,7 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 			Upload::Ptr u = (*i);
 
 			if(u->getLocalFileName() == aFile){
-				u->getUserConnection()->disconnect();
+				u->getUserConnection()->disconnect(true);
 				nowait = false;
 			}
 		}

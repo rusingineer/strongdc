@@ -89,11 +89,11 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	setMinMax(IDC_WRITE_SPIN, 1024, 1024*1024);
 	setMinMax(IDC_TAB_SPIN, 1, 10);
 	setMinMax(IDC_REFRESH_SPIN, 0, 3000);
-	setMinMax(IDC_PM_LINESSPIN, 1, 999);
+	setMinMax(IDC_PM_LINESSPIN, 0, 999);
 	setMinMax(IDC_SEARCH_HISTORY_SPIN, 1, 100);
 	setMinMax(IDC_SHUTDOWN_SPIN , 1, 3600);
 	setMinMax(IDC_MAX_COMP_SPIN, 0, 9);
-	setMinMax(IDC_INTERVAL_SPIN, 5, 100);
+	setMinMax(IDC_INTERVAL_SPIN, 10, 100);
 	setMinMax(IDC_MATCH_SPIN, 1, 999);
 	setMinMax(IDC_AUTO_SEARCH_LIMIT_SPIN, 1, 15);
 

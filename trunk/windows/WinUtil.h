@@ -330,14 +330,13 @@ public:
 	static CImageList userImages;
 	static CImageList flagImages;
 
-	typedef HASH_MAP<string, int> ImageMap;
-	typedef ImageMap::const_iterator ImageIter;
-
 	struct TextItem {
 		WORD itemID;
 		ResourceManager::Strings translatedString;
 	};
 
+	typedef HASH_MAP<tstring, int> ImageMap;
+	typedef ImageMap::const_iterator ImageIter;
 	static ImageMap fileIndexes;
 	static HBRUSH bgBrush;
 	static COLORREF textColor;
@@ -376,6 +375,7 @@ public:
 	static CHARFORMAT2 m_ChatTextPrivate;
 	static CHARFORMAT2 m_ChatTextLog;
 	static bool mutesounds;
+	static DWORD comCtlVersion;	
 
 	static void reLoadImages(); // User Icon Begin / User Icon End
 	static void createImageList1(CImageList &imglst, string file, int size);

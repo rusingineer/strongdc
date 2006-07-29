@@ -475,7 +475,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(i->subItems.size() == 0) {
+		if(!i->multiSource || i->subItems.size() == 0) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					ctrlTransfers.getItemData(item->iItem)->pm();
@@ -1198,6 +1198,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 			
 			main->actual = (int64_t)(total * ratio);
 			main->pos = total;
+			main->speed = totalSpeed;
+			main->timeLeft = (totalSpeed > 0) ? ((fileSize - main->pos) / totalSpeed) : 0;
 		}
 		main->size = fileSize;
 		
@@ -1205,8 +1207,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 			main->columns[COLUMN_HUB] = Text::toT(Util::toString(segs)) + _T(" ") + TSTRING(NUMBER_OF_SEGMENTS);
 		}
 		main->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(fileSize));
-		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(totalSpeed)) + _T("/s");
-		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds((totalSpeed > 0) ? ((fileSize - main->pos) / totalSpeed) : 0));
+		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(main->speed)) + _T("/s");
+		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(main->timeLeft));
 		main->columns[COLUMN_RATIO] = Text::toT(Util::toString(ratio));
 		return false;
 	}

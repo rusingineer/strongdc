@@ -517,6 +517,7 @@ private:
 		}
 
 		~TabInfo() {
+			DeleteObject(pen);
 			if (hIcon == hStateIcon)
 				DestroyIcon(hIcon);
 			else {

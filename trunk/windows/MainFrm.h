@@ -46,7 +46,6 @@
 #include "UPnP.h"
 #include "WinUtil.h"
 #include "picturewindow.h"
-#include "atlctrlxp.h"
 
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
 		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>, public Thread,
@@ -58,7 +57,7 @@ public:
 	virtual ~MainFrame();
 	DECLARE_FRAME_WND_CLASS(_T(APPNAME), IDR_MAINFRAME)
 
-	CMDICommandBarXPCtrl m_CmdBar;
+	CMDICommandBarCtrl m_CmdBar;
 
 	class Popup {
 	public:
@@ -323,7 +322,7 @@ public:
 	}
 	static void setShutDown(bool b) {
 		if (b)
-			iCurrentShutdownTime = (unsigned long) (TimerManager::getTick() / 1000);
+			iCurrentShutdownTime = TimerManager::getTick() / 1000;
 		bShutdown = b;
 	}
 	static bool getShutDown() {
@@ -349,7 +348,7 @@ public:
 	static MainFrame* anyMF;
 private:
 	friend int CZDCLib::setButtonPressed(int iPos, bool bPressed);
-	friend void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon);
+	friend void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int iPreview);
 
 	NOTIFYICONDATA normalicon;
 	NOTIFYICONDATA pmicon;

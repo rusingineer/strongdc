@@ -308,6 +308,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	time_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
+		if(disconnecting)
+			return;
 		throttling = BOOLSETTING(THROTTLE_ENABLE);
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer

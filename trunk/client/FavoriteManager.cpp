@@ -742,6 +742,7 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 
 	Lock l(cs);
 	UserCommand::List lst;
+	dcdebug("Input: %d\n", userCommands.size());
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
 		if(!(uc.getCtx() & ctx)) {
@@ -767,10 +768,13 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 				{
 					lst.push_back(*i);
 					break;
+				} else {
+					dcassert(0);
 				}
 			}
 		}
 	}
+	dcdebug("Output: %d\n", lst.size());
 	return lst;
 }
 
