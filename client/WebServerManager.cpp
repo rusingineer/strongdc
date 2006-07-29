@@ -441,7 +441,7 @@ string WebServerManager::getULQueue(){
 	for(UploadQueueItem::UserMapIter ii = UploadManager::getInstance()->UploadQueueItems.begin(); ii != UploadManager::getInstance()->UploadQueueItems.end(); ++ii) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			ret+="<tr><td>" + (*i)->User->getFirstNick() + "</td>";
-			ret+="<td>" + (*i)->FileName + "</td></tr>";
+			ret+="<td>" + Util::getFileName((*i)->File) + "</td></tr>";
 		}
 	}
 	ret+="</table>";

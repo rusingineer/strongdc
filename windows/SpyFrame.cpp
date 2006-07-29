@@ -28,9 +28,9 @@
 #include "../client/ResourceManager.h"
 #include "../client/ConnectionManager.h"
 
-int SpyFrame::columnSizes[] = { 305, 70, 90, 85 };
-int SpyFrame::columnIndexes[] = { COLUMN_STRING, COLUMN_COUNT, COLUMN_USERS, COLUMN_TIME };
-static ResourceManager::Strings columnNames[] = { ResourceManager::SEARCH_STRING, ResourceManager::COUNT, ResourceManager::USERS, ResourceManager::TIME };
+int SpyFrame::columnSizes[] = { 305, 70, 85 };
+int SpyFrame::columnIndexes[] = { COLUMN_STRING, COLUMN_COUNT, COLUMN_TIME };
+static ResourceManager::Strings columnNames[] = { ResourceManager::SEARCH_STRING, ResourceManager::COUNT, ResourceManager::TIME };
 
 LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -133,46 +133,18 @@ void SpyFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == SEARCH) {
-		SearchInfo* x = (SearchInfo*)lParam;
-
-		SearchIter it2 = searches.find(x->s);
-		int n;
-		if(it2 == searches.end()) {
-			n = searches[x->s].i = 1;
-			it2 = searches.find(x->s);
-		} else {
-			n = ++((it2->second).i);
-		}
-
-		if (x->seeker.find("Hub:")) x->seeker = ClientManager::getInstance()->getIPNick(x->seeker.substr(0, x->seeker.find(':')));
-		
-		int k;
-		for (k = 0; k < 3; ++k)
-			if (x->seeker == (searches[x->s].seekers)[k])
-				break;		//that user's searching for file already noted
-
-		{
-			Lock l(cs);
-			if (k == 3)		//loop terminated normally
-				searches[x->s].AddSeeker(x->seeker);
-		}
-
-		string temp;
-
-		for (int k = 0; k < 3; ++k)
-			temp += (searches[x->s].seekers)[k] + "  ";
+		tstring* x = (tstring*)lParam;
 
 		total++;
 
 		// Not thread safe, but who cares really...
 		perSecond[cur]++;
 
-		int j = ctrlSearches.find(Text::toT(x->s));
+		int j = ctrlSearches.find(*x);
 		if(j == -1) {
 			TStringList a;
-			a.push_back(Text::toT(x->s));
+			a.push_back(*x);
 			a.push_back(Text::toT(Util::toString(1)));
-			a.push_back(Text::toT(temp));
 			a.push_back(Text::toT(Util::getTimeString()));			
 			ctrlSearches.insert(a);
 			if(ctrlSearches.GetItemCount() > 500) {
@@ -182,7 +154,6 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 			TCHAR tmp[32];
 			ctrlSearches.GetItemText(j, COLUMN_COUNT, tmp, 32);
 			ctrlSearches.SetItemText(j, COLUMN_COUNT, Text::toT(Util::toString(Util::toInt(Text::fromT(tmp))+1)).c_str());
-			ctrlSearches.SetItemText(j, COLUMN_USERS, Text::toT(temp).c_str());
 			ctrlSearches.GetItemText(j, COLUMN_TIME, tmp, 32);
 			ctrlSearches.SetItemText(j, COLUMN_TIME, Text::toT(Util::getTimeString()).c_str());
 			if(ctrlSearches.getSortColumn() == COLUMN_COUNT )
@@ -239,13 +210,13 @@ LRESULT SpyFrame::onSearch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 	return 0;
 }
 
-void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& user, const string& s) throw() {
+void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& s) throw() {
 	if(ignoreTth && s.compare(0, 4, "TTH:") == 0)
 		return;
-	SearchInfo *x = new SearchInfo(user, s);
-	string::size_type i = 0;
-	while( (i=(x->s).find('$')) != string::npos) {
-		(x->s)[i] = ' ';
+	tstring* x = new tstring(Text::toT(s));
+	tstring::size_type i = 0;
+	while( (i=x->find(_T('$'))) != string::npos) {
+		(*x)[i] = _T(' ');
 	}
 	PostMessage(WM_SPEAKER, SEARCH, (LPARAM)x);
 }

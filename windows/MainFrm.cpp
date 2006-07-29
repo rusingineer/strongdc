@@ -192,10 +192,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	AddSimpleReBarBand(hWndToolBar, NULL, TRUE);
 	CreateSimpleStatusBar();
 
-	//Crea XP like Menu
-	m_CmdBar.AddToolbar(hWndToolBar);
-    m_CmdBar.Prepare();
-
 	ctrlStatus.Attach(m_hWndStatusBar);
 	ctrlStatus.SetSimple(FALSE);
 	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -469,8 +465,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		if (bShutdown) {
-			time_t aTick = (u_int32_t)GET_TICK();
-			time_t iSec = (aTick / 1000);
+			time_t iSec = GET_TICK() / 1000;
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);

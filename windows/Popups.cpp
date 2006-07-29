@@ -78,9 +78,9 @@ void Popups::write()
 
 LRESULT Popups::onPreview(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	MainFrame::getMainFrame()->ShowBalloonTip((
-		TSTRING(FILE)+_T(": sdc100rc8.rar\n")+
-		TSTRING(USER)+_T(": BigMuscle")).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
+	PopupManager::getInstance()->Show(STRING(FILE) + ": sdc202.rar\n" +
+		STRING(USER) + ": BigMuscle", STRING(DOWNLOAD_FINISHED_IDLE), NIIF_INFO, ctrlPopupType.GetCurSel());
+
 	return 0;
 }
 /**

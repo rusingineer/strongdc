@@ -1,8 +1,8 @@
 	-- StrongDC++ 2.01 --
 
-*** WARNING ***
-  Tato verze opravuje bezpeènostní chybu, aktualizujte pokud nechcete zaèít runtime chyby
-*** WARNING ***
+*** VAROVÁNÍ ***
+  Tato verze opravuje bezpeènostní chybu, aktualizujte pokud nechcete zažít runtime chyby
+*** VAROVÁNÍ ***
 
 * opraven bug pøi detekci faku
 * opraven bug, že teèky v názvech log souborù byli pøevedeny na _

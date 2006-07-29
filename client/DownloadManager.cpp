@@ -718,7 +718,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 					for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 						Download* download = *i;
 						if(download != d && download->getTarget() == d->getTarget()) {
-							download->getUserConnection()->disconnect();
+							download->getUserConnection()->disconnect(true);
 							aborting = true;
 							break;
 						}

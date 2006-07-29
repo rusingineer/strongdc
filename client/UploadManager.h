@@ -90,8 +90,8 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
 public:
-	UploadQueueItem(User::Ptr u, string file, string path, string filename, int64_t p, int64_t sz, time_t itime) :
-		User(u), File(file), Path(path), FileName(filename), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
+	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, time_t itime) :
+		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
 	typedef vector<Ptr> List;
@@ -104,8 +104,8 @@ public:
 	}
 	static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
 		switch(col) {
-			case COLUMN_FILE: return Util::stricmp(a->FileName, b->FileName);
-			case COLUMN_PATH: return Util::stricmp(a->Path, b->Path);
+			case COLUMN_FILE: return Util::stricmp(a->columns[COLUMN_FILE], b->columns[COLUMN_FILE]);
+			case COLUMN_PATH: return Util::stricmp(a->columns[COLUMN_PATH], b->columns[COLUMN_PATH]);
 			case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
 			case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
 			case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
@@ -136,8 +136,6 @@ public:
 
 	User::Ptr User;
 	string File;
-	string Path;
-	string FileName;
 	int64_t pos;
 	int64_t size;
 	time_t iTime;

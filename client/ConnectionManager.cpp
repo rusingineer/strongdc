@@ -148,7 +148,7 @@ UserConnection* ConnectionManager::getConnection(bool aNmdc, bool secure) throw(
 
 void ConnectionManager::putConnection(UserConnection* aConn) {
 	aConn->removeListener(this);
-	aConn->disconnect();
+	aConn->disconnect(true);
 
 	Lock l(cs);
 	userConnections.erase(remove(userConnections.begin(), userConnections.end(), aConn), userConnections.end());

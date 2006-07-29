@@ -65,9 +65,7 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	}
 		
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
-    ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
-		SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
-
+	ctrlList.setSortColumn(COLUMN_NICK);
 	ctrlList.setVisible(SETTING(UPLOADQUEUEFRAME_VISIBLE));
 	
 	// colors
@@ -132,7 +130,7 @@ LRESULT WaitingUsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		ctrlList.DeleteAllItems();
 		UQFUsers.clear();
 		SettingsManager::getInstance()->set(SettingsManager::UPLOADQUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
-	    ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
+		ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
 			SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
 
 		bHandled = FALSE;
@@ -456,7 +454,7 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 		}
 	}
 	aUQI->update();
-	aUQI->icon = WinUtil::getIconIndex(Text::toT(aUQI->FileName));
+	aUQI->icon = WinUtil::getIconIndex(Text::toT(aUQI->File));
 	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->icon);
 }
 
@@ -499,8 +497,8 @@ void WaitingUsersFrame::updateStatus() {
 
 
 void UploadQueueItem::update() {
-	columns[COLUMN_FILE] = Text::toT(FileName);
-	columns[COLUMN_PATH] = Text::toT(Path);
+	columns[COLUMN_FILE] = Text::toT(Util::getFileName(File));
+	columns[COLUMN_PATH] = Text::toT(Util::getFilePath(File));
 	columns[COLUMN_NICK] = WinUtil::getNicks(User);
 	columns[COLUMN_HUB] = WinUtil::getHubNames(User).first;
 	columns[COLUMN_TRANSFERRED] = Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");

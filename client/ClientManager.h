@@ -71,19 +71,10 @@ public:
 	
 	void setIPUser(const string& IP, User::Ptr user) {
 		Lock l(cs);
-		ipList[IP] = user->getFirstNick();
 		OnlinePair p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	const string& getIPNick(const string& IP) const {
-		NickMap::const_iterator it;
-		if ((it = ipList.find(IP)) != ipList.end() && !it->second.empty())
-			return it->second;
-		else
-			return IP;
-	}
-
 	OnlineUser& getOnlineUser(const User::Ptr& p) {
 		// this method is unsafe, but try it 
 		OnlineIter i = onlineUsers.find(p->getCID());
@@ -148,7 +139,6 @@ private:
 
 	typedef HASH_MAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
 	typedef UserMap::iterator UserIter;
-	typedef map<string, string, noCaseStringLess> NickMap;
 
 	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
 	typedef OnlineMap::const_iterator OnlineIter;
@@ -156,7 +146,6 @@ private:
 
 	Client::List clients;
 	mutable CriticalSection cs;
-	NickMap ipList;
 	
 	UserMap users;
 	OnlineMap onlineUsers;
@@ -168,8 +157,7 @@ private:
 	string cachedIp;
 	CID pid;	
 
-	int64_t quickTick;
-	int infoTick;
+	time_t quickTick;
 
 	friend class Singleton<ClientManager>;
 
@@ -177,7 +165,6 @@ private:
 		TimerManager::getInstance()->addListener(this); 
 		SettingsManager::getInstance()->addListener(this);
 		quickTick = GET_TICK();
-		infoTick = 0;
 	}
 
 	virtual ~ClientManager() throw() { 

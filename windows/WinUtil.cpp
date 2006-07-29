@@ -79,6 +79,7 @@ StringPairList WinUtil::initialDirs;
 bool WinUtil::urlDcADCRegistered = false;
 bool WinUtil::urlMagnetRegistered = false;
 bool WinUtil::isAppActive = false;
+DWORD WinUtil::comCtlVersion = 0;
 CHARFORMAT2 WinUtil::m_TextStyleTimestamp;
 CHARFORMAT2 WinUtil::m_ChatTextGeneral;
 CHARFORMAT2 WinUtil::m_TextStyleMyNick;
@@ -509,6 +510,11 @@ void WinUtil::init(HWND hWnd) {
 		urlMagnetRegistered = true; 
 	}
 
+	DWORD dwMajor = 0, dwMinor = 0;
+	if(SUCCEEDED(ATL::AtlGetCommCtrlVersion(&dwMajor, &dwMinor))) {
+		comCtlVersion = MAKELONG(dwMinor, dwMajor);
+	}
+	
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
 	grantMenu.CreatePopupMenu();
@@ -949,6 +955,10 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			status = TSTRING(SPECIFY_SEARCH_STRING);
 		} else {
 			WinUtil::openLink(_T("http://www.imdb.com/find?q=") + Text::toT(Util::encodeURI(Text::fromT(param))));
+		}
+	} else if(Util::stricmp(cmd.c_str(), _T("u")) == 0) {
+		if (!param.empty()) {
+			WinUtil::openLink(Text::toT(Util::encodeURI(Text::fromT(param))));
 		}
 	} else if(Util::stricmp(cmd.c_str(), _T("rebuild")) == 0) {
 		HashManager::getInstance()->rebuild();
@@ -1488,14 +1498,13 @@ void WinUtil::saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting o
 int WinUtil::getIconIndex(const tstring& aFileName) {
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset(&fi, 0, sizeof(SHFILEINFO));
-		string x = Text::toLower(Util::getFileExt(Text::fromT(aFileName)));
+		tstring x = Text::toLower(Util::getFileExt(aFileName));
 		if(!x.empty()) {
 			ImageIter j = fileIndexes.find(x);
 			if(j != fileIndexes.end())
 				return j->second;
 		}
-		tstring fn = Text::toT(Text::toLower(Util::getFileName(Text::fromT(aFileName))));
+		tstring fn = Text::toLower(Util::getFileName(aFileName));
 		::SHGetFileInfo(fn.c_str(), FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		::DestroyIcon(fi.hIcon);

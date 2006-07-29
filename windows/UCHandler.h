@@ -58,6 +58,7 @@ public:
 		bool op = false;
 		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, op);
 		int n = 0;
+		int m = 0;
 
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
@@ -79,14 +80,14 @@ public:
 					if( (cur.GetMenuItemCount() >= 1) &&
 						!(cur.GetMenuState(cur.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR))
 					{
-						cur.AppendMenu(MF_SEPARATOR);
+						cur.AppendMenu(MF_SEPARATOR);m++;
 					}
 				} else if(uc.getType() == UserCommand::TYPE_RAW || uc.getType() == UserCommand::TYPE_RAW_ONCE) {
 					cur = menu.m_hMenu;
 					StringTokenizer<tstring> t(Text::toT(uc.getName()), _T('\\'));
 					for(TStringIter i = t.getTokens().begin(); i != t.getTokens().end(); ++i) {
 						if(i+1 == t.getTokens().end()) {
-							cur.AppendMenu(MF_STRING, IDC_USER_COMMAND+n, i->c_str());
+							cur.AppendMenu(MF_STRING, IDC_USER_COMMAND+n, i->c_str());m++;
 						} else {
 							bool found = false;
 							TCHAR buf[1024];

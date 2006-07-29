@@ -145,6 +145,7 @@ void NmdcHub::clearUsers() {
 		ClientManager::getInstance()->putOffline(*i->second);
 		delete i->second;
 	}
+	u2.clear();
 }
 
 void NmdcHub::updateFromTag(Identity& id, const string& tag) {

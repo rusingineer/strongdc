@@ -289,18 +289,22 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		int i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED);
 		UserInfo* ui = ctrlUsers.getItemData(i);
 		dcassert(i != -1);
-		string file = Util::emptyString;
-		string xNick = Text::fromT(ui->columns[COLUMN_NICK]);
-		if (xNick != "") {
-			file = Util::validateFileName(SETTING(LOG_DIRECTORY) + "PM\\" + xNick + ".log");
-		}
+
+		StringMap params;
+		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(ui->getUser()->getCID()));
+		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(ui->getUser()->getCID()));
+		params["userCID"] = ui->getUser()->getCID().toBase32(); 
+		params["userNI"] = ClientManager::getInstance()->getNicks(ui->getUser()->getCID())[0];
+		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
+
+		string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));
 		if(Util::fileExists(file)) {
 			ShellExecute(NULL, NULL, Text::toT(file).c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else {
-			MessageBox(CTSTRING(NO_LOG_FOR_USER),CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
+			MessageBox(CTSTRING(NO_LOG_FOR_USER), CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
 		}	
 	}
-	return 0;
+		return 0;
 }
 
 void UsersFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {

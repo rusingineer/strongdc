@@ -135,6 +135,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 
 	ctrlList.setSortColumn(COLUMN_FILENAME);	
+	ctrlList.setVisible(SETTING(DIRECTORYLISTINGFRAME_VISIBLE));
 
 	ctrlTree.SetImageList(WinUtil::fileImages, TVSIL_NORMAL);
 	ctrlList.SetImageList(WinUtil::fileImages, LVSIL_SMALL);

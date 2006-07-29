@@ -59,8 +59,8 @@ extern CAppModule _Module;
 #include <Shellapi.h>
 #endif // _WIN32
 
-#define _CMDBAR_EXTRA_TRACE
-#define _WTL_USE_MDI
+//#define _CMDBAR_EXTRA_TRACE
+//#define _WTL_USE_MDI
 #define WM_SPEAKER (WM_APP + 500)
 
 //{{AFX_INSERT_LOCATION}}

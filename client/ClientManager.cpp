@@ -339,7 +339,7 @@ void ClientManager::infoUpdated(bool antispam) {
 void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 									int aFileType, const string& aString, bool isPassive) throw() 
 {
-	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aSeeker, aString);
+	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aString);
 
 	// We don't wan't to answer passive searches if we're in passive mode...
 	if(isPassive && !ClientManager::getInstance()->isActive(aClient->getHubUrl())) {
@@ -499,7 +499,6 @@ void ClientManager::on(TimerManagerListener::Minute, time_t /* aTick */) throw()
 			(*j)->info();
 		}
 	}
-	// TODO SetProcessWorkingSetSize
 	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 

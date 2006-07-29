@@ -28,14 +28,14 @@
 
 PopupManager* Singleton< PopupManager >::instance = NULL;
 
-void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
+void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int iPreview) {
 	if(!activated)
 		return;
 
-	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY))
+	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY) && (iPreview == -1))
 		return;
 	
-	if(!MainFrame::getMainFrame()->bAppMinimized && BOOLSETTING(POPUP_MINIMIZED)) {
+	if(!MainFrame::getMainFrame()->bAppMinimized && BOOLSETTING(POPUP_MINIMIZED) && (iPreview == -1)) {
 		return;
 	}
 
@@ -45,7 +45,8 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon) {
 		msg += "...";
 	}
 
-	if(SETTING(POPUP_TYPE) == 0) {
+	if(	(SETTING(POPUP_TYPE) == 0 && iPreview != 1) ||
+		(SETTING(POPUP_TYPE) == 1 && iPreview == 0)) {
 
 		NOTIFYICONDATA m_nid;
 		m_nid.cbSize = sizeof(NOTIFYICONDATA);

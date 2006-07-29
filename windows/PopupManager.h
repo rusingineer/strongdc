@@ -46,7 +46,7 @@ public:
 	}
 	
 	//call this with a preformatted message
-	void Show(const string &aMsg, const string &aTitle, int Icon);
+	void Show(const string &aMsg, const string &aTitle, int Icon, int iPreview = -1);
 
 	//remove first popup in list and move everyone else
 	void Remove(u_int32_t pos = 0);
