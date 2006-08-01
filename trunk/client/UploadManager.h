@@ -41,7 +41,9 @@ public:
 		FLAG_ZUPLOAD = 0x04,
 		FLAG_PARTIAL_LIST = 0x08,
 		FLAG_PENDING_KICK = 0x10,
-		FLAG_PARTIAL_SHARE = 0x20
+		FLAG_PARTIAL_SHARE = 0x20,
+		FLAG_RESUMED = 0x40,
+		FLAG_CHUNKED = 0x80
 	};
 
 	typedef Upload* Ptr;
@@ -242,6 +244,18 @@ public:
 		conn->addListener(this);
 		conn->setState(UserConnection::STATE_GET);
 	}
+	void removeDelayUpload(const User::Ptr& aUser) {
+		Lock l(cs);
+		for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
+			Upload* up = *i;
+			if(aUser == up->getUser()) {
+				delayUploads.erase(i);
+				up->setUserConnection(NULL);
+				delete up;
+				break;
+			}
+		}		
+	}
 
 	void abortUpload(const string& aFile, bool waiting = true);
 
@@ -283,6 +297,7 @@ private:
 
 	
 	Upload::List uploads;
+	Upload::List delayUploads;
 	CriticalSection cs;
 
 	typedef HASH_MAP<User::Ptr, time_t, User::HashFunction> SlotMap;
@@ -296,7 +311,8 @@ private:
 	virtual ~UploadManager() throw();
 
 	void removeConnection(UserConnection::Ptr aConn);
-	void removeUpload(Upload* aUpload);
+	void removeUpload(Upload* aUpload, bool delay = false);
+	void finishUpload(Upload* u, bool msg);
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();

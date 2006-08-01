@@ -681,7 +681,7 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 				if(xml.findChild("Title")) {
 					const string& title = xml.getChildData();
 					xml.resetCurrentChild();
-					if(xml.findChild("Message")) {
+					if(xml.findChild("Message") && !BOOLSETTING(DONT_ANNOUNCE_NEW_VERSIONS)) {
 						if(url.empty()) {
 							const string& msg = xml.getChildData();
 							MessageBox(Text::toT(msg).c_str(), Text::toT(title).c_str(), MB_OK);

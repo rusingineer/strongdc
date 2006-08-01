@@ -97,18 +97,18 @@ public:
 	/**
      * Get file chunks information by file name
      */
-	static Ptr Get(const string& name);
+	static Ptr Get(const TTHValue* tth);
 
 	/**
      * Free the file chunks information, this is called when target is removed from download queue
      * See also ~FileChunksInfo()
      */
-    static void Free(const string& name);
+    static void Free(const TTHValue* tth);
 
 	/**
      * Create file chunks infromation with name, size and chunks detail
      */
-	FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* blocks = NULL);
+	FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* blocks = NULL);
 
 	/**
      * Smart pointer based destructor
@@ -183,7 +183,7 @@ public:
 	/**
      * Perform last verifying against TigerTree
      */
-	bool doLastVerify(const TigerTree& aTree);
+	bool doLastVerify(const TigerTree& aTree, const string& tempTargetName);
 
 	void markVerifiedBlock(u_int16_t start, u_int16_t end);
 
@@ -205,7 +205,7 @@ public:
 	/**
 	 * Verify a block	
  	 */	
- 	bool verifyBlock(int64_t anyPos, const TigerTree& aTree);
+ 	bool verifyBlock(int64_t anyPos, const TigerTree& aTree, const string& tempTargetName);
  	 	
  	/**
 	 * Debug
@@ -223,7 +223,8 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-	string  tempTargetName;					// temp target file name
+	//string  tempTargetName;					// temp target file name
+	TTHValue* TTH;
 
 	int64_t iFileSize;
     int64_t iDownloadedSize;

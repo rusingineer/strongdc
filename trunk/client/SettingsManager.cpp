@@ -73,7 +73,7 @@ const string SettingsManager::settingTags[] =
 	"SkipZeroByte", "AdlsBreakOnFirst",
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
 	"LogFilelistTransfers", "ShowStatusbar", "BandwidthSettingMode", "ShowToolbar", "ShowTransferview", 
-	"SearchPassiveAlways", "SetMinislotSize", "ShutdownInterval", 
+	"SearchPassiveAlways", "SetMinislotSize", "ShutdownInterval", "DontAnnounceNewVersions", 
 	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", 
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
 	"TextMyOwnBackColor", "TextMyOwnForeColor", "TextMyOwnBold", "TextMyOwnItalic", 
@@ -523,7 +523,7 @@ SettingsManager::SettingsManager()
 	setDefault(GROUP_SEARCH_RESULTS, true);
 	setDefault(TABS_ON_TOP, false);
 	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);
-	
+	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

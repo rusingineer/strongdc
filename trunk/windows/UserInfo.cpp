@@ -85,7 +85,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	columns[COLUMN_PK] = Text::toT(identity.getUser()->getPk());
 	columns[COLUMN_LOCK] = Text::toT(identity.getUser()->getLock());
 	columns[COLUMN_SUPPORTS] = Text::toT(identity.getUser()->getSupports());
-	columns[COLUMN_CLIENTID] = Text::toT(identity.getClientType());
+	columns[COLUMN_CLIENTID] = Text::toT(identity.get("CT"));
 
 	if(sortCol != -1) {
 		needsSort = needsSort || (old != columns[sortCol]);

@@ -183,7 +183,7 @@ void QueueFrame::QueueItemInfo::update() {
 		int colMask = updateMask;
 		updateMask = 0;
 
-		qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(target));
+		//qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(getTarget()));
 
 		int PocetSegmentu = qi ? qi->getCurrents().size() : 0;
 		int MaxSegmentu = qi ? qi->getMaxSegments() : 0;

@@ -106,7 +106,7 @@ namespace {
 
 const string& QueueItem::getTempTarget() {
 	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
-		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() /*&& (File::getSize(getTarget()) == -1)*/) {
+		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(getTarget()) == -1)) {
 #ifdef _WIN32
 			::StringMap sm;
 			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
@@ -117,8 +117,6 @@ const string& QueueItem::getTempTarget() {
 #else //_WIN32
 			setTempTarget(SETTING(TEMP_DOWNLOAD_DIRECTORY) + getTempName(getTargetFileName(), getTTH()));
 #endif //_WIN32
-		}else{
-			tempTarget = target + ".dctmp";
 		}
 	}
 	return tempTarget;
@@ -185,7 +183,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 			}
 		}
 		
-		pChunksInfo = new FileChunksInfo(qi->getTempTarget(), qi->getSize(), &v);
+		pChunksInfo = new FileChunksInfo(qi->getTTH(), qi->getSize(), &v);
 		qi->chunkInfo = pChunksInfo;
 
 		if(pChunksInfo && verifiedBlocks != Util::emptyString){
@@ -971,23 +969,23 @@ int QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
 	if(BOOLSETTING(SEGMENTS_MANUAL)) {
 		MaxSegments = min(SETTING(NUMBER_OF_SEGMENTS), 10);
 	} else {
-		if((filesize >= 10*1048576) && (filesize < 20*1048576)) {
+		if((filesize >= 2*1048576) && (filesize < 15*1048576)) {
 			MaxSegments = 2;
-		} else if((filesize >= (int64_t)20*1048576) && (filesize < (int64_t)40*1048576)) {
+		} else if((filesize >= (int64_t)15*1048576) && (filesize < (int64_t)30*1048576)) {
 			MaxSegments = 3;
-		} else if((filesize >= (int64_t)40*1048576) && (filesize < (int64_t)80*1048576)) {
+		} else if((filesize >= (int64_t)30*1048576) && (filesize < (int64_t)60*1048576)) {
 			MaxSegments = 4;
-		} else if((filesize >= (int64_t)80*1048576) && (filesize < (int64_t)160*1048576)) {
+		} else if((filesize >= (int64_t)60*1048576) && (filesize < (int64_t)120*1048576)) {
 			MaxSegments = 5;
-		} else if((filesize >= (int64_t)160*1048576) && (filesize < (int64_t)320*1048576)) {
+		} else if((filesize >= (int64_t)120*1048576) && (filesize < (int64_t)240*1048576)) {
 			MaxSegments = 6;
-		} else if((filesize >= (int64_t)320*1048576) && (filesize < (int64_t)640*1048576)) {
+		} else if((filesize >= (int64_t)240*1048576) && (filesize < (int64_t)480*1048576)) {
 			MaxSegments = 7;
-		} else if((filesize >= (int64_t)640*1048576) && (filesize < (int64_t)1280*1048576)) {
+		} else if((filesize >= (int64_t)480*1048576) && (filesize < (int64_t)960*1048576)) {
 			MaxSegments = 8;
-		} else if((filesize >= (int64_t)1280*1048576) && (filesize < (int64_t)2560*1048576)) {
+		} else if((filesize >= (int64_t)960*1048576) && (filesize < (int64_t)1920*1048576)) {
 			MaxSegments = 9;
-		} else if(filesize >= (int64_t)2560*1048576) {
+		} else if(filesize >= (int64_t)1920*1048576) {
 			MaxSegments = 10;
 		}
 	}
@@ -1179,7 +1177,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 	
 						if(q->getDownloadedBytes() > 0) {
 							q->setFlag(QueueItem::FLAG_EXISTS);
-						} else if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+						} else {
 							q->setTempTarget(Util::emptyString);
 						}
 						if(q->isSet(QueueItem::FLAG_USER_LIST)) {
@@ -1220,7 +1218,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		if(aDownload->isSet(Download::FLAG_MULTI_CHUNK) && 
 			!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			
-			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aDownload->getTempTarget());
+			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aDownload->getTTH());
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
 				fileChunks->putChunk(aDownload->getStartPos());
 			}
@@ -1935,7 +1933,7 @@ bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& t
 		}
 
 		// Get my parts info
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTTH());
 		if(!chunksInfo){
 			return false;
 		}
@@ -1998,7 +1996,7 @@ bool QueueManager::handlePartialSearch(const TTHValue& tth, PartsInfo& _outParts
 			return false;
 		}
 
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTempTarget());
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(qi->getTTH());
 		if(!chunksInfo){
 			return false;
 		}

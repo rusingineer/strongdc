@@ -247,7 +247,7 @@ private:
 			MASK_TYPE = 1 << COLUMN_TYPE
 		};
 
-		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI), target(Text::toT(aQI->getTarget())),
+		QueueItemInfo(QueueItem* aQI) : Flags(*aQI), qi(aQI),
 			path(Text::toT(Util::getFilePath(aQI->getTarget()))),
 			size(aQI->getSize()), downloadedBytes(aQI->getDownloadedBytes()), 
 			added(aQI->getAdded()), tth(aQI->getTTH()), priority(aQI->getPriority()), status(aQI->getStatus()),
@@ -281,10 +281,11 @@ private:
 			}
 		}
 		int imageIndex() {
-			return WinUtil::getIconIndex(target);
+			return WinUtil::getIconIndex(getTarget());
 		}
 
 		const tstring& getTargetFileName() { return getDisplay()->columns[COLUMN_TARGET]; }
+		const tstring getTarget() { return qi ? Text::toT(qi->getTarget()) : Util::emptyStringT; }
 
 		SourceList& getSources() { return sources; }
 		SourceList& getBadSources() { return badSources; }
@@ -312,7 +313,6 @@ private:
 			return false;
 		}
 		
-		GETSET(tstring, target, Target);
 		GETSET(tstring, path, Path);
 		GETSET(int64_t, size, Size);
 		GETSET(int64_t, downloadedBytes, DownloadedBytes);

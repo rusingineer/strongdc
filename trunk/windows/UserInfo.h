@@ -64,10 +64,6 @@
 		bool bot;
 	};
 
-
-class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
-friend struct CompareItems;
-public:
 	enum {
 		COLUMN_FIRST,
 		COLUMN_NICK = COLUMN_FIRST, 
@@ -83,21 +79,23 @@ public:
 		COLUMN_HUBS, 
 		COLUMN_SLOTS,
 		COLUMN_UPLOAD_SPEED, 
-		COLUMN_IP,
+		COLUMN_IP, 
 		COLUMN_PK, 
 		COLUMN_LOCK, 
 		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
+
+class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
+friend struct CompareItems;
+public:
 	UserInfo(const UserTask& u) : UserInfoBase(u.user) {
 		update(u.identity, -1); 
 	};
 	const tstring& getText(int col) const;
 
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
-	int imageIndex() {
-		return WinUtil::getImage(identity, Util::emptyString); // TODO get hub url
-	}
+	int imageIndex() { return WinUtil::getImage(identity); }
 
 	bool update(const Identity& identity, int sortCol);
 

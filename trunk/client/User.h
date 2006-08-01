@@ -134,22 +134,7 @@ public:
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Connection, "CO")
-
-	// fake detection variables
-	GS(TestSURComplete, "TC");
-	GS(FilelistComplete, "FC");
-	GS(BadClient, "BC");	
-	GS(BadFilelist, "BF");
-	GS(FileListDisconnects, "FD");
-	GS(ConnectionTimeouts, "TO");
 	GS(Status, "ST");
-	GS(FileListSize, "LS");
-	GS(ListLength, "LL");
-	GS(RealBytesShared, "RS");
-	GS(CheatingString, "CS");
-	GS(ClientType, "CT");
-	GS(TestSUR, "TS");
-	GS(Comment, "CM");	
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }

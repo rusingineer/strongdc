@@ -575,7 +575,7 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, string target);
 	static string formatTime(long rest);
-	static int getImage(const Identity& u, const string& aHubUrl);
+	static int getImage(const Identity& u);
 	static int getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
 	static string disableCzChars(string message);

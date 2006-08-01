@@ -85,7 +85,7 @@ public:
 	}
 
 	void updateUser(const User::Ptr& p) {
-		Lock l(cs);
+		//Lock l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;

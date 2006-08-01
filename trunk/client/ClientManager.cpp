@@ -576,7 +576,7 @@ void ClientManager::on(Load, SimpleXML*) throw() {
                 if(cid.length() != 39 || nick.empty())
 					continue;
 				User::Ptr p(new User(CID(cid)));
-				p->setFirstNick(xml.getChildData());
+				p->setFirstNick(nick);
 				users.insert(make_pair(p->getCID(), p));
 			}
 		}
@@ -625,7 +625,7 @@ void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 	Lock l(cs);
 	OnlineIter i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
-		i->second->getIdentity().setListLength(listLen);
+		i->second->getIdentity().set("LL", listLen);
 	}
 }
 
@@ -638,8 +638,8 @@ void ClientManager::fileListDisconnected(const User::Ptr& p) {
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
 	
-			int fileListDisconnects = Util::toInt(ou.getIdentity().getFileListDisconnects()) + 1;
-			ou.getIdentity().setFileListDisconnects(Util::toString(fileListDisconnects));
+			int fileListDisconnects = Util::toInt(ou.getIdentity().get("FD")) + 1;
+			ou.getIdentity().set("FD", Util::toString(fileListDisconnects));
 
 			if(SETTING(ACCEPTED_DISCONNECTS) == 0)
 				return;
@@ -666,8 +666,8 @@ void ClientManager::connectionTimeout(const User::Ptr& p) {
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
 	
-			int connectionTimeouts = Util::toInt(ou.getIdentity().getConnectionTimeouts()) + 1;
-			ou.getIdentity().setConnectionTimeouts(Util::toString(connectionTimeouts));
+			int connectionTimeouts = Util::toInt(ou.getIdentity().get("TO")) + 1;
+			ou.getIdentity().set("TO", Util::toString(connectionTimeouts));
 	
 			if(SETTING(ACCEPTED_TIMEOUTS) == 0)
 				return;
@@ -710,7 +710,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
 		string detectString = Util::emptyString;
 		string inflationString = Util::emptyString;
-		ou->getIdentity().setRealBytesShared(Util::toString(realSize));
+		ou->getIdentity().set("RS", Util::toString(realSize));
 		bool isFakeSharing = false;
 	
 		if(statedSize > sizeTolerated) {
@@ -718,7 +718,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 		}
 
 		if(isFakeSharing) {
-			ou->getIdentity().setBadFilelist("1");
+			ou->getIdentity().set("BF", "1");
 			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
 			if(realSize == 0) {
 				detectString += STRING(CHECK_0BYTE_SHARE);
@@ -735,7 +735,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 			report = ou->getIdentity().setCheat(ou->getClient(), detectString, false);
 			ou->getIdentity().sendRawCommand(ou->getClient(), SETTING(FAKESHARE_RAW));
 		}
-		ou->getIdentity().setFilelistComplete("1");
+		ou->getIdentity().set("FC", "1");
 	}
 	ou->getClient().updated(*ou);
 	if(!report.empty())
@@ -753,8 +753,8 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 		ou = i->second;
 		
 		if(!aTestSURString.empty()) {
-			ou->getIdentity().setTestSUR(aTestSURString);
-			ou->getIdentity().setTestSURComplete("1");
+			ou->getIdentity().set("TS", aTestSURString);
+			ou->getIdentity().set("TC", "1");
 			report = ou->getIdentity().updateClientType(*ou);
 		}
 		if(!aCheatString.empty()) {

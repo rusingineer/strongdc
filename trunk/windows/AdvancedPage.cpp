@@ -62,6 +62,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
 	{ SettingsManager::DETECT_BADSOFT, ResourceManager::SETTINGS_BAD_SOFTWARE },
+	{ SettingsManager::DONT_ANNOUNCE_NEW_VERSIONS, ResourceManager::SETTINGS_DISPLAY_DC_UPDATE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

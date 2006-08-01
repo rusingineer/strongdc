@@ -39,10 +39,10 @@ class ChunkOutputStream : public OutputStream
 
 public:
 
-	ChunkOutputStream(OutputStream* _os, const string& name, int64_t _chunk) 
+	ChunkOutputStream(OutputStream* _os, const TTHValue* tth, int64_t _chunk) 
 		: os(_os), chunk(_chunk), pos(_chunk)
     {
-		fileChunks = FileChunksInfo::Get(name);
+		fileChunks = FileChunksInfo::Get(tth);
 		if(fileChunks == (FileChunksInfo*)NULL)
         {
 			throw FileException("No chunks data");
