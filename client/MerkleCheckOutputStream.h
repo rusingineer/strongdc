@@ -29,13 +29,13 @@
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
-	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, const string& tempTarget = Util::emptyString) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
-		if(!tempTarget.empty()) {
+	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, Download* aDown = NULL) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0), d(aDown) {
+		if(aDown) {
 			skippingBytes = (size_t)(start % aTree.getBlockSize());
 			if(skippingBytes > 0)
 				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
-			fileChunks = FileChunksInfo::Get(tempTarget);
+			fileChunks = FileChunksInfo::Get(&aTree.getRoot());
 			dcassert(!(fileChunks == (FileChunksInfo*)NULL));
 			bufPos = 0;
 			start = start + skippingBytes;
@@ -93,7 +93,7 @@ public:
 					s->flush();
 					dcassert(verified > 0);
 					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
-					fileChunks->verifyBlock(offset, real);
+					fileChunks->verifyBlock(offset, real, d->getTempTarget());
 				}
 				return ret;
 	        }else{
@@ -143,7 +143,7 @@ public:
 				s->flush();
 				dcassert(old > 0);
 				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
-				fileChunks->verifyBlock(offset, real);
+				fileChunks->verifyBlock(offset, real, d->getTempTarget());
 			}
 		}
 		return ret;
@@ -160,6 +160,7 @@ private:
 	size_t skippingBytes;					// the bytes that will be skipped
 	FileChunksInfo::Ptr fileChunks;
 	bool multiSourceChecking;
+	Download* d;
 
 	u_int8_t buf[TreeType::BASE_BLOCK_SIZE];
 	size_t bufPos;

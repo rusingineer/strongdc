@@ -449,12 +449,9 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
 			}
-		} else if(((colIndex == COLUMN_FILE) || (colIndex == COLUMN_SIZE) || (colIndex == COLUMN_PATH)) &&
-			ii->download && (ii->status != ItemInfo::STATUS_RUNNING)) {
+		} else if((colIndex != COLUMN_USER) && (colIndex != COLUMN_HUB) && (colIndex != COLUMN_STATUS) && (colIndex != COLUMN_IP) &&
+			(ii->status != ItemInfo::STATUS_RUNNING)) {
 			cd->clrText = OperaColors::blendColors(WinUtil::bgColor, WinUtil::textColor, 0.4);
-			return CDRF_NEWFONT;
-		} else if (ii->download && (ii->status != ItemInfo::STATUS_RUNNING)) {
-			cd->clrText = WinUtil::textColor;
 			return CDRF_NEWFONT;
 		}
 		// Fall through
@@ -655,8 +652,8 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 }
 	
 TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload), transferFailed(false),
-	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0), Target(Util::emptyStringT), flagImage(0),
-	collapsed(true), main(NULL)
+	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
+	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 
 	columns[COLUMN_USER] = WinUtil::getNicks(u);
 	columns[COLUMN_HUB] = WinUtil::getHubNames(u).first;
@@ -686,24 +683,27 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 		actual = start + ui.actual;
 		columns[COLUMN_RATIO] = Text::toT(Util::toString(getRatio()));
 	}
-	if(status == STATUS_RUNNING && (ui.updateMask & UpdateInfo::MASK_SPEED)) {
+	if(ui.updateMask & UpdateInfo::MASK_SPEED) {
 		speed = ui.speed;
-		columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(speed) + "/s");
-	} else {
-		columns[COLUMN_SPEED] = Util::emptyStringT;
+		if (status == STATUS_RUNNING) {
+			columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(speed) + "/s");
+		} else {
+			columns[COLUMN_SPEED] = Util::emptyStringT;
+		}
 	}
 	if(ui.updateMask & UpdateInfo::MASK_FILE) {
 		if(ui.download) Target = ui.target;
 		columns[COLUMN_FILE] = ui.file;
 		columns[COLUMN_PATH] = ui.path;
 	}
-	if(status == STATUS_RUNNING && (ui.updateMask & UpdateInfo::MASK_TIMELEFT)) {
+	if(ui.updateMask & UpdateInfo::MASK_TIMELEFT) {
 		timeLeft = ui.timeLeft;
-		columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
-	} else {
-		columns[COLUMN_TIMELEFT] = Util::emptyStringT;
+		if (status == STATUS_RUNNING) {
+			columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
+		} else {
+			columns[COLUMN_TIMELEFT] = Util::emptyStringT;
+		}
 	}
-
 	if(ui.updateMask & UpdateInfo::MASK_IP) {
 		flagImage = ui.flagImage;
 		columns[COLUMN_IP] = ui.IP;
@@ -905,7 +905,12 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 	ui->setStart(aUpload->getPos());
 	ui->setSize(aUpload->isSet(Upload::FLAG_TTH_LEAVES) ? aUpload->getSize() : aUpload->getFileSize());
 	ui->setFile(Text::toT(aUpload->getFileName()));
-	ui->setStatusString(TSTRING(UPLOAD_STARTING));
+
+	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
+		aUpload->unsetFlag(Upload::FLAG_RESUMED);
+		ui->setStatusString(TSTRING(UPLOAD_STARTING));
+	}
+
 	tstring country = Text::toT(Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp()));
 	tstring ip = Text::toT(aUpload->getUserConnection()->getRemoteIp());
 	if(country.empty()) {
@@ -946,12 +951,16 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 		if(u->isSet(Upload::FLAG_PARTIAL_SHARE)) {
 			statusString += _T("[P]");
 		}
+		if(u->isSet(Upload::FLAG_CHUNKED)) {
+			statusString += _T("[C]");
+		}
 		if(u->getUserConnection()->isSecure()) {
 			statusString += _T("[S]");
 		}
 		if(u->isSet(Upload::FLAG_ZUPLOAD)) {
 			statusString += _T("[Z]");
 		}
+
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}			

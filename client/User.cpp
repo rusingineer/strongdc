@@ -58,7 +58,7 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 				sm["email"] = get("EM");
 				sm["share"] = get("SS");
 				sm["shareshort"] = Util::formatBytes(get("SS"));
-				sm["realshareformat"] = Util::formatBytes(getRealBytesShared());
+				sm["realshareformat"] = Util::formatBytes(get("RS"));
 			}
 		}
 	}
@@ -89,8 +89,8 @@ const string Identity::setCheat(Client& c, const string& aCheatDescription, bool
 	getParams(ucParams, "user", true);
 	string cheat = Util::formatParams(aCheatDescription, ucParams, false);
 	
-	setCheatingString(cheat);
-	setBadClient(Util::toString(aBadClient));
+	set("CS", cheat);
+	set("BC", Util::toString(aBadClient));
 
 	string report = "*** " + STRING(USER) + " " + getNick() + " - " + cheat;
 	return report;
@@ -98,16 +98,16 @@ const string Identity::setCheat(Client& c, const string& aCheatDescription, bool
 
 const string Identity::getReport()
 {
-	string report = "\r\nClient:		" + getClientType();
+	string report = "\r\nClient:		" + get("CT");
 	report += "\r\nXML Generator:	" + (user->getGenerator().empty() ? "N/A" : user->getGenerator());
 	report += "\r\nLock:		" + user->getLock();
 	report += "\r\nPk:		" + user->getPk();
 	report += "\r\nTag:		" + getTag();
 	report += "\r\nSupports:		" + user->getSupports();
 	report += "\r\nStatus:		" + Util::formatStatus(Util::toInt(getStatus()));
-	report += "\r\nTestSUR:		" + getTestSUR();
-	report += "\r\nDisconnects:	" + getFileListDisconnects();
-	report += "\r\nTimeouts:		" + getConnectionTimeouts();
+	report += "\r\nTestSUR:		" + get("TS");
+	report += "\r\nDisconnects:	" + get("FD");
+	report += "\r\nTimeouts:		" + get("TO");
 	report += "\r\nDownspeed:	" + Util::formatBytes(getUser()->getLastDownloadSpeed()) + "/s";
 	report += "\r\nIP:		" + getIp();
 	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
@@ -116,35 +116,35 @@ const string Identity::getReport()
 	report += "\r\nConnection:	" + getConnection();
 	report += "\r\nCommands:	" + user->getUnknownCommand();
 
-	int64_t listSize = Util::toInt64(getFileListSize());
+	int64_t listSize = Util::toInt64(get("LS"));
 	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Util::formatExactSize(listSize) + " )") : "N/A");
 	
-	int64_t listLen = Util::toInt64(getListLength());
+	int64_t listLen = Util::toInt64(get("LL"));
 	report += "\r\nListLen:		" + (listLen != -1 ? (string)(Util::formatBytes(listLen) + "  (" + Util::formatExactSize(listLen) + " )") : "N/A");
 	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Util::formatExactSize(getBytesShared()) + " )";
 	
-	int64_t realBytes = Util::toInt64(getRealBytesShared());
+	int64_t realBytes = Util::toInt64(get("RS"));
 	report += "\r\nReal Share:	" + (realBytes > -1 ? (string)(Util::formatBytes(realBytes) + "  (" + Util::formatExactSize(realBytes) + " )") : "N/A");
-	report += "\r\nCheat status:	" + (getCheatingString().empty() ? "N/A" : getCheatingString());
-	report += "\r\nComment:		" + getComment();
+	report += "\r\nCheat status:	" + (get("CS").empty() ? "N/A" : get("CS"));
+	report += "\r\nComment:		" + get("CM");
 	return report;
 }
 
 const string Identity::updateClientType(OnlineUser& ou) {
-	if ( getUser()->isSet(User::DCPLUSPLUS) && (getListLength() == "11") && (getBytesShared() > 0) ) {
+	if ( getUser()->isSet(User::DCPLUSPLUS) && (get("LL") == "11") && (getBytesShared() > 0) ) {
 		string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
-		setClientType("DC++ Stealth");
-		setBadClient("1");
-		setBadFilelist("1");
+		set("CT", "DC++ Stealth");
+		set("BC", "1");
+		set("BF", "1");
 		sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
 		return report;
 	} else if( getUser()->isSet(User::DCPLUSPLUS) &&
 		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
-		getListLength() != "42") {
+		get("LL") != "42") {
 			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
-			setClientType("Faked DC++");
-			setComment("Supports corrupted files...");
-			setBadClient("1");
+			set("CT", "Faked DC++");
+			set("CM", "Supports corrupted files...");
+			set("BC", "1");
 			sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
 			return report;
 	}
@@ -184,7 +184,7 @@ const string Identity::updateClientType(OnlineUser& ou) {
 		if (!matchProfile(getTag(), formattedTagExp)) { continue; } 
 		if (!matchProfile(user->getPk(), formattedPkExp)) { continue; }
 		if (!matchProfile(user->getSupports(), cp.getSupports())) { continue; }
-		if (!matchProfile(getTestSUR(), cp.getTestSUR())) { continue; }
+		if (!matchProfile(get("TS"), cp.getTestSUR())) { continue; }
 		if (!matchProfile(getStatus(), cp.getStatus())) { continue; }
 		if (!matchProfile(user->getUnknownCommand(), cp.getUserConCom())) { continue; }
 		if (!matchProfile(getDescription(), formattedExtTagExp))	{ continue; }
@@ -198,31 +198,31 @@ const string Identity::updateClientType(OnlineUser& ou) {
 
 		DETECTION_DEBUG("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
 		if (cp.getUseExtraVersion()) {
-			setClientType(cp.getName() + " " + extraVersion );
+			set("CT", cp.getName() + " " + extraVersion );
 		} else {
-			setClientType(cp.getName() + " " + version);
+			set("CT", cp.getName() + " " + version);
 		}
-		setCheatingString(cp.getCheatingDescription());
-		setComment(cp.getComment());
-		setBadClient(cp.getCheatingDescription().empty() ? Util::emptyString : "1");
+		set("CS", cp.getCheatingDescription());
+		set("CM", cp.getComment());
+		set("BC", cp.getCheatingDescription().empty() ? Util::emptyString : "1");
 
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
-			setClientType(getClientType() + " Version mis-match");
-			setCheatingString(getCheatingString() + " Version mis-match");
-			setBadClient("1");
-			string report = setCheat(ou.getClient(), getCheatingString(), true);
+			set("CT", get("CT") + " Version mis-match");
+			set("CS", get("CS") + " Version mis-match");
+			set("BC", "1");
+			string report = setCheat(ou.getClient(), get("CS"), true);
 			return report;
 		}
 		string report = Util::emptyString;
-		if(!getBadClient().empty()) report = setCheat(ou.getClient(), getCheatingString(), true);
+		if(!get("BC").empty()) report = setCheat(ou.getClient(), get("CS"), true);
 		if(cp.getRawToSend() > 0) {
 			sendRawCommand(ou.getClient(), cp.getRawToSend());
 		}
 		return report;
 	}
-	setClientType("Unknown");
-	setCheatingString(Util::emptyString);
-	setBadClient(Util::emptyString);
+	set("CT", "Unknown");
+	set("CS", Util::emptyString);
+	set("BC", Util::emptyString);
 
 	return Util::emptyString;
 }

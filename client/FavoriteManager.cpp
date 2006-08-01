@@ -768,8 +768,6 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 				{
 					lst.push_back(*i);
 					break;
-				} else {
-					dcassert(0);
 				}
 			}
 		}

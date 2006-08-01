@@ -133,7 +133,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		WinUtil::splitTokens(columnSizes, SETTING(HUBFRAME_WIDTHS), COLUMN_LAST);                           
 	}
     	
-	for(int j=0; j<UserInfo::COLUMN_LAST; j++) {
+	for(int j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SHARED || j == COLUMN_EXACT_SHARED || j == COLUMN_SLOTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlUsers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -152,7 +152,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlUsers.setFlickerFree(WinUtil::bgBrush);
 	ctrlClient.SetBackgroundColor(WinUtil::bgColor); 
 	
-	ctrlUsers.setSortColumn(UserInfo::COLUMN_NICK);
+	ctrlUsers.setSortColumn(COLUMN_NICK);
 				
 	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
 
@@ -537,7 +537,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 						_T("\tTag: ") + Text::toT(ui->getIdentity().getTag()) + _T("\r\n") +
 						_T("\tConnection: ") + Text::toT(ui->getIdentity().getConnection()) + _T("\r\n") + 
 						_T("\tE-Mail: ") + Text::toT(ui->getIdentity().getEmail()) + _T("\r\n") +
-						_T("\tClient: ") + Text::toT(ui->getIdentity().getClientType()) + _T("\r\n") + 
+						_T("\tClient: ") + Text::toT(ui->getIdentity().get("CT")) + _T("\r\n") + 
 						_T("\tVersion: ") + Text::toT(ui->getIdentity().get("VE")) + _T("\r\n") +
 						_T("\tMode: ") + ui->columns[COLUMN_MODE] + _T("\r\n") +
 						_T("\tHubs: ") + ui->columns[COLUMN_HUBS] + _T("\r\n") +
@@ -640,7 +640,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u.user, ui));
 		if(!ui->isHidden() && showUsers)
-			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity, client->getHubUrl()));
+			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity));
 
 		if(!filter.empty())
 			updateUserList(ui);
@@ -661,7 +661,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 			int pos = ctrlUsers.findItem(ui);
 			if(pos != -1) {
 				ctrlUsers.updateItem(pos);
-				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity, client->getHubUrl()), 0, 0, NULL);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
 			}
 
 			updateUserList(ui);
@@ -738,7 +738,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 						}
 						if(samenumbers) {
 							string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
-							u.identity.setBadFilelist("1");
+							u.identity.set("BF", "1");
 							u.identity.setCheat(*client, detectString, false);
 							
 							CHARFORMAT2 cf;
@@ -855,10 +855,12 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			MessageTask& pm = *static_cast<MessageTask*>(task);
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!ignoreList.count(nick) || (pm.from.isOp() && !client->isOp())) {
+				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
+				const User::Ptr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, false);
-					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
+					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
@@ -866,13 +868,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				} else if(pm.bot) {
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, WinUtil::m_ChatTextPrivate, false);
-					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
+					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
 					}
 				} else {
-					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(pm.replyTo)) {
+					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
@@ -1500,7 +1502,7 @@ void HubFrame::onTab() {
 			i = 0;
 		while(firstPass || (!firstPass && i < start)) {
 			UserInfo* ui = ctrlUsers.getItemData(i);
-			const tstring& nick = ui->columns[UserInfo::COLUMN_NICK];
+			const tstring& nick = ui->columns[COLUMN_NICK];
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
 			tstring::size_type x = 0;
 			if(!found) {
@@ -1692,7 +1694,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
 			UserInfo* ui = i->second;
 			if(!ui->isHidden())
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
+				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
 		}
 
 		ctrlUsers.SetRedraw(TRUE);
@@ -2005,7 +2007,7 @@ void HubFrame::updateUserList(UserInfo* ui) {
 		}
 		if(filter.empty()) {
 			if(ctrlUsers.findItem(ui) == -1) {
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
+				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -2013,7 +2015,7 @@ void HubFrame::updateUserList(UserInfo* ui) {
 
 			if(matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 				if(ctrlUsers.findItem(ui) == -1) {
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
+					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
 				}
 			} else {
 				//deleteItem checks to see that the item exists in the list
@@ -2029,7 +2031,7 @@ void HubFrame::updateUserList(UserInfo* ui) {
 			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i){
 				UserInfo* ui = i->second;
 				if(!ui->isHidden())
-					ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->getIdentity(), client->getHubUrl()));	
+					ctrlUsers.insertItem(i->second, WinUtil::getImage(i->second->getIdentity()));	
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -2038,7 +2040,7 @@ void HubFrame::updateUserList(UserInfo* ui) {
 			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
 				UserInfo* ui = i->second;
 				if(!ui->isHidden() && matchFilter(*ui, sel, doSizeCompare, mode, size)) {
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity(), client->getHubUrl()));
+					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
 				}
 			}
 		}
@@ -2565,13 +2567,13 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 			}
 
 			if (client->isOp()) {				
-				if (!ui->getIdentity().getBadClient().empty()) {
+				if (!ui->getIdentity().get("BC").empty()) {
 					cd->clrText = SETTING(BAD_CLIENT_COLOUR);
-				} else if(!ui->getIdentity().getBadFilelist().empty()) {
+				} else if(!ui->getIdentity().get("BF").empty()) {
 					cd->clrText = SETTING(BAD_FILELIST_COLOUR);
 				} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) {
-					bool cClient = !ui->getIdentity().getTestSURComplete().empty();
-					bool cFilelist = !ui->getIdentity().getFilelistComplete().empty();
+					bool cClient = !ui->getIdentity().get("TC").empty();
+					bool cFilelist = !ui->getIdentity().get("FC").empty();
 					if(cClient && cFilelist) {
 						cd->clrText = SETTING(FULL_CHECKED_COLOUR);
 					} else if(cClient) {

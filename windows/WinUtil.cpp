@@ -1713,7 +1713,7 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-int WinUtil::getImage(const Identity& u, const string& aHubUrl) {
+int WinUtil::getImage(const Identity& u) {
 	int image = 12;
 
 	if(u.isOp()) {
@@ -1769,7 +1769,7 @@ int WinUtil::getImage(const Identity& u, const string& aHubUrl) {
 		image+=26;
 	}
 
-	if(!ClientManager::getInstance()->isActive(aHubUrl) && !u.isTcpActive()) {
+	if(!u.isTcpActive()) {
 		// Users we can't connect to...
 		image+=52;
 	}		

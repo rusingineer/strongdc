@@ -83,6 +83,7 @@ public:
 		TCHAR buf[256];
 		if(GetDlgItemText(IDC_LIST_EDIT_BOX, buf, 256)) {
 			ctrlList.insert(0, buf);
+			SetDlgItemText(IDC_LIST_EDIT_BOX, _T(""));
 		}
 		bHandled = FALSE;
 		return 0;
@@ -93,6 +94,8 @@ public:
 		for(int i = 1; i < j; ++i) {
 			if(ctrlList.GetItemState(i, LVIS_SELECTED)) {
 				ctrlList.moveItem(i, i-1);
+		        ctrlList.SelectItem(i-1); 
+		        ctrlList.SetFocus();
 			}
 		}
 		bHandled = FALSE;
@@ -104,6 +107,8 @@ public:
 		for(int i = j; i >= 0; --i) {
 			if(ctrlList.GetItemState(i, LVIS_SELECTED)) {
 				ctrlList.moveItem(i, i+1);
+				ctrlList.SelectItem(i+1); 
+				ctrlList.SetFocus();
 			}
 		}
 		bHandled = FALSE;

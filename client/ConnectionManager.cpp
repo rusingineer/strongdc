@@ -128,6 +128,7 @@ void ConnectionManager::putCQI(ConnectionQueueItem* cqi) {
 		dcassert(find(downloads.begin(), downloads.end(), cqi) != downloads.end());
 		downloads.erase(remove(downloads.begin(), downloads.end(), cqi), downloads.end());
 	} else {
+		UploadManager::getInstance()->removeDelayUpload(cqi->getUser());
 		dcassert(find(uploads.begin(), uploads.end(), cqi) != uploads.end());
 		uploads.erase(remove(uploads.begin(), uploads.end(), cqi), uploads.end());
 	}

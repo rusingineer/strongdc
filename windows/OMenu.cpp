@@ -132,7 +132,6 @@ LRESULT OMenu::onInitMenuPopup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			mii.fMask = MIIM_TYPE | MIIM_DATA;
 			::GetMenuItemInfo(mnu, i, TRUE, &mii);
 			if ((mii.fType &= MFT_OWNERDRAW) != MFT_OWNERDRAW && mii.dwItemData != NULL) {
-				dcdebug("mmi.dwItemData = %d", mii.dwItemData);
 				OMenuItem* omi = (OMenuItem*)mii.dwItemData;
 				if (omi->ownerdrawn) {
 					mii.fType |= MFT_OWNERDRAW;

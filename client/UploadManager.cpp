@@ -172,7 +172,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 				if(aType == "file") {
 					file = tempTarget;
 					// check start position and bytes
-					FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(file);
+					FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(&fileHash);
 					if(chunksInfo && chunksInfo->isVerified(aStartPos, aBytes)){
 						try{
 							SharedFileStream* ss = new SharedFileStream(file, aStartPos);
@@ -272,6 +272,19 @@ ok:
 	else
 		u->setSize(aStartPos + aBytes);
 
+	if(u->getSize() != size)
+		u->setFlag(Upload::FLAG_CHUNKED);
+
+	for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
+		Upload* up = *i;
+		if(aSource == up->getUserConnection()) {
+			delayUploads.erase(i);
+			finishUpload(up, false);
+			u->setFlag(Upload::FLAG_RESUMED);
+			break;
+		}
+	}
+
 	u->setFileSize(size);
 	u->setStartPos(aStartPos);
 	u->setFileName(file);
@@ -310,13 +323,18 @@ ok:
 	return true;
 }
 
-void UploadManager::removeUpload(Upload* aUpload) {
+void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	Lock l(cs);
 	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
 	uploads.erase(remove(uploads.begin(), uploads.end(), aUpload), uploads.end());
 	throttleSetup();
-	aUpload->setUserConnection(NULL);
-	delete aUpload;
+	
+	if(delay) {
+		delayUploads.push_back(aUpload);
+	} else {
+		aUpload->setUserConnection(NULL);
+		delete aUpload;
+	}
 }
 
 void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
@@ -397,9 +415,14 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setUpload(NULL);
 	aSource->setState(UserConnection::STATE_GET);
 
+	removeUpload(u, true);
+}
+
+void UploadManager::finishUpload(Upload* u, bool msg) {
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-		!u->isSet(Upload::FLAG_TTH_LEAVES) && (u->getSize() == u->getFileSize())) {
+		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
+		UserConnection* aSource = u->getUserConnection();
 		params["source"] = u->getFileName();
 		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource->getUser()->getCID()));
 		params["userI4"] = aSource->getRemoteIp();
@@ -426,8 +449,11 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 		LOG(LogManager::UPLOAD, params);
 	}
 
-	fire(UploadManagerListener::Complete(), u);
-	removeUpload(u);
+	if(msg)
+		fire(UploadManagerListener::Complete(), u);
+
+	u->setUserConnection(NULL);
+	delete u;
 }
 
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
@@ -604,6 +630,13 @@ void UploadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 		Lock l(cs);
 		throttleSetup();
 		throttleZeroCounters();
+
+		if((aTick / 1000) % 5 == 0) {
+			for(Upload::Iter i = delayUploads.begin(); i != delayUploads.end(); ++i) {
+				finishUpload(*i, true);
+			}
+			delayUploads.clear();
+		}
 
 		if(uploads.size() > 0)
 			fire(UploadManagerListener::Tick(), uploads);

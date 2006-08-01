@@ -79,7 +79,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 
 int64_t Download::getQueueTotal() {
 	if(isSet(Download::FLAG_MULTI_CHUNK)) {
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tempTarget);
+		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tth);
 		if(chunksInfo != (FileChunksInfo*)NULL)
 			return chunksInfo->getDownloadedSize();
 	}
@@ -430,13 +430,13 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 	if (download && aSource->getDownload()->isSet(Download::FLAG_USER_LIST)) {	
 		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
 		if(&ou) {
-			ou.getIdentity().setFileListSize(Util::toString(aFileLength));
+			ou.getIdentity().set("LS", Util::toString(aFileLength));
 			if((aFileLength < 100) && (ou.getIdentity().getBytesShared() > 0)) {
 				ou.getIdentity().setCheat(ou.getClient(), "Too small filelist - " + Util::formatBytes(aFileLength) + " for the specified share of " + Util::formatBytes(ou.getIdentity().getBytesShared()), false);
-				ou.getIdentity().setBadFilelist("1");
+				ou.getIdentity().set("BF", "1");
 				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(FILELIST_TOO_SMALL));
 			} else {
-				int64_t listLength = Util::toInt64(ou.getIdentity().getListLength());
+				int64_t listLength = Util::toInt64(ou.getIdentity().get("LL"));
 				if ( aSource->getUser()->isSet(User::DCPLUSPLUS) && (listLength != -1) && (listLength * 3 < aFileLength) && (ou.getIdentity().getBytesShared() > 0) ) {
 					ou.getIdentity().setCheat(ou.getClient(), "Fake file list - ListLen = " + Util::toString(listLength) + " FileLength = " + Util::toString(aFileLength), false);
 					ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
@@ -601,12 +601,12 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	
 		if(d->isSet(Download::FLAG_MULTI_CHUNK)){
 			if(d->getTreeValid()) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d->getTempTarget()));
+				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d));
 				d->setFlag(Download::FLAG_TTH_CHECK);
 			}
 
 			try {
-				d->setFile(new ChunkOutputStream<true>(d->getFile(), target, d->getStartPos()));
+				d->setFile(new ChunkOutputStream<true>(d->getFile(), d->getTTH(), d->getStartPos()));
 			} catch(const FileException&) {
 				delete d->getFile();
 				d->setFile(NULL);
@@ -653,8 +653,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcdebug("ChunkDoneException.....\n");
 
 			if(d->getTreeValid() && e.pos > 0) {
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
-				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree());
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTTH());
+				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
 			}
 
 			d->setPos(e.pos);
@@ -684,11 +684,11 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(d->getTreeValid()) {
 
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTTH());
 				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
 				{
 					dcdebug("Do last verify.....\n");
-					if(!lpFileDataInfo->doLastVerify(d->getTigerTree())) {
+					if(!lpFileDataInfo->doLastVerify(d->getTigerTree(), d->getTempTarget())) {
 						dcdebug("last verify failed .....\n");
 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -746,10 +746,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				// fire(DownloadManagerListener::ChunkComplete(), d);
 
 				if(d->getTreeValid()) {
-					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTempTarget());
+					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTTH());
 					if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
 						dcassert(d->getPos() > 0);
-						lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree());
+						lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
 					}else{
 						dcassert(0);
 					}

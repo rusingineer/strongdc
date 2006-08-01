@@ -49,6 +49,8 @@
 # define _STLP_NO_IOSTREAMS 1
 # ifndef _DEBUG
 //#  define _STLP_DONT_USE_EXCEPTIONS 1
+# else
+#	define _STLP_DO_CLEAN_NODE_ALLOC 1
 # endif
 #endif
 

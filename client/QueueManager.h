@@ -202,7 +202,7 @@ public:
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 				qi->chunkInfo = NULL;
-				FileChunksInfo::Free(qi->getTempTarget());
+				FileChunksInfo::Free(qi->getTTH());
 			}
 
 			delete qi;

@@ -58,11 +58,7 @@ public:
 	}
 	static time_t getTick() { 
 #ifdef _WIN32
-		FILETIME ft;
-		GetSystemTimeAsFileTime(&ft);
-		//convert to millisecond resolution, don't care about nanoseconds but don't want
-		//the overflow with GetTickCount
-		return ( ((time_t)ft.dwHighDateTime) << 32 | (time_t)ft.dwLowDateTime ) / 10000; 
+		return GetTickCount(); 
 #else
 		timeval tv2;
 		gettimeofday(&tv2, NULL);

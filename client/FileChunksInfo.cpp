@@ -31,12 +31,12 @@ CriticalSection FileChunksInfo::hMutexMapList;
 // NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
 enum { MIN_BLOCK_SIZE = 65536 };
 
-FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
+FileChunksInfo::Ptr FileChunksInfo::Get(const TTHValue* tth)
 {
     Lock l(hMutexMapList);
 
 	for(vector<Ptr>::const_iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tempTargetName == name){
+		if(*((*i)->TTH) == *tth){
 			return (*i);
 		}
 	}
@@ -44,12 +44,12 @@ FileChunksInfo::Ptr FileChunksInfo::Get(const string& name)
 	return NULL;
 }
 
-void FileChunksInfo::Free(const string& name)
+void FileChunksInfo::Free(const TTHValue* tth)
 {
     Lock l(hMutexMapList);
 
 	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if((*i)->tempTargetName == name ){
+		if(*((*i)->TTH) == *tth){
 			vecAllFileChunksInfo.erase(i);
 			return;
 		}
@@ -58,8 +58,8 @@ void FileChunksInfo::Free(const string& name)
 	dcassert(0);
 }
 
-FileChunksInfo::FileChunksInfo(const string& name, int64_t size, const vector<int64_t>* chunks) 
-	: tempTargetName(name), iFileSize(0), iVerifiedSize(0)
+FileChunksInfo::FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
+	: TTH(tth), iFileSize(0), iVerifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
@@ -96,7 +96,7 @@ void FileChunksInfo::setFileSize(const int64_t& size)
 
 FileChunksInfo::~FileChunksInfo()
 {
-	dcdebug("Delete file chunks info: %s, waiting = %d, running = %d\n", tempTargetName.c_str(), waiting.size(), running.size());
+	//dcdebug("Delete file chunks info: %s, waiting = %d, running = %d\n", TTH->toBase32().c_str(), waiting.size(), running.size());
 
 	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++)
 		delete i->second;
@@ -475,7 +475,7 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 	return false;
 }
 
-bool FileChunksInfo::doLastVerify(const TigerTree& aTree)
+bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTargetName)
 {
     dcassert(tthBlockSize == aTree.getBlockSize());
 	Lock l(cs);
@@ -843,7 +843,7 @@ bool FileChunksInfo::isVerified(int64_t startPos, int64_t& len){
 	return false;
 }
 
-bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree)
+bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const string& tempTargetName)
 {
 	Lock l(cs);
 
@@ -884,6 +884,7 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree)
 	auto_ptr<unsigned char> buf(new unsigned char[len]);
 
 	// reread all bytes from stream
+
 	SharedFileStream file(tempTargetName, start);
 
 	size_t tmpLen = len;
@@ -893,7 +894,6 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree)
 
 	// check against tiger tree
 	return verify(buf.get(), start, end, aTree);
-
 }
 
 void FileChunksInfo::selfCheck()
