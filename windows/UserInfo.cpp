@@ -21,10 +21,6 @@
 #include "Resource.h"
 #include "UserInfo.h"
 
-const tstring& UserInfo::getText(int col) const {
-	return columns[col];
-}
-
 int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	if(a == NULL || b == NULL){
 		dcdebug("UserInfo::compareItems NULL >:-[\n");
@@ -42,12 +38,12 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 
 	switch(col) {
 		case COLUMN_SHARED:
-		case COLUMN_EXACT_SHARED: return compare(a->getBytes(), b->getBytes());
+		case COLUMN_EXACT_SHARED: return compare(a->identity.getBytesShared(), b->identity.getBytesShared());
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
 		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
 		case COLUMN_UPLOAD_SPEED: return compare(a->identity.getUser()->getLastDownloadSpeed(), b->identity.getUser()->getLastDownloadSpeed());
 	}
-	return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());	
+	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
 }
 
 bool UserInfo::update(const Identity& identity, int sortCol) {
@@ -55,40 +51,36 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 
 	tstring old;
 	if(sortCol != -1)
-		old = columns[sortCol];
+		old = getText(sortCol);
 
 	if (identity.getUser()->getLastDownloadSpeed() > 0) {
-		columns[COLUMN_UPLOAD_SPEED] = Text::toT(Util::formatBytes(identity.getUser()->getLastDownloadSpeed()) + "/s");
+		setText(COLUMN_UPLOAD_SPEED, Text::toT(Util::formatBytes(identity.getUser()->getLastDownloadSpeed()) + "/s"));
 	} else if(identity.getUser()->isSet(User::FIREBALL)) {
-		columns[COLUMN_UPLOAD_SPEED] = _T(">= 100 kB/s");
+		setText(COLUMN_UPLOAD_SPEED, _T(">= 100 kB/s"));
 	} else {
-		columns[COLUMN_UPLOAD_SPEED] = _T("N/A");
+		setText(COLUMN_UPLOAD_SPEED, _T("N/A"));
 	}
 
-	bytes = identity.getBytesShared();
 	string hn = identity.get("HN");
 	string hr = identity.get("HR");
 	string ho = identity.get("HO");
 
-	columns[COLUMN_NICK] = Text::toT(identity.getNick());
-	columns[COLUMN_SHARED] = Text::toT(Util::formatBytes(bytes));
-	columns[COLUMN_EXACT_SHARED] = Text::toT(Util::formatExactSize(bytes));
-	columns[COLUMN_DESCRIPTION] = Text::toT(identity.getDescription());
-	columns[COLUMN_TAG] = Text::toT(identity.getTag());
-	columns[COLUMN_EMAIL] = Text::toT(identity.getEmail());
-	columns[COLUMN_CONNECTION] = Text::toT(identity.getConnection());
-	columns[COLUMN_VERSION] = Text::toT(identity.get("VE"));
-	columns[COLUMN_MODE] = identity.isTcpActive() ? _T("A") : _T("P");
-	columns[COLUMN_HUBS] = hn.empty() ? Util::emptyStringT : Text::toT(hn + "/" + hr + "/" + ho);
-	columns[COLUMN_SLOTS] = Text::toT(identity.get("SL"));
-	columns[COLUMN_IP] = Text::toT(identity.getIp());
-	columns[COLUMN_PK] = Text::toT(identity.getUser()->getPk());
-	columns[COLUMN_LOCK] = Text::toT(identity.getUser()->getLock());
-	columns[COLUMN_SUPPORTS] = Text::toT(identity.getUser()->getSupports());
-	columns[COLUMN_CLIENTID] = Text::toT(identity.get("CT"));
+	setText(COLUMN_NICK, Text::toT(identity.getNick()));
+	setText(COLUMN_SHARED, Text::toT(Util::formatBytes(identity.getBytesShared())));
+	setText(COLUMN_EXACT_SHARED, Text::toT(Util::formatExactSize(identity.getBytesShared())));
+	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()));
+	setText(COLUMN_TAG, Text::toT(identity.getTag()));
+	setText(COLUMN_EMAIL, Text::toT(identity.getEmail()));
+	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection()));
+	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")));
+	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
+	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : Text::toT(hn + "/" + hr + "/" + ho));
+	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
+	setText(COLUMN_IP, Text::toT(identity.getIp()));
+	setText(COLUMN_PK, Text::toT(identity.getUser()->getPk()));
 
 	if(sortCol != -1) {
-		needsSort = needsSort || (old != columns[sortCol]);
+		needsSort = needsSort || (old != getText(sortCol));
 	}
 
 	setIdentity(identity);

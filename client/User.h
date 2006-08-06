@@ -32,7 +32,7 @@
 class User : public FastAlloc<User>, public PointerBase, public Flags
 {
 public:
-	enum Bits {
+	enum Bits{
 		ONLINE_BIT,
 		DCPLUSPLUS_BIT,
 		PASSIVE_BIT,
@@ -72,8 +72,8 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { clearUserData(); }
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { clearUserData(); }
+	User(const string& nick) : Flags(NMDC), firstNick(nick), lastDownloadSpeed(0) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
 
 	virtual ~User() throw() { }
 
@@ -82,27 +82,34 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	void clearUserData() {
-		generator = Util::emptyString;
-		supports = Util::emptyString;
-		lock = Util::emptyString;
-		pk = Util::emptyString;
-		unknownCommand = Util::emptyString;
-	}
-
-	static void updated(User::Ptr& aUser);
-	
 	GETSET(CID, cid, CID);
 	GETSET(string, firstNick, FirstNick);
-	GETSET(int64_t, lastDownloadSpeed, LastDownloadSpeed);
+	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 
-	GETSET(string, generator, Generator);
-	GETSET(string, supports, Supports);
-	GETSET(string, lock, Lock);
-	GETSET(string, pk, Pk);
-	GETSET(string, unknownCommand, UnknownCommand);
+#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
+	GS(Generator, "GE");
+	GS(Supports, "SU");
+	GS(Lock, "LO");
+	GS(Pk, "PK");
+	GS(UnknownCommand, "UC");
 
 private:
+	typedef map<short, string> InfMap;
+	typedef InfMap::const_iterator InfIter;
+	InfMap info;
+
+	const string& get(const char* name) const {
+		InfMap::const_iterator i = info.find(*(short*)name);
+		return i == info.end() ? Util::emptyString : i->second;
+	}
+
+	void set(const char* name, const string& val) {
+		if(val.empty())
+			info.erase(*(short*)name);
+		else
+			info[*(short*)name] = val;
+	}
+
 	User(const User&);
 	User& operator=(const User&);
 };
@@ -113,7 +120,7 @@ class OnlineUser;
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity : public Flags {
 public:
-	enum {
+/*	enum {
 		GOT_INF_BIT,
 		NMDC_PASSIVE_BIT
 	};
@@ -121,7 +128,7 @@ public:
 		GOT_INF = 1 << GOT_INF_BIT,
 		NMDC_PASSIVE = 1 << NMDC_PASSIVE_BIT
 	};
-
+*/
 	Identity() : sid(0) { }
 	Identity(const User::Ptr& ptr, u_int32_t aSID) : user(ptr), sid(aSID) { }
 	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), sid(rhs.sid), info(rhs.info) { }

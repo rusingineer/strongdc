@@ -203,7 +203,7 @@ private:
 		bool collapsed;
 		ItemInfo* main;
 		Status status;
-		int flagImage;
+		u_int8_t flagImage;
 		int64_t pos;
 		int64_t size;
 		int64_t start;
@@ -336,7 +336,7 @@ private:
 		tstring path;
 		void setIP(const tstring& aIP) { IP = aIP; updateMask |= MASK_IP; }
 		tstring IP;
-		int flagImage;
+		u_int8_t flagImage;
 	};
 
 	void speak(int type, UpdateInfo* ui) { PostMessage(WM_SPEAKER, type, reinterpret_cast<LPARAM>(ui)); }
@@ -374,7 +374,7 @@ private:
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
-	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getFileName(), false); }
+	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getLocalFileName(), false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 

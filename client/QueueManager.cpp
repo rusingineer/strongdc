@@ -1047,8 +1047,6 @@ again:
 	QueueItem::Source* source = *(q->getSource(aUser));
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-		dcassert(!q->getTempTarget().empty());
-
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
 			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {
@@ -1186,7 +1184,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 						}
 					}
 
-					if(connectSources && (q->getPriority() != QueueItem::PAUSED)) {
+					if((connectSources || q->getCurrents().size() <= 2) && (q->getPriority() != QueueItem::PAUSED)) {
 						for(QueueItem::Source::ConstIter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
 							if((*j)->getUser()->isOnline() && false == q->isCurrent((*j)->getUser())) {
 								getConn.push_back((*j)->getUser());

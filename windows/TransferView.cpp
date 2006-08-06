@@ -29,7 +29,7 @@
 #include "MainFrm.h"
 
 #include "BarShader.h"
-
+#include <unordered_map>
 int TransferView::columnIndexes[] = { COLUMN_USER, COLUMN_HUB, COLUMN_STATUS, COLUMN_TIMELEFT, COLUMN_SPEED, COLUMN_FILE, COLUMN_SIZE, COLUMN_PATH, COLUMN_IP, COLUMN_RATIO };
 int TransferView::columnSizes[] = { 150, 100, 250, 75, 75, 175, 100, 200, 50, 75 };
 
@@ -43,7 +43,6 @@ TransferView::~TransferView() {
 }
 
 LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-
 	arrows.CreateFromImage(IDB_ARROWS, 16, 3, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 	ctrlTransfers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_TRANSFERS);
@@ -904,7 +903,7 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 	ui->setActual(aUpload->getActual());
 	ui->setStart(aUpload->getPos());
 	ui->setSize(aUpload->isSet(Upload::FLAG_TTH_LEAVES) ? aUpload->getSize() : aUpload->getFileSize());
-	ui->setFile(Text::toT(aUpload->getFileName()));
+	ui->setFile(Text::toT(aUpload->getLocalFileName()));
 
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
 		aUpload->unsetFlag(Upload::FLAG_RESUMED);

@@ -39,9 +39,6 @@ public:
 			dcassert(!(fileChunks == (FileChunksInfo*)NULL));
 			bufPos = 0;
 			start = start + skippingBytes;
-			multiSourceChecking = true;
-		} else {
-			multiSourceChecking = false;
 		}
 		// Only start at block boundaries
 		dcassert(start % aTree.getBlockSize() == 0);
@@ -54,14 +51,14 @@ public:
 		}
 		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + nBlocks);
 		
-		if(multiSourceChecking)
+		if(d)
 			verified = cur.getLeaves().size();
 	}
 
 	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
 	virtual size_t flush() throw(FileException) {
-		if(!multiSourceChecking) {
+		if(!d) {
 			if (bufPos != 0)
 				cur.update(buf, bufPos);
 			bufPos = 0;
@@ -83,7 +80,7 @@ public:
 		bool verifyFlag = false;
 
 		
-		if(multiSourceChecking && (skippingBytes > 0))
+		if(d && (skippingBytes > 0))
 		{
 			if(skippingBytes >= len)
 			{
@@ -132,7 +129,7 @@ public:
 		checkTrees();
 		size_t ret = s->write(b, len);
 		
-		if(multiSourceChecking) {
+		if(d) {
 			// mark verified block
 			if(verified > old) {
 				s->flush();
@@ -159,7 +156,6 @@ private:
 	size_t verified;
 	size_t skippingBytes;					// the bytes that will be skipped
 	FileChunksInfo::Ptr fileChunks;
-	bool multiSourceChecking;
 	Download* d;
 
 	u_int8_t buf[TreeType::BASE_BLOCK_SIZE];
@@ -170,9 +166,9 @@ private:
 			if(cur.getLeaves().size() > real.getLeaves().size() ||
 				!(cur.getLeaves()[verified] == real.getLeaves()[verified])) 
 			{
-				if(multiSourceChecking) {
+				if(d) {
 					dcassert(cur.getLeaves().size() <= real.getLeaves().size());
-					LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified));
+					LogManager::getInstance()->message(d->getTargetFileName() + " - " + STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified));
 				}
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}

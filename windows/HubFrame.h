@@ -274,11 +274,12 @@ public:
 	LRESULT onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if(sSelectedUser != _T("")) {
-				ignoreList.insert(sSelectedUser);
+			if(!sSelectedUser.empty()) {
+				UserInfo* ui = findUser(sSelectedUser);
+				if(ui) ignoreList.insert(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.insert(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getFirstNick()));
+					ignoreList.insert(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
 				}
 			}
 		}
@@ -288,11 +289,12 @@ public:
 	LRESULT onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if(sSelectedUser != _T("")) {
-				ignoreList.erase(sSelectedUser);
+			if(!sSelectedUser.empty()) {
+				UserInfo* ui = findUser(sSelectedUser);
+				if(ui) ignoreList.erase(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase(Text::toT((((UserInfo*)ctrlUsers.getItemData(i))->user)->getFirstNick()));
+					ignoreList.erase(((UserInfo*)ctrlUsers.getItemData(i))->user);
 				}
 			}
 		}
@@ -379,8 +381,8 @@ private:
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;
 
-	typedef hash_set<tstring> TStringHash;
-	TStringHash ignoreList;
+	typedef hash_set<User::Ptr, User::HashFunction> IgnoreMap;
+	static IgnoreMap ignoreList;
 
 	tstring currentNeedle;		// search in chat window
 	int currentNeedlePos;		// search in chat window
@@ -389,7 +391,7 @@ private:
 
 	CFindReplaceDialog findDlg;
 
-	const tstring& getNick(const User::Ptr& u);
+	//const tstring& getNick(const User::Ptr& u);
 	
 	Client* client;
 	tstring server;

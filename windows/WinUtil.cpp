@@ -1713,8 +1713,8 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-int WinUtil::getImage(const Identity& u) {
-	int image = 12;
+u_int8_t WinUtil::getImage(const Identity& u) {
+	u_int8_t image = 12;
 
 	if(u.isOp()) {
 		image = 0;
@@ -1777,15 +1777,15 @@ int WinUtil::getImage(const Identity& u) {
 	return image;
 }
 
-int WinUtil::getFlagImage(const char* country, bool fullname) {
+u_int8_t WinUtil::getFlagImage(const char* country, bool fullname) {
 	if(fullname) {
-		for(size_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
+		for(u_int8_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
 			if(_stricmp(country, CountryNames[i-1]) == 0) {
 				return i;
 			}
 		}
 	} else {
-		for(size_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
+		for(u_int8_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
 			if(_stricmp(country,CountryCodes[i-1]) == 0) {
 				return i;
 			}

@@ -434,6 +434,7 @@ private:
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		} catch(const Exception& e) {
 			mWindow->error = WinUtil::getNicks(mWindow->dl->getUser()) + Text::toT(": " + e.getError());
+			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		}
 
 		//cleanup the thread object

@@ -19,11 +19,10 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
+#include <process.h>
 #include "Thread.h"
 
 #include "ResourceManager.h"
-
-#include <process.h>
 
 #ifndef _WIN32
 pthread_mutex_t Thread::mtx = PTHREAD_MUTEX_INITIALIZER;

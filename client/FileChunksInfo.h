@@ -223,7 +223,6 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-	//string  tempTargetName;					// temp target file name
 	TTHValue* TTH;
 
 	int64_t iFileSize;

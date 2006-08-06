@@ -20,7 +20,6 @@
 #include "DCPlusPlus.h"
 
 #include "Text.h"
-#include "Util.h"
 
 char Text::asciiLower[128];
 wchar_t Text::lower[65536];

@@ -192,6 +192,8 @@ public:
 	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT) {
 		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
  	}
+	void stopSearch(int *aWindow = NULL);
+
 	static string clean(const string& aSearchString);
 	
 	void respond(const AdcCommand& cmd, const CID& cid);
