@@ -41,15 +41,16 @@
 #include "../client/pme.h"
 
 HubFrame::FrameMap HubFrame::frames;
+HubFrame::IgnoreMap HubFrame::ignoreList;
 
-int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 40, 100, 40, 40, 40, 40, 40, 100, 100, 100, 175 };
+int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 50, 40, 40, 40, 40, 40, 100, 100 };
 int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARED, COLUMN_DESCRIPTION, COLUMN_TAG,
-	COLUMN_CONNECTION, COLUMN_EMAIL, COLUMN_CLIENTID, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS,
-	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_PK, COLUMN_LOCK, COLUMN_SUPPORTS };
+	COLUMN_CONNECTION, COLUMN_EMAIL, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS,
+	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_PK };
 static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
-ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL, 
-ResourceManager::CLIENTID, ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
-ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::PK, ResourceManager::LOCK, ResourceManager::SUPPORTS };
+ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL,
+ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
+ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::PK };
 
 tstring sSelectedURL = Util::emptyStringT;
 long lURLBegin = 0;
@@ -360,8 +361,8 @@ void HubFrame::onEnter() {
 				WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 			} else if(Util::stricmp(cmd.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
-				for(TStringHash::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
-					ignorelist += _T(" ") + *i;
+				for(IgnoreMap::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
+					ignorelist += _T(" ") + Text::toT((*i)->getFirstNick());
 				addLine(ignorelist, WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
@@ -441,14 +442,14 @@ struct CompareItems {
 	const int col;
 };
 
-const tstring& HubFrame::getNick(const User::Ptr& aUser) {
+/*const tstring& HubFrame::getNick(const User::Ptr& aUser) {
 	UserMapIter i = userMap.find(aUser);
 	if(i == userMap.end())
 		return Util::emptyStringT;
 
 	UserInfo* ui = i->second;
 	return ui->columns[COLUMN_NICK];
-}
+}*/
 
 void HubFrame::addAsFavorite() {
 	FavoriteHubEntry* existingHub = FavoriteManager::getInstance()->getFavoriteHubEntry(client->getHubUrl());
@@ -510,7 +511,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 					sCopy += Text::toT(ui->getNick());
 					break;
 				case IDC_COPY_EXACT_SHARE:
-					sCopy += Text::toT(Util::formatExactSize(ui->getBytes()));
+					sCopy += Text::toT(Util::formatExactSize(ui->getIdentity().getBytesShared()));
 					break;
 				case IDC_COPY_DESCRIPTION:
 					sCopy += Text::toT(ui->getIdentity().getDescription());
@@ -532,17 +533,17 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 				case IDC_COPY_ALL:
 					sCopy += _T("Info User:\r\n")
 						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
-						_T("\tShare: ") + Text::toT(Util::formatBytes(ui->getBytes())) + _T("\r\n") + 
+						_T("\tShare: ") + Text::toT(Util::formatBytes(ui->getIdentity().getBytesShared())) + _T("\r\n") + 
 						_T("\tDescription: ") + Text::toT(ui->getIdentity().getDescription()) + _T("\r\n") +
 						_T("\tTag: ") + Text::toT(ui->getIdentity().getTag()) + _T("\r\n") +
 						_T("\tConnection: ") + Text::toT(ui->getIdentity().getConnection()) + _T("\r\n") + 
 						_T("\tE-Mail: ") + Text::toT(ui->getIdentity().getEmail()) + _T("\r\n") +
 						_T("\tClient: ") + Text::toT(ui->getIdentity().get("CT")) + _T("\r\n") + 
 						_T("\tVersion: ") + Text::toT(ui->getIdentity().get("VE")) + _T("\r\n") +
-						_T("\tMode: ") + ui->columns[COLUMN_MODE] + _T("\r\n") +
-						_T("\tHubs: ") + ui->columns[COLUMN_HUBS] + _T("\r\n") +
-						_T("\tSlots: ") + ui->columns[COLUMN_SLOTS] + _T("\r\n") +
-						_T("\tUpLimit: ") + ui->columns[COLUMN_UPLOAD_SPEED] + _T("\r\n") +
+						_T("\tMode: ") + ui->getText(COLUMN_MODE) + _T("\r\n") +
+						_T("\tHubs: ") + ui->getText(COLUMN_HUBS) + _T("\r\n") +
+						_T("\tSlots: ") + ui->getText(COLUMN_SLOTS) + _T("\r\n") +
+						_T("\tUpLimit: ") + ui->getText(COLUMN_UPLOAD_SPEED) + _T("\r\n") +
 						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
 						_T("\tPk String: ") + Text::toT(ui->getUser()->getPk()) + _T("\r\n") +
 						_T("\tLock: " )+ Text::toT(ui->getUser()->getLock()) + _T("\r\n")+
@@ -645,7 +646,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 		if(!filter.empty())
 			updateUserList(ui);
 
-		client->availableBytes += ui->getBytes();
+		client->availableBytes += ui->getIdentity().getBytesShared();
 		return true;
 	} else {
 		UserInfo* ui = i->second;
@@ -653,9 +654,9 @@ bool HubFrame::updateUser(const UserTask& u) {
 			ctrlUsers.deleteItem(ui);
 		}
 		
-		client->availableBytes -= ui->getBytes();
+		client->availableBytes -= ui->getIdentity().getBytesShared();
 		resort = ui->update(u.identity, ctrlUsers.getSortColumn()) || resort;
-		client->availableBytes += ui->getBytes();
+		client->availableBytes += ui->getIdentity().getBytesShared();
 
 		if(showUsers) {
 			int pos = ctrlUsers.findItem(ui);
@@ -683,14 +684,14 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	if(!ui->isHidden() && showUsers)
 		ctrlUsers.deleteItem(ui);
 
-	client->availableBytes -= ui->getBytes();
+	client->availableBytes -= ui->getIdentity().getBytesShared();
 	userMap.erase(i);
 	delete ui;
 }
 
 UserInfo* HubFrame::findUser(const tstring& nick) {
 	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		if(i->second->columns[COLUMN_NICK] == nick)
+		if(i->second->getText(COLUMN_NICK) == nick)
 			return i->second;
 	}
 	return 0;
@@ -802,7 +803,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			}
 		} else if(task->speaker == ADD_CHAT_LINE) {
     		MessageTask& msg = *static_cast<MessageTask*>(task);
-        	if(!ignoreList.count(Text::toT(msg.from.getNick())) ||
+        	if(!msg.from.getUser() || (ignoreList.find(msg.from.getUser()) == ignoreList.end()) ||
 	          (msg.from.isOp() && !client->isOp())) {
     	        addLine(msg.from, msg.msg, WinUtil::m_ChatTextGeneral);
         	}
@@ -854,7 +855,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(task->speaker == PRIVATE_MESSAGE) {
 			MessageTask& pm = *static_cast<MessageTask*>(task);
 			tstring nick = Text::toT(pm.from.getNick());
-			if(!ignoreList.count(nick) || (pm.from.isOp() && !client->isOp())) {
+			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
+			  (pm.from.isOp() && !client->isOp())) {
 				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
 				const User::Ptr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
@@ -1054,7 +1056,6 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_WIDTHS, tmp2);
 			SettingsManager::getInstance()->set(SettingsManager::HUBFRAME_VISIBLE, tmp3);
 		}
-
 		bHandled = FALSE;
 		return 0;
 	}
@@ -1186,7 +1187,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					    break;
 					}    
 					case 1: {
-					     CAtlString sUser = ui->columns[COLUMN_NICK].c_str();
+					     CAtlString sUser = ui->getText(COLUMN_NICK).c_str();
 					     CAtlString sText = "";
 					     int iSelBegin, iSelEnd;
 					     ctrlMessage.GetSel(iSelBegin, iSelEnd);
@@ -1254,9 +1255,9 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 	}
 
 	if(timeStamps) {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
 	} else {
-		ctrlClient.AppendText(i, Text::toT(client->getMyNick()), _T(""), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), _T(""), aLine.c_str(), cf, bUseEmo);
 	}
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
@@ -1502,7 +1503,7 @@ void HubFrame::onTab() {
 			i = 0;
 		while(firstPass || (!firstPass && i < start)) {
 			UserInfo* ui = ctrlUsers.getItemData(i);
-			const tstring& nick = ui->columns[COLUMN_NICK];
+			const tstring& nick = ui->getText(COLUMN_NICK);
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
 			tstring::size_type x = 0;
 			if(!found) {
@@ -2256,7 +2257,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 					UserInfo* ui = (UserInfo*)ctrlUsers.getItemData(i);
 					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
-						if(!ignoreList.count(sNick)) {
+						if(ignoreList.find(ui->getUser()) == ignoreList.end()) {
 							pMenu->AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
 						} else {    
 							pMenu->AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
@@ -2550,7 +2551,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(FAVORITE_COLOR);
 			} else if (UploadManager::getInstance()->hasReservedSlot(ui->user)) {
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
-			} else if (ignoreList.count(Text::toT(ui->user->getFirstNick()))) {
+			} else if (ignoreList.find(ui->user) != ignoreList.end()) {
 				cd->clrText = SETTING(IGNORED_COLOR);
 			} else if(ui->user->isSet(User::FIREBALL)) {
 				cd->clrText = SETTING(FIREBALL_COLOR);

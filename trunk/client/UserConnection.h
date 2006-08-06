@@ -315,10 +315,8 @@ public:
 
 	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
-	//GETSET(ConnectionQueueItem*, cqi, CQI);
 	GETSET(States, state, State);
 	GETSET(time_t, lastActivity, LastActivity);
-	GETSET(string, unknownCommand, UnknownCommand);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	void garbageCommand() { 
@@ -344,7 +342,7 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection(bool secure_) throw() : state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(0), secure(secure_), download(NULL), unknownCommand(Util::emptyString) { 
+		socket(0), secure(secure_), download(NULL) { 
 	}
 
 	virtual ~UserConnection() throw() {

@@ -59,7 +59,7 @@ void ChatCtrl::AdjustTextSize() {
 	if(GetWindowTextLength() > 25000) {
 		// We want to limit the buffer to 25000 characters...after that, w95 becomes sad...
 		SetRedraw(FALSE);
-		SetSel(0, LineIndex(LineFromChar(2000))); // TODO use "true" as 3rd noscroll parameter
+		SetSel(0, LineIndex(LineFromChar(2000)));
 		ReplaceSel(_T(""));
 		SetRedraw(TRUE);
 	}
@@ -109,15 +109,14 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 			SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		} else {
 			bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(i.getUser());
-			bool isOP = (m_pUsers != NULL) ? i.isOp() : false;
 
-			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isOP || isFavorite) {
+			if(BOOLSETTING(BOLD_AUTHOR_MESS) || i.isOp() || isFavorite) {
 				SetSel(lSelBegin, lSelBegin+iLen+1);
 				SetSelectionCharFormat(cf);
 				SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
 				if(isFavorite){
 					SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
-				} else if(isOP) {
+				} else if(i.isOp()) {
 					SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
 				} else {
 					SetSelectionCharFormat(WinUtil::m_TextStyleBold);
@@ -312,24 +311,19 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, LPCTSTR sText, CHARFORMAT2
 	lSearchFrom = 0;
 	sNick.MakeLower();
 
-	CAtlString autor = sAuthor.c_str();
-	autor.MakeLower();
-	
-	if(sNick.GetLength() > 0)
 	while(true) {
-		lMyNickStart = sMsgLower.Find( sNick, lSearchFrom );
-		if ( lMyNickStart < 0 ) 
+		lMyNickStart = sMsgLower.Find(sNick, lSearchFrom);
+		if(lMyNickStart < 0) 
 			break;
 
 		lMyNickEnd = lMyNickStart + sNick.GetLength();
-
 		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 		SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		lSearchFrom = lMyNickEnd;
 
-		if( ( sNick != autor ) && (autor != "")) {
-	        if ((!SETTING(CHATNAMEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-		        PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
+		if(	!SETTING(CHATNAMEFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED) &&
+			!sAuthor.empty() && (Util::stricmp(sAuthor, sMyNick) != 0)) {
+				PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
         }
 	}
 
@@ -341,11 +335,13 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, LPCTSTR sText, CHARFORMAT2
 
 		lSearchFrom = 0;
 		sNick = pUser.getNick().c_str();
-		if(sNick.GetLength() == 0) continue;
-
 		sNick.MakeLower();
 
-		while((lMyNickStart = sMsgLower.Find(sNick, lSearchFrom)) >= 0) {
+		while(true) {
+			lMyNickStart = sMsgLower.Find(sNick, lSearchFrom);
+			if(lMyNickStart < 0) 
+				break;
+
 			lMyNickEnd = lMyNickStart + sNick.GetLength();
 			SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 			SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
@@ -375,8 +371,8 @@ LRESULT ChatCtrl::OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BO
 		this->CRichEditCtrl::SendMessage(EM_SCROLLCARET);
 		SetSel(-1, -1);
 		this->CRichEditCtrl::SendMessage(EM_SCROLLCARET);
+		SetRedraw(TRUE);
 	}
-    SetRedraw(TRUE);
     InvalidateRect(NULL);
 	return 1;
 }

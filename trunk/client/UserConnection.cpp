@@ -82,6 +82,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		if(getUser() && aLine.length() < 255)
 			getUser()->setUnknownCommand(aLine);
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
+		disconnect(true);
 		return;
 	}
 	string cmd;

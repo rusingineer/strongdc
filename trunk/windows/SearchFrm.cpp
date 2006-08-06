@@ -753,6 +753,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
+		SearchManager::getInstance()->stopSearch((int*)this);
 		SettingsManager::getInstance()->removeListener(this);
 		if(searches != 0) {
 			searches--;
@@ -1672,22 +1673,6 @@ bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, Filte
 			insert = reg.match(Text::fromT(si->getText(sel))) > 0;
 		}
 	}
-
-	if(insert) {
-		if(ctrlResults.findItem(si) == -1) {
-			int k = ctrlResults.insertItem(si, si->imageIndex());
-			if(si->subItems.size() > 0) {
-				if(si->collapsed) {
-					ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
-				} else {
-					ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
-				}
-			} else {
-				ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
-			}
-		}
-	}
-	
 	return insert;
 }
 	
@@ -1709,7 +1694,19 @@ void SearchFrame::updateSearchList(SearchInfo* si) {
 		for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
 			SearchInfo* si = *i;
 			si->collapsed = true;
-			matchFilter(si, sel, doSizeCompare, mode, size);
+			if(matchFilter(si, sel, doSizeCompare, mode, size)) {
+				dcassert(ctrlResults.findItem(si) == -1);
+				int k = ctrlResults.insertItem(si, si->imageIndex());
+				if(si->subItems.size() > 0) {
+					if(si->collapsed) {
+						ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
+					} else {
+						ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);	
+					}
+				} else {
+					ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);	
+				}
+			}
 		}
 		ctrlResults.SetRedraw(TRUE);
 	}

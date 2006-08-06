@@ -34,7 +34,7 @@ static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, Res
 	ResourceManager::HUB, ResourceManager::TRANSFERRED, ResourceManager::SIZE, ResourceManager::ADDED, ResourceManager::WAITING_TIME };
 
 LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	showTree = BOOLSETTING(UPLOADQUEUEFRAME_SHOW_TREE); ;
+	showTree = BOOLSETTING(UPLOADQUEUEFRAME_SHOW_TREE);
 
 	// status bar
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
@@ -497,14 +497,14 @@ void WaitingUsersFrame::updateStatus() {
 
 
 void UploadQueueItem::update() {
-	columns[COLUMN_FILE] = Text::toT(Util::getFileName(File));
-	columns[COLUMN_PATH] = Text::toT(Util::getFilePath(File));
-	columns[COLUMN_NICK] = WinUtil::getNicks(User);
-	columns[COLUMN_HUB] = WinUtil::getHubNames(User).first;
-	columns[COLUMN_TRANSFERRED] = Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)");
-	columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
-	columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime));
-	columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(GET_TIME() - iTime));
+	setText(COLUMN_FILE, Text::toT(Util::getFileName(File)));
+	setText(COLUMN_PATH, Text::toT(Util::getFilePath(File)));
+	setText(COLUMN_NICK, WinUtil::getNicks(User));
+	setText(COLUMN_HUB, WinUtil::getHubNames(User).first);
+	setText(COLUMN_TRANSFERRED, Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)"));
+	setText(COLUMN_SIZE, Text::toT(Util::formatBytes(size)));
+	setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime)));
+	setText(COLUMN_WAITING, Text::toT(Util::formatSeconds(GET_TIME() - iTime)));
 
 }
 
@@ -532,7 +532,7 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			UQI->columns[COLUMN_WAITING] = Text::toT(Util::formatSeconds(itime - UQI->iTime));
+			UQI->setText(COLUMN_WAITING, Text::toT(Util::formatSeconds(itime - UQI->iTime)));
 			ctrlList.updateItem(i);
 		}
 	}

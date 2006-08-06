@@ -181,7 +181,8 @@ void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 					continue;
 				} 
 				
-				if(cqi->getUser()->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(cqi->getUser()))) {
+				if(	cqi->getUser()->isSet(User::PASSIVE) &&
+					!ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(cqi->getUser()))) {
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;

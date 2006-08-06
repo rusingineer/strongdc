@@ -424,7 +424,7 @@ private:
 			}
 		}
 
-		GETSET(int, flagimage, FlagImage);
+		GETSET(u_int8_t, flagimage, FlagImage);
 		SearchResult* sr;
 		tstring columns[COLUMN_LAST];
 	};

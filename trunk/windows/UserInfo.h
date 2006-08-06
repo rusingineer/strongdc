@@ -73,7 +73,6 @@
 		COLUMN_TAG,
 		COLUMN_CONNECTION, 
 		COLUMN_EMAIL, 
-		COLUMN_CLIENTID, 
 		COLUMN_VERSION, 
 		COLUMN_MODE, 
 		COLUMN_HUBS, 
@@ -81,30 +80,23 @@
 		COLUMN_UPLOAD_SPEED, 
 		COLUMN_IP, 
 		COLUMN_PK, 
-		COLUMN_LOCK, 
-		COLUMN_SUPPORTS,
 		COLUMN_LAST
 	};
 
-class UserInfo : public UserInfoBase, public FastAlloc<UserInfo> {
-friend struct CompareItems;
+class UserInfo : public UserInfoBase, public FastAlloc<UserInfo>, public ColumnBase {
 public:
 	UserInfo(const UserTask& u) : UserInfoBase(u.user) {
-		update(u.identity, -1); 
+		update(u.identity, -1);
 	};
-	const tstring& getText(int col) const;
-
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
-	int imageIndex() { return WinUtil::getImage(identity); }
+	u_int8_t imageIndex() { return WinUtil::getImage(identity); }
 
 	bool update(const Identity& identity, int sortCol);
 
 	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 
-	tstring columns[COLUMN_LAST];
 	GETSET(Identity, identity, Identity);
-	GETSET(int64_t, bytes, Bytes);
 };
 
 #endif //USERINFO_H

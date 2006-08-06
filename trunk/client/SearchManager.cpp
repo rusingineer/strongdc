@@ -128,6 +128,15 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 	}
 }
 
+void SearchManager::stopSearch(int *aWindow) {
+	for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
+		if(qi->getWindow() == aWindow) {
+			searchQueue.erase(qi);
+			break;
+		}
+	}
+}
+
 string SearchResult::getFileName() const { 
 	if(getType() == TYPE_FILE) 
 		return Util::getFileName(getFile()); 

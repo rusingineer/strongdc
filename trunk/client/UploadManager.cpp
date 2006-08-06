@@ -287,7 +287,6 @@ ok:
 
 	u->setFileSize(size);
 	u->setStartPos(aStartPos);
-	u->setFileName(file);
 	u->setLocalFileName(file);
 
 	if(userlist)
@@ -423,7 +422,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
 		UserConnection* aSource = u->getUserConnection();
-		params["source"] = u->getFileName();
+		params["source"] = u->getLocalFileName();
 		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource->getUser()->getCID()));
 		params["userI4"] = aSource->getRemoteIp();
 		StringList hubNames = ClientManager::getInstance()->getHubNames(aSource->getUser()->getCID());

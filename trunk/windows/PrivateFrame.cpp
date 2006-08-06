@@ -109,6 +109,7 @@ void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::P
 	
 	FrameIter i = frames.find(user);
 	if(i == frames.end()) {
+		if(frames.size() > 200) return;
 		p = new PrivateFrame(user);
 		frames[user] = p;
 		p->addLine(from, aMessage);
@@ -152,6 +153,7 @@ void PrivateFrame::openWindow(const User::Ptr& replyTo, const tstring& msg) {
 	PrivateFrame* p = NULL;
 	FrameIter i = frames.find(replyTo);
 	if(i == frames.end()) {
+		if(frames.size() > 200) return;
 		p = new PrivateFrame(replyTo);
 		frames[replyTo] = p;
 		p->CreateEx(WinUtil::mdiClient);

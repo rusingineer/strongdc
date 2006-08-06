@@ -58,7 +58,7 @@ public:
 	
 	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); }
 	
-	GETSET(string, fileName, FileName);
+	//GETSET(string, fileName, FileName);
 	GETSET(string, localFileName, LocalFileName);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(InputStream*, file, File);
@@ -90,7 +90,7 @@ public:
 
 };
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
 	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, time_t itime) :
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
@@ -101,15 +101,12 @@ public:
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
-	const tstring& getText(int col) const {
-		return columns[col];
-	}
 	static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
 		switch(col) {
-			case COLUMN_FILE: return Util::stricmp(a->columns[COLUMN_FILE], b->columns[COLUMN_FILE]);
-			case COLUMN_PATH: return Util::stricmp(a->columns[COLUMN_PATH], b->columns[COLUMN_PATH]);
-			case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
-			case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
+			case COLUMN_FILE: return Util::stricmp(a->getText(COLUMN_FILE), b->getText(COLUMN_FILE));
+			case COLUMN_PATH: return Util::stricmp(a->getText(COLUMN_PATH), b->getText(COLUMN_PATH));
+			case COLUMN_NICK: return Util::stricmp(a->getText(COLUMN_NICK), b->getText(COLUMN_NICK));
+			case COLUMN_HUB: return Util::stricmp(a->getText(COLUMN_HUB), b->getText(COLUMN_HUB));
 			case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 			case COLUMN_SIZE: return compare(a->size, b->size);
 			case COLUMN_ADDED: return compare(a->iTime, b->iTime);
@@ -141,7 +138,6 @@ public:
 	int64_t pos;
 	int64_t size;
 	time_t iTime;
-	tstring columns[COLUMN_LAST];
 	int icon;
 };
 
@@ -294,7 +290,6 @@ private:
 
 	// Main fileserver flag
 	bool boFileServerSent;
-
 	
 	Upload::List uploads;
 	Upload::List delayUploads;
