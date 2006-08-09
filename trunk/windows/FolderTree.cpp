@@ -274,6 +274,8 @@ FolderTree::FolderTree()
 
 FolderTree::~FolderTree()
 {
+	m_pShellFolder->Release();
+	m_pMalloc->Release();
 }
 
 void FolderTree::PopulateTree()

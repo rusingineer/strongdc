@@ -96,7 +96,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = Text::toT(ctrlUsers.getItemData(CZDCLib::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick());
+			x = Text::toT(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick());
 		} else {
 			x = _T("");
 		}
@@ -252,7 +252,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		FavoriteManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
-		CZDCLib::setButtonPressed(IDC_FAVUSERS, false);
+		WinUtil::setButtonPressed(IDC_FAVUSERS, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
@@ -294,7 +294,7 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(ui->getUser()->getCID()));
 		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(ui->getUser()->getCID()));
 		params["userCID"] = ui->getUser()->getCID().toBase32(); 
-		params["userNI"] = ClientManager::getInstance()->getNicks(ui->getUser()->getCID())[0];
+		params["userNI"] = ui->getUser()->getFirstNick();
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 		string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));

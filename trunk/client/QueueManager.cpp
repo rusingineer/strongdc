@@ -124,7 +124,7 @@ const string& QueueItem::getTempTarget() {
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
-						  int64_t aDownloadedBytes, time_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
+						  int64_t aDownloadedBytes, u_int32_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue* root) throw(QueueException, FileException) 
 {
 	if(p == QueueItem::DEFAULT) {
 		p = QueueItem::NORMAL;
@@ -240,19 +240,13 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue& tth) {
 	}
 }
 
-bool hasFreeSegments(QueueItem* qi, const User::Ptr& aUser) {
-	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) return (qi->getStatus() != QueueItem::STATUS_RUNNING);
-
-	switch(aUser ? qi->chunkInfo->findChunk((*qi->getSource(aUser))->getPartialInfo(), aUser->getLastDownloadSpeed()) : 1) {
-		case 0: return false;
-		case 1:	return !qi->isSet(QueueItem::FLAG_MULTI_SOURCE) ||
-					((qi->getCurrents().size() < qi->getMaxSegments()) &&
-					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || (SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024 >= qi->getAverageSpeed())));
-		case 2: return true; // need testing, whether it will be really overlapped.
-		default:
-			dcassert(0);
+bool hasFreeSegments(QueueItem* qi) {
+	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+		return (qi->getStatus() != QueueItem::STATUS_RUNNING);
+	} else {
+		return ((qi->getCurrents().size() < qi->getMaxSegments()) &&
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) >= qi->getAverageSpeed())));
 	}
-	return false;	
 }
 
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
@@ -261,7 +255,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		QueueItem* q = i->second;
 
 		// We prefer to search for things that are not running...
-		if((cand != NULL) && !hasFreeSegments(q, NULL)) 
+		if((cand != NULL) && !hasFreeSegments(q)) 
 			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
@@ -281,7 +275,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 
 		cand = q;
 
-		if(hasFreeSegments(cand, NULL))
+		if(hasFreeSegments(cand))
 			break;
 	}
 	return cand;
@@ -297,9 +291,9 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
-	} else if(!hasFreeSegments(cand, NULL)) {
+	} else if(!hasFreeSegments(cand)) {
 		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
-		if(cand2 != NULL && hasFreeSegments(cand2, NULL)) {
+		if(cand2 != NULL && hasFreeSegments(cand2)) {
 			cand = cand2;
 		}
 	}
@@ -358,7 +352,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = hasFreeSegments(found, aUser);
+			bool freeSegments = hasFreeSegments(found);
 
 			if(freeSegments && (pNext == NULL || fNext)) {
 				return found;
@@ -375,7 +369,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	                fNext = true;   // found, next is target
 	
 					iQi++;
-					if((iQi != i->second.end()) && hasFreeSegments(*iQi, aUser)) {
+					if((iQi != i->second.end()) && hasFreeSegments(*iQi)) {
 						return *iQi;
 					}
 				}
@@ -548,7 +542,7 @@ QueueManager::~QueueManager() throw() {
 	}
 }
 
-void QueueManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
+void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	string searchString;
 	{
 		Lock l(cs);
@@ -963,11 +957,11 @@ bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSiz
 	return true;
 }
 
-int QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
-	int MaxSegments = 1;
+u_int8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
+	u_int8_t MaxSegments = 1;
 
 	if(BOOLSETTING(SEGMENTS_MANUAL)) {
-		MaxSegments = min(SETTING(NUMBER_OF_SEGMENTS), 10);
+		MaxSegments = min((u_int8_t)SETTING(NUMBER_OF_SEGMENTS), (u_int8_t)10);
 	} else {
 		if((filesize >= 2*1048576) && (filesize < 15*1048576)) {
 			MaxSegments = 2;
@@ -991,7 +985,7 @@ int QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
 	}
 
 #ifdef _DEBUG
-	return 500;
+	return 200;
 #else
 	return MaxSegments;
 #endif
@@ -1094,10 +1088,8 @@ again:
 	}
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aUser);
-		supportsChunks = supportsChunks && (!(&ou) || !ou.getClient().getStealth()) && useChunks;
 		d->setStartPos(freeBlock);
-		q->chunkInfo->setDownload(freeBlock, d, supportsChunks);
+		q->chunkInfo->setDownload(freeBlock, d, supportsChunks && useChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
@@ -1184,7 +1176,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 						}
 					}
 
-					if((connectSources || q->getCurrents().size() <= 2) && (q->getPriority() != QueueItem::PAUSED)) {
+					if((connectSources || (q->getCurrents().size() <= 2)) && (q->getPriority() != QueueItem::PAUSED)) {
 						for(QueueItem::Source::ConstIter j = q->getSources().begin(); j != q->getSources().end(); ++j) {
 							if((*j)->getUser()->isOnline() && false == q->isCurrent((*j)->getUser())) {
 								getConn.push_back((*j)->getUser());
@@ -1279,7 +1271,7 @@ void QueueManager::processList(const string& name, User::Ptr& user, int flags) {
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
 			AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
 		sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(dirList));
-		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + string(tmp));			
+		LogManager::getInstance()->message(user->getFirstNick() + ": " + string(tmp));			
 	}
 }
 
@@ -1308,7 +1300,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 		UploadManager::getInstance()->abortUpload(temptarget);
 
 		if(q->getStatus() == QueueItem::STATUS_RUNNING) {
-				x = q->getTarget();
+			x = q->getTarget();
 		} else if(!q->getTempTarget().empty() && q->getTempTarget() != q->getTarget()) {
 			File::deleteFile(q->getTempTarget() + Download::ANTI_FRAG_EXT);
 			File::deleteFile(q->getTempTarget());
@@ -1645,11 +1637,11 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& verifiedBlocks = getAttrib(attribs, sVerifiedBlocks, 2);
 
 			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 3));
-			time_t added = (time_t)Util::toInt(getAttrib(attribs, sAdded, 4));
+			u_int32_t added = (u_int32_t)Util::toInt(getAttrib(attribs, sAdded, 4));
 			const string& tthRoot = getAttrib(attribs, sTTH, 5);
 			string tempTarget = getAttrib(attribs, sTempTarget, 5);
 			int64_t downloaded = Util::toInt64(getAttrib(attribs, sDownloaded, 5));
-			int maxSegments = Util::toInt(getAttrib(attribs, sMaxSegments, 5));
+			u_int8_t maxSegments = (u_int8_t)Util::toInt(getAttrib(attribs, sMaxSegments, 5));
 			if (downloaded > size || downloaded < 0)
 				downloaded = 0;
 
@@ -1670,7 +1662,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				}
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
 				qi->setAutoPriority(ap);
-				qi->setMaxSegments(max(1, maxSegments));
+				qi->setMaxSegments(max((u_int8_t)1, maxSegments));
 				
 				qm->fire(QueueManagerListener::Added(), qi);
 			}
@@ -1794,7 +1786,7 @@ void QueueManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& 
 		removeTestSUR(aUser);
 }
 
-void QueueManager::on(TimerManagerListener::Second, time_t aTick) throw() {
+void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	if(dirty && ((lastSave + 10000) < aTick)) {
 		saveQueue();
 	}else if(lastSave + 300000 < aTick) {

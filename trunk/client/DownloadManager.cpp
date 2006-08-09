@@ -28,7 +28,6 @@
 #include "HashManager.h"
 
 #include "LogManager.h"
-#include "SFVReader.h"
 #include "User.h"
 #include "File.h"
 #include "FilteredFile.h"
@@ -110,7 +109,7 @@ AdcCommand Download::getCommand(bool zlib, bool tthf) {
 	return cmd;
 }
 
-void DownloadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
+void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	Lock l(cs);
 
 	Download::List tickList;
@@ -268,12 +267,13 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	string message = STRING(WAITING_TO_RETRY);
 	Download* d = QueueManager::getInstance()->getDownload(aConn->getUser(), aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL), 
-		aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST),
+		!aConn->isSet(UserConnection::FLAG_STEALTH) && (aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)),
 		message);
 
 	if(!d) {
 		fire(DownloadManagerListener::Status(), aConn->getUser(), message);
-		
+		aConn->setLastActivity(0);
+
 		Lock l(cs);
  	    idlers.push_back(aConn);
 		return;
@@ -412,6 +412,11 @@ void DownloadManager::on(UserConnectionListener::Sending, UserConnection* aSourc
 		dcdebug("DM::onFileLength Bad state, ignoring\n");
 		return;
 	}
+
+	if(!aSource->getDownload()) {
+		aSource->disconnect(true);
+		return;
+	}
 	
 	if(prepareFile(aSource, (aBytes == -1) ? -1 : aSource->getDownload()->getPos() + aBytes, aSource->getDownload()->isSet(Download::FLAG_ZDOWNLOAD))) {
 		aSource->setDataMode();
@@ -425,7 +430,12 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 		return;
 	}
 
-	Download::Ptr download = aSource->getDownload();
+	if(!aSource->getDownload()) {
+		aSource->disconnect(true);
+		return;
+	}
+
+	/*Download::Ptr download = aSource->getDownload();
 	
 	if (download && aSource->getDownload()->isSet(Download::FLAG_USER_LIST)) {	
 		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());
@@ -443,7 +453,7 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 				}
 			}
 		}
-	}
+	}*/
 
 	if(prepareFile(aSource, aFileLength, aSource->getDownload()->isSet(Download::FLAG_ZDOWNLOAD))) {
 		aSource->setDataMode();
@@ -456,17 +466,20 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 		dcdebug("DM::onFileLength Bad state, ignoring\n");
 		return;
 	}
-
+	if(!aSource->getDownload()) {
+		aSource->disconnect(true);
+		return;
+	}
 	const string& type = cmd.getParam(0);
 	int64_t bytes = Util::toInt64(cmd.getParam(3));
 
-	if(!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
+	if(	!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
 		(type == "list" && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
 	{
 		// Uhh??? We didn't ask for this?
-			aSource->disconnect();
-			return;
-		}
+		aSource->disconnect();
+		return;
+	}
 
 	if(prepareFile(aSource, (bytes == -1) ? -1 : aSource->getDownload()->getPos() + bytes, cmd.hasFlag("ZL", 4))) {
 		aSource->setDataMode();
@@ -865,7 +878,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	StringMap params;
 	params["target"] = d->getTarget();
-	params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource->getUser()->getCID()));
+	params["userNI"] = aSource->getUser()->getFirstNick();
 	params["userI4"] = aSource->getRemoteIp();
 	StringList hubNames = ClientManager::getInstance()->getHubNames(aSource->getUser()->getCID());
 	if(hubNames.empty())
@@ -1008,7 +1021,7 @@ void DownloadManager::abortDownload(const string& aTarget) {
 		Download* d = *i;
 		if(d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
-			d->getUserConnection()->disconnect();
+			d->getUserConnection()->disconnect(true);
 		}
 	}
 }
@@ -1020,7 +1033,7 @@ void DownloadManager::abortDownloadExcept(const string& aTarget, Download* excep
 		Download* d = *i;
 		if(d != except && d->getTarget() == aTarget) {
 			dcassert(d->getUserConnection() != NULL);
-			d->getUserConnection()->disconnect();
+			d->getUserConnection()->disconnect(true);
 		}
 	}
 }
@@ -1030,6 +1043,10 @@ void DownloadManager::on(UserConnectionListener::ListLength, UserConnection* aSo
 }
 
 void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnection* aSource) throw() {
+	if(!aSource->getDownload()) {
+		aSource->disconnect(true);
+		return;
+	}
 	fileNotAvailable(aSource);
 }
 
@@ -1068,11 +1085,11 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	dcassert(d != NULL);
 	dcdebug("File Not Available: %s\n", d->getTarget().c_str());
 
-	removeDownload(d);
 	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR File not available\n");
-		
+		removeDownload(d);
+
 		ClientManager::getInstance()->setCheating(aSource->getUser(), "File Not Available", "", -1, false);
 		
 		aSource->setDownload(NULL);
@@ -1080,10 +1097,10 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 		removeConnection(aSource);
 		return;
 	}
-
-	aSource->setDownload(NULL);
-
+	
 	QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), d->isSet(Download::FLAG_TREE_DOWNLOAD) ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE, false);
+	removeDownload(d);
+	aSource->setDownload(NULL);
 
 	QueueManager::getInstance()->putDownload(d, false, false);
 	checkDownloads(aSource);
@@ -1115,7 +1132,7 @@ size_t DownloadManager::throttleGetSlice() {
 	}
 }
 
-time_t DownloadManager::throttleCycleTime() {
+u_int32_t DownloadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;

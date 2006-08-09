@@ -122,7 +122,7 @@ const string SettingsManager::settingTags[] =
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
 	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
- 	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash",
+ 	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
 	"SENTRY",
 	// Int64
@@ -318,7 +318,7 @@ SettingsManager::SettingsManager()
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,13,-1,14,15,16,17,-1,18,19,20,21");
 	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
 	setDefault(WEBSERVER, false);
-	setDefault(WEBSERVER_PORT, 80);
+	setDefault(WEBSERVER_PORT, (int)Util::rand(80, 1024));
 	setDefault(WEBSERVER_FORMAT,"%Y-%m-%d %H:%M: %[ip] tried getting %[file]");
 	setDefault(LOG_WEBSERVER, true);
 	setDefault(WEBSERVER_USER, "strongdc");
@@ -524,6 +524,7 @@ SettingsManager::SettingsManager()
 	setDefault(TABS_ON_TOP, false);
 	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);
 	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
+	setDefault(DOWNCONN_PER_SEC, 2);
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

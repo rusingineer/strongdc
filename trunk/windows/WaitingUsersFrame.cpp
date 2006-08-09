@@ -116,7 +116,7 @@ LRESULT WaitingUsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	if(!closed) {
 		UploadManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
-		CZDCLib::setButtonPressed(IDC_UPLOAD_QUEUE, false);
+		WinUtil::setButtonPressed(IDC_UPLOAD_QUEUE, false);
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;
@@ -365,7 +365,7 @@ void WaitingUsersFrame::LoadAll() {
 	ctrlQueued.SetRedraw(FALSE);
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		UQFUsers.push_back(uit->first);
-		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (WinUtil::getNicks(uit->first) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
+		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserPtr(uit->first)), TVI_ROOT, TVI_LAST);
 		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
 			AddFile(*i);
@@ -443,13 +443,13 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 	}
 	if(add) {
 			UQFUsers.push_back(aUQI->User);
-			userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (WinUtil::getNicks(aUQI->User) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), 
+			userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), 
 				0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->User)), TVI_ROOT, TVI_LAST);
 	}	
 	if(selNode) {
 		TCHAR selBuf[256];
 		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		if(_tcscmp(selBuf, (WinUtil::getNicks(aUQI->User) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str()) != 0) {
+		if(_tcscmp(selBuf, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str()) != 0) {
 			return;
 		}
 	}
@@ -499,7 +499,7 @@ void WaitingUsersFrame::updateStatus() {
 void UploadQueueItem::update() {
 	setText(COLUMN_FILE, Text::toT(Util::getFileName(File)));
 	setText(COLUMN_PATH, Text::toT(Util::getFilePath(File)));
-	setText(COLUMN_NICK, WinUtil::getNicks(User));
+	setText(COLUMN_NICK, Text::toT(User->getFirstNick()));
 	setText(COLUMN_HUB, WinUtil::getHubNames(User).first);
 	setText(COLUMN_TRANSFERRED, Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)"));
 	setText(COLUMN_SIZE, Text::toT(Util::formatBytes(size)));

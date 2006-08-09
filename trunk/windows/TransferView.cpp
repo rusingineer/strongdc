@@ -654,7 +654,7 @@ TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoB
 	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
 	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 
-	columns[COLUMN_USER] = WinUtil::getNicks(u);
+	columns[COLUMN_USER] = Text::toT(u->getFirstNick());
 	columns[COLUMN_HUB] = WinUtil::getHubNames(u).first;
 }
 
@@ -1118,7 +1118,7 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw()
 }
 
 bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
-	int64_t totalSpeed = 0;	double ratio = 0; int segs = 0;
+	size_t totalSpeed = 0;	double ratio = 0; int segs = 0;
 	ItemInfo* l = NULL;
 
 	for(ItemInfo::Iter k = main->subItems.begin(); k != main->subItems.end(); ++k) {
@@ -1126,7 +1126,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		if(l->status == ItemInfo::STATUS_RUNNING && main->Target == l->Target) {
 			segs++;
 			if(main->multiSource) {
-				totalSpeed += l->speed;
+				totalSpeed += (size_t)l->speed;
 				ratio += l->getRatio();
 			} else
 				break;

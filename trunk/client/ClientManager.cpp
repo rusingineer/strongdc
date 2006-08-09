@@ -93,7 +93,7 @@ StringList ClientManager::getHubNames(const CID& cid) {
 	}
 	return lst;
 }
-
+/*
 StringList ClientManager::getNicks(const CID& cid) {
 	Lock l(cs);
 	StringSet nicks;
@@ -117,7 +117,7 @@ StringList ClientManager::getNicks(const CID& cid) {
 
 	return sl;
 }
-
+*/
 string ClientManager::getConnection(const CID& cid) {
 	Lock l(cs);
 	OnlineIter i = onlineUsers.find(cid);
@@ -395,7 +395,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				dcdebug("Search caught error\n");
 			}
 		}
-	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0)/* && aClient->getMe()->isClientOp()*/) {
+	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0)) {
 		PartsInfo partialInfo;
 		TTHValue aTTH(aString.substr(4));
 		if(!QueueManager::getInstance()->handlePartialSearch(aTTH, partialInfo)) {
@@ -406,6 +406,15 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 		}
 
 		try {
+			AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
+			cmd.addParam("NI", Text::utf8ToAcp(aClient->getMyNick()));
+			cmd.addParam("HI", aClient->getIpPort());
+			cmd.addParam("U4", Util::toString(SETTING(UDP_PORT)));
+			cmd.addParam("TR", aTTH.toBase32());
+			cmd.addParam("PC", Util::toString(partialInfo.size() / 2));
+			cmd.addParam("PI", GetPartsString(partialInfo));
+			
+			/* We might use old $PSR in some cases
 			char buf[1024];
 			// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
 			string hubIpPort = aClient->getIpPort();
@@ -413,12 +422,14 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 			string user = Text::utf8ToAcp(aClient->getMyNick());
 			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
 			buf[1023] = NULL;
+			*/
+
 			string ip, file;
 			u_int16_t port = 0;
 			Util::decodeUrl(aSeeker, ip, port, file);
 			ip = Socket::resolve(ip);
 			if(port == 0) port = 412;
-			s.writeTo(ip, port, buf);
+			s.writeTo(ip, port, cmd.toString(ClientManager::getInstance()->getMyCID()));
 		} catch(const SocketException&) {
 			s.disconnect();			
 			dcdebug("Search caught error\n");
@@ -481,7 +492,7 @@ void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aF
 	}
 }
 
-void ClientManager::on(TimerManagerListener::Minute, time_t /* aTick */) throw() {
+void ClientManager::on(TimerManagerListener::Minute, u_int32_t /* aTick */) throw() {
 	{
 		Lock l(cs);
 

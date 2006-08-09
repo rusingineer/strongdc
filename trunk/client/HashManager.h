@@ -186,7 +186,7 @@ private:
 	class HashStore {
 	public:
 		HashStore();
-		void addFile(const string& aFileName, time_t aTimeStamp, const TigerTree& tth, bool aUsed);
+		void addFile(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, bool aUsed);
 
 		void load();
 		void save();
@@ -215,14 +215,14 @@ private:
 		/** File -> root mapping info */
 		struct FileInfo {
 		public:
-			FileInfo(const string& aFileName, const TTHValue& aRoot, time_t aTimeStamp, bool aUsed) :
+			FileInfo(const string& aFileName, const TTHValue& aRoot, u_int32_t aTimeStamp, bool aUsed) :
 			  fileName(aFileName), root(aRoot), timeStamp(aTimeStamp), used(aUsed) { }
 
 			bool operator==(const string& name) { return name == fileName; }
 
 			GETSET(string, fileName, FileName);
 			GETSET(TTHValue, root, Root);
-			GETSET(time_t, timeStamp, TimeStamp);
+			GETSET(u_int32_t, timeStamp, TimeStamp);
 			GETSET(bool, used, Used);
 		};
 
@@ -261,12 +261,12 @@ private:
 	/** Single node tree where node = root, no storage in HashData.dat */
 	static const int64_t SMALL_TREE = -1;
 
-	void hashDone(const string& aFileName, time_t aTimeStamp, const TigerTree& tth, int64_t speed);
+	void hashDone(const string& aFileName, u_int32_t aTimeStamp, const TigerTree& tth, int64_t speed);
 	void doRebuild() {
 		Lock l(cs);
 		store.rebuild();
 	}
-	virtual void on(TimerManagerListener::Minute, time_t) throw() {
+	virtual void on(TimerManagerListener::Minute, u_int32_t) throw() {
 		Lock l(cs);
 		store.save();
 	}

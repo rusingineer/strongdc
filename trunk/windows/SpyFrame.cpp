@@ -79,7 +79,7 @@ LRESULT SpyFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		if (ignoreTth != BOOLSETTING(SPY_FRAME_IGNORE_TTH_SEARCHES))
 			SettingsManager::getInstance()->set(SettingsManager::SPY_FRAME_IGNORE_TTH_SEARCHES, ignoreTth);
 
-		CZDCLib::setButtonPressed(IDC_SEARCH_SPY, false);
+		WinUtil::setButtonPressed(IDC_SEARCH_SPY, false);
 		bHandled = FALSE;
 		return 0;
 	}
@@ -221,7 +221,7 @@ void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& s) throw(
 	PostMessage(WM_SPEAKER, SEARCH, (LPARAM)x);
 }
 
-void SpyFrame::on(TimerManagerListener::Second, time_t) throw() {
+void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
 		float* f = new float(0.0);
 		for(int i = 0; i < AVG_TIME; ++i) {
 			(*f) += (float)perSecond[i];

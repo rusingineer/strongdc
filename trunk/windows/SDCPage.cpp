@@ -47,6 +47,7 @@ PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_TRANSFERLISTDBLCLICKACTION, ResourceManager::TRANSFERLISTDBLCLICKACTION },
 	{ IDC_CHATDBLCLICKACTION, ResourceManager::CHATDBLCLICKACTION },
 	{ IDC_SHUTDOWNACTION, ResourceManager::SHUTDOWN_ACTION },
+	{ IDC_SETTINGS_DOWNCONN, ResourceManager::SETTINGS_DOWNCONN },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -68,6 +69,7 @@ PropPage::Item SDCPage::items[] = {
 	{ IDC_INTERVAL, SettingsManager::MINIMUM_SEARCH_INTERVAL, PropPage::T_INT },
 	{ IDC_MATCH, SettingsManager::MAX_AUTO_MATCH_SOURCES, PropPage::T_INT },
 	{ IDC_AUTO_SEARCH_LIMIT, SettingsManager::AUTO_SEARCH_LIMIT, PropPage::T_INT },
+	{ IDC_DOWNCONN, SettingsManager::DOWNCONN_PER_SEC, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -95,7 +97,8 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	setMinMax(IDC_MAX_COMP_SPIN, 0, 9);
 	setMinMax(IDC_INTERVAL_SPIN, 10, 100);
 	setMinMax(IDC_MATCH_SPIN, 1, 999);
-	setMinMax(IDC_AUTO_SEARCH_LIMIT_SPIN, 1, 15);
+	setMinMax(IDC_AUTO_SEARCH_LIMIT_SPIN, 1, 999);
+	setMinMax(IDC_DOWNCONN_SPIN, 0, 100);
 
 	ctrlShutdownAction.Attach(GetDlgItem(IDC_COMBO1));
 	ctrlShutdownAction.AddString(CTSTRING(POWER_OFF));
@@ -156,9 +159,7 @@ void SDCPage::write()
 	transferlistaction.Detach(); 
 	chataction.Detach(); 
 
-	if(SETTING(AUTO_SEARCH_LIMIT) > 15)
-		settings->set(SettingsManager::AUTO_SEARCH_LIMIT, 15);
-	else if(SETTING(AUTO_SEARCH_LIMIT) < 1)
+	if(SETTING(AUTO_SEARCH_LIMIT) < 1)
 		settings->set(SettingsManager::AUTO_SEARCH_LIMIT, 1);	
 }
 

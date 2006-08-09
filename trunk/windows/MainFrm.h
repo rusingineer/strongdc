@@ -347,7 +347,7 @@ public:
 	
 	static MainFrame* anyMF;
 private:
-	friend int CZDCLib::setButtonPressed(int iPos, bool bPressed);
+	friend int WinUtil::setButtonPressed(int iPos, bool bPressed);
 	friend void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int iPreview);
 
 	NOTIFYICONDATA normalicon;
@@ -408,7 +408,7 @@ private:
 	bool bIsPM;
 	
 	static bool bShutdown;
-	static time_t iCurrentShutdownTime;
+	static u_int32_t iCurrentShutdownTime;
 	HICON hShutdownIcon;
 	static bool isShutdownStatus;
 
@@ -417,8 +417,8 @@ private:
 	UINT trayMessage;
 	/** Was the window maximized when minimizing it? */
 	bool maximized;
-	time_t lastMove;
-	time_t lastUpdate;
+	u_int32_t lastMove;
+	u_int32_t lastUpdate;
 	int64_t lastUp;
 	int64_t lastDown;
 	tstring lastTTHdir;
@@ -458,7 +458,7 @@ private:
 	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); }
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second type, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Second type, u_int32_t aTick) throw();
 	
 	// HttpConnectionListener
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();

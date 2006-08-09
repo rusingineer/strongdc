@@ -155,7 +155,7 @@ LRESULT OMenu::onMeasureItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM
 				tstring& text = mi->text;
 
 				SIZE size;
-				CZDCLib::CalcTextSize(text, WinUtil::boldFont, &size);
+				CalcTextSize(text, WinUtil::boldFont, &size);
 				mis->itemWidth = size.cx + 4;
 				mis->itemHeight = size.cy + 4;
 

@@ -279,7 +279,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		
 		{
 			Lock l(cs);
-			time_t tick = GET_TICK();
+			u_int32_t tick = GET_TICK();
 
 			seekers.push_back(make_pair(seeker, tick));
 
@@ -495,7 +495,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 		string port = param.substr(j+1);
-		ConnectionManager::getInstance()->nmdcConnect(server, (unsigned short)Util::toInt(port), getMyNick(), getHubUrl()); 
+		ConnectionManager::getInstance()->nmdcConnect(server, (unsigned short)Util::toInt(port), getMyNick(), getHubUrl(), getStealth()); 
 	} else if(cmd == "$RevConnectToMe") {
 		if(state != STATE_CONNECTED) {
 			return;
@@ -970,7 +970,7 @@ void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) {
 }
 
 // TimerManagerListener
-void NmdcHub::on(Second, time_t aTick) throw() {
+void NmdcHub::on(Second, u_int32_t aTick) throw() {
 	if(state == STATE_CONNECTED && (getLastActivity() + getReconnDelay() * 1000) < aTick) {
 		// Try to send something for the fun of it...
 		dcdebug("Testing writing...\n");

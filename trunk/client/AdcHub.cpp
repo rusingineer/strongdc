@@ -591,7 +591,7 @@ void AdcHub::send(const AdcCommand& cmd) {
 	send(cmd.toString(sid));
 }
 
-void AdcHub::on(Second, time_t aTick) throw() {
+void AdcHub::on(Second, u_int32_t aTick) throw() {
 	if(getAutoReconnect() && state == STATE_PROTOCOL && (getReconnecting() || ((getLastActivity() + getReconnDelay() * 1000) < aTick)) ) {
 		// Try to reconnect...
 		connect();

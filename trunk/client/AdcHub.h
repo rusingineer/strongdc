@@ -121,7 +121,7 @@ private:
 	virtual void on(Line, const string& aLine) throw();
 	virtual void on(Failed, const string& aLine) throw();
 
-	virtual void on(Second, time_t aTick) throw();
+	virtual void on(Second, u_int32_t aTick) throw();
 };
 
 #endif // !defined(ADC_HUB_H)

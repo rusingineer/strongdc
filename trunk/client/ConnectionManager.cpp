@@ -155,7 +155,7 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	userConnections.erase(remove(userConnections.begin(), userConnections.end(), aConn), userConnections.end());
 }
 
-void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
+void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
 	User::List idlers;
@@ -166,7 +166,7 @@ void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	{
 		Lock l(cs);
 
-		bool attemptDone = false;
+		u_int16_t attempts = 0;
 
 		idlers = checkIdle;
 		checkIdle.clear();
@@ -188,7 +188,7 @@ void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 					continue;
 				}
 
-				if( ((cqi->getLastAttempt() + 60*1000) < aTick) && !attemptDone ) {
+				if( ((cqi->getLastAttempt() + 60*1000) < aTick) && ((SETTING(DOWNCONN_PER_SEC)== 0) || (attempts < SETTING(DOWNCONN_PER_SEC))) ) {
 					cqi->setLastAttempt(aTick);
 
 					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
@@ -209,7 +209,7 @@ void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 							cqi->setState(ConnectionQueueItem::CONNECTING);
 							ClientManager::getInstance()->connect(cqi->getUser());
 							fire(ConnectionManagerListener::StatusChanged(), cqi);
-							attemptDone = true;
+							attempts++;
 						} else {
 							cqi->setState(ConnectionQueueItem::NO_DOWNLOAD_SLOTS);
 							fire(ConnectionManagerListener::Failed(), cqi, STRING(ALL_DOWNLOAD_SLOTS_TAKEN));
@@ -241,7 +241,7 @@ void ConnectionManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	}
 }
 
-void ConnectionManager::on(TimerManagerListener::Minute, time_t aTick) throw() {	
+void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
 	Lock l(cs);
 
 	for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
@@ -283,7 +283,7 @@ int ConnectionManager::Server::run() throw() {
  * It's always the other fellow that starts sending if he made the connection.
  */
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
-	time_t now = GET_TICK();
+	u_int32_t now = GET_TICK();
 
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
@@ -313,7 +313,7 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	}
 }
 
-void ConnectionManager::nmdcConnect(const string& aServer, unsigned short aPort, const string& aNick, const string& hubUrl) {
+void ConnectionManager::nmdcConnect(const string& aServer, unsigned short aPort, const string& aNick, const string& hubUrl, bool stealth) {
 	if(shuttingDown)
 		return;
 
@@ -322,6 +322,9 @@ void ConnectionManager::nmdcConnect(const string& aServer, unsigned short aPort,
 	uc->setHubUrl(hubUrl);
 	uc->setState(UserConnection::STATE_CONNECT);
 	uc->setFlag(UserConnection::FLAG_NMDC);
+	if(stealth) {
+		uc->setFlag(UserConnection::FLAG_STEALTH);
+	}
 	try {
 		uc->connect(aServer, aPort);
 	} catch(const Exception&) {

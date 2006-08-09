@@ -46,16 +46,11 @@ CAGEmotion::CAGEmotion() {
 	m_EmotionText.empty();
 	m_EmotionBmpPath.empty();
 	m_EmotionBmp = NULL;
-	m_idCommand = -1;
 	m_ImagePos = -1;
 	m_pImagesList = NULL;
 }
 
 CAGEmotion::~CAGEmotion() {
-	if (m_EmotionBmp != NULL) {
-		DeleteObject(m_EmotionBmp);
-		m_EmotionBmp = NULL;
-	}
 	m_EmotionText.empty();
 	m_EmotionBmpPath.empty();
 	m_ImagePos = -1;
@@ -85,7 +80,7 @@ HBITMAP CAGEmotion::GetEmotionBmp() {
 const string& CAGEmotion::GetEmotionBmpPath() {
 	return m_EmotionBmpPath;
 }
-
+	
 const long&	CAGEmotion::GetImagePos() {
 	return m_ImagePos;
 }
@@ -124,40 +119,20 @@ HBITMAP CAGEmotion::GetEmotionBmp(const COLORREF &clrBkColor) {
 	return (HBITMAP)dist.Detach();
 }
 
-const long&	CAGEmotion::GetidCommand() {
-	return m_idCommand;
-}
-
-void CAGEmotion::SetidCommand(const long& idCommand) {
-	m_idCommand = idCommand;
-}
-
 // CAGEmotionSetup
 
 CAGEmotionSetup::CAGEmotionSetup() {
 	setUseEmoticons(false);
-	m_toolbarsStruct = NULL;
-	m_nEmotionsCnt = 0;
 }
 
 CAGEmotionSetup::~CAGEmotionSetup() {
 	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
-	if (m_toolbarsStruct != NULL) {
-		delete [] m_toolbarsStruct;
-		m_toolbarsStruct = NULL;
-	}
-	m_nEmotionsCnt = 0;
 	m_images.Destroy();
 }
 
 bool CAGEmotionSetup::Create() {
 	setUseEmoticons(false);
 	m_images.Destroy();
-	if (m_toolbarsStruct != NULL) {
-		delete [] m_toolbarsStruct;
-		m_toolbarsStruct = NULL;
-	}
-	m_nEmotionsCnt = 0;
 
 	if (!Util::fileExists(Util::getAppPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
 		return true;
@@ -180,7 +155,7 @@ bool CAGEmotionSetup::Create() {
 				strEmotionBmpPath = xml.getChildAttrib("Bitmap");
 				if (strEmotionBmpPath.size() > 0) {
 					if (strEmotionBmpPath[0] == '.') {
-						// Relativni cesta - dame od applikace
+						// Relativni cesta - dame od aplikace
 						strEmotionBmpPath = Util::getAppPath() + "EmoPacks\\" + strEmotionBmpPath;
 					}
 					else strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
@@ -215,26 +190,6 @@ bool CAGEmotionSetup::Create() {
 		return false;
 	}
 
-	DWORD dwIdCommand = WM_USER+10000;
-
-	int nEmotionsLineBreak = 0;
-	m_nEmotionsCnt = EmotionsList.size();
-	if (m_nEmotionsCnt > 4) {
-		// Zkusime zarovnat na 2 odmocninu aby to pekne vypadalo
-		nEmotionsLineBreak = (int) sqrt((double)m_nEmotionsCnt);
-		if (nEmotionsLineBreak > 10)	// Ale kdyz je to vic nez 10, tak nechame mensi sirku
-			nEmotionsLineBreak = 10;
-	}
-
-	m_toolbarsStruct = new TBBUTTON[m_nEmotionsCnt+1];
-	if (m_toolbarsStruct == NULL) {
-		dcassert(FALSE);
-		return false;
-	}
-
-	int idx = 0;
-	int nEmotionInLine = 0;
-
 	CDC oTestDC;
 	if (!oTestDC.CreateCompatibleDC(NULL))
 		return FALSE;
@@ -248,41 +203,11 @@ bool CAGEmotionSetup::Create() {
 
 		int nImagePos = m_images.Add(hBmp, clrTransparent);
 
-		nEmotionInLine++;
-		
-		(*pEmotion)->SetidCommand(dwIdCommand);
 		(*pEmotion)->SetImagePos(nImagePos);
 		(*pEmotion)->SetImageList(&m_images);
 
-		m_toolbarsStruct[idx].iBitmap = nImagePos;// zero-based index of button image
-		m_toolbarsStruct[idx].idCommand = dwIdCommand;  // command to be sent when button pressed
-		m_toolbarsStruct[idx].fsState = TBSTATE_ENABLED;   // button state--see below
-		if (nEmotionInLine > nEmotionsLineBreak) {
-			m_toolbarsStruct[idx].fsState |= TBSTATE_WRAP;
-			nEmotionInLine = 0;
-		}
-		m_toolbarsStruct[idx].fsStyle = TBSTYLE_BUTTON;   // button style--see below
-		m_toolbarsStruct[idx].dwData = 0;   // application-defined value
-		m_toolbarsStruct[idx].iString = -1; // zero-based index of button label string
-
-		dwIdCommand++;
+		DeleteObject(hBmp);
 	}
-
-	return true;
-}
-
-bool CAGEmotionSetup::CreateToolbar(HWND parentWnd) {
-	m_ctrlToolbar.Create(parentWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
-	m_ctrlToolbar.SetImageList(m_images);
-
-	m_ctrlToolbar.SetButtonStructSize();
-
-	m_ctrlToolbar.AddButtons(m_nEmotionsCnt, m_toolbarsStruct);
-
-	m_ctrlToolbar.AutoSize();
-
-	CRect frame;
-	GetWindowRect(parentWnd, frame);
 
 	return true;
 }

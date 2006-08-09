@@ -99,6 +99,7 @@ public:
 	C(SID, 'S','I','D');
 	// Extensions
 	C(CMD, 'C','M','D');
+	C(PSR, 'P','S','R');
 #undef C
 
 	static const u_int32_t HUB_SID = 0x41414141;		// AAAA in base32

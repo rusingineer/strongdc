@@ -41,8 +41,8 @@ public:
 	typedef X<1> Minute;
 
 	// We expect everyone to implement this...
-	virtual void on(Second, time_t) throw() { }
-	virtual void on(Minute, time_t) throw() { }
+	virtual void on(Second, u_int32_t) throw() { }
+	virtual void on(Minute, u_int32_t) throw() { }
 };
 
 class TimerManager : public Speaker<TimerManagerListener>, public Singleton<TimerManager>, public Thread
@@ -56,7 +56,7 @@ public:
 	static time_t getTime() {
 		return (time_t)time(NULL);
 	}
-	static time_t getTick() { 
+	static u_int32_t getTick() { 
 #ifdef _WIN32
 		return GetTickCount(); 
 #else

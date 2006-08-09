@@ -294,7 +294,7 @@ public:
 		if(frame == NULL) {
 			frame = new T();
 			frame->CreateEx(WinUtil::mdiClient, frame->rcDefault, CTSTRING_I(ResourceManager::Strings(title)));
-			CZDCLib::setButtonPressed(ID, true);
+			WinUtil::setButtonPressed(ID, true);
 		} else {
 			// match the behavior of MainFrame::onSelected()
 			HWND hWnd = frame->m_hWnd;
@@ -302,12 +302,12 @@ public:
 				::PostMessage(hWnd, WM_CLOSE, NULL, NULL);
 			} else if(frame->MDIGetActive() != hWnd) {
 				MainFrame::anyMF->MDIActivate(hWnd);
-				CZDCLib::setButtonPressed(ID, true);
+				WinUtil::setButtonPressed(ID, true);
 			} else if(BOOLSETTING(TOGGLE_ACTIVE_WINDOW)) {
 				::SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 				frame->MDINext(hWnd);
 				hWnd = frame->MDIGetActive();
-				CZDCLib::setButtonPressed(ID, true);
+				WinUtil::setButtonPressed(ID, true);
 			}
 			if(::IsIconic(hWnd))
 				::ShowWindow(hWnd, SW_RESTORE);
@@ -513,14 +513,14 @@ public:
 	
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
-	static tstring getNicks(const CID& cid) throw();
+	/*static tstring getNicks(const CID& cid) throw();
 	static tstring getNicks(const User::Ptr& u) {
 		if(u->isSet(User::NMDC)) {
 			return Text::toT(u->getFirstNick());
 		} else  {
 			return getNicks(u->getCID());
 		}
-	}
+	}*/
 	/** @return Pair of hubnames as a string and a bool representing the user's online status */
 	static pair<tstring, bool> getHubNames(const CID& cid) throw();
 	static pair<tstring, bool> getHubNames(const User::Ptr& u) { return getHubNames(u->getCID()); }
@@ -579,6 +579,9 @@ public:
 	static u_int8_t getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
 	static string disableCzChars(string message);
+	static bool shutDown(int action);
+	static int getFirstSelectedIndex(CListViewCtrl& list);
+	static int setButtonPressed(int nID, bool bPressed = true);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 };

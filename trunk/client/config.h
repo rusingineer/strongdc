@@ -46,7 +46,7 @@
 # define _STLP_USE_TEMPLATE_EXPRESSION 1
 # define _STLP_NO_ANACHRONISMS 1
 # define _STLP_NO_CUSTOM_IO 1
-# define _STLP_NO_IOSTREAMS 1
+//# define _STLP_NO_IOSTREAMS 1
 # ifndef _DEBUG
 //#  define _STLP_DONT_USE_EXCEPTIONS 1
 # else
@@ -121,6 +121,7 @@ typedef unsigned __int64 u_int64_t;
 # define _WIN32_WINNT 0x0600
 # define _WIN32_IE	0x0601
 # define _RICHEDIT_VER 0x0300
+# define _USE_32BIT_TIME_T
 #endif
 
 #endif // !defined(CONFIG_H)

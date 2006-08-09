@@ -520,9 +520,9 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 	}
 }
 
-void SearchFrame::on(TimerManagerListener::Second, time_t aTick) throw() {
+void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	if(searches > 0) {
-		time_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
+		u_int32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
 		TCHAR buf[64];
 		_stprintf(buf, CTSTRING(WAITING_FOR), waitFor);
 		PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));
@@ -1437,7 +1437,7 @@ void SearchFrame::SearchInfo::update() {
 			columns[COLUMN_EXACT_SIZE] = Text::toT(Util::formatExactSize(sr->getSize()));
 		}
 	}
-	columns[COLUMN_NICK] = WinUtil::getNicks(sr->getUser());
+	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick());
 	columns[COLUMN_CONNECTION] = Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()));
 	columns[COLUMN_HUB] = Text::toT(sr->getHubName());
 	columns[COLUMN_SLOTS] = Text::toT(sr->getSlotString());

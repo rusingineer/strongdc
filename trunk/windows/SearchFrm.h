@@ -559,7 +559,7 @@ private:
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
 
-	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 
 	// ClientManagerListener
 	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }

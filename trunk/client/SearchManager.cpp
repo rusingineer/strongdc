@@ -393,19 +393,25 @@ int SearchManager::ResultsQueue::run() {
 				continue;
 			}
 
-			User::Ptr user = ClientManager::getInstance()->findLegacyUser(nick);
+			string url = ClientManager::getInstance()->findHub(hubIpPort);
+			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
 			if(!user) {
-				dcdebug("Search result from unknown legacy user");
-				continue;
+				// Could happen if hub has multiple URLs / IPs
+				user = ClientManager::getInstance()->findLegacyUser(nick);
+				if(!user) {
+					dcdebug("Search result from unknown user");
+					continue;
+				}
 			}
+
 			PartsInfo outPartialInfo;
 			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
-		
+
 			if((UdpPort > 0) && !outPartialInfo.empty()) {
-				OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-				if(&ou) {
+				const string& myNick = ClientManager::getInstance()->getMyNMDCNick(user);
+				if(!myNick.empty()) {
 					char buf[1024];
-					_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(ou.getClient().getMyNick()).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
+					_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
 					buf[1023] = NULL;
 					Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
 				}
@@ -436,6 +442,80 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 
 		onRES(c, user, remoteIp);
 
+	} if(x.compare(1, 4, "PSR ") == 0 && x[x.length() - 1] == 0x0a) {
+		AdcCommand c(x.substr(0, x.length()-1));
+		if(c.getParameters().empty())
+			return;
+		string cid = c.getParam(0);
+		if(cid.size() != 39)
+			return;
+
+		c.getParameters().erase(c.getParameters().begin());
+
+		unsigned short udpPort = 0;
+		u_int32_t partialCount = 0;
+		string tth;
+		string hubIpPort;
+		string nick;
+		PartsInfo partialInfo;
+
+		for(StringIterC i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
+			const string& str = *i;
+			if(str.compare(0, 2, "U4") == 0) {
+				udpPort = (unsigned short)Util::toInt(str.substr(2));
+			} else if(str.compare(0, 2, "NI") == 0) {
+				nick = str.substr(2);
+			} else if(str.compare(0, 2, "HI") == 0) {
+				hubIpPort = str.substr(2);
+			} else if(str.compare(0, 2, "TR") == 0) {
+				tth = str.substr(2);
+			} else if(str.compare(0, 2, "PC") == 0) {
+				partialCount = Util::toUInt32(str.substr(2))*2;
+			} else if(str.compare(0, 2, "PI") == 0) {
+				string partialInfoBlocks = str.substr(2);
+				string::size_type i = 0, j = 0;
+				while(j != string::npos) {
+					j = partialInfoBlocks.find(',', i);
+					partialInfo.push_back((u_int16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
+					i = j + 1;
+				}
+			}
+		}
+
+		User::Ptr user = ClientManager::getInstance()->findUser(CID(cid));
+		if(!user) {
+			string url = ClientManager::getInstance()->findHub(hubIpPort);
+			user = ClientManager::getInstance()->findUser(nick, url);
+			if(!user) {
+				// Could happen if hub has multiple URLs / IPs
+				user = ClientManager::getInstance()->findLegacyUser(nick);
+				if(!user) {
+					dcdebug("Search result from unknown user");
+					return;
+				}
+			}
+		}
+
+		dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
+		if(partialInfo.size() != partialCount) {
+			// what to do now ? just ignore partial search result :-/
+			return;
+		}
+
+		PartsInfo outPartialInfo;
+		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
+		
+		if((udpPort > 0) && !outPartialInfo.empty()) {
+			AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
+			if(user->isSet(User::NMDC)) {
+				cmd.addParam("NI", Text::utf8ToAcp(ClientManager::getInstance()->getMyNMDCNick(user)));
+				cmd.addParam("HI", hubIpPort);
+			}
+			cmd.addParam("TR", tth);
+			cmd.addParam("PC", Util::toString(outPartialInfo.size() / 2));
+			cmd.addParam("PI", GetPartsString(outPartialInfo));
+			Socket s; s.writeTo(Socket::resolve(remoteIp), udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
+		}
 	} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 		try {
 			respond(AdcCommand(x.substr(0, x.length()-1)));
@@ -528,7 +608,7 @@ string SearchManager::clean(const string& aSearchString) {
 	return tmp;
 }
 
-void SearchManager::on(TimerManagerListener::Second, time_t aTick) throw() {
+void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();
@@ -544,7 +624,7 @@ void SearchManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	}
 }
 
-time_t SearchManager::getLastSearch() {
+u_int32_t SearchManager::getLastSearch() {
 	return lastSearch; 
 }
 

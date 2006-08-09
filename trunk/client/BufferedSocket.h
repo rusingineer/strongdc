@@ -100,7 +100,6 @@ public:
 	void setMode(Modes mode, size_t aRollback = 0);
 	Modes getMode() const { return mode; }
 	const string& getIp() const { return sock ? sock->getIp() : Util::emptyString; }
-	const short getPort() const { return sock ? sock->getPort() : 0; }
 	const string getRemoteHost(const string& aIp) const { return sock ? sock->getRemoteHost(aIp) : Util::emptyString; }
 	bool isConnected() const { return sock && sock->isConnected(); }
 	

@@ -52,7 +52,7 @@ public:
 	const User::Ptr& getUser() const { return user; }
 	
 	GETSET(State, state, State);
-	GETSET(time_t, lastAttempt, LastAttempt);
+	GETSET(u_int32_t, lastAttempt, LastAttempt);
 	GETSET(bool, download, Download);
 private:
 	ConnectionQueueItem(const ConnectionQueueItem&);
@@ -100,7 +100,7 @@ public:
 		expectedConnections.add(aNick, aMyNick, aHubUrl);
 	}
 
-	void nmdcConnect(const string& aServer, unsigned short aPort, const string& aMyNick, const string& hubUrl);
+	void nmdcConnect(const string& aServer, unsigned short aPort, const string& aMyNick, const string& hubUrl, bool stealth);
 	void adcConnect(const OnlineUser& aUser, unsigned short aPort, const string& aToken, bool secure);
 
 	void getDownloadConnection(const User::Ptr& aUser);
@@ -156,7 +156,7 @@ private:
 
 	ExpectedMap expectedConnections;
 
-	time_t floodCounter;
+	u_int32_t floodCounter;
 
 	Server* server;
 	Server* secureServer;
@@ -193,8 +193,8 @@ private:
 	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, time_t aTick) throw();	
-	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();	
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();	
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();	
 
 };
 

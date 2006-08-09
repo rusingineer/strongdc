@@ -92,7 +92,7 @@ private:
 	string lastmyinfo;
 	int64_t lastbytesshared;
 
-	typedef list<pair<string, time_t> > FloodMap;
+	typedef list<pair<string, u_int32_t> > FloodMap;
 	typedef FloodMap::const_iterator FloodIter;
 	FloodMap seekers;
 	FloodMap flooders;
@@ -128,7 +128,7 @@ private:
 	virtual string checkNick(const string& aNick);
 
 	// TimerManagerListener
-	virtual void on(Second, time_t aTick) throw();
+	virtual void on(Second, u_int32_t aTick) throw();
 
 	virtual void on(Line, const string& l) throw() { onLine(l); }
 	virtual void on(Failed, const string&) throw();

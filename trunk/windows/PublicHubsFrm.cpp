@@ -299,7 +299,7 @@ LRESULT PublicHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 		FavoriteManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;
-		CZDCLib::setButtonPressed(ID_FILE_CONNECT, false);
+		WinUtil::setButtonPressed(ID_FILE_CONNECT, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

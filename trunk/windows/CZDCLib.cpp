@@ -1,81 +1,8 @@
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
 #include "../client/StringTokenizer.h"
-#include "MainFrm.h"
 #include "CZDCLib.h"
-#include <powrprof.h>
-
-bool CZDCLib::bIsXP = false;
-bool CZDCLib::bGotXP = false; 
-
-bool CZDCLib::isXp() {
-	if (!bGotXP) {
-		OSVERSIONINFO osvi;
-		osvi.dwOSVersionInfoSize = sizeof(osvi);
-		if (GetVersionEx(&osvi) != 0) {
-			if (osvi.dwMajorVersion > 5) {
-				bIsXP = true;
-			} else if (osvi.dwMajorVersion == 5) {
-				bIsXP = (osvi.dwMinorVersion >= 1 && osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
-			} else {
-				bIsXP = false;
-			}
-			bGotXP = true;
-		}
-	}
-	return bIsXP;
-}
-
-bool CZDCLib::shutDown(int action) /* throw(ShutdownException) */ {
-	// Prepare for shutdown
-	UINT iForceIfHung = 0;
-	OSVERSIONINFO osvi;
-	osvi.dwOSVersionInfoSize = sizeof(osvi);
-	if (GetVersionEx(&osvi) != 0 && osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-		iForceIfHung = 0x00000010;
-		HANDLE hToken;
-		if (OpenProcessToken(GetCurrentProcess(), (TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY), &hToken) == 0) {
-//			throw ShutdownException("OperaLib::shutDown()::OpenProcessToken() failed");
-		}
-		LUID luid;
-		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid) == 0) {
-//			throw ShutdownException("OperaLib::shutDown()::LookupPrivilegeValue() failed");
-		}
-		TOKEN_PRIVILEGES tp;
-		tp.PrivilegeCount = 1;
-		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-		tp.Privileges[0].Luid = luid;
-		AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL);
-		if (GetLastError() != ERROR_SUCCESS) {
-//			throw ShutdownException("OperaLib::shutDown()::AdjustTokenPrivileges() failed");
-		}
-		CloseHandle(hToken);
-	}
-	// Shutdown
-
-	switch(action) {
-		case 0: { action = EWX_POWEROFF; break; }
-		case 1: { action = EWX_LOGOFF; break; }
-		case 2: { action = EWX_REBOOT; break; }
-		case 3: { SetSuspendState(false, false, false); return true; }
-		case 4: { SetSuspendState(true, false, false); return true; }
-		case 5: { 
-			if(LOBYTE(LOWORD(GetVersion())) >= 5) {
-				typedef bool (CALLBACK* LPLockWorkStation)(void);
-				LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
-				_d_LockWorkStation();
-			}
-			return true;
-		}
-	}
-
-	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
-//		throw ShutdownException("OperaLib::shutDown()::ExitWindowsEx() failed.\r\nGetLastError returned: " + Util::toString((int)GetLastError()));
-		return false;
-	} else {
-		return true;
-	}
-}
+#include "MainFrm.h"
 
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
 #define MIN3(a, b, c) (((a) < (b)) ? ((((a) < (c)) ? (a) : (c))) : ((((b) < (c)) ? (b) : (c))))
@@ -213,30 +140,4 @@ COLORREF OperaColors::TextFromBackground(COLORREF bg) {
 		return RGB(255, 255, 255);
 }
 
-int CZDCLib::getFirstSelectedIndex(CListViewCtrl& list) {
-	int items = list.GetItemCount();
-	for(int i = 0; i < items; ++i) {
-		if (list.GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
-			return i;
-		}
-	}
-	return -1;
-}
 
-void CZDCLib::CalcTextSize(const tstring& text, HFONT font, LPSIZE size) {
-	HDC dc = CreateCompatibleDC(NULL);
-	HGDIOBJ old = SelectObject(dc, font);
-	::GetTextExtentPoint32(dc, text.c_str(), MIN(text.size(), 8192), size);
-	SelectObject(dc, old);
-	DeleteDC(dc);
-}
-
-int CZDCLib::setButtonPressed(int nID, bool bPressed /* = true */) {
-	if (nID == -1)
-		return -1;
-	if (!MainFrame::anyMF->ctrlToolbar.IsWindow())
-		return -1;
-
-	MainFrame::anyMF->ctrlToolbar.CheckButton(nID, bPressed);
-	return 0;
-}

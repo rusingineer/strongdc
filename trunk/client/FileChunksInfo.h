@@ -74,7 +74,7 @@ private:
 
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
-	size_t overlappedCount;
+	u_int16_t overlappedCount;
 };
 
 /**
@@ -127,11 +127,6 @@ public:
 	 * Or split the biggest duplicate chunk both in running and parts info
 	 */
 	int64_t getChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
-
-	/**
-	 * Detects whether new chunk can be started
-	 */
-	int findChunk(const PartsInfo& partialInfo, int64_t _speed = DEFAULT_SPEED);
 
 	/**
      * Abandon all unverified bytes received by a chunk
