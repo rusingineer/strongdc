@@ -140,7 +140,7 @@ public:
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
@@ -271,12 +271,12 @@ public:
 	GETSET(Priority, priority, Priority);
 	GETSET(Source::List, currents, Currents);
 	GETSET(Download*, currentDownload, CurrentDownload);
-	GETSET(time_t, added, Added);
+	GETSET(u_int32_t, added, Added);
 	GETSET(TTHValue*, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
-	GETSET(unsigned int, maxSegments, MaxSegments);
+	GETSET(u_int8_t, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
-	GETSET(int64_t, averageSpeed, AverageSpeed);
+	GETSET(size_t, averageSpeed, AverageSpeed);
 	FileChunksInfo::Ptr chunkInfo;
 
 	QueueItem::Priority calculateAutoPriority(){

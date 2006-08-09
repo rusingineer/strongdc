@@ -132,15 +132,14 @@ void Socket::connect(const string& aAddr, short aPort) throw(SocketException) {
 	check(::connect(sock,(sockaddr*)&serv_addr,sizeof(serv_addr)), true);
 	connected = true;
 	setIp(addr);
-	setPort(aPort);
 }
 
 namespace {
-	inline time_t timeLeft(time_t start, time_t timeout) {
+	inline u_int32_t timeLeft(u_int32_t start, u_int32_t timeout) {
 		if(timeout == 0) {
 			return 0;
 		}			
-		time_t now = GET_TICK();
+		u_int32_t now = GET_TICK();
 		if(start + timeout < now)
 			throw SocketException(STRING(CONNECTION_TIMEOUT));
 		return start + timeout - now;
@@ -156,7 +155,7 @@ void Socket::socksConnect(const string& aAddr, short aPort, u_int32_t timeout) t
 	bool oldblock = getBlocking();
 	setBlocking(false);
 
-	time_t start = GET_TICK();
+	u_int32_t start = GET_TICK();
 
 	connect(SETTING(SOCKS_SERVER), (short)SETTING(SOCKS_PORT));
 
@@ -211,10 +210,10 @@ void Socket::socksConnect(const string& aAddr, short aPort, u_int32_t timeout) t
 		setBlocking(oldblock);
 }
 
-void Socket::socksAuth(time_t timeout) throw(SocketException) {
+void Socket::socksAuth(u_int32_t timeout) throw(SocketException) {
 	vector<u_int8_t> connStr;
 
-	time_t start = GET_TICK();
+	u_int32_t start = GET_TICK();
 
 	if(SETTING(SOCKS_USER).empty() && SETTING(SOCKS_PASSWORD).empty()) {
 		// No username and pw, easier...=)
@@ -310,7 +309,7 @@ int Socket::read(void* aBuffer, int aBufLen, string &aIP) throw(SocketException)
 	return len;
 }
 
-int Socket::readAll(void* aBuffer, int aBufLen, time_t timeout) throw(SocketException) {
+int Socket::readAll(void* aBuffer, int aBufLen, u_int32_t timeout) throw(SocketException) {
 	u_int8_t* buf = (u_int8_t*)aBuffer;
 	int i = 0;
 	while(i < aBufLen) {
@@ -329,7 +328,7 @@ int Socket::readAll(void* aBuffer, int aBufLen, time_t timeout) throw(SocketExce
 	return i;
 }
 
-void Socket::writeAll(const void* aBuffer, int aLen, time_t timeout) throw(SocketException) {
+void Socket::writeAll(const void* aBuffer, int aLen, u_int32_t timeout) throw(SocketException) {
 	const u_int8_t* buf = (const u_int8_t*)aBuffer;
 	int pos = 0;
 	// No use sending more than this at a time...
@@ -429,12 +428,12 @@ void Socket::writeTo(const string& aAddr, short aPort, const void* aBuffer, int 
  * @return WAIT_*** ored together of the current state.
  * @throw SocketException Select or the connection attempt failed.
  */
-int Socket::wait(time_t millis, int waitFor) throw(SocketException) {
+int Socket::wait(u_int32_t millis, int waitFor) throw(SocketException) {
 	timeval tv;
 	fd_set rfd, wfd, efd;
 	fd_set *rfdp = NULL, *wfdp = NULL;
-	tv.tv_sec = static_cast<long>(millis/1000);
-	tv.tv_usec = static_cast<long>((millis%1000)*1000); 
+	tv.tv_sec = millis/1000;
+	tv.tv_usec = (millis%1000)*1000; 
 
 	if(waitFor & WAIT_CONNECT) {
 		dcassert(!(waitFor & WAIT_READ) && !(waitFor & WAIT_WRITE));

@@ -423,7 +423,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 		StringMap params;
 		UserConnection* aSource = u->getUserConnection();
 		params["source"] = u->getLocalFileName();
-		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource->getUser()->getCID()));
+		params["userNI"] = aSource->getUser()->getFirstNick();
 		params["userI4"] = aSource->getRemoteIp();
 		StringList hubNames = ClientManager::getInstance()->getHubNames(aSource->getUser()->getCID());
 		if(hubNames.empty())
@@ -456,7 +456,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 }
 
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
-	time_t itime = GET_TIME();
+	u_int32_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
 	if(j != UploadQueueItems.end()) {
@@ -522,7 +522,7 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn) {
 	}
 }
 
-void UploadManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	Lock l(cs);
 	for(SlotIter j = reservedSlots.begin(); j != reservedSlots.end();) {
 		if(j->second < aTick) {
@@ -542,7 +542,7 @@ void UploadManager::on(TimerManagerListener::Minute, time_t aTick) throw() {
 
 			if(u->isSet(Upload::FLAG_PENDING_KICK)) {
 				u->getUserConnection()->disconnect(true);
-				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks(u->getUser()->getCID())));
+				LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + u->getUser()->getFirstNick());
 			}
 
 			if(BOOLSETTING(AUTO_KICK_NO_FAVS) && FavoriteManager::getInstance()->isFavoriteUser(u->getUser())) {
@@ -624,7 +624,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();
@@ -644,9 +644,9 @@ void UploadManager::on(TimerManagerListener::Second, time_t aTick) throw() {
 	}
 	if(!m_boFireball) {
 		if(getAverageSpeed() >= 102400) {
-			time_t iActTicks = aTick;
+			u_int32_t iActTicks = aTick;
 			if ( m_boLastTickHighSpeed ) {
-				time_t iHighSpeedTicks = 0;
+				u_int32_t iHighSpeedTicks = 0;
 				if ( iActTicks >= m_iHighSpeedStartTick ) 
 					iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
 				else

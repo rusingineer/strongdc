@@ -46,7 +46,7 @@ public:
 	int64_t getAvailable();
 	StringList getHubs(const CID& cid);
 	StringList getHubNames(const CID& cid);
-	StringList getNicks(const CID& cid);
+	//StringList getNicks(const CID& cid);
 	string getConnection(const CID& cid);
 
 	bool isConnected(const string& aUrl);
@@ -75,22 +75,40 @@ public:
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	OnlineUser& getOnlineUser(const User::Ptr& p) {
-		// this method is unsafe, but try it 
+	const string& getMyNMDCNick(const User::Ptr& p) {
+		Lock l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
-			return *i->second;
+			return i->second->getClient().getMyNick();
 		}
-		return *(OnlineUser*)NULL;
+		return Util::emptyString;
+	}
+
+	void reportUser(const User::Ptr& p) {
+		string nick; string report;
+		Client* c;
+		{
+			Lock l(cs);
+			OnlineIter i = onlineUsers.find(p->getCID());
+			if(i == onlineUsers.end()) return;
+
+			nick = i->second->getIdentity().getNick();
+			report = i->second->getIdentity().getReport();
+			c = &i->second->getClient();
+		}
+		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}
 
 	void updateUser(const User::Ptr& p) {
-		//Lock l(cs);
-		OnlineIter i = onlineUsers.find(p->getCID());
-		if(i != onlineUsers.end()) {
-			OnlineUser& ou = *i->second;
-			ou.getClient().updated(ou);
+		OnlineUser* ou;
+		{
+			Lock l(cs);
+			OnlineIter i = onlineUsers.find(p->getCID());
+			if(i != onlineUsers.end()) return;
+			
+			ou = i->second;
 		}
+		ou->getClient().updated(*ou);
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
@@ -157,7 +175,7 @@ private:
 	string cachedIp;
 	CID pid;	
 
-	time_t quickTick;
+	u_int32_t quickTick;
 
 	friend class Singleton<ClientManager>;
 
@@ -191,7 +209,7 @@ private:
 		int aFileType, const string& aString, bool) throw();
 	virtual void on(AdcSearch, Client* c, const AdcCommand& adc, const CID& from) throw();
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 };
 
 #endif // !defined(CLIENT_MANAGER_H)

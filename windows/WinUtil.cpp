@@ -23,6 +23,7 @@
 #define COMPILE_MULTIMON_STUBS 1
 #include <MultiMon.h>
 #include <psapi.h>
+#include <powrprof.h>
 
 #include "WinUtil.h"
 #include "PrivateFrame.h"
@@ -260,9 +261,7 @@ void UserInfoBase::getUserResponses() {
 }
 
 void UserInfoBase::doReport() {
-	OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(user);
-	if(&ou)
-		ou.getClient().cheatMessage("*** Info on " + ou.getIdentity().getNick() + " ***" + "\r\n" + ou.getIdentity().getReport() + "\r\n");
+	ClientManager::getInstance()->reportUser(user);
 }
 
 void UserInfoBase::getList() {
@@ -1558,11 +1557,11 @@ int WinUtil::getOsMinor()
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	return ver.dwMinorVersion;
 }
-
+/*
 tstring WinUtil::getNicks(const CID& cid) throw() {
 	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid)));
 }
-
+*/
 pair<tstring, bool> WinUtil::getHubNames(const CID& cid) throw() {
 	StringList hubs = ClientManager::getInstance()->getHubNames(cid);
 	if(hubs.empty()) {
@@ -1869,6 +1868,73 @@ string WinUtil::generateStats() {
 		return "Not supported by OS";
 	}
 } 
+
+bool WinUtil::shutDown(int action) {
+	// Prepare for shutdown
+	UINT iForceIfHung = 0;
+	OSVERSIONINFO osvi;
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+	if (GetVersionEx(&osvi) != 0 && osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+		iForceIfHung = 0x00000010;
+		HANDLE hToken;
+		if (OpenProcessToken(GetCurrentProcess(), (TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY), &hToken) == 0) {
+		}
+		LUID luid;
+		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid) == 0) {
+		}
+		TOKEN_PRIVILEGES tp;
+		tp.PrivilegeCount = 1;
+		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+		tp.Privileges[0].Luid = luid;
+		AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL);
+		if (GetLastError() != ERROR_SUCCESS) {
+		}
+		CloseHandle(hToken);
+	}
+	// Shutdown
+
+	switch(action) {
+		case 0: { action = EWX_POWEROFF; break; }
+		case 1: { action = EWX_LOGOFF; break; }
+		case 2: { action = EWX_REBOOT; break; }
+		case 3: { SetSuspendState(false, false, false); return true; }
+		case 4: { SetSuspendState(true, false, false); return true; }
+		case 5: { 
+			if(LOBYTE(LOWORD(GetVersion())) >= 5) {
+				typedef bool (CALLBACK* LPLockWorkStation)(void);
+				LPLockWorkStation _d_LockWorkStation = (LPLockWorkStation)GetProcAddress(LoadLibrary(_T("user32")), "LockWorkStation");
+				_d_LockWorkStation();
+			}
+			return true;
+		}
+	}
+
+	if (ExitWindowsEx(action | iForceIfHung, 0) == 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+int WinUtil::getFirstSelectedIndex(CListViewCtrl& list) {
+	int items = list.GetItemCount();
+	for(int i = 0; i < items; ++i) {
+		if (list.GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+int WinUtil::setButtonPressed(int nID, bool bPressed /* = true */) {
+	if (nID == -1)
+		return -1;
+	if (!MainFrame::anyMF->ctrlToolbar.IsWindow())
+		return -1;
+
+	MainFrame::anyMF->ctrlToolbar.CheckButton(nID, bPressed);
+	return 0;
+}
 
 /**
  * @file

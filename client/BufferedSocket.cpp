@@ -137,7 +137,7 @@ void BufferedSocket::threadConnect(const string& aAddr, short aPort, bool proxy)
 		return;
 	fire(BufferedSocketListener::Connecting());
 
-	time_t startTime = GET_TICK();
+	u_int32_t startTime = GET_TICK();
 	if(proxy) {
 		sock->socksConnect(aAddr, aPort, CONNECT_TIMEOUT);
 	} else {
@@ -173,7 +173,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 			getMaximum = dm->throttleGetSlice();
 			readsize = (u_int32_t)min((int64_t)inbuf.size(), (int64_t)getMaximum);
 			if (readsize <= 0  || readsize > inbuf.size()) { // FIX
-				Thread::sleep(static_cast<u_int32_t>(dm->throttleCycleTime()));
+				Thread::sleep(dm->throttleCycleTime());
 				return;
 			}
 		}
@@ -276,7 +276,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 						if (left > 0 && left < (int)readsize) {
 							dm->throttleReturnBytes(left - readsize);
 						}
-						Thread::sleep(static_cast<u_int32_t>(dm->throttleCycleTime()));
+						Thread::sleep(dm->throttleCycleTime());
 					}
 				}
 				break;
@@ -305,7 +305,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum;
-	time_t start = 0, current= 0;
+	u_int32_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
 		if(disconnecting)
@@ -321,7 +321,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 					throttling = false;
 					sendMaximum = bytesRead;
 				}
-				bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+				bytesRead = min(bytesRead, sendMaximum);
 			}
 			size_t actual = file->read(&readBuf[readPos], bytesRead);
 
@@ -394,11 +394,11 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				}	
 			}
 			if(throttling) {
-				time_t cycle_time = um->throttleCycleTime();
+				u_int32_t cycle_time = um->throttleCycleTime();
 				current = TimerManager::getTick();
-				time_t sleep_time = cycle_time - (current - start);
+				u_int32_t sleep_time = cycle_time - (current - start);
 				if (sleep_time > 0 && sleep_time <= cycle_time) {
-					Thread::sleep(static_cast<u_int32_t>(sleep_time));
+					Thread::sleep(sleep_time);
 				}
 			}
 		}

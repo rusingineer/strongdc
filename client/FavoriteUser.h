@@ -42,7 +42,7 @@ public:
 	GETSET(User::Ptr, user, User);
 	GETSET(string, nick, Nick);
 	GETSET(string, url, Url);
-	GETSET(time_t, lastSeen, LastSeen);
+	GETSET(u_int32_t, lastSeen, LastSeen);
 	GETSET(string, description, Description);
 };
 

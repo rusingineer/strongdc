@@ -42,9 +42,9 @@ const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
 
 void Transfer::updateRunningAverage() {
-	time_t tick = GET_TICK();
+	u_int32_t tick = GET_TICK();
 	if(tick > lastTick) {
-		time_t diff = tick - lastTick;
+		u_int32_t diff = tick - lastTick;
 		int64_t tot = getTotal();
 		if(diff == 0) {
 			// No time passed, don't update runningAverage;

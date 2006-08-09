@@ -41,7 +41,7 @@ LRESULT StatsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		KillTimer(timerId);
 
 		closed = true;		
-		CZDCLib::setButtonPressed(IDC_NET_STATS, false);
+		WinUtil::setButtonPressed(IDC_NET_STATS, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
@@ -156,13 +156,13 @@ void StatsFrame::addTick(int64_t bdiff, int64_t tdiff, StatList& lst, AvgList& a
 }
 
 LRESULT StatsFrame::onTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	time_t tick = GET_TICK();
-	time_t tdiff = tick - lastTick;
+	u_int32_t tick = GET_TICK();
+	u_int32_t tdiff = tick - lastTick;
 	if(tdiff == 0)
 		return 0;
 
-	time_t scrollms = (tdiff + scrollTick)*PIX_PER_SEC;
-	time_t scroll = scrollms / 1000;
+	u_int32_t scrollms = (tdiff + scrollTick)*PIX_PER_SEC;
+	u_int32_t scroll = scrollms / 1000;
 
 	if(scroll == 0)
 		return 0;
@@ -179,8 +179,8 @@ LRESULT StatsFrame::onTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	int64_t u = Socket::getTotalUp();
 	int64_t udiff = u - lastUp;
 
-	addTick(ddiff, static_cast<u_int32_t>(tdiff), down, downAvg, static_cast<u_int32_t>(scroll));
-	addTick(udiff, static_cast<u_int32_t>(tdiff), up, upAvg, static_cast<u_int32_t>(scroll));
+	addTick(ddiff, tdiff, down, downAvg, scroll);
+	addTick(udiff, tdiff, up, upAvg, scroll);
 
 	int64_t mspeed = 0;
 	StatIter i;

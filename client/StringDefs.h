@@ -604,6 +604,7 @@ enum Strings { // @DontAdd
 	SETTINGS_DISPLAY_CHEATS_IN_MAIN_CHAT, // "Display cheats in main chat"
 	SETTINGS_DISPLAY_DC_UPDATE, // "Don't announce new StrongDC++ versions (version.xml is still downloaded)"
 	SETTINGS_DONT_DL_ALREADY_SHARED, // "Don't download files already in share"
+	SETTINGS_DOWNCONN, // "Down conns per sec"
 	SETTINGS_DOWNLOAD_DIRECTORY, // "Default download directory"
 	SETTINGS_DOWNLOAD_LIMITS, // "Limits"
 	SETTINGS_DOWNLOADS, // "Downloads"

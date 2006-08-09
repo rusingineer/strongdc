@@ -71,7 +71,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 		
 	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		FinishedItem *item = new FinishedItem(
-			d->getTarget(), Util::toString(ClientManager::getInstance()->getNicks(d->getUserConnection()->getUser()->getCID())),
+			d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
 			d->getUserConnection()->getUser()->getCID(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUserConnection()->getUser()->getCID())),
 			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH() ? d->getTTH()->toBase32() : Util::emptyString);
@@ -98,7 +98,7 @@ void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 		FinishedItem *item = new FinishedItem(
-			u->getLocalFileName(), Util::toString(ClientManager::getInstance()->getNicks(u->getUserConnection()->getUser()->getCID())),
+			u->getLocalFileName(), u->getUserConnection()->getUser()->getFirstNick(),
 			u->getUserConnection()->getUser()->getCID(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUserConnection()->getUser()->getCID())),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());

@@ -132,7 +132,7 @@ LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 		closed = true;		
 		ADLSearchManager::getInstance()->Save();
 		SettingsManager::getInstance()->removeListener(this);
-		CZDCLib::setButtonPressed(IDC_FILE_ADL_SEARCH, false);
+		WinUtil::setButtonPressed(IDC_FILE_ADL_SEARCH, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

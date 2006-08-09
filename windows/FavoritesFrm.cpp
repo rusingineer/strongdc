@@ -167,7 +167,7 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 
 		tstring x;
 		if (ctrlHubs.GetSelectedCount() == 1) {
-			FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(CZDCLib::getFirstSelectedIndex(ctrlHubs));
+			FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(WinUtil::getFirstSelectedIndex(ctrlHubs));
 			x = Text::toT(f->getName());
 		} else {
 			x = _T("");
@@ -334,7 +334,7 @@ LRESULT FavoriteHubsFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		FavoriteManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
 		closed = true;		
-		CZDCLib::setButtonPressed(IDC_FAVORITES, false);
+		WinUtil::setButtonPressed(IDC_FAVORITES, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

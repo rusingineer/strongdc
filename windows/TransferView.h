@@ -211,7 +211,7 @@ private:
 		int64_t speed;
 		int64_t timeLeft;
 		tstring Target;
-		time_t fileBegin;
+		u_int32_t fileBegin;
 		bool multiSource;
 
 		tstring columns[COLUMN_LAST];
@@ -273,7 +273,7 @@ private:
 				ItemInfo* i = main->subItems.front();
 				main->user = i->user;
 				main->flagImage = i->flagImage;
-				main->columns[COLUMN_USER] = WinUtil::getNicks(main->user);
+				main->columns[COLUMN_USER] = Text::toT(main->user->getFirstNick());
 				main->columns[COLUMN_HUB] = WinUtil::getHubNames(main->user).first;
 				main->columns[COLUMN_IP] = i->columns[COLUMN_IP];
 			} else {

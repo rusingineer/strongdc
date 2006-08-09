@@ -189,7 +189,7 @@ string Client::getLocalIp() const {
 	return lip;
 }
 
-void Client::on(Second, time_t) throw() {
+void Client::on(Second, u_int32_t) throw() {
 }
 
 /**

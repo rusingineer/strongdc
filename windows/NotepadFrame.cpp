@@ -70,7 +70,7 @@ LRESULT NotepadFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		}
 
 		closed = true;
-		CZDCLib::setButtonPressed(IDC_NOTEPAD, false);
+		WinUtil::setButtonPressed(IDC_NOTEPAD, false);
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {

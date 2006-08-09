@@ -166,7 +166,7 @@ public:
 		
 	}
 	
-	GETSET(time_t, lastSave, LastSave);
+	GETSET(u_int32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
 	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;
@@ -183,11 +183,11 @@ public:
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
-			time_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
+			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
-		int getMaxSegments(int64_t filesize);
+		u_int8_t getMaxSegments(int64_t filesize);
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
 
@@ -262,7 +262,7 @@ private:
 	/** The queue needs to be saved */
 	bool dirty;
 	/** Next search */
-	time_t nextSearch;
+	u_int32_t nextSearch;
 	
 	static const string USER_LIST_NAME;
 
@@ -284,8 +284,8 @@ private:
 	}
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
 	
 	// SearchManagerListener
 	virtual void on(SearchManagerListener::SR, SearchResult*) throw();

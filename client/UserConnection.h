@@ -139,8 +139,8 @@ public:
 	}
 
 	GETSET(UserConnection*, userConnection, UserConnection);
-	GETSET(time_t, start, Start);
-	GETSET(time_t, lastTick, LastTick);
+	GETSET(u_int32_t, start, Start);
+	GETSET(u_int32_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
 	GETSET(int64_t, fileSize, FileSize);
 private:
@@ -206,7 +206,8 @@ public:
 		FLAG_SUPPORTS_ADCGET = FLAG_SUPPORTS_XML_BZLIST << 1,
 		FLAG_SUPPORTS_ZLIB_GET = FLAG_SUPPORTS_ADCGET << 1,
 		FLAG_SUPPORTS_TTHL = FLAG_SUPPORTS_ZLIB_GET << 1,
-		FLAG_SUPPORTS_TTHF = FLAG_SUPPORTS_TTHL << 1
+		FLAG_SUPPORTS_TTHF = FLAG_SUPPORTS_TTHL << 1,
+		FLAG_STEALTH = FLAG_SUPPORTS_TTHF << 1
 	};
 	
 	enum States {
@@ -289,7 +290,6 @@ public:
 	bool isTrusted() const { return socket && socket->isTrusted(); }
 
 	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
-	short getPort() const { if(socket) return socket->getPort(); else return 0; }
 	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; }
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; }
@@ -316,7 +316,7 @@ public:
 	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
 	GETSET(States, state, State);
-	GETSET(time_t, lastActivity, LastActivity);
+	GETSET(u_int32_t, lastActivity, LastActivity);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	void garbageCommand() { 

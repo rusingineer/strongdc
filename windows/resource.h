@@ -527,6 +527,7 @@
 #define IDC_SETTINGS_KB4                1309
 #define IDC_BUFFER_SPIN                 1309
 #define IDC_SETTINGS_KB5                1310
+#define IDC_DOWNCONN_SPIN               1310
 #define IDC_SETTINGS_KB6                1311
 #define IDC_SETTINGS_AUTOPRIO           1312
 #define IDC_SETTINGS_SEGMENT            1313
@@ -558,8 +559,11 @@
 #define IDC_GENERATE_CERTS              1422
 #define IDC_CLOSE_ALL_PM                1423
 #define IDC_BROWSE_PRIVATE_KEY          1423
+#define IDC_SETTINGS_AUTO_SEARCH_LIMIT2 1423
+#define IDC_SETTINGS_DOWNCONN           1423
 #define IDC_CLOSE_ALL_OFFLINE_PM        1424
 #define IDC_BROWSE_CERTIFICATE          1424
+#define IDC_DOWNCONN                    1424
 #define IDC_CLOSE_ALL_DIR_LIST          1425
 #define IDC_BROWSE_TRUSTED_PATH         1425
 #define IDC_CLOSE_ALL_SEARCH_FRAME      1426

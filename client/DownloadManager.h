@@ -235,14 +235,14 @@ public:
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
 	size_t throttleGetSlice();
-	time_t throttleCycleTime();
+	u_int32_t throttleCycleTime();
 
 private:
 	void throttleZeroCounters();
 	void throttleBytesTransferred(u_int32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
-	time_t mCycleTime;
+	u_int32_t mCycleTime;
 	size_t mBytesSent,
 		   mBytesSpokenFor,
 		   mDownloadLimit,
@@ -320,7 +320,7 @@ private:
 
 	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, time_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
 };
 
 #endif // !defined(DOWNLOAD_MANAGER_H)

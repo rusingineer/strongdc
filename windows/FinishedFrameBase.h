@@ -123,7 +123,7 @@ public:
 			SettingsManager::getInstance()->removeListener(this);
 
 			closed = true;
-			CZDCLib::setButtonPressed(id, false);
+			WinUtil::setButtonPressed(id, false);
 			PostMessage(WM_CLOSE);
 			return 0;
 		} else {

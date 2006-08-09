@@ -42,9 +42,6 @@ public:
 	HBITMAP GetEmotionBmp(const COLORREF &clrBkColor);
 	const string& GetEmotionBmpPath();
 
-	const long&	GetidCommand();
-	void SetidCommand(const long& idCommand);
-
 	const long&	GetImagePos();
 	void SetImagePos(const long& ImagePos);
 
@@ -55,7 +52,6 @@ protected:
 	string		m_EmotionBmpPath;
 	HBITMAP		m_EmotionBmp;
 
-	long		m_idCommand;
 	long		m_ImagePos;
 	CImageList*	m_pImagesList;
 };
@@ -69,19 +65,14 @@ public:
 
 	bool Create();
 
-	bool CreateToolbar(HWND parentWnd);
-
-// Variables
+	// Variables
 	GETSET(bool, UseEmoticons, UseEmoticons);
 
-// Emotion list
+	// Emotion list
 	CAGEmotion::List EmotionsList;
 
 protected:
 	CImageList		m_images;
-	CToolBarCtrl	m_ctrlToolbar;
-	TBBUTTON*		m_toolbarsStruct;
-	int				m_nEmotionsCnt;
 };
 
 #endif // AGEMOTIONSETUP_H__

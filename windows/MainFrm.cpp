@@ -68,7 +68,7 @@
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
-time_t MainFrame::iCurrentShutdownTime = 0;
+u_int32_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
@@ -465,7 +465,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		if (bShutdown) {
-			time_t iSec = GET_TICK() / 1000;
+			u_int32_t iSec = GET_TICK() / 1000;
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
@@ -479,7 +479,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					ctrlStatus.SetText(9, Text::toT(' ' + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
-						bDidShutDown = CZDCLib::shutDown(SETTING(SHUTDOWN_ACTION));
+						bDidShutDown = WinUtil::shutDown(SETTING(SHUTDOWN_ACTION));
 						if (bDidShutDown) {
 							// Should we go faster here and force termination?
 							// We "could" do a manual shutdown of this app...
@@ -1196,7 +1196,7 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::on(TimerManagerListener::Second, time_t aTick) throw() {
+void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		Util::increaseUptime();
 		int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 		int64_t updiff = Socket::getTotalUp() - lastUp;
@@ -1344,7 +1344,7 @@ void MainFrame::on(WebServerListener::Setup) throw() {
 }
 
 void MainFrame::on(WebServerListener::ShutdownPC, int action) throw() {
-	CZDCLib::shutDown(action);
+	WinUtil::shutDown(action);
 }
 
 int MainFrame::FileListQueue::run() {

@@ -104,8 +104,8 @@ private:
 	UINT_PTR timerId;
 	int twidth;
 
-	time_t lastTick;
-	time_t scrollTick;
+	u_int32_t lastTick;
+	u_int32_t scrollTick;
 	int64_t lastUp;
 	int64_t lastDown;
 

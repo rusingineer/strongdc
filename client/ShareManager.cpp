@@ -1511,7 +1511,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 	}
 }
 
-void ShareManager::on(TimerManagerListener::Minute, time_t tick) throw() {
+void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
 	if(SETTING(AUTO_REFRESH_TIME) > 0) {
 		if(lastFullUpdate + SETTING(AUTO_REFRESH_TIME) * 60 * 1000 < tick) {
 			try {

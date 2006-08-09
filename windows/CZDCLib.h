@@ -10,22 +10,6 @@ typedef struct tagHLSTRIPLE {
 	DOUBLE hlstSaturation;
 } HLSTRIPLE;
 
-class CZDCLib {
-
-public:
-	static bool shutDown(int action);
-	static bool isXp();
-
-	static int getFirstSelectedIndex(CListViewCtrl& list);
-	static int setButtonPressed(int nID, bool bPressed = true);
-	static void CalcTextSize(const tstring& text, HFONT font, LPSIZE size);
-
-private:
-	static bool bIsXP;
-	static bool bGotXP;
-	static int iWinVerMajor;
-};
-
 const int MAX_SHADE = 44;
 const int SHADE_LEVEL = 90;
 const int blend_vector[MAX_SHADE] = {0, 4, 8, 10, 5, 2, 0, -1, -2, -3, -5, -6, -7, -8, -7, -6, -5, -4, -3, -2, -1, 0, 

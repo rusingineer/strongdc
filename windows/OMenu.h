@@ -88,6 +88,14 @@ private:
 
 	void pMap();
 	void pUnMap();
+
+	static void CalcTextSize(const tstring& text, HFONT font, LPSIZE size) {
+		HDC dc = CreateCompatibleDC(NULL);
+		HGDIOBJ old = SelectObject(dc, font);
+		::GetTextExtentPoint32(dc, text.c_str(), min((int)_tcslen(text.c_str()), (int)8192), size);
+		SelectObject(dc, old);
+		DeleteDC(dc);
+	}
 };
 
 #define MESSAGE_HANDLER_HWND(msg, func) \

@@ -82,7 +82,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		BITMAP bm;
-		GetObject((*Emoticons.begin())->GetEmotionBmp(), sizeof(BITMAP), &bm);
+		GetObject((*Emoticons.begin())->GetEmotionBmp(GetSysColor(COLOR_BTNFACE)), sizeof(BITMAP), &bm);
 		int bW = bm.bmWidth;
 
 		pos.bottom = pos.top - 3;

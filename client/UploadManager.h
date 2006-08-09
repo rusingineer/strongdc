@@ -92,7 +92,7 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
-	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, time_t itime) :
+	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, u_int32_t itime) :
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
@@ -137,7 +137,7 @@ public:
 	string File;
 	int64_t pos;
 	int64_t size;
-	time_t iTime;
+	u_int32_t iTime;
 	int icon;
 };
 
@@ -257,7 +257,7 @@ public:
 
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);
-	GETSET(time_t, lastGrant, LastGrant);
+	GETSET(u_int32_t, lastGrant, LastGrant);
 
 	// Upload throttling
 	size_t throttleGetSlice();
@@ -285,7 +285,7 @@ private:
 	
 	// Variables for Fireball detecting
 	bool m_boLastTickHighSpeed;
-	time_t m_iHighSpeedStartTick;
+	u_int32_t m_iHighSpeedStartTick;
 	bool boFireballSent;
 
 	// Main fileserver flag
@@ -295,7 +295,7 @@ private:
 	Upload::List delayUploads;
 	CriticalSection cs;
 
-	typedef HASH_MAP<User::Ptr, time_t, User::HashFunction> SlotMap;
+	typedef HASH_MAP<User::Ptr, u_int32_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
@@ -313,8 +313,8 @@ private:
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void on(Second, time_t aTick) throw();
-	virtual void on(Minute, time_t aTick) throw();
+	virtual void on(Second, u_int32_t aTick) throw();
+	virtual void on(Minute, u_int32_t aTick) throw();
 
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();
