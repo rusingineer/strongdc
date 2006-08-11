@@ -29,6 +29,7 @@
 
 // Remove this line if hashes are not available in your stl
 #define HAVE_HASH 1
+#define _SECURE_SCL  0
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
 //#define _STLP_DEBUG 1

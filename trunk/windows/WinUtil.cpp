@@ -437,6 +437,8 @@ void WinUtil::init(HWND hWnd) {
 	help.AppendMenu(MF_SEPARATOR);
 	help.AppendMenu(MF_STRING, IDC_HELP_HOMEPAGE, CTSTRING(MENU_HOMEPAGE));
 	help.AppendMenu(MF_STRING, IDC_HELP_GEOIPFILE, CTSTRING(MENU_HELP_GEOIPFILE));
+	help.AppendMenu(MF_STRING, IDC_HELP_TRANSLATIONS, CTSTRING(MENU_HELP_TRANSLATIONS));
+	help.AppendMenu(MF_STRING, IDC_HELP_FAQ, CTSTRING(MENU_FAQ));
 	help.AppendMenu(MF_STRING, IDC_HELP_DISCUSS, CTSTRING(MENU_DISCUSS));
 	help.AppendMenu(MF_STRING, IDC_HELP_DONATE, CTSTRING(MENU_DONATE));
 
@@ -863,9 +865,9 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 }
 
 #ifdef isCVS
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T("") _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #else
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #endif
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- rm-...what? Nope...never heard of it...\r\n") LINE2,
@@ -1856,8 +1858,8 @@ string WinUtil::generateStats() {
 		GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
 		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
-		sprintf(buf, "\n-=[ StrongDC++ %s%s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
-			VERSIONSTRING, STRONGDCVERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
+		sprintf(buf, "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
+			VERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
 			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 

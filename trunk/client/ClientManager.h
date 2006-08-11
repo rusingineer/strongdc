@@ -150,6 +150,7 @@ public:
 	void connectionTimeout(const User::Ptr& p);
 	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
 	void setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
+	void setFakeList(const User::Ptr& p, const string& aCheatString);
 
 private:
 	typedef HASH_MAP<string, User::Ptr> LegacyMap;

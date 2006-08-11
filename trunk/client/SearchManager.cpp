@@ -337,7 +337,7 @@ int SearchManager::ResultsQueue::run() {
 			}
 
 			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-				file, hubName, url, remoteIp, tth, false, Util::emptyString);
+				file, hubName, remoteIp, tth, false, Util::emptyString);
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		} else if(x.compare(0, 5, "$PSR ") == 0) {
@@ -506,15 +506,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
 		
 		if((udpPort > 0) && !outPartialInfo.empty()) {
-			AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
-			if(user->isSet(User::NMDC)) {
-				cmd.addParam("NI", Text::utf8ToAcp(ClientManager::getInstance()->getMyNMDCNick(user)));
-				cmd.addParam("HI", hubIpPort);
-			}
-			cmd.addParam("TR", tth);
-			cmd.addParam("PC", Util::toString(outPartialInfo.size() / 2));
-			cmd.addParam("PI", GetPartsString(outPartialInfo));
-			Socket s; s.writeTo(Socket::resolve(remoteIp), udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
+			sendPSR(remoteIp, udpPort, false, ClientManager::getInstance()->getMyNMDCNick(user), hubIpPort, tth, outPartialInfo);
 		}
 	} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 		try {
@@ -559,7 +551,7 @@ void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const st
 			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
 			/// @todo Something about the slots
 		SearchResult* sr = new SearchResult(from, type, 0, freeSlots, size, 
-			file, hubName, hub, remoteIp, tth, true, token);
+			file, hubName, remoteIp, tth, true, token);
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		}
@@ -642,6 +634,34 @@ int SearchManager::getSearchQueueNumber(int* aWindow) {
 		return 0;
 	}
 	return 0;
+}
+
+void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<u_int16_t>& partialInfo) {
+	if(myNick.empty()) return;
+	Socket s;
+	try {
+		AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
+		cmd.addParam("NI", Text::utf8ToAcp(myNick));
+		cmd.addParam("HI", hubIpPort);
+		cmd.addParam("U4", Util::toString(wantResponse ? SETTING(UDP_PORT) : 0));
+		cmd.addParam("TR", tth);
+		cmd.addParam("PC", Util::toString(partialInfo.size() / 2));
+		cmd.addParam("PI", GetPartsString(partialInfo));
+			
+		/* We might use old $PSR in some cases
+		char buf[1024];
+		// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
+		string hubIpPort = aClient->getIpPort();
+		string tth = aTTH.toBase32();
+		string user = Text::utf8ToAcp(aClient->getMyNick());
+		_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
+		buf[1023] = NULL;
+		*/
+
+		s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMyCID()));
+	} catch(const SocketException&) {
+		s.disconnect();			
+	}
 }
 
 /**

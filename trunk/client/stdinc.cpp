@@ -24,8 +24,8 @@
 #error STLPort not correctly installed, read compile.txt
 #endif
 
-#ifndef _STLP_NO_IOSTREAMS
-//#error You're not using the STLPort from the DC++ homepage, that uses a different configuration than the original one. Remove this line only if you know what you're doing.
+#ifdef _STLP_NO_IOSTREAMS
+#error You must use compiled STLPort else you can't use optimized node allocator.
 #endif
 
 #endif // HAVE_STLPORT

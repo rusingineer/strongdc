@@ -123,7 +123,8 @@ const string SettingsManager::settingTags[] =
 	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
-	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio", 
+	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
+	"FilterEnter",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -525,6 +526,8 @@ SettingsManager::SettingsManager()
 	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);
 	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
 	setDefault(DOWNCONN_PER_SEC, 2);
+	setDefault(FILTER_ENTER, false);
+
 #ifdef _WIN32
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

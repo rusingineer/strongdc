@@ -134,7 +134,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 				}
 			}
 
-			if(d->getStart() &&  0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 20) {
+			if(d->getStart() &&  0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40) {
 				if(d->getRunningAverage() < minSpeed) {
 					if(QueueManager::getInstance()->dropSource(d, true)) {
 						d->getUserConnection()->disconnect();

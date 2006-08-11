@@ -847,9 +847,9 @@ void NmdcHub::myInfo() {
 	if (getStealth() == false) {
 		dc = "<StrgDC++";
 #ifdef isCVS
-		version = VERSIONSTRING STRONGDCVERSIONSTRING CVSVERSION;
+		version = VERSIONSTRING CVSVERSION;
 #else
-		version = VERSIONSTRING STRONGDCVERSIONSTRING;
+		version = VERSIONSTRING;
 #endif
 		if (UploadManager::getFireballStatus()) {
 			StatusMode += 8;

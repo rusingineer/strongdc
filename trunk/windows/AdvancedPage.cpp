@@ -63,6 +63,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
 	{ SettingsManager::DETECT_BADSOFT, ResourceManager::SETTINGS_BAD_SOFTWARE },
 	{ SettingsManager::DONT_ANNOUNCE_NEW_VERSIONS, ResourceManager::SETTINGS_DISPLAY_DC_UPDATE },
+	{ SettingsManager::FILTER_ENTER, ResourceManager::SETTINGS_FILTER_ENTER },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

@@ -28,6 +28,8 @@
 #include "CID.h"
 #include "FastAlloc.h"
 
+#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
+
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
 {
@@ -86,18 +88,17 @@ public:
 	GETSET(string, firstNick, FirstNick);
 	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 
-#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Generator, "GE");
 	GS(Supports, "SU");
 	GS(Lock, "LO");
 	GS(Pk, "PK");
 	GS(UnknownCommand, "UC");
 
-private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 
+private:
 	const string& get(const char* name) const {
 		InfMap::const_iterator i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
@@ -134,7 +135,6 @@ public:
 	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), sid(rhs.sid), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
-#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")

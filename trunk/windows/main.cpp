@@ -131,8 +131,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
 
-	sprintf(buf, "Code: %x\r\nVersion: %s%s\r\n", 
-		exceptionCode, VERSIONSTRING, STRONGDCVERSIONSTRING);
+	sprintf(buf, "Code: %x\r\nVersion: %s\r\n", 
+		exceptionCode, VERSIONSTRING);
 
 	f.write(buf, strlen(buf));
 #if defined(isCVS)
@@ -342,7 +342,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	rc.right = GetSystemMetrics(SM_CXFULLSCREEN);
 	rc.left = rc.right / 2 - 85;
 	
-	dummy.Create(NULL, rc, _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("[") _T(STRONGDCVERSIONSTRING) _T("]"), WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+	dummy.Create(NULL, rc, _T(APPNAME) _T(" ") _T(VERSIONSTRING), WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_CENTER | ES_READONLY, WS_EX_STATICEDGE);
 	splash.Create(_T("Static"), GetDesktopWindow(), splash.rcDefault, NULL, WS_POPUP | WS_VISIBLE | SS_USERITEM | WS_EX_TOOLWINDOW);
 	splash.SetFont((HFONT)GetStockObject(DEFAULT_GUI_FONT));
@@ -356,7 +356,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.SetWindowLong(GWL_WNDPROC, (LONG)&splashCallback);
 	splash.CenterWindow();
 
-	sTitle = Text::toT(VERSIONSTRING "" STRONGDCVERSIONSTRING);
+	sTitle = _T(VERSIONSTRING);
 	switch (get_cpu_type())
 	{
 		case 2:
@@ -420,8 +420,22 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	return nRet;
 }
 
+class hello1 {
+public:
+	hello1() {}
+	tstring a[100];
+};
+
+class hello2 : public FastAlloc<hello2> {
+public:
+	hello2() {}
+	tstring a[20];
+};
+
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+
 #ifndef _DEBUG
 	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}"));
 #else
@@ -433,7 +447,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 				bool multiple = false;
 		if(_tcslen(lpstrCmdLine) == 0) {
 		if (::MessageBox(NULL, _T("There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
+			_T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
 					multiple = true;
 				}
 		}
@@ -465,7 +479,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 #else
 #if defined(isCVS)
 	if (::MessageBox(NULL, _T("!!! WARNING !!!\n\nThis version is considered to be beta, because it can contain serious bugs which can have negative influence on your system!\nAre you sure you want to run this unstable beta version?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(STRONGDCVERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) != IDYES) {
+			_T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) != IDYES) {
 					ExitProcess(0);
 				}	
 #endif

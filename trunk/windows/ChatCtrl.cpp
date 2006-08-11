@@ -540,10 +540,10 @@ bool ChatCtrl::HitURL() {
 	return boOK;
 }
 
-string ChatCtrl::LineFromPos(POINT p) {
+tstring ChatCtrl::LineFromPos(POINT p) {
 	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos) + 1;
 	if(len < 3) {
-		return "";
+		return _T("");
 	}
 	if(len > g_BufTemplen) {
 		g_BufTemp = (TCHAR *) realloc(g_BufTemp, (len+1) * sizeof(TCHAR));
@@ -551,13 +551,20 @@ string ChatCtrl::LineFromPos(POINT p) {
 	}
 	GetLine(line, g_BufTemp, len);
 	tstring x(g_BufTemp, len-1);
-	return Text::fromT(x);
+	return x;
 }
 
 void ChatCtrl::GoToEnd() {
-	if(m_boAutoScroll) {
-		this->CRichEditCtrl::PostMessage(EM_SCROLL, SB_BOTTOM, 0);
-	}
+/** TODO make auto-scroll dependent on scrollbar position
+	SCROLLINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+	GetScrollInfo(SB_VERT, &si);
+
+	if (si.nPos >= si.nMax - si.nPage- 14)
+*/
+	if(m_boAutoScroll)
+		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 }
 
 bool ChatCtrl::GetAutoScroll() {
@@ -573,7 +580,7 @@ void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 	long lSelBegin = 0, lSelEnd = 0; CAtlString sSel;
 
-	sSelectedLine = Text::toT(LineFromPos(pt));
+	sSelectedLine = LineFromPos(pt);
 	sTempSelectedUser = _T("");
 	sSelectedIP = _T("");
 

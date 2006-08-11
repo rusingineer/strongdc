@@ -136,9 +136,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	// Set window name
 #ifdef isCVS
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING) _T(CVSVERSION));
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CVSVERSION));
 #else
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING));
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING));
 #endif
 
 	// Load images
@@ -246,10 +246,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		int times_detected = SETTING(BADSOFT_DETECTIONS);
 		if (times_detected % 5 == 0) {
 			if (FindWindow(NULL, _T("ZoneAlarm")) || FindWindow(NULL, _T("ZoneAlarm Pro"))) {
-				::MessageBox(m_hWnd, CTSTRING(ZONEALARM_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
+				::MessageBox(m_hWnd, CTSTRING(ZONEALARM_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 			}
 			if(Util::isNLrunning())
-				::MessageBox(m_hWnd, CTSTRING(NETLIMITER_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING) _T("") _T(STRONGDCVERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
+				::MessageBox(m_hWnd, CTSTRING(NETLIMITER_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 		}
 		SettingsManager::getInstance()->set(SettingsManager::BADSOFT_DETECTIONS, ++times_detected);
 	}
@@ -950,8 +950,10 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	bool isFile = false;
 	switch(wID) {
 	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
-	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
 	case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
+	case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=3818"); break;
+	case IDC_HELP_FAQ: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=4067"); break;
+	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
 	case IDC_HELP_DONATE: site = Text::toT("http://strongdc.berlios.de/donate.php"); break;
 	default: dcassert(0);
 	}
@@ -1374,6 +1376,7 @@ int MainFrame::FileListQueue::run() {
 		}
 		delete i;
 	}
+	stop = true;
 	return 0;
 }
 

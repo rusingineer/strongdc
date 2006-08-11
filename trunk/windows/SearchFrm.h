@@ -307,7 +307,7 @@ private:
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
-		typedef vector<Ptr> List;
+		typedef deque<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		SearchInfo::List subItems;
