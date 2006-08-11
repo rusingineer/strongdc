@@ -207,7 +207,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 			}else{
 				target = FinishedManager::getInstance()->getTarget(fileHash.toBase32());
 
-				if(!target.empty()){
+				if(!target.empty() && Util::fileExists(target)){
 					if(aType == "file") {
 						file = target;
 						try{

@@ -182,7 +182,7 @@ private:
 	class ItemInfo : public UserInfoBase {
 	public:
 		typedef ItemInfo* Ptr;
-		typedef vector<Ptr> List;
+		typedef deque<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		ItemInfo::List subItems;

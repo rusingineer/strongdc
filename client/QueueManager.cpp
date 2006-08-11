@@ -321,7 +321,8 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 
 	QueueItem::List& l = userQueue[qi->getPriority()][aUser];
 	if(qi->isSet(QueueItem::FLAG_EXISTS)) {
-		l.insert(l.begin(), qi);
+		l.push_front(qi);
+		//l.insert(l.begin(), qi);
 	} else {
 		l.push_back(qi);
 	}

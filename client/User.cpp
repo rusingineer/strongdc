@@ -40,6 +40,9 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 		sm[prefix + string((char*)(&i->first), 2)] = i->second;
 	}
 	if(user) {
+		for(InfMap::const_iterator i = user->info.begin(); i != user->info.end(); ++i) {
+			sm[prefix + string((char*)(&i->first), 2)] = i->second;
+		}
 		sm[prefix + "SID"] = getSIDString();
 		sm[prefix + "CID"] = user->getCID().toBase32();
 		sm[prefix + "TAG"] = getTag();

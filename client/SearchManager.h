@@ -56,8 +56,8 @@ public:
 
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& aHubURL, const string& ip, const string& aTTH, bool aUtf8, const string& aToken) :
-	file(aFile), hubName(aHubName), hubURL(aHubURL), user(aUser), 
+		const string& ip, const string& aTTH, bool aUtf8, const string& aToken) :
+	file(aFile), hubName(aHubName), user(aUser), 
 		size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
 		tth(aTTH.empty() ? NULL : new TTHValue(aTTH)), token(aToken), utf8(aUtf8), ref(1) { }
 
@@ -69,7 +69,6 @@ public:
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
 
 	const string& getFile() const { return file; }
-	const string& getHubURL() const { return hubURL; }
 	const string& getHubName() const { return hubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
@@ -96,7 +95,6 @@ private:
 
 	string file;
 	string hubName;
-	string hubURL;
 	User::Ptr user;
 	int64_t size;
 	Types type;
@@ -210,6 +208,7 @@ public:
 	}
 
 	void onRES(const AdcCommand& cmd, const User::Ptr& from, const string& removeIp = Util::emptyString);
+	void sendPSR(const string& ip, u_int16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<u_int16_t>& partialInfo);
 
 	u_int32_t getLastSearch();
 	int getSearchQueueNumber(int* aWindow);

@@ -36,8 +36,7 @@ class Download;
 class QueueItem : public Flags, public FastAlloc<QueueItem> {
 public:
 	typedef QueueItem* Ptr;
-	// Strange, the vc7 optimizer won't take a deque here...
-	typedef vector<Ptr> List;
+	typedef deque<Ptr> List;
 	typedef List::const_iterator Iter;
 	typedef map<string*, Ptr, noCaseStringLess> StringMap;
 	//	typedef HASH_MAP<string, Ptr, noCaseStringHash, noCaseStringEq> StringMap;

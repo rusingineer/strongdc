@@ -1039,7 +1039,7 @@ void TransferView::CollapseAll() {
 }
 
 void TransferView::ExpandAll() {
-	for(list<ItemInfo*>::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
+	for(slist<ItemInfo*>::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
 		if((*i)->collapsed) {
 			ctrlTransfers.Expand(*i, ctrlTransfers.findItem(*i));
 		}

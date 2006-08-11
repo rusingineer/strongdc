@@ -59,6 +59,9 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
+	map<int, string> s;
+	s[0] = "ahoj";
+	dcdebug(s[0].c_str());
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
@@ -739,8 +742,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 						}
 						if(samenumbers) {
 							string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
-							u.identity.set("BF", "1");
-							u.identity.setCheat(*client, detectString, false);
+							ClientManager::getInstance()->setFakeList(u.user, detectString);
 							
 							CHARFORMAT2 cf;
 							memset(&cf, 0, sizeof(CHARFORMAT2));
@@ -1902,7 +1904,7 @@ LRESULT HubFrame::onFilterChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL
 		return 0;
 	}
 	
-	if(wParam == VK_RETURN) {
+	if(!BOOLSETTING(FILTER_ENTER) || (wParam == VK_RETURN)) {
 		TCHAR *buf = new TCHAR[ctrlFilter.GetWindowTextLength()+1];
 		ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
 		filter = buf;

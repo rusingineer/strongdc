@@ -58,7 +58,7 @@ public:
 	bool HitURL();
 	bool GetAutoScroll();
 
-	string LineFromPos(POINT p);
+	tstring LineFromPos(POINT p);
 
 	void AdjustTextSize();
 	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);

@@ -600,7 +600,7 @@ public:
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
-	typedef list<T*> TreeItem;
+	typedef slist<T*> TreeItem;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -705,7 +705,7 @@ public:
 
 		if(mainItem == NULL) {
 			mainItem = item->createMainItem();
-			mainItems.push_back(mainItem);
+			mainItems.push_front(mainItem);
 
 			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());

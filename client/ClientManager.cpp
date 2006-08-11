@@ -404,36 +404,11 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				return;
 			}
 		}
-
-		try {
-			AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
-			cmd.addParam("NI", Text::utf8ToAcp(aClient->getMyNick()));
-			cmd.addParam("HI", aClient->getIpPort());
-			cmd.addParam("U4", Util::toString(SETTING(UDP_PORT)));
-			cmd.addParam("TR", aTTH.toBase32());
-			cmd.addParam("PC", Util::toString(partialInfo.size() / 2));
-			cmd.addParam("PI", GetPartsString(partialInfo));
-			
-			/* We might use old $PSR in some cases
-			char buf[1024];
-			// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
-			string hubIpPort = aClient->getIpPort();
-			string tth = aTTH.toBase32();
-			string user = Text::utf8ToAcp(aClient->getMyNick());
-			_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
-			buf[1023] = NULL;
-			*/
-
-			string ip, file;
-			u_int16_t port = 0;
-			Util::decodeUrl(aSeeker, ip, port, file);
-			ip = Socket::resolve(ip);
-			if(port == 0) port = 412;
-			s.writeTo(ip, port, cmd.toString(ClientManager::getInstance()->getMyCID()));
-		} catch(const SocketException&) {
-			s.disconnect();			
-			dcdebug("Search caught error\n");
-		}
+		
+		string ip, file;
+		u_int16_t port = 0;
+		Util::decodeUrl(aSeeker, ip, port, file);
+		SearchManager::getInstance()->sendPSR(ip, port, true, aClient->getMyNick(), aClient->getIpPort(), aTTH.toBase32(), partialInfo);
 	}
 }
 
@@ -662,7 +637,7 @@ void ClientManager::fileListDisconnected(const User::Ptr& p) {
 			}
 		}
 	}
-	if(c && !report.empty()) {
+	if(c && !report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
 		c->cheatMessage(report);
 	}
 }
@@ -697,7 +672,7 @@ void ClientManager::connectionTimeout(const User::Ptr& p) {
 		} catch(...) {
 		}
 	}
-	if(c && !report.empty()) {
+	if(c && !report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
 		c->cheatMessage(report);
 	}
 }
@@ -749,7 +724,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 		ou->getIdentity().set("FC", "1");
 	}
 	ou->getClient().updated(*ou);
-	if(!report.empty())
+	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
 }
 
@@ -777,6 +752,15 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 	ou->getClient().updated(*ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
+}
+
+void ClientManager::setFakeList(const User::Ptr& p, const string& aCheatString) {
+	Lock l(cs);
+	OnlineIter i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end()) return;
+
+	i->second->getIdentity().set("BF", "1");
+	i->second->getIdentity().setCheat(i->second->getClient(), aCheatString, false);
 }
 
 int ClientManager::getMode(const string& aHubUrl) {

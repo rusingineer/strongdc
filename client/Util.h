@@ -664,7 +664,6 @@ public:
 	}
 private:
 	typedef map<u_int8_t, tstring> InfMap;
-	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 };
 

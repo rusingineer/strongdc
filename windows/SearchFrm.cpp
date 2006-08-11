@@ -651,7 +651,10 @@ void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
 		hubs = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID());
 		firstHubs = false;
 	} else if(!hubs.empty()) {
-		Util::intersect(hubs, ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID()));
+		// we will merge hubs of all users to ensure we can use OP commands in all hubs
+		StringList sl = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID());
+		hubs.insert( hubs.end(), sl.begin(), sl.end() );
+		//Util::intersect(hubs, ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID()));
 	}
 }
 
@@ -768,8 +771,6 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		return 0;
 	} else {
 		ctrlResults.SetRedraw(FALSE);
-		filter = Util::emptyStringT;
-		updateSearchList();
 		ctrlResults.deleteAllItems();
 		ctrlResults.SetRedraw(TRUE);
 
@@ -1086,7 +1087,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;	 	
             // Check previous search results for dupes	 	
-			for(list<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+			for(slist<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
 				SearchInfo* si2 = *s;
                 SearchResult* sr2 = si2->sr;
 				if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
@@ -1111,7 +1112,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
 					ctrlResults.insertItem(si, si->imageIndex());
-					ctrlResults.mainItems.push_back(si);
+					ctrlResults.mainItems.push_front(si);
 				}
 
 				if(!filter.empty())
@@ -1573,7 +1574,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 }
 
 LRESULT SearchFrame::onFilterChar(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
-	if(wParam == VK_RETURN) {
+	if(!BOOLSETTING(FILTER_ENTER) || (wParam == VK_RETURN)) {
 		TCHAR *buf = new TCHAR[ctrlFilter.GetWindowTextLength()+1];
 		ctrlFilter.GetWindowText(buf, ctrlFilter.GetWindowTextLength()+1);
 		filter = buf;
@@ -1691,7 +1692,7 @@ void SearchFrame::updateSearchList(SearchInfo* si) {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();
 
-		for(list<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+		for(slist<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
 			SearchInfo* si = *i;
 			si->collapsed = true;
 			if(matchFilter(si, sel, doSizeCompare, mode, size)) {
