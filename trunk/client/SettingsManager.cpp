@@ -25,7 +25,6 @@
 #include "SimpleXML.h"
 #include "Util.h"
 #include "File.h"
-#include "FavoriteManager.h"
 #include "version.h"
 #include "CID.h"
 

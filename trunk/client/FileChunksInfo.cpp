@@ -24,6 +24,7 @@
 #include "FileChunksInfo.h"
 #include "SharedFileStream.h"
 #include "ResourceManager.h"
+#include "LogManager.h"
 
 vector<FileChunksInfo::Ptr> FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;

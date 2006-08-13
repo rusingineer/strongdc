@@ -23,10 +23,9 @@
 #include "Client.h"
 #include "StringTokenizer.h"
 #include "FavoriteUser.h"
+
 #include "ClientManager.h"
-#include "DebugManager.h"
 #include "ClientProfileManager.h"
-#include "QueueManager.h"
 #include "pme.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"

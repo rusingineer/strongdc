@@ -53,12 +53,12 @@ UploadManager::~UploadManager() throw() {
 	ClientManager::getInstance()->removeListener(this);
 	{
 		Lock l(cs);
-		for(UploadQueueItem::UserMapIter ii = UploadQueueItems.begin(); ii != UploadQueueItems.end(); ++ii) {
+		for(UploadQueueItem::UserMapIter ii = waitingUsers.begin(); ii != waitingUsers.end(); ++ii) {
 			for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 				(*i)->dec();
 			}
 		}
-		UploadQueueItems.clear();
+		waitingUsers.clear();
 	}
 
 	while(true) {
@@ -458,8 +458,8 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
 	u_int32_t itime = GET_TIME();
 	bool found = false;
-	UploadQueueItem::UserMapIter j = UploadQueueItems.find(User);
-	if(j != UploadQueueItems.end()) {
+	UploadQueueItem::UserMapIter j = waitingUsers.find(User);
+	if(j != waitingUsers.end()) {
 		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
 			if((*i)->File == file) {
 				(*i)->pos = pos;
@@ -471,11 +471,11 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 	if(found == false) {
 		UploadQueueItem* qi = new UploadQueueItem(User, file, pos, size, itime);
 		{
-		UploadQueueItem::UserMap::iterator i = UploadQueueItems.find(User);
-			if(i == UploadQueueItems.end()) {
+		UploadQueueItem::UserMap::iterator i = waitingUsers.find(User);
+			if(i == waitingUsers.end()) {
 				UploadQueueItem::List l;
 				l.push_back(qi);
-				UploadQueueItems.insert(make_pair(User, l));
+				waitingUsers.insert(make_pair(User, l));
 			} else {
 				i->second.push_back(qi);
 			}
@@ -485,15 +485,20 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 }
 
 void UploadManager::clearUserFiles(const User::Ptr& source) {
-	UploadQueueItem::UserMap::iterator ii = UploadQueueItems.find(source);
-	if(ii != UploadQueueItems.end()) {
+	UploadQueueItem::UserMap::iterator ii = waitingUsers.find(source);
+	if(ii != waitingUsers.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
 			(*i)->dec();
 		}
-		UploadQueueItems.erase(ii);
+		waitingUsers.erase(ii);
 		fire(UploadManagerListener::QueueRemove(), source);
 	}
+}
+
+UploadQueueItem::UserMap UploadManager::getWaitingUsers() {
+	Lock l(cs);
+	return waitingUsers;
 }
 
 void UploadManager::removeConnection(UserConnection::Ptr aConn) {
@@ -501,20 +506,23 @@ void UploadManager::removeConnection(UserConnection::Ptr aConn) {
 	aConn->removeListener(this);
 	if(aConn->isSet(UserConnection::FLAG_HASSLOT)) {
 		running--;
+		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 
-		User::Ptr aUser = (User::Ptr)NULL;
+		UploadQueueItem::UserMap u;
 		{
 			Lock l(cs);
-			if(!UploadQueueItems.empty())
-				aUser = UploadQueueItems.begin()->first;
+			u = waitingUsers;
 		}
-		if((aUser != (User::Ptr)NULL) && aUser->isOnline()) {
-			ClientManager* clientMgr = ClientManager::getInstance();
-			if(clientMgr)
-				clientMgr->connect(aUser);
+		
+		int freeSlots = getFreeSlots()*2;
+		for(UploadQueueItem::UserMapIter i = u.begin(); i != u.end(); ++i) {
+			User::Ptr aUser = i->first;
+			if(aUser->isOnline()) {
+				ClientManager::getInstance()->connect(aUser);
+				freeSlots--;
+			}
+			if(freeSlots == 0) break;
 		}
-
-		aConn->unsetFlag(UserConnection::FLAG_HASSLOT);
 	} 
 	if(aConn->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
 		extra--;
@@ -743,11 +751,6 @@ void UploadManager::throttleSetup() {
 			mCycleTime = 1000 * inbufSize / mUploadLimit;
 		}
 	}
-}
-
-UploadQueueItem::UserMap UploadManager::getQueue() {
-	//Lock l(cs);
-	return UploadQueueItems;
 }
 
 /**

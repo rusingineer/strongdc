@@ -781,8 +781,8 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 }
 
 void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
-	pair<HashFileIter, HashFileIter> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
-	for(HashFileIter j = range.first; j != range.second; ++j) {
+	pair<HashFileMap::iterator, HashFileMap::iterator> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
+	for(HashFileMap::iterator j = range.first; j != range.second; ++j) {
 		if(*j->second == file) {
 			tthIndex.erase(j);
 			break;

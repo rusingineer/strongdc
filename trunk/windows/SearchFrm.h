@@ -307,7 +307,7 @@ private:
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
-		typedef deque<Ptr> List;
+		typedef slist<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		SearchInfo::List subItems;
@@ -409,7 +409,7 @@ private:
 		void update();
 		
 		SearchInfo* createMainItem() { return this; }
-		const tstring getGroupingString() { return columns[COLUMN_TTH]; }
+		const tstring& getGroupingString() { return columns[COLUMN_TTH]; }
 		void updateMainItem() {
 			u_int32_t total = main->subItems.size();
 			if(total != 0) {

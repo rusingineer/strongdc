@@ -417,7 +417,7 @@ int SearchManager::ResultsQueue::run() {
 				}
 			}
 		}	
-		Thread::sleep(5);
+		Thread::sleep(6);
 	}
 	return 0;
 }
@@ -643,7 +643,7 @@ void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse,
 		AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
 		cmd.addParam("NI", Text::utf8ToAcp(myNick));
 		cmd.addParam("HI", hubIpPort);
-		cmd.addParam("U4", Util::toString(wantResponse ? SETTING(UDP_PORT) : 0));
+		cmd.addParam("U4", Util::toString(wantResponse ? getPort() : 0));
 		cmd.addParam("TR", tth);
 		cmd.addParam("PC", Util::toString(partialInfo.size() / 2));
 		cmd.addParam("PI", GetPartsString(partialInfo));

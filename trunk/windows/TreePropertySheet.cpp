@@ -21,7 +21,6 @@
 
 #include "TreePropertySheet.h"
 #include "../client/ResourceManager.h"
-#include "CZDCLib.h"
 
 static const TCHAR SEPARATOR = _T('\\');
 

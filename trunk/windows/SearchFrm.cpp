@@ -22,7 +22,6 @@
 
 #include "SearchFrm.h"
 #include "LineDlg.h"
-#include "CZDCLib.h"
 
 #include "../client/QueueManager.h"
 #include "../client/StringTokenizer.h"
@@ -101,7 +100,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		ctrlResults.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 			WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_RESULTS);
 	}
-	ctrlResults.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
+	ctrlResults.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | LVS_EX_INFOTIP);
 	resultsContainer.SubclassWindow(ctrlResults.m_hWnd);
 	
 	if (BOOLSETTING(USE_SYSTEM_ICONS)) {
@@ -548,16 +547,12 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
 				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 			
-			if(si->subItems.size()>0) {
-				unsigned int q = 0;
-				while(q < si->subItems.size()) {
-					SearchInfo* j = si->subItems[q];
-					try {
-						QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
-							j->sr->getFile(), j->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
-					} catch(const Exception&) {
-					}
-					q++;
+			for(SearchInfo::Iter i = si->subItems.begin(); i != si->subItems.end(); i++) {
+				SearchInfo* j = *i;
+				try {
+					QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
+						j->sr->getFile(), j->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+				} catch(const Exception&) {
 				}
 			}
 			if(WinUtil::isShift())
@@ -1128,7 +1123,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					ctrlResults.SetRedraw(TRUE);
 				}
 			} else {
-				PausedResults.push_back(si);
+				PausedResults.push_front(si);
 				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount-PausedResults.size()) + "/" + Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
 			}
 		}

@@ -28,8 +28,6 @@
 
 #include "CriticalSection.h"
 #include "Singleton.h"
-#include "ResourceManager.h"
-#include "LogManager.h"
 
 class FinishedItem
 {

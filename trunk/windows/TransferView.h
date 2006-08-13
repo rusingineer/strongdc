@@ -182,7 +182,7 @@ private:
 	class ItemInfo : public UserInfoBase {
 	public:
 		typedef ItemInfo* Ptr;
-		typedef deque<Ptr> List;
+		typedef slist<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		ItemInfo::List subItems;
@@ -267,7 +267,7 @@ private:
 
 			return h;
 		}
-		const tstring getGroupingString() { return Target; }
+		const tstring& getGroupingString() { return Target; }
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
 				ItemInfo* i = main->subItems.front();

@@ -25,7 +25,6 @@
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
 #include "DebugManager.h"
-#include "ConnectionManager.h"
 
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";

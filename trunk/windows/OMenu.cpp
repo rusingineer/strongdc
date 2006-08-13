@@ -21,8 +21,7 @@
 
 #include "OMenu.h"
 #include "WinUtil.h"
-#include "CZDCLib.h"
-
+#include "BarShader.h"
 //#include "DebugFrame.h"
 
 //map<HMENU, bool> OMenu::fixedMenus;

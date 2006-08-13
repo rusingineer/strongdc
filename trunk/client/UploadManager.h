@@ -58,7 +58,6 @@ public:
 	
 	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); }
 	
-	//GETSET(string, fileName, FileName);
 	GETSET(string, localFileName, LocalFileName);
 	GETSET(TTHValue*, tth, TTH);
 	GETSET(InputStream*, file, File);
@@ -96,7 +95,7 @@ public:
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
-	typedef vector<Ptr> List;
+	typedef deque<Ptr> List;
 	typedef List::const_iterator Iter;
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
@@ -263,9 +262,8 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
 
-	UploadQueueItem::UserMap getQueue();
 	void clearUserFiles(const User::Ptr&);
-	UploadQueueItem::UserMap UploadQueueItems;
+	UploadQueueItem::UserMap getWaitingUsers();
 	static bool getFireballStatus() { return m_boFireball; }
 	static bool getFileServerStatus() { return m_boFileServer; }
 	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
@@ -299,6 +297,7 @@ private:
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
+	UploadQueueItem::UserMap waitingUsers;
 	void addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size);
 	
 	friend class Singleton<UploadManager>;

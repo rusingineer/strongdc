@@ -24,7 +24,6 @@
 #include "LineDlg.h"
 #include "SearchFrm.h"
 #include "PrivateFrame.h"
-#include "CZDCLib.h"
 #include "AGEmotionSetup.h"
 
 #include "../client/QueueManager.h"
@@ -102,7 +101,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
-	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
+	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | LVS_EX_INFOTIP);
 
 	splitChat.Create( m_hWnd );
 	splitChat.SetSplitterPanes(ctrlClient.m_hWnd, ctrlMessage.m_hWnd, true);
@@ -1874,7 +1873,7 @@ void HubFrame::on(HubUpdated, Client*) throw() {
 	speak(SET_WINDOW_TITLE, hubName);
 }
 void HubFrame::on(Message, Client*, const OnlineUser& from, const string& msg) throw() {
-	if(&from == NULL || from.getIdentity().isOp()) {
+	if(&from == NULL || from.getIdentity().isOp() || from.getIdentity().isHub()) {
 		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
 			// Do nothing...
 		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
@@ -2435,18 +2434,22 @@ LRESULT HubFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR sURLTemp[INTERNET_MAX_URL_LENGTH];
-		int iRet = ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
-		UNREFERENCED_PARAMETER(iRet);
-		tstring sURL = sURLTemp;
-		WinUtil::openLink(sURL);
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
+			tstring sURL = sURLTemp;
+			WinUtil::openLink(sURL);
+			delete[] sURLTemp;
+		}
 	} else if(pEL->msg == WM_RBUTTONUP) {
 		sSelectedURL = _T("");
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR sURLTemp[INTERNET_MAX_URL_LENGTH];
-		int iRet = ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
-		UNREFERENCED_PARAMETER(iRet);
-		sSelectedURL = sURLTemp;
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
+			sSelectedURL = sURLTemp;
+			delete[] sURLTemp;
+		}
 
 		ctrlClient.SetSel(lBegin, lEnd);
 		ctrlClient.InvalidateRect(NULL);

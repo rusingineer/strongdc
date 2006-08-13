@@ -43,7 +43,7 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_UPLOAD_QUEUE);
 
-	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
+	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | LVS_EX_INFOTIP);
 	ctrlQueued.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, 
 		 WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
@@ -349,8 +349,10 @@ LRESULT WaitingUsersFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, 
 };
 
 void WaitingUsersFrame::LoadAll() {
+	ctrlList.SetRedraw(FALSE);
+	ctrlQueued.SetRedraw(FALSE);	
+	
 	HTREEITEM userNode = ctrlQueued.GetRootItem();
-
 	while (userNode) {
 		delete reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
 		userNode = ctrlQueued.GetNextSiblingItem(userNode);
@@ -360,9 +362,7 @@ void WaitingUsersFrame::LoadAll() {
 	UQFUsers.clear();
 
 	// Load queue
-	UploadQueueItem::UserMap users = UploadManager::getInstance()->getQueue();
-	ctrlList.SetRedraw(FALSE);
-	ctrlQueued.SetRedraw(FALSE);
+	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		UQFUsers.push_back(uit->first);
 		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
@@ -406,7 +406,7 @@ LRESULT WaitingUsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOO
 	while(userNode) {
 		ctrlList.DeleteAllItems();
 		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
-		UploadQueueItem::UserMap users = UploadManager::getInstance()->getQueue();
+		UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 			if(uit->first == u->u) {
 				ctrlList.SetRedraw(FALSE);
@@ -442,9 +442,9 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 		}
 	}
 	if(add) {
-			UQFUsers.push_back(aUQI->User);
-			userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), 
-				0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->User)), TVI_ROOT, TVI_LAST);
+		UQFUsers.push_back(aUQI->User);
+		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), 
+			0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->User)), TVI_ROOT, TVI_LAST);
 	}	
 	if(selNode) {
 		TCHAR selBuf[256];

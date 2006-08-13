@@ -47,12 +47,6 @@
 # define _STLP_USE_TEMPLATE_EXPRESSION 1
 # define _STLP_NO_ANACHRONISMS 1
 # define _STLP_NO_CUSTOM_IO 1
-//# define _STLP_NO_IOSTREAMS 1
-# ifndef _DEBUG
-//#  define _STLP_DONT_USE_EXCEPTIONS 1
-# else
-#	define _STLP_DO_CLEAN_NODE_ALLOC 1
-# endif
 #endif
 
 #ifdef _MSC_VER

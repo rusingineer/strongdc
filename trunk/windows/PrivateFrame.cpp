@@ -23,7 +23,6 @@
 #include "PrivateFrame.h"
 #include "SearchFrm.h"
 #include "WinUtil.h"
-#include "CZDCLib.h"
 #include "MainFrm.h"
 #include "AGEmotionSetup.h"
 
@@ -676,18 +675,22 @@ LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 
 	if ( pEL->msg == WM_LBUTTONUP ) {
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR sURLTemp[INTERNET_MAX_URL_LENGTH];
-		int iRet = ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
-		UNREFERENCED_PARAMETER(iRet);
-		tstring sURL = sURLTemp;
-		WinUtil::openLink(sURL);
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
+			tstring sURL = sURLTemp;
+			WinUtil::openLink(sURL);
+			delete[] sURLTemp;
+		}
 	} else if ( pEL->msg == WM_RBUTTONUP ) {
 		pSelectedURL = _T("");
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR sURLTemp[INTERNET_MAX_URL_LENGTH];
-		int iRet = ctrlClient.GetTextRange( lBegin, lEnd, sURLTemp );
-		UNREFERENCED_PARAMETER(iRet);
-		pSelectedURL = sURLTemp;
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
+			pSelectedURL = sURLTemp;
+			delete[] sURLTemp;
+		}
 
 		ctrlClient.SetSel( lBegin, lEnd );
 		ctrlClient.InvalidateRect( NULL );

@@ -26,8 +26,6 @@
 #include "../client/Util.h"
 #include "../client/simplexml.h"
 #include "WinUtil.h"
-#include "CZDCLib.h"
-
 
 UpdateDlg::~UpdateDlg() {
 	if (hc) {

@@ -41,7 +41,6 @@
 
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
-#include "CZDCLib.h"
 #include "TransferView.h"
 #include "UPnP.h"
 #include "WinUtil.h"
