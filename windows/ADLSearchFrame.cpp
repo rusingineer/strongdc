@@ -27,7 +27,6 @@
 #include "../client/Client.h"
 #include "ADLSearchFrame.h"
 #include "AdlsProperties.h"
-#include "CZDCLib.h"
 
 int ADLSearchFrame::columnIndexes[] = { 
 	COLUMN_ACTIVE_SEARCH_STRING,
@@ -63,7 +62,7 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	// Create list control
 	ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_ADLLIST);
-	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | (BOOLSETTING(SHOW_INFOTIPS) ? LVS_EX_INFOTIP : 0));
+	ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_CHECKBOXES | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 	// Set background color
 	ctrlList.SetBkColor(WinUtil::bgColor);

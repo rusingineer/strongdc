@@ -47,8 +47,7 @@
 #include "HubFrame.h"
 #include "MagnetDlg.h"
 #include "winamp.h"
-#include <control.h>
-#include <Windows.h>
+#include "BarShader.h"
 #include "../client/cvsversion.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;

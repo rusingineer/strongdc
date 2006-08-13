@@ -30,12 +30,9 @@
 #include "TypedListViewCtrl.h"
 #include "WinUtil.h"
 #include "UCHandler.h"
-#include "QueueFrame.h"
-#include "SearchFrm.h"
 
 #include "../client/DirectoryListing.h"
 #include "../client/StringSearch.h"
-#include "../client/ShareManager.h"
 #include "../client/ADLSearch.h"
 
 class ThreadedDirectoryListing;

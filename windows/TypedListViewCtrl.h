@@ -128,6 +128,8 @@ public:
 	}
 	
 	LRESULT onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+		if(!BOOLSETTING(SHOW_INFOTIPS)) return 0;
+
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
 		tstring InfoTip(_T(""));
@@ -644,24 +646,19 @@ public:
 		return 0;
 	} 
 
-	void Collapse(T* i, int a) {
-		size_t q = 0;
-		while(q < i->subItems.size()) {
-			deleteItem(i->subItems[q]);
-			++q;
+	void Collapse(T* s, int a) {
+		for(T::Iter i = s->subItems.begin(); i != s->subItems.end(); i++) {
+			deleteItem(*i);
 		}
-		i->collapsed = true;
+		s->collapsed = true;
 		SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 	}
 
-	void Expand(T* i, int a) {
-		if(i->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
-			size_t q = 0;
-			i->collapsed = false;
-			while(q < i->subItems.size()) {
-//				i->subItems[q]->update();
-				insertSubItem(i->subItems[q], a + 1);
-				++q;
+	void Expand(T* s, int a) {
+		if(s->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
+			s->collapsed = false;
+			for(T::Iter i = s->subItems.begin(); i != s->subItems.end(); i++) {
+				insertSubItem(*i, a + 1);
 			}
 			SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
@@ -690,7 +687,7 @@ public:
 		TStringComp& operator=(const TStringComp&);
 	};
 
-	inline T* findMainItem(const tstring& groupingString) {
+	T* findMainItem(const tstring& groupingString) {
 		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
 		return j != mainItems.end() ? *j : NULL;
 	}
@@ -719,7 +716,7 @@ public:
 		} else 
 			pos = findItem(mainItem);
 
-		mainItem->subItems.push_back(item);
+		mainItem->subItems.push_front(item);
 		item->main = mainItem;
 		item->updateMainItem();
 
@@ -741,12 +738,9 @@ public:
 	}
 
 	void removeMainItem(T* s) {
-		size_t q = 0;
-		while(q < s->subItems.size()) {
-			T* j = s->subItems[q];
-			deleteItem(j);
-			delete j;
-			++q;
+		for(T::List::iterator i = s->subItems.begin(); i != s->subItems.end(); i++) {
+			deleteItem(*i);
+			delete *i;
 		}
 		s->subItems.clear();
 		mainItems.remove(s);

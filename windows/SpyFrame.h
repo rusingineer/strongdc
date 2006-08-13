@@ -25,7 +25,6 @@
 
 #include "../client/ClientManager.h"
 #include "../client/TimerManager.h"
-#include "CZDCLib.h"
 
 #include "FlatTabCtrl.h"
 #include "ExListViewCtrl.h"

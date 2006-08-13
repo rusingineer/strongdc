@@ -24,6 +24,7 @@
 #include "ClientManager.h"
 #include "UploadManager.h"
 #include "StringTokenizer.h"
+#include "ResourceManager.h"
 
 WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
@@ -438,7 +439,8 @@ string WebServerManager::getULQueue(){
 	ret += "			<td>User</td>";
 	ret += "			<td>Filename</td>";
 	ret += "		</tr>";
-	for(UploadQueueItem::UserMapIter ii = UploadManager::getInstance()->UploadQueueItems.begin(); ii != UploadManager::getInstance()->UploadQueueItems.end(); ++ii) {
+	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
+	for(UploadQueueItem::UserMapIter ii = users.begin(); ii != users.end(); ++ii) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
 			ret+="<tr><td>" + (*i)->User->getFirstNick() + "</td>";
 			ret+="<td>" + Util::getFileName((*i)->File) + "</td></tr>";

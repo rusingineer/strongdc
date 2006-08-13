@@ -47,7 +47,7 @@ PropPage::Item AppearancePage::items[] = {
 
 PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::SHOW_PROGRESS_BARS, ResourceManager::SETTINGS_SHOW_PROGRESS_BARS },
-	{ SettingsManager::SHOW_INFOTIPS , ResourceManager::SETTINGS_SHOW_INFO_TIPS },
+	{ SettingsManager::SHOW_INFOTIPS, ResourceManager::SETTINGS_SHOW_INFO_TIPS },
 	{ SettingsManager::MINIMIZE_TRAY, ResourceManager::SETTINGS_MINIMIZE_TRAY },
 	{ SettingsManager::TIME_STAMPS, ResourceManager::SETTINGS_TIME_STAMPS },
 	{ SettingsManager::STATUS_IN_CHAT, ResourceManager::SETTINGS_STATUS_IN_CHAT },
@@ -63,7 +63,6 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
 	{ SettingsManager::USE_VERTICAL_VIEW, ResourceManager::SETTINGS_USE_VERTICAL_VIEW },
-	{ SettingsManager::GROUP_SEARCH_RESULTS, ResourceManager::GROUP_SEARCH_RESULTS },
 	{ SettingsManager::TABS_ON_TOP, ResourceManager::TABS_ON_TOP },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };

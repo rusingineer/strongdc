@@ -104,7 +104,6 @@ public:
 	}
 
 	GETSET(u_int32_t, hits, Hits);
-	GETSET(string, listFile, ListFile);
 	GETSET(string, bzXmlFile, BZXmlFile);
 	GETSET(int64_t, sharedSize, SharedSize);
 
@@ -252,7 +251,7 @@ private:
 	};
 
 	typedef HASH_MULTIMAP_X(TTHValue*, Directory::File::Iter, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
-	typedef HashFileMap::iterator HashFileIter;
+	typedef HashFileMap::const_iterator HashFileIter;
 
 	HashFileMap tthIndex;
 

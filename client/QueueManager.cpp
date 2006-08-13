@@ -36,8 +36,6 @@
 #include "DirectoryListing.h"
 
 #include "FileChunksInfo.h"
-#include "FilteredFile.h"
-#include "MerkleCheckOutputStream.h"
 #include "UploadManager.h"
 
 #include <limits>
@@ -1216,7 +1214,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		}
 
 		int64_t speed = aDownload->getAverageSpeed();
-		if(speed > 0 && aDownload->getTotal() > 32 * 1024 && speed < 10 * 1024 * 1024){
+		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
 			aDownload->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)speed);
 		}
 		
@@ -1270,7 +1268,7 @@ void QueueManager::processList(const string& name, User::Ptr& user, int flags) {
 		}
 	}
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
-			AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
+		AutoArray<char> tmp(STRING(MATCHED_FILES).size() + 16);
 		sprintf(tmp, CSTRING(MATCHED_FILES), matchListing(dirList));
 		LogManager::getInstance()->message(user->getFirstNick() + ": " + string(tmp));			
 	}

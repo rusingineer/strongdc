@@ -29,7 +29,8 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 #define MAX_EMOTICONS 32
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
-_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://") };
+	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
+	_T("adc://"), _T("adcs://") };
 tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
 tstring ChatCtrl::sTempSelectedUser = Util::emptyStringT;

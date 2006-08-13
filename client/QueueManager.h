@@ -38,7 +38,6 @@
 #include "SearchManagerListener.h"
 #include "ClientManagerListener.h"
 #include "LogManager.h"
-#include "DownloadManager.h"
 
 STANDARD_EXCEPTION(QueueException);
 

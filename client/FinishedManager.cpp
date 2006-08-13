@@ -21,7 +21,8 @@
 
 #include "FinishedManager.h"
 #include "FileChunksInfo.h"
-#include "Client.h"
+#include "LogManager.h"
+#include "ResourceManager.h"
 
 FinishedManager::~FinishedManager() throw() {
 	Lock l(cs);

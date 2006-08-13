@@ -23,7 +23,6 @@
 #include "NotepadFrame.h"
 #include "WinUtil.h"
 #include "../client/File.h"
-#include "CZDCLib.h"
 
 LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {

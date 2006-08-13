@@ -30,7 +30,6 @@
 #include "FilteredFile.h"
 #include "ZUtils.h"
 #include "MerkleTree.h"
-#include "LogManager.h"
 #include "QueueItem.h"
 
 class QueueItem;
@@ -86,8 +85,6 @@ public:
 			return getTarget();
 		}
 	}
-
-	int64_t getQueueTotal();
 
 	/** @internal */
 	string getDownloadTarget() {

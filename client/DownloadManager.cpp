@@ -76,15 +76,6 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 	user = aUser;
 }
 
-int64_t Download::getQueueTotal() {
-	if(isSet(Download::FLAG_MULTI_CHUNK)) {
-		FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(tth);
-		if(chunksInfo != (FileChunksInfo*)NULL)
-			return chunksInfo->getDownloadedSize();
-	}
-	return getTotal();
-}
-
 AdcCommand Download::getCommand(bool zlib, bool tthf) {
 	AdcCommand cmd(AdcCommand::CMD_GET);
 	if(isSet(FLAG_TREE_DOWNLOAD)) {
@@ -435,7 +426,8 @@ void DownloadManager::on(UserConnectionListener::FileLength, UserConnection* aSo
 		return;
 	}
 
-	/*Download::Ptr download = aSource->getDownload();
+	/** TODO set filelist size
+	Download::Ptr download = aSource->getDownload();
 	
 	if (download && aSource->getDownload()->isSet(Download::FLAG_USER_LIST)) {	
 		OnlineUser& ou = ClientManager::getInstance()->getOnlineUser(aSource->getUser());

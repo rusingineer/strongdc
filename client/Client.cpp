@@ -26,7 +26,6 @@
 #include "FavoriteManager.h"
 #include "TimerManager.h"
 #include "ResourceManager.h"
-#include "DebugManager.h"
 #include "ClientManager.h"
 
 Client::Counts Client::counts;

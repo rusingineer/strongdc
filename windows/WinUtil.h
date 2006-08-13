@@ -27,13 +27,9 @@
 #include "../client/SettingsManager.h"
 #include "../client/User.h"
 #include "../client/MerkleTree.h"
-#include "../client/ResourceManager.h"
 
 #include "resource.h"
-#include "CZDCLib.h"
 #include "OMenu.h"
-
-#include <wininet.h>
 
 // Some utilities for handling HLS colors, taken from Jean-Michel LE FOL's codeproject
 // article on WTL OfficeXP Menus

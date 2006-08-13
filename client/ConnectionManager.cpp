@@ -666,7 +666,7 @@ void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSour
 			dcassert(i != downloads.end());
 			ConnectionQueueItem* cqi = *i;
 			cqi->setState(ConnectionQueueItem::WAITING);
-			cqi->setLastAttempt(GET_TICK());
+			cqi->setLastAttempt((aSource->getLastActivity() == 0) ? 0 : GET_TICK());
 			fire(ConnectionManagerListener::Failed(), cqi, aError);
 		} else if(aSource->isSet(UserConnection::FLAG_UPLOAD)) {
 			ConnectionQueueItem::Iter i = find(uploads.begin(), uploads.end(), aSource->getUser());

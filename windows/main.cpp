@@ -22,6 +22,7 @@
 /** 
 	Memory leak detector
 	You can remove following 3 lines if you don't want to detect memory leaks.
+	Ignore STL pseudo-leaks, we can avoid them with _STLP_LEAKS_PEDANTIC, but it only slows down everything.
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
@@ -419,19 +420,6 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
 	return nRet;
 }
-
-class hello1 {
-public:
-	hello1() {}
-	tstring a[100];
-};
-
-class hello2 : public FastAlloc<hello2> {
-public:
-	hello2() {}
-	tstring a[20];
-};
-
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
