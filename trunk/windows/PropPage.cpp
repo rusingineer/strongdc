@@ -67,7 +67,7 @@ void PropPage::read(HWND page, Item const* items, ListItem* listItems /* = NULL 
 			break;
 		case T_INT64:
 			if(!SettingsManager::getInstance()->isDefault(i->setting)) {
-				tstring s = Text::toT(Util::toString(settings->get((SettingsManager::Int64Setting)i->setting, useDef)));
+				tstring s = Util::toStringW(settings->get((SettingsManager::Int64Setting)i->setting, useDef));
 				::SetDlgItemText(page, i->itemID, s.c_str());
 			}
 			break;

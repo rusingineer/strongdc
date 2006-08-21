@@ -465,7 +465,7 @@ void WinUtil::init(HWND hWnd) {
 
 	fileImageCount++;
 
-	flagImages.CreateFromImage(IDB_FLAGS, 25, 8, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
+	flagImages.CreateFromImage(IDB_FLAGS, 25, 8, CLR_DEFAULT, IMAGE_BITMAP, /*LR_CREATEDIBSECTION |*/ LR_SHARED);
 
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
@@ -739,11 +739,11 @@ tstring WinUtil::encodeFont(LOGFONT const& font)
 {
 	tstring res(font.lfFaceName);
 	res += L',';
-	res += Text::toT(Util::toString(font.lfHeight));
+	res += Util::toStringW(font.lfHeight);
 	res += L',';
-	res += Text::toT(Util::toString(font.lfWeight));
+	res += Util::toStringW(font.lfWeight);
 	res += L',';
-	res += Text::toT(Util::toString(font.lfItalic));
+	res += Util::toStringW(font.lfItalic);
 	return res;
 }
 
@@ -1017,8 +1017,8 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 				intPercent = 0;
 			}
 			params["percent"] = Util::toString(intPercent) + "%";
-			params["elapsed"] = Util::formatSeconds(curPos, true);
-			params["length"] = Util::formatSeconds(length, true);
+			params["elapsed"] = Text::fromT(Util::formatSeconds(curPos, true));
+			params["length"] = Text::fromT(Util::formatSeconds(length, true));
 			int numFront = min(max(intPercent / 10, 0), 10),
 				numBack = min(max(10 - 1 - numFront, 0), 10);
 			string inFront = string(numFront, '-'),
@@ -1323,7 +1323,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	u_int16_t port = 411;
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty()) {
-		HubFrame::openWindow(Text::toT(server + ":" + Util::toString(port)));
+		HubFrame::openWindow(Text::toT(server) + _T(":") + Util::toStringW(port));
 	}
 	if(!file.empty()) {
 		if(file[0] == '/') // Remove any '/' in from of the file
@@ -1346,7 +1346,7 @@ void WinUtil::parseADChubUrl(const tstring& aUrl) {
 	u_int16_t port = 0; //make sure we get a port since adc doesn't have a standard one
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty() && port > 0) {
-		HubFrame::openWindow(Text::toT("adc://" + server + ":" + Util::toString(port)));
+		HubFrame::openWindow(_T("adc://") + Text::toT(server) + _T(":") + Util::toStringW(port));
 	}
 }
 
@@ -1560,7 +1560,7 @@ int WinUtil::getOsMinor()
 }
 /*
 tstring WinUtil::getNicks(const CID& cid) throw() {
-	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid)));
+	return Util::toStringW(ClientManager::getInstance()->getNicks(cid));
 }
 */
 pair<tstring, bool> WinUtil::getHubNames(const CID& cid) throw() {
@@ -1858,7 +1858,7 @@ string WinUtil::generateStats() {
 		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
 		sprintf(buf, "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
-			VERSIONSTRING, formatTime(Util::getUptime()).c_str(), Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64)).c_str(), 
+			VERSIONSTRING, formatTime(Util::getUptime()).c_str(), Text::fromT(Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64))).c_str(), 
 			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 

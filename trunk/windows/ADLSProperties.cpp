@@ -71,8 +71,8 @@ LRESULT ADLSProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	// Load search data
 	ctrlSearch.SetWindowText(Text::toT(search->searchString).c_str());
 	ctrlDestDir.SetWindowText(Text::toT(search->destDir).c_str());
-	ctrlMinSize.SetWindowText(Text::toT(search->minFileSize > 0 ? Util::toString(search->minFileSize) : "").c_str());
-	ctrlMaxSize.SetWindowText(Text::toT(search->maxFileSize > 0 ? Util::toString(search->maxFileSize) : "").c_str());
+	ctrlMinSize.SetWindowText((search->minFileSize > 0 ? Util::toStringW(search->minFileSize) : _T("")).c_str());
+	ctrlMaxSize.SetWindowText((search->maxFileSize > 0 ? Util::toStringW(search->maxFileSize) : _T("")).c_str());
 	ctrlActive.SetCheck(search->isActive ? 1 : 0);
 	ctrlAutoQueue.SetCheck(search->isAutoQueue ? 1 : 0);
 	ctrlSearchType.SetCurSel(search->sourceType);

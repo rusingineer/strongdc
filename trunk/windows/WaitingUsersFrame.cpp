@@ -471,23 +471,23 @@ void WaitingUsersFrame::updateStatus() {
 		int cnt = ctrlList.GetItemCount();
 		int users = ctrlQueued.GetCount();	
 
-		string tmp[2];
+		tstring tmp[2];
 		if(showTree) {
-			tmp[0] = STRING(USERS) + ": " + Util::toString(users);
+			tmp[0] = TSTRING(USERS) + _T(": ") + Util::toStringW(users);
 		} else {
-			tmp[0] = "";
+			tmp[0] = _T("");
 		}    		  
-		tmp[1] = STRING(ITEMS) + ": " + Util::toString(cnt);
+		tmp[1] = TSTRING(ITEMS) + _T(": ") + Util::toStringW(cnt);
 		bool u = false;
 
 		for(int i = 1; i < 3; i++) {
-			int w = WinUtil::getTextWidth(Text::toT(tmp[i-1]), ctrlStatus.m_hWnd);
+			int w = WinUtil::getTextWidth(tmp[i-1], ctrlStatus.m_hWnd);
 				
 			if(statusSizes[i] < w) {
 				statusSizes[i] = w + 50;
 				u = true;
 			}
-			ctrlStatus.SetText(i+1, Text::toT(tmp[i-1]).c_str());
+			ctrlStatus.SetText(i+1, tmp[i-1].c_str());
 		}
 
 		if(u)
@@ -501,10 +501,10 @@ void UploadQueueItem::update() {
 	setText(COLUMN_PATH, Text::toT(Util::getFilePath(File)));
 	setText(COLUMN_NICK, Text::toT(User->getFirstNick()));
 	setText(COLUMN_HUB, WinUtil::getHubNames(User).first);
-	setText(COLUMN_TRANSFERRED, Text::toT(Util::formatBytes(pos)+" ("+Util::toString((double)pos*100.0/(double)size)+"%)"));
-	setText(COLUMN_SIZE, Text::toT(Util::formatBytes(size)));
+	setText(COLUMN_TRANSFERRED, Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)"));
+	setText(COLUMN_SIZE, Util::formatBytesW(size));
 	setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime)));
-	setText(COLUMN_WAITING, Text::toT(Util::formatSeconds(GET_TIME() - iTime)));
+	setText(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - iTime));
 
 }
 
@@ -532,7 +532,7 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			UQI->setText(COLUMN_WAITING, Text::toT(Util::formatSeconds(itime - UQI->iTime)));
+			UQI->setText(COLUMN_WAITING, Util::formatSeconds(itime - UQI->iTime));
 			ctrlList.updateItem(i);
 		}
 	}

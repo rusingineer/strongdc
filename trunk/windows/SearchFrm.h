@@ -253,7 +253,7 @@ public:
 				PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)(*i));
 			}
 			PausedResults.clear();
-			ctrlStatus.SetText(2, Text::toT(Util::toString(ctrlResults.GetItemCount()) + " " + STRING(FILES)).c_str());			
+			ctrlStatus.SetText(2, (Util::toStringW(ctrlResults.GetItemCount()) + _T(" ") + TSTRING(FILES)).c_str());			
 			ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 		} else {
 			bPaused = true;
@@ -307,7 +307,7 @@ private:
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
-		typedef slist<Ptr> List;
+		typedef deque<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		SearchInfo::List subItems;

@@ -425,15 +425,15 @@ void PublicHubsFrame::updateList() {
 			l.resize(COLUMN_LAST);
 			l[COLUMN_NAME] = Text::toT(i->getName());
 			l[COLUMN_DESCRIPTION] = Text::toT(i->getDescription());
-			l[COLUMN_USERS] = Text::toT(Util::toString(i->getUsers()));
+			l[COLUMN_USERS] = Util::toStringW(i->getUsers());
 			l[COLUMN_SERVER] = Text::toT(i->getServer());
 			l[COLUMN_COUNTRY] = Text::toT(i->getCountry());
-			l[COLUMN_SHARED] = Text::toT(Util::formatBytes(i->getShared()));
-			l[COLUMN_MINSHARE] = Text::toT(Util::formatBytes(i->getMinShare()));
-			l[COLUMN_MINSLOTS] = Text::toT(Util::toString(i->getMinSlots()));
-			l[COLUMN_MAXHUBS] = Text::toT(Util::toString(i->getMaxHubs()));
-			l[COLUMN_MAXUSERS] = Text::toT(Util::toString(i->getMaxUsers()));
-			l[COLUMN_RELIABILITY] = Text::toT(Util::toString(i->getReliability()));
+			l[COLUMN_SHARED] = Util::formatBytesW(i->getShared());
+			l[COLUMN_MINSHARE] = Util::formatBytesW(i->getMinShare());
+			l[COLUMN_MINSLOTS] = Util::toStringW(i->getMinSlots());
+			l[COLUMN_MAXHUBS] = Util::toStringW(i->getMaxHubs());
+			l[COLUMN_MAXUSERS] = Util::toStringW(i->getMaxUsers());
+			l[COLUMN_RELIABILITY] = Util::toStringW(i->getReliability());
 			l[COLUMN_RATING] = Text::toT(i->getRating());
 			ctrlHubs.insert(ctrlHubs.GetItemCount(), l, WinUtil::getFlagImage(i->getCountry().c_str(), true));
 			visibleHubs++;
@@ -448,8 +448,8 @@ void PublicHubsFrame::updateList() {
 }
 
 void PublicHubsFrame::updateStatus() {
-	ctrlStatus.SetText(1, Text::toT(STRING(HUBS) + ": " + Util::toString(visibleHubs)).c_str());
-	ctrlStatus.SetText(2, Text::toT(STRING(USERS) + ": " + Util::toString(users)).c_str());
+	ctrlStatus.SetText(1, (TSTRING(HUBS) + _T(": ") + Util::toStringW(visibleHubs)).c_str());
+	ctrlStatus.SetText(2, (TSTRING(USERS) + _T(": ") + Util::toStringW(users)).c_str());
 }
 
 LRESULT PublicHubsFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {

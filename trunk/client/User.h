@@ -121,15 +121,7 @@ class OnlineUser;
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity : public Flags {
 public:
-/*	enum {
-		GOT_INF_BIT,
-		NMDC_PASSIVE_BIT
-	};
-	enum Flags {
-		GOT_INF = 1 << GOT_INF_BIT,
-		NMDC_PASSIVE = 1 << NMDC_PASSIVE_BIT
-	};
-*/
+
 	Identity() : sid(0) { }
 	Identity(const User::Ptr& ptr, u_int32_t aSID) : user(ptr), sid(aSID) { }
 	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), sid(rhs.sid), info(rhs.info) { }
@@ -213,7 +205,6 @@ public:
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_);
-	virtual ~OnlineUser() throw() { }
 
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }

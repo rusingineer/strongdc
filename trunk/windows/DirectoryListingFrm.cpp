@@ -297,7 +297,7 @@ void DirectoryListingFrame::updateStatus() {
 			total = ctrlList.forEachSelectedT(ItemInfo::TotalSize()).total;
 		}
 
-		tstring tmp = Text::toT(STRING(ITEMS) + ": " + Util::toString(cnt));
+		tstring tmp = TSTRING(ITEMS) + _T(": ") + Util::toStringW(cnt);
 		bool u = false;
 
 		int w = WinUtil::getTextWidth(tmp, ctrlStatus.m_hWnd);
@@ -307,7 +307,7 @@ void DirectoryListingFrame::updateStatus() {
 		}
 		ctrlStatus.SetText(STATUS_SELECTED_FILES, tmp.c_str());
 
-		tmp = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(total));
+		tmp = TSTRING(SIZE) + _T(": ") + Util::formatBytesW(total);
 		w = WinUtil::getTextWidth(tmp, ctrlStatus.m_hWnd);
 		if(statusSizes[STATUS_SELECTED_SIZE] < w) {
 			statusSizes[STATUS_SELECTED_SIZE] = w;
@@ -324,15 +324,15 @@ void DirectoryListingFrame::initStatus() {
 	files = dl->getTotalFileCount();
 	size = Util::formatBytes(dl->getTotalSize());
 
-	tstring tmp = Text::toT(STRING(FILES) + ": " + Util::toString(dl->getTotalFileCount(true)));
+	tstring tmp = TSTRING(FILES) + _T(": ") + Util::toStringW(dl->getTotalFileCount(true));
 	statusSizes[STATUS_TOTAL_FILES] = WinUtil::getTextWidth(tmp, m_hWnd);
 	ctrlStatus.SetText(STATUS_TOTAL_FILES, tmp.c_str());
 
-	tmp = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(dl->getTotalSize(true)));
+	tmp = TSTRING(SIZE) + _T(": ") + Util::formatBytesW(dl->getTotalSize(true));
 	statusSizes[STATUS_TOTAL_SIZE] = WinUtil::getTextWidth(tmp, m_hWnd);
 	ctrlStatus.SetText(STATUS_TOTAL_SIZE, tmp.c_str());
 
-	tmp = Text::toT(STRING(SPEED) + ": " + Util::formatBytes(speed) + "/s");
+	tmp = TSTRING(SPEED) + _T(": ") + Util::formatBytesW(speed) + _T("/s");
 	statusSizes[STATUS_SPEED] = WinUtil::getTextWidth(tmp, m_hWnd);
 	ctrlStatus.SetText(STATUS_SPEED, tmp.c_str());
 

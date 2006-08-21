@@ -78,8 +78,10 @@ public:
 				throw FileException(e.getError());
 			}
 
-			if(size != len)
-				throw FileException("Internal Error");
+			if(size != len){
+				dcassert(0);
+				throw FileException("internal error");
+			}
 		}
 
 		if (iRet == FileChunksInfo::CHUNK_OVER){

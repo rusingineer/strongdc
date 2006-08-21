@@ -56,7 +56,7 @@ static char buf[DEBUG_BUFSIZE];
 #ifndef _DEBUG
 
 FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
-	MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old)."), _T("Unhandled Exception"), MB_OK | MB_ICONERROR);
+	MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old)."), _T("StrongDC++ Has Crashed"), MB_OK | MB_ICONERROR);
 	exit(-1);
 }
 
@@ -182,8 +182,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	_tcscpy(m_nid.szInfoTitle, _T("StrongDC++ has crashed"));
 	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
-	if(MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered a fatal bug and should have written an exceptioninfo.txt the same directory as the executable. You can upload this file at http://strongdc.berlios.de/forum/ to help us find out what happened. Go there now?"), _T("StrongDC++ Has Crashed"), MB_YESNO | MB_ICONERROR) == IDYES) {
-		WinUtil::openLink(_T("http://strongdc.berlios.de/forum/"));
+	if(MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered a fatal bug and should have written an exceptioninfo.txt the same directory as the executable. You can upload this file at http://strongdc.berlios.de/crash/ to help us find out what happened. Go there now?"), _T("StrongDC++ Has Crashed"), MB_YESNO | MB_ICONERROR) == IDYES) {
+		WinUtil::openLink(_T("http://strongdc.berlios.de/crash/"));
 	}
 
 #ifndef _DEBUG

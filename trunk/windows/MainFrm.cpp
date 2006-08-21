@@ -476,7 +476,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					ctrlStatus.SetText(9, _T(""));
 				} else {
 					int64_t timeLeft = SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime);
-					ctrlStatus.SetText(9, Text::toT(' ' + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
+					ctrlStatus.SetText(9, (_T(" ") + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
 						bDidShutDown = WinUtil::shutDown(SETTING(SHUTDOWN_ACTION));
@@ -1087,11 +1087,11 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		nid.hWnd = m_hWnd;
 		nid.uID = 0;
 		nid.uFlags = NIF_TIP;
-		_tcsncpy(nid.szTip, Text::toT("D: " + Util::formatBytes(DownloadManager::getInstance()->getAverageSpeed()) + "/s (" + 
-			Util::toString(DownloadManager::getInstance()->getDownloadCount()) + ")\r\nU: " +
-			Util::formatBytes(UploadManager::getInstance()->getAverageSpeed()) + "/s (" + 
-			Util::toString(UploadManager::getInstance()->getUploadCount()) + ")"
-			+ "\r\nUptime: " + Util::formatSeconds(Util::getUptime())
+		_tcsncpy(nid.szTip, (_T("D: ") + Util::formatBytesW(DownloadManager::getInstance()->getAverageSpeed()) + _T("/s (") + 
+			Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T(")\r\nU: ") +
+			Util::formatBytesW(UploadManager::getInstance()->getAverageSpeed()) + _T("/s (") + 
+			Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T(")")
+			+ _T("\r\nUptime: ") + Util::formatSeconds(Util::getUptime())
 			).c_str(), 64);
 		
 		::Shell_NotifyIcon(NIM_MODIFY, &nid);
@@ -1206,13 +1206,13 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 		TStringList* str = new TStringList();
 		str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
-		str->push_back(Text::toT(STRING(SHARED) + ": " + Util::formatBytes(ShareManager::getInstance()->getSharedSize())));
-		str->push_back(Text::toT("H: " + Client::getCounts()));
-		str->push_back(Text::toT(STRING(SLOTS) + ": " + Util::toString(UploadManager::getInstance()->getFreeSlots()) + '/' + Util::toString(UploadManager::getInstance()->getSlots()) + " (" + Util::toString(UploadManager::getInstance()->getFreeExtraSlots()) + '/' + Util::toString(SETTING(EXTRA_SLOTS)) + ")"));
-		str->push_back(Text::toT("D: " + Util::formatBytes(Socket::getTotalDown())));
-		str->push_back(Text::toT("U: " + Util::formatBytes(Socket::getTotalUp())));
-		str->push_back(Text::toT("D: [" + Util::toString(DownloadManager::getInstance()->getDownloadCount()) + "][" + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(downdiff*1000I64/diff) + "/s"));
-		str->push_back(Text::toT("U: [" + Util::toString(UploadManager::getInstance()->getUploadCount()) + "][" + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? string("N") : Util::toString((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + "k") + "] " + Util::formatBytes(updiff*1000I64/diff) + "/s"));
+		str->push_back(TSTRING(SHARED) + _T(": ") + Util::formatBytesW(ShareManager::getInstance()->getSharedSize()));
+		str->push_back(_T("H: ") + Text::toT(Client::getCounts()));
+		str->push_back(TSTRING(SLOTS) + _T(": ") + Util::toStringW(UploadManager::getInstance()->getFreeSlots()) + _T('/') + Util::toStringW(UploadManager::getInstance()->getSlots()) + _T(" (") + Util::toStringW(UploadManager::getInstance()->getFreeExtraSlots()) + _T('/') + Util::toStringW(SETTING(EXTRA_SLOTS)) + _T(")"));
+		str->push_back(_T("D: ") + Util::formatBytesW(Socket::getTotalDown()));
+		str->push_back(_T("U: ") + Util::formatBytesW(Socket::getTotalUp()));
+		str->push_back(_T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][") + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(downdiff*1000I64/diff) + _T("/s"));
+		str->push_back(_T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][") + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(updiff*1000I64/diff) + _T("/s"));
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_DOWNLOAD, SETTING(TOTAL_DOWNLOAD) + downdiff);

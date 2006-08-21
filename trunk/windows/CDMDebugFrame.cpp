@@ -57,25 +57,19 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	m_hWndClient = ctrlPad;
 	m_hMenu = WinUtil::mainMenu;
 
-	DebugManager::getInstance()->addListener(this);
-
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
-		DebugManager::getInstance()->removeListener(this);
 		closed = true;
-
 		PostMessage(WM_CLOSE);
 		return 0;
 	} else {
 		bHandled = FALSE;
 		return 0;
 	}
-
-	
 }
 
 void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
@@ -131,7 +125,6 @@ void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 }
 
 void CDMDebugFrame::addLine(const string& aLine) {
-	Lock l(cs);	
 	if(ctrlPad.GetWindowTextLength() > MAX_TEXT_LEN) {
 		ctrlPad.SetRedraw(FALSE);
 		ctrlPad.SetSel(0, ctrlPad.LineIndex(ctrlPad.LineFromChar(2000)));
@@ -159,4 +152,14 @@ LRESULT CDMDebugFrame::onClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	ctrlPad.SetWindowText(_T(""));
 	ctrlPad.SetFocus();
 	return 0;
+}
+
+LRESULT CDMDebugFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	if(wParam == ADD_LINE && !closed){
+		string* x = (string*)lParam;
+		addLine(*x);
+		delete x;
+	}
+	return 0;
+
 }

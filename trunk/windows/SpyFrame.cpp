@@ -144,7 +144,7 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		if(j == -1) {
 			TStringList a;
 			a.push_back(*x);
-			a.push_back(Text::toT(Util::toString(1)));
+			a.push_back(Util::toStringW(1));
 			a.push_back(Text::toT(Util::getTimeString()));			
 			ctrlSearches.insert(a);
 			if(ctrlSearches.GetItemCount() > 500) {
@@ -153,7 +153,7 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		} else {
 			TCHAR tmp[32];
 			ctrlSearches.GetItemText(j, COLUMN_COUNT, tmp, 32);
-			ctrlSearches.SetItemText(j, COLUMN_COUNT, Text::toT(Util::toString(Util::toInt(Text::fromT(tmp))+1)).c_str());
+			ctrlSearches.SetItemText(j, COLUMN_COUNT, Util::toStringW(Util::toInt(Text::fromT(tmp))+1).c_str());
 			ctrlSearches.GetItemText(j, COLUMN_TIME, tmp, 32);
 			ctrlSearches.SetItemText(j, COLUMN_TIME, Text::toT(Util::getTimeString()).c_str());
 			if(ctrlSearches.getSortColumn() == COLUMN_COUNT )
@@ -163,13 +163,13 @@ LRESULT SpyFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /
 		}
 		delete x;
 
-		ctrlStatus.SetText(2, Text::toT(STRING(TOTAL) + Util::toString(total)).c_str());
-		ctrlStatus.SetText(4, Text::toT(STRING(HITS) + Util::toString(ShareManager::getInstance()->getHits())).c_str());
+		ctrlStatus.SetText(2, (TSTRING(TOTAL) + Util::toStringW(total)).c_str());
+		ctrlStatus.SetText(4, (TSTRING(HITS) + Util::toStringW(ShareManager::getInstance()->getHits())).c_str());
 		double ratio = total > 0 ? ((double)ShareManager::getInstance()->getHits()) / (double)total : 0.0;
-		ctrlStatus.SetText(5, Text::toT(STRING(HIT_RATIO) + Util::toString(ratio)).c_str());
+		ctrlStatus.SetText(5, (TSTRING(HIT_RATIO) + Util::toStringW(ratio)).c_str());
 	} else if(wParam == TICK_AVG) {
 		float* x = (float*)lParam;
-		ctrlStatus.SetText(3, Text::toT(STRING(AVERAGE) + Util::toString(*x)).c_str());
+		ctrlStatus.SetText(3, (TSTRING(AVERAGE) + Util::toStringW(*x)).c_str());
 		delete x;
 	}
 

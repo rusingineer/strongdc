@@ -669,7 +669,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	}
 	if(ui.updateMask & UpdateInfo::MASK_SIZE) {
 		size = ui.size;
-		columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(size));
+		columns[COLUMN_SIZE] = Util::formatBytesW(size);
 	}
 	if(ui.updateMask & UpdateInfo::MASK_START) {
 		start = ui.start;
@@ -679,12 +679,12 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	}
 	if(ui.updateMask & UpdateInfo::MASK_ACTUAL) {
 		actual = start + ui.actual;
-		columns[COLUMN_RATIO] = Text::toT(Util::toString(getRatio()));
+		columns[COLUMN_RATIO] = Util::toStringW(getRatio());
 	}
 	if(ui.updateMask & UpdateInfo::MASK_SPEED) {
 		speed = ui.speed;
 		if (status == STATUS_RUNNING) {
-			columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(speed) + "/s");
+			columns[COLUMN_SPEED] =Util::formatBytesW(speed) + _T("/s");
 		} else {
 			columns[COLUMN_SPEED] = Util::emptyStringT;
 		}
@@ -697,7 +697,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	if(ui.updateMask & UpdateInfo::MASK_TIMELEFT) {
 		timeLeft = ui.timeLeft;
 		if (status == STATUS_RUNNING) {
-			columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(timeLeft));
+			columns[COLUMN_TIMELEFT] = Util::formatSeconds(timeLeft);
 		} else {
 			columns[COLUMN_TIMELEFT] = Util::emptyStringT;
 		}
@@ -808,16 +808,16 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			ui->timeLeft = (ui->speed > 0) ? ((ui->size - d->getTotal()) / ui->speed) : 0;
 
 			double progress = (double)(d->getTotal())*100.0/(double)ui->size;
-			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(d->getTotal())).c_str(), 
-				progress, Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getTotal()).c_str(), 
+				progress, Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
 			if(progress > 100) {
 				// workaround to fix > 100% percentage
 				d->getUserConnection()->disconnect();
 				continue;
 			}
 		} else {
-			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(d->getPos())).c_str(), 
-				(double)d->getPos()*100.0/(double)d->getSize(), Text::toT(Util::formatSeconds((GET_TICK() - d->getStart())/1000)).c_str());
+			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getPos()).c_str(), 
+				(double)d->getPos()*100.0/(double)d->getSize(), Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
 		}
 
 		tstring statusString;
@@ -941,8 +941,8 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
 		ui->setSpeed(u->getRunningAverage());
 
-		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Text::toT(Util::formatBytes(u->getPos())).c_str(), 
-			(double)u->getPos()*100.0/(double)(u->isSet(Upload::FLAG_TTH_LEAVES) ? u->getSize() : u->getFileSize()), Text::toT(Util::formatSeconds((GET_TICK() - u->getStart())/1000)).c_str());
+		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(u->getPos()).c_str(), 
+			(double)u->getPos()*100.0/(double)(u->isSet(Upload::FLAG_TTH_LEAVES) ? u->getSize() : u->getFileSize()), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
 
 		tstring statusString;
 
@@ -1155,10 +1155,10 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->timeLeft = l->timeLeft;
 		main->columns[COLUMN_HUB] = l->columns[COLUMN_HUB];
 		main->columns[COLUMN_STATUS] = l->columns[COLUMN_STATUS];
-		main->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(l->size));
-		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(l->speed)) + _T("/s");
-		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(l->timeLeft));
-		main->columns[COLUMN_RATIO] = Text::toT(Util::toString(l->getRatio()));
+		main->columns[COLUMN_SIZE] = Util::formatBytesW(l->size);
+		main->columns[COLUMN_SPEED] = Util::formatBytesW(l->speed) + _T("/s");
+		main->columns[COLUMN_TIMELEFT] = Util::formatSeconds(l->timeLeft);
+		main->columns[COLUMN_RATIO] = Util::toStringW(l->getRatio());
 		return false;
 	} else {
 		if(smallUpdate) return false;
@@ -1187,8 +1187,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 			main->columns[COLUMN_STATUS] = TSTRING(DOWNLOAD_STARTING);
 		} else {
 			AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);		
-				_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Text::toT(Util::formatBytes(total)).c_str(), 
-				(double)total*100.0/(double)fileSize, Text::toT(Util::formatSeconds((GET_TICK() - main->fileBegin)/1000)).c_str());
+				_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(total).c_str(), 
+				(double)total*100.0/(double)fileSize, Util::formatSeconds((GET_TICK() - main->fileBegin)/1000).c_str());
 
 			tstring statusString;
 
@@ -1211,12 +1211,15 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->size = fileSize;
 		
 		if(main->subItems.size() > 1) {
-			main->columns[COLUMN_HUB] = Text::toT(Util::toString(segs)) + _T(" ") + TSTRING(NUMBER_OF_SEGMENTS);
+			TCHAR buf[256];
+			_sntprintf(buf, 255, _T("%d %s"), segs, CTSTRING(NUMBER_OF_SEGMENTS));
+			buf[255] = NULL;
+			main->columns[COLUMN_HUB] = buf;
 		}
-		main->columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(fileSize));
-		main->columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(main->speed)) + _T("/s");
-		main->columns[COLUMN_TIMELEFT] = Text::toT(Util::formatSeconds(main->timeLeft));
-		main->columns[COLUMN_RATIO] = Text::toT(Util::toString(ratio));
+		main->columns[COLUMN_SIZE] = Util::formatBytesW(fileSize);
+		main->columns[COLUMN_SPEED] = Util::formatBytesW(main->speed) + _T("/s");
+		main->columns[COLUMN_TIMELEFT] = Util::formatSeconds(main->timeLeft);
+		main->columns[COLUMN_RATIO] = Util::toStringW(ratio);
 		return false;
 	}
 }

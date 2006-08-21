@@ -98,15 +98,15 @@ LRESULT LimitPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	timeCtrlEnd.AddString(_T("Midnight"));
 	for (int i = 1; i < 12; ++i)
 	{
-		timeCtrlBegin.AddString((Text::toT(Util::toString(i)) + _T(" AM")).c_str());
-		timeCtrlEnd.AddString((Text::toT(Util::toString(i)) + _T(" AM")).c_str());
+		timeCtrlBegin.AddString((Util::toStringW(i) + _T(" AM")).c_str());
+		timeCtrlEnd.AddString((Util::toStringW(i) + _T(" AM")).c_str());
 	}
 	timeCtrlBegin.AddString(_T("Noon"));
 	timeCtrlEnd.AddString(_T("Noon"));
 	for (int i = 1; i < 12; ++i)
 	{
-		timeCtrlBegin.AddString((Text::toT(Util::toString(i)) + _T(" PM")).c_str());
-		timeCtrlEnd.AddString((Text::toT(Util::toString(i)) + _T(" PM")).c_str());
+		timeCtrlBegin.AddString((Util::toStringW(i) + _T(" PM")).c_str());
+		timeCtrlEnd.AddString((Util::toStringW(i) + _T(" PM")).c_str());
 	}
 
 	timeCtrlBegin.SetCurSel(SETTING(BANDWIDTH_LIMIT_START));

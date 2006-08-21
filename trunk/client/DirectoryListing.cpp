@@ -84,7 +84,7 @@ void DirectoryListing::loadFile(const string& name) {
 		::File ff(name, ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
-		char buf[BUF_SIZE];
+		AutoArray<char> buf(BUF_SIZE);
 		size_t len;
 		for(;;) {
 			size_t n = BUF_SIZE;
