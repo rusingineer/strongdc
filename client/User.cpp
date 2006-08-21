@@ -119,14 +119,14 @@ const string Identity::getReport()
 	report += "\r\nCommands:	" + user->getUnknownCommand();
 
 	int64_t listSize = Util::toInt64(get("LS"));
-	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Util::formatExactSize(listSize) + " )") : "N/A");
+	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Text::fromT(Util::formatExactSize(listSize)) + " )") : "N/A");
 	
 	int64_t listLen = Util::toInt64(get("LL"));
-	report += "\r\nListLen:		" + (listLen != -1 ? (string)(Util::formatBytes(listLen) + "  (" + Util::formatExactSize(listLen) + " )") : "N/A");
-	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Util::formatExactSize(getBytesShared()) + " )";
+	report += "\r\nListLen:		" + (listLen != -1 ? (string)(Util::formatBytes(listLen) + "  (" + Text::fromT(Util::formatExactSize(listLen)) + " )") : "N/A");
+	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Text::fromT(Util::formatExactSize(getBytesShared())) + " )";
 	
 	int64_t realBytes = Util::toInt64(get("RS"));
-	report += "\r\nReal Share:	" + (realBytes > -1 ? (string)(Util::formatBytes(realBytes) + "  (" + Util::formatExactSize(realBytes) + " )") : "N/A");
+	report += "\r\nReal Share:	" + (realBytes > -1 ? (string)(Util::formatBytes(realBytes) + "  (" + Text::fromT(Util::formatExactSize(realBytes)) + " )") : "N/A");
 	report += "\r\nCheat status:	" + (get("CS").empty() ? "N/A" : get("CS"));
 	report += "\r\nComment:		" + get("CM");
 	return report;

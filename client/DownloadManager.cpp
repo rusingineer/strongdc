@@ -104,7 +104,6 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 	Lock l(cs);
 
 	Download::List tickList;
-	int64_t minSpeed = downloads.size() * 100;
 	throttleSetup();
 	throttleZeroCounters();
 
@@ -117,6 +116,7 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
 					if(((aTick - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
 						if(!QueueManager::getInstance()->dropSource(d, false)) {
+							d->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
 							continue;
 						}
 					}
@@ -126,8 +126,9 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 			}
 
 			if(d->getStart() &&  0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40) {
-				if(d->getRunningAverage() < minSpeed) {
+				if(d->getRunningAverage() < (downloads.size() * 100)) {
 					if(QueueManager::getInstance()->dropSource(d, true)) {
+						d->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
 						d->getUserConnection()->disconnect();
 						continue;
 					}
@@ -657,7 +658,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 
-			if(d->getTreeValid() && e.pos > 0) {
+			if(e.pos > 0 && d->getTreeValid()) {
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(d->getTTH());
 				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
 			}
@@ -887,7 +888,7 @@ void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	params["fileSIactual"] = Util::toString(d->getActual());
 	params["fileSIactualshort"] = Util::formatBytes(d->getActual());
 	params["speed"] = Util::formatBytes(d->getAverageSpeed()) + "/s";
-	params["time"] = Util::formatSeconds((GET_TICK() - d->getStart()) / 1000);
+	params["time"] = Text::fromT(Util::formatSeconds((GET_TICK() - d->getStart()) / 1000));
 	params["sfv"] = Util::toString(d->isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
 	TTHValue *hash = d->getTTH();
 	if(hash != NULL) {

@@ -60,39 +60,28 @@ void FileChunksInfo::Free(const TTHValue* tth)
 }
 
 FileChunksInfo::FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
-	: TTH(tth), iFileSize(0), iVerifiedSize(0)
+	: TTH(tth), fileSize(size), verifiedSize(0)
 {
 	hMutexMapList.enter();
 	vecAllFileChunksInfo.push_back(this);
 	hMutexMapList.leave();
 
-	setFileSize(size);
+	dcassert(size);
+
+	tthBlockSize = max((size_t)TigerTree::calcBlockSize(fileSize, 10), (size_t)MIN_BLOCK_SIZE);
+	minChunkSize = max((int64_t)1048576, (int64_t)(fileSize / 100));
+	minChunkSize = minChunkSize - (minChunkSize % tthBlockSize);
 
 	if(chunks != NULL){
-		delete waiting.begin()->second;
-		waiting.clear();
 		for(vector<int64_t>::const_iterator i = chunks->begin(); i < chunks->end(); i++, i++)
 			waiting.insert(make_pair(*i, new Chunk(*i, *(i+1))));
+	}else{
+		waiting.insert(make_pair(0, new Chunk(0, size)));	
 	}
 
-	iDownloadedSize = iFileSize;
+	downloadedSize = fileSize;
 	for(Chunk::Iter i = waiting.begin(); i != waiting.end(); i++)
-        iDownloadedSize -= (i->second->end - i->second->pos);
-}
-
-void FileChunksInfo::setFileSize(const int64_t& size)
-{
-	dcassert(iFileSize == 0);
-	dcassert(waiting.empty());
-
-	if(size > 0){
-		iFileSize = size;
-		waiting.insert(make_pair(0, new Chunk(0, size)));
-
-		tthBlockSize = max((size_t)TigerTree::calcBlockSize(iFileSize, 10), (size_t)MIN_BLOCK_SIZE);
-		minChunkSize = max((int64_t)1048576, (int64_t)(iFileSize / 100));
-		minChunkSize = minChunkSize - (minChunkSize % tthBlockSize);
-	}
+        downloadedSize -= (i->second->end - i->second->pos);
 }
 
 FileChunksInfo::~FileChunksInfo()
@@ -119,7 +108,7 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 	len = (size_t)min((int64_t)len, chunk->end - chunk->pos);
 
 	chunk->pos += len;
-	iDownloadedSize += len;
+	downloadedSize += len;
 
 	// chunk over
 	if(chunk->pos >= chunk->end){
@@ -148,7 +137,7 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 	i->second->download = d;
 
 	if(noStealth) {
-		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, iFileSize - i->second->pos)));
+		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, fileSize - i->second->pos)));
 	}
 }
 
@@ -168,7 +157,26 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 		chunk = waiting.begin()->second;
 
 		waiting.erase(waiting.begin());
-		running.insert(make_pair(chunk->pos, chunk));
+		
+		// this chunk maybe already in running because of `overlapped->chunk finish->verify fail'
+		// @todo move this to verify() and dolastverify()
+		Chunk::Iter i = running.find(chunk->pos);
+		if(i != running.end()){
+			Chunk* chunk2 = i->second;
+
+			// it must be a finished chunk
+			dcassert(chunk2->pos >= chunk2->end);
+
+			// reset the running chunk
+			chunk2->overlappedCount++;
+			chunk2->pos = chunk->pos;
+			chunk2->end = chunk->end;
+
+			// delete the waiting chunk
+			delete chunk;
+		}else{
+			running.insert(make_pair(chunk->pos, chunk));
+		}
 
 		return chunk->pos;
 	}
@@ -395,7 +403,7 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		
 	waiting.insert(make_pair(start, new Chunk(start, end)));
 
-	iDownloadedSize -= (end - start);
+	downloadedSize -= (end - start);
 	selfCheck();
 
 	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
@@ -407,9 +415,22 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
     dcassert(tthBlockSize == aTree.getBlockSize());
 	Lock l(cs);
 	
+	dcdebug("doLastVerify %I64d bytes %d%% verified\n", verifiedSize , (int)(verifiedSize * 100 / fileSize)); 
+
+	dumpVerifiedBlocks();
+
 	// for exception free
 	auto_ptr<unsigned char> buf(new unsigned char[tthBlockSize]);
 
+    // This is only called when download finish
+    // Because buffer is used during download, the disk data maybe incorrect
+	dcdebug("waiting = %d, running = %d\n", waiting.size(), running.size()); 
+    dcassert(waiting.empty());
+
+#ifdef _DEBUG
+	for(Chunk::Iter j = running.begin(); j != running.end(); j++)
+		dcassert(j->second->pos == j->second->end);
+#endif
  
 	// Convert to unverified blocks
     map<int64_t, int64_t> unVerifiedBlocks;
@@ -421,7 +442,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 		int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
 		int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
 		
-		second = min(second, iFileSize);
+		second = min(second, fileSize);
 
 		if(first > start){
             unVerifiedBlocks.insert(make_pair(start, first));
@@ -431,8 +452,8 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 		start = second;
 	}
 
-	if(start < iFileSize)
-        unVerifiedBlocks.insert(make_pair(start, iFileSize));
+	if(start < fileSize)
+        unVerifiedBlocks.insert(make_pair(start, fileSize));
 
 	// Open file
 	SharedFileStream file(tempTargetName, 0, 0);
@@ -486,7 +507,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 						waiting.insert(make_pair(start, new Chunk(start, end)));
 				}
 
-				iDownloadedSize -= (end - start);
+				downloadedSize -= (end - start);
         	}else{
 				u_int16_t s = (u_int16_t)(start / tthBlockSize);
 				u_int16_t e = (u_int16_t)((end - 1) / tthBlockSize + 1);
@@ -503,7 +524,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 
 		dcassert(verifiedBlocks.size() == 1 && 
 			    verifiedBlocks.begin()->first == 0 &&
-			    verifiedBlocks.begin()->second == (iFileSize - 1) / tthBlockSize + 1);
+			    verifiedBlocks.begin()->second == (fileSize - 1) / tthBlockSize + 1);
 
         return true;
     }
@@ -551,7 +572,7 @@ void FileChunksInfo::markVerifiedBlock(u_int16_t start, u_int16_t end)
         }
     }
 
-	iVerifiedSize = min(iVerifiedSize + (end - start) * tthBlockSize, iFileSize);
+	verifiedSize = min(verifiedSize + (end - start) * tthBlockSize, fileSize);
 
 }
 
@@ -606,7 +627,7 @@ void FileChunksInfo::abandonChunk(int64_t start)
 	}
 
 	// adjust downloade size
-	iDownloadedSize -= (oldPos - chunk->pos);
+	downloadedSize -= (oldPos - chunk->pos);
 
 	selfCheck();
 }
@@ -646,7 +667,7 @@ void FileChunksInfo::getPartialInfo(PartsInfo& partialInfo){
 /**
  * return first chunk size after split
  */
-
+/*
 int64_t splitChunk(int64_t chunkSize, int64_t chunkSpeed, int64_t estimatedSpeed)
 {
 	if(chunkSpeed <= 0) chunkSpeed = 1;
@@ -657,7 +678,7 @@ int64_t splitChunk(int64_t chunkSize, int64_t chunkSpeed, int64_t estimatedSpeed
 
 	return chunkSize * chunkSpeed / (chunkSpeed + estimatedSpeed);
 }
-
+*/
 int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimatedSpeed*/){
 	if(partialInfo.empty()){
 		return -1;
@@ -670,7 +691,7 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 	posArray.reserve(partialInfo.size());
 
 	for(PartsInfo::const_iterator i = partialInfo.begin(); i != partialInfo.end(); i++)
-		posArray.push_back(min(iFileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
+		posArray.push_back(min(fileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
 
 	// Check waiting chunks
 	for(Chunk::Map::iterator i = waiting.begin(); i != waiting.end(); i++){
@@ -759,7 +780,7 @@ bool FileChunksInfo::isVerified(int64_t startPos, int64_t& len){
 		int64_t first  = (int64_t)i->first  * (int64_t)tthBlockSize;
 		int64_t second = (int64_t)i->second * (int64_t)tthBlockSize;
 		
-		second = min(second, iFileSize);
+		second = min(second, fileSize);
 
 		if(first <= startPos && startPos < second){
 			len = min(len, second - startPos);
@@ -777,7 +798,7 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 	// which block the pos belong to?
 	u_int16_t block = (u_int16_t)(anyPos / tthBlockSize);
 	int64_t   start = block * tthBlockSize;
-	int64_t   end   = min(start + tthBlockSize, iFileSize);
+	int64_t   end   = min(start + tthBlockSize, fileSize);
 	size_t    len   = (size_t)(end - start);
 
 	dcdebug("verifyBlock %I64d - %I64d\n", start, end);
@@ -811,7 +832,6 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 	auto_ptr<unsigned char> buf(new unsigned char[len]);
 
 	// reread all bytes from stream
-
 	SharedFileStream file(tempTargetName, start);
 
 	size_t tmpLen = len;
@@ -821,11 +841,13 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 
 	// check against tiger tree
 	return verify(buf.get(), start, end, aTree);
+
 }
 
 void FileChunksInfo::selfCheck()
 {
 #ifdef _DEBUG
+
 	// check running
 	for(Chunk::Iter i = running.begin(); i != running.end();){
 		dcassert(i->first <= i->second->pos);
@@ -838,35 +860,32 @@ void FileChunksInfo::selfCheck()
 			dcassert(tmp <= i->second->pos);
 		}
 	}
+
 	// check waiting
 	for(Chunk::Iter i = waiting.begin(); i != waiting.end();){
 		dcassert(i->first == i->second->pos);
 		dcassert(i->second->pos <= i->second->end);
 
+		Chunk* c1 = i->second;
+		int64_t s1 = i->first;
+
 		for(Chunk::Iter j = running.begin(); j != running.end(); j++){
-			Chunk* c1 = i->second;
-			int64_t s1 = i->first;
 			Chunk* c2 = j->second;
 			int64_t s2 = j->first;
 
 			if(c2->pos == c2->end) continue;
 
-			dcassert(i->first != j->first);
+			dcassert(s1 != s2);
 
-			if(s1 > s2)
-				dcassert(s1 >= c2->end);
-			if(s1 < s2){
-				dcassert(c1->end <= c2->pos);
-			}
+			if(s1 > s2)	dcassert(s1 >= c2->end || c1->end <= c2->pos);
+			if(s1 < s2)	dcassert(c1->end <= c2->pos);
 		}			
 
-		int64_t tmp = i->second->end;
 		i++;
 
 		if(i != waiting.end()){
-			dcassert(tmp <= i->first);
+			dcassert(c1->end <= i->first);
 		}
-
 	}
 #endif
 }

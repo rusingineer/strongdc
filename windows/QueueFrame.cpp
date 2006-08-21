@@ -183,7 +183,7 @@ void QueueFrame::QueueItemInfo::update() {
 		updateMask = 0;
 
 		//qi = QueueManager::getInstance()->fileQueue.find(Text::fromT(getTarget()));
-		display->columns[COLUMN_SEGMENTS] = Text::toT(Util::toString(qi ? qi->getCurrents().size() : 0) + "/" + Util::toString(qi ? qi->getMaxSegments() : 0) + " ");
+		display->columns[COLUMN_SEGMENTS] = Util::toStringW(qi ? qi->getCurrents().size() : 0) + _T("/") + Util::toStringW(qi ? qi->getMaxSegments() : 0);// + _T(" ");
 
 		if(colMask & MASK_TARGET) {
 			display->columns[COLUMN_TARGET] = Util::getFileName(getTarget());
@@ -246,12 +246,12 @@ void QueueFrame::QueueItemInfo::update() {
 			} 
 		}
 		if(colMask & MASK_SIZE) {
-			display->columns[COLUMN_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Text::toT(Util::formatBytes(getSize()));
-			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Text::toT(Util::formatExactSize(getSize()));
-			}
+			display->columns[COLUMN_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Util::formatBytesW(getSize());
+			display->columns[COLUMN_EXACT_SIZE] = (getSize() == -1) ? TSTRING(UNKNOWN) : Util::formatExactSize(getSize());
+		}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
-					display->columns[COLUMN_DOWNLOADED] = Text::toT(Util::formatBytes(getDownloadedBytes()) + " (" + Util::toString((double)getDownloadedBytes()*100.0/(double)getSize()) + "%)");
+					display->columns[COLUMN_DOWNLOADED] =Util::formatBytesW(getDownloadedBytes()) + _T(" (") + Util::toStringW((double)getDownloadedBytes()*100.0/(double)getSize()) + _T("%)");
 				else
 					display->columns[COLUMN_DOWNLOADED].clear();
 		}
@@ -882,7 +882,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					} else if(i->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						nick += _T(" (") + TSTRING(INVALID_TREE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_SLOW)) {
-						nick += _T(" (") + TSTRING(SLOW_USER) + _T(")");
+						nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::formatBytesW(i->getUser()->getLastDownloadSpeed()) + _T("/s])");
 					} else if(i->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
 						nick += _T(" (") + TSTRING(NO_NEEDED_PART) + _T(")");
 					}
@@ -1267,8 +1267,8 @@ void QueueFrame::updateStatus() {
 
 		}
 
-		tstring tmp1 = Text::toT(STRING(ITEMS) + ": " + Util::toString(cnt));
-		tstring tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(total));
+		tstring tmp1 = TSTRING(ITEMS) + _T(": ") + Util::toStringW(cnt);
+		tstring tmp2 = TSTRING(SIZE) + _T(": ") + Util::formatBytesW(total);
 		bool u = false;
 
 		int w = WinUtil::getTextWidth(tmp1, ctrlStatus.m_hWnd);
@@ -1285,8 +1285,8 @@ void QueueFrame::updateStatus() {
 		ctrlStatus.SetText(3, tmp2.c_str());
 
 		if(dirty) {
-			tmp1 = Text::toT(STRING(FILES) + ": " + Util::toString(queueItems));
-			tmp2 = Text::toT(STRING(SIZE) + ": " + Util::formatBytes(queueSize));
+			tmp1 = TSTRING(FILES) + _T(": ") + Util::toStringW(queueItems);
+			tmp2 = TSTRING(SIZE) + _T(": ") + Util::formatBytesW(queueSize);
 
 			w = WinUtil::getTextWidth(tmp2, ctrlStatus.m_hWnd);
 			if(statusSizes[3] < w) {

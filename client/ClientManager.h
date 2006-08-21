@@ -112,6 +112,7 @@ public:
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);
+	bool isStealth(const string& aHubUrl);
 
 	/** Constructs a synthetic, hopefully unique CID */
 	CID makeCid(const string& nick, const string& hubUrl) throw();

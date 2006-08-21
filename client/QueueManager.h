@@ -138,7 +138,6 @@ public:
 	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
 	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
-	QueueItem* getRunning(const User::Ptr& aUser);
 	bool dropSource(Download* d, bool autoDrop);
 
 	QueueItem::List getRunningFiles() throw() {

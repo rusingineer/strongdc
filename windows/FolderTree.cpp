@@ -1603,7 +1603,7 @@ void FolderTree::UpdateStaticCtrl()
 	if(m_pStaticCtrl != NULL)
 	{
 		/* display theActualSizeOfTheShareAfterRefresh = WhatTheShareManagerThinksIsTheCorrectSize - theOffsetCreatedByPlayingAroundWithExcludeFolders */
-		m_pStaticCtrl->SetWindowText(Text::toT(Util::formatBytes(ShareManager::getInstance()->getShareSize()) + "*").c_str());
+		m_pStaticCtrl->SetWindowText((Util::formatBytesW(ShareManager::getInstance()->getShareSize()) + _T("*")).c_str());
 	}
 }
 

@@ -158,21 +158,17 @@ public:
      */
 	int addChunkPos(int64_t, int64_t, size_t&);
 
-	/**
-     * Because magnet link maybe not contain size information...
-     */
-	void setFileSize(const int64_t& size);
 
 	void getAllChunks(vector<int64_t>& v, int type);
 
     int64_t getDownloadedSize()
     {
-        return iDownloadedSize;
+        return downloadedSize;
     }
 
     int64_t getVerifiedSize()
     {
-        return iVerifiedSize;
+        return verifiedSize;
     }
 
 	/**
@@ -199,6 +195,7 @@ public:
 
 	/**
 	 * Verify a block	
+	 * Note: if the block is not finished, true is returned
  	 */	
  	bool verifyBlock(int64_t anyPos, const TigerTree& aTree, const string& tempTargetName);
  	 	
@@ -220,9 +217,9 @@ public:
     size_t	tthBlockSize;					// tiger tree hash block size
 	TTHValue* TTH;
 
-	int64_t iFileSize;
-    int64_t iDownloadedSize;
-    int64_t iVerifiedSize;
+	int64_t fileSize;
+    int64_t downloadedSize;
+    int64_t verifiedSize;
 	int64_t minChunkSize;					// it'll be doubled when last verifying fail
 
 	CriticalSection cs;

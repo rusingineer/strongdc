@@ -294,7 +294,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		ctrlSearchBox.InsertString(0, initialString.c_str());
 		ctrlSearchBox.SetCurSel(0);
 		ctrlMode.SetCurSel(initialMode);
-		ctrlSize.SetWindowText(Text::toT(Util::toString(initialSize)).c_str());
+		ctrlSize.SetWindowText(Util::toStringW(initialSize).c_str());
 		ctrlFiletype.SetCurSel(initialType);
 		onEnter();
 	} else {
@@ -1116,7 +1116,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if (BOOLSETTING(BOLD_SEARCH)) {
 					setDirty();
 				}
-				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
+				ctrlStatus.SetText(2, (Util::toStringW(resultsCount) + _T(" ") + TSTRING(FILES)).c_str());
 
 				if(resort) {
 					ctrlResults.resort();
@@ -1124,12 +1124,12 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				}
 			} else {
 				PausedResults.push_front(si);
-				ctrlStatus.SetText(2, Text::toT(Util::toString(resultsCount-PausedResults.size()) + "/" + Util::toString(resultsCount) + " " + STRING(FILES)).c_str());
+				ctrlStatus.SetText(2, (Util::toStringW(resultsCount-PausedResults.size()) + _T("/") + Util::toStringW(resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
 			}
 		}
 		break;
 	case FILTER_RESULT:
-		ctrlStatus.SetText(3, Text::toT(Util::toString(droppedResults) + ' ' + STRING(FILTERED)).c_str());
+		ctrlStatus.SetText(3, (Util::toStringW(droppedResults) + _T(" ") + TSTRING(FILTERED)).c_str());
 		break;
  	case HUB_ADDED:
  			onHubAdded((HubInfo*)(lParam));
@@ -1422,15 +1422,15 @@ void SearchFrame::SearchInfo::update() {
 		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])));
 		if(!columns[COLUMN_TYPE].empty() && columns[COLUMN_TYPE][0] == _T('.'))
 			columns[COLUMN_TYPE].erase(0, 1);
-		columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(sr->getSize()));
-		columns[COLUMN_EXACT_SIZE] = Text::toT(Util::formatExactSize(sr->getSize()));
+		columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
+		columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 	} else {
 		columns[COLUMN_FILENAME] = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
 		columns[COLUMN_PATH] = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
 		columns[COLUMN_TYPE] = TSTRING(DIRECTORY);
 		if(sr->getSize() > 0) {
-			columns[COLUMN_SIZE] = Text::toT(Util::formatBytes(sr->getSize()));
-			columns[COLUMN_EXACT_SIZE] = Text::toT(Util::formatExactSize(sr->getSize()));
+			columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
+			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 		}
 	}
 	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick());
@@ -1451,7 +1451,7 @@ void SearchFrame::SearchInfo::update() {
 		columns[COLUMN_TTH] = Text::toT(sr->getTTH()->toBase32());
 	}	
 	if (sr->getUser()->getLastDownloadSpeed() > 0) {
-		columns[COLUMN_UPLOAD] = Text::toT(Util::formatBytes(sr->getUser()->getLastDownloadSpeed()) + "/s");
+		columns[COLUMN_UPLOAD] = Util::formatBytesW(sr->getUser()->getLastDownloadSpeed()) + _T("/s");
 	} else if(user->isSet(User::FIREBALL)) {
 		columns[COLUMN_UPLOAD] = Text::toT(">=100 kB/s");
 	} else {

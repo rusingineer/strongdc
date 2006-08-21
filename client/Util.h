@@ -353,15 +353,16 @@ public:
 	}
 	
 	static string formatBytes(int64_t aBytes);
+	static wstring formatBytesW(int64_t aBytes);
 
-	static string formatExactSize(int64_t aBytes);
+	static wstring formatExactSize(int64_t aBytes);
 
-	static string formatSeconds(int64_t aSec, bool supressHours = false) {
-		char buf[64];
+	static wstring formatSeconds(int64_t aSec, bool supressHours = false) {
+		wchar_t buf[64];
 		if (!supressHours)
-			sprintf(buf, "%01lu:%02d:%02d", (unsigned long)(aSec / (60*60)), (int)((aSec / 60) % 60), (int)(aSec % 60));
+			swprintf(buf, L"%01lu:%02d:%02d", (unsigned long)(aSec / (60*60)), (int)((aSec / 60) % 60), (int)(aSec % 60));
 		else
-			sprintf(buf, "%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));	
+			swprintf(buf, L"%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));	
 		return buf;
 	}
 
@@ -469,6 +470,42 @@ public:
 		else
 			tmp[tmp.length()-1] = ']';
 		return tmp;
+	}
+
+	static wstring toStringW( long val ) {
+		wchar_t buf[32];
+		swprintf(buf, L"%ld", val);
+		return buf;
+	}
+
+	static wstring toStringW( int64_t val ) {
+		wchar_t buf[32];
+		swprintf(buf, L"%ld", val);
+		return buf;
+	}
+
+	static wstring toStringW( DWORD val ) {
+		wchar_t buf[16];
+		swprintf(buf, L"%d", val);
+		return buf;
+	}
+
+	static wstring toStringW( int val ) {
+		wchar_t buf[16];
+		swprintf(buf, L"%d", val);
+		return buf;
+	}
+
+	static wstring toStringW( size_t val ) {
+		wchar_t buf[16];
+		swprintf(buf, L"%d", val);
+		return buf;
+	}
+
+	static wstring toStringW( double val ) {
+		wchar_t buf[32];
+		swprintf(buf, L"%0.2f", val);
+		return buf;
 	}
 
 	static string toHexEscape(char val) {

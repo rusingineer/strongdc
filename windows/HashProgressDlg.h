@@ -96,7 +96,7 @@ public:
 		double diff = tick - startTime;
 		if(diff < 1000 || files == 0 || bytes == 0) {
 			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
-			SetDlgItemText(IDC_HASH_SPEED, Text::toT("-.-- B/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
+			SetDlgItemText(IDC_HASH_SPEED, (_T("-.-- B/s, ") + Util::formatBytesW(bytes) + _T(" ") + TSTRING(LEFT)).c_str());
 			SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
 			progress.SetPos(0);
 		} else {
@@ -104,7 +104,7 @@ public:
 			double speedStat = (((double)(startBytes - bytes)) * 1000) / diff;
 
 			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT(Util::toString(filestat) + " " + STRING(FILES_PER_HOUR) + ", " + Util::toString((u_int32_t)files) + " " + STRING(FILES_LEFT)).c_str());
-			SetDlgItemText(IDC_HASH_SPEED, Text::toT(Util::formatBytes((int64_t)speedStat) + "/s, " + Util::formatBytes(bytes) + " " + STRING(LEFT)).c_str());
+			SetDlgItemText(IDC_HASH_SPEED, (Util::formatBytesW((int64_t)speedStat) + _T("/s, ") + Util::formatBytesW(bytes) + _T(" ") + TSTRING(LEFT)).c_str());
 
 			if(filestat == 0 || speedStat == 0) {
 				SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
@@ -112,7 +112,7 @@ public:
 				double fs = files * 60 * 60 / filestat;
 				double ss = bytes / speedStat;
 
-				SetDlgItemText(IDC_TIME_LEFT, Text::toT(Util::formatSeconds((int64_t)(fs + ss) / 2) + " " + STRING(LEFT)).c_str());
+				SetDlgItemText(IDC_TIME_LEFT, (Util::formatSeconds((int64_t)(fs + ss) / 2) + _T(" ") + TSTRING(LEFT)).c_str());
 			}
 		}
 

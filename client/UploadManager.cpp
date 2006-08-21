@@ -183,7 +183,7 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 								return false;
 							}
 							is = ss;
-							size = chunksInfo->iFileSize;
+							size = chunksInfo->fileSize;
 							free = (size <= (int64_t)(64 * 1024));
 
 							if((aStartPos + aBytes) < size) {
@@ -440,7 +440,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 		params["fileSIactual"] = Util::toString(u->getActual());
 		params["fileSIactualshort"] = Util::formatBytes(u->getActual());
 		params["speed"] = Util::formatBytes(u->getAverageSpeed()) + "/s";
-		params["time"] = Util::formatSeconds((GET_TICK() - u->getStart()) / 1000);
+		params["time"] = Text::fromT(Util::formatSeconds((GET_TICK() - u->getStart()) / 1000));
 
 		if(u->getTTH() != NULL) {
 			params["tth"] = u->getTTH()->toBase32();

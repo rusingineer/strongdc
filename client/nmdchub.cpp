@@ -140,12 +140,11 @@ void NmdcHub::clearUsers() {
 		users.clear();
 		availableBytes = 0;
 	}
-	
+
 	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
 		ClientManager::getInstance()->putOffline(*i->second);
 		delete i->second;
 	}
-	u2.clear();
 }
 
 void NmdcHub::updateFromTag(Identity& id, const string& tag) {

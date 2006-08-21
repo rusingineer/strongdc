@@ -339,8 +339,8 @@ protected:
 			columns[COLUMN_PATH]  = Text::toT(Util::getFilePath(entry->getTarget()));
 			columns[COLUMN_NICK]  = Text::toT(entry->getUser());
 			columns[COLUMN_HUB]   = Text::toT(entry->getHub());
-			columns[COLUMN_SIZE]  = Text::toT(Util::formatBytes(entry->getSize()));
-			columns[COLUMN_SPEED] = Text::toT(Util::formatBytes(entry->getAvgSpeed()) + "/s");
+			columns[COLUMN_SIZE]  = Util::formatBytesW(entry->getSize());
+			columns[COLUMN_SPEED] = Util::formatBytesW(entry->getAvgSpeed()) + _T("/s");
 		}
 		tstring columns[COLUMN_LAST];
 
@@ -394,9 +394,9 @@ protected:
 	}
 
 	void updateStatus() {
-		ctrlStatus.SetText(1, Text::toT(Util::toString(ctrlList.GetItemCount()) + ' ' + STRING(ITEMS)).c_str());
-		ctrlStatus.SetText(2, Text::toT(Util::formatBytes(totalBytes)).c_str());
-		ctrlStatus.SetText(3, Text::toT(Util::formatBytes((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + "/s").c_str());
+		ctrlStatus.SetText(1, (Util::toStringW(ctrlList.GetItemCount()) + _T(" ") + TSTRING(ITEMS)).c_str());
+		ctrlStatus.SetText(2, Util::formatBytesW(totalBytes).c_str());
+		ctrlStatus.SetText(3, (Util::formatBytesW((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + _T("/s")).c_str());
 	}
 
 	void updateList(const FinishedItem::List& fl) {

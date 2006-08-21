@@ -563,7 +563,7 @@ void ADLSearchFrame::UpdateSearch(int index, BOOL doDelete)
 	fs = _T("");
 	if(search.minFileSize >= 0)
 	{
-		fs = Text::toT(Util::toString(search.minFileSize));
+		fs = Util::toStringW(search.minFileSize);
 		fs += _T(" ");
 		fs += search.SizeTypeToDisplayString(search.typeFileSize);
 	}
@@ -572,7 +572,7 @@ void ADLSearchFrame::UpdateSearch(int index, BOOL doDelete)
 	fs = _T("");
 	if(search.maxFileSize >= 0)
 	{
-		fs = Text::toT(Util::toString(search.maxFileSize));
+		fs = Util::toStringW(search.maxFileSize);
 		fs += _T(" ");
 		fs += search.SizeTypeToDisplayString(search.typeFileSize);
 	}

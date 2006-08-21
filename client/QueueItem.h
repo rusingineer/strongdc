@@ -311,6 +311,15 @@ public:
 		return p;
 	}
 
+	bool hasFreeSegments() {
+		if(!isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+			return (status != STATUS_RUNNING);
+		} else {
+			return ((currents.size() < maxSegments) &&
+					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) >= averageSpeed)));
+		}
+	}
+
 private:
 	QueueItem& operator=(const QueueItem&);
 

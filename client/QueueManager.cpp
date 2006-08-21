@@ -238,22 +238,13 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue& tth) {
 	}
 }
 
-bool hasFreeSegments(QueueItem* qi) {
-	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-		return (qi->getStatus() != QueueItem::STATUS_RUNNING);
-	} else {
-		return ((qi->getCurrents().size() < qi->getMaxSegments()) &&
-				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) >= qi->getAverageSpeed())));
-	}
-}
-
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
 	QueueItem* cand = NULL;
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
 
 		// We prefer to search for things that are not running...
-		if((cand != NULL) && !hasFreeSegments(q)) 
+		if((cand != NULL) && !q->hasFreeSegments()) 
 			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
@@ -273,9 +264,16 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 
 		cand = q;
 
-		if(hasFreeSegments(cand))
+		if(cand->hasFreeSegments())
 			break;
 	}
+
+	//check this again, if the first item we pick is running and there are no
+	//other suitable items this will be true
+	if((cand != NULL) && (!cand->hasFreeSegments())) {
+		cand = NULL;
+	}
+
 	return cand;
 }
 
@@ -289,9 +287,9 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
-	} else if(!hasFreeSegments(cand)) {
+	} else if(!cand->hasFreeSegments()) {
 		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
-		if(cand2 != NULL && hasFreeSegments(cand2)) {
+		if(cand2 != NULL && cand2->hasFreeSegments()) {
 			cand = cand2;
 		}
 	}
@@ -351,7 +349,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 			dcassert(!i->second.empty());
 			QueueItem* found = i->second.front();
 
-			bool freeSegments = hasFreeSegments(found);
+			bool freeSegments = found->hasFreeSegments();
 
 			if(freeSegments && (pNext == NULL || fNext)) {
 				return found;
@@ -368,7 +366,7 @@ QueueItem* QueueManager::UserQueue::getNext(const User::Ptr& aUser, QueueItem::P
 	                fNext = true;   // found, next is target
 	
 					iQi++;
-					if((iQi != i->second.end()) && hasFreeSegments(*iQi)) {
+					if((iQi != i->second.end()) && (*iQi)->hasFreeSegments()) {
 						return *iQi;
 					}
 				}
@@ -406,7 +404,6 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const User::Ptr& aUser) 
 	// Move the download to the running list...
 	dcassert(running.find(aUser) == running.end());
 	running[aUser] = qi;
-
 }
 
 void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) {
@@ -443,11 +440,6 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 QueueItem* QueueManager::UserQueue::getRunning(const User::Ptr& aUser) {
 	QueueItem::UserIter i = running.find(aUser);
 	return (i == running.end()) ? 0 : i->second;
-}
-
-QueueItem* QueueManager::getRunning(const User::Ptr& aUser) {
-	Lock l(cs);
-	return userQueue.getRunning(aUser);
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi) {
@@ -543,6 +535,8 @@ QueueManager::~QueueManager() throw() {
 
 void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 	string searchString;
+	bool online = false;
+
 	{
 		Lock l(cs);
 		QueueItem::UserMap& um = userQueue.getRunning();
@@ -563,20 +557,18 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 			setDirty();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
-			// We keep 32 recent searches to avoid duplicate searches
-			while((recent.size() >= fileQueue.getSize()) || (recent.size() > 32)) {
+			// We keep 30 recent searches to avoid duplicate searches
+			while((recent.size() >= fileQueue.getSize()) || (recent.size() > 30)) {
 				recent.erase(recent.begin());
 			}
 
 			QueueItem* qi = fileQueue.findAutoSearch(recent);
-			if(qi == NULL && (recent.size() > 0 && fileQueue.getSize() > 0)) {
-				recent.erase(recent.begin());
-				qi = fileQueue.findAutoSearch(recent);
-            }
-			if(qi != NULL && qi->getTTH()) {
+			if(qi != NULL) {
+				dcassert(qi->getTTH());
 				searchString = qi->getTTH()->toBase32();
+				online = qi->hasOnlineUsers();
 				recent.push_back(qi->getTarget());
-				nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
+				nextSearch = aTick + (SETTING(SEARCH_TIME) * (online ? 24000 : 60000));
 				if(BOOLSETTING(REPORT_ALTERNATES))
 					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()));		
 			}
@@ -634,6 +626,15 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
     
 	string target = checkTarget(aTarget, aSize, aFlags);
 
+	// Check if it's a zero-byte file, if so, create and return...
+	if(aSize == 0) {
+		if(!BOOLSETTING(SKIP_ZERO_BYTE)) {
+			File::ensureDirectory(target);
+			File f(target, File::WRITE, File::CREATE);
+		}
+		return;
+	}
+	
 	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(aUser))) {
 		throw QueueException(STRING(NO_DOWNLOADS_FROM_PASSIVE));
 	}
@@ -641,28 +642,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 	{
 		Lock l(cs);
 
-		QueueItem* q = NULL;
-		
-		if(root) {
-			QueueItem::List ql;
-			fileQueue.find(ql, *root);
-			if(!ql.empty()){
-				q = ql[0];
-			}
-		}
-
-		if(q == NULL)
-			q = fileQueue.find(target);
-
-		// Check if it's a zero-byte file, if so, create and return...
-		if(aSize == 0) {
-			if(q == NULL && !BOOLSETTING(SKIP_ZERO_BYTE)) {
-				File::ensureDirectory(target);
-				File f(target, File::WRITE, File::CREATE);
-			}
-			return;
-		}
-
+		QueueItem* q = fileQueue.find(target);
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
@@ -751,7 +731,7 @@ string QueueManager::checkTarget(const string& aTarget, int64_t aSize, int& flag
 /** Add a source to an existing queue item */
 bool QueueManager::addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, Flags::MaskType addBad, bool utf8) throw(QueueException, FileException) {
 	QueueItem::Source* s = NULL;
-	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED);
+	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED) && qi->hasFreeSegments();
 
 	if(qi->isSource(aUser)) {
 		throw QueueException(STRING(DUPLICATE_SOURCE));
@@ -1038,6 +1018,10 @@ again:
 	int64_t freeBlock = 0;
 
 	QueueItem::Source* source = *(q->getSource(aUser));
+	if(supportsTrees && q->getTTH() != NULL) {
+		source->setPath(Util::emptyString);
+	}
+
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
@@ -1048,11 +1032,13 @@ again:
 
 		if(freeBlock < 0) {
 			if(freeBlock == -2) {
+				dcassert(source->isSet(QueueItem::Source::FLAG_PARTIAL));
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
 				message = STRING(NO_NEEDED_PART);
-			} else
+			} else {
 				message = STRING(NO_FREE_BLOCK);
+			}
 			
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 			goto again;

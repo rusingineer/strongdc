@@ -54,27 +54,27 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 		old = getText(sortCol);
 
 	if (identity.getUser()->getLastDownloadSpeed() > 0) {
-		setText(COLUMN_UPLOAD_SPEED, Text::toT(Util::formatBytes(identity.getUser()->getLastDownloadSpeed()) + "/s"));
+		setText(COLUMN_UPLOAD_SPEED, Util::formatBytesW(identity.getUser()->getLastDownloadSpeed()) + _T("/s"));
 	} else if(identity.getUser()->isSet(User::FIREBALL)) {
 		setText(COLUMN_UPLOAD_SPEED, _T(">= 100 kB/s"));
 	} else {
 		setText(COLUMN_UPLOAD_SPEED, _T("N/A"));
 	}
 
-	string hn = identity.get("HN");
-	string hr = identity.get("HR");
-	string ho = identity.get("HO");
+	tstring hn = Text::toT(identity.get("HN"));
+	tstring hr = Text::toT(identity.get("HR"));
+	tstring ho = Text::toT(identity.get("HO"));
 
 	setText(COLUMN_NICK, Text::toT(identity.getNick()));
-	setText(COLUMN_SHARED, Text::toT(Util::formatBytes(identity.getBytesShared())));
-	setText(COLUMN_EXACT_SHARED, Text::toT(Util::formatExactSize(identity.getBytesShared())));
+	setText(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()));
+	setText(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()));
 	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()));
 	setText(COLUMN_TAG, Text::toT(identity.getTag()));
 	setText(COLUMN_EMAIL, Text::toT(identity.getEmail()));
 	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection()));
 	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")));
 	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
-	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : Text::toT(hn + "/" + hr + "/" + ho));
+	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
 	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
 	setText(COLUMN_IP, Text::toT(identity.getIp()));
 	setText(COLUMN_PK, Text::toT(identity.getUser()->getPk()));

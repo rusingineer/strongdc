@@ -53,8 +53,8 @@ public:
 		ctrlThanks.Detach();
 		SetDlgItemText(IDC_TTH, WinUtil::tth.c_str());
 		SetDlgItemText(IDC_LATEST, CTSTRING(DOWNLOADING));
-		SetDlgItemText(IDC_TOTALS, Text::toT("Upload: " + Util::formatBytes(SETTING(TOTAL_UPLOAD)) + ", Download: " + 
-			Util::formatBytes(SETTING(TOTAL_DOWNLOAD))).c_str());
+		SetDlgItemText(IDC_TOTALS, (_T("Upload: ") + Util::formatBytesW(SETTING(TOTAL_UPLOAD)) + _T(", Download: ") + 
+			Util::formatBytesW(SETTING(TOTAL_DOWNLOAD))).c_str());
 
 		if(SETTING(TOTAL_DOWNLOAD) > 0) {
 			char buf[64];

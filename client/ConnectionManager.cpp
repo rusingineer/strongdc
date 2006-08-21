@@ -473,6 +473,9 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 	if(ClientManager::getInstance()->isOp(aSource->getUser(), aSource->getHubUrl()))
 		aSource->setFlag(UserConnection::FLAG_OP);
 
+	if(ClientManager::getInstance()->isStealth(aSource->getHubUrl()))
+		aSource->setFlag(UserConnection::FLAG_STEALTH);
+
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
 		if(SETTING(GARBAGE_COMMAND_INCOMING))
 			aSource->garbageCommand();

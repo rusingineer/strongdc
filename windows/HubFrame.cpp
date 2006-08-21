@@ -58,9 +58,6 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
-	map<int, string> s;
-	s[0] = "ahoj";
-	dcdebug(s[0].c_str());
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
@@ -513,7 +510,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 					sCopy += Text::toT(ui->getNick());
 					break;
 				case IDC_COPY_EXACT_SHARE:
-					sCopy += Text::toT(Util::formatExactSize(ui->getIdentity().getBytesShared()));
+					sCopy += Util::formatExactSize(ui->getIdentity().getBytesShared());
 					break;
 				case IDC_COPY_DESCRIPTION:
 					sCopy += Text::toT(ui->getIdentity().getDescription());
@@ -535,7 +532,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 				case IDC_COPY_ALL:
 					sCopy += _T("Info User:\r\n")
 						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
-						_T("\tShare: ") + Text::toT(Util::formatBytes(ui->getIdentity().getBytesShared())) + _T("\r\n") + 
+						_T("\tShare: ") + Util::formatBytesW(ui->getIdentity().getBytesShared()) + _T("\r\n") + 
 						_T("\tDescription: ") + Text::toT(ui->getIdentity().getDescription()) + _T("\r\n") +
 						_T("\tTag: ") + Text::toT(ui->getIdentity().getTag()) + _T("\r\n") +
 						_T("\tConnection: ") + Text::toT(ui->getIdentity().getConnection()) + _T("\r\n") + 
@@ -740,7 +737,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							}
 						}
 						if(samenumbers) {
-							string detectString = Util::formatExactSize(u.identity.getBytesShared())+" - the share size had too many same numbers in it";
+							string detectString = Text::fromT(Util::formatExactSize(u.identity.getBytesShared()))+" - the share size had too many same numbers in it";
 							ClientManager::getInstance()->setFakeList(u.user, detectString);
 							
 							CHARFORMAT2 cf;
@@ -819,14 +816,14 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			size_t AllUsers = client->getUserCount();
 			size_t ShownUsers = ctrlUsers.GetItemCount();
 			if(filter.empty() == false && AllUsers != ShownUsers) {
-				ctrlStatus.SetText(1, Text::toT(Util::toString(ShownUsers) + "/" + Util::toString(AllUsers) + " " + STRING(HUB_USERS)).c_str());
+				ctrlStatus.SetText(1, (Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
 			} else {
-				ctrlStatus.SetText(1, Text::toT(Util::toString(AllUsers) + " " + STRING(HUB_USERS)).c_str());
+				ctrlStatus.SetText(1, (Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
 			}
 			int64_t available = client->getAvailable();
-			ctrlStatus.SetText(2, Text::toT(Util::formatBytes(available)).c_str());
+			ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
 			if(AllUsers > 0)
-				ctrlStatus.SetText(3, Text::toT((Util::formatBytes(available / AllUsers) + "/" + STRING(USER))).c_str());
+				ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
 			else
 				ctrlStatus.SetText(3, _T(""));
 		} else if(task->speaker == GET_PASSWORD) {
@@ -2275,7 +2272,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 			if(bIsChat == false) {
 				// Pocet oznacenych
 				int iCount = ctrlUsers.GetSelectedCount();
-				pMenu->InsertSeparator(0, TRUE, Text::toT(Util::toString(iCount)) + _T(" ") + TSTRING(HUB_USERS));
+				pMenu->InsertSeparator(0, TRUE, Util::toStringW(iCount) + _T(" ") + TSTRING(HUB_USERS));
 			}
 			if (ctrlUsers.GetSelectedCount() <= 25) {
 				pMenu->AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));

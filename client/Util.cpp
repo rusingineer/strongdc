@@ -472,7 +472,7 @@ string Util::getAwayMessage() {
 }
 
 string Util::formatBytes(int64_t aBytes) {
-	char buf[128];
+	char buf[64];
 	if(aBytes < 1024) {
 		sprintf(buf, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
 	} else if(aBytes < 1048576) {
@@ -492,36 +492,50 @@ string Util::formatBytes(int64_t aBytes) {
 	return buf;
 }
 
-string Util::formatExactSize(int64_t aBytes) {
-#ifdef _WIN32
-		TCHAR buf[64];
-		TCHAR number[64];
+wstring Util::formatBytesW(int64_t aBytes) {
+	wchar_t buf[64];
+	if(aBytes < 1024) {
+		swprintf(buf, L"%d %s", (int)(aBytes&0xffffffff), CWSTRING(B));
+	} else if(aBytes < 1048576) {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1024.0), CWSTRING(KB));
+	} else if(aBytes < 1073741824) {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1048576.0), CWSTRING(MB));
+	} else if(aBytes < (int64_t)1099511627776) {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1073741824.0), CWSTRING(GB));
+	} else if(aBytes < (int64_t)1125899906842624) {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1099511627776.0), CWSTRING(TB));
+	} else if(aBytes < (int64_t)1152921504606846976)  {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1125899906842624.0), CWSTRING(PB));
+	} else {
+		swprintf(buf, L"%.02f %s", (double)aBytes/(1152921504606846976.0), CWSTRING(EB));
+	}
+
+	return buf;
+}
+
+wstring Util::formatExactSize(int64_t aBytes) {
+	wchar_t buf[64];
+	wchar_t number[64];
 		NUMBERFMT nf;
-		_stprintf(number, _T("%I64d"), aBytes);
-		TCHAR Dummy[16];
+	swprintf(number, L"%I64d", aBytes);
+	wchar_t dummy[16];
     
 		/*No need to read these values from the system because they are not
 		used to format the exact size*/
 		nf.NumDigits = 0;
 		nf.LeadingZero = 0;
 		nf.NegativeOrder = 0;
-		nf.lpDecimalSep = _T(",");
+	nf.lpDecimalSep = L",";
 
-		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
-		nf.Grouping = _tstoi(Dummy);
-		GetLocaleInfo( LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
-		nf.lpThousandSep = Dummy;
+	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_SGROUPING, dummy, 16 );
+	nf.Grouping = _wtoi(dummy);
+	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, dummy, 16 );
+	nf.lpThousandSep = dummy;
 
-		GetNumberFormat(LOCALE_USER_DEFAULT, 0, number, &nf, buf, sizeof(buf)/sizeof(buf[0]));
+	GetNumberFormat(LOCALE_USER_DEFAULT, 0, number, &nf, buf, 64);
 		
-		_stprintf(buf, _T("%s %s"), buf, CTSTRING(B));
-		return Text::fromT(buf);
-#else
-		char buf[64];
-		sprintf(buf, "%'lld", aBytes);
-		sprintf(buf, "%s %s", buf, CSTRING(B));
-		return buf;
-#endif
+	wsprintf(buf, L"%s %s", buf, CTSTRING(B));
+	return buf;
 }
 
 string Util::getLocalIp() {

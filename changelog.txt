@@ -1,3 +1,41 @@
+	-- StrongDC++ 2.02 --
+
+* opraven èasovaè vypínání
+* opraveno pozdní odpojení uploadu
+* snad opraveno øazení podle èasu a rychlosti
+* opraven problém s otevíráním záznamù
+* odstranìny pøezdívky z vyhledávacího špióna - šetøí pamì a je to anonymní
+* opraven dvojklik na nesegmentovı soubor v Pøenosech
+* opraven náhled popupu v nastavení
+* opraveny nìjaké GDI leaky (+ odstranìny nabídky ve stylu XP)
+* ušetøena pamì pro velké fronty a velké huby
+* hláška "Odesílání dokonèeno" je zpodìna o 5 sekund, aby se pøedešlo zbyteènému blikání pøi dokonèení segmentu
+* pøidána znaèka [C] pro oznaèení segmentovıch pøenosù
+* opraveno naèítání pøezdívek z Users.xml
+* ikona firewallu zobrazena všem uivatelùm
+* pøidána volba pro neoznamování novıch verzí (version.xml je stále stahován)
+* opraveno zobrazování odchozích PM, pokud jsou pøíchozí PM zobrazeny v hlavním chatu
+* segmentování zaloené na velikosti není tak pøísné
+* opraveno zdvojování vısledkù hledání pøi aplikovaném filtru
+* poèet oken soukromıch zpráv omezen na 200 aby se pøedešlo vzdálenému zneuití
+* odstranìny nìkteré nepotøebné sloupce v seznamu uivatelù
+* poadavek na vyhledávání je odstranìn z fronty pøi zavøení vyhledávacího okna
+* opraven problém s otevíráním nekompletních filelistù
+* vdy je zobrazena pouze jedna pøezdívka místo všech pøezdívek uivatele
+* pøidána volba pro nastavení poètu pokusù na stahování za sekundu
+* kdy je stahování dokonèeno, bude odstranìno døíve a lze ho odstranit pomocí Zavøít spojení
+* opraveno znovuvytváøení dokonèeného souboru, pokud je smazanı a nìkdo ho chce stahovat
+* pøidána volba pro vyadování stisknutí Enteru k aplikaci filtru uivatelù/hledání
+* segmenty pro automatické odpojení jsou zkontrolovány kadıch 40 sekund (místo 20 sekund)
+* snad opraven problém s nastavením hlášky o podvádìní pro fakery se spoustou stejnıch èísel ve velikosti sdílení
+* doèasná oprava pro zobrazení OP pøíkazù pøi vybrání uivatelù z více hubù v oknì vyhledávání
+* lze pøidat více souborù se stejnım TTH do fronty
+* opraven deadlock v oknì CDM Debug messages
+* zobrazeno "Offline" jako název hubu, pokud uivatel není na hubu
+* zmìnìn formát pro vısledky èásteènıch souborù
+* opravena chyba, e maximální poèet zdrojù pro hledání alternativ nemohl bıt nastaven pøes 15
+* pokud je odpojen pomalı uivatel, v menu Znovu pøidat zdroj bude zobrazena jeho rychlost
+
 	-- StrongDC++ 2.01 --
 
 *** VAROVÁNÍ ***

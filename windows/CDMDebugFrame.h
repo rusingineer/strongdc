@@ -18,7 +18,9 @@
 
 #include "../client/DebugManager.h"
 
-class CDMDebugFrame : private DebugManagerListener, public MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM>, public StaticFrame<CDMDebugFrame, ResourceManager::MENU_CDMDEBUG_MESSAGES>
+class CDMDebugFrame : private DebugManagerListener,
+	public MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM>,
+	public StaticFrame<CDMDebugFrame, ResourceManager::MENU_CDMDEBUG_MESSAGES>
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("CDMDebugFrame"), IDR_CDM, 0, COLOR_3DFACE);
@@ -32,9 +34,10 @@ public:
 		clearContainer(WC_BUTTON, this, CLEAR_MESSAGE_MAP),
 		statusContainer(STATUSCLASSNAME, this, CLEAR_MESSAGE_MAP)
 	 { 
-
+		DebugManager::getInstance()->addListener(this);
 	}
 	~CDMDebugFrame() {		
+		DebugManager::getInstance()->removeListener(this);
 	}
 	
 	virtual void OnFinalMessage(HWND /*hWnd*/) {
@@ -48,6 +51,7 @@ public:
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onCtlColor)
 		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onCtlColor)
+		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		CHAIN_MSG_MAP(baseClass)
 	ALT_MSG_MAP(DETECTION_MESSAGE_MAP)
 		MESSAGE_HANDLER(BM_SETCHECK, onSetCheckDetection)
@@ -63,6 +67,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_CLEAR, onClear)
 	END_MSG_MAP()
 
+	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -114,6 +119,9 @@ public:
 	void addLine(const string& aLine);
 	
 private:
+	enum {
+		ADD_LINE,
+	};
 	CEdit ctrlPad, ctrlFilterText;
 	CStatusBarCtrl ctrlStatus;
 	CButton ctrlClear, ctrlCommands, ctrlHubCommands, ctrlDetection, ctrlFilterIp;
@@ -121,14 +129,12 @@ private:
 
 	bool showCommands, showHubCommands, showDetection, bFilterIp;
 	tstring sFilterIp;
-
-	CriticalSection cs;
 	bool closed;
 	
 	void on(DebugManagerListener::DebugDetection, const string& aLine) throw() {
 		if(!showDetection)
 			return;
-		addLine(aLine);
+		PostMessage(WM_SPEAKER, ADD_LINE, (LPARAM)new string(aLine));
 	}
 	void on(DebugManagerListener::DebugCommand, const string& aLine, int typeDir, const string& ip) throw() {
 			switch(typeDir) {
@@ -136,28 +142,28 @@ private:
 					if(!showHubCommands)
 						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
-						addLine("Hub:\t[" + ip + "]\t <<  \t" + aLine);
+						PostMessage(WM_SPEAKER, ADD_LINE, (LPARAM)new string("Hub:\t[Incoming][" + ip + "]\t \t" + aLine));
 					}
 					break;
 				case DebugManager::HUB_OUT:
 					if(!showHubCommands)
 						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
-						addLine("Hub:\t[" + ip + "]\t   >>\t" + aLine);
+						PostMessage(WM_SPEAKER, ADD_LINE, (LPARAM)new string("Hub:\t[Outgoing][" + ip + "]\t \t" + aLine));
 					}
 					break;
 				case DebugManager::CLIENT_IN:
 					if(!showCommands)
 						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
-						addLine("Client:\t[" + ip + "]\t <<  \t" + aLine);
+						PostMessage(WM_SPEAKER, ADD_LINE, (LPARAM)new string("Client:\t[Incoming][" + ip + "]\t \t" + aLine));
 					}
 					break;
 				case DebugManager::CLIENT_OUT:
 					if(!showCommands)
 						return;
 					if(!bFilterIp || Text::toT(ip) == sFilterIp) {
-						addLine("Client:\t[" + ip + "]\t   >>\t" + aLine);
+						PostMessage(WM_SPEAKER, ADD_LINE, (LPARAM)new string("Client:\t[Outgoing][" + ip + "]\t \t" + aLine));
 					}
 					break;
 				default: dcassert(0);

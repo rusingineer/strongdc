@@ -91,6 +91,9 @@ StringList ClientManager::getHubNames(const CID& cid) {
 	for(OnlineIter i = op.first; i != op.second; ++i) {
 		lst.push_back(i->second->getClient().getHubName());
 	}
+	if(lst.empty()) {
+		lst.push_back(STRING(OFFLINE));
+	}
 	return lst;
 }
 /*
@@ -236,6 +239,17 @@ bool ClientManager::isOp(const User::Ptr& user, const string& aHubUrl) {
 	for(OnlineIter i = p.first; i != p.second; ++i) {
 		if(i->second->getClient().getHubUrl() == aHubUrl) {
 			return i->second->getIdentity().isOp();
+		}
+	}
+	return false;
+}
+
+bool ClientManager::isStealth(const string& aHubUrl) {
+	Lock l(cs);
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		Client* c = *i;
+		if(c->getHubUrl() == aHubUrl) {
+			return c->getStealth();
 		}
 	}
 	return false;
