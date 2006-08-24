@@ -532,6 +532,7 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
+			UQI->setText(COLUMN_TRANSFERRED, Util::formatBytesW(UQI->pos) + _T(" (") + Util::toStringW((double)UQI->pos*100.0/(double)UQI->size) + _T("%)"));
 			UQI->setText(COLUMN_WAITING, Util::formatSeconds(itime - UQI->iTime));
 			ctrlList.updateItem(i);
 		}

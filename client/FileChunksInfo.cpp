@@ -174,6 +174,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 
 			// delete the waiting chunk
 			delete chunk;
+			chunk = chunk2;
 		}else{
 			running.insert(make_pair(chunk->pos, chunk));
 		}

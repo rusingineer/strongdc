@@ -29,11 +29,14 @@
 
 // Remove this line if hashes are not available in your stl
 #define HAVE_HASH 1
-#define _SECURE_SCL  0
+
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
-//#define _STLP_DEBUG 1
-//#define _STLP_USE_NEWALLOC 1
+#ifdef _DEBUG
+# define _STLP_DEBUG 1
+#else
+# define _SECURE_SCL  0
+#endif
 
 // --- Shouldn't have to change anything under here...
 
@@ -45,7 +48,7 @@
 # define _STLP_DONT_USE_SHORT_STRING_OPTIM 1	// Uses small string buffer, so it saves memory for a lot of strings
 # define _STLP_USE_PTR_SPECIALIZATIONS 1		// Reduces some code bloat
 # define _STLP_USE_TEMPLATE_EXPRESSION 1		// Speeds up string concatenation
-# define _STLP_NO_ANACHRONISMS 1				// Disable anachronistic constructs
+# define _STLP_NO_ANACHRONISMS 1				// Disables anachronistic constructs
 //# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in STLPort)
 #endif
 

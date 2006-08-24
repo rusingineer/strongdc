@@ -49,7 +49,7 @@ Client* ClientManager::getClient(const string& aHubURL) {
 
 	{
 		Lock l(cs);
-		clients.push_back(c);
+		clients.push_front(c);
 	}
 
 	c->addListener(this);
@@ -64,7 +64,7 @@ void ClientManager::putClient(Client* aClient) {
 
 	{
 		Lock l(cs);
-		clients.erase(remove(clients.begin(), clients.end(), aClient), clients.end());
+		clients.remove(aClient);
 	}
 	delete aClient;
 }
@@ -90,9 +90,6 @@ StringList ClientManager::getHubNames(const CID& cid) {
 	OnlinePair op = onlineUsers.equal_range(cid);
 	for(OnlineIter i = op.first; i != op.second; ++i) {
 		lst.push_back(i->second->getClient().getHubName());
-	}
-	if(lst.empty()) {
-		lst.push_back(STRING(OFFLINE));
 	}
 	return lst;
 }

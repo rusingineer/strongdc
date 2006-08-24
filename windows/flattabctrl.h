@@ -87,7 +87,7 @@ public:
 		delete ti;
 		tabs.erase(i);
 		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
-		viewOrder.erase(remove(viewOrder.begin(), viewOrder.end(), aWnd), viewOrder.end());
+		viewOrder.remove(aWnd);
 		nextTab = viewOrder.end();
 		if(!viewOrder.empty())
 			--nextTab;
@@ -141,7 +141,7 @@ public:
 
 	void setTop(HWND aWnd) {
 		dcassert(find(viewOrder.begin(), viewOrder.end(), aWnd) != viewOrder.end());
-		viewOrder.erase(remove(viewOrder.begin(), viewOrder.end(), aWnd), viewOrder.end());
+		viewOrder.remove(aWnd);
 		viewOrder.push_back(aWnd);
 		nextTab = --viewOrder.end();
 	}

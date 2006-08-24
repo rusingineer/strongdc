@@ -163,7 +163,7 @@ public:
 		currentDownload(rhs.currentDownload), averageSpeed(rhs.averageSpeed)
 	{
 		// Deep copy the source lists
-		Source::List::const_iterator i;
+		Source::ConstIter i;
 		for(i = rhs.sources.begin(); i != rhs.sources.end(); ++i) {
 			sources.push_back(new Source(*(*i)));
 		}
@@ -180,14 +180,21 @@ public:
 
 	int countOnlineUsers() const {
 		int n = 0;
-		Source::List::const_iterator i = sources.begin();
+		Source::ConstIter i = sources.begin();
 		for(; i != sources.end(); ++i) {
 			if((*i)->getUser()->isOnline())
 				n++;
 		}
 		return n;
 	}
-	bool hasOnlineUsers() const { return countOnlineUsers() > 0; }
+	bool hasOnlineUsers() const { 
+		Source::ConstIter i = sources.begin();
+		for(; i != sources.end(); ++i) {
+			if((*i)->getUser()->isOnline())
+				return true;
+		}
+		return false;
+	}
 
 	const string& getSourcePath(const User::Ptr& aUser) { 
 		dcassert(isSource(aUser));
@@ -198,7 +205,7 @@ public:
 	Source::List& getBadSources() { return badSources; }
 
 	void getOnlineUsers(User::List& l) const  {
-		for(Source::List::const_iterator i = sources.begin(); i != sources.end(); ++i)
+		for(Source::ConstIter i = sources.begin(); i != sources.end(); ++i)
 			if((*i)->getUser()->isOnline())
 				l.push_back((*i)->getUser());
 	}
@@ -368,7 +375,7 @@ private:
 		return lst.end();
 	}
 	static bool isSource(const User::Ptr& aUser, const Source::List& lst) {
-		for(Source::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+		for(Source::ConstIter i = lst.begin(); i != lst.end(); ++i) {
 			const Source* s = *i;
 			if(s->getUser() == aUser)
 				return true;

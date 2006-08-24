@@ -169,11 +169,13 @@ public:
 	bool matchProfile(const string& aString, const string& aProfile);
 
 	const string& get(const char* name) const {
+		RLock<> l(cs);
 		InfMap::const_iterator i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
 	}
 
 	void set(const char* name, const string& val) {
+		WLock<> l(cs);
 		if(val.empty())
 			info.erase(*(short*)name);
 		else
@@ -192,6 +194,8 @@ private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
+
+	mutable RWLock<> cs;
 
 	string getVersion(const string& aExp, const string& aTag);
 	string splitVersion(const string& aExp, const string& aTag, const int part);

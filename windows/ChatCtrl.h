@@ -39,7 +39,7 @@ class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
 protected:
-	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	IRichEditOle* GetIRichEditOle() const;
 
@@ -61,14 +61,15 @@ public:
 	tstring LineFromPos(POINT p);
 
 	void AdjustTextSize();
-	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
-	void AppendTextOnly(const tstring& sMyNick, LPCTSTR sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
+	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
+	void AppendTextOnly(const tstring& sMyNick, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
 	void EndRedrawAppendTextOnly();
 
 	void GoToEnd();
 	void SetAutoScroll(bool boAutoScroll);
 	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL);
 	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
+
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
 	static tstring sTempSelectedUser;

@@ -380,10 +380,6 @@ void SearchFrame::onEnter() {
 	if (onlyFree != BOOLSETTING(FREE_SLOTS_DEFAULT))
 		SettingsManager::getInstance()->set(SettingsManager::FREE_SLOTS_DEFAULT, onlyFree);
 
-	// Start the countdown timer...
-	// Can this be done in a better way?
-	TimerManager::getInstance()->addListener(this);
-
 	int n = ctrlHubs.GetItemCount();
 	for(int i = 0; i < n; i++) {
 		if(ctrlHubs.GetCheckState(i)) {
@@ -461,6 +457,10 @@ void SearchFrame::onEnter() {
 	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
 	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 			
+	// Start the countdown timer...
+	// Can this be done in a better way?
+	TimerManager::getInstance()->addListener(this);
+
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
 		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this, fullSearch);
 	searches++;

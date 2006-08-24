@@ -66,7 +66,7 @@ void ChatCtrl::AdjustTextSize() {
 	}
 }
 
-void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
 	long lSelBeginSaved, lSelEndSaved;
 	GetSel(lSelBeginSaved, lSelEndSaved);
@@ -256,7 +256,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	EndRedrawAppendTextOnly();
 }
 
-void ChatCtrl::AppendTextOnly(const tstring& sMyNick, LPCTSTR sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
+void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
