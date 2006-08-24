@@ -189,7 +189,7 @@ public:
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
 
-		QueueItem* findAutoSearch(StringList& recent);
+		QueueItem* findAutoSearch(deque<string>& recent);
 		size_t getSize() { return queue.size(); }
 		QueueItem::StringMap& getQueue() { return queue; }
 		void move(QueueItem* qi, const string& aTarget);
@@ -256,7 +256,7 @@ private:
 	/** Directories queued for downloading */
 	DirectoryItem::DirectoryMap directories;
 	/** Recent searches list, to avoid searching for the same thing too often */
-	StringList recent;
+	deque<string> recent;
 	/** The queue needs to be saved */
 	bool dirty;
 	/** Next search */

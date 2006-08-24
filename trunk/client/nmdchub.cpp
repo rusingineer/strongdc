@@ -40,6 +40,7 @@
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0), state(STATE_CONNECT),
 	lastbytesshared(0)
 {
+dcdebug("Identity takes: %d bytes\n", sizeof(Identity));
 }
 
 NmdcHub::~NmdcHub() throw() {
@@ -78,7 +79,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 	{
 		Lock l(cs);
 
-		NickIter i = users.find(aNick);
+		NickIter i = users.find(const_cast<string*>(&aNick));
 		if(i != users.end())
 			return *i->second;
 	}
@@ -92,8 +93,9 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 
 	{
 		Lock l(cs);
-		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
+		u = new OnlineUser(p, *this, 0);
 		u->getIdentity().setNick(aNick);
+		users.insert(make_pair(const_cast<string*>(&u->getIdentity().getNick()), u));
 		if(u->getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u->getIdentity());
 		}
@@ -113,7 +115,7 @@ void NmdcHub::supports(const StringList& feat) {
 
 OnlineUser* NmdcHub::findUser(const string& aNick) {
 	Lock l(cs);
-	NickIter i = users.find(aNick);
+	NickIter i = users.find(const_cast<string*>(&aNick));
 	return i == users.end() ? NULL : i->second;
 }
 
@@ -121,7 +123,7 @@ void NmdcHub::putUser(const string& aNick) {
 	OnlineUser* u = NULL;
 	{
 		Lock l(cs);
-		NickMap::iterator i = users.find(aNick);
+		NickMap::iterator i = users.find(const_cast<string*>(&aNick));
 		if(i == users.end())
 			return;
 		u = i->second;
@@ -183,7 +185,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 	/// @todo Think about this
 	id.set("TA", '<' + tag + '>');
 }
-
+int myInfo = 0;
 void NmdcHub::onLine(const string& aLine) throw() {
     updateActivity();
     
@@ -357,7 +359,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 
 		i = j + 1;
-		
+
 		OnlineUser& u = getUser(nick);
 
 		j = param.find('$', i);

@@ -238,7 +238,7 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue& tth) {
 	}
 }
 
-static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, StringList& recent) {
+static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, deque<string>& recent) {
 	QueueItem* cand = NULL;
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
@@ -277,7 +277,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 	return cand;
 }
 
-QueueItem* QueueManager::FileQueue::findAutoSearch(StringList& recent) {
+QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) {
 	// We pick a start position at random, hoping that we will find something to search for...
 	QueueItem::StringMap::size_type start = (QueueItem::StringMap::size_type)Util::rand((u_int32_t)queue.size());
 
@@ -559,10 +559,13 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
 			while((recent.size() >= fileQueue.getSize()) || (recent.size() > 30)) {
-				recent.erase(recent.begin());
+				recent.pop_front();
 			}
 
-			QueueItem* qi = fileQueue.findAutoSearch(recent);
+			QueueItem* qi;
+			while((qi = fileQueue.findAutoSearch(recent)) == NULL && !recent.empty()) { // TEST how does this work
+				recent.pop_front();
+			}
 			if(qi != NULL) {
 				dcassert(qi->getTTH());
 				searchString = qi->getTTH()->toBase32();
@@ -643,6 +646,16 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue* roo
 		Lock l(cs);
 
 		QueueItem* q = fileQueue.find(target);
+		
+		if(q == NULL && root && (aSize > 2097153) ){
+			QueueItem::List ql;
+			fileQueue.find(ql, *root);
+			if(!ql.empty()){
+				dcassert(ql.size() == 1);
+				q = ql[0];
+			}
+		}
+				
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);

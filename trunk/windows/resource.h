@@ -609,11 +609,7 @@
 #define IDC_LIMITER                     2225
 #define IDC_STEALTH                     2226
 #define IDC_HELP_GEOIPFILE              2227
-#define IDC_BROWSELIST                  3000
-#define IDC_REMOVE_SOURCE               3500
-#define IDC_PM                          4000
-#define IDC_EMOMENU                     4001
-#define IDC_READD                       4500
+#define IDC_EMOMENU                     2228
 #define IDC_DOWNLOAD_TARGET             5000
 #define IDC_DOWNLOAD_TARGET_DIR         5500
 #define IDC_SELECT_WINDOW               6000
@@ -625,7 +621,6 @@
 #define IDC_PRIORITY_HIGH               7004
 #define IDC_PRIORITY_HIGHEST            7005
 #define IDC_DOWNLOAD_WHOLE_TARGET       7500
-#define IDC_REMOVE_SOURCES              8000
 #define IDC_DOWNLOAD_FAVORITE_DIRS      8500
 #define IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS 9000
 #define IDR_TRAY_PM                     10000
@@ -760,6 +755,11 @@
 #define IDC_CHAT_DBLCLICK               10195
 #define IDC_HEADER_MENU                 10196
 #define IDC_BITZI_LOOKUP                20000
+#define IDC_BROWSELIST                  21000
+#define IDC_REMOVE_SOURCE               23000
+#define IDC_PM                          25000
+#define IDC_READD                       27000
+#define IDC_REMOVE_SOURCES              29000
 #define ID_FILE_CONNECT                 32772
 #define ID_FILE_SETTINGS                32774
 #define ID_FILE_RECONNECT               32775

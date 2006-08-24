@@ -1061,6 +1061,8 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 			// re-add all sources
 			for(QueueItemInfo::SourceIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); ) {
 				QueueManager::getInstance()->readd(Text::fromT(ii->getTarget()), s->getUser());
+				//reset the iterator since it won't be valid after the call to readd
+				s = ii->getBadSources().begin();
 			}
 		} else {
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
@@ -1083,6 +1085,8 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		if(wID == IDC_REMOVE_SOURCE) {
 			for(QueueItemInfo::SourceIter si = ii->getSources().begin(); si != ii->getSources().end(); ) {
 				QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), si->getUser(), QueueItem::Source::FLAG_REMOVED);
+				//reset the iterator since it won't be valid after the call to readd
+				si = ii->getSources().begin();
 			}
 		} else {
 			CMenuItemInfo mi;

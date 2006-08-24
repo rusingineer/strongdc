@@ -29,7 +29,7 @@
 * segmenty pro automatické odpojení jsou zkontrolovány každých 40 sekund (místo 20 sekund)
 * snad opraven problém s nastavením hlášky o podvádìní pro fakery se spoustou stejných èísel ve velikosti sdílení
 * doèasná oprava pro zobrazení OP pøíkazù pøi vybrání uživatelù z více hubù v oknì vyhledávání
-* lze pøidat více souborù se stejným TTH do fronty
+* více souborù se stejným TTH lze pøidat pouze pokud je velikost souboru pod 2 MB
 * opraven deadlock v oknì CDM Debug messages
 * zobrazeno "Offline" jako název hubu, pokud uživatel není na hubu
 * zmìnìn formát pro výsledky èásteèných souborù

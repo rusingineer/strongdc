@@ -84,7 +84,7 @@ private:
 
 	mutable CriticalSection cs;
 
-	typedef HASH_MAP_X(string, OnlineUser*, noCaseStringHash, noCaseStringEq, noCaseStringLess) NickMap;
+	typedef HASH_MAP_X(string*, OnlineUser*, noCaseStringHash, noCaseStringEq, noCaseStringLess) NickMap;
 	typedef NickMap::const_iterator NickIter;
 
 	NickMap users;
@@ -97,7 +97,7 @@ private:
 	FloodMap seekers;
 	FloodMap flooders;
 
-	NmdcHub(const string& aHubURL);	
+	NmdcHub(const string& aHubURL);
 	virtual ~NmdcHub() throw();
 
 	// Dummy

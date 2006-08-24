@@ -83,7 +83,7 @@ public:
 class Client : public Speaker<ClientListener>, public BufferedSocketListener, protected TimerManagerListener {
 public:
 	typedef Client* Ptr;
-	typedef list<Ptr> List;
+	typedef slist<Ptr> List;
 	typedef List::const_iterator Iter;
 
 	virtual void connect();

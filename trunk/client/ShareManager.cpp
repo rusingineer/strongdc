@@ -410,7 +410,7 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	string vName = validateVirtual(aName);
 
 	Directory* dp = NULL;
-	list<string> removeMap;
+	slist<string> removeMap;
 	{
 		RLock<> l(cs);
 		
@@ -418,10 +418,10 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 		for(Directory::MapIter i = a.begin(); i != a.end(); ++i) {
 			if(Util::strnicmp(d, i->first, i->first.length()) == 0) {
 				// Trying to share an already shared directory
-				removeMap.push_back(i->first);
+				removeMap.push_front(i->first);
 			} else if(Util::strnicmp(d, i->first, d.length()) == 0) {
 				// Trying to share a parent directory
-				removeMap.push_back(i->first);	
+				removeMap.push_front(i->first);	
 			}
 		}
 
@@ -430,7 +430,7 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 		}
 	}
 
-	for(list<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
+	for(slist<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
 		removeDirectory(*i, true);
 	}
 	

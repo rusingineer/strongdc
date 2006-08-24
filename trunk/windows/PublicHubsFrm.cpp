@@ -332,7 +332,7 @@ void PublicHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		
 		w[0] = sr.right - tmp;
 		w[1] = w[0] + (tmp-16)/2;
-		w[2] = w[0] + (tmp-16);
+		w[2] = w[0] + (tmp);
 		
 		ctrlStatus.SetParts(3, w);
 	}
@@ -523,6 +523,7 @@ bool PublicHubsFrame::parseFilter(FilterModes& mode, double& size) {
 	string::size_type end = (string::size_type)string::npos;
 	int64_t multiplier = 1;
 
+	if(filter.empty()) return false;
 	if(filter.compare(0, 2, ">=") == 0) {
 		mode = GREATER_EQUAL;
 		start = 2;
