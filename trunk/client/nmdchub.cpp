@@ -69,9 +69,20 @@ void NmdcHub::connect(const OnlineUser& aUser) {
 	}
 }
 
-void NmdcHub::refreshUserList() {
-	clearUsers();
-	getNickList();
+void NmdcHub::refreshUserList(bool refreshOnly) {
+	if(refreshOnly) {
+		OnlineUser::List v;
+		{
+			Lock l(cs);
+			for(NickIter i = users.begin(); i != users.end(); ++i) {
+				v.push_back(i->second);
+			}
+			fire(ClientListener::UsersUpdated(), this, v);
+		}
+	} else {
+		clearUsers();
+		getNickList();
+	}
 }
 
 OnlineUser& NmdcHub::getUser(const string& aNick) {
@@ -185,7 +196,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 	/// @todo Think about this
 	id.set("TA", '<' + tag + '>');
 }
-int myInfo = 0;
+
 void NmdcHub::onLine(const string& aLine) throw() {
     updateActivity();
     
@@ -526,11 +537,18 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	} else if(cmd == "$SR") {
 		SearchManager::getInstance()->onSearchResult(aLine);
 	} else if(cmd == "$HubName") {
-		// Hack - first word goes to hub name, rest to description
+		// If " - " found, the first part goes to hub name, rest to description
+		// If no " - " found, first word goes to hub name, rest to description
 		string::size_type i = param.find(" - ");
 		if(i == string::npos) {
+			i = param.find(' ');
+			if(i == string::npos) {
 			getHubIdentity().setNick(unescape(param));
 			getHubIdentity().setDescription(Util::emptyString);			
+		} else {
+			getHubIdentity().setNick(unescape(param.substr(0, i)));
+				getHubIdentity().setDescription(unescape(param.substr(i+1)));
+			}
 		} else {
 			getHubIdentity().setNick(unescape(param.substr(0, i)));
 			getHubIdentity().setDescription(unescape(param.substr(i+3)));
@@ -787,6 +805,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		setPassword(Util::emptyString);
 	} else if(cmd == "$ZOn") {
 		socket->setMode(BufferedSocket::MODE_ZPIPE);
+	} else if(cmd == "$HubTopic") {
+		fire(ClientListener::HubTopic(), this, param);
 	} else {
 		dcassert(cmd[0] == '$');
 		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine.c_str());
@@ -830,8 +850,8 @@ void NmdcHub::myInfo() {
 	
 	dcdebug("MyInfo %s...\n", getMyNick().c_str());
 	char StatusMode = '\x01';
-	char modeChar = '?';
 
+	char modeChar = '?';
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
 		modeChar = '5';
 	else if(isActive())

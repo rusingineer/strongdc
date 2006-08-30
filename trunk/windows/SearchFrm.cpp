@@ -1082,7 +1082,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;	 	
             // Check previous search results for dupes	 	
-			for(slist<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+			for(vector<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
 				SearchInfo* si2 = *s;
                 SearchResult* sr2 = si2->sr;
 				if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
@@ -1107,7 +1107,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
 					ctrlResults.insertItem(si, si->imageIndex());
-					ctrlResults.mainItems.push_front(si);
+					ctrlResults.mainItems.push_back(si);
 				}
 
 				if(!filter.empty())
@@ -1687,7 +1687,7 @@ void SearchFrame::updateSearchList(SearchInfo* si) {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();
 
-		for(slist<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+		for(vector<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
 			SearchInfo* si = *i;
 			si->collapsed = true;
 			if(matchFilter(si, sel, doSizeCompare, mode, size)) {

@@ -602,7 +602,8 @@ public:
 
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
-	typedef slist<T*> TreeItem;
+	
+	typedef vector<T*> TreeItem;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -702,7 +703,7 @@ public:
 
 		if(mainItem == NULL) {
 			mainItem = item->createMainItem();
-			mainItems.push_front(mainItem);
+			mainItems.push_back(mainItem);
 
 			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
@@ -743,7 +744,7 @@ public:
 			delete *i;
 		}
 		s->subItems.clear();
-		mainItems.remove(s);
+		mainItems.erase(remove(mainItems.begin(), mainItems.end(), s), mainItems.end());
 	}
 
 	void removeGroupedItem(T* s, bool removeFromMemory = true) {

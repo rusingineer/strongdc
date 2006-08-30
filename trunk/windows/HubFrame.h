@@ -57,6 +57,15 @@ public:
 	typedef UCHandler<HubFrame> ucBase;
 	typedef UserInfoBaseHandler<HubFrame> uibBase;
 	
+	virtual BOOL PreTranslateMessage(MSG* pMsg)
+	{
+		if (!IsWindow())
+			return FALSE;
+
+		ctrlLastLines.RelayEvent(pMsg);
+		return FALSE;
+	}
+
 	BEGIN_MSG_MAP(HubFrame)
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_USERS, LVN_COLUMNCLICK, ctrlUsers.onColumnClick)
@@ -78,6 +87,7 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEMOVE, onStyleChange)
 		MESSAGE_HANDLER(WM_CAPTURECHANGED, onStyleChanged)
 		MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, onSizeMove)
+		MESSAGE_HANDLER(WM_FORWARDMSG, onForwardMsg)
 		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, onFileReconnect)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
 		COMMAND_ID_HANDLER(IDC_FOLLOW, onFollow)
@@ -173,6 +183,12 @@ public:
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+	BOOL onForwardMsg(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+	{
+		ctrlLastLines.RelayEvent((LPMSG)lParam);
+		return baseClass::PreTranslateMessage((LPMSG)lParam);
+	}
+
 	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
 		if (hWndCtl != ctrlEmoticons.m_hWnd) {
 			bHandled = false;
@@ -251,7 +267,7 @@ public:
 	LRESULT onRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		if(client->isConnected()) {
 			clearUserList();
-			client->refreshUserList();
+			client->refreshUserList(false);
 		}
 		return 0;
 	}
@@ -483,6 +499,7 @@ private:
 	virtual void on(NickTaken, Client*) throw();
 	virtual void on(SearchFlood, Client*, const string&) throw();
 	virtual void on(CheatMessage, Client*, const string&) throw();	
+	virtual void on(HubTopic, Client*, const string&) throw();
 
 	void speak(Speakers s) { Lock l(taskCS); taskList.push_back(new Task(s)); PostMessage(WM_SPEAKER); }
 	void speak(Speakers s, const string& msg) { Lock l(taskCS); taskList.push_back(new StringTask(s, Text::toT(msg))); PostMessage(WM_SPEAKER); }

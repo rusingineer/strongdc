@@ -419,7 +419,7 @@ bool ChatCtrl::HitNick(POINT p, CAtlString *sNick, int *piBegin, int *piEnd) {
 		if(iPos < 0) 
 			return false;
 		iRight = iPos - 1;
-	iCRLF = iRight - iLeft + 1;
+		iCRLF = iRight - iLeft + 1;
 	} else {
 		iLeft = 0;
 	}

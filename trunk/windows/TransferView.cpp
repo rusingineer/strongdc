@@ -863,7 +863,14 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 	ui->setStatusString(Text::toT(aReason));
 	ui->setSize(aDownload->getSize());
 	ui->setFile(Text::toT(aDownload->getTarget()));
-
+	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
+	tstring ip = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+	if(country.empty()) {
+		ui->setIP(ip);
+	} else {
+		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
+		ui->setIP(country + _T(" (") + ip + _T(")"));
+	}
 	if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
 		MainFrame::getMainFrame()->ShowBalloonTip((
 			TSTRING(FILE)+_T(": ") + ui->file + _T("\n")+
@@ -1038,7 +1045,7 @@ void TransferView::CollapseAll() {
 }
 
 void TransferView::ExpandAll() {
-	for(slist<ItemInfo*>::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
+	for(vector<ItemInfo*>::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
 		if((*i)->collapsed) {
 			ctrlTransfers.Expand(*i, ctrlTransfers.findItem(*i));
 		}
@@ -1198,7 +1205,10 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 			// hack to display whether file is compressed
 			if(ratio < 1.0000) {
-				statusString += _T("[Z] ");
+				statusString += _T("[Z]");
+			}
+			if(!statusString.empty()) {
+				statusString += _T(" ");
 			}
 			statusString += buf;
 			main->columns[COLUMN_STATUS] = statusString;

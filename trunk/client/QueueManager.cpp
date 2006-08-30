@@ -207,10 +207,11 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 }
 
 void QueueManager::FileQueue::add(QueueItem* qi) {
-	if(lastInsert == queue.end())
-		lastInsert = queue.insert(make_pair(const_cast<string*>(&qi->getTarget()), qi)).first;
-	else
-		lastInsert = queue.insert(lastInsert, make_pair(const_cast<string*>(&qi->getTarget()), qi));
+	queue.insert(make_pair(const_cast<string*>(&qi->getTarget()), qi));
+	//if(lastInsert == queue.end())
+	//	lastInsert = queue.insert(make_pair(const_cast<string*>(&qi->getTarget()), qi)).first;
+	//else
+	//	lastInsert = queue.insert(lastInsert, make_pair(const_cast<string*>(&qi->getTarget()), qi));
 }
 
 QueueItem* QueueManager::FileQueue::find(const string& target) {
@@ -297,8 +298,8 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) {
 }
 
 void QueueManager::FileQueue::move(QueueItem* qi, const string& aTarget) {
-	if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
-		lastInsert = queue.end();
+	//if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
+	//	lastInsert = queue.end();
 	queue.erase(const_cast<string*>(&qi->getTarget()));
 	qi->setTarget(aTarget);
 	add(qi);
@@ -1478,8 +1479,10 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 }
 
 void QueueManager::saveQueue() throw() {
-
-	try {
+		
+		Lock l(cs);	
+		
+		try {
 		
 		File ff(getQueueFile() + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		BufferedOutputStream<false> f(&ff);
@@ -1488,65 +1491,59 @@ void QueueManager::saveQueue() throw() {
 		f.write(LIT("<Downloads Version=\"" VERSIONSTRING "\">\r\n"));
 		string tmp;
 		string b32tmp;
-
-		{
-			Lock l(cs);
-			for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
-				QueueItem* qi = i->second;
-				if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
-					f.write(LIT("\t<Download Target=\""));
-					f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
-					f.write(LIT("\" Size=\""));
-					f.write(Util::toString(qi->getSize()));
-					f.write(LIT("\" Priority=\""));
-					f.write(Util::toString((int)qi->getPriority()));
-					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->chunkInfo) {
-						f.write(LIT("\" FreeBlocks=\""));
-						f.write(qi->chunkInfo->getFreeChunksString());
-						f.write(LIT("\" VerifiedParts=\""));
-						f.write(qi->chunkInfo->getVerifiedBlocksString());
-					}
-					f.write(LIT("\" Added=\""));
-					f.write(Util::toString(qi->getAdded()));
-					if(qi->getTTH() != NULL) {
-						b32tmp.clear();
-						f.write(LIT("\" TTH=\""));
-						f.write(qi->getTTH()->toBase32(b32tmp));
-					}
-					if(qi->getDownloadedBytes() > 0) {
-						f.write(LIT("\" TempTarget=\""));
-						f.write(SimpleXML::escape(qi->getTempTarget(), tmp, true));
-						f.write(LIT("\" Downloaded=\""));
-						f.write(Util::toString(qi->getDownloadedBytes()));
-					}
-					f.write(LIT("\" AutoPriority=\""));
-					f.write(Util::toString(qi->getAutoPriority()));
-					if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-						f.write(LIT("\" MaxSegments=\""));
-						f.write(Util::toString(qi->getMaxSegments()));
-					}
-	
-					f.write(LIT("\">\r\n"));
-	
-					for(QueueItem::Source::List::const_iterator j = qi->sources.begin(); j != qi->sources.end(); ++j) {
-						QueueItem::Source* s = *j;
-
-						if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
-
-						f.write(LIT("\t\t<Source CID=\""));
-						f.write(s->getUser()->getCID().toBase32());
-
-						if(!s->getPath().empty() && (!s->getUser()->isSet(User::TTH_GET) || !qi->getTTH()) ) {
-							f.write(LIT("\" Path=\""));
-							f.write(SimpleXML::escape(s->getPath(), tmp, true));
-							f.write(LIT("\" Utf8=\""));
-							f.write(s->isSet(QueueItem::Source::FLAG_UTF8) ? "1" : "0", 1);
-						}
-						f.write(LIT("\"/>\r\n"));
-					}
-
-					f.write(LIT("\t</Download>\r\n"));
+		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
+			QueueItem* qi = i->second;
+			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
+				f.write(LIT("\t<Download Target=\""));
+				f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
+				f.write(LIT("\" Size=\""));
+				f.write(Util::toString(qi->getSize()));
+				f.write(LIT("\" Priority=\""));
+				f.write(Util::toString((int)qi->getPriority()));
+				if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->chunkInfo) {
+					f.write(LIT("\" FreeBlocks=\""));
+					f.write(qi->chunkInfo->getFreeChunksString());
+					f.write(LIT("\" VerifiedParts=\""));
+					f.write(qi->chunkInfo->getVerifiedBlocksString());
 				}
+				f.write(LIT("\" Added=\""));
+				f.write(Util::toString(qi->getAdded()));
+				if(qi->getTTH() != NULL) {
+					b32tmp.clear();
+					f.write(LIT("\" TTH=\""));
+					f.write(qi->getTTH()->toBase32(b32tmp));
+				}
+				if(qi->getDownloadedBytes() > 0) {
+					f.write(LIT("\" TempTarget=\""));
+					f.write(SimpleXML::escape(qi->getTempTarget(), tmp, true));
+					f.write(LIT("\" Downloaded=\""));
+					f.write(Util::toString(qi->getDownloadedBytes()));
+				}
+				f.write(LIT("\" AutoPriority=\""));
+				f.write(Util::toString(qi->getAutoPriority()));
+				if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+					f.write(LIT("\" MaxSegments=\""));
+					f.write(Util::toString(qi->getMaxSegments()));
+				}
+
+				f.write(LIT("\">\r\n"));
+
+				for(QueueItem::Source::List::const_iterator j = qi->sources.begin(); j != qi->sources.end(); ++j) {
+					QueueItem::Source* s = *j;
+					if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
+					f.write(LIT("\t\t<Source CID=\""));
+					f.write(s->getUser()->getCID().toBase32());
+
+					if(!s->getPath().empty() && (!s->getUser()->isSet(User::TTH_GET) || !qi->getTTH()) ) {
+						f.write(LIT("\" Path=\""));
+						f.write(SimpleXML::escape(s->getPath(), tmp, true));
+						f.write(LIT("\" Utf8=\""));
+						f.write(s->isSet(QueueItem::Source::FLAG_UTF8) ? "1" : "0", 1);
+					}
+					f.write(LIT("\"/>\r\n"));
+				}
+
+				f.write(LIT("\t</Download>\r\n"));
 			}
 		}
 		
@@ -1803,7 +1800,6 @@ void QueueManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		}
 	}
 }
-
 
 bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException) 
 {	

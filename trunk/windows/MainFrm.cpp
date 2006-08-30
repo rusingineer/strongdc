@@ -203,7 +203,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
 	ctrlLastLines.SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	ctrlLastLines.AddTool(&ti);
-	ctrlLastLines.SetDelayTime(TTDT_AUTOPOP, 30000);
+	ctrlLastLines.SetDelayTime(TTDT_AUTOPOP, 15000);
 
 	CreateMDIClient();
 	m_CmdBar.SetMDIClient(m_hWndMDIClient);
@@ -274,7 +274,9 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	PostMessage(WM_SPEAKER, PARSE_COMMAND_LINE);
 
-	File::ensureDirectory(SETTING(LOG_DIRECTORY));
+	try {
+		File::ensureDirectory(SETTING(LOG_DIRECTORY));
+	} catch (const FileException) {	}
 
 	startSocket();
 	

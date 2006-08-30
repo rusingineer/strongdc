@@ -119,7 +119,7 @@ string WebServerManager::getLoginPage(){
     pagehtml += "		</form>";
     pagehtml += "	</div>";
     pagehtml += "	<div id='paticka'>";
-    pagehtml += "		2004 | Big Muscle | <a href='http://snail.pc.cz/StrongDC'>StrongDC++</a>";
+    pagehtml += "		2004 | Big Muscle | <a href='http://strongdc.berlios.de/'>StrongDC++</a>";
     pagehtml += "	</div>";
     pagehtml += "</div>";                                
     pagehtml += "</body>";

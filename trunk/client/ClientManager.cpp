@@ -110,12 +110,7 @@ StringList ClientManager::getNicks(const CID& cid) {
 			nicks.insert('{' + cid.toBase32() + '}');
 		}
 	}
-	
-	// HACK: STLPort bug?
-	StringList sl;
-	for(StringSet::const_iterator i = nicks.begin(); i != nicks.end(); i++) sl.push_back(*i);
-
-	return sl;
+	return StringList(nicks.begin(), nicks.end());
 }
 */
 string ClientManager::getConnection(const CID& cid) {

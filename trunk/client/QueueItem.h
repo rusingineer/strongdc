@@ -38,8 +38,9 @@ public:
 	typedef QueueItem* Ptr;
 	typedef deque<Ptr> List;
 	typedef List::const_iterator Iter;
-	typedef map<string*, Ptr, noCaseStringLess> StringMap;
-	//	typedef HASH_MAP<string, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
+	//typedef map<string*, Ptr, noCaseStringLess> StringMap;
+	//test the hash_map
+	typedef HASH_MAP<string*, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
 	typedef StringMap::const_iterator StringIter;
 	typedef HASH_MAP_X(User::Ptr, Ptr, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
 	typedef UserMap::const_iterator UserIter;
@@ -125,7 +126,7 @@ public:
 		User::Ptr& getUser() { return user; }
 		const User::Ptr& getUser() const { return user; }
 		void setUser(const User::Ptr& aUser) { user = aUser; }
-		string getFileName() { return Util::getFileName(path); }
+		//string getFileName() { return Util::getFileName(path); }
 
 		/**
 		 * Source parts info

@@ -43,8 +43,10 @@ LRESULT FavoriteDirsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	ctrlDirectories.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_FULLROWSELECT);
 		
 	// Prepare shared dir list
-	ctrlDirectories.InsertColumn(0, CTSTRING(FAVORITE_DIR_NAME), LVCFMT_LEFT, 80, 0);
-	ctrlDirectories.InsertColumn(1, CTSTRING(DIRECTORY), LVCFMT_LEFT, 197, 1);
+	CRect rc; 
+	ctrlDirectories.GetClientRect(rc); 
+	ctrlDirectories.InsertColumn(0, CTSTRING(FAVORITE_DIR_NAME), LVCFMT_LEFT, rc.Width()/4, 0); 
+	ctrlDirectories.InsertColumn(1, CTSTRING(DIRECTORY), LVCFMT_LEFT, rc.Width()*3 /4, 1);
 	StringPairList directories = FavoriteManager::getInstance()->getFavoriteDirs();
 	for(StringPairIter j = directories.begin(); j != directories.end(); j++)
 	{

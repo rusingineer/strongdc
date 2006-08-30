@@ -1475,19 +1475,13 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_NOTIFYSUBITEMDRAW;
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-		if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
-			bHandled = FALSE;
-			return 0;
-		}
-		
-		QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
-		if(!qi->qi || qi->qi->isSet(QueueItem::FLAG_TESTSUR) || qi->qi->isSet(QueueItem::FLAG_USER_LIST)) {
-			bHandled = FALSE;
-			return 0;
-		}
 
 		int colIndex = ctrlQueue.findColumn(cd->iSubItem);
 		if(colIndex == COLUMN_PROGRESS) {
+			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
+				bHandled = FALSE;
+				return 0;
+			}			
 			// draw something nice...
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 
@@ -1506,9 +1500,14 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			SetBkMode(dc, TRANSPARENT);
 		
+			FileChunksInfo::Ptr filedatainfo;
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			{
+				Lock l(cs);
+				filedatainfo = qi->qi ? qi->qi->chunkInfo : NULL;
+			}
+			
 			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), qi->getSize());
-
-			FileChunksInfo::Ptr filedatainfo = qi->qi->chunkInfo;
 
 			COLORREF crDownloaded = SETTING(COLOR_DOWNLOADED);
 			COLORREF crVerified = SETTING(COLOR_VERIFIED);
@@ -1549,6 +1548,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			return CDRF_SKIPDEFAULT;
 		} else if(colIndex == COLUMN_SEGMENTS) {
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
 			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlQueue.m_hWnd == ::GetFocus()) {
 					barva = GetSysColor(COLOR_HIGHLIGHT);
@@ -1581,10 +1581,13 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
 
-			if(!qi || !qi->qi || !qi->qi->getHasTree()) {
-				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
-			} else {
-				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
+			{
+				Lock l(cs);
+				if(!qi->qi || !qi->qi->getHasTree()) {
+					DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
+				} else {
+					DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
+				}
 			}
 			
 			::DrawText(cd->nmcd.hdc,buf, _tcslen(buf), rc, DT_RIGHT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
