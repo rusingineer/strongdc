@@ -689,18 +689,23 @@ struct noCaseStringLess {
 // parent class for objects with a lot of empty columns in list
 class ColumnBase {
 public:
+#ifdef _DEBUG
 	ColumnBase() : threadId(0) { }
+#endif
 
 	const tstring& getText(int col) const {
+#ifdef _DEBUG
 		if(threadId == 0) threadId = GetCurrentThreadId();
 		dcassert(threadId == GetCurrentThreadId());
+#endif
 		InfMap::const_iterator i = info.find((u_int8_t)col);
 		return i == info.end() ? Util::emptyStringT : i->second;
 	}
 	void setText(int name, const tstring& val) {
+#ifdef _DEBUG
 		if(threadId == 0) threadId = GetCurrentThreadId();
 		dcassert(threadId == GetCurrentThreadId());
-
+#endif
 		if(val.empty())
 			info.erase((u_int8_t)name);
 		else
@@ -709,8 +714,9 @@ public:
 private:
 	typedef map<u_int8_t, tstring> InfMap;
 	InfMap info;
-
+#ifdef _DEBUG
 	mutable DWORD threadId;
+#endif
 };
 
 #endif // !defined(UTIL_H)

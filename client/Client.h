@@ -57,6 +57,7 @@ public:
 	typedef X<18> NmdcSearch;
 	typedef X<19> AdcSearch;
 	typedef X<20> CheatMessage;
+	typedef X<21> HubTopic;
 
 	virtual void on(Connecting, Client*) throw() { }
 	virtual void on(Connected, Client*) throw() { }
@@ -77,6 +78,7 @@ public:
 	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&, bool) throw() { }
 	virtual void on(AdcSearch, Client*, const AdcCommand&, const CID&) throw() { }
 	virtual void on(CheatMessage, Client*, const string&) throw() { }
+	virtual void on(HubTopic, Client*, const string&) throw() { }
 };
 
 /** Yes, this should probably be called a Hub */
@@ -108,7 +110,7 @@ public:
 	bool isConnected() const { return socket && socket->isConnected(); }
 	bool isOp() const { return getMyIdentity().isOp(); }
 
-	virtual void refreshUserList() = 0;
+	virtual void refreshUserList(bool) = 0;
 
 	short getPort() const { return port; }
 	const string& getAddress() const { return address; }
@@ -155,8 +157,8 @@ public:
 		if(!socket)
 			return;
 		updateActivity();
-		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 		socket->write(aMessage, aLen);
+		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
 	}
 
 	const string& getMyNick() const { return getMyIdentity().getNick(); }

@@ -64,7 +64,7 @@ public:
 	virtual void send(const AdcCommand&) { dcassert(0); }
 
 	static string validateMessage(string tmp, bool reverse);
-	void refreshUserList();
+	void refreshUserList(bool);
 	
 	GETSET(int, supportFlags, SupportFlags);
 private:

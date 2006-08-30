@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio 2005\StrongDC++ 1.00\StrongDC.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio 2005\StrongDC\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -544,7 +544,7 @@
 #define IDC_BW_SIMPLE                   1324
 #define IDC_BW_BOTH                     1325
 #define IDC_SETTINGS_NOMINALBW          1326
-#define IDC_HELP_TRANSLATIONS			1327
+#define IDC_HELP_TRANSLATIONS           1327
 #define IDC_OTHER_QUEUE_OPTIONS         1400
 #define IDC_FILELIST_DIFF               1406
 #define IDC_SETTINGS_MEBIBYES           1406

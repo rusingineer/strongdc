@@ -85,13 +85,15 @@ public:
 		if (!IsWindow())
 			return FALSE;
 
+		ctrlLastLines.RelayEvent(pMsg);
+
 		if(CMDIFrameWindowImpl<MainFrame>::PreTranslateMessage(pMsg))
 			return TRUE;
 		
 		HWND hWnd = MDIGetActive();
 		if(hWnd != NULL)
 			return (BOOL)::SendMessage(hWnd, WM_FORWARDMSG, 0, (LPARAM)pMsg);
-		
+
 		return FALSE;
 	}
 	

@@ -190,7 +190,7 @@ AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) 
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
 
-	Directory::File::Iter f = i->second;
+	Directory::File* f = i->second;
 	AdcCommand cmd(AdcCommand::CMD_RES);
 	cmd.addParam("FN", f->getADCPath());
 	cmd.addParam("SI", Util::toString(f->getSize()));
@@ -776,7 +776,7 @@ void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
 
 	dir->addType(getType(f.getName()));
 
-	tthIndex.insert(make_pair(const_cast<TTHValue*>(&f.getTTH()), i));
+	tthIndex.insert(make_pair(const_cast<TTHValue*>(&f.getTTH()), const_cast<Directory::File*>(&f)));
 	bloom.add(Text::toLower(f.getName()));
 }
 
@@ -861,6 +861,7 @@ int ShareManager::run() {
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);
 	}
+
 	return 0;
 }
 		
@@ -1500,7 +1501,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 			// Get rid of false constness...
 			Directory::File* f = const_cast<Directory::File*>(&(*i));
 			f->setTTH(root);
-			tthIndex.insert(make_pair(const_cast<TTHValue*>(&f->getTTH()), i));
+			tthIndex.insert(make_pair(const_cast<TTHValue*>(&f->getTTH()), f));
 		} else {
 			string name = Util::getFileName(fname);
 			int64_t size = File::getSize(fname);

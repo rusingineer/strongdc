@@ -72,7 +72,14 @@ public:
 	
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(reinterpret_cast<HWND>(wParam) == ctrlHubs && ctrlHubs.GetSelectedCount() > 0) {
-		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+			POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+
+			CRect rc;
+			ctrlHubs.GetHeader().GetWindowRect(&rc);
+			if (PtInRect(&rc, pt)) {
+				return 0;
+			}
+
 	        if(pt.x == -1 && pt.y == -1) {
 			    WinUtil::getContextMenuPos(ctrlHubs, pt);
             }	

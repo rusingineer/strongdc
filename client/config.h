@@ -49,7 +49,8 @@
 # define _STLP_USE_PTR_SPECIALIZATIONS 1		// Reduces some code bloat
 # define _STLP_USE_TEMPLATE_EXPRESSION 1		// Speeds up string concatenation
 # define _STLP_NO_ANACHRONISMS 1				// Disables anachronistic constructs
-//# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in STLPort)
+//# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in my STLPort)
+# define _STLP_USE_OWN_NAMESPACE 1
 #endif
 
 #ifdef _MSC_VER

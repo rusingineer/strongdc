@@ -154,15 +154,23 @@ LRESULT FavoriteHubsFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 	if(reinterpret_cast<HWND>(wParam) == ctrlHubs) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
+		CRect rc;
+		ctrlHubs.GetHeader().GetWindowRect(&rc);
+		if (PtInRect(&rc, pt)) {
+			return 0;
+		}
+
 		if(pt.x == -1 && pt.y == -1) {
 			WinUtil::getContextMenuPos(ctrlHubs, pt);
 		}
 
 		int status = ctrlHubs.GetSelectedCount() > 0 ? MFS_ENABLED : MFS_DISABLED;
+		hubsMenu.EnableMenuItem(IDC_OPEN_HUB_LOG, status);
 		hubsMenu.EnableMenuItem(IDC_CONNECT, status);
 		hubsMenu.EnableMenuItem(IDC_EDIT, status);
 		hubsMenu.EnableMenuItem(IDC_MOVE_UP, status);
 		hubsMenu.EnableMenuItem(IDC_MOVE_DOWN, status);
+		hubsMenu.EnableMenuItem(IDC_REMOVE, status);
 
 		tstring x;
 		if (ctrlHubs.GetSelectedCount() == 1) {

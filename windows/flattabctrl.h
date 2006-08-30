@@ -97,14 +97,15 @@ public:
 	}
 
 	void startSwitch() {
-		nextTab = --viewOrder.end();
+		if(!viewOrder.empty())
+			nextTab = --viewOrder.end();
 		inTab = true;
 	}
 
 	void endSwitch() {
 		inTab = false;
 		if(active) 
-		setTop(active->hWnd);
+			setTop(active->hWnd);
 	}
 
 	HWND getNext() {

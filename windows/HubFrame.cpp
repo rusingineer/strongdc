@@ -161,7 +161,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlLastLines.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON, WS_EX_TOPMOST);
 	ctrlLastLines.SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	ctrlLastLines.AddTool(&ti);
-	ctrlLastLines.SetDelayTime(TTDT_AUTOPOP, 30000);
+	ctrlLastLines.SetDelayTime(TTDT_AUTOPOP, 15000);
 
 	copyHubMenu.CreatePopupMenu();
 	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBNAME, CTSTRING(HUB_NAME));
@@ -635,6 +635,8 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 }
 
 bool HubFrame::updateUser(const UserTask& u) {
+	if(!showUsers) return true;
+
 	UserMapIter i = userMap.find(u.user);
 	if(i == userMap.end()) {
 		UserInfo* ui = new UserInfo(u);
@@ -675,7 +677,7 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	UserMap::iterator i = userMap.find(aUser);
 	if(i == userMap.end()) {
 		// Should never happen?
-		dcassert(i != userMap.end());
+		// dcassert(i != userMap.end());
 		return;
 	}
 
@@ -763,7 +765,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					}
 						
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
-						if(u.identity.isTcpActive() || ClientManager::getInstance()->isActive(client->getHubUrl())) {
+						if(u.identity.isTcpActive() || client->isActive()) {
 							try {
 								QueueManager::getInstance()->addTestSUR(u.user, true);
 							} catch(const Exception&) {
@@ -774,7 +776,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			}
 		} else if(task->speaker == REMOVE_USER) {
 			UserTask& u = *static_cast<UserTask*>(task);
-			removeUser(u.user);
+			if(showUsers)
+				removeUser(u.user);
 			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.user))) {
 				addLine(Text::toT("*** " + STRING(PARTS) + u.identity.getNick()), WinUtil::m_ChatTextSystem);
 			}
@@ -1260,6 +1263,8 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
+	ctrlLastLines.Activate(FALSE);
+	ctrlLastLines.Activate(TRUE);
 }
 
 LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -1687,7 +1692,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 	bHandled = FALSE;
 	if(wParam == BST_CHECKED) {
 		showUsers = true;
-		ctrlUsers.SetRedraw(FALSE);
+		/*ctrlUsers.SetRedraw(FALSE);
 		ctrlUsers.DeleteAllItems();
 		
 		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
@@ -1697,10 +1702,13 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		}
 
 		ctrlUsers.SetRedraw(TRUE);
-		ctrlUsers.resort();
+		ctrlUsers.resort();*/
+		client->refreshUserList(true);
 	} else {
 		showUsers = false;
-		ctrlUsers.DeleteAllItems();
+		clearUserList();
+		client->availableBytes = 0;
+		//ctrlUsers.DeleteAllItems();
 	}
 
 	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);
@@ -1766,6 +1774,7 @@ LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 		lastLines.erase(lastLines.size() - 2);
 	}
 	nm->lpszText = const_cast<TCHAR*>(lastLines.c_str());
+
 	return 0;
 }
 
@@ -1892,6 +1901,9 @@ void HubFrame::on(SearchFlood, Client*, const string& line) throw() {
 }
 void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
 	speak(CHEATING_USER, line);
+}
+void HubFrame::on(HubTopic, Client*, const string& line) throw() {
+	speak(ADD_STATUS_LINE, STRING(HUB_TOPIC) + "\t" + Text::acpToUtf8(line) + "\r\n");
 }
 
 LRESULT HubFrame::onFilterChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {

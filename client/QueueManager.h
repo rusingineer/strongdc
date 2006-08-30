@@ -173,7 +173,7 @@ public:
 	/** All queue items by target */
 	class FileQueue {
 	public:
-		FileQueue() : lastInsert(queue.end()) { }
+		FileQueue() /*: lastInsert(queue.end())*/ { }
 		~FileQueue() {
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
 				delete i->second;
@@ -194,8 +194,8 @@ public:
 		QueueItem::StringMap& getQueue() { return queue; }
 		void move(QueueItem* qi, const string& aTarget);
 		void remove(QueueItem* qi) {
-			if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
-				lastInsert = queue.end();
+			//if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
+			//	lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
@@ -209,7 +209,7 @@ public:
 	private:
 		QueueItem::StringMap queue;
 		/** A hint where to insert an item... */
-		QueueItem::StringMap::iterator lastInsert;
+		//QueueItem::StringMap::iterator lastInsert;
 	};
 
 	/** QueueItems by target */

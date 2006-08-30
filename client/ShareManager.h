@@ -250,7 +250,7 @@ private:
 		bool isDirectory;
 	};
 
-	typedef HASH_MULTIMAP_X(TTHValue*, Directory::File::Iter, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
+	typedef HASH_MULTIMAP_X(TTHValue*, Directory::File*, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
 
 	HashFileMap tthIndex;
