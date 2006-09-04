@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -215,8 +215,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 			DirectoryListing::File *copyFile = new DirectoryListing::File(*currentFile, true);
 			if(is->isForbidden && !getSentRaw()) {
 				char buf[128];
-				_snprintf(buf, 127, CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
-				buf[127] = NULL;
+				snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
 				
 				ClientManager::getInstance()->setCheating(user, "", buf, is->raw, false);
 

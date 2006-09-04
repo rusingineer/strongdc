@@ -30,7 +30,6 @@
 // Remove this line if hashes are not available in your stl
 #define HAVE_HASH 1
 
-
 // This enables stlport's debug mode (and slows it down to a crawl...)
 #ifdef _DEBUG
 # define _STLP_DEBUG 1
@@ -50,7 +49,6 @@
 # define _STLP_USE_TEMPLATE_EXPRESSION 1		// Speeds up string concatenation
 # define _STLP_NO_ANACHRONISMS 1				// Disables anachronistic constructs
 //# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in my STLPort)
-# define _STLP_USE_OWN_NAMESPACE 1
 #endif
 
 #ifdef _MSC_VER

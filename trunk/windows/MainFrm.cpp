@@ -389,12 +389,12 @@ HWND MainFrame::createToolbar() {
 		if(SETTING(TOOLBARIMAGE) == "")
 			largeImages.CreateFromImage(IDB_TOOLBAR20, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 		else
-			WinUtil::createImageList1(largeImages, SETTING(TOOLBARIMAGE), 20);
+			largeImages.CreateFromImage(Text::toT(SETTING(TOOLBARIMAGE)).c_str(), 20, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 
 		if(SETTING(TOOLBARHOTIMAGE) == "")
 			largeImagesHot.CreateFromImage(IDB_TOOLBAR20_HOT, 20, 20, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
 		else
-			WinUtil::createImageList1(largeImagesHot, SETTING(TOOLBARHOTIMAGE), 20);
+			largeImagesHot.CreateFromImage(Text::toT(SETTING(TOOLBARHOTIMAGE)).c_str(), 20, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 
 		ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
 		ctrlToolbar.SetImageList(largeImages);
@@ -972,34 +972,37 @@ int MainFrame::run() {
 	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_GRAYED);
 	tstring file = Text::toT(Util::getAppPath()) + _T("*.*");
 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
+		Thread::setThreadPriority(Thread::LOW);
 		lastTTHdir = Util::getFilePath(file);
 
 		char TTH[192*8/(5*8)+2];
 
 		char buf[512*1024];
 
-		File f(Text::fromT(file), File::READ, File::OPEN);
-		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
+		try {
+			File f(Text::fromT(file), File::READ, File::OPEN);
+			TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
 
-		if(f.getSize() > 0) {
-			size_t n = 0;
-			size_t n2 = 512*1024;
-			while( (n = f.read(buf, n2)) > 0) {
-				tth.update(buf, n);
-				n2 = 512*1024;
+			if(f.getSize() > 0) {
+				size_t n = 512*1024;
+				while( (n = f.read(buf, n)) > 0) {
+					tth.update(buf, n);
+					n = 512*1024;
+				}
+			} else {
+				tth.update("", 0);
 			}
-		} else {
-			tth.update("", 0);
-		}
-		tth.finalize();
+			tth.finalize();
 
-		strcpy(TTH, tth.getRoot().toBase32().c_str());
+			strcpy(TTH, tth.getRoot().toBase32().c_str());
 
-		CInputBox ibox(m_hWnd);
+			CInputBox ibox(m_hWnd);
 
-		string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
-		f.close();
-		ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
+			string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
+			f.close();
+			Thread::setThreadPriority(Thread::NORMAL);
+			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
+		} catch(...) { }
 	}
 	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);
 	return 0;
@@ -1007,8 +1010,7 @@ int MainFrame::run() {
 
 LRESULT MainFrame::onGetTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	Thread::start();
-	Thread::setThreadPriority(Thread::NORMAL); // change as you wish
-  return 0;
+	return 0;
 }
 
 void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)

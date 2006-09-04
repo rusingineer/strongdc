@@ -411,13 +411,12 @@ int SearchManager::ResultsQueue::run() {
 				const string& myNick = ClientManager::getInstance()->getMyNMDCNick(user);
 				if(!myNick.empty()) {
 					char buf[1024];
-					_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
-					buf[1023] = NULL;
+					snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
 					Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
 				}
 			}
 		}	
-		Thread::sleep(6);
+		Thread::sleep(10);
 	}
 	return 0;
 }
@@ -654,8 +653,7 @@ void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse,
 		string hubIpPort = aClient->getIpPort();
 		string tth = aTTH.toBase32();
 		string user = Text::utf8ToAcp(aClient->getMyNick());
-		_snprintf(buf, 1023, "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
-		buf[1023] = NULL;
+		snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
 		*/
 
 		s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMyCID()));

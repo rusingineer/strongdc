@@ -127,7 +127,7 @@ public:
 
 	static string getCounts() {
 		char buf[128];
-		return string(buf, sprintf(buf, "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
+		return string(buf, snprintf(buf, sizeof(buf), "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
 	}
 
 	string getRawCommand(const int aRawCommand) {

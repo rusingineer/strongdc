@@ -35,6 +35,8 @@
 * zmìnìn formát pro výsledky èásteèných souborù
 * opravena chyba, že maximální poèet zdrojù pro hledání alternativ nemohl být nastaven pøes 15
 * pokud je odpojen pomalý uživatel, v menu Znovu pøidat zdroj bude zobrazena jeho rychlost
+* koneènì opraven velmi starý bug s nefungujícíma tooltipama, pokud jednou zmizí
+* pøidána podpora $HubTopic (iDC++)
 
 	-- StrongDC++ 2.01 --
 

@@ -28,6 +28,8 @@
 #include "CID.h"
 #include "FastAlloc.h"
 
+typedef map<short, string> InfMap;
+typedef InfMap::const_iterator InfIter;
 #define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 
 /** A user connected to one or more hubs. */
@@ -94,13 +96,11 @@ public:
 	GS(Pk, "PK");
 	GS(UnknownCommand, "UC");
 
-	typedef map<short, string> InfMap;
-	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 
 private:
 	const string& get(const char* name) const {
-		InfMap::const_iterator i = info.find(*(short*)name);
+		InfIter i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
 	}
 
@@ -119,12 +119,12 @@ class Client;
 class OnlineUser;
 
 /** One of possibly many identities of a user, mainly for UI purposes */
-class Identity : public Flags {
+class Identity {
 public:
 
 	Identity() : sid(0) { }
 	Identity(const User::Ptr& ptr, u_int32_t aSID) : user(ptr), sid(aSID) { }
-	Identity(const Identity& rhs) : ::Flags(rhs), user(rhs.user), sid(rhs.sid), info(rhs.info) { }
+	Identity(const Identity& rhs) : user(rhs.user), sid(rhs.sid), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
 	GS(Nick, "NI")
@@ -164,13 +164,13 @@ public:
 
 	void sendRawCommand(Client& c, const int aRawCommand);
 	const string setCheat(Client& c, const string& aCheatDescription, bool aBadClient);
-	const string getReport();
+	const string getReport() const;
 	const string updateClientType(OnlineUser& ou);
-	bool matchProfile(const string& aString, const string& aProfile);
+	bool matchProfile(const string& aString, const string& aProfile) const;
 
 	const string& get(const char* name) const {
 		RLock<> l(cs);
-		InfMap::const_iterator i = info.find(*(short*)name);
+		InfIter i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
 	}
 
@@ -191,14 +191,11 @@ public:
 	GETSET(User::Ptr, user, User);
 	GETSET(u_int32_t, sid, SID);
 private:
-	typedef map<short, string> InfMap;
-	typedef InfMap::const_iterator InfIter;
 	InfMap info;
-
 	mutable RWLock<> cs;
 
-	string getVersion(const string& aExp, const string& aTag);
-	string splitVersion(const string& aExp, const string& aTag, const int part);
+	string getVersion(const string& aExp, const string& aTag) const;
+	string splitVersion(const string& aExp, const string& aTag, const int part) const;
 };
 
 class NmdcHub;

@@ -182,7 +182,7 @@ private:
 	class ItemInfo : public UserInfoBase {
 	public:
 		typedef ItemInfo* Ptr;
-		typedef deque<Ptr> List;
+		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		ItemInfo::List subItems;
@@ -278,8 +278,8 @@ private:
 				main->columns[COLUMN_IP] = i->columns[COLUMN_IP];
 			} else {
 				TCHAR buf[256];
-				_sntprintf(buf, 255, _T("%d %s"), main->subItems.size(), CTSTRING(USERS));
-				buf[255] = NULL;
+				snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size(), CTSTRING(USERS));
+
 				main->columns[COLUMN_USER] = buf;
 				main->columns[COLUMN_IP] = Util::emptyStringT;
 			}

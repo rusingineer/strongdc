@@ -74,7 +74,7 @@ ShareManager::~ShareManager() {
 	if(hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if(_tcslen(data.cFileName) > 13) // length of "files.xml.bz2"
-				File::deleteFile(Util::getAppPath() + Text::fromT(data.cFileName));			
+				File::deleteFile(Util::getConfigPath() + Text::fromT(data.cFileName));			
 		} while(FindNextFile(hFind, &data));
 
 		FindClose(hFind);

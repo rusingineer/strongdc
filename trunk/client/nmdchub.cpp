@@ -839,7 +839,7 @@ void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 void NmdcHub::hubMessage(const string& aMessage) { 
 	checkstate(); 
 	char buf[256];
-	sprintf(buf, "<%s> ", getMyNick().c_str());
+	snprintf(buf, sizeof(buf), "<%s> ", getMyNick().c_str());
 	send(toAcp(string(buf)+ escape(aMessage) + "|"));
 }
 
@@ -888,13 +888,13 @@ void NmdcHub::myInfo() {
 	}
 
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		sprintf(tag, "%s V:%s,M:%c,H:%s,S:%d,L:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots(), SETTING(MAX_UPLOAD_SPEED_LIMIT));
+		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d,L:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots(), SETTING(MAX_UPLOAD_SPEED_LIMIT));
 	} else {
-		sprintf(tag, "%s V:%s,M:%c,H:%s,S:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots());
+		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots());
 	}
 
 	char myinfo[512];
-	sprintf(myinfo, "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toAcp(getCurrentNick()).c_str(),
+	snprintf(myinfo, sizeof(myinfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toAcp(getCurrentNick()).c_str(),
 		toAcp(escape(getCurrentDescription())).c_str(), tag, connection.c_str(), StatusMode, 
 		toAcp(escape(SETTING(EMAIL))).c_str());
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
@@ -902,7 +902,7 @@ void NmdcHub::myInfo() {
 		lastmyinfo = myinfo;
 		lastbytesshared = newbytesshared;
 		tag[0] = NULL;
-		sprintf(tag, "%s$|", Util::toString(newbytesshared).c_str());
+		snprintf(tag, sizeof(tag), "%s$|", Util::toString(newbytesshared).c_str());
 		strcat(myinfo, tag);
 		send(myinfo);	
 	}
@@ -919,13 +919,16 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 		tmp[i] = '$';
 	}
 	int chars = 0;
+	size_t BUF_SIZE;	
 	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp();
-		buf = new char[x.length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		BUF_SIZE = x.length() + aString.length() + 64;
+		buf = new char[BUF_SIZE];
+		chars = snprintf(buf, BUF_SIZE, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	} else {
-		buf = new char[getMyNick().length() + aString.length() + 64];
-		chars = sprintf(buf, "$Search Hub:%s %c?%c?%I64d?%d?%s|", toAcp(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		BUF_SIZE = getMyNick().length() + aString.length() + 64;
+		buf = new char[BUF_SIZE];
+		chars = snprintf(buf, BUF_SIZE, "$Search Hub:%s %c?%c?%I64d?%d?%s|", toAcp(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
 }

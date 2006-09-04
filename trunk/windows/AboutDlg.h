@@ -57,10 +57,10 @@ public:
 			Util::formatBytesW(SETTING(TOTAL_DOWNLOAD))).c_str());
 
 		if(SETTING(TOTAL_DOWNLOAD) > 0) {
-			char buf[64];
-			_snprintf(buf, 63, "Ratio (up/down): %.2f", ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
-			buf[63] = 0;
-			SetDlgItemText(IDC_RATIO, Text::toT(buf).c_str());
+			TCHAR buf[64];
+			snwprintf(buf, sizeof(buf), _T("Ratio (up/down): %.2f"), ((double)SETTING(TOTAL_UPLOAD)) / ((double)SETTING(TOTAL_DOWNLOAD)));
+
+			SetDlgItemText(IDC_RATIO, buf);
 		/*	sprintf(buf, "Uptime: %s", Util::formatTime(Util::getUptime()));
 			SetDlgItemText(IDC_UPTIME, Text::toT(buf).c_str());*/
 		}

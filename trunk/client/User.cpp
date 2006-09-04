@@ -101,8 +101,7 @@ const string Identity::setCheat(Client& c, const string& aCheatDescription, bool
 	return report;
 }
 
-const string Identity::getReport()
-{
+const string Identity::getReport() const {
 	string report = "\r\nClient:		" + get("CT");
 	report += "\r\nXML Generator:	" + (user->getGenerator().empty() ? "N/A" : user->getGenerator());
 	report += "\r\nLock:		" + user->getLock();
@@ -232,13 +231,13 @@ const string Identity::updateClientType(OnlineUser& ou) {
 	return Util::emptyString;
 }
 
-bool Identity::matchProfile(const string& aString, const string& aProfile) {
+bool Identity::matchProfile(const string& aString, const string& aProfile) const {
 	DETECTION_DEBUG("\t\tMatching String: " + aString + " to Profile: " + aProfile);
 	PME reg(aProfile);
 	return reg.IsValid() ? (reg.match(aString) > 0) : false;
 }
 
-string Identity::getVersion(const string& aExp, const string& aTag) {
+string Identity::getVersion(const string& aExp, const string& aTag) const {
 	string::size_type i = aExp.find("%[version]");
 	if (i == string::npos) { 
 		i = aExp.find("%[version2]"); 
@@ -247,7 +246,7 @@ string Identity::getVersion(const string& aExp, const string& aTag) {
 	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 }
 
-string Identity::splitVersion(const string& aExp, const string& aTag, const int part) {
+string Identity::splitVersion(const string& aExp, const string& aTag, const int part) const {
 	PME reg(aExp);
 	if(!reg.IsValid()) { return ""; }
 	reg.split(aTag, 2);

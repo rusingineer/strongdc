@@ -752,7 +752,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							cf.crTextColor = SETTING(ERROR_COLOR);
 
 							char buf[512];
-							sprintf(buf, "*** %s %s - %s", STRING(USER).c_str(), u.identity.getNick().c_str(), detectString.c_str());
+							snprintf(buf, sizeof(buf), "*** %s %s - %s", STRING(USER).c_str(), u.identity.getNick().c_str(), detectString.c_str());
 
 							if(BOOLSETTING(POPUP_CHEATING_USER)) {
 								MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(buf).c_str(), CTSTRING(CHEATING_USER));
@@ -1780,11 +1780,11 @@ LRESULT HubFrame::onGetToolTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 
 void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	tstring line = _T("[") + Text::toT(Util::getShortTimeString()) + _T("] ") + aLine;
-    TCHAR* sLine = (TCHAR*)line.c_str();
+	TCHAR* sLine = (TCHAR*)line.c_str();
 
-    if(_tcslen(sLine) > 512) {
-        sLine[512] = NULL;
-    }
+   	if(_tcslen(sLine) > 512) {
+		sLine[512] = NULL;
+	}
 
 	ctrlStatus.SetText(0, sLine);
 	while(lastLinesList.size() + 1 > MAX_CLIENT_LINES)
@@ -1903,7 +1903,7 @@ void HubFrame::on(CheatMessage, Client*, const string& line) throw() {
 	speak(CHEATING_USER, line);
 }
 void HubFrame::on(HubTopic, Client*, const string& line) throw() {
-	speak(ADD_STATUS_LINE, STRING(HUB_TOPIC) + "\t" + Text::acpToUtf8(line) + "\r\n");
+	speak(ADD_STATUS_LINE, STRING(HUB_TOPIC) + "\t" + line);
 }
 
 LRESULT HubFrame::onFilterChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
