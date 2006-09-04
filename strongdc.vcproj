@@ -81,7 +81,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="ws2_32.lib winmm.lib powrprof.lib"
+				AdditionalDependencies="libunicows.lib ws2_32.lib winmm.lib powrprof.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -191,7 +191,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="ws2_32.lib winmm.lib powrprof.lib"
+				AdditionalDependencies="libunicows.lib ws2_32.lib winmm.lib powrprof.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				Version=""
 				LinkIncremental="1"

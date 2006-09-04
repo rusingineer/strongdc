@@ -671,6 +671,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
+				dcassert(!d->isSet(Download::FLAG_CHUNKED));
 				failDownload(aSource, e.getError());
 				ClientManager::getInstance()->connect(aSource->getUser());
 			}
@@ -701,8 +702,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 						char buf[128];
-						_snprintf(buf, 127, CSTRING(LEAF_CORRUPTED), Util::formatBytes(d->getSize() - lpFileDataInfo->getDownloadedSize()).c_str());
-						buf[127] = 0;
+						snprintf(buf, sizeof(buf), CSTRING(LEAF_CORRUPTED), Util::formatBytes(d->getSize() - lpFileDataInfo->getDownloadedSize()).c_str());
 
 						failDownload(aSource, buf);
 						return;

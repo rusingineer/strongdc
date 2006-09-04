@@ -508,7 +508,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	}
 
 	SearchInfo* i = new SearchInfo(aResult);
-	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
+	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);
 }
 
 void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw() {
@@ -1099,7 +1099,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			if(bPaused == false) {
 				bool resort = false;
 				if(resultsCount++ % 13 == 0) {
-					ctrlResults.SetRedraw(FALSE);
+					//ctrlResults.SetRedraw(FALSE);
 					resort = true;
 				}
 
@@ -1120,10 +1120,10 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 
 				if(resort) {
 					ctrlResults.resort();
-					ctrlResults.SetRedraw(TRUE);
+					//ctrlResults.SetRedraw(TRUE);
 				}
 			} else {
-				PausedResults.push_front(si);
+				PausedResults.push_back(si);
 				ctrlStatus.SetText(2, (Util::toStringW(resultsCount-PausedResults.size()) + _T("/") + Util::toStringW(resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
 			}
 		}

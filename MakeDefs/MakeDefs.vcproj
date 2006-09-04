@@ -49,7 +49,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				WholeProgramOptimization="false"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="_CONSOLE;HAVE_STLPORT"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -91,9 +91,10 @@
 				GenerateDebugInformation="true"
 				GenerateMapFile="false"
 				SubSystem="1"
-				OptimizeReferences="0"
+				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				LinkTimeCodeGeneration="0"
+				OptimizeForWindows98="1"
+				LinkTimeCodeGeneration="1"
 			/>
 			<Tool
 				Name="VCALinkTool"

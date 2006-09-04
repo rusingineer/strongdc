@@ -66,6 +66,11 @@ _CrtDbgBreak(); } } while(false)
 #define dcdrun(exp)
 #endif //_DEBUG
 
+#ifdef _WIN32
+# define snprintf _snprintf
+# define snwprintf _snwprintf
+#endif
+
 // Make sure we're using the templates from algorithm...
 #ifdef min
 #undef min

@@ -652,13 +652,12 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 	}
 	if(!m_boFireball) {
 		if(getAverageSpeed() >= 102400) {
-			u_int32_t iActTicks = aTick;
 			if ( m_boLastTickHighSpeed ) {
 				u_int32_t iHighSpeedTicks = 0;
-				if ( iActTicks >= m_iHighSpeedStartTick ) 
-					iHighSpeedTicks = ( iActTicks - m_iHighSpeedStartTick );
+				if ( aTick >= m_iHighSpeedStartTick ) 
+					iHighSpeedTicks = ( aTick - m_iHighSpeedStartTick );
 				else
-					iHighSpeedTicks = ( iActTicks + 4294967295 - m_iHighSpeedStartTick );
+					iHighSpeedTicks = ( aTick + 4294967295 - m_iHighSpeedStartTick );
 
 				if ( iHighSpeedTicks > 60000 ) {
 					m_boFireball = true;

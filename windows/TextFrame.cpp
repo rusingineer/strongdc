@@ -37,7 +37,7 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_READONLY, WS_EX_CLIENTEDGE);
 
 	ctrlPad.LimitText(0);
-	ctrlPad.SetFont(WinUtil::monoFont);
+	ctrlPad.SetFont(WinUtil::font);
 	string tmp;
 	try {
 		tmp = Util::toDOS(File(Text::fromT(file), File::READ, File::OPEN).read(MAX_TEXT_LEN));
@@ -49,7 +49,7 @@ LRESULT TextFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			}
 			i++;
 		}
-		ctrlPad.SetWindowText(Text::toT(tmp).c_str());
+		ctrlPad.SetWindowText(Text::toT(Text::acpToUtf8(tmp)).c_str());
 		ctrlPad.EmptyUndoBuffer();
 		SetWindowText(Text::toT(Util::getFileName(Text::fromT(file))).c_str());
 	} catch(const FileException& e) {

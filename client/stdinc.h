@@ -37,9 +37,6 @@
 #define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 //disable the deperecated warnings for the crt functions.
 #pragma warning(disable: 4996)
-//#define _CRT_SECURE_NO_DEPRECATE 1
-//#define _ATL_SECURE_NO_DEPRECATE 1
-//#define _CRT_NON_CONFORMING_SWPRINTFS 1
 #endif
 
 #include <Winsock2.h>
@@ -50,6 +47,7 @@
 
 #else
 #include <unistd.h>
+#include <stdint.h>
 #endif
 
 #undef memcpy

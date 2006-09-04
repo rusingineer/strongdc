@@ -580,7 +580,7 @@ private:
 			lvcl.pszText = buf;
 			lvcl.cchTextMax = 100;
 			GetColumn(i, &lvcl);
-			for(u_int32_t j = 0; j < columnList.size(); ++j) {
+			for(size_t j = 0; j < columnList.size(); ++j) {
 				if(Util::stricmp(columnList[j]->name.c_str(), lvcl.pszText) == 0) {
 					columnIndexes.push_back(static_cast<int>(j));
 					break;
@@ -717,13 +717,13 @@ public:
 		} else 
 			pos = findItem(mainItem);
 
-		mainItem->subItems.push_front(item);
+		mainItem->subItems.push_back(item);
 		item->main = mainItem;
 		item->updateMainItem();
 
 		if(pos != -1) {
-			u_int32_t totalSubItems = mainItem->subItems.size();
-			if(totalSubItems == (u_int32_t)(uniqueMainItem ? 2 : 1)) {
+			size_t totalSubItems = mainItem->subItems.size();
+			if(totalSubItems == (size_t)(uniqueMainItem ? 2 : 1)) {
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 					mainItem->collapsed = false;

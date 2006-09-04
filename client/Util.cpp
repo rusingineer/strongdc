@@ -148,12 +148,10 @@ int Util::getNetLimiterLimit() {
 				char buf1[256];
 				char buf2[256];
 
-				_snprintf(buf1, 255, "%X", u_int8_t(buf[5]));
-				buf1[255] = 0;
+				snprintf(buf1, sizeof(buf1), "%X", u_int8_t(buf[5]));
 				string a1 = buf1;
 
-				_snprintf(buf2, 255, "%X", u_int8_t(buf[6]));
-				buf2[255] = 0;
+				snprintf(buf2, sizeof(buf2), "%X", u_int8_t(buf[6]));
 				string a2 = buf2;
 
 				char* limit_hex = _strdup(("0x" + a2 + a1).c_str());
@@ -260,7 +258,7 @@ void Util::initialize() {
 		}
 	} catch(const FileException&) {
 	}
-	File::ensureDirectory(Util::getAppPath() + SETTINGS_DIR);
+	File::ensureDirectory(Util::getConfigPath());
 }
 
 string Util::getConfigPath() {
@@ -272,24 +270,6 @@ string Util::getConfigPath() {
 #ifdef __APPLE__
 /// @todo Verify this for apple?
 			return string(home) + "/Library/Application Support/Mac DC++/";
-#else
-			return string(home) + "/.dc++/";
-#endif // __APPLE__
-		}
-		return emptyString;
-#endif // _WIN32
-}
-
-string Util::getDataPath() {
-#ifdef _WIN32
-	return getAppPath();
-#else
-	// This probably ought to be /usr/share/*...
-	char* home = getenv("HOME");
-	if (home) {
-#ifdef __APPLE__
-		/// @todo Verify this for apple?
-		return string(home) + "/Library/Application Support/Mac DC++/";
 #else
 			return string(home) + "/.strongdc++/";
 #endif // __APPLE__
@@ -474,19 +454,19 @@ string Util::getAwayMessage() {
 string Util::formatBytes(int64_t aBytes) {
 	char buf[64];
 	if(aBytes < 1024) {
-		sprintf(buf, "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
+		snprintf(buf, sizeof(buf), "%d %s", (int)(aBytes&0xffffffff), CSTRING(B));
 	} else if(aBytes < 1048576) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1024.0), CSTRING(KB));
 	} else if(aBytes < 1073741824) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1048576.0), CSTRING(MB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1048576.0), CSTRING(MB));
 	} else if(aBytes < (int64_t)1099511627776) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1073741824.0), CSTRING(GB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1073741824.0), CSTRING(GB));
 	} else if(aBytes < (int64_t)1125899906842624) {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1099511627776.0), CSTRING(TB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1099511627776.0), CSTRING(TB));
 	} else if(aBytes < (int64_t)1152921504606846976)  {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1125899906842624.0), CSTRING(PB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1125899906842624.0), CSTRING(PB));
 	} else {
-		sprintf(buf, "%.02f %s", (double)aBytes/(1152921504606846976.0), CSTRING(EB));
+		snprintf(buf, sizeof(buf), "%.02f %s", (double)aBytes/(1152921504606846976.0), CSTRING(EB));
 	}
 
 	return buf;
@@ -495,19 +475,19 @@ string Util::formatBytes(int64_t aBytes) {
 wstring Util::formatBytesW(int64_t aBytes) {
 	wchar_t buf[64];
 	if(aBytes < 1024) {
-		swprintf(buf, L"%d %s", (int)(aBytes&0xffffffff), CWSTRING(B));
+		snwprintf(buf, sizeof(buf), L"%d %s", (int)(aBytes&0xffffffff), CWSTRING(B));
 	} else if(aBytes < 1048576) {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1024.0), CWSTRING(KB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1024.0), CWSTRING(KB));
 	} else if(aBytes < 1073741824) {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1048576.0), CWSTRING(MB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1048576.0), CWSTRING(MB));
 	} else if(aBytes < (int64_t)1099511627776) {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1073741824.0), CWSTRING(GB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1073741824.0), CWSTRING(GB));
 	} else if(aBytes < (int64_t)1125899906842624) {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1099511627776.0), CWSTRING(TB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1099511627776.0), CWSTRING(TB));
 	} else if(aBytes < (int64_t)1152921504606846976)  {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1125899906842624.0), CWSTRING(PB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1125899906842624.0), CWSTRING(PB));
 	} else {
-		swprintf(buf, L"%.02f %s", (double)aBytes/(1152921504606846976.0), CWSTRING(EB));
+		snwprintf(buf, sizeof(buf), L"%.02f %s", (double)aBytes/(1152921504606846976.0), CWSTRING(EB));
 	}
 
 	return buf;
@@ -516,25 +496,25 @@ wstring Util::formatBytesW(int64_t aBytes) {
 wstring Util::formatExactSize(int64_t aBytes) {
 	wchar_t buf[64];
 	wchar_t number[64];
-		NUMBERFMT nf;
-	swprintf(number, L"%I64d", aBytes);
-	wchar_t dummy[16];
+	NUMBERFMT nf;
+	snwprintf(number, sizeof(number), L"%I64d", aBytes);
+	wchar_t Dummy[16];
     
-		/*No need to read these values from the system because they are not
-		used to format the exact size*/
-		nf.NumDigits = 0;
-		nf.LeadingZero = 0;
-		nf.NegativeOrder = 0;
-	nf.lpDecimalSep = L",";
+	/*No need to read these values from the system because they are not
+	used to format the exact size*/
+	nf.NumDigits = 0;
+	nf.LeadingZero = 0;
+	nf.NegativeOrder = 0;
+	nf.lpDecimalSep = _T(",");
 
-	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_SGROUPING, dummy, 16 );
-	nf.Grouping = _wtoi(dummy);
-	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, dummy, 16 );
-	nf.lpThousandSep = dummy;
+	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
+	nf.Grouping = _wtoi(Dummy);
+	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, Dummy, 16 );
+	nf.lpThousandSep = Dummy;
 
 	GetNumberFormat(LOCALE_USER_DEFAULT, 0, number, &nf, buf, 64);
 		
-	wsprintf(buf, L"%s %s", buf, CTSTRING(B));
+	snwprintf(buf, sizeof(buf), L"%s %s", buf, CTSTRING(B));
 	return buf;
 }
 

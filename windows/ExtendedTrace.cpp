@@ -61,8 +61,9 @@ static void checkBuggyLibrary(PCSTR library) {
 	for(map<string, string>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
 		string lib = i->first; string app = i->second;
 		if(Util::stricmp(library, lib) == 0) {
-			AutoArray<TCHAR> buf(TSTRING(LIB_CRASH).size() + 64);
-			_stprintf(buf, CTSTRING(LIB_CRASH), Text::toT(app).c_str());
+			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;
+			AutoArray<TCHAR> buf(BUF_SIZE);
+			snwprintf(buf, BUF_SIZE, CTSTRING(LIB_CRASH), Text::toT(app).c_str());
 		
 			MessageBox(0, buf, _T("Unhandled exception"), MB_OK);
 			exit(1);

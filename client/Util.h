@@ -186,9 +186,6 @@ public:
 #endif
 	}
 
-	/** Path of resource directory */
-	static string getDataPath();
-
 	/** Path of configuration files */
 	static string getConfigPath();
 
@@ -360,9 +357,9 @@ public:
 	static wstring formatSeconds(int64_t aSec, bool supressHours = false) {
 		wchar_t buf[64];
 		if (!supressHours)
-			swprintf(buf, L"%01lu:%02d:%02d", (unsigned long)(aSec / (60*60)), (int)((aSec / 60) % 60), (int)(aSec % 60));
+			snwprintf(buf, sizeof(buf), L"%01lu:%02d:%02d", (unsigned long)(aSec / (60*60)), (int)((aSec / 60) % 60), (int)(aSec % 60));
 		else
-			swprintf(buf, L"%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));	
+			snwprintf(buf, sizeof(buf), L"%02d:%02d", (int)(aSec / 60), (int)(aSec % 60));	
 		return buf;
 	}
 
@@ -406,55 +403,55 @@ public:
 
 	static string toString(short val) {
 		char buf[8];
-		sprintf(buf, "%d", (int)val);
+		snprintf(buf, sizeof(buf), "%d", (int)val);
 		return buf;
 	}
 	static string toString(unsigned short val) {
 		char buf[8];
-		sprintf(buf, "%u", (unsigned int)val);
+		snprintf(buf, sizeof(buf), "%u", (unsigned int)val);
 		return buf;
 	}
 	static string toString(int val) {
 		char buf[16];
-		sprintf(buf, "%d", val);
+		snprintf(buf, sizeof(buf), "%d", val);
 		return buf;
 	}
 	static string toString(unsigned int val) {
 		char buf[16];
-		sprintf(buf, "%u", val);
+		snprintf(buf, sizeof(buf), "%u", val);
 		return buf;
 	}
 	static string toString(long val) {
 		char buf[32];
-		sprintf(buf, "%ld", val);
+		snprintf(buf, sizeof(buf), "%ld", val);
 		return buf;
 	}
 	static string toString(unsigned long val) {
 		char buf[32];
-		sprintf(buf, "%lu", val);
+		snprintf(buf, sizeof(buf), "%lu", val);
 		return buf;
 	}
 	static string toString(long long val) {
 		char buf[32];
 #ifdef _MSC_VER
-		sprintf(buf, "%I64d", val);
+		snprintf(buf, sizeof(buf), "%I64d", val);
 #else
-		sprintf(buf, "%lld", val);
+		snprintf(buf, sizeof(buf), "%lld", val);
 #endif
 		return buf;
 	}
 	static string toString(unsigned long long val) {
 		char buf[32];
 #ifdef _MSC_VER
-		sprintf(buf, "%I64u", val);
+		snprintf(buf, sizeof(buf), "%I64u", val);
 #else
-		sprintf(buf, "%llu", val);
+		snprintf(buf, sizeof(buf), "%llu", val);
 #endif
 		return buf;
 	}
 	static string toString(double val) {
 		char buf[16];
-		sprintf(buf, "%0.2f", val);
+		snprintf(buf, sizeof(buf), "%0.2f", val);
 		return buf;
 	}
 
@@ -474,43 +471,43 @@ public:
 
 	static wstring toStringW( long val ) {
 		wchar_t buf[32];
-		swprintf(buf, L"%ld", val);
+		snwprintf(buf, sizeof(buf), L"%ld", val);
 		return buf;
 	}
 
 	static wstring toStringW( int64_t val ) {
 		wchar_t buf[32];
-		swprintf(buf, L"%ld", val);
+		snwprintf(buf, sizeof(buf), L"%ld", val);
 		return buf;
 	}
 
 	static wstring toStringW( DWORD val ) {
 		wchar_t buf[16];
-		swprintf(buf, L"%d", val);
+		snwprintf(buf, sizeof(buf), L"%d", val);
 		return buf;
 	}
 
 	static wstring toStringW( int val ) {
 		wchar_t buf[16];
-		swprintf(buf, L"%d", val);
+		snwprintf(buf, sizeof(buf), L"%d", val);
 		return buf;
 	}
 
 	static wstring toStringW( size_t val ) {
 		wchar_t buf[16];
-		swprintf(buf, L"%d", val);
+		snwprintf(buf, sizeof(buf), L"%d", val);
 		return buf;
 	}
 
 	static wstring toStringW( double val ) {
 		wchar_t buf[32];
-		swprintf(buf, L"%0.2f", val);
+		snwprintf(buf, sizeof(buf), L"%0.2f", val);
 		return buf;
 	}
 
 	static string toHexEscape(char val) {
 		char buf[sizeof(int)*2+1+1];
-		sprintf(buf, "%%%X", val&0x0FF);
+		snprintf(buf, sizeof(buf), "%%%X", val&0x0FF);
 		return buf;
 	}
 	static char fromHexEscape(const string aString) {

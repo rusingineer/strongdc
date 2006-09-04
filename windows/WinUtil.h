@@ -341,8 +341,6 @@ public:
 	static int fontHeight;
 	static HFONT boldFont;
 	static HFONT systemFont;
-	static HFONT monoFont;
-	static HFONT tinyFont;
 	static HFONT smallBoldFont;
 	static CMenu mainMenu;
 	static CMenu grantMenu;
@@ -373,13 +371,11 @@ public:
 	static bool mutesounds;
 	static DWORD comCtlVersion;	
 
-	static void reLoadImages(); // User Icon Begin / User Icon End
-	static void createImageList1(CImageList &imglst, string file, int size);
-
 	static void init(HWND hWnd);
 	static void uninit();
 
 	static void initColors();
+	static void reLoadImages(); // User Icon Begin / User Icon End
 
 	static void decodeFont(const tstring& setting, LOGFONT &dest);
 
@@ -580,6 +576,7 @@ public:
 	static int setButtonPressed(int nID, bool bPressed = true);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
+
 };
 
 #endif // !defined(WIN_UTIL_H)

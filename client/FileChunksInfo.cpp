@@ -138,6 +138,7 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 
 	if(noStealth) {
 		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, fileSize - i->second->pos)));
+		d->setFlag(Download::FLAG_CHUNKED);
 	}
 }
 

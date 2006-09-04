@@ -222,15 +222,15 @@ void SpyFrame::on(ClientManagerListener::IncomingSearch, const string& s) throw(
 }
 
 void SpyFrame::on(TimerManagerListener::Second, u_int32_t) throw() {
-		float* f = new float(0.0);
-		for(int i = 0; i < AVG_TIME; ++i) {
-			(*f) += (float)perSecond[i];
-		}
-		(*f) /= AVG_TIME;
+	float* f = new float(0.0);
+	for(int i = 0; i < AVG_TIME; ++i) {
+		(*f) += (float)perSecond[i];
+	}
+	(*f) /= AVG_TIME;
 		
 	cur = (cur + 1) % AVG_TIME;
 	perSecond[cur] = 0;
-		PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
+	PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
 }
 
 void SpyFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {

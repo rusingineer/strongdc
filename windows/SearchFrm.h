@@ -175,6 +175,7 @@ public:
 
 	void removeSelected() {
 		int i = -1;
+		Lock l(cs);
 		while( (i = ctrlResults.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			ctrlResults.removeGroupedItem(ctrlResults.getItemData(i));
 		}
@@ -307,7 +308,7 @@ private:
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
-		typedef deque<Ptr> List;
+		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
 
 		SearchInfo::List subItems;
@@ -414,8 +415,8 @@ private:
 			u_int32_t total = main->subItems.size();
 			if(total != 0) {
 				TCHAR buf[256];
-				_sntprintf(buf, 255, _T("%d %s"), total + 1, CTSTRING(USERS));
-				buf[255] = NULL;
+				snwprintf(buf, sizeof(buf), _T("%d %s"), total + 1, CTSTRING(USERS));
+
 				main->columns[COLUMN_HITS] = buf;
 				if(total == 1)
 					main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
@@ -537,14 +538,13 @@ private:
 	bool closed;
 	int searches;
 
-	COLORREF barva;
 	StringMap ucLineParams;
 		
 	static int columnIndexes[];
 	static int columnSizes[];
 
 	typedef map<HWND, SearchFrame*> FrameMap;
-	typedef FrameMap::iterator FrameIter;
+	typedef FrameMap::const_iterator FrameIter;
 	typedef pair<HWND, SearchFrame*> FramePair;
 
 	static FrameMap frames;

@@ -29,12 +29,11 @@
 
 HBITMAP AGLoadImage(HINSTANCE hIns, LPCTSTR BmpPath, unsigned int nFlags, int x, int y, unsigned int nLoadFlags) {
 	HBITMAP hBmp = (HBITMAP) ::LoadImage(hIns, BmpPath, nFlags, x, y, nLoadFlags);
-	if (!hBmp) {
+	/*if (!hBmp) {
 		TCHAR buf[512];
-		_sntprintf(buf, 511, _T("Unable to load '%s'. The program is unable to function without this file"), BmpPath);
-		buf[511] = 0;
+		snwprintf(buf, sizeof(buf), _T("Unable to load '%s'. The program is unable to function without this file"), BmpPath);
 		MessageBox(NULL, buf, _T("Unable to load file"), MB_ICONSTOP | MB_OK);
-	}
+	}*/
 	return hBmp;
 }
 

@@ -717,8 +717,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 			} else {
 				double qwe = (double)((double)statedSize / (double)realSize);
 				char buf[128];
-				_snprintf(buf, 127, CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
-				buf[127] = 0;
+				snprintf(buf, sizeof(buf), CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
 				inflationString = buf;
 				detectString += inflationString;
 			}

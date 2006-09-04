@@ -162,7 +162,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 					if(ext.size()>1) ext = ext.substr(1);
 					PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 
-					QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+					QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 					QueueItem::StringIter qi = queue.find(&target);
 
@@ -494,7 +494,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	if(wParam == ADD_ITEM) {
 		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
 		ItemInfo* ii = new ItemInfo(ui->user, ui->download);
-		transferItems.push_front(ii);
+		transferItems.push_back(ii);
 		ii->update(*ui);
 		if(ui->download) {
 			ctrlTransfers.insertGroupedItem(ii, false, ui->fileList);
@@ -504,33 +504,25 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 	} else if(wParam == REMOVE_ITEM) {
 		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
-		if(ui->download) {
-			for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
-				ItemInfo* ii = *i;
-				if(*ui == *ii) {
-					transferItems.erase(i);
+		for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
+			ItemInfo* ii = *i;
+			if(*ui == *ii) {
+				transferItems.erase(i);
+				if(ui->download) {
 					ctrlTransfers.removeGroupedItem(ii);
-					break;
-				}
-			}
-		} else {
-			int ic = ctrlTransfers.GetItemCount(); 
-			for(int i = 0; i < ic; ++i) {
-				ItemInfo* ii = ctrlTransfers.getItemData(i);
-				if(*ui == *ii) {
-					transferItems.erase(find(transferItems.begin(), transferItems.end(), ii));
-					ctrlTransfers.DeleteItem(i);
+				} else {
+					ctrlTransfers.deleteItem(ii);
 					delete ii;
-					break;
 				}
+				break;
 			}
 		}
 	} else if(wParam == UPDATE_ITEM) {
 		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
-		if(ui->download) {
-			for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
-				ItemInfo* ii = *i;
-				if(ii->download == ui->download && ii->user == ui->user) {
+		for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
+			ItemInfo* ii = *i;
+			if(*ui == *ii) {
+				if(ui->download) {
 					ii->update(*ui);
 					if(ii->main) {
 						if(ui->updateMask && UpdateInfo::MASK_FILE) setMainItem(ii);
@@ -574,18 +566,11 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 							ctrlTransfers.updateItem(ii);
 						ctrlTransfers.updateItem(main);
 					}				
-					break;
-				}
-			}
-		} else {
-			int ic = ctrlTransfers.GetItemCount(); 
-			for(int i = 0; i < ic; ++i) {
-				ItemInfo* ii = ctrlTransfers.getItemData(i);
-				if(ii->download == ui->download && ii->user == ui->user) {
+				} else {
 					ii->update(*ui);
-					ctrlTransfers.updateItem(i);
-					break;
+					ctrlTransfers.updateItem(ii);
 				}
+				break;
 			}
 		}
 	} else if(wParam == UPDATE_ITEMS) {
@@ -626,7 +611,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
@@ -838,6 +823,9 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		if(d->isSet(Download::FLAG_ZDOWNLOAD)) {
 			statusString += _T("[Z]");
 		}
+		if(d->isSet(Download::FLAG_CHUNKED)) {
+			statusString += _T("[C]");
+		}
 		if(d->isSet(Download::FLAG_ROLLBACK)) {
 			statusString += _T("[R]");
 		}
@@ -1014,7 +1002,7 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
@@ -1087,7 +1075,7 @@ LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
@@ -1177,7 +1165,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		bool hasTree = false;
 
 		string tmp = Text::fromT(main->Target);
-		QueueItem::StringMap queue = QueueManager::getInstance()->lockQueue();
+		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 		QueueItem::StringIter qi = queue.find(&tmp);
 		if(qi != queue.end()) {
 			total = qi->second->getDownloadedBytes();
@@ -1222,8 +1210,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		
 		if(main->subItems.size() > 1) {
 			TCHAR buf[256];
-			_sntprintf(buf, 255, _T("%d %s"), segs, CTSTRING(NUMBER_OF_SEGMENTS));
-			buf[255] = NULL;
+			snwprintf(buf, sizeof(buf), _T("%d %s"), segs, CTSTRING(NUMBER_OF_SEGMENTS));
+
 			main->columns[COLUMN_HUB] = buf;
 		}
 		main->columns[COLUMN_SIZE] = Util::formatBytesW(fileSize);

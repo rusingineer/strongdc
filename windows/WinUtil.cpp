@@ -59,8 +59,6 @@ HFONT WinUtil::font = NULL;
 int WinUtil::fontHeight = 0;
 HFONT WinUtil::boldFont = NULL;
 HFONT WinUtil::systemFont = NULL;
-HFONT WinUtil::monoFont = NULL;
-HFONT WinUtil::tinyFont = NULL;
 HFONT WinUtil::smallBoldFont = NULL;
 CMenu WinUtil::mainMenu;
 CMenu WinUtil::grantMenu;
@@ -337,16 +335,12 @@ static LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 	return CallNextHookEx(WinUtil::hook, code, wParam, lParam);
 }
 
-void WinUtil::createImageList1(CImageList &imglst, string file, int size) {
-	imglst.CreateFromImage(Text::toT(file).c_str(), size, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
-}
-
 void WinUtil::reLoadImages(){
 	userImages.Destroy();
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	else 
-		createImageList1(userImages, SETTING(USERLIST_IMAGE), 16);
+	else
+		userImages.CreateFromImage(Text::toT(SETTING(USERLIST_IMAGE)).c_str(), 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 }
 
 void WinUtil::init(HWND hWnd) {
@@ -450,7 +444,7 @@ void WinUtil::init(HWND hWnd) {
 		SHFILEINFO fi;
 		memset(&fi, 0, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
-		::SHGetFileInfo(_T(""), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+		::SHGetFileInfo(_T("."), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
 		fileImages.AddIcon(ic);
 		::DestroyIcon(fi.hIcon);
@@ -469,8 +463,8 @@ void WinUtil::init(HWND hWnd) {
 
 	if(SETTING(USERLIST_IMAGE) == "")
 		userImages.CreateFromImage(IDB_USERS, 16, 9, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED);
-	else 
-		createImageList1(userImages, SETTING(USERLIST_IMAGE), 16);
+	else
+		userImages.CreateFromImage(Text::toT(SETTING(USERLIST_IMAGE)).c_str(), 16, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE); 
 	
 	LOGFONT lf, lf2;
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
@@ -489,16 +483,10 @@ void WinUtil::init(HWND hWnd) {
 	fontHeight = WinUtil::getTextHeight(mainWnd, font);
 	lf.lfWeight = FW_BOLD;
 	boldFont = ::CreateFontIndirect(&lf);
-	LONG _lfh = lf.lfHeight;
 	lf.lfHeight *= 5;
 	lf.lfHeight /= 6;
 	smallBoldFont = ::CreateFontIndirect(&lf);
-	lf.lfHeight = _lfh;
-	lf.lfHeight *= 3;
-	lf.lfHeight /= 4;
-	tinyFont = ::CreateFontIndirect(&lf);
 	systemFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-	monoFont = (HFONT)::GetStockObject(BOOLSETTING(USE_OEM_MONOFONT)?OEM_FIXED_FONT:ANSI_FIXED_FONT);
 
 	if(BOOLSETTING(URL_HANDLER)) {
 		registerDchubHandler();
@@ -638,9 +626,7 @@ void WinUtil::uninit() {
 	::DeleteObject(font);
 	::DeleteObject(boldFont);
 	::DeleteObject(smallBoldFont);
-	::DeleteObject(tinyFont);
 	::DeleteObject(bgBrush);
-	::DeleteObject(monoFont);
 
 	mainMenu.DestroyMenu();
 	grantMenu.DestroyMenu();
@@ -1276,7 +1262,7 @@ void WinUtil::openLink(const tstring& url) {
 			 *  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1"
 			 *  "C:\Program Files\Internet Explorer\iexplore.exe" -nohome
 			 *  "C:\Apps\Opera7\opera.exe"
-			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1" <= to je mojeeeeeeee :-D
+			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1"
 			 *  C:\PROGRA~1\NETSCAPE\NETSCAPE\NETSCP.EXE -url "%1"
 			 */
 			tstring cmd(regbuf); // otherwise you consistently get two trailing nulls
@@ -1667,10 +1653,9 @@ string WinUtil::formatTime(long rest) {
 	rest %= (24*3600*7);
 	if(n) {
 		if(n >= 2)
-			_snprintf(buf, 127, "%d weeks ", n);
+			snprintf(buf, sizeof(buf), "%d weeks ", n);
 		else
-			_snprintf(buf, 127, "%d week ", n);
-		buf[127] = 0;
+			snprintf(buf, sizeof(buf), "%d week ", n);
 		formatedTime += (string)buf;
 		i++;
 	}
@@ -1678,10 +1663,9 @@ string WinUtil::formatTime(long rest) {
 	rest %= (24*3600);
 	if(n) {
 		if(n >= 2)
-			_snprintf(buf, 127, "%d days ", n); 
+			snprintf(buf, sizeof(buf), "%d days ", n); 
 		else
-			_snprintf(buf, 127, "%d day ", n);
-		buf[127] = 0;
+			snprintf(buf, sizeof(buf), "%d day ", n);
 		formatedTime += (string)buf;
 		i++;
 	}
@@ -1689,25 +1673,22 @@ string WinUtil::formatTime(long rest) {
 	rest %= (3600);
 	if(n) {
 		if(n >= 2)
-			_snprintf(buf, 127, "%d hours ", n);
+			snprintf(buf, sizeof(buf), "%d hours ", n);
 		else
-			_snprintf(buf, 127, "%d hour ", n);
-		buf[127] = 0;
+			snprintf(buf, sizeof(buf), "%d hour ", n);
 		formatedTime += (string)buf;
 		i++;
 	}
 	n = rest / (60);
 	rest %= (60);
 	if(n) {
-		_snprintf(buf, 127, "%d min ", n);
-		buf[127] = 0;
+		snprintf(buf, sizeof(buf), "%d min ", n);
 		formatedTime += (string)buf;
 		i++;
 	}
 	n = rest;
 	if(++i <= 3) {
-		_snprintf(buf, 127,"%d sec ", n); 
-		buf[127] = 0;
+		snprintf(buf, sizeof(buf),"%d sec ", n); 
 		formatedTime += (string)buf;
 	}
 	return formatedTime;
@@ -1857,7 +1838,7 @@ string WinUtil::generateStats() {
 		GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
 		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
-		sprintf(buf, "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
+		snprintf(buf, sizeof(buf), "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
 			VERSIONSTRING, formatTime(Util::getUptime()).c_str(), Text::fromT(Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64))).c_str(), 
 			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
