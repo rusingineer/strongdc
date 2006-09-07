@@ -412,7 +412,9 @@ int SearchManager::ResultsQueue::run() {
 				if(!myNick.empty()) {
 					char buf[1024];
 					snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
-					Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
+					try {
+						Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
+					} catch(...) {}
 				}
 			}
 		}	
@@ -650,10 +652,8 @@ void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse,
 		/* We might use old $PSR in some cases
 		char buf[1024];
 		// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
-		string hubIpPort = aClient->getIpPort();
-		string tth = aTTH.toBase32();
-		string user = Text::utf8ToAcp(aClient->getMyNick());
-		snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), SETTING(UDP_PORT), hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
+		string user = Text::utf8ToAcp(myNick);
+		snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), wantResponse ? getPort() : 0, hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
 		*/
 
 		s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMyCID()));

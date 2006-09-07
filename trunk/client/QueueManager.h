@@ -86,14 +86,16 @@ public:
 	void addPfs(const User::Ptr& aUser, const string& aDir) throw(QueueException);
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
-		string fileName = "TestSUR" + Util::validateFileName(aUser->getFirstNick())  + "." + aUser->getCID().toBase32();
-		string target = Util::getAppPath() + "TestSURs\\" + fileName;
+		string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
+		string target = Util::getConfigPath() + "TestSURs\\" + fileName;
 		add(target, -1, NULL, aUser, fileName, false, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
 		try {
-			remove(Util::getAppPath() + "TestSURs\\TestSUR" + aUser->getFirstNick());
+			string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
+			string target = Util::getConfigPath() + "TestSURs\\" + fileName;
+			remove(target);
 		} catch(...) {
 			// exception
 		}

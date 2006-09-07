@@ -1507,7 +1507,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				filedatainfo = qi->qi ? qi->qi->chunkInfo : NULL;
 			}
 			
-			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), qi->getSize());
+			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), qi->qi ? qi->qi->getSize() : max((int64_t)0, (int64_t)qi->getSize()));
 
 			COLORREF crDownloaded = SETTING(COLOR_DOWNLOADED);
 			COLORREF crVerified = SETTING(COLOR_VERIFIED);

@@ -377,6 +377,12 @@ public:
 	static void initColors();
 	static void reLoadImages(); // User Icon Begin / User Icon End
 
+	static string getAppName() {
+		TCHAR buf[MAX_PATH+1];
+		DWORD x = GetModuleFileName(NULL, buf, MAX_PATH);
+		return Text::fromT(tstring(buf, x));
+	}
+
 	static void decodeFont(const tstring& setting, LOGFONT &dest);
 
 	static void addInitalDir(const User::Ptr& user, string dir) {

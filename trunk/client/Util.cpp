@@ -27,8 +27,12 @@
 #include "StringTokenizer.h"
 #include "SettingsManager.h"
 #include "version.h"
+#include "File.h"
+#include "SimpleXML.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <ShlObj.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -56,7 +60,9 @@ string Util::awayMsg;
 time_t Util::awayTime;
 
 Util::CountryList Util::countries;
-string Util::appPath;
+string Util::configPath;
+string Util::systemPath;
+string Util::dataPath;
 
 static void sgenrand(unsigned long seed);
 
@@ -92,34 +98,11 @@ BOOL CALLBACK GetWOkna(HWND handle, LPARAM) {
 	return true;
 }
 
-unsigned char HEX_2_INT_TABLE[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 
-            6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-int hexstr2int(char *hexstr) {
-    register unsigned int length, i, value, shift;
-    for (length = 0; length < 9; length++) if (!hexstr[length]) break;
-    shift = (length - 1) * 4;
-    for (i = value = 0; i < length; i++, shift -= 4)
-        value += HEX_2_INT_TABLE[(unsigned int)hexstr[i] & 127] << shift;
-    return value;
-}
-
-bool Util::isNLrunning() {
-	//nlfound = false;
-	//EnumWindows(GetWOkna,NULL);
-	return GetModuleHandle(L"nl_lsp.dll") > 0;
-}
-
 int Util::getNetLimiterLimit() {
 	int NetLimiter_UploadLimit = -1;
 	int NetLimiter_UploadOn = 0;
 
-	if(!isNLrunning()) return -1;
+	if(GetModuleHandle(_T("nl_lsp.dll")) == 0) return -1;
 
 	try {
 		TCHAR AppData[256];
@@ -128,7 +111,11 @@ int Util::getNetLimiterLimit() {
 		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
 
 		const size_t BUF_SIZE = 800;
-		string cesta = Util::getAppName() + "/";
+
+		TCHAR appName[MAX_PATH+1];
+		DWORD x = GetModuleFileName(NULL, appName, MAX_PATH);
+		string cesta = Text::fromT(tstring(appName, x)) + "/";
+
 		char buf[BUF_SIZE];
 		u_int32_t len;
 		char* w2 = _strdup(cesta.c_str());
@@ -158,7 +145,8 @@ int Util::getNetLimiterLimit() {
 
 				NetLimiter_UploadLimit = 0;
 
-				NetLimiter_UploadLimit = hexstr2int(limit_hex) / 4;
+				sscanf(limit_hex,"%x",&NetLimiter_UploadLimit);
+				NetLimiter_UploadLimit /= 4;
 				delete limit_hex;
 
 				NetLimiter_UploadOn = u_int8_t(txt[16]);
@@ -201,21 +189,48 @@ void Util::initialize() {
 
 #ifdef _WIN32
 	TCHAR buf[MAX_PATH+1];
-	GetModuleFileName(NULL, buf, MAX_PATH);
-	appPath = Text::fromT(buf);
-	appPath.erase(appPath.rfind('\\') + 1);
+	::GetModuleFileName(NULL, buf, MAX_PATH);
+	// System config path is DC++ executable path...
+	systemPath = Util::getFilePath(Text::fromT(buf));
+	configPath = systemPath + "Settings\\";
+	dataPath = systemPath;
+	
+#else
+	systemPath = "/etc/";
+	char* home = getenv("HOME");
+	configPath = home ? home + string("/.dc++/") : "/tmp/";
+#error dataPath = wherever linux should fetch data
+#endif
+
+	// Load boot settings
+	try {
+		SimpleXML boot;
+		boot.fromXML(File(systemPath + "dcppboot.xml", File::READ, File::OPEN).read());
+		boot.stepIn();
+
+		if(boot.findChild("ConfigPath")) {
+			StringMap params;
+#ifdef _WIN32
+			TCHAR path[MAX_PATH];
+
+			params["APPDATA"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path), path));
+			params["PERSONAL"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path), path));
+			configPath = Util::formatParams(boot.getChildData(), params, false);
+#else
+#error TODO - make env vars available perhaps?
+#endif
+		}
+	} catch(const Exception& ) {
+		// Unable to load boot settings...
+	}
+
+	if(!File::isAbsolute(configPath)) {
+		configPath = systemPath + configPath;
+	}
 
 #if _MSC_VER == 1400
 	_set_invalid_parameter_handler(reinterpret_cast<_invalid_parameter_handler>(invalidParameterHandler));
 #endif
-
-#else // _WIN32
-	char* home = getenv("HOME");
-	if (home) {
-		appPath = Text::fromT(home);
-		appPath += "/.strongdc++/";
-	}
-#endif // _WIN32
 
 	try {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
@@ -259,23 +274,6 @@ void Util::initialize() {
 	} catch(const FileException&) {
 	}
 	File::ensureDirectory(Util::getConfigPath());
-}
-
-string Util::getConfigPath() {
-#ifdef _WIN32
-		return getAppPath() + SETTINGS_DIR;
-#else
-		char* home = getenv("HOME");
-		if (home) {
-#ifdef __APPLE__
-/// @todo Verify this for apple?
-			return string(home) + "/Library/Application Support/Mac DC++/";
-#else
-			return string(home) + "/.strongdc++/";
-#endif // __APPLE__
-		}
-		return emptyString;
-#endif // _WIN32
 }
 
 #ifdef _WIN32
@@ -1133,6 +1131,47 @@ string Util::formatMessage(const string& message) {
 		i++;
 	}
 	return toDOS(tmp);
+}
+
+string Util::getTimeString() {
+	char buf[64];
+	time_t _tt;
+	time(&_tt);
+	tm* _tm = localtime(&_tt);
+	if(_tm == NULL) {
+		strcpy(buf, "xx:xx:xx");
+	} else {
+		strftime(buf, 64, "%X", _tm);
+	}
+	return buf;
+}
+
+string Util::toAdcFile(const string& file) {
+	if(file == "files.xml.bz2" || file == "MyList.DcLst")
+		return file;
+
+	string ret;
+	ret.reserve(file.length() + 1);
+	ret += '/';
+	ret += file;
+	for(string::size_type i = 0; i < ret.length(); ++i) {
+		if(ret[i] == '\\') {
+			ret[i] = '/';
+		}
+	}
+	return ret;
+}
+string Util::toNmdcFile(const string& file) {
+	if(file.empty())
+		return Util::emptyString;
+
+	string ret(file.substr(1));
+	for(string::size_type i = 0; i < ret.length(); ++i) {
+		if(ret[i] == '/') {
+			ret[i] = '\\';
+		}
+	}
+	return ret;
 }
 
 TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {

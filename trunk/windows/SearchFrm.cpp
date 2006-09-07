@@ -1080,20 +1080,30 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 	case ADD_RESULT:
 		{
 			SearchInfo* si = (SearchInfo*)lParam;
-			SearchResult* sr = si->sr;	 	
-            // Check previous search results for dupes	 	
-			for(vector<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
-				SearchInfo* si2 = *s;
-                SearchResult* sr2 = si2->sr;
-				if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
-					delete si;	 	
-                    return 0;	 	
-				}
-                for(SearchInfo::Iter k = si2->subItems.begin(); k != si2->subItems.end(); k++){	 	
-					if((sr->getUser()->getCID() == (*k)->getUser()->getCID()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
-				        delete si;	 	
-		                return 0;	 	
+			SearchResult* sr = si->sr;
+            // Check previous search results for dupes
+			if(!si->columns[COLUMN_TTH].empty() && useGrouping) {
+				SearchInfo* main = ctrlResults.findMainItem(si->columns[COLUMN_TTH]);
+				if(main) {
+					if((sr->getUser()->getCID() == main->sr->getUser()->getCID()) && (sr->getFile() == main->sr->getFile())) {	 	
+						delete si;	 	
+						return 0;	 	
 					} 	
+					for(SearchInfo::Iter k = main->subItems.begin(); k != main->subItems.end(); k++){	 	
+						if((sr->getUser()->getCID() == (*k)->getUser()->getCID()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
+							delete si;	 	
+							return 0;	 	
+						} 	
+					}	 	
+				}
+			} else {
+				for(vector<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+					SearchInfo* si2 = *s;
+	                SearchResult* sr2 = si2->sr;
+					if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
+						delete si;	 	
+				        return 0;	 	
+					}
 				}	 	
             }
 			if(bPaused == false) {

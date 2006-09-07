@@ -600,7 +600,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
-		hFind = FindFirstFile(Text::toT(Util::getAppPath()+"EmoPacks\\*.xml").c_str(), &data);
+		hFind = FindFirstFile(Text::toT(Util::getDataPath()+"EmoPacks\\*.xml").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
 				tstring name = data.cFileName;

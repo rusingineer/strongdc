@@ -81,7 +81,7 @@ ShareManager::~ShareManager() {
 	}
 
 #else
-	DIR* dir = opendir(Util::getAppName().c_str());
+	DIR* dir = opendir(Util::getConfigPath().c_str());
 	if (dir) {
 		while (struct dirent* ent = readdir(dir)) {
 			if (fnmatch("files*.xml.bz2", ent->d_name, 0) == 0) {

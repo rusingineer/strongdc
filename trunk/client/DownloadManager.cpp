@@ -111,27 +111,23 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 
-		if(d->getUserConnection() != NULL) {
-			if (!d->isSet(Download::FLAG_USER_LIST) && (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576))) {
+		if (d->getUserConnection() && !d->isSet(Download::FLAG_USER_LIST)) {
+			// TODO: merge codes for automatic and manual disconnecting
+			if(	(d->getStart() &&  0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40) &&
+				(d->getRunningAverage() < (downloads.size() * 100)) &&
+				(QueueManager::getInstance()->dropSource(d, true))) {
+					d->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
+					d->getUserConnection()->disconnect();
+					continue;
+			} else if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
 				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
-					if(((aTick - d->quickTick)/1000) > SETTING(DOWN_TIME)) {
-						if(!QueueManager::getInstance()->dropSource(d, false)) {
+					if(	(((aTick - d->quickTick)/1000) > SETTING(DOWN_TIME)) &&
+						(!QueueManager::getInstance()->dropSource(d, false))) {
 							d->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
 							continue;
-						}
 					}
 				} else {
 					d->quickTick = aTick;
-				}
-			}
-
-			if(d->getStart() &&  0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40) {
-				if(d->getRunningAverage() < (downloads.size() * 100)) {
-					if(QueueManager::getInstance()->dropSource(d, true)) {
-						d->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
-						d->getUserConnection()->disconnect();
-						continue;
-					}
 				}
 			}
 		}

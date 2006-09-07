@@ -128,9 +128,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	
 	WinUtil::init(m_hWnd);
 
-	//trayMessage = RegisterWindowMessage(_T("TaskbarCreated"));
-	// Use ASCII version as opencow doesn't support the wide one...
-	trayMessage = RegisterWindowMessageA("TaskbarCreated");
+	trayMessage = RegisterWindowMessage(_T("TaskbarCreated"));
 
 	TimerManager::getInstance()->start();
 
@@ -248,7 +246,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 			if (FindWindow(NULL, _T("ZoneAlarm")) || FindWindow(NULL, _T("ZoneAlarm Pro"))) {
 				::MessageBox(m_hWnd, CTSTRING(ZONEALARM_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 			}
-			if(Util::isNLrunning())
+			if(GetModuleHandle(_T("nl_lsp.dll")) > 0)
 				::MessageBox(m_hWnd, CTSTRING(NETLIMITER_WARNING), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
 		}
 		SettingsManager::getInstance()->set(SettingsManager::BADSOFT_DETECTIONS, ++times_detected);
@@ -575,7 +573,7 @@ void MainFrame::parseCommandLine(const tstring& cmdLine)
 
 LRESULT MainFrame::onCopyData(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	tstring cmdLine = (LPCTSTR) (((COPYDATASTRUCT *)lParam)->lpData);
-	parseCommandLine(Text::toT(Util::getAppName() + " ") + cmdLine);
+	parseCommandLine(Text::toT(WinUtil::getAppName() + " ") + cmdLine);
 	return true;
 }
 
@@ -970,13 +968,12 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 
 int MainFrame::run() {
 	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_GRAYED);
-	tstring file = Text::toT(Util::getAppPath()) + _T("*.*");
+	tstring file = Text::toT(Util::getDataPath()) + _T("*.*");
 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
 		Thread::setThreadPriority(Thread::LOW);
 		lastTTHdir = Util::getFilePath(file);
 
 		char TTH[192*8/(5*8)+2];
-
 		char buf[512*1024];
 
 		try {

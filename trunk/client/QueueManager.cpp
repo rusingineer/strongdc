@@ -196,7 +196,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 	if((qi->getDownloadedBytes() > 0))
 		qi->setFlag(QueueItem::FLAG_EXISTS);
 
-	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && (p != QueueItem::HIGHEST) ) {
+	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && (p != QueueItem::HIGHEST) && (p != QueueItem::PAUSED)) {
 		qi->setAutoPriority(true);
 		qi->setPriority(qi->calculateAutoPriority());
 	}
@@ -549,9 +549,12 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 				q->setDownloadedBytes(q->getCurrentDownload()->getPos());
 			}
 			if(q->getAutoPriority()) {
-				QueueItem::Priority p = q->calculateAutoPriority();
-				if(p != q->getPriority())
-					setPriority(q->getTarget(), p);
+				QueueItem::Priority p1 = q->getPriority();
+				if(p1 != QueueItem::PAUSED) {
+					QueueItem::Priority p2 = q->calculateAutoPriority();
+					if(p1 != p2)
+						setPriority(q->getTarget(), p2);
+				}
 			}
 		}
 		if(!um.empty())
@@ -585,7 +588,7 @@ void QueueManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
 }
 
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
-	string target = Util::getListPath() + Util::validateFileName(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
+	string target = Util::getListPath() + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick())) + "." + aUser->getCID().toBase32();
 
 	add(target, -1, NULL, aUser, USER_LIST_NAME, !aUser->isSet(User::NMDC), QueueItem::FLAG_USER_LIST | aFlags);
 }

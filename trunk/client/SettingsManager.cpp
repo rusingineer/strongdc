@@ -135,6 +135,7 @@ const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
 
 SettingsManager::SettingsManager()
 {
+
 	connectionSpeeds.push_back("0.005");
 	connectionSpeeds.push_back("0.01");
 	connectionSpeeds.push_back("0.02");
@@ -162,8 +163,8 @@ SettingsManager::SettingsManager()
 		int64Settings[k] = 0;
 	}
 	
-	setDefault(DOWNLOAD_DIRECTORY, Util::getAppPath() + "Downloads" PATH_SEPARATOR_STR);
-	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getAppPath() + "Incomplete" PATH_SEPARATOR_STR);
+	setDefault(DOWNLOAD_DIRECTORY, Util::getDataPath() + "Downloads" PATH_SEPARATOR_STR);
+	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getDataPath() + "Incomplete" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 2);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
@@ -187,7 +188,7 @@ SettingsManager::SettingsManager()
 	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2;http://dc.selwerd.nl/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
-	setDefault(LOG_DIRECTORY, Util::getAppPath() + "Logs" PATH_SEPARATOR_STR);
+	setDefault(LOG_DIRECTORY, Util::getDataPath() + "Logs" PATH_SEPARATOR_STR);
 	setDefault(LOG_UPLOADS, false);
 	setDefault(LOG_DOWNLOADS, false);
 	setDefault(LOG_PRIVATE_CHAT, false);

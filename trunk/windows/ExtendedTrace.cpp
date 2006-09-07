@@ -30,40 +30,40 @@
 #define BUFFERSIZE   0x200
 
 static void checkBuggyLibrary(PCSTR library) {
-	map<string, string> libraries;
-	libraries.insert(make_pair("Vlsp", "V-One Smartpass"));
-	libraries.insert(make_pair("mclsp", "McAfee AV"));
-	libraries.insert(make_pair("Niphk", "Norman AV"));
-	libraries.insert(make_pair("aslsp", "Aventail Corporation VPN"));
-	libraries.insert(make_pair("AXShlEx", "Alcohol 120%"));
-	libraries.insert(make_pair("gdlsphlr", "McAfee"));
-	libraries.insert(make_pair("mlang", "IE"));
-	libraries.insert(make_pair("cslsp", "McAfee"));
-	libraries.insert(make_pair("winsflt", "PureSight Internet Content Filter"));
-	libraries.insert(make_pair("imslsp", "ZoneLabs IM Secure"));
-	libraries.insert(make_pair("apitrap", "Norton Cleansweep [?]"));
-	libraries.insert(make_pair("sockspy", "BitDefender Antivirus"));
-	libraries.insert(make_pair("imon", "Eset NOD32"));
-	libraries.insert(make_pair("KvWspXp(_1)", "Kingsoft Antivirus"));
-	libraries.insert(make_pair("nl_lsp", "NetLimiter"));
-	libraries.insert(make_pair("OSMIM", "Marketscore Internet Accelerator"));
-	libraries.insert(make_pair("opls", "Opinion Square [malware]"));
-	libraries.insert(make_pair("PavTrc", "Panda Anti-Virus"));
-	libraries.insert(make_pair("pavlsp", "Panda Anti-Virus"));
-	libraries.insert(make_pair("AppToPort", "Wyvern Works  Firewall"));
-	libraries.insert(make_pair("SpyDll", "Nice Spy [malware]"));
-	libraries.insert(make_pair("WBlind", "Window Blinds"));
-	libraries.insert(make_pair("UPS10", "Uniscribe Unicode Script Processor Library"));
-	libraries.insert(make_pair("SOCKS32", "Sockscap [?]"));
-	libraries.insert(make_pair("___j", "Worm: W32.Maslan.C@mm"));
-	libraries.insert(make_pair("nvappfilter", "NVidia Nforce Network Access Manager"));
+	map<tstring, tstring> libraries;
+	libraries.insert(make_pair(L"Vlsp", L"V-One Smartpass"));
+	libraries.insert(make_pair(L"mclsp", L"McAfee AV"));
+	libraries.insert(make_pair(L"Niphk", L"Norman AV"));
+	libraries.insert(make_pair(L"aslsp", L"Aventail Corporation VPN"));
+	libraries.insert(make_pair(L"AXShlEx", L"Alcohol 120%"));
+	libraries.insert(make_pair(L"gdlsphlr", L"McAfee"));
+	libraries.insert(make_pair(L"mlang", L"IE"));
+	libraries.insert(make_pair(L"cslsp", L"McAfee"));
+	libraries.insert(make_pair(L"winsflt", L"PureSight Internet Content Filter"));
+	libraries.insert(make_pair(L"imslsp", L"ZoneLabs IM Secure"));
+	libraries.insert(make_pair(L"apitrap", L"Norton Cleansweep [?]"));
+	libraries.insert(make_pair(L"sockspy", L"BitDefender Antivirus"));
+	libraries.insert(make_pair(L"imon", L"Eset NOD32"));
+	libraries.insert(make_pair(L"KvWspXp(_1)", L"Kingsoft Antivirus"));
+	libraries.insert(make_pair(L"nl_lsp", L"NetLimiter"));
+	libraries.insert(make_pair(L"OSMIM", L"Marketscore Internet Accelerator"));
+	libraries.insert(make_pair(L"opls", L"Opinion Square [malware]"));
+	libraries.insert(make_pair(L"PavTrc", L"Panda Anti-Virus"));
+	libraries.insert(make_pair(L"pavlsp", L"Panda Anti-Virus"));
+	libraries.insert(make_pair(L"AppToPort", L"Wyvern Works  Firewall"));
+	libraries.insert(make_pair(L"SpyDll", L"Nice Spy [malware]"));
+	libraries.insert(make_pair(L"WBlind", L"Window Blinds"));
+	libraries.insert(make_pair(L"UPS10", L"Uniscribe Unicode Script Processor Library"));
+	libraries.insert(make_pair(L"SOCKS32", L"Sockscap [?]"));
+	libraries.insert(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
+	libraries.insert(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
 
-	for(map<string, string>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
-		string lib = i->first; string app = i->second;
+	for(map<tstring, tstring>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
+		string lib = Text::fromT(i->first); tstring app = i->second;
 		if(Util::stricmp(library, lib) == 0) {
 			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;
 			AutoArray<TCHAR> buf(BUF_SIZE);
-			snwprintf(buf, BUF_SIZE, CTSTRING(LIB_CRASH), Text::toT(app).c_str());
+			snwprintf(buf, BUF_SIZE, CTSTRING(LIB_CRASH), app.c_str());
 		
 			MessageBox(0, buf, _T("Unhandled exception"), MB_OK);
 			exit(1);

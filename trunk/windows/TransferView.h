@@ -304,7 +304,7 @@ private:
 
 		bool operator==(const ItemInfo& ii) { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false) { }
+		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
 
 		u_int32_t updateMask;
 
