@@ -108,16 +108,16 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 
 	// The release version loads the dll and pdb:s here...
-	EXTENDEDTRACEINITIALIZE( Util::getAppPath().c_str() );
+	EXTENDEDTRACEINITIALIZE( Util::getDataPath().c_str() );
 
 #endif
 
 	if(firstException) {
-		File::deleteFile(Util::getAppPath() + "exceptioninfo.txt");
+		File::deleteFile(Util::getConfigPath() + "exceptioninfo.txt");
 		firstException = false;
 	}
 
-	if(File::getSize(Util::getAppPath() + "StrongDC.pdb") == -1) {
+	if(File::getSize(Util::getDataPath() + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
 		::MessageBox(WinUtil::mainWnd, _T("StrongDC++ has crashed and you don't have StrongDC.pdb file installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution..."), _T("StrongDC++ has crashed"), MB_OK);
 #ifndef _DEBUG
@@ -127,7 +127,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 	}
 
-	File f(Util::getAppPath() + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE);
+	File f(Util::getConfigPath() + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE);
 	f.setEndPos(0);
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
@@ -462,8 +462,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// For SHBrowseForFolder, UPnP
 	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
 #ifdef _DEBUG
-	EXTENDEDTRACEINITIALIZE( Util::getAppPath().c_str() );
-	//File::deleteFile(Util::getAppPath() + "exceptioninfo.txt");
+	EXTENDEDTRACEINITIALIZE( Util::getDataPath().c_str() );
+	//File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
 #else
 #if defined(isCVS)
 	if (::MessageBox(NULL, _T("!!! WARNING !!!\n\nThis version is considered to be beta, because it can contain serious bugs which can have negative influence on your system!\nAre you sure you want to run this unstable beta version?"), 
@@ -485,7 +485,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	ATLASSERT(SUCCEEDED(hRes));
 	
 	try {		
-		File f(Util::getAppName(), File::READ, File::OPEN);
+		File f(WinUtil::getAppName(), File::READ, File::OPEN);
 		TigerTree tth(TigerTree::calcBlockSize(f.getSize(), 1));
 		size_t n = 0;
 		size_t n2 = DEBUG_BUFSIZE;

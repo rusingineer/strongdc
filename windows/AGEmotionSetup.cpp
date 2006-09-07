@@ -133,7 +133,7 @@ bool CAGEmotionSetup::Create() {
 	setUseEmoticons(false);
 	m_images.Destroy();
 
-	if (!Util::fileExists(Util::getAppPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
+	if (!Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
 		return true;
 
 	int nMaxSizeCX = 0;
@@ -141,7 +141,7 @@ bool CAGEmotionSetup::Create() {
 	
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Emoticons")) {
 			xml.stepIn();
@@ -155,7 +155,7 @@ bool CAGEmotionSetup::Create() {
 				if (strEmotionBmpPath.size() > 0) {
 					if (strEmotionBmpPath[0] == '.') {
 						// Relativni cesta - dame od aplikace
-						strEmotionBmpPath = Util::getAppPath() + "EmoPacks\\" + strEmotionBmpPath;
+						strEmotionBmpPath = Util::getDataPath() + "EmoPacks\\" + strEmotionBmpPath;
 					}
 					else strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 				}

@@ -519,11 +519,13 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 			setDirty();		
 	} else if(wParam == REMOVE) {
 		RemoveUser(((UserInfoBase*)lParam)->user);
+		updateStatus();
 		delete (UserInfoBase*)lParam;
 		if(BOOLSETTING(BOLD_WAITING_USERS))
 			setDirty();		
 	} else if(wParam == ADD_ITEM) {
 		AddFile((UploadQueueItem*)lParam);
+		updateStatus();
 		ctrlList.resort();
 		if(BOOLSETTING(BOLD_WAITING_USERS))
 			setDirty();		

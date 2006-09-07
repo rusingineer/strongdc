@@ -823,12 +823,17 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			} else {
 				ctrlStatus.SetText(1, (Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
 			}
-			int64_t available = client->getAvailable();
-			ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
-			if(AllUsers > 0)
-				ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
-			else
+			if(showUsers) {
+				int64_t available = client->getAvailable();
+				ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
+				if(AllUsers > 0)
+					ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
+				else
+					ctrlStatus.SetText(3, _T(""));
+			} else {
+				ctrlStatus.SetText(2, _T(""));
 				ctrlStatus.SetText(3, _T(""));
+			}
 		} else if(task->speaker == GET_PASSWORD) {
 			if(client->getPassword().size() > 0) {
 				client->password(client->getPassword());
@@ -1357,7 +1362,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
-		hFind = FindFirstFile(Text::toT(Util::getAppPath()+"EmoPacks\\*.xml").c_str(), &data);
+		hFind = FindFirstFile(Text::toT(Util::getDataPath()+"EmoPacks\\*.xml").c_str(), &data);
 		if(hFind != INVALID_HANDLE_VALUE) {
 			do {
 				tstring name = data.cFileName;

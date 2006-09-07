@@ -287,9 +287,9 @@ public:
 	FileChunksInfo::Ptr chunkInfo;
 
 	QueueItem::Priority calculateAutoPriority(){
-		QueueItem::Priority p = getPriority();
-		if(p == QueueItem::PAUSED) return p;
-		if(getAutoPriority()){			
+		
+		if(getAutoPriority()){
+			QueueItem::Priority p;
 			int percent = (int)(getDownloadedBytes() * 10.0 / getSize());
 			switch(percent){
 					case 0:
@@ -314,9 +314,10 @@ public:
 					case 10:
 						p = QueueItem::HIGHEST;			
 						break;
-			}			
+			}
+			return p;			
 		}
-		return p;
+		return priority;
 	}
 
 	bool hasFreeSegments() {

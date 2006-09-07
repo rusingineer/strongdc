@@ -50,7 +50,7 @@ void ClientProfileManager::saveClientProfiles() {
 
 		xml.stepOut();
 
-		string fname = Util::getAppPath() + SETTINGS_DIR + "Profiles.xml";
+		string fname = Util::getConfigPath() + "Profiles.xml";
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		f.write(SimpleXML::utf8Header);
@@ -112,7 +112,7 @@ void ClientProfileManager::loadClientProfiles(SimpleXML* aXml) {
 void ClientProfileManager::loadClientProfiles() {
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getAppPath() + SETTINGS_DIR + "Profiles.xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getConfigPath() + "Profiles.xml", File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Profiles")) {
 			xml.stepIn();

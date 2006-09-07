@@ -603,6 +603,7 @@ public:
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
 	
+	// TODO: rewrite to hash_map
 	typedef vector<T*> TreeItem;
 
 	BEGIN_MSG_MAP(thisClass)
@@ -688,7 +689,7 @@ public:
 		TStringComp& operator=(const TStringComp&);
 	};
 
-	T* findMainItem(const tstring& groupingString) {
+	T* findMainItem(const tstring& groupingString) const {
 		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
 		return j != mainItems.end() ? *j : NULL;
 	}
