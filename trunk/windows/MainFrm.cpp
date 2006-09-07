@@ -292,11 +292,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(SETTING(NICK).empty()) {
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
 	}
-	m_PictureWindow.SubclassWindow(m_hWndMDIClient);
-	m_PictureWindow.m_nMessageHandler = CPictureWindow::BackGroundPaint;
-	currentPic = SETTING(BACKGROUND_IMAGE);
-	m_PictureWindow.Load(Text::toT(currentPic).c_str());
-	//listQueue.start();
 
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;
@@ -1220,10 +1215,6 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
-		if(currentPic != SETTING(BACKGROUND_IMAGE)) {
-			currentPic = SETTING(BACKGROUND_IMAGE);
-			m_PictureWindow.Load(Text::toT(currentPic).c_str());
-		}
 
 		if(BOOLSETTING(THROTTLE_ENABLE)) {
 			// Limitery sem a tam, vsude kam se podivam :o)

@@ -44,8 +44,6 @@ PropPage::TextItem OperaColorsPage::texts[] = {
 	{ IDC_CZDC_PROGRESS_TEXT, ResourceManager::SETCZDC_PROGRESSBAR_TEXT },
 	{ IDC_SETTINGS_ODC_MENUBAR2, ResourceManager::SETCZDC_PROGRESSBAR_COLORS },
 	{ IDC_IMAGEBROWSE, ResourceManager::BROWSE },
-	{ IDC_BACK_IMAGE, ResourceManager::BACKGROUND_IMAGE },
-
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -61,7 +59,6 @@ PropPage::Item OperaColorsPage::items[] = {
 	{ IDC_PROGRESS_OVERRIDE, SettingsManager::PROGRESS_OVERRIDE_COLORS, PropPage::T_BOOL },
 	{ IDC_PROGRESS_OVERRIDE2, SettingsManager::PROGRESS_OVERRIDE_COLORS2, PropPage::T_BOOL },
 	{ IDC_FLAT, SettingsManager::PROGRESS_3DDEPTH, PropPage::T_INT },
-	{ IDC_BACKGROUND_IMAGE, SettingsManager::BACKGROUND_IMAGE, PropPage::T_STR },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -307,11 +304,6 @@ void OperaColorsPage::BrowseForPic(int DLGITEM) {
 	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
 		SetDlgItemText(DLGITEM, x.c_str());
 	}
-}
-
-LRESULT OperaColorsPage::onImageBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	BrowseForPic(IDC_BACKGROUND_IMAGE);
-	return 0;
 }
 
 LRESULT OperaColorsPage::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)

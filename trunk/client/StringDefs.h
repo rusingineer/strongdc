@@ -49,7 +49,6 @@ enum Strings { // @DontAdd
 	AWAY_MODE_OFF, // "Away mode off"
 	AWAY_MODE_ON, // "Away mode on: "
 	B, // "B"
-	BACKGROUND_IMAGE, // "Background image"
 	BALLOON_POPUPS, // "Balloon popups"
 	BITZI_LOOKUP, // "Bitzi Lookup"
 	BLOCK_FINISHED, // "Segment Block Finished, waiting..."

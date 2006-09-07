@@ -44,7 +44,6 @@
 #include "TransferView.h"
 #include "UPnP.h"
 #include "WinUtil.h"
-#include "picturewindow.h"
 
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
 		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>, public Thread,
@@ -401,8 +400,6 @@ private:
 	string versionInfo;
 	CImageList images;
 	CToolBarCtrl ctrlToolbar;
-	CPictureWindow m_PictureWindow;
-	string currentPic;
 
 	bool tbarcreated;
 	bool awaybyminimize;
