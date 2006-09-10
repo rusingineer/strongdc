@@ -119,8 +119,8 @@ typedef unsigned __int64 u_int64_t;
 #define BZ_NO_STDIO
 
 #ifdef _WIN32
-# define _WIN32_WINNT 0x0600
-# define _WIN32_IE	0x0601
+# define _WIN32_WINNT 0x0501
+# define _WIN32_IE	0x0500
 # define _RICHEDIT_VER 0x0300
 # define _USE_32BIT_TIME_T
 #endif

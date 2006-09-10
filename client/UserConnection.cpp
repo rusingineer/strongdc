@@ -79,7 +79,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 	} else {
 		// We shouldn't be here?
 		if(getUser() && aLine.length() < 255)
-			getUser()->setUnknownCommand(aLine);
+			ClientManager::getInstance()->setUnknownCommand(getUser(), aLine);
 		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
 		disconnect(true);
 		return;
@@ -183,7 +183,8 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		}
 	} else {
 		if(getUser() && aLine.length() < 255)
-			getUser()->setUnknownCommand(aLine);
+			ClientManager::getInstance()->setUnknownCommand(getUser(), aLine);
+		
 		dcdebug("Unknown NMDC command: %.50s\n", aLine.c_str());
 	}
 }

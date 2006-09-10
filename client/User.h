@@ -28,15 +28,11 @@
 #include "CID.h"
 #include "FastAlloc.h"
 
-typedef map<short, string> InfMap;
-typedef InfMap::const_iterator InfIter;
-#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
-
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
 {
 public:
-	enum Bits{
+	enum Bits {
 		ONLINE_BIT,
 		DCPLUSPLUS_BIT,
 		PASSIVE_BIT,
@@ -90,27 +86,7 @@ public:
 	GETSET(string, firstNick, FirstNick);
 	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 
-	GS(Generator, "GE");
-	GS(Supports, "SU");
-	GS(Lock, "LO");
-	GS(Pk, "PK");
-	GS(UnknownCommand, "UC");
-
-	InfMap info;
-
 private:
-	const string& get(const char* name) const {
-		InfIter i = info.find(*(short*)name);
-		return i == info.end() ? Util::emptyString : i->second;
-	}
-
-	void set(const char* name, const string& val) {
-		if(val.empty())
-			info.erase(*(short*)name);
-		else
-			info[*(short*)name] = val;
-	}
-
 	User(const User&);
 	User& operator=(const User&);
 };
@@ -127,6 +103,7 @@ public:
 	Identity(const Identity& rhs) : user(rhs.user), sid(rhs.sid), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
+#define GS(n, x) const string& get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
@@ -191,6 +168,8 @@ public:
 	GETSET(User::Ptr, user, User);
 	GETSET(u_int32_t, sid, SID);
 private:
+	typedef map<short, string> InfMap;
+	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 	mutable RWLock<> cs;
 

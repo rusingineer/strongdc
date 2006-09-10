@@ -544,9 +544,9 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 						_T("\tSlots: ") + ui->getText(COLUMN_SLOTS) + _T("\r\n") +
 						_T("\tUpLimit: ") + ui->getText(COLUMN_UPLOAD_SPEED) + _T("\r\n") +
 						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
-						_T("\tPk String: ") + Text::toT(ui->getUser()->getPk()) + _T("\r\n") +
-						_T("\tLock: " )+ Text::toT(ui->getUser()->getLock()) + _T("\r\n")+
-						_T("\tSupports: ") + Text::toT(ui->getUser()->getSupports());
+						_T("\tPk String: ") + Text::toT(ui->getIdentity().get("PK")) + _T("\r\n") +
+						_T("\tLock: " )+ Text::toT(ui->getIdentity().get("LO")) + _T("\r\n")+
+						_T("\tSupports: ") + Text::toT(ui->getIdentity().get("SU"));
 					break;		
 				default:
 					dcdebug("HUBFRAME DON'T GO HERE\n");
