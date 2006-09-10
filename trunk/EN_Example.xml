@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.02" Revision="1">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Language Name="Example Language" Author="BigMuscle" Version="2.03" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -50,7 +50,6 @@
 		<String Name="AwayModeOff">Away mode off</String>
 		<String Name="AwayModeOn">Away mode on: </String>
 		<String Name="B">B</String>
-		<String Name="BackgroundImage">Background image</String>
 		<String Name="BalloonPopups">Balloon popups</String>
 		<String Name="BitziLookup">Bitzi Lookup</String>
 		<String Name="BlockFinished">Segment Block Finished, waiting...</String>
