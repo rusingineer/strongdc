@@ -99,7 +99,7 @@ public:
 		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}
 
-	void updateUser(const User::Ptr& p) {
+	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
 		OnlineUser* ou;
 		{
 			Lock l(cs);
@@ -107,8 +107,31 @@ public:
 			if(i == onlineUsers.end()) return;
 			
 			ou = i->second;
+			ou->getIdentity().set("PK", aPk);
+			ou->getIdentity().set("LO", aLock);
 		}
 		ou->getClient().updated(*ou);
+	}
+
+	void setSupports(const User::Ptr& p, const string& aSupports) {
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end()) return;
+		i->second->getIdentity().set("SU", aSupports);
+	}
+
+	void setGenerator(const User::Ptr& p, const string& aGenerator) {
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end()) return;
+		i->second->getIdentity().set("GE", aGenerator);
+	}
+
+	void setUnknownCommand(const User::Ptr& p, const string& aUnknownCommand) {
+		Lock l(cs);
+		OnlineIter i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end()) return;
+		i->second->getIdentity().set("UC", aUnknownCommand);
 	}
 
 	bool isOp(const User::Ptr& aUser, const string& aHubUrl);

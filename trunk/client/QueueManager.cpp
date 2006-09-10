@@ -1848,8 +1848,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 
 	unsigned int activeSegments, onlineUsers;
 	int64_t overallSpeed;
-	bool enabledSlowDisconnecting;
-	User::Ptr aUser = d->getUserConnection()->getUser();
+	User::Ptr aUser = d->getUser();
 
 	{
 	    Lock l(cs);
@@ -1865,6 +1864,8 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 			if(q->getCurrents().size() < 2) return false;
 			if((q->getAverageSpeed() > 0) && (2*d->getRunningAverage() > q->getAverageSpeed())) return false;
 
+			aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
+
 		    userQueue.setWaiting(q, aUser);
 			userQueue.remove(q, aUser);
 
@@ -1876,15 +1877,17 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 			return true;
 		}
 
+		if(!q->isSet(QueueItem::FLAG_AUTODROP)) return true;
+
 		activeSegments = q->getCurrents().size();
 		onlineUsers = q->countOnlineUsers();
 		overallSpeed = q->getAverageSpeed();
-		enabledSlowDisconnecting = q->isSet(QueueItem::FLAG_AUTODROP);
 	}
 
-	if(enabledSlowDisconnecting && !(SETTING(DROP_MULTISOURCE_ONLY) && (activeSegments < 2))) {
+	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
 		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
 			if(onlineUsers > 2) {
+				aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
 					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
 				} else {

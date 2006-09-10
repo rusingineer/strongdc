@@ -77,7 +77,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
 	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
 	setText(COLUMN_IP, Text::toT(identity.getIp()));
-	setText(COLUMN_PK, Text::toT(identity.getUser()->getPk()));
+	setText(COLUMN_PK, Text::toT(identity.get("PK")));
 
 	if(sortCol != -1) {
 		needsSort = needsSort || (old != getText(sortCol));

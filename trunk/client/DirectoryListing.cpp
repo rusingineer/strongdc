@@ -265,7 +265,7 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 		cur->setComplete(true);
 
 		string generator = getAttrib(attribs, sGenerator, 2);
-		uziv->setGenerator(generator);
+		ClientManager::getInstance()->setGenerator(uziv, generator);
 
 		inListing = true;
 

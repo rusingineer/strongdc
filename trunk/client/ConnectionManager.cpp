@@ -511,13 +511,8 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
 
-	if(aSource->getUser()) {
-		aSource->getUser()->setPk(aPk);
-		aSource->getUser()->setLock(aLock);
-		
-		if(updateUser)
-			ClientManager::getInstance()->updateUser(aSource->getUser());
-	}
+	if(updateUser && aSource->getUser())
+		ClientManager::getInstance()->setPkLock(aSource->getUser(), aPk, aLock);
 }
 
 void ConnectionManager::on(UserConnectionListener::Direction, UserConnection* aSource, const string& dir, const string& num) throw() {
@@ -739,7 +734,7 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 	}
 
 	if(conn->getUser())
-		conn->getUser()->setSupports(sup);
+		ClientManager::getInstance()->setSupports(conn->getUser(), sup);
 }
 
 /**

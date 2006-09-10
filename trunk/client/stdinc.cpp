@@ -20,7 +20,7 @@
 
 #ifdef HAVE_STLPORT
 
-#if (_STLPORT_VERSION < 0x510)
+#if (_STLPORT_VERSION < 0x520)
 #error STLPort not correctly installed, read compile.txt
 #endif
 
