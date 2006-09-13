@@ -195,8 +195,6 @@ private:
 
 	User::Ptr me;
 	
-	Socket s;
-
 	string cachedIp;
 	CID pid;	
 

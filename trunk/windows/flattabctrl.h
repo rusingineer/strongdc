@@ -205,6 +205,7 @@ public:
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButtonDown)
 		MESSAGE_HANDLER(WM_LBUTTONUP, onLButtonUp)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
+		MESSAGE_HANDLER(WM_MOUSEMOVE, onMouseMove)		
 		MESSAGE_HANDLER(WM_MBUTTONUP, onCloseTab)
 		COMMAND_ID_HANDLER(IDC_CLOSE_WINDOW, onCloseWindow)
 		COMMAND_ID_HANDLER(IDC_CHEVRON, onChevron)
@@ -295,6 +296,37 @@ public:
 		return 0;
 	}
 
+	LRESULT onMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
+
+		int xPos = pt.x;
+		int row = rows - ((pt.y / height) + 1);
+
+		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
+			TabInfo* t = *i;
+			if((row == t->row) && (xPos >= t->xpos) && (xPos < (t->xpos + t->getWidth()))) {
+				// Bingo, the mouse was over this one
+				int len = ::GetWindowTextLength(t->hWnd) + 1;
+				if(len >= TabInfo::MAX_LENGTH) {
+					TCHAR* buf = new TCHAR[len];
+					::GetWindowText(t->hWnd, buf, len);
+					if(buf != current_tip) {
+						tab_tip.DelTool(m_hWnd);
+						CToolInfo ti(TTF_SUBCLASS, m_hWnd, 0, NULL, buf);
+						tab_tip.AddTool(&ti);
+						tab_tip.Activate(TRUE);
+						current_tip = buf;
+					}
+					delete[] buf;
+					return 1;
+				}
+			}
+		}
+		tab_tip.Activate(FALSE);
+		current_tip = _T("");
+		return 1;
+	}
+
 	LRESULT onCloseWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		if(::IsWindow(closing))
 			::SendMessage(closing, WM_CLOSE, 0, 0);
@@ -350,9 +382,11 @@ public:
 	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) { 
 		chevron.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 			BS_PUSHBUTTON , 0, IDC_CHEVRON);
-		chevron.SetWindowText(_T("»"));
+		chevron.SetWindowText(_T("\u00bb"));
 
 		mnu.CreatePopupMenu();
+
+		tab_tip.Create(m_hWnd, rcDefault, NULL, TTS_ALWAYSTIP | TTS_NOPREFIX);
 
 		CDC dc(::GetDC(m_hWnd));
 		HFONT oldfont = dc.SelectFont(WinUtil::font);
@@ -626,9 +660,12 @@ private:
 	HWND closing;
 	CButton chevron;
 	CMenu mnu;
+	CToolTipCtrl tab_tip;
 	
 	int rows;
 	int height;
+
+	tstring current_tip;
 
 	TabInfo* active;
 	TabInfo* moving;

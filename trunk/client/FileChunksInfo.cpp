@@ -26,7 +26,7 @@
 #include "ResourceManager.h"
 #include "LogManager.h"
 
-vector<FileChunksInfo::Ptr> FileChunksInfo::vecAllFileChunksInfo;
+FileChunksInfo::tthMap FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;
 
 // NOTE: THIS MUST EQUAL TO HashManager::Hasher::MIN_BLOCK_SIZE
@@ -35,21 +35,21 @@ enum { MIN_BLOCK_SIZE = 65536 };
 FileChunksInfo::Ptr FileChunksInfo::Get(const TTHValue* tth)
 {
     Lock l(hMutexMapList);
-
-	for(vector<Ptr>::const_iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
+	tthMap::const_iterator i = vecAllFileChunksInfo.find(const_cast<TTHValue*>(tth));
+	/*for(vector<Ptr>::const_iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if(*((*i)->TTH) == *tth){
 			return (*i);
 		}
-	}
-
-	return NULL;
+	}*/
+	return (i != vecAllFileChunksInfo.end()) ? i->second : NULL;
 }
 
 void FileChunksInfo::Free(const TTHValue* tth)
 {
     Lock l(hMutexMapList);
-
-	for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
+	tthMap::iterator i = vecAllFileChunksInfo.find(const_cast<TTHValue*>(tth));
+	vecAllFileChunksInfo.erase(i);
+	/*for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
 		if(*((*i)->TTH) == *tth){
 			vecAllFileChunksInfo.erase(i);
 			return;
@@ -57,13 +57,15 @@ void FileChunksInfo::Free(const TTHValue* tth)
 	}
 
 	dcassert(0);
+	*/
 }
 
 FileChunksInfo::FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
-	: TTH(tth), fileSize(size), verifiedSize(0)
+	: fileSize(size), verifiedSize(0)
 {
 	hMutexMapList.enter();
-	vecAllFileChunksInfo.push_back(this);
+	//vecAllFileChunksInfo.push_back(this);
+	vecAllFileChunksInfo.insert(make_pair(tth, this));
 	hMutexMapList.leave();
 
 	dcassert(size);

@@ -23,6 +23,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#ifdef _WIN32
+# define snprintf _snprintf
+# define snwprintf _snwprintf
+#endif
+
 #ifdef _DEBUG
 
 inline void CDECL debugTrace(const char* format, ...)
@@ -65,11 +70,6 @@ _CrtDbgBreak(); } } while(false)
 #define dcassert(exp)
 #define dcdrun(exp)
 #endif //_DEBUG
-
-#ifdef _WIN32
-# define snprintf _snprintf
-# define snwprintf _snwprintf
-#endif
 
 // Make sure we're using the templates from algorithm...
 #ifdef min

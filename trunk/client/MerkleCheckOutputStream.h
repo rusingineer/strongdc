@@ -143,6 +143,7 @@ public:
 				fileChunks->verifyBlock(offset, real, d->getTempTarget());
 			}
 		}
+
 		return ret;
 	}
 
@@ -166,10 +167,6 @@ private:
 			if(cur.getLeaves().size() > real.getLeaves().size() ||
 				!(cur.getLeaves()[verified] == real.getLeaves()[verified])) 
 			{
-				if(d) {
-					dcassert(cur.getLeaves().size() <= real.getLeaves().size());
-					LogManager::getInstance()->message(d->getTargetFileName() + " - " + STRING(CORRUPTION_DETECTED) + " " + Util::toString(verified));
-				}
 				throw FileException(STRING(TTH_INCONSISTENCY));
 			}
 			verified++;

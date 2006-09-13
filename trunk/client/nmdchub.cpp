@@ -783,7 +783,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			}
 			if(from == 0) {
 				// Assume it's from the hub
-				from = &getUser(rtNick);
+				from = &getUser(fromNick);
 				from->getIdentity().setHub(true);
 				from->getIdentity().setHidden(true);
 				fire(ClientListener::UserUpdated(), this, *from);
@@ -792,8 +792,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			// Update pointers just in case they've been invalidated
 			replyTo = findUser(rtNick);
 			from = findUser(fromNick);
-
 		}
+
 		OnlineUser& to = getUser(getMyNick());
 		fire(ClientListener::PrivateMessage(), this, *from, to, *replyTo, unescape(msg));
 	} else if(cmd == "$GetPass") {

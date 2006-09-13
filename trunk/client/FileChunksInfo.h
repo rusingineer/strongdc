@@ -44,7 +44,7 @@
 typedef vector<u_int16_t> PartsInfo;
 
 // ...
-typedef map<u_int16_t, u_int16_t> BlockMap;
+typedef hash_map<u_int16_t, u_int16_t> BlockMap;
 typedef BlockMap::const_iterator BlockIter;
 
 class Download;
@@ -204,8 +204,10 @@ public:
 	 */
 
 	inline void selfCheck();
+
+	typedef HASH_MAP_X(TTHValue*, Ptr, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) tthMap;
 	
-	static vector<Ptr> vecAllFileChunksInfo;
+	static tthMap vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
 
 	// chunk start position must be unique in both waiting and running
@@ -215,7 +217,7 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-	TTHValue* TTH;
+	//TTHValue* TTH;
 
 	int64_t fileSize;
     int64_t downloadedSize;

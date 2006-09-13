@@ -27,6 +27,7 @@
 #include "Pointer.h"
 #include "CID.h"
 #include "FastAlloc.h"
+#include "CriticalSection.h"
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
@@ -146,13 +147,13 @@ public:
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
 	const string& get(const char* name) const {
-		RLock<> l(cs);
+		RLock<> l(rw);
 		InfIter i = info.find(*(short*)name);
 		return i == info.end() ? Util::emptyString : i->second;
 	}
 
 	void set(const char* name, const string& val) {
-		WLock<> l(cs);
+		WLock<> l(rw);
 		if(val.empty())
 			info.erase(*(short*)name);
 		else
@@ -171,8 +172,9 @@ private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
-	mutable RWLock<> cs;
-
+	/** @todo there are probably more threading issues here ...*/
+	static RWLock<> rw;
+	
 	string getVersion(const string& aExp, const string& aTag) const;
 	string splitVersion(const string& aExp, const string& aTag, const int part) const;
 };

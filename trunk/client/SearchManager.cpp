@@ -81,7 +81,7 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 	if(aWindow != NULL) {
 		bool added = false;
 		if(searchQueue.empty()) {
-			searchQueue.insert(searchQueue.begin(), sqi);
+			searchQueue.push_front(sqi);
 			added = true;
 		} else {
 			// Insert before the automatic searches (manual search) 
@@ -605,20 +605,15 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 
 	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
 		SearchQueueItem sqi = searchQueue.front();
-		searchQueue.erase(searchQueue.begin());
+		searchQueue.pop_front();
 		if(sqi.getHubs().empty()) {
 			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
-			fire(SearchManagerListener::Searching(), &sqi);
 		} else {
 			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
-			fire(SearchManagerListener::Searching(), &sqi);
 		}
+		fire(SearchManagerListener::Searching(), &sqi);
 		setLastSearch(aTick);
 	}
-}
-
-u_int32_t SearchManager::getLastSearch() {
-	return lastSearch; 
 }
 
 int SearchManager::getSearchQueueNumber(int* aWindow) {
@@ -628,11 +623,8 @@ int SearchManager::getSearchQueueNumber(int* aWindow) {
 			if(sqi->getWindow() == aWindow) {
 				return queueNumber;
 			}
-		queueNumber++;
+			queueNumber++;
 		}
-	} else {
-		// should never get here but just in case...
-		return 0;
 	}
 	return 0;
 }
@@ -657,8 +649,8 @@ void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse,
 		*/
 
 		s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMyCID()));
-	} catch(const SocketException&) {
-		s.disconnect();			
+	} catch(...) {
+		dcdebug("Partial search caught error\n");		
 	}
 }
 
