@@ -433,7 +433,7 @@ SettingsManager::SettingsManager()
 	setDefault(USE_EMOTICONS, true);
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(REPORT_ALTERNATES, true);	
-	setDefault(USE_OLD_SHARING_UI, false);
+
 	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
 	setDefault(CHECK_NEW_USERS, false);
@@ -541,7 +541,13 @@ SettingsManager::SettingsManager()
 	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
 	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
 	setDefault(COLOR_VERIFIED, RGB(222, 160, 0));
-	
+
+	OSVERSIONINFO ver;
+	memset(&ver, 0, sizeof(OSVERSIONINFO));
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx((OSVERSIONINFO*)&ver);
+
+	setDefault(USE_OLD_SHARING_UI, (ver.dwPlatformId == VER_PLATFORM_WIN32_NT) ? true : false);
 #endif
 }
 

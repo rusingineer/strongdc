@@ -1,3 +1,9 @@
+** cvs186
+	[Win9x] old sharing interface is enabled on default
+	DC++ 0.695 SVN merge
+	hash_map to store multisource information
+	fixed wrong search socket disconnection on socket exception
+
 ** cvs185
 	fixed crash #44
 	hopefully fixed absolute paths

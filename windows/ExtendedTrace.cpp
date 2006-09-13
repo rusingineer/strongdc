@@ -57,6 +57,7 @@ static void checkBuggyLibrary(PCSTR library) {
 	libraries.insert(make_pair(L"SOCKS32", L"Sockscap [?]"));
 	libraries.insert(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
 	libraries.insert(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
+	libraries.insert(make_pair(L"mshp32", L"Worm: W32.Worm.Feebs"));
 
 	for(map<tstring, tstring>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
 		string lib = Text::fromT(i->first); tstring app = i->second;

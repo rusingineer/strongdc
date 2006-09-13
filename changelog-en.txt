@@ -1,0 +1,344 @@
+	-- StrongDC++ 2.03 --
+
+* fixed some crashes
+* hopefully fixed absolute paths
+* updated STLPort
+* old sharing interface is enabled on default for Win9x
+* DC++ 0.695 update
+
+	-- StrongDC++ 2.02 --
+
+* fixed shutdown timer
+* fixed late upload disconnection
+* hopefully fixed sorting by time and speed
+* fixed issue with opening logs
+* removed nicks from search spy - it saves many memory and it should be anonymous
+* fixed doubleclick on non-multisource files in Transfers
+* fixed popup preview in Settings
+* fixed some GDI leaks (+ removed XP-styled menu)
+* saved memory for a large queues and large hubs
+* "Upload finished" message delayed for 5 seconds to avoid unnecessary blinking when single chunk finishes
+* added [C] tag to state chunked transfers
+* fixed loading nicks from Users.xml
+* firewall icon display for all users
+* added option not to announce new versions (version.xml is still downloaded)
+* fixed displaying outgoing PMs when incoming PMs are displayed in mainchat
+* size-based segmenting isn't so strict
+* fixed double search results when search filter was applied
+* PM windows limited to 200 to avoid remote abusing
+* removed some unuseful userlist columns
+* search request is removed from queue when the search window is closed
+* fixed problem with opening incomplete filelists
+* always using single nick instead of all user's nicks
+* added option to set download connections attemps per second
+* when download finishes, it will be removed sooner and can be removed by Close connection
+* fixed recreating finished file when it's deleted and someone wants to download it
+* added option to require pressing Enter to activate user/search filter
+* segments for autdrop are checked every 40 second (instead of 20 secs before)
+* hopefully fixed problem with setting cheating string for fakers with many same numbers in share size
+* workaround to display OP commands when selecting users from different hubs in SearchFrame
+* more files with same TTH can be added only if filesize is below 2 MB
+* fixed GUI deadlock in CDM Debug messages window
+* display "Offline" as a hubname when user is not in hub
+* changed partial search result format
+* fixed bug that max sources for auto-search couldn't be set over 15
+* when slow user is disconnected, the Readd menu will display user's speed
+* finally fixed very old bug with non-working tooltips if they once disappear
+* added $HubTopic support (iDC++)
+
+	-- StrongDC++ 2.01 --
+
+*** WARNING ***
+  This version fixes a security bug, upgrade unless you want to experience runtime errors
+*** WARNING ***
+
+* fixed bug in fake detection
+* fixed bug that dots in log filenames were transformed to _
+* hopefully fixed crash when subtracting filelists
+* fixed loading which columns are hidden in queue
+* bots shouldn't be checked on join anymore
+* added reason to Readd menu when TTH inconsistency occurs
+* fixed runtime error when only <nick> without message comes to mainchat (THX darwusch)
+* using UTF8 to get filelist from ADC users
+* fixed sharing finished files (THX MaynardK)
+* fixed removing diacritics from national chars
+* always using STL exception to avoid Runtime errors
+* *.antifrag and *.dctmp files are always unshared regardless the "Remove forbidden" settings
+
+	-- StrongDC++ 2.00 --
+
+!!! This version will break your queue sources and favorite users, so you will lost them !!!
+
+* changed graphics
+* chunk splitting with download speed awareness
+* verify downloaded block on chunk done
+* fixed many deadlocks
+* fixed many crashes
+* fixed many memory leaks
+* updated to last DC++ SVN
+* updated to STLPort CVS and WTL CVS
+* added some AMD/MMX/SSE CPU optimizations
+* should work on Win9x
+* added finished file sharing
+* performance tweaks
+* removed some obsolete functions (MP3 Info, SFV check...)
+* project ported to Visual Studio .net 2005
+* reworked user filter - for activation you need always press Enter
+* for complete changelog see cvs-changelog.txt
+
+
+	-- StrongDC++ 1.00 RC10 --
+
+* fixed issue with international nicknames
+* fixed issue with unicode chars in timestamps
+* added doubleclick actions for userlist, mainchat and transferview (CZDC++)
+* added option to switch to faster user at the end of downloading
+* fixed elapsed time of downloading
+* fixed progressbars for files > 2GB
+* added chunk transfers for GetZBlock and UGetBlock
+* fixed crash in QueueManager's critial section
+* rewritten search queue (THX Naga)
+* readded chat diacritics removing (THX popKorn)
+* added finished chunks grouping in finished uploads
+* removed global emulation; use local one for each hub when necessary; all features of multisource can be used w/o emulation only
+* added option to disable multi-source downloading and use standard way with rollback
+* added option to display chunk info on progressbars
+* added more userlist colors (CZDC++)
+* you can use %[targetdrive] in Unfinished Downloads Path (e.g. "%[targetdrive]\Temp\DCdownloads\") (BCDC++)
+* file download slots doesn't apply for filelists
+* fixed sorting in upload queue frame
+* hopefully fixed problem with removing users from queue
+* fixed unicode in webserver
+* search results grouping is dependent on file size
+* added option to use old oDC progressbars style
+* added ZoneAlarm detection (Zion++)
+* changed upload limiter policy to 5*(slots+1) to respect DC rules
+* improved lists columns settings (CZDC++)
+* improved hub dependent connection mode
+* finally fixed removeSource(s) and readd, maybe :)
+* added Ctrl+A shortcut to select all items in list
+* fixed dupe items issue in Color settings
+* garbage command changed to NMDC protocol format, it shouldn't time out anymore
+* fixed maximum alternates settings
+* added /csfd chat command (THX Atom)
+* added typing notification sound event
+* readded autodrop sources below 1.2 kB/s to avoid abusing of multisource downloading
+* added reason to Readd source menu in queue
+* DC++ emulation is enabled when entering hub using Quick Connect
+* download is disconnected when priority is changed to paused status
+* changed queue saving from seconds to minutes to avoid file corruption on crash
+* fixed icon loading from file
+* added options to set accepted timeouts/disconnects
+* fixed memory leak for menu's titles
+* fixed memory leak in upload queue
+* fixed scrolling when switching between hub windows
+* added emoticons dialog (THX Rm.)
+* fixed rare deadlock when faker is found
+* added support for emoticons pack (save it to EmoPacks subfolder)
+* rewritten code for grouping downloads in TransferView
+* added partial file sharing (idea from RevConnect)
+* fixed critical bug in zlib library
+
+
+	-- StrongDC++ 1.00 RC9 --
+
+*** WARNING *** 
+This update will change all your config files and queues, and it is 
+very probable that you won't be able to revert back to an older version
+once the update has been done!!!
+Also, finish your queue file before upgrading if you care for your
+international filenames in it - they will not be correctly converted.
+*** WARNING ***
+
+* fixed progressbar drawing in upload queue
+* added item to remove offline users for multiple files
+* added average share size (THX Corvik)
+* added webserver (PhantomDC++, THX Chmelic for web-interface)
+* fixed bug with crash on startup on old Windows (THX Prologic)
+* readded kick messages history
+* fixed crash on readd source
+* updated to PCRE 5.0
+* moved the core structures to UTF-8 to allow correct internationalisation
+* fixed 100% CPU usage when downloading TTH tree for large files
+* fixed columns in Finished uploads
+* hopefully fixed buffer overrun
+* stored TTH tree is loaded at startup
+* items with 1 user are displayed without [+]
+* added option to set minimum search interval
+* added userlist colors settings (iDC++)
+* improved debug commands (DCDM++)
+* fixed crash when invalid regular expression was used
+* option to expand new search results (BCDC++ SVN)
+* grant slot connects immediately (BCDC++ SVN)
+* don't reconnect when chunk done at the end of file (THX Liny)
+* updated to WTL 7.5.4291
+* hopefully fixed transfers deadlock
+* fixed crash when importing theme
+* added rmDC++ 0.403B[7] and 0.403D[1] detection with DC++ emulation
+* queue progressbars display verified blocks
+* added option to disable realtime queue updating (to decrease CPU usage)
+* added option to suppress main chat (zDC++)
+* fixed occassional deadlock when trying to open queue window
+* changed progressbars appearance
+* fixed bug when sharing whole root folder
+* TTH tool hashes in his own thread (THX Prologic)
+* added main menu item to open indexing process status (fulDC)
+* fixed downloading when temporary file of full size already exists
+* updated to ZLIB 1.2.2
+* removed removing diacritics from international chars
+* colors change immediately w/o restart (CZDC++)
+* added country flags (CZDC++)
+* you can choose active/passive mode for each favorite hub
+* added main menu item Open my filelist (fulDC)
+* improved slow downloads disconnecting (seconds!!!; when segm. downloading only; fixed No Free Block)
+* fixed moving subfolders in queueframe
+* added file:// protocol support in chat
+* fixed No Free Block when decompression error occurs
+* added option to switch userlist to horizontal view (DCDM++)
+* real elapsed time is displayed in transferview
+* added Pause Search button (CZDC++)
+* added option to limit maximum simultaneous files (default = 15)
+* fixed bug with losing search results
+* time to next search is displayed
+* added option to enable/disable antifragmentation method
+* segments have fixed size and no reconnect is needed when block's finished
+
+
+	-- StrongDC++ 1.00 RC8 --
+
+* away is saved when exiting
+* slow downloads disconnecting can be enabled/disabled for each file
+* added missing button Downloaded MP3 info on toolbar
+* added Copy menu to tab context menu of hub
+* added setting to switch to old Share UI
+* added confirmation when removing file from TransferView
+* added percentage progress of TTH checking
+* added button to sound preview in settings
+* added 2 items to tab context menu of user's filelist
+* added balloon tips for a few events
+* added icons to queue to display if TTH tree is available
+* search spy supports searching by TTH
+
+* settings files are stored to separated folder (iDC++) - move your .xml files to Settings folder
+* filelist is updated after hashing is finished (CZDC++)
+* added background image (DCDM++)
+* added progressbar to Upload queue (iDC++)
+* added option to add magnet link to queue (CZDC++)
+* added waiting time and added time to upload queue (CZDC++)
+* synchronized with CVS DC++ 0.40325
+
+* updated to WTL 4.5.4196
+* search filter is activated after pressing Enter
+* search queue has delay 30 seconds
+* upload queue code moved to UI thread (against deadlock)
+* chat/PM logs are arranged to subfolders
+* optimized item grouping in Transfers
+* only sources with the same TTH are listed in "Download to" menu
+* improved colors settings
+
+* fixed search filter when columns are't sorted in default way
+* fixed memory leak when NetLimiter is detected
+* fixed memory leak when hashing finished file (THX PPK)
+* fixed random crash when removing TestSUR on disconnect
+* fixed bug when starting to download MP3 info
+* fixed user-defined compression level
+* fixed a few possible deadlocks
+* fixed list drawing on Win2000
+* fixed user icons after get user response
+
+
+	-- StrongDC++ 1.00 RC7 --
+
+* when Tiger Tree is available, only corrupted blocks are redownloaded
+* added a button on toolbar to enable/disable sounds
+* grouping search results by TTH under 1 item with [+]
+* added search filter (supports regexp)
+* added new user checking
+* added an item to remove offline users from queue
+* added some new sound events
+* added a few items to popupmenu on segmented downloads
+* added online/offline/away icons to Favorite users
+
+* autosearching alternates copied from RevConnect
+* search queue against searchspam with delay 15 seconds (RevConnect)
+* some news and changes from CZDC++
+* highlighted search results that are already in your queue (PhantomDC++)
+* added reconnection attempt if download reaches 0 B/s (DCDM++)
+* added option to report alternate search send in status bar (CZDC++)
+* added option to load few last lines of private message (CZDC++)
+* synchronized with CVS DC++ 0.404
+* improved commands receiving from clients (CZDC++)
+
+* autodrop slow sources can be disabled
+* compression is defaultly on and should work with segmented downloading
+* NetLimiter is detected if StrongDC++ is limited only
+* removed Flood cache for progressbars
+* removed Don't send tag feature
+* userfilter rewritten + regular expressions
+* splash screen isn't Always on top
+* improved new version updating (oDC++)
+* improved magnet handling (BCDC++)
+* improved segment downloading that ensures good file integrity (THX Liny)
+* improved client profiles (DCDM++)
+* changed menus to XP look (zDC++)
+* changed About dialog look (oDC++)
+* changed crash dialog look
+
+* fixed bug in DC++ emulation (THX PPK)
+* fixed bug in share settings
+* fixed memory leak in SearchFrame
+* fixed bug with case-sensitive nicks on Toomaxx
+* fixed sound on own nick
+* fixed impossibility download from clients based on DC++ 0.402 CVS and above
+* fixed away on minimize
+* fixed Import theme
+* fixed loading RAW commands
+* fixed connecting to user, which has multiple files in queue, when downloading at max segments
+* fixed upload sorting in transferview
+
+
+	-- StrongDC++ 1.00 RC6 --
+
+* tabs from CZDC++
+* fixed preview in Settings
+* autodrop sources slower than 1 kB/s, checking every 20 seconds
+* fixed crash on receiving $MyInfo from Robocop
+* changes in segmented downloading
+* fixed loading and saving OP's colours
+* hashing has IDLE priority
+* grouping multiple sources under 1 item with [+] (experimental)
+* added option to search files with TTH only
+* fixed freeze on Tukan
+* added missing item Copy TTH in searchframe
+* added item Bitzi Lookup in searchframe (RevConnect)
+* TTH string can be copied to clipboard in TTH tool
+* TTH tool displays magnet-link
+* Message appears on progressbar while hashing finished downloads
+* magnet-links support (CZDC++)
+* low priority on minimize (only Win2000/XP)
+* autosearch exact file name is disabled on default
+* fixed command /me in chat
+* improved receiving hub's commands (CZDC++)
+* added option to set maximum emoticons in one chat message (CZDC++)
+* option to remove diacritics from Czech chars (CZDC++)
+* debug commands (DCDM++)
+* option to autosave queue in time interval
+* queue backup is created on save
+* compression allowed only with clients >= 0.307
+* changes from last DC++ CVS 0.402
+* fixed popupmenu when userlist is hidden
+* hopefully fixed chat scrolling
+* client profiles are compatible with DCDM++
+* simple NetLimiter detection
+* added progressbar to queueframe (CZDC++)
+* autopriority mode (PhantomDC++)
+* fixed crash on slow downloads disconnecting
+* added special progressbars for segments where downloaded segments are displayed (CZDC++)
+* added Nick column into Search spy frame
+* treeview for setting share folders, not existed folders are automatically removed (PossumMod)
+* alternative sources are searched by TTH in TransferView popupmenu
+* minimum segment size is set automatically by filesize
+* upgraded to WTL 7.5
+* added feature to display bandwidth in description
+* updated to STLPort 4.6.2
+* corrupted file is redownloaded in 10 seconds

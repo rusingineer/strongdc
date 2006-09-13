@@ -1110,6 +1110,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 	int flag = 0;
 	bool checkList = false;
 	User::Ptr user;
+	TTHValue* aTTH = new TTHValue(aDownload->getTTH()->toBase32());
 
 	{
 		Lock l(cs);
@@ -1210,7 +1211,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		if(aDownload->isSet(Download::FLAG_MULTI_CHUNK) && 
 			!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			
-			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aDownload->getTTH());
+			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aTTH);
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
 				fileChunks->putChunk(aDownload->getStartPos());
 			}
@@ -1225,6 +1226,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		user = aDownload->getUserConnection()->getUser();
 
 		aDownload->setUserConnection(0);
+		delete aTTH;
 		delete aDownload;
 	}
 

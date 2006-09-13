@@ -1003,7 +1003,7 @@ u_int32_t Util::rand() {
 
 	return y; 
 }
-
+/*
 string Util::getOsVersion() {
 #ifdef _WIN32
 	string os;
@@ -1041,6 +1041,8 @@ string Util::getOsVersion() {
 				os += " Server";
 			else if(ver.wProductType & VER_NT_DOMAIN_CONTROLLER)
 				os += " DC";
+		} else if(ver.dwMajorVersion == 6) {
+			os = "WinVista";
 		}
 
 		if(ver.wServicePackMajor != 0) {
@@ -1066,7 +1068,7 @@ string Util::getOsVersion() {
 
 #endif // _WIN32
 }
-
+*/
 /*	getIpCountry
 	This function returns the country(Abbreviation) of an ip
 	for exemple: it returns "PT", whitch standards for "Portugal"

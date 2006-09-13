@@ -254,6 +254,7 @@ void DirectoryListingFrame::updateTree(DirectoryListing::Directory* aTree, HTREE
 		updateTree(*i, ht);
 	}
 }
+
 void DirectoryListingFrame::refreshTree(const tstring& root) {
 	if(!loading) {
 		throw AbortException();
@@ -410,6 +411,7 @@ void DirectoryListingFrame::back() {
 		history = tmp;
 	}
 }
+
 void DirectoryListingFrame::forward() {
 	if(history.size() > 1 && historyIndex < history.size()) {
 		size_t n = min(historyIndex, history.size() - 1);
