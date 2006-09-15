@@ -825,7 +825,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(task->speaker == STATS) {
 			size_t AllUsers = client->getUserCount();
 			size_t ShownUsers = ctrlUsers.GetItemCount();
-			if(filter.empty() == false && AllUsers != ShownUsers) {
+			if(AllUsers != ShownUsers) {
 				ctrlStatus.SetText(1, (Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
 			} else {
 				ctrlStatus.SetText(1, (Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());

@@ -111,7 +111,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		} else {
 			bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(i.getUser());
 
-			if(BOOLSETTING(BOLD_AUTHOR_MESS) || i.isOp() || isFavorite) {
+			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isFavorite || i.isOp()) {
 				SetSel(lSelBegin, lSelBegin+iLen+1);
 				SetSelectionCharFormat(cf);
 				SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);

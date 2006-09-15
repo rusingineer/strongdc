@@ -1110,7 +1110,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 	int flag = 0;
 	bool checkList = false;
 	User::Ptr user;
-	TTHValue* aTTH = new TTHValue(aDownload->getTTH()->toBase32());
+	TTHValue* aTTH = aDownload->getTTH() ? new TTHValue(aDownload->getTTH()->toBase32()) : NULL;
 
 	{
 		Lock l(cs);
@@ -1226,9 +1226,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		user = aDownload->getUserConnection()->getUser();
 
 		aDownload->setUserConnection(0);
-		delete aTTH;
 		delete aDownload;
 	}
+	delete aTTH;
 
 	for(User::Iter i = getConn.begin(); i != getConn.end(); ++i) {
 		ConnectionManager::getInstance()->getDownloadConnection(*i);
