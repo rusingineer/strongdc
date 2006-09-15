@@ -665,7 +665,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
-				dcassert(!d->isSet(Download::FLAG_CHUNKED));
 				failDownload(aSource, e.getError());
 				ClientManager::getInstance()->connect(aSource->getUser());
 			}

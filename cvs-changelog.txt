@@ -1,3 +1,7 @@
+** cvs187
+	fixed crash for files without TTH
+	HubFrame shows count as "X/Y Users" when some users are hidden
+
 ** cvs186
 	[Win9x] old sharing interface is enabled on default
 	DC++ 0.695 SVN merge

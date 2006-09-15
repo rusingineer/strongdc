@@ -36,11 +36,6 @@ FileChunksInfo::Ptr FileChunksInfo::Get(const TTHValue* tth)
 {
     Lock l(hMutexMapList);
 	tthMap::const_iterator i = vecAllFileChunksInfo.find(const_cast<TTHValue*>(tth));
-	/*for(vector<Ptr>::const_iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if(*((*i)->TTH) == *tth){
-			return (*i);
-		}
-	}*/
 	return (i != vecAllFileChunksInfo.end()) ? i->second : NULL;
 }
 
@@ -49,24 +44,15 @@ void FileChunksInfo::Free(const TTHValue* tth)
     Lock l(hMutexMapList);
 	tthMap::iterator i = vecAllFileChunksInfo.find(const_cast<TTHValue*>(tth));
 	vecAllFileChunksInfo.erase(i);
-	/*for(vector<FileChunksInfo::Ptr>::iterator i = vecAllFileChunksInfo.begin(); i != vecAllFileChunksInfo.end(); i++){
-		if(*((*i)->TTH) == *tth){
-			vecAllFileChunksInfo.erase(i);
-			return;
-		}
-	}
-
-	dcassert(0);
-	*/
 }
 
 FileChunksInfo::FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
 	: fileSize(size), verifiedSize(0)
 {
-	hMutexMapList.enter();
-	//vecAllFileChunksInfo.push_back(this);
-	vecAllFileChunksInfo.insert(make_pair(tth, this));
-	hMutexMapList.leave();
+	{
+		Lock l(hMutexMapList);
+		vecAllFileChunksInfo.insert(make_pair(tth, this));
+	}
 
 	dcassert(size);
 
@@ -129,7 +115,8 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 
 void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 {
-	map<int64_t, Chunk*>::const_iterator i = running.find(chunk);
+	Lock l(cs);
+	Chunk::Iter i = running.find(chunk);
 
 	if(i == running.end()){
 		dcassert(0);
@@ -195,7 +182,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	int64_t maxTimeLeft = 0;
 	int64_t speed;
 
-	for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
+	for(Chunk::Iter i = running.begin(); i != running.end(); i++)
 	{
 		chunk = i->second;
 
@@ -221,7 +208,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	// all running chunks are unbreakable (timeleft < 15 sec)
 	// try overlapped download the pending chunk
 	if(maxTimeLeft < 15){
-		for(map<int64_t, Chunk*>::const_iterator i = running.begin(); i != running.end(); i++)
+		for(Chunk::Iter i = running.begin(); i != running.end(); i++)
 		{
 			chunk = i->second;
 			if(chunk->pos == i->first){
@@ -274,7 +261,7 @@ void FileChunksInfo::putChunk(int64_t start)
 
 	Chunk* prev = NULL;
 
-	for(map<int64_t, Chunk*>::iterator i = running.begin(); i != running.end(); i++)
+	for(Chunk::Map::iterator i = running.begin(); i != running.end(); i++)
 	{
 		Chunk* chunk = i->second;
 
