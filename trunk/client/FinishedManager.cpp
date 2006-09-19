@@ -75,7 +75,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 			d->getTarget(), d->getUserConnection()->getUser()->getFirstNick(),
 			d->getUserConnection()->getUser()->getCID(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUserConnection()->getUser()->getCID())),
-			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH() ? d->getTTH()->toBase32() : Util::emptyString);
+			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->isSet(Download::FLAG_CRC32_OK), d->getTTH().toBase32());
 		{
 			Lock l(cs);
 			downloads.push_back(item);

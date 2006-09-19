@@ -1,3 +1,8 @@
+** cvs188
+	fixed crash #99
+	fixed loading verified parts
+	removed non-hashing support + big DC++ SVN merge
+
 ** cvs187
 	fixed crash for files without TTH
 	HubFrame shows count as "X/Y Users" when some users are hidden

@@ -99,7 +99,7 @@ public:
 	}
 
 	bool isTTHShared(const TTHValue& tth){
-		HashFileIter i = tthIndex.find(const_cast<TTHValue*>(&tth));
+		HashFileIter i = tthIndex.find(tth);//OLD HashFileIter i = tthIndex.find(const_cast<TTHValue*>(&tth));
 		return (i != tthIndex.end());
 	}
 
@@ -250,7 +250,8 @@ private:
 		bool isDirectory;
 	};
 
-	typedef HASH_MULTIMAP_X(TTHValue*, Directory::File*, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
+	typedef HASH_MULTIMAP_X(TTHValue, Directory::File::Iter, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) HashFileMap;
+	//OLD typedef HASH_MULTIMAP_X(TTHValue*, Directory::File*, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
 
 	HashFileMap tthIndex;
@@ -313,17 +314,17 @@ private:
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {
+	virtual void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
 		save(xml);
 	}
-	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() {
+	virtual void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
 		load(xml);
 	}
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Minute, u_int32_t tick) throw();
-	void load(SimpleXML* aXml);
-	void save(SimpleXML* aXml);
+	void load(SimpleXML& aXml);
+	void save(SimpleXML& aXml);
 	
 };
 

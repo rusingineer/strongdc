@@ -385,20 +385,20 @@ private:
 	void onHttpFinished() throw();
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Load, SimpleXML* xml) throw() {
+	virtual void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
 		load(xml);
 		recentload(xml);
 		previewload(xml);
 	}
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML* xml) throw() {
+	virtual void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
 		previewsave(xml);
 	}
 
-	void load(SimpleXML* aXml);
-	void recentload(SimpleXML* aXml);
-	void previewload(SimpleXML* aXml);
-	void previewsave(SimpleXML* aXml);
+	void load(SimpleXML& aXml);
+	void recentload(SimpleXML& aXml);
+	void previewload(SimpleXML& aXml);
+	void previewsave(SimpleXML& aXml);
 	
 	string getConfigFile() { return Util::getConfigPath() + "Favorites.xml"; }
 };

@@ -206,9 +206,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		return;
 
 	if(aLine[0] != '$') {
-		if ((BOOLSETTING(SUPPRESS_MAIN_CHAT)) && (!isOp())) {
-			return;
-		}
+		if (BOOLSETTING(SUPPRESS_MAIN_CHAT) && !isOp()) return;
+
 		// Check if we're being banned...
 		if(state != STATE_CONNECTED) {
 			if(Util::findSubString(aLine, "banned") != string::npos) {

@@ -44,7 +44,7 @@
 typedef vector<u_int16_t> PartsInfo;
 
 // ...
-typedef hash_map<u_int16_t, u_int16_t> BlockMap;
+typedef map<u_int16_t, u_int16_t> BlockMap;
 typedef BlockMap::const_iterator BlockIter;
 
 class Download;

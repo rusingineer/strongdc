@@ -157,13 +157,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlSlots.SetWindowText(CTSTRING(ONLY_FREE_SLOTS));
 	slotsContainer.SubclassWindow(ctrlSlots.m_hWnd);
 
-	ctrlTTH.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, IDC_TTHONLY);
-	ctrlTTH.SetButtonStyle(BS_AUTOCHECKBOX, FALSE);
-	ctrlTTH.SetFont(WinUtil::systemFont, FALSE);
-	ctrlTTH.SetWindowText(CTSTRING(ONLY_TTH));
-	ctrlTTH.SetCheck(onlyTTH);
-	tthContainer.SubclassWindow(ctrlTTH.m_hWnd);
-
 	ctrlCollapsed.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, IDC_COLLAPSED);
 	ctrlCollapsed.SetButtonStyle(BS_AUTOCHECKBOX, FALSE);
 	ctrlCollapsed.SetFont(WinUtil::systemFont, FALSE);
@@ -375,8 +368,6 @@ void SearchFrame::onEnter() {
 	StringList clients;
 	
 	// Change Default Settings If Changed
-	if (onlyTTH != BOOLSETTING(SEARCH_ONLY_TTH))
-		SettingsManager::getInstance()->set(SettingsManager::SEARCH_ONLY_TTH, onlyTTH);
 	if (onlyFree != BOOLSETTING(FREE_SLOTS_DEFAULT))
 		SettingsManager::getInstance()->set(SettingsManager::FREE_SLOTS_DEFAULT, onlyFree);
 
@@ -476,15 +467,13 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 		}
 
 		if(isHash) {
-			if(aResult->getTTH() == NULL)
-				return;
-			if(Util::stricmp(Text::toT(aResult->getTTH()->toBase32()), search[0]) != 0)
+			if(Util::stricmp(Text::toT(aResult->getTTH().toBase32()), search[0]) != 0)
 				return;
 		} else {
 			// match all here
 			for(TStringIter j = search.begin(); j != search.end(); ++j) {
-				if((*j->begin() != _T('-') && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(*j)) == -1) ||
-					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getUtf8() ? aResult->getFile() : Text::acpToUtf8(aResult->getFile()), Text::fromT(j->substr(1))) != -1)
+				if((*j->begin() != _T('-') && Util::findSubString(aResult->getFile(), Text::fromT(*j)) == -1) ||
+					(*j->begin() == _T('-') && j->size() != 1 && Util::findSubString(aResult->getFile(), Text::fromT(j->substr(1))) != -1)
 					) 
 				{
 					droppedResults++;
@@ -498,7 +487,6 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	// Reject results without free slots if selected
 	// but always show directories
 	if( (onlyFree && aResult->getFreeSlots() < 1) ||
-	((onlyTTH && aResult->getTTH() == NULL) && (aResult->getType() != SearchResult::TYPE_DIRECTORY)) ||
 	(exactSize1 && (aResult->getSize() != exactSize2))
 	)
 	{
@@ -532,8 +520,8 @@ void SearchFrame::SearchInfo::view() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(Util::getTempPath() + Text::fromT(columns[COLUMN_FILENAME]), 
-				sr->getSize(), sr->getTTH(), sr->getUser(), sr->getFile(), 
-				sr->getUtf8(), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_TEXT);
+				sr->getSize(), sr->getTTH(), sr->getUser(),
+				QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_TEXT);
 		}
 	} catch(const Exception&) {
 	}
@@ -544,14 +532,14 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt + si->columns[COLUMN_FILENAME]);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
-				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+				si->sr->getTTH(), si->sr->getUser(),
+				(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 			
 			for(SearchInfo::Iter i = si->subItems.begin(); i != si->subItems.end(); i++) {
 				SearchInfo* j = *i;
 				try {
 					QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
-						j->sr->getFile(), j->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+						(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 				} catch(const Exception&) {
 				}
 			}
@@ -583,8 +571,8 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(), si->sr->getFile(), 
-				si->sr->getUtf8(), (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+				si->sr->getTTH(), si->sr->getUser(), 
+				(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
 
 			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
@@ -614,20 +602,15 @@ void SearchFrame::SearchInfo::browseList() {
 }
 
 void SearchFrame::SearchInfo::CheckSize::operator()(SearchInfo* si) {
-	if(!si->columns[COLUMN_TTH].empty()) {
-		if(firstTTH) {
-			tth = si->columns[COLUMN_TTH];
-			hasTTH = true;
-			firstTTH = false;
-		} else if(hasTTH) {
-			if(tth != si->columns[COLUMN_TTH]) {
-				hasTTH = false;
-			}
-		} 
-	} else {
+	if(firstTTH) {
+		tth = si->columns[COLUMN_TTH];
+		hasTTH = true;
 		firstTTH = false;
-		hasTTH = false;
-	}
+	} else if(hasTTH) {
+		if(tth != si->columns[COLUMN_TTH]) {
+			hasTTH = false;
+		}
+	} 
 
 	if(si->sr->getType() == SearchResult::TYPE_FILE) {
 		if(ext.empty()) {
@@ -893,14 +876,6 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 		rc.bottom += 21;
 		ctrlCollapsed.MoveWindow(rc);
 
-
-
-		rc.left = lMargin+4;
-		rc.right = width - rMargin;
-		rc.top += labelH+4;
-		rc.bottom += labelH+4;
-		ctrlTTH.MoveWindow(rc);
-
 		// "Hubs"
 		rc.left = lMargin;
 		rc.right = width - rMargin;
@@ -977,11 +952,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		ucParams["fileFN"] = sr->getFile();
 		ucParams["fileSI"] = Util::toString(sr->getSize());
 		ucParams["fileSIshort"] = Util::formatBytes(sr->getSize());
-		if(sr->getTTH() != NULL) {
-			ucParams["fileTR"] = sr->getTTH()->toBase32();
-		} else {
-			ucParams["fileTR"] = "NONE";
-		}
+		ucParams["fileTR"] = sr->getTTH().toBase32();
 
 		// compatibility with 0.674 and earlier
 		ucParams["file"] = ucParams["fileFN"];
@@ -999,7 +970,7 @@ LRESULT SearchFrame::onCtlColor(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	HDC hDC = (HDC)wParam;
 
 	if(hWnd == searchLabel.m_hWnd || hWnd == sizeLabel.m_hWnd || hWnd == optionLabel.m_hWnd || hWnd == typeLabel.m_hWnd
-		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlTTH.m_hWnd || hWnd == ctrlCollapsed.m_hWnd || hWnd == srLabel.m_hWnd) {
+		|| hWnd == hubsLabel.m_hWnd || hWnd == ctrlSlots.m_hWnd || hWnd == ctrlCollapsed.m_hWnd || hWnd == srLabel.m_hWnd) {
 		::SetBkColor(hDC, ::GetSysColor(COLOR_3DFACE));
 		::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
 		return (LRESULT)::GetSysColorBrush(COLOR_3DFACE);
@@ -1035,7 +1006,7 @@ LRESULT SearchFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& b
 void SearchFrame::onTab(bool shift) {
 	HWND wnds[] = {
 		ctrlSearch.m_hWnd, ctrlPurge.m_hWnd, ctrlMode.m_hWnd, ctrlSize.m_hWnd, ctrlSizeMode.m_hWnd, 
-		ctrlFiletype.m_hWnd, ctrlSlots.m_hWnd, ctrlTTH.m_hWnd, ctrlCollapsed.m_hWnd, ctrlDoSearch.m_hWnd, ctrlSearch.m_hWnd, 
+		ctrlFiletype.m_hWnd, ctrlSlots.m_hWnd, ctrlCollapsed.m_hWnd, ctrlDoSearch.m_hWnd, ctrlSearch.m_hWnd, 
 		ctrlResults.m_hWnd
 	};
 	
@@ -1058,10 +1029,8 @@ LRESULT SearchFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		SearchResult* sr = ctrlResults.getItemData(i)->sr;
 
-		if(sr->getTTH() != NULL) {
-			WinUtil::searchHash(sr->getTTH());
-		}
-	} 
+		WinUtil::searchHash(sr->getTTH());
+	}
 
 	return 0;
 }
@@ -1271,25 +1240,9 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 				targetDirMenu.AppendMenu(MF_SEPARATOR);
 				for(TStringIter i = WinUtil::lastDirs.begin(); i != WinUtil::lastDirs.end(); ++i) {
 					targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_WHOLE_TARGET + n, i->c_str());
-						n++;
-					}
-				}		
-
-			int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-			SearchResult* sr = ctrlResults.getItemData(i)->sr;
-			if(sr) {
-				if (ctrlResults.GetSelectedCount() == 1 && sr->getTTH() != NULL) {
-					resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_ENABLED);
-					resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MFS_ENABLED);
-					resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_ENABLED);
-					resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_ENABLED);
-				} else {
-					resultsMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_DISABLED);
-					resultsMenu.EnableMenuItem(IDC_BITZI_LOOKUP, MFS_DISABLED);
-					resultsMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_DISABLED);
-					resultsMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_DISABLED);
-				}		
-			}
+					n++;
+				}
+			}		
 
 			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
 			if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
@@ -1297,12 +1250,12 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}
 			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 			checkAdcItems(resultsMenu);
-			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
+//			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
 			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
 			grantMenu.InsertSeparatorFirst(TSTRING(GRANT_SLOTS_MENU));	
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
-			resultsMenu.RemoveFirstItem();
+//			resultsMenu.RemoveFirstItem();
 			copyMenu.RemoveFirstItem();
 			grantMenu.RemoveFirstItem();
 			targetDirMenu.RemoveFirstItem();
@@ -1423,10 +1376,10 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-			columns[COLUMN_FILENAME] = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+			columns[COLUMN_FILENAME] = Text::toT(sr->getFile());
 		} else {
-			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
-			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile())));
+			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getFile()));
+			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getFile()));
 		}
 
 		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])));
@@ -1435,8 +1388,8 @@ void SearchFrame::SearchInfo::update() {
 		columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
 		columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 	} else {
-		columns[COLUMN_FILENAME] = Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName()));
-		columns[COLUMN_PATH] = Text::toT(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+		columns[COLUMN_FILENAME] = Text::toT(sr->getFileName());
+		columns[COLUMN_PATH] = Text::toT(sr->getFile());
 		columns[COLUMN_TYPE] = TSTRING(DIRECTORY);
 		if(sr->getSize() > 0) {
 			columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
@@ -1457,9 +1410,7 @@ void SearchFrame::SearchInfo::update() {
 			flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
 		}
 	}
-	if(sr->getTTH() != NULL) {
-		columns[COLUMN_TTH] = Text::toT(sr->getTTH()->toBase32());
-	}	
+	columns[COLUMN_TTH] = Text::toT(sr->getTTH().toBase32());
 	if (sr->getUser()->getLastDownloadSpeed() > 0) {
 		columns[COLUMN_UPLOAD] = Util::formatBytesW(sr->getUser()->getLastDownloadSpeed()) + _T("/s");
 	} else if(user->isSet(User::FIREBALL)) {
@@ -1480,22 +1431,22 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				sCopy = sr->getUser()->getFirstNick();
 				break;
 			case IDC_COPY_FILENAME:
-				sCopy = Util::getFileName(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+				sCopy = Util::getFileName(sr->getFile());
 				break;
 			case IDC_COPY_PATH:
-				sCopy = Util::getFilePath(sr->getUtf8() ? sr->getFile() : Text::acpToUtf8(sr->getFile()));
+				sCopy = Util::getFilePath(sr->getFile());
 				break;
 			case IDC_COPY_SIZE:
 				sCopy = Util::formatBytes(sr->getSize());
 				break;
 			case IDC_COPY_LINK:
 				if(sr->getType() == SearchResult::TYPE_FILE) {
-					WinUtil::copyMagnet(sr->getTTH(), Text::toT(sr->getUtf8() ? sr->getFileName() : Text::acpToUtf8(sr->getFileName())), sr->getSize());
+					WinUtil::copyMagnet(sr->getTTH(), Text::toT(sr->getFileName()), sr->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:
-				if(sr->getType() == SearchResult::TYPE_FILE && sr->getTTH())
-					sCopy = sr->getTTH()->toBase32();
+				if(sr->getType() == SearchResult::TYPE_FILE)
+					sCopy = sr->getTTH().toBase32();
 				break;
 			default:
 				dcdebug("SEARCHFRAME DON'T GO HERE\n");
@@ -1520,11 +1471,9 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 		SearchInfo* si = (SearchInfo*)cd->nmcd.lItemlParam;
 		if(si->sr != NULL) {
 			targets.clear();
-			if(si->sr->getTTH()) {
-				QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(si->sr->getTTH()->toBase32()));
-				if(si->sr->getType() == SearchResult::TYPE_FILE && targets.size() > 0) {		
-					cd->clrText = SETTING(SEARCH_ALTERNATE_COLOUR);	
-				}
+			QueueManager::getInstance()->getTargetsByRoot(targets, TTHValue(si->sr->getTTH().toBase32()));
+			if(si->sr->getType() == SearchResult::TYPE_FILE && targets.size() > 0) {		
+				cd->clrText = SETTING(SEARCH_ALTERNATE_COLOUR);	
 			}
 		}
 		return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;

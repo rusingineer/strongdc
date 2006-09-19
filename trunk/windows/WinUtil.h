@@ -468,9 +468,9 @@ public:
 	static bool browseDirectory(tstring& target, HWND owner = NULL);
 
 	// Hash related
-	static void bitziLink(const TTHValue* /*aHash*/);
-	static void copyMagnet(const TTHValue* /*aHash*/, const tstring& /*aFile*/, int64_t);
-	static void searchHash(const TTHValue* /*aHash*/);
+	static void bitziLink(const TTHValue& /*aHash*/);
+	static void copyMagnet(const TTHValue& /*aHash*/, const tstring& /*aFile*/, int64_t);
+	static void searchHash(const TTHValue& /*aHash*/);
 
 	// URL related
 	static void registerDchubHandler();

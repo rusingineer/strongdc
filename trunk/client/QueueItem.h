@@ -108,7 +108,7 @@ public:
 			FLAG_REMOVED = 0x08,
 			FLAG_CRC_FAILED = 0x10,
 			FLAG_CRC_WARN = 0x20,
-			FLAG_UTF8 = 0x40,
+			FLAG_NO_TTHF = 0x40,
 			FLAG_BAD_TREE = 0x80,
 			FLAG_SLOW = 0x100,
 			FLAG_NO_TREE = 0x200,
@@ -116,17 +116,14 @@ public:
 			FLAG_PARTIAL = 0x800,
 			FLAG_TTH_INCONSISTENCY = 0x1000,
 			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
-				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_UTF8 | FLAG_BAD_TREE
+				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_BAD_TREE
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
 
-		Source(const User::Ptr& aUser, const string& aPath) : path(aPath), user(aUser) { }
-		Source(const Source& aSource) : Flags(aSource), path(aSource.path), user(aSource.user), partialInfo(aSource.partialInfo) { }
+		Source(const User::Ptr& aUser) : user(aUser) { }
+		Source(const Source& aSource) : Flags(aSource), user(aSource.user), partialInfo(aSource.partialInfo) { }
 
 		User::Ptr& getUser() { return user; }
-		const User::Ptr& getUser() const { return user; }
-		void setUser(const User::Ptr& aUser) { user = aUser; }
-		//string getFileName() { return Util::getFileName(path); }
 
 		/**
 		 * Source parts info
@@ -134,34 +131,31 @@ public:
 		 * If this source is not bad source, empty parts info means full file
 		 */
 		GETSET(PartsInfo, partialInfo, PartialInfo);
-		GETSET(string, path, Path);
-	private:
-		User::Ptr user;
+		GETSET(User::Ptr, user, User);
 	};
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue* tth) : 
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, u_int32_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth == NULL ? NULL : new TTHValue(*tth)), autoPriority(false), hasTree(false)
+	tthRoot(tth), autoPriority(false), hasTree(false)
 	{ 
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
 		}
-		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (tth == NULL) || (size < 2097153)) {
+		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size < 2097153)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
-		if(tth != NULL) {
-			TigerTree tree;
-			hasTree = HashManager::getInstance()->getTree(*tth, tree);
-		}
+
+		TigerTree tree;
+		hasTree = HashManager::getInstance()->getTree(tth, tree);
 	}
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents),
-		added(rhs.added), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), autoPriority(rhs.autoPriority),
-		currentDownload(rhs.currentDownload), averageSpeed(rhs.averageSpeed)
+		currentDownload(rhs.currentDownload), added(rhs.added), tthRoot(rhs.tthRoot),
+		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority)
 	{
 		// Deep copy the source lists
 		Source::ConstIter i;
@@ -176,7 +170,6 @@ public:
 	virtual ~QueueItem() { 
 		for_each(sources.begin(), sources.end(), DeleteFunction());
 		for_each(badSources.begin(), badSources.end(), DeleteFunction());
-		delete tthRoot;
 	}
 
 	int countOnlineUsers() const {
@@ -195,11 +188,6 @@ public:
 				return true;
 		}
 		return false;
-	}
-
-	const string& getSourcePath(const User::Ptr& aUser) { 
-		dcassert(isSource(aUser));
-		return (*getSource(aUser, sources))->getPath();
 	}
 
 	Source::List& getSources() { return sources; }
@@ -262,7 +250,7 @@ public:
 		if(isSet(QueueItem::FLAG_XML_BZLIST)) {
 			return getTarget() + ".xml.bz2";
 		} else {
-			return getTarget() + ".DcLst";
+			return getTarget() + ".xml";
 		}
 	}
 
@@ -279,7 +267,7 @@ public:
 	GETSET(Source::List, currents, Currents);
 	GETSET(Download*, currentDownload, CurrentDownload);
 	GETSET(u_int32_t, added, Added);
-	GETSET(TTHValue*, tthRoot, TTH);
+	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(u_int8_t, maxSegments, MaxSegments);
 	GETSET(bool, hasTree, HasTree);
@@ -336,54 +324,13 @@ private:
 	Source::List sources;
 	Source::List badSources;	
 
-	Source* addSource(const User::Ptr& aUser, const string& aPath) {
-		dcassert(!isSource(aUser));
-		Source* s = NULL;
-		Source::Iter i = getSource(aUser, badSources);
-		if(i != badSources.end()) {
-			s = *i;
-			badSources.erase(i);
-			s->setPath(aPath);
-		} else {
-			s = new Source(aUser, aPath);
-		}
+	Source* addSource(const User::Ptr& aUser);
 
-		sources.push_back(s);
-		return s;
-	}
+	void removeSource(const User::Ptr& aUser, int reason);
 
-	void removeSource(const User::Ptr& aUser, int reason) {
-		Source::Iter i = getSource(aUser, sources);
-		dcassert(i != sources.end());
-		(*i)->setFlag(reason);
-		badSources.push_back(*i);
-		sources.erase(i);
-	}
-
-	static Source::Iter getSource(const User::Ptr& aUser, Source::List& lst) { 
-		for(Source::Iter i = lst.begin(); i != lst.end(); ++i) {
-			if((*i)->getUser() == aUser)
-				return i;
-		}
-		return lst.end();
-	}
-	static Source::ConstIter getSource(const User::Ptr& aUser, const Source::List& lst) { 
-		for(Source::ConstIter i = lst.begin(); i != lst.end(); ++i) {
-			const Source* s = *i;
-			if(s->getUser() == aUser)
-				return i;
-		}
-
-		return lst.end();
-	}
-	static bool isSource(const User::Ptr& aUser, const Source::List& lst) {
-		for(Source::ConstIter i = lst.begin(); i != lst.end(); ++i) {
-			const Source* s = *i;
-			if(s->getUser() == aUser)
-				return true;
-		}
-		return false;
-	}
+	static Source::Iter getSource(const User::Ptr& aUser, Source::List& lst);
+	static Source::ConstIter getSource(const User::Ptr& aUser, const Source::List& lst) ;
+	static bool isSource(const User::Ptr& aUser, const Source::List& lst);
 
 };
 

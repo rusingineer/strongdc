@@ -78,8 +78,8 @@ public:
 	/** Add a file with hash to the queue. */
 	bool add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException); 
 	/** Add a file to the queue. */
-	void add(const string& aTarget, int64_t aSize, const TTHValue* root, User::Ptr aUser, const string& aSourceFile, 
-		bool utf8 = true, int aFlags = QueueItem::FLAG_RESUME, bool addBad = true) throw(QueueException, FileException);
+	void add(const string& aTarget, int64_t aSize, const TTHValue& root, User::Ptr aUser,
+		int aFlags = QueueItem::FLAG_RESUME, bool addBad = true) throw(QueueException, FileException);
 		/** Add a user's filelist to the queue. */
 	void addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException);
 	/** Queue a partial file list download */
@@ -88,7 +88,7 @@ public:
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
 		string target = Util::getConfigPath() + "TestSURs\\" + fileName;
-		add(target, -1, NULL, aUser, fileName, false, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
+		add(target, -1, TTHValue(), aUser, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
@@ -109,6 +109,8 @@ public:
 	void addDirectory(const string& aDir, const User::Ptr& aUser, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();
 	
 	int matchListing(const DirectoryListing& dl) throw();
+
+	bool getTTH(const string& name, TTHValue& tth) throw();
 
 	/** Move the target location of a queued item. Running items are silently ignored */
 	void move(const string& aSource, const string& aTarget) throw();
@@ -183,7 +185,7 @@ public:
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
-			u_int32_t aAdded, const string& freeBlocks = Util::emptyString, const string& verifiedBlocks = Util::emptyString , const TTHValue* root = NULL) throw(QueueException, FileException);
+			u_int32_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
@@ -202,7 +204,7 @@ public:
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 				qi->chunkInfo = NULL;
-				FileChunksInfo::Free(qi->getTTH());
+				FileChunksInfo::Free(&qi->getTTH());
 			}
 
 			delete qi;
@@ -249,7 +251,7 @@ private:
 	QueueManager();
 	virtual ~QueueManager() throw();
 	
-	CriticalSection cs;
+	mutable CriticalSection cs;
 	
 	/** Partial file list queue */
 	PfsQueue pfsQueue;
@@ -264,12 +266,10 @@ private:
 	/** Next search */
 	u_int32_t nextSearch;
 	
-	static const string USER_LIST_NAME;
-
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
-	bool addSource(QueueItem* qi, const string& aFile, User::Ptr aUser, Flags::MaskType addBad, bool utf8) throw(QueueException, FileException);
+	bool addSource(QueueItem* qi, User::Ptr aUser, Flags::MaskType addBad) throw(QueueException, FileException);
 
 	int matchFiles(const DirectoryListing::Directory* dir) throw();
 	void processList(const string& name, User::Ptr& user, int flags);

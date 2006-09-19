@@ -28,10 +28,10 @@
 #include "QueueManager.h"
 #include "ResourceManager.h"
 
-SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue* aTTH) :
+SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue& aTTH) :
 	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
 	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
-	tth(aTTH == NULL ? NULL : new TTHValue(*aTTH)), utf8(true), ref(1) { }
+	tth(aTTH), ref(1) { }
 
 string SearchResult::toSR(const Client& c) const {
 	// File:		"$SR %s %s%c%s %d/%d%c%s (%s)|"
@@ -41,7 +41,7 @@ string SearchResult::toSR(const Client& c) const {
 	tmp.append("$SR ", 4);
 	tmp.append(Text::utf8ToAcp(c.getMyNick()));
 	tmp.append(1, ' ');
-	string acpFile = utf8 ? Text::utf8ToAcp(file) : file;
+	string acpFile = Text::utf8ToAcp(file);
 	if(type == TYPE_FILE) {
 		tmp.append(acpFile);
 		tmp.append(1, '\x05');
@@ -54,11 +54,7 @@ string SearchResult::toSR(const Client& c) const {
 	tmp.append(1, '/');
 	tmp.append(Util::toString(slots));
 	tmp.append(1, '\x05');
-	if(getTTH() == NULL) {
-		tmp.append(Text::utf8ToAcp(c.getHubName()));
-	} else {
-		tmp.append("TTH:" + getTTH()->toBase32());
-	}
+	tmp.append("TTH:" + getTTH().toBase32());
 	tmp.append(" (", 2);
 	tmp.append(c.getIpPort());
 	tmp.append(")|", 2);
@@ -69,10 +65,8 @@ AdcCommand SearchResult::toRES(char type) const {
 	AdcCommand cmd(AdcCommand::CMD_RES, type);
 	cmd.addParam("SI", Util::toString(size));
 	cmd.addParam("SL", Util::toString(freeSlots));
-	cmd.addParam("FN", Util::toAdcFile(utf8 ? file : Text::acpToUtf8(file)));
-	if(getTTH() != NULL) {
-		cmd.addParam("TR", getTTH()->toBase32());
-	}
+	cmd.addParam("FN", Util::toAdcFile(file));
+	cmd.addParam("TR", getTTH().toBase32());
 	return cmd;
 }
 
@@ -335,9 +329,11 @@ int SearchManager::ResultsQueue::run() {
 				StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
 				hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
 			}
+			if(tth.empty())
+				continue;
 
 			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-				file, hubName, remoteIp, tth, false, Util::emptyString);
+				file, hubName, remoteIp, TTHValue(tth), Util::emptyString);
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		} else if(x.compare(0, 5, "$PSR ") == 0) {
@@ -418,7 +414,7 @@ int SearchManager::ResultsQueue::run() {
 				}
 			}
 		}	
-		Thread::sleep(10);
+		Thread::sleep(9);
 	}
 	return 0;
 }
@@ -550,9 +546,11 @@ void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const st
 			string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
 
 			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
+		if(type == SearchResult::TYPE_FILE && tth.empty())
+			return;
 			/// @todo Something about the slots
 		SearchResult* sr = new SearchResult(from, type, 0, freeSlots, size, 
-			file, hubName, remoteIp, tth, true, token);
+			file, hubName, remoteIp, TTHValue(tth), token);
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
 		}

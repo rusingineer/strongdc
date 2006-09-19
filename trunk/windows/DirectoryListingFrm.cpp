@@ -588,7 +588,7 @@ LRESULT DirectoryListingFrame::onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ItemInfo* ii = ctrlList.getSelectedItem();
-	if(ii != NULL && ii->type == ItemInfo::FILE && ii->file->getTTH() != NULL) {
+	if(ii != NULL && ii->type == ItemInfo::FILE) {
 		WinUtil::searchHash(ii->file->getTTH());
 	} 
 	return 0;
@@ -710,25 +710,13 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			targets.clear();
-			if(ii->file->getTTH() != NULL) {
-				QueueManager::getInstance()->getTargetsByRoot(targets, *ii->file->getTTH());
-			} else {
-				QueueManager::getInstance()->getTargetsBySize(targets, ii->file->getSize(), Util::getFileExt(ii->file->getName()));
-			}
+			QueueManager::getInstance()->getTargetsByRoot(targets, ii->file->getTTH());
+
 			if(targets.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
 				for(StringIter i = targets.begin(); i != targets.end(); ++i) {
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (++n), Text::toT(*i).c_str());
 				}
-			}
-			if(ii->file->getTTH()) {
-				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_ENABLED);
-				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_ENABLED);
-				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_ENABLED);
-			} else {
-				copyMenu.EnableMenuItem(IDC_COPY_TTH, MF_BYCOMMAND | MFS_DISABLED);
-				copyMenu.EnableMenuItem(IDC_COPY_LINK, MF_BYCOMMAND | MFS_DISABLED);
-				fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_DISABLED);
 			}
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
@@ -1157,10 +1145,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 			ucParams["fileFN"] = dl->getPath(ii->file) + ii->file->getName();
 			ucParams["fileSI"] = Util::toString(ii->file->getSize());
 			ucParams["fileSIshort"] = Util::formatBytes(ii->file->getSize());
-			TTHValue *hash = ii->file->getTTH();
-			if(hash != NULL) {
-				ucParams["fileTR"] = hash->toBase32();
-			}
+			ucParams["fileTR"] = ii->file->getTTH().toBase32();
 		} else {
 			ucParams["type"] = "Directory";
 			ucParams["fileFN"] = dl->getPath(ii->dir) + ii->dir->getName();
@@ -1207,8 +1192,8 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 				}
 				break;
 			case IDC_COPY_TTH:
-				if(ii->type == ItemInfo::FILE && ii->file->getTTH())
-					sCopy = ii->file->getTTH()->toBase32();
+				if(ii->type == ItemInfo::FILE)
+					sCopy = ii->file->getTTH().toBase32();
 				break;
 			default:
 				dcdebug("DIRECTORYLISTINGFRAME DON'T GO HERE\n");

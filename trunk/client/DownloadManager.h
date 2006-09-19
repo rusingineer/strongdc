@@ -55,7 +55,6 @@ public:
 		FLAG_CALC_CRC32 = 0x10,
 		FLAG_CRC32_OK = 0x20,
 		FLAG_ANTI_FRAG = 0x40,
-		FLAG_UTF8 = 0x80,
 		FLAG_TREE_DOWNLOAD = 0x100,
 		FLAG_TREE_TRIED = 0x200,
 		FLAG_PARTIAL_LIST = 0x400,
@@ -100,13 +99,13 @@ public:
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
 	/** @internal */
-	AdcCommand getCommand(bool zlib, bool tthf);
+	AdcCommand getCommand(bool zlib);
 
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
-	GETSET(TTHValue*, tth, TTH);
+	GETSET(TTHValue, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
 	GETSET(User::Ptr, user, User);
 	int64_t quickTick;
@@ -185,11 +184,7 @@ class DownloadManager : public Speaker<DownloadManagerListener>,
 public:
 
 	/** @internal */
-	void addConnection(UserConnection::Ptr conn) {
-		conn->addListener(this);
-		checkDownloads(conn);
-	}
-
+	void addConnection(UserConnection::Ptr conn);
 	void checkIdle(const User::Ptr& user);
 
 	/** @internal */
@@ -212,23 +207,15 @@ public:
 		return avg;
 	}
 
-	Download* getDownloadItem(const string& aTarget) {
-		Lock l(cs);
-		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-			Download* d = *i;
-			if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (d->getTarget() == aTarget)) {
-				return d;
-			}
-		}
-		return NULL;
-	}
-
 	/** @return Number of downloads. */ 
 	size_t getDownloadCount() {
 		Lock l(cs);
 		return downloads.size();
 	}
-	
+
+	static const string USER_LIST_NAME;
+	static const string USER_LIST_NAME_BZ;
+		
 	// the following functions were added to help download throttle
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
@@ -282,25 +269,10 @@ private:
 	void failDownload(UserConnection* aSource, const string& reason, bool connectSources = true);
 
 	friend class Singleton<DownloadManager>;
-	DownloadManager() { 
-		TimerManager::getInstance()->addListener(this);
-		mDownloadLimit = 0; mBytesSent = 0; mBytesSpokenFor = 0; mCycleTime = 0; mByteSlice = 0;
-		mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
-		throttleZeroCounters();
-	}
 
-	virtual ~DownloadManager() throw() {
-		TimerManager::getInstance()->removeListener(this);
-		while(true) {
-			{
-				Lock l(cs);
-				if(downloads.empty())
-					break;
-			}
-			Thread::sleep(100);
-		}
-	}
-	
+	DownloadManager();
+	virtual ~DownloadManager() throw();
+
 	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 

@@ -123,8 +123,13 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	LogManager::getInstance()->addListener(this);
 	WebServerManager::getInstance()->addListener(this);
 	
-	if(BOOLSETTING(WEBSERVER))
-		WebServerManager::getInstance()->Start();
+	if(BOOLSETTING(WEBSERVER)) {
+		try {
+			WebServerManager::getInstance()->Start();
+		} catch(const Exception& e) {
+			MessageBox(Text::toT(e.getError()).c_str(), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+		}
+	}
 	
 	WinUtil::init(m_hWnd);
 

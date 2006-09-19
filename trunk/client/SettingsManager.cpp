@@ -94,7 +94,7 @@ const string SettingsManager::settingTags[] =
 	"DisconnectingEnable", "MinFileSize", "UploadQueueFrameShowTree",
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
 	"UseEmoticons", "SendUnknownCommands", "Disconnect",
-	"AutoUpdateIP", "MaxHashSpeed", "SearchTTHOnly", "GetUserCountry", "DisableCZDiacritic",
+	"AutoUpdateIP", "MaxHashSpeed", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
@@ -256,7 +256,6 @@ SettingsManager::SettingsManager()
 	setDefault(CONFIRM_HUB_REMOVAL, true);
 	setDefault(USE_CTRL_FOR_LINE_HISTORY, true);
 	setDefault(JOIN_OPEN_NEW_WINDOW, false);
-	setDefault(SEARCH_ONLY_TTH, true);
 	setDefault(SHOW_LAST_LINES_LOG, 10);
 	setDefault(CONFIRM_DELETE, true);
 	setDefault(ADVANCED_RESUME, true);
@@ -626,7 +625,7 @@ void SettingsManager::load(string const& aFileName)
 
 		File::ensureDirectory(SETTING(TLS_TRUSTED_CERTIFICATES_PATH));
 		
-		fire(SettingsManagerListener::Load(), &xml);
+		fire(SettingsManagerListener::Load(), xml);
 
 		xml.stepOut();
 
@@ -683,7 +682,7 @@ void SettingsManager::save(string const& aFileName) {
 	}
 	xml.stepOut();
 	
-	fire(SettingsManagerListener::Save(), &xml);
+	fire(SettingsManagerListener::Save(), xml);
 
 	try {
 		File out(aFileName + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);

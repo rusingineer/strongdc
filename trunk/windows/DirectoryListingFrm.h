@@ -281,8 +281,7 @@ private:
 
 			columns[COLUMN_EXACTSIZE] = Util::formatExactSize(f->getSize());
 			columns[COLUMN_SIZE] =  Util::formatBytesW(f->getSize());
-			if(f->getTTH() != NULL)
-				columns[COLUMN_TTH] = Text::toT(f->getTTH()->toBase32());
+			columns[COLUMN_TTH] = Text::toT(f->getTTH().toBase32());
 		}
 		ItemInfo(DirectoryListing::Directory* d, bool utf8) : type(DIRECTORY), dir(d) { 
 			if(utf8) {
