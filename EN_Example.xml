@@ -777,6 +777,7 @@
 		<String Name="SoundTthInvalid">File is corrupted</String>
 		<String Name="SoundTypingNotify">Typing notification</String>
 		<String Name="SoundUploadFinished">Upload finished</String>
+		<String Name="SourceTooOld">Remote client does not fully support TTH - cannot download</String>
 		<String Name="SourceType">Source Type</String>
 		<String Name="SpecifySearchString">Specify a search string</String>
 		<String Name="SpecifyServer">Specify a server to connect to</String>
@@ -790,7 +791,7 @@
 		<String Name="Tag">Tag</String>
 		<String Name="TargetFilenameTooLong">Target filename too long</String>
 		<String Name="Tb">TB</String>
-		<String Name="TcpPortBusy">Unable to open TCP port. File transfers will not work correctly until you change settings or turn off any application that might be using the TCP port</String>
+		<String Name="TcpPortBusy">Unable to open TCP/TLS port. File transfers will not work correctly until you change settings or turn off any application that might be using the TCP/TLS port</String>
 		<String Name="TextFakepercent">Percent fake share accepted</String>
 		<String Name="TextManual">Manual settings of number of segments</String>
 		<String Name="Time">Time</String>

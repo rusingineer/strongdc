@@ -548,15 +548,14 @@ void WebServerManager::onSearchResult(SearchResult* aResult) {
 	{
 		Lock l(cs);
 		if(aResult->getType() == SearchResult::TYPE_FILE) {
-			string TTH = (aResult->getTTH() != NULL) ? aResult->getTTH()->toBase32() : Util::emptyString;
 			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
 			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";
 			results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
 			results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
-			results += "<input type='hidden' name='tth' value='" + TTH + "'>";
+			results += "<input type='hidden' name='tth' value='" + aResult->getTTH().toBase32() + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";
-			results += "<td>" + aResult->getUser()->getFirstNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + TTH + "</td></form></tr>";
+			results += "<td>" + aResult->getUser()->getFirstNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + aResult->getTTH().toBase32() + "</td></form></tr>";
 			row++;
 		}
 	}

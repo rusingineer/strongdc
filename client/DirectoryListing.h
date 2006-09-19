@@ -50,25 +50,25 @@ public:
 		typedef List::const_iterator Iter;
 		
 		File(Directory* aDir, const string& aName, int64_t aSize, const string& aTTH) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(new TTHValue(aTTH)), adls(false) { }
-		File(Directory* aDir, const string& aName, int64_t aSize) throw() : 
-			name(aName), size(aSize), parent(aDir), tthRoot(NULL), adls(false) { }
+			name(aName), size(aSize), parent(aDir), tthRoot(aTTH), adls(false)
+		{
+		}
 
-		File(const File& rhs, bool _adls = false) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot == NULL ? NULL : new TTHValue(*rhs.tthRoot)), adls(_adls) { }
+		File(const File& rhs, bool _adls = false) : name(rhs.name), size(rhs.size), parent(rhs.parent), tthRoot(rhs.tthRoot), adls(_adls)
+		{
+		}
 
 		File& operator=(const File& rhs) {
-			name = rhs.name; size = rhs.size; parent = rhs.parent; tthRoot = rhs.tthRoot ? new TTHValue(*rhs.tthRoot) : NULL; 
+			name = rhs.name; size = rhs.size; parent = rhs.parent; tthRoot = rhs.tthRoot; 
 			return *this;
 		}
 
-		~File() {
-			delete tthRoot;
-		}
+		~File() { }
 
 		GETSET(string, name, Name);
 		GETSET(int64_t, size, Size);
 		GETSET(Directory*, parent, Parent);
-		GETSET(TTHValue*, tthRoot, TTH);
+		GETSET(TTHValue, tthRoot, TTH);
 		GETSET(bool, adls, Adls);
 	};
 

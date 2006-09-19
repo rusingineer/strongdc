@@ -611,23 +611,11 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
+		string target = Text::fromT(ii->getText(COLUMN_PATH) + ii->getText(COLUMN_FILE));
 
-		string tmp = Text::fromT(ii->Target);
-		QueueItem::StringIter qi = queue.find(&tmp);
-
-		//create a copy of the tth to avoid holding the filequeue lock while calling
-		//into searchframe, searchmanager and all of that
-		TTHValue *val = NULL;
-		if(qi != queue.end() && qi->second->getTTH()) {
-			val = new TTHValue(*qi->second->getTTH());
-		}
-
-		QueueManager::getInstance()->unlockQueue();
-
-		if(val) {
-			WinUtil::searchHash(val);
-			delete val;
+		TTHValue tth;
+		if(QueueManager::getInstance()->getTTH(Text::fromT(ii->Target), tth)) {
+			WinUtil::searchHash(tth);
 		}
 	}
 
@@ -740,7 +728,11 @@ void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* a
 
 void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) {
 	UpdateInfo* ui = new UpdateInfo(aCqi->getUser(), aCqi->getDownload());
-	ui->setStatusString(Text::toT(aReason));
+	if(aCqi->getUser()->isSet(User::OLD_CLIENT)) {
+		ui->setStatusString(TSTRING(SOURCE_TOO_OLD));
+	} else {
+		ui->setStatusString(Text::toT(aReason));
+	}
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	speak(UPDATE_ITEM, ui);
 }

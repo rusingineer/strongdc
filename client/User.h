@@ -40,8 +40,8 @@ public:
 		NMDC_BIT,
 		BOT_BIT,
 		TTH_GET_BIT,
-		SAVE_NICK_BIT,
 		TLS_BIT,
+		OLD_CLIENT_BIT,		
 		AWAY_BIT,
 		SERVER_BIT,
 		FIREBALL_BIT
@@ -55,8 +55,8 @@ public:
 		NMDC = 1<<NMDC_BIT,
 		BOT = 1<<BOT_BIT,
 		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
-		SAVE_NICK = 1<<SAVE_NICK_BIT,	//< Save cid->nick association
 		TLS = 1<<TLS_BIT,				//< Client supports SSL
+		OLD_CLIENT = 1<<OLD_CLIENT_BIT, //< Can't download - old client
 		AWAY = 1 << AWAY_BIT,
 		SERVER = 1 << SERVER_BIT,
 		FIREBALL = 1 << FIREBALL_BIT

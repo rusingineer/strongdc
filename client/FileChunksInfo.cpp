@@ -169,6 +169,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 			running.insert(make_pair(chunk->pos, chunk));
 		}
 
+		selfCheck();
 		return chunk->pos;
 	}
 
@@ -250,6 +251,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	running.insert(make_pair(n, new Chunk(n, e)));
 
 	dcdebug("split running chunk (%I64d , %I64d) * %I64d Bytes/s -> (%I64d , %I64d) * %I64d Bytes/s \n", b, e, speed, n, e, _speed);
+	selfCheck();
 	return n;
 }
 
@@ -391,12 +393,23 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 	// Note: following code causes a running chunk dupe with waiting chunk
 	// Eg. original running chunk: (1000, 1500, 2000), and 800-1500 corruption detected
 	//  -> running chunks (1000, 1500, 2000), waiting chunk (800, 1500)
+	//
 		
 	waiting.insert(make_pair(start, new Chunk(start, end)));
 
 	downloadedSize -= (end - start);
 	selfCheck();
 
+#ifdef _DEBUG
+	try{
+		string filename = Util::getDataPath() + aTree.getRoot().toBase32() + "." + Util::toString(start) + "." + Util::toString(end) + "." + "dat";
+		File f(filename, File::WRITE, File::CREATE | File::TRUNCATE);
+		f.write(data, len);
+	}catch(const FileException& e){
+		dcdebug("%s\n", e.getError().c_str());
+		dcassert(0);
+	}
+#endif
 	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
 	return false;
 }
@@ -841,6 +854,7 @@ void FileChunksInfo::selfCheck()
 
 	// check running
 	for(Chunk::Iter i = running.begin(); i != running.end();){
+
 		dcassert(i->first <= i->second->pos);
 		dcassert(i->second->pos <= i->second->end);
 
@@ -848,7 +862,9 @@ void FileChunksInfo::selfCheck()
 		i++;
 
 		if(i != running.end()){
-			dcassert(tmp <= i->second->pos);
+			int64_t start = i->first;
+			Chunk* x = i->second;
+			dcassert(tmp <= x->pos );
 		}
 	}
 

@@ -71,7 +71,7 @@ LRESULT MagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 
 		if(IsDlgButtonChecked(IDC_MAGNET_SEARCH)) {
 			TTHValue tmphash(Text::fromT(mHash));
-			WinUtil::searchHash(&tmphash); 
+			WinUtil::searchHash(tmphash); 
 		} else if(IsDlgButtonChecked(IDC_MAGNET_QUEUE)) {
 			QueueManager::getInstance()->add(Text::fromT(mFileName), mSize, Text::fromT(mHash));
 		} 

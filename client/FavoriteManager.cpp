@@ -125,7 +125,6 @@ void FavoriteManager::removeHubUserCommands(int ctx, const string& hub) {
 void FavoriteManager::addFavoriteUser(User::Ptr& aUser) { 
 	Lock l(cs);
 	if(users.find(aUser->getCID()) == users.end()) {
-		aUser->setFlag(User::SAVE_NICK);
 		StringList urls = ClientManager::getInstance()->getHubs(aUser->getCID());
         
 		/// @todo make this an error probably...
@@ -391,7 +390,6 @@ void FavoriteManager::save() {
 		xml.addTag("Users");
 		xml.stepIn();
 		for(FavoriteMap::iterator j = users.begin(); j != users.end(); ++j) {
-			j->second.getUser()->setFlag(User::SAVE_NICK);
 			xml.addTag("User");
 			xml.addChildAttrib("LastSeen", j->second.getLastSeen());
 			xml.addChildAttrib("GrantSlot", j->second.isSet(FavoriteUser::FLAG_GRANTSLOT));
@@ -503,7 +501,7 @@ void FavoriteManager::load() {
 		
 		if(xml.findChild("Favorites")) {
 			xml.stepIn();
-			load(&xml);
+			load(xml);
 			xml.stepOut();
 		}
 	} catch(const Exception& e) {
@@ -516,7 +514,7 @@ void FavoriteManager::load() {
 		
 		if(xml.findChild("Recents")) {
 			xml.stepIn();
-			recentload(&xml);
+			recentload(xml);
 			xml.stepOut();
 		}
 	} catch(const Exception& e) {
@@ -524,51 +522,51 @@ void FavoriteManager::load() {
 	}
 }
 
-void FavoriteManager::load(SimpleXML* aXml) {
+void FavoriteManager::load(SimpleXML& aXml) {
 	dontSave = true;
 
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Hubs")) {
-		aXml->stepIn();
-		while(aXml->findChild("Hub")) {
+	aXml.resetCurrentChild();
+	if(aXml.findChild("Hubs")) {
+		aXml.stepIn();
+		while(aXml.findChild("Hub")) {
 			FavoriteHubEntry* e = new FavoriteHubEntry();
-			e->setName(aXml->getChildAttrib("Name"));
-			e->setConnect(aXml->getBoolChildAttrib("Connect"));
-			e->setDescription(aXml->getChildAttrib("Description"));
-			e->setNick(aXml->getChildAttrib("Nick"));
-			e->setPassword(aXml->getChildAttrib("Password"));
-			e->setServer(aXml->getChildAttrib("Server"));
-			e->setUserDescription(aXml->getChildAttrib("UserDescription"));
-			e->setWindowPosX(aXml->getIntChildAttrib("WindowPosX"));
-			e->setWindowPosY(aXml->getIntChildAttrib("WindowPosY"));
-			e->setWindowSizeX(aXml->getIntChildAttrib("WindowSizeX"));
-			e->setWindowSizeY(aXml->getIntChildAttrib("WindowSizeY"));
-			e->setWindowType(aXml->getIntChildAttrib("WindowType"));
-			e->setChatUserSplit(aXml->getIntChildAttrib("ChatUserSplit"));
-			e->setStealth(aXml->getBoolChildAttrib("StealthMode"));
-			e->setUserListState(aXml->getBoolChildAttrib("UserListState"));
-			e->setHeaderOrder(aXml->getChildAttrib("HeaderOrder", SETTING(HUBFRAME_ORDER)));
-			e->setHeaderWidths(aXml->getChildAttrib("HeaderWidths", SETTING(HUBFRAME_WIDTHS)));
-			e->setHeaderVisible(aXml->getChildAttrib("HeaderVisible", SETTING(HUBFRAME_VISIBLE)));
-			e->setRawOne(aXml->getChildAttrib("RawOne"));
-			e->setRawTwo(aXml->getChildAttrib("RawTwo"));
-			e->setRawThree(aXml->getChildAttrib("RawThree"));
-			e->setRawFour(aXml->getChildAttrib("RawFour"));
-			e->setRawFive(aXml->getChildAttrib("RawFive"));
-			e->setMode(Util::toInt(aXml->getChildAttrib("Mode")));
-			e->setIP(aXml->getChildAttrib("IP"));
+			e->setName(aXml.getChildAttrib("Name"));
+			e->setConnect(aXml.getBoolChildAttrib("Connect"));
+			e->setDescription(aXml.getChildAttrib("Description"));
+			e->setNick(aXml.getChildAttrib("Nick"));
+			e->setPassword(aXml.getChildAttrib("Password"));
+			e->setServer(aXml.getChildAttrib("Server"));
+			e->setUserDescription(aXml.getChildAttrib("UserDescription"));
+			e->setWindowPosX(aXml.getIntChildAttrib("WindowPosX"));
+			e->setWindowPosY(aXml.getIntChildAttrib("WindowPosY"));
+			e->setWindowSizeX(aXml.getIntChildAttrib("WindowSizeX"));
+			e->setWindowSizeY(aXml.getIntChildAttrib("WindowSizeY"));
+			e->setWindowType(aXml.getIntChildAttrib("WindowType"));
+			e->setChatUserSplit(aXml.getIntChildAttrib("ChatUserSplit"));
+			e->setStealth(aXml.getBoolChildAttrib("StealthMode"));
+			e->setUserListState(aXml.getBoolChildAttrib("UserListState"));
+			e->setHeaderOrder(aXml.getChildAttrib("HeaderOrder", SETTING(HUBFRAME_ORDER)));
+			e->setHeaderWidths(aXml.getChildAttrib("HeaderWidths", SETTING(HUBFRAME_WIDTHS)));
+			e->setHeaderVisible(aXml.getChildAttrib("HeaderVisible", SETTING(HUBFRAME_VISIBLE)));
+			e->setRawOne(aXml.getChildAttrib("RawOne"));
+			e->setRawTwo(aXml.getChildAttrib("RawTwo"));
+			e->setRawThree(aXml.getChildAttrib("RawThree"));
+			e->setRawFour(aXml.getChildAttrib("RawFour"));
+			e->setRawFive(aXml.getChildAttrib("RawFive"));
+			e->setMode(Util::toInt(aXml.getChildAttrib("Mode")));
+			e->setIP(aXml.getChildAttrib("IP"));
 			favoriteHubs.push_back(e);
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Users")) {
-		aXml->stepIn();
-		while(aXml->findChild("User")) {
+	aXml.resetCurrentChild();
+	if(aXml.findChild("Users")) {
+		aXml.stepIn();
+		while(aXml.findChild("User")) {
 			User::Ptr u;
-			const string& cid = aXml->getChildAttrib("CID");
-			const string& nick = aXml->getChildAttrib("Nick");
-			const string& hubUrl = aXml->getChildAttrib("URL");
+			const string& cid = aXml.getChildAttrib("CID");
+			const string& nick = aXml.getChildAttrib("Nick");
+			const string& hubUrl = aXml.getChildAttrib("URL");
 
 			if(cid.length() != 39) {
 				if(nick.empty() || hubUrl.empty())
@@ -581,35 +579,34 @@ void FavoriteManager::load(SimpleXML* aXml) {
 			}
 			FavoriteMap::iterator i = users.insert(make_pair(u->getCID(), FavoriteUser(u, nick, hubUrl))).first;
 
-			if(aXml->getBoolChildAttrib("GrantSlot"))
+			if(aXml.getBoolChildAttrib("GrantSlot"))
 				i->second.setFlag(FavoriteUser::FLAG_GRANTSLOT);
 
-			i->second.setLastSeen((u_int32_t)aXml->getIntChildAttrib("LastSeen"));
-			i->second.setDescription(aXml->getChildAttrib("UserDescription"));
+			i->second.setLastSeen((u_int32_t)aXml.getIntChildAttrib("LastSeen"));
+			i->second.setDescription(aXml.getChildAttrib("UserDescription"));
 
-			i->second.getUser()->setFlag(User::SAVE_NICK);
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}
-	aXml->resetCurrentChild();
-	if(aXml->findChild("UserCommands")) {
-		aXml->stepIn();
-		while(aXml->findChild("UserCommand")) {
-			addUserCommand(aXml->getIntChildAttrib("Type"), aXml->getIntChildAttrib("Context"),
-				0, aXml->getChildAttrib("Name"), aXml->getChildAttrib("Command"), aXml->getChildAttrib("Hub"));
+	aXml.resetCurrentChild();
+	if(aXml.findChild("UserCommands")) {
+		aXml.stepIn();
+		while(aXml.findChild("UserCommand")) {
+			addUserCommand(aXml.getIntChildAttrib("Type"), aXml.getIntChildAttrib("Context"),
+				0, aXml.getChildAttrib("Name"), aXml.getChildAttrib("Command"), aXml.getChildAttrib("Hub"));
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}
 	//Favorite download to dirs
-	aXml->resetCurrentChild();
-	if(aXml->findChild("FavoriteDirs")) {
-		aXml->stepIn();
-		while(aXml->findChild("Directory")) {
-			string virt = aXml->getChildAttrib("Name");
-			string d(aXml->getChildData());
+	aXml.resetCurrentChild();
+	if(aXml.findChild("FavoriteDirs")) {
+		aXml.stepIn();
+		while(aXml.findChild("Directory")) {
+			string virt = aXml.getChildAttrib("Name");
+			string d(aXml.getChildData());
 			FavoriteManager::getInstance()->addFavoriteDir(d, virt);
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}
 
 	dontSave = false;
@@ -671,20 +668,20 @@ void FavoriteManager::setUserDescription(const User::Ptr& aUser, const string& d
 	save();
 }
 
-void FavoriteManager::recentload(SimpleXML* aXml) {
-	aXml->resetCurrentChild();
-	if(aXml->findChild("Hubs")) {
-		aXml->stepIn();
-		while(aXml->findChild("Hub")) {
+void FavoriteManager::recentload(SimpleXML& aXml) {
+	aXml.resetCurrentChild();
+	if(aXml.findChild("Hubs")) {
+		aXml.stepIn();
+		while(aXml.findChild("Hub")) {
 			RecentHubEntry* e = new RecentHubEntry();
-			e->setName(aXml->getChildAttrib("Name"));
-			e->setDescription(aXml->getChildAttrib("Description"));
-			e->setUsers(aXml->getChildAttrib("Users"));
-			e->setShared(aXml->getChildAttrib("Shared"));
-			e->setServer(aXml->getChildAttrib("Server"));
+			e->setName(aXml.getChildAttrib("Name"));
+			e->setDescription(aXml.getChildAttrib("Description"));
+			e->setUsers(aXml.getChildAttrib("Users"));
+			e->setShared(aXml.getChildAttrib("Shared"));
+			e->setServer(aXml.getChildAttrib("Server"));
 			recentHubs.push_back(e);
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}
 }
 
@@ -739,7 +736,6 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 
 	Lock l(cs);
 	UserCommand::List lst;
-	dcdebug("Input: %d\n", userCommands.size());
 	for(UserCommand::Iter i = userCommands.begin(); i != userCommands.end(); ++i) {
 		UserCommand& uc = *i;
 		if(!(uc.getCtx() & ctx)) {
@@ -769,7 +765,6 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 			}
 		}
 	}
-	dcdebug("Output: %d\n", lst.size());
 	return lst;
 }
 
@@ -831,29 +826,29 @@ void FavoriteManager::on(UserConnected, const User::Ptr& user) throw() {
 		fire(FavoriteManagerListener::StatusChanged(), user);
 }
 
-void FavoriteManager::previewload(SimpleXML* aXml){
-	aXml->resetCurrentChild();
-	if(aXml->findChild("PreviewApps")) {
-		aXml->stepIn();
-		while(aXml->findChild("Application")) {					
-			addPreviewApp(aXml->getChildAttrib("Name"), aXml->getChildAttrib("Application"), 
-				aXml->getChildAttrib("Arguments"), aXml->getChildAttrib("Extension"));			
+void FavoriteManager::previewload(SimpleXML& aXml){
+	aXml.resetCurrentChild();
+	if(aXml.findChild("PreviewApps")) {
+		aXml.stepIn();
+		while(aXml.findChild("Application")) {					
+			addPreviewApp(aXml.getChildAttrib("Name"), aXml.getChildAttrib("Application"), 
+				aXml.getChildAttrib("Arguments"), aXml.getChildAttrib("Extension"));			
 		}
-		aXml->stepOut();
+		aXml.stepOut();
 	}	
 }
 
-void FavoriteManager::previewsave(SimpleXML* aXml){
-	aXml->addTag("PreviewApps");
-	aXml->stepIn();
+void FavoriteManager::previewsave(SimpleXML& aXml){
+	aXml.addTag("PreviewApps");
+	aXml.stepIn();
 	for(PreviewApplication::Iter i = previewApplications.begin(); i != previewApplications.end(); ++i) {
-		aXml->addTag("Application");
-		aXml->addChildAttrib("Name", (*i)->getName());
-		aXml->addChildAttrib("Application", (*i)->getApplication());
-		aXml->addChildAttrib("Arguments", (*i)->getArguments());
-		aXml->addChildAttrib("Extension", (*i)->getExtension());
+		aXml.addTag("Application");
+		aXml.addChildAttrib("Name", (*i)->getName());
+		aXml.addChildAttrib("Application", (*i)->getApplication());
+		aXml.addChildAttrib("Arguments", (*i)->getArguments());
+		aXml.addChildAttrib("Extension", (*i)->getExtension());
 	}
-	aXml->stepOut();
+	aXml.stepOut();
 }
 
 /**

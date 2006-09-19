@@ -166,8 +166,6 @@ public:
 	CID getMyCID();
 	const CID& getMyPID();
 	
-	void save();
-		
 	// fake detection methods
 	void setListLength(const User::Ptr& p, const string& listLen);
 	void fileListDisconnected(const User::Ptr& p);
@@ -177,9 +175,6 @@ public:
 	void setFakeList(const User::Ptr& p, const string& aCheatString);
 
 private:
-	//typedef HASH_MAP<string, User::Ptr> LegacyMap;
-	//typedef LegacyMap::iterator LegacyIter;
-
 	typedef HASH_MAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
 	typedef UserMap::iterator UserIter;
 
@@ -213,13 +208,10 @@ private:
 		TimerManager::getInstance()->removeListener(this); 
 	}
 
-	string getUsersFile() { return Util::getConfigPath() + "Users.xml"; }
-
 	void updateCachedIp();
 
 	// SettingsManagerListener
-	virtual void on(Load, SimpleXML*) throw();
-	virtual void on(Save, SimpleXML*) throw();
+	virtual void on(Load, SimpleXML&);
 
 	// ClientListener
 	virtual void on(Connected, Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }

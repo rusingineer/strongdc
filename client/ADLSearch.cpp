@@ -226,7 +226,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 
 			if(is->isAutoQueue){
 				QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + currentFile->getName(),
-					currentFile->getSize(), currentFile->getTTH(), getUser(), currentFile->getName());
+					currentFile->getSize(), currentFile->getTTH(), getUser());
 			}
 
 			if(breakOnFirst) {

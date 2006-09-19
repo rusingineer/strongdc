@@ -78,7 +78,6 @@ public:
 	const string& getPk() { return pk; }
 	bool isExtended(const string& aLock) { return strncmp(aLock.c_str(), "EXTENDEDPROTOCOL", 16) == 0; }
 
-	void decodeHuffman(const u_int8_t* /*is*/, string& /*os*/, const size_t /*len*/) throw(CryptoException);
 	void decodeBZ2(const u_int8_t* is, size_t sz, string& os) throw(CryptoException);
 
 	SSLSocket* getClientSocket(bool allowUntrusted) throw(SocketException);
@@ -95,28 +94,6 @@ private:
 	CryptoManager();
 	virtual ~CryptoManager();
 
-	class Leaf : public FastAlloc<Leaf> {
-	public:
-		int chr;
-		int len;
-		Leaf(int aChr, int aLen) : chr(aChr), len(aLen) { }
-		Leaf() : chr(-1), len(-1) { }
-	};
-	
-	class DecNode : public FastAlloc<DecNode> {
-	public:
-		int chr;
-		DecNode* left;
-		DecNode* right;
-		DecNode(int aChr) : chr(aChr), left(NULL), right(NULL) { }
-		DecNode(DecNode* aLeft, DecNode* aRight) : chr(-1), left(aLeft), right(aRight) { }
-		DecNode() : chr(-1), left(NULL), right(NULL) { }
-		~DecNode() {
-			delete left;
-			delete right;
-		}
-	};
-	
 	SSL_CTX* clientContext;
 	SSL_CTX* clientVerContext;
 	SSL_CTX* serverContext;

@@ -251,7 +251,7 @@ void QueueFrame::QueueItemInfo::update() {
 		}
 		if(colMask & MASK_DOWNLOADED) {
 				if(getSize() > 0)
-					display->columns[COLUMN_DOWNLOADED] =Util::formatBytesW(getDownloadedBytes()) + _T(" (") + Util::toStringW((double)getDownloadedBytes()*100.0/(double)getSize()) + _T("%)");
+					display->columns[COLUMN_DOWNLOADED] = Util::formatBytesW(getDownloadedBytes()) + _T(" (") + Util::toStringW((double)getDownloadedBytes()*100.0/(double)getSize()) + _T("%)");
 				else
 					display->columns[COLUMN_DOWNLOADED].clear();
 		}
@@ -293,6 +293,8 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += TSTRING(INVALID_TREE);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
 						tmp += TSTRING(SLOW_USER);
+					} else if(j->isSet(QueueItem::Source::FLAG_NO_TTHF)) {
+						tmp += TSTRING(SOURCE_TOO_OLD);						
 					} else if(j->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
 						tmp += TSTRING(NO_NEEDED_PART);
 					}
@@ -305,8 +307,8 @@ void QueueFrame::QueueItemInfo::update() {
 		if(colMask & MASK_ADDED) {
 			display->columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", getAdded()));
 		}
-		if(colMask & MASK_TTH && getTTH() != NULL) {
-			display->columns[COLUMN_TTH] = Text::toT(getTTH()->toBase32());
+		if(colMask & MASK_TTH) {
+			display->columns[COLUMN_TTH] = Text::toT(getTTH().toBase32());
 		}
 		if(colMask & MASK_TYPE) {
 			display->columns[COLUMN_TYPE] = Util::getFileExt(getTarget());
@@ -885,7 +887,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 						nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::formatBytesW(i->getUser()->getLastDownloadSpeed()) + _T("/s])");
 					} else if(i->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
 						nick += _T(" (") + TSTRING(NO_NEEDED_PART) + _T(")");
-					}
+					} else if(i->isSet(QueueItem::Source::FLAG_NO_TTHF)) {
+						nick += _T(" (") + TSTRING(SOURCE_TOO_OLD) + _T(")");
+					}					
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
 					mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -920,12 +924,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			else {
 				singleMenu.EnableMenuItem((UINT_PTR)(HMENU)readdMenu, MFS_ENABLED);
  			}
-
-			if(ii->getTTH() == NULL) {
-				singleMenu.EnableMenuItem(IDC_COPY_LINK, MFS_DISABLED);
-            } else {
-                singleMenu.EnableMenuItem(IDC_COPY_LINK, MFS_ENABLED);
-            }
 
 			UINT pos = 0;
 			switch(ii->getPriority()) {
@@ -1002,21 +1000,7 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
-		
-		if(ii->getTTH() != NULL) {
-			WinUtil::searchHash(ii->getTTH());
-		} else {
-			tstring searchString = Text::toT(SearchManager::clean(Text::fromT(ii->getTargetFileName())));
-		
-			if(!searchString.empty()) {
-				bool bigFile = (ii->getSize() > 10*1024*1024);
-				if(bigFile) {
-					SearchFrame::openWindow(searchString, ii->getSize()-1, SearchManager::SIZE_ATLEAST, ShareManager::getInstance()->getType(Text::fromT(ii->getTargetFileName())));
-				} else {
-					SearchFrame::openWindow(searchString, ii->getSize()+1, SearchManager::SIZE_ATMOST, ShareManager::getInstance()->getType(Text::fromT(ii->getTargetFileName())));
-				}		
-			}
-		}
+		WinUtil::searchHash(ii->getTTH());
 	}	
 	return 0;
 }
@@ -1633,11 +1617,11 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
-		for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end();) {
+		for(QueueItemInfo::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
 			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(Text::fromT(ii->getTarget()), i->getUser(), QueueItem::Source::FLAG_REMOVED);
-			} else {
-				i++;
+				//reset the iterator since it won't be valid after the call to readd
+				i = ii->getSources().begin();
 			}
 		}
 	}

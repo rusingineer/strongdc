@@ -5,6 +5,8 @@
 * updated STLPort
 * old sharing interface is enabled on default for Win9x
 * DC++ 0.695 update
+* user count format is "X/Y Users" when some users are hidden
+* some performance tweaks
 
 	-- StrongDC++ 2.02 --
 

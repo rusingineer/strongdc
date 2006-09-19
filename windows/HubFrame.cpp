@@ -1931,6 +1931,7 @@ LRESULT HubFrame::onFilterChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL
 		delete[] buf;
 	
 		updateUserList();
+		updateUsers = true;
 	}
 
 	bHandled = FALSE;
@@ -1945,7 +1946,8 @@ LRESULT HubFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	delete[] buf;
 	
 	updateUserList();
-	
+	updateUsers = true;
+
 	bHandled = FALSE;
 
 	return 0;

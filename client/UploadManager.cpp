@@ -31,6 +31,7 @@
 #include "HashManager.h"
 #include "AdcCommand.h"
 #include "FavoriteManager.h"
+#include "CryptoManager.h"
 #include "QueueManager.h"
 #include "FinishedManager.h"
 #include "SharedFileStream.h"
@@ -93,33 +94,46 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 	try {
 		if(aType == "file") {
 			file = ShareManager::getInstance()->translateFileName(aFile);
-			userlist = (aFile == "files.xml.bz2");
+			userlist = (aFile == DownloadManager::USER_LIST_NAME_BZ || aFile == DownloadManager::USER_LIST_NAME);
 
 			try {
-				File* f = new File(file, File::READ, File::OPEN);
+				if(aFile == DownloadManager::USER_LIST_NAME) {
+					// Unpack before sending...
+					string bz2 = File(file, File::READ, File::OPEN).read();
+					string xml;
+					CryptoManager::getInstance()->decodeBZ2(reinterpret_cast<const u_int8_t*>(bz2.data()), bz2.size(), xml);
+					// Clear to save some memory...
+					bz2 = string();
+					is = new MemoryInputStream(xml);
+					aBytes = size = xml.size();
+					aStartPos = 0;
+					free = true;
+			
+				} else {
+					File* f = new File(file, File::READ, File::OPEN);
 
-				size = f->getSize();
+					size = f->getSize();
 
-				free = userlist || (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
+					free = userlist || (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
 	
-				if(aBytes == -1) {
-					aBytes = size - aStartPos;
+					if(aBytes == -1) {
+						aBytes = size - aStartPos;
+					}
+
+					if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
+						aSource->fileNotAvail();
+						delete f;
+						return false;
+					}
+
+					f->setPos(aStartPos);
+
+					is = f;
+
+					if((aStartPos + aBytes) < size) {
+						is = new LimitedInputStream<true>(is, aBytes);
+					}
 				}
-
-				if((aBytes < 0) || ((aStartPos + aBytes) > size)) {
-					aSource->fileNotAvail();
-					delete f;
-					return false;
-				}
-
-				f->setPos(aStartPos);
-
-				is = f;
-
-				if((aStartPos + aBytes) < size) {
-					is = new LimitedInputStream<true>(is, aBytes);
-				}
-
 			} catch(const Exception&) {
 				aSource->fileNotAvail();
 				return false;
@@ -247,7 +261,7 @@ ok:
 		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource->getUser());
 
 		if(!(hasReserved || isFavorite || getFreeSlots() > 0 || getAutoSlot())) {
-			bool supportsFree = aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS) || !aSource->isSet(UserConnection::FLAG_NMDC);
+			bool supportsFree = aSource->isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource->isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource->isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
 			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
@@ -344,31 +358,6 @@ void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, con
 	}
 }
 
-void UploadManager::onGetBlock(UserConnection* aSource, const string& aFile, int64_t aStartPos, int64_t aBytes, bool z) {
-	if(!z || BOOLSETTING(COMPRESS_TRANSFERS)) {
-		if(prepareFile(aSource, "file", Util::toAdcFile(aFile), aStartPos, aBytes)) {
-			Upload* u = aSource->getUpload();
-			dcassert(u != NULL);
-			if(aBytes == -1)
-				aBytes = u->getSize() - aStartPos;
-
-			dcassert(aBytes >= 0);
-
-			u->setStart(GET_TICK());
-
-			if(z) {
-				u->setFile(new FilteredInputStream<ZFilter, true>(u->getFile()));
-				u->setFlag(Upload::FLAG_ZUPLOAD);
-			}
-
-			aSource->sending(aBytes);
-			aSource->setState(UserConnection::STATE_DONE);
-			aSource->transmitFile(u->getFile());
-			fire(UploadManagerListener::Starting(), u);
-		}
-	}
-}
-
 void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) throw() {
 	if(aSource->getState() != UserConnection::STATE_SEND) {
 		dcdebug("UM::onSend Bad state, ignoring\n");
@@ -441,10 +430,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 		params["fileSIactualshort"] = Util::formatBytes(u->getActual());
 		params["speed"] = Util::formatBytes(u->getAverageSpeed()) + "/s";
 		params["time"] = Text::fromT(Util::formatSeconds((GET_TICK() - u->getStart()) / 1000));
-
-		if(u->getTTH() != NULL) {
-			params["tth"] = u->getTTH()->toBase32();
-		}
+		params["tth"] = u->getTTH().toBase32();
 		LOG(LogManager::UPLOAD, params);
 	}
 

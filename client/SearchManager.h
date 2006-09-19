@@ -52,14 +52,14 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 	
-	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue* aTTH);
+	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue& aTTH);
 
 	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& ip, const string& aTTH, bool aUtf8, const string& aToken) :
-	file(aFile), hubName(aHubName), user(aUser), 
+		const string& ip, TTHValue aTTH, const string& aToken) :
+	file(aFile), hubName(aHubName), user(aUser),
 		size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
-		tth(aTTH.empty() ? NULL : new TTHValue(aTTH)), token(aToken), utf8(aUtf8), ref(1) { }
+		tth(aTTH), token(aToken), ref(1) { }
 
 	string getFileName() const;
 	string toSR(const Client& client) const;
@@ -74,8 +74,7 @@ public:
 	Types getType() const { return type; }
 	int getSlots() const { return slots; }
 	int getFreeSlots() const { return freeSlots; }
-	TTHValue* getTTH() const { return tth; }
-	bool getUtf8() const { return utf8; }
+	TTHValue getTTH() const { return tth; }
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
 
@@ -89,7 +88,7 @@ private:
 	friend class SearchManager;
 
 	SearchResult();
-	~SearchResult() { delete tth; }
+	~SearchResult() { }
 
 	SearchResult(const SearchResult& rhs);
 
@@ -101,10 +100,9 @@ private:
 	int slots;
 	int freeSlots;
 	string IP;
-	TTHValue* tth;
+	TTHValue tth;
 	string token;
 	
-	bool utf8;
 	volatile long ref;
 };
 

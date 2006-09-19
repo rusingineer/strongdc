@@ -319,7 +319,7 @@ private:
 		GETSET(u_int32_t, added, Added);
 		GETSET(QueueItem::Priority, priority, Priority);
 		GETSET(QueueItem::Status, status, Status);
-		GETSET(TTHValue*, tth, TTH);
+		GETSET(TTHValue, tth, TTH);
 		GETSET(tstring, type, Type);
 		GETSET(bool, autoPriority, AutoPriority);
 		u_int32_t updateMask;
