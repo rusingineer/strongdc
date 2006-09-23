@@ -74,6 +74,7 @@ private:
 	typedef HASH_MAP<u_int32_t, OnlineUser*> SIDMap;
 	typedef SIDMap::iterator SIDIter;
 
+	Socket udp;
 	SIDMap users;
 	StringMap lastInfoMap;
 	mutable CriticalSection cs;
@@ -114,7 +115,7 @@ private:
 		//Speaker<AdcHubListener>::fire(t, this, c);
 	}
 
-	void sendUDP(const AdcCommand& cmd);
+	void sendUDP(const AdcCommand& cmd) throw();
 
 	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
 	virtual void on(Connected) throw();

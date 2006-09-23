@@ -131,17 +131,17 @@ OnlineUser* NmdcHub::findUser(const string& aNick) {
 }
 
 void NmdcHub::putUser(const string& aNick) {
-	OnlineUser* u = NULL;
+	OnlineUser* ou = NULL;
 	{
 		Lock l(cs);
 		NickMap::iterator i = users.find(const_cast<string*>(&aNick));
 		if(i == users.end())
 			return;
-		u = i->second;
+		ou = i->second;
 		users.erase(i);
 	}
-	ClientManager::getInstance()->putOffline(*u);
-	delete u;
+	ClientManager::getInstance()->putOffline(*ou);
+	delete ou;
 }
 
 void NmdcHub::clearUsers() {
@@ -149,8 +149,7 @@ void NmdcHub::clearUsers() {
 	
 	{
 		Lock l(cs);
-		u2 = users;
-		users.clear();
+		u2.swap(users);
 		availableBytes = 0;
 	}
 
@@ -288,35 +287,33 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 		i = j + 1;
 		
-		{
-			Lock l(cs);
-			u_int32_t tick = GET_TICK();
+		u_int32_t tick = GET_TICK();
+		clearFlooders(tick);
 
-			seekers.push_back(make_pair(seeker, tick));
+		seekers.push_back(make_pair(seeker, tick));
 
-			// First, check if it's a flooder
-			for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
-				if(fi->first == seeker) {
-					return;
-				}
+		// First, check if it's a flooder
+		for(FloodIter fi = flooders.begin(); fi != flooders.end(); ++fi) {
+			if(fi->first == seeker) {
+				return;
 			}
+		}
 
-			int count = 0;
-			for(FloodIter fi = seekers.begin(); fi != seekers.end(); ++fi) {
-				if(fi->first == seeker)
-					count++;
+		int count = 0;
+		for(FloodIter fi = seekers.begin(); fi != seekers.end(); ++fi) {
+			if(fi->first == seeker)
+				count++;
 
-				if(count > 7) {
-				    if(isOp()) {
-						if(bPassive)
-							fire(ClientListener::SearchFlood(), this, seeker.substr(4));
-						else
-							fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
-					}
-					
-					flooders.push_back(make_pair(seeker, tick));
-					return;
+			if(count > 7) {
+			    if(isOp()) {
+					if(bPassive)
+						fire(ClientListener::SearchFlood(), this, seeker.substr(4));
+					else
+						fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
 				}
+				
+				flooders.push_back(make_pair(seeker, tick));
+				return;
 			}
 		}
 
@@ -538,6 +535,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	} else if(cmd == "$HubName") {
 		// If " - " found, the first part goes to hub name, rest to description
 		// If no " - " found, first word goes to hub name, rest to description
+
 		string::size_type i = param.find(" - ");
 		if(i == string::npos) {
 			i = param.find(' ');
@@ -992,6 +990,16 @@ void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) {
 	}
 }
 
+void NmdcHub::clearFlooders(u_int32_t aTick) {
+	while(!seekers.empty() && seekers.front().second + (5 * 1000) < aTick) {
+		seekers.pop_front();
+	}
+
+	while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
+		flooders.pop_front();
+	}
+}
+
 // TimerManagerListener
 void NmdcHub::on(Second, u_int32_t aTick) throw() {
 	if(state == STATE_CONNECTED && (getLastActivity() + getReconnDelay() * 1000) < aTick) {
@@ -1001,18 +1009,6 @@ void NmdcHub::on(Second, u_int32_t aTick) throw() {
 	} else if(getAutoReconnect() && state == STATE_CONNECT && (getReconnecting() || ((getLastActivity() + getReconnDelay() * 1000) < aTick))) {
 		// Try to reconnect...
 		connect();
-	}
-
-	{
-		Lock l(cs);
-		
-		while(!seekers.empty() && seekers.front().second + (5 * 1000) < aTick) {
-			seekers.pop_front();
-		}
-		
-		while(!flooders.empty() && flooders.front().second + (120 * 1000) < aTick) {
-			flooders.pop_front();
-		}
 	}
 
 	Client::on(Second(), aTick);

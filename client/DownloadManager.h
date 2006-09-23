@@ -188,8 +188,7 @@ public:
 	void checkIdle(const User::Ptr& user);
 
 	/** @internal */
-	void abortDownload(const string& aTarget);
-	void abortDownloadExcept(const string& aTarget, Download*);
+	void abortDownload(const string& aTarget, Download* except = NULL);
 
 	/**
 	 * @remarks This is only used in the tray icons. In MainFrame this is

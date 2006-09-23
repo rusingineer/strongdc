@@ -694,7 +694,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 
 			UploadManager::getInstance()->abortUpload(d->getTempTarget(), false);
-			abortDownloadExcept(d->getTarget(), d);
+			abortDownload(d->getTarget(), d);
 
 			if(d->getTreeValid()) {
 
@@ -1011,19 +1011,7 @@ void DownloadManager::removeDownload(Download* d) {
 	}
 }
 
-void DownloadManager::abortDownload(const string& aTarget) {
-	Lock l(cs);
-	
-	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-		Download* d = *i;
-		if(d->getTarget() == aTarget) {
-			dcassert(d->getUserConnection() != NULL);
-			d->getUserConnection()->disconnect(true);
-		}
-	}
-}
-
-void DownloadManager::abortDownloadExcept(const string& aTarget, Download* except) {
+void DownloadManager::abortDownload(const string& aTarget, Download* except) {
 	Lock l(cs);
 	
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {

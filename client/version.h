@@ -20,8 +20,8 @@
 #define VERSIONSTRING "2.03"
 #define VERSIONFLOAT 2.030
 
-#define DCVERSIONSTRING "0.695"
-#define DCVERSIONFLOAT 0.6951
+#define DCVERSIONSTRING "0.696"
+#define DCVERSIONFLOAT 0.6961
 
 /* Update the .rc file as well... */
 

@@ -29,7 +29,7 @@
 
 PropPage::TextItem LogPage::texts[] = {
 	{ IDC_SETTINGS_LOGGING,		ResourceManager::SETTINGS_LOGGING },
-	{ IDC_SETTINGS_LOG_DIR,		ResourceManager::DIRECTORY},
+	{ IDC_SETTINGS_LOG_DIR,		ResourceManager::DIRECTORY },
 	{ IDC_BROWSE_LOG,			ResourceManager::BROWSE_ACCEL },
 	{ IDC_SETTINGS_FORMAT,		ResourceManager::SETTINGS_FORMAT },
 	{ IDC_SETTINGS_FILE_NAME,	ResourceManager::SETTINGS_FILE_NAME },
@@ -65,6 +65,9 @@ LRESULT LogPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 		options.push_back(pair);
 	}
 	
+	::EnableWindow(GetDlgItem(IDC_LOG_FORMAT), false);
+	::EnableWindow(GetDlgItem(IDC_LOG_FILE), false);
+
 	oldSelection = -1;
 	
 	// Do specialized reading here

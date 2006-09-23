@@ -122,8 +122,7 @@ public:
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
 
-	void getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw();
-	void getTargetsByRoot(StringList& sl, const TTHValue& tth);
+	void getTargets(const TTHValue& tth, StringList& sl);
 	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); }
 
