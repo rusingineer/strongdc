@@ -971,16 +971,7 @@ u_int8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
 #endif
 }
 
-void QueueManager::getTargetsBySize(StringList& sl, int64_t aSize, const string& suffix) throw() {
-	Lock l(cs);
-	QueueItem::List ql;
-	fileQueue.find(ql, aSize, suffix);
-	for(QueueItem::Iter i = ql.begin(); i != ql.end(); ++i) {
-		sl.push_back((*i)->getTarget());
-	}
-}
-
-void QueueManager::getTargetsByRoot(StringList& sl, const TTHValue& tth) {
+void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 	Lock l(cs);
 	QueueItem::List ql;
 	fileQueue.find(ql, tth);
@@ -1005,8 +996,8 @@ Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool s
 
 again:
 
-	if(q == NULL)
-		return NULL;
+	if(!q)
+		return 0;
 
 	if((SETTING(FILE_SLOTS) != 0) && (q->getStatus() == QueueItem::STATUS_WAITING) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
 		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
@@ -1516,6 +1507,8 @@ void QueueManager::saveQueue() throw() {
 					if(s->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 					f.write(LIT("\t\t<Source CID=\""));
 					f.write(s->getUser()->getCID().toBase32());
+					f.write(LIT("\" Nick=\""));
+					f.write(SimpleXML::escape(s->getUser()->getFirstNick(), tmp, true));
 					f.write(LIT("\"/>\r\n"));
 				}
 
@@ -1641,7 +1634,10 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				return;
 			}
 			User::Ptr user = ClientManager::getInstance()->getUser(CID(cid));
-
+			if(user->getFirstNick().empty()) {
+				const string& nick = getAttrib(attribs, sNick, 1);
+				user->setFirstNick(nick);
+			}
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
 				ConnectionManager::getInstance()->getDownloadConnection(user);

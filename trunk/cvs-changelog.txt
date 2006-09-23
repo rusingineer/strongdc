@@ -1,3 +1,9 @@
+** cvs189
+	DC++ 0.696 merge
+	again saving user's nicks to queue.xml
+	fixed Winamp 5.09+ title mismatch when scrolling is turned on (BCDC++)
+	powrprof.dll load delay to speed up startup a very little
+	
 ** cvs188
 	fixed crash #99
 	fixed loading verified parts

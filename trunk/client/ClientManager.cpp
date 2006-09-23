@@ -53,6 +53,7 @@ Client* ClientManager::getClient(const string& aHubURL) {
 	}
 
 	c->addListener(this);
+
 	return c;
 }
 
@@ -322,8 +323,8 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 			u.getClient().send(cmd);
 		} else {
 			try {
-				Socket s;
-				s.writeTo(u.getIdentity().getIp(), static_cast<short>(Util::toInt(u.getIdentity().getUdpPort())), cmd.toString(getMe()->getCID()));
+				Socket udp;
+				udp.writeTo(u.getIdentity().getIp(), static_cast<short>(Util::toInt(u.getIdentity().getUdpPort())), cmd.toString(getMe()->getCID()));
 			} catch(const SocketException&) {
 				dcdebug("Socket exception sending ADC UDP command\n");
 			}
@@ -375,7 +376,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 			
 		} else {
 			try {
-				Socket s;
+				Socket udp;
 				string ip, file;
 				u_int16_t port = 0;
 				Util::decodeUrl(aSeeker, ip, port, file);
@@ -391,7 +392,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 					port = 412;
 				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
 					SearchResult* sr = *i;
-					s.writeTo(ip, port, sr->toSR(*aClient));
+					udp.writeTo(ip, port, sr->toSR(*aClient));
 					sr->decRef();
 				}
 			} catch(...) {

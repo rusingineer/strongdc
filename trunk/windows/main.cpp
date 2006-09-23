@@ -331,8 +331,6 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);	
 
-	MainFrame wndMain;
-	
 	CEdit dummy;
 	CWindow splash;
 	
@@ -383,6 +381,9 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	if(ResourceManager::getInstance()->isRTL()) {
 		SetProcessDefaultLayout(LAYOUT_RTL);
 	}
+
+
+	MainFrame wndMain;
 
 	rc = wndMain.rcDefault;
 

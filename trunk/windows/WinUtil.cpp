@@ -981,11 +981,21 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			GetWindowText(hwndWinamp, titleBuffer, buffLength);
 			tstring title = titleBuffer;
 			params["rawtitle"] = Text::fromT(title);
+			// there's some winamp bug with scrolling. wa5.09x and 5.1 or something.. see:
+			// http://forums.winamp.com/showthread.php?s=&postid=1768775#post1768775
+			int starpos = title.find(_T("***"));
+			if (starpos >= 1) {
+				tstring firstpart = title.substr(0, starpos - 1);
+				if (firstpart == title.substr(title.size() - firstpart.size(), title.size())) {
+					// fix title
+					title = title.substr(starpos, title.size());
+				}
+			}
 			// fix the title if scrolling is on, so need to put the stairs to the end of it
-			tstring titletmp = title.substr(title.find(_T("***"))+2, title.size());
-			title = titletmp + title.substr(0, title.size()-titletmp.size());
-			title = title.substr(title.find(_T("."))+2, title.size());
-			if (title.rfind(_T("-")) != string::npos) {
+			tstring titletmp = title.substr(title.find(_T("***")) + 2, title.size());
+			title = titletmp + title.substr(0, title.size() - titletmp.size());
+			title = title.substr(title.find(_T('.')) + 2, title.size());
+			if (title.rfind(_T('-')) != string::npos) {
 				params["title"] = Text::fromT(title.substr(0, title.rfind(_T('-')) - 1));
 			}
 			int curPos = SendMessage(hwndWinamp,WM_USER, 0, IPC_GETOUTPUTTIME);
@@ -1015,7 +1025,20 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 				waChannels = SendMessage(hwndWinamp,WM_USER, 2, IPC_GETINFO);
 			params["bitrate"] = Util::toString(waBitRate) + "kbps";
 			params["sample"] = Util::toString(waSampleRate) + "kHz";
-			params["channels"] = (waChannels==2?"stereo":"mono"); // 3+ channels? 0 channels?
+			// later it should get some improvement:
+			string waChannelName;
+			switch (waChannels) {
+				case 2:
+					waChannelName = "stereo";
+					break;
+				case 6:
+					waChannelName = "5.1 surround";
+					break;
+				default:
+					waChannelName = "mono";
+			}
+			params["channels"] = waChannelName;
+			//params["channels"] = (waChannels==2?"stereo":"mono"); // 3+ channels? 0 channels?
 			message = Text::toT(Util::formatParams(SETTING(WINAMP_FORMAT), params, false));
 		} else {
 			status = _T("Supported version of Winamp is not running");

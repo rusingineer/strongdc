@@ -122,6 +122,7 @@ private:
 	void revConnectToMe(const OnlineUser& aUser);
 	void myInfo();
 	void supports(const StringList& feat);
+	void clearFlooders(u_int32_t tick);
 
 	void updateFromTag(Identity& id, const string& tag);
 
