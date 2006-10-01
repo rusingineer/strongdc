@@ -57,7 +57,7 @@ public:
 
 	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
-	virtual size_t flush() throw(FileException) {
+	virtual size_t flush(bool = false) throw(FileException) {
 		if(!d) {
 			if (bufPos != 0)
 				cur.update(buf, bufPos);

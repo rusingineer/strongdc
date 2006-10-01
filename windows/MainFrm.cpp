@@ -110,6 +110,45 @@ DWORD WINAPI MainFrame::stopper(void* p) {
 	return 0;
 }
 
+class ListMatcher : public Thread {
+public:
+	ListMatcher(StringList files_) : files(files_) {
+
+	}
+	virtual int run() {
+		for(StringIter i = files.begin(); i != files.end(); ++i) {
+			User::Ptr u = DirectoryListing::getUserFromFilename(*i);
+			if(!u)
+				continue;
+			DirectoryListing dl(u);
+			try {
+				dl.loadFile(*i);
+				const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
+				AutoArray<char> tmp(BUF_SIZE);
+				snprintf(tmp, BUF_SIZE, CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl));
+				LogManager::getInstance()->message(u->getFirstNick() + ": " + string(tmp));
+			} catch(const Exception&) {
+
+			}
+		}
+		delete this;
+		return 0;
+	}
+	StringList files;
+};
+
+LRESULT MainFrame::onMatchAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ListMatcher* matcher = new ListMatcher(File::findFiles(Util::getListPath(), "*.xml*"));
+	try {
+		matcher->start();
+	} catch(const ThreadException&) {
+		///@todo add error message
+		delete matcher;
+	}
+	
+	return 0;
+}
+
 LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	g_pEmotionsSetup = new CAGEmotionSetup;
 	if ((g_pEmotionsSetup == NULL)||
@@ -613,16 +652,19 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 {
 	PropertiesDlg dlg(m_hWnd, SettingsManager::getInstance());
 
-	unsigned short lastPort = (unsigned short)SETTING(TCP_PORT);
-	unsigned short lastUDP = (unsigned short)SETTING(UDP_PORT);
+	unsigned short lastTCP = static_cast<unsigned short>(SETTING(TCP_PORT));
+	unsigned short lastUDP = static_cast<unsigned short>(SETTING(UDP_PORT));
+	unsigned short lastTLS = static_cast<unsigned short>(SETTING(TLS_PORT));
+
 	int lastConn = SETTING(INCOMING_CONNECTIONS);
 
-	if(dlg.DoModal(m_hWnd) == IDOK) {
+	if(dlg.DoModal(m_hWnd) == IDOK) 
+	{
 		SettingsManager::getInstance()->save();
 		if(missedAutoConnect && !SETTING(NICK).empty()) {
 			PostMessage(WM_SPEAKER, AUTO_CONNECT);
 		}
-		if(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastPort || SETTING(UDP_PORT) != lastUDP) {
+		if(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS) {
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);
@@ -1275,15 +1317,14 @@ void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi, int64_t speed)
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			// This is a file listing, show it...
-
-			DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0]->getUser(), Text::toT(qi->getListName()), speed);
+			DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0], Text::toT(qi->getListName()), speed);
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
 	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
-		DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0]->getUser(), Text::toT(qi->getListName()), speed);
+		DirectoryListInfo* i = new DirectoryListInfo(qi->getCurrents()[0], Text::toT(qi->getListName()), speed);
 		
 		if(listQueue.stop) {
 			listQueue.stop = false;

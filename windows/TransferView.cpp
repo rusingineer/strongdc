@@ -470,7 +470,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(!i->multiSource || i->subItems.size() == 0) {
+		if(!i->multiSource || i->subItems.empty()) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					ctrlTransfers.getItemData(item->iItem)->pm();
@@ -490,119 +490,159 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 	return 0;
 }
 
-LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	if(wParam == ADD_ITEM) {
-		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
-		ItemInfo* ii = new ItemInfo(ui->user, ui->download);
-		transferItems.push_back(ii);
-		ii->update(*ui);
-		if(ui->download) {
-			ctrlTransfers.insertGroupedItem(ii, false, ui->fileList);
-			ii->main->multiSource = ii->multiSource;
-		} else {
-			ctrlTransfers.insertItem(ii, IMAGE_UPLOAD);
+int TransferView::ItemInfo::compareItems(ItemInfo* a, ItemInfo* b, int col) {
+	if(a->status == b->status) {
+		if(a->download != b->download) {
+			return a->download ? -1 : 1;
 		}
-	} else if(wParam == REMOVE_ITEM) {
-		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
-		for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
-			ItemInfo* ii = *i;
-			if(*ui == *ii) {
-				transferItems.erase(i);
-				if(ui->download) {
-					ctrlTransfers.removeGroupedItem(ii);
-				} else {
-					ctrlTransfers.deleteItem(ii);
-					delete ii;
-				}
-				break;
-			}
-		}
-	} else if(wParam == UPDATE_ITEM) {
-		auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(lParam));
-		for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
-			ItemInfo* ii = *i;
-			if(*ui == *ii) {
-				if(ui->download) {
-					ii->update(*ui);
-					if(ii->main) {
-						if(ui->updateMask && UpdateInfo::MASK_FILE) setMainItem(ii);
-						ItemInfo* main = ii->main;
-
-						main->multiSource = ii->multiSource;
-						bool defString = false;
-								
-						switch(ii->status) {
-							case ItemInfo::DOWNLOAD_STARTING:
-								ii->status = ItemInfo::STATUS_RUNNING;
-								if(main->status != ItemInfo::STATUS_RUNNING) {
-									main->fileBegin = GET_TICK();
-
-									if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-										PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-									if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-										MainFrame::getMainFrame()->ShowBalloonTip((
-											TSTRING(FILE) + _T(": ")+ Util::getFileName(ii->Target) + _T("\n")+
-											TSTRING(USER) + _T(": ") + Text::toT(ii->user->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
-									}
-									main->start = 0;
-									main->actual = 0;
-									main->pos = 0;
-									main->status = ItemInfo::DOWNLOAD_STARTING;
-								}
-								break;
-							case ItemInfo::DOWNLOAD_FINISHED:
-								ii->status = ItemInfo::STATUS_WAITING;
-								main->status = ItemInfo::STATUS_WAITING;
-								main->columns[COLUMN_STATUS] = TSTRING(DOWNLOAD_FINISHED_IDLE);
-								break;
-							default:
-								defString = true;
-						}
-						if(mainItemTick(main, true) && defString && ui->transferFailed)
-							main->columns[COLUMN_STATUS] = ii->columns[COLUMN_STATUS];
-					
-						if(!main->collapsed)
-							ctrlTransfers.updateItem(ii);
-						ctrlTransfers.updateItem(main);
-					}				
-				} else {
-					ii->update(*ui);
-					ctrlTransfers.updateItem(ii);
-				}
-				break;
-			}
-		}
-	} else if(wParam == UPDATE_ITEMS) {
-		auto_ptr<vector<UpdateInfo*> > v(reinterpret_cast<vector<UpdateInfo*>* >(lParam));
-		set<ItemInfo*> mainItems;
-		ctrlTransfers.SetRedraw(FALSE);
-		for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
-			ItemInfo* ii = *i;
-			for(vector<UpdateInfo*>::const_iterator j = v->begin(); j != v->end(); ++j) {
-				UpdateInfo* ui = *j;
-				if(*ui == *ii) {
-					if(ii->main)
-						mainItems.insert(ii->main);
-					ii->update(*ui);
-					ctrlTransfers.updateItem(ii);
-				}
-			}
-		}
-
-		for(set<ItemInfo*>::const_iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-			ItemInfo* main = *i;
-			mainItemTick(main, false);
-			ctrlTransfers.updateItem(main);
-		}
-		
-		if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
-			ctrlTransfers.resort();
-		ctrlTransfers.SetRedraw(TRUE);
-
-		for_each(v->begin(), v->end(), DeleteFunction());
+	} else {
+		return (a->status == ItemInfo::STATUS_RUNNING) ? -1 : 1;
 	}
 
+	switch(col) {
+		case COLUMN_USER:
+			{
+				if(a->subItems.size() == b->subItems.size())
+					return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
+				return compare(a->subItems.size(), b->subItems.size());						
+			}
+		case COLUMN_STATUS: return 0;
+		case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
+		case COLUMN_SPEED: return compare(a->speed, b->speed);
+		case COLUMN_SIZE: return compare(a->size, b->size);
+		case COLUMN_RATIO: return compare(a->getRatio(), b->getRatio());
+		default: return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
+	}
+}
+		
+LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	TaskQueue::List t;
+	tasks.get(t);
+	if(t.size() > 2) {
+		ctrlTransfers.SetRedraw(FALSE);
+	}
+
+	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {	
+		if(i->first == ADD_ITEM) {
+			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
+			ItemInfo* ii = new ItemInfo(ui->user, ui->download);
+			transferItems.push_back(ii);
+			ii->update(*ui);
+			if(ui->download) {
+				ctrlTransfers.insertGroupedItem(ii, false, ui->fileList);
+				ii->main->multiSource = ii->multiSource;
+			} else {
+				ctrlTransfers.insertItem(ii, IMAGE_UPLOAD);
+			}
+		} else if(i->first == REMOVE_ITEM) {
+			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
+			for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
+				ItemInfo* ii = *i;
+				if(*ui == *ii) {
+					transferItems.erase(i);
+					if(ui->download) {
+						ctrlTransfers.removeGroupedItem(ii);
+					} else {
+						ctrlTransfers.deleteItem(ii);
+						delete ii;
+					}
+					break;
+				}
+			}
+		} else if(i->first == UPDATE_ITEM) {
+			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
+			for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
+				ItemInfo* ii = *i;
+				if(*ui == *ii) {
+					if(ui->download) {
+						ii->update(*ui);
+						if(ii->main) {
+							if(ui->updateMask && UpdateInfo::MASK_FILE) setMainItem(ii);
+							ItemInfo* main = ii->main;
+
+							main->multiSource = ii->multiSource;
+							bool defString = false;
+								
+							switch(ii->status) {
+								case ItemInfo::DOWNLOAD_STARTING:
+									ii->status = ItemInfo::STATUS_RUNNING;
+									if(main->status != ItemInfo::STATUS_RUNNING) {
+										main->fileBegin = GET_TICK();
+
+										if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+											PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+										if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+											MainFrame::getMainFrame()->ShowBalloonTip((
+												TSTRING(FILE) + _T(": ")+ Util::getFileName(ii->Target) + _T("\n")+
+												TSTRING(USER) + _T(": ") + Text::toT(ii->user->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
+										}
+										main->start = 0;
+										main->actual = 0;
+										main->pos = 0;
+										main->status = ItemInfo::DOWNLOAD_STARTING;
+									}
+									break;
+								case ItemInfo::DOWNLOAD_FINISHED:
+									ii->status = ItemInfo::STATUS_WAITING;
+									main->status = ItemInfo::STATUS_WAITING;
+									main->columns[COLUMN_STATUS] = TSTRING(DOWNLOAD_FINISHED_IDLE);
+									break;
+								default:
+									defString = true;
+							}
+							if(mainItemTick(main, ii->status != ItemInfo::STATUS_RUNNING) && defString && ui->transferFailed)
+								main->columns[COLUMN_STATUS] = ii->columns[COLUMN_STATUS];
+					
+							if(!main->collapsed)
+								ctrlTransfers.updateItem(ii);
+							ctrlTransfers.updateItem(main);
+						}				
+					} else {
+						ii->update(*ui);
+						ctrlTransfers.updateItem(ii);
+					}
+					break;
+				}
+			}
+		} /*else if(wParam == UPDATE_ITEMS) {
+			auto_ptr<vector<UpdateInfo*> > v(reinterpret_cast<vector<UpdateInfo*>* >(lParam));
+			set<ItemInfo*> mainItems;
+			ctrlTransfers.SetRedraw(FALSE);
+			for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
+				ItemInfo* ii = *i;
+				for(vector<UpdateInfo*>::const_iterator j = v->begin(); j != v->end(); ++j) {
+					UpdateInfo* ui = *j;
+					if(*ui == *ii) {
+						if(ii->main)
+							mainItems.insert(ii->main);
+						ii->update(*ui);
+						ctrlTransfers.updateItem(ii);
+					}
+				}
+			}
+
+			for(set<ItemInfo*>::const_iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
+				ItemInfo* main = *i;
+				mainItemTick(main, false);
+				ctrlTransfers.updateItem(main);
+			}
+		
+			if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
+				ctrlTransfers.resort();
+			ctrlTransfers.SetRedraw(TRUE);
+	
+			for_each(v->begin(), v->end(), DeleteFunction());
+		}*/
+	}
+
+	if(!t.empty()) {
+		ctrlTransfers.resort();
+		if(t.size() > 2) {
+			ctrlTransfers.SetRedraw(TRUE);
+		}
+	}
+	
 	return 0;
 }
 
@@ -766,9 +806,6 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 }
 
 void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
-	vector<UpdateInfo*>* v = new vector<UpdateInfo*>();
-	v->reserve(dl.size());
-
 	AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
 
 	for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
@@ -830,10 +867,10 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 			d->getUserConnection()->disconnect();
 		}
 			
-		v->push_back(ui);
+		tasks.add(UPDATE_ITEM, ui);
 	}
 
-	speak(UPDATE_ITEMS, v);
+	PostMessage(WM_SPEAKER);
 }
 
 void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
@@ -866,7 +903,7 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 
 void TransferView::on(DownloadManagerListener::Status, const User::Ptr& aUser, const string& aMessage) {
 	{
-		Lock l(cs);
+		//Lock l(cs);
 		for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
 			ItemInfo* ii = *i;
 			if(ii->download && (ii->user == aUser)) {
@@ -892,7 +929,6 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 	ui->setFile(Text::toT(aUpload->getLocalFileName()));
 
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
-		aUpload->unsetFlag(Upload::FLAG_RESUMED);
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));
 	}
 
@@ -912,9 +948,6 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 }
 
 void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
-	vector<UpdateInfo*>* v = new vector<UpdateInfo*>();
-	v->reserve(ul.size());
-
 	AutoArray<TCHAR> buf(TSTRING(UPLOADED_BYTES).size() + 64);
 
 	for(Upload::List::const_iterator j = ul.begin(); j != ul.end(); ++j) {
@@ -945,20 +978,20 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 		if(u->isSet(Upload::FLAG_ZUPLOAD)) {
 			statusString += _T("[Z]");
 		}
-
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}			
 		statusString += buf;
+
 		ui->setStatusString(statusString);
 					
-		v->push_back(ui);
+		tasks.add(UPDATE_ITEM, ui);
 		if((u->getRunningAverage() == 0) && ((GET_TICK() - u->getStart()) > 1000)) {
 			u->getUserConnection()->disconnect(true);
 		}
 	}
 
-	speak(UPDATE_ITEMS, v);
+	PostMessage(WM_SPEAKER);
 }
 
 void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree) {

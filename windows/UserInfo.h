@@ -27,35 +27,26 @@
 #include "WinUtil.h"
 
 #include "../client/FastAlloc.h"
+#include "../client/TaskQueue.h"
 
-	enum Speakers { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
+	enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
 		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
 		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
 		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
 	};
 
-	struct Task {
-		Task(Speakers speaker_) : speaker(speaker_) { }
-		virtual ~Task() { }
-		Speakers speaker;
-	};
-
 	struct UserTask : public Task {
-		UserTask(Speakers speaker_, const OnlineUser& ou) : Task(speaker_), user(ou.getUser()), identity(ou.getIdentity()) { }
+		UserTask(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
 
 		User::Ptr user;
 		Identity identity;
 	};
 
-	struct StringTask : public Task {
-		StringTask(Speakers speaker_, const tstring& msg_) : Task(speaker_), msg(msg_) { }
-		tstring msg;
-	};
-
 	struct MessageTask : public StringTask {
-		MessageTask(Speakers speaker_, const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const tstring& m) : StringTask(speaker_, m),
+		MessageTask(const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const string& m) : StringTask(m),
 			from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
 			hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
+		
 		Identity from;
 		User::Ptr to;
 		User::Ptr replyTo;
@@ -93,7 +84,7 @@ public:
 
 	bool update(const Identity& identity, int sortCol);
 
-	const string& getNick() const { return identity.getNick(); }
+	string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 
 	GETSET(Identity, identity, Identity);

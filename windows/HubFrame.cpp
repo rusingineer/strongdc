@@ -648,7 +648,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 	if(i == userMap.end()) {
 		UserInfo* ui = new UserInfo(u);
 		userMap.insert(make_pair(u.user, ui));
-		if(!ui->isHidden() && showUsers)
+		if(!ui->isHidden())
 			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity));
 
 		if(!filter.empty())
@@ -658,7 +658,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 		return true;
 	} else {
 		UserInfo* ui = i->second;
-		if(!ui->isHidden() && u.identity.isHidden() && showUsers) {
+		if(!ui->isHidden() && u.identity.isHidden()) {
 			ctrlUsers.deleteItem(ui);
 		}
 		
@@ -666,16 +666,13 @@ bool HubFrame::updateUser(const UserTask& u) {
 		resort = ui->update(u.identity, ctrlUsers.getSortColumn()) || resort;
 		client->availableBytes += ui->getIdentity().getBytesShared();
 
-		if(showUsers) {
-			int pos = ctrlUsers.findItem(ui);
-			if(pos != -1) {
-				ctrlUsers.updateItem(pos);
-				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
-			}
-
-			updateUserList(ui);
+		int pos = ctrlUsers.findItem(ui);
+		if(pos != -1) {
+			ctrlUsers.updateItem(pos);
+			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
 		}
 
+		updateUserList(ui);
 		return false;
 	}
 }
@@ -684,12 +681,16 @@ void HubFrame::removeUser(const User::Ptr& aUser) {
 	UserMap::iterator i = userMap.find(aUser);
 	if(i == userMap.end()) {
 		// Should never happen?
+		
+		// I removed the assertion because my memory saving feature can reache the code
+		// One big idiot removed this code too, but he doesn't use the memory saving
+		// feature, so he doesn't really know why the assertion should be there
 		// dcassert(i != userMap.end());
 		return;
 	}
 
 	UserInfo* ui = i->second;
-	if(!ui->isHidden() && showUsers)
+	if(!ui->isHidden())
 		ctrlUsers.deleteItem(ui);
 
 	client->availableBytes -= ui->getIdentity().getBytesShared();
@@ -706,20 +707,16 @@ UserInfo* HubFrame::findUser(const tstring& nick) {
 }
 
 LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam */, BOOL& /*bHandled*/) {
-	TaskList t;
-	{
-		Lock l(taskCS);
-		taskList.swap(t);
-	}
+	TaskQueue::List t;
+	tasks.get(t);
 
 	ctrlUsers.SetRedraw(FALSE);
 
-	for(TaskIter i = t.begin(); i != t.end(); ++i) {
-		Task* task = *i;
-		if(task->speaker == UPDATE_USER) {
-			updateUser(*static_cast<UserTask*>(task));
-		} else if(task->speaker == UPDATE_USER_JOIN) {
-			UserTask& u = *static_cast<UserTask*>(task);
+	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {
+		if(i->first == UPDATE_USER) {
+			updateUser(*static_cast<UserTask*>(i->second));
+		} else if(i->first == UPDATE_USER_JOIN) {
+			UserTask& u = *static_cast<UserTask*>(i->second);
 			if(updateUser(u)) {
 				bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u.user);
 				if (isFavorite && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -781,14 +778,14 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					}
 				}
 			}
-		} else if(task->speaker == REMOVE_USER) {
-			UserTask& u = *static_cast<UserTask*>(task);
+		} else if(i->first == REMOVE_USER) {
+			UserTask& u = *static_cast<UserTask*>(i->second);
 			if(showUsers)
 				removeUser(u.user);
 			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.user))) {
 				addLine(Text::toT("*** " + STRING(PARTS) + u.identity.getNick()), WinUtil::m_ChatTextSystem);
 			}
-		} else if(task->speaker == CONNECTED) {
+		} else if(i->first == CONNECTED) {
 			addClientLine(TSTRING(CONNECTED), WinUtil::m_ChatTextServer);
 			setTabColor(RGB(0, 255, 0));
 			unsetIconState();
@@ -799,7 +796,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 
 			if ((!SETTING(SOUND_HUBCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 				PlaySound(Text::toT(SETTING(SOUND_HUBCON)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-		} else if(task->speaker == DISCONNECTED) {
+		} else if(i->first == DISCONNECTED) {
 			clearUserList();
 			setTabColor(RGB(255, 0, 0));
 			setIconState();
@@ -809,20 +806,20 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			if(BOOLSETTING(POPUP_HUB_DISCONNECTED)) {
 				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()).c_str(), CTSTRING(DISCONNECTED));
 			}
-		} else if(task->speaker == ADD_CHAT_LINE) {
-    		MessageTask& msg = *static_cast<MessageTask*>(task);
+		} else if(i->first == ADD_CHAT_LINE) {
+    		MessageTask& msg = *static_cast<MessageTask*>(i->second);
         	if(!msg.from.getUser() || (ignoreList.find(msg.from.getUser()) == ignoreList.end()) ||
 	          (msg.from.isOp() && !client->isOp())) {
-    	        addLine(msg.from, msg.msg, WinUtil::m_ChatTextGeneral);
+				  addLine(msg.from, Text::toT(msg.str), WinUtil::m_ChatTextGeneral);
         	}
-		} else if(task->speaker == ADD_STATUS_LINE) {
-			addClientLine(static_cast<StringTask*>(task)->msg, WinUtil::m_ChatTextServer );
-		} else if(task->speaker == ADD_SILENT_STATUS_LINE) {
-			addClientLine(static_cast<StringTask*>(task)->msg, false);
-		} else if(task->speaker == SET_WINDOW_TITLE) {
-			SetWindowText(static_cast<StringTask*>(task)->msg.c_str());
+		} else if(i->first == ADD_STATUS_LINE) {
+			addClientLine(Text::toT(static_cast<StringTask*>(i->second)->str), WinUtil::m_ChatTextServer );
+		} else if(i->first == ADD_SILENT_STATUS_LINE) {
+			addClientLine(Text::toT(static_cast<StringTask*>(i->second)->str), false);
+		} else if(i->first == SET_WINDOW_TITLE) {
+			SetWindowText(Text::toT(static_cast<StringTask*>(i->second)->str).c_str());
 			SetMDIFrameMenu();
-		} else if(task->speaker == STATS) {
+		} else if(i->first == STATS) {
 			size_t AllUsers = client->getUserCount();
 			size_t ShownUsers = ctrlUsers.GetItemCount();
 			if(AllUsers != ShownUsers) {
@@ -841,7 +838,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				ctrlStatus.SetText(2, _T(""));
 				ctrlStatus.SetText(3, _T(""));
 			}
-		} else if(task->speaker == GET_PASSWORD) {
+		} else if(i->first == GET_PASSWORD) {
 			if(client->getPassword().size() > 0) {
 				client->password(client->getPassword());
 				addClientLine(TSTRING(STORED_PASSWORD_SENT), WinUtil::m_ChatTextSystem);
@@ -865,8 +862,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					}
 				}
 			}
-		} else if(task->speaker == PRIVATE_MESSAGE) {
-			MessageTask& pm = *static_cast<MessageTask*>(task);
+		} else if(i->first == PRIVATE_MESSAGE) {
+			MessageTask& pm = *static_cast<MessageTask*>(i->second);
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
 			  (pm.from.isOp() && !client->isOp())) {
@@ -874,25 +871,25 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				const User::Ptr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
-						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, false);
+						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else if(pm.bot) {
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
-						addClientLine(TSTRING(IGNORED_MESSAGE) + pm.msg, WinUtil::m_ChatTextPrivate, false);
+						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, pm.msg);
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + pm.msg, WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 					if(BOOLSETTING(MINIMIZE_TRAY)) {
 						HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
@@ -900,14 +897,14 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					}										
 				}
 			}
-		} else if(task->speaker == KICK_MSG) {
-    	    MessageTask& km = *static_cast<MessageTask*>(task);
+		} else if(i->first == KICK_MSG) {
+    	    MessageTask& km = *static_cast<MessageTask*>(i->second);
         	if(SETTING(FILTER_MESSAGES)) {
-            	addClientLine(km.msg, false);
+            	addClientLine(Text::toT(km.str), false);
 	        } else {
-    			addLine(km.from, km.msg, WinUtil::m_ChatTextServer, false);
+    			addLine(km.from, Text::toT(km.str), WinUtil::m_ChatTextServer, false);
         	}
-		} else if(task->speaker == CHEATING_USER) {
+		} else if(i->first == CHEATING_USER) {
 			CHARFORMAT2 cf;
 			memset(&cf, 0, sizeof(CHARFORMAT2));
 			cf.cbSize = sizeof(cf);
@@ -917,14 +914,15 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			cf.crBackColor = SETTING(BACKGROUND_COLOR);
 			cf.crTextColor = SETTING(ERROR_COLOR);
 
-			if(BOOLSETTING(POPUP_CHEATING_USER) && static_cast<StringTask*>(task)->msg.length() < 256) {
-				MainFrame::getMainFrame()->ShowBalloonTip(static_cast<StringTask*>(task)->msg.c_str(), CTSTRING(CHEATING_USER));
+			tstring msg = Text::toT(static_cast<StringTask*>(i->second)->str);
+			if(BOOLSETTING(POPUP_CHEATING_USER) && msg.length() < 256) {
+				MainFrame::getMainFrame()->ShowBalloonTip(msg.c_str(), CTSTRING(CHEATING_USER));
 			}
 
-			addLine(static_cast<StringTask*>(task)->msg, cf);
+			addLine(Text::toT(static_cast<StringTask*>(i->second)->str), cf);
 		}
 
-		delete task;
+		delete i->second;
 	}
 	
 	if(resort && showUsers) {
@@ -950,10 +948,10 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 		int tmp = (sr.Width()) > 332 ? 232 : ((sr.Width() > 132) ? sr.Width()-100 : 32);
 		
-		w[0] = sr.right - tmp - 50;
-		w[1] = w[0] + (tmp-50)/2;
-		w[2] = w[0] + (tmp-80);
-		w[3] = w[2] + 96;
+		w[0] = sr.right - tmp - 55;
+		w[1] = w[0] + (tmp-30)/2;
+		w[2] = w[0] + (tmp-65);
+		w[3] = w[2] + 100;
 		w[4] = w[3] + 16;
 		
 		ctrlStatus.SetParts(5, w);
@@ -1083,9 +1081,7 @@ void HubFrame::clearUserList() {
 }
 
 void HubFrame::clearTaskList() {
-	Lock l(taskCS);
-	for_each(taskList.begin(), taskList.end(), DeleteFunction());
-	taskList.clear();
+	tasks.clear();
 }
 
 void HubFrame::findText(tstring const& needle) throw() {
@@ -1275,8 +1271,11 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
-	ctrlLastLines.Activate(FALSE);
-	ctrlLastLines.Activate(TRUE);
+	/* This shouldn't be there but one big idiot copied it without knowing 
+	   what it is, because I forgot to remove it after one testing
+		ctrlLastLines.Activate(FALSE);
+		ctrlLastLines.Activate(TRUE);
+	*/
 }
 
 LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -1850,10 +1849,8 @@ void HubFrame::on(UserUpdated, Client*, const OnlineUser& user) throw() {
 	speak(UPDATE_USER_JOIN, user);
 }
 void HubFrame::on(UsersUpdated, Client*, const OnlineUser::List& aList) throw() {
-	Lock l(taskCS);
-	taskList.reserve(aList.size());
 	for(OnlineUser::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-		taskList.push_back(new UserTask(UPDATE_USER, *(*i)));
+		tasks.add(UPDATE_USER, new UserTask(*(*i)));
 	}
 	updateUsers = true;
 }

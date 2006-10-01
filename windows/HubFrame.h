@@ -35,6 +35,7 @@
 #include "../client/TimerManager.h"
 #include "../client/FastAlloc.h"
 #include "../client/DirectoryListing.h"
+#include "../client/TaskQueue.h"
 
 #include "WinUtil.h"
 #include "UCHandler.h"
@@ -372,8 +373,6 @@ private:
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
-	typedef vector<Task*> TaskList;
-	typedef TaskList::iterator TaskIter;
 	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
@@ -401,8 +400,6 @@ private:
 
 	CFindReplaceDialog findDlg;
 
-	//const tstring& getNick(const User::Ptr& u);
-	
 	Client* client;
 	tstring server;
 	CContainedWindow ctrlMessageContainer;
@@ -438,8 +435,7 @@ private:
 	bool tabMenuShown;
 
 	UserMap userMap;
-	TaskList taskList;
-	CriticalSection taskCS;
+	TaskQueue tasks;
 	bool updateUsers;
 	bool resort;
 
@@ -497,10 +493,10 @@ private:
 	virtual void on(CheatMessage, Client*, const string&) throw();	
 	virtual void on(HubTopic, Client*, const string&) throw();
 
-	void speak(Speakers s) { Lock l(taskCS); taskList.push_back(new Task(s)); PostMessage(WM_SPEAKER); }
-	void speak(Speakers s, const string& msg) { Lock l(taskCS); taskList.push_back(new StringTask(s, Text::toT(msg))); PostMessage(WM_SPEAKER); }
-	void speak(Speakers s, const OnlineUser& u) { Lock l(taskCS); taskList.push_back(new UserTask(s, u)); updateUsers = true; }
-	void speak(Speakers s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { Lock l(taskCS); taskList.push_back(new MessageTask(s, &from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, Text::toT(line)));  PostMessage(WM_SPEAKER); }
+	void speak(Tasks s) { tasks.add(s, 0); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const string& msg) { tasks.add(s, new StringTask(msg)); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const OnlineUser& u) { tasks.add(s, new UserTask(u)); updateUsers = true; }
+	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(s, new MessageTask(&from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, line));  PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

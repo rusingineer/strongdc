@@ -161,7 +161,7 @@ public:
 
 	void getAllChunks(vector<int64_t>& v, int type);
 
-    int64_t getDownloadedSize()
+    int64_t getDownloadedSize() const
     {
         return downloadedSize;
     }
@@ -217,7 +217,6 @@ public:
     BlockMap verifiedBlocks;
 
     size_t	tthBlockSize;					// tiger tree hash block size
-	//TTHValue* TTH;
 
 	int64_t fileSize;
     int64_t downloadedSize;

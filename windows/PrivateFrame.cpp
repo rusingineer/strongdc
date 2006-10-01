@@ -730,15 +730,14 @@ void PrivateFrame::readLog() {
 
 		int linesCount = lines.size();
 
-		int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG)) : 0;
+		int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG) + 1) : 0;
 
-		for(; i < linesCount; ++i){
-			if(!lines[i].empty())
-				ctrlClient.AppendText(Identity(NULL, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
+		for(; i < (linesCount - 1); ++i){
+			ctrlClient.AppendText(Identity(NULL, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
 		}
 
 		f.close();
-	} catch(FileException&){
+	} catch(const FileException&){
 	}
 }
 

@@ -90,7 +90,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 	{
 		Lock l(cs);
 
-		NickIter i = users.find(const_cast<string*>(&aNick));
+		NickIter i = users.find(aNick);
 		if(i != users.end())
 			return *i->second;
 	}
@@ -106,7 +106,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		Lock l(cs);
 		u = new OnlineUser(p, *this, 0);
 		u->getIdentity().setNick(aNick);
-		users.insert(make_pair(const_cast<string*>(&u->getIdentity().getNick()), u));
+		users.insert(make_pair(u->getIdentity().getNick(), u));
 		if(u->getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u->getIdentity());
 		}
@@ -126,7 +126,7 @@ void NmdcHub::supports(const StringList& feat) {
 
 OnlineUser* NmdcHub::findUser(const string& aNick) {
 	Lock l(cs);
-	NickIter i = users.find(const_cast<string*>(&aNick));
+	NickIter i = users.find(aNick);
 	return i == users.end() ? NULL : i->second;
 }
 
@@ -134,7 +134,7 @@ void NmdcHub::putUser(const string& aNick) {
 	OnlineUser* ou = NULL;
 	{
 		Lock l(cs);
-		NickMap::iterator i = users.find(const_cast<string*>(&aNick));
+		NickMap::iterator i = users.find(aNick);
 		if(i == users.end())
 			return;
 		ou = i->second;
@@ -812,9 +812,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 string NmdcHub::checkNick(const string& aNick) {
 	string tmp = aNick;
-	string::size_type i = 0;
-	while( (i = tmp.find_first_of("|$ ", i)) != string::npos) {
-		tmp[i++]='_';
+	for(size_t i = 0; i < aNick.size(); ++i) {
+		if(static_cast<u_int8_t>(tmp[i]) <= 32 || tmp[i] == '|' || tmp[i] == '$' || tmp[i] == '<' || tmp[i] == '>') {
+			tmp[i] = '_';
+		}
 	}
 	return tmp;
 }
