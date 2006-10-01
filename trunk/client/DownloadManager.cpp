@@ -53,9 +53,9 @@ const string DownloadManager::USER_LIST_NAME_BZ = "files.xml.bz2";
 Download::Download() throw() : file(NULL), treeValid(false) { 
 }
 
-Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw() :
-	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), tth(qi->getTTH()), treeValid(false),
-	quickTick(GET_TICK()) { 
+Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::SourceConstIter aSource) throw() :
+	target(qi->getTarget()), tempTarget(qi->getTempTarget()), file(NULL), 
+	quickTick(GET_TICK()), tth(qi->getTTH()), treeValid(false) {
 	
 	setSize(qi->getSize());
 	setFileSize(qi->getSize());
@@ -73,7 +73,7 @@ Download::Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) 
 
 	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
-
+	
 	user = aUser;
 }
 
@@ -131,6 +131,10 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 
+		if(d->getTotal() > 0) {
+			tickList.push_back(d);
+		}
+
 		if (d->getUserConnection() && !d->isSet(Download::FLAG_USER_LIST)) {
 			// TODO: merge codes for automatic and manual disconnecting
 			if(	(d->getStart() &&  (0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40)) &&
@@ -149,11 +153,8 @@ void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() 
 				}
 			}
 		}
-
-		if((*i)->getTotal() > 0) {
-			tickList.push_back(*i);
-		}
 	}
+	
 	if(tickList.size() > 0)
 		fire(DownloadManagerListener::Tick(), tickList);
 }
@@ -230,7 +231,7 @@ public:
 		return len;
 	}
 
-	virtual size_t flush() throw(Exception) {
+	virtual size_t flush(bool = false) throw(Exception) {
 		return 0;
 	}
 private:
@@ -364,7 +365,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 class DummyOutputStream : public OutputStream {
 public:
 	virtual size_t write(const void*, size_t n) throw(Exception) { return n; }
-	virtual size_t flush() throw(Exception) { return 0; }
+	virtual size_t flush(bool = false) throw(Exception) { return 0; }
 };
 
 int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, int64_t startPos) {
@@ -474,7 +475,7 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 	const string& type = cmd.getParam(0);
 	int64_t bytes = Util::toInt64(cmd.getParam(3));
 
-	if(	!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
+	if(!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
 		(type == "list" && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
 	{
 		// Uhh??? We didn't ask for this?
@@ -502,7 +503,7 @@ public:
 	}
 	virtual ~RollbackOutputStream() throw() { delete[] buf; if(managed) delete s; }
 
-	virtual size_t flush() throw(FileException) {
+	virtual size_t flush(bool = false) throw(FileException) {
 		return s->flush();
 	}
 
@@ -1079,7 +1080,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 		
 		aSource->setDownload(NULL);
 		QueueManager::getInstance()->putDownload(d, true);
-		removeConnection(aSource);
+		checkDownloads(aSource);
 		return;
 	}
 	

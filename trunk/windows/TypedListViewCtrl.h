@@ -763,7 +763,7 @@ public:
 						deleteItem(s->main->subItems.front());
 					}
 					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(s->main->subItems.size() == 0) {
+				} else if(s->main->subItems.empty()) {
 					T* main = s->main;
 					removeMainItem(main);
 					deleteItem(main);
@@ -771,7 +771,7 @@ public:
 					delete main;
 				}
 			} else {
-				if(s->main->subItems.size() == 0) {
+				if(s->main->subItems.empty()) {
 					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
@@ -799,7 +799,7 @@ public:
 		}
 		for(int i = 0; i < GetItemCount(); i++) {
 			T* si = getItemData(i);
-			dcassert(si->subItems.size() == 0);
+			dcassert(si->subItems.empty());
 			delete si;
 		}
 

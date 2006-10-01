@@ -41,7 +41,7 @@ public:
 	virtual void on(Added, QueueItem*) throw() { }
 	virtual void on(Finished, QueueItem*, int64_t) throw() { }
 	virtual void on(Removed, QueueItem*) throw() { }
-	virtual void on(Moved, QueueItem*) throw() { }
+	virtual void on(Moved, QueueItem*, const string&) throw() { }
 	virtual void on(SourcesUpdated, QueueItem*) throw() { }
 	virtual void on(StatusUpdated, QueueItem*) throw() { }
 	virtual void on(PartialList, const User::Ptr&, const string&) throw() { }

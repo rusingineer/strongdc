@@ -67,7 +67,7 @@ public:
 	};
 
 	Download() throw();
-	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::Source* aSource) throw();
+	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::SourceConstIter aSource) throw();
 
 	virtual ~Download() { }
 

@@ -71,6 +71,7 @@ AdcCommand SearchResult::toRES(char type) const {
 }
 
 void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+	Lock l(cs);
 	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch, aToken);
 	if(aWindow != NULL) {
 		bool added = false;
@@ -97,6 +98,7 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 }
 
 void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+	Lock l(cs);
 	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch, aToken);
 	if(aWindow != NULL) {
 		bool added = false;
@@ -123,6 +125,7 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 }
 
 void SearchManager::stopSearch(int *aWindow) {
+	Lock l(cs);
 	for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
 		if(qi->getWindow() == aWindow) {
 			searchQueue.erase(qi);
@@ -256,12 +259,12 @@ int SearchManager::ResultsQueue::run() {
 				if(j < i + 1) {
 					continue;
 				}	
-				file = x.substr(i, j-i) + '\\';
+				file = Text::acpToUtf8(x.substr(i, j-i)) + '\\';
 			} else if(cnt == 2) {
 				if( (j = x.find((char)5, i)) == string::npos) {
 					continue;
 				}
-				file = x.substr(i, j-i);
+				file = Text::acpToUtf8(x.substr(i, j-i));
 				i = j + 1;
 				if( (j = x.find(' ', i)) == string::npos) {
 					continue;
@@ -581,10 +584,15 @@ string SearchManager::clean(const string& aSearchString) {
 }
 
 void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
-
-	if(!searchQueue.empty() && ((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick)) {
-		SearchQueueItem sqi = searchQueue.front();
-		searchQueue.pop_front();
+	if((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick) {
+		SearchQueueItem sqi;
+		{
+			Lock l(cs);
+			if(searchQueue.empty()) return;
+			sqi = searchQueue.front();
+			searchQueue.pop_front();
+		}
+		
 		if(sqi.getHubs().empty()) {
 			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
 		} else {
@@ -596,6 +604,7 @@ void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 }
 
 int SearchManager::getSearchQueueNumber(int* aWindow) {
+	Lock l(cs);
 	if(!searchQueue.empty()){
 		int queueNumber = 0;
 		for(SearchQueueIter sqi = searchQueue.begin(); sqi != searchQueue.end(); ++sqi) {

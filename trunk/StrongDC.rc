@@ -1411,7 +1411,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,9,5
+ FILEVERSION 0,6,9,7
  PRODUCTVERSION 2,0,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -1429,7 +1429,7 @@ BEGIN
         BEGIN
             VALUE "Comments", "http://strongdc.berlios.de"
             VALUE "FileDescription", "StrongDC++"
-            VALUE "FileVersion", "0, 6, 9, 5"
+            VALUE "FileVersion", "0, 6, 9, 7"
             VALUE "InternalName", "StrongDC++"
             VALUE "OriginalFilename", "StrongDC.exe"
             VALUE "ProductName", "StrongDC++"

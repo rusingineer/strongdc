@@ -75,7 +75,7 @@ public:
 		for (OnlineIter i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	const string& getMyNMDCNick(const User::Ptr& p) {
+	string getMyNMDCNick(const User::Ptr& p) {
 		Lock l(cs);
 		OnlineIter i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {

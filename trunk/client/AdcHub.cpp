@@ -61,7 +61,7 @@ OnlineUser& AdcHub::getUser(const u_int32_t aSID, const CID& aCID) {
 		ou = users.insert(make_pair(aSID, new OnlineUser(p, *this, aSID))).first->second;
 	}
 
-	if(!aCID.isZero())
+	if(aSID != AdcCommand::HUB_SID)
 		ClientManager::getInstance()->putOnline(*ou);
 	return *ou;
 }
@@ -403,9 +403,9 @@ void AdcHub::connect(const OnlineUser& user, string const& token, bool secure) {
 			LogManager::getInstance()->message(STRING(NOT_LISTENING));
 			return;
 		}
-		send(AdcCommand(AdcCommand::CMD_CTM, user.getIdentity().getSID()).addParam(proto).addParam(Util::toString(port)).addParam(token));
+		send(AdcCommand(AdcCommand::CMD_CTM, user.getIdentity().getSID(), AdcCommand::TYPE_DIRECT).addParam(proto).addParam(Util::toString(port)).addParam(token));
 	} else {
-		send(AdcCommand(AdcCommand::CMD_RCM, user.getIdentity().getSID()).addParam(proto));
+		send(AdcCommand(AdcCommand::CMD_RCM, user.getIdentity().getSID(), AdcCommand::TYPE_DIRECT).addParam(proto));
 	}
 }
 
@@ -418,7 +418,7 @@ void AdcHub::hubMessage(const string& aMessage) {
 void AdcHub::privateMessage(const OnlineUser& user, const string& aMessage) { 
 	if(state != STATE_NORMAL)
 		return;
-	send(AdcCommand(AdcCommand::CMD_MSG, user.getIdentity().getSID()).addParam(aMessage).addParam("PM", getMySID())); 
+	send(AdcCommand(AdcCommand::CMD_MSG, user.getIdentity().getSID(), AdcCommand::TYPE_ECHO).addParam(aMessage).addParam("PM", getMySID()));
 }
 
 void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) { 
@@ -569,7 +569,7 @@ void AdcHub::info() {
 string AdcHub::checkNick(const string& aNick) {
 	string tmp = aNick;
 	for(size_t i = 0; i < aNick.size(); ++i) {
-		if(tmp[i] <= 32) {
+		if(static_cast<u_int8_t>(tmp[i]) <= 32) {
 			tmp[i] = '_';
 		}
 	}

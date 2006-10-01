@@ -1,3 +1,13 @@
+** cvs190
+	hopefully fixed unicode search results
+	fixed search spam when downloading filelists
+	hopefully fixed finished uploads logging - no single chunks logged, only really finished uploads are logged regardless the last file position =)
+	some fix for loading PM history
+	DC++ SVN merge
+	flush file buffers when download finishes
+	hopefully fixed crash #150
+	updated WTL
+
 ** cvs189
 	DC++ 0.696 merge
 	again saving user's nicks to queue.xml

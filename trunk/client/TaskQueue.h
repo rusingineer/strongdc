@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,16 +16,48 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.03"
-#define VERSIONFLOAT 2.030
+#if !defined(TASK_H)
+#define TASK_H
 
-#define DCVERSIONSTRING "0.697"
-#define DCVERSIONFLOAT 0.6971
+#include "CriticalSection.h"
 
-/* Update the .rc file as well... */
+struct Task {
+	virtual ~Task() = 0 { }
+};
+struct StringTask : public Task {
+	StringTask(const string& str_) : str(str_) { }
+	string str;
+};
 
-/**
- * @file
- * $Id$
- */
+class TaskQueue {
+public:
+	typedef pair<int, Task*> Pair;
+	typedef vector<Pair> List;
+	typedef List::iterator Iter;
+
+	TaskQueue() {
+	}
+
+	~TaskQueue() {
+		clear();
+	}
+
+	void add(int type, Task* data) { Lock l(cs); tasks.push_back(make_pair(type, data)); }
+	void get(List& list) { Lock l(cs); swap(tasks, list); }
+	void clear() {
+		List tmp;
+		get(tmp);
+		for(Iter i = tmp.begin(); i != tmp.end(); ++i) {
+			delete i->second;
+		}
+	}
+private:
+
+	TaskQueue(const TaskQueue&);
+	TaskQueue& operator=(const TaskQueue&);
+
+	CriticalSection cs;
+	List tasks;
+};
+
+#endif TASK_H

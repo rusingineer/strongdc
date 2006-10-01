@@ -75,11 +75,12 @@ User::Ptr DirectoryListing::getUserFromFilename(const string& fileName) {
 	return p;
 }
 
-void DirectoryListing::loadFile(const string& name) {
+void DirectoryListing::loadFile(const string& name) throw(FileException, SimpleXMLException) {
 	string txt;
 
 	// For now, we detect type by ending...
 	string ext = Util::getFileExt(name);
+
 	if(Util::stricmp(ext, ".bz2") == 0) {
 		::File ff(name, ::File::READ, ::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
@@ -328,7 +329,7 @@ private:
 
 struct DirectoryEmpty {
 	bool operator()(const DirectoryListing::Directory::Ptr i) const {
-		bool r = i->getFileCount() + i->directories.size() == 0;
+		bool r = i->getFileCount() + i->directories.size() > 0;
 		if (r) DeleteFunction()(i);
 		return r;
 	}

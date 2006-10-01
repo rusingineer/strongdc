@@ -98,7 +98,7 @@ public:
         return len;
     }
 
-	virtual size_t flush() throw(Exception) 
+	virtual size_t flush(bool = false) throw(Exception) 
 	{
 		return os->flush();
 	}

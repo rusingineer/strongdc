@@ -25,8 +25,8 @@
 
 #include "../client/DownloadManager.h"
 #include "../client/UploadManager.h"
-#include "../client/CriticalSection.h"
 #include "../client/ConnectionManagerListener.h"
+#include "../client/TaskQueue.h"
 #include "../client/ConnectionManager.h"
 #include "../client/HashManager.h"
 
@@ -154,7 +154,6 @@ private:
 		ADD_ITEM,
 		REMOVE_ITEM,
 		UPDATE_ITEM,
-		UPDATE_ITEMS
 	};
 
 	enum {
@@ -227,32 +226,8 @@ private:
 			return columns[col];
 		}
 
-		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
-			if(a->status == b->status) {
-				if(a->download != b->download) {
-					return a->download ? -1 : 1;
-				}
-			} else {
-				return (a->status == ItemInfo::STATUS_RUNNING) ? -1 : 1;
-			}
+		static int compareItems(ItemInfo* a, ItemInfo* b, int col);
 
-			switch(col) {
-				case COLUMN_USER:
-					{
-						if(a->subItems.size() == b->subItems.size())
-							return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
-
-						return compare(a->subItems.size(), b->subItems.size());						
-					}
-				case COLUMN_STATUS: return 0;
-				case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
-				case COLUMN_SPEED: return compare(a->speed, b->speed);
-				case COLUMN_SIZE: return compare(a->size, b->size);
-				case COLUMN_RATIO: return compare(a->getRatio(), b->getRatio());
-				default: return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
-			}
-		}
-		
 		int imageIndex() {
 			return !download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
 		}
@@ -286,7 +261,7 @@ private:
 		}
 	};
 
-	struct UpdateInfo {
+	struct UpdateInfo : public Task {
 		enum {
 			MASK_POS = 1 << 0,
 			MASK_SIZE = 1 << 1,
@@ -339,10 +314,7 @@ private:
 		u_int8_t flagImage;
 	};
 
-	void speak(int type, UpdateInfo* ui) { PostMessage(WM_SPEAKER, type, reinterpret_cast<LPARAM>(ui)); }
-	void speak(int type, vector<UpdateInfo*>* ui) { PostMessage(WM_SPEAKER, type, reinterpret_cast<LPARAM>(ui)); }
-
-	CriticalSection cs;
+	void speak(int type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }
 
 	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
@@ -353,6 +325,8 @@ private:
 	OMenu usercmdsMenu;
 	OMenu previewMenu;
 	CImageList arrows;
+
+	TaskQueue tasks;
 
 	StringMap ucLineParams;
 	HDC hDCDB; // Double buffer DC

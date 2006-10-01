@@ -222,6 +222,7 @@ private:
 	friend class Singleton<SearchManager>;
 	SearchQueueItemList searchQueue;
 	ResultsQueue queue;
+	CriticalSection cs;
 
 	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
 		TimerManager::getInstance()->addListener(this);

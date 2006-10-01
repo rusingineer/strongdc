@@ -190,12 +190,12 @@ bool UploadManager::prepareFile(UserConnection* aSource, const string& aType, co
 					if(chunksInfo && chunksInfo->isVerified(aStartPos, aBytes)){
 						try{
 							SharedFileStream* ss = new SharedFileStream(file, aStartPos);
-							if(ss->getSize() < aBytes) {
+							/*if(ss->getSize() < aBytes) {
 								aSource->fileNotAvail();
 								aSource->disconnect();
 								delete is;
 								return false;
-							}
+							}*/
 							is = ss;
 							size = chunksInfo->fileSize;
 							free = (size <= (int64_t)(64 * 1024));
@@ -293,8 +293,11 @@ ok:
 		Upload* up = *i;
 		if(aSource == up->getUserConnection()) {
 			delayUploads.erase(i);
-			finishUpload(up, false);
-			u->setFlag(Upload::FLAG_RESUMED);
+			if(file != up->getLocalFileName()) {
+				finishUpload(up, true);
+			} else {
+				u->setFlag(Upload::FLAG_RESUMED);
+			}
 			break;
 		}
 	}

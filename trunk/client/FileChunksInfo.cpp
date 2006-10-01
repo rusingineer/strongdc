@@ -140,7 +140,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	Lock l(cs);
 	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
 
-	useChunks = (waiting.size() + running.size()) > 1;
+	useChunks = true;//(waiting.size() > 1) || (running.size() > 0);
 
 	// if there is any waiting chunk, return it
 	if(!waiting.empty()){
@@ -410,7 +410,6 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		dcassert(0);
 	}
 #endif
-	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
 	return false;
 }
 
@@ -864,7 +863,7 @@ void FileChunksInfo::selfCheck()
 		if(i != running.end()){
 			int64_t start = i->first;
 			Chunk* x = i->second;
-			dcassert(tmp <= x->pos );
+			dcassert(start <= x->pos );
 		}
 	}
 
