@@ -66,10 +66,12 @@ public:
 		FLAG_CHUNKED = 0x10000
 	};
 
-	Download() throw();
-	Download(QueueItem* qi, User::Ptr& aUser, QueueItem::SourceConstIter aSource) throw();
+	Download(UserConnection& conn) throw();
+	Download(UserConnection& conn, QueueItem& qi, /*User::Ptr& aUser, */QueueItem::SourceConstIter aSource) throw();
 
-	virtual ~Download() { }
+	virtual void getParams(const UserConnection& aSource, StringMap& params);
+
+	virtual ~Download();
 
 	/**
 	 * @remarks This function is only used from DownloadManager but its
@@ -78,12 +80,7 @@ public:
 	 * @return Target filename without path.
 	 */
 	string getTargetFileName() {
-		string::size_type i = getTarget().rfind('\\');
-		if(i != string::npos) {
-			return getTarget().substr(i + 1);
-		} else {
-			return getTarget();
-		}
+		return Util::getFileName(getTarget());
 	}
 
 	/** @internal */
@@ -105,9 +102,8 @@ public:
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
-	GETSET(TTHValue, tth, TTH);
 	GETSET(bool, treeValid, TreeValid);
-	GETSET(User::Ptr, user, User);
+	//GETSET(User::Ptr, user, User);
 	int64_t quickTick;
 	
 private:
@@ -212,9 +208,6 @@ public:
 		return downloads.size();
 	}
 
-	static const string USER_LIST_NAME;
-	static const string USER_LIST_NAME_BZ;
-		
 	// the following functions were added to help download throttle
 	bool throttle() { return mThrottleEnable; }
 	void throttleReturnBytes(u_int32_t b);
@@ -277,6 +270,7 @@ private:
 
 	// UserConnectionListener
 	virtual void on(Data, UserConnection*, const u_int8_t*, size_t) throw();
+	virtual void on(Error, UserConnection*, const string&) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();
 	virtual void on(Sending, UserConnection*, int64_t) throw();
 	virtual void on(FileLength, UserConnection*, int64_t) throw();

@@ -436,12 +436,12 @@ public:
 	}
 
 	void saveHeaderOrder(string& order, string& widths, string& visible) throw() {
-		TCHAR *buf = new TCHAR[128];
+		TCHAR buf[512];
 		int size = GetHeader().GetItemCount();
 		for(int i = 0; i < size; ++i){
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
-			lvc.cchTextMax = 128;
+			lvc.cchTextMax = 512;
 			lvc.pszText = buf;
 			GetColumn(i, &lvc);
 			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
@@ -452,8 +452,6 @@ public:
 				}
 			}
 		}
-
-		delete[] buf;
 
 		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
 			ColumnInfo* ci = *i;
@@ -483,8 +481,7 @@ public:
 		StringList l = tok.getTokens();
 
 		StringIter i = l.begin();
-		ColumnIter j = columnList.begin();		
-		for(; j != columnList.end() && i != l.end(); ++i, ++j) {
+		for(ColumnIter j = columnList.begin(); j != columnList.end() && i != l.end(); ++i, ++j) {
 
 			if(Util::toInt(*i) == 0){
 				(*j)->visible = false;
@@ -529,7 +526,7 @@ private:
 	vector<int> columnIndexes;
 
 	void removeColumn(ColumnInfo* ci){
-		TCHAR *buf = new TCHAR[512];
+		TCHAR buf[512];
 		LVCOLUMN lvcl = { 0 };
 		lvcl.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
 		lvcl.pszText = buf;
@@ -562,7 +559,6 @@ private:
 				break;
 			}
 		}
-		delete[] buf;
 	}
 
 	void updateColumnIndexes() {
@@ -572,13 +568,13 @@ private:
 		
 		columnIndexes.reserve(columns);
 
-		TCHAR *buf = new TCHAR[100];
+		TCHAR buf[128];
 		LVCOLUMN lvcl;
 
 		for(int i = 0; i < columns; ++i) {
 			lvcl.mask = LVCF_TEXT;
 			lvcl.pszText = buf;
-			lvcl.cchTextMax = 100;
+			lvcl.cchTextMax = 128;
 			GetColumn(i, &lvcl);
 			for(size_t j = 0; j < columnList.size(); ++j) {
 				if(Util::stricmp(columnList[j]->name.c_str(), lvcl.pszText) == 0) {
@@ -587,7 +583,6 @@ private:
 				}
 			}
 		}
-		delete[] buf;
 	}	
 };
 

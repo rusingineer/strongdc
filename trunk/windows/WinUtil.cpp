@@ -856,7 +856,7 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 #define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #endif
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
-_T("\r\n-- rm-...what? Nope...never heard of it...\r\n") LINE2,
+_T("\r\n-- CZ-...what? Nope...never heard of it...\r\n") LINE2,
 _T("\r\n-- Evolution of species: Ape --> Man\r\n-- Evolution of science: \"The Earth is Flat\" --> \"The Earth is Round\"\r\n-- Evolution of sharing: DC++ --> StrongDC++\r\n") LINE2,
 _T("\r\n-- I share, therefore I am.\r\n") LINE2,
 _T("\r\n-- I came, I searched, I found...\r\n") LINE2,
@@ -866,7 +866,7 @@ _T("\r\n-- Ja jsem byl prvni klient, ktery nemuze ztratit slot pri segmentovem s
 _T("\r\n-- Ja jsem byl prvni klient, ktery umi seskupovat prenosy se stejnym nazvem souboru :-P\r\n") LINE2,
 _T("\r\n-- Umim stahovat segmentove bez poskozeni souboru :-))\r\n") LINE2,
 _T("\r\n-- Dokazu seskupovat vysledky hledani se stejnym TTH pod jednu polozku ;)\r\n") LINE2,
-_T("\r\n-- Nedovolim michat soubory s TTH a bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,
+_T("\r\n-- Nedovolim stahovat soubory bez TTH a predejdu tak poskozeni souboru :-)\r\n") LINE2,
 _T("\r\n-- Kontroluji data behem prenosu a zarucim spravnou integritu dat :)\r\n") LINE2,
 _T("\r\n-- Nekdo ma a nekdo nema....ja mam (ale nedam :-)) )\r\n") LINE2,
 _T("\r\n-- Muzu omezit rychlost sveho downloadu, aby mi zbyla linka pro brouzdani na webu :-D\r\n") LINE2

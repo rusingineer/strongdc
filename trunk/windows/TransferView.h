@@ -348,7 +348,7 @@ private:
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
-	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getLocalFileName(), false); }
+	virtual void on(UploadManagerListener::Complete, Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 

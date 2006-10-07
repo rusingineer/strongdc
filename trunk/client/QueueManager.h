@@ -127,7 +127,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); }
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
-	Download* getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message) throw();
+	Download* getDownload(UserConnection& aSource, bool supportsTrees, bool supportsChunks, string &message) throw();
 	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
 	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
