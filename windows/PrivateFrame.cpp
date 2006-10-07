@@ -730,9 +730,9 @@ void PrivateFrame::readLog() {
 
 		int linesCount = lines.size();
 
-		int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - (SETTING(SHOW_LAST_LINES_LOG) + 1) : 0;
+		int i = linesCount > (SETTING(SHOW_LAST_LINES_LOG) + 1) ? linesCount - SETTING(SHOW_LAST_LINES_LOG) : 0;
 
-		for(; i < (linesCount - 1); ++i){
+		for(; i < linesCount; ++i){
 			ctrlClient.AppendText(Identity(NULL, 0), _T("- "), _T(""), (Text::toT(lines[i])).c_str(), WinUtil::m_ChatTextLog, true);
 		}
 

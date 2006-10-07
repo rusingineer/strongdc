@@ -29,9 +29,10 @@
 #include "Client.h"
 #include "ClientManager.h"
 #include "ClientManagerListener.h"
-#include "File.h"
 #include "MerkleTree.h"
 #include "FastAlloc.h"
+
+class InputStream;
 
 class Upload : public Transfer, public Flags {
 public:
@@ -50,16 +51,13 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 	
-	Upload() : file(0) { }
-	virtual ~Upload() { 
-		delete file;
-	}
+	Upload(UserConnection& conn);
+	virtual ~Upload();
 	
-	User::Ptr& getUser() { dcassert(getUserConnection() != NULL); return getUserConnection()->getUser(); }
+	virtual void getParams(const UserConnection& aSource, StringMap& params);
 	
-	GETSET(string, localFileName, LocalFileName);
-	GETSET(TTHValue, tth, TTH);
-	GETSET(InputStream*, file, File);
+	GETSET(string, sourceFile, SourceFile);
+	GETSET(InputStream*, stream, Stream);
 };
 
 class UploadManagerListener {
@@ -176,18 +174,6 @@ public:
 	int getFreeSlots() { return max((getSlots() - running), 0); }
 	
 	/** @internal */
-	bool getAutoSlot() {
-		/** A 0 in settings means disable */
-		if(SETTING(MIN_UPLOAD_SPEED) == 0)
-			return false;
-		/** Only grant one slot per 30 sec */
-		if(GET_TICK() < getLastGrant() + 30*1000)
-			return false;
-		/** Grant if upload speed is less than the threshold speed */
-		return getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
-	}
-
-	/** @internal */
 	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
@@ -244,7 +230,6 @@ public:
 			Upload* up = *i;
 			if(aUser == up->getUser()) {
 				delayUploads.erase(i);
-				up->setUserConnection(NULL);
 				delete up;
 				break;
 			}
@@ -303,7 +288,8 @@ private:
 	UploadManager() throw();
 	virtual ~UploadManager() throw();
 
-	void removeConnection(UserConnection::Ptr aConn);
+	bool getAutoSlot();
+	void removeConnection(UserConnection* aConn);
 	void removeUpload(Upload* aUpload, bool delay = false);
 	void finishUpload(Upload* u, bool msg);
 
@@ -325,7 +311,7 @@ private:
 	virtual void on(AdcCommand::GET, UserConnection*, const AdcCommand&) throw();
 	virtual void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) throw();
 
-	bool prepareFile(UserConnection* aSource, const string& aType, const string& aFile, int64_t aResume, int64_t& aBytes, bool listRecursive = false);
+	bool prepareFile(UserConnection& aSource, const string& aType, const string& aFile, int64_t aResume, int64_t& aBytes, bool listRecursive = false);
 };
 
 #endif // !defined(UPLOAD_MANAGER_H)

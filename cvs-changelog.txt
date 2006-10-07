@@ -1,3 +1,8 @@
+** cvs191
+	DC++ SVN merge
+	hopefully fixed Transfer doubleclick action
+	another fix for finished uploads logging
+
 ** cvs190
 	hopefully fixed unicode search results
 	fixed search spam when downloading filelists

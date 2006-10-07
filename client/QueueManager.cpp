@@ -978,13 +978,14 @@ void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 	}
 }
 
-Download* QueueManager::getDownload(User::Ptr& aUser, bool supportsTrees, bool supportsChunks, string &message) throw() {
+Download* QueueManager::getDownload(UserConnection& aSource, bool supportsTrees, bool supportsChunks, string &message) throw() {
 	Lock l(cs);
 
+	User::Ptr& aUser = aSource.getUser();
 	// First check PFS's...
 	PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
-		Download* d = new Download();
+		Download* d = new Download(aSource);
 		d->setFlag(Download::FLAG_PARTIAL_LIST);
 		d->setSource(pi->second);
 		return d;
@@ -1032,7 +1033,7 @@ again:
 
 	userQueue.setRunning(q, aUser);
 
-	Download* d = new Download(q, aUser, source);
+	Download* d = new Download(aSource, *q, source);
 	
 	if(d->getSize() != -1) {
 		if(HashManager::getInstance()->getTree(d->getTTH(), d->getTigerTree())) {
@@ -1084,18 +1085,18 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		Lock l(cs);
 
 		if(aDownload->isSet(Download::FLAG_PARTIAL_LIST)) {
-			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUserConnection()->getUser()->getCID());
+			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
 			PfsIter i = find_if(range.first, range.second, CompareSecond<CID, string>(aDownload->getSource()));
 			if(i != range.second) {
 				pfsQueue.erase(i);
-				fire(QueueManagerListener::PartialList(), aDownload->getUserConnection()->getUser(), aDownload->getPFS());
+				fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
 			}
 		} else {
 			QueueItem* q = fileQueue.find(aDownload->getTarget());
 
 			if(q) {
 				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
-					if(aDownload->getSource() == DownloadManager::USER_LIST_NAME_BZ) {
+					if(aDownload->getSource() == Transfer::USER_LIST_NAME_BZ) {
 						q->setFlag(QueueItem::FLAG_XML_BZLIST);
 					} else {
 						q->unsetFlag(QueueItem::FLAG_XML_BZLIST);
@@ -1110,7 +1111,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 
 						q->setHasTree(true);
 						if(q->getStatus() == QueueItem::STATUS_RUNNING) {
-							userQueue.setWaiting(q, aDownload->getUserConnection()->getUser());
+							userQueue.setWaiting(q, aDownload->getUser());
 							fire(QueueManagerListener::StatusUpdated(), q);
 						}
 					} else {
@@ -1154,11 +1155,11 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 					if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 						// This might have been set to wait elsewhere already...
 						if(q->getStatus() == QueueItem::STATUS_RUNNING) {
-							userQueue.setWaiting(q, aDownload->getUserConnection()->getUser());
+							userQueue.setWaiting(q, aDownload->getUser());
 							fire(QueueManagerListener::StatusUpdated(), q);						
 						}
 					} else {
-						userQueue.setWaiting(q, aDownload->getUserConnection()->getUser());
+						userQueue.setWaiting(q, aDownload->getUser());
 						if(q->getStatus() != QueueItem::STATUS_RUNNING) {
 							fire(QueueManagerListener::StatusUpdated(), q);
 						}
@@ -1183,13 +1184,12 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 
 		int64_t speed = aDownload->getAverageSpeed();
 		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
-			aDownload->getUserConnection()->getUser()->setLastDownloadSpeed((size_t)speed);
+			aDownload->getUser()->setLastDownloadSpeed((size_t)speed);
 		}
 		
 		checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
-		user = aDownload->getUserConnection()->getUser();
+		user = aDownload->getUser();
 
-		aDownload->setUserConnection(0);
 		delete aDownload;
 	}
 	delete aTTH;
@@ -1772,7 +1772,7 @@ void QueueItem::removeSource(const User::Ptr& aUser, int reason) {
 	
 bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException) 
 {	
-	if(aFile == DownloadManager::USER_LIST_NAME_BZ || aFile == DownloadManager::USER_LIST_NAME) return false;
+	if(aFile == Transfer::USER_LIST_NAME_BZ || aFile == Transfer::USER_LIST_NAME) return false;
 	if(aSize == 0) return false;
 
 	string target = SETTING(DOWNLOAD_DIRECTORY) + aFile;
@@ -1856,7 +1856,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
 					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
 				} else {
-					d->getUserConnection()->disconnect();
+					d->getUserConnection().disconnect();
 				}
 				return false;
 			}

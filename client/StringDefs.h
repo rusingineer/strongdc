@@ -813,6 +813,7 @@ enum Strings { // @DontAdd
 	UNABLE_TO_CREATE_THREAD, // "Unable to create thread"
 	UNABLE_TO_OPEN_FILELIST, // "Unable to open filelist: "
 	UNABLE_TO_RENAME, // "Unable to rename "
+	UNABLE_TO_SEND_FILE, // "Unable to send file "
 	UNIGNORE_USER, // "Unignore User"
 	UNKNOWN, // "Unknown"
 	UNKNOWN_COMMAND, // "Unknown command: "

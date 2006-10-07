@@ -470,7 +470,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(!i->multiSource || i->subItems.empty()) {
+		if(/*!i->multiSource || */i->subItems.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					ctrlTransfers.getItemData(item->iItem)->pm();
@@ -778,7 +778,7 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 }
 
 void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
-	UpdateInfo* ui = new UpdateInfo(aDownload->getUserConnection()->getUser(), true);
+	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
 	bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD);
 
 	ui->setStatus(ItemInfo::DOWNLOAD_STARTING);
@@ -789,8 +789,8 @@ void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
 	ui->setFile(Text::toT(aDownload->getTarget()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 	ui->setMultiSource(aDownload->isSet(Download::FLAG_MULTI_CHUNK));
-	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
-	tstring ip = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection().getRemoteIp()));
+	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {
@@ -811,7 +811,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 		Download* d = *j;
 
-		UpdateInfo* ui = new UpdateInfo(d->getUserConnection()->getUser(), true);
+		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
 		ui->setActual(d->getActual());
 		ui->setPos(d->getTotal());
 		ui->setTimeLeft(d->getSecondsLeft());
@@ -826,7 +826,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 				progress, Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
 			if(progress > 100) {
 				// workaround to fix > 100% percentage
-				d->getUserConnection()->disconnect();
+				d->getUserConnection().disconnect();
 				continue;
 			}
 		} else {
@@ -839,8 +839,8 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		if(d->isSet(Download::FLAG_PARTIAL)) {
 			statusString += _T("[P]");
 		}
-		if(d->getUserConnection()->isSecure()) {
-			if(d->getUserConnection()->isTrusted()) {
+		if(d->getUserConnection().isSecure()) {
+			if(d->getUserConnection().isTrusted()) {
 				statusString += _T("[S]");
 			} else {
 				statusString += _T("[U]");
@@ -864,7 +864,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		statusString += buf;
 		ui->setStatusString(statusString);
 		if((d->getRunningAverage() == 0) && ((GET_TICK() - d->getStart()) > 1000)) {
-			d->getUserConnection()->disconnect();
+			d->getUserConnection().disconnect();
 		}
 			
 		tasks.add(UPDATE_ITEM, ui);
@@ -874,14 +874,14 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 }
 
 void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
-	UpdateInfo* ui = new UpdateInfo(aDownload->getUserConnection()->getUser(), true, true);
+	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true, true);
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
 	ui->setStatusString(Text::toT(aReason));
 	ui->setSize(aDownload->getSize());
 	ui->setFile(Text::toT(aDownload->getTarget()));
-	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection()->getRemoteIp()));
-	tstring ip = Text::toT(aDownload->getUserConnection()->getRemoteIp());
+	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection().getRemoteIp()));
+	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {
@@ -919,21 +919,21 @@ void TransferView::on(DownloadManagerListener::Status, const User::Ptr& aUser, c
 }
 
 void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
-	UpdateInfo* ui = new UpdateInfo(aUpload->getUserConnection()->getUser(), false);
+	UpdateInfo* ui = new UpdateInfo(aUpload->getUser(), false);
 
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setPos(aUpload->getTotal());
 	ui->setActual(aUpload->getActual());
 	ui->setStart(aUpload->getPos());
 	ui->setSize(aUpload->isSet(Upload::FLAG_TTH_LEAVES) ? aUpload->getSize() : aUpload->getFileSize());
-	ui->setFile(Text::toT(aUpload->getLocalFileName()));
+	ui->setFile(Text::toT(aUpload->getSourceFile()));
 
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));
 	}
 
-	tstring country = Text::toT(Util::getIpCountry(aUpload->getUserConnection()->getRemoteIp()));
-	tstring ip = Text::toT(aUpload->getUserConnection()->getRemoteIp());
+	tstring country = Text::toT(Util::getIpCountry(aUpload->getUserConnection().getRemoteIp()));
+	tstring ip = Text::toT(aUpload->getUserConnection().getRemoteIp());
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {
@@ -955,7 +955,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 
 		if (u->getTotal() == 0) continue;
 
-		UpdateInfo* ui = new UpdateInfo(u->getUserConnection()->getUser(), false);
+		UpdateInfo* ui = new UpdateInfo(u->getUser(), false);
 		ui->setActual(u->getActual());
 		ui->setPos(u->getTotal());
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
@@ -972,8 +972,12 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 		if(u->isSet(Upload::FLAG_CHUNKED)) {
 			statusString += _T("[C]");
 		}
-		if(u->getUserConnection()->isSecure()) {
-			statusString += _T("[S]");
+		if(u->getUserConnection().isSecure()) {
+			if(u->getUserConnection().isTrusted()) {
+				statusString += _T("[S]");
+			} else {
+				statusString += _T("[U]");
+			}
 		}
 		if(u->isSet(Upload::FLAG_ZUPLOAD)) {
 			statusString += _T("[Z]");
@@ -987,7 +991,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 					
 		tasks.add(UPDATE_ITEM, ui);
 		if((u->getRunningAverage() == 0) && ((GET_TICK() - u->getStart()) > 1000)) {
-			u->getUserConnection()->disconnect(true);
+			u->getUserConnection().disconnect(true);
 		}
 	}
 
@@ -995,20 +999,20 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 }
 
 void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree) {
-	UpdateInfo* ui = new UpdateInfo(aTransfer->getUserConnection()->getUser(), !isUpload);
+	UpdateInfo* ui = new UpdateInfo(aTransfer->getUser(), !isUpload);
 	if(!isUpload) {
 		ui->setStatus(isTree ? ItemInfo::STATUS_WAITING : ItemInfo::DOWNLOAD_FINISHED);
 		if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED) && !isTree) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
 				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUserConnection()->getUser()->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
+				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUser()->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
 		}
 	} else {
 		ui->setStatus(ItemInfo::STATUS_WAITING);
 		if(BOOLSETTING(POPUP_UPLOAD_FINISHED) && !isTree) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
 				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUserConnection()->getUser()->getFirstNick())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
+				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUser()->getFirstNick())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
 		}
 	}
 	

@@ -47,7 +47,7 @@ SharedFileHandle::SharedFileHandle(const string& name, bool shareDelete)
 					dwShareMode, 
 					NULL, 
 					OPEN_ALWAYS, 
-					0,
+					FILE_FLAG_SEQUENTIAL_SCAN,
 					NULL);
 	
 	if(handle == INVALID_HANDLE_VALUE) {
