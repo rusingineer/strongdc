@@ -3,7 +3,7 @@
 class CBarShader
 {
 public:
-	CBarShader(u_int32_t dwHeight, u_int32_t dwWidth, COLORREF crColor = 0, u_int64_t dwFileSize = 1ui64);
+	CBarShader(uint32_t dwHeight, uint32_t dwWidth, COLORREF crColor = 0, uint64_t dwFileSize = 1ui64);
 	~CBarShader(void);
 
 	//set the width of the bar
@@ -25,10 +25,10 @@ public:
 	}
 
 	//sets new file size and resets the shader
-	void SetFileSize(u_int64_t qwFileSize);
+	void SetFileSize(uint64_t qwFileSize);
 
 	//fills in a range with a certain color, new ranges overwrite old
-	void FillRange(u_int64_t qwStart, u_int64_t qwEnd, COLORREF crColor);
+	void FillRange(uint64_t qwStart, uint64_t qwEnd, COLORREF crColor);
 
 	//fills in entire range with a certain color
 	void Fill(COLORREF crColor);
@@ -40,14 +40,14 @@ protected:
 	void BuildModifiers();
 	void FillRect(CDC& dc, LPCRECT rectSpan, COLORREF crColor);
 
-	u_int64_t		m_qwFileSize;
+	uint64_t		m_qwFileSize;
 	int			m_iWidth;
 	int			m_iHeight;
 	double		m_dblPixelsPerByte;
 	double		m_dblBytesPerPixel;
 
 private:
-	CRBMap<u_int64_t, COLORREF> m_Spans;
+	CRBMap<uint64_t, COLORREF> m_Spans;
 	double	*m_pdblModifiers;
 	byte	m_used3dlevel;
 	bool	m_bIsPreview;

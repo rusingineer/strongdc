@@ -150,7 +150,7 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 			}
 }
 
-void UpdateDlg::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
+void UpdateDlg::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 			if (xmldata.empty())
 				PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(RETRIEVING_DATA) + _T("...")));
 			xmldata += string((const char*)buf, len);

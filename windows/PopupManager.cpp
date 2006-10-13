@@ -105,7 +105,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 	popups.push_back(p);
 }
 
-void PopupManager::on(TimerManagerListener::Second /*type*/, u_int32_t /*tick*/) {
+void PopupManager::on(TimerManagerListener::Second /*type*/, uint32_t /*tick*/) {
 
 	//post a message and let the main window thread take care of the window
 	::PostMessage(WinUtil::mainWnd, WM_SPEAKER, MainFrame::REMOVE_POPUP, 0);
@@ -137,7 +137,7 @@ void PopupManager::AutoRemove(){
 	}
 }
 
-void PopupManager::Remove(u_int32_t pos) {
+void PopupManager::Remove(uint32_t pos) {
 	//find the correct window
 	PopupIter i = popups.begin();
 

@@ -43,9 +43,9 @@
 
 #include <limits>
 
-ShareManager::ShareManager() : hits(0), listLen(0), bzXmlListLen(0),
-	xmlDirty(true), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0), lFile(NULL), 
-	xFile(NULL), lastXmlUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
+ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
+	xmlDirty(true), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
+	lastXmlUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -61,11 +61,6 @@ ShareManager::~ShareManager() {
 
 	join();
 
-	delete lFile;
-	lFile = NULL;
-	delete xFile;
-	xFile = NULL;
-
 	StringList lists = File::findFiles(Util::getConfigPath(), "files?*.xml.bz2");
 	for_each(lists.begin(), lists.end(), File::deleteFile);
 
@@ -77,12 +72,10 @@ ShareManager::~ShareManager() {
 ShareManager::Directory::~Directory() {
 	for(MapIter i = directories.begin(); i != directories.end(); ++i)
 		delete i->second;
-	for(File::Iter i = files.begin(); i != files.end(); ++i) {
-		ShareManager::getInstance()->removeTTH(i->getTTH(), *i);
-	}
 }
 
-string ShareManager::translateTTH(const TTHValue& tth) throw(ShareException) {
+string ShareManager::toVirtual(const TTHValue& tth) throw(ShareException) {
+	Lock l(cs);
 	HashFileIter i = tthIndex.find(tth);
 	if(i != tthIndex.end()) {
 		return i->second->getADCPath();
@@ -91,7 +84,7 @@ string ShareManager::translateTTH(const TTHValue& tth) throw(ShareException) {
 	}
 }
 
-string ShareManager::translateFileName(const string& virtualFile) throw(ShareException) {
+string ShareManager::toReal(const string& virtualFile) throw(ShareException) {
 	if(virtualFile == "MyList.DcLst") {
 		throw ShareException("NMDC-style lists no longer supported, please upgrade your client");
 	} else if(virtualFile == Transfer::USER_LIST_NAME_BZ || virtualFile == Transfer::USER_LIST_NAME) {
@@ -109,39 +102,39 @@ string ShareManager::translateFileName(const string& virtualFile) throw(ShareExc
 	}
 }
 
-TTHValue ShareManager::getTTH(const string& virtualName) throw(ShareException) {
+TTHValue ShareManager::getTTH(const string& virtualFile) throw(ShareException) {
 	Lock l(cs);
-	string realName;
+	string realFile;
 	Directory::File::Iter it;
-	if(!checkFile(virtualName, realName, it))
+	if(!checkFile(virtualFile, realFile, it))
 		throw ShareException();
 	return it->getTTH();
 }
 
-MemoryInputStream* ShareManager::getTree(const string& aFile) {
+MemoryInputStream* ShareManager::getTree(const string& virtualFile) {
 	TigerTree tree;
-	if(aFile.compare(0, 4, "TTH/") == 0) {
-		if(!HashManager::getInstance()->getTree(TTHValue(aFile.substr(4)), tree))
+	if(virtualFile.compare(0, 4, "TTH/") == 0) {
+		if(!HashManager::getInstance()->getTree(TTHValue(virtualFile.substr(4)), tree))
 			return 0;
 	} else {
 		try {
-			TTHValue tth = getTTH(aFile);
+			TTHValue tth = getTTH(virtualFile);
 			HashManager::getInstance()->getTree(tth, tree);
 		} catch(const Exception&) {
 			return 0;
 		}
 	}
 
-	vector<u_int8_t> buf = tree.getLeafData();
+	vector<uint8_t> buf = tree.getLeafData();
 	return new MemoryInputStream(&buf[0], buf.size());
 }
 
 AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) {
 	if(aFile == Transfer::USER_LIST_NAME) {
 		generateXmlList();
-		/** todo fix size... */
 		AdcCommand cmd(AdcCommand::CMD_RES);
 		cmd.addParam("FN", aFile);
+		cmd.addParam("SI", Util::toString(xmlListLen));
 		cmd.addParam("TR", xmlRoot.toBase32());
 		return cmd;
 	} else if(aFile == Transfer::USER_LIST_NAME_BZ) {
@@ -149,8 +142,8 @@ AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) 
 
 		AdcCommand cmd(AdcCommand::CMD_RES);
 		cmd.addParam("FN", aFile);
-		cmd.addParam("SI", Util::toString(File::getSize(getBZXmlFile())));
-		cmd.addParam("TR", xmlbzRoot.toBase32());
+		cmd.addParam("SI", Util::toString(bzXmlListLen));
+		cmd.addParam("TR", bzXmlRoot.toBase32());
 		return cmd;
 	}
 
@@ -164,7 +157,7 @@ AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) 
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
 
-	Directory::File::Iter f = i->second;
+	Directory::File::Set::const_iterator f = i->second;
 	AdcCommand cmd(AdcCommand::CMD_RES);
 	cmd.addParam("FN", f->getADCPath());
 	cmd.addParam("SI", Util::toString(f->getSize()));
@@ -191,7 +184,7 @@ StringPairIter ShareManager::findReal(const string& virtualName) {
 bool ShareManager::checkFile(const string& virtualFile, string& realFile, Directory::File::Iter& it) {
 	string file;
 	if(virtualFile.compare(0, 4, "TTH/") == 0) {
-		file = translateTTH(TTHValue(virtualFile.substr(4)));
+		file = toVirtual(TTHValue(virtualFile.substr(4)));
 	} else if(virtualFile.empty() || virtualFile[0] != '/') {
 		return false;
 	} else {
@@ -362,7 +355,7 @@ bool ShareManager::loadCache() {
 		SimpleXMLReader(&loader).fromXML(txt);
 
 		for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
-			addTree(i->second);
+			addTree(*i->second);
 		}
 
 		return true;
@@ -431,7 +424,7 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	}
 
 	for(slist<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
-		removeDirectory(*i, true);
+		removeDirectory(*i);
 	}
 	
 	dp = buildTree(d, NULL);
@@ -439,7 +432,7 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 
 	{
 		Lock l(cs);
-		addTree(dp);
+		addTree(*dp);
 
 		directories[d] = dp;
 		virtualMap.push_back(make_pair(vName, d));
@@ -447,31 +440,33 @@ void ShareManager::addDirectory(const string& aDirectory, const string& aName) t
 	}
 }
 
-void ShareManager::removeDirectory(const string& aDirectory, bool duringRefresh) {
-	Lock l(cs);
-
+void ShareManager::removeDirectory(const string& aDirectory) {
 	string d(aDirectory);
 
 	if(d[d.length() - 1] != PATH_SEPARATOR)
 		d += PATH_SEPARATOR;
 
-	Directory::Map::iterator i = directories.find(d);
-	if(i != directories.end()) {
-		delete i->second;
-		directories.erase(i);
-	}
+	{
+		Lock l(cs);
 
-	for(StringPairIter j = virtualMap.begin(); j != virtualMap.end(); ++j) {
-		if(Util::stricmp(j->second.c_str(), d.c_str()) == 0) {
-			virtualMap.erase(j);
-			break;
+		Directory::Map::iterator i = directories.find(d);
+		if(i != directories.end()) {
+			delete i->second;
+			directories.erase(i);
 		}
+
+		for(StringPairIter j = virtualMap.begin(); j != virtualMap.end(); ++j) {
+			if(Util::stricmp(j->second.c_str(), d.c_str()) == 0) {
+				virtualMap.erase(j);
+				break;
+			}
+		}
+
+		rebuildIndices();
+		setDirty();
 	}
 
-	if(!duringRefresh)
 		HashManager::getInstance()->stopHashing(d);
-
-	setDirty();
 }
 
 void ShareManager::renameDirectory(const string& oName, const string& nName) throw(ShareException) {
@@ -538,7 +533,7 @@ string ShareManager::Directory::getFullName() const throw() {
 	return parent->getFullName() + getName() + '\\';
 }
 
-void ShareManager::Directory::addType(u_int32_t type) throw() {
+void ShareManager::Directory::addType(uint32_t type) throw() {
 	if(!hasType(type)) {
 		fileTypes |= (1 << type);
 		if(getParent() != NULL)
@@ -588,7 +583,7 @@ public:
 			return (int64_t)nFileSizeLow | ((int64_t)nFileSizeHigh)<<32;
 		}
 
-		u_int32_t getLastWriteTime() {
+		uint32_t getLastWriteTime() {
 			return File::convertTime(&ftLastWriteTime);
 		}
 	};
@@ -658,7 +653,7 @@ public:
 			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
 			return inode.st_size;
 		}
-		u_int32_t getLastWriteTime() {
+		uint32_t getLastWriteTime() {
 			struct stat inode;
 			if (!ent) return false;
 			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
@@ -740,6 +735,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 					continue;
 				}
 				try {
+					//@todo race condition - if hashmanager finishes hashing before buildtree is done...
 					if(HashManager::getInstance()->checkTTH(fileName, size, i->getLastWriteTime()))
 						lastFileIter = dir->files.insert(lastFileIter, Directory::File(name, size, dir, HashManager::getInstance()->getTTH(fileName, size)));
 				} catch(const HashException&) {
@@ -751,47 +747,44 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 	return dir;
 }
 
-void ShareManager::addTree(Directory* dir) {
-	bloom.add(Text::toLower(dir->getName()));
+void ShareManager::addTree(Directory& dir) {
+	bloom.add(Text::toLower(dir.getName()));
 
-	for(Directory::MapIter i = dir->directories.begin(); i != dir->directories.end(); ++i) {
-		Directory* d = i->second;
-		addTree(d);
+	for(Directory::MapIter i = dir.directories.begin(); i != dir.directories.end(); ++i) {
+		addTree(*i->second);
 	}
 
-	for(Directory::File::Iter i = dir->files.begin(); i != dir->files.end(); ) {
+	for(Directory::File::Iter i = dir.files.begin(); i != dir.files.end(); ) {
 		addFile(dir, i++);
 	}
 }
 
-void ShareManager::addFile(Directory* dir, Directory::File::Iter i) {
+void ShareManager::rebuildIndices() {
+	tthIndex.clear();
+	bloom.clear();
+
+	for(Directory::Map::const_iterator i = directories.begin(); i != directories.end(); ++i) {
+		addTree(*i->second);
+	}
+}
+
+void ShareManager::addFile(Directory& dir, Directory::File::Iter i) {
 	const Directory::File& f = *i;
 
 	HashFileIter j = tthIndex.find(f.getTTH());
 	if(j == tthIndex.end()) {
-		dir->size+=f.getSize();
+		dir.size+=f.getSize();
 		sharedSize+=f.getSize();
 	}
 
-	dir->addType(getType(f.getName()));
+	dir.addType(getType(f.getName()));
 
 	tthIndex.insert(make_pair(f.getTTH(), i));
 	bloom.add(Text::toLower(f.getName()));
 }
 
-void ShareManager::removeTTH(const TTHValue& tth, const Directory::File& file) {
-	pair<HashFileMap::iterator, HashFileMap::iterator> range = tthIndex.equal_range(tth);//OLD pair<HashFileMap::iterator, HashFileMap::iterator> range = tthIndex.equal_range(const_cast<TTHValue*>(&tth));
-	for(HashFileMap::iterator j = range.first; j != range.second; ++j) {
-		if(*j->second == file) {
-			tthIndex.erase(j);
-			break;
-		}
-	}
-}
-
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw(ThreadException, ShareException) {
-	if(Thread::safeInc(refreshing) > 1) {
-		Thread::safeDec(refreshing);
+	if(Thread::safeExchange(refreshing, 1) == 1) {
 		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS));
 		return;
 	}
@@ -830,41 +823,35 @@ int ShareManager::run() {
 			}
 
 			for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
-				Directory* dp = buildTree(i->second, NULL);
+				Directory* dp = buildTree(i->second, 0);
 				dp->setName(i->first);
 				newDirs.insert(make_pair(i->second, dp));
 			}
 
 			{
 				Lock l(cs);
-				StringPairList dirs = virtualMap;
-				for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
-					removeDirectory(i->second, true);
+				for(Directory::MapIter i = directories.begin(); i != directories.end(); ++i) {
+					delete i->second;
 				}
-				bloom.clear();
+				directories = newDirs;
 
-				virtualMap = dirs;
-
-				for(Directory::MapIter i = newDirs.begin(); i != newDirs.end(); ++i) {
-					addTree(i->second);
-					directories.insert(*i);
-				}
+				rebuildIndices();
 			}
 			refreshDirs = false;
 		}
 	}
 
-	Thread::safeDec(refreshing);
 	
 	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED));
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);
 	}
+	refreshing = 0;
 	return 0;
 }
 		
 void ShareManager::generateXmlList() {
-	Lock l(listGenLock);
+	Lock l(cs);
 	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate)) {
 		listN++;
 
@@ -878,7 +865,8 @@ void ShareManager::generateXmlList() {
 				// We don't care about the leaves...
 				CalcOutputStream<TTFilter<1024*1024*1024>, false> bzTree(&f);
 				FilteredOutputStream<BZFilter, false> bzipper(&bzTree);
-				CalcOutputStream<TTFilter<1024*1024*1024>, false> newXmlFile(&bzipper);
+				CountOutputStream<false> count(&bzipper);
+				CalcOutputStream<TTFilter<1024*1024*1024>, false> newXmlFile(&count);
 
 				newXmlFile.write(SimpleXML::utf8Header);
 				newXmlFile.write("<FileListing Version=\"1\" CID=\"" + ClientManager::getInstance()->getMe()->getCID().toBase32() + "\" Base=\"/\" Generator=\"DC++ " DCVERSIONSTRING "\">\r\n");
@@ -888,25 +876,27 @@ void ShareManager::generateXmlList() {
 				newXmlFile.write("</FileListing>");
 				newXmlFile.flush();
 
+				xmlListLen = count.getCount();
+
 				newXmlFile.getFilter().getTree().finalize();
 				bzTree.getFilter().getTree().finalize();
 
 				xmlRoot = newXmlFile.getFilter().getTree().getRoot();
-				xmlbzRoot = bzTree.getFilter().getTree().getRoot();
+				bzXmlRoot = bzTree.getFilter().getTree().getRoot();
 			}
 
-			if(xFile != NULL) {
-				delete xFile;
-				xFile = NULL;
+			if(bzXmlRef.get()) {
+				bzXmlRef.reset();
 				File::deleteFile(getBZXmlFile());
 			}
+
 			try {
 				File::renameFile(newXmlName, Util::getConfigPath() + "files.xml.bz2");
 				newXmlName = Util::getConfigPath() + "files.xml.bz2";
 			} catch(const FileException&) {
 				// Ignore, this is for caching only...
 			}
-			xFile = new File(newXmlName, File::READ, File::OPEN);
+			bzXmlRef = auto_ptr<File>(new File(newXmlName, File::READ, File::OPEN));
 			setBZXmlFile(newXmlName);
 			bzXmlListLen = File::getSize(newXmlName);
 		} catch(const Exception&) {
@@ -981,30 +971,6 @@ static const string& escaper(const string& n, string& tmp) {
 }
 
 #define LITERAL(n) n, sizeof(n)-1
-void ShareManager::Directory::toNmdc(string& nmdc, string& indent, string& tmp2) {
-	tmp2.clear();
-	nmdc.append(indent);
-	nmdc.append(Text::utf8ToAcp(name, tmp2));
-	nmdc.append(LITERAL("\r\n"));
-
-	indent += '\t';
-	for(MapIter i = directories.begin(); i != directories.end(); ++i) {
-		i->second->toNmdc(nmdc, indent, tmp2);
-	}
-	
-	Directory::File::Iter j = files.begin();
-	for(Directory::File::Iter i = files.begin(); i != files.end(); ++i) {
-		const Directory::File& f = *i;
-		nmdc.append(indent);
-		tmp2.clear();
-		nmdc.append(Text::utf8ToAcp(f.getName(), tmp2));
-		nmdc.append(LITERAL("|"));
-		nmdc.append(Util::toString(f.getSize()));
-		nmdc.append(LITERAL("\r\n"));
-	}
-	indent.erase(indent.length()-1);
-}
-
 void ShareManager::Directory::toXml(OutputStream& xmlFile, string& indent, string& tmp2, bool fullList) {
 	xmlFile.write(indent);
 	xmlFile.write(LITERAL("<Directory Name=\""));
@@ -1062,7 +1028,7 @@ static const string type2Compressed[] = { ".gz" };
 static const string type2Picture[] = { ".ai", ".ps", ".pict", ".jpeg", ".tiff" };
 static const string type2Video[] = { ".rm", ".divx", ".mpeg", ".mp1v", ".mp2v", ".mpv1", ".mpv2", ".qt", ".rv", ".vivo" };
 
-#define IS_TYPE(x) ( type == (*((u_int32_t*)x)) )
+#define IS_TYPE(x) ( type == (*((uint32_t*)x)) )
 #define IS_TYPE2(x) (Util::stricmp(aString.c_str() + aString.length() - x.length(), x.c_str()) == 0)
 
 static bool checkType(const string& aString, int aType) {
@@ -1076,7 +1042,7 @@ static bool checkType(const string& aString, int aType) {
 	if(!Text::isAscii(c))
 		return false;
 
-	u_int32_t type = '.' | (Text::asciiToLower(c[0]) << 8) | (Text::asciiToLower(c[1]) << 16) | (((u_int32_t)Text::asciiToLower(c[2])) << 24);
+	uint32_t type = '.' | (Text::asciiToLower(c[0]) << 8) | (Text::asciiToLower(c[1]) << 16) | (((uint32_t)Text::asciiToLower(c[2])) << 24);
 
 	switch(aType) {
 	case SearchManager::TYPE_AUDIO:
@@ -1248,7 +1214,7 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 	if(aFileType == SearchManager::TYPE_TTH) {
 		if(aString.compare(0, 4, "TTH:") == 0) {
 			TTHValue tth(aString.substr(4));
-			HashFileIter i = tthIndex.find(tth);//OLD HashFileIter i = tthIndex.find(&tth);
+			HashFileIter i = tthIndex.find(tth);
 			if(i != tthIndex.end()) {
 				SearchResult* sr = new SearchResult(SearchResult::TYPE_FILE, i->second->getSize(), 
 					i->second->getParent()->getFullName() + i->second->getName(), i->second->getTTH());
@@ -1279,7 +1245,7 @@ void ShareManager::search(SearchResult::List& results, const string& aString, in
 }
 
 namespace {
-	inline u_int16_t toCode(char a, char b) { return (u_int16_t)a | ((u_int16_t)b)<<8; }
+	inline uint16_t toCode(char a, char b) { return (uint16_t)a | ((uint16_t)b)<<8; }
 }
 
 ShareManager::AdcSearch::AdcSearch(const StringList& params) : include(&includeX), gt(0), 
@@ -1290,7 +1256,7 @@ ShareManager::AdcSearch::AdcSearch(const StringList& params) : include(&includeX
 		if(p.length() <= 2)
 			continue;
 
-		u_int16_t cmd = toCode(p[0], p[1]);
+		uint16_t cmd = toCode(p[0], p[1]);
 		if(toCode('T', 'R') == cmd) {
 			hasRoot = true;
 			root = TTHValue(p.substr(2));
@@ -1386,7 +1352,7 @@ void ShareManager::search(SearchResult::List& results, const StringList& params,
 	Lock l(cs);
 
 	if(srch.hasRoot) {
-		HashFileIter i = tthIndex.find(srch.root);//OLD HashFileIter i = tthIndex.find(&srch.root);
+		HashFileIter i = tthIndex.find(srch.root);
 		if(i != tthIndex.end()) {
 			SearchResult* sr = new SearchResult(SearchResult::TYPE_FILE, 
 				i->second->getSize(), i->second->getParent()->getFullName() + i->second->getName(), 
@@ -1405,6 +1371,20 @@ void ShareManager::search(SearchResult::List& results, const StringList& params,
 	for(Directory::MapIter j = directories.begin(); (j != directories.end()) && (results.size() < maxResults); ++j) {
 		j->second->search(results, srch, maxResults);
 	}
+}
+
+int64_t ShareManager::Directory::getSize() {
+	int64_t tmp = size;
+	for(MapIter i = directories.begin(); i != directories.end(); ++i)
+		tmp+=i->second->getSize();
+	return tmp;
+}
+
+size_t ShareManager::Directory::countFiles() {
+	size_t tmp = files.size();
+	for(MapIter i = directories.begin(); i != directories.end(); ++i)
+		tmp+=i->second->countFiles();
+	return tmp;
 }
 
 ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
@@ -1454,7 +1434,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
         Directory::File::Iter i = d->findFile(Util::getFileName(fname));
 		if(i != d->files.end()) {
 			if(root != i->getTTH())
-				removeTTH(i->getTTH(), *i);
+				tthIndex.erase(i->getTTH());
 			// Get rid of false constness...
 			Directory::File* f = const_cast<Directory::File*>(&(*i));
 			f->setTTH(root);
@@ -1463,13 +1443,13 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 			string name = Util::getFileName(fname);
 			int64_t size = File::getSize(fname);
 			Directory::File::Iter it = d->files.insert(Directory::File(name, size, d, root)).first;
-			addFile(d, it);
+			addFile(*d, it);
 		}
 		setDirty();
 	}
 }
 
-void ShareManager::on(TimerManagerListener::Minute, u_int32_t tick) throw() {
+void ShareManager::on(TimerManagerListener::Minute, uint32_t tick) throw() {
 	if(SETTING(AUTO_REFRESH_TIME) > 0) {
 		if(lastFullUpdate + SETTING(AUTO_REFRESH_TIME) * 60 * 1000 < tick) {
 			try {

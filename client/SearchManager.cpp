@@ -175,7 +175,7 @@ void SearchManager::disconnect() throw() {
 #define BUFSIZE 8192
 int SearchManager::run() {
 	
-	AutoArray<u_int8_t> buf(BUFSIZE);
+	AutoArray<uint8_t> buf(BUFSIZE);
 	int len;
 
 	queue.start();
@@ -183,7 +183,7 @@ int SearchManager::run() {
 
 		string remoteAddr;
 		try {
-			while( (len = socket->read((u_int8_t*)buf, BUFSIZE, remoteAddr)) != 0) {
+			while( (len = socket->read((uint8_t*)buf, BUFSIZE, remoteAddr)) != 0) {
 				onData(buf, len, remoteAddr);
 			}
 		} catch(const SocketException& e) {
@@ -351,7 +351,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.find('$', i)) == string::npos) {
 				continue;
 			}
-			u_int32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
+			uint32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
 			i = j + 1;
 
 			if( (j = x.find('$', i)) == string::npos) {
@@ -363,7 +363,7 @@ int SearchManager::ResultsQueue::run() {
 			i = 0; j = 0;
 			while(j != string::npos) {
 				j = partialInfoBlocks.find(',', i);
-				partialInfo.push_back((u_int16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
+				partialInfo.push_back((uint16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
 				i = j + 1;
 			}
 			dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
@@ -403,7 +403,7 @@ int SearchManager::ResultsQueue::run() {
 	return 0;
 }
 
-void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remoteIp) {
+void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remoteIp) {
 	string x((char*)buf, aLen);
 
 	if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
@@ -434,7 +434,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 		c.getParameters().erase(c.getParameters().begin());
 
 		unsigned short udpPort = 0;
-		u_int32_t partialCount = 0;
+		uint32_t partialCount = 0;
 		string tth;
 		string hubIpPort;
 		string nick;
@@ -457,7 +457,7 @@ void SearchManager::onData(const u_int8_t* buf, size_t aLen, const string& remot
 				string::size_type i = 0, j = 0;
 				while(j != string::npos) {
 					j = partialInfoBlocks.find(',', i);
-					partialInfo.push_back((u_int16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
+					partialInfo.push_back((uint16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
 					i = j + 1;
 				}
 			}
@@ -583,7 +583,7 @@ string SearchManager::clean(const string& aSearchString) {
 	return tmp;
 }
 
-void SearchManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void SearchManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	if((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick) {
 		SearchQueueItem sqi;
 		{
@@ -617,7 +617,7 @@ int SearchManager::getSearchQueueNumber(int* aWindow) {
 	return 0;
 }
 
-void SearchManager::sendPSR(const string& ip, u_int16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<u_int16_t>& partialInfo) {
+void SearchManager::sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo) {
 	if(myNick.empty()) return;
 	Socket s;
 	try {

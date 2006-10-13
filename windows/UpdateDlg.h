@@ -84,7 +84,7 @@ private:
 	HICON m_hIcon;
 
 	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
-	virtual void on(HttpConnectionListener::Data, HttpConnection* conn, const u_int8_t* buf, size_t len) throw();	
+	virtual void on(HttpConnectionListener::Data, HttpConnection* conn, const uint8_t* buf, size_t len) throw();	
 	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw();
 
 };

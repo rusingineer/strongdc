@@ -37,7 +37,7 @@ public:
 	typedef List::const_iterator Iter;
 
 	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
-		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, u_int32_t aTime,
+		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, uint32_t aTime,
 		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 
 		target(aTarget), user(aUser), cid(aCID), hub(aHub), size(aSize), chunkSize(aChunkSize),
 		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH)
@@ -53,7 +53,7 @@ public:
 	GETSET(int64_t, size, Size);
 	GETSET(int64_t, chunkSize, ChunkSize);
 	GETSET(int64_t, milliSeconds, MilliSeconds);
-	GETSET(u_int32_t, time, Time);
+	GETSET(uint32_t, time, Time);
 	GETSET(bool, crc32Checked, Crc32Checked)
 	GETSET(string, tth, TTH);
 private:
@@ -94,7 +94,7 @@ public:
 
 	/** Get file full path by tth to share */
 	string getTarget(const string& aTTH);
-	bool handlePartialRequest(const TTHValue& tth, vector<u_int16_t>& outPartialInfo);
+	bool handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo);
 
 
 private:

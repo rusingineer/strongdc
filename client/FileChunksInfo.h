@@ -41,10 +41,10 @@
 #define DEFAULT_SPEED 5120
 
 // PFS purpose
-typedef vector<u_int16_t> PartsInfo;
+typedef vector<uint16_t> PartsInfo;
 
 // ...
-typedef map<u_int16_t, u_int16_t> BlockMap;
+typedef map<uint16_t, uint16_t> BlockMap;
 typedef BlockMap::const_iterator BlockIter;
 
 class Download;
@@ -74,7 +74,7 @@ private:
 
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
-	u_int16_t overlappedCount;
+	uint16_t overlappedCount;
 };
 
 /**
@@ -176,7 +176,7 @@ public:
      */
 	bool doLastVerify(const TigerTree& aTree, const string& tempTargetName);
 
-	void markVerifiedBlock(u_int16_t start, u_int16_t end);
+	void markVerifiedBlock(uint16_t start, uint16_t end);
 
 	/**
 	 * Is specified parts needed by this download?

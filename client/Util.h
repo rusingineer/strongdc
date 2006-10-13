@@ -245,7 +245,7 @@ public:
 		return (j != wstring::npos) ? path.substr(j+1, i-j-1) : path;
 	}
 
-	static void decodeUrl(const string& aUrl, string& aServer, u_int16_t& aPort, string& aFile);
+	static void decodeUrl(const string& aUrl, string& aServer, uint16_t& aPort, string& aFile);
 	static string validateFileName(string aFile);
 	static string cleanPathChars(string aNick);
 	static string formatStatus(int iStatus) {
@@ -306,11 +306,11 @@ public:
 	static int toInt(const string& aString) {
 		return atoi(aString.c_str());
 	}
-	static u_int32_t toUInt32(const string& str) {
+	static uint32_t toUInt32(const string& str) {
 		return toUInt32(str.c_str());
 	}
-	static u_int32_t toUInt32(const char* c) {
-		return (u_int32_t)strtoul(c, NULL, 10);
+	static uint32_t toUInt32(const char* c) {
+		return (uint32_t)strtoul(c, NULL, 10);
 	}
 
 	static double toDouble(const string& aString) {
@@ -495,13 +495,13 @@ public:
 	}
 
 	static void setAwayMessage(const string& aMsg) { awayMsg = aMsg; }
-	static u_int64_t getDirSize(const string &sFullPath);
+	static uint64_t getDirSize(const string &sFullPath);
 	static bool validatePath(const string &sPath);
 	static bool fileExists(const string &aFile);
 
-	static u_int32_t rand();
-	static u_int32_t rand(u_int32_t high) { return rand() % high; }
-	static u_int32_t rand(u_int32_t low, u_int32_t high) { return rand(high-low) + low; }
+	static uint32_t rand();
+	static uint32_t rand(uint32_t high) { return rand() % high; }
+	static uint32_t rand(uint32_t low, uint32_t high) { return rand(high-low) + low; }
 	static double randd() { return ((double)rand()) / ((double)0xffffffff); }
 	static bool isNumeric(wchar_t c) {
 		return (c >= '0' && c <= '9') ? true : false;
@@ -522,7 +522,7 @@ private:
 	static string awayMsg;
 	static time_t awayTime;
 	
-	typedef map<u_int32_t, u_int16_t> CountryList;
+	typedef map<uint32_t, uint16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
 
 	static CountryList countries;
@@ -611,17 +611,17 @@ struct noCaseStringLess {
 class ColumnBase {
 public:
 	const tstring& getText(int col) const {
-		InfMap::const_iterator i = info.find((u_int8_t)col);
+		InfMap::const_iterator i = info.find((uint8_t)col);
 		return i == info.end() ? Util::emptyStringT : i->second;
 	}
 	void setText(int name, const tstring& val) {
 		if(val.empty())
-			info.erase((u_int8_t)name);
+			info.erase((uint8_t)name);
 		else
-			info[(u_int8_t)name] = val;
+			info[(uint8_t)name] = val;
 	}
 private:
-	typedef map<u_int8_t, tstring> InfMap;
+	typedef map<uint8_t, tstring> InfMap;
 	InfMap info;
 };
 

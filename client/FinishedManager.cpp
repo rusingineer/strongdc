@@ -135,7 +135,7 @@ string FinishedManager::getTarget(const string& aTTH){
 	return Util::emptyString;
 }
 
-bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<u_int16_t>& outPartialInfo)
+bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo)
 {
 
 	string target = getTarget(tth.toBase32());
@@ -147,7 +147,7 @@ bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<u_int16_t
 	if(fileSize < PARTIAL_SHARE_MIN_SIZE)
 		return false;
 
-	u_int16_t len = TigerTree::calcBlocks(fileSize);
+	uint16_t len = TigerTree::calcBlocks(fileSize);
 	outPartialInfo.push_back(0);
 	outPartialInfo.push_back(len);
 

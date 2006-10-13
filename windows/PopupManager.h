@@ -49,7 +49,7 @@ public:
 	void Show(const string &aMsg, const string &aTitle, int Icon, int iPreview = -1);
 
 	//remove first popup in list and move everyone else
-	void Remove(u_int32_t pos = 0);
+	void Remove(uint32_t pos = 0);
 
 	//remove the popups that are scheduled to be removed
 	void AutoRemove();
@@ -66,21 +66,21 @@ private:
 	PopupList popups;
 	
 	//size of the popup window
-	u_int16_t height;
-	u_int16_t width;
+	uint16_t height;
+	uint16_t width;
 
 	//if we have multiple windows displayed, 
 	//keep track of where the new one will be displayed
-	u_int16_t offset;
+	uint16_t offset;
 	
 	//turn on/off popups completely
 	bool activated;
 
 	//id of the popup to keep track of them
-	u_int32_t id;
+	uint32_t id;
  	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t tick) throw();
+	virtual void on(TimerManagerListener::Second, uint32_t tick) throw();
 
 };
 

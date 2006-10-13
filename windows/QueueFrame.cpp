@@ -1091,7 +1091,7 @@ LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		QueueItem* qi = QueueManager::getInstance()->fileQueue.find(ii->getTarget());
 		if(qi && qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
-			qi->setMaxSegments(max((u_int8_t)2, (u_int8_t)(wID - 109)));
+			qi->setMaxSegments(max((uint8_t)2, (uint8_t)(wID - 109)));
 		ii->update();
 		ctrlQueue.updateItem(ii);
 	}

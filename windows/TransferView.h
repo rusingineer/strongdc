@@ -202,7 +202,7 @@ private:
 		bool collapsed;
 		ItemInfo* main;
 		Status status;
-		u_int8_t flagImage;
+		uint8_t flagImage;
 		int64_t pos;
 		int64_t size;
 		int64_t start;
@@ -210,7 +210,7 @@ private:
 		int64_t speed;
 		int64_t timeLeft;
 		tstring Target;
-		u_int32_t fileBegin;
+		uint32_t fileBegin;
 		bool multiSource;
 
 		tstring columns[COLUMN_LAST];
@@ -281,7 +281,7 @@ private:
 
 		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
 
-		u_int32_t updateMask;
+		uint32_t updateMask;
 
 		User::Ptr user;
 		bool download;
@@ -311,7 +311,7 @@ private:
 		tstring path;
 		void setIP(const tstring& aIP) { IP = aIP; updateMask |= MASK_IP; }
 		tstring IP;
-		u_int8_t flagImage;
+		uint8_t flagImage;
 	};
 
 	void speak(int type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }

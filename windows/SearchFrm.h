@@ -403,7 +403,7 @@ private:
 		SearchInfo* createMainItem() { return this; }
 		const tstring& getGroupingString() { return columns[COLUMN_TTH]; }
 		void updateMainItem() {
-			u_int32_t total = main->subItems.size();
+			uint32_t total = main->subItems.size();
 			if(total != 0) {
 				TCHAR buf[256];
 				snwprintf(buf, sizeof(buf), _T("%d %s"), total + 1, CTSTRING(USERS));
@@ -416,7 +416,7 @@ private:
 			}
 		}
 
-		GETSET(u_int8_t, flagimage, FlagImage);
+		GETSET(uint8_t, flagimage, FlagImage);
 		SearchResult* sr;
 		tstring columns[COLUMN_LAST];
 	};
@@ -548,7 +548,7 @@ private:
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
 	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
 
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
 
 	// ClientManagerListener
 	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }

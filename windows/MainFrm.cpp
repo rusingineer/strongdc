@@ -68,7 +68,7 @@
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
-u_int32_t MainFrame::iCurrentShutdownTime = 0;
+uint32_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
@@ -504,7 +504,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		if (bShutdown) {
-			u_int32_t iSec = GET_TICK() / 1000;
+			uint32_t iSec = GET_TICK() / 1000;
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
@@ -1130,9 +1130,9 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 		nid.hWnd = m_hWnd;
 		nid.uID = 0;
 		nid.uFlags = NIF_TIP;
-		_tcsncpy(nid.szTip, (_T("D: ") + Util::formatBytesW(DownloadManager::getInstance()->getAverageSpeed()) + _T("/s (") + 
+		_tcsncpy(nid.szTip, (_T("D: ") + Util::formatBytesW(DownloadManager::getInstance()->getRunningAverage()) + _T("/s (") + 
 			Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T(")\r\nU: ") +
-			Util::formatBytesW(UploadManager::getInstance()->getAverageSpeed()) + _T("/s (") + 
+			Util::formatBytesW(UploadManager::getInstance()->getRunningAverage()) + _T("/s (") + 
 			Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T(")")
 			+ _T("\r\nUptime: ") + Util::formatSeconds(Util::getUptime())
 			).c_str(), 64);
@@ -1241,7 +1241,7 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void MainFrame::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 		Util::increaseUptime();
 		int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 		int64_t updiff = Socket::getTotalUp() - lastUp;
@@ -1305,7 +1305,7 @@ void MainFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		}		
 }
 
-void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
+void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 	versionInfo += string((const char*)buf, len);
 }
 

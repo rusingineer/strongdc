@@ -32,7 +32,6 @@
 #include "MerkleTree.h"
 #include "QueueItem.h"
 
-class QueueItem;
 class ConnectionQueueItem;
 
 /**
@@ -67,18 +66,13 @@ public:
 	};
 
 	Download(UserConnection& conn) throw();
-	Download(UserConnection& conn, QueueItem& qi, /*User::Ptr& aUser, */QueueItem::SourceConstIter aSource) throw();
+	Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter aSource) throw();
 
 	virtual void getParams(const UserConnection& aSource, StringMap& params);
 
 	virtual ~Download();
 
-	/**
-	 * @remarks This function is only used from DownloadManager but its
-	 * functionality could be useful in TransferView.
-	 *
-	 * @return Target filename without path.
-	 */
+	/** @return Target filename without path. */
 	string getTargetFileName() {
 		return Util::getFileName(getTarget());
 	}
@@ -103,18 +97,15 @@ public:
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
-	//GETSET(User::Ptr, user, User);
 	int64_t quickTick;
 	
 private:
 	Download(const Download&);
-
 	Download& operator=(const Download&);
 
 	TigerTree tt;
 	string pfs;
 };
-
 
 /**
  * Use this listener interface to get progress information for downloads.
@@ -186,21 +177,8 @@ public:
 	/** @internal */
 	void abortDownload(const string& aTarget, Download* except = NULL);
 
-	/**
-	 * @remarks This is only used in the tray icons. In MainFrame this is
-	 * calculated instead so there seems to be a little duplication of code.
-	 *
-	 * @return Average download speed in Bytes/s
-	 */
-	int getAverageSpeed() {
-		Lock l(cs);
-		int avg = 0;
-		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-			Download* d = *i;
-			avg += (int)d->getRunningAverage();
-		}
-		return avg;
-	}
+	/** @return Running average download speed in Bytes/s */
+	int64_t getRunningAverage();
 
 	/** @return Number of downloads. */ 
 	size_t getDownloadCount() {
@@ -208,18 +186,20 @@ public:
 		return downloads.size();
 	}
 
+	bool startDownload(QueueItem::Priority prio);
+
 	// the following functions were added to help download throttle
 	bool throttle() { return mThrottleEnable; }
-	void throttleReturnBytes(u_int32_t b);
+	void throttleReturnBytes(uint32_t b);
 	size_t throttleGetSlice();
-	u_int32_t throttleCycleTime();
+	uint32_t throttleCycleTime();
 
 private:
 	void throttleZeroCounters();
-	void throttleBytesTransferred(u_int32_t i);
+	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
-	u_int32_t mCycleTime;
+	uint32_t mCycleTime;
 	size_t mBytesSent,
 		   mBytesSpokenFor,
 		   mDownloadLimit,
@@ -248,7 +228,7 @@ private:
 	Download::List downloads;
 	UserConnection::List idlers;
 
-	bool checkRollback(Download* aDownload, const u_int8_t* aBuf, int aLen) throw(FileException);
+	bool checkRollback(Download* aDownload, const uint8_t* aBuf, int aLen) throw(FileException);
 	void removeConnection(UserConnection::Ptr aConn);
 	void removeDownload(Download* aDown);
 	void fileNotAvailable(UserConnection* aSource);
@@ -269,7 +249,7 @@ private:
 	void handleEndData(UserConnection* aSource);
 
 	// UserConnectionListener
-	virtual void on(Data, UserConnection*, const u_int8_t*, size_t) throw();
+	virtual void on(Data, UserConnection*, const uint8_t*, size_t) throw();
 	virtual void on(Error, UserConnection*, const string&) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();
 	virtual void on(Sending, UserConnection*, int64_t) throw();
@@ -283,7 +263,7 @@ private:
 
 	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
 };
 
 #endif // !defined(DOWNLOAD_MANAGER_H)

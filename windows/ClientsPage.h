@@ -71,7 +71,7 @@ protected:
 	TCHAR* title;
 	void addEntry(const ClientProfile& cp, int pos);
 private:
-	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const u_int8_t* buf, size_t len) throw() {
+	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
 
