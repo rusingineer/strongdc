@@ -509,9 +509,9 @@ void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch)
 	}
 }
 
-void SearchFrame::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void SearchFrame::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	if(searches > 0) {
-		u_int32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
+		uint32_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
 		TCHAR buf[64];
 		_stprintf(buf, CTSTRING(WAITING_FOR), waitFor);
 		PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));

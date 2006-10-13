@@ -1326,7 +1326,7 @@ void WinUtil::openLink(const tstring& url) {
 
 void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	string server, file;
-	u_int16_t port = 411;
+	uint16_t port = 411;
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty()) {
 		HubFrame::openWindow(Text::toT(server) + _T(":") + Util::toStringW(port));
@@ -1349,7 +1349,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 
 void WinUtil::parseADChubUrl(const tstring& aUrl) {
 	string server, file;
-	u_int16_t port = 0; //make sure we get a port since adc doesn't have a standard one
+	uint16_t port = 0; //make sure we get a port since adc doesn't have a standard one
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty() && port > 0) {
 		HubFrame::openWindow(_T("adc://") + Text::toT(server) + _T(":") + Util::toStringW(port));
@@ -1714,8 +1714,8 @@ string WinUtil::formatTime(long rest) {
 	return formatedTime;
 }
 
-u_int8_t WinUtil::getImage(const Identity& u) {
-	u_int8_t image = 12;
+uint8_t WinUtil::getImage(const Identity& u) {
+	uint8_t image = 12;
 
 	if(u.isOp()) {
 		image = 0;
@@ -1778,15 +1778,15 @@ u_int8_t WinUtil::getImage(const Identity& u) {
 	return image;
 }
 
-u_int8_t WinUtil::getFlagImage(const char* country, bool fullname) {
+uint8_t WinUtil::getFlagImage(const char* country, bool fullname) {
 	if(fullname) {
-		for(u_int8_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
+		for(uint8_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
 			if(_stricmp(country, CountryNames[i-1]) == 0) {
 				return i;
 			}
 		}
 	} else {
-		for(u_int8_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
+		for(uint8_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
 			if(_stricmp(country,CountryCodes[i-1]) == 0) {
 				return i;
 			}

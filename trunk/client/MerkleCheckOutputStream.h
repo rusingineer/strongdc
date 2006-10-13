@@ -75,7 +75,7 @@ public:
 	}
 
 	virtual size_t write(const void* b, size_t len) throw(FileException) {
-		u_int8_t* xb = (u_int8_t*)b;
+		uint8_t* xb = (uint8_t*)b;
 		size_t pos = 0;
 		bool verifyFlag = false;
 
@@ -133,7 +133,7 @@ public:
 			// mark verified block
 			if(verified > old) {
 				s->flush();
-				fileChunks->markVerifiedBlock((u_int16_t)old, (u_int16_t)verified);
+				fileChunks->markVerifiedBlock((uint16_t)old, (uint16_t)verified);
 			}
 
 			if(verifyFlag){
@@ -159,7 +159,7 @@ private:
 	FileChunksInfo::Ptr fileChunks;
 	Download* d;
 
-	u_int8_t buf[TreeType::BASE_BLOCK_SIZE];
+	uint8_t buf[TreeType::BASE_BLOCK_SIZE];
 	size_t bufPos;
 
 	void checkTrees() throw(FileException) {

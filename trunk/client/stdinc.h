@@ -74,7 +74,7 @@
 
 // Use maps if hash_maps aren't available
 #ifdef HAVE_HASH
-# ifdef HAVE_STLPORT
+# ifdef _STLPORT_VERSION
 #  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
 #  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
 #  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
@@ -96,7 +96,7 @@
 
 #else // HAVE_HASH
 
-#define HASH_SET_X(key, hfunc, eq, order) 
+# define HASH_SET_X(key, hfunc, eq, order)
 # define HASH_SET set
 # define HASH_MAP map
 # define HASH_MAP_X(key, type, hfunc, eq, order) map<key, type, order >
@@ -105,9 +105,8 @@
 
 #endif // HAVE_HASH
 
-
-#ifdef HAVE_STLPORT
-using namespace _STL;
+#ifdef _STLPORT_VERSION
+using namespace std;
 #include <hash_map>
 #include <hash_set>
 

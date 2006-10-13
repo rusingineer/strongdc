@@ -137,7 +137,7 @@ void BufferedSocket::threadConnect(const string& aAddr, short aPort, bool proxy)
 		return;
 	fire(BufferedSocketListener::Connecting());
 
-	u_int32_t startTime = GET_TICK();
+	uint32_t startTime = GET_TICK();
 	if(proxy) {
 		sock->socksConnect(aAddr, aPort, CONNECT_TIMEOUT);
 	} else {
@@ -166,12 +166,12 @@ void BufferedSocket::threadRead() throw(SocketException) {
 	bool throttling = false;
 	if(mode == MODE_DATA)
 	{
-		u_int32_t getMaximum;
+		uint32_t getMaximum;
 		throttling = dm->throttle();
 		if (throttling)
 		{
 			getMaximum = dm->throttleGetSlice();
-			readsize = (u_int32_t)min((int64_t)inbuf.size(), (int64_t)getMaximum);
+			readsize = (uint32_t)min((int64_t)inbuf.size(), (int64_t)getMaximum);
 			if (readsize <= 0  || readsize > inbuf.size()) { // FIX
 				Thread::sleep(dm->throttleCycleTime());
 				return;
@@ -199,7 +199,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 				    const int BufSize = 1024;
 					// Special to autodetect nmdc connections...
 					string::size_type pos = 0;
-					AutoArray<u_int8_t> buffer (BufSize);
+					AutoArray<uint8_t> buffer (BufSize);
 					size_t in;
 					l = line;
 					// decompress all input data and store in l.
@@ -296,8 +296,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	size_t sockSize = (size_t)sock->getSocketOptInt(SO_SNDBUF);
 	size_t bufSize = max(sockSize, (size_t)64*1024);
 
-	vector<u_int8_t> readBuf(bufSize);
-	vector<u_int8_t> writeBuf(bufSize);
+	vector<uint8_t> readBuf(bufSize);
+	vector<uint8_t> writeBuf(bufSize);
 
 	size_t readPos = 0;
 
@@ -305,7 +305,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum;
-	u_int32_t start = 0, current= 0;
+	uint32_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
 		if(disconnecting)
@@ -368,7 +368,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 							throttling = false;
 							sendMaximum = bytesRead;
 						}
-						bytesRead = (u_int32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
+						bytesRead = (uint32_t)min((int64_t)bytesRead, (int64_t)sendMaximum);
 					}
 					size_t actual = file->read(&readBuf[readPos], bytesRead);
 
@@ -394,9 +394,9 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				}	
 			}
 			if(throttling) {
-				u_int32_t cycle_time = um->throttleCycleTime();
+				uint32_t cycle_time = um->throttleCycleTime();
 				current = TimerManager::getTick();
-				u_int32_t sleep_time = cycle_time - (current - start);
+				uint32_t sleep_time = cycle_time - (current - start);
 				if (sleep_time > 0 && sleep_time <= cycle_time) {
 					Thread::sleep(sleep_time);
 				}

@@ -173,8 +173,8 @@ public:
 	GETSET(Identity, hubIdentity, HubIdentity);
 
 	GETSET(string, defpassword, Password);
-	GETSET(u_int32_t, reconnDelay, ReconnDelay);
-	GETSET(u_int32_t, lastActivity, LastActivity);
+	GETSET(uint32_t, reconnDelay, ReconnDelay);
+	GETSET(uint32_t, lastActivity, LastActivity);
 	GETSET(bool, registered, Registered);
 	GETSET(bool, autoReconnect, AutoReconnect);
 	GETSET(bool, reconnecting, Reconnecting);
@@ -216,7 +216,7 @@ protected:
 	virtual string checkNick(const string& nick) = 0;
 
 	// TimerManagerListener
-	virtual void on(Second, u_int32_t aTick) throw();
+	virtual void on(Second, uint32_t aTick) throw();
 
 private:
 
@@ -233,7 +233,7 @@ private:
 	string hubUrl;
 	string address;
 	string ip;
-	u_int16_t port;
+	uint16_t port;
 	char separator;
 	bool secure;
 	CountType countType;

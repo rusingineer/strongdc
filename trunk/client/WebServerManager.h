@@ -134,7 +134,7 @@ private:
 	ServerSocket socket;
 	HWND m_hWnd;
 
-	map<string, u_int32_t> loggedin;
+	map<string, uint32_t> loggedin;
 	int row;
 public:
 	void login(string ip){
@@ -164,9 +164,9 @@ public:
 	}
 
 	bool isloggedin(string ip) {
-		map<string, u_int32_t>::iterator i;
+		map<string, uint32_t>::iterator i;
 		if((i = loggedin.find(ip)) != loggedin.end()) {
-            u_int32_t elapsed = (GET_TICK() - loggedin[ip]) / 1000;
+            uint32_t elapsed = (GET_TICK() - loggedin[ip]) / 1000;
 			if(elapsed > 300) {
 				loggedin.erase(i);
 				return false;

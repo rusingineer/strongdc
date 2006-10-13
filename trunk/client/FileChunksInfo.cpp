@@ -382,7 +382,7 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 	dcassert(cur.getLeaves().size() == 1);
 
 	// verify OK
-	u_int16_t blockNo = (u_int16_t)(start / tthBlockSize);
+	uint16_t blockNo = (uint16_t)(start / tthBlockSize);
 	if(cur.getLeaves()[0] == aTree.getLeaves()[blockNo]){
 		markVerifiedBlock(blockNo, blockNo + 1);
 		return true;
@@ -513,8 +513,8 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 
 				downloadedSize -= (end - start);
         	}else{
-				u_int16_t s = (u_int16_t)(start / tthBlockSize);
-				u_int16_t e = (u_int16_t)((end - 1) / tthBlockSize + 1);
+				uint16_t s = (uint16_t)(start / tthBlockSize);
+				uint16_t e = (uint16_t)((end - 1) / tthBlockSize + 1);
         		markVerifiedBlock(s, e);
         	}
 
@@ -539,7 +539,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 	return false;
 }
 
-void FileChunksInfo::markVerifiedBlock(u_int16_t start, u_int16_t end)
+void FileChunksInfo::markVerifiedBlock(uint16_t start, uint16_t end)
 {
 	dcassert(start < end);
 
@@ -800,7 +800,7 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 	Lock l(cs);
 
 	// which block the pos belong to?
-	u_int16_t block = (u_int16_t)(anyPos / tthBlockSize);
+	uint16_t block = (uint16_t)(anyPos / tthBlockSize);
 	int64_t   start = block * tthBlockSize;
 	int64_t   end   = min(start + tthBlockSize, fileSize);
 	size_t    len   = (size_t)(end - start);

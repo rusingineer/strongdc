@@ -1,3 +1,6 @@
+** cvs192
+	DC++ 0.698 merge
+
 ** cvs191
 	DC++ SVN merge
 	hopefully fixed Transfer doubleclick action

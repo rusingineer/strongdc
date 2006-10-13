@@ -11,7 +11,7 @@
 
 #define HALF(X) (((X) + 1) / 2)
 
-CBarShader::CBarShader(u_int32_t dwHeight, u_int32_t dwWidth, COLORREF crColor /*= 0*/, u_int64_t qwFileSize /*= 1*/)
+CBarShader::CBarShader(uint32_t dwHeight, uint32_t dwWidth, COLORREF crColor /*= 0*/, uint64_t qwFileSize /*= 1*/)
 {
 	m_iWidth = dwWidth;
 	m_iHeight = dwHeight;
@@ -39,13 +39,13 @@ void CBarShader::BuildModifiers()
 
 	static const double dDepths[5] = { 5.5, 4.0, 3.0, 2.50, 2.25 };		//aqua bar - smoother gradient jumps...
 	double	depth = dDepths[((m_used3dlevel > 5) ? (256 - m_used3dlevel) : m_used3dlevel) - 1];
-	u_int32_t dwCount = HALF(static_cast<u_int32_t>(m_iHeight));
+	uint32_t dwCount = HALF(static_cast<uint32_t>(m_iHeight));
 	double piOverDepth = PI / depth;
 	double base = PI / 2 - piOverDepth;
 	double increment = piOverDepth / (dwCount - 1);
 
 	m_pdblModifiers = new double[dwCount];
-	for (u_int32_t i = 0; i < dwCount; i++, base += increment)
+	for (uint32_t i = 0; i < dwCount; i++, base += increment)
 		m_pdblModifiers[i] = sin(base);
 }
 
@@ -64,7 +64,7 @@ void CBarShader::SetWidth(int width)
 	}
 }
 
-void CBarShader::SetFileSize(u_int64_t qwFileSize)
+void CBarShader::SetFileSize(uint64_t qwFileSize)
 {
 	if (m_qwFileSize != qwFileSize)
 	{
@@ -90,7 +90,7 @@ void CBarShader::SetHeight(int height)
 	}
 }
 
-void CBarShader::FillRange(u_int64_t qwStart, u_int64_t qwEnd, COLORREF crColor)
+void CBarShader::FillRange(uint64_t qwStart, uint64_t qwEnd, COLORREF crColor)
 {
 	if(qwEnd > m_qwFileSize)
 		qwEnd = m_qwFileSize;
@@ -142,12 +142,12 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 	rectSpan.right = iLeft;
 
 	int64_t iBytesInOnePixel = static_cast<int64_t>(m_dblBytesPerPixel + 0.5);
-	u_int64_t qwStart = 0;
+	uint64_t qwStart = 0;
 	COLORREF crColor = m_Spans.GetNextValue(pos);
 
 	iLeft += m_iWidth;
 	while ((pos != NULL) && (rectSpan.right < iLeft)) {
-		u_int64_t qwSpan = m_Spans.GetKeyAt(pos) - qwStart;
+		uint64_t qwSpan = m_Spans.GetKeyAt(pos) - qwStart;
 		int iPixels = static_cast<int>(qwSpan * m_dblPixelsPerByte + 0.5);
 
 		if(iPixels > 0) {
@@ -155,11 +155,11 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 			rectSpan.right += iPixels;
 			FillRect(dc, &rectSpan, crLastColor = crColor);
 
-			qwStart += static_cast<u_int64_t>(iPixels * m_dblBytesPerPixel + 0.5);
+			qwStart += static_cast<uint64_t>(iPixels * m_dblBytesPerPixel + 0.5);
 		} else {
 			double dRed = 0, dGreen = 0, dBlue = 0;
-			u_int32_t dwRed, dwGreen, dwBlue; 
-			u_int64_t qwLast = qwStart, qwEnd = qwStart + iBytesInOnePixel;
+			uint32_t dwRed, dwGreen, dwBlue; 
+			uint64_t qwLast = qwStart, qwEnd = qwStart + iBytesInOnePixel;
 
 			do {
 				double	dblWeight = (min(m_Spans.GetKeyAt(pos), qwEnd) - qwLast) * m_dblPixelsPerByte;
@@ -175,13 +175,13 @@ void CBarShader::Draw(CDC& dc, int iLeft, int iTop, int P3DDepth)
 			rectSpan.right++;
 
 		//	Saturation
-			dwRed = static_cast<u_int32_t>(dRed);
+			dwRed = static_cast<uint32_t>(dRed);
 			if (dwRed > 255)
 				dwRed = 255;
-			dwGreen = static_cast<u_int32_t>(dGreen);
+			dwGreen = static_cast<uint32_t>(dGreen);
 			if (dwGreen > 255)
 				dwGreen = 255;
-			dwBlue = static_cast<u_int32_t>(dBlue);
+			dwBlue = static_cast<uint32_t>(dBlue);
 			if (dwBlue > 255)
 				dwBlue = 255;
 

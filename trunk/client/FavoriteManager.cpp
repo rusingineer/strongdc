@@ -269,7 +269,7 @@ void FavoriteManager::onHttpFinished() throw() {
 
 	if(listType == TYPE_BZIP2) {
 		try {
-			CryptoManager::getInstance()->decodeBZ2((u_int8_t*)downloadBuf.data(), downloadBuf.size(), bzlist);
+			CryptoManager::getInstance()->decodeBZ2((uint8_t*)downloadBuf.data(), downloadBuf.size(), bzlist);
 		} catch(const CryptoException&) {
 			bzlist.clear();
 		}
@@ -489,12 +489,6 @@ void FavoriteManager::load() {
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
 		STRING(REDIRECT_USER), redirstr, "op");
 
-	// Add ADC standard op commands
-	static const char adc_disconnectstr[] =
-		"HDSC %[userSID]\n";
-	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE,
-		STRING(DISCONNECT_USER), adc_disconnectstr, "adc://op");
-
 	try {
 		SimpleXML xml;
 		xml.fromXML(File(getConfigFile(), File::READ, File::OPEN).read());
@@ -582,7 +576,7 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			if(aXml.getBoolChildAttrib("GrantSlot"))
 				i->second.setFlag(FavoriteUser::FLAG_GRANTSLOT);
 
-			i->second.setLastSeen((u_int32_t)aXml.getIntChildAttrib("LastSeen"));
+			i->second.setLastSeen((uint32_t)aXml.getIntChildAttrib("LastSeen"));
 			i->second.setDescription(aXml.getChildAttrib("UserDescription"));
 
 		}
@@ -769,7 +763,7 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 }
 
 // HttpConnectionListener
-void FavoriteManager::on(Data, HttpConnection*, const u_int8_t* buf, size_t len) throw() { 
+void FavoriteManager::on(Data, HttpConnection*, const uint8_t* buf, size_t len) throw() { 
 	downloadBuf.append((const char*)buf, len);
 }
 

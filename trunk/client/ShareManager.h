@@ -55,11 +55,11 @@ public:
 	 * @param aName Virtual name
 	 */
 	void addDirectory(const string& aDirectory, const string & aName) throw(ShareException);
-	void removeDirectory(const string& aName, bool duringRefresh = false);	
+	void removeDirectory(const string& aName);	
 	void renameDirectory(const string& oName, const string& nName) throw(ShareException);
-	string translateTTH(const TTHValue& tth) throw(ShareException);
-	string translateFileName(const string& aFile) throw(ShareException);
-	TTHValue getTTH(const string& aFile) throw(ShareException);
+	string toVirtual(const TTHValue& tth) throw(ShareException);
+	string toReal(const string& virtualFile) throw(ShareException);
+	TTHValue getTTH(const string& virtualFile) throw(ShareException);
 
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw(ThreadException, ShareException);
 	void setDirty() { xmlDirty = true; }
@@ -74,7 +74,7 @@ public:
 	StringPairList getDirectories() const { Lock l(cs); return virtualMap; }
 
 	MemoryInputStream* generatePartialList(const string& dir, bool recurse);
-	MemoryInputStream* getTree(const string& aFile);
+	MemoryInputStream* getTree(const string& virtualFile);
 
 	AdcCommand getFileInfo(const string& aFile) throw(ShareException);
 
@@ -90,7 +90,7 @@ public:
 
 	string validateVirtual(const string& /*aVirt*/);
 
-	void addHits(u_int32_t aHits) {
+	void addHits(uint32_t aHits) {
 		hits += aHits;
 	}
 
@@ -100,11 +100,11 @@ public:
 	}
 
 	bool isTTHShared(const TTHValue& tth){
-		HashFileIter i = tthIndex.find(tth);//OLD HashFileIter i = tthIndex.find(const_cast<TTHValue*>(&tth));
-		return (i != tthIndex.end());
+		Lock l(cs);
+		return tthIndex.find(tth) != tthIndex.end();
 	}
 
-	GETSET(u_int32_t, hits, Hits);
+	GETSET(uint32_t, hits, Hits);
 	GETSET(string, bzXmlFile, BZXmlFile);
 	GETSET(int64_t, sharedSize, SharedSize);
 
@@ -166,32 +166,20 @@ private:
 
 		~Directory();
 
-		bool hasType(u_int32_t type) const throw() {
+		bool hasType(uint32_t type) const throw() {
 			return ( (type == SearchManager::TYPE_ANY) || (fileTypes & (1 << type)) );
 		}
-		void addType(u_int32_t type) throw();
+		void addType(uint32_t type) throw();
 
 		string getADCPath() const throw();
 		string getFullName() const throw(); 
 
-		int64_t getSize() {
-			int64_t tmp = size;
-			for(MapIter i = directories.begin(); i != directories.end(); ++i)
-				tmp+=i->second->getSize();
-			return tmp;
-		}
-
-		size_t countFiles() {
-			size_t tmp = files.size();
-			for(MapIter i = directories.begin(); i != directories.end(); ++i)
-				tmp+=i->second->countFiles();
-			return tmp;
-		}
+		int64_t getSize();
+		size_t countFiles();
 
 		void search(SearchResult::List& aResults, StringSearch::List& aStrings, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults) throw();
 		void search(SearchResult::List& aResults, AdcSearch& aStrings, StringList::size_type maxResults) throw();
 
-		void toNmdc(string& nmdc, string& indent, string& tmp2);
 		void toXml(OutputStream& xmlFile, string& indent, string& tmp2, bool fullList);
 		void filesToXml(OutputStream& xmlFile, string& indent, string& tmp2);
 
@@ -204,7 +192,7 @@ private:
 		Directory& operator=(const Directory&);
 
 		/** Set of flags that say which SearchManager::TYPE_* a directory contains */
-		u_int32_t fileTypes;
+		uint32_t fileTypes;
 
 	};
 
@@ -251,16 +239,16 @@ private:
 		bool isDirectory;
 	};
 
-	typedef HASH_MULTIMAP_X(TTHValue, Directory::File::Iter, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) HashFileMap;
-	//OLD typedef HASH_MULTIMAP_X(TTHValue*, Directory::File*, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) HashFileMap;
+	typedef HASH_MAP_X(TTHValue, Directory::File::Set::const_iterator, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
 
 	HashFileMap tthIndex;
 
-	int64_t listLen;
-	int64_t bzXmlListLen;
-	TTHValue xmlbzRoot;
+	int64_t xmlListLen;
 	TTHValue xmlRoot;
+	int64_t bzXmlListLen;
+	TTHValue bzXmlRoot;
+	auto_ptr<File> bzXmlRef;
 
 	bool xmlDirty;
 	bool refreshDirs;
@@ -271,14 +259,10 @@ private:
 
 	volatile long refreshing;
 	
-	File* lFile;
-	File* xFile;
-
-	u_int32_t lastXmlUpdate;
-	u_int32_t lastFullUpdate;
+	uint32_t lastXmlUpdate;
+	uint32_t lastFullUpdate;
 
 	mutable CriticalSection cs;
-	CriticalSection listGenLock;
 
 	// Map real name to directory structure
 	Directory::Map directories;
@@ -296,13 +280,14 @@ private:
 	bool checkFile(const string& virtualFile, string& realFile, Directory::File::Iter& it);
 
 	Directory* buildTree(const string& aName, Directory* aParent);
-	void addTree(Directory* aDirectory);
-	void addFile(Directory* dir, Directory::File::Iter i);
+
+	void rebuildIndices();
+
+	void addTree(Directory& aDirectory);
+	void addFile(Directory& dir, Directory::File::Iter i);
 	void generateXmlList();
 	StringList notShared;
 	bool loadCache();
-
-	void removeTTH(const TTHValue& tth, const Directory::File& file);
 
 	Directory* getDirectory(const string& fname);
 
@@ -323,7 +308,7 @@ private:
 	}
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, u_int32_t tick) throw();
+	virtual void on(TimerManagerListener::Minute, uint32_t tick) throw();
 	void load(SimpleXML& aXml);
 	void save(SimpleXML& aXml);
 	

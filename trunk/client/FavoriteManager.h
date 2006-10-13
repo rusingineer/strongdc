@@ -375,7 +375,7 @@ private:
 	virtual void on(UserDisconnected, const User::Ptr& user) throw();
 
 	// HttpConnectionListener
-	virtual void on(Data, HttpConnection*, const u_int8_t*, size_t) throw();
+	virtual void on(Data, HttpConnection*, const uint8_t*, size_t) throw();
 	virtual void on(Failed, HttpConnection*, const string&) throw();
 	virtual void on(Complete, HttpConnection*, const string&) throw();
 	virtual void on(Redirected, HttpConnection*, const string&) throw();

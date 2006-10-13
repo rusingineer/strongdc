@@ -40,7 +40,7 @@ public:
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButtonDown)
 	END_MSG_MAP()
 
-	PopupWnd(const string& aMsg, const string& aTitle, CRect rc, u_int32_t aId): visible(GET_TICK()), id(aId) {
+	PopupWnd(const string& aMsg, const string& aTitle, CRect rc, uint32_t aId): visible(GET_TICK()), id(aId) {
 			msg = aMsg;
 			title = aTitle;
 
@@ -106,8 +106,8 @@ public:
 		return (LRESULT)::GetSysColorBrush(COLOR_INFOBK);
 	}
 
-	u_int32_t id;
-	u_int32_t visible;
+	uint32_t id;
+	uint32_t visible;
 
 private:
 	string  msg, title;

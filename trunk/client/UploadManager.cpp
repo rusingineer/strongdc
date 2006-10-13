@@ -107,13 +107,13 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 	string sourceFile;
 	try {
 		if(aType == Transfer::TYPE_FILE) {
-			sourceFile = ShareManager::getInstance()->translateFileName(aFile);
+			sourceFile = ShareManager::getInstance()->toReal(aFile);
 
 			if(aFile == Transfer::USER_LIST_NAME) {
 				// Unpack before sending...
 				string bz2 = File(sourceFile, File::READ, File::OPEN).read();
 				string xml;
-				CryptoManager::getInstance()->decodeBZ2(reinterpret_cast<const u_int8_t*>(bz2.data()), bz2.size(), xml);
+				CryptoManager::getInstance()->decodeBZ2(reinterpret_cast<const uint8_t*>(bz2.data()), bz2.size(), xml);
 				// Clear to save some memory...
 				string().swap(bz2);
 				is = new MemoryInputStream(xml);
@@ -132,7 +132,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					return false;
 				}
 
-				free = (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
+				free = free || (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
 
 				f->setPos(start);
 
@@ -142,9 +142,9 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 				}
 			}
 		} else if(aType == Transfer::TYPE_TTHL) {
-			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
-			//sourceFile = ShareManager::getInstance()->translateFileName(aFile);
+			//sourceFile = ShareManager::getInstance()->toReal(aFile);
 			sourceFile = aFile;
+			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
 			if(!mis) {
 				aSource.fileNotAvail();
 				return false;
@@ -246,9 +246,11 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 				}
 			}
 		}
-		// --
-		dcdebug("File not avail : %s\n", aFile.c_str());
 		aSource.fileNotAvail(e.getError());
+		return false;
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(STRING(UNABLE_TO_SEND_FILE) + sourceFile + ": " + e.getError());
+		aSource.fileNotAvail();
 		return false;
 	}
 
@@ -319,7 +321,6 @@ ok:
 	if(resumed)
 		u->setFlag(Upload::FLAG_RESUMED);
 
-	dcassert(aSource.getUpload() != NULL);
 	uploads.push_back(u);
 
 	throttleSetup();
@@ -342,6 +343,16 @@ ok:
 	return true;
 }
 
+int64_t UploadManager::getRunningAverage() {
+	Lock l(cs);
+	int64_t avg = 0;
+	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+		Upload* u = *i;
+		avg += (int)u->getRunningAverage();
+	}
+	return avg;
+}
+
 bool UploadManager::getAutoSlot() {
 	/** A 0 in settings means disable */
 	if(SETTING(MIN_UPLOAD_SPEED) == 0)
@@ -350,7 +361,7 @@ bool UploadManager::getAutoSlot() {
 	if(GET_TICK() < getLastGrant() + 30*1000)
 		return false;
 	/** Grant if upload speed is less than the threshold speed */
-	return getAverageSpeed() < (SETTING(MIN_UPLOAD_SPEED)*1024);
+	return getRunningAverage() < (SETTING(MIN_UPLOAD_SPEED)*1024);
 }
 
 void UploadManager::removeUpload(Upload* aUpload, bool delay) {
@@ -470,7 +481,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 }
 
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
-	u_int32_t itime = GET_TIME();
+	uint32_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMapIter j = waitingUsers.find(User);
 	if(j != waitingUsers.end()) {
@@ -544,7 +555,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 	}
 }
 
-void UploadManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 	User::List disconnects;
 	{
 		Lock l(cs);
@@ -599,13 +610,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 
 	if(type == Transfer::TYPE_FILE) {
 		try {
-			string realFile = ShareManager::getInstance()->translateFileName(ident);
-			TTHValue tth = ShareManager::getInstance()->getTTH(ident);
-			string virtualFile = ShareManager::getInstance()->translateTTH(tth);
-			int64_t size = File::getSize(realFile);
-			SearchResult* sr = new SearchResult(SearchResult::TYPE_FILE, size, virtualFile, tth);
-			aSource->send(sr->toRES(AdcCommand::TYPE_CLIENT));
-			sr->decRef();
+			aSource->send(ShareManager::getInstance()->getFileInfo(ident));
 		} catch(const ShareException&) {
 			aSource->fileNotAvail();
 		}
@@ -615,7 +620,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();
@@ -634,9 +639,9 @@ void UploadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
 		fire(UploadManagerListener::QueueUpdate());
 	}
 	if(!m_boFireball) {
-		if(getAverageSpeed() >= 102400) {
+		if(getRunningAverage() >= 102400) {
 			if ( m_boLastTickHighSpeed ) {
-				u_int32_t iHighSpeedTicks = 0;
+				uint32_t iHighSpeedTicks = 0;
 				if ( aTick >= m_iHighSpeedStartTick ) 
 					iHighSpeedTicks = ( aTick - m_iHighSpeedStartTick );
 				else
@@ -711,7 +716,7 @@ void UploadManager::throttleZeroCounters()  {
 	}
 }
 
-void UploadManager::throttleBytesTransferred(u_int32_t i)  {
+void UploadManager::throttleBytesTransferred(uint32_t i)  {
 	mBytesSent += i;
 }
 

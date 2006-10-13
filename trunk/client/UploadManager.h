@@ -88,7 +88,7 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
-	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, u_int32_t itime) :
+	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, uint32_t itime) :
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
@@ -133,7 +133,7 @@ public:
 	string File;
 	int64_t pos;
 	int64_t size;
-	u_int32_t iTime;
+	uint32_t iTime;
 	int icon;
 };
 
@@ -148,17 +148,9 @@ public:
 	 * @remarks This is only used in the tray icons. Could be used in
 	 * MainFrame too.
 	 *
-	 * @return Average download speed in Bytes/s
+	 * @return Running average download speed in Bytes/s
 	 */
-	int getAverageSpeed() {
-		Lock l(cs);
-		int avg = 0;
-		for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
-			Upload* u = *i;
-			avg += (int)u->getRunningAverage();
-		}
-		return avg;
-	}
+	int64_t getRunningAverage();
 	
 	int getSlots() {
 		int slots = 0;
@@ -240,7 +232,7 @@ public:
 
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);
-	GETSET(u_int32_t, lastGrant, LastGrant);
+	GETSET(uint32_t, lastGrant, LastGrant);
 
 	// Upload throttling
 	size_t throttleGetSlice();
@@ -252,8 +244,12 @@ public:
 	static bool getFileServerStatus() { return m_boFileServer; }
 	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
 private:
+	Upload::List uploads;
+	Upload::List delayUploads;
+	CriticalSection cs;
+	
 	void throttleZeroCounters();
-	void throttleBytesTransferred(u_int32_t i);
+	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
 	size_t mBytesSent,
@@ -267,17 +263,13 @@ private:
 	
 	// Variables for Fireball detecting
 	bool m_boLastTickHighSpeed;
-	u_int32_t m_iHighSpeedStartTick;
+	uint32_t m_iHighSpeedStartTick;
 	bool boFireballSent;
 
 	// Main fileserver flag
 	bool boFileServerSent;
 	
-	Upload::List uploads;
-	Upload::List delayUploads;
-	CriticalSection cs;
-
-	typedef HASH_MAP<User::Ptr, u_int32_t, User::HashFunction> SlotMap;
+	typedef HASH_MAP<User::Ptr, uint32_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 
@@ -297,8 +289,8 @@ private:
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
 	
 	// TimerManagerListener
-	virtual void on(Second, u_int32_t aTick) throw();
-	virtual void on(Minute, u_int32_t aTick) throw();
+	virtual void on(Second, uint32_t aTick) throw();
+	virtual void on(Minute, uint32_t aTick) throw();
 
 	// UserConnectionListener
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw();

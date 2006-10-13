@@ -58,6 +58,10 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
+	dcdebug("UserInfoBase takes %d bytes\n", sizeof(UserInfoBase));
+	dcdebug("User takes %d bytes\n", sizeof(User));
+	dcdebug("User::Ptr takes %d bytes\n", sizeof(User::Ptr));
+	dcdebug("User::Ptr& takes %d bytes\n", sizeof(User::Ptr&));
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
@@ -710,7 +714,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 	TaskQueue::List t;
 	tasks.get(t);
 
-	ctrlUsers.SetRedraw(FALSE);
+	if(t.size() > 2) {
+		ctrlUsers.SetRedraw(FALSE);
+	}
 
 	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {
 		if(i->first == UPDATE_USER) {
@@ -930,7 +936,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		resort = false;
 	}
 
-	ctrlUsers.SetRedraw(TRUE);
+	if(t.size() > 2) {
+		ctrlUsers.SetRedraw(TRUE);
+	}
 	
 	return 0;
 }
@@ -1827,7 +1835,7 @@ void HubFrame::closeDisconnected() {
 	}
 }
 
-void HubFrame::on(Second, u_int32_t /*aTick*/) throw() {
+void HubFrame::on(Second, uint32_t /*aTick*/) throw() {
 	if(updateUsers) {
 		updateStatusBar();
 		updateUsers = false;

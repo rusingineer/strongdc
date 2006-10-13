@@ -203,13 +203,13 @@ public:
 	void listen() throw(SocketException);
 	void disconnect() throw();
 	void onSearchResult(const string& aLine) {
-		onData((const u_int8_t*)aLine.data(), aLine.length(), Util::emptyString);
+		onData((const uint8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
 
 	void onRES(const AdcCommand& cmd, const User::Ptr& from, const string& removeIp = Util::emptyString);
-	void sendPSR(const string& ip, u_int16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<u_int16_t>& partialInfo);
+	void sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo);
 
-	u_int32_t getLastSearch() { return lastSearch; }
+	uint32_t getLastSearch() { return lastSearch; }
 	int getSearchQueueNumber(int* aWindow);
 	
 
@@ -218,7 +218,7 @@ private:
 	Socket* socket;
 	unsigned short port;
 	bool stop;
-	u_int32_t lastSearch;
+	uint32_t lastSearch;
 	friend class Singleton<SearchManager>;
 	SearchQueueItemList searchQueue;
 	ResultsQueue queue;
@@ -228,7 +228,7 @@ private:
 		TimerManager::getInstance()->addListener(this);
 	}
 
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
 
 	virtual int run();
 
@@ -244,8 +244,8 @@ private:
 		}
 	}
 
-	void setLastSearch(u_int32_t aTime) { lastSearch = aTime; };
-	void onData(const u_int8_t* buf, size_t aLen, const string& address);	
+	void setLastSearch(uint32_t aTime) { lastSearch = aTime; };
+	void onData(const uint8_t* buf, size_t aLen, const string& address);	
 };
 
 #endif // !defined(SEARCH_MANAGER_H)

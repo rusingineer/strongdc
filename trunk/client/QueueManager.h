@@ -130,10 +130,8 @@ public:
 	Download* getDownload(UserConnection& aSource, bool supportsTrees, bool supportsChunks, string &message) throw();
 	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
-	bool hasDownload(const User::Ptr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST) throw() {
-		Lock l(cs);
-		return (pfsQueue.find(aUser->getCID()) != pfsQueue.end()) || (userQueue.getNext(aUser, minPrio) != NULL);
-	}
+	/** @return The highest priority download the user has, PAUSED may also mean no downloads */
+	QueueItem::Priority hasDownload(const User::Ptr& aUser) throw();
 	
 	void loadQueue() throw();
 	void saveQueue() throw();
@@ -167,7 +165,7 @@ public:
 		
 	}
 	
-	GETSET(u_int32_t, lastSave, LastSave);
+	GETSET(uint32_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
 	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;
@@ -184,11 +182,11 @@ public:
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
-			u_int32_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
+			uint32_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target);
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
-		u_int8_t getMaxSegments(int64_t filesize);
+		uint8_t getMaxSegments(int64_t filesize);
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
 
@@ -263,14 +261,13 @@ private:
 	/** The queue needs to be saved */
 	bool dirty;
 	/** Next search */
-	u_int32_t nextSearch;
+	uint32_t nextSearch;
 	
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, User::Ptr aUser, Flags::MaskType addBad) throw(QueueException, FileException);
 
-	int matchFiles(const DirectoryListing::Directory* dir) throw();
 	void processList(const string& name, User::Ptr& user, int flags);
 
 	void load(const SimpleXML& aXml);
@@ -283,8 +280,8 @@ private:
 	}
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, u_int32_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, u_int32_t aTick) throw();
+	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	virtual void on(TimerManagerListener::Minute, uint32_t aTick) throw();
 	
 	// SearchManagerListener
 	virtual void on(SearchManagerListener::SR, SearchResult*) throw();

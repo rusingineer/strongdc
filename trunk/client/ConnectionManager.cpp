@@ -127,18 +127,15 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	userConnections.erase(remove(userConnections.begin(), userConnections.end(), aConn), userConnections.end());
 }
 
-void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	User::List passiveUsers;
 	ConnectionQueueItem::List removed;
 	User::List idlers;
 
-	bool tooMany = ((SETTING(DOWNLOAD_SLOTS) != 0) && DownloadManager::getInstance()->getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
-	bool tooFast = ((SETTING(MAX_DOWNLOAD_SPEED) != 0 && DownloadManager::getInstance()->getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024)));
-
 	{
 		Lock l(cs);
 
-		u_int16_t attempts = 0;
+		uint16_t attempts = 0;
 
 		idlers = checkIdle;
 		checkIdle.clear();
@@ -163,18 +160,14 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 				if( ((cqi->getLastAttempt() + 60*1000) < aTick) && ((SETTING(DOWNCONN_PER_SEC)== 0) || (attempts < SETTING(DOWNCONN_PER_SEC))) ) {
 					cqi->setLastAttempt(aTick);
 
-					if(!QueueManager::getInstance()->hasDownload(cqi->getUser())) {
+					QueueItem::Priority prio = QueueManager::getInstance()->hasDownload(cqi->getUser());
+
+					if(prio == QueueItem::PAUSED) {
 						removed.push_back(cqi);
 						continue;
 					}
 
-					// Always start high-priority downloads unless we have 3 more than maxdownslots already...
-					bool startDown = !tooMany && !tooFast;
-
-					if(!startDown) {
-						bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (DownloadManager::getInstance()->getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
-						startDown = !extraFull && QueueManager::getInstance()->hasDownload(cqi->getUser(), QueueItem::HIGHEST);
-					}
+					bool startDown = DownloadManager::getInstance()->startDownload(prio);
 
 					if(cqi->getState() == ConnectionQueueItem::WAITING) {
 						if(startDown) {
@@ -213,7 +206,7 @@ void ConnectionManager::on(TimerManagerListener::Second, u_int32_t aTick) throw(
 	}
 }
 
-void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw() {	
+void ConnectionManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {	
 	Lock l(cs);
 
 	for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
@@ -223,8 +216,8 @@ void ConnectionManager::on(TimerManagerListener::Minute, u_int32_t aTick) throw(
 	}
 }
 
-static const u_int32_t FLOOD_TRIGGER = 20000;
-static const u_int32_t FLOOD_ADD = 2000;
+static const uint32_t FLOOD_TRIGGER = 20000;
+static const uint32_t FLOOD_ADD = 2000;
 
 ConnectionManager::Server::Server(bool secure_, short aPort, const string& ip /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
 	sock.create();
@@ -234,7 +227,7 @@ ConnectionManager::Server::Server(bool secure_, short aPort, const string& ip /*
 	start();
 }
 
-static const u_int32_t POLL_TIMEOUT = 250;
+static const uint32_t POLL_TIMEOUT = 250;
 
 int ConnectionManager::Server::run() throw() {
 	try {
@@ -254,7 +247,7 @@ int ConnectionManager::Server::run() throw() {
  * It's always the other fellow that starts sending if he made the connection.
  */
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
-	u_int32_t now = GET_TICK();
+	uint32_t now = GET_TICK();
 
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;

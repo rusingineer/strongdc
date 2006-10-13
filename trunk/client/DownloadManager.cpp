@@ -22,9 +22,7 @@
 #include "DownloadManager.h"
 
 #include "ResourceManager.h"
-#include "ConnectionManager.h"
 #include "QueueManager.h"
-#include "CryptoManager.h"
 #include "HashManager.h"
 
 #include "LogManager.h"
@@ -32,7 +30,6 @@
 #include "File.h"
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
-#include "ClientManager.h"
 #include "SharedFileStream.h"
 #include "ChunkOutputStream.h"
 #include "UploadManager.h"
@@ -52,7 +49,7 @@ treeValid(false) {
 	conn.setDownload(this);
 }
 
-Download::Download(UserConnection& conn, QueueItem& qi, /*User::Ptr& aUser,*/QueueItem::SourceConstIter aSource) throw() :
+Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter aSource) throw() :
 	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0), 
 	quickTick(GET_TICK()), treeValid(false) 
 {
@@ -75,8 +72,6 @@ Download::Download(UserConnection& conn, QueueItem& qi, /*User::Ptr& aUser,*/Que
 
 	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(Download::FLAG_PARTIAL);
-	
-	//user = aUser;
 }
 Download::~Download() {
 	getUserConnection().setDownload(0);
@@ -85,11 +80,11 @@ Download::~Download() {
 AdcCommand Download::getCommand(bool zlib) {
 	AdcCommand cmd(AdcCommand::CMD_GET);
 	if(isSet(FLAG_TREE_DOWNLOAD)) {
-		cmd.addParam("tthl");
+		cmd.addParam(Transfer::TYPE_TTHL);
 	} else if(isSet(FLAG_PARTIAL_LIST)) {
-		cmd.addParam("list");
+		cmd.addParam(Transfer::TYPE_LIST);
 	} else {
-		cmd.addParam("file");
+		cmd.addParam(Transfer::TYPE_FILE);
 	}
 	if(isSet(FLAG_PARTIAL_LIST) || isSet(FLAG_USER_LIST)) {
 		cmd.addParam(Util::toAdcFile(getSource()));
@@ -104,6 +99,12 @@ AdcCommand Download::getCommand(bool zlib) {
 	}
 
 	return cmd;
+}
+
+void Download::getParams(const UserConnection& aSource, StringMap& params) {
+	Transfer::getParams(aSource, params);
+	params["target"] = getTarget();
+	//params["sfv"] = Util::toString(isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
 }
 
 DownloadManager::DownloadManager() {
@@ -125,7 +126,7 @@ DownloadManager::~DownloadManager() throw() {
 	}
 }
 
-void DownloadManager::on(TimerManagerListener::Second, u_int32_t aTick) throw() {
+void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	Lock l(cs);
 
 	Download::List tickList;
@@ -216,7 +217,7 @@ public:
 
 	virtual size_t write(const void* xbuf, size_t len) throw(Exception) {
 		size_t pos = 0;
-		u_int8_t* b = (u_int8_t*)xbuf;
+		uint8_t* b = (uint8_t*)xbuf;
 		while(pos < len) {
 			size_t left = len - pos;
 			if(bufPos == 0 && left >= TigerTree::HASH_SIZE) {
@@ -241,7 +242,7 @@ public:
 	}
 private:
 	TigerTree& tree;
-	u_int8_t buf[TigerTree::HASH_SIZE];
+	uint8_t buf[TigerTree::HASH_SIZE];
 	size_t bufPos;
 };
 
@@ -269,22 +270,31 @@ void DownloadManager::addConnection(UserConnection::Ptr conn) {
 	checkDownloads(conn);
 }
 
+bool DownloadManager::startDownload(QueueItem::Priority prio) {
+	size_t downloadCount = getDownloadCount();
+
+	bool full = (SETTING(DOWNLOAD_SLOTS) != 0) && (downloadCount >= (size_t)SETTING(DOWNLOAD_SLOTS));
+	full = full || (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getRunningAverage() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
+
+	if(full) {
+		bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+3));
+		if(extraFull) {
+			return false;
+		}
+		return prio == QueueItem::HIGHEST;
+	}
+
+	if(downloadCount > 0) {
+		return prio != QueueItem::LOWEST;
+	}
+
+	return true;
+}
+
 void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false*/) {
 	dcassert(aConn->getDownload() == NULL);
 
-	bool slotsFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)SETTING(DOWNLOAD_SLOTS));
-	bool speedFull = (SETTING(MAX_DOWNLOAD_SPEED) != 0) && (getAverageSpeed() >= (SETTING(MAX_DOWNLOAD_SPEED)*1024));
-
-	if(slotsFull || speedFull) {
-		bool extraFull = (SETTING(DOWNLOAD_SLOTS) != 0) && (getDownloadCount() >= (size_t)(SETTING(DOWNLOAD_SLOTS)+SETTING(EXTRA_DOWNLOAD_SLOTS)));
-		if(extraFull || !QueueManager::getInstance()->hasDownload(aConn->getUser(), QueueItem::HIGHEST)) {
-			removeConnection(aConn);
-			return;
-		}
-	}
-
-	// this happen when download finished, we need reconnect.	
-	if(reconn){
+	if(reconn || !startDownload(QueueManager::getInstance()->hasDownload(aConn->getUser()))) {
 		removeConnection(aConn);
 		return;
 	}
@@ -379,7 +389,7 @@ int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, i
 
 	DummyOutputStream dummy;
 
-	vector<u_int8_t> buf((size_t)min((int64_t)1024*1024, tt.getBlockSize()));
+	vector<uint8_t> buf((size_t)min((int64_t)1024*1024, tt.getBlockSize()));
 
 	do {
 		int64_t blockPos = startPos - tt.getBlockSize();
@@ -477,8 +487,8 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 	const string& type = cmd.getParam(0);
 	int64_t bytes = Util::toInt64(cmd.getParam(3));
 
-	if(!(type == "file" || (type == "tthl" && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
-		(type == "list" && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
+	if(!(type == Transfer::TYPE_FILE || (type == Transfer::TYPE_TTHL && aSource->getDownload()->isSet(Download::FLAG_TREE_DOWNLOAD)) ||
+		(type == Transfer::TYPE_LIST && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
 	{
 		// Uhh??? We didn't ask for this?
 		aSource->disconnect();
@@ -498,7 +508,7 @@ public:
 template<bool managed>
 class RollbackOutputStream : public OutputStream {
 public:
-	RollbackOutputStream(File* f, OutputStream* aStream, size_t bytes) : s(aStream), pos(0), bufSize(bytes), buf(new u_int8_t[bytes]) {
+	RollbackOutputStream(File* f, OutputStream* aStream, size_t bytes) : s(aStream), pos(0), bufSize(bytes), buf(new uint8_t[bytes]) {
 		size_t n = bytes;
 		f->read(buf, n);
 		f->movePos(-((int64_t)bytes));
@@ -513,7 +523,7 @@ public:
 		if(buf != NULL) {
 			size_t n = min(len, bufSize - pos);
 
-			u_int8_t* wb = (u_int8_t*)b;
+			uint8_t* wb = (uint8_t*)b;
 			if(memcmp(buf + pos, wb, n) != 0) {
 				throw RollbackException(STRING(ROLLBACK_INCONSISTENCY));
 			}
@@ -530,7 +540,7 @@ private:
 	OutputStream* s;
 	size_t pos;
 	size_t bufSize;
-	u_int8_t* buf;
+	uint8_t* buf;
 };
 
 bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool z) {
@@ -658,7 +668,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	return true;
 }	
 
-void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, const u_int8_t* aData, size_t aLen) throw() {
+void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, const uint8_t* aData, size_t aLen) throw() {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
@@ -876,10 +886,14 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	checkDownloads(aSource, reconn);
 }
 
-void Download::getParams(const UserConnection& aSource, StringMap& params) {
-	Transfer::getParams(aSource, params);
-	params["target"] = getTarget();
-	//params["sfv"] = Util::toString(isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
+int64_t DownloadManager::getRunningAverage() {
+	Lock l(cs);
+	int64_t avg = 0;
+	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+		Download* d = *i;
+		avg += d->getRunningAverage();
+	}
+	return avg;
 }
 
 void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
@@ -1077,7 +1091,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
-void DownloadManager::throttleReturnBytes(u_int32_t b) {
+void DownloadManager::throttleReturnBytes(uint32_t b) {
 	if (b > 0 && b < 2*mByteSlice) {
 		mBytesSpokenFor -= b;
 		if (mBytesSpokenFor < 0)
@@ -1103,7 +1117,7 @@ size_t DownloadManager::throttleGetSlice() {
 	}
 }
 
-u_int32_t DownloadManager::throttleCycleTime() {
+uint32_t DownloadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -1114,7 +1128,7 @@ void DownloadManager::throttleZeroCounters() {
 	mBytesSent = 0;
 }
 
-void DownloadManager::throttleBytesTransferred(u_int32_t i) {
+void DownloadManager::throttleBytesTransferred(uint32_t i) {
 	mBytesSent += i;
 }
 

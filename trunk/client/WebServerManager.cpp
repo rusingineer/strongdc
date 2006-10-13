@@ -205,7 +205,7 @@ string WebServerManager::getPage(string file, string IP) {
 			break;
 
 		case LOGOUT: {
-			map<string, u_int32_t>::iterator i;
+			map<string, uint32_t>::iterator i;
 			if((i = loggedin.find(IP)) != loggedin.end())
 				loggedin.erase(i);
 

@@ -117,14 +117,14 @@ int Util::getNetLimiterLimit() {
 		string cesta = Text::fromT(tstring(appName, x)) + "/";
 
 		char buf[BUF_SIZE];
-		u_int32_t len;
+		uint32_t len;
 		char* w2 = _strdup(cesta.c_str());
 
 		for(;;) {
 			size_t n = BUF_SIZE;
 			len = f.read(buf, n);
 			string txt = Util::emptyString;
-			for(u_int32_t i = 0; i < len; ++i) {
+			for(uint32_t i = 0; i < len; ++i) {
 				if (buf[i]== 0) 
 				txt += "/"; else
 				txt += buf[i];
@@ -135,10 +135,10 @@ int Util::getNetLimiterLimit() {
 				char buf1[256];
 				char buf2[256];
 
-				snprintf(buf1, sizeof(buf1), "%X", u_int8_t(buf[5]));
+				snprintf(buf1, sizeof(buf1), "%X", uint8_t(buf[5]));
 				string a1 = buf1;
 
-				snprintf(buf2, sizeof(buf2), "%X", u_int8_t(buf[6]));
+				snprintf(buf2, sizeof(buf2), "%X", uint8_t(buf[6]));
 				string a2 = buf2;
 
 				char* limit_hex = _strdup(("0x" + a2 + a1).c_str());
@@ -149,7 +149,7 @@ int Util::getNetLimiterLimit() {
 				NetLimiter_UploadLimit /= 4;
 				delete limit_hex;
 
-				NetLimiter_UploadOn = u_int8_t(txt[16]);
+				NetLimiter_UploadOn = uint8_t(txt[16]);
 				buf[255] = 0;
 
 				if(NetLimiter_UploadOn == 1) {
@@ -246,8 +246,8 @@ void Util::initialize() {
 		string::size_type comma4 = 0;
 		string::size_type lineend = 0;
 		CountryIter last = countries.end();
-		u_int32_t startIP = 0;
-		u_int32_t endIP = 0, endIPprev = 0;
+		uint32_t startIP = 0;
+		uint32_t endIP = 0, endIPprev = 0;
 
 		for(;;) {
 			comma1 = data.find(',', linestart);
@@ -263,9 +263,9 @@ void Util::initialize() {
 
 			startIP = Util::toUInt32(start + comma2 + 2);
 			endIP = Util::toUInt32(start + comma3 + 2);
-			u_int16_t* country = (u_int16_t*)(start + comma4 + 2);
+			uint16_t* country = (uint16_t*)(start + comma4 + 2);
 			if((startIP-1) != endIPprev)
-				last = countries.insert(last, make_pair((startIP-1), (u_int16_t)16191));
+				last = countries.insert(last, make_pair((startIP-1), (uint16_t)16191));
 			last = countries.insert(last, make_pair(endIP, *country));
 
 			endIPprev = endIP;
@@ -396,7 +396,7 @@ string Util::getShortTimeString() {
  * http:// -> port 80
  * dchub:// -> port 411
  */
-void Util::decodeUrl(const string& url, string& aServer, u_int16_t& aPort, string& aFile) {
+void Util::decodeUrl(const string& url, string& aServer, uint16_t& aPort, string& aFile) {
 	// First, check for a protocol: xxxx://
 	string::size_type i = 0, j, k;
 	
@@ -560,7 +560,7 @@ bool Util::isPrivateIp(string const& ip) {
 	return false;
 }
 
-typedef const u_int8_t* ccp;
+typedef const uint8_t* ccp;
 static wchar_t utf8ToLC(ccp& str) {
 	wchar_t c = 0;
    if(str[0] & 0x80) { 
@@ -612,22 +612,22 @@ string::size_type Util::findSubString(const string& aString, const string& aSubS
 		return 0;
 
 	// Hm, should start measure in characters or in bytes? bytes for now...
-	const u_int8_t* tx = (const u_int8_t*)aString.c_str() + start;
-	const u_int8_t* px = (const u_int8_t*)aSubString.c_str();
+	const uint8_t* tx = (const uint8_t*)aString.c_str() + start;
+	const uint8_t* px = (const uint8_t*)aSubString.c_str();
 
-	const u_int8_t* end = tx + aString.length() - start - aSubString.length() + 1;
+	const uint8_t* end = tx + aString.length() - start - aSubString.length() + 1;
 
 	wchar_t wp = utf8ToLC(px);
 
 	while(tx < end) {
-		const u_int8_t* otx = tx;
+		const uint8_t* otx = tx;
 		if(wp == utf8ToLC(tx)) {
-			const u_int8_t* px2 = px;
-			const u_int8_t* tx2 = tx;
+			const uint8_t* px2 = px;
+			const uint8_t* tx2 = tx;
 
 			for(;;) {
 				if(*px2 == 0)
-					return otx - (u_int8_t*)aString.c_str();
+					return otx - (uint8_t*)aString.c_str();
 
 				if(utf8ToLC(px2) != utf8ToLC(tx2))
 					break;
@@ -847,8 +847,8 @@ string Util::formatRegExp(const string& msg, StringMap& params) {
 	return result;
 }
 
-u_int64_t Util::getDirSize(const string &sFullPath) {
-	u_int64_t total = 0;
+uint64_t Util::getDirSize(const string &sFullPath) {
+	uint64_t total = 0;
 
 	WIN32_FIND_DATA fData;
 	HANDLE hFind;
@@ -874,7 +874,7 @@ u_int64_t Util::getDirSize(const string &sFullPath) {
 				if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
 					(Util::stricmp(name.c_str(), "Favorites.xml") != 0)) {
 
-					total+=(u_int64_t)fData.nFileSizeLow | ((u_int64_t)fData.nFileSizeHigh)<<32;
+					total+=(uint64_t)fData.nFileSizeLow | ((uint64_t)fData.nFileSizeHigh)<<32;
 				}
 			}
 		} while(FindNextFile(hFind, &fData));
@@ -970,7 +970,7 @@ static void sgenrand(unsigned long seed) {
 		mt[mti] = (69069 * mt[mti-1]) & 0xffffffff;
 }
 
-u_int32_t Util::rand() {
+uint32_t Util::rand() {
 	unsigned long y;
 	static unsigned long mag01[2]={0x0, MATRIX_A};
 	/* mag01[x] = x * MATRIX_A  for x=0,1 */
@@ -1083,7 +1083,7 @@ string Util::getIpCountry (string IP) {
 		string::size_type b = IP.find('.', a+1);
 		string::size_type c = IP.find('.', b+2);
 
-		u_int32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
+		uint32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
 			(Util::toUInt32(IP.c_str() + a + 1) << 16) | 
 			(Util::toUInt32(IP.c_str() + b + 1) << 8) | 
 			(Util::toUInt32(IP.c_str() + c + 1) );

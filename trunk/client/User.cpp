@@ -30,7 +30,7 @@
 #include "UserCommand.h"
 #include "ResourceManager.h"
 
-OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_, u_int32_t sid_) : identity(ptr, sid_), client(&client_) { 
+OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
 
 }
 
