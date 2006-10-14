@@ -157,7 +157,7 @@ public:
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 
-	string getHubUrl(const User::Ptr& aUser) const;
+	const string& getHubUrl(const User::Ptr& aUser) const;
 
 	Client::List& getClients() { return clients; }
 

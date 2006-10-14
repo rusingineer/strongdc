@@ -870,9 +870,9 @@ void NmdcHub::myInfo() {
 #else
 		version = VERSIONSTRING;
 #endif
-		if (UploadManager::getFireballStatus()) {
+		if (UploadManager::getInstance()->getFireballStatus()) {
 			StatusMode += 8;
-		} else if (UploadManager::getFileServerStatus()) {
+		} else if (UploadManager::getInstance()->getFileServerStatus()) {
 			StatusMode += 4;
 		}
 

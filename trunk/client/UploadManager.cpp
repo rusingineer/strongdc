@@ -36,9 +36,6 @@
 #include "FinishedManager.h"
 #include "SharedFileStream.h"
 
-bool UploadManager::m_boFireball = false;
-bool UploadManager::m_boFileServer = false;
-
 static const string UPLOAD_AREA = "Uploads";
 
 Upload::Upload(UserConnection& conn) : Transfer(conn), stream(0) { 
@@ -57,7 +54,7 @@ void Upload::getParams(const UserConnection& aSource, StringMap& params) {
 
 UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
 	mBytesSent(0), mBytesSpokenFor(0), mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
-	m_boLastTickHighSpeed(false), m_iHighSpeedStartTick(0), boFireballSent(false), boFileServerSent(false) {	
+	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
 	throttleZeroCounters();
@@ -288,7 +285,8 @@ ok:
 		if(&aSource == &up->getUserConnection()) {
 			delayUploads.erase(i);
 			if(sourceFile != up->getSourceFile()) {
-				finishUpload(up, true);
+				finishUpload(up);
+				delete up;
 			} else {
 				resumed = true;
 			}
@@ -377,6 +375,21 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	}
 }
 
+void UploadManager::reserveSlot(const User::Ptr& aUser, uint32_t aTime) {
+	{
+		Lock l(cs);
+		reservedSlots[aUser] = GET_TICK() + aTime*1000;
+	}
+	if(aUser->isOnline())
+		ClientManager::getInstance()->connect(aUser);	
+}
+
+void UploadManager::unreserveSlot(const User::Ptr& aUser) {
+	SlotIter uis = reservedSlots.find(aUser);
+	if(uis != reservedSlots.end())
+		reservedSlots.erase(uis);
+}
+
 void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM::onGet Bad state, ignoring\n");
@@ -463,10 +476,15 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 
 	aSource->setState(UserConnection::STATE_GET);
 
-	removeUpload(u, true);
+	if(!u->isSet(Upload::FLAG_CHUNKED)) {
+		finishUpload(u);
+		removeUpload(u);
+	} else {
+		removeUpload(u, true);
+	}
 }
 
-void UploadManager::finishUpload(Upload* u, bool msg) {
+void UploadManager::finishUpload(Upload* u) {
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
 		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
@@ -474,10 +492,7 @@ void UploadManager::finishUpload(Upload* u, bool msg) {
 		LOG(LogManager::UPLOAD, params);
 	}
 
-	if(msg)
-		fire(UploadManagerListener::Complete(), u);
-
-	delete u;
+	fire(UploadManagerListener::Complete(), u);
 }
 
 void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
@@ -626,9 +641,10 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 		throttleSetup();
 		throttleZeroCounters();
 
-		if((aTick / 1000) % 6 == 0) {
+		if((aTick / 1000) % 10 == 0) {
 			for(Upload::Iter i = delayUploads.begin(); i != delayUploads.end(); ++i) {
-				finishUpload(*i, true);
+				finishUpload(*i);
+				delete *i;
 			}
 			delayUploads.clear();
 		}
@@ -638,40 +654,27 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 
 		fire(UploadManagerListener::QueueUpdate());
 	}
-	if(!m_boFireball) {
+	if(!isFireball) {
 		if(getRunningAverage() >= 102400) {
-			if ( m_boLastTickHighSpeed ) {
-				uint32_t iHighSpeedTicks = 0;
-				if ( aTick >= m_iHighSpeedStartTick ) 
-					iHighSpeedTicks = ( aTick - m_iHighSpeedStartTick );
-				else
-					iHighSpeedTicks = ( aTick + 4294967295 - m_iHighSpeedStartTick );
-
-				if ( iHighSpeedTicks > 60000 ) {
-					m_boFireball = true;
-					if(boFireballSent == false) {
-						ClientManager::getInstance()->infoUpdated(true);
-						boFireballSent = true;
-					}
+			if (m_iHighSpeedStartTick > 0) {
+				if ((aTick - m_iHighSpeedStartTick) > 60000) {
+					isFireball = true;
+					ClientManager::getInstance()->infoUpdated(true);
+					return;
 				}
 			} else {
 				m_iHighSpeedStartTick = aTick;
-				m_boLastTickHighSpeed = true;
 			}
 		} else {
 			m_iHighSpeedStartTick = 0;
-			m_boLastTickHighSpeed = false;
 		}
 
-		if(!m_boFileServer) {
-			if(	(Util::getUptime() > 7200) && 
-				(Socket::getTotalUp() > 209715200) &&
-				(ShareManager::getInstance()->getSharedSize() > 2147483648)) {
-					m_boFileServer = true;
-				if(!boFireballSent && !boFileServerSent) {
+		if(!isFileServer) {
+			if(	(Util::getUptime() > 7200) && // > 2 hours uptime
+				(Socket::getTotalUp() > 209715200) && // > 200 MB uploaded
+				(ShareManager::getInstance()->getSharedSize() > 2147483648)) { // > 2 GB shared
+					isFileServer = true;
 					ClientManager::getInstance()->infoUpdated(true);
-					boFileServerSent = true;
-				}
 			}
 		}
 	}

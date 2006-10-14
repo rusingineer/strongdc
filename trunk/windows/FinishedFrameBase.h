@@ -271,7 +271,7 @@ public:
 			if(ii) {
 				User::Ptr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
 				if(u) {
-					UploadManager::getInstance()->reserveSlot(u);
+					UploadManager::getInstance()->reserveSlot(u, 600);
 				} else {
 					addStatusLine(TSTRING(USER_OFFLINE));
 				}

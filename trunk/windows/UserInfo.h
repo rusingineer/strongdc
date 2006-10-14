@@ -76,7 +76,7 @@
 
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo>, public ColumnBase {
 public:
-	UserInfo(const UserTask& u) : UserInfoBase(User::Ptr()) {
+	UserInfo(const UserTask& u) : UserInfoBase(u.user) {
 		update(u.identity, -1);
 	};
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
@@ -86,7 +86,6 @@ public:
 
 	string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
-	User::Ptr& getUser() { return identity.getUser(); }
 
 	GETSET(Identity, identity, Identity);
 };
