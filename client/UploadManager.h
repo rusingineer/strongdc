@@ -92,7 +92,7 @@ public:
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
-	typedef deque<Ptr> List;
+	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
@@ -169,47 +169,13 @@ public:
 	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
-	void reserveSlot(User::Ptr& aUser) {
-		{
-			Lock l(cs);
-			reservedSlots[aUser] = GET_TICK() + 600*1000;
-		}
-		if(aUser->isOnline())
-			ClientManager::getInstance()->connect(aUser);	
-	}
-	
-	void reserveSlotHour(User::Ptr& aUser) {
-		{
-			Lock l(cs);
-			reservedSlots[aUser] = GET_TICK() + 3600*1000;
-		}
-		if(aUser->isOnline())
-			ClientManager::getInstance()->connect(aUser);				
-	}
-
-	void reserveSlotDay(User::Ptr& aUser) {
-		{
-			Lock l(cs);
-			reservedSlots[aUser] = GET_TICK() + 24*3600*1000;
-		}
-		if(aUser->isOnline())
-			ClientManager::getInstance()->connect(aUser);	
-	}
-
-	void reserveSlotWeek(User::Ptr& aUser) {
-		{
-			Lock l(cs);
-			reservedSlots[aUser] = GET_TICK() + 7*24*3600*1000;
-		}
-		if(aUser->isOnline())
-			ClientManager::getInstance()->connect(aUser);	
-	}
-
-	void unreserveSlot(const User::Ptr& aUser) {
-		SlotIter uis = reservedSlots.find(aUser);
-		if(uis != reservedSlots.end())
-			reservedSlots.erase(uis);
-	}
+	void reserveSlot(const User::Ptr& aUser, uint32_t aTime);
+	void unreserveSlot(const User::Ptr& aUser);
+	void clearUserFiles(const User::Ptr&);
+	UploadQueueItem::UserMap getWaitingUsers();
+	bool getFireballStatus() const { return isFireball; }
+	bool getFileServerStatus() const { return isFileServer; }
+	bool hasReservedSlot(const User::Ptr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
 
 	/** @internal */
 	void addConnection(UserConnection::Ptr conn) {
@@ -229,24 +195,25 @@ public:
 	}
 
 	void abortUpload(const string& aFile, bool waiting = true);
-
-	GETSET(int, running, Running);
-	GETSET(int, extra, Extra);
-	GETSET(uint32_t, lastGrant, LastGrant);
-
+	
 	// Upload throttling
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
-
-	void clearUserFiles(const User::Ptr&);
-	UploadQueueItem::UserMap getWaitingUsers();
-	static bool getFireballStatus() { return m_boFireball; }
-	static bool getFileServerStatus() { return m_boFileServer; }
-	bool hasReservedSlot(const User::Ptr& aUser) { return reservedSlots.find(aUser) != reservedSlots.end(); }
+	
+	GETSET(int, running, Running);
+	GETSET(int, extra, Extra);
+	GETSET(uint32_t, lastGrant, LastGrant);
 private:
 	Upload::List uploads;
 	Upload::List delayUploads;
 	CriticalSection cs;
+	
+	typedef HASH_MAP<User::Ptr, uint32_t, User::HashFunction> SlotMap;
+	typedef SlotMap::iterator SlotIter;
+	SlotMap reservedSlots;
+	
+	UploadQueueItem::UserMap waitingUsers;
+	void addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size);
 	
 	void throttleZeroCounters();
 	void throttleBytesTransferred(uint32_t i);
@@ -257,24 +224,11 @@ private:
 		   mUploadLimit,
 		   mCycleTime,
 		   mByteSlice;
-
-	static bool m_boFireball;
-	static bool m_boFileServer;
 	
-	// Variables for Fireball detecting
-	bool m_boLastTickHighSpeed;
+	// Variables for Fireball and Fileserver detecting
+	bool isFireball;
+	bool isFileServer;
 	uint32_t m_iHighSpeedStartTick;
-	bool boFireballSent;
-
-	// Main fileserver flag
-	bool boFileServerSent;
-	
-	typedef HASH_MAP<User::Ptr, uint32_t, User::HashFunction> SlotMap;
-	typedef SlotMap::iterator SlotIter;
-	SlotMap reservedSlots;
-
-	UploadQueueItem::UserMap waitingUsers;
-	void addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size);
 	
 	friend class Singleton<UploadManager>;
 	UploadManager() throw();
@@ -283,7 +237,7 @@ private:
 	bool getAutoSlot();
 	void removeConnection(UserConnection* aConn);
 	void removeUpload(Upload* aUpload, bool delay = false);
-	void finishUpload(Upload* u, bool msg);
+	void finishUpload(Upload* u);
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();

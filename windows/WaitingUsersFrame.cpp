@@ -262,12 +262,12 @@ LRESULT WaitingUsersFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			UploadManager::getInstance()->reserveSlot(User);
+			UploadManager::getInstance()->reserveSlot(User, 600);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 600);
 		}
 	}
 	return 0; 
@@ -277,12 +277,12 @@ LRESULT WaitingUsersFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			UploadManager::getInstance()->reserveSlotHour(User);
+			UploadManager::getInstance()->reserveSlot(User, 3600);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlotHour(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 3600);
 		}
 	}
 	return 0;
@@ -292,12 +292,12 @@ LRESULT WaitingUsersFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			UploadManager::getInstance()->reserveSlotDay(User);
+			UploadManager::getInstance()->reserveSlot(User, 24*3600);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlotDay(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 24*3600);
 		}
 	}
 	return 0;
@@ -307,12 +307,12 @@ LRESULT WaitingUsersFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	if(usingUserMenu) {
 		User::Ptr User = getSelectedUser();
 		if(User) {
-			UploadManager::getInstance()->reserveSlotWeek(User);
+			UploadManager::getInstance()->reserveSlot(User, 7*24*3600);
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlotWeek(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 7*24*3600);
 		}
 	}
 	return 0;

@@ -291,7 +291,7 @@ void PrivateFrame::onEnter()
 			} else if((Util::stricmp(s.c_str(), _T("clear")) == 0) || (Util::stricmp(s.c_str(), _T("cls")) == 0)) {
 				ctrlClient.SetWindowText(_T(""));
 			} else if(Util::stricmp(s.c_str(), _T("grant")) == 0) {
-				UploadManager::getInstance()->reserveSlot(getUser());
+				UploadManager::getInstance()->reserveSlot(getUser(), 600);
 				addClientLine(TSTRING(SLOT_GRANTED));
 			} else if(Util::stricmp(s.c_str(), _T("close")) == 0) {
 				PostMessage(WM_CLOSE);
@@ -478,22 +478,22 @@ LRESULT PrivateFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT PrivateFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlot(replyTo);
+	UploadManager::getInstance()->reserveSlot(replyTo, 600);
 	return 0;
 }
 
 LRESULT PrivateFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlotHour(replyTo);
+	UploadManager::getInstance()->reserveSlot(replyTo, 3600);
 	return 0;
 };
 
 LRESULT PrivateFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlotDay(replyTo);
+	UploadManager::getInstance()->reserveSlot(replyTo, 24*3600);
 	return 0;
 };
 
 LRESULT PrivateFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlotWeek(replyTo);
+	UploadManager::getInstance()->reserveSlot(replyTo, 7*24*3600);
 	return 0;
 };
 

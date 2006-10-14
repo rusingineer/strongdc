@@ -292,7 +292,7 @@ void ClientManager::putOffline(OnlineUser* ou) throw() {
 
 void ClientManager::connect(const User::Ptr& p) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
 		u->getClient().connect(*u);
@@ -301,7 +301,7 @@ void ClientManager::connect(const User::Ptr& p) {
 
 void ClientManager::privateMessage(const User::Ptr& p, const string& msg) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
 		u->getClient().privateMessage(*u, msg);
@@ -310,7 +310,7 @@ void ClientManager::privateMessage(const User::Ptr& p, const string& msg) {
 
 void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(cid);
+	OnlineIterC i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
 		OnlineUser& u = *i->second;
 		if(cmd.getType() == AdcCommand::TYPE_UDP && !u.getIdentity().isUdpActive()) {
@@ -418,7 +418,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 
 void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i == onlineUsers.end())
 		return;
 
@@ -434,7 +434,7 @@ void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& fro
 	SearchManager::getInstance()->respond(adc, from);
 }
 
-string ClientManager::getHubUrl(const User::Ptr& aUser) const {
+const string& ClientManager::getHubUrl(const User::Ptr& aUser) const {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(aUser->getCID());
 	if(i != onlineUsers.end()) {
@@ -475,7 +475,7 @@ void ClientManager::on(Load, SimpleXML&) throw() {
 	users.insert(make_pair(getMe()->getCID(), getMe()));
 }
 
-void ClientManager::on(TimerManagerListener::Minute, uint32_t /* aTick */) throw() {
+void ClientManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 	{
 		Lock l(cs);
 
@@ -493,7 +493,8 @@ void ClientManager::on(TimerManagerListener::Minute, uint32_t /* aTick */) throw
 			(*j)->info();
 		}
 	}
-	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
+	if((aTick / 1000 / 60) % 5 == 0)
+		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
 User::Ptr& ClientManager::getMe() {
@@ -557,7 +558,7 @@ void ClientManager::updateCachedIp() {
 
 void ClientManager::setListLength(const User::Ptr& p, const string& listLen) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		i->second->getIdentity().set("LL", listLen);
 	}
@@ -568,7 +569,7 @@ void ClientManager::fileListDisconnected(const User::Ptr& p) {
 	Client* c = NULL;
 	{
 		Lock l(cs);
-		OnlineIter i = onlineUsers.find(p->getCID());
+		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
 	
@@ -596,7 +597,7 @@ void ClientManager::connectionTimeout(const User::Ptr& p) {
 	Client* c = NULL;
 	{
 		Lock l(cs);
-		OnlineIter i = onlineUsers.find(p->getCID());
+		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
 			OnlineUser& ou = *i->second;
 	
@@ -631,7 +632,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 	{
 		Lock l(cs);
 
-		OnlineIter i = onlineUsers.find(p->getCID());
+		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end())
 			return;
 
@@ -680,7 +681,7 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 	string report = Util::emptyString;
 	{
 		Lock l(cs);
-		OnlineIter i = onlineUsers.find(p->getCID());
+		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 		
 		ou = i->second;
@@ -703,7 +704,7 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 
 void ClientManager::setFakeList(const User::Ptr& p, const string& aCheatString) {
 	Lock l(cs);
-	OnlineIter i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i == onlineUsers.end()) return;
 
 	i->second->getIdentity().set("BF", "1");

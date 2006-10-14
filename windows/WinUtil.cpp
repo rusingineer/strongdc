@@ -291,19 +291,19 @@ void UserInfoBase::pm() {
 	PrivateFrame::openWindow(getUser());
 }
 void UserInfoBase::grant() {
-	UploadManager::getInstance()->reserveSlot(getUser());
+	UploadManager::getInstance()->reserveSlot(getUser(), 600);
 }
 void UserInfoBase::removeAll() {
 	QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
 }
 void UserInfoBase::grantSlotHour() {
-	UploadManager::getInstance()->reserveSlotHour(getUser());
+	UploadManager::getInstance()->reserveSlot(getUser(), 3600);
 }
 void UserInfoBase::grantSlotDay() {
-	UploadManager::getInstance()->reserveSlotDay(getUser());
+	UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
 }
 void UserInfoBase::grantSlotWeek() {
-	UploadManager::getInstance()->reserveSlotWeek(getUser());
+	UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
 }
 void UserInfoBase::ungrantSlot() {
 	UploadManager::getInstance()->unreserveSlot(getUser());
