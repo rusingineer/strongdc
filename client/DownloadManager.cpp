@@ -264,6 +264,7 @@ void DownloadManager::addConnection(UserConnection::Ptr conn) {
 		conn->getUser()->setFlag(User::OLD_CLIENT);
 		QueueManager::getInstance()->removeSource(conn->getUser(), QueueItem::Source::FLAG_NO_TTHF);
 		removeConnection(conn);
+		return;
 	}
 
 	conn->addListener(this);

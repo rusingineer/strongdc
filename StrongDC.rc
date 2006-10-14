@@ -759,8 +759,6 @@ IDR_RECENTS             ICON                    "res\\Recents.ico"
 IDR_UPDATE              ICON                    "res\\Update.ico"
 IDB_SHUTDOWN            ICON                    "res\\shutdown.ico"
 IDI_MAGNET              ICON                    "res\\magnet.ico"
-IDR_TREE_YES            ICON                    "res\\TreeYes.ico"
-IDR_TREE_NO             ICON                    "res\\TreeNo.ico"
 #endif    // Czech resources
 /////////////////////////////////////////////////////////////////////////////
 

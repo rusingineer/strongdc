@@ -1,3 +1,9 @@
+** cvs193
+	fixed compilation as Release build
+	fixed displaying message "Client doesn't fully support TTH"
+	auto-priority doesn't set Lowest priority
+	removed green/red shield icons from queue frame, because all files should have TTH tree available
+
 ** cvs192
 	DC++ 0.698 merge
 

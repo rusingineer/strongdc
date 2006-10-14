@@ -394,14 +394,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->user, param.substr(j+1));
+							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->user);
+							PrivateFrame::openWindow(ui->getUser());
 					}
 				} else if(!param.empty()) {
 					UserInfo* ui = findUser(param);
 					if(ui) {
-						PrivateFrame::openWindow(ui->user);
+						PrivateFrame::openWindow(ui->getUser());
 					}
 				}
 			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
@@ -604,7 +604,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				if(ctrlUsers.getItemData(item->iItem)->user != ClientManager::getInstance()->getMe())
+				if(ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())
 		         	 ctrlUsers.getItemData(item->iItem)->pm();
 		        break;
 		    case 3:
@@ -1181,10 +1181,10 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->user);
+					PrivateFrame::openWindow(ui->getUser());
 				} else if (wParam & MK_SHIFT) {
 					try {
-						QueueManager::getInstance()->addList(ui->user, QueueItem::FLAG_CLIENT_VIEW);
+						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
 					addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
@@ -1229,7 +1229,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						if(ui->user != ClientManager::getInstance()->getMe())
+						if(ui->getUser() != ClientManager::getInstance()->getMe())
 					          ui->pm();
 					     break;
 					case 3:
@@ -1456,7 +1456,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			sel = ctrlUsers.findItem(sSelectedUser);
 			if ( sel >= 0 ) { 
 				u = (UserInfo*)ctrlUsers.getItemData(sel);
-				if(u->user->isOnline()) {
+				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;		
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp); 
@@ -1467,7 +1467,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			sel = -1;
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
 				u = (UserInfo*)ctrlUsers.getItemData(sel);
-				if(u->user->isOnline()) {
+				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp);
@@ -1774,7 +1774,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	int item = ctrlUsers.GetNextItem(-1, LVNI_FOCUSED);
 	if(item != -1) {
 		try {
-			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->user, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			addClientLine(Text::toT(e.getError()));
 		}
@@ -2504,7 +2504,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	params["userNI"] = ui->getNick();
 	params["hubNI"] = client->getHubName();
 	params["myNI"] = client->getMyNick();
-	params["userCID"] = ui->user->getCID().toBase32();
+	params["userCID"] = ui->getUser()->getCID().toBase32();
 	params["hubURL"] = client->getHubUrl();
 	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false)));
 	if(Util::fileExists(Text::fromT(file))) {
@@ -2580,15 +2580,15 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 
 	case CDDS_ITEMPREPAINT: {
 			UserInfo* ui = (UserInfo*)cd->nmcd.lItemlParam;
-			if (FavoriteManager::getInstance()->isFavoriteUser(ui->user)) {
+			if (FavoriteManager::getInstance()->isFavoriteUser(ui->getUser())) {
 				cd->clrText = SETTING(FAVORITE_COLOR);
-			} else if (UploadManager::getInstance()->hasReservedSlot(ui->user)) {
+			} else if (UploadManager::getInstance()->hasReservedSlot(ui->getUser())) {
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
-			} else if (ignoreList.find(ui->user) != ignoreList.end()) {
+			} else if (ignoreList.find(ui->getUser()) != ignoreList.end()) {
 				cd->clrText = SETTING(IGNORED_COLOR);
-			} else if(ui->user->isSet(User::FIREBALL)) {
+			} else if(ui->getUser()->isSet(User::FIREBALL)) {
 				cd->clrText = SETTING(FIREBALL_COLOR);
-			} else if(ui->user->isSet(User::SERVER)) {
+			} else if(ui->getUser()->isSet(User::SERVER)) {
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);

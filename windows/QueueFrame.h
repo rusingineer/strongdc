@@ -46,9 +46,6 @@ public:
 	}
 
 	virtual ~QueueFrame() {
-		DestroyIcon(hIconTree);
-		DestroyIcon(hIconNotTree);
-
 		// Clear up dynamicly allocated menu objects
 		browseMenu.ClearMenu();
 		removeMenu.ClearMenu();
@@ -366,7 +363,6 @@ private:
 
 	TypedListViewCtrl<QueueItemInfo, IDC_QUEUE> ctrlQueue;
 	CTreeViewCtrl ctrlDirs;
-	HICON hIconTree, hIconNotTree;
 	COLORREF barva;
 	
 	CStatusBarCtrl ctrlStatus;

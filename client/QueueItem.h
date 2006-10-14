@@ -139,7 +139,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, uint32_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth), autoPriority(false), hasTree(false)
+	tthRoot(tth), autoPriority(false)
 	{ 
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
@@ -147,9 +147,6 @@ public:
 		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size < 2097153)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
-
-		TigerTree tree;
-		hasTree = HashManager::getInstance()->getTree(tth, tree);
 	}
 
 	QueueItem(const QueueItem& rhs) : 
@@ -262,7 +259,6 @@ public:
 	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(uint8_t, maxSegments, MaxSegments);
-	GETSET(bool, hasTree, HasTree);
 	GETSET(size_t, averageSpeed, AverageSpeed);
 	FileChunksInfo::Ptr chunkInfo;
 
@@ -274,8 +270,8 @@ public:
 			switch(percent){
 					case 0:
 					case 1:
-						p = QueueItem::LOWEST;
-						break;
+/*						p = QueueItem::LOWEST;
+						break;*/
 					case 2:
 					case 3:
 						p = QueueItem::LOW;
