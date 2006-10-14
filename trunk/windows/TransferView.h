@@ -329,9 +329,6 @@ private:
 	TaskQueue tasks;
 
 	StringMap ucLineParams;
-	HDC hDCDB; // Double buffer DC
-	HBITMAP hDCBitmap; // Double buffer Bitmap for above DC
-	StringList searchFilter;
 
 	ItemInfo::List transferItems;
 

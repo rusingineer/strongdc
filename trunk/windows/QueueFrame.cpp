@@ -166,9 +166,6 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	QueueManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	hIconTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_YES), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
-	hIconNotTree = (HICON)LoadImage((HINSTANCE)::GetWindowLong(::GetParent(m_hWnd), GWL_HINSTANCE), MAKEINTRESOURCE(IDR_TREE_NO), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
-
 	memset(statusSizes, 0, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
@@ -1485,50 +1482,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;
-		} else if(colIndex == COLUMN_SEGMENTS) {
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			if(ctrlQueue.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
-				if(ctrlQueue.m_hWnd == ::GetFocus()) {
-					barva = GetSysColor(COLOR_HIGHLIGHT);
-					SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
-					SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-				} else {
-					barva = GetBkColor(cd->nmcd.hdc);
-					SetBkColor(cd->nmcd.hdc, barva);
-				}				
-			} else {
-				barva = WinUtil::bgColor;
-				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-				if(qi->getText(COLUMN_ERRORS) != (TSTRING(NO_ERRORS))) {
-					SetTextColor(cd->nmcd.hdc, SETTING(ERROR_COLOR));
-				} else {
-					SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
-				}
-			}
-						
-			TCHAR buf[256];
-			ctrlQueue.GetItemText((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, buf, 255);
-			buf[255] = 0;
-			
-			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_SEGMENTS, LVIR_BOUNDS, rc);			
-	
-			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, barva));
-			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(barva));
-			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
-
-			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
-
-			/*bool hasTree = qi->qi && qi->qi->getHasTree();
-			if(hasTree) {
-				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
-			} else {
-				DrawIconEx(cd->nmcd.hdc, rc.left, rc.top, hIconNotTree, 16, 16, NULL, NULL, DI_NORMAL | DI_COMPAT);
-			}*/
-			
-			::DrawText(cd->nmcd.hdc,buf, _tcslen(buf), rc, DT_RIGHT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
-
-			return CDRF_NEWFONT | CDRF_SKIPDEFAULT;
 		}
 	}
 	default:

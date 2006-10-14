@@ -1016,7 +1016,6 @@ again:
 	if(d->getSize() != -1) {
 		if(HashManager::getInstance()->getTree(d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
-			q->setHasTree(true);
 			dcassert(!q->chunkInfo || (q->chunkInfo->tthBlockSize == d->getTigerTree().getBlockSize()));
 		} else if(supportsTrees && !source->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
@@ -1087,7 +1086,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 						dcassert(aDownload->getTreeValid());
 						HashManager::getInstance()->addTree(aDownload->getTigerTree());
 
-						q->setHasTree(true);
 						if(q->getStatus() == QueueItem::STATUS_RUNNING) {
 							userQueue.setWaiting(q, aDownload->getUser());
 							fire(QueueManagerListener::StatusUpdated(), q);

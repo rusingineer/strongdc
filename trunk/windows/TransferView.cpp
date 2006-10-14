@@ -1141,7 +1141,7 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw()
 }
 
 bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
-	size_t totalSpeed = 0;	double ratio = 0; int segs = 0;
+	size_t totalSpeed = 0;	double ratio = 0; uint8_t segs = 0;
 	ItemInfo* l = NULL;
 
 	for(ItemInfo::Iter k = main->subItems.begin(); k != main->subItems.end(); ++k) {
@@ -1156,21 +1156,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		}
 	}
 
-	if(segs == 0) {
-		main->pos = 0;
-		main->actual = 0;
-		main->status = ItemInfo::STATUS_WAITING;
-		main->fileBegin = 0;
-		main->timeLeft = 0;
-		main->speed = 0;
-		main->columns[COLUMN_TIMELEFT] = Util::emptyStringT;
-		main->columns[COLUMN_SPEED] = Util::emptyStringT;
-		main->columns[COLUMN_RATIO] = Util::emptyStringT;
-		if(main->multiSource && main->subItems.size() > 1)
-			main->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
-		
-		return true;
-	} else if(!main->multiSource) {
+	if(!main->multiSource) {
  		main->status = l->status;
 		main->size = l->size;
 		main->pos = l->pos;
@@ -1184,6 +1170,20 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->columns[COLUMN_TIMELEFT] = Util::formatSeconds(l->timeLeft);
 		main->columns[COLUMN_RATIO] = Util::toStringW(l->getRatio());
 		return false;
+	} else if(segs == 0) {
+		main->pos = 0;
+		main->actual = 0;
+		main->status = ItemInfo::STATUS_WAITING;
+		main->fileBegin = 0;
+		main->timeLeft = 0;
+		main->speed = 0;
+		main->columns[COLUMN_TIMELEFT] = Util::emptyStringT;
+		main->columns[COLUMN_SPEED] = Util::emptyStringT;
+		main->columns[COLUMN_RATIO] = Util::emptyStringT;
+		if(main->multiSource && main->subItems.size() > 1)
+			main->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
+		
+		return true;
 	} else {
 		if(smallUpdate) return false;
 
@@ -1191,7 +1191,6 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 		int64_t total = 0;
 		int64_t fileSize = -1;
-		bool hasTree = false;
 
 		string tmp = Text::fromT(main->Target);
 		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
@@ -1199,7 +1198,6 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		if(qi != queue.end()) {
 			total = qi->second->getDownloadedBytes();
 			fileSize = qi->second->getSize();
-			hasTree = qi->second->getHasTree();
 			qi->second->setAverageSpeed(totalSpeed);
 		}
 		QueueManager::getInstance()->unlockQueue();
@@ -1215,10 +1213,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 				(double)total*100.0/(double)fileSize, Util::formatSeconds((GET_TICK() - main->fileBegin)/1000).c_str());
 
 			tstring statusString;
-
-			if(hasTree) {
-				statusString += _T("[T]");
-			}
+			// TODO statusString += _T("[T]");
 
 			// hack to display whether file is compressed
 			if(ratio < 1.0000) {

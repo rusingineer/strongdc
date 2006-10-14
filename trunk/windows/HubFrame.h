@@ -305,7 +305,7 @@ public:
 				if(ui) ignoreList.erase(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase(((UserInfo*)ctrlUsers.getItemData(i))->user);
+					ignoreList.erase(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
 				}
 			}
 		}
