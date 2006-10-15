@@ -75,7 +75,7 @@ public:
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
-	User(const CID& aCID) : cid(aCID) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
 
 	virtual ~User() throw() { }
 
