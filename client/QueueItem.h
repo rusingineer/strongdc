@@ -136,7 +136,7 @@ public:
 	typedef SourceList::const_iterator SourceConstIter;
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, uint32_t aAdded, const TTHValue& tth) :
+		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false)
@@ -255,7 +255,7 @@ public:
 	GETSET(Priority, priority, Priority);
 	GETSET(User::List, currents, Currents);
 	GETSET(Download*, currentDownload, CurrentDownload);
-	GETSET(uint32_t, added, Added);
+	GETSET(time_t, added, Added);
 	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(uint8_t, maxSegments, MaxSegments);

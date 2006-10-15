@@ -1279,11 +1279,6 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
 	}
-	/* This shouldn't be there but one big idiot copied it without knowing 
-	   what it is, because I forgot to remove it after one testing
-		ctrlLastLines.Activate(FALSE);
-		ctrlLastLines.Activate(TRUE);
-	*/
 }
 
 LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {

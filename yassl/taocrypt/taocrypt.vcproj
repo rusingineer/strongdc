@@ -22,7 +22,7 @@
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -46,6 +46,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				MinimalRebuild="true"
+				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				BufferSecurityCheck="true"
@@ -54,6 +55,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -93,7 +95,7 @@
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -122,16 +124,18 @@
 				AdditionalIncludeDirectories="include,..\mySTL"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				MinimalRebuild="false"
+				MinimalRebuild="true"
+				ExceptionHandling="1"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
-				EnableFunctionLevelLinking="false"
+				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 				CallingConvention="1"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

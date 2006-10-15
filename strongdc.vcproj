@@ -65,6 +65,7 @@
 				DebugInformationFormat="4"
 				CallingConvention="0"
 				CompileAs="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -164,7 +165,7 @@
 				ExceptionHandling="1"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
-				EnableFunctionLevelLinking="false"
+				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				ForceConformanceInForLoopScope="true"
 				RuntimeTypeInfo="false"
@@ -175,6 +176,7 @@
 				DebugInformationFormat="3"
 				CallingConvention="1"
 				CompileAs="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -201,7 +203,6 @@
 				DelayLoadDLLs="dbghelp.dll;oleaut32.dll;winmm.dll;powrprof.dll"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)compiled/$(ProjectName).pdb"
-				StripPrivateSymbols=""
 				GenerateMapFile="false"
 				MapFileName=""
 				SubSystem="2"
