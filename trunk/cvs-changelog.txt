@@ -1,3 +1,7 @@
+** cvs195
+	DC++ SVN merge
+	enabled function-level linking
+
 ** cvs194
 	emptying process working set every 5 minutes
 	only chunked transfer's finish message is delayed

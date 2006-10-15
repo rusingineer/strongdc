@@ -205,7 +205,7 @@ User::Ptr ClientManager::getUser(const string& aNick, const string& aHubUrl) thr
 
 User::Ptr ClientManager::getUser(const CID& cid) throw() {
 	Lock l(cs);
-	UserIter ui = users.find(cid);
+	UserMap::const_iterator ui = users.find(cid);
 	if(ui != users.end()) {
 		return ui->second;
 	}

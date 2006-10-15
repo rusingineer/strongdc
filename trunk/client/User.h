@@ -67,8 +67,10 @@ public:
 	typedef List::const_iterator Iter;
 
 	struct HashFunction {
+#ifdef _MSC_VER
 		static const size_t bucket_size = 4;
 		static const size_t min_buckets = 8;
+#endif
 		size_t operator()(const Ptr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
 		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
 	};

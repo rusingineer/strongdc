@@ -117,7 +117,7 @@ const string& QueueItem::getTempTarget() {
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
-						  int64_t aDownloadedBytes, uint32_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue& root) throw(QueueException, FileException)
+						  int64_t aDownloadedBytes, time_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue& root) throw(QueueException, FileException)
 {
 	if(p == QueueItem::DEFAULT) {
 		p = QueueItem::NORMAL;
@@ -1564,7 +1564,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			const string& verifiedBlocks = getAttrib(attribs, sVerifiedBlocks, 2);
 
 			QueueItem::Priority p = (QueueItem::Priority)Util::toInt(getAttrib(attribs, sPriority, 3));
-			uint32_t added = (uint32_t)Util::toInt(getAttrib(attribs, sAdded, 4));
+			time_t added = static_cast<time_t>(Util::toInt(getAttrib(attribs, sAdded, 4)));
 			const string& tthRoot = getAttrib(attribs, sTTH, 5);
 			if(tthRoot.empty())
 				return;
@@ -1601,10 +1601,9 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				return;
 			}
 			User::Ptr user = ClientManager::getInstance()->getUser(CID(cid));
-			if(user->getFirstNick().empty()) {
-				const string& nick = getAttrib(attribs, sNick, 1);
-				user->setFirstNick(nick);
-			}
+			const string& nick = getAttrib(attribs, sNick, 1);
+			user->setFirstNick(nick);
+
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
 				ConnectionManager::getInstance()->getDownloadConnection(user);
