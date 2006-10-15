@@ -682,7 +682,8 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			if(e.pos > 0 && d->getTreeValid()) {
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
+				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
+					lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
 			}
 
 			d->setPos(e.pos);

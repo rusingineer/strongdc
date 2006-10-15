@@ -1,3 +1,7 @@
+** cvs196
+	fixed user download speed initialization
+	fixed one crash
+
 ** cvs195
 	DC++ SVN merge
 	enabled function-level linking
