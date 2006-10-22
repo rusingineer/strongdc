@@ -293,7 +293,7 @@ private:
 			columns[COLUMN_SIZE] = Util::formatBytesW(d->getTotalSize());
 		}
 
-		const tstring& getText(int col) {
+		const tstring& getText(int col) const {
 			return columns[col];
 		}
 		
@@ -324,7 +324,7 @@ private:
 				}
 			}
 		}
-		int imageIndex() {
+		int imageIndex() const {
 			if(type == DIRECTORY)
 				return WinUtil::getDirIconIndex();
 			else

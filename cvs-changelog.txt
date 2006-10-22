@@ -1,3 +1,10 @@
+** cvs197
+	DC++ SVN merge
+	fixed memory leak in UploadManager
+	some fixes in Sharing interface
+	code cleanup
+	hopefully fixed partial uploads
+
 ** cvs196
 	fixed user download speed initialization
 	fixed one crash

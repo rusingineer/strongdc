@@ -1217,11 +1217,11 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 
 			// hack to display whether file is compressed
 			if(ratio < 1.0000) {
-				statusString += _T("[Z]");
+				statusString += _T("[Z] ");
 			}
-			if(!statusString.empty()) {
+			/*if(!statusString.empty()) {
 				statusString += _T(" ");
-			}
+			}*/
 			statusString += buf;
 			main->columns[COLUMN_STATUS] = statusString;
 			
@@ -1233,7 +1233,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->size = fileSize;
 		
 		if(main->subItems.size() > 1) {
-			TCHAR buf[256];
+			TCHAR buf[64];
 			snwprintf(buf, sizeof(buf), _T("%d %s"), segs, CTSTRING(NUMBER_OF_SEGMENTS));
 
 			main->columns[COLUMN_HUB] = buf;

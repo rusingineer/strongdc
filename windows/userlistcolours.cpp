@@ -28,7 +28,6 @@ LRESULT UserListColours::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	ignoredColour = SETTING(IGNORED_COLOR);
 	fastColour = SETTING(FIREBALL_COLOR);
 	serverColour = SETTING(SERVER_COLOR);
-	activeColour = SETTING(ACTIVE_COLOR);
 	pasiveColour = SETTING(PASIVE_COLOR);
 	opColour = SETTING(OP_COLOR);
 	clientCheckedColour = SETTING(CLIENT_CHECKED_COLOUR);
@@ -47,7 +46,6 @@ LRESULT UserListColours::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	n_lsbList.AddString(CTSTRING(COLOR_FAST));
 	n_lsbList.AddString(CTSTRING(COLOR_SERVER));
 	n_lsbList.AddString(CTSTRING(COLOR_OP));
-	n_lsbList.AddString(CTSTRING(COLOR_ACTIVE));
 	n_lsbList.AddString(CTSTRING(COLOR_PASIVE));
 	n_lsbList.AddString(CTSTRING(SETTINGS_COLOR_CLIENT_CHECKED));
 	n_lsbList.AddString(CTSTRING(SETTINGS_COLOR_FILELIST_CHECKED));
@@ -71,14 +69,13 @@ LRESULT UserListColours::onChangeColour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 		case 3: colour = ignoredColour; break;
 		case 4: colour = fastColour; break;
 		case 5: colour = serverColour; break;
-		case 7: colour = activeColour; break;
-		case 8: colour = pasiveColour; break;
 		case 6: colour = opColour; break;
-		case 9: colour = clientCheckedColour; break;
-		case 10: colour = fileListCheckedColour; break;
-		case 11: colour = fullCheckedColour; break;
-		case 12: colour = badClientColour; break;
-		case 13: colour = badFilelistColour; break;
+		case 7: colour = pasiveColour; break;
+		case 8: colour = clientCheckedColour; break;
+		case 9: colour = fileListCheckedColour; break;
+		case 10: colour = fullCheckedColour; break;
+		case 11: colour = badClientColour; break;
+		case 12: colour = badFilelistColour; break;
 		default: break;
 	}
 	CColorDialog d( colour, 0, hWndCtl );
@@ -90,14 +87,13 @@ LRESULT UserListColours::onChangeColour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 			case 3: ignoredColour = d.GetColor(); break;
 			case 4: fastColour = d.GetColor(); break;
 			case 5: serverColour = d.GetColor(); break;
-			case 7: activeColour = d.GetColor(); break;
-			case 8: pasiveColour = d.GetColor(); break;
 			case 6: opColour = d.GetColor(); break;
-			case 9: clientCheckedColour = d.GetColor(); break;
-			case 10: fileListCheckedColour = d.GetColor(); break;
-			case 11: fullCheckedColour = d.GetColor(); break;
-			case 12: badClientColour = d.GetColor(); break;
-			case 13: badFilelistColour = d.GetColor(); break;
+			case 7: pasiveColour = d.GetColor(); break;
+			case 8: clientCheckedColour = d.GetColor(); break;
+			case 9: fileListCheckedColour = d.GetColor(); break;
+			case 10: fullCheckedColour = d.GetColor(); break;
+			case 11: badClientColour = d.GetColor(); break;
+			case 12: badFilelistColour = d.GetColor(); break;
 			default: break;
 		}
 		refreshPreview();
@@ -138,10 +134,6 @@ void UserListColours::refreshPreview() {
 	cf.crTextColor = opColour;
 	n_Preview.SetSelectionCharFormat(cf);
 	n_Preview.AppendText((_T("\r\n") + TSTRING(COLOR_OP)).c_str());
-	
-	cf.crTextColor = activeColour;
-	n_Preview.SetSelectionCharFormat(cf);
-	n_Preview.AppendText((_T("\r\n") + TSTRING(COLOR_ACTIVE)).c_str());
 
 	cf.crTextColor = pasiveColour;
 	n_Preview.SetSelectionCharFormat(cf);
@@ -178,7 +170,6 @@ void UserListColours::write() {
 	SettingsManager::getInstance()->set(SettingsManager::IGNORED_COLOR, ignoredColour);
 	SettingsManager::getInstance()->set(SettingsManager::FIREBALL_COLOR, fastColour);
 	SettingsManager::getInstance()->set(SettingsManager::SERVER_COLOR, serverColour);
-	SettingsManager::getInstance()->set(SettingsManager::ACTIVE_COLOR, activeColour);
 	SettingsManager::getInstance()->set(SettingsManager::PASIVE_COLOR, pasiveColour);
 	SettingsManager::getInstance()->set(SettingsManager::OP_COLOR, opColour);
 	SettingsManager::getInstance()->set(SettingsManager::CLIENT_CHECKED_COLOUR, clientCheckedColour);

@@ -20,14 +20,14 @@ EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
 LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/) {
 	TCHAR buf[256];
 	::GetWindowText(hWndCtl, buf, 255);
-	result = Text::fromT(buf);
+	result = buf;
 	// pro ucely testovani emoticon packu...
-  if ((GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)) {
+	if ((GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)) {
 		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
-		result = "";
+		result = _T("");
 		string lastEmotionPath = "";
-		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion)
-		{   if (lastEmotionPath != (*pEmotion)->GetEmotionBmpPath()) result += (*pEmotion)->GetEmotionText() + " ";
+		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
+			if (lastEmotionPath != (*pEmotion)->GetEmotionBmpPath()) result += (*pEmotion)->GetEmotionText() + _T(" ");
 			lastEmotionPath = (*pEmotion)->GetEmotionBmpPath();
 		}
 	}
@@ -110,10 +110,10 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 			if ((*pEmotion)->GetEmotionBmpPath() != lastEmotionPath) {
 				try {
 					CButton emoButton;
-					emoButton.Create(EmoticonsDlg::m_hWnd, pos, Text::toT((*pEmotion)->GetEmotionText()).c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
+					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->GetEmotionText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
 					emoButton.SetBitmap((*pEmotion)->GetEmotionBmp(GetSysColor(COLOR_BTNFACE)));
 
-					tstring smajl = Text::toT((*pEmotion)->GetEmotionText());
+					tstring smajl = (*pEmotion)->GetEmotionText();
 					CToolInfo ti(TTF_SUBCLASS, emoButton.m_hWnd, 0, 0, const_cast<LPTSTR>(smajl.c_str()));
 					ctrlToolTip.AddTool(&ti);
 

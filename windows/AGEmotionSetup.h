@@ -35,23 +35,21 @@ public:
 
 	CAGEmotion();
 	virtual ~CAGEmotion();
-	bool Create(string& strEmotionText, string& strEmotionBmpPath);
+	bool Create(tstring& strEmotionText, string& strEmotionBmpPath);
 
-	const string& GetEmotionText();
-	HBITMAP GetEmotionBmp();
+	const tstring& GetEmotionText() const;
+	HBITMAP GetEmotionBmp() const;
 	HBITMAP GetEmotionBmp(const COLORREF &clrBkColor);
-	const string& GetEmotionBmpPath();
+	const string& GetEmotionBmpPath() const;
 
-	const long&	GetImagePos();
+	const long&	GetImagePos() const;
 	void SetImagePos(const long& ImagePos);
-
 	void SetImageList(CImageList* pImagesList);
 
 protected:
-	string		m_EmotionText;
+	tstring		m_EmotionText;
 	string		m_EmotionBmpPath;
 	HBITMAP		m_EmotionBmp;
-
 	long		m_ImagePos;
 	CImageList*	m_pImagesList;
 };

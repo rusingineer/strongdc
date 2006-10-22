@@ -57,13 +57,6 @@ private:
 	friend class ClientManager;
 	friend class CommandHandler<AdcHub>;
 
-	enum States {
-		STATE_PROTOCOL,
-		STATE_IDENTIFY,
-		STATE_VERIFY,
-		STATE_NORMAL
-	} state;
-
 	AdcHub(const string& aHubURL, bool secure);
 
 	AdcHub(const AdcHub&);
@@ -80,9 +73,7 @@ private:
 	mutable CriticalSection cs;
 
 	string salt;
-
 	uint32_t sid;
-	bool reconnect;
 
 	static const string CLIENT_PROTOCOL;
 	static const string SECURE_CLIENT_PROTOCOL;
@@ -94,6 +85,7 @@ private:
 
 	OnlineUser& getUser(const uint32_t aSID, const CID& aCID);
 	OnlineUser* findUser(const uint32_t sid) const;
+	OnlineUser* findUser(const CID& cid) const;
 	void putUser(const uint32_t sid);
 
 	void clearUsers();
@@ -111,9 +103,7 @@ private:
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 	void handle(AdcCommand::RES, AdcCommand& c) throw();
 
-	template<typename T> void handle(T, AdcCommand&) { 
-		//Speaker<AdcHubListener>::fire(t, this, c);
-	}
+	template<typename T> void handle(T, AdcCommand&) { }
 
 	void sendUDP(const AdcCommand& cmd) throw();
 
@@ -123,6 +113,7 @@ private:
 	virtual void on(Failed, const string& aLine) throw();
 
 	virtual void on(Second, uint32_t aTick) throw();
+
 };
 
 #endif // !defined(ADC_HUB_H)

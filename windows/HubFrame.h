@@ -58,15 +58,6 @@ public:
 	typedef UCHandler<HubFrame> ucBase;
 	typedef UserInfoBaseHandler<HubFrame> uibBase;
 	
-	virtual BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		if (!IsWindow())
-			return FALSE;
-
-		ctrlLastLines.RelayEvent(pMsg);
-		return FALSE;
-	}
-
 	BEGIN_MSG_MAP(HubFrame)
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_USERS, LVN_COLUMNCLICK, ctrlUsers.onColumnClick)
@@ -89,7 +80,6 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEMOVE, onStyleChange)
 		MESSAGE_HANDLER(WM_CAPTURECHANGED, onStyleChanged)
 		MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, onSizeMove)
-
 		COMMAND_ID_HANDLER(ID_FILE_RECONNECT, onFileReconnect)
 		COMMAND_ID_HANDLER(IDC_REFRESH, onRefresh)
 		COMMAND_ID_HANDLER(IDC_FOLLOW, onFollow)
@@ -200,7 +190,7 @@ public:
 			ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
 			tstring s(message, ctrlMessage.GetWindowTextLength());
 			delete[] message;
-			ctrlMessage.SetWindowText(Text::toT(Text::fromT(s)+dlg.result).c_str());
+			ctrlMessage.SetWindowText((s + dlg.result).c_str());
 			ctrlMessage.SetFocus();
 			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
 		}
@@ -335,7 +325,7 @@ private:
 		, int chatusersplit, bool userliststate) : 
 		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false),
-		curCommandPosition(0), timeStamps(BOOLSETTING(TIME_STAMPS)), 
+		curCommandPosition(0), timeStamps(BOOLSETTING(TIME_STAMPS)),
 		hubchatusersplit(chatusersplit), menuItems(0), currentNeedlePos(-1),
 		ctrlMessageContainer(WC_EDIT, this, EDIT_MESSAGE_MAP), 
 		showUsersContainer(WC_BUTTON, this, EDIT_MESSAGE_MAP),
@@ -351,7 +341,7 @@ private:
 		client->setRawThree(Text::fromT(aRawThree));
 		client->setRawFour(Text::fromT(aRawFour));
 		client->setRawFive(Text::fromT(aRawFive));
-		//client->addListener(this);
+
 		if(FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			showUsers = userliststate;
 		} else {
@@ -388,7 +378,7 @@ private:
 
 	TStringList prevCommands;
 	tstring currentCommand;
-	TStringList::size_type curCommandPosition;
+	TStringList::size_type curCommandPosition;		//can't use an iterator because StringList is a vector, and vector iterators become invalid after resizing
 
 	typedef hash_set<User::Ptr, User::HashFunction> IgnoreMap;
 	static IgnoreMap ignoreList;

@@ -18,17 +18,13 @@
 
 #include "stdinc.h"
 
-#ifdef HAVE_STLPORT
-
-#if (_STLPORT_VERSION < 0x520)
-#error STLPort not correctly installed, read compile.txt
+#if defined(HAVE_STLPORT) && (_STLPORT_VERSION < 0x520)
+#error I use STLport SVN. Remove this if you know what you're doing.
 #endif
 
 #ifdef _STLP_NO_IOSTREAMS
 #error You must use compiled STLPort else you can't use optimized node allocator.
 #endif
-
-#endif // HAVE_STLPORT
 
 /**
  * @file

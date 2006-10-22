@@ -76,7 +76,11 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
 	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
 	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
-	setText(COLUMN_IP, Text::toT(identity.getIp()));
+	string ip = identity.getIp();
+	string country = ip.empty()?Util::emptyString:Util::getIpCountry(ip);
+	if (!country.empty())
+		ip = country + " (" + ip + ")";
+	setText(COLUMN_IP, Text::toT(ip));
 	setText(COLUMN_PK, Text::toT(identity.get("PK")));
 
 	if(sortCol != -1) {

@@ -364,7 +364,7 @@ protected:
 			}
 		}
 
-		int imageIndex() { return WinUtil::getIconIndex(Text::toT(entry->getTarget())); }
+		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(entry->getTarget())); }
 
 		FinishedItem* entry;
 	};

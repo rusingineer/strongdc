@@ -371,7 +371,7 @@ private:
 			}
 		}
 
-		int imageIndex() {
+		int imageIndex() const {
 			int image = 0;
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
@@ -401,7 +401,7 @@ private:
 		void update();
 		
 		SearchInfo* createMainItem() { return this; }
-		const tstring& getGroupingString() { return columns[COLUMN_TTH]; }
+		const tstring& getGroupingString() const { return columns[COLUMN_TTH]; }
 		void updateMainItem() {
 			uint32_t total = main->subItems.size();
 			if(total != 0) {

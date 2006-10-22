@@ -231,7 +231,7 @@ void UserConnection::inf(bool withToken) {
 void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
-
+	dcassert(upload == NULL);
 	delete this;	
 }
 

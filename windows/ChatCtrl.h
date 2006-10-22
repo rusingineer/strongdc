@@ -39,35 +39,28 @@ class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
 protected:
-	LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-
-	IRichEditOle* GetIRichEditOle() const;
-
 	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
 	bool m_boAutoScroll;
-	TCHAR *g_BufTemp, *beforeAppendText, *afterAppendText;
-	int g_BufTemplen, AppendTextlen;
 public:
 	ChatCtrl();
-	virtual ~ChatCtrl();
+	virtual ~ChatCtrl() {}
 
 	LRESULT OnRButtonDown(POINT pt);
 
-	bool HitNick(POINT p, CAtlString *sNick, int *piBegin = NULL, int *piEnd = NULL);
-	bool HitIP(POINT p, CAtlString *sIP, int *piBegin = NULL, int *piEnd = NULL);
+	bool HitNick(POINT p, CAtlString& sNick, int& piBegin , int& piEnd);
+	bool HitIP(POINT p, CAtlString& sIP, int& piBegin, int& piEnd);
 	bool HitURL();
-	bool GetAutoScroll();
+	bool GetAutoScroll() const;
 
-	tstring LineFromPos(POINT p);
+	tstring LineFromPos(POINT p) const;
 
 	void AdjustTextSize();
 	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
 	void AppendTextOnly(const tstring& sMyNick, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
-	void EndRedrawAppendTextOnly();
 
 	void GoToEnd();
 	void SetAutoScroll(bool boAutoScroll);
-	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers = NULL);
+	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers);
 	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
 
 	static tstring sSelectedLine;

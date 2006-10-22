@@ -66,7 +66,6 @@ enum Strings { // @DontAdd
 	CLOSE, // "Close"
 	CLOSE_CONNECTION, // "Close connection"
 	COLLAPSE_ALL, // "Collapse All"
-	COLOR_ACTIVE, // "Active user"
 	COLOR_FAST, // "User with fireball"
 	COLOR_OP, // "User is OP"
 	COLOR_PASIVE, // "Passive user"

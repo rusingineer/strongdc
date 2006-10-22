@@ -511,7 +511,6 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 			importData("FileListCheckedColour", FILELIST_CHECKED_COLOUR);
 			importData("FireballColor", FIREBALL_COLOR);
 			importData("ServerColor", SERVER_COLOR);
-			importData("ActiveColor", ACTIVE_COLOR);
 			importData("PasiveColor", PASIVE_COLOR);
 			importData("OpColor", OP_COLOR);
 			importData("FileListAndClientCheckedColour", FULL_CHECKED_COLOUR);
@@ -622,7 +621,6 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	exportData("FileListCheckedColour", FILELIST_CHECKED_COLOUR);
 	exportData("FireballColor", FIREBALL_COLOR);
 	exportData("ServerColor", SERVER_COLOR);
-	exportData("ActiveColor", ACTIVE_COLOR);
 	exportData("PasiveColor", PASIVE_COLOR);
 	exportData("OpColor", OP_COLOR);
 	exportData("FileListAndClientCheckedColour", FULL_CHECKED_COLOUR);

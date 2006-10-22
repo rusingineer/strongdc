@@ -3,10 +3,16 @@
 * fixed some crashes
 * hopefully fixed absolute paths
 * updated STLPort
+* updated WTL
 * old sharing interface is enabled on default for Win9x
-* DC++ 0.695 update
+* DC++ 0.698 update
 * user count format is "X/Y Users" when some users are hidden
 * some performance tweaks
+* flush file buffers when download finishes
+* removed green/red shield icons from queue frame
+* auto-priority doesn't set Lowest priority
+* emptying process working set every 5 minutes
+* some fixes for delayed "Upload finished" message
 
 	-- StrongDC++ 2.02 --
 

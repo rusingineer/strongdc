@@ -37,27 +37,17 @@
 
 #include "cvsversion.h"
 
-NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0), state(STATE_CONNECT),
+NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
 	lastbytesshared(0)
 {
-dcdebug("Identity takes: %d bytes\n", sizeof(Identity));
 }
 
 NmdcHub::~NmdcHub() throw() {
 	clearUsers();
 }
 
-void NmdcHub::connect() {
-	supportFlags = 0;
-	lastmyinfo.clear();
-	lastbytesshared = 0;
 
-	state = STATE_LOCK;
-
-	Client::connect();
-}
-
-#define checkstate() if(state != STATE_CONNECTED) return
+#define checkstate() if(state != STATE_NORMAL) return
 
 void NmdcHub::connect(const OnlineUser& aUser) {
 	checkstate(); 
@@ -197,8 +187,6 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 }
 
 void NmdcHub::onLine(const string& aLine) throw() {
-    updateActivity();
-    
 	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
 
 	if(aLine.length() == 0)
@@ -208,7 +196,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		if (BOOLSETTING(SUPPRESS_MAIN_CHAT) && !isOp()) return;
 
 		// Check if we're being banned...
-		if(state != STATE_CONNECTED) {
+		if(state != STATE_NORMAL) {
 			if(Util::findSubString(aLine, "banned") != string::npos) {
 				setAutoReconnect(false);
 			}
@@ -256,7 +244,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	}
 
 	if(cmd == "$Search") {
-		if(state != STATE_CONNECTED) {
+		if(state != STATE_NORMAL) {
 			return;
 		}
 		string::size_type i = 0;
@@ -485,7 +473,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			putUser(nick);
 		}
 	} else if(cmd == "$ConnectToMe") {
-		if(state != STATE_CONNECTED) {
+		if(state != STATE_NORMAL) {
 			return;
 		}
 		string::size_type i = param.find(' ');
@@ -505,7 +493,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		string port = param.substr(j+1);
 		ConnectionManager::getInstance()->nmdcConnect(server, (unsigned short)Util::toInt(port), getMyNick(), getHubUrl(), getStealth()); 
 	} else if(cmd == "$RevConnectToMe") {
-		if(state != STATE_CONNECTED) {
+		if(state != STATE_NORMAL) {
 			return;
 		}
 
@@ -589,10 +577,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			fire(ClientListener::UserCommand(), this, type, ctx, name, command);
 		}
 	} else if(cmd == "$Lock") {
-		if(state != STATE_LOCK) {
+		if(state != STATE_PROTOCOL) {
 			return;
 		}
-		state = STATE_HELLO;
+		state = STATE_IDENTIFY;
 
 		// Param must not be fromAcp'd...
 		param = aLine.substr(6);
@@ -642,8 +630,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 					u.getUser()->setFlag(User::PASSIVE);
 			}
 
-			if(state == STATE_HELLO && u.getUser() == getMyIdentity().getUser()) {
-				state = STATE_CONNECTED;
+			if(state == STATE_IDENTIFY && u.getUser() == getMyIdentity().getUser()) {
+				state = STATE_NORMAL;
 				updateCounts(false);
 
 				version();
@@ -700,7 +688,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				v.push_back(&getUser(*it));
 			}
 
-			if(!(getSupportFlags() & SUPPORTS_NOGETINFO)) {
+			if(!(supportFlags & SUPPORTS_NOGETINFO)) {
 				string tmp;
 				// Let's assume 10 characters per nick...
 				tmp.reserve(v.size() * (11 + 10 + getMyNick().length())); 
@@ -1001,27 +989,31 @@ void NmdcHub::clearFlooders(uint32_t aTick) {
 	}
 }
 
-// TimerManagerListener
-void NmdcHub::on(Second, uint32_t aTick) throw() {
-	if(state == STATE_CONNECTED && (getLastActivity() + getReconnDelay() * 1000) < aTick) {
-		// Try to send something for the fun of it...
-		dcdebug("Testing writing...\n");
-		send("|", 1);
-	} else if(getAutoReconnect() && state == STATE_CONNECT && (getReconnecting() || ((getLastActivity() + getReconnDelay() * 1000) < aTick))) {
-		// Try to reconnect...
-		connect();
-	}
+void NmdcHub::on(Connected) throw() {
+	Client::on(Connected());
 
-	Client::on(Second(), aTick);
+	supportFlags = 0;
+	lastmyinfo.clear();
+	lastbytesshared = 0;
 }
 
-// BufferedSocketListener
-void NmdcHub::on(BufferedSocketListener::Failed, const string& aLine) throw() {
+void NmdcHub::on(Line, const string& aLine) throw() {
+	Client::on(Line(), aLine);
+	onLine(aLine);
+}
+
+void NmdcHub::on(Failed, const string& aLine) throw() {
 	clearUsers();
-	socket->removeListener(this);
-	state = STATE_CONNECT;
-	fire(ClientListener::Failed(), this, aLine); 
-	updateCounts(true);
+	Client::on(Failed(), aLine);
+	updateCounts(true);	
+}
+
+void NmdcHub::on(Second, uint32_t aTick) throw() {
+	Client::on(Second(), aTick);
+
+	if(state == STATE_NORMAL && (aTick > (getLastActivity() + 120*1000)) ) {
+		send("|", 1);
+	}
 }
 
 /**

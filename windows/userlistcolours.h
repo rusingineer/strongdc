@@ -47,7 +47,6 @@ private:
 	int ignoredColour;
 	int fastColour;
 	int serverColour;
-	int activeColour;
 	int pasiveColour;
 	int opColour; 
 	int clientCheckedColour;
