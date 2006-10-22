@@ -80,7 +80,7 @@ public:
 		update(u.identity, -1);
 	};
 	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
-	uint8_t imageIndex() { return WinUtil::getImage(identity); }
+	uint8_t imageIndex() const { return WinUtil::getImage(identity); }
 
 	bool update(const Identity& identity, int sortCol);
 

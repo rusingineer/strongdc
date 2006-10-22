@@ -50,7 +50,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="_CONSOLE;HAVE_STLPORT"
+				PreprocessorDefinitions="_CONSOLE"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_CONSOLE;HAVE_STLPORT"
+				PreprocessorDefinitions="_CONSOLE"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"

@@ -108,7 +108,7 @@ const string SettingsManager::settingTags[] =
 	"PopupAway", "PopupMinimized", "ShowShareCheckedUsers", "MaxAutoMatchSource",
     "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
-	"FireballColor", "ServerColor", "ActiveColor", "PasiveColor", "OpColor", 
+	"FireballColor", "ServerColor", "PasiveColor", "OpColor", 
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
@@ -503,7 +503,6 @@ SettingsManager::SettingsManager()
 	setDefault(FAVORITE_COLOR, RGB(51,51,255));	
 	setDefault(FIREBALL_COLOR, RGB(255,100,0));
  	setDefault(SERVER_COLOR, RGB(128,128,255));
-	setDefault(ACTIVE_COLOR, RGB(255,255,255));
 	setDefault(PASIVE_COLOR, RGB(255,255,255));
 	setDefault(OP_COLOR, RGB(255,255,0));
 	setDefault(CLIENT_CHECKED_COLOUR, RGB(160, 160, 160));

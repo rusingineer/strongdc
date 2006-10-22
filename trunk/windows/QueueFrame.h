@@ -255,9 +255,7 @@ private:
 				default: return lstrcmpi(a->getDisplay()->columns[col].c_str(), b->getDisplay()->columns[col].c_str());
 			}
 		}
-		int imageIndex() {
-			return WinUtil::getIconIndex(Text::toT(getTarget()));
-		}
+		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
 		QueueItem::SourceList& getSources() { return sources; }
 		QueueItem::SourceList& getBadSources() { return badSources; }

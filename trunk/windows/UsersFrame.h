@@ -113,9 +113,7 @@ private:
 			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 		}
 		
-		int imageIndex() {
-			return 2;
-		}
+		int imageIndex() const { return 2; }
 
 		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(user); }
 

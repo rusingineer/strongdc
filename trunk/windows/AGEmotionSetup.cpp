@@ -42,21 +42,17 @@ bool GetBitmapInfo(HBITMAP hBmp, BITMAP *pBuffer) {
 }
 
 CAGEmotion::CAGEmotion() {
-	m_EmotionText.empty();
-	m_EmotionBmpPath.empty();
 	m_EmotionBmp = NULL;
 	m_ImagePos = -1;
 	m_pImagesList = NULL;
 }
 
 CAGEmotion::~CAGEmotion() {
-	m_EmotionText.empty();
-	m_EmotionBmpPath.empty();
 	m_ImagePos = -1;
 	m_pImagesList = NULL;
 }
 
-bool CAGEmotion::Create(string& strEmotionText, string& strEmotionBmpPath) {
+bool CAGEmotion::Create(tstring& strEmotionText, string& strEmotionBmpPath) {
 	m_EmotionBmp = ::AGLoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	if (m_EmotionBmp == NULL) {
 		dcassert(FALSE);
@@ -68,19 +64,19 @@ bool CAGEmotion::Create(string& strEmotionText, string& strEmotionBmpPath) {
 	return true;
 }
 
-const string& CAGEmotion::GetEmotionText() {
+const tstring& CAGEmotion::GetEmotionText() const {
 	return m_EmotionText;
 }
 
-HBITMAP CAGEmotion::GetEmotionBmp() {
+HBITMAP CAGEmotion::GetEmotionBmp() const {
 	return m_EmotionBmp;
 }
 
-const string& CAGEmotion::GetEmotionBmpPath() {
+const string& CAGEmotion::GetEmotionBmpPath() const {
 	return m_EmotionBmpPath;
 }
 	
-const long&	CAGEmotion::GetImagePos() {
+const long&	CAGEmotion::GetImagePos() const {
 	return m_ImagePos;
 }
 
@@ -146,11 +142,11 @@ bool CAGEmotionSetup::Create() {
 		if(xml.findChild("Emoticons")) {
 			xml.stepIn();
 
-			string strEmotionText;
+			tstring strEmotionText;
 			string strEmotionBmpPath;
 			while(xml.findChild("Emoticon")) {
-				strEmotionText = xml.getChildAttrib("PasteText");
-				if (strEmotionText.empty()) strEmotionText = xml.getChildAttrib("Expression");
+				strEmotionText = Text::toT(xml.getChildAttrib("PasteText"));
+				if (strEmotionText.empty()) strEmotionText = Text::toT(xml.getChildAttrib("Expression"));
 				strEmotionBmpPath = xml.getChildAttrib("Bitmap");
 				if (strEmotionBmpPath.size() > 0) {
 					if (strEmotionBmpPath[0] == '.') {

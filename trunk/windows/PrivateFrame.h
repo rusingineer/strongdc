@@ -127,7 +127,7 @@ public:
   	             ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
   	             tstring s(message, ctrlMessage.GetWindowTextLength());
   	             delete[] message;
-  	             ctrlMessage.SetWindowText(Text::toT(Text::fromT(s)+dlg.result).c_str());
+  	             ctrlMessage.SetWindowText((s+dlg.result).c_str());
   	             ctrlMessage.SetFocus();
   	             ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
   	           }

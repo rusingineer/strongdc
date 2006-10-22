@@ -19,10 +19,75 @@
 #if !defined(STDINC_H)
 #define STDINC_H
 
-#include "config.h"
 #include "memcpy_amd.h"
 
+// This enables stlport's debug mode (and slows it down to a crawl...)
+#ifdef _DEBUG
+//# define _STLP_DEBUG 1
+# define _STLP_DO_CLEAN_NODE_ALLOC 1
+#else
+# define _SECURE_SCL  0
+#endif
+
+// --- Shouldn't have to change anything under here...
+
+#ifndef _REENTRANT
+# define _REENTRANT 1
+#endif
+
+#ifndef BZ_NO_STDIO
+#define BZ_NO_STDIO 1
+#endif
+
+#ifdef HAVE_STLPORT
+# define _STLP_DONT_USE_SHORT_STRING_OPTIM 1	// Uses small string buffer, so it saves memory for a lot of strings
+# define _STLP_USE_PTR_SPECIALIZATIONS 1		// Reduces some code bloat
+# define _STLP_USE_TEMPLATE_EXPRESSION 1		// Speeds up string concatenation
+# define _STLP_NO_ANACHRONISMS 1				// Disables anachronistic constructs
+//# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in my STLPort)
+#endif
+
+#ifdef _MSC_VER
+
+//disable the deprecated warnings for the CRT functions.
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _ATL_SECURE_NO_DEPRECATE 1
+#define _CRT_NON_CONFORMING_SWPRINTFS 1
+
+# pragma warning(disable: 4711) // function 'xxx' selected for automatic inline expansion
+# pragma warning(disable: 4786) // identifier was truncated to '255' characters in the debug information
+# pragma warning(disable: 4290) // C++ Exception Specification ignored
+# pragma warning(disable: 4127) // constant expression
+# pragma warning(disable: 4710) // function not inlined
+# pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
+# pragma warning(disable: 4428) // universal-character-name encountered in source
+
+typedef signed __int8 int8_t;
+typedef signed __int16 int16_t;
+typedef signed __int32 int32_t;
+typedef signed __int64 int64_t;
+
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+
+# ifndef CDECL
+#  define CDECL _cdecl
+# endif
+
+#else // _MSC_VER
+
+# ifndef CDECL
+#  define CDECL
+# endif
+
+#endif // _MSC_VER
+
 #ifdef _WIN32
+# define _WIN32_WINNT 0x0501
+# define _WIN32_IE	0x0500
+# define _USE_32BIT_TIME_T
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -73,44 +138,26 @@
 #include <functional>
 
 // Use maps if hash_maps aren't available
-#ifdef HAVE_HASH
-# ifdef _STLPORT_VERSION
-#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
-#  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
-#  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
-# elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
-#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
-#  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
-#  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
-# elif defined(_MSC_VER)  // Assume the msvc 7.x stl
-#  define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc >
-#  define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc >
-#  define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc >
-# else
-#  error Unknown STL, hashes need to be configured
-# endif
-
+#ifdef _STLPORT_VERSION
 # define HASH_SET hash_set
 # define HASH_MAP hash_map
 # define HASH_MULTIMAP hash_multimap
+# define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
+# define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
+# define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
 
-#else // HAVE_HASH
-
-# define HASH_SET_X(key, hfunc, eq, order)
-# define HASH_SET set
-# define HASH_MAP map
-# define HASH_MAP_X(key, type, hfunc, eq, order) map<key, type, order >
-# define HASH_MULTIMAP multimap
-# define HASH_MULTIMAP_X(key, type, hfunc, eq, order) multimap<key, type, order >
-
-#endif // HAVE_HASH
-
-#ifdef _STLPORT_VERSION
-using namespace std;
 #include <hash_map>
 #include <hash_set>
+using namespace std;
 
 #elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
+# define HASH_SET hash_set
+# define HASH_MAP hash_map
+# define HASH_MULTIMAP hash_multimap
+# define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc, eq >
+# define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc, eq >
+# define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc, eq >
+
 #include <ext/hash_map>
 #include <ext/hash_set>
 #include <ext/functional>
@@ -127,15 +174,28 @@ namespace __gnu_cxx {
 		size_t operator()(long long int x) const { return x; }
 	};
 }
-#else // __GLIBCPP__
+
+#elif defined(_MSC_VER)  // Assume the msvc stl
+# define HASH_SET hash_set
+# define HASH_MAP hash_map
+# define HASH_MULTIMAP hash_multimap
+# define HASH_SET_X(key, hfunc, eq, order) hash_set<key, hfunc >
+# define HASH_MAP_X(key, type, hfunc, eq, order) hash_map<key, type, hfunc >
+# define HASH_MULTIMAP_X(key, type, hfunc, eq, order) hash_multimap<key, type, hfunc >
 
 #include <hash_map>
 #include <hash_set>
-
 using namespace std;
 using namespace stdext;
 
-#endif // __GLIBCPP__
+#else
+# define HASH_SET set
+# define HASH_MAP map
+# define HASH_SET_X(key, hfunc, eq, order)
+# define HASH_MAP_X(key, type, hfunc, eq, order) map<key, type, order >
+# define HASH_MULTIMAP multimap
+# define HASH_MULTIMAP_X(key, type, hfunc, eq, order) multimap<key, type, order >
+#endif
 
 #endif // !defined(STDINC_H)
 

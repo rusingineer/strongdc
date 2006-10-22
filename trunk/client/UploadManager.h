@@ -124,9 +124,7 @@ public:
 		COLUMN_LAST
 	};
 		
-	int imageIndex() {
-		return icon;
-	}
+	int imageIndex() const { return icon; }
 	void update();
 
 	User::Ptr User;
@@ -237,7 +235,7 @@ private:
 	bool getAutoSlot();
 	void removeConnection(UserConnection* aConn);
 	void removeUpload(Upload* aUpload, bool delay = false);
-	void finishUpload(Upload* u);
+	void logUpload(Upload* u);
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();

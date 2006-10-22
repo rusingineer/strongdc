@@ -67,7 +67,6 @@
 		<String Name="Close">Close</String>
 		<String Name="CloseConnection">Close connection</String>
 		<String Name="CollapseAll">Collapse All</String>
-		<String Name="ColorActive">Active user</String>
 		<String Name="ColorFast">User with fireball</String>
 		<String Name="ColorOp">User is OP</String>
 		<String Name="ColorPasive">Passive user</String>

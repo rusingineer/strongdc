@@ -22,7 +22,7 @@ public:
 		return 0;
 	}
 
-	string result;
+	tstring result;
 	CRect pos;
 
 private:

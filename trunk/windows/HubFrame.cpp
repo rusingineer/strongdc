@@ -58,10 +58,6 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
-	dcdebug("UserInfoBase takes %d bytes\n", sizeof(UserInfoBase));
-	dcdebug("User takes %d bytes\n", sizeof(User));
-	dcdebug("User::Ptr takes %d bytes\n", sizeof(User::Ptr));
-	dcdebug("User::Ptr& takes %d bytes\n", sizeof(User::Ptr&));
 	CreateSimpleStatusBar(ATL_IDS_IDLEMESSAGE, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SBARS_SIZEGRIP);
 	ctrlStatus.Attach(m_hWndStatusBar);
 
@@ -73,8 +69,8 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	clientContainer.SubclassWindow(ctrlClient.m_hWnd);
 	
 	ctrlClient.SetAutoURLDetect(false);
-	ctrlClient.SetEventMask( ctrlClient.GetEventMask() | ENM_LINK );
-	ctrlClient.SetUsers( &ctrlUsers );
+	ctrlClient.SetEventMask(ctrlClient.GetEventMask() | ENM_LINK);
+	ctrlClient.SetUsers(&ctrlUsers);
 	
 	ctrlMessage.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_VSCROLL | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE, WS_EX_CLIENTEDGE);
@@ -1471,7 +1467,6 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			}
 		}
 	}
-	return;
 }
 
 void HubFrame::onTab() {
@@ -2587,8 +2582,6 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);
-			} else if(ui->getIdentity().isTcpActive()) {
-				cd->clrText = SETTING(ACTIVE_COLOR);
 			} else if(!ui->getIdentity().isTcpActive()) {
 				cd->clrText = SETTING(PASIVE_COLOR);
 			} else {

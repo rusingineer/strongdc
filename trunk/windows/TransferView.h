@@ -228,9 +228,7 @@ private:
 
 		static int compareItems(ItemInfo* a, ItemInfo* b, int col);
 
-		int imageIndex() {
-			return !download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT);
-		}
+		int imageIndex() const { return !download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT); }
 
 		ItemInfo* createMainItem() {
 	  		ItemInfo* h = new ItemInfo(user, true);
@@ -242,7 +240,7 @@ private:
 
 			return h;
 		}
-		const tstring& getGroupingString() { return Target; }
+		const tstring& getGroupingString() const { return Target; }
 		void updateMainItem() {
 			if(main->subItems.size() == 1) {
 				ItemInfo* i = main->subItems.front();

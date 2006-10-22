@@ -189,17 +189,18 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					if(chunksInfo && chunksInfo->isVerified(aStartPos, aBytes)){
 						try{
 							SharedFileStream* ss = new SharedFileStream(sourceFile, aStartPos);
-							/*if(ss->getSize() < aBytes) {
-								aSource->fileNotAvail();
-								aSource->disconnect();
+							is = ss;
+							start = aStartPos;
+							size = chunksInfo->fileSize;
+							bytesLeft = (aBytes == -1) ? size : aBytes;
+
+							if(size < (start + bytesLeft)) {
+								aSource.fileNotAvail();
 								delete is;
 								return false;
-							}*/
-							is = ss;
-							size = chunksInfo->fileSize;
-							free = (size <= (int64_t)(64 * 1024));
+							}
 
-							if((aStartPos + aBytes) < size) {
+							if((aStartPos + bytesLeft) < size) {
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
@@ -207,7 +208,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 							goto ok;
 						}catch(const Exception&) {
 							aSource.fileNotAvail();
-							aSource.disconnect();
+							//aSource.disconnect();
 							delete is;
 							return false;
 						}
@@ -225,10 +226,17 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 						sourceFile = target;
 						try{
 							is = new SharedFileStream(sourceFile, aStartPos, 0, true);
+							start = aStartPos;
 							size = File::getSize(sourceFile);
-							free = (size <= (int64_t)(64 * 1024));
+							bytesLeft = (aBytes == -1) ? size : aBytes;
 
-							if((aStartPos + aBytes) < size) {
+							if(size < (start + bytesLeft)) {
+								aSource.fileNotAvail();
+								delete is;
+								return false;
+							}
+
+							if((aStartPos + bytesLeft) < size) {
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
@@ -285,11 +293,12 @@ ok:
 		if(&aSource == &up->getUserConnection()) {
 			delayUploads.erase(i);
 			if(sourceFile != up->getSourceFile()) {
-				finishUpload(up);
-				delete up;
+				logUpload(up);
 			} else {
 				resumed = true;
 			}
+			dcdebug("Upload from %s removed on next chunk\n", up->getUserConnection().getUser()->getFirstNick());
+			delete up;
 			break;
 		}
 	}
@@ -369,8 +378,10 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	throttleSetup();
 	
 	if(delay) {
+		dcdebug("Upload from %s delayed\n", aUpload->getUserConnection().getUser()->getFirstNick());
 		delayUploads.push_back(aUpload);
 	} else {
+		dcdebug("Upload from %s removed normally\n", aUpload->getUserConnection().getUser()->getFirstNick());
 		delete aUpload;
 	}
 }
@@ -462,7 +473,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 	if(u) {
 		fire(UploadManagerListener::Failed(), u, aError);
 
-		dcdebug("UM::onFailed: Removing upload\n");
+		dcdebug("UM::onFailed: Removing upload from %s\n", aSource->getUser()->getFirstNick());
 		removeUpload(u);
 	}
 
@@ -477,14 +488,14 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	aSource->setState(UserConnection::STATE_GET);
 
 	if(!u->isSet(Upload::FLAG_CHUNKED)) {
-		finishUpload(u);
+		logUpload(u);
 		removeUpload(u);
 	} else {
 		removeUpload(u, true);
 	}
 }
 
-void UploadManager::finishUpload(Upload* u) {
+void UploadManager::logUpload(Upload* u) {
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
 		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;
@@ -643,7 +654,8 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 
 		if((aTick / 1000) % 10 == 0) {
 			for(Upload::Iter i = delayUploads.begin(); i != delayUploads.end(); ++i) {
-				finishUpload(*i);
+				logUpload(*i);
+				dcdebug("Upload from %s removed delayed\n", (*i)->getUserConnection().getUser()->getFirstNick());
 				delete *i;
 			}
 			delayUploads.clear();

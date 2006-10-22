@@ -43,7 +43,6 @@ PropPage::TextItem OperaColorsPage::texts[] = {
 	{ IDC_CZDC_PROGRESS_COLOR, ResourceManager::SETCZDC_PROGRESSBAR_COLORS },
 	{ IDC_CZDC_PROGRESS_TEXT, ResourceManager::SETCZDC_PROGRESSBAR_TEXT },
 	{ IDC_SETTINGS_ODC_MENUBAR2, ResourceManager::SETCZDC_PROGRESSBAR_COLORS },
-	{ IDC_IMAGEBROWSE, ResourceManager::BROWSE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -293,17 +292,6 @@ LRESULT OperaColorsPage::onClickedProgressTextUp(WORD /* wNotifyCode */, WORD /*
 	}
 		ctrlProgressUpDrawer.Invalidate();
 	return TRUE;
-}
-
-void OperaColorsPage::BrowseForPic(int DLGITEM) {
-	TCHAR buf[MAX_PATH];
-
-	GetDlgItemText(DLGITEM, buf, MAX_PATH);
-	tstring x = buf;
-
-	if(WinUtil::browseFile(x, m_hWnd, false) == IDOK) {
-		SetDlgItemText(DLGITEM, x.c_str());
-	}
 }
 
 LRESULT OperaColorsPage::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
