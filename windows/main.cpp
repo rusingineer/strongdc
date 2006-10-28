@@ -26,7 +26,7 @@
  */
 #define VLD_MAX_DATA_DUMP 0
 #define VLD_AGGREGATE_DUPLICATES
-//#include <vld.h>
+#include <vld.h>
 #endif
 
 #include "../client/DCPlusPlus.h"
@@ -113,7 +113,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 
 	if(firstException) {
-		File::deleteFile(Util::getConfigPath() + "exceptioninfo.txt");
+		File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
 		firstException = false;
 	}
 

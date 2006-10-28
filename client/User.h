@@ -105,7 +105,7 @@ public:
 	Identity() : sid(0) { }
 	Identity(const User::Ptr& ptr, uint32_t aSID) : user(ptr), sid(aSID) { }
 	Identity(const Identity& rhs) : user(rhs.user), sid(rhs.sid), info(rhs.info) { }
-	Identity& operator=(const Identity& rhs) { user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
+	Identity& operator=(const Identity& rhs) { Lock l(cs); user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")

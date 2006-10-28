@@ -625,7 +625,6 @@ void AdcHub::on(Connected) throw() {
 
 void AdcHub::on(Line, const string& aLine) throw() {
 	Client::on(Line(), aLine);	
-	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
 	if(BOOLSETTING(ADC_DEBUG)) {
 		fire(ClientListener::Message(), this, *(OnlineUser*)NULL, "<ADC>" + aLine + "</ADC>");
 	}

@@ -30,7 +30,7 @@
 class CAGEmotion {
 public:
 	typedef CAGEmotion* Ptr;
-	typedef vector<Ptr> List;
+	typedef slist<Ptr> List;
 	typedef List::const_iterator Iter;
 
 	CAGEmotion();
@@ -64,13 +64,13 @@ public:
 	bool Create();
 
 	// Variables
-	GETSET(bool, UseEmoticons, UseEmoticons);
+	GETSET(bool, useEmoticons, UseEmoticons);
 
-	// Emotion list
-	CAGEmotion::List EmotionsList;
+	const CAGEmotion::List& getEmoticonsList() const { return EmotionsList; }
 
 protected:
 	CImageList		m_images;
+	CAGEmotion::List EmotionsList;
 };
 
 #endif // AGEMOTIONSETUP_H__

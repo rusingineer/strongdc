@@ -19,8 +19,9 @@
 #include "stdafx.h"
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
-#include "ChatCtrl.h"
 #include "../client/FavoriteManager.h"
+
+#include "ChatCtrl.h"
 #include "AGEmotionSetup.h"
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
@@ -34,10 +35,7 @@ tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
 tstring ChatCtrl::sTempSelectedUser = Util::emptyStringT;
 
-ChatCtrl::ChatCtrl() {
-	m_boAutoScroll = true;
-	m_pUsers = NULL;
-}
+ChatCtrl::ChatCtrl() : m_boAutoScroll(true), m_pUsers(NULL) { }
 
 void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers) { m_pUsers = pUsers; }
 
@@ -116,7 +114,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
         switch(sMsg[0]) {
             case _T('<'): {
                 if((_tcschr((TCHAR*)sMsg+1, _T('>'))) != NULL) {
-                    int iAuthorLen = _tcslen(sMsg+1)+1;
+                    size_t iAuthorLen = _tcslen(sMsg+1)+1;
                     sText = sMsg+iAuthorLen;
 		            msg = msg.substr(0, iAuthorLen);
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
@@ -138,7 +136,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
             }
             case _T('*'): {
                 if(sMsg[1] == _T(' ') && (_tcschr((wchar_t *)sMsg+2, _T(' '))) != NULL) {
-                    int iAuthorLen = _tcslen(sMsg+2)+1;
+                    size_t iAuthorLen = _tcslen(sMsg+2)+1;
                     sText = sMsg+iAuthorLen+1;
 		            msg = msg.substr(0, iAuthorLen+1);
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
@@ -171,9 +169,9 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	sText += "\n";
 
 	// Insert emoticons
-	if(g_pEmotionsSetup->getUseEmoticons() && BOOLSETTING(USE_EMOTICONS) && bUseEmo) {
-		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
-		int smiles = 0; int nIdxFound = -1;
+	if(g_pEmotionsSetup->getUseEmoticons() && bUseEmo) {
+		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		uint8_t smiles = 0; int nIdxFound = -1;
 		while(true) {
 			TCHAR *rpl = NULL;
 			CAGEmotion::Ptr pFoundEmotion = NULL;

@@ -26,11 +26,10 @@
 #include "atlstr.h"
 #include "TypedListViewCtrl.h"
 #include "ImageDataObject.h"
-#include "../client/Client.h"
 #include "UserInfo.h"
 
 #ifndef _RICHEDIT_VER
-#define _RICHEDIT_VER 0x0300
+# define _RICHEDIT_VER 0x0300
 #endif
 
 #include <AtlCrack.h>

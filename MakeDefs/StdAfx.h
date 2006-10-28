@@ -10,7 +10,6 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../client/config.h"
 #include "../client/stdinc.h"
 
 #include <windows.h>

@@ -126,7 +126,7 @@
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
+				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
@@ -447,10 +447,6 @@
 			</File>
 			<File
 				RelativePath=".\client\ClientProfileManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\client\config.h"
 				>
 			</File>
 			<File

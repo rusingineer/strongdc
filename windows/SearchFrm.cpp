@@ -1612,11 +1612,11 @@ bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, Filte
 			case NOT_EQUAL: insert = (size != si->sr->getSize()); break;
 		}
 	} else {
-		PME reg(Text::fromT(filter),"i");
+		PME reg(filter, _T("i"));
 		if(!reg.IsValid()) {
 			insert = true;
 		} else {
-			insert = reg.match(Text::fromT(si->getText(sel))) > 0;
+			insert = reg.match(si->getText(sel)) > 0;
 		}
 	}
 	return insert;

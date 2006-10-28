@@ -147,7 +147,6 @@ enum Strings { // @DontAdd
 	EB, // "EB"
 	EDIT_ACCEL, // "&Edit"
 	EMAIL, // "E-Mail"
-	ENABLE_EMOTICONS, // "Enable emoticons"
 	ENABLE_MULTI_SOURCE, // "Enable multi-source"
 	ENTER_NICK, // "Please enter a nickname in the settings dialog!"
 	ENTER_PASSWORD, // "Please enter a password"

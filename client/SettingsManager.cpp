@@ -93,7 +93,7 @@ const string SettingsManager::settingTags[] =
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
 	"DisconnectingEnable", "MinFileSize", "UploadQueueFrameShowTree",
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
-	"UseEmoticons", "SendUnknownCommands", "Disconnect",
+	"SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
 	"FavShowJoins", "LogStatusMessages", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
@@ -429,7 +429,6 @@ SettingsManager::SettingsManager()
 	setDefault(MENUBAR_BUMPED, true);
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
-	setDefault(USE_EMOTICONS, true);
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(REPORT_ALTERNATES, true);	
 

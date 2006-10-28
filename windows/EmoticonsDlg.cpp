@@ -23,7 +23,7 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 	result = buf;
 	// pro ucely testovani emoticon packu...
 	if ((GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)) {
-		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
+		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 		result = _T("");
 		string lastEmotionPath = "";
 		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
@@ -44,7 +44,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 	if(g_pEmotionsSetup->getUseEmoticons() && SETTING(EMOTICONS_FILE)!="Disabled") {
 
-		CAGEmotion::List& Emoticons = g_pEmotionsSetup->EmotionsList;
+		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 
 		unsigned int pocet = 0;
 		string lastEmotionPath = "";
