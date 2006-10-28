@@ -2114,20 +2114,20 @@ bool HubFrame::matchFilter(const UserInfo& ui, int sel, bool doSizeCompare, Filt
 			case NOT_EQUAL: insert = (size != ui.getIdentity().getBytesShared()); break;
 		}
 	} else {
-		PME reg(Text::fromT(filter),"i");
+		PME reg(filter,_T("i"));
 		if(!reg.IsValid()) { 
 			insert = true;
 		} else if(sel >= COLUMN_LAST) {
 			for(int i = COLUMN_FIRST; i < COLUMN_LAST; ++i) {
 				//if(Util::findSubString(ui.getText(i), filter) != string::npos) {
-				if(reg.match(Text::fromT(ui.getText(i)))) {
+				if(reg.match(ui.getText(i))) {
 					insert = true;
 					break;
 				}
 			}
 		} else {
 			//if(Util::findSubString(ui.getText(sel), filter) != string::npos)
-			if(reg.match(Text::fromT(ui.getText(sel))))
+			if(reg.match(ui.getText(sel)))
 				insert = true;
 		}
 	}
@@ -2616,7 +2616,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 LRESULT HubFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	TCHAR buf[256];
 	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
-	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
+	if (buf != Text::toT(SETTING(EMOTICONS_FILE))) {
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
 		delete g_pEmotionsSetup;
 		g_pEmotionsSetup = NULL;

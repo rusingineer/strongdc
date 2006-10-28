@@ -378,12 +378,6 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				Util::decodeUrl(aSeeker, ip, port, file);
 				ip = Socket::resolve(ip);
 				
-				// Temporary fix to avoid spamming hublist.org and dcpp.net
-				if(ip == "70.85.55.252" || ip == "207.44.220.108") {
-					LogManager::getInstance()->message("Someone is trying to use your client to spam " + ip + ", please urge hub owner to fix this");
-					return;
-				}
-				
 				if(port == 0) 
 					port = 412;
 				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {

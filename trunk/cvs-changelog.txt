@@ -1,3 +1,8 @@
+** cvs198
+	some code fixes
+	some unicode fixes for regexps
+	experimental: favor small code optimization
+
 ** cvs197
 	DC++ SVN merge
 	fixed memory leak in UploadManager

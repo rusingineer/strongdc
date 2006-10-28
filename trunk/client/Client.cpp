@@ -194,8 +194,9 @@ string Client::getLocalIp() const {
 	return lip;
 }
 
-void Client::on(Line, const string& /*aLine*/) throw() {
+void Client::on(Line, const string& aLine) throw() {
 	updateActivity();
+	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
 }
 
 void Client::on(Second, uint32_t aTick) throw() {

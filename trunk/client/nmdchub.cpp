@@ -94,9 +94,8 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 
 	{
 		Lock l(cs);
-		u = new OnlineUser(p, *this, 0);
+		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
 		u->getIdentity().setNick(aNick);
-		users.insert(make_pair(u->getIdentity().getNick(), u));
 		if(u->getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u->getIdentity());
 		}
@@ -152,6 +151,7 @@ void NmdcHub::clearUsers() {
 void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 	StringTokenizer<string> tok(tag, ',');
 	string::size_type j;
+	size_t slots = 1;
 	for(StringIter i = tok.getTokens().begin(); i != tok.getTokens().end(); ++i) {
 		if(i->length() < 2)
 			continue;
@@ -165,6 +165,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			id.set("HO", t.getTokens()[2]);
 		} else if(i->compare(0, 2, "S:") == 0) {
 			id.set("SL", i->substr(2));
+			slots = Util::toUInt32(i->substr(2));			
 		} else if((j = i->find("V:")) != string::npos) {
 			i->erase(i->begin(), i->begin() + j + 2);
 			id.set("VE", *i);
@@ -177,7 +178,6 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			}
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
-			size_t slots = Util::toUInt32(id.get("SL"));
 			if(slots > 0)
 				id.getUser()->setLastDownloadSpeed((Util::toUInt32(*i)*1024) / slots);
 		}
@@ -187,8 +187,6 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 }
 
 void NmdcHub::onLine(const string& aLine) throw() {
-	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
-
 	if(aLine.length() == 0)
 		return;
 

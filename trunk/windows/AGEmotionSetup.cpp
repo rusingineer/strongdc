@@ -129,7 +129,7 @@ bool CAGEmotionSetup::Create() {
 	setUseEmoticons(false);
 	m_images.Destroy();
 
-	if (!Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
+	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
 		return true;
 
 	int nMaxSizeCX = 0;
@@ -168,7 +168,7 @@ bool CAGEmotionSetup::Create() {
 				if (nMaxSizeCY < bm.bmHeight)
 					nMaxSizeCY = bm.bmHeight;
 
-				EmotionsList.push_back(pEmotion);
+				EmotionsList.push_front(pEmotion);
 			}
 			xml.stepOut();
 		}
