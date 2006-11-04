@@ -1,3 +1,8 @@
+** cvs199
+	fixed GUI lock when many debug messages come
+	some code cleanup
+	removed beta version warning because betatesters don't need to be warned
+
 ** cvs198
 	some code fixes
 	some unicode fixes for regexps

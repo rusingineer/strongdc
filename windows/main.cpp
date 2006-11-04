@@ -465,13 +465,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 #ifdef _DEBUG
 	EXTENDEDTRACEINITIALIZE( Util::getDataPath().c_str() );
 	//File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
-#else
-#if defined(isCVS)
-	if (::MessageBox(NULL, _T("!!! WARNING !!!\n\nThis version is considered to be beta, because it can contain serious bugs which can have negative influence on your system!\nAre you sure you want to run this unstable beta version?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) != IDYES) {
-					ExitProcess(0);
-				}	
-#endif
 #endif
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldSEHFilter = NULL;
 	pOldSEHFilter = SetUnhandledExceptionFilter(&DCUnhandledExceptionFilter);

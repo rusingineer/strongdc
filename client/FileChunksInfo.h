@@ -166,7 +166,7 @@ public:
         return downloadedSize;
     }
 
-    int64_t getVerifiedSize()
+    int64_t getVerifiedSize() const
     {
         return verifiedSize;
     }

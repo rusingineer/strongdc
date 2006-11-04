@@ -13,13 +13,13 @@ public:
 	void SetHeight(int height);
 
 	//returns the width of the bar
-	int GetWidth()
+	int GetWidth() const
 	{
 		return m_iWidth;
 	}
 
 	//returns the height of the bar
-	int GetHeight()
+	int GetHeight() const
 	{
 		return m_iHeight;
 	}
@@ -110,10 +110,8 @@ public:
 		}
 	}
 	static inline void FloodFill(CDC& hDC, int x1, int y1, int x2, int y2, COLORREF c1, COLORREF c2, bool light = true) {
-		if (x2 <= x1 || y2 <= y1)
+		if (x2 <= x1 || y2 <= y1 || x2 > 10000)
 			return;
-
-		if(x2 > 10000) return;
 
 		if (!light) {
 			for (int _x = x1; _x <= x2; ++_x) {

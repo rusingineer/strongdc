@@ -220,7 +220,7 @@ private:
 		void removeAll();
 		void deleteSelf() { delete this; }	
 
-		double getRatio() { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
+		double getRatio() const { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
 
 		const tstring& getText(int col) const {
 			return columns[col];

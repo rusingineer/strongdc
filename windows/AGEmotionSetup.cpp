@@ -18,42 +18,14 @@
 
 #include "stdafx.h"
 #include "../client/DCPlusPlus.h"
-
-#ifndef AGEMOTIONSETUP_H__
-	#include "AGEmotionSetup.h"
-#endif
-
 #include "../client/SimpleXML.h"
-#include "../client/pointer.h"
+#include "../client/Pointer.h"
+
+#include "AGEmotionSetup.h"
 #include <math.h>
 
-HBITMAP AGLoadImage(HINSTANCE hIns, LPCTSTR BmpPath, unsigned int nFlags, int x, int y, unsigned int nLoadFlags) {
-	HBITMAP hBmp = (HBITMAP) ::LoadImage(hIns, BmpPath, nFlags, x, y, nLoadFlags);
-	/*if (!hBmp) {
-		TCHAR buf[512];
-		snwprintf(buf, sizeof(buf), _T("Unable to load '%s'. The program is unable to function without this file"), BmpPath);
-		MessageBox(NULL, buf, _T("Unable to load file"), MB_ICONSTOP | MB_OK);
-	}*/
-	return hBmp;
-}
-
-bool GetBitmapInfo(HBITMAP hBmp, BITMAP *pBuffer) {
-	return (GetObject(hBmp, sizeof(BITMAP), pBuffer) != 0);
-}
-
-CAGEmotion::CAGEmotion() {
-	m_EmotionBmp = NULL;
-	m_ImagePos = -1;
-	m_pImagesList = NULL;
-}
-
-CAGEmotion::~CAGEmotion() {
-	m_ImagePos = -1;
-	m_pImagesList = NULL;
-}
-
 bool CAGEmotion::Create(tstring& strEmotionText, string& strEmotionBmpPath) {
-	m_EmotionBmp = ::AGLoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	if (m_EmotionBmp == NULL) {
 		dcassert(FALSE);
 		return false;
@@ -64,31 +36,7 @@ bool CAGEmotion::Create(tstring& strEmotionText, string& strEmotionBmpPath) {
 	return true;
 }
 
-const tstring& CAGEmotion::GetEmotionText() const {
-	return m_EmotionText;
-}
-
-HBITMAP CAGEmotion::GetEmotionBmp() const {
-	return m_EmotionBmp;
-}
-
-const string& CAGEmotion::GetEmotionBmpPath() const {
-	return m_EmotionBmpPath;
-}
-	
-const long&	CAGEmotion::GetImagePos() const {
-	return m_ImagePos;
-}
-
-void CAGEmotion::SetImagePos(const long& ImagePos) {
-	m_ImagePos = ImagePos;
-}
-
-void CAGEmotion::SetImageList(CImageList* pImagesList) {
-	m_pImagesList = pImagesList;
-}
-
-HBITMAP CAGEmotion::GetEmotionBmp(const COLORREF &clrBkColor) {
+HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	if ((m_pImagesList == NULL) || (m_ImagePos <0))
 		return NULL;
 
@@ -96,7 +44,7 @@ HBITMAP CAGEmotion::GetEmotionBmp(const COLORREF &clrBkColor) {
 	CClientDC dc(NULL);
 
 	IMAGEINFO ii;
-	m_pImagesList->GetImageInfo(GetImagePos(), &ii);
+	m_pImagesList->GetImageInfo(getImagePos(), &ii);
 
 	int nWidth = ii.rcImage.right - ii.rcImage.left;
 	int nHeight = ii.rcImage.bottom - ii.rcImage.top;
@@ -107,7 +55,7 @@ HBITMAP CAGEmotion::GetEmotionBmp(const COLORREF &clrBkColor) {
 	HBITMAP pOldBitmap = (HBITMAP) SelectObject(memDC, dist);
 	
 	memDC.FillSolidRect(0, 0, nWidth, nHeight, clrBkColor);
-	m_pImagesList->Draw(memDC, GetImagePos(), CPoint(0, 0), ILD_NORMAL);
+	m_pImagesList->Draw(memDC, getImagePos(), CPoint(0, 0), ILD_NORMAL);
 
 	SelectObject(memDC, pOldBitmap);
 
@@ -115,10 +63,7 @@ HBITMAP CAGEmotion::GetEmotionBmp(const COLORREF &clrBkColor) {
 }
 
 // CAGEmotionSetup
-
-CAGEmotionSetup::CAGEmotionSetup() {
-	setUseEmoticons(false);
-}
+CAGEmotionSetup::CAGEmotionSetup() : useEmoticons(false) { }
 
 CAGEmotionSetup::~CAGEmotionSetup() {
 	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
@@ -158,17 +103,18 @@ bool CAGEmotionSetup::Create() {
 
 				CAGEmotion* pEmotion = new CAGEmotion();
 				if (!pEmotion->Create(strEmotionText, strEmotionBmpPath)) {
+					delete pEmotion;
 					continue;
 				}
 
 				BITMAP bm;
-				GetBitmapInfo(pEmotion->GetEmotionBmp(), &bm);
+				GetObject(pEmotion->getEmotionBmp(), sizeof(BITMAP), &bm);
 				if (nMaxSizeCX < bm.bmWidth)
 					nMaxSizeCX = bm.bmWidth;
 				if (nMaxSizeCY < bm.bmHeight)
 					nMaxSizeCY = bm.bmHeight;
 
-				EmotionsList.push_front(pEmotion);
+				EmotionsList.push_back(pEmotion);
 			}
 			xml.stepOut();
 		}
@@ -178,7 +124,6 @@ bool CAGEmotionSetup::Create() {
 	}
 	if (nMaxSizeCX == 0)	// Nejsou zadne ikony ? tak to ani pouzivat nebudeme
 		return true;
-	setUseEmoticons(true);
 
 	if (!m_images.Create(nMaxSizeCX, nMaxSizeCY, ILC_COLORDDB|ILC_MASK, 0, 1)) {
 		dcassert(FALSE);
@@ -190,7 +135,7 @@ bool CAGEmotionSetup::Create() {
 		return FALSE;
 
 	for(CAGEmotion::Iter pEmotion = EmotionsList.begin(); pEmotion != EmotionsList.end(); ++pEmotion) {
-		HBITMAP hBmp = (*pEmotion)->GetEmotionBmp();
+		HBITMAP hBmp = (*pEmotion)->getEmotionBmp();
 
 	 	HBITMAP poPrevSourceBmp = (HBITMAP) SelectObject(oTestDC, hBmp);
 		COLORREF clrTransparent = GetPixel(oTestDC,0,0);
@@ -198,11 +143,12 @@ bool CAGEmotionSetup::Create() {
 
 		int nImagePos = m_images.Add(hBmp, clrTransparent);
 
-		(*pEmotion)->SetImagePos(nImagePos);
-		(*pEmotion)->SetImageList(&m_images);
+		(*pEmotion)->setImagePos(nImagePos);
+		(*pEmotion)->setImageList(&m_images);
 
 		DeleteObject(hBmp);
 	}
-
+	
+	setUseEmoticons(true);
 	return true;
 }

@@ -26,7 +26,7 @@
 
 //map<HMENU, bool> OMenu::fixedMenus;
 
-OMenu::Map OMenu::menus;
+//OMenu::Map OMenu::menus;
 
 OMenu::OMenu() : CMenu() {
 }
@@ -40,9 +40,9 @@ OMenu::~OMenu() {
 			delete *i;
 		}
 	}
-	pUnMap();
+	//pUnMap();
 }
-
+/*
 void OMenu::pMap() {
 	if (m_hMenu != NULL) {
 		menus[m_hMenu] = this;
@@ -55,11 +55,11 @@ void OMenu::pUnMap() {
 		menus.erase(i);
 	}
 }
-
+*/
 BOOL OMenu::CreatePopupMenu() {
-	pUnMap();
+	//pUnMap();
 	BOOL b = CMenu::CreatePopupMenu();
-	pMap();
+	//pMap();
 	return b;
 }
 
@@ -76,8 +76,7 @@ void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const tstring& caption,
 	}
 	mi->parent = this;
 	items.push_back(mi);
-	MENUITEMINFO mii;
-	ZeroMemory(&mii, sizeof(MENUITEMINFO));
+	MENUITEMINFO mii = {0};
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_FTYPE | MIIM_DATA;
 	mii.fType = MFT_OWNERDRAW | MFT_SEPARATOR;
@@ -86,8 +85,7 @@ void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const tstring& caption,
 }
 
 void OMenu::CheckOwnerDrawn(UINT uItem, BOOL byPosition) {
-	MENUITEMINFO mii;
-	ZeroMemory(&mii, sizeof(MENUITEMINFO));
+	MENUITEMINFO mii = {0};
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_TYPE | MIIM_DATA;
 	GetMenuItemInfo(uItem, byPosition, &mii);
@@ -125,8 +123,7 @@ LRESULT OMenu::onInitMenuPopup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	/*LRESULT ret = */::DefWindowProc(hWnd, uMsg, wParam, lParam);
 //	if (fixedMenus.find(mnu) == fixedMenus.end()) {
 		for (int i = 0; i < ::GetMenuItemCount(mnu); ++i) {
-			MENUITEMINFO mii;
-			ZeroMemory(&mii, sizeof(MENUITEMINFO));
+			MENUITEMINFO mii = {0};
 			mii.cbSize = sizeof(MENUITEMINFO);
 			mii.fMask = MIIM_TYPE | MIIM_DATA;
 			::GetMenuItemInfo(mnu, i, TRUE, &mii);

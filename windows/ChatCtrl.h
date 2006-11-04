@@ -49,7 +49,6 @@ public:
 	bool HitNick(POINT p, CAtlString& sNick, int& piBegin , int& piEnd);
 	bool HitIP(POINT p, CAtlString& sIP, int& piBegin, int& piEnd);
 	bool HitURL();
-	bool GetAutoScroll() const;
 
 	tstring LineFromPos(POINT p) const;
 
@@ -58,6 +57,7 @@ public:
 	void AppendTextOnly(const tstring& sMyNick, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
 
 	void GoToEnd();
+	bool GetAutoScroll() const { return m_boAutoScroll; }
 	void SetAutoScroll(bool boAutoScroll);
 	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers);
 	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };

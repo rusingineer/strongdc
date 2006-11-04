@@ -64,12 +64,14 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
 		closed = true;
+		stop = true;
+		s.signal();
+
 		PostMessage(WM_CLOSE);
-		return 0;
 	} else {
 		bHandled = FALSE;
-		return 0;
 	}
+	return 0;
 }
 
 void CDMDebugFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
@@ -152,14 +154,4 @@ LRESULT CDMDebugFrame::onClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	ctrlPad.SetWindowText(_T(""));
 	ctrlPad.SetFocus();
 	return 0;
-}
-
-LRESULT CDMDebugFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	if(wParam == ADD_LINE && !closed){
-		string* x = (string*)lParam;
-		addLine(*x);
-		delete x;
-	}
-	return 0;
-
 }
