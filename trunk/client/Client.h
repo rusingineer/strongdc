@@ -121,7 +121,7 @@ public:
 
 	void updated(const OnlineUser& aUser) { fire(ClientListener::UserUpdated(), this, aUser); }
 
-	static int getTotalCounts(){
+	static int getTotalCounts() {
 		return counts.normal + counts.registered + counts.op;
 	}
 

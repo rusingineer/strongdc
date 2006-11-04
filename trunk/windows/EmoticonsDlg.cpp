@@ -27,8 +27,8 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 		result = _T("");
 		string lastEmotionPath = "";
 		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
-			if (lastEmotionPath != (*pEmotion)->GetEmotionBmpPath()) result += (*pEmotion)->GetEmotionText() + _T(" ");
-			lastEmotionPath = (*pEmotion)->GetEmotionBmpPath();
+			if (lastEmotionPath != (*pEmotion)->getEmotionBmpPath()) result += (*pEmotion)->getEmotionText() + _T(" ");
+			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
 		}
 	}
 	PostMessage(WM_CLOSE);
@@ -37,10 +37,10 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 
 LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 
-		WNDPROC temp = reinterpret_cast<WNDPROC>(::SetWindowLong(EmoticonsDlg::m_hWnd, GWL_WNDPROC, reinterpret_cast<LONG>(NewWndProc)));
-		if (!m_MFCWndProc) m_MFCWndProc = temp;
-		m_pDialog = this;
-		::EnableWindow(WinUtil::mainWnd, true);
+	WNDPROC temp = reinterpret_cast<WNDPROC>(::SetWindowLong(EmoticonsDlg::m_hWnd, GWL_WNDPROC, reinterpret_cast<LONG>(NewWndProc)));
+	if (!m_MFCWndProc) m_MFCWndProc = temp;
+	m_pDialog = this;
+	::EnableWindow(WinUtil::mainWnd, true);
 
 	if(g_pEmotionsSetup->getUseEmoticons() && SETTING(EMOTICONS_FILE)!="Disabled") {
 
@@ -51,8 +51,8 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		CAGEmotion::Iter pEmotion;
 		for(pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
 		{
-			if ((*pEmotion)->GetEmotionBmpPath() != lastEmotionPath) pocet++;
-			lastEmotionPath = (*pEmotion)->GetEmotionBmpPath();
+			if ((*pEmotion)->getEmotionBmpPath() != lastEmotionPath) pocet++;
+			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
 		}
 
 		// x, y jen pro for cyklus
@@ -82,7 +82,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		BITMAP bm;
-		GetObject((*Emoticons.begin())->GetEmotionBmp(GetSysColor(COLOR_BTNFACE)), sizeof(BITMAP), &bm);
+		GetObject((*Emoticons.begin())->getEmotionBmp(GetSysColor(COLOR_BTNFACE)), sizeof(BITMAP), &bm);
 		int bW = bm.bmWidth;
 
 		pos.bottom = pos.top - 3;
@@ -107,13 +107,13 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 			if ((iY*nXfor)+iX+1 > Emoticons.size()) break;
 
 			// dve stejne emotikony za sebou nechceme
-			if ((*pEmotion)->GetEmotionBmpPath() != lastEmotionPath) {
+			if ((*pEmotion)->getEmotionBmpPath() != lastEmotionPath) {
 				try {
 					CButton emoButton;
-					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->GetEmotionText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
-					emoButton.SetBitmap((*pEmotion)->GetEmotionBmp(GetSysColor(COLOR_BTNFACE)));
+					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->getEmotionText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
+					emoButton.SetBitmap((*pEmotion)->getEmotionBmp(GetSysColor(COLOR_BTNFACE)));
 
-					tstring smajl = (*pEmotion)->GetEmotionText();
+					tstring smajl = (*pEmotion)->getEmotionText();
 					CToolInfo ti(TTF_SUBCLASS, emoButton.m_hWnd, 0, 0, const_cast<LPTSTR>(smajl.c_str()));
 					ctrlToolTip.AddTool(&ti);
 
@@ -130,7 +130,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 				}
 			}
 
-			lastEmotionPath = (*pEmotion)->GetEmotionBmpPath();
+			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
 			try { pEmotion++; }
 			catch (...) {}
 		}

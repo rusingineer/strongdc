@@ -178,7 +178,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 			int len = sText.GetLength();
 			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 				nIdxFound = -1;
-				TCHAR *txt = Util::strstr(sText, (*pEmotion)->GetEmotionText().c_str(), &nIdxFound);
+				TCHAR *txt = Util::strstr(sText, (*pEmotion)->getEmotionText().c_str(), &nIdxFound);
 				if((txt < rpl && txt) || !rpl && txt) {
 					if(len > nIdxFound) {
 						rpl = txt;
@@ -193,9 +193,9 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 				lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 				SetSel(lSelEnd, lSelEnd);
 				CImageDataObject::InsertBitmap(GetOleInterface(), 
-					pFoundEmotion->GetEmotionBmp(bMyMess ? WinUtil::m_ChatTextMyOwn.crBackColor : WinUtil::m_ChatTextGeneral.crBackColor));
+					pFoundEmotion->getEmotionBmp(bMyMess ? WinUtil::m_ChatTextMyOwn.crBackColor : WinUtil::m_ChatTextGeneral.crBackColor));
 
-				sText = rpl + pFoundEmotion->GetEmotionText().size();
+				sText = rpl + pFoundEmotion->getEmotionText().size();
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
@@ -483,8 +483,6 @@ void ChatCtrl::GoToEnd() {
 	if(m_boAutoScroll)
 		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 }
-
-bool ChatCtrl::GetAutoScroll() const { return m_boAutoScroll; }
 
 void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
 	m_boAutoScroll = boAutoScroll;
