@@ -34,10 +34,8 @@ public:
 	typedef List::const_iterator Iter;
 
 	CAGEmotion() : m_EmotionBmp(NULL), m_ImagePos(-1), m_pImagesList(NULL) { }
-	~CAGEmotion() {
-		m_ImagePos = -1;
-		m_pImagesList = NULL;
-	}
+	~CAGEmotion() {	}
+	
 	bool Create(tstring& strEmotionText, string& strEmotionBmpPath);
 
 	const tstring& getEmotionText() const { return m_EmotionText; }
@@ -61,7 +59,7 @@ protected:
 
 class CAGEmotionSetup {
 public:
-	CAGEmotionSetup();
+	CAGEmotionSetup() : useEmoticons(false) { }
 	virtual ~CAGEmotionSetup();
 
 	bool Create();
@@ -72,7 +70,7 @@ public:
 	const CAGEmotion::List& getEmoticonsList() const { return EmotionsList; }
 
 protected:
-	CImageList		m_images;
+	CImageList		 m_images;
 	CAGEmotion::List EmotionsList;
 };
 

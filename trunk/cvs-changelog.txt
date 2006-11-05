@@ -1,3 +1,9 @@
+** cvs200
+	updated Czech language file
+	when private IP is detected, the passive mode is set by default
+	fixed default old sharing interface for Win9x
+	release version 2.03
+
 ** cvs199
 	fixed GUI lock when many debug messages come
 	some code cleanup

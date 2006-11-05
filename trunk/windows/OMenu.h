@@ -81,14 +81,7 @@ public:
 
 private:
 	OMenuItem::List items;
-/*
-	typedef map<HMENU, OMenu*> Map;
-	typedef Map::iterator Iter;
-	static Map menus;
 
-	void pMap();
-	void pUnMap();
-*/
 	static void CalcTextSize(const tstring& text, HFONT font, LPSIZE size) {
 		HDC dc = CreateCompatibleDC(NULL);
 		HGDIOBJ old = SelectObject(dc, font);

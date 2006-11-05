@@ -245,7 +245,7 @@
 		<String Name="HubListEdit">Edit the hublist</String>
 		<String Name="HubName">Name</String>
 		<String Name="HubSegments">Hub / Segments</String>
-		<String Name="HubTopic">Hub Topic :"</String>
+		<String Name="HubTopic">Hub Topic :</String>
 		<String Name="HubUsers">Users</String>
 		<String Name="Hubs">Hubs</String>
 		<String Name="Chatdblclickaction">Chat double click on user action</String>

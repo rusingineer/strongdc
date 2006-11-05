@@ -169,7 +169,7 @@ SettingsManager::SettingsManager()
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
 	setDefault(TLS_PORT, 0);
-	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
+	setDefault(INCOMING_CONNECTIONS, Util::isPrivateIp(Util::getLocalIp()) ? INCOMING_FIREWALL_PASSIVE : INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(ROLLBACK, 4096);
 	setDefault(AUTO_FOLLOW, true);
@@ -185,7 +185,7 @@ SettingsManager::SettingsManager()
 	setDefault(IGNORE_HUB_PMS, false);
 	setDefault(IGNORE_BOT_PMS, false);
 	setDefault(BUFFER_SIZE, 64);
-	setDefault(HUBLIST_SERVERS, "http://www.hublist.org/PublicHubList.xml.bz2;http://dc.selwerd.nl/hublist.xml.bz2");
+	setDefault(HUBLIST_SERVERS, "http://www.cnet.cz/list.txt;http://home.bandicoot.nl/adchublist.xml.bz2;http://www.hublist.org/PublicHubList.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(LOG_DIRECTORY, Util::getDataPath() + "Logs" PATH_SEPARATOR_STR);
@@ -544,7 +544,7 @@ SettingsManager::SettingsManager()
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx((OSVERSIONINFO*)&ver);
 
-	setDefault(USE_OLD_SHARING_UI, (ver.dwPlatformId == VER_PLATFORM_WIN32_NT) ? true : false);
+	setDefault(USE_OLD_SHARING_UI, (ver.dwPlatformId == VER_PLATFORM_WIN32_NT) ? false : true);
 #endif
 }
 

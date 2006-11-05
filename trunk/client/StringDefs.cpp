@@ -241,7 +241,7 @@ string ResourceManager::strings[] = {
 "Edit the hublist", 
 "Name", 
 "Hub / Segments", 
-"Hub Topic :"	, 
+"Hub Topic :", 
 "Users", 
 "Hubs", 
 "Chat double click on user action", 

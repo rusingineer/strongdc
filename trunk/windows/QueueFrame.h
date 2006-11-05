@@ -113,7 +113,6 @@ public:
 	LRESULT onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void removeDir(HTREEITEM ht);
 	void setPriority(HTREEITEM ht, const QueueItem::Priority& p);
@@ -361,7 +360,6 @@ private:
 
 	TypedListViewCtrl<QueueItemInfo, IDC_QUEUE> ctrlQueue;
 	CTreeViewCtrl ctrlDirs;
-	COLORREF barva;
 	
 	CStatusBarCtrl ctrlStatus;
 	int statusSizes[6];

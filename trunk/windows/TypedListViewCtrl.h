@@ -290,9 +290,9 @@ public:
 		sortColumn = aSortColumn;
 		updateArrow();
 	}
-	int getSortColumn() { return sortColumn; }
-	int getRealSortColumn() { return findColumn(sortColumn); }
-	bool isAscending() { return sortAscending; }
+	int getSortColumn() const { return sortColumn; }
+	int getRealSortColumn() const { return findColumn(sortColumn); }
+	bool isAscending() const { return sortAscending; }
 	void setAscending(bool s) {
 		sortAscending = s;
 		updateArrow();
@@ -502,8 +502,7 @@ public:
 	}
 
 	//find the original position of the column at the current position.
-	int findColumn(int col){
-		return columnIndexes[col];
+	int findColumn(int col) const {	return columnIndexes[col];
 	}	
 	
 private:

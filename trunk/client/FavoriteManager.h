@@ -360,7 +360,7 @@ private:
 
 	void loadXmlList(const string& xml);
 
-	RecentHubEntry::Iter getRecentHub(const string& aServer) {
+	RecentHubEntry::Iter getRecentHub(const string& aServer) const {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
 			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
 				return i;
