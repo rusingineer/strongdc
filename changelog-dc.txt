@@ -1,4 +1,46 @@
 ﻿-- --
+* Switched to VC8/VS2005
+* Removed some unused options
+* Antifrag is now default
+* Confirm hub removal is now default
+* SFV checking is now default
+* Fixed TLS port not being greyed out
+* Automatic hub reconnection is only done if at least one successful connection has been made
+* [bug 1080] Better nick tab completion (thanks cologic)
+* [bug 1081] Added user IP in hub frame (thanks cologic)
+* No more STLport for the time being
+* Linux checks for invalid file types (thanks steven sheehy)
+* Fixed potential crash when search began with space
+* [bug 1085] Better sound playing settings (thanks cologic / ullner)
+
+-- 0.698 2006-10-10 --
+* [bug 1065] Code cleanup (thanks steven sheehy)
+* Fixed readme.txt (thanks ullner)
+* More code cleanup
+* Fixed trusted/untrusted upload view
+* Fixed crash on invalid remote command during upload
+* [ADC] Improved GFI command support
+* Lowest priority downloads are no longer started if there are other downloads running
+* Upgraded to STLport 5.0.2
+* Updated compile instructions
+* Updated unsigned types to C99
+* Removed unmaintained autoconf files
+* Reworked match listing to make it slightly faster
+* Fixed a few random crashes
+* [ADC] Removed obsolete DSC command
+* Fixed user list not being updated in some cases
+* [bug 1071] Added fasthash for unix (thanks steven sheehy)
+
+-- 0.697 2006-09-29 --
+* [ADC] Fixed a few protocol issues
+* Some code cleanup
+* Queue frame fixes and memory saves
+* TLS port change without restart fixed
+* [bug 1007] Fixed nick character check
+* Fixed some transfer view sorting issues
+* [bug 59] Added option to match all local lists
+
+-- 0.696 2006-09-22 --
 * Fixed a possible deadlock
 * [bug 1058] Removed some whitespace (big thanks to pothead)
 * Removed the possibility to download files without TTH
@@ -13,6 +55,9 @@
 * Fixed some SSL connection issues
 * Fixed on-the-fly compression of file lists
 * [bug 1055] Stopped files.xml.bz2 from being deleted on linux (thanks dorian)
+* [bug 1061] Log page fix (thanks fleetcommand)
+* [bug 1033] Altered NMDC hubname/description detection slightly (thanks fleetcommand)
+* [bug 1059] Fixed the possibility for users to become hidden in some cases (thanks fleetcommand)
 
 -- 0.695 2006-09-10 --
 * PM popup/ignore options updated, in nmdc a hub is any nick which hasn't sent a hello or myinfo, and a bot is a nick with myinfo

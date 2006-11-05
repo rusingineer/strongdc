@@ -13,6 +13,7 @@
 * auto-priority doesn't set Lowest priority
 * emptying process working set every 5 minutes
 * some fixes for delayed "Upload finished" message
+* when private IP is detected, the passive mode is set by default
 
 	-- StrongDC++ 2.02 --
 

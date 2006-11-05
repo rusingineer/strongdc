@@ -37,7 +37,7 @@ class PublicHubsFrame : public MDITabChildWindowImpl<PublicHubsFrame, RGB(0, 0, 
 	private FavoriteManagerListener, private SettingsManagerListener
 {
 public:
-	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(""),
+	PublicHubsFrame() : users(0), hubs(0), closed(false), filter(Util::emptyString),
 		filterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP) {
 	}
 

@@ -69,9 +69,9 @@ public:
 		}
 	}
 
-	bool isAscending() { return ascending; }
-	int getSortColumn() { return sortColumn; }
-	int getSortType() { return sortType; }
+	bool isAscending() const { return ascending; }
+	int getSortColumn() const { return sortColumn; }
+	int getSortType() const { return sortType; }
 
 	int insert(int nItem, TStringList& aList, int iImage = 0, LPARAM lParam = NULL);
 	int insert(TStringList& aList, int iImage = 0, LPARAM lParam = NULL);

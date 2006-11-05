@@ -149,9 +149,6 @@ private:
 		s.signal();
 	}
 
-	enum {
-		ADD_LINE,
-	};
 	CEdit ctrlPad, ctrlFilterText;
 	CStatusBarCtrl ctrlStatus;
 	CButton ctrlClear, ctrlCommands, ctrlHubCommands, ctrlDetection, ctrlFilterIp;

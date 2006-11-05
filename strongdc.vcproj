@@ -469,10 +469,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\AGArrayTemplates.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\AGEmotionSetup.cpp"
 				>
 			</File>
@@ -770,19 +766,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\AGArrayTemplates.h"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\AGEmotionSetup.h"
 				>
 			</File>
 			<File
 				RelativePath=".\windows\AppearancePage.h"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\atlctrlxp.h"
 				>
 			</File>
 			<File

@@ -210,7 +210,7 @@ public:
 		currents.push_back(aUser);
 	}
 	
-	bool isCurrent(const User::Ptr& aUser) {
+	bool isCurrent(const User::Ptr& aUser) const {
 		dcassert(isSource(aUser));
 		return find(currents.begin(), currents.end(), aUser) != currents.end();
 	
@@ -296,7 +296,7 @@ public:
 		return priority;
 	}
 
-	bool hasFreeSegments() {
+	bool hasFreeSegments() const {
 		if(!isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 			return (status != STATUS_RUNNING);
 		} else {

@@ -244,7 +244,7 @@ enum Strings { // @DontAdd
 	HUB_LIST_EDIT, // "Edit the hublist"
 	HUB_NAME, // "Name"
 	HUB_SEGMENTS, // "Hub / Segments"
-	HUB_TOPIC, // "Hub Topic :"	
+	HUB_TOPIC, // "Hub Topic :"
 	HUB_USERS, // "Users"
 	HUBS, // "Hubs"
 	CHATDBLCLICKACTION, // "Chat double click on user action"

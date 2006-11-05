@@ -13,16 +13,10 @@ public:
 	void SetHeight(int height);
 
 	//returns the width of the bar
-	int GetWidth() const
-	{
-		return m_iWidth;
-	}
+	int GetWidth() const { return m_iWidth; }
 
 	//returns the height of the bar
-	int GetHeight() const
-	{
-		return m_iHeight;
-	}
+	int GetHeight() const { return m_iHeight; }
 
 	//sets new file size and resets the shader
 	void SetFileSize(uint64_t qwFileSize);

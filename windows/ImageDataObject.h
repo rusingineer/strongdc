@@ -38,10 +38,7 @@ private:
 	FORMATETC m_fromat;
 
 public:
-	CImageDataObject() : m_ulRefCnt(0) {
-		m_bRelease = FALSE;
-	}
-
+	CImageDataObject() : m_ulRefCnt(0), m_bRelease(FALSE) {	}
 	~CImageDataObject() {
 		if (m_bRelease)
 			::ReleaseStgMedium(&m_stgmed);

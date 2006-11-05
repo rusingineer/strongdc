@@ -62,9 +62,6 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	return (HBITMAP)dist.Detach();
 }
 
-// CAGEmotionSetup
-CAGEmotionSetup::CAGEmotionSetup() : useEmoticons(false) { }
-
 CAGEmotionSetup::~CAGEmotionSetup() {
 	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
 	m_images.Destroy();
