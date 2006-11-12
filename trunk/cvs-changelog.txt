@@ -1,3 +1,8 @@
+** cvs201
+	hopefully fixed deadlock on some queue operations
+	some fixes for finished uploads logging
+	some fixes in Share settings interface
+
 ** cvs200
 	updated Czech language file
 	when private IP is detected, the passive mode is set by default

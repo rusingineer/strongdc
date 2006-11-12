@@ -35,7 +35,7 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 	if (!Util::getAway() && BOOLSETTING(POPUP_AWAY) && (iPreview == -1))
 		return;
 	
-	if(!MainFrame::getMainFrame()->bAppMinimized && BOOLSETTING(POPUP_MINIMIZED) && (iPreview == -1)) {
+	if(!MainFrame::getMainFrame()->getAppMinimized() && BOOLSETTING(POPUP_MINIMIZED) && (iPreview == -1)) {
 		return;
 	}
 

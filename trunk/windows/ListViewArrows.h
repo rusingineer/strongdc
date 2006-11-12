@@ -134,7 +134,6 @@ public:
 
 				headerCtrl.SetItem(i, &item);
 			}
-
 		} else {
 			if (upArrow.IsNull())
 				return;
@@ -173,7 +172,6 @@ public:
 
 		DeleteObject(downArrow);
 		DeleteObject(upArrow);
-
 
 		bHandled = FALSE;
 		return 0;

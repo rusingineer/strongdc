@@ -297,7 +297,7 @@ public:
 			if(isMDIChildActive(hWnd)) {
 				::PostMessage(hWnd, WM_CLOSE, NULL, NULL);
 			} else if(frame->MDIGetActive() != hWnd) {
-				MainFrame::anyMF->MDIActivate(hWnd);
+				MainFrame::getMainFrame()->MDIActivate(hWnd);
 				WinUtil::setButtonPressed(ID, true);
 			} else if(BOOLSETTING(TOGGLE_ACTIVE_WINDOW)) {
 				::SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
@@ -310,7 +310,7 @@ public:
 		}
 	}
 	static bool isMDIChildActive(HWND hWnd) {
-		HWND wnd = MainFrame::anyMF->MDIGetActive();
+		HWND wnd = MainFrame::getMainFrame()->MDIGetActive();
 		dcassert(wnd != NULL);
 		return (hWnd == wnd);
 	}

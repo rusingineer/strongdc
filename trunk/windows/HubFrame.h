@@ -53,7 +53,6 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
 
 	typedef CSplitterImpl<HubFrame> splitBase;
-	CHorSplitterWindow splitChat;
 	typedef MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF> baseClass;
 	typedef UCHandler<HubFrame> ucBase;
 	typedef UserInfoBaseHandler<HubFrame> uibBase;

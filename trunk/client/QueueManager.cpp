@@ -76,7 +76,7 @@ namespace {
 
 		v.reserve(sl.size());
 
-		for(StringList::iterator i = sl.begin(); i != sl.end(); ++i) {
+		for(StringList::const_iterator i = sl.begin(); i != sl.end(); ++i) {
 			if(!i->empty()) {
 				int64_t offset = Util::toInt64(*i);
 				if(!v.empty() && offset < v.back()){
@@ -661,6 +661,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 		}
 				
 		if(q == NULL) {
+			aFlags |= BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0;
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 			fire(QueueManagerListener::Added(), q);
 
@@ -673,7 +674,6 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 				throw QueueException(STRING(FILE_WITH_DIFFERENT_TTH));
 			}
 
-			aFlags &= ~QueueItem::FLAG_MULTI_SOURCE;
 			q->setFlag(aFlags);
 
 			// We don't add any more sources to user list downloads...
@@ -987,7 +987,7 @@ again:
 
 	QueueItem::SourceConstIter source = q->getSource(aUser);
 	bool useChunks = true;
-	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && q->chunkInfo) {
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
 			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {

@@ -1003,10 +1003,8 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		readdMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		if(wID == IDC_READD) {
 			// re-add all sources
-			for(QueueItem::SourceIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); ) {
+			for(QueueItem::SourceIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); s++) {
 				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
-				//reset the iterator since it won't be valid after the call to readd
-				s = ii->getBadSources().begin();
 			}
 		} else {
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
@@ -1027,10 +1025,8 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		if(wID == IDC_REMOVE_SOURCE) {
-			for(QueueItem::SourceIter si = ii->getSources().begin(); si != ii->getSources().end(); ) {
+			for(QueueItem::SourceIter si = ii->getSources().begin(); si != ii->getSources().end(); si++) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), si->getUser(), QueueItem::Source::FLAG_REMOVED);
-				//reset the iterator since it won't be valid after the call to readd
-				si = ii->getSources().begin();
 			}
 		} else {
 			CMenuItemInfo mi;
@@ -1517,8 +1513,6 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		for(QueueItem::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
 			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
-				//reset the iterator since it won't be valid after the call to readd
-				i = ii->getSources().begin();
 			}
 		}
 	}

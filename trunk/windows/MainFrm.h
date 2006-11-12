@@ -57,8 +57,7 @@ public:
 
 	CMDICommandBarCtrl m_CmdBar;
 
-	class Popup {
-	public:
+	struct Popup {
 		tstring Title;
 		tstring Message;
 		int Icon;
@@ -75,7 +74,6 @@ public:
 		STATUS_MESSAGE,
 		SHOW_POPUP,
 		REMOVE_POPUP,
-		SET_NORMAL_TRAY_ICON,
 		SET_PM_TRAY_ICON
 	};
 
@@ -322,27 +320,19 @@ public:
 		createToolbar();
 		return S_OK;
 	}
-	static MainFrame* getMainFrame() {
-		return anyMF;
-	}
+	static MainFrame* getMainFrame() { return anyMF; }
+	bool getAppMinimized() const { return bAppMinimized; }
+	CToolBarCtrl& getToolBar() { return ctrlToolbar; }
+
 	static void setShutDown(bool b) {
 		if (b)
 			iCurrentShutdownTime = TimerManager::getTick() / 1000;
 		bShutdown = b;
 	}
-	static bool getShutDown() {
-		return bShutdown;
-	}
-
+	static bool getShutDown() { return bShutdown; }
 	
-	static void setAwayButton(bool a) {
-		if(a) {
-			if(!anyMF->ctrlToolbar.IsButtonChecked(IDC_AWAY)) anyMF->ctrlToolbar.CheckButton(IDC_AWAY,true);
-		}
-		else
-		{
-			if(anyMF->ctrlToolbar.IsButtonChecked(IDC_AWAY)) anyMF->ctrlToolbar.CheckButton(IDC_AWAY,false);
-		}
+	static void setAwayButton(bool check) {
+		anyMF->ctrlToolbar.CheckButton(IDC_AWAY, check);
 	}
 
 	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
@@ -350,11 +340,8 @@ public:
 	CImageList largeImages, largeImagesHot;
 	virtual int run();
 	
-	static MainFrame* anyMF;
-private:
-	friend int WinUtil::setButtonPressed(int iPos, bool bPressed);
-	friend void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int iPreview);
 
+private:
 	NOTIFYICONDATA normalicon;
 	NOTIFYICONDATA pmicon;
 
@@ -391,7 +378,8 @@ private:
 	};
 	
 	TransferView transferView;
-
+	static MainFrame* anyMF;
+	
 	enum { MAX_CLIENT_LINES = 10 };
 	TStringList lastLinesList;
 	tstring lastLines;
@@ -440,9 +428,6 @@ private:
 	bool missedAutoConnect;
 	HWND createToolbar();
 	void updateTray(bool add = true);
-	void setNormalTrayIcon() {
-		PostMessage(WM_SPEAKER, SET_NORMAL_TRAY_ICON);
-	}
 
 	LRESULT onAppShow(WORD /*wNotifyCode*/,WORD /*wParam*/, HWND, BOOL& /*bHandled*/) {
 		if (::IsIconic(m_hWnd)) {

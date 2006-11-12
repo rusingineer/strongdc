@@ -37,13 +37,13 @@ int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, 
 	COLUMN_PATH, COLUMN_SLOTS, COLUMN_CONNECTION, COLUMN_HUB, COLUMN_EXACT_SIZE, COLUMN_UPLOAD, COLUMN_IP, COLUMN_TTH };
 int SearchFrame::columnSizes[] = { 210, 80, 100, 50, 80, 100, 40, 70, 150, 80, 80, 100, 150 };
 
-static ResourceManager::Strings columnNames[] = {ResourceManager::FILE,  ResourceManager::HIT_COUNT, ResourceManager::USER, ResourceManager::TYPE, ResourceManager::SIZE,
+static ResourceManager::Strings columnNames[] = { ResourceManager::FILE,  ResourceManager::HIT_COUNT, ResourceManager::USER, ResourceManager::TYPE, ResourceManager::SIZE,
 	ResourceManager::PATH, ResourceManager::SLOTS, ResourceManager::CONNECTION, 
 	ResourceManager::HUB, ResourceManager::EXACT_SIZE, ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::TTH_ROOT };
 
 SearchFrame::FrameMap SearchFrame::frames;
 
-void SearchFrame::openWindow(const tstring& str /* = Util::emptyString */, LONGLONG size /* = 0 */, SearchManager::SizeModes mode /* = SearchManager::SIZE_ATLEAST */, SearchManager::TypeModes type /* = SearchManager::TYPE_ANY */) {
+void SearchFrame::openWindow(const tstring& str /* = Util::emptyString */, LONGLONG size /* = 0 */, SearchManager::SizeModes mode /* = SearchManager::SIZE_ATLEAST */, SearchManager::TypeModes type /* = SearchManager::TYPE_ANY ( 0 ) */) {
 	SearchFrame* pChild = new SearchFrame();
 	pChild->setInitial(str, size, mode, type);
 	pChild->CreateEx(WinUtil::mdiClient);
@@ -245,7 +245,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	initHubs();
 
 	copyMenu.CreatePopupMenu();
-	grantMenu.CreatePopupMenu();
 	targetDirMenu.CreatePopupMenu();
 	targetMenu.CreatePopupMenu();
 	resultsMenu.CreatePopupMenu();
@@ -257,28 +256,20 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CTSTRING(TTH_ROOT));
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
 
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));
-	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_WEEK, CTSTRING(GRANT_EXTRA_SLOT_WEEK));
-	grantMenu.AppendMenu(MF_SEPARATOR);
-	grantMenu.AppendMenu(MF_STRING, IDC_UNGRANTSLOT, CTSTRING(REMOVE_EXTRA_SLOT));
-	
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CTSTRING(DOWNLOAD));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CTSTRING(DOWNLOAD_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD_WHOLE_DIR));
 	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_WHOLE_DIR_TO));
 	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
+	resultsMenu.AppendMenu(MF_SEPARATOR);
 	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CTSTRING(BITZI_LOOKUP));
+	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 	resultsMenu.AppendMenu(MF_SEPARATOR);
 	appendUserItems(resultsMenu);
-	resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-4, MF_BYPOSITION);
 	resultsMenu.AppendMenu(MF_SEPARATOR);
-	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+	resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 	resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
-	resultsMenu.AppendMenu(MF_SEPARATOR);
-	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CTSTRING(BITZI_LOOKUP));
 
 	UpdateLayout();
 
@@ -488,9 +479,8 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	}
 
 	// Reject results without free slots
-	if( (onlyFree && aResult->getFreeSlots() < 1) ||
-	(exactSize1 && (aResult->getSize() != exactSize2))
-	)
+	if((onlyFree && aResult->getFreeSlots() < 1) ||
+	   (exactSize1 && (aResult->getSize() != exactSize2)))
 	{
 		droppedResults++;
 		PostMessage(WM_SPEAKER, FILTER_RESULT);
@@ -534,14 +524,12 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt + si->columns[COLUMN_FILENAME]);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(),
-				(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+				si->sr->getTTH(), si->sr->getUser());
 			
 			for(SearchInfo::Iter i = si->subItems.begin(); i != si->subItems.end(); i++) {
 				SearchInfo* j = *i;
 				try {
-					QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser(), 
-						(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+					QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser());
 				} catch(const Exception&) {
 				}
 			}
@@ -574,8 +562,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(), 
-				(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) | QueueItem::FLAG_RESUME);
+				si->sr->getTTH(), si->sr->getUser());
 
 			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
@@ -745,7 +732,6 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
 			delete *i;
 		}
-
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -1234,24 +1220,16 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}		
 
 			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
-			if(!(resultsMenu.GetMenuState(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-				resultsMenu.AppendMenu(MF_SEPARATOR);
-			}
-			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 			checkAdcItems(resultsMenu);
 //			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
 			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
-			grantMenu.InsertSeparatorFirst(TSTRING(GRANT_SLOTS_MENU));	
+
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 //			resultsMenu.RemoveFirstItem();
 			copyMenu.RemoveFirstItem();
-			grantMenu.RemoveFirstItem();
 			targetDirMenu.RemoveFirstItem();
 			targetMenu.RemoveFirstItem();
-
-			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
-			resultsMenu.DeleteMenu(resultsMenu.GetMenuItemCount()-1, MF_BYPOSITION);
 			cleanMenu(resultsMenu);
 			return TRUE; 
 		}

@@ -292,9 +292,7 @@ void DirectoryListing::download(const string& aDir, const string& aTarget, bool 
 }
 
 void DirectoryListing::download(File* aFile, const string& aTarget, bool view, bool highPrio, QueueItem::Priority prio) {
-
-	int flags = (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0) |
-		(view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
+	int flags = (view ? (QueueItem::FLAG_TEXT | QueueItem::FLAG_CLIENT_VIEW) : QueueItem::FLAG_RESUME);
 
 	QueueManager::getInstance()->add(aTarget, aFile->getSize(), aFile->getTTH(), getUser(), flags);
 
@@ -329,7 +327,7 @@ private:
 
 struct DirectoryEmpty {
 	bool operator()(const DirectoryListing::Directory::Ptr i) const {
-		bool r = i->getFileCount() + i->directories.size() > 0;
+		bool r = i->getFileCount() + i->directories.size() == 0;
 		if (r) DeleteFunction()(i);
 		return r;
 	}

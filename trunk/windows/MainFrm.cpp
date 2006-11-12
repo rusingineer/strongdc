@@ -39,19 +39,16 @@
 #include "TextFrame.h"
 #include "UpdateDlg.h"
 #include "StatsFrame.h"
+#include "WaitingUsersFrame.h"
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
 #include "UPnP.h"
 #include "PrivateFrame.h"
-#include "WaitingUsersFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
 #include "InputBox.h"
 #include "PopupManager.h"
-
-#ifndef AGEMOTIONSETUP_H__
-	#include "AGEmotionSetup.h"
-#endif
+#include "AGEmotionSetup.h"
 
 #include "../client/ConnectionManager.h"
 #include "../client/DownloadManager.h"
@@ -567,17 +564,6 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		PopupManager::getInstance()->Remove((int)lParam);
 	} else if(wParam == REMOVE_POPUP){
 		PopupManager::getInstance()->AutoRemove();
-	} else if(wParam == SET_NORMAL_TRAY_ICON) {
-		if(bIsPM && bTrayIcon == true) {
-			NOTIFYICONDATA nid;
-			nid.cbSize = sizeof(NOTIFYICONDATA);
-			nid.hWnd = m_hWnd;
-			nid.uID = 0;
-			nid.uFlags = NIF_ICON;
-			nid.hIcon = normalicon.hIcon;
-			::Shell_NotifyIcon(NIM_MODIFY, &nid);
-			bIsPM = false;
-		}
 	} else if(wParam == SET_PM_TRAY_ICON) {
 		if(bIsPM == false && (!WinUtil::isAppActive || bAppMinimized) && bTrayIcon == true) {
 			NOTIFYICONDATA nid;
@@ -889,7 +875,16 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 				ClientManager::getInstance()->infoUpdated(false);
 			}
 		}
-		setNormalTrayIcon();
+		if(bIsPM && bTrayIcon == true) {
+			NOTIFYICONDATA nid;
+			nid.cbSize = sizeof(NOTIFYICONDATA);
+			nid.hWnd = m_hWnd;
+			nid.uID = 0;
+			nid.uFlags = NIF_ICON;
+			nid.hIcon = normalicon.hIcon;
+			::Shell_NotifyIcon(NIM_MODIFY, &nid);
+			bIsPM = false;
+		}
 		bAppMinimized = false;
 	}
 
@@ -1342,7 +1337,16 @@ LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 	bHandled = FALSE;
 	WinUtil::isAppActive = (wParam == 1);	//wParam == TRUE if window is activated, FALSE if deactivated
 	if(wParam == 1) {
-		setNormalTrayIcon();
+		if(bIsPM && bTrayIcon == true) {
+			NOTIFYICONDATA nid;
+			nid.cbSize = sizeof(NOTIFYICONDATA);
+			nid.hWnd = m_hWnd;
+			nid.uID = 0;
+			nid.uFlags = NIF_ICON;
+			nid.hIcon = normalicon.hIcon;
+			::Shell_NotifyIcon(NIM_MODIFY, &nid);
+			bIsPM = false;
+		}
 	}
 	return 0;
 }

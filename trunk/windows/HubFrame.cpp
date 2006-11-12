@@ -72,17 +72,15 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlClient.SetEventMask(ctrlClient.GetEventMask() | ENM_LINK);
 	ctrlClient.SetUsers(&ctrlUsers);
 	
-	ctrlMessage.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-		WS_VSCROLL | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE, WS_EX_CLIENTEDGE);
+	ctrlMessage.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VSCROLL |
+		ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE, WS_EX_CLIENTEDGE);
 	
 	ctrlMessageContainer.SubclassWindow(ctrlMessage.m_hWnd);
 	ctrlMessage.SetFont(WinUtil::font);
 	ctrlMessage.SetLimitText(9999);
 
 	ctrlEmoticons.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER, 0, IDC_EMOT);
-	hEmoticonBmp = (HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED);
-
-	ctrlEmoticons.SetBitmap(hEmoticonBmp);
+	ctrlEmoticons.SetBitmap((HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED));
 
 	ctrlFilter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
@@ -99,11 +97,6 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlUsers.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | LVS_EX_INFOTIP);
-
-	splitChat.Create( m_hWnd );
-	splitChat.SetSplitterPanes(ctrlClient.m_hWnd, ctrlMessage.m_hWnd, true);
-	splitChat.SetSplitterExtendedStyle(0);
-	splitChat.SetSplitterPos( 40 );
 
 	m_bVertical = BOOLSETTING(USE_VERTICAL_VIEW);
 	if(m_bVertical) {

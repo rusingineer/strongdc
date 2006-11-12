@@ -49,7 +49,7 @@ const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
 const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
 
-Transfer::Transfer(UserConnection& conn) : start(0), lastTick(GET_TICK()), runningAverage(0),
+Transfer::Transfer(UserConnection& conn) : start(GET_TICK()), lastTick(GET_TICK()), runningAverage(0),
 		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn) { }
 
 void Transfer::updateRunningAverage() {

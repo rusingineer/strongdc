@@ -1213,15 +1213,12 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 				(double)total*100.0/(double)fileSize, Util::formatSeconds((GET_TICK() - main->fileBegin)/1000).c_str());
 
 			tstring statusString;
-			// TODO statusString += _T("[T]");
+			// TODO statusString += _T("[T] ");
 
 			// hack to display whether file is compressed
 			if(ratio < 1.0000) {
 				statusString += _T("[Z] ");
 			}
-			/*if(!statusString.empty()) {
-				statusString += _T(" ");
-			}*/
 			statusString += buf;
 			main->columns[COLUMN_STATUS] = statusString;
 			

@@ -378,10 +378,9 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	throttleSetup();
 	
 	if(delay) {
-		dcdebug("Upload from %s delayed\n", aUpload->getUserConnection().getUser()->getFirstNick());
+		aUpload->setStart(GET_TICK());
 		delayUploads.push_back(aUpload);
 	} else {
-		dcdebug("Upload from %s removed normally\n", aUpload->getUserConnection().getUser()->getFirstNick());
 		delete aUpload;
 	}
 }
@@ -506,10 +505,10 @@ void UploadManager::logUpload(Upload* u) {
 	fire(UploadManagerListener::Complete(), u);
 }
 
-void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size) {
+void UploadManager::addFailedUpload(const User::Ptr& User, string file, int64_t pos, int64_t size) {
 	uint32_t itime = GET_TIME();
 	bool found = false;
-	UploadQueueItem::UserMapIter j = waitingUsers.find(User);
+	UploadQueueItem::UserMap::iterator j = waitingUsers.find(User);
 	if(j != waitingUsers.end()) {
 		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
 			if((*i)->File == file) {
@@ -521,15 +520,13 @@ void UploadManager::addFailedUpload(User::Ptr& User, string file, int64_t pos, i
 	}
 	if(found == false) {
 		UploadQueueItem* qi = new UploadQueueItem(User, file, pos, size, itime);
-		{
-		UploadQueueItem::UserMap::iterator i = waitingUsers.find(User);
-			if(i == waitingUsers.end()) {
-				UploadQueueItem::List l;
-				l.push_back(qi);
-				waitingUsers.insert(make_pair(User, l));
-			} else {
-				i->second.push_back(qi);
-			}
+		//UploadQueueItem::UserMap::iterator i = waitingUsers.find(User);
+		if(j == waitingUsers.end()) {
+			UploadQueueItem::List l;
+			l.push_back(qi);
+			waitingUsers.insert(make_pair(User, l));
+		} else {
+			j->second.push_back(qi);
 		}
 		fire(UploadManagerListener::QueueAdd(), qi);
 	}
@@ -653,12 +650,15 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 		throttleZeroCounters();
 
 		if((aTick / 1000) % 10 == 0) {
-			for(Upload::Iter i = delayUploads.begin(); i != delayUploads.end(); ++i) {
-				logUpload(*i);
-				dcdebug("Upload from %s removed delayed\n", (*i)->getUserConnection().getUser()->getFirstNick());
-				delete *i;
+			for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end();) {
+				Upload* u = *i;
+				if((aTick - u->getStart()) > 15000) {
+					logUpload(u);
+					delete u;
+					delayUploads.erase(i);
+					i = delayUploads.begin();
+				} else i++;
 			}
-			delayUploads.clear();
 		}
 
 		if(uploads.size() > 0)

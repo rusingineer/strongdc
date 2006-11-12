@@ -177,8 +177,8 @@ HLSCOLOR RGB2HLS (COLORREF rgb) {
 	float hue = 0.0f; 
 
 	if ( maxval != minval ) { 
-		float rnorm = (maxval - GetRValue(rgb)  ) / mdiff;      
-		float gnorm = (maxval - GetGValue(rgb)) / mdiff;
+		float rnorm = (maxval - GetRValue(rgb) ) / mdiff;      
+		float gnorm = (maxval - GetGValue(rgb) ) / mdiff;
 		float bnorm = (maxval - GetBValue(rgb) ) / mdiff;   
 
 		saturation = (luminance <= 0.5f) ? (mdiff / msum) : (mdiff / (510.0f - msum));
@@ -243,7 +243,7 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 
 void UserInfoBase::matchQueue() {
 	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_MATCH_QUEUE);
+		QueueManager::getInstance()->addList(user, QueueItem::FLAG_MATCH_QUEUE);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());
 	}
@@ -251,19 +251,19 @@ void UserInfoBase::matchQueue() {
 
 void UserInfoBase::getUserResponses() {
 	try {
-		QueueManager::getInstance()->addTestSUR(getUser(), false);
+		QueueManager::getInstance()->addTestSUR(user, false);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 
 void UserInfoBase::doReport() {
-	ClientManager::getInstance()->reportUser(getUser());
+	ClientManager::getInstance()->reportUser(user);
 }
 
 void UserInfoBase::getList() {
 	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW);
+		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
@@ -272,41 +272,41 @@ void UserInfoBase::browseList() {
 	if(getUser()->getCID().isZero())
 		return;
 	try {
-		QueueManager::getInstance()->addPfs(getUser(), "");
+		QueueManager::getInstance()->addPfs(user, "");
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::checkList() {
 	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::addFav() {
-	FavoriteManager::getInstance()->addFavoriteUser(getUser());
+	FavoriteManager::getInstance()->addFavoriteUser(user);
 }
 void UserInfoBase::pm() {
-	PrivateFrame::openWindow(getUser());
+	PrivateFrame::openWindow(user);
 }
 void UserInfoBase::grant() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 600);
+	UploadManager::getInstance()->reserveSlot(user, 600);
 }
 void UserInfoBase::removeAll() {
-	QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
+	QueueManager::getInstance()->removeSource(user, QueueItem::Source::FLAG_REMOVED);
 }
 void UserInfoBase::grantSlotHour() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 3600);
+	UploadManager::getInstance()->reserveSlot(user, 3600);
 }
 void UserInfoBase::grantSlotDay() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
+	UploadManager::getInstance()->reserveSlot(user, 24*3600);
 }
 void UserInfoBase::grantSlotWeek() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
+	UploadManager::getInstance()->reserveSlot(user, 7*24*3600);
 }
 void UserInfoBase::ungrantSlot() {
-	UploadManager::getInstance()->unreserveSlot(getUser());
+	UploadManager::getInstance()->unreserveSlot(user);
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
@@ -1919,8 +1919,7 @@ bool WinUtil::shutDown(int action) {
 }
 
 int WinUtil::getFirstSelectedIndex(CListViewCtrl& list) {
-	int items = list.GetItemCount();
-	for(int i = 0; i < items; ++i) {
+	for(int i = 0; i < list.GetItemCount(); ++i) {
 		if (list.GetItemState(i, LVIS_SELECTED) == LVIS_SELECTED) {
 			return i;
 		}
@@ -1931,10 +1930,10 @@ int WinUtil::getFirstSelectedIndex(CListViewCtrl& list) {
 int WinUtil::setButtonPressed(int nID, bool bPressed /* = true */) {
 	if (nID == -1)
 		return -1;
-	if (!MainFrame::anyMF->ctrlToolbar.IsWindow())
+	if (!MainFrame::getMainFrame()->getToolBar().IsWindow())
 		return -1;
 
-	MainFrame::anyMF->ctrlToolbar.CheckButton(nID, bPressed);
+	MainFrame::getMainFrame()->getToolBar().CheckButton(nID, bPressed);
 	return 0;
 }
 
