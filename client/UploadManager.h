@@ -211,7 +211,7 @@ private:
 	SlotMap reservedSlots;
 	
 	UploadQueueItem::UserMap waitingUsers;
-	void addFailedUpload(User::Ptr& User, string file, int64_t pos, int64_t size);
+	void addFailedUpload(const User::Ptr& User, string file, int64_t pos, int64_t size);
 	
 	void throttleZeroCounters();
 	void throttleBytesTransferred(uint32_t i);

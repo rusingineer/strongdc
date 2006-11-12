@@ -57,9 +57,12 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aU
 		} else {
 			aHWND = frame->CreateEx(WinUtil::mdiClient);
 		}
-		if(aHWND != 0)
+		if(aHWND != 0) {
 			frame->loadFile(aFile);
-		frames.insert( FramePair( frame->m_hWnd, frame ) );
+			frames.insert( FramePair( frame->m_hWnd, frame ) );
+		} else {
+			delete frame;
+		}
 	}
 }
 

@@ -139,7 +139,7 @@ public:
 		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth), autoPriority(false)
+	tthRoot(tth), autoPriority(false), chunkInfo(NULL)
 	{ 
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
@@ -153,7 +153,7 @@ public:
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents),
 		currentDownload(rhs.currentDownload), added(rhs.added), tthRoot(rhs.tthRoot),
-		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority)
+		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority), chunkInfo(rhs.chunkInfo)
 	{
 	}
 
