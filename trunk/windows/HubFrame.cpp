@@ -183,6 +183,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	bHandled = FALSE;
 	client->connect();
 
+	FavoriteManager::getInstance()->addListener(this);
     TimerManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
@@ -1016,8 +1017,9 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		}
 		DeleteObject(hEmoticonBmp);
 
-		TimerManager::getInstance()->removeListener(this);
 		SettingsManager::getInstance()->removeListener(this);
+		TimerManager::getInstance()->removeListener(this);
+		FavoriteManager::getInstance()->removeListener(this);
 		client->removeListener(this);
 		client->disconnect(true);
 
@@ -1147,7 +1149,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 		TCHAR* buf = new TCHAR[len];
 		ctrlClient.GetLine(line, buf, len);
 		x = tstring(buf, len-1);
-		delete buf;
+		delete[] buf;
 
 		string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 
@@ -1810,11 +1812,30 @@ void HubFrame::addClientLine(const tstring& aLine, bool inChat /* = true */) {
 	}
 }
 
+void HubFrame::resortUsers() {
+	for(FrameIter i = frames.begin(); i != frames.end(); ++i)
+		i->second->resortForFavsFirst(true);
+}
+
 void HubFrame::closeDisconnected() {
 	for(FrameIter i=frames.begin(); i!= frames.end(); ++i) {
 		if (!(i->second->client->isConnected())) {
 			i->second->PostMessage(WM_CLOSE);
 		}
+	}
+}
+
+void HubFrame::on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) throw() {
+	resortForFavsFirst();
+}
+void HubFrame::on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) throw() {
+	resortForFavsFirst();
+}
+
+void HubFrame::resortForFavsFirst(bool justDoIt /* = false */) {
+	if(justDoIt || BOOLSETTING(SORT_FAVUSERS_FIRST)) {
+		resort = true;
+		PostMessage(WM_SPEAKER);
 	}
 }
 
@@ -1846,7 +1867,7 @@ void HubFrame::on(UsersUpdated, Client*, const OnlineUser::List& aList) throw() 
 	updateUsers = true;
 }
 
-void HubFrame::on(UserRemoved, Client*, const OnlineUser& user) throw() {
+void HubFrame::on(ClientListener::UserRemoved, Client*, const OnlineUser& user) throw() {
 	speak(REMOVE_USER, user);
 }
 

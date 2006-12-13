@@ -644,6 +644,8 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 	int lastConn = SETTING(INCOMING_CONNECTIONS);
 
+	bool lastSortFavUsersFirst = BOOLSETTING(SORT_FAVUSERS_FIRST);
+
 	if(dlg.DoModal(m_hWnd) == IDOK) 
 	{
 		SettingsManager::getInstance()->save();
@@ -654,6 +656,9 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated(false);
+
+		if(BOOLSETTING(SORT_FAVUSERS_FIRST) != lastSortFavUsersFirst)
+			HubFrame::resortUsers();
 
 		if(BOOLSETTING(URL_HANDLER)) {
 			WinUtil::registerDchubHandler();

@@ -28,6 +28,7 @@
 
 #include "FlatTabCtrl.h"
 #include "TypedListViewCtrl.h"
+#include "ShellContextMenu.h"
 #include "WinUtil.h"
 #include "TextFrame.h"
 
@@ -71,7 +72,7 @@ public:
 		ctrlStatus.Attach(m_hWndStatusBar);
 
 		ctrlList.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-			WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, id);
+			WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, WS_EX_CLIENTEDGE, id);
 		ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT);
 
 		ctrlList.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
@@ -228,10 +229,34 @@ public:
 				WinUtil::getContextMenuPos(ctrlList, pt);
 			}
 
-			ctxMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
+			bool bShellMenuShown = false;
+			if(BOOLSETTING(SHOW_SHELL_MENU) && (ctrlList.GetSelectedCount() == 1)) {
+				tstring path = Text::toT(((ItemInfo*)ctrlList.GetItemData(ctrlList.GetSelectedIndex()))->entry->getTarget());
+				if(GetFileAttributes(path.c_str()) != 0xFFFFFFFF) { // Check that the file still exists
+					CShellContextMenu shellMenu;
+					shellMenu.SetPath(path);
+
+					CMenu* pShellMenu = shellMenu.GetMenu();
+					pShellMenu->AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
+					pShellMenu->AppendMenu(MF_STRING, IDC_OPEN_FOLDER, CTSTRING(OPEN_FOLDER));
+					pShellMenu->AppendMenu(MF_SEPARATOR);
+					pShellMenu->AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+					pShellMenu->AppendMenu(MF_STRING, IDC_TOTAL, CTSTRING(REMOVE_ALL));
+					pShellMenu->AppendMenu(MF_SEPARATOR);
+
+					UINT idCommand = shellMenu.ShowContextMenu(m_hWnd, pt);
+					if(idCommand != 0)
+						PostMessage(WM_COMMAND, idCommand);
+
+					bShellMenuShown = true;
+				}
+			}
+
+			if(!bShellMenuShown)
+				ctxMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);			
+
 			return TRUE; 
 		}
-
 		bHandled = FALSE;
 		return FALSE; 
 	}

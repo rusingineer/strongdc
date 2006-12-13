@@ -228,7 +228,6 @@ public:
 private:
 	bool verify(const unsigned char* data, int64_t start, int64_t end, const TigerTree& aTree);
 
-
 	// for debug purpose
 	void dumpVerifiedBlocks();
 };

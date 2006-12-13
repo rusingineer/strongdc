@@ -55,9 +55,23 @@ public:
 			verified = cur.getLeaves().size();
 	}
 
-	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
+	virtual ~MerkleCheckOutputStream() throw() { 
+		if(managed) delete s;
+		
+		if(d) {
+			size_t skippingBytes = (size_t)(d->getStartPos() % real.getBlockSize());
+			if(skippingBytes > 0)
+				skippingBytes = (size_t)(real.getBlockSize() - skippingBytes);
 
-	virtual size_t flush(bool = false) throw(FileException) {
+			int64_t start = (d->getStartPos() + skippingBytes) / real.getBlockSize();
+			if(verified > start) {
+				fileChunks->markVerifiedBlock((uint16_t)start, (uint16_t)verified);
+			}
+		}
+		fileChunks->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
+	}
+
+	virtual size_t flush() throw(FileException) {
 		if(!d) {
 			if (bufPos != 0)
 				cur.update(buf, bufPos);
@@ -129,19 +143,11 @@ public:
 		checkTrees();
 		size_t ret = s->write(b, len);
 		
-		if(d) {
-			// mark verified block
-			if(verified > old) {
-				s->flush();
-				fileChunks->markVerifiedBlock((uint16_t)old, (uint16_t)verified);
-			}
-
-			if(verifyFlag){
-				s->flush();
-				dcassert(old > 0);
-				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
-				fileChunks->verifyBlock(offset, real, d->getTempTarget());
-			}
+		if(d && verifyFlag) {
+			s->flush();
+			dcassert(old > 0);
+			int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
+			fileChunks->verifyBlock(offset, real, d->getTempTarget());
 		}
 
 		return ret;

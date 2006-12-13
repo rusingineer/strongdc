@@ -46,8 +46,8 @@
 struct CompareItems;
 
 class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF>, private ClientListener, 
-	public CSplitterImpl<HubFrame>, private TimerManagerListener, public UCHandler<HubFrame>, 
-	public UserInfoBaseHandler<HubFrame>, private SettingsManagerListener
+	public CSplitterImpl<HubFrame>, private FavoriteManagerListener, private TimerManagerListener,
+	public UCHandler<HubFrame>, public UserInfoBaseHandler<HubFrame>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
@@ -215,6 +215,7 @@ public:
 		, const tstring& rawFive = Util::emptyStringT
 		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool userliststate = true,
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
+	static void resortUsers();	
 	static void closeDisconnected();
 
 	static HubFrame* getHub(Client* aClient) {
@@ -356,6 +357,7 @@ private:
 		frames.erase(server);
 
 		clearTaskList();
+		dcassert(userMap.empty());
 	}
 
 	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
@@ -461,6 +463,11 @@ private:
 
 	void updateStatusBar() { if(m_hWnd) speak(STATS); }
 
+	// FavoriteManagerListener
+	virtual void on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) throw();
+	virtual void on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) throw();
+	void resortForFavsFirst(bool justDoIt = false);
+
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, uint32_t /*aTick*/) throw();
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
@@ -470,7 +477,7 @@ private:
 	virtual void on(Connected, Client*) throw();
 	virtual void on(UserUpdated, Client*, const OnlineUser&) throw();
 	virtual void on(UsersUpdated, Client*, const OnlineUser::List&) throw();
-	virtual void on(UserRemoved, Client*, const OnlineUser&) throw();
+	virtual void on(ClientListener::UserRemoved, Client*, const OnlineUser&) throw();
 	virtual void on(Redirect, Client*, const string&) throw();
 	virtual void on(Failed, Client*, const string&) throw();
 	virtual void on(GetPassword, Client*) throw();

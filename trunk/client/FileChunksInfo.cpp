@@ -212,7 +212,8 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 		for(Chunk::Iter i = running.begin(); i != running.end(); i++)
 		{
 			chunk = i->second;
-			if(chunk->pos == i->first){
+			if(	(chunk->pos == i->first) ||
+				(chunk->download && chunk->download->getRunningAverage() != 0 && chunk->download->getRunningAverage()*5 < _speed)) {
 				chunk->overlappedCount++;
 				return i->first;
 			}

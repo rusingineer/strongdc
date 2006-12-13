@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dirent.h>
+#include <fnmatch.h>
 #endif
 
 #ifdef _WIN32
@@ -87,7 +89,7 @@ public:
 
 	virtual size_t read(void* buf, size_t& len) throw(FileException);
 	virtual size_t write(const void* buf, size_t len) throw(FileException);
-	virtual size_t flush(bool flushBuffers = false) throw(FileException);
+	virtual size_t flush() throw(FileException);
 
 	uint32_t getLastModified() throw();
 

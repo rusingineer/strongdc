@@ -628,7 +628,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	TCHAR* buf = new TCHAR[len];
 	ctrlClient.GetLine(line, buf, len);
 	tstring x = tstring(buf, len-1);
-	delete buf;
+	delete[] buf;
 	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 	if (start == string::npos) { start = 0; }
 	tstring nick = Text::toT(replyTo->getFirstNick());

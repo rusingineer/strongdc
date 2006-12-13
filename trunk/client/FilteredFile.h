@@ -33,7 +33,7 @@ public:
 	CountOutputStream(OutputStream* aStream) : s(aStream), count(0) { }
 	virtual ~CountOutputStream() throw() { if(managed) delete s; }
 
-	size_t flush(bool = false) throw(Exception) {
+	size_t flush() throw(Exception) {
 		size_t n = s->flush();
 		count += n;
 		return n;
@@ -58,7 +58,7 @@ public:
 	CalcOutputStream(OutputStream* aStream) : s(aStream) { }
 	virtual ~CalcOutputStream() throw() { if(managed) delete s; }
 
-	size_t flush(bool = false) throw(Exception) {
+	size_t flush() throw(Exception) {
 		return s->flush();
 	}
 
@@ -100,7 +100,7 @@ public:
 	FilteredOutputStream(OutputStream* aFile) : f(aFile), buf(BUF_SIZE), flushed(false) { }
 	~FilteredOutputStream() throw() { if(manage) delete f; }
 
-	size_t flush(bool = false) throw(Exception) {
+	size_t flush() throw(Exception) {
 		if(flushed)
 			return 0;
 

@@ -199,7 +199,7 @@ void Util::initialize() {
 	systemPath = "/etc/";
 	char* home = getenv("HOME");
 	configPath = home ? home + string("/.dc++/") : "/tmp/";
-#error dataPath = wherever linux should fetch data
+	dataPath = configPath; // dataPath in linux is usually prefix + /share/app_name, so we can't represent it here
 #endif
 
 	// Load boot settings
@@ -216,8 +216,6 @@ void Util::initialize() {
 			params["APPDATA"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path), path));
 			params["PERSONAL"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path), path));
 			configPath = Util::formatParams(boot.getChildData(), params, false);
-#else
-#error TODO - make env vars available perhaps?
 #endif
 		}
 	} catch(const Exception& ) {
@@ -494,10 +492,11 @@ wstring Util::formatBytesW(int64_t aBytes) {
 }
 
 wstring Util::formatExactSize(int64_t aBytes) {
+#ifdef _WIN32	
 	wchar_t buf[64];
 	wchar_t number[64];
 	NUMBERFMT nf;
-	snwprintf(number, sizeof(number), L"%I64d", aBytes);
+	snwprintf(number, sizeof(number), _T("%I64d"), aBytes);
 	wchar_t Dummy[16];
     
 	/*No need to read these values from the system because they are not
@@ -514,8 +513,13 @@ wstring Util::formatExactSize(int64_t aBytes) {
 
 	GetNumberFormat(LOCALE_USER_DEFAULT, 0, number, &nf, buf, 64);
 		
-	snwprintf(buf, sizeof(buf), L"%s %s", buf, CTSTRING(B));
+	snwprintf(buf, sizeof(buf), _T("%s %s"), buf, CTSTRING(B));
 	return buf;
+#else
+		wchar_t buf[64];
+		snwprintf(buf, sizeof(buf), L"%'lld", (long long int)aBytes);
+		return tstring(buf) + TSTRING(B);
+#endif
 }
 
 string Util::getLocalIp() {

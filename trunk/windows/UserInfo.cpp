@@ -22,20 +22,23 @@
 #include "UserInfo.h"
 
 int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
-	if(a == NULL || b == NULL){
-		dcdebug("UserInfo::compareItems NULL >:-[\n");
-		return NULL;
-	}
+	if(a == NULL || b == NULL) return NULL;
 	if(col == COLUMN_NICK) {
-		bool aOp = a->getIdentity().isOp();
-		bool bOp = b->getIdentity().isOp();
-		if(aOp && !bOp) {
+		bool a_isOp = a->getIdentity().isOp(),
+			b_isOp = b->getIdentity().isOp();
+		if(a_isOp && !b_isOp)
 			return -1;
-		} else if(!aOp && bOp) {
+		if(!a_isOp && b_isOp)
 			return 1;
+		if(BOOLSETTING(SORT_FAVUSERS_FIRST)) {
+			bool a_isFav = FavoriteManager::getInstance()->isFavoriteUser(a->getIdentity().getUser()),
+				b_isFav = FavoriteManager::getInstance()->isFavoriteUser(b->getIdentity().getUser());
+			if(a_isFav && !b_isFav)
+				return -1;
+			if(!a_isFav && b_isFav)
+				return 1;
 		}
 	}
-
 	switch(col) {
 		case COLUMN_SHARED:
 		case COLUMN_EXACT_SHARED: return compare(a->identity.getBytesShared(), b->identity.getBytesShared());

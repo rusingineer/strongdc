@@ -137,7 +137,7 @@ void File::setEOF() throw(FileException) {
 	}
 }
 
-size_t File::flush(bool) throw(FileException) {
+size_t File::flush() throw(FileException) {
 	if(isOpen() && !FlushFileBuffers(h))
 		throw FileException(Util::translateError(GetLastError()));
 	return 0;
@@ -320,7 +320,7 @@ void File::setSize(int64_t newSize) throw(FileException) {
 	setPos(pos);
 }
 
-size_t File::flush(bool flushBuffers) throw(FileException) {
+size_t File::flush() throw(FileException) {
 	if(isOpen() && fsync(h) == -1)
 		throw FileException(Util::translateError(errno));
 	return 0;
@@ -383,7 +383,7 @@ void File::ensureDirectory(const string& aFile) throw() {
 }
 
 bool File::isAbsolute(const string& path) throw() {
-	return path.size() > 1 && path[0] = '/';
+	return path.size() > 1 && path[0] == '/';
 }
 
 #endif // !_WIN32
