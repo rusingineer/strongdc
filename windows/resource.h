@@ -753,6 +753,8 @@
 #define IDC_CHATDBLCLICKACTION          10194
 #define IDC_CHAT_DBLCLICK               10195
 #define IDC_HEADER_MENU                 10196
+#define ID_SHELLCONTEXTMENU_MIN         12000
+#define ID_SHELLCONTEXTMENU_MAX         14000
 #define IDC_BITZI_LOOKUP                20000
 #define IDC_BROWSELIST                  21000
 #define IDC_REMOVE_SOURCE               23000

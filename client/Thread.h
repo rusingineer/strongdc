@@ -65,15 +65,7 @@ public:
 
 	void setThreadPriority(Priority p) throw() { ::SetThreadPriority(threadHandle, p); }
 	
-	static void sleep(uint32_t millis) {
-		if (millis % 10 != 0) { // default precision ~10ms - don't use mm timers if not needed
-			timeBeginPeriod(1);
-			::Sleep(millis);
-			timeEndPeriod(1);
-		} else { 
-			::Sleep(millis);
-		}
-	}
+	static void sleep(uint32_t millis) { ::Sleep(millis); }
 	static void yield() { ::Sleep(1); }
 	static long safeInc(volatile long& v) { return InterlockedIncrement(&v); }
 	static long safeDec(volatile long& v) { return InterlockedDecrement(&v); }
@@ -113,6 +105,13 @@ public:
 	static long safeDec(volatile long& v) { 
 		pthread_mutex_lock(&mtx);
 		long ret = --v;
+		pthread_mutex_unlock(&mtx);
+		return ret;
+	}
+	static long safeExchange(volatile long& target, long value) {
+		pthread_mutex_lock(&mtx);
+		long ret = target;
+		target = value;
 		pthread_mutex_unlock(&mtx);
 		return ret;
 	}

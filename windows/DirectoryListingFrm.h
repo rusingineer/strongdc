@@ -59,7 +59,12 @@ public:
 		COLUMN_TTH,
 		COLUMN_LAST
 	};
-	
+
+	enum {
+		FINISHED,
+		ABORTED
+	};	
+		
 	enum {
 		STATUS_TEXT,
 		STATUS_SPEED,
@@ -74,11 +79,6 @@ public:
 		STATUS_DUMMY,
 		STATUS_LAST
 	};
-	
-	enum {
-		FINISHED,
-		ABORTED
-	};	
 	
 	DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed);
 	virtual ~DirectoryListingFrame() { 

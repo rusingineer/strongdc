@@ -237,7 +237,7 @@ public:
 		return len;
 	}
 
-	virtual size_t flush(bool = false) throw(Exception) {
+	virtual size_t flush() throw(Exception) {
 		return 0;
 	}
 private:
@@ -301,9 +301,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 	}
 
 	string message = STRING(WAITING_TO_RETRY);
-	Download* d = QueueManager::getInstance()->getDownload(*aConn, aConn->isSet(UserConnection::FLAG_SUPPORTS_TTHL), 
-		!aConn->isSet(UserConnection::FLAG_STEALTH) && (aConn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aConn->isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)),
-		message);
+	Download* d = QueueManager::getInstance()->getDownload(*aConn, message);
 
 	if(!d) {
 		fire(DownloadManagerListener::Status(), aConn->getUser(), message);
@@ -378,7 +376,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 class DummyOutputStream : public OutputStream {
 public:
 	virtual size_t write(const void*, size_t n) throw(Exception) { return n; }
-	virtual size_t flush(bool = false) throw(Exception) { return 0; }
+	virtual size_t flush() throw(Exception) { return 0; }
 };
 
 int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, int64_t startPos) {
@@ -516,7 +514,7 @@ public:
 	}
 	virtual ~RollbackOutputStream() throw() { delete[] buf; if(managed) delete s; }
 
-	virtual size_t flush(bool = false) throw(FileException) {
+	virtual size_t flush() throw(FileException) {
 		return s->flush();
 	}
 
@@ -530,7 +528,7 @@ public:
 			}
 			pos += n;
 			if(pos == bufSize) {
-				delete buf;
+				delete[] buf;
 				buf = NULL;
 			}
 		}
@@ -680,12 +678,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 
-			if(e.pos > 0 && d->getTreeValid()) {
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
-					lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
-			}
-
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
@@ -772,17 +764,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 			else{ // peer's partial size < chunk size
 				// fire(DownloadManagerListener::ChunkComplete(), d);
-
-				if(d->getTreeValid()) {
-					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-					if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
-						dcassert(d->getPos() > 0);
-						lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
-					}else{
-						dcassert(0);
-					}
-				}
-
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
@@ -795,9 +776,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		d->resetPos();
 		failDownload(aSource, e.getError());
 	} catch(const FileException& e) {
-		if(e.getError().find(STRING(TTH_INCONSISTENCY)) != string::npos){
-			QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), QueueItem::Source::FLAG_TTH_INCONSISTENCY);
-		}
 		d->resetPos();
 		failDownload(aSource, e.getError());
 	} catch(const Exception& e) {

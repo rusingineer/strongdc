@@ -103,8 +103,7 @@ public:
 	}
 
 	/** Readd a source that was removed */
-	void readd(const string& target, User::Ptr aUser) throw(QueueException);
-
+	void readd(const string& target, User::Ptr& aUser) throw(QueueException);
 	/** Add a directory to the queue (downloads filelist and matches the directory). */
 	void addDirectory(const string& aDir, const User::Ptr& aUser, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();
 	
@@ -116,8 +115,8 @@ public:
 	void move(const string& aSource, const string& aTarget) throw();
 
 	void remove(const string& aTarget) throw();
-	void removeSource(const string& aTarget, User::Ptr aUser, int reason, bool removeConn = true) throw();
-	void removeSource(User::Ptr aUser, int reason) throw();
+	void removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn = true) throw();
+	void removeSource(User::Ptr& aUser, int reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
@@ -127,7 +126,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); }
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
-	Download* getDownload(UserConnection& aSource, bool supportsTrees, bool supportsChunks, string &message) throw();
+	Download* getDownload(UserConnection& aSource, string& message) throw();
 	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
 	/** @return The highest priority download the user has, PAUSED may also mean no downloads */

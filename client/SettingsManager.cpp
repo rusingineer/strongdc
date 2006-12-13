@@ -123,7 +123,7 @@ const string SettingsManager::settingTags[] =
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
-	"FilterEnter",
+	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -185,7 +185,7 @@ SettingsManager::SettingsManager()
 	setDefault(IGNORE_HUB_PMS, false);
 	setDefault(IGNORE_BOT_PMS, false);
 	setDefault(BUFFER_SIZE, 64);
-	setDefault(HUBLIST_SERVERS, "http://www.cnet.cz/list.txt;http://home.bandicoot.nl/adchublist.xml.bz2;http://www.hublist.org/PublicHubList.xml.bz2");
+	setDefault(HUBLIST_SERVERS, "http://www.cnet.cz/list.txt;http://home.bandicoot.nl/adchublist.xml.bz2;http://adchublist.com/hublist.xml.bz2;http://www.hublist.org/PublicHubList.xml.bz2;http://dchublist.com/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(LOG_DIRECTORY, Util::getDataPath() + "Logs" PATH_SEPARATOR_STR);
@@ -300,6 +300,8 @@ SettingsManager::SettingsManager()
 	setDefault(ALLOW_UNTRUSTED_HUBS, true);
 	setDefault(ALLOW_UNTRUSTED_CLIENTS, true);		
 	setDefault(FAST_HASH, true);
+	setDefault(SORT_FAVUSERS_FIRST, false);
+	setDefault(SHOW_SHELL_MENU, false);	
 	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);

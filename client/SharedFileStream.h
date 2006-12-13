@@ -52,14 +52,12 @@ public:
 
 	virtual size_t read(void* buf, size_t& len) throw(Exception);
 
-	virtual size_t flush(bool flushBuffers = false) throw(Exception) 
+	virtual size_t flush() throw(Exception) 
 	{
-		if(flushBuffers) {		
-			Lock l(*shared_handle_ptr);
+		Lock l(*shared_handle_ptr);
 
-			if(!FlushFileBuffers(shared_handle_ptr->handle))
-				throw FileException(Util::translateError(GetLastError()));
-		}
+		if(!FlushFileBuffers(shared_handle_ptr->handle))
+			throw FileException(Util::translateError(GetLastError()));
 		return 0;
 	}
 

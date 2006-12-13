@@ -152,9 +152,17 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 		dcassert(!qi->getTempTarget().empty());
 		vector<int64_t> v;
+		bool isMissing = false;
 		
 		if ( freeBlocks != Util::emptyString ){
-			toIntList<int64_t>(freeBlocks, v);
+			if(File::getSize(qi->getTempTarget()) > 0) {
+				toIntList<int64_t>(freeBlocks, v);
+			} else {
+				aDownloadedBytes = 0;
+				v.push_back(0);
+				v.push_back(qi->getSize());
+				isMissing = true;
+			}
 		} else {
 			// import DC++'s download queue
 			v.push_back(aDownloadedBytes);
@@ -179,7 +187,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		pChunksInfo = new FileChunksInfo(const_cast<TTHValue*>(&qi->getTTH()), qi->getSize(), &v);
 		qi->chunkInfo = pChunksInfo;
 
-		if(pChunksInfo && verifiedBlocks != Util::emptyString){
+		if(pChunksInfo && !isMissing && verifiedBlocks != Util::emptyString){
 			vector<uint16_t> v;
 			toIntList<uint16_t>(verifiedBlocks, v);
 
@@ -694,7 +702,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 	
 }
 
-void QueueManager::readd(const string& target, User::Ptr aUser) throw(QueueException) {
+void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueException) {
 	bool wantConnection = false;
 	{
 		Lock l(cs);
@@ -956,7 +964,7 @@ void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 	}
 }
 
-Download* QueueManager::getDownload(UserConnection& aSource, bool supportsTrees, bool supportsChunks, string &message) throw() {
+Download* QueueManager::getDownload(UserConnection& aSource, string& message) throw() {
 	Lock l(cs);
 
 	User::Ptr& aUser = aSource.getUser();
@@ -1016,8 +1024,7 @@ again:
 	if(d->getSize() != -1) {
 		if(HashManager::getInstance()->getTree(d->getTTH(), d->getTigerTree())) {
 			d->setTreeValid(true);
-			dcassert(!q->chunkInfo || (q->chunkInfo->tthBlockSize == d->getTigerTree().getBlockSize()));
-		} else if(supportsTrees && !source->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
+		} else if(aSource.isSet(UserConnection::FLAG_SUPPORTS_TTHL) && !source->isSet(QueueItem::Source::FLAG_NO_TREE) && d->getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			d->setFlag(Download::FLAG_TREE_DOWNLOAD);
 			d->getTigerTree().setFileSize(d->getSize());
@@ -1036,6 +1043,7 @@ again:
 	}
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+		bool supportsChunks = !aSource.isSet(UserConnection::FLAG_STEALTH) && (aSource.isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aSource.isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aSource.isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST));
 		d->setStartPos(freeBlock);
 		q->chunkInfo->setDownload(freeBlock, d, supportsChunks && useChunks);
 	} else {
@@ -1124,7 +1132,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 						}
 					}
 
-					if((connectSources || (q->getCurrents().size() <= 2)) && (q->getPriority() != QueueItem::PAUSED)) {
+					if(/*(connectSources || (q->getCurrents().size() <= 2)) &&*/ (q->getPriority() != QueueItem::PAUSED)) {
 						q->getOnlineUsers(getConn);
 					}
 	
@@ -1155,6 +1163,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aTTH);
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
 				fileChunks->putChunk(aDownload->getStartPos());
+				/*if(aDownload->getPos() > aDownload->getStartPos()) {
+					fileChunks->verifyBlock(aDownload->getPos() - 1, aDownload->getTigerTree(), aDownload->getTempTarget());				
+				}*/
 			}
 		}
 
@@ -1262,7 +1273,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 	}
 }
 
-void QueueManager::removeSource(const string& aTarget, User::Ptr aUser, int reason, bool removeConn /* = true */) throw() {
+void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn /* = true */) throw() {
 	bool isRunning = false;
 	bool removeCompletely = false;
 	{
@@ -1316,7 +1327,7 @@ endCheck:
 	}	
 }
 
-void QueueManager::removeSource(User::Ptr aUser, int reason) throw() {
+void QueueManager::removeSource(User::Ptr& aUser, int reason) throw() {
 	bool isRunning = false;
 	string removeRunning;
 	{

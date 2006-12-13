@@ -201,7 +201,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw()
 		DownloadManager::getInstance()->checkIdle(*i);
 	}
 
-	for(User::Iter ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
+	for(User::List::iterator ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
 		QueueManager::getInstance()->removeSource(*ui, QueueItem::Source::FLAG_PASSIVE);
 	}
 }
@@ -473,12 +473,10 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		dcdebug("CM::onLock %p received lock twice, ignoring\n", (void*)aSource);
 		return;
 	}
-	bool updateUser = false;
 	if( CryptoManager::getInstance()->isExtended(aLock) ) {
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
 			aSource->getUser()->setFlag(User::DCPLUSPLUS);
-			updateUser = true;
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
@@ -493,7 +491,7 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 	aSource->direction(aSource->getDirectionString(), aSource->getNumber());
 	aSource->key(CryptoManager::getInstance()->makeKey(aLock));
 
-	if(updateUser && aSource->getUser())
+	if(aSource->getUser())
 		ClientManager::getInstance()->setPkLock(aSource->getUser(), aPk, aLock);
 }
 
