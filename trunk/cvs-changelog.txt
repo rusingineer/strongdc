@@ -4,6 +4,7 @@
 	when tempfile doesn't exist during queue loading, the file will be completely redownloaded
 	fixed missing Pk and Lock strings in some cases
 	improved data verification
+	DC++ SVN merge
 
 ** cvs201
 	hopefully fixed deadlock on some queue operations
