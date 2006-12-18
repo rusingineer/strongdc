@@ -32,8 +32,6 @@
 # define _RICHEDIT_VER 0x0300
 #endif
 
-#include <AtlCrack.h>
-
 class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
@@ -46,8 +44,8 @@ public:
 
 	LRESULT OnRButtonDown(POINT pt);
 
-	bool HitNick(POINT p, CAtlString& sNick, int& piBegin , int& piEnd);
-	bool HitIP(POINT p, CAtlString& sIP, int& piBegin, int& piEnd);
+	bool HitNick(POINT p, CAtlString& sNick, int& iBegin , int& iEnd);
+	bool HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd);
 	bool HitURL();
 
 	tstring LineFromPos(POINT p) const;
@@ -64,7 +62,7 @@ public:
 
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
-	static tstring sTempSelectedUser;
+	static tstring sSelectedUser;
 };
 
 

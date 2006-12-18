@@ -24,7 +24,7 @@
 #include "ResourceManager.h"
 
 BZFilter::BZFilter() {
-	memset(&zs, 0, sizeof(zs));
+	memzero(&zs, sizeof(zs));
 
 	if(BZ2_bzCompressInit(&zs, 9, 0, 30) != BZ_OK) {
 		throw Exception(STRING(COMPRESSION_ERROR));
@@ -65,7 +65,7 @@ bool BZFilter::operator()(const void* in, size_t& insize, void* out, size_t& out
 }
 
 UnBZFilter::UnBZFilter() {
-	memset(&zs, 0, sizeof(zs));
+	memzero(&zs, sizeof(zs));
 
 	if(BZ2_bzDecompressInit(&zs, 0, 0) != BZ_OK) 
 		throw Exception(STRING(DECOMPRESSION_ERROR));

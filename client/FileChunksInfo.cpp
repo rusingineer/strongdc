@@ -213,7 +213,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 		{
 			chunk = i->second;
 			if(	(chunk->pos == i->first) ||
-				(chunk->download && chunk->download->getRunningAverage() != 0 && chunk->download->getRunningAverage()*5 < _speed)) {
+				(chunk->download && (chunk->download->getTotal() > 10) && (chunk->download->getAverageSpeed()*5 < _speed))) {
 				chunk->overlappedCount++;
 				return i->first;
 			}
@@ -553,7 +553,7 @@ void FileChunksInfo::markVerifiedBlock(uint16_t start, uint16_t end)
 	{
 		// check dupe
 		if(start >= i->first && start < i->second){
-			dcassert(0);
+
 			return;
 		}
 

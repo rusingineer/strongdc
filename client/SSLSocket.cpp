@@ -23,13 +23,13 @@
 #include "LogManager.h"
 #include "SettingsManager.h"
 
-#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0) {
 
 }
 
-void SSLSocket::connect(const string& aIp, short aPort) throw(SocketException) {
+void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException) {
 	Socket::setBlocking(true);
 	Socket::connect(aIp, aPort);
 	

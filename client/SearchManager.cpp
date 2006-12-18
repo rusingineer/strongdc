@@ -70,9 +70,9 @@ AdcCommand SearchResult::toRES(char type) const {
 	return cmd;
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */) {
 	Lock l(cs);
-	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch, aToken);
+	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
 	if(aWindow != NULL) {
 		bool added = false;
 		if(searchQueue.empty()) {
@@ -97,9 +97,9 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 	}
 }
 
-void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */, tstring aSearch /*= _T("")*/) {
+void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */) {
 	Lock l(cs);
-	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aSearch, aToken);
+	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
 	if(aWindow != NULL) {
 		bool added = false;
 		if(searchQueue.empty()) {
@@ -154,7 +154,7 @@ void SearchManager::listen() throw(SocketException) {
 
 	socket = new Socket();
 	socket->create(Socket::TYPE_UDP);
-	port = socket->bind(static_cast<short>(SETTING(UDP_PORT)));
+	port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)));
 
 	start();
 }

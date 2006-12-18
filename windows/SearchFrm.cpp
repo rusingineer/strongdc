@@ -395,14 +395,20 @@ void SearchFrame::onEnter() {
 	{
 		Lock l(cs);
 		search = StringTokenizer<tstring>(s, ' ').getTokens();
-	}
+		s.clear();
+		//strip out terms beginning with -
+		for(TStringList::iterator si = search.begin(); si != search.end(); ) {
+			if(si->empty()) {
+				si = search.erase(si);
+				continue;
+			}
+			if ((*si)[0] != _T('-')) 
+				s += *si + _T(' ');	
+			++si;
+		}
 
-	//strip out terms beginning with -
-	tstring fullSearch = s;
-	s.clear();
-	for (TStringList::const_iterator si = search.begin(); si != search.end(); ++si)
-		if ((*si)[0] != _T('-') || si->size() == 1) s += *si + _T(' ');	//Shouldn't get 0-length tokens, so safely assume at least a first char.
-	s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
+		s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
+	}
 
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
@@ -444,7 +450,7 @@ void SearchFrame::onEnter() {
 	TimerManager::getInstance()->addListener(this);
 
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
-		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this, fullSearch);
+		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this);
 	searches++;
 }
 
@@ -1117,10 +1123,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			ctrlResults.deleteAllItems();
 			resultsCount = 0;
 
-			{
-				Lock l(cs);
-				search = StringTokenizer<tstring>(aSearch->getSearch(), ' ').getTokens();
-			}
 			isHash = (aSearch->getTypeMode() == SearchManager::TYPE_TTH);
 
 			// Turn off the countdown timer if no more manual searches left

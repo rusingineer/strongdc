@@ -129,7 +129,6 @@ public:
 	typedef X<1> Failed;
 	typedef X<2> Starting;
 	typedef X<3> Tick;
-	typedef X<4> Status;
 
 	/** 
 	 * This is the first message sent before a download starts. 
@@ -156,7 +155,6 @@ public:
 	 * display an error string.
 	 */
 	virtual void on(Failed, Download*, const string&) throw() { }
-	virtual void on(Status, const User::Ptr&, const string&) throw() { }
 };
 
 

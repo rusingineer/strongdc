@@ -542,7 +542,7 @@ SettingsManager::SettingsManager()
 	setDefault(COLOR_VERIFIED, RGB(222, 160, 0));
 
 	OSVERSIONINFO ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFO));
+	memzero(&ver, sizeof(OSVERSIONINFO));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx((OSVERSIONINFO*)&ver);
 

@@ -171,9 +171,10 @@ public:
 	typedef X<5> UserAdded;
 	typedef X<6> UserRemoved;
 	typedef X<7> StatusChanged;
-	typedef X<8> RecentAdded;
-	typedef X<9> RecentRemoved;
-	typedef X<10> RecentUpdated;
+	typedef X<8> LoadedFromCache;	
+	typedef X<9> RecentAdded;
+	typedef X<10> RecentRemoved;
+	typedef X<11> RecentUpdated;
 
 	virtual void on(DownloadStarting, const string&) throw() { }
 	virtual void on(DownloadFailed, const string&) throw() { }
@@ -183,6 +184,7 @@ public:
 	virtual void on(UserAdded, const FavoriteUser&) throw() { }
 	virtual void on(UserRemoved, const FavoriteUser&) throw() { }
 	virtual void on(StatusChanged, const User::Ptr&) throw() { }
+	virtual void on(LoadedFromCache, const string&) throw() { }
 	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
 	virtual void on(RecentUpdated, const RecentHubEntry*) throw() { }
@@ -203,15 +205,15 @@ public:
 		TYPE_BZIP2
 	};
 	StringList getHubLists();
-	bool setHubList(int /*aHubList*/);
-	unsigned int getSelectedHubList() { return lastServer; }
-	void refresh();
+	void setHubList(int aHubList);
+	int getSelectedHubList() { return lastServer; }
+	void refresh(bool forceDownload = false);
 	HubTypes getHubListType() { return listType; }
 	HubEntry::List getPublicHubs() {
 		Lock l(cs);
 		return publicListMatrix[publicListServer];
 	}
-	bool isDownloading() { return running; }
+	bool isDownloading() { return (useHttp && running); }
 
 // Favorite Users
 	typedef HASH_MAP_X(CID, FavoriteUser, CID::Hash, equal_to<CID>, less<CID>) FavoriteMap;
@@ -319,9 +321,9 @@ private:
 	typedef map<string, HubEntry::List> PubListMap;
 	PubListMap publicListMatrix;
 	string publicListServer;
-	bool running;
+	bool useHttp, running;
 	HttpConnection* c;
-	unsigned int lastServer;
+	int lastServer;
 	HubTypes listType;
 	string downloadBuf;
 	
@@ -330,24 +332,8 @@ private:
 
 	friend class Singleton<FavoriteManager>;
 	
-	FavoriteManager() : lastId(0), running(false), c(NULL), lastServer(0), listType(TYPE_NORMAL), dontSave(false) {
-		SettingsManager::getInstance()->addListener(this);
-		ClientManager::getInstance()->addListener(this);
-	}
-
-	virtual ~FavoriteManager() throw() {
-		ClientManager::getInstance()->removeListener(this);
-		SettingsManager::getInstance()->removeListener(this);
-		if(c) {
-			c->removeListener(this);
-			delete c;
-			c = NULL;
-		}
-		
-		for_each(favoriteHubs.begin(), favoriteHubs.end(), DeleteFunction());
-		for_each(recentHubs.begin(), recentHubs.end(), DeleteFunction());
-		for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction());
-	}
+	FavoriteManager();
+	virtual ~FavoriteManager() throw();
 	
 	FavoriteHubEntry::Iter getFavoriteHub(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
@@ -382,7 +368,7 @@ private:
 	virtual void on(TypeNormal, HttpConnection*) throw();
 	virtual void on(TypeBZ2, HttpConnection*) throw();
 
-	void onHttpFinished() throw();
+	void onHttpFinished(bool fromHttp) throw();
 
 	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {

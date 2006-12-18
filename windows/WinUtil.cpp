@@ -310,7 +310,7 @@ void UserInfoBase::ungrantSlot() {
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memzero(&ver, sizeof(OSVERSIONINFOEX));
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
@@ -443,7 +443,7 @@ void WinUtil::init(HWND hWnd) {
 #if 0	
 	if(BOOLSETTING(USE_SYSTEM_ICONS)) {
 		SHFILEINFO fi;
-		memset(&fi, 0, sizeof(SHFILEINFO));
+		memzero(&fi, sizeof(SHFILEINFO));
 		fileImages.Create(16, 16, ILC_COLOR32 | ILC_MASK, 16, 16);
 		::SHGetFileInfo(_T("."), FILE_ATTRIBUTE_DIRECTORY, &fi, sizeof(fi), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
 		fileImages.AddIcon(fi.hIcon);
@@ -523,7 +523,7 @@ void WinUtil::initColors() {
 	bgColor = SETTING(BACKGROUND_COLOR);
 
 	CHARFORMAT2 cf;
-	memset(&cf, 0, sizeof(CHARFORMAT2));
+	memzero(&cf, sizeof(CHARFORMAT2));
 	cf.cbSize = sizeof(cf);
 	cf.dwReserved = 0;
 	cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD | CFM_ITALIC;
@@ -1542,7 +1542,7 @@ double WinUtil::toBytes(TCHAR* aSize) {
 
 int WinUtil::getOsMajor() {
 	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memzero(&ver, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -1555,7 +1555,7 @@ int WinUtil::getOsMajor() {
 int WinUtil::getOsMinor() 
 {
 	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
+	memzero(&ver, sizeof(OSVERSIONINFOEX));
 	if(!GetVersionEx((OSVERSIONINFO*)&ver)) 
 	{
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);

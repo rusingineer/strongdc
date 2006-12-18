@@ -52,8 +52,6 @@ ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, Resource
 ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::PK };
 
 tstring sSelectedURL = Util::emptyStringT;
-long lURLBegin = 0;
-long lURLEnd = 0;
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -178,7 +176,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.AddString(CTSTRING(ANY));
-	ctrlFilterSel.SetCurSel(0);
+	ctrlFilterSel.SetCurSel(COLUMN_LAST);
 
 	bHandled = FALSE;
 	client->connect();
@@ -384,14 +382,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1));
+							PrivateFrame::openWindow(ui->user, param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->getUser());
+							PrivateFrame::openWindow(ui->user);
 					}
 				} else if(!param.empty()) {
 					UserInfo* ui = findUser(param);
 					if(ui) {
-						PrivateFrame::openWindow(ui->getUser());
+						PrivateFrame::openWindow(ui->user);
 					}
 				}
 			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
@@ -594,7 +592,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				if(ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())
+				if(ctrlUsers.getItemData(item->iItem)->user != ClientManager::getInstance()->getMe())
 		         	 ctrlUsers.getItemData(item->iItem)->pm();
 		        break;
 		    case 3:
@@ -739,26 +737,28 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							}
 						}
 						if(samenumbers) {
-							string detectString = Text::fromT(Util::formatExactSize(u.identity.getBytesShared()))+" - the share size had too many same numbers in it";
-							ClientManager::getInstance()->setFakeList(u.user, detectString);
+							tstring detectString = Util::formatExactSize(u.identity.getBytesShared()) + _T(" - the share size had too many same numbers in it");
+							ClientManager::getInstance()->setFakeList(u.user, Text::fromT(detectString));
 							
-							CHARFORMAT2 cf;
-							memset(&cf, 0, sizeof(CHARFORMAT2));
-							cf.cbSize = sizeof(cf);
-							cf.dwReserved = 0;
-							cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-							cf.dwEffects = 0;
-							cf.crBackColor = SETTING(BACKGROUND_COLOR);
-							cf.crTextColor = SETTING(ERROR_COLOR);
-
-							char buf[512];
-							snprintf(buf, sizeof(buf), "*** %s %s - %s", STRING(USER).c_str(), u.identity.getNick().c_str(), detectString.c_str());
+							AutoArray<TCHAR> buf(512);
+							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.identity.getNick()).c_str(), detectString.c_str());
 
 							if(BOOLSETTING(POPUP_CHEATING_USER)) {
-								MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(buf).c_str(), CTSTRING(CHEATING_USER));
+								MainFrame::getMainFrame()->ShowBalloonTip(buf, CTSTRING(CHEATING_USER));
 							}
 
-							addLine(Text::toT(buf), cf);
+							if(BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
+								CHARFORMAT2 cf;
+								memzero(&cf, sizeof(CHARFORMAT2));
+								cf.cbSize = sizeof(cf);
+								cf.dwReserved = 0;
+								cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
+								cf.dwEffects = 0;
+								cf.crBackColor = SETTING(BACKGROUND_COLOR);
+								cf.crTextColor = SETTING(ERROR_COLOR);							
+								
+								addLine((tstring)buf, cf);
+							}
 
 							u.identity.sendRawCommand(*client, SETTING(FAKESHARE_RAW));
 						}
@@ -902,7 +902,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
         	}
 		} else if(i->first == CHEATING_USER) {
 			CHARFORMAT2 cf;
-			memset(&cf, 0, sizeof(CHARFORMAT2));
+			memzero(&cf, sizeof(CHARFORMAT2));
 			cf.cbSize = sizeof(cf);
 			cf.dwReserved = 0;
 			cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
@@ -1172,10 +1172,10 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->getUser());
+					PrivateFrame::openWindow(ui->user);
 				} else if (wParam & MK_SHIFT) {
 					try {
-						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+						QueueManager::getInstance()->addList(ui->user, QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
 					addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
@@ -1220,7 +1220,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						if(ui->getUser() != ClientManager::getInstance()->getMe())
+						if(ui->user != ClientManager::getInstance()->getMe())
 					          ui->pm();
 					     break;
 					case 3:
@@ -1393,7 +1393,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlClient.ScreenToClient(&ptCl); 
 		ctrlClient.OnRButtonDown(ptCl);
 
-		sSelectedUser = ChatCtrl::sTempSelectedUser;
+		sSelectedUser = ChatCtrl::sSelectedUser;
 		bool boHitURL = ctrlClient.HitURL();
 		if (!boHitURL)
 			sSelectedURL = _T("");
@@ -1441,7 +1441,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		if (!sSelectedUser.empty()) {
 			sel = ctrlUsers.findItem(sSelectedUser);
 			if ( sel >= 0 ) { 
-				u = (UserInfo*)ctrlUsers.getItemData(sel);
+				u = ctrlUsers.getItemData(sel);
 				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;		
 					u->getIdentity().getParams(tmp, "user", true);
@@ -1452,7 +1452,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		} else {
 			sel = -1;
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
-				u = (UserInfo*)ctrlUsers.getItemData(sel);
+				u = ctrlUsers.getItemData(sel);
 				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;
 					u->getIdentity().getParams(tmp, "user", true);
@@ -1696,23 +1696,11 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 	bHandled = FALSE;
 	if(wParam == BST_CHECKED) {
 		showUsers = true;
-		/*ctrlUsers.SetRedraw(FALSE);
-		ctrlUsers.DeleteAllItems();
-		
-		for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-			UserInfo* ui = i->second;
-			if(!ui->isHidden())
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
-		}
-
-		ctrlUsers.SetRedraw(TRUE);
-		ctrlUsers.resort();*/
 		client->refreshUserList(true);
 	} else {
 		showUsers = false;
 		clearUserList();
 		client->availableBytes = 0;
-		//ctrlUsers.DeleteAllItems();
 	}
 
 	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);
@@ -1759,7 +1747,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	int item = ctrlUsers.GetNextItem(-1, LVNI_FOCUSED);
 	if(item != -1) {
 		try {
-			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->user, QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			addClientLine(Text::toT(e.getError()));
 		}
@@ -2293,7 +2281,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 				pMenu->AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 				int i = ctrlUsers.findItem(sNick);
 				if ( i >= 0 ) {
-					UserInfo* ui = (UserInfo*)ctrlUsers.getItemData(i);
+					UserInfo* ui = ctrlUsers.getItemData(i);
 					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
 						if(ignoreList.find(ui->getUser()) == ignoreList.end()) {
@@ -2505,7 +2493,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	} else {
 	int i = -1;
 		if((i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			ui = (UserInfo*)ctrlUsers.getItemData(i);
+			ui = ctrlUsers.getItemData(i);
 		}
 	}
 
@@ -2561,8 +2549,8 @@ LRESULT HubFrame::onStyleChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 }
 
 void HubFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
-	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
-	ctrlUsers.Invalidate();
+	//ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
+	//ctrlUsers.Invalidate();
 	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
 		ctrlClient.SetBackgroundColor(WinUtil::bgColor);
 		ctrlUsers.SetBkColor(WinUtil::bgColor);

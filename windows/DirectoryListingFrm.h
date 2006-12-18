@@ -198,7 +198,7 @@ public:
 	void clearList() {
 		int j = ctrlList.GetItemCount();
 		for(int i = 0; i < j; i++) {
-			delete (ItemInfo*)ctrlList.GetItemData(i);
+			delete ctrlList.getItemData(i);
 		}
 		ctrlList.DeleteAllItems();
 	}
@@ -328,7 +328,7 @@ private:
 			if(type == DIRECTORY)
 				return WinUtil::getDirIconIndex();
 			else
-				return WinUtil::getIconIndex(getText(COLUMN_FILENAME));
+				return WinUtil::getIconIndex(columns[COLUMN_FILENAME]);
 		}
 
 	private:

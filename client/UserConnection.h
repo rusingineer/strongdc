@@ -286,7 +286,7 @@ public:
 	void setDataMode(int64_t aBytes = -1) { dcassert(socket); socket->setDataMode(aBytes); }
 	void setLineMode(size_t rollback) { dcassert(socket); socket->setLineMode(rollback); }
 
-	void connect(const string& aServer, short aPort) throw(SocketException, ThreadException);
+	void connect(const string& aServer, uint16_t aPort) throw(SocketException, ThreadException);
 	void accept(const Socket& aServer) throw(SocketException, ThreadException);
 
 	void disconnect(bool graceless = false) { if(socket) socket->disconnect(graceless); }
@@ -312,7 +312,7 @@ public:
 	void reconnect() {
 		disconnect();
 		Thread::sleep(100);
-		ClientManager::getInstance()->connect(user);
+		ClientManager::getInstance()->connect(user, Util::toString(Util::rand()));
 	}
 	
 	void handle(AdcCommand::SUP t, const AdcCommand& c) { fire(t, this, c); }

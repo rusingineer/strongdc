@@ -57,7 +57,7 @@ public:
 
 	virtual ~MerkleCheckOutputStream() throw() { 
 		if(managed) delete s;
-		
+
 		if(d) {
 			size_t skippingBytes = (size_t)(d->getStartPos() % real.getBlockSize());
 			if(skippingBytes > 0)
@@ -67,8 +67,10 @@ public:
 			if(verified > start) {
 				fileChunks->markVerifiedBlock((uint16_t)start, (uint16_t)verified);
 			}
+			if(d->getPos() > 0) {
+				fileChunks->verifyBlock(d->getPos() - 1, real, d->getTempTarget());
+			}
 		}
-		fileChunks->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
 	}
 
 	virtual size_t flush() throw(FileException) {

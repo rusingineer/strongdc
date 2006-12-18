@@ -300,11 +300,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		return;
 	}
 
-	string message = STRING(WAITING_TO_RETRY);
-	Download* d = QueueManager::getInstance()->getDownload(*aConn, message);
+	Download* d = QueueManager::getInstance()->getDownload(*aConn);
 
 	if(!d) {
-		fire(DownloadManagerListener::Status(), aConn->getUser(), message);
 		aConn->setLastActivity(0);
 
 		Lock l(cs);
@@ -613,33 +611,25 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		else 
 			d->setFile(f);
 
-
-		if(SETTING(BUFFER_SIZE) > 0 ) {
-			try {
+		try {
+			if(SETTING(BUFFER_SIZE) > 0 ) {
 				d->setFile(new BufferedOutputStream<true>(d->getFile()));
-			} catch(const Exception& e) {
-				delete d->getFile();
-				d->setFile(NULL);
-				failDownload(aSource, e.getError());
-				return false;
 			}
-		}
-	
-		if(d->isSet(Download::FLAG_MULTI_CHUNK)){
-			if(d->getTreeValid()) {
-				d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d));
-				d->setFlag(Download::FLAG_TTH_CHECK);
-			}
-
-			try {
+			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
+				if(d->getTreeValid()) {
+					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos(), d));
+					d->setFlag(Download::FLAG_TTH_CHECK);
+				}
 				d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos()));
-			} catch(const FileException&) {
-				delete d->getFile();
-				d->setFile(NULL);
-				failDownload(aSource, STRING(COULD_NOT_OPEN_TARGET_FILE));
-				return false;
 			}
-		} else {
+		} catch(const Exception& e) {
+			delete d->getFile();
+			d->setFile(NULL);
+			failDownload(aSource, e.getError());
+			return false;
+		}
+			
+		if(!d->isSet(Download::FLAG_MULTI_CHUNK)) {
 			if(d->getTreeValid()) {
 				if((d->getPos() % d->getTigerTree().getBlockSize()) == 0) {
 					d->setFile(new MerkleCheckOutputStream<TigerTree, true>(d->getTigerTree(), d->getFile(), d->getPos()));
@@ -680,6 +670,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
+				fire(DownloadManagerListener::Failed(), d, e.getError());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
@@ -687,7 +678,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				checkDownloads(aSource);
 			}else{
 				failDownload(aSource, e.getError());
-				ClientManager::getInstance()->connect(aSource->getUser());
+				ClientManager::getInstance()->connect(aSource->getUser(), Util::toString(Util::rand()));
 			}
 			return;
 
@@ -763,7 +754,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				handleEndData(aSource);
 			}
 			else{ // peer's partial size < chunk size
-				// fire(DownloadManagerListener::ChunkComplete(), d);
+				fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
