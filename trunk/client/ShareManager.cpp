@@ -738,6 +738,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 
 void ShareManager::addTree(Directory& dir) {
 	bloom.add(Text::toLower(dir.getName()));
+	dir.size = 0;
 
 	for(Directory::MapIter i = dir.directories.begin(); i != dir.directories.end(); ++i) {
 		addTree(*i->second);
@@ -749,6 +750,7 @@ void ShareManager::addTree(Directory& dir) {
 }
 
 void ShareManager::rebuildIndices() {
+	sharedSize = 0;
 	tthIndex.clear();
 	bloom.clear();
 

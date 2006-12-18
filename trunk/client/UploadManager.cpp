@@ -391,7 +391,7 @@ void UploadManager::reserveSlot(const User::Ptr& aUser, uint32_t aTime) {
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
 	}
 	if(aUser->isOnline())
-		ClientManager::getInstance()->connect(aUser);	
+		ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()));	
 }
 
 void UploadManager::unreserveSlot(const User::Ptr& aUser) {
@@ -566,7 +566,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 		for(UploadQueueItem::UserMapIter i = u.begin(); i != u.end(); ++i) {
 			User::Ptr aUser = i->first;
 			if(aUser->isOnline()) {
-				ClientManager::getInstance()->connect(aUser);
+				ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()));
 				freeSlots--;
 			}
 			if(freeSlots == 0) break;

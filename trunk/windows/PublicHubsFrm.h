@@ -126,6 +126,7 @@ private:
 
 	enum {
 		FINISHED,
+		LOADED_FROM_CACHE,
 		STARTING,
 		FAILED
 	};
@@ -166,6 +167,7 @@ private:
 	virtual void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
 	virtual void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
 	virtual void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
+	virtual void on(LoadedFromCache, const string& l) throw() { speak(LOADED_FROM_CACHE, l); }
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void speak(int x, const string& l) {

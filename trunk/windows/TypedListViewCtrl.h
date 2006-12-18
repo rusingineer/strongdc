@@ -133,7 +133,8 @@ public:
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
 		tstring InfoTip(_T(""));
-		TCHAR Buffer[300];
+		AutoArray<TCHAR> Buffer(300);
+		
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
 		int indexes[32];

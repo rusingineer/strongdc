@@ -73,7 +73,7 @@ MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastU
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
 closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
 bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
-		memset(statusSizes, 0, sizeof(statusSizes));
+		memzero(statusSizes, sizeof(statusSizes));
 		anyMF = this;
 }
 
@@ -447,7 +447,7 @@ HWND MainFrame::createToolbar() {
 		int i = Util::toInt(*k);		
 		
 		TBBUTTON nTB;
-		memset(&nTB, 0, sizeof(TBBUTTON));
+		memzero(&nTB, sizeof(TBBUTTON));
 
 		if((i == INT_MAX) || (i == -1)) {
 			nTB.fsStyle = TBSTYLE_SEP;			

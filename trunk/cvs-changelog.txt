@@ -1,3 +1,10 @@
+** cvs203
+	DC++ SVN merge
+	fixed crash for non-segmented files
+	fixed invalid share size
+	optimized zero memory function
+	fixed bug when "too many same numbers" mainchat cheat message could not be disabled
+
 ** cvs202
 	fixed some memory leaks (THX redsaq)
 	TTH inconsistency doesn't remove the source from queue anymore

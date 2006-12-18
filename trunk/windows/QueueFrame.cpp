@@ -165,7 +165,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	QueueManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
-	memset(statusSizes, 0, sizeof(statusSizes));
+	memzero(statusSizes, sizeof(statusSizes));
 	statusSizes[0] = 16;
 	ctrlStatus.SetParts(6, statusSizes);
 	updateStatus();
@@ -1374,7 +1374,7 @@ void QueueFrame::clearTree(HTREEITEM item) {
 static TCHAR tmpBuf[1024];
 void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 	TVINSERTSTRUCT tvis;
-	memset(&tvis, 0, sizeof(tvis));
+	memzero(&tvis, sizeof(tvis));
 	tvis.itemex.hItem = item;
 	tvis.itemex.mask = TVIF_CHILDREN | TVIF_HANDLE | TVIF_IMAGE | TVIF_INTEGRAL | TVIF_PARAM |
 		TVIF_SELECTEDIMAGE | TVIF_STATE | TVIF_TEXT;

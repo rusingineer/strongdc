@@ -421,9 +421,9 @@ void Util::decodeUrl(const string& url, string& aServer, uint16_t& aPort, string
 	if( (k=url.find(':', i)) != string::npos) {
 		// Port
 		if(j == string::npos) {
-			aPort = (short)Util::toInt(url.substr(k+1));
+			aPort = static_cast<uint16_t>(Util::toInt(url.substr(k+1)));
 		} else if(k < j) {
-			aPort = (short)Util::toInt(url.substr(k+1, j-k-1));
+			aPort = static_cast<uint16_t>(Util::toInt(url.substr(k+1, j-k-1)));
 		}
 	} else {
 		k = j;
@@ -1007,72 +1007,7 @@ uint32_t Util::rand() {
 
 	return y; 
 }
-/*
-string Util::getOsVersion() {
-#ifdef _WIN32
-	string os;
 
-	OSVERSIONINFOEX ver;
-	memset(&ver, 0, sizeof(OSVERSIONINFOEX));
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-
-	if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
-		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if(!GetVersionEx((OSVERSIONINFO*)&ver)) {
-			os = "Windows (version unknown)";
-		}
-	}
-
-	if(os.empty()) {
-		if(ver.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-			os = "Win9x/ME/Junk";
-		} else if(ver.dwMajorVersion == 4) {
-			os = "WinNT4";
-		} else if(ver.dwMajorVersion == 5) {
-			if(ver.dwMinorVersion == 0) {
-				os = "Win2000";
-			} else if(ver.dwMinorVersion == 1) {
-				os = "WinXP";
-			} else if(ver.dwMinorVersion == 2) {
-				os = "Win2003";
-			} else {
-				os = "Unknown WinNT5";
-			}
-
-			if(ver.wProductType & VER_NT_WORKSTATION)
-				os += " Pro";
-			else if(ver.wProductType & VER_NT_SERVER)
-				os += " Server";
-			else if(ver.wProductType & VER_NT_DOMAIN_CONTROLLER)
-				os += " DC";
-		} else if(ver.dwMajorVersion == 6) {
-			os = "WinVista";
-		}
-
-		if(ver.wServicePackMajor != 0) {
-			os += "SP";
-			os += Util::toString(ver.wServicePackMajor);
-			if(ver.wServicePackMinor != 0) {
-				os += '.';
-				os += Util::toString(ver.wServicePackMinor);
-			}
-		}
-	}
-
-	return os;
-
-#else // _WIN32
-	struct utsname n;
-
-	if(uname(&n) != 0) {
-		return "unix (unknown version)";
-	}
-
-	return string(n.sysname) + " " + string(n.release) + " (" + string(n.machine) + ")";
-
-#endif // _WIN32
-}
-*/
 /*	getIpCountry
 	This function returns the country(Abbreviation) of an ip
 	for exemple: it returns "PT", whitch standards for "Portugal"

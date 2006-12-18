@@ -269,6 +269,11 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 	string token;
 	bool hasToken = c.getParam("TO", 2, token);
 
+	if(!hasToken) {
+		// @todo remove this bugfix for <=0.698 some time
+		token = c.getParam(2);
+	}
+
 	bool secure;
 	if(protocol == CLIENT_PROTOCOL) {
 		secure = false;
@@ -291,7 +296,7 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 		return;
 	}
 
-	ConnectionManager::getInstance()->adcConnect(*u, (short)Util::toInt(port), token, secure);
+	ConnectionManager::getInstance()->adcConnect(*u, static_cast<uint16_t>(Util::toInt(port)), token, secure);
 }
 
 void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
@@ -358,7 +363,7 @@ void AdcHub::handle(AdcCommand::CMD, AdcCommand& c) throw() {
 void AdcHub::sendUDP(const AdcCommand& cmd) throw() {
 	string command;
 	string ip;
-	short port;
+	uint16_t port;
 	{
 		Lock l(cs);
 		SIDMap::const_iterator i = users.find(cmd.getTo());
@@ -371,7 +376,7 @@ void AdcHub::sendUDP(const AdcCommand& cmd) throw() {
 			return;
 		}
 		ip = ou.getIdentity().getIp();
-		port = static_cast<short>(Util::toInt(ou.getIdentity().getUdpPort()));
+		port = static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort()));
 		command = cmd.toString(ou.getUser()->getCID());
 	}
 	try {
@@ -390,6 +395,10 @@ void AdcHub::handle(AdcCommand::STA, AdcCommand& c) throw() {
 		return;
 
 	//int severity = Util::toInt(c.getParam(0).substr(0, 1));
+	if(c.getParam(0).size() != 3) {
+		return;
+	}
+
 	int code = Util::toInt(c.getParam(0).substr(1));
 
 	if(code == AdcCommand::ERROR_BAD_PASSWORD) {
@@ -418,9 +427,8 @@ void AdcHub::handle(AdcCommand::RES, AdcCommand& c) throw() {
 	SearchManager::getInstance()->onRES(c, ou->getUser());
 }
 
-void AdcHub::connect(const OnlineUser& user) {
-	uint32_t r = Util::rand();
-	connect(user, Util::toString(r), CryptoManager::getInstance()->TLSOk() && user.getUser()->isSet(User::TLS));
+void AdcHub::connect(const OnlineUser& user, const string& token) {
+	connect(user, token, CryptoManager::getInstance()->TLSOk() && user.getUser()->isSet(User::TLS));
 }
 
 void AdcHub::connect(const OnlineUser& user, string const& token, bool secure) {
@@ -429,7 +437,7 @@ void AdcHub::connect(const OnlineUser& user, string const& token, bool secure) {
 
 	const string& proto = secure ? SECURE_CLIENT_PROTOCOL : CLIENT_PROTOCOL;
 	if(isActive()) {
-		short port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
+		uint16_t port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
 		if(port == 0) {
 			// Oops?
 			LogManager::getInstance()->message(STRING(NOT_LISTENING));
@@ -625,6 +633,7 @@ void AdcHub::on(Connected) throw() {
 
 void AdcHub::on(Line, const string& aLine) throw() {
 	Client::on(Line(), aLine);	
+
 	if(BOOLSETTING(ADC_DEBUG)) {
 		fire(ClientListener::Message(), this, *(OnlineUser*)NULL, "<ADC>" + aLine + "</ADC>");
 	}

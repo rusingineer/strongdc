@@ -597,7 +597,8 @@ void QueueManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 }
 
 void QueueManager::addList(const User::Ptr& aUser, int aFlags) throw(QueueException, FileException) {
-	string target = Util::getListPath() + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick())) + "." + aUser->getCID().toBase32();
+	// complete target is checked later, just remove path separators from the nick here
+	string target = Util::getListPath() + Util::cleanPathChars(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
 	add(target, -1, TTHValue(), aUser, QueueItem::FLAG_USER_LIST | aFlags);
 }
@@ -964,7 +965,7 @@ void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 	}
 }
 
-Download* QueueManager::getDownload(UserConnection& aSource, string& message) throw() {
+Download* QueueManager::getDownload(UserConnection& aSource) throw() {
 	Lock l(cs);
 
 	User::Ptr& aUser = aSource.getUser();
@@ -986,7 +987,7 @@ again:
 
 	if((SETTING(FILE_SLOTS) != 0) && (q->getStatus() == QueueItem::STATUS_WAITING) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
 		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
-		message = STRING(ALL_FILE_SLOTS_TAKEN);
+		//message = STRING(ALL_FILE_SLOTS_TAKEN);
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto again;
 	}
@@ -1007,9 +1008,9 @@ again:
 				dcassert(source->isSet(QueueItem::Source::FLAG_PARTIAL));
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
-				message = STRING(NO_NEEDED_PART);
+				//message = STRING(NO_NEEDED_PART);
 			} else {
-				message = STRING(NO_FREE_BLOCK);
+				//message = STRING(NO_FREE_BLOCK);
 			}
 			
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
@@ -1057,7 +1058,7 @@ again:
 	return d;
 }
 
-void QueueManager::putDownload(Download* aDownload, bool finished, bool connectSources /* = true */) throw() {
+void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connectSources  = true */) throw() {
 	User::List getConn;
 	string fname;
 	User::Ptr up;

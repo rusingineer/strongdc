@@ -275,8 +275,8 @@ public:
 	LRESULT onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if(!sSelectedUser.empty()) {
-				UserInfo* ui = findUser(sSelectedUser);
+			if(!ChatCtrl::sSelectedUser.empty()) {
+				UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
 				if(ui) ignoreList.insert(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
@@ -290,8 +290,8 @@ public:
 	LRESULT onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/) {
 		int i=-1;
 		if(client->isConnected()) {
-			if(!sSelectedUser.empty()) {
-				UserInfo* ui = findUser(sSelectedUser);
+			if(!ChatCtrl::sSelectedUser.empty()) {
+				UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
 				if(ui) ignoreList.erase(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
@@ -357,7 +357,6 @@ private:
 		frames.erase(server);
 
 		clearTaskList();
-		dcassert(userMap.empty());
 	}
 
 	typedef HASH_MAP<tstring, HubFrame*> FrameMap;

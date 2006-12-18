@@ -38,7 +38,7 @@ public:
 		size_t operator()(const CID& c) const { return c.toHash(); }
 		bool operator()(const CID& a, const CID& b) const { return a < b; }
 	};
-	CID() { memset(cid, 0, sizeof(cid)); }
+	CID() { memzero(cid, sizeof(cid)); }
 	explicit CID(const uint8_t* data) { memcpy(cid, data, sizeof(cid)); }
 	explicit CID(const string& base32) { Encoder::fromBase32(base32.c_str(), cid, sizeof(cid)); }
 

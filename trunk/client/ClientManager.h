@@ -145,7 +145,7 @@ public:
 
 	User::Ptr& getMe();
 	
-	void connect(const User::Ptr& p);
+	void connect(const User::Ptr& p, const string& token);
 	void send(AdcCommand& c, const CID& to);
 	void privateMessage(const User::Ptr& p, const string& msg);
 

@@ -241,7 +241,7 @@ LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 		ii->columns[COLUMN_STATUS] = CTSTRING(CONNECTING_FORCED);
 		ctrlTransfers.updateItem( ii );
-		ClientManager::getInstance()->connect(ii->user);
+		ConnectionManager::getInstance()->force(ii->user);
 	}
 	return 0;
 }
@@ -376,7 +376,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 			//rc2.right = right;
 			LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2 + 1;
-			::ExtTextOut(dc, rc2.left, top, ETO_CLIPPED, rc2, ii->getText(COLUMN_STATUS).c_str(), ii->getText(COLUMN_STATUS).length(), NULL);
+			::ExtTextOut(dc, rc2.left, top, ETO_CLIPPED, rc2, ii->columns[COLUMN_STATUS].c_str(), ii->columns[COLUMN_STATUS].length(), NULL);
 
 			SelectObject(dc, oldFont);
 			::SetTextColor(dc, oldcol);
@@ -591,7 +591,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 								default:
 									defString = true;
 							}
-							if(mainItemTick(main, ii->status != ItemInfo::STATUS_RUNNING) && defString && ui->transferFailed)
+							if(mainItemTick(main, ii->status != ItemInfo::STATUS_RUNNING) && defString/* && ui->transferFailed*/)
 								main->columns[COLUMN_STATUS] = ii->columns[COLUMN_STATUS];
 					
 							if(!main->collapsed)
@@ -605,35 +605,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					break;
 				}
 			}
-		} /*else if(wParam == UPDATE_ITEMS) {
-			auto_ptr<vector<UpdateInfo*> > v(reinterpret_cast<vector<UpdateInfo*>* >(lParam));
-			set<ItemInfo*> mainItems;
-			ctrlTransfers.SetRedraw(FALSE);
-			for(ItemInfo::Iter i = transferItems.begin(); i != transferItems.end(); ++i) {
-				ItemInfo* ii = *i;
-				for(vector<UpdateInfo*>::const_iterator j = v->begin(); j != v->end(); ++j) {
-					UpdateInfo* ui = *j;
-					if(*ui == *ii) {
-						if(ii->main)
-							mainItems.insert(ii->main);
-						ii->update(*ui);
-						ctrlTransfers.updateItem(ii);
-					}
-				}
-			}
-
-			for(set<ItemInfo*>::const_iterator i = mainItems.begin(); i != mainItems.end(); ++i) {
-				ItemInfo* main = *i;
-				mainItemTick(main, false);
-				ctrlTransfers.updateItem(main);
-			}
-		
-			if(ctrlTransfers.getSortColumn() != COLUMN_STATUS)
-				ctrlTransfers.resort();
-			ctrlTransfers.SetRedraw(TRUE);
-	
-			for_each(v->begin(), v->end(), DeleteFunction());
-		}*/
+		}
 	}
 
 	if(!t.empty()) {
@@ -651,8 +623,6 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		string target = Text::fromT(ii->getText(COLUMN_PATH) + ii->getText(COLUMN_FILE));
-
 		TTHValue tth;
 		if(QueueManager::getInstance()->getTTH(Text::fromT(ii->Target), tth)) {
 			WinUtil::searchHash(tth);
@@ -662,7 +632,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	return 0;
 }
 	
-TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload), transferFailed(false),
+TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload),// transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
 	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 
@@ -676,9 +646,9 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	}
 	if(ui.updateMask & UpdateInfo::MASK_STATUS_STRING) {
 		// No slots etc from transfermanager better than disconnected from connectionmanager
-		if(!transferFailed)
+		//if(!transferFailed || status == DOWNLOAD_STARTING)
 			columns[COLUMN_STATUS] = ui.statusString;
-		transferFailed = ui.transferFailed;
+		//transferFailed = ui.transferFailed;
 	}
 	if(ui.updateMask & UpdateInfo::MASK_SIZE) {
 		size = ui.size;
@@ -874,7 +844,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 }
 
 void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
-	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true, true);
+	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true/*, true*/);
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
 	ui->setStatusString(Text::toT(aReason));
@@ -898,23 +868,6 @@ void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, cons
 		ui->file = _T("TTH: ") + ui->file;
 	}
 
-	speak(UPDATE_ITEM, ui);
-}
-
-void TransferView::on(DownloadManagerListener::Status, const User::Ptr& aUser, const string& aMessage) {
-	{
-		//Lock l(cs);
-		for(ItemInfo::List::iterator i = transferItems.begin(); i != transferItems.end(); ++i) {
-			ItemInfo* ii = *i;
-			if(ii->download && (ii->user == aUser)) {
-				if(ii->status == ItemInfo::STATUS_WAITING) return;
-				break;
-			}
-		}
-	}
-	UpdateInfo* ui = new UpdateInfo(aUser, true, aMessage != STRING(WAITING_TO_RETRY));
-	ui->setStatus(ItemInfo::STATUS_WAITING);
-	ui->setStatusString(Text::toT(aMessage));
 	speak(UPDATE_ITEM, ui);
 }
 
@@ -1078,7 +1031,7 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 			int h = ctrlTransfers.findItem(*j);
 			if(h != -1)
 				ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
-			ClientManager::getInstance()->connect((*j)->user);
+			ConnectionManager::getInstance()->force((*j)->user);
 		}
 	}
 	return 0;

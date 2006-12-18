@@ -33,7 +33,7 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("adc://"), _T("adcs://") };
 tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
-tstring ChatCtrl::sTempSelectedUser = Util::emptyStringT;
+tstring ChatCtrl::sSelectedUser = Util::emptyStringT;
 
 ChatCtrl::ChatCtrl() : m_boAutoScroll(true), m_pUsers(NULL) { }
 
@@ -59,7 +59,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset(&pf, 0, sizeof(PARAFORMAT2));
+	memzero(&pf, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 
@@ -220,7 +220,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	long lSelBegin = 0, lSelEnd = 0;
 
 	PARAFORMAT2 pf;
-	memset(&pf, 0, sizeof(PARAFORMAT2));
+	memzero(&pf, sizeof(PARAFORMAT2));
 	pf.dwMask = PFM_STARTINDENT; 
 	pf.dxStartIndent = 0;
 
@@ -292,7 +292,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	FavoriteManager::FavoriteMap ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	for(FavoriteManager::FavoriteMap::const_iterator i = ul.begin(); i != ul.end(); ++i) {
-		FavoriteUser pUser = i->second;
+		const FavoriteUser& pUser = i->second;
 
 		lSearchFrom = 0;
 		sNick = pUser.getNick().c_str();
@@ -311,7 +311,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	}
 }
 
-bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& piBegin, int& piEnd) {
+bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
 	if(!m_pUsers) 
 		return FALSE;
 
@@ -361,8 +361,8 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& piBegin, int& piEnd) {
 
 	if(m_pUsers->findItem((tstring)sN) >= 0) {
 		sNick = sN;
-		piBegin = lSelBegin + iLeft;
-		piEnd = lSelBegin + iLeft + iCRLF;
+		iBegin = lSelBegin + iLeft;
+		iEnd = lSelBegin + iLeft + iCRLF;
 		return true;
 	}
     
@@ -374,31 +374,31 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& piBegin, int& piEnd) {
 		sN = sText.Mid(iLeft, iCRLF - 1);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
 			sNick = sN;
-   			piBegin = lSelBegin + iLeft;
-   			piEnd = lSelBegin + iLeft + iCRLF - 1;
+   			iBegin = lSelBegin + iLeft;
+   			iEnd = lSelBegin + iLeft + iCRLF - 1;
 			return true;
 		}
 
 		sN = sText.Mid(iLeft + 1, iCRLF - 1);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
         	sNick = sN;
-			piBegin = lSelBegin + iLeft + 1;
-			piEnd = lSelBegin + iLeft + iCRLF;
+			iBegin = lSelBegin + iLeft + 1;
+			iEnd = lSelBegin + iLeft + iCRLF;
 			return true;
 		}
 
 		sN = sText.Mid(iLeft + 1, iCRLF - 2);
 		if(m_pUsers->findItem((tstring)sN) >= 0) {
 			sNick = sN;
-   			piBegin = lSelBegin + iLeft + 1;
-			piEnd = lSelBegin + iLeft + iCRLF - 1;
+   			iBegin = lSelBegin + iLeft + 1;
+			iEnd = lSelBegin + iLeft + iCRLF - 1;
 			return true;
 		}
 	}	
 	return false;
 }
 
-bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& piBegin, int& piEnd) {
+bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd) {
 	int iCharPos = CharFromPos(p), len = LineLength(iCharPos) + 1;
 	if(len < 3)
 		return false;
@@ -439,8 +439,8 @@ bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& piBegin, int& piEnd) {
 
 	if(boOK) {
 		sIP = sText.Mid(0, iPos);
-		piBegin = lPosBegin;
-		piEnd = lPosEnd;
+		iBegin = lPosBegin;
+		iEnd = lPosEnd;
 	}
 	return boOK;
 }
@@ -494,7 +494,7 @@ LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 	long lSelBegin = 0, lSelEnd = 0; CAtlString sSel;
 
 	sSelectedLine = LineFromPos(pt);
-	sTempSelectedUser = Util::emptyStringT;
+	sSelectedUser = Util::emptyStringT;
 	sSelectedIP = Util::emptyStringT;
 
 	// Po kliku dovnitr oznaceneho textu si zkusime poznamenat pripadnej nick ci ip...
@@ -505,7 +505,7 @@ LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 		if(HitIP(pt, sSel, iBegin, iEnd)) {
 			sSelectedIP = sSel;
 		} else if(HitNick(pt, sSel, iBegin, iEnd)) {
-			sTempSelectedUser = sSel;
+			sSelectedUser = sSel;
 		}
 		return 1;
 	}
@@ -517,7 +517,7 @@ LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 		InvalidateRect(NULL);
 	// Po kliku na Nick oznacit Nick
 	} else if(HitNick(pt, sSel, iBegin, iEnd)) {
-		sTempSelectedUser = sSel;
+		sSelectedUser = sSel;
 		SetSel(iBegin, iEnd);
 		InvalidateRect(NULL);
 	}

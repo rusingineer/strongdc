@@ -40,6 +40,10 @@
 #define BZ_NO_STDIO 1
 #endif
 
+#ifndef USE_SYS_STL
+#define USE_SYS_STL 1
+#endif
+
 #ifdef HAVE_STLPORT
 # define _STLP_DONT_USE_SHORT_STRING_OPTIM 1	// Uses small string buffer, so it saves memory for a lot of strings
 # define _STLP_USE_PTR_SPECIALIZATIONS 1		// Reduces some code bloat
@@ -118,8 +122,10 @@ typedef unsigned __int64 uint64_t;
 
 #undef memcpy
 #undef memset
+#undef memzero
 #define memcpy memcpy2
 #define memset memset2
+#define memzero memzero2
 
 #include <stdio.h>
 #include <stdarg.h>

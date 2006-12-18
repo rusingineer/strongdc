@@ -91,7 +91,7 @@ public:
 	virtual void connect();
 	virtual void disconnect(bool graceless);
 
-	virtual void connect(const OnlineUser& user) = 0;
+	virtual void connect(const OnlineUser& user, const string& token) = 0;
 	virtual void hubMessage(const string& aMessage) = 0;
 	virtual void privateMessage(const OnlineUser& user, const string& aMessage) = 0;
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
@@ -112,7 +112,7 @@ public:
 
 	virtual void refreshUserList(bool) = 0;
 
-	short getPort() const { return port; }
+	uint16_t getPort() const { return port; }
 	const string& getAddress() const { return address; }
 
 	const string& getIp() const { return ip; }

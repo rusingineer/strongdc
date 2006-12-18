@@ -29,50 +29,50 @@
 #include "../client/FastAlloc.h"
 #include "../client/TaskQueue.h"
 
-	enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
-		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
-		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
-		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
-	};
+enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
+	ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
+	PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
+	GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
+};
 
-	struct UserTask : public Task {
-		UserTask(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
+struct UserTask : public Task {
+	UserTask(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
 
-		User::Ptr user;
-		Identity identity;
-	};
+	User::Ptr user;
+	Identity identity;
+};
 
-	struct MessageTask : public StringTask {
-		MessageTask(const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const string& m) : StringTask(m),
-			from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
-			hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
+struct MessageTask : public StringTask {
+	MessageTask(const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const string& m) : StringTask(m),
+		from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
+		hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
 		
-		Identity from;
-		User::Ptr to;
-		User::Ptr replyTo;
+	Identity from;
+	User::Ptr to;
+	User::Ptr replyTo;
 
-		bool hub;
-		bool bot;
-	};
+	bool hub;
+	bool bot;
+};
 
-	enum {
-		COLUMN_FIRST,
-		COLUMN_NICK = COLUMN_FIRST, 
-		COLUMN_SHARED, 
-		COLUMN_EXACT_SHARED, 
-		COLUMN_DESCRIPTION, 
-		COLUMN_TAG,
-		COLUMN_CONNECTION, 
-		COLUMN_EMAIL, 
-		COLUMN_VERSION, 
-		COLUMN_MODE, 
-		COLUMN_HUBS, 
-		COLUMN_SLOTS,
-		COLUMN_UPLOAD_SPEED, 
-		COLUMN_IP, 
-		COLUMN_PK, 
-		COLUMN_LAST
-	};
+enum {
+	COLUMN_FIRST,
+	COLUMN_NICK = COLUMN_FIRST, 
+	COLUMN_SHARED, 
+	COLUMN_EXACT_SHARED, 
+	COLUMN_DESCRIPTION, 
+	COLUMN_TAG,
+	COLUMN_CONNECTION, 
+	COLUMN_EMAIL, 
+	COLUMN_VERSION, 
+	COLUMN_MODE, 
+	COLUMN_HUBS, 
+	COLUMN_SLOTS,
+	COLUMN_UPLOAD_SPEED, 
+	COLUMN_IP, 
+	COLUMN_PK, 
+	COLUMN_LAST
+};
 
 class UserInfo : public UserInfoBase, public FastAlloc<UserInfo>, public ColumnBase {
 public:

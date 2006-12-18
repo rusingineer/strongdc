@@ -242,6 +242,7 @@ enum Strings { // @DontAdd
 	HUB_LIST, // "Hublist"
 	HUB_LIST_DOWNLOADED, // "Hub list downloaded..."
 	HUB_LIST_EDIT, // "Edit the hublist"
+	HUB_LIST_LOADED_FROM_CACHE, // "Hub list loaded from cache..."
 	HUB_NAME, // "Name"
 	HUB_SEGMENTS, // "Hub / Segments"
 	HUB_TOPIC, // "Hub Topic :"

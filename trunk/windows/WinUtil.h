@@ -70,9 +70,7 @@ public:
 template<class T>
 class UserInfoBaseHandler {
 public:
-	UserInfoBaseHandler() {
-		sSelectedUser = Util::emptyStringT;
-	}
+	UserInfoBaseHandler() : sSelectedUser(Util::emptyStringT) { }
 
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
@@ -274,7 +272,7 @@ public:
 	}
 
 protected:
-	tstring sSelectedUser;
+	tstring& sSelectedUser;
 };
 
 class FlatTabCtrl;

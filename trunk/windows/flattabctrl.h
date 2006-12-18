@@ -539,8 +539,8 @@ private:
 			if (icon != stateIcon)
 				hStateIcon = (HICON)LoadImage((HINSTANCE)::GetWindowLong(aWnd, GWL_HINSTANCE), MAKEINTRESOURCE(stateIcon), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 			pen.CreatePen(PS_SOLID, 1, c);
-			memset(&size, 0, sizeof(size));
-			memset(&boldSize, 0, sizeof(boldSize));
+			memzero(&size, sizeof(size));
+			memzero(&boldSize, sizeof(boldSize));
 			name[0] = 0;
 			update();
 		}

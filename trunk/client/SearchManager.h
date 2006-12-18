@@ -110,13 +110,12 @@ private:
 class SearchQueueItem {
 public:
 	SearchQueueItem() { }
-	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch, const string& aToken) : 
-	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch), token(aToken) { }
-	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, tstring aSearch, const string& aToken) : 
-	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), search(aSearch), token(aToken) { }
+	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, const string& aToken) : 
+	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
+	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, const string& aToken) : 
+	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
 
 	GETSET(string, target, Target);
-	GETSET(tstring, search, Search);
 	GETSET(string, token, Token);
 	GETSET(int64_t, size, Size);
 	GETSET(int, typeMode, TypeMode);
@@ -180,14 +179,14 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT);
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT) {
-		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
+	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL);
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL) {
+		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
 	}
 
-	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT);
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL, tstring aSearch = Util::emptyStringT) {
-		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow, aSearch);
+	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL);
+	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL) {
+		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
  	}
 	void stopSearch(int *aWindow = NULL);
 
@@ -195,7 +194,7 @@ public:
 	
 	void respond(const AdcCommand& cmd, const CID& cid);
 
-	unsigned short getPort()
+	uint16_t getPort()
 	{
 		return port;
 	}
@@ -216,7 +215,7 @@ public:
 private:
 	
 	Socket* socket;
-	unsigned short port;
+	uint16_t port;
 	bool stop;
 	uint32_t lastSearch;
 	friend class Singleton<SearchManager>;
