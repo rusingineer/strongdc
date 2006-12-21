@@ -83,9 +83,7 @@ public:
 		return isSet(FLAG_ANTI_FRAG) ? tgt + ANTI_FRAG_EXT : tgt;			
 	}
 
-	int64_t getChunkSize() {
-		return getSize() - getStartPos();
-	}
+	int64_t getChunkSize() const { return getSize() - getStartPos(); }
 	/** @internal */
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
@@ -187,10 +185,10 @@ public:
 	bool startDownload(QueueItem::Priority prio);
 
 	// the following functions were added to help download throttle
-	bool throttle() { return mThrottleEnable; }
+	bool throttle() const { return mThrottleEnable; }
 	void throttleReturnBytes(uint32_t b);
 	size_t throttleGetSlice();
-	uint32_t throttleCycleTime();
+	uint32_t throttleCycleTime() const;
 
 private:
 	void throttleZeroCounters();

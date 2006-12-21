@@ -1435,13 +1435,9 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			HDC& dc = cdc.m_hDC;
 
 			SetBkMode(dc, TRANSPARENT);
-		
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), qi->getSize());
 
-			COLORREF crDownloaded = SETTING(COLOR_DOWNLOADED);
-			COLORREF crVerified = SETTING(COLOR_VERIFIED);
-			COLORREF crPending = SETTING(COLOR_RUNNING);
+			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), (uint64_t)max((int64_t)1, (int64_t)qi->getSize()));
 
 			if(qi->chunkInfo) {
 				vector<int64_t> v;
@@ -1449,7 +1445,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				// running chunks
 				qi->chunkInfo->getAllChunks(v, 1);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), crPending);
+					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
 				}
 				v.clear();
 
@@ -1458,19 +1454,19 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				qi->chunkInfo->getAllChunks(v, 0);
 				v.push_back(qi->getSize());
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), crDownloaded);
+					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 				}
 				v.clear();
 
 				// verified chunks
 				qi->chunkInfo->getAllChunks(v, 2);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), crVerified);
+					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
 				}
-			} else {
+			} else {			
 				int64_t possibleVerified = qi->getDownloadedBytes() - (qi->getDownloadedBytes() % 65536);
-				statusBar.FillRange(0, possibleVerified, crVerified);
-				statusBar.FillRange(possibleVerified, qi->getDownloadedBytes(), crDownloaded);
+				statusBar.FillRange(0, possibleVerified, SETTING(COLOR_VERIFIED));
+				statusBar.FillRange(possibleVerified, qi->getDownloadedBytes(), SETTING(COLOR_DOWNLOADED));
 			}
 			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);

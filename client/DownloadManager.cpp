@@ -1088,7 +1088,7 @@ size_t DownloadManager::throttleGetSlice() {
 	}
 }
 
-uint32_t DownloadManager::throttleCycleTime() {
+uint32_t DownloadManager::throttleCycleTime() const {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;

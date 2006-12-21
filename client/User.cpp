@@ -66,15 +66,15 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 	}
 }
 
-string Identity::getTag() const {
+const string Identity::getTag() const {
 	if(!get("TA").empty())
 		return get("TA");
-	if(get("VE").empty() || get("HN").empty() || get("HR").empty() ||get("HO").empty() || get("SL").empty())
+	if(get("VE").empty() || get("HN").empty() || get("HR").empty() || get("HO").empty() || get("SL").empty())
 		return Util::emptyString;
 	return "<" + get("VE") + ",M:" + string(isTcpActive() ? "A" : "P") + ",H:" + get("HN") + "/" +
 		get("HR") + "/" + get("HO") + ",S:" + get("SL") + ">";
 }
-string Identity::get(const char* name) const {
+const string Identity::get(const char* name) const {
 	Lock l(cs);
 	InfMap::const_iterator i = info.find(*(short*)name);
 	return i == info.end() ? Util::emptyString : i->second;
@@ -103,7 +103,7 @@ void FavoriteUser::update(const OnlineUser& info) {
 	setUrl(info.getClient().getHubUrl()); 
 }
 
-const string Identity::setCheat(Client& c, const string& aCheatDescription, bool aBadClient) {
+const string Identity::setCheat(const Client& c, const string& aCheatDescription, bool aBadClient) {
 	if(!c.isOp() || isOp()) return Util::emptyString;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -153,7 +153,7 @@ const string Identity::getReport() const {
 	return report;
 }
 
-const string Identity::updateClientType(OnlineUser& ou) {
+const string Identity::updateClientType(const OnlineUser& ou) {
 	if ( getUser()->isSet(User::DCPLUSPLUS) && (get("LL") == "11") && (getBytesShared() > 0) ) {
 		string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
 		set("CT", "DC++ Stealth");
@@ -272,7 +272,7 @@ string Identity::splitVersion(const string& aExp, const string& aTag, const int 
 	return reg[part];
 }
 
-void Identity::sendRawCommand(Client& c, const int aRawCommand) {
+void Identity::sendRawCommand(const Client& c, const int aRawCommand) {
 	string rawCommand = c.getRawCommand(aRawCommand);
 	if (!rawCommand.empty()) {
 		StringMap ucParams;

@@ -1,3 +1,7 @@
+** cvs204
+	added constness to some functions
+	hopefully fixed silent crash in queue Filelists node (THX BugMaster for hint)
+
 ** cvs203
 	DC++ SVN merge
 	fixed crash for non-segmented files

@@ -152,7 +152,7 @@ public:
 	GETSET(uint32_t, start, Start);
 	GETSET(uint32_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
-	GETSET(TTHValue, tth, TTH);	
+	GETSET(TTHValue, tth, TTH);
 	GETSET(int64_t, fileSize, FileSize);
 private:
 	Transfer(const Transfer&);
