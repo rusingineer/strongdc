@@ -130,7 +130,7 @@ public:
 		return string(buf, snprintf(buf, sizeof(buf), "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
 	}
 
-	string getRawCommand(const int aRawCommand) {
+	const string& getRawCommand(const int aRawCommand) const {
 		switch(aRawCommand) {
 			case 1: return rawOne;
 			case 2: return rawTwo;

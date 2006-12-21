@@ -196,7 +196,7 @@ public:
 	
 	// Upload throttling
 	size_t throttleGetSlice();
-	size_t throttleCycleTime();
+	size_t throttleCycleTime() const;
 	
 	GETSET(int, running, Running);
 	GETSET(int, extra, Extra);

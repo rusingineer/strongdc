@@ -114,7 +114,7 @@ public:
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Connection, "CO")
-	GS(Status, "ST");
+	GS(Status, "ST")
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
@@ -123,7 +123,7 @@ public:
 	void setHub(bool hub) { set("HU", hub ? "1" : Util::emptyString); }
 	void setBot(bool bot) { set("BO", bot ? "1" : Util::emptyString); }
 	void setHidden(bool hidden) { set("HI", hidden ? "1" : Util::emptyString); }
-	string getTag() const;
+	const string getTag() const;
 	bool supports(const string& name) const;
 	bool isHub() const { return !get("HU").empty(); }
 	bool isOp() const { return !get("OP").empty(); }
@@ -133,14 +133,14 @@ public:
 	bool isAway() const { return !get("AW").empty(); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
-	string get(const char* name) const;
+	const string get(const char* name) const;
 	void set(const char* name, const string& val);
 	string getSIDString() const { return string((const char*)&sid, 4); }
 	
-	void sendRawCommand(Client& c, const int aRawCommand);
-	const string setCheat(Client& c, const string& aCheatDescription, bool aBadClient);
+	void sendRawCommand(const Client& c, const int aRawCommand);
+	const string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
 	const string getReport() const;
-	const string updateClientType(OnlineUser& ou);
+	const string updateClientType(const OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;

@@ -718,7 +718,7 @@ size_t UploadManager::throttleGetSlice()  {
 	}
 }
 
-size_t UploadManager::throttleCycleTime() {
+size_t UploadManager::throttleCycleTime() const {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
