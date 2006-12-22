@@ -23,6 +23,7 @@
 
 #include "ChatCtrl.h"
 #include "AGEmotionSetup.h"
+#include "atlstr.h"
 
 extern CAGEmotionSetup* g_pEmotionsSetup;
 
@@ -35,9 +36,7 @@ tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
 tstring ChatCtrl::sSelectedUser = Util::emptyStringT;
 
-ChatCtrl::ChatCtrl() : m_boAutoScroll(true), m_pUsers(NULL) { }
-
-void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers) { m_pUsers = pUsers; }
+void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS>* pUsers) { m_pUsers = pUsers; }
 
 void ChatCtrl::AdjustTextSize() {
 	if(GetWindowTextLength() > 25000) {
@@ -230,23 +229,15 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	ReplaceSel(sText, false);
 
 	// Set text format
-	long lMyNickStart = -1, lMyNickEnd = -1;
 	CAtlString sMsgLower = sText;
 	sMsgLower.MakeLower();
 	CAtlString sNick = sMyNick.c_str();
-	if(bMyMess) {
-		// Moje vlastni zprava
-		lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
-		SetSel(lSelBegin, lSelEnd);
-		SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
-	} else {
-		lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
-		SetSel(lSelBegin, lSelEnd);
-		SetSelectionCharFormat(cf);
-	}
+
+	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
+	SetSel(lSelBegin, lSelEnd);
+	SetSelectionCharFormat(bMyMess ? WinUtil::m_ChatTextMyOwn : cf);
 	
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
-	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	long lSearchFrom = 0;
 	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
 		long linkStart = sMsgLower.Find(Links[i], lSearchFrom);
@@ -268,7 +259,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	}
 
 	// Zvyrazneni vsech vyskytu vlastniho nicku
-	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
+	long lMyNickStart = -1, lMyNickEnd = -1;	
 	lSearchFrom = 0;
 	sNick.MakeLower();
 
@@ -311,7 +302,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	}
 }
 
-bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
+bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 	if(!m_pUsers) 
 		return FALSE;
 
@@ -337,15 +328,14 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
 	if(len <= 0)
 		return false;
 
-	AutoArray<TCHAR> g_BufTemp(len+1);
-	GetTextRange(lSelBegin, lSelEnd, g_BufTemp);
-	g_BufTemp[len] = 0;
-	CAtlString sText = g_BufTemp;
+	AutoArray<TCHAR> buf(len+1);
+	GetTextRange(lSelBegin, lSelEnd, buf);
+	tstring sText(buf, len);
 
-	int iLeft = 0, iRight = 0, iCRLF = sText.GetLength(), iPos = sText.Find('<');
+	int iLeft = 0, iRight = 0, iCRLF = sText.size(), iPos = sText.find(_T('<'));
 	if(iPos >= 0) {
 		iLeft = iPos + 1;
-		iPos = sText.Find('>', iLeft);
+		iPos = sText.find(_T('>'), iLeft);
 		if(iPos < 0) 
 			return false;
 
@@ -355,11 +345,11 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
 		iLeft = 0;
 	}
 
-	CAtlString sN = sText.Mid(iLeft, iCRLF);
-	if(sN.GetLength() == 0)
+	tstring sN = sText.substr(iLeft, iCRLF);
+	if(sN.size() == 0)
 		return false;
 
-	if(m_pUsers->findItem((tstring)sN) >= 0) {
+	if(m_pUsers->findItem(sN) >= 0) {
 		sNick = sN;
 		iBegin = lSelBegin + iLeft;
 		iEnd = lSelBegin + iLeft + iCRLF;
@@ -371,24 +361,24 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
 	// A taky prvni znak 
 	// A pak prvni i posledni :-)
 	if(iCRLF > 1) {
-		sN = sText.Mid(iLeft, iCRLF - 1);
-		if(m_pUsers->findItem((tstring)sN) >= 0) {
+		sN = sText.substr(iLeft, iCRLF - 1);
+		if(m_pUsers->findItem(sN) >= 0) {
 			sNick = sN;
    			iBegin = lSelBegin + iLeft;
    			iEnd = lSelBegin + iLeft + iCRLF - 1;
 			return true;
 		}
 
-		sN = sText.Mid(iLeft + 1, iCRLF - 1);
-		if(m_pUsers->findItem((tstring)sN) >= 0) {
+		sN = sText.substr(iLeft + 1, iCRLF - 1);
+		if(m_pUsers->findItem(sN) >= 0) {
         	sNick = sN;
 			iBegin = lSelBegin + iLeft + 1;
 			iEnd = lSelBegin + iLeft + iCRLF;
 			return true;
 		}
 
-		sN = sText.Mid(iLeft + 1, iCRLF - 2);
-		if(m_pUsers->findItem((tstring)sN) >= 0) {
+		sN = sText.substr(iLeft + 1, iCRLF - 2);
+		if(m_pUsers->findItem(sN) >= 0) {
 			sNick = sN;
    			iBegin = lSelBegin + iLeft + 1;
 			iEnd = lSelBegin + iLeft + iCRLF - 1;
@@ -398,7 +388,7 @@ bool ChatCtrl::HitNick(POINT p, CAtlString& sNick, int& iBegin, int& iEnd) {
 	return false;
 }
 
-bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd) {
+bool ChatCtrl::HitIP(POINT p, tstring& sIP, int& iBegin, int& iEnd) {
 	int iCharPos = CharFromPos(p), len = LineLength(iCharPos) + 1;
 	if(len < 3)
 		return false;
@@ -407,29 +397,25 @@ bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd) {
 	DWORD lPosEnd = FindWordBreak(WB_RIGHTBREAK, iCharPos);
 	len = lPosEnd - lPosBegin;
 	
-	AutoArray<TCHAR> g_BufTemp(len+1);
-	GetTextRange(lPosBegin, lPosEnd, g_BufTemp);
-	g_BufTemp[len] = 0;
+	AutoArray<TCHAR> buf(len+1);
+	GetTextRange(lPosBegin, lPosEnd, buf);
 	for(int i = 0; i < len; i++) {
-		if(!((g_BufTemp[i] == 0) || (g_BufTemp[i] == '.') || ((g_BufTemp[i] >= '0') && (g_BufTemp[i] <= '9')))) {
+		if(!((buf[i] == 0) || (buf[i] == '.') || ((buf[i] >= '0') && (buf[i] <= '9')))) {
 			return false;
 		}
 	}
-	CAtlString sText = g_BufTemp;
+	tstring sText(buf, len);
 
-	sText.ReleaseBuffer();
-	sText.TrimLeft();
-	sText.TrimRight();
-	sText = sText + '.';
+	sText += _T('.');
 	int iFindBegin = 0, iPos = -1, iEnd2 = 0;
 	bool boOK = true;
 	for(int i = 0; i < 4; i++) {
-		iPos = sText.Find('.', iFindBegin);
+		iPos = sText.find(_T('.'), iFindBegin);
 		if(iPos < 0) {
 			boOK = false;
 			break;
 		}
-		iEnd2 = atoi(Text::fromT((tstring)sText.Mid(iFindBegin)).c_str());
+		iEnd2 = atoi(Text::fromT(sText.substr(iFindBegin)).c_str());
 		if((iEnd2 < 0) || (iEnd2 > 255)) {
 			boOK = false;
 			break;
@@ -438,7 +424,7 @@ bool ChatCtrl::HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd) {
 	}
 
 	if(boOK) {
-		sIP = sText.Mid(0, iPos);
+		sIP = sText.substr(0, iPos);
 		iBegin = lPosBegin;
 		iEnd = lPosEnd;
 	}
@@ -465,9 +451,9 @@ tstring ChatCtrl::LineFromPos(POINT p) const {
 	if(len < 3) {
 		return Util::emptyStringT;
 	}
-	AutoArray<TCHAR> g_BufTemp(len+1);
-	GetLine(line, g_BufTemp, len);
-	tstring x(g_BufTemp, len-1);
+	AutoArray<TCHAR> buf(len+1);
+	GetLine(line, buf, len);
+	tstring x(buf, len-1);
 	return x;
 }
 
@@ -491,7 +477,7 @@ void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
 }
 
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
-	long lSelBegin = 0, lSelEnd = 0; CAtlString sSel;
+	long lSelBegin = 0, lSelEnd = 0; tstring sSel;
 
 	sSelectedLine = LineFromPos(pt);
 	sSelectedUser = Util::emptyStringT;

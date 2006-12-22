@@ -250,7 +250,7 @@ public:
 	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
 	void deleteItem(T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
-	int getSortPos(T* a) {
+	int getSortPos(const T* a) {
 		int high = GetItemCount();
 		if((sortColumn == -1) || (high == 0))
 			return high;
@@ -503,8 +503,7 @@ public:
 	}
 
 	//find the original position of the column at the current position.
-	int findColumn(int col) const {	return columnIndexes[col];
-	}	
+	inline int findColumn(int col) const {	return columnIndexes[col]; }	
 	
 private:
 	int sortColumn;
@@ -630,7 +629,7 @@ public:
 			GetItemRect(pos, rect, LVIR_ICON);
 			
 			if (pt.x < rect.left) {
-				T* i = (T*)getItemData(pos);
+				T* i = getItemData(pos);
 				if(i->collapsed) {
 					Expand(i, pos);
 				} else {
@@ -643,50 +642,42 @@ public:
 		return 0;
 	} 
 
-	void Collapse(T* s, int a) {
-		for(T::Iter i = s->subItems.begin(); i != s->subItems.end(); i++) {
+	void Collapse(T* mainItem, int itemPos) {
+		for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
 			deleteItem(*i);
 		}
-		s->collapsed = true;
-		SetItemState(a, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+		mainItem->collapsed = true;
+		SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 	}
 
-	void Expand(T* s, int a) {
-		if(s->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
-			s->collapsed = false;
-			for(T::Iter i = s->subItems.begin(); i != s->subItems.end(); i++) {
-				insertSubItem(*i, a + 1);
+	void Expand(T* mainItem, int itemPos) {
+		if(mainItem->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
+			mainItem->collapsed = false;
+			for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
+				insertSubItem(*i, itemPos + 1);
 			}
-			SetItemState(a, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+			SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
 		}
 	}
 
-	void insertSubItem(T* i, int idx) {
+	void insertSubItem(const T* item, int idx) {
 		LV_ITEM lvi;
 		lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
 		lvi.iItem = idx;
 		lvi.iSubItem = 0;
 		lvi.iIndent = 1;
 		lvi.pszText = LPSTR_TEXTCALLBACK;
-		lvi.iImage = i->imageIndex();
-		lvi.lParam = (LPARAM)i;
+		lvi.iImage = item->imageIndex();
+		lvi.lParam = (LPARAM)item;
 		lvi.state = 0;
 		lvi.stateMask = 0;
 		InsertItem(&lvi);
 	}
 
-	struct TStringComp {
-		TStringComp(const tstring& s) : a(s) { }
-		bool operator()(T* b) const { return b->getGroupingString() == a; }
-		const tstring& a;
-	private:
-		TStringComp& operator=(const TStringComp&);
-	};
-
 	T* findMainItem(const tstring& groupingString) const {
 		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
-		return j != mainItems.end() ? *j : NULL;
+		return j != mainItems.end() ? (*j) : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
@@ -734,52 +725,52 @@ public:
 		}
 	}
 
-	void removeMainItem(T* s) {
-		for(T::List::iterator i = s->subItems.begin(); i != s->subItems.end(); i++) {
+	void removeMainItem(T* mainItem) {
+		for(T::List::iterator i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
 			deleteItem(*i);
 			delete *i;
 		}
-		s->subItems.clear();
-		mainItems.erase(remove(mainItems.begin(), mainItems.end(), s), mainItems.end());
+		mainItem->subItems.clear();
+		mainItems.erase(remove(mainItems.begin(), mainItems.end(), mainItem), mainItems.end());
 	}
 
-	void removeGroupedItem(T* s, bool removeFromMemory = true) {
-		if(!s->main) {
-			removeMainItem(s);
+	void removeGroupedItem(T* item, bool removeFromMemory = true) {
+		if(!item->main) {
+			removeMainItem(item);
 		} else {
-			T::List::iterator n = find(s->main->subItems.begin(), s->main->subItems.end(), s);
-			if(n != s->main->subItems.end()) {
-				s->main->subItems.erase(n);
+			T::List::iterator n = find(item->main->subItems.begin(), item->main->subItems.end(), item);
+			if(n != item->main->subItems.end()) {
+				item->main->subItems.erase(n);
 			}
 			if(uniqueMainItem) {
-				if(s->main->subItems.size() == 1) {
-					if(!s->main->collapsed) {
-						s->main->collapsed = true;
-						deleteItem(s->main->subItems.front());
+				if(item->main->subItems.size() == 1) {
+					if(!item->main->collapsed) {
+						item->main->collapsed = true;
+						deleteItem(item->main->subItems.front());
 					}
-					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(s->main->subItems.empty()) {
-					T* main = s->main;
+					SetItemState(findItem(item->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				} else if(item->main->subItems.empty()) {
+					T* main = item->main;
 					removeMainItem(main);
 					deleteItem(main);
-					s->main = NULL;
+					item->main = NULL;
 					delete main;
 				}
 			} else {
-				if(s->main->subItems.empty()) {
-					SetItemState(findItem(s->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				if(item->main->subItems.empty()) {
+					SetItemState(findItem(item->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
-			if(s->main) {
-				s->updateMainItem();
-				updateItem(s->main);
+			if(item->main) {
+				item->updateMainItem();
+				updateItem(item->main);
 			}
 		}
 
-		deleteItem(s);
+		deleteItem(item);
 
 		if(removeFromMemory)
-			delete s;
+			delete item;
 	}
 
 	void deleteAllItems() {
@@ -872,7 +863,15 @@ public:
 private:
 	CImageList states;
 	bool uniqueMainItem;
-		
+
+	struct TStringComp {
+		TStringComp(const tstring& s) : a(s) { }
+		bool operator()(T* b) const { return b->getGroupingString() == a; }
+		const tstring& a;
+	private:
+		TStringComp& operator=(const TStringComp&);
+	};
+
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
 		int result = compareItems((T*)lParam1, (T*)lParam2, t->getRealSortColumn());
@@ -885,7 +884,7 @@ private:
 		return (t->isAscending() ? result : -result);
 	}
 
-	static int compareItems(T* a, T* b, int col) {
+	static int compareItems(const T* a, const T* b, int col) {
 		// Copyright (C) Liny, RevConnect
 
 		// both are children

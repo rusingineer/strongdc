@@ -165,9 +165,9 @@ void SearchManager::disconnect() throw() {
 		queue.shutdown();
 		socket->disconnect();
 		port = 0;
-#ifdef _WIN32
+
 		join();
-#endif
+
 		stop = false;
 	}
 }

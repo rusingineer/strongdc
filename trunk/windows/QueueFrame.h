@@ -245,13 +245,13 @@ private:
 		const tstring& getText(int col) {
 			return getDisplay()->columns[col];
 		}
-		static int compareItems(QueueItemInfo* a, QueueItemInfo* b, int col) {
+		static int compareItems(const QueueItemInfo* a, const QueueItemInfo* b, int col) {
 			switch(col) {
 				case COLUMN_SIZE: case COLUMN_EXACT_SIZE: return compare(a->getSize(), b->getSize());
 				case COLUMN_PRIORITY: return compare((int)a->getPriority(), (int)b->getPriority());
 				case COLUMN_DOWNLOADED: return compare(a->getDownloadedBytes(), b->getDownloadedBytes());
 				case COLUMN_ADDED: return compare(a->getAdded(), b->getAdded());
-				default: return lstrcmpi(a->getDisplay()->columns[col].c_str(), b->getDisplay()->columns[col].c_str());
+				default: return lstrcmpi(const_cast<QueueItemInfo*>(a)->getDisplay()->columns[col].c_str(), const_cast<QueueItemInfo*>(b)->getDisplay()->columns[col].c_str());
 			}
 		}
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}

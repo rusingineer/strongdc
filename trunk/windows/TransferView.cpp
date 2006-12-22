@@ -256,7 +256,6 @@ void TransferView::ItemInfo::removeAll() {
 }
 
 LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-	CRect rc;
 	NMLVCUSTOMDRAW* cd = (NMLVCUSTOMDRAW*)pnmh;
 
 	switch(cd->nmcd.dwDrawStage) {
@@ -286,6 +285,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 
 			//this is just severely broken, msdn says GetSubItemRect requires a one based index
 			//but it wont work and index 0 gives the rect of the whole item
+			CRect rc;
 			if(cd->iSubItem == 0) {
 				//use LVIR_LABEL to exclude the icon area since we will be painting over that
 				//later
@@ -342,8 +342,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			}
 
 			// Draw the background and border of the bar
-			if(ii->size == 0)
-				ii->size = 1;
+			if(ii->size == 0) ii->size = 1;
 
 			if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
 				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), ii->size);
@@ -408,6 +407,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			return CDRF_SKIPDEFAULT;
 		} else if(BOOLSETTING(GET_USER_COUNTRY) && (colIndex == COLUMN_IP)) {
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
+			CRect rc;
 			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
 			COLORREF color;
 			if(ctrlTransfers.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
@@ -490,7 +490,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 	return 0;
 }
 
-int TransferView::ItemInfo::compareItems(ItemInfo* a, ItemInfo* b, int col) {
+int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, int col) {
 	if(a->status == b->status) {
 		if(a->download != b->download) {
 			return a->download ? -1 : 1;
@@ -591,7 +591,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 								default:
 									defString = true;
 							}
-							if(mainItemTick(main, ii->status != ItemInfo::STATUS_RUNNING) && defString/* && ui->transferFailed*/)
+							if(mainItemTick(main, ii->status != ItemInfo::STATUS_RUNNING) && defString && ui->transferFailed)
 								main->columns[COLUMN_STATUS] = ii->columns[COLUMN_STATUS];
 					
 							if(!main->collapsed)
@@ -632,7 +632,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	return 0;
 }
 	
-TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload),// transferFailed(false),
+TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload), transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
 	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 
@@ -646,9 +646,9 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	}
 	if(ui.updateMask & UpdateInfo::MASK_STATUS_STRING) {
 		// No slots etc from transfermanager better than disconnected from connectionmanager
-		//if(!transferFailed || status == DOWNLOAD_STARTING)
+		if(!transferFailed || status == DOWNLOAD_STARTING)
 			columns[COLUMN_STATUS] = ui.statusString;
-		//transferFailed = ui.transferFailed;
+		transferFailed = ui.transferFailed;
 	}
 	if(ui.updateMask & UpdateInfo::MASK_SIZE) {
 		size = ui.size;
@@ -844,7 +844,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 }
 
 void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
-	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true/*, true*/);
+	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true, true);
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
 	ui->setStatusString(Text::toT(aReason));

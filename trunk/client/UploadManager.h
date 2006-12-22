@@ -97,7 +97,7 @@ public:
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
-	static int compareItems(UploadQueueItem* a, UploadQueueItem* b, int col) {
+	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, int col) {
 		switch(col) {
 			case COLUMN_FILE: return Util::stricmp(a->getText(COLUMN_FILE), b->getText(COLUMN_FILE));
 			case COLUMN_PATH: return Util::stricmp(a->getText(COLUMN_PATH), b->getText(COLUMN_PATH));

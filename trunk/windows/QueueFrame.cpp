@@ -1393,7 +1393,6 @@ void QueueFrame::moveNode(HTREEITEM item, HTREEITEM parent) {
 }
 
 LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
-	CRect rc;
 	NMLVCUSTOMDRAW* cd = (NMLVCUSTOMDRAW*)pnmh;
 
 	switch(cd->nmcd.dwDrawStage) {
@@ -1402,8 +1401,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_ITEMPREPAINT:
 		{
-			QueueItemInfo *ii = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			if(ii->getText(COLUMN_ERRORS) != TSTRING(NO_ERRORS)) {
+			if(!(((QueueItemInfo*)cd->nmcd.lItemlParam)->getBadSources().empty())) {
 				cd->clrText = SETTING(ERROR_COLOR);
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 			}				
@@ -1411,23 +1409,18 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		return CDRF_NOTIFYSUBITEMDRAW;
 
 	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
-
-		int colIndex = ctrlQueue.findColumn(cd->iSubItem);
-		if(colIndex == COLUMN_PROGRESS) {
+		if(ctrlQueue.findColumn(cd->iSubItem) == COLUMN_PROGRESS) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
 			}			
 			// draw something nice...
+			CRect rc;
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 
 			CRect real_rc = rc;
 			rc.MoveToXY(0, 0);
 			
-			CRect rc2 = rc;
-            rc2.left += 6; // indented with 6 pixels
-			rc2.right -= 2; // and without messing with the border of the cell				
-
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
 			HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
@@ -1436,14 +1429,14 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 			SetBkMode(dc, TRANSPARENT);
 
-			QueueItemInfo *qi = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), (uint64_t)max((int64_t)1, (int64_t)qi->getSize()));
+			QueueItemInfo *qii = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), (uint64_t)max((int64_t)0, (int64_t)qii->getSize()));
 
-			if(qi->chunkInfo) {
+			if(qii->chunkInfo) {
 				vector<int64_t> v;
 
 				// running chunks
-				qi->chunkInfo->getAllChunks(v, 1);
+				qii->chunkInfo->getAllChunks(v, 1);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
 				}
@@ -1451,22 +1444,22 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 				// downloaded chunks
 				v.push_back(0);
-				qi->chunkInfo->getAllChunks(v, 0);
-				v.push_back(qi->getSize());
+				qii->chunkInfo->getAllChunks(v, 0);
+				v.push_back(qii->getSize());
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 				}
 				v.clear();
 
 				// verified chunks
-				qi->chunkInfo->getAllChunks(v, 2);
+				qii->chunkInfo->getAllChunks(v, 2);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
 				}
 			} else {			
-				int64_t possibleVerified = qi->getDownloadedBytes() - (qi->getDownloadedBytes() % 65536);
+				int64_t possibleVerified = qii->getDownloadedBytes() - (qii->getDownloadedBytes() % 65536);
 				statusBar.FillRange(0, possibleVerified, SETTING(COLOR_VERIFIED));
-				statusBar.FillRange(possibleVerified, qi->getDownloadedBytes(), SETTING(COLOR_DOWNLOADED));
+				statusBar.FillRange(possibleVerified, qii->getDownloadedBytes(), SETTING(COLOR_DOWNLOADED));
 			}
 			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
 			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);

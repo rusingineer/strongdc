@@ -30,6 +30,9 @@
 
 #include "resource.h"
 #include "OMenu.h"
+//#include "ChatCtrl.h"
+
+class ChatCtrl;
 
 // Some utilities for handling HLS colors, taken from Jean-Michel LE FOL's codeproject
 // article on WTL OfficeXP Menus
@@ -67,11 +70,9 @@ public:
 	User::Ptr user;
 };
 
-template<class T>
+template<class T, bool B = false>
 class UserInfoBaseHandler {
 public:
-	UserInfoBaseHandler() : sSelectedUser(Util::emptyStringT) { }
-
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_BROWSELIST, onBrowseList)
@@ -90,8 +91,8 @@ public:
 	END_MSG_MAP()
 
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::matchQueue);
 			}
@@ -101,8 +102,8 @@ public:
 		return 0;
 	}
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getList);
 			}
@@ -112,12 +113,19 @@ public:
 		return 0;
 	}
 	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		((T*)this)->getUserList().forEachSelected(&UserInfoBase::browseList);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
+			if ( nAtPos >= 0 ) {
+				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::browseList);
+			}
+		} else {
+			((T*)this)->getUserList().forEachSelected(&UserInfoBase::browseList);
+		}
 		return 0;
 	}
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != Util::emptyStringT) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::doReport);
 			}
@@ -128,8 +136,8 @@ public:
 	}
 
 	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != Util::emptyStringT) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getUserResponses);
 			}
@@ -140,8 +148,8 @@ public:
 	}
 
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != Util::emptyStringT) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::checkList);
 			}
@@ -152,8 +160,8 @@ public:
 	}
 
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::addFav);
 			}
@@ -163,8 +171,8 @@ public:
 		return 0;
 	}
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::pm);
 			}
@@ -174,8 +182,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grant);
 			}
@@ -185,8 +193,8 @@ public:
 		return 0;
 	}
 	LRESULT onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::removeAll);
 			}
@@ -196,8 +204,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotHour);
 			}
@@ -207,8 +215,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotDay);
 			}
@@ -218,8 +226,8 @@ public:
 		return 0;
 	}
 	LRESULT onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
 				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotWeek);
 			}
@@ -230,13 +238,13 @@ public:
 	}
 
 	LRESULT onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(sSelectedUser != _T("")) {
-			int nAtPos = ((T*)this)->getUserList().findItem(sSelectedUser);
+		if(B && !ChatCtrl::sSelectedUser.empty()) {
+			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
 			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::ungrantSlot );
+				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::ungrantSlot);
 			}
 		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::ungrantSlot );
+			((T*)this)->getUserList().forEachSelected(&UserInfoBase::ungrantSlot);
 		}
 		return 0;
 	}
@@ -270,9 +278,6 @@ public:
 		menu.AppendMenu(MF_SEPARATOR);
 		menu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_FROM_ALL));
 	}
-
-protected:
-	tstring& sSelectedUser;
 };
 
 class FlatTabCtrl;

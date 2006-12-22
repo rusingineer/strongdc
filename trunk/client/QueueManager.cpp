@@ -1061,10 +1061,9 @@ again:
 void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connectSources  = true */) throw() {
 	User::List getConn;
 	string fname;
-	User::Ptr up;
+	User::Ptr up = aDownload->getUser();
 	int flag = 0;
-	bool checkList = false;
-	User::Ptr user;
+	bool checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
 	TTHValue* aTTH = aDownload->isSet(Download::FLAG_MULTI_CHUNK) ? new TTHValue(aDownload->getTTH().toBase32()) : NULL;
 
 	{
@@ -1164,9 +1163,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connec
 			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aTTH);
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
 				fileChunks->putChunk(aDownload->getStartPos());
-				/*if(aDownload->getPos() > aDownload->getStartPos()) {
-					fileChunks->verifyBlock(aDownload->getPos() - 1, aDownload->getTigerTree(), aDownload->getTempTarget());				
-				}*/
 			}
 		}
 
@@ -1174,10 +1170,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connec
 		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
 			aDownload->getUser()->setLastDownloadSpeed((size_t)speed);
 		}
-		
-		checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
-		user = aDownload->getUser();
-
 		delete aDownload;
 	}
 	delete aTTH;
@@ -1192,7 +1184,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connec
 
 	if(checkList) {
 		try {
-			QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
+			QueueManager::getInstance()->addList(up, QueueItem::FLAG_CHECK_FILE_LIST);
 		} catch(const Exception&) {}
 	}
 }

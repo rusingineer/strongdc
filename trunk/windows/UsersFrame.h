@@ -109,7 +109,7 @@ private:
 			return columns[col];
 		}
 
-		static int compareItems(UserInfo* a, UserInfo* b, int col) {
+		static int compareItems(const UserInfo* a, const UserInfo* b, int col) {
 			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 		}
 		
