@@ -23,7 +23,6 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "atlstr.h"
 #include "TypedListViewCtrl.h"
 #include "ImageDataObject.h"
 #include "UserInfo.h"
@@ -35,17 +34,14 @@
 class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
-protected:
-	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
-	bool m_boAutoScroll;
 public:
-	ChatCtrl();
-	virtual ~ChatCtrl() {}
+	ChatCtrl() : m_boAutoScroll(true), m_pUsers(NULL) { };
+	virtual ~ChatCtrl() { }
 
 	LRESULT OnRButtonDown(POINT pt);
 
-	bool HitNick(POINT p, CAtlString& sNick, int& iBegin , int& iEnd);
-	bool HitIP(POINT p, CAtlString& sIP, int& iBegin, int& iEnd);
+	bool HitNick(POINT p, tstring& sNick, int& iBegin , int& iEnd);
+	bool HitIP(POINT p, tstring& sIP, int& iBegin, int& iEnd);
 	bool HitURL();
 
 	tstring LineFromPos(POINT p) const;
@@ -63,6 +59,10 @@ public:
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
 	static tstring sSelectedUser;
+
+private:
+	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
+	bool m_boAutoScroll;
 };
 
 

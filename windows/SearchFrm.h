@@ -25,6 +25,7 @@
 
 #include "FlatTabCtrl.h"
 #include "TypedListViewCtrl.h"
+#include "ChatCtrl.h"
 #include "WinUtil.h"
 
 #include "../client/Client.h"
@@ -348,7 +349,7 @@ private:
         
 		const tstring& getText(int col) const { return columns[col]; }
 
-		static int compareItems(SearchInfo* a, SearchInfo* b, int col) {
+		static int compareItems(const SearchInfo* a, const SearchInfo* b, int col) {
 			if(!a->sr || !b->sr)
 				return 0;
 
@@ -428,7 +429,7 @@ private:
 		const tstring& getText(int col) const {
 			return (col == 0) ? name : Util::emptyStringT;
 		}
-		static int compareItems(HubInfo* a, HubInfo* b, int col) {
+		static int compareItems(const HubInfo* a, const HubInfo* b, int col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;
 		}
 		int imageIndex() {

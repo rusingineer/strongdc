@@ -381,7 +381,7 @@ protected:
 			return Util::emptyStringT;
 		}
 
-		static int compareItems(ItemInfo* a, ItemInfo* b, int col) {
+		static int compareItems(const ItemInfo* a, const ItemInfo* b, int col) {
 			switch(col) {
 				case COLUMN_SPEED:	return compare(a->entry->getAvgSpeed(), b->entry->getAvgSpeed());
 				case COLUMN_SIZE:	return compare(a->entry->getSize(), b->entry->getSize());

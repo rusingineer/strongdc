@@ -47,7 +47,7 @@ struct CompareItems;
 
 class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF>, private ClientListener, 
 	public CSplitterImpl<HubFrame>, private FavoriteManagerListener, private TimerManagerListener,
-	public UCHandler<HubFrame>, public UserInfoBaseHandler<HubFrame>, private SettingsManagerListener
+	public UCHandler<HubFrame>, public UserInfoBaseHandler<HubFrame, true>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
@@ -55,7 +55,7 @@ public:
 	typedef CSplitterImpl<HubFrame> splitBase;
 	typedef MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF> baseClass;
 	typedef UCHandler<HubFrame> ucBase;
-	typedef UserInfoBaseHandler<HubFrame> uibBase;
+	typedef UserInfoBaseHandler<HubFrame, true> uibBase;
 	
 	BEGIN_MSG_MAP(HubFrame)
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)

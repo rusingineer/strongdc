@@ -1,3 +1,9 @@
+** cvs205
+	updated yaSSL
+	fixed bug with autosending user's nick when opening PM window
+	improved the response time to close connections
+	some performance tweaks
+
 ** cvs204
 	added constness to some functions
 	hopefully fixed silent crash in queue Filelists node (THX BugMaster for hint)

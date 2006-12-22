@@ -198,7 +198,7 @@ private:
 		ItemInfo(const User::Ptr& u, bool aDownload);
 
 		bool download;
-		//bool transferFailed;
+		bool transferFailed;
 		bool collapsed;
 		ItemInfo* main;
 		Status status;
@@ -226,7 +226,7 @@ private:
 			return columns[col];
 		}
 
-		static int compareItems(ItemInfo* a, ItemInfo* b, int col);
+		static int compareItems(const ItemInfo* a, const ItemInfo* b, int col);
 
 		int imageIndex() const { return !download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT); }
 
@@ -277,13 +277,13 @@ private:
 
 		bool operator==(const ItemInfo& ii) { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const User::Ptr& aUser, bool isDownload/*, bool isTransferFailed = false*/) : updateMask(0), user(aUser), download(isDownload), /*transferFailed(isTransferFailed),*/ multiSource(false), fileList(false), flagImage(0) { }
+		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
 
 		uint32_t updateMask;
 
 		User::Ptr user;
 		bool download;
-		//bool transferFailed;
+		bool transferFailed;
 		bool fileList;
 		tstring target;
 		void setMultiSource(bool aSeg) { multiSource = aSeg; updateMask |= MASK_SEGMENT; }

@@ -25,6 +25,7 @@
 #include "SearchFrm.h"
 #include "PrivateFrame.h"
 #include "AGEmotionSetup.h"
+#include "atlstr.h"
 
 #include "../client/QueueManager.h"
 #include "../client/ShareManager.h"
@@ -176,7 +177,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.AddString(CTSTRING(ANY));
-	ctrlFilterSel.SetCurSel(COLUMN_LAST);
+	ctrlFilterSel.SetCurSel(0);
 
 	bHandled = FALSE;
 	client->connect();
@@ -501,8 +502,8 @@ LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
 
-	if(!sSelectedUser.empty()) {
-		UserInfo* ui = findUser(sSelectedUser);
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
 		if(ui) {
 			switch (wID) {
 				case IDC_COPY_NICK:
@@ -567,26 +568,25 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				ctrlUsers.getItemData(item->iItem)->getList();
 		        break;
 		    case 1: {
-				CAtlString sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getNick()).c_str();
-	            CAtlString sText = "";
+				tstring sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getNick());
+				CAtlString sText = "";
 	            int iSelBegin, iSelEnd;
 	            ctrlMessage.GetSel(iSelBegin, iSelEnd);
 	            ctrlMessage.GetWindowText(sText);
 
 	            if((iSelBegin == 0) && (iSelEnd == 0)) {
+					sUser += _T(": ");
 					if(sText.GetLength() == 0) {
-						sUser += ": ";
-			            ctrlMessage.SetWindowText(sUser);
+			            ctrlMessage.SetWindowText(sUser.c_str());
 			            ctrlMessage.SetFocus();
 			            ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
                     } else {
-			            sUser += ": ";
-			            ctrlMessage.ReplaceSel(sUser);
+			            ctrlMessage.ReplaceSel(sUser.c_str());
 			            ctrlMessage.SetFocus();
                     }
 				} else {
-					sUser += " ";
-                    ctrlMessage.ReplaceSel(sUser);
+					sUser += _T(" ");
+                    ctrlMessage.ReplaceSel(sUser.c_str());
                     ctrlMessage.SetFocus();
 	            }
 				break;
@@ -1195,26 +1195,25 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					    break;
 					}    
 					case 1: {
-					     CAtlString sUser = ui->getText(COLUMN_NICK).c_str();
-					     CAtlString sText = "";
+					     tstring sUser = ui->getText(COLUMN_NICK);
+						 CAtlString sText = "";
 					     int iSelBegin, iSelEnd;
 					     ctrlMessage.GetSel(iSelBegin, iSelEnd);
 					     ctrlMessage.GetWindowText(sText);
 
 					     if((iSelBegin == 0) && (iSelEnd == 0)) {
-					          if(sText.GetLength() == 0) {
-                                   sUser += ": ";
-			                       ctrlMessage.SetWindowText(sUser);
-			                       ctrlMessage.SetFocus();
-			                       ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
-					          } else {
-			                       sUser += ": ";
-			                       ctrlMessage.ReplaceSel(sUser);
-			                       ctrlMessage.SetFocus();
-					          }
+							sUser += _T(": ");
+							if(sText.GetLength() == 0) {   
+			                    ctrlMessage.SetWindowText(sUser.c_str());
+			                    ctrlMessage.SetFocus();
+			                    ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
+							} else {
+			                    ctrlMessage.ReplaceSel(sUser.c_str());
+								ctrlMessage.SetFocus();
+					        }
 					     } else {
-					          sUser += " ";
-					          ctrlMessage.ReplaceSel(sUser);
+					          sUser += _T(" ");
+					          ctrlMessage.ReplaceSel(sUser.c_str());
 					          ctrlMessage.SetFocus();
 					     }
 					     break;
@@ -1314,7 +1313,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
 	tabMenuShown = false;
 	OMenu Mnu;
-	sSelectedUser = Util::emptyStringT;
+	ChatCtrl::sSelectedUser = Util::emptyStringT;
 
 	ctrlUsers.GetHeader().GetWindowRect(&rc);
 		
@@ -1331,11 +1330,11 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			int i = -1;
 			i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
 			if ( i >= 0 ) {
-				sSelectedUser = Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
+				ChatCtrl::sSelectedUser = Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
 			}
 		}
 
-		if(PreparePopupMenu(&ctrlUsers, sSelectedUser, &Mnu)) {
+		if(PreparePopupMenu(&ctrlUsers, ChatCtrl::sSelectedUser, &Mnu)) {
 			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
 			
 			if(!(Mnu.GetMenuState(Mnu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
@@ -1393,13 +1392,12 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		ctrlClient.ScreenToClient(&ptCl); 
 		ctrlClient.OnRButtonDown(ptCl);
 
-		sSelectedUser = ChatCtrl::sSelectedUser;
 		bool boHitURL = ctrlClient.HitURL();
 		if (!boHitURL)
 			sSelectedURL = _T("");
 
-		if(PreparePopupMenu(&ctrlClient, sSelectedUser, &Mnu )) {
-			if(sSelectedUser.empty()) {
+		if(PreparePopupMenu(&ctrlClient, ChatCtrl::sSelectedUser, &Mnu )) {
+			if(ChatCtrl::sSelectedUser.empty()) {
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				if(copyMenu != NULL) copyMenu.DestroyMenu();
 				if(grantMenu != NULL) grantMenu.DestroyMenu();
@@ -1438,8 +1436,8 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 	} else {
 		int sel;
 		UserInfo* u = NULL;
-		if (!sSelectedUser.empty()) {
-			sel = ctrlUsers.findItem(sSelectedUser);
+		if (!ChatCtrl::sSelectedUser.empty()) {
+			sel = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 			if ( sel >= 0 ) { 
 				u = ctrlUsers.getItemData(sel);
 				if(u->getUser()->isOnline()) {
@@ -2363,12 +2361,12 @@ LRESULT HubFrame::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(sSelectedUser.empty()) {
+	if(ChatCtrl::sSelectedUser.empty()) {
 		// No nick selected
 		return 0;
 	}
 
-	int pos = ctrlUsers.findItem(sSelectedUser);
+	int pos = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 	if ( pos == -1 ) {
 		// User not found is list
 		return 0;
@@ -2386,40 +2384,39 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 
 LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
-	CAtlString sUsers = "";
+	tstring sUsers = Util::emptyStringT;
 	CAtlString sText = "";
 
-	if ( !client->isConnected() )
+	if(!client->isConnected())
 		return 0;
 
-	if(!sSelectedUser.empty()) {
-		sUsers = sSelectedUser.c_str();
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		sUsers = ChatCtrl::sSelectedUser.c_str();
 	} else {
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			if ( sUsers.GetLength() > 0 )
-  				sUsers += ", ";
-			sUsers += Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick()).c_str();
+			if (!sUsers.empty())
+  				sUsers += _T(", ");
+			sUsers += Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
 		}
 	}
 
 	int iSelBegin, iSelEnd;
 	ctrlMessage.GetSel( iSelBegin, iSelEnd );
-	ctrlMessage.GetWindowText( sText );
+	ctrlMessage.GetWindowText(sText);
 
 	if ( ( iSelBegin == 0 ) && ( iSelEnd == 0 ) ) {
-		if ( sText.GetLength() == 0 ) {
-			sUsers += ": ";
-			ctrlMessage.SetWindowText( sUsers );
+		sUsers += _T(": ");
+		if (sText.GetLength() == 0) {	
+			ctrlMessage.SetWindowText(sUsers.c_str());
 			ctrlMessage.SetFocus();
 			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
 		} else {
-			sUsers += ": ";
-			ctrlMessage.ReplaceSel( sUsers );
+			ctrlMessage.ReplaceSel( sUsers.c_str() );
 			ctrlMessage.SetFocus();
 		}
 	} else {
-		sUsers += " ";
-		ctrlMessage.ReplaceSel( sUsers );
+		sUsers += _T(" ");
+		ctrlMessage.ReplaceSel( sUsers.c_str() );
 		ctrlMessage.SetFocus();
 	}
 	return 0;
@@ -2487,11 +2484,11 @@ LRESULT HubFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
 	UserInfo* ui = NULL;
-	if(!sSelectedUser.empty()) {
-		int k = ctrlUsers.findItem(sSelectedUser);
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		int k = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 		if(k != -1) ui = ctrlUsers.getItemData(k);
 	} else {
-	int i = -1;
+		int i = -1;
 		if((i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			ui = ctrlUsers.getItemData(i);
 		}
