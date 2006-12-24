@@ -1058,7 +1058,7 @@ again:
 	return d;
 }
 
-void QueueManager::putDownload(Download* aDownload, bool finished, bool connectSources  = true) throw() {
+void QueueManager::putDownload(Download* aDownload, bool finished, bool connectSources) throw() {
 	User::List getConn;
 	string fname;
 	User::Ptr up = aDownload->getUser();
