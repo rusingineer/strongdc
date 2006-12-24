@@ -108,7 +108,7 @@ public:
 	/**
      * Create file chunks infromation with name, size and chunks detail
      */
-	FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* blocks = NULL);
+	FileChunksInfo(const TTHValue* tth, int64_t size, const vector<int64_t>* blocks = NULL);
 
 	/**
      * Smart pointer based destructor

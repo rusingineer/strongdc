@@ -86,7 +86,7 @@ public:
 	bool isNMDC() const { return isSet(NMDC); }
 
 	GETSET(string, firstNick, FirstNick);
-	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
+	GETSET(uint16_t, lastDownloadSpeed, LastDownloadSpeed);
 
 private:
 	User(const User&);

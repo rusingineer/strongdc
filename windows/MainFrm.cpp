@@ -79,9 +79,7 @@ bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), 
 
 MainFrame::~MainFrame() {
 	m_CmdBar.m_hImageList = NULL;
-
 	delete g_pEmotionsSetup;
-	g_pEmotionsSetup = NULL;
 
 	images.Destroy();
 	largeImages.Destroy();
@@ -147,13 +145,6 @@ LRESULT MainFrame::onMatchAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	g_pEmotionsSetup = new CAGEmotionSetup;
-	if ((g_pEmotionsSetup == NULL)||
-		(!g_pEmotionsSetup->Create())){
-		dcassert(FALSE);
-		return -1;
-	}
-
 	TimerManager::getInstance()->addListener(this);
 	QueueManager::getInstance()->addListener(this);
 	LogManager::getInstance()->addListener(this);
@@ -332,6 +323,11 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	if(SETTING(NICK).empty()) {
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
+	}
+
+	g_pEmotionsSetup = new CAGEmotionSetup;
+	if((g_pEmotionsSetup == NULL) || !g_pEmotionsSetup->Create()) {
+		dcassert(0);
 	}
 
 	// We want to pass this one on to the splitter...hope it get's there...

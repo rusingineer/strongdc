@@ -1,3 +1,9 @@
+** cvs206
+	user's speed is displayed in kB/s
+	small chat code cleanup, so it could be a little bit faster
+	small cleanup in TransferView
+	added missing files
+
 ** cvs205
 	updated yaSSL
 	fixed bug with autosending user's nick when opening PM window
