@@ -179,7 +179,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
 			if(slots > 0)
-				id.getUser()->setLastDownloadSpeed((Util::toUInt32(*i)*1024) / slots);
+				id.getUser()->setLastDownloadSpeed((uint16_t)(Util::toInt(*i) / slots));
 		}
 	}
 	/// @todo Think about this
@@ -422,7 +422,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				u.getUser()->unsetFlag(User::AWAY);
 				u.getUser()->unsetFlag(User::SERVER);
 				if(u.getUser()->getLastDownloadSpeed() == 0)
-					u.getUser()->setLastDownloadSpeed(100*1024);
+					u.getUser()->setLastDownloadSpeed(100);
            		break;
            	case 10:
             case 11:
@@ -430,7 +430,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				u.getUser()->setFlag(User::AWAY);
 				u.getUser()->unsetFlag(User::SERVER);
 				if(u.getUser()->getLastDownloadSpeed() == 0)
-					u.getUser()->setLastDownloadSpeed(100*1024);
+					u.getUser()->setLastDownloadSpeed(100);
            		break;
            	default:
 				u.getUser()->unsetFlag(User::AWAY);

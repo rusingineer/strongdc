@@ -131,7 +131,7 @@ const string Identity::getReport() const {
 	report += "\r\nTestSUR:		" + get("TS");
 	report += "\r\nDisconnects:	" + get("FD");
 	report += "\r\nTimeouts:		" + get("TO");
-	report += "\r\nDownspeed:	" + Util::formatBytes(getUser()->getLastDownloadSpeed()) + "/s";
+	report += "\r\nDownspeed:	" + Util::toString(getUser()->getLastDownloadSpeed()) + " kB/s";
 	report += "\r\nIP:		" + getIp();
 	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
 	report += "\r\nDescription:	" + getDescription();

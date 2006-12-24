@@ -844,7 +844,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					} else if(i->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						nick += _T(" (") + TSTRING(INVALID_TREE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_SLOW)) {
-						nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::formatBytesW(i->getUser()->getLastDownloadSpeed()) + _T("/s])");
+						nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::toStringW(i->getUser()->getLastDownloadSpeed()) + _T(" kB/s])");
 					} else if(i->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
 						nick += _T(" (") + TSTRING(NO_NEEDED_PART) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_NO_TTHF)) {

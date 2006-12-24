@@ -642,7 +642,7 @@ public:
 		return 0;
 	} 
 
-	void Collapse(T* mainItem, int itemPos) {
+	void Collapse(T* mainItem, unsigned int itemPos) {
 		for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
 			deleteItem(*i);
 		}
@@ -650,7 +650,7 @@ public:
 		SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 	}
 
-	void Expand(T* mainItem, int itemPos) {
+	void Expand(T* mainItem, unsigned int itemPos) {
 		if(mainItem->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
 			mainItem->collapsed = false;
 			for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
@@ -866,7 +866,7 @@ private:
 
 	struct TStringComp {
 		TStringComp(const tstring& s) : a(s) { }
-		bool operator()(T* b) const { return b->getGroupingString() == a; }
+		bool operator()(const T* b) const { return b->getGroupingString() == a; }
 		const tstring& a;
 	private:
 		TStringComp& operator=(const TStringComp&);

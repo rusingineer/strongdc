@@ -1,3 +1,17 @@
+	-- StrongDC++ 2.04 --
+
+* DC++ 0.699 update
+* fixed deadlock on some queue operations
+* fixed some memory leaks (THX redsaq)
+* TTH inconsistency doesn't remove the source from queue anymore
+* when tempfile doesn't exist, the file will be completely redownloaded
+* fixed missing Pk and Lock strings in some cases
+* fixed invalid share size
+* fixed bug when "too many same numbers" mainchat cheat message could not be disabled
+* hopefully fixed silent crash in queue Filelists node (THX BugMaster for hint)
+* improved the response time to close connections
+* some performance tweaks
+
 	-- StrongDC++ 2.03 --
 
 * fixed some crashes

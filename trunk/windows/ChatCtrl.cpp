@@ -29,12 +29,13 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 #define MAX_EMOTICONS 48
 
-static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
-	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
-	_T("adc://"), _T("adcs://") };
 tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
 tstring ChatCtrl::sSelectedUser = Util::emptyStringT;
+
+static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
+	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
+	_T("adc://"), _T("adcs://") };
 
 void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS>* pUsers) { m_pUsers = pUsers; }
 
@@ -57,11 +58,6 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 
 	long lSelBegin = 0, lSelEnd = 0;
 
-	PARAFORMAT2 pf;
-	memzero(&pf, sizeof(PARAFORMAT2));
-	pf.dwMask = PFM_STARTINDENT; 
-	pf.dxStartIndent = 0;
-
 	// Insert TimeStamp and format with default style
 	if(!sTime.empty()) {
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
@@ -70,21 +66,24 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 		SetSel(lSelBegin, lSelEnd - 1);
 		SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
+
+		PARAFORMAT2 pf;
+		memzero(&pf, sizeof(PARAFORMAT2));
+		pf.dwMask = PFM_STARTINDENT; 
+		pf.dxStartIndent = 0;
 		SetParaFormat(pf);
 	}
 
-	tstring msg = sMsg;
 	CAtlString sText;
 	tstring sAuthor = Text::toT(i.getNick());
 	bool bMyMess = i.getUser() == ClientManager::getInstance()->getMe();
 	if(!sAuthor.empty()) {
-		size_t iLen = 0, iAuthorLen = _tcslen(sAuthor.c_str())+1;
-		if(sMsg[0] == _T('*')) iLen = 1;
+		size_t iLen = (sMsg[0] == _T('*')) ? 1 : 0;
+		size_t iAuthorLen = _tcslen(sAuthor.c_str())+1;
    		sText = sMsg+iAuthorLen+iLen;
-		msg = msg.substr(0, iAuthorLen+iLen);
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(msg.c_str(), false);
+		ReplaceSel(((tstring)sMsg).substr(0, iAuthorLen+iLen).c_str(), false);
 		if(bMyMess) {
 			SetSel(lSelBegin, lSelBegin+iLen+1);
 			SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
@@ -115,10 +114,9 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
                 if((_tcschr((TCHAR*)sMsg+1, _T('>'))) != NULL) {
                     size_t iAuthorLen = _tcslen(sMsg+1)+1;
                     sText = sMsg+iAuthorLen;
-		            msg = msg.substr(0, iAuthorLen);
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		            SetSel(lSelEnd, lSelEnd);
-            		ReplaceSel(msg.c_str(), false);
+            		ReplaceSel(((tstring)sMsg).substr(0, iAuthorLen).c_str(), false);
         			if(BOOLSETTING(BOLD_AUTHOR_MESS)) {
         				SetSel(lSelBegin, lSelBegin+1);
         				SetSelectionCharFormat(cf);
@@ -137,10 +135,9 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
                 if(sMsg[1] == _T(' ') && (_tcschr((wchar_t *)sMsg+2, _T(' '))) != NULL) {
                     size_t iAuthorLen = _tcslen(sMsg+2)+1;
                     sText = sMsg+iAuthorLen+1;
-		            msg = msg.substr(0, iAuthorLen+1);
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		            SetSel(lSelEnd, lSelEnd);
-            		ReplaceSel(msg.c_str(), false);
+            		ReplaceSel(((tstring)sMsg).substr(0, iAuthorLen+1).c_str(), false);
         			if(BOOLSETTING(BOLD_AUTHOR_MESS)) {
         				SetSel(lSelBegin, lSelBegin+2);
         				SetSelectionCharFormat(cf);
@@ -161,10 +158,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
         }
 	}
 
-	// Ensure that EOLs will be always same
-	sText.Replace(_T("\r\n"), _T("\n"));
-	sText.Replace(_T("\n\r"), _T("\n"));
-	sText.Replace(_T("\r"), _T("\n"));
+	sText.Remove(_T('\r'));
 	sText += "\n";
 
 	// Insert emoticons
@@ -216,22 +210,15 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 }
 
 void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
-	long lSelBegin = 0, lSelEnd = 0;
-
-	PARAFORMAT2 pf;
-	memzero(&pf, sizeof(PARAFORMAT2));
-	pf.dwMask = PFM_STARTINDENT; 
-	pf.dxStartIndent = 0;
-
 	// Insert text at the end
-	lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
-	SetSel(lSelEnd, lSelEnd);
+	long lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
+	long lSelBegin = lSelEnd;
+	SetSel(lSelBegin, lSelEnd);
 	ReplaceSel(sText, false);
 
 	// Set text format
 	CAtlString sMsgLower = sText;
 	sMsgLower.MakeLower();
-	CAtlString sNick = sMyNick.c_str();
 
 	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	SetSel(lSelBegin, lSelEnd);
@@ -260,7 +247,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 
 	// Zvyrazneni vsech vyskytu vlastniho nicku
 	long lMyNickStart = -1, lMyNickEnd = -1;	
-	lSearchFrom = 0;
+	CAtlString sNick = sMyNick.c_str();
 	sNick.MakeLower();
 
 	while(true) {
@@ -280,7 +267,6 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	}
 
 	// Zvyrazneni vsech vyskytu nicku Favorite useru
-	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	FavoriteManager::FavoriteMap ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	for(FavoriteManager::FavoriteMap::const_iterator i = ul.begin(); i != ul.end(); ++i) {
 		const FavoriteUser& pUser = i->second;

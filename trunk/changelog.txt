@@ -1,3 +1,34 @@
+	-- StrongDC++ 2.04 --
+
+* aktualizace na DC++ 0.699
+* opraveno vytuhnutí pøi nìkterých operacích ve frontì
+* opraveny nìjaké memory leaky (THX redsaq)
+* pøi chybì TTH už nebude zdroj odebrán z fronty
+* pokud neexistuje doèasný soubor, tak bude soubor stažen celý znovu
+* opraven chybìjící øetìzec Pk a Lock v nìkterých pøípadech
+* opravena chybná velikost sdílení
+* opravena chyba, že hláška "too many same numbers" nemohla být vypnuta
+* snad opraven tichý pád v seznamu filelistù ve frontì (THX BugMaster za nalezení problému)
+* vylepšen èas reakce na zavøení pøipojení
+* trochu zlepšen výkon
+
+	-- StrongDC++ 2.03 --
+
+* opraveny nìjaké pády
+* snad opraveny absolutní cesty
+* aktualizace STLPortu
+* aktualizace WTL
+* starý vzhled sdílení je nastaven jako výchozí pro Win9x
+* aktualizace na DC++ 0.695
+* formát poètu uživatelù je "X/Y Uživatelù" pokud jsou nìjací uživatelé skrytí
+* vylepšení výkonu
+* bufer soubor je uložen na disk pøi ukoèení stahování
+* odstranìna ikonka zeleného/èerveného štítu ve frontì
+* automatická priorita nenastavuje nejnižší prioritu
+* pracovní sada procesu je vyprázdnìna každých 5 minut
+* pár oprav pro zpoždìnou hlášku "Odesílání dokonèeno"
+* pokud je zjištìna privátní IP, tak je standardnì nastaven pasivní režim
+
 	-- StrongDC++ 2.02 --
 
 * opraven èasovaè vypínání

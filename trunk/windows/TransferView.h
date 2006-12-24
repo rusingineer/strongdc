@@ -45,9 +45,7 @@ class TransferView : public CWindowImpl<TransferView>, private DownloadManagerLi
 public:
 	DECLARE_WND_CLASS(_T("TransferView"))
 
-	TransferView() : PreviewAppsSize(0) {
-		headerBuf = new TCHAR[128];
-	}
+	TransferView() : PreviewAppsSize(0) { }
 	virtual ~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
@@ -143,8 +141,6 @@ public:
 	}
 
 private:
-	TCHAR * headerBuf;
-
 	class ItemInfo;	
 	int PreviewAppsSize;
 public:
@@ -328,8 +324,6 @@ private:
 
 	StringMap ucLineParams;
 
-	ItemInfo::List transferItems;
-
 	virtual void on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) throw();
 	virtual void on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) throw();
@@ -339,6 +333,7 @@ private:
 	virtual void on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) throw();
 	virtual void on(DownloadManagerListener::Starting, Download* aDownload) throw();
 	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
+	virtual void on(DownloadManagerListener::Status, const UserConnection*, const string&) throw();
 
 	virtual void on(UploadManagerListener::Starting, Upload* aUpload) throw();
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();

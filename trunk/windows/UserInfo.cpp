@@ -57,7 +57,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 		old = getText(sortCol);
 
 	if (identity.getUser()->getLastDownloadSpeed() > 0) {
-		setText(COLUMN_UPLOAD_SPEED, Util::formatBytesW(identity.getUser()->getLastDownloadSpeed()) + _T("/s"));
+		setText(COLUMN_UPLOAD_SPEED, Util::toStringW(identity.getUser()->getLastDownloadSpeed()) + _T(" kB/s"));
 	} else if(identity.getUser()->isSet(User::FIREBALL)) {
 		setText(COLUMN_UPLOAD_SPEED, _T(">= 100 kB/s"));
 	} else {

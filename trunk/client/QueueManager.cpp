@@ -965,7 +965,7 @@ void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 	}
 }
 
-Download* QueueManager::getDownload(UserConnection& aSource) throw() {
+Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) throw() {
 	Lock l(cs);
 
 	User::Ptr& aUser = aSource.getUser();
@@ -987,7 +987,7 @@ again:
 
 	if((SETTING(FILE_SLOTS) != 0) && (q->getStatus() == QueueItem::STATUS_WAITING) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
 		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
-		//message = STRING(ALL_FILE_SLOTS_TAKEN);
+		aMessage = STRING(ALL_FILE_SLOTS_TAKEN);
 		q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
 		goto again;
 	}
@@ -998,9 +998,9 @@ again:
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && q->chunkInfo) {
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
+			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
 		} else {
-			freeBlock = q->chunkInfo->getChunk(useChunks, aUser->getLastDownloadSpeed());
+			freeBlock = q->chunkInfo->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
 		}
 
 		if(freeBlock < 0) {
@@ -1008,9 +1008,9 @@ again:
 				dcassert(source->isSet(QueueItem::Source::FLAG_PARTIAL));
 				userQueue.remove(q, aUser);
 				q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
-				//message = STRING(NO_NEEDED_PART);
+				aMessage = STRING(NO_NEEDED_PART);
 			} else {
-				//message = STRING(NO_FREE_BLOCK);
+				aMessage = STRING(NO_FREE_BLOCK);
 			}
 			
 			q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
@@ -1058,7 +1058,7 @@ again:
 	return d;
 }
 
-void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connectSources  = true */) throw() {
+void QueueManager::putDownload(Download* aDownload, bool finished, bool connectSources  = true) throw() {
 	User::List getConn;
 	string fname;
 	User::Ptr up = aDownload->getUser();
@@ -1132,7 +1132,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connec
 						}
 					}
 
-					if(/*(connectSources || (q->getCurrents().size() <= 2)) &&*/ (q->getPriority() != QueueItem::PAUSED)) {
+					if((connectSources || (q->getCurrents().size() < 3)) && (q->getPriority() != QueueItem::PAUSED)) {
 						q->getOnlineUsers(getConn);
 					}
 	
@@ -1168,7 +1168,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool /*connec
 
 		int64_t speed = aDownload->getAverageSpeed();
 		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
-			aDownload->getUser()->setLastDownloadSpeed((size_t)speed);
+			aDownload->getUser()->setLastDownloadSpeed((uint16_t)(speed / 1024));
 		}
 		delete aDownload;
 	}
@@ -1808,7 +1808,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 			if(q->getCurrents().size() < 2) return false;
 			if((q->getAverageSpeed() > 0) && (2*d->getRunningAverage() > q->getAverageSpeed())) return false;
 
-			aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
+			aUser->setLastDownloadSpeed((uint16_t)(d->getRunningAverage() / 1024));
 
 		    userQueue.setWaiting(q, aUser);
 			userQueue.remove(q, aUser);
@@ -1831,7 +1831,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
 		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
 			if(onlineUsers > 2) {
-				aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
+				aUser->setLastDownloadSpeed((uint16_t)(d->getRunningAverage() / 1024));
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
 					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
 				} else {

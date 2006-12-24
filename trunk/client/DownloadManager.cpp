@@ -300,9 +300,11 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 		return;
 	}
 
-	Download* d = QueueManager::getInstance()->getDownload(*aConn);
+	string aMessage = Util::emptyString;
+	Download* d = QueueManager::getInstance()->getDownload(*aConn, aMessage);
 
 	if(!d) {
+		if(!aMessage.empty()) fire(DownloadManagerListener::Status(), aConn, aMessage);
 		aConn->setLastActivity(0);
 
 		Lock l(cs);
@@ -670,7 +672,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
-				fire(DownloadManagerListener::Failed(), d, e.getError());
+				//fire(DownloadManagerListener::Failed(), d, e.getError());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false);
@@ -754,7 +756,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				handleEndData(aSource);
 			}
 			else{ // peer's partial size < chunk size
-				fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
+				//fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);

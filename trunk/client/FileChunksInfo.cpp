@@ -46,12 +46,12 @@ void FileChunksInfo::Free(const TTHValue* tth)
 	vecAllFileChunksInfo.erase(i);
 }
 
-FileChunksInfo::FileChunksInfo(TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
+FileChunksInfo::FileChunksInfo(const TTHValue* tth, int64_t size, const vector<int64_t>* chunks) 
 	: fileSize(size), verifiedSize(0)
 {
 	{
 		Lock l(hMutexMapList);
-		vecAllFileChunksInfo.insert(make_pair(tth, this));
+		vecAllFileChunksInfo.insert(make_pair(const_cast<TTHValue*>(tth), this));
 	}
 
 	dcassert(size);
@@ -140,7 +140,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	Lock l(cs);
 	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
 
-	useChunks = (waiting.size() > 1) || (running.size() > 0);
+	useChunks = true;//(waiting.size() > 1) || (running.size() > 0);
 
 	// if there is any waiting chunk, return it
 	if(!waiting.empty()){
@@ -194,7 +194,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
 			if(speed == 0) speed = 1;
 		}else{
-			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
+			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed()*1024 : DEFAULT_SPEED;
 			if(speed == 0) speed = DEFAULT_SPEED;
 		}
 		
@@ -229,7 +229,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
 
 	if(speed == 0 && maxChunk->download){
-		speed =  maxChunk->download->getUser()->getLastDownloadSpeed();
+		speed =  maxChunk->download->getUser()->getLastDownloadSpeed()*1024;
 	}
 
 	if(speed == 0){

@@ -126,7 +126,7 @@ public:
 	void unlockQueue() throw() { cs.leave(); }
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
-	Download* getDownload(UserConnection& aSource) throw();
+	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
 	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
 	/** @return The highest priority download the user has, PAUSED may also mean no downloads */
