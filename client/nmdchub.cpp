@@ -113,7 +113,7 @@ void NmdcHub::supports(const StringList& feat) {
 	send("$Supports " + x + '|');
 }
 
-OnlineUser* NmdcHub::findUser(const string& aNick) {
+OnlineUser* NmdcHub::findUser(const string& aNick) const {
 	Lock l(cs);
 	NickIter i = users.find(aNick);
 	return i == users.end() ? NULL : i->second;

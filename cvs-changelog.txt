@@ -1,3 +1,9 @@
+** cvs207
+	fixed chinese tea in mainchat
+	added combobox with available bind IP addresses (ApexDC++)
+	a little bit faster userlist loading
+	DC++ SVN merge
+
 ** cvs206
 	user's speed is displayed in kB/s
 	small chat code cleanup, so it could be a little bit faster

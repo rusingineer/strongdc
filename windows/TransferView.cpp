@@ -924,9 +924,9 @@ void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
 		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
 		ui->setIP(country + _T(" (") + ip + _T(")"));
 	}
-	if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
+	/*if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
 		ui->file = _T("TTH: ") + ui->file;
-	}
+	}*/
 
 	speak(UPDATE_ITEM, ui);
 }

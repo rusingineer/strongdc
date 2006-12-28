@@ -56,8 +56,10 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	CEdit desc;
+	CComboBox BindCombo;
 
 	void fixControls();
+	void getAddresses();
 };
 
 #endif // !defined(NETWORK_PAGE_H)

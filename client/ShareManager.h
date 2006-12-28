@@ -163,7 +163,7 @@ private:
 		File::Set files;
 
 		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
-			size(0), name(aName), parent(aParent), fileTypes(0) { 
+			name(aName), parent(aParent), fileTypes(0) {
 		}
 
 		~Directory();

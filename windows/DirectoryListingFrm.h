@@ -44,7 +44,7 @@ class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame
 
 {
 public:
-	static void openWindow(const tstring& aFile, const User::Ptr& aUser, int64_t aSpeed);
+	static void openWindow(const tstring& aFile, const tstring& aDir, const User::Ptr& aUser, int64_t aSpeed);
 	static void openWindow(const User::Ptr& aUser, const string& txt, int64_t aSpeed);
 	static void closeAll();
 
@@ -167,7 +167,7 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void findFile(bool findNext);
 	void runUserCommand(UserCommand& uc);
-	void loadFile(const tstring& name);
+	void loadFile(const tstring& name, const tstring& dir);
 	void loadXML(const string& txt);
 	void refreshTree(const tstring& root);
 
@@ -403,14 +403,15 @@ class ThreadedDirectoryListing : public Thread
 {
 public:
 	ThreadedDirectoryListing(DirectoryListingFrame* pWindow, 
-		const string& pFile, const string& pTxt) : mWindow(pWindow),
-		mFile(pFile), mTxt(pTxt)
+		const string& pFile, const string& pTxt, const tstring& aDir = Util::emptyStringT) : mWindow(pWindow),
+		mFile(pFile), mTxt(pTxt), mDir(aDir)
 	{ }
 
 protected:
 	DirectoryListingFrame* mWindow;
 	string mFile;
 	string mTxt;
+	tstring mDir;
 
 private:
 	virtual int run()
@@ -420,7 +421,7 @@ private:
 			if(!mFile.empty()) {
 				mWindow->dl->loadFile(mFile);
 				ADLSearchManager::getInstance()->matchListing(*mWindow->dl);
-				mWindow->refreshTree(Text::toT(WinUtil::getInitialDir(mWindow->dl->getUser())));
+				mWindow->refreshTree(mDir);
 			} else {
 				mWindow->refreshTree(Text::toT(Util::toNmdcFile(mWindow->dl->loadXML(mTxt, true))));
 			}

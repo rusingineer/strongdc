@@ -303,7 +303,7 @@ public:
 	bool isTrusted() const { return socket && socket->isTrusted(); }
 
 	string getRemoteIp() const { if(socket) return socket->getIp(); else return Util::emptyString; }
-	string getRemoteHost(const string& aIp) const { return socket->getRemoteHost(aIp); }
+	string getRemoteHost(const string& aIp) const { if(socket) return socket->getRemoteHost(aIp); else return Util::emptyString; }
 	Download* getDownload() { dcassert(isSet(FLAG_DOWNLOAD)); return download; }
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; }
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; }

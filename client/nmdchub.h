@@ -56,7 +56,7 @@ public:
 		fire(ClientListener::CheatMessage(), this, unescape(aLine));
 	}    
 
-	virtual size_t getUserCount() const {  Lock l(cs); return users.size(); }
+	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
 
 	virtual string escape(string const& str) const { return validateMessage(str, false); }
 	static string unescape(const string& str) { return validateMessage(str, true); }
@@ -101,7 +101,7 @@ private:
 	void onLine(const string& aLine) throw();
 
 	OnlineUser& getUser(const string& aNick);
-	OnlineUser* findUser(const string& aNick);
+	OnlineUser* findUser(const string& aNick) const;
 	void putUser(const string& aNick);
 	
 	string fromAcp(const string& str) const { return Text::acpToUtf8(str); }
