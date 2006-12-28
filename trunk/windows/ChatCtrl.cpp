@@ -250,11 +250,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 	CAtlString sNick = sMyNick.c_str();
 	sNick.MakeLower();
 
-	while(true) {
-		lMyNickStart = sMsgLower.Find(sNick, lSearchFrom);
-		if(lMyNickStart < 0) 
-			break;
-
+	while((lMyNickStart = sMsgLower.Find(sNick, lSearchFrom)) >= 0) {
 		lMyNickEnd = lMyNickStart + sNick.GetLength();
 		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 		SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
@@ -275,11 +271,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 		sNick = pUser.getNick().c_str();
 		sNick.MakeLower();
 
-		while(true) {
-			lMyNickStart = sMsgLower.Find(sNick, lSearchFrom);
-			if(lMyNickStart < 0) 
-				break;
-
+		while((lMyNickStart = sMsgLower.Find(sNick, lSearchFrom)) >= 0) {
 			lMyNickEnd = lMyNickStart + sNick.GetLength();
 			SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 			SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);

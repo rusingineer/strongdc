@@ -42,7 +42,7 @@ static ResourceManager::Strings columnNames[] = { ResourceManager::FILE, Resourc
 
 DirectoryListingFrame::UserMap DirectoryListingFrame::lists;
 
-void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aUser, int64_t aSpeed) {
+void DirectoryListingFrame::openWindow(const tstring& aFile, const tstring& aDir, const User::Ptr& aUser, int64_t aSpeed) {
 	UserIter i = lists.find(aUser);
 	if(i != lists.end()) {
 		if(!BOOLSETTING(POPUNDER_FILELIST)) {
@@ -58,7 +58,7 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const User::Ptr& aU
 			aHWND = frame->CreateEx(WinUtil::mdiClient);
 		}
 		if(aHWND != 0) {
-			frame->loadFile(aFile);
+			frame->loadFile(aFile, aDir);
 			frames.insert( FramePair( frame->m_hWnd, frame ) );
 		} else {
 			delete frame;
@@ -91,10 +91,10 @@ DirectoryListingFrame::DirectoryListingFrame(const User::Ptr& aUser, int64_t aSp
 	lists.insert(make_pair(aUser, this));
 }
 
-void DirectoryListingFrame::loadFile(const tstring& name) {
+void DirectoryListingFrame::loadFile(const tstring& name, const tstring& dir) {
 	ctrlStatus.SetText(0, CTSTRING(LOADING_FILE_LIST));
 	//don't worry about cleanup, the object will delete itself once the thread has finished it's job
-	ThreadedDirectoryListing* tdl = new ThreadedDirectoryListing(this, Text::fromT(name), Util::emptyString);
+	ThreadedDirectoryListing* tdl = new ThreadedDirectoryListing(this, Text::fromT(name), Util::emptyString, dir);
 	loading = true;
 	tdl->start();
 }
@@ -624,13 +624,17 @@ LRESULT DirectoryListingFrame::onListDiff(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	tstring file;
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), _T("File Lists\0*.xml.bz2\0All Files\0*.*\0"))) {
 		DirectoryListing dirList(dl->getUser());
-		dirList.loadFile(Text::fromT(file));
-		dl->getRoot()->filterList(dirList);
-		loading = true;
-		refreshTree(Util::emptyStringT);
-		loading = false;
-		initStatus();
-		updateStatus();
+		try {
+			dirList.loadFile(Text::fromT(file));
+			dl->getRoot()->filterList(dirList);
+			loading = true;
+			refreshTree(Util::emptyStringT);
+			loading = false;
+			initStatus();
+			updateStatus();
+		} catch(const Exception&) {
+			/// @todo report to user?
+		}
 	}
 	return 0;
 }

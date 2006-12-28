@@ -740,7 +740,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							tstring detectString = Util::formatExactSize(u.identity.getBytesShared()) + _T(" - the share size had too many same numbers in it");
 							ClientManager::getInstance()->setFakeList(u.user, Text::fromT(detectString));
 							
-							AutoArray<TCHAR> buf(512);
+							TCHAR buf[512];
 							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.identity.getNick()).c_str(), detectString.c_str());
 
 							if(BOOLSETTING(POPUP_CHEATING_USER)) {
@@ -1119,15 +1119,15 @@ void HubFrame::findText(tstring const& needle) throw() {
 }
 
 tstring HubFrame::findTextPopup() {
-	LineDlg *finddlg;
+	LineDlg *finddlg = new LineDlg;
+	finddlg->title = CTSTRING(SEARCH);
+	finddlg->description = CTSTRING(SPECIFY_SEARCH_STRING);
+
 	tstring param = Util::emptyStringT;
-		finddlg = new LineDlg;
-		finddlg->title = CTSTRING(SEARCH);
-		finddlg->description = CTSTRING(SPECIFY_SEARCH_STRING);
-		if(finddlg->DoModal() == IDOK) {
+	if(finddlg->DoModal() == IDOK) {
 		param = finddlg->line;
 	}
-	delete[] finddlg;
+	delete finddlg;
 	return param;
 }
 
@@ -1136,7 +1136,6 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 	bHandled = false;
 	if(focus == ctrlClient.m_hWnd) {
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-		tstring x;
 
 		int i = ctrlClient.CharFromPos(pt);
 		int line = ctrlClient.LineFromChar(i);
@@ -1148,7 +1147,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 
 		TCHAR* buf = new TCHAR[len];
 		ctrlClient.GetLine(line, buf, len);
-		x = tstring(buf, len-1);
+		tstring x = tstring(buf, len-1);
 		delete[] buf;
 
 		string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);

@@ -25,6 +25,9 @@
 #include "../client/Socket.h"
 #include "WinUtil.h"
 
+#include <IPHlpApi.h>
+#pragma comment(lib, "iphlpapi.lib")
+
 PropPage::TextItem NetworkPage::texts[] = {
 	{ IDC_DIRECT, ResourceManager::SETTINGS_DIRECT },
 	{ IDC_DIRECT_OUT, ResourceManager::SETTINGS_DIRECT },
@@ -109,7 +112,6 @@ void NetworkPage::write()
 		settings->set(SettingsManager::OUTGOING_CONNECTIONS, ct);
 		Socket::socksUpdated();
 	}
-
 }
 
 LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -151,6 +153,17 @@ LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	desc.Attach(GetDlgItem(IDC_SOCKS_PASSWORD));
 	desc.LimitText(250);
 	desc.Detach();
+
+	BindCombo.Attach(GetDlgItem(IDC_BIND_ADDRESS));
+	//BindCombo.AddString(_T("0.0.0.0"));
+	getAddresses();
+	BindCombo.SetCurSel(BindCombo.FindString(0, Text::toT(SETTING(BIND_ADDRESS)).c_str()));
+	
+	if(BindCombo.GetCurSel() == -1) {
+		BindCombo.AddString(Text::toT(SETTING(BIND_ADDRESS)).c_str());
+		BindCombo.SetCurSel(BindCombo.FindString(0, Text::toT(SETTING(BIND_ADDRESS)).c_str()));
+	}
+
 	return TRUE;
 }
 
@@ -173,6 +186,29 @@ void NetworkPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_SOCKS_PASSWORD), socks);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_RESOLVE), socks);
 
+}
+
+void NetworkPage::getAddresses() {
+	IP_ADAPTER_INFO* AdapterInfo = NULL;
+	DWORD dwBufLen = NULL;
+
+	DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+	if(dwStatus == ERROR_BUFFER_OVERFLOW) {
+		AdapterInfo = (IP_ADAPTER_INFO*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufLen);
+		dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);		
+	}
+
+	if(dwStatus == ERROR_SUCCESS) {
+		PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+		while (pAdapterInfo) {
+			IP_ADDR_STRING* pIpList = &(pAdapterInfo->IpAddressList);
+			while (pIpList) {
+				BindCombo.AddString(Text::toT(pIpList->IpAddress.String).c_str());
+				pIpList = pIpList->Next;
+			}
+			pAdapterInfo = pAdapterInfo->Next;
+		}
+	}
 }
 
 LRESULT NetworkPage::onClickedActive(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
