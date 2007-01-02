@@ -130,8 +130,7 @@ LRESULT FavoriteDirsPage::onClickedAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 LRESULT FavoriteDirsPage::onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	TCHAR buf[MAX_PATH];
-	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	LVITEM item = { 0 };
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = sizeof(buf);
 	item.pszText = buf;
@@ -151,8 +150,7 @@ LRESULT FavoriteDirsPage::onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 LRESULT FavoriteDirsPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	TCHAR buf[MAX_PATH];
-	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	LVITEM item = { 0 };
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = sizeof(buf);
 	item.pszText = buf;

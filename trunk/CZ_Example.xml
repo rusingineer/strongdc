@@ -324,7 +324,7 @@
 		<String Name="Mbps">MB/s</String>
 		<String Name="MenuAbout">O StrongDC++</String>
 		<String Name="MenuAdlSearch">ADL hledání</String>
-		<String Name="MenuArrange">Upravit toolbar</String>
+		<String Name="MenuArrange">Seřadit ikony</String>
 		<String Name="MenuCascade">Kaskádové zobrazení</String>
 		<String Name="MenuCdmdebugMessages">CDM Debug zprávy</String>
 		<String Name="MenuCloseAllDirList">Zavři všechny seznamy souborů</String>

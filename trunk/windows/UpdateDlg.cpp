@@ -60,7 +60,7 @@ LRESULT UpdateDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 	hc = new HttpConnection;
 	hc->addListener(this);
-	hc->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
+	hc->downloadFile("http://strongdc.berlios.de/download/version.xml");
 
 	SetWindowText(CTSTRING(UPDATE_CHECK));
 

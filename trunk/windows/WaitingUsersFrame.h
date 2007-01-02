@@ -209,7 +209,7 @@ private:
 		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
 	}
 	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
-		PostMessage(WM_SPEAKER, REMOVE, (LPARAM) new UserInfoBase(aUser));
+		PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new UserInfoBase(aUser));
 	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
 		aUQI->inc();

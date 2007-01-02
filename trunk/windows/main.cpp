@@ -55,8 +55,10 @@ static char buf[DEBUG_BUFSIZE];
 
 #ifndef _DEBUG
 
-FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  /* pdli */) {
-	MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered an unhandled exception and will terminate. Please do not report this as a bug, as StrongDC++ was unable to collect the information needed for a useful bug report (Your Operating System doesn't support the functionality needed, probably because it's too old)."), _T("StrongDC++ Has Crashed"), MB_OK | MB_ICONERROR);
+FARPROC WINAPI FailHook(unsigned /* dliNotify */, PDelayLoadInfo  pdli) {
+	char buf[DEBUG_BUFSIZE];
+	sprintf(buf, "StrongDC++ just encountered and unhandled exception and will terminate.\nPlease do not report this as a bug. The error was caused by library %s.", pdli->szDll);
+	MessageBox(WinUtil::mainWnd, Text::toT(buf).c_str(), _T("StrongDC++ Has Crashed"), MB_OK | MB_ICONERROR);
 	exit(-1);
 }
 
@@ -241,7 +243,7 @@ static void checkCommonControls() {
 			DLLVERSIONINFO dvi;
 			HRESULT hr;
 			
-			ZeroMemory(&dvi, sizeof(dvi));
+			memzero2(&dvi, sizeof(dvi));
 			dvi.cbSize = sizeof(dvi);
 			
 			hr = (*pDllGetVersion)(&dvi);

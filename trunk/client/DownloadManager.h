@@ -187,13 +187,12 @@ public:
 	bool startDownload(QueueItem::Priority prio);
 
 	// the following functions were added to help download throttle
-	bool throttle() const { return mThrottleEnable; }
+	inline bool throttle() const { return mThrottleEnable; }
 	void throttleReturnBytes(uint32_t b);
 	size_t throttleGetSlice();
 	uint32_t throttleCycleTime() const;
 
 private:
-	void throttleZeroCounters();
 	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;

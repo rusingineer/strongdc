@@ -162,7 +162,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 					if(ext.size()>1) ext = ext.substr(1);
 					PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 
-					QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
+					const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 					QueueItem::StringIter qi = queue.find(&target);
 
@@ -1015,7 +1015,7 @@ LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hW
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
+		const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);
@@ -1088,7 +1088,7 @@ LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		ItemInfo *ii = ctrlTransfers.getItemData(i);
 
-		QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
+		const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
 		string tmp = Text::fromT(ii->Target);
 		QueueItem::StringIter qi = queue.find(&tmp);

@@ -219,7 +219,7 @@ LRESULT UploadPage::onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 {
 	TCHAR buf[MAX_PATH];
 	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	memzero2(&item, sizeof(item));
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = sizeof(buf);
 	item.pszText = buf;
@@ -241,7 +241,7 @@ LRESULT UploadPage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 {
 	TCHAR buf[MAX_PATH];
 	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	memzero2(&item, sizeof(item));
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = sizeof(buf);
 	item.pszText = buf;

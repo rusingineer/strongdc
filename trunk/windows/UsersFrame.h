@@ -115,7 +115,7 @@ private:
 		
 		int imageIndex() const { return 2; }
 
-		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(user); }
+		void remove() { FavoriteManager::getInstance()->removeFavoriteUser(getUser()); }
 
 		void update(const FavoriteUser& u);
 

@@ -13,12 +13,7 @@
 IContextMenu2* g_IContext2 = NULL;
 IContextMenu3* g_IContext3 = NULL;
 
-CShellContextMenu::CShellContextMenu() : bDelete(false)
-{
-	m_psfFolder = NULL;
-	m_pidlArray = NULL;
-	m_Menu = NULL;
-}
+CShellContextMenu::CShellContextMenu() : bDelete(false), m_psfFolder(NULL), m_pidlArray(NULL), m_Menu(NULL) { }
 
 CShellContextMenu::~CShellContextMenu()
 {

@@ -224,7 +224,7 @@ void UsersFrame::updateUser(const User::Ptr& aUser) {
 				if(aUser->isSet(User::AWAY))
 					ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 1, 0, 0, NULL);
 				else
-				ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 0, 0, 0, NULL);
+					ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 0, 0, 0, NULL);
 			} else
 				ctrlUsers.SetItem(i,0,LVIF_IMAGE, NULL, 2, 0, 0, NULL);
 			ctrlUsers.updateItem(i);
@@ -274,7 +274,7 @@ void UsersFrame::UserInfo::update(const FavoriteUser& u) {
 LRESULT UsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == USER_UPDATED) {
 		UserInfoBase* uib = (UserInfoBase*)lParam;
-		updateUser(uib->user);
+		updateUser(uib->getUser());
 		delete uib;
 	}
 	return 0;

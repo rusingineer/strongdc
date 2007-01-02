@@ -67,13 +67,13 @@ UINT_PTR CALLBACK MenuBarCommDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		if (HIWORD(wParam) == EN_CHANGE && 
 			(LOWORD(wParam) == CTLID_VALUE_RED || LOWORD(wParam) == CTLID_VALUE_GREEN || LOWORD(wParam) == CTLID_VALUE_BLUE)) {
 			TCHAR buf[16];
-			ZeroMemory(buf, 16);
+			memzero2(buf, sizeof(buf));
 			::GetDlgItemText(hWnd, CTLID_VALUE_RED, buf, 15);
 			int color_r = Util::toInt(Text::fromT(buf));
-			ZeroMemory(buf, 16);
+			memzero2(buf, sizeof(buf));
 			::GetDlgItemText(hWnd, CTLID_VALUE_BLUE, buf, 15);
 			int color_g = Util::toInt(Text::fromT(buf));
-			ZeroMemory(buf, 16);
+			memzero2(buf, sizeof(buf));
 			::GetDlgItemText(hWnd, CTLID_VALUE_GREEN, buf, 15);
 			int color_b = Util::toInt(Text::fromT(buf));
 

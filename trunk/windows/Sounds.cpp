@@ -97,8 +97,7 @@ void Sounds::write()
 LRESULT Sounds::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	TCHAR buf[MAX_PATH];
-	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	LVITEM item = { 0 };
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = 255;
 	item.pszText = buf;
@@ -114,8 +113,7 @@ LRESULT Sounds::onBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
 LRESULT Sounds::onClickedNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	TCHAR buf[MAX_PATH];
-	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	LVITEM item =  { 0 };
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = 255;
 	item.pszText = buf;
@@ -129,8 +127,7 @@ LRESULT Sounds::onClickedNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 LRESULT Sounds::onPlay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	TCHAR buf[MAX_PATH];
-	LVITEM item;
-	::ZeroMemory(&item, sizeof(item));
+	LVITEM item = { 0 };
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = 255;
 	item.pszText = buf;

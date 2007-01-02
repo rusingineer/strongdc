@@ -269,7 +269,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
 	c->addListener(this);
-	c->downloadFile("http://snail.pc.cz/StrongDC/version.xml");
+	c->downloadFile("http://strongdc.berlios.de/download/version.xml");
 
 	// ZoneAlarm - ref: http://www.unixwiz.net/backstealth/
 	if (BOOLSETTING(DETECT_BADSOFT)) {
@@ -987,13 +987,13 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	tstring site;
 	bool isFile = false;
 	switch(wID) {
-	case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
-	case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
-	case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=3818"); break;
-	case IDC_HELP_FAQ: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=4067"); break;
-	case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
-	case IDC_HELP_DONATE: site = Text::toT("http://strongdc.berlios.de/donate.php"); break;
-	default: dcassert(0);
+		case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
+		case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
+		case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=3818"); break;
+		case IDC_HELP_FAQ: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=4067"); break;
+		case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
+		case IDC_HELP_DONATE: site = _T("http://strongdc.berlios.de/donate.php"); break;
+		default: dcassert(0);
 	}
 
 	if(isFile)
@@ -1005,9 +1005,9 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 }
 
 int MainFrame::run() {
-	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_GRAYED);
-	tstring file = Text::toT(Util::getDataPath()) + _T("*.*");
+	tstring file;
 	if(WinUtil::browseFile(file, m_hWnd, false, lastTTHdir) == IDOK) {
+		WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_GRAYED);
 		Thread::setThreadPriority(Thread::LOW);
 		lastTTHdir = Util::getFilePath(file);
 
@@ -1035,11 +1035,12 @@ int MainFrame::run() {
 
 			string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
 			f.close();
-			Thread::setThreadPriority(Thread::NORMAL);
+			
 			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
 		} catch(...) { }
+		Thread::setThreadPriority(Thread::NORMAL);
+		WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);
 	}
-	WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);
 	return 0;
 }
 

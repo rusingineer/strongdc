@@ -57,7 +57,6 @@ UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUp
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
-	throttleZeroCounters();
 }
 
 UploadManager::~UploadManager() throw() {
@@ -647,7 +646,6 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();
-		throttleZeroCounters();
 
 		if((aTick / 1000) % 10 == 0) {
 			for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end();) {
@@ -724,13 +722,6 @@ size_t UploadManager::throttleCycleTime() const {
 	return 0;
 }
 
-void UploadManager::throttleZeroCounters()  {
-	if (mThrottleEnable) {
-		mBytesSpokenFor = 0;
-		mBytesSent = 0;
-	}
-}
-
 void UploadManager::throttleBytesTransferred(uint32_t i)  {
 	mBytesSent += i;
 }
@@ -752,6 +743,8 @@ void UploadManager::throttleSetup() {
 			mByteSlice = inbufSize;
 			mCycleTime = 1000 * inbufSize / mUploadLimit;
 		}
+		mBytesSpokenFor = 0;
+		mBytesSent = 0;
 	}
 }
 

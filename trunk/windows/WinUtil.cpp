@@ -650,7 +650,7 @@ void WinUtil::decodeFont(const tstring& setting, LOGFONT &dest) {
 	}
 	
 	if(!face.empty()) {
-		::ZeroMemory(dest.lfFaceName, LF_FACESIZE);
+		memzero2(dest.lfFaceName, LF_FACESIZE);
 		_tcscpy(dest.lfFaceName, face.c_str());
 	}
 }
@@ -669,7 +669,7 @@ bool WinUtil::browseDirectory(tstring& target, HWND owner /* = NULL */) {
 	BROWSEINFO bi;
 	LPMALLOC ma;
 	
-	ZeroMemory(&bi, sizeof(bi));
+	memzero2(&bi, sizeof(bi));
 	
 	bi.hwndOwner = owner;
 	bi.pszDisplayName = buf;
@@ -1878,22 +1878,20 @@ bool WinUtil::shutDown(int action) {
 	if (GetVersionEx(&osvi) != 0 && osvi.dwPlatformId == VER_PLATFORM_WIN32_NT) {
 		iForceIfHung = 0x00000010;
 		HANDLE hToken;
-		if (OpenProcessToken(GetCurrentProcess(), (TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY), &hToken) == 0) {
-		}
+		OpenProcessToken(GetCurrentProcess(), (TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY), &hToken);
+
 		LUID luid;
-		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid) == 0) {
-		}
+		LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luid);
+		
 		TOKEN_PRIVILEGES tp;
 		tp.PrivilegeCount = 1;
 		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 		tp.Privileges[0].Luid = luid;
 		AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL);
-		if (GetLastError() != ERROR_SUCCESS) {
-		}
 		CloseHandle(hToken);
 	}
-	// Shutdown
 
+	// Shutdown
 	switch(action) {
 		case 0: { action = EWX_POWEROFF; break; }
 		case 1: { action = EWX_LOGOFF; break; }

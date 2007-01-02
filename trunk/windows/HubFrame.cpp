@@ -1439,7 +1439,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			sel = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 			if ( sel >= 0 ) { 
 				u = ctrlUsers.getItemData(sel);
-				if(u->getUser()->isOnline()) {
+				if(u->user->isOnline()) {
 					StringMap tmp = ucParams;		
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp); 
@@ -1450,7 +1450,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			sel = -1;
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
 				u = ctrlUsers.getItemData(sel);
-				if(u->getUser()->isOnline()) {
+				if(u->user->isOnline()) {
 					StringMap tmp = ucParams;
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp);
@@ -2281,7 +2281,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 					UserInfo* ui = ctrlUsers.getItemData(i);
 					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
-						if(ignoreList.find(ui->getUser()) == ignoreList.end()) {
+						if(ignoreList.find(ui->user) == ignoreList.end()) {
 							pMenu->AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
 						} else {    
 							pMenu->AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
@@ -2498,7 +2498,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	params["userNI"] = ui->getNick();
 	params["hubNI"] = client->getHubName();
 	params["myNI"] = client->getMyNick();
-	params["userCID"] = ui->getUser()->getCID().toBase32();
+	params["userCID"] = ui->user->getCID().toBase32();
 	params["hubURL"] = client->getHubUrl();
 	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false)));
 	if(Util::fileExists(Text::fromT(file))) {
@@ -2574,15 +2574,15 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 
 	case CDDS_ITEMPREPAINT: {
 			UserInfo* ui = (UserInfo*)cd->nmcd.lItemlParam;
-			if (FavoriteManager::getInstance()->isFavoriteUser(ui->getUser())) {
+			if (FavoriteManager::getInstance()->isFavoriteUser(ui->user)) {
 				cd->clrText = SETTING(FAVORITE_COLOR);
-			} else if (UploadManager::getInstance()->hasReservedSlot(ui->getUser())) {
+			} else if (UploadManager::getInstance()->hasReservedSlot(ui->user)) {
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
-			} else if (ignoreList.find(ui->getUser()) != ignoreList.end()) {
+			} else if (ignoreList.find(ui->user) != ignoreList.end()) {
 				cd->clrText = SETTING(IGNORED_COLOR);
-			} else if(ui->getUser()->isSet(User::FIREBALL)) {
+			} else if(ui->user->isSet(User::FIREBALL)) {
 				cd->clrText = SETTING(FIREBALL_COLOR);
-			} else if(ui->getUser()->isSet(User::SERVER)) {
+			} else if(ui->user->isSet(User::SERVER)) {
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);

@@ -303,7 +303,8 @@ private:
 
 	struct UpdateTask : FastAlloc<UpdateTask>, public Task {
 		UpdateTask(const QueueItem& source) : target(source.getTarget()), priority(source.getPriority()), size(source.getSize()),
-			status(source.getStatus()), downloadedBytes(source.getDownloadedBytes()), sources(source.getSources()), badSources(source.getBadSources()) 
+			status(source.getStatus()), downloadedBytes(source.getDownloadedBytes()), sources(source.getSources()), badSources(source.getBadSources()),
+			autoPriority(source.getAutoPriority())
 		{
 		}
 
@@ -312,6 +313,7 @@ private:
 		QueueItem::Status status;
 		int64_t downloadedBytes;
 		int64_t size;
+		bool autoPriority;
 
 		QueueItem::SourceList sources;
 		QueueItem::SourceList badSources;
