@@ -49,14 +49,13 @@ int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
 	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
 }
 
+tstring old, tmp;
 bool UserInfo::update(const Identity& identity, int sortCol) {
 	bool needsSort = (getIdentity().isOp() != identity.isOp());
 
-	tstring old;
 	if(sortCol != -1)
 		old = getText(sortCol);
 
-	tstring tmp;
 	if (identity.getUser()->getLastDownloadSpeed() > 0) {
 		setText(COLUMN_UPLOAD_SPEED, Util::toStringW(identity.getUser()->getLastDownloadSpeed()) + _T(" kB/s"));
 	} else if(identity.getUser()->isSet(User::FIREBALL)) {

@@ -122,7 +122,7 @@ public:
 	void setAutoPriority(const string& aTarget, bool ap) throw();
 
 	void getTargets(const TTHValue& tth, StringList& sl);
-	QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
+	const QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); }
 
 	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
@@ -136,7 +136,7 @@ public:
 	void saveQueue() throw();
 
 	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
-	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo);
+	bool handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, const PartsInfo& partialInfo, PartsInfo& outPartialInfo);
 	
 	bool dropSource(Download* d, bool autoDrop);
 
@@ -173,7 +173,7 @@ public:
 	/** All queue items by target */
 	class FileQueue {
 	public:
-		FileQueue() /*: lastInsert(queue.end())*/ { }
+		FileQueue() { }
 		~FileQueue() {
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
 				delete i->second;
@@ -183,19 +183,17 @@ public:
 			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			time_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
 
-		QueueItem* find(const string& target);
+		QueueItem* find(const string& target) const;
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
-		uint8_t getMaxSegments(int64_t filesize);
+		uint8_t getMaxSegments(int64_t filesize) const;
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
 
-		QueueItem* findAutoSearch(deque<string>& recent);
-		size_t getSize() { return queue.size(); }
-		QueueItem::StringMap& getQueue() { return queue; }
+		QueueItem* findAutoSearch(deque<string>& recent) const;
+		size_t getSize() const { return queue.size(); }
+		const QueueItem::StringMap& getQueue() const { return queue; }
 		void move(QueueItem* qi, const string& aTarget);
 		void remove(QueueItem* qi) {
-			//if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
-			//	lastInsert = queue.end();
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
@@ -208,8 +206,6 @@ public:
 
 	private:
 		QueueItem::StringMap queue;
-		/** A hint where to insert an item... */
-		//QueueItem::StringMap::iterator lastInsert;
 	};
 
 	/** QueueItems by target */
@@ -226,14 +222,11 @@ private:
 		QueueItem* getRunning(const User::Ptr& aUser);
 		void setRunning(QueueItem* qi, const User::Ptr& aUser);
 		void setWaiting(QueueItem* qi, const User::Ptr& aUser);
-		QueueItem::UserListMap& getList(int p) { return userQueue[p]; }
+		const QueueItem::UserListMap& getList(int p) const { return userQueue[p]; }
 		void remove(QueueItem* qi);
 		void remove(QueueItem* qi, const User::Ptr& aUser);
 
-		QueueItem::UserMap& getRunning() { return running; }
-		bool isRunning(const User::Ptr& aUser) const { 
-			return (running.find(aUser) != running.end());
-		}
+		const QueueItem::UserMap& getRunning() const { return running; }
 	private:
 		/** QueueItems by priority and user (this is where the download order is determined) */
 		QueueItem::UserListMap userQueue[QueueItem::LAST];

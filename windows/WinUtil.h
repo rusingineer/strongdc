@@ -65,7 +65,7 @@ public:
 	void ungrantSlot();
 	void addFav();
 	void removeAll();
-
+	
 	User::Ptr& getUser() { return user; }
 	User::Ptr user;
 };

@@ -1,3 +1,11 @@
+** cvs208
+	hopefully fixed autopriority displaying in QueueFrame
+	I recommend to download Service Pack 1 for VS2005
+	fixed crash when removing waiting file from queue (THX redsaq for reporting)
+	fixed invalid default filename in Get TTH dialog (THX redsaq for reporting)
+	crash dialog "Your OS is too old..." should display error library name
+	replaced some slow ZeroMemory with CPU-optimized memzero
+
 ** cvs207
 	fixed chinese tea in mainchat
 	added combobox with available bind IP addresses (ApexDC++)
@@ -44,7 +52,7 @@
 	updated Czech language file
 	when private IP is detected, the passive mode is set by default
 	fixed default old sharing interface for Win9x
-	release version 2.03
+	released version 2.03
 
 ** cvs199
 	fixed GUI lock when many debug messages come

@@ -150,7 +150,7 @@ public:
 	 */
 	int64_t getRunningAverage();
 	
-	int getSlots() {
+	int getSlots() const {
 		int slots = 0;
 		if (SETTING(HUB_SLOTS) * Client::getTotalCounts() <= SETTING(SLOTS)) {
 			slots = SETTING(SLOTS);
@@ -161,10 +161,10 @@ public:
 	}
 
 	/** @return Number of free slots. */
-	int getFreeSlots() { return max((getSlots() - running), 0); }
+	int getFreeSlots() const { return max((getSlots() - running), 0); }
 	
 	/** @internal */
-	int getFreeExtraSlots() { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
+	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
 	void reserveSlot(const User::Ptr& aUser, uint32_t aTime);
@@ -198,8 +198,8 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime() const;
 	
-	GETSET(int, running, Running);
-	GETSET(int, extra, Extra);
+	GETSET(uint16_t, running, Running);
+	GETSET(uint16_t, extra, Extra);
 	GETSET(uint32_t, lastGrant, LastGrant);
 private:
 	Upload::List uploads;
@@ -213,7 +213,6 @@ private:
 	UploadQueueItem::UserMap waitingUsers;
 	void addFailedUpload(const User::Ptr& User, string file, int64_t pos, int64_t size);
 	
-	void throttleZeroCounters();
 	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;

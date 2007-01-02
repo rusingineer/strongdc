@@ -107,11 +107,9 @@ void Download::getParams(const UserConnection& aSource, StringMap& params) {
 	//params["sfv"] = Util::toString(isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
 }
 
-DownloadManager::DownloadManager() {
+DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSent(0), mBytesSpokenFor(0),
+	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
 	TimerManager::getInstance()->addListener(this);
-	mDownloadLimit = 0; mBytesSent = 0; mBytesSpokenFor = 0; mCycleTime = 0; mByteSlice = 0;
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE);
-	throttleZeroCounters();	
 }
 
 DownloadManager::~DownloadManager() throw() {
@@ -131,7 +129,6 @@ void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 
 	Download::List tickList;
 	throttleSetup();
-	throttleZeroCounters();
 
 	// Tick each ongoing download
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
@@ -1096,11 +1093,6 @@ uint32_t DownloadManager::throttleCycleTime() const {
 	return 0;
 }
 
-void DownloadManager::throttleZeroCounters() {
-	mBytesSpokenFor = 0;
-	mBytesSent = 0;
-}
-
 void DownloadManager::throttleBytesTransferred(uint32_t i) {
 	mBytesSent += i;
 }
@@ -1119,11 +1111,13 @@ void DownloadManager::throttleSetup() {
 			if (mByteSlice > inbufSize)
 				mByteSlice = inbufSize;
 			mCycleTime = 100;
-			} else {
+		} else {
 			mByteSlice = inbufSize;
 			mCycleTime = 1000 * inbufSize / mDownloadLimit;
 		}
 	}
+	mBytesSpokenFor = 0;
+	mBytesSent = 0;
 }
 
 /**

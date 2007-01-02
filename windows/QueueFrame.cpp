@@ -642,6 +642,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			if(!ii)
 				continue;
 
+			ii->setAutoPriority(ui->autoPriority);
 			ii->setPriority(ui->priority);
 			ii->setStatus(ui->status);
 			ii->setDownloadedBytes(ui->downloadedBytes);

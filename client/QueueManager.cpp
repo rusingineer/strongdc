@@ -217,7 +217,7 @@ void QueueManager::FileQueue::add(QueueItem* qi) {
 	//	lastInsert = queue.insert(lastInsert, make_pair(const_cast<string*>(&qi->getTarget()), qi));
 }
 
-QueueItem* QueueManager::FileQueue::find(const string& target) {
+QueueItem* QueueManager::FileQueue::find(const string& target) const {
 	QueueItem::StringIter i = queue.find(const_cast<string*>(&target));
 	return (i == queue.end()) ? NULL : i->second;
 }
@@ -278,7 +278,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 	return cand;
 }
 
-QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) {
+QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) const {
 	// We pick a start position at random, hoping that we will find something to search for...
 	QueueItem::StringMap::size_type start = (QueueItem::StringMap::size_type)Util::rand((uint32_t)queue.size());
 
@@ -546,11 +546,10 @@ bool QueueManager::getTTH(const string& name, TTHValue& tth) throw() {
 
 void QueueManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 	string searchString;
-	bool online = false;
 
 	{
 		Lock l(cs);
-		QueueItem::UserMap& um = userQueue.getRunning();
+		const QueueItem::UserMap& um = userQueue.getRunning();
 
 		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
 			QueueItem* q = j->second;
@@ -577,14 +576,13 @@ void QueueManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 			}
 
 			QueueItem* qi;
-			while((qi = fileQueue.findAutoSearch(recent)) == NULL && !recent.empty()) { // TEST how does this work
+			while((qi = fileQueue.findAutoSearch(recent)) == NULL && !recent.empty()) {
 				recent.pop_front();
 			}
 			if(qi != NULL) {
 				searchString = qi->getTTH().toBase32();
-				online = qi->hasOnlineUsers();
 				recent.push_back(qi->getTarget());
-				nextSearch = aTick + (SETTING(SEARCH_TIME) * (online ? 24000 : 60000));
+				nextSearch = aTick + (SETTING(SEARCH_TIME) * (qi->hasOnlineUsers() ? 24000 : 60000));
 				if(BOOLSETTING(REPORT_ALTERNATES))
 					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()));		
 			}
@@ -926,7 +924,7 @@ bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSiz
 	return true;
 }
 
-uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) {
+uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 	uint8_t MaxSegments = 1;
 
 	if(BOOLSETTING(SEGMENTS_MANUAL)) {
@@ -1114,10 +1112,12 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 						} 
 
 						string dir;
-						StringMapIter i = dirMap.find(aDownload->getUser()->getCID().toBase32());
-						if (i != dirMap.end()) {
-							dir = i->second;
-							dirMap.erase(i);
+						if(q->isSet(QueueItem::FLAG_USER_LIST)) {
+							StringMapIter i = dirMap.find(aDownload->getUser()->getCID().toBase32());
+							if (i != dirMap.end()) {
+								dir = i->second;
+								dirMap.erase(i);
+							}
 						}
 
 						fire(QueueManagerListener::Finished(), q, dir, aDownload->getAverageSpeed());
@@ -1265,9 +1265,11 @@ void QueueManager::remove(const string& aTarget) throw() {
 			File::deleteFile(q->getTempTarget());
 		}
 
-		StringMapIter i = dirMap.find(q->getCurrents()[0]->getCID().toBase32());
-		if (i != dirMap.end()) {
-			dirMap.erase(i);
+		if(q->isSet(QueueItem::FLAG_USER_LIST)) {
+			StringMapIter i = dirMap.find(q->getSources()[0].getUser()->getCID().toBase32());
+			if (i != dirMap.end()) {
+				dirMap.erase(i);
+			}
 		}
 
 		fire(QueueManagerListener::Removed(), q);
@@ -1806,7 +1808,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	int iHighSpeed = SETTING(H_DOWN_SPEED);
 
-	unsigned int activeSegments, onlineUsers;
+	size_t activeSegments, onlineUsers;
 	int64_t overallSpeed;
 	User::Ptr aUser = d->getUser();
 
@@ -1860,7 +1862,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	return true;
 }
 
-bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, PartsInfo& partialInfo, PartsInfo& outPartialInfo) {
+bool QueueManager::handlePartialResult(const User::Ptr& aUser, const TTHValue& tth, const PartsInfo& partialInfo, PartsInfo& outPartialInfo) {
 	bool wantConnection = false;
 	dcassert(outPartialInfo.empty());
 
