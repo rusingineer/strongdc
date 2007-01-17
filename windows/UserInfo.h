@@ -38,7 +38,7 @@ enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
 struct UserTask : public Task {
 	UserTask(const OnlineUser& ou) : user(ou.getUser()), identity(ou.getIdentity()) { }
 
-	User::Ptr user;
+	const User::Ptr user;
 	Identity identity;
 };
 
@@ -47,9 +47,9 @@ struct MessageTask : public StringTask {
 		from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
 		hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
 		
-	Identity from;
-	User::Ptr to;
-	User::Ptr replyTo;
+	const Identity from;
+	const User::Ptr to;
+	const User::Ptr replyTo;
 
 	bool hub;
 	bool bot;
@@ -79,12 +79,12 @@ public:
 	UserInfo(const UserTask& u) : UserInfoBase(u.user) {
 		update(u.identity, -1);
 	};
-	static int compareItems(const UserInfo* a, const UserInfo* b, int col);
+	static int compareItems(const UserInfo* a, const UserInfo* b, uint8_t col);
 	uint8_t imageIndex() const { return WinUtil::getImage(identity); }
 
 	bool update(const Identity& identity, int sortCol);
 
-	string getNick() const { return identity.getNick(); }
+	const string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 
 	GETSET(Identity, identity, Identity);

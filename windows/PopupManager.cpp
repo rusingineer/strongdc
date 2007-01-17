@@ -28,7 +28,7 @@
 
 PopupManager* Singleton< PopupManager >::instance = NULL;
 
-void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int iPreview) {
+void PopupManager::Show(const tstring &aMsg, const tstring &aTitle, int Icon, int iPreview) {
 	if(!activated)
 		return;
 
@@ -39,10 +39,10 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 		return;
 	}
 
-	string msg = aMsg;
+	tstring msg = aMsg;
 	if(int(aMsg.length()) > 256){
 		msg = aMsg.substr(0, 253);
-		msg += "...";
+		msg += _T("...");
 	}
 
 	if(	(SETTING(POPUP_TYPE) == 0 && iPreview != 1) ||
@@ -55,8 +55,8 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 		m_nid.uFlags = NIF_INFO;
 		m_nid.uTimeout = 5000;
 		m_nid.dwInfoFlags = Icon;
-		_tcscpy(m_nid.szInfo, Text::toT(msg).c_str());
-		_tcscpy(m_nid.szInfoTitle, Text::toT(aTitle).c_str());
+		_tcscpy(m_nid.szInfo, msg.c_str());
+		_tcscpy(m_nid.szInfoTitle, aTitle.c_str());
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 		return;
 	}
@@ -92,12 +92,9 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 	//move the window to the top of the z-order and display it
 	p->SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 	p->ShowWindow(SW_SHOWNA);
-	
 		
 	//restore focus to window
 	::SetFocus(gotFocus);
-
-	
 	
 	//increase offset so we know where to place the next popup
 	offset = offset + height;
@@ -106,10 +103,8 @@ void PopupManager::Show(const string &aMsg, const string &aTitle, int Icon, int 
 }
 
 void PopupManager::on(TimerManagerListener::Second /*type*/, uint32_t /*tick*/) {
-
 	//post a message and let the main window thread take care of the window
 	::PostMessage(WinUtil::mainWnd, WM_SPEAKER, MainFrame::REMOVE_POPUP, 0);
-
 }
 
 
@@ -160,8 +155,7 @@ void PopupManager::Remove(uint32_t pos) {
 	p->SendMessage(WM_CLOSE, 0, 0);
 	delete p;
 	p = NULL;
-	
-	    
+	 
 	//set offset one window position lower
 	dcassert(offset > 0);
 	offset = offset - height;

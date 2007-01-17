@@ -55,8 +55,8 @@ template<typename T> struct TypeTraits {
 
 #define GETSET(type, name, name2) \
 private: type name; \
-public: TypeTraits<type>::ParameterType get##name2() const { return name; } \
-	void set##name2(TypeTraits<type>::ParameterType a##name2) { name = a##name2; }
+public: inline TypeTraits<type>::ParameterType get##name2() const { return name; } \
+	inline void set##name2(TypeTraits<type>::ParameterType a##name2) { name = a##name2; }
 
 #define LIT(x) x, (sizeof(x)-1)
 
@@ -105,7 +105,7 @@ inline int compare(const T1& v1, const T1& v2) { return (v1 < v2) ? -1 : ((v1 ==
 
 class Flags {
 	public:
-		typedef int MaskType;
+		typedef uint16_t MaskType;
 
 		Flags() : flags(0) { }
 		Flags(const Flags& rhs) : flags(rhs.flags) { }
@@ -617,15 +617,15 @@ struct noCaseStringLess {
 // parent class for objects with a lot of empty columns in list
 class ColumnBase {
 public:
-	const tstring& getText(const int col) const {
-		InfMap::const_iterator i = info.find((uint8_t)col);
+	const tstring& getText(const uint8_t col) const {
+		InfMap::const_iterator i = info.find(col);
 		return i == info.end() ? Util::emptyStringT : i->second;
 	}
-	void setText(const int name, const tstring& val) {
+	void setText(const uint8_t name, const tstring& val) {
 		if(val.empty())
-			info.erase((uint8_t)name);
+			info.erase(name);
 		else
-			info[(uint8_t)name] = val;
+			info[name] = val;
 	}
 private:
 	typedef map<const uint8_t, tstring> InfMap;

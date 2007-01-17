@@ -48,7 +48,7 @@ public:
 		return socket;
 	}
 
-	string getPage(string file, string IP);
+	string getPage(const string& file, const string& IP);
 	string getLoginPage();
 
 
@@ -137,7 +137,7 @@ private:
 	map<string, uint32_t> loggedin;
 	int row;
 public:
-	void login(string ip){
+	void login(const string& ip){
 		loggedin[ip] = GET_TICK();
 	}
 	void search(string search_str, int search_type) {
@@ -163,7 +163,7 @@ public:
 		SearchManager::getInstance()->removeListener(this);
 	}
 
-	bool isloggedin(string ip) {
+	bool isloggedin(const string& ip) {
 		map<string, uint32_t>::iterator i;
 		if((i = loggedin.find(ip)) != loggedin.end()) {
             uint32_t elapsed = (GET_TICK() - loggedin[ip]) / 1000;
@@ -193,7 +193,7 @@ public:
 		ioctlsocket(sock, FIONBIO, &b);		
 	}
 
-	StringMap getArgs(string arguments); 
+	StringMap getArgs(const string& arguments); 
 	virtual int run();
 
 private:

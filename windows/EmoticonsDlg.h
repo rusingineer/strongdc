@@ -27,6 +27,7 @@ public:
 
 private:
 	CToolTipCtrl ctrlToolTip;
+	static vector<HBITMAP> bitmapList;
 
 	static WNDPROC m_MFCWndProc;
 	static EmoticonsDlg* m_pDialog;

@@ -59,7 +59,7 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	WinUtil::splitTokens(columnSizes, SETTING(UPLOADQUEUEFRAME_WIDTHS), COLUMN_LAST);
 
 	// column names, sizes
-	for (int j=0; j<COLUMN_LAST; j++) {
+	for (uint8_t j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_TRANSFERRED || j == COLUMN_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -587,36 +587,32 @@ LRESULT WaitingUsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHan
 				buf[255] = 0;
 
 				ctrlList.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
-				// Real rc, the original one.
-				CRect real_rc = rc;
-				// We need to offset the current rc to (0, 0) to paint on the New dc
-				rc.MoveToXY(0, 0);
 
 				// Text rect
 				CRect rc2 = rc;
-                rc2.left += 6; // indented with 6 pixels
+				rc2.MoveToXY(0, 0);
+                rc2.left = 6; // indented with 6 pixels
 				rc2.right -= 2; // and without messing with the border of the cell
 
 				// Set references
 				CDC cdc;
 				cdc.CreateCompatibleDC(cd->nmcd.hdc);
-				HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
-				HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
+				HBITMAP pOldBmp = cdc.SelectBitmap(CreateCompatibleBitmap(cd->nmcd.hdc,  rc.Width(),  rc.Height()));
 				HDC& dc = cdc.m_hDC;
 
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 
-				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, RGB(150, 0, 0), ii->size);
+				CBarShader statusBar(rc.Height(), rc.Width(), RGB(150, 0, 0), ii->size);
 				statusBar.FillRange(0, ii->pos, RGB(222, 160, 0));
-				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
+				statusBar.Draw(cdc, 0, 0, SETTING(PROGRESS_3DDEPTH));
 
 				SetTextColor(dc, SETTING(PROGRESS_TEXT_COLOR_UP));
                 ::ExtTextOut(dc, rc2.left, rc2.top + (rc2.Height() - WinUtil::getTextHeight(dc) - 1)/2, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
 
 				SelectObject(dc, oldFont);
 				
-				BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
+				BitBlt(cd->nmcd.hdc,rc.left, rc.top, rc.Width(), rc.Height(), dc, 0, 0, SRCCOPY);
 
 				DeleteObject(cdc.SelectBitmap(pOldBmp));
 				return CDRF_SKIPDEFAULT;	

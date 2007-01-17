@@ -424,7 +424,7 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params, false));
 }
 
-void ClientManager::on(AdcSearch, Client*, const AdcCommand& adc, const CID& from) throw() {
+void ClientManager::on(AdcSearch, const Client*, const AdcCommand& adc, const CID& from) throw() {
 	SearchManager::getInstance()->respond(adc, from);
 }
 
@@ -514,12 +514,12 @@ CID ClientManager::getMyCID() {
 	return CID(tiger.finalize());
 }
 
-void ClientManager::on(Failed, Client* client, const string&) throw() { 
+void ClientManager::on(Failed, const Client* client, const string&) throw() { 
 	FavoriteManager::getInstance()->removeUserCommand(client->getHubUrl());
 	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 
-void ClientManager::on(UserCommand, Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
+void ClientManager::on(UserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
 	if(BOOLSETTING(HUB_USER_COMMANDS)) {
 		if(aType == ::UserCommand::TYPE_CLEAR) {
  			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
@@ -705,11 +705,11 @@ void ClientManager::setFakeList(const User::Ptr& p, const string& aCheatString) 
 	i->second->getIdentity().setCheat(i->second->getClient(), aCheatString, false);
 }
 
-int ClientManager::getMode(const string& aHubUrl) {
+int ClientManager::getMode(const string& aHubUrl) const {
 	if(aHubUrl.empty()) return SETTING(INCOMING_CONNECTIONS);
 
 	int mode = 0;
-	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(aHubUrl);
+	const FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(aHubUrl);
 	if(hub) {
 		switch(hub->getMode()) {
 			case 1 :

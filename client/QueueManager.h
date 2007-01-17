@@ -79,16 +79,16 @@ public:
 	bool add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException); 
 	/** Add a file to the queue. */
 	void add(const string& aTarget, int64_t aSize, const TTHValue& root, User::Ptr aUser,
-		int aFlags = QueueItem::FLAG_RESUME, bool addBad = true) throw(QueueException, FileException);
+		Flags::MaskType aFlags = QueueItem::FLAG_RESUME, bool addBad = true) throw(QueueException, FileException);
 		/** Add a user's filelist to the queue. */
-	void addList(const User::Ptr& aUser, int aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
+	void addList(const User::Ptr& aUser, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
 	/** Queue a partial file list download */
 	void addPfs(const User::Ptr& aUser, const string& aDir) throw(QueueException);
 
 	void addTestSUR(User::Ptr aUser, bool checkList = false) throw(QueueException, FileException) {
 		string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
 		string target = Util::getConfigPath() + "TestSURs\\" + fileName;
-		add(target, -1, TTHValue(), aUser, (checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR);
+		add(target, -1, TTHValue(), aUser, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
 	}
 
 	void removeTestSUR(User::Ptr aUser) {
@@ -109,14 +109,14 @@ public:
 	
 	int matchListing(const DirectoryListing& dl) throw();
 
-	bool getTTH(const string& name, TTHValue& tth) throw();
+	bool getTTH(const string& name, TTHValue& tth) const throw();
 
 	/** Move the target location of a queued item. Running items are silently ignored */
 	void move(const string& aSource, const string& aTarget) throw();
 
 	void remove(const string& aTarget) throw();
-	void removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn = true) throw();
-	void removeSource(User::Ptr& aUser, int reason) throw();
+	void removeSource(const string& aTarget, User::Ptr& aUser, Flags::MaskType reason, bool removeConn = true) throw();
+	void removeSource(User::Ptr& aUser, Flags::MaskType reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();
@@ -125,7 +125,7 @@ public:
 	const QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); }
 
-	bool getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
+	bool getQueueInfo(const User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
 	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
 
@@ -140,7 +140,7 @@ public:
 	
 	bool dropSource(Download* d, bool autoDrop);
 
-	QueueItem::List getRunningFiles() throw() {
+	const QueueItem::List getRunningFiles() const throw() {
 		QueueItem::List ql;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 			QueueItem* q = i->second;
@@ -180,7 +180,7 @@ public:
 			}
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
-			int aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
+			Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
 			time_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target) const;
@@ -257,7 +257,7 @@ private:
 	/** map for storing initial dir for file lists */
 	StringMap dirMap;
 	/** Sanity check for the target filename */
-	static string checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException);
+	static string checkTarget(const string& aTarget, int64_t aSize, Flags::MaskType& flags) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
 	bool addSource(QueueItem* qi, User::Ptr aUser, Flags::MaskType addBad) throw(QueueException, FileException);
 

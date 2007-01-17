@@ -7,10 +7,10 @@ public:
 	~CBarShader(void);
 
 	//set the width of the bar
-	void SetWidth(int width);
+	void SetWidth(uint32_t width);
 
 	//set the height of the bar
-	void SetHeight(int height);
+	void SetHeight(uint32_t height);
 
 	//returns the width of the bar
 	int GetWidth() const { return m_iWidth; }
@@ -34,9 +34,9 @@ protected:
 	void BuildModifiers();
 	void FillRect(CDC& dc, LPCRECT rectSpan, COLORREF crColor);
 
-	uint64_t		m_qwFileSize;
-	int			m_iWidth;
-	int			m_iHeight;
+	uint64_t	m_qwFileSize;
+	uint32_t	m_iWidth;
+	uint32_t	m_iHeight;
 	double		m_dblPixelsPerByte;
 	double		m_dblBytesPerPixel;
 
@@ -55,8 +55,8 @@ typedef struct tagHLSTRIPLE {
 
 const int MAX_SHADE = 44;
 const int SHADE_LEVEL = 90;
-const int blend_vector[MAX_SHADE] = {0, 4, 8, 10, 5, 2, 0, -1, -2, -3, -5, -6, -7, -8, -7, -6, -5, -4, -3, -2, -1, 0, 
-1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 3, 2, 1, 0, -2, -5, -10, -8, -4, 0};
+const int blend_vector[MAX_SHADE] = {0, 8, 16, 20, 10, 4, 0, -2, -4, -6, -10, -12, -14, -16, -14, -12, -10, -8, -6, -4, -2, 0, 
+1, 2, 3, 8, 10, 12, 14, 16, 14, 12, 10, 6, 4, 2, 0, -4, -10, -20, -16, -8, 0};
 
 class OperaColors {
 public:
@@ -114,22 +114,13 @@ public:
 			}
 		} else {
 			int height = y2 - y1;
-			size_t ci_1;
-			// Allocate shade-constants
-			double* c = new double[height];
-			// Calculate constants
-			for (int i = 0; i < height; ++i) {
-				ci_1 = (size_t)floor(((double)(i + 1) / height) * MAX_SHADE - 1);
-				c[i] = (double)(blend_vector[ci_1] + blend_vector[ci_1]) / (double)(SHADE_LEVEL);
-			}
 			int delta_x = x2 - x1;
 			for (int _x = x1; _x <= x2; ++_x) {
 				COLORREF cr = blendColors(c2, c1, (double)(_x - x1) / (double)(delta_x));
 				for (int _y = y1; _y < y2; ++_y) {
-					hDC.SetPixelV(_x, _y, brightenColor(cr, c[_y - y1]));
+					hDC.SetPixelV(_x, _y, brightenColor(cr, (double)blend_vector[(size_t)floor(((double)(_y) / height) * MAX_SHADE - 1)] / (double)SHADE_LEVEL));
 				}
 			}
-			delete[] c;
 		}
 	}
 	static void EnlightenFlood(const COLORREF& clr, COLORREF& a, COLORREF& b);

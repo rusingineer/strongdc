@@ -40,15 +40,11 @@ public:
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButtonDown)
 	END_MSG_MAP()
 
-	PopupWnd(const string& aMsg, const string& aTitle, CRect rc, uint32_t aId): visible(GET_TICK()), id(aId) {
-			msg = aMsg;
-			title = aTitle;
-
+	PopupWnd(const tstring& aMsg, const tstring& aTitle, CRect rc, uint32_t aId): visible(GET_TICK()), id(aId), msg(aMsg), title(aTitle) {
 		Create(NULL, rc, NULL, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW );
 
 		WinUtil::decodeFont(Text::toT(SETTING(TEXT_FONT))/*SETTING(POPUP_FONT)*/, logFont);
 		font = ::CreateFontIndirect(&logFont);
-
 	}
 
 	~PopupWnd(){
@@ -81,9 +77,9 @@ public:
 			SS_CENTER | SS_NOPREFIX);
 
 		label.SetFont(WinUtil::boldFont);
-		label.SetWindowText(Text::toT(title).c_str());
+		label.SetWindowText(title.c_str());
 		label1.SetFont(WinUtil::font);
-		label1.SetWindowText(Text::toT(msg).c_str());
+		label1.SetWindowText(msg.c_str());
 
 
 		bHandled = false;
@@ -110,7 +106,7 @@ public:
 	uint32_t visible;
 
 private:
-	string  msg, title;
+	tstring  msg, title;
 	CStatic label, label1;
 	LOGFONT logFont;
 	HFONT   font;

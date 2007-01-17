@@ -258,9 +258,9 @@ private:
 
 		QueueItem::SourceList& getSources() { return sources; }
 		QueueItem::SourceList& getBadSources() { return badSources; }
-		string getPath() { return Util::getFilePath(getTarget()); }
+		const string getPath() const { return Util::getFilePath(getTarget()); }
 
-		Display* getDisplay() {
+		const Display* getDisplay() {
 			if(!display) {
 				display = new Display;
 				update();
@@ -268,10 +268,10 @@ private:
 			return display;
 		}
 
-		bool isSource(const User::Ptr& u) {
+		bool isSource(const User::Ptr& u) const {
 			return find(sources.begin(), sources.end(), u) != sources.end();
 		}
-		bool isBadSource(const User::Ptr& u) {
+		bool isBadSource(const User::Ptr& u) const {
 			return find(badSources.begin(), badSources.end(), u) != badSources.end();
 		}
 		
@@ -356,7 +356,9 @@ private:
 
 	typedef HASH_MULTIMAP_X(string, QueueItemInfo*, noCaseStringHash, noCaseStringEq, noCaseStringLess) DirectoryMap;
 	typedef DirectoryMap::iterator DirectoryIter;
-	typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
+	typedef DirectoryMap::const_iterator DirectoryIterC;
+	//typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
+	typedef pair<DirectoryIterC, DirectoryIterC> DirectoryPairC;
 	DirectoryMap directories;
 	string curDir;
 
@@ -406,23 +408,23 @@ private:
 
 	void clearTree(HTREEITEM item);
 
-	QueueItemInfo* getItemInfo(const string& target);
+	QueueItemInfo* getItemInfo(const string& target) const;
 
 	void removeSelected();
 	void removeSelectedDir();
 	
-	const string& getSelectedDir() {
+	const string& getSelectedDir() const {
 		HTREEITEM ht = ctrlDirs.GetSelectedItem();
 		return ht == NULL ? Util::emptyString : getDir(ctrlDirs.GetSelectedItem());
 	}
 	
-	const string& getDir(HTREEITEM ht) { dcassert(ht != NULL); return *reinterpret_cast<string*>(ctrlDirs.GetItemData(ht)); }
+	const string& getDir(HTREEITEM ht) const { dcassert(ht != NULL); return *reinterpret_cast<string*>(ctrlDirs.GetItemData(ht)); }
 
-	virtual void on(QueueManagerListener::Added, QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::Moved, QueueItem* aQI, const string& oldTarget) throw();
-	virtual void on(QueueManagerListener::Removed, QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::StatusUpdated, QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
+	virtual void on(QueueManagerListener::Added, const QueueItem* aQI) throw();
+	virtual void on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) throw();
+	virtual void on(QueueManagerListener::Removed, const QueueItem* aQI) throw();
+	virtual void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();
+	virtual void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 

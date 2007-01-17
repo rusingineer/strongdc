@@ -30,9 +30,8 @@ WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
 //static const string WEBSERVER_AREA = "WebServer";
 
-WebServerManager::WebServerManager(void) : started(false), page404(NULL) {
+WebServerManager::WebServerManager(void) : started(false), page404(NULL), sended_search(false) {
 	SettingsManager::getInstance()->addListener(this);
-	sended_search = false;
 }
 
 WebServerManager::~WebServerManager(void){
@@ -41,7 +40,7 @@ WebServerManager::~WebServerManager(void){
 }
 
 void WebServerManager::Start(){
-	if(started)return;
+	if(started) return;
 	Lock l(cs);
 	started = true;
 
@@ -67,8 +66,8 @@ void WebServerManager::Start(){
 #endif
 }
 
-void WebServerManager::Stop(){
-	if(!started)return;
+void WebServerManager::Stop() {
+	if(!started) return;
 	started = false;
 	Lock l(cs);
 
@@ -130,7 +129,7 @@ string WebServerManager::getLoginPage(){
 	return header + pagehtml;
 }
 
-string WebServerManager::getPage(string file, string IP) {
+string WebServerManager::getPage(const string& file, const string& IP) {
 	printf("requested: '%s'\n",file.c_str()); 
 	string header = "HTTP/1.0 200 OK\r\n";
 	string pagehtml = "";
@@ -450,7 +449,7 @@ string WebServerManager::getULQueue(){
 	return ret;
 }	
 
-StringMap WebServerSocket::getArgs(string arguments) {
+StringMap WebServerSocket::getArgs(const string& arguments) {
 	StringMap args;
 
 	string::size_type i = 0;

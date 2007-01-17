@@ -51,7 +51,7 @@ FavoriteManager::~FavoriteManager() throw() {
 	for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction());
 }
 
-UserCommand FavoriteManager::addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub) {
+UserCommand FavoriteManager::addUserCommand(int type, int ctx, Flags::MaskType flags, const string& name, const string& command, const string& hub) {
 	// No dupes, add it...
 	Lock l(cs);
 	userCommands.push_back(UserCommand(lastId++, type, ctx, flags, name, command, hub));
@@ -143,7 +143,7 @@ void FavoriteManager::removeHubUserCommands(int ctx, const string& hub) {
 	}
 }
 
-void FavoriteManager::addFavoriteUser(User::Ptr& aUser) { 
+void FavoriteManager::addFavoriteUser(const User::Ptr& aUser) { 
 	Lock l(cs);
 	if(users.find(aUser->getCID()) == users.end()) {
 		StringList urls = ClientManager::getInstance()->getHubs(aUser->getCID());
@@ -158,7 +158,7 @@ void FavoriteManager::addFavoriteUser(User::Ptr& aUser) {
 	}
 }
 
-void FavoriteManager::removeFavoriteUser(User::Ptr& aUser) {
+void FavoriteManager::removeFavoriteUser(const User::Ptr& aUser) {
 	Lock l(cs);
 	FavoriteMap::iterator i = users.find(aUser->getCID());
 	if(i != users.end()) {
@@ -181,7 +181,7 @@ void FavoriteManager::addFavorite(const FavoriteHubEntry& aEntry) {
 	save();
 }
 
-void FavoriteManager::removeFavorite(FavoriteHubEntry* entry) {
+void FavoriteManager::removeFavorite(const FavoriteHubEntry* entry) {
 	FavoriteHubEntry::List::iterator i = find(favoriteHubs.begin(), favoriteHubs.end(), entry);
 	if(i == favoriteHubs.end()) {
 		return;
@@ -249,13 +249,11 @@ bool FavoriteManager::renameFavoriteDir(const string& aName, const string& anoth
 }
 
 void FavoriteManager::addRecent(const RecentHubEntry& aEntry) {
-	RecentHubEntry* f;
-
 	RecentHubEntry::Iter i = getRecentHub(aEntry.getServer());
 	if(i != recentHubs.end()) {
 		return;
 	}
-	f = new RecentHubEntry(aEntry);
+	RecentHubEntry* f = new RecentHubEntry(aEntry);
 	recentHubs.push_back(f);
 	fire(FavoriteManagerListener::RecentAdded(), f);
 	recentsave();
@@ -646,7 +644,7 @@ void FavoriteManager::userUpdated(const OnlineUser& info) {
 	}
 }
 
-FavoriteHubEntry* FavoriteManager::getFavoriteHubEntry(const string& aServer) {
+FavoriteHubEntry* FavoriteManager::getFavoriteHubEntry(const string& aServer) const {
 	for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
 		FavoriteHubEntry* hub = *i;
 		if(Util::stricmp(hub->getServer(), aServer) == 0) {

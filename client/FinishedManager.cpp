@@ -64,7 +64,7 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 		fire(FinishedManagerListener::RemovedAllUl());
 }
 
-void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) throw()
+void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw()
 {
 	if(!d->isSet(Download::FLAG_USER_LIST) && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
 		PlaySound(Text::toT(SETTING(FINISHFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -84,7 +84,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 	
 		size_t BUF_SIZE = STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128;
 		char* buf = new char[BUF_SIZE];
-		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), d->getTargetFileName().c_str(), 
+		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), Util::getFileName(d->getTarget()).c_str(), 
 			d->getUser()->getFirstNick().c_str());
 
 		LogManager::getInstance()->message(buf);
@@ -92,7 +92,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, Download* d, bool) t
 	}
 }
 
-void FinishedManager::on(UploadManagerListener::Complete, Upload* u) throw()
+void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw()
 {
 	if(!u->isSet(Upload::FLAG_TTH_LEAVES) && (!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))

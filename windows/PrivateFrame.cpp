@@ -65,8 +65,8 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlMessage.SetLimitText(9999);
 
 	ctrlEmoticons.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER, 0, IDC_EMOT);
-  	hEmoticonBmp = (HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED);
 
+	hEmoticonBmp = (HBITMAP) ::LoadImage(_Module.get_m_hInst(), MAKEINTRESOURCE(IDB_EMOTICON), IMAGE_BITMAP, 0, 0, LR_SHARED);
   	ctrlEmoticons.SetBitmap(hEmoticonBmp);
 
 	grantMenu.CreatePopupMenu();
@@ -101,7 +101,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
 	bool myPM = replyTo == ClientManager::getInstance()->getMe();
 	const User::Ptr& user = myPM ? to : replyTo;

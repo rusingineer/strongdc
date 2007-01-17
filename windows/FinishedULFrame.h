@@ -42,10 +42,10 @@ public:
 		
 private:
 
-	virtual void on(AddedUl, FinishedItem* entry) throw() {
+	virtual void on(AddedUl, const FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 	}
-	virtual void on(RemovedUl, FinishedItem* entry) throw() { 
+	virtual void on(RemovedUl, const FinishedItem* entry) throw() { 
 		totalBytes -= entry->getChunkSize();
 		totalTime -= entry->getMilliSeconds();
 		PostMessage(WM_SPEAKER, SPEAK_REMOVE);

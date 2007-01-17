@@ -41,7 +41,7 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
+	static void gotMessage(const Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
 	static void openWindow(const User::Ptr& replyTo, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
@@ -114,24 +114,25 @@ public:
 	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
   	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
-  	       if (hWndCtl != ctrlEmoticons.m_hWnd) {
-  	                 bHandled = false;
-  	                 return 0;
-  	           }
+  		if (hWndCtl != ctrlEmoticons.m_hWnd) {
+  			bHandled = false;
+  	        return 0;
+  	    }
   	 
-  	       EmoticonsDlg dlg;
-  	       ctrlEmoticons.GetWindowRect(dlg.pos);
-  	       dlg.DoModal(m_hWnd);
-  		   if (!dlg.result.empty()) {
-  	             TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
-  	             ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
-  	             tstring s(message, ctrlMessage.GetWindowTextLength());
-  	             delete[] message;
-  	             ctrlMessage.SetWindowText((s+dlg.result).c_str());
-  	             ctrlMessage.SetFocus();
-  	             ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
-  	           }
-  	       return 0;
+  		EmoticonsDlg dlg;
+  		ctrlEmoticons.GetWindowRect(dlg.pos);
+  		dlg.DoModal(m_hWnd);
+  		if (!dlg.result.empty()) {
+  			TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
+  			ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
+  			tstring s(message, ctrlMessage.GetWindowTextLength());
+  			delete[] message;
+  			
+			ctrlMessage.SetWindowText((s+dlg.result).c_str());
+  			ctrlMessage.SetFocus();
+  			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
+  		}
+  		return 0;
   	}
 
 	void addLine(const tstring& aLine, CHARFORMAT2& cf);
@@ -189,12 +190,11 @@ public:
 	
 	void sendMessage(const tstring& msg);
 	
-	User::Ptr& getUser() { return replyTo; }
+	const User::Ptr& getUser() const { return replyTo; }
 private:
 	PrivateFrame(const User::Ptr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
-		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) {
-		}
+		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
 	
 	virtual ~PrivateFrame() { }
 

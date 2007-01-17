@@ -65,7 +65,7 @@ public:
 	void refresh(bool dirs = false, bool aUpdate = true, bool block = false) throw();
 	void setDirty() { xmlDirty = true; }
 	
-	bool shareFolder(const string& path, bool thoroughCheck = false);
+	bool shareFolder(const string& path, bool thoroughCheck = false) const;
 	int64_t removeExcludeFolder(const string &path, bool returnSize = true);
 	int64_t addExcludeFolder(const string &path);
 
@@ -210,7 +210,7 @@ private:
 	struct AdcSearch {
 		AdcSearch(const StringList& params);
 
-		bool isExcluded(const string& str) {
+		bool isExcluded(const string& str) const {
 			for(StringSearch::Iter i = exclude.begin(); i != exclude.end(); ++i) {
 				if(i->match(str))
 					return true;
@@ -218,10 +218,10 @@ private:
 			return false;
 		}
 
-		bool hasExt(const string& name) {
+		bool hasExt(const string& name) const {
 			if(ext.empty())
 				return true;
-			for(StringIter i = ext.begin(); i != ext.end(); ++i) {
+			for(StringIterC i = ext.begin(); i != ext.end(); ++i) {
 				if(name.length() >= i->length() && Util::stricmp(name.c_str() + name.length() - i->length(), i->c_str()) == 0)
 					return true;
 			}
@@ -291,7 +291,7 @@ private:
 	virtual int run();
 
 	// DownloadManagerListener
-	virtual void on(DownloadManagerListener::Complete, Download* d, bool) throw();
+	virtual void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
 
 	// HashManagerListener
 	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();

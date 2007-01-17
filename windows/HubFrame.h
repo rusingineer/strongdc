@@ -219,12 +219,9 @@ public:
 	static void closeDisconnected();
 
 	static HubFrame* getHub(Client* aClient) {
-		HubFrame* hubFrame = NULL;
-		for(FrameIter i = frames.begin() ; i != frames.end() ; i++)
-		{
-			hubFrame = (i->second);
-			if(hubFrame->client == aClient)
-			{
+		for(FrameIter i = frames.begin() ; i != frames.end() ; i++) {
+			HubFrame* hubFrame = i->second;
+			if(hubFrame->client == aClient) {
 				return hubFrame;
 			}
 		}
@@ -276,8 +273,8 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			if(!ChatCtrl::sSelectedUser.empty()) {
-				UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
-				if(ui) ignoreList.insert(ui->getUser());
+				const UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
+				if(ui) ignoreList.insert(ui->user);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 					ignoreList.insert(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
@@ -291,8 +288,8 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			if(!ChatCtrl::sSelectedUser.empty()) {
-				UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
-				if(ui) ignoreList.erase(ui->getUser());
+				const UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
+				if(ui) ignoreList.erase(ui->user);
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 					ignoreList.erase(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
@@ -363,7 +360,7 @@ private:
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
-	typedef HASH_MAP<User::Ptr, UserInfo*, User::HashFunction> UserMap;
+	typedef HASH_MAP<User::Ptr, const UserInfo*, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
 	tstring redirect;
@@ -442,10 +439,10 @@ private:
 	bool updateUser(const UserTask& u);
 	void removeUser(const User::Ptr& aUser);
 
-	void updateUserList(UserInfo* ui = NULL);
+	void updateUserList(const UserInfo* ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);
 	bool matchFilter(const UserInfo& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
-	UserInfo* findUser(const tstring& nick);
+	const UserInfo* findUser(const tstring& nick) const;
 
 	void addAsFavorite();
 	void removeFavoriteHub();
@@ -472,21 +469,21 @@ private:
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	// ClientListener
-	virtual void on(Connecting, Client*) throw();
-	virtual void on(Connected, Client*) throw();
-	virtual void on(UserUpdated, Client*, const OnlineUser&) throw();
-	virtual void on(UsersUpdated, Client*, const OnlineUser::List&) throw();
-	virtual void on(ClientListener::UserRemoved, Client*, const OnlineUser&) throw();
-	virtual void on(Redirect, Client*, const string&) throw();
-	virtual void on(Failed, Client*, const string&) throw();
-	virtual void on(GetPassword, Client*) throw();
-	virtual void on(HubUpdated, Client*) throw();
-	virtual void on(Message, Client*, const OnlineUser&, const string&) throw();
-	virtual void on(PrivateMessage, Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
-	virtual void on(NickTaken, Client*) throw();
-	virtual void on(SearchFlood, Client*, const string&) throw();
-	virtual void on(CheatMessage, Client*, const string&) throw();	
-	virtual void on(HubTopic, Client*, const string&) throw();
+	virtual void on(Connecting, const Client*) throw();
+	virtual void on(Connected, const Client*) throw();
+	virtual void on(UserUpdated, const Client*, const OnlineUser&) throw();
+	virtual void on(UsersUpdated, const Client*, const OnlineUser::List&) throw();
+	virtual void on(ClientListener::UserRemoved, const Client*, const OnlineUser&) throw();
+	virtual void on(Redirect, const Client*, const string&) throw();
+	virtual void on(Failed, const Client*, const string&) throw();
+	virtual void on(GetPassword, const Client*) throw();
+	virtual void on(HubUpdated, const Client*) throw();
+	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw();
+	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
+	virtual void on(NickTaken, const Client*) throw();
+	virtual void on(SearchFlood, const Client*, const string&) throw();
+	virtual void on(CheatMessage, const Client*, const string&) throw();	
+	virtual void on(HubTopic, const Client*, const string&) throw();
 
 	void speak(Tasks s) { tasks.add(s, 0); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const string& msg) { tasks.add(s, new StringTask(msg)); PostMessage(WM_SPEAKER); }

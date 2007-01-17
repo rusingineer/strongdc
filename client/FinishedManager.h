@@ -44,7 +44,7 @@ public:
 	{
 	}
 
-	int64_t getAvgSpeed() { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
+	int64_t getAvgSpeed() const { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
 
 	GETSET(string, target, Target);
 	GETSET(string, user, User);
@@ -73,11 +73,11 @@ public:
 	typedef X<4> RemovedAllUl;
 	typedef X<5> RemovedAllDl;
 
-	virtual void on(AddedDl, FinishedItem*) throw() { }
-	virtual void on(RemovedDl, FinishedItem*) throw() { }
+	virtual void on(AddedDl, const FinishedItem*) throw() { }
+	virtual void on(RemovedDl, const FinishedItem*) throw() { }
 	virtual void on(RemovedAllDl) throw() { }
-	virtual void on(AddedUl, FinishedItem*) throw() { }
-	virtual void on(RemovedUl, FinishedItem*) throw() { }
+	virtual void on(AddedUl, const FinishedItem*) throw() { }
+	virtual void on(RemovedUl, const FinishedItem*) throw() { }
 	virtual void on(RemovedAllUl) throw() { }
 
 }; 
@@ -86,7 +86,7 @@ class FinishedManager : public Singleton<FinishedManager>,
 	public Speaker<FinishedManagerListener>, private DownloadManagerListener, private UploadManagerListener
 {
 public:
-	FinishedItem::List& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
+	const FinishedItem::List& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
 	void unlockList() { cs.leave(); }
 
 	void remove(FinishedItem *item, bool upload = false);
@@ -106,8 +106,8 @@ private:
 	}
 	virtual ~FinishedManager() throw();
 
-	virtual void on(DownloadManagerListener::Complete, Download* d, bool) throw();
-	virtual void on(UploadManagerListener::Complete, Upload*) throw();
+	virtual void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
+	virtual void on(UploadManagerListener::Complete, const Upload*) throw();
 
 	CriticalSection cs;
 	FinishedItem::List downloads, uploads;

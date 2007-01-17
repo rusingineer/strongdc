@@ -46,7 +46,7 @@ public:
 	}
 	
 	//call this with a preformatted message
-	void Show(const string &aMsg, const string &aTitle, int Icon, int iPreview = -1);
+	void Show(const tstring &aMsg, const tstring &aTitle, int Icon, int iPreview = -1);
 
 	//remove first popup in list and move everyone else
 	void Remove(uint32_t pos = 0);
@@ -54,20 +54,16 @@ public:
 	//remove the popups that are scheduled to be removed
 	void AutoRemove();
 	
-	void Mute(bool mute) {
-		activated = !mute;
-	}
-
+	void Mute(bool mute) { activated = !mute; }
 
 private:
-		
 	typedef list< PopupWnd* > PopupList;
 	typedef PopupList::iterator PopupIter;
 	PopupList popups;
 	
 	//size of the popup window
-	uint16_t height;
-	uint16_t width;
+	uint8_t height;
+	uint8_t width;
 
 	//if we have multiple windows displayed, 
 	//keep track of where the new one will be displayed

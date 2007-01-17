@@ -457,7 +457,7 @@ private:
 	virtual void on(WebServerListener::ShutdownPC, int);
 
 	// QueueManagerListener
-	virtual void on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw();
+	virtual void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, int64_t speed) throw();
 	virtual void on(PartialList, const User::Ptr&, const string& text) throw();
 
 	// UPnP connectors

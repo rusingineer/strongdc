@@ -59,26 +59,26 @@ public:
 	typedef X<20> CheatMessage;
 	typedef X<21> HubTopic;
 
-	virtual void on(Connecting, Client*) throw() { }
-	virtual void on(Connected, Client*) throw() { }
-	virtual void on(UserUpdated, Client*, const OnlineUser&) throw() { }
-	virtual void on(UsersUpdated, Client*, const OnlineUser::List&) throw() { }
-	virtual void on(UserRemoved, Client*, const OnlineUser&) throw() { }
-	virtual void on(Redirect, Client*, const string&) throw() { }
-	virtual void on(Failed, Client*, const string&) throw() { }
-	virtual void on(GetPassword, Client*) throw() { }
-	virtual void on(HubUpdated, Client*) throw() { }
-	virtual void on(Message, Client*, const OnlineUser&, const string&) throw() { }
-	//virtual void on(StatusMessage, Client*, const string&) throw() { }
-	virtual void on(PrivateMessage, Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw() { }
-	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw() { }
-	virtual void on(HubFull, Client*) throw() { }
-	virtual void on(NickTaken, Client*) throw() { }
-	virtual void on(SearchFlood, Client*, const string&) throw() { }
+	virtual void on(Connecting, const Client*) throw() { }
+	virtual void on(Connected, const Client*) throw() { }
+	virtual void on(UserUpdated, const Client*, const OnlineUser&) throw() { }
+	virtual void on(UsersUpdated, const Client*, const OnlineUser::List&) throw() { }
+	virtual void on(UserRemoved, const Client*, const OnlineUser&) throw() { }
+	virtual void on(Redirect, const Client*, const string&) throw() { }
+	virtual void on(Failed, const Client*, const string&) throw() { }
+	virtual void on(GetPassword, const Client*) throw() { }
+	virtual void on(HubUpdated, const Client*) throw() { }
+	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw() { }
+	//virtual void on(StatusMessage, const Client*, const string&) throw() { }
+	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw() { }
+	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw() { }
+	virtual void on(HubFull, const Client*) throw() { }
+	virtual void on(NickTaken, const Client*) throw() { }
+	virtual void on(SearchFlood, const Client*, const string&) throw() { }
 	virtual void on(NmdcSearch, Client*, const string&, int, int64_t, int, const string&, bool) throw() { }
-	virtual void on(AdcSearch, Client*, const AdcCommand&, const CID&) throw() { }
-	virtual void on(CheatMessage, Client*, const string&) throw() { }
-	virtual void on(HubTopic, Client*, const string&) throw() { }
+	virtual void on(AdcSearch, const Client*, const AdcCommand&, const CID&) throw() { }
+	virtual void on(CheatMessage, const Client*, const string&) throw() { }
+	virtual void on(HubTopic, const Client*, const string&) throw() { }
 };
 
 /** Yes, this should probably be called a Hub */
@@ -149,7 +149,7 @@ public:
 
 	void reconnect();
 	void shutdown();
-	bool isActive();
+	bool isActive() const;
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {

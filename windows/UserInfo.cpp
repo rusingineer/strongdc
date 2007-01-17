@@ -21,8 +21,7 @@
 #include "Resource.h"
 #include "UserInfo.h"
 
-int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, int col)  {
-	if(a == NULL || b == NULL) return NULL;
+int UserInfo::compareItems(const UserInfo* a, const UserInfo* b, uint8_t col)  {
 	if(col == COLUMN_NICK) {
 		bool a_isOp = a->getIdentity().isOp(),
 			b_isOp = b->getIdentity().isOp();
@@ -54,7 +53,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	bool needsSort = (getIdentity().isOp() != identity.isOp());
 
 	if(sortCol != -1)
-		old = getText(sortCol);
+		old = getText(static_cast<uint8_t>(sortCol));
 
 	if (identity.getUser()->getLastDownloadSpeed() > 0) {
 		setText(COLUMN_UPLOAD_SPEED, Util::toStringW(identity.getUser()->getLastDownloadSpeed()) + _T(" kB/s"));
@@ -77,7 +76,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection(), tmp));
 	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"), tmp));
 	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
-	setText(COLUMN_HUBS, (hn.empty() && hr.empty() && ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
+	setText(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
 	setText(COLUMN_SLOTS, Text::toT(identity.get("SL"), tmp));
 	string ip = identity.getIp();
 	string country = ip.empty()?Util::emptyString:Util::getIpCountry(ip);
@@ -87,7 +86,7 @@ bool UserInfo::update(const Identity& identity, int sortCol) {
 	setText(COLUMN_PK, Text::toT(identity.get("PK"), tmp));
 
 	if(sortCol != -1) {
-		needsSort = needsSort || (old != getText(sortCol));
+		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));
 	}
 
 	setIdentity(identity);

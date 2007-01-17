@@ -49,7 +49,7 @@ void CBarShader::BuildModifiers()
 		m_pdblModifiers[i] = sin(base);
 }
 
-void CBarShader::SetWidth(int width)
+void CBarShader::SetWidth(uint32_t width)
 {
 	if(m_iWidth != width) {
 		m_iWidth = width;
@@ -80,7 +80,7 @@ void CBarShader::SetFileSize(uint64_t qwFileSize)
 	}
 }
 
-void CBarShader::SetHeight(int height)
+void CBarShader::SetHeight(uint32_t height)
 {
 	if(m_iHeight != height)
  	{

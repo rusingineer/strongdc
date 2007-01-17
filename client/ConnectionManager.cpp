@@ -221,6 +221,7 @@ static const uint32_t FLOOD_ADD = 2000;
 
 ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
 	sock.create();
+	sock.setSocketOpt(SO_REUSEADDR, 1);
 	port = sock.bind(aPort, ip);
 	sock.listen();
 
@@ -692,7 +693,7 @@ void ConnectionManager::disconnect(const User::Ptr& aUser, int isDownload) {
 	Lock l(cs);
 	for(UserConnection::Iter i = userConnections.begin(); i != userConnections.end(); ++i) {
 		UserConnection* uc = *i;
-		if(uc->getUser() == aUser && uc->isSet(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD)) {
+		if(uc->getUser() == aUser && uc->isSet((Flags::MaskType)(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD))) {
 			uc->disconnect(true);
 			break;
 		}

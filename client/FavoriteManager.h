@@ -220,9 +220,9 @@ public:
 	FavoriteMap getFavoriteUsers() { Lock l(cs); return users; }
 	PreviewApplication::List& getPreviewApps() { return previewApplications; }
 
-	void addFavoriteUser(User::Ptr& aUser);
+	void addFavoriteUser(const User::Ptr& aUser);
 	bool isFavoriteUser(const User::Ptr& aUser) const { Lock l(cs); return users.find(aUser->getCID()) != users.end(); }
-	void removeFavoriteUser(User::Ptr& aUser);
+	void removeFavoriteUser(const User::Ptr& aUser);
 
 	bool hasSlot(const User::Ptr& aUser) const;
 	void setUserDescription(const User::Ptr& aUser, const string& description);
@@ -233,9 +233,9 @@ public:
 	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; }
 
 	void addFavorite(const FavoriteHubEntry& aEntry);
-	void removeFavorite(FavoriteHubEntry* entry);
+	void removeFavorite(const FavoriteHubEntry* entry);
 	bool checkFavHubExists(const FavoriteHubEntry& aEntry);
-	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer);
+	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) const;
 
 // Favorite Directories
 	bool addFavoriteDir(const string& aDirectory, const string& aName);
@@ -289,7 +289,7 @@ public:
 	}
 
 // User Commands
-	UserCommand addUserCommand(int type, int ctx, int flags, const string& name, const string& command, const string& hub);
+	UserCommand addUserCommand(int type, int ctx, Flags::MaskType flags, const string& name, const string& command, const string& hub);
 	bool getUserCommand(int cid, UserCommand& uc);
 	int findUserCommand(const string& aName);
 	bool moveUserCommand(int cid, int pos);

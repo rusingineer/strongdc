@@ -24,7 +24,7 @@
 #include "AGEmotionSetup.h"
 #include <math.h>
 
-bool CAGEmotion::Create(tstring& strEmotionText, string& strEmotionBmpPath) {
+bool CAGEmotion::Create(const tstring& strEmotionText, const string& strEmotionBmpPath) {
 	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 	if (m_EmotionBmp == NULL) {
 		dcassert(FALSE);
@@ -56,9 +56,10 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	
 	memDC.FillSolidRect(0, 0, nWidth, nHeight, clrBkColor);
 	m_pImagesList->Draw(memDC, getImagePos(), CPoint(0, 0), ILD_NORMAL);
+	//BitBlt(dc, ii.rcImage.left, ii.rcImage.top, nWidth, nHeight, memDC.m_hDC, 0, 0, SRCCOPY);
 
 	SelectObject(memDC, pOldBitmap);
-
+	
 	return (HBITMAP)dist.Detach();
 }
 

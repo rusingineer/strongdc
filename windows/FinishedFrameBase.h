@@ -1,20 +1,20 @@
 /*
-* Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+ * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 #if !defined(FINISHED_FRAME_BASE_H)
 #define FINISHED_FRAME_BASE_H
@@ -84,7 +84,7 @@ public:
 		WinUtil::splitTokens(columnIndexes, SettingsManager::getInstance()->get(columnOrder), COLUMN_LAST);
 		WinUtil::splitTokens(columnSizes, SettingsManager::getInstance()->get(columnWidth), COLUMN_LAST);
 
-		for(int j=0; j<COLUMN_LAST; j++) {
+		for(uint8_t j=0; j<COLUMN_LAST; j++) {
 			int fmt = (j == COLUMN_SIZE || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 			ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 		}
@@ -152,7 +152,7 @@ public:
 
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(wParam == SPEAK_ADD_LINE) {
-			FinishedItem* entry = reinterpret_cast<FinishedItem*>(lParam);
+			const FinishedItem* entry = reinterpret_cast<const FinishedItem*>(lParam);
 			addEntry(entry);
 			if(SettingsManager::getInstance()->get(boldFinished))
 				setDirty();
@@ -178,7 +178,7 @@ public:
 				int i = -1;
 				while((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 					ItemInfo *ii = ctrlList.getItemData(i);
-					FinishedManager::getInstance()->remove(ii->entry, upload);
+					FinishedManager::getInstance()->remove(const_cast<FinishedItem*>(ii->entry), upload);
 					ctrlList.DeleteItem(i);
 					delete ii;
 				}
@@ -356,9 +356,7 @@ protected:
 
 	class ItemInfo {
 	public:
-		ItemInfo(FinishedItem* fi) {
-			entry = fi;
-
+		ItemInfo(const FinishedItem* fi) : entry(fi) {
 			columns[COLUMN_FILE]  = Text::toT(Util::getFileName(entry->getTarget()));
 			columns[COLUMN_DONE]  = Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime()));
 			columns[COLUMN_PATH]  = Text::toT(Util::getFilePath(entry->getTarget()));
@@ -391,7 +389,7 @@ protected:
 
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(entry->getTarget())); }
 
-		FinishedItem* entry;
+		const FinishedItem* entry;
 	};
 
 	CStatusBarCtrl ctrlStatus;
@@ -434,7 +432,7 @@ protected:
 		updateStatus();
 	}
 
-	void addEntry(FinishedItem* entry) {
+	void addEntry(const FinishedItem* entry) {
 		ItemInfo *ii = new ItemInfo(entry);
 		totalBytes += entry->getChunkSize();
 		totalTime += entry->getMilliSeconds();

@@ -97,9 +97,8 @@ void Transfer::getParams(const UserConnection& aSource, StringMap& params) {
 	params["fileTR"] = getTTH().toBase32();
 }
 
-User::Ptr Transfer::getUser() {
-	return getUserConnection().getUser();
-}
+User::Ptr Transfer::getUser() { return getUserConnection().getUser(); }
+const User::Ptr Transfer::getUser() const { return getUserConnection().getUser(); }
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 
@@ -170,7 +169,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 				// Workaround for faulty linux clients...
 				x = param.find(' ');
 				if(x != string::npos) {
-					setFlag(FLAG_INVALIDKEY);
+					//setFlag(FLAG_INVALIDKEY);
 					fire(UserConnectionListener::CLock(), this, param.substr(0, x), Util::emptyString);
 	    		} else {
 					fire(UserConnectionListener::CLock(), this, param, Util::emptyString);

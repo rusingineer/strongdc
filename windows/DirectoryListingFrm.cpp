@@ -129,7 +129,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	
 	WinUtil::splitTokens(columnIndexes, SETTING(DIRECTORLISTINGFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(DIRECTORLISTINGFRAME_WIDTHS), COLUMN_LAST);
-	for(int j = 0; j < COLUMN_LAST; j++) 
+	for(uint8_t j = 0; j < COLUMN_LAST; j++) 
 	{
 		int fmt = ((j == COLUMN_SIZE) || (j == COLUMN_EXACTSIZE) || (j == COLUMN_TYPE)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);

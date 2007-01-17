@@ -51,18 +51,17 @@ public:
 		FLAG_RESUME = 0x02,
 		FLAG_ROLLBACK = 0x04,
 		FLAG_ZDOWNLOAD = 0x08,
-		FLAG_CALC_CRC32 = 0x10,
-		FLAG_CRC32_OK = 0x20,
-		FLAG_ANTI_FRAG = 0x40,
-		FLAG_TREE_DOWNLOAD = 0x100,
-		FLAG_TREE_TRIED = 0x200,
-		FLAG_PARTIAL_LIST = 0x400,
-		FLAG_TESTSUR = 0x800,
-		FLAG_CHECK_FILE_LIST = 0x1000,
-		FLAG_MULTI_CHUNK = 0x2000,
-		FLAG_PARTIAL = 0x4000,
-		FLAG_TTH_CHECK = 0x8000,
-		FLAG_CHUNKED = 0x10000
+		FLAG_CRC32_OK = 0x10,
+		FLAG_ANTI_FRAG = 0x20,
+		FLAG_TREE_DOWNLOAD = 0x40,
+		FLAG_TREE_TRIED = 0x80,
+		FLAG_PARTIAL_LIST = 0x100,
+		FLAG_TESTSUR = 0x200,
+		FLAG_CHECK_FILE_LIST = 0x400,
+		FLAG_MULTI_CHUNK = 0x800,
+		FLAG_PARTIAL = 0x1000,
+		FLAG_TTH_CHECK = 0x2000,
+		FLAG_CHUNKED = 0x4000
 	};
 
 	Download(UserConnection& conn) throw();
@@ -73,12 +72,12 @@ public:
 	virtual ~Download();
 
 	/** @return Target filename without path. */
-	string getTargetFileName() {
+	string getTargetFileName() const {
 		return Util::getFileName(getTarget());
 	}
 
 	/** @internal */
-	string getDownloadTarget() {
+	string getDownloadTarget() const {
 		const string& tgt = (getTempTarget().empty() ? getTarget() : getTempTarget());
 		return isSet(FLAG_ANTI_FRAG) ? tgt + ANTI_FRAG_EXT : tgt;			
 	}
@@ -88,14 +87,14 @@ public:
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
 	/** @internal */
-	AdcCommand getCommand(bool zlib);
+	AdcCommand getCommand(bool zlib) const;
 
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
-	int64_t quickTick;
+	uint32_t quickTick;
 	
 private:
 	Download(const Download&);
@@ -133,7 +132,7 @@ public:
 	 * This is the first message sent before a download starts. 
 	 * No other messages will be sent before.
 	 */
-	virtual void on(Starting, Download*) throw() { }
+	virtual void on(Starting, const Download*) throw() { }
 
 	/**
 	 * Sent once a second if something has actually been downloaded.
@@ -144,7 +143,7 @@ public:
 	 * This is the last message sent before a download is deleted. 
 	 * No more messages will be sent after it.
 	 */
-	virtual void on(Complete, Download*, bool) throw() { }
+	virtual void on(Complete, const Download*, bool) throw() { }
 
 	/** 
 	 * This indicates some sort of failure with a particular download.
@@ -153,7 +152,7 @@ public:
 	 * @remarks Should send an error code instead of a string and let the GUI
 	 * display an error string.
 	 */
-	virtual void on(Failed, Download*, const string&) throw() { }
+	virtual void on(Failed, const Download*, const string&) throw() { }
 	virtual void on(Status, const UserConnection*, const string&) throw() { }
 };
 

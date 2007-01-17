@@ -50,7 +50,7 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	WinUtil::splitTokens(columnIndexes, SETTING(MAINFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(MAINFRAME_WIDTHS), COLUMN_LAST);
 
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(uint8_t j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_TIMELEFT || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlTransfers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -297,21 +297,18 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			// We need to offset the current rc to (0, 0) to paint on the New dc
 			rc.MoveToXY(0, 0);
 
-			// Text rect
-			CRect rc2 = rc;
-            rc2.left += 6; // indented with 6 pixels
-			rc2.right -= 2; // and without messing with the border of the cell				
-
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
-			HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
 
-			HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
+			HBITMAP pOldBmp = cdc.SelectBitmap(CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height()));
 			HDC& dc = cdc.m_hDC;
 
 			HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 			SetBkMode(dc, TRANSPARENT);
-		
+			
+			// Draw the background and border of the bar	
+			if(ii->size == 0) ii->size = 1;		
+			
 			if(BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
 				// New style progressbar tweaks the current colors
 				HLSTRIPLE hls_bk = OperaColors::RGB2HLS(cd->clrTextBk);
@@ -337,15 +334,14 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				DeleteObject(::SelectObject(dc, pOldPen));
 				// Reset bg (brush)
 				DeleteObject(::SelectObject(dc, oldBg));
-			}
 
-			// Draw the background and border of the bar
-			if(ii->size == 0) ii->size = 1;
-
-			if(!BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
+				COLORREF a, b;
+				OperaColors::EnlightenFlood(!ii->main ? clr : SETTING(PROGRESS_SEGMENT_COLOR), a, b);
+				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1,  rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size), rc.bottom-1, a, b);
+			} else {
 				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), ii->size);
 
-				rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
+				//rc.right = rc.left + (int) (rc.Width() * ii->pos / ii->size); 
 				if(!ii->download) {
 					statusBar.FillRange(0, ii->start, HLS_TRANSFORM(clr, -20, 30));
 					statusBar.FillRange(ii->start, ii->actual,  clr);
@@ -358,12 +354,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
 
 				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
-			} else {
-				int right = rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size);
-                
-				COLORREF a, b;
-				OperaColors::EnlightenFlood(!ii->main ? clr : SETTING(PROGRESS_SEGMENT_COLOR), a, b);
-				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1, right, rc.bottom-1, a, b);
 			}
 
 			// Get the color of this text bar
@@ -371,9 +361,10 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
 				OperaColors::TextFromBackground(clr));
 
-			//rc2.right = right;
-			LONG top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2 + 1;
-			::ExtTextOut(dc, rc2.left, top, ETO_CLIPPED, rc2, ii->columns[COLUMN_STATUS].c_str(), ii->columns[COLUMN_STATUS].length(), NULL);
+			rc.left += 6;
+			rc.right -= 2;
+			LONG top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2 + 1;
+			::ExtTextOut(dc, rc.left, top, ETO_CLIPPED, rc, ii->columns[COLUMN_STATUS].c_str(), ii->columns[COLUMN_STATUS].length(), NULL);
 
 			SelectObject(dc, oldFont);
 			::SetTextColor(dc, oldcol);
@@ -422,8 +413,6 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
 				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
 			}
-			CRect rc2 = rc;
-			rc2.left += 2;
 			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, color));
 			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(color));
 			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
@@ -435,14 +424,15 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
 			buf[255] = 0;
 			if(_tcslen(buf) > 0) {
-				LONG top = rc2.top + (rc2.Height() - 15)/2;
-				if((top - rc2.top) < 2)
-					top = rc2.top + 1;
+				rc.left += 2;
+				LONG top = rc.top + (rc.Height() - 15)/2;
+				if((top - rc.top) < 2)
+					top = rc.top + 1;
 
-				POINT p = { rc2.left, top };
+				POINT p = { rc.left, top };
 				WinUtil::flagImages.Draw(cd->nmcd.hdc, ii->flagImage, p, LVSIL_SMALL);
-				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
-				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+				top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+				::ExtTextOut(cd->nmcd.hdc, rc.left + 30, top + 1, ETO_CLIPPED, rc, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
 			}
 		} else if((colIndex != COLUMN_USER) && (colIndex != COLUMN_HUB) && (colIndex != COLUMN_STATUS) && (colIndex != COLUMN_IP) &&
@@ -488,7 +478,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 	return 0;
 }
 
-int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, int col) {
+int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, uint8_t col) {
 	if(a->status == b->status) {
 		if(a->download != b->download) {
 			return a->download ? -1 : 1;
@@ -567,8 +557,14 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						if(*ui == *ii) {
 							ii->update(*ui);
 							if(ii->main) {
-								if(ui->updateMask && UpdateInfo::MASK_FILE) setMainItem(ii);
 								ItemInfo* main = ii->main;
+								if(ui->updateMask && UpdateInfo::MASK_FILE) {
+									if(main->Target != ii->Target) {
+										ctrlTransfers.removeGroupedItem(ii, false);
+										ctrlTransfers.insertGroupedItem(ii, false);
+										main = ii->main;
+									}
+								}
 
 								main->multiSource = ii->multiSource;
 								bool defString = false;
@@ -720,7 +716,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	}
 }
 
-void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::Added, const ConnectionQueueItem* aCqi) {
 	UpdateInfo* ui = new UpdateInfo(aCqi->getUser(), aCqi->getDownload());
 
 	if(ui->download) {
@@ -738,7 +734,7 @@ void TransferView::on(ConnectionManagerListener::Added, ConnectionQueueItem* aCq
 	speak(ADD_ITEM, ui);
 }
 
-void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::StatusChanged, const ConnectionQueueItem* aCqi) {
 	UpdateInfo* ui = new UpdateInfo(aCqi->getUser(), aCqi->getDownload());
 	string aTarget;	int64_t aSize; int aFlags = 0; bool segmented;
 
@@ -754,11 +750,11 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, ConnectionQueueI
 	speak(UPDATE_ITEM, ui);
 }
 
-void TransferView::on(ConnectionManagerListener::Removed, ConnectionQueueItem* aCqi) {
+void TransferView::on(ConnectionManagerListener::Removed, const ConnectionQueueItem* aCqi) {
 	speak(REMOVE_ITEM, new UpdateInfo(aCqi->getUser(), aCqi->getDownload()));
 }
 
-void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aCqi, const string& aReason) {
+void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueItem* aCqi, const string& aReason) {
 	UpdateInfo* ui = new UpdateInfo(aCqi->getUser(), aCqi->getDownload());
 	if(aCqi->getUser()->isSet(User::OLD_CLIENT)) {
 		ui->setStatusString(TSTRING(SOURCE_TOO_OLD));
@@ -769,7 +765,7 @@ void TransferView::on(ConnectionManagerListener::Failed, ConnectionQueueItem* aC
 	speak(UPDATE_ITEM, ui);
 }
 
-void TransferView::on(DownloadManagerListener::Starting, Download* aDownload) {
+void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
 	bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD);
 
@@ -865,7 +861,7 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 	PostMessage(WM_SPEAKER);
 }
 
-void TransferView::on(DownloadManagerListener::Failed, Download* aDownload, const string& aReason) {
+void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload, const string& aReason) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true, true);
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
@@ -902,7 +898,7 @@ void TransferView::on(DownloadManagerListener::Status, const UserConnection* uc,
 	speak(UPDATE_ITEM, ui);
 }
 
-void TransferView::on(UploadManagerListener::Starting, Upload* aUpload) {
+void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 	UpdateInfo* ui = new UpdateInfo(aUpload->getUser(), false);
 
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
@@ -982,7 +978,7 @@ void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
 	PostMessage(WM_SPEAKER);
 }
 
-void TransferView::onTransferComplete(Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree) {
+void TransferView::onTransferComplete(const Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree) {
 	UpdateInfo* ui = new UpdateInfo(aTransfer->getUser(), !isUpload);
 	if(!isUpload) {
 		ui->setStatus(isTree ? ItemInfo::STATUS_WAITING : ItemInfo::DOWNLOAD_FINISHED);

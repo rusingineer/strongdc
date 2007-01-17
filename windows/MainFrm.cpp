@@ -554,7 +554,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		delete msg;
 	} else if(wParam == SHOW_POPUP) {
 		Popup* msg = (Popup*)lParam;
-		PopupManager::getInstance()->Show(Text::fromT(msg->Message), Text::fromT(msg->Title), msg->Icon);
+		PopupManager::getInstance()->Show(msg->Message, msg->Title, msg->Icon);
 		delete msg;
 	} else if(wParam == WM_CLOSE) {
 		PopupManager::getInstance()->Remove((int)lParam);
@@ -788,7 +788,7 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 }
 
 void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
- 	missedAutoConnect = false;
+	missedAutoConnect = false;
 	for(FavoriteHubEntry::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
 		FavoriteHubEntry* entry = *i;
 		if(entry->getConnect()) {
@@ -1310,7 +1310,7 @@ void MainFrame::on(PartialList, const User::Ptr& aUser, const string& text) thro
 	PostMessage(WM_SPEAKER, BROWSE_LISTING, (LPARAM)new DirectoryBrowseInfo(aUser, text));
 }
 
-void MainFrame::on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw() {
+void MainFrame::on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, int64_t speed) throw() {
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			// This is a file listing, show it...

@@ -63,7 +63,7 @@ void Client::shutdown() {
 }
 
 void Client::reloadSettings(bool updateNick) {
-	FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
+	const FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
 	string speedDescription = Util::emptyString;
 	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
@@ -93,9 +93,7 @@ void Client::reloadSettings(bool updateNick) {
 	}
 }
 
-bool Client::isActive() {
-	return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE;
-}
+bool Client::isActive() const { return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
 void Client::connect() {
 	if(socket)

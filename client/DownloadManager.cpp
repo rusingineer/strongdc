@@ -77,7 +77,7 @@ Download::~Download() {
 	getUserConnection().setDownload(0);
 }
 
-AdcCommand Download::getCommand(bool zlib) {
+AdcCommand Download::getCommand(bool zlib) const {
 	AdcCommand cmd(AdcCommand::CMD_GET);
 	if(isSet(FLAG_TREE_DOWNLOAD)) {
 		cmd.addParam(Transfer::TYPE_TTHL);
@@ -146,8 +146,8 @@ void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 					d->getUserConnection().disconnect();
 					continue;
 			} else if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
-				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED)*1024)) {
-					if(	(((aTick - d->quickTick)/1000) > SETTING(DOWN_TIME)) &&
+				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED) * 1024)) {
+					if(	(((aTick - d->quickTick)/1000) > (uint32_t)SETTING(DOWN_TIME)) &&
 						(!QueueManager::getInstance()->dropSource(d, false))) {
 							continue;
 					}
@@ -1054,7 +1054,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 		return;
 	}
 	
-	QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), d->isSet(Download::FLAG_TREE_DOWNLOAD) ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE, false);
+	QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), (Flags::MaskType)(d->isSet(Download::FLAG_TREE_DOWNLOAD) ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE), false);
 	removeDownload(d);
 
 	QueueManager::getInstance()->putDownload(d, false, false);
