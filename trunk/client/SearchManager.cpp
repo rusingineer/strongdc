@@ -276,12 +276,12 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.find('/', i)) == string::npos) {
 				continue;
 			}
-			int freeSlots = Util::toInt(x.substr(i, j-i));
+			uint8_t freeSlots = (uint8_t)Util::toInt(x.substr(i, j-i));
 			i = j + 1;
 			if( (j = x.find((char)5, i)) == string::npos) {
 				continue;
 			}
-			int slots = Util::toInt(x.substr(i, j-i));
+			uint8_t slots = (uint8_t)Util::toInt(x.substr(i, j-i));
 			i = j + 1;
 			if( (j = x.rfind(" (")) == string::npos) {
 				continue;
@@ -519,25 +519,25 @@ void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const st
 				tth = str.substr(2);
 		} else if(str.compare(0, 2, "TO") == 0) {
 			token = str.substr(2);
-			}
 		}
+	}
 
-		if(!file.empty() && freeSlots != -1 && size != -1) {
+	if(!file.empty() && freeSlots != -1 && size != -1) {
 
 		StringList names = ClientManager::getInstance()->getHubNames(from->getCID());
-			string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
+		string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
 		StringList hubs = ClientManager::getInstance()->getHubs(from->getCID());
-			string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
+		string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
 
-			SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
+		SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
 		if(type == SearchResult::TYPE_FILE && tth.empty())
 			return;
-			/// @todo Something about the slots
-		SearchResult* sr = new SearchResult(from, type, 0, freeSlots, size, 
+		/// @todo Something about the slots
+		SearchResult* sr = new SearchResult(from, type, 0, (uint8_t)freeSlots, size, 
 			file, hubName, remoteIp, TTHValue(tth), token);
 			fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
-		}
+	}
 }
 
 void SearchManager::respond(const AdcCommand& adc, const CID& from) {

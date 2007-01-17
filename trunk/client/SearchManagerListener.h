@@ -34,7 +34,7 @@ public:
 	typedef X<0> SR;
 	typedef X<1> Searching;
 	virtual void on(SR, SearchResult*) throw() = 0;
-	virtual void on(Searching, SearchQueueItem*) throw() { }
+	virtual void on(Searching, const SearchQueueItem*) throw() { }
 };
 
 #endif // !defined(SEARCH_MANAGER_LISTENER_H)

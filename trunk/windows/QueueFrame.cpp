@@ -68,7 +68,7 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	WinUtil::splitTokens(columnIndexes, SETTING(QUEUEFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(QUEUEFRAME_WIDTHS), COLUMN_LAST);
 	
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(uint8_t j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_DOWNLOADED || j == COLUMN_EXACT_SIZE|| j == COLUMN_SEGMENTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlQueue.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -313,7 +313,7 @@ void QueueFrame::QueueItemInfo::update() {
 	}
 }
 
-void QueueFrame::on(QueueManagerListener::Added, QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::Added, const QueueItem* aQI) {
 	QueueItemInfo* ii = new QueueItemInfo(*aQI);
 
 	speak(ADD_ITEM,	new QueueItemInfoTask(ii));
@@ -343,10 +343,10 @@ void QueueFrame::addQueueItem(QueueItemInfo* ii, bool noSort) {
 	}
 }
 
-QueueFrame::QueueItemInfo* QueueFrame::getItemInfo(const string& target) {
+QueueFrame::QueueItemInfo* QueueFrame::getItemInfo(const string& target) const {
 	string path = Util::getFilePath(target);
-	DirectoryPair items = directories.equal_range(path);
-	for(DirectoryIter i = items.first; i != items.second; ++i) {
+	DirectoryPairC items = directories.equal_range(path);
+	for(DirectoryIterC i = items.first; i != items.second; ++i) {
 		if(i->second->getTarget() == target) {
 			return i->second;
 		}
@@ -570,16 +570,16 @@ void QueueFrame::removeDirectories(HTREEITEM ht) {
 	ctrlDirs.DeleteItem(ht);
 }
 
-void QueueFrame::on(QueueManagerListener::Removed, QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::Removed, const QueueItem* aQI) {
 	speak(REMOVE_ITEM, new StringTask(aQI->getTarget()));
 }
 
-void QueueFrame::on(QueueManagerListener::Moved, QueueItem* aQI, const string& oldTarget) {
+void QueueFrame::on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) {
 	speak(REMOVE_ITEM, new StringTask(oldTarget));
 	speak(ADD_ITEM,	new QueueItemInfoTask(new QueueItemInfo(*aQI)));
 }
 
-void QueueFrame::on(QueueManagerListener::SourcesUpdated, QueueItem* aQI) {
+void QueueFrame::on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) {
 	speak(UPDATE_ITEM, new UpdateTask(*aQI));
 }
 
@@ -735,9 +735,9 @@ void QueueFrame::moveDir(HTREEITEM ht, const string& target) {
 	}
 	string* s = (string*)ctrlDirs.GetItemData(ht);
 
-	DirectoryPair p = directories.equal_range(*s);
+	DirectoryPairC p = directories.equal_range(*s);
 	
-	for(DirectoryIter i = p.first; i != p.second; ++i) {
+	for(DirectoryIterC i = p.first; i != p.second; ++i) {
 		QueueItemInfo* ii = i->second;
 		QueueManager::getInstance()->move(ii->getTarget(), target + Util::getFileName(ii->getTarget()));
 	}			
@@ -1128,8 +1128,8 @@ void QueueFrame::removeDir(HTREEITEM ht) {
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
 	const string& name = getDir(ht);
-	DirectoryPair dp = directories.equal_range(name);
-	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
+	DirectoryPairC dp = directories.equal_range(name);
+	for(DirectoryIterC i = dp.first; i != dp.second; ++i) {
 		QueueManager::getInstance()->remove(i->second->getTarget());
 	}
 }
@@ -1170,8 +1170,8 @@ void QueueFrame::setPriority(HTREEITEM ht, const QueueItem::Priority& p) {
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
 	const string& name = getDir(ht);
-	DirectoryPair dp = directories.equal_range(name);
-	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
+	DirectoryPairC dp = directories.equal_range(name);
+	for(DirectoryIterC i = dp.first; i != dp.second; ++i) {
 		QueueManager::getInstance()->setPriority(i->second->getTarget(), p);
 	}
 }
@@ -1185,8 +1185,8 @@ void QueueFrame::setAutoPriority(HTREEITEM ht, const bool& ap) {
 		child = ctrlDirs.GetNextSiblingItem(child);
 	}
 	const string& name = getDir(ht);
-	DirectoryPair dp = directories.equal_range(name);
-	for(DirectoryIter i = dp.first; i != dp.second; ++i) {
+	DirectoryPairC dp = directories.equal_range(name);
+	for(DirectoryIterC i = dp.first; i != dp.second; ++i) {
 		QueueManager::getInstance()->setAutoPriority(i->second->getTarget(), ap);
 	}
 }
@@ -1416,23 +1416,13 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				bHandled = FALSE;
 				return 0;
 			}			
+			QueueItemInfo *qii = (QueueItemInfo*)cd->nmcd.lItemlParam;
+			if(qii->getSize() == -1) return CDRF_DODEFAULT;
+
 			// draw something nice...
 			CRect rc;
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
-
-			CRect real_rc = rc;
-			rc.MoveToXY(0, 0);
-			
-			CDC cdc;
-			cdc.CreateCompatibleDC(cd->nmcd.hdc);
-			HBITMAP hBmp = CreateCompatibleBitmap(cd->nmcd.hdc,  real_rc.Width(),  real_rc.Height());
-			HBITMAP pOldBmp = cdc.SelectBitmap(hBmp);
-			HDC& dc = cdc.m_hDC;
-
-			SetBkMode(dc, TRANSPARENT);
-
-			QueueItemInfo *qii = (QueueItemInfo*)cd->nmcd.lItemlParam;
-			CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), (uint64_t)max((int64_t)0, (int64_t)qii->getSize()));
+			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
 			if(qii->chunkInfo) {
 				vector<int64_t> v;
@@ -1463,8 +1453,12 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				statusBar.FillRange(0, possibleVerified, SETTING(COLOR_VERIFIED));
 				statusBar.FillRange(possibleVerified, qii->getDownloadedBytes(), SETTING(COLOR_DOWNLOADED));
 			}
-			statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
-			BitBlt(cd->nmcd.hdc, real_rc.left, real_rc.top, real_rc.Width(), real_rc.Height(), dc, 0, 0, SRCCOPY);
+			CDC cdc;
+			cdc.CreateCompatibleDC(cd->nmcd.hdc);
+			HBITMAP pOldBmp = cdc.SelectBitmap(CreateCompatibleBitmap(cd->nmcd.hdc,  rc.Width(),  rc.Height()));
+
+			statusBar.Draw(cdc, 0, 0, SETTING(PROGRESS_3DDEPTH));
+			BitBlt(cd->nmcd.hdc, rc.left, rc.top, rc.Width(), rc.Height(), cdc.m_hDC, 0, 0, SRCCOPY);
 			DeleteObject(cdc.SelectBitmap(pOldBmp));
 
 			return CDRF_SKIPDEFAULT;

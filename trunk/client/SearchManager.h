@@ -55,7 +55,7 @@ public:
 	
 	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue& aTTH);
 
-	SearchResult(const User::Ptr& aUser, Types aType, int aSlots, int aFreeSlots, 
+	SearchResult(const User::Ptr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
 		const string& ip, TTHValue aTTH, const string& aToken) :
 	file(aFile), hubName(aHubName), user(aUser),
@@ -66,15 +66,15 @@ public:
 	string toSR(const Client& client) const;
 	AdcCommand toRES(char type) const;
 
-	User::Ptr& getUser() { return user; }
+	const User::Ptr& getUser() const { return user; }
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
 
 	const string& getFile() const { return file; }
 	const string& getHubName() const { return hubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
-	int getSlots() const { return slots; }
-	int getFreeSlots() const { return freeSlots; }
+	uint8_t getSlots() const { return slots; }
+	uint8_t getFreeSlots() const { return freeSlots; }
 	TTHValue getTTH() const { return tth; }
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
@@ -98,8 +98,8 @@ private:
 	User::Ptr user;
 	int64_t size;
 	Types type;
-	int slots;
-	int freeSlots;
+	uint8_t slots;
+	uint8_t freeSlots;
 	string IP;
 	TTHValue tth;
 	string token;
@@ -138,9 +138,7 @@ class SearchManager : public Speaker<SearchManagerListener>, private TimerManage
 		deque<pair<string, string>> resultList;
 
 		ResultsQueue() : stop(false) {}
-		virtual ~ResultsQueue() throw() {
-			shutdown();
-		}
+		virtual ~ResultsQueue() throw() { shutdown(); }
 
 		int run();
 		void shutdown() {
@@ -194,7 +192,7 @@ public:
 	
 	void respond(const AdcCommand& cmd, const CID& cid);
 
-	uint16_t getPort()
+	uint16_t getPort() const
 	{
 		return port;
 	}
@@ -208,7 +206,7 @@ public:
 	void onRES(const AdcCommand& cmd, const User::Ptr& from, const string& removeIp = Util::emptyString);
 	void sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo);
 
-	uint32_t getLastSearch() { return lastSearch; }
+	uint32_t getLastSearch() const { return lastSearch; }
 	int getSearchQueueNumber(int* aWindow);
 	
 

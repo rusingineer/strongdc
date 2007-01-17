@@ -69,13 +69,13 @@ public:
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
-	void setIPUser(const string& IP, User::Ptr user) {
+	void setIPUser(const string& IP, const User::Ptr& user) {
 		Lock l(cs);
 		OnlinePairC p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIterC i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	string getMyNMDCNick(const User::Ptr& p) const {
+	const string getMyNMDCNick(const User::Ptr& p) const {
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
@@ -110,7 +110,7 @@ public:
 			ou->getIdentity().set("PK", aPk);
 			ou->getIdentity().set("LO", aLock);
 		}
-		ou->getClient().updated(*ou);
+		//ou->getClient().updated(*ou);
 	}
 
 	void setSupports(const User::Ptr& p, const string& aSupports) {
@@ -151,15 +151,15 @@ public:
 
 	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
 
-	int getMode(const string& aHubUrl);
-	bool isActive(const string& aHubUrl) { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
+	int getMode(const string& aHubUrl) const;
+	bool isActive(const string& aHubUrl) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 
 	const string& getHubUrl(const User::Ptr& aUser) const;
 
-	Client::List& getClients() { return clients; }
+	const Client::List& getClients() const { return clients; }
 
 	string getCachedIp() const { Lock l(cs); return cachedIp; }
 
@@ -216,15 +216,15 @@ private:
 	virtual void on(Load, SimpleXML&) throw();
 
 	// ClientListener
-	virtual void on(Connected, Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
-	virtual void on(UserUpdated, Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
-	virtual void on(UsersUpdated, Client* c, const User::List&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
-	virtual void on(Failed, Client*, const string&) throw();
-	virtual void on(HubUpdated, Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
-	virtual void on(UserCommand, Client*, int, int, const string&, const string&) throw();
+	virtual void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
+	virtual void on(UserUpdated, const Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
+	virtual void on(UsersUpdated, const Client* c, const User::List&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	virtual void on(Failed, const Client*, const string&) throw();
+	virtual void on(HubUpdated, const Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw();
 	virtual void on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 		int aFileType, const string& aString, bool) throw();
-	virtual void on(AdcSearch, Client* c, const AdcCommand& adc, const CID& from) throw();
+	virtual void on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw();
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Minute, uint32_t aTick) throw();
 };

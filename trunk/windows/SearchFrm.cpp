@@ -220,7 +220,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	WinUtil::splitTokens(columnIndexes, SETTING(SEARCHFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(SEARCHFRAME_WIDTHS), COLUMN_LAST);
 
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(uint8_t j=0; j<COLUMN_LAST; j++) {
 		int fmt = (j == COLUMN_SIZE || j == COLUMN_EXACT_SIZE) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlResults.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
@@ -497,7 +497,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);
 }
 
-void SearchFrame::on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw() {
+void SearchFrame::on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw() {
 	if((searches >= 0) && (aSearch->getWindow() == (int*)this)) {
 		searches--;
 		dcassert(searches >= 0);
@@ -1061,9 +1061,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					}
 				}	 	
             }
-			if(bPaused == false) {
+			if(!bPaused) {
 				bool resort = false;
-				if(resultsCount++ % 13 == 0) {
+				if((resultsCount++) % 15 == 0) {
 					//ctrlResults.SetRedraw(FALSE);
 					resort = true;
 				}
@@ -1247,7 +1247,7 @@ void SearchFrame::initHubs() {
 	clientMgr->lock();
 	clientMgr->addListener(this);
 
-	Client::List& clients = clientMgr->getClients();
+	const Client::List& clients = clientMgr->getClients();
 
 	Client::List::const_iterator it;
 	Client::List::const_iterator endIt = clients.end();
@@ -1340,53 +1340,53 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 	return 0;
 }
 
-
+tstring tmp1;
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-			columns[COLUMN_FILENAME] = Text::toT(sr->getFile());
+			columns[COLUMN_FILENAME] = Text::toT(sr->getFile(), tmp1);
 		} else {
-			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getFile()));
-			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getFile()));
+			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getFile()), tmp1);
+			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getFile()), tmp1);
 		}
 
-		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])));
+		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])), tmp1);
 		if(!columns[COLUMN_TYPE].empty() && columns[COLUMN_TYPE][0] == _T('.'))
 			columns[COLUMN_TYPE].erase(0, 1);
 		columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
 		columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 	} else {
-		columns[COLUMN_FILENAME] = Text::toT(sr->getFileName());
-		columns[COLUMN_PATH] = Text::toT(sr->getFile());
+		columns[COLUMN_FILENAME] = Text::toT(sr->getFileName(), tmp1);
+		columns[COLUMN_PATH] = Text::toT(sr->getFile(), tmp1);
 		columns[COLUMN_TYPE] = TSTRING(DIRECTORY);
 		if(sr->getSize() > 0) {
 			columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
 			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 		}
 	}
-	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick());
-	columns[COLUMN_CONNECTION] = Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()));
-	columns[COLUMN_HUB] = Text::toT(sr->getHubName());
-	columns[COLUMN_SLOTS] = Text::toT(sr->getSlotString());
-	columns[COLUMN_IP] = Text::toT(sr->getIP());
+	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick(), tmp1);
+	columns[COLUMN_CONNECTION] = Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()), tmp1);
+	columns[COLUMN_HUB] = Text::toT(sr->getHubName(), tmp1);
+	columns[COLUMN_SLOTS] = Text::toT(sr->getSlotString(), tmp1);
+	columns[COLUMN_IP] = Text::toT(sr->getIP(), tmp1);
 	flagimage = 0;
 	if (!columns[COLUMN_IP].empty()) {
 		// Only attempt to grab a country mapping if we actually have an IP address
-		tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
+		tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()), tmp1);
 		if(!tmpCountry.empty()) {
 			columns[COLUMN_IP] = tmpCountry + _T(" (") + columns[COLUMN_IP] + _T(")");
 			flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
 		}
 	}
 	if(sr->getType() == SearchResult::TYPE_FILE) {
-		columns[COLUMN_TTH] = Text::toT(sr->getTTH().toBase32());
+		columns[COLUMN_TTH] = Text::toT(sr->getTTH().toBase32(), tmp1);
 	}
 	if (sr->getUser()->getLastDownloadSpeed() > 0) {
 		columns[COLUMN_UPLOAD] = Util::toStringW(sr->getUser()->getLastDownloadSpeed()) + _T(" kB/s");
 	} else if(user->isSet(User::FIREBALL)) {
-		columns[COLUMN_UPLOAD] = Text::toT(">=100 kB/s");
+		columns[COLUMN_UPLOAD] = _T(">=100 kB/s");
 	} else {
-		columns[COLUMN_UPLOAD] = Text::toT("N/A");
+		columns[COLUMN_UPLOAD] = _T("N/A");
 	}
 }
 
@@ -1467,9 +1467,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
 				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
 			}
-			CRect rc2 = rc;
-			rc2.left += 2;
-			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID,0, color));
+			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID, 0, color));
 			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(color));
 			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
 
@@ -1480,14 +1478,15 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 			ctrlResults.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
 			buf[255] = 0;
 			if(_tcslen(buf) > 0) {
-				LONG top = rc2.top + (rc2.Height() - 15)/2;
-				if((top - rc2.top) < 2)
-					top = rc2.top + 1;
+				rc.left += 2;
+				LONG top = rc.top + (rc.Height() - 15)/2;
+				if((top - rc.top) < 2)
+					top = rc.top + 1;
 
-				POINT p = { rc2.left, top };
+				POINT p = { rc.left, top };
 				WinUtil::flagImages.Draw(cd->nmcd.hdc, si->getFlagImage(), p, LVSIL_SMALL);
-				top = rc2.top + (rc2.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
-				::ExtTextOut(cd->nmcd.hdc, rc2.left + 30, top + 1, ETO_CLIPPED, rc2, buf, _tcslen(buf), NULL);
+				top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+				::ExtTextOut(cd->nmcd.hdc, rc.left + 30, top + 1, ETO_CLIPPED, rc, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
 			}
 		}		
@@ -1595,7 +1594,7 @@ bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, Filte
 		if(!reg.IsValid()) {
 			insert = true;
 		} else {
-			insert = reg.match(si->getText(sel)) > 0;
+			insert = reg.match(si->getText(static_cast<uint8_t>(sel))) > 0;
 		}
 	}
 	return insert;

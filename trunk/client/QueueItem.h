@@ -65,7 +65,7 @@ public:
 		LAST
 	};
 
-	enum FileFlags {
+	enum {
 		/** Normal download, no flags set */
 		FLAG_NORMAL = 0x00, 
 		/** This download should be resumed if possible */
@@ -136,7 +136,7 @@ public:
 	typedef SourceList::const_iterator SourceConstIter;
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, int aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
+		Priority aPriority, Flags::MaskType aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false), chunkInfo(NULL)
@@ -201,7 +201,7 @@ public:
 	bool isBadSourceExcept(const User::Ptr& aUser, Flags::MaskType exceptions) const {
 		SourceConstIter i = getBadSource(aUser);
 		if(i != badSources.end())
-			return i->isAnySet(exceptions^Source::FLAG_MASK);
+			return i->isAnySet((Flags::MaskType)(exceptions^Source::FLAG_MASK));
 		return false;
 	}
 	
@@ -313,7 +313,7 @@ private:
 	SourceList badSources;
 
 	void addSource(const User::Ptr& aUser);
-	void removeSource(const User::Ptr& aUser, int reason);
+	void removeSource(const User::Ptr& aUser, Flags::MaskType reason);
 };
 
 #endif // !defined(QUEUE_ITEM_H)

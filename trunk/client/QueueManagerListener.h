@@ -38,12 +38,12 @@ public:
 	typedef X<5> StatusUpdated;
 	typedef X<6> PartialList;
 
-	virtual void on(Added, QueueItem*) throw() { }
-	virtual void on(Finished, QueueItem*, const string&, int64_t) throw() { }
-	virtual void on(Removed, QueueItem*) throw() { }
-	virtual void on(Moved, QueueItem*, const string&) throw() { }
-	virtual void on(SourcesUpdated, QueueItem*) throw() { }
-	virtual void on(StatusUpdated, QueueItem*) throw() { }
+	virtual void on(Added, const QueueItem*) throw() { }
+	virtual void on(Finished, const QueueItem*, const string&, int64_t) throw() { }
+	virtual void on(Removed, const QueueItem*) throw() { }
+	virtual void on(Moved, const QueueItem*, const string&) throw() { }
+	virtual void on(SourcesUpdated, const QueueItem*) throw() { }
+	virtual void on(StatusUpdated, const QueueItem*) throw() { }
 	virtual void on(PartialList, const User::Ptr&, const string&) throw() { }
 };
 

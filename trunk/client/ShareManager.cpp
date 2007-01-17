@@ -1379,7 +1379,7 @@ ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
 	return NULL;
 }
 
-void ShareManager::on(DownloadManagerListener::Complete, Download* d, bool) throw() {
+void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw() {
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		Lock l(cs);
@@ -1429,7 +1429,7 @@ void ShareManager::on(TimerManagerListener::Minute, uint32_t tick) throw() {
 	}
 }
 
-bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false */) {
+bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false */) const {
 	if(thoroughCheck)	// check if it's part of the share before checking if it's in the exclusions
 	{
 		bool result = false;
@@ -1455,7 +1455,7 @@ bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false
 	}
 
 	// check if it's an excluded folder or a sub folder of an excluded folder
-	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	for(StringIterC j = notShared.begin(); j != notShared.end(); ++j)
 	{		
 		if(Util::stricmp(path, *j) == 0)
 			return false;
@@ -1493,7 +1493,7 @@ int64_t ShareManager::addExcludeFolder(const string &path) {
 		return 0;
 
 	// Make sure this not a subfolder of an already excluded folder
-	for(StringIter j = notShared.begin(); j != notShared.end(); ++j)
+	for(StringIterC j = notShared.begin(); j != notShared.end(); ++j)
 	{
 		if(path.size() >= (*j).size())
 		{

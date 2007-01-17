@@ -132,7 +132,7 @@ public:
 
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
-		tstring InfoTip(_T(""));
+		tstring InfoTip(Util::emptyStringT);
 		AutoArray<TCHAR> Buffer(300);
 		
 		LV_COLUMN lvCol;
@@ -144,13 +144,13 @@ public:
 			if (!NoColumnHeader) {
 				lvCol.mask = LVCF_TEXT;
 				lvCol.pszText = Buffer;
-				lvCol.cchTextMax = sizeof(Buffer);
+				lvCol.cchTextMax = 300;
 				GetColumn(indexes[i], &lvCol);
 				InfoTip += lvCol.pszText;
 				InfoTip += _T(": ");
 			}
-			lvItem.iItem = pInfoTip->iItem /*nItem*/;
-			GetItemText(pInfoTip->iItem /*nItem*/, indexes[i], Buffer, 300);
+			lvItem.iItem = pInfoTip->iItem;
+			GetItemText(pInfoTip->iItem, indexes[i], Buffer, 300);
 			Buffer[299] = NULL;
 
 			InfoTip += Buffer;
@@ -189,17 +189,17 @@ public:
 		}
 	}
 
-	int insertItem(T* item, int image) {
+	int insertItem(const T* item, int image) {
 		return insertItem(getSortPos(item), item, image);
 	}
-	int insertItem(int i, T* item, int image) {
+	int insertItem(int i, const T* item, int image) {
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)item);
 	}
 	T* getItemData(int iItem) { return (T*)GetItemData(iItem); }
 	T* getSelectedItem() { return (GetSelectedCount() > 0 ? getItemData(GetNextItem(-1, LVNI_SELECTED)) : NULL); }
 
-	int findItem(T* item) { 
+	int findItem(const T* item) const { 
 		LVFINDINFO fi = { LVFI_PARAM, NULL, (LPARAM)item };
 		return FindItem(&fi, -1);
 	}
@@ -247,8 +247,8 @@ public:
 		for(int j = 0; j < k; ++j)
 			SetItemText(i, j, LPSTR_TEXTCALLBACK);
 	}
-	void updateItem(T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
-	void deleteItem(T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
+	void updateItem(const T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
+	void deleteItem(const T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
 	int getSortPos(const T* a) {
 		int high = GetItemCount();
@@ -264,7 +264,7 @@ public:
 		while( low <= high ) {
 			mid = (low + high) / 2;
 			b = getItemData(mid);
-			comp = T::compareItems(a, b, sortColumn);
+			comp = T::compareItems(a, b, static_cast<uint8_t>(sortColumn));
 			
 			if(!sortAscending)
 				comp = -comp;
@@ -278,7 +278,7 @@ public:
 			}
 		}
 
-		comp = T::compareItems(a, b, sortColumn);
+		comp = T::compareItems(a, b, static_cast<uint8_t>(sortColumn));
 		if(!sortAscending)
 			comp = -comp;
 		if(comp > 0)
@@ -292,7 +292,7 @@ public:
 		updateArrow();
 	}
 	int getSortColumn() const { return sortColumn; }
-	int getRealSortColumn() const { return findColumn(sortColumn); }
+	uint8_t getRealSortColumn() const { return findColumn(sortColumn); }
 	bool isAscending() const { return sortAscending; }
 	void setAscending(bool s) {
 		sortAscending = s;
@@ -302,14 +302,14 @@ public:
 	iterator begin() { return iterator(this); }
 	iterator end() { return iterator(this, GetItemCount()); }
 
-	int InsertColumn(int nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
+	int InsertColumn(uint8_t nCol, const tstring &columnHeading, int nFormat = LVCFMT_LEFT, int nWidth = -1, int nSubItem = -1 ){
 		if(nWidth == 0) nWidth = 80;
 		columnList.push_back(new ColumnInfo(columnHeading, nCol, nFormat, nWidth));
 		columnIndexes.push_back(nCol);
 		return CListViewCtrl::InsertColumn(nCol, columnHeading.c_str(), nFormat, nWidth, nSubItem);
 	}
 
-	void showMenu(POINT &pt){
+	void showMenu(const POINT &pt){
 		headerMenu.DestroyMenu();
 		headerMenu.CreatePopupMenu();
 		MENUINFO inf;
@@ -477,7 +477,7 @@ public:
 
 	}
 	
-	void setVisible(string vis){
+	void setVisible(const string& vis) {
 		StringTokenizer<string> tok(vis, ',');
 		StringList l = tok.getTokens();
 
@@ -503,7 +503,7 @@ public:
 	}
 
 	//find the original position of the column at the current position.
-	inline int findColumn(int col) const {	return columnIndexes[col]; }	
+	inline uint8_t findColumn(int col) const { return columnIndexes[col]; }	
 	
 private:
 	int sortColumn;
@@ -522,7 +522,7 @@ private:
 	typedef ColumnList::const_iterator ColumnIter;
 
 	ColumnList columnList;
-	vector<int> columnIndexes;
+	vector<uint8_t> columnIndexes;
 
 	void removeColumn(ColumnInfo* ci){
 		TCHAR buf[512];
@@ -577,7 +577,7 @@ private:
 			GetColumn(i, &lvcl);
 			for(size_t j = 0; j < columnList.size(); ++j) {
 				if(Util::stricmp(columnList[j]->name.c_str(), lvcl.pszText) == 0) {
-					columnIndexes.push_back(static_cast<int>(j));
+					columnIndexes.push_back(static_cast<uint8_t>(j));
 					break;
 				}
 			}
@@ -585,7 +585,7 @@ private:
 	}	
 };
 
-// Copyright (C) 2005 Big Muscle, StrongDC++
+// Copyright (C) 2005-2007 Big Muscle, StrongDC++
 template<class T, int ctrlId>
 class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
 {
@@ -642,7 +642,7 @@ public:
 		return 0;
 	} 
 
-	void Collapse(T* mainItem, unsigned int itemPos) {
+	void Collapse(T* mainItem, size_t itemPos) {
 		for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
 			deleteItem(*i);
 		}
@@ -650,7 +650,7 @@ public:
 		SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 	}
 
-	void Expand(T* mainItem, unsigned int itemPos) {
+	void Expand(T* mainItem, size_t itemPos) {
 		if(mainItem->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
 			mainItem->collapsed = false;
 			for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
@@ -675,9 +675,9 @@ public:
 		InsertItem(&lvi);
 	}
 
-	T* findMainItem(const tstring& groupingString) const {
-		TreeItem::const_iterator j = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
-		return j != mainItems.end() ? (*j) : NULL;
+	inline T* findMainItem(const tstring& groupingString) const {
+		TreeItem::const_iterator i = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
+		return i != mainItems.end() ? (*i) : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
@@ -738,27 +738,27 @@ public:
 		if(!item->main) {
 			removeMainItem(item);
 		} else {
-			T::List::iterator n = find(item->main->subItems.begin(), item->main->subItems.end(), item);
-			if(n != item->main->subItems.end()) {
-				item->main->subItems.erase(n);
+			T* main = item->main;
+			T::List::iterator n = find(main->subItems.begin(), main->subItems.end(), item);
+			if(n != main->subItems.end()) {
+				main->subItems.erase(n);
 			}
 			if(uniqueMainItem) {
-				if(item->main->subItems.size() == 1) {
-					if(!item->main->collapsed) {
-						item->main->collapsed = true;
-						deleteItem(item->main->subItems.front());
+				if(main->subItems.size() == 1) {
+					if(!main->collapsed) {
+						main->collapsed = true;
+						deleteItem(main->subItems.front());
 					}
-					SetItemState(findItem(item->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(item->main->subItems.empty()) {
-					T* main = item->main;
+					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				} else if(main->subItems.empty()) {
 					removeMainItem(main);
 					deleteItem(main);
 					item->main = NULL;
 					delete main;
 				}
 			} else {
-				if(item->main->subItems.empty()) {
-					SetItemState(findItem(item->main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				if(main->subItems.empty()) {
+					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
 			if(item->main) {
@@ -811,7 +811,7 @@ public:
 			SortItems(&compareFunc, (LPARAM)this);
 		}
 	}
-	int getSortPos(T* a) {
+	int getSortPos(const T* a) {
 		int high = GetItemCount();
 		if((getSortColumn() == -1) || (high == 0))
 			return high;
@@ -825,7 +825,7 @@ public:
 		while( low <= high ) {
 			mid = (low + high) / 2;
 			b = getItemData(mid);
-			comp = compareItems(a, b, getSortColumn());
+			comp = compareItems(a, b, static_cast<uint8_t>(getSortColumn()));
 			
 			if(!isAscending())
 				comp = -comp;
@@ -849,7 +849,7 @@ public:
 			}
 		}
 
-		comp = compareItems(a, b, getSortColumn());
+		comp = compareItems(a, b, static_cast<uint8_t>(getSortColumn()));
 		if(!isAscending())
 			comp = -comp;
 		if(comp > 0)
@@ -884,7 +884,7 @@ private:
 		return (t->isAscending() ? result : -result);
 	}
 
-	static int compareItems(const T* a, const T* b, int col) {
+	static int compareItems(const T* a, const T* b, uint8_t col) {
 		// Copyright (C) Liny, RevConnect
 
 		// both are children

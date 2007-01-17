@@ -131,9 +131,9 @@ private:
 		UserPtr(User::Ptr u) : u(u) { }
 	};
 		
-	User::Ptr getSelectedUser() {
+	const User::Ptr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();
-		return selectedItem?reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(selectedItem))->u:User::Ptr(0);
+		return selectedItem ? reinterpret_cast<UserPtr*>(ctrlQueued.GetItemData(selectedItem))->u : User::Ptr(0);
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -205,19 +205,12 @@ private:
 	void updateStatus();
 
 	// UploadManagerListener
-	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() {
-		PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI);
-	}
-	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() {
-		PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new UserInfoBase(aUser));
-	}
-	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() {
-		aUQI->inc();
-		PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI);
-	}
-	virtual void on(UploadManagerListener::QueueUpdate) throw() {
-		PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL);
-	}
+	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() { PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI); }
+	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new UserInfoBase(aUser));	}
+	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() { aUQI->inc(); PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI); }
+	virtual void on(UploadManagerListener::QueueUpdate) throw() { PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL); }
+
+	// SettingsManagerListener
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 };
 

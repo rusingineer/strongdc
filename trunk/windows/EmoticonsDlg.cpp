@@ -16,6 +16,7 @@ extern CAGEmotionSetup* g_pEmotionsSetup;
 
 WNDPROC EmoticonsDlg::m_MFCWndProc = 0;
 EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
+vector<HBITMAP> EmoticonsDlg::bitmapList;
 
 LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/) {
 	TCHAR buf[256];
@@ -82,8 +83,10 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		BITMAP bm;
-		GetObject((*Emoticons.begin())->getEmotionBmp(GetSysColor(COLOR_BTNFACE)), sizeof(BITMAP), &bm);
+		HBITMAP hbm = (*Emoticons.begin())->getEmotionBmp(GetSysColor(COLOR_BTNFACE));
+		GetObject(hbm, sizeof(BITMAP), &bm);
 		int bW = bm.bmWidth;
+		DeleteObject(hbm);
 
 		pos.bottom = pos.top - 3;
 		pos.left = pos.right - nX * (bW + EMOTICONS_ICONMARGIN) - 2;
@@ -111,7 +114,9 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 				try {
 					CButton emoButton;
 					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->getEmotionText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
-					emoButton.SetBitmap((*pEmotion)->getEmotionBmp(GetSysColor(COLOR_BTNFACE)));
+					HBITMAP b = (*pEmotion)->getEmotionBmp(GetSysColor(COLOR_BTNFACE));
+					emoButton.SetBitmap(b);
+					bitmapList.push_back(b);
 
 					tstring smajl = (*pEmotion)->getEmotionText();
 					CToolInfo ti(TTF_SUBCLASS, emoButton.m_hWnd, 0, 0, const_cast<LPTSTR>(smajl.c_str()));
@@ -156,5 +161,11 @@ LRESULT CALLBACK EmoticonsDlg::NewWndProc( HWND hWnd, UINT message, WPARAM wPara
 		m_pDialog->PostMessage(WM_CLOSE);
 		return FALSE;
     }
+	if (message==WM_CLOSE) {
+		for(vector<HBITMAP>::const_iterator i = bitmapList.begin(); i != bitmapList.end(); i++) {
+			DeleteObject(*i);
+		}
+		bitmapList.clear();
+	}
 	return ::CallWindowProc(m_MFCWndProc, hWnd, message, wParam, lParam);
 }

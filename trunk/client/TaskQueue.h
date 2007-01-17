@@ -26,14 +26,14 @@ struct Task {
 };
 struct StringTask : public Task {
 	StringTask(const string& str_) : str(str_) { }
-	string str;
+	const string str;
 };
 
 class TaskQueue {
 public:
 	typedef pair<int, Task*> Pair;
 	typedef vector<Pair> List;
-	typedef List::iterator Iter;
+	typedef List::const_iterator Iter;
 
 	TaskQueue() {
 	}

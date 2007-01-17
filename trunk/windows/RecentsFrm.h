@@ -168,12 +168,8 @@ private:
 	}
 
 	
-	virtual void on(RecentAdded, const RecentHubEntry* entry) throw() {
-		addEntry(entry, ctrlHubs.GetItemCount());
-	}
-	virtual void on(RecentRemoved, const RecentHubEntry* entry) throw() {
-		ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry));
-	}
+	virtual void on(RecentAdded, const RecentHubEntry* entry) throw() { addEntry(entry, ctrlHubs.GetItemCount()); }
+	virtual void on(RecentRemoved, const RecentHubEntry* entry) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry)); }
 	virtual void on(RecentUpdated, const RecentHubEntry* entry) throw() {
 		int i = -1;
 		if((i = ctrlHubs.find((LPARAM)entry)) != -1) {

@@ -437,10 +437,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		// Allow for more than one instance...
 				bool multiple = false;
 		if(_tcslen(lpstrCmdLine) == 0) {
-		if (::MessageBox(NULL, _T("There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?"), 
-			_T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
+			if (::MessageBox(NULL, _T("There is already an instance of StrongDC++ running.\nDo you want to launch another instance anyway?"), 
+				_T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_TOPMOST) == IDYES) {
 					multiple = true;
-				}
+			}
 		}
 
 		if(multiple == false) {

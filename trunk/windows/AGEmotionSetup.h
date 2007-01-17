@@ -36,15 +36,15 @@ public:
 	CAGEmotion() : m_EmotionBmp(NULL), m_ImagePos(-1), m_pImagesList(NULL) { }
 	~CAGEmotion() {	}
 	
-	bool Create(tstring& strEmotionText, string& strEmotionBmpPath);
+	bool Create(const tstring& strEmotionText, const string& strEmotionBmpPath);
 
 	const tstring& getEmotionText() const { return m_EmotionText; }
 	HBITMAP getEmotionBmp() const {	return m_EmotionBmp; }
 	HBITMAP getEmotionBmp(const COLORREF &clrBkColor);
 	const string& getEmotionBmpPath() const { return m_EmotionBmpPath; }
-	const long&	getImagePos() const { return m_ImagePos; }
+	long getImagePos() const { return m_ImagePos; }
 	
-	void setImagePos(const long& ImagePos) { m_ImagePos = ImagePos; }
+	void setImagePos(long ImagePos) { m_ImagePos = ImagePos; }
 	void setImageList(CImageList* pImagesList) { m_pImagesList = pImagesList; }
 
 protected:

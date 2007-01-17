@@ -116,7 +116,7 @@ const string& QueueItem::getTempTarget() {
 }
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
-						  int aFlags, QueueItem::Priority p, const string& aTempTarget,
+						  Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget,
 						  int64_t aDownloadedBytes, time_t aAdded, const string& freeBlocks/* = Util::emptyString*/, const string& verifiedBlocks /* = Util::emptyString */, const TTHValue& root) throw(QueueException, FileException)
 {
 	if(p == QueueItem::DEFAULT) {
@@ -211,10 +211,6 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 void QueueManager::FileQueue::add(QueueItem* qi) {
 	queue.insert(make_pair(const_cast<string*>(&qi->getTarget()), qi));
-	//if(lastInsert == queue.end())
-	//	lastInsert = queue.insert(make_pair(const_cast<string*>(&qi->getTarget()), qi)).first;
-	//else
-	//	lastInsert = queue.insert(lastInsert, make_pair(const_cast<string*>(&qi->getTarget()), qi));
 }
 
 QueueItem* QueueManager::FileQueue::find(const string& target) const {
@@ -534,7 +530,7 @@ QueueManager::~QueueManager() throw() {
 	}
 }
 
-bool QueueManager::getTTH(const string& name, TTHValue& tth) throw() {
+bool QueueManager::getTTH(const string& name, TTHValue& tth) const throw() {
 	Lock l(cs);
 	QueueItem* qi = fileQueue.find(name);
 	if(qi) {
@@ -594,7 +590,7 @@ void QueueManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 	}
 }
 
-void QueueManager::addList(const User::Ptr& aUser, int aFlags, const string& aInitialDir /* = Util::emptyString */) throw(QueueException, FileException) {
+void QueueManager::addList(const User::Ptr& aUser, Flags::MaskType aFlags, const string& aInitialDir /* = Util::emptyString */) throw(QueueException, FileException) {
 	// complete target is checked later, just remove path separators from the nick here
 	string target = Util::getListPath() + Util::cleanPathChars(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
 
@@ -602,7 +598,7 @@ void QueueManager::addList(const User::Ptr& aUser, int aFlags, const string& aIn
 		dirMap[aUser->getCID().toBase32()] = aInitialDir;
 	}
 
-	add(target, -1, TTHValue(), aUser, QueueItem::FLAG_USER_LIST | aFlags);
+	add(target, -1, TTHValue(), aUser, (Flags::MaskType)(QueueItem::FLAG_USER_LIST | aFlags));
 }
 
 void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw(QueueException) {
@@ -625,7 +621,7 @@ void QueueManager::addPfs(const User::Ptr& aUser, const string& aDir) throw(Queu
 }
 
 void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& root, User::Ptr aUser,
-					   int aFlags /* = QueueItem::FLAG_RESUME */, bool addBad /* = true */) throw(QueueException, FileException)
+					   Flags::MaskType aFlags /* = QueueItem::FLAG_RESUME */, bool addBad /* = true */) throw(QueueException, FileException)
 {
 	bool wantConnection = true;
 	bool newItem = false;
@@ -692,7 +688,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 				return;
 		}
 
-		wantConnection = addSource(q, aUser, addBad ? QueueItem::Source::FLAG_MASK : 0);
+		wantConnection = addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
 	}
 
 	if(wantConnection && aUser->isOnline())
@@ -718,7 +714,7 @@ void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueExce
 		ConnectionManager::getInstance()->getDownloadConnection(aUser);
 }
 
-string QueueManager::checkTarget(const string& aTarget, int64_t aSize, int& flags) throw(QueueException, FileException) {
+string QueueManager::checkTarget(const string& aTarget, int64_t aSize, Flags::MaskType& flags) throw(QueueException, FileException) {
 #ifdef _WIN32
 	if(aTarget.length() > MAX_PATH) {
 		throw QueueException(STRING(TARGET_FILENAME_TOO_LONG));
@@ -909,7 +905,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-bool QueueManager::getQueueInfo(User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw() {
+bool QueueManager::getQueueInfo(const User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw() {
     Lock l(cs);
     QueueItem* qi = userQueue.getNextAll(aUser);
 	if(qi == NULL)
@@ -970,7 +966,7 @@ void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
 Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) throw() {
 	Lock l(cs);
 
-	User::Ptr& aUser = aSource.getUser();
+	const User::Ptr& aUser = aSource.getUser();
 	// First check PFS's...
 	PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
@@ -1066,7 +1062,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 	User::Ptr up = aDownload->getUser();
 	int flag = 0;
 	bool checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
-	TTHValue* aTTH = aDownload->isSet(Download::FLAG_MULTI_CHUNK) ? new TTHValue(aDownload->getTTH().toBase32()) : NULL;
 
 	{
 		Lock l(cs);
@@ -1171,7 +1166,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		if(aDownload->isSet(Download::FLAG_MULTI_CHUNK) && 
 			!aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 			
-			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(aTTH);
+			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(&aDownload->getTTH());
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
 				fileChunks->putChunk(aDownload->getStartPos());
 			}
@@ -1183,7 +1178,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 		}
 		delete aDownload;
 	}
-	delete aTTH;
 
 	for(User::Iter i = getConn.begin(); i != getConn.end(); ++i) {
 		ConnectionManager::getInstance()->getDownloadConnection(*i);
@@ -1284,7 +1278,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 	}
 }
 
-void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, int reason, bool removeConn /* = true */) throw() {
+void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, Flags::MaskType reason, bool removeConn /* = true */) throw() {
 	bool isRunning = false;
 	bool removeCompletely = false;
 	{
@@ -1338,7 +1332,7 @@ endCheck:
 	}	
 }
 
-void QueueManager::removeSource(User::Ptr& aUser, int reason) throw() {
+void QueueManager::removeSource(User::Ptr& aUser, Flags::MaskType reason) throw() {
 	bool isRunning = false;
 	string removeRunning;
 	{
@@ -1570,7 +1564,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 		inDownloads = true;
 	} else if(inDownloads) {
 		if(cur == NULL && name == sDownload) {
-			int flags = QueueItem::FLAG_RESUME;
+			Flags::MaskType flags = QueueItem::FLAG_RESUME;
 			int64_t size = Util::toInt64(getAttrib(attribs, sSize, 1));
 			if(size == 0)
 				return;
@@ -1759,7 +1753,7 @@ void QueueItem::addSource(const User::Ptr& aUser) {
 	}
 }
 
-void QueueItem::removeSource(const User::Ptr& aUser, int reason) {
+void QueueItem::removeSource(const User::Ptr& aUser, Flags::MaskType reason) {
 	SourceIter i = getSource(aUser);
 	dcassert(i != sources.end());
 	i->setFlag(reason);
@@ -1775,7 +1769,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	string target = SETTING(DOWNLOAD_DIRECTORY) + aFile;
 	string tempTarget = Util::emptyString;
 
-	int flag = QueueItem::FLAG_RESUME;
+	Flags::MaskType flag = QueueItem::FLAG_RESUME;
 
 	try {
 		target = checkTarget(target, aSize, flag);
@@ -1794,7 +1788,7 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 		fileQueue.find(ql, root);
 		if(ql.size()) return false;
 
-		QueueItem* q = fileQueue.add(target, aSize, flag | (BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0), QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
+		QueueItem* q = fileQueue.add(target, aSize, flag | (Flags::MaskType)(BOOLSETTING(MULTI_CHUNK) ? QueueItem::FLAG_MULTI_SOURCE : 0), QueueItem::DEFAULT, Util::emptyString, 0, GET_TIME(), Util::emptyString, Util::emptyString, root);
 		fire(QueueManagerListener::Added(), q);
 	}
 
@@ -1806,10 +1800,8 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 }
 
 bool QueueManager::dropSource(Download* d, bool autoDrop) {
-	int iHighSpeed = SETTING(H_DOWN_SPEED);
-
-	size_t activeSegments, onlineUsers;
-	int64_t overallSpeed;
+	size_t activeSegments, onlineUsers, iHighSpeed = SETTING(H_DOWN_SPEED);
+	uint64_t overallSpeed;
 	User::Ptr aUser = d->getUser();
 
 	{
@@ -1847,7 +1839,7 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	}
 
 	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
-		if((overallSpeed > (iHighSpeed*1024)) || (iHighSpeed == 0)) {
+		if((iHighSpeed == 0) || (overallSpeed > iHighSpeed*1024)) {
 			if(onlineUsers > 2) {
 				aUser->setLastDownloadSpeed((uint16_t)(d->getRunningAverage() / 1024));
 				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {

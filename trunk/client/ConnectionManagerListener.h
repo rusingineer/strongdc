@@ -36,11 +36,11 @@ public:
 	typedef X<3> Failed;
 	typedef X<4> StatusChanged;
 
-	virtual void on(Added, ConnectionQueueItem*) throw() { }
-	virtual void on(Connected, ConnectionQueueItem*) throw() { }
-	virtual void on(Removed, ConnectionQueueItem*) throw() { }
-	virtual void on(Failed, ConnectionQueueItem*, const string&) throw() { }
-	virtual void on(StatusChanged, ConnectionQueueItem*) throw() { }
+	virtual void on(Added, const ConnectionQueueItem*) throw() { }
+	virtual void on(Connected, const ConnectionQueueItem*) throw() { }
+	virtual void on(Removed, const ConnectionQueueItem*) throw() { }
+	virtual void on(Failed, const ConnectionQueueItem*, const string&) throw() { }
+	virtual void on(StatusChanged, const ConnectionQueueItem*) throw() { }
 };
 
 #endif // !defined(CONNECTION_MANAGER_LISTENER_H)

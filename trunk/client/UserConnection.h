@@ -145,6 +145,7 @@ public:
 	virtual void getParams(const UserConnection& aSource, StringMap& params);
 
 	User::Ptr getUser();
+	const User::Ptr getUser() const;
 
 	UserConnection& getUserConnection() { return userConnection; }
 	const UserConnection& getUserConnection() const { return userConnection; }
@@ -212,8 +213,7 @@ public:
 		FLAG_ASSOCIATED = FLAG_INCOMING << 1,
 		FLAG_HASSLOT = FLAG_ASSOCIATED << 1,
 		FLAG_HASEXTRASLOT = FLAG_HASSLOT << 1,
-		FLAG_INVALIDKEY = FLAG_HASEXTRASLOT << 1,
-		FLAG_SUPPORTS_GETZBLOCK = FLAG_INVALIDKEY << 1,
+		FLAG_SUPPORTS_GETZBLOCK = FLAG_HASEXTRASLOT << 1,
 		FLAG_SUPPORTS_MINISLOTS = FLAG_SUPPORTS_GETZBLOCK << 1,
 		FLAG_SUPPORTS_XML_BZLIST = FLAG_SUPPORTS_MINISLOTS << 1,
 		FLAG_SUPPORTS_ADCGET = FLAG_SUPPORTS_XML_BZLIST << 1,
@@ -246,7 +246,7 @@ public:
 
 	};
 
-	short getNumber() { return (short)((((size_t)this)>>2) & 0x7fff); }
+	short getNumber() const { return (short)((((size_t)this)>>2) & 0x7fff); }
 
 	// NMDC stuff
 	void myNick(const string& aNick) { send("$MyNick " + Text::utf8ToAcp(aNick) + '|'); }
@@ -292,7 +292,7 @@ public:
 	void disconnect(bool graceless = false) { if(socket) socket->disconnect(graceless); }
 	void transmitFile(InputStream* f) { socket->transmitFile(f); }
 
-	const string& getDirectionString() {
+	const string& getDirectionString() const {
 		dcassert(isSet(FLAG_UPLOAD) ^ isSet(FLAG_DOWNLOAD));
 		return isSet(FLAG_UPLOAD) ? UPLOAD : DOWNLOAD;
 	}

@@ -75,10 +75,10 @@ public:
 	typedef X<6> QueueItemRemove;
 	typedef X<7> QueueUpdate;
 
-	virtual void on(Starting, Upload*) throw() { }
+	virtual void on(Starting, const Upload*) throw() { }
 	virtual void on(Tick, const Upload::List&) throw() { }
-	virtual void on(Complete, Upload*) throw() { }
-	virtual void on(Failed, Upload*, const string&) throw() { }
+	virtual void on(Complete, const Upload*) throw() { }
+	virtual void on(Failed, const Upload*, const string&) throw() { }
 	virtual void on(QueueAdd, UploadQueueItem*) throw() { }
 	virtual void on(QueueRemove, const User::Ptr&) throw() { }
 	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { }
@@ -97,7 +97,7 @@ public:
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
-	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, int col) {
+	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, uint8_t col) {
 		switch(col) {
 			case COLUMN_FILE: return Util::stricmp(a->getText(COLUMN_FILE), b->getText(COLUMN_FILE));
 			case COLUMN_PATH: return Util::stricmp(a->getText(COLUMN_PATH), b->getText(COLUMN_PATH));
@@ -150,18 +150,10 @@ public:
 	 */
 	int64_t getRunningAverage();
 	
-	int getSlots() const {
-		int slots = 0;
-		if (SETTING(HUB_SLOTS) * Client::getTotalCounts() <= SETTING(SLOTS)) {
-			slots = SETTING(SLOTS);
-		} else {
-			slots = max(SETTING(HUB_SLOTS),0) * (Client::getTotalCounts());
-		}
-		return slots;
-	}
+	uint8_t getSlots() const { return (uint8_t)(max(SETTING(SLOTS), max(SETTING(HUB_SLOTS),0) * Client::getTotalCounts())); }
 
 	/** @return Number of free slots. */
-	int getFreeSlots() const { return max((getSlots() - running), 0); }
+	uint8_t getFreeSlots() const { return (uint8_t)max((getSlots() - running), 0); }
 	
 	/** @internal */
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
@@ -198,8 +190,8 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime() const;
 	
-	GETSET(uint16_t, running, Running);
-	GETSET(uint16_t, extra, Extra);
+	GETSET(uint8_t, running, Running);
+	GETSET(uint8_t, extra, Extra);
 	GETSET(uint32_t, lastGrant, LastGrant);
 private:
 	Upload::List uploads;

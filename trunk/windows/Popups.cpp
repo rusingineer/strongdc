@@ -71,15 +71,13 @@ void Popups::write()
 	PropPage::write((HWND)*this, items, listItems, GetDlgItem(IDC_POPUPLIST));
 
 	SettingsManager::getInstance()->set(SettingsManager::POPUP_TYPE, ctrlPopupType.GetCurSel());
-	// Do specialized writing here
-	// settings->set(XX, YY);
 }
 
 
 LRESULT Popups::onPreview(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	PopupManager::getInstance()->Show(STRING(FILE) + ": sdc202.rar\n" +
-		STRING(USER) + ": BigMuscle", STRING(DOWNLOAD_FINISHED_IDLE), NIIF_INFO, ctrlPopupType.GetCurSel());
+	PopupManager::getInstance()->Show(TSTRING(FILE) + _T(": sdc202.rar\n") +
+		TSTRING(USER) + _T(": ") + Text::toT(SETTING(NICK)), TSTRING(DOWNLOAD_FINISHED_IDLE), NIIF_INFO, ctrlPopupType.GetCurSel());
 
 	return 0;
 }

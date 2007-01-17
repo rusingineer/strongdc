@@ -347,9 +347,9 @@ private:
 			tstring tth;
 		};
         
-		const tstring& getText(int col) const { return columns[col]; }
+		const tstring& getText(uint8_t col) const { return columns[col]; }
 
-		static int compareItems(const SearchInfo* a, const SearchInfo* b, int col) {
+		static int compareItems(const SearchInfo* a, const SearchInfo* b, uint8_t col) {
 			if(!a->sr || !b->sr)
 				return 0;
 
@@ -394,7 +394,7 @@ private:
 					image = 3;
 				}
 				if(sr->getType() == SearchResult::TYPE_FILE)
-					image+=4;
+					image += 4;
 			}
 			return image;
 		}
@@ -404,14 +404,13 @@ private:
 		SearchInfo* createMainItem() { return this; }
 		const tstring& getGroupingString() const { return columns[COLUMN_TTH]; }
 		void updateMainItem() {
-			uint32_t total = main->subItems.size();
-			if(total != 0) {
+			if(!main->subItems.empty()) {
 				TCHAR buf[256];
-				snwprintf(buf, sizeof(buf), _T("%d %s"), total + 1, CTSTRING(USERS));
-
+				snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size() + 1, CTSTRING(USERS));
 				main->columns[COLUMN_HITS] = buf;
-				if(total == 1)
-					main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
+				
+				//if(total == 1)
+				//	main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
 			} else {
 				main->columns[COLUMN_HITS] = Util::emptyStringT;
 			}
@@ -426,15 +425,13 @@ private:
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
 
-		const tstring& getText(int col) const {
+		const tstring& getText(uint8_t col) const {
 			return (col == 0) ? name : Util::emptyStringT;
 		}
-		static int compareItems(const HubInfo* a, const HubInfo* b, int col) {
+		static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;
 		}
-		int imageIndex() {
-			return 0;
-		}
+		uint8_t imageIndex() const { return 0; }
 
 		tstring url;
 		tstring name;
@@ -547,14 +544,14 @@ private:
 	void download(SearchResult* aSR, const tstring& aDir, bool view);
 	
 	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
-	virtual void on(SearchManagerListener::Searching, SearchQueueItem* aSearch) throw();
+	virtual void on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw();
 
 	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
 
 	// ClientManagerListener
-	virtual void on(ClientConnected, Client* c) throw() { speak(HUB_ADDED, c); }
-	virtual void on(ClientUpdated, Client* c) throw() { speak(HUB_CHANGED, c); }
-	virtual void on(ClientDisconnected, Client* c) throw() { speak(HUB_REMOVED, c); }
+	virtual void on(ClientConnected, const Client* c) throw() { speak(HUB_ADDED, c); }
+	virtual void on(ClientUpdated, const Client* c) throw() { speak(HUB_CHANGED, c); }
+	virtual void on(ClientDisconnected, const Client* c) throw() { speak(HUB_REMOVED, c); }
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 
 	void initHubs();
@@ -567,7 +564,7 @@ private:
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
-	void speak(Speakers s, Client* aClient) {
+	void speak(Speakers s, const Client* aClient) {
 		HubInfo* hubInfo = new HubInfo(Text::toT(aClient->getHubUrl()), Text::toT(aClient->getHubName()), aClient->getMyIdentity().isOp());
 		PostMessage(WM_SPEAKER, WPARAM(s), LPARAM(hubInfo)); 
 	}

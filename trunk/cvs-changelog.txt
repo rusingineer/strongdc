@@ -1,3 +1,12 @@
+** cvs209
+	fixed listview's infotips
+	fixed GDI leaks in emoticons dialog
+	fixed crashes in emoticons code
+	tweak in oDC-styled progressbar drawing
+	always using chunked transfer to ensure we will never lose a slot
+	added constness to a lot of functions
+	reduced Flags type size to save some memory
+
 ** cvs208
 	hopefully fixed autopriority displaying in QueueFrame
 	I recommend to download Service Pack 1 for VS2005

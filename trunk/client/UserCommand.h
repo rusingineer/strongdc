@@ -50,7 +50,7 @@ public:
 	};
 
 	UserCommand() : cid(0), type(0), ctx(0) { }
-	UserCommand(int aId, int aType, int aCtx, int aFlags, const string& aName, const string& aCommand, const string& aHub) throw() 
+	UserCommand(int aId, int aType, int aCtx, Flags::MaskType aFlags, const string& aName, const string& aCommand, const string& aHub) throw() 
 		: Flags(aFlags), cid(aId), type(aType), ctx(aCtx), name(aName), command(aCommand), hub(aHub) { }
 	
 	UserCommand(const UserCommand& rhs) : Flags(rhs), cid(rhs.cid), type(rhs.type), 
