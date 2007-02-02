@@ -47,7 +47,7 @@ public:
 		fire(ServerSocketListener::IncomingConnection());
 	}
 	
-	socket_t getSock() { return socket.sock; }
+	socket_t getSock() const { return socket.sock; }
 	operator const Socket&() const { return socket; }
 private:
 	ServerSocket(const ServerSocket&);

@@ -231,5 +231,3 @@ private:
 	// for debug purpose
 	void dumpVerifiedBlocks();
 };
-
-string GetPartsString(const PartsInfo& partsInfo);

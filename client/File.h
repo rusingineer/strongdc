@@ -76,12 +76,12 @@ public:
 
 	File(const string& aFileName, int access, int mode) throw(FileException);
 
-	bool isOpen() throw();
+	bool isOpen() const throw();
 	virtual void close() throw();
-	virtual int64_t getSize() throw();
+	virtual int64_t getSize() const throw();
 	virtual void setSize(int64_t newSize) throw(FileException);
 
-	virtual int64_t getPos() throw();
+	virtual int64_t getPos() const throw();
 	virtual void setPos(int64_t pos) throw();
 	virtual void setEndPos(int64_t pos) throw();
 	virtual void movePos(int64_t pos) throw();
@@ -91,7 +91,7 @@ public:
 	virtual size_t write(const void* buf, size_t len) throw(FileException);
 	virtual size_t flush() throw(FileException);
 
-	uint32_t getLastModified() throw();
+	uint32_t getLastModified() const throw();
 
 	static void copyFile(const string& src, const string& target) throw(FileException);
 	static void renameFile(const string& source, const string& target) throw(FileException);

@@ -161,9 +161,9 @@ public:
 		blocking = block;
 	}
 #endif
-	bool getBlocking() throw() { return blocking; }
+	bool getBlocking() const throw() { return blocking; }
 
-	string getLocalIp() throw();
+	string getLocalIp() const throw();
 
 	// Low level interface
 	virtual void create(int aType = TYPE_TCP) throw(SocketException);
@@ -173,7 +173,7 @@ public:
 	virtual void listen() throw(SocketException);
 	virtual void accept(const Socket& listeningSocket) throw(SocketException);
 
-	int getSocketOptInt(int option) throw(SocketException);
+	int getSocketOptInt(int option) const throw(SocketException);
 	void setSocketOpt(int option, int value) throw(SocketException);
 
 	virtual bool isSecure() const throw() { return false; }

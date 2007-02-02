@@ -463,7 +463,7 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 	// Open file
 	SharedFileStream file(tempTargetName, 0, 0);
 
-	for(map<int64_t, int64_t>::iterator i = unVerifiedBlocks.begin();
+	for(map<int64_t, int64_t>::const_iterator i = unVerifiedBlocks.begin();
         								i != unVerifiedBlocks.end();
                                         i++)
 	{
@@ -896,17 +896,6 @@ void FileChunksInfo::selfCheck()
 		}
 	}
 #endif
-}
-
-string GetPartsString(const PartsInfo& partsInfo)
-{
-	string ret;
-
-	for(PartsInfo::const_iterator i = partsInfo.begin(); i < partsInfo.end(); i+=2){
-		ret += Util::toString(*i) + "," + Util::toString(*(i+1)) + ",";
-	}
-
-	return ret.substr(0, ret.size()-1);
 }
 
 void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - downloaded, 1 - running, 2 - verified

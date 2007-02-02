@@ -268,7 +268,7 @@ void Socket::socksAuth(uint32_t timeout) throw(SocketException) {
 	}
 }
 
-int Socket::getSocketOptInt(int option) throw(SocketException) {
+int Socket::getSocketOptInt(int option) const throw(SocketException) {
 	int val;
 	socklen_t len = sizeof(val);
 	check(::getsockopt(sock, SOL_SOCKET, option, (char*)&val, &len));
@@ -511,7 +511,7 @@ string Socket::resolve(const string& aDns) {
 	}
 }
 
-string Socket::getLocalIp() throw() {
+string Socket::getLocalIp() const throw() {
 	if(sock == INVALID_SOCKET)
 		return Util::emptyString;
 

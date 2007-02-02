@@ -1,3 +1,8 @@
+** cvs210
+	added constness to another functions
+	webserver moved to berlios' server
+	disabled Omit frame pointers option to improve debugging
+
 ** cvs209
 	fixed listview's infotips
 	fixed GDI leaks in emoticons dialog

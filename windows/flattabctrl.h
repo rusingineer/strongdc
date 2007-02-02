@@ -72,7 +72,7 @@ public:
 	}
 
 	void removeTab(HWND aWnd) {
-		TabInfo::ListIter i;
+		TabInfo::List::iterator i;
 		for(i = tabs.begin(); i != tabs.end(); ++i) {
 			if((*i)->hWnd == aWnd)
 				break;
@@ -327,11 +327,12 @@ public:
 		return 0;
 	}
 
-	int getTabHeight() { return height; }
-	int getHeight() { return (getRows() * getTabHeight())+1; }
-	int getFill() { return (getTabHeight() + 1) / 2; }
+	int getTabHeight() const { return height; }
+	int getHeight() const { return (getRows() * getTabHeight())+1; }
+	int getFill() const { return (getTabHeight() + 1) / 2; }
 
-	int getRows() { return rows; }
+	int getRows() const 
+		{ return rows; }
 
 	void calcRows(bool inval = true) {
 		CRect rc;
@@ -529,7 +530,7 @@ private:
 	public:
 
 		typedef vector<TabInfo*> List;
-		typedef typename List::iterator ListIter;
+		typedef typename List::const_iterator ListIter;
 
 		enum { MAX_LENGTH = 20 };
 
@@ -595,7 +596,7 @@ private:
 			return true;
 		}
 
-		bool updateText(LPCTSTR text) {
+		bool updateText(const LPCTSTR text) {
 			len = _tcslen(text);
 			if(len >= MAX_LENGTH) {
 				::_tcsncpy(name, text, MAX_LENGTH - 3);
@@ -617,7 +618,7 @@ private:
 			return true;
 		}
 
-		int getWidth() {
+		int getWidth() const {
 			return (dirty ? boldSize.cx : size.cx) + FT_EXTRA_SPACE + (hIcon != NULL ? 10 : 0);
 		}
 	};
@@ -626,7 +627,7 @@ private:
 		if(moving == NULL)
 			return;
 
-		TabInfo::ListIter i, j;
+		TabInfo::List::iterator i, j;
 		//remove the tab we're moving
 		for(j = tabs.begin(); j != tabs.end(); ++j){
 			if((*j) == moving){
@@ -674,7 +675,7 @@ private:
 
 	bool inTab;
 
-	TabInfo* getTabInfo(HWND aWnd) {
+	TabInfo* getTabInfo(HWND aWnd) const {
 		for(TabInfo::ListIter i	= tabs.begin(); i != tabs.end(); ++i) {
 			if((*i)->hWnd == aWnd)
 				return *i;

@@ -155,7 +155,7 @@ public:
 		return ret;
 	}
 
-	int64_t verifiedBytes() {
+	int64_t verifiedBytes() const {
 		return min(real.getFileSize(), (int64_t)(cur.getBlockSize() * cur.getLeaves().size()));
 	}
 private:

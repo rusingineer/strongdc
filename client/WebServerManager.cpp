@@ -104,7 +104,7 @@ string WebServerManager::getLoginPage(){
 	pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
     pagehtml += "<meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "   	<meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
-	pagehtml += "	<link rel='stylesheet' href='http://snail.pc.cz/StrongDC/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+	pagehtml += "	<link rel='stylesheet' href='https://strongdc.berlios.de/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
     pagehtml += "<div id='index_obsah'>";
@@ -146,7 +146,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
     pagehtml += "    <meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "    <meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
 	
-    pagehtml += "	<link rel='stylesheet' href='http://snail.pc.cz/StrongDC/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+    pagehtml += "	<link rel='stylesheet' href='https://strongdc.berlios.de/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
 
@@ -472,7 +472,7 @@ StringMap WebServerSocket::getArgs(const string& arguments) {
 
 int WebServerSocket::run(){
 	char buff[8192];
-	int test = 0;
+	uint16_t test = 0;
 	memzero2(buff, sizeof(buff));
 	while(true) {
 
@@ -501,7 +501,7 @@ int WebServerSocket::run(){
 
 			header = header.substr(start+4,end);
 			bool check = false;
-			dcdebug(header.c_str());
+			//dcdebug(header.c_str());
 			if((start = header.find("?")) != string::npos) {
 				string arguments = header.substr(start+1);
 				header = header.substr(0, start);

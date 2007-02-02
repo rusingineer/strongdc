@@ -984,7 +984,7 @@ void DownloadManager::removeDownload(Download* d) {
 	}
 }
 
-void DownloadManager::abortDownload(const string& aTarget, Download* except) {
+void DownloadManager::abortDownload(const string& aTarget, const Download* except) {
 	Lock l(cs);
 	
 	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {

@@ -88,7 +88,7 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
-	UploadQueueItem(User::Ptr u, string file, int64_t p, int64_t sz, uint32_t itime) :
+	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint32_t itime) :
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
@@ -162,7 +162,7 @@ public:
 	void reserveSlot(const User::Ptr& aUser, uint32_t aTime);
 	void unreserveSlot(const User::Ptr& aUser);
 	void clearUserFiles(const User::Ptr&);
-	UploadQueueItem::UserMap getWaitingUsers();
+	const UploadQueueItem::UserMap getWaitingUsers();
 	bool getFireballStatus() const { return isFireball; }
 	bool getFileServerStatus() const { return isFileServer; }
 	bool hasReservedSlot(const User::Ptr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
@@ -203,7 +203,7 @@ private:
 	SlotMap reservedSlots;
 	
 	UploadQueueItem::UserMap waitingUsers;
-	void addFailedUpload(const User::Ptr& User, string file, int64_t pos, int64_t size);
+	void addFailedUpload(const User::Ptr& User, const string& file, int64_t pos, int64_t size);
 	
 	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();

@@ -113,20 +113,20 @@ public:
 	void disconnect(const User::Ptr& aUser, int isDownload);
 
 	void shutdown();
-	bool isShuttingDown() { return shuttingDown; }
+	bool isShuttingDown() const { return shuttingDown; }
 
 	/** Find a suitable port to listen on, and start doing it */
 	void listen() throw(SocketException);
 	void disconnect() throw();
 
-	uint16_t getPort() { return server ? static_cast<uint16_t>(server->getPort()) : 0; }
-	uint16_t getSecurePort() { return secureServer ? static_cast<uint16_t>(secureServer->getPort()) : 0; }
+	uint16_t getPort() const { return server ? static_cast<uint16_t>(server->getPort()) : 0; }
+	uint16_t getSecurePort() const { return secureServer ? static_cast<uint16_t>(secureServer->getPort()) : 0; }
 private:
 
 	class Server : public Thread {
 	public:
 		Server(bool secure_, uint16_t port, const string& ip = "0.0.0.0");
-		uint16_t getPort() { return port; }
+		uint16_t getPort() const { return port; }
 		virtual ~Server() { die = true; join(); }
 	private:
 		virtual int run() throw();

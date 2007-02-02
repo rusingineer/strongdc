@@ -63,8 +63,8 @@ public:
 
 	virtual void setPos(int64_t _pos) 
 	{ pos = _pos; }
-
-	virtual int64_t getSize() throw() {
+/*
+	virtual int64_t getSize() const throw() {
 		DWORD x;
 		DWORD l = ::GetFileSize(shared_handle_ptr->handle, &x);
 
@@ -73,7 +73,7 @@ public:
 
 		return (int64_t)l | ((int64_t)x)<<32;
 	}
-
+*/
     static CriticalSection critical_section;
 	static SharedFileHandleMap file_handle_pool;
 

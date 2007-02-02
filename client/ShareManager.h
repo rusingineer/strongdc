@@ -100,7 +100,7 @@ public:
 		return getBZXmlFile();
 	}
 
-	bool isTTHShared(const TTHValue& tth){
+	bool isTTHShared(const TTHValue& tth) const {
 		Lock l(cs);
 		return tthIndex.find(tth) != tthIndex.end();
 	}
@@ -286,7 +286,7 @@ private:
 	bool hasVirtual(const string& name) const throw();
 	Directory::Map::const_iterator getByVirtual(const string& virtualName) const throw();
 
-	Directory* getDirectory(const string& fname);
+	Directory* getDirectory(const string& fname) const;
 
 	virtual int run();
 

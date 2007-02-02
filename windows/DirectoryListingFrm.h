@@ -414,10 +414,8 @@ protected:
 	tstring mDir;
 
 private:
-	virtual int run()
-	{
-		try
-		{
+	virtual int run() {
+		try {
 			if(!mFile.empty()) {
 				mWindow->dl->loadFile(mFile);
 				ADLSearchManager::getInstance()->matchListing(*mWindow->dl);
@@ -427,7 +425,7 @@ private:
 			}
 
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::FINISHED);
-		}catch(const AbortException) {
+		} catch(const AbortException) {
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		} catch(const Exception& e) {
 			mWindow->error = Text::toT(mWindow->dl->getUser()->getFirstNick() + ": " + e.getError());
