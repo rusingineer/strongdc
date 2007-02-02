@@ -41,7 +41,7 @@ public:
 			delete this;
 		}
 	}
-	bool unique() throw() {
+	bool unique() const throw() {
 		return (ref == 1);
 	}
 	

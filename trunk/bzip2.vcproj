@@ -45,7 +45,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
-				OmitFramePointers="true"
+				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="true"
 				PreprocessorDefinitions="BZ_NO_STDIO"
 				StringPooling="true"

@@ -31,9 +31,9 @@ public:
 #include "StringDefs.h"
 
 	void loadLanguage(const string& aFile);
-	const string& getString(Strings x) const { return strings[x]; }
-	const wstring& getStringW(Strings x) const { return wstrings[x]; }
-	bool isRTL() { return rtl; }
+	inline const string& getString(Strings x) const { return strings[x]; }
+	inline const wstring& getStringW(Strings x) const { return wstrings[x]; }
+	bool isRTL() const { return rtl; }
 private:
 	friend class Singleton<ResourceManager>;
 	

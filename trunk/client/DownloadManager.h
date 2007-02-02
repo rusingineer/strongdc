@@ -86,6 +86,9 @@ public:
 	/** @internal */
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
+	
+	const TigerTree& getTigerTree() const { return tt; }
+	const string& getPFS() const { return pfs; }
 	/** @internal */
 	AdcCommand getCommand(bool zlib) const;
 
@@ -172,7 +175,7 @@ public:
 	void checkIdle(const User::Ptr& user);
 
 	/** @internal */
-	void abortDownload(const string& aTarget, Download* except = NULL);
+	void abortDownload(const string& aTarget, const Download* except = NULL);
 
 	/** @return Running average download speed in Bytes/s */
 	int64_t getRunningAverage();

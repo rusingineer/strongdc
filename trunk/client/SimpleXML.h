@@ -148,20 +148,20 @@ public:
 		return (*currentChild)->data;
 	}
 
-	const string& getChildAttrib(const string& aName, const string& aDefault = Util::emptyString) throw(SimpleXMLException) {
+	const string& getChildAttrib(const string& aName, const string& aDefault = Util::emptyString) const throw(SimpleXMLException) {
 		checkChildSelected();
 		return (*currentChild)->getAttrib(aName, aDefault);
 	}
 
-	int getIntChildAttrib(const string& aName) throw(SimpleXMLException) {
+	int getIntChildAttrib(const string& aName) const throw(SimpleXMLException) {
 		checkChildSelected();
 		return Util::toInt(getChildAttrib(aName));
 	}
-	int64_t getLongLongChildAttrib(const string& aName) throw(SimpleXMLException) {
+	int64_t getLongLongChildAttrib(const string& aName) const throw(SimpleXMLException) {
 		checkChildSelected();
 		return Util::toInt64(getChildAttrib(aName));
 	}
-	bool getBoolChildAttrib(const string& aName) throw(SimpleXMLException) {
+	bool getBoolChildAttrib(const string& aName) const throw(SimpleXMLException) {
 		checkChildSelected();
 		const string& tmp = getChildAttrib(aName);
 
@@ -223,8 +223,8 @@ private:
 		Tag(const string& aName, const string& d, Ptr aParent) : name(aName), data(d), parent(aParent) { 
 		}
 		
-		const string& getAttrib(const string& aName, const string& aDefault = Util::emptyString) {
-			StringPairIter i = find_if(attribs.begin(), attribs.end(), CompareFirst<string,string>(aName));
+		const string& getAttrib(const string& aName, const string& aDefault = Util::emptyString) const {
+			StringPairList::const_iterator i = find_if(attribs.begin(), attribs.end(), CompareFirst<string,string>(aName));
 			return (i == attribs.end()) ? aDefault : i->second; 
 		}
 		void toXML(int indent, OutputStream* f);
@@ -245,7 +245,7 @@ private:
 	class TagReader : public SimpleXMLReader::CallBack {
 	public:
 		TagReader(Tag* root) : cur(root) { }
-		virtual bool getData(string&) { return false; }
+		virtual bool getData(string&) const { return false; }
 		virtual void startTag(const string& name, StringPairList& attribs, bool simple) {
 			cur->children.push_back(new Tag(name, attribs, cur));
 			if(!simple)

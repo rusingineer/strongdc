@@ -62,7 +62,7 @@ public:
 		fire(LogManagerListener::Message(), msg);
 	}
 
-	const string& getSetting(int area, int sel) {
+	const string& getSetting(int area, int sel) const {
 		return SettingsManager::getInstance()->get(static_cast<SettingsManager::StrSetting>(logOptions[area][sel]), true);
 	}
 

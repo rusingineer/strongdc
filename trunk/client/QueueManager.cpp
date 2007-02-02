@@ -253,7 +253,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		if(q->getPriority() == QueueItem::PAUSED)
 			continue;
 		// No files that already have more than AUTO_SEARCH_LIMIT online sources
-		if(q->countOnlineUsers() >= SETTING(AUTO_SEARCH_LIMIT))
+		if(q->countOnlineUsers() >= (size_t)SETTING(AUTO_SEARCH_LIMIT))
 			continue;
 		// Did we search for it recently?
         if(find(recent.begin(), recent.end(), q->getTarget()) != recent.end())
@@ -294,8 +294,6 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) const 
 }
 
 void QueueManager::FileQueue::move(QueueItem* qi, const string& aTarget) {
-	//if(lastInsert != queue.end() && Util::stricmp(*lastInsert->first, qi->getTarget()) == 0)
-	//	lastInsert = queue.end();
 	queue.erase(const_cast<string*>(&qi->getTarget()));
 	qi->setTarget(aTarget);
 	add(qi);
@@ -315,7 +313,6 @@ void QueueManager::UserQueue::add(QueueItem* qi, const User::Ptr& aUser) {
 	QueueItem::List& l = userQueue[qi->getPriority()][aUser];
 	if(qi->isSet(QueueItem::FLAG_EXISTS)) {
 		l.push_front(qi);
-		//l.insert(l.begin(), qi);
 	} else {
 		l.push_back(qi);
 	}
@@ -1056,7 +1053,7 @@ again:
 	return d;
 }
 
-void QueueManager::putDownload(Download* aDownload, bool finished, bool connectSources) throw() {
+void QueueManager::putDownload(const Download* aDownload, bool finished, bool connectSources) throw() {
 	User::List getConn;
 	string fname;
 	User::Ptr up = aDownload->getUser();
@@ -1174,7 +1171,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool connectS
 
 		int64_t speed = aDownload->getAverageSpeed();
 		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
-			aDownload->getUser()->setLastDownloadSpeed((uint16_t)(speed / 1024));
+			User::Ptr u = aDownload->getUser();
+			u->setLastDownloadSpeed((uint16_t)(speed / 1024));
 		}
 		delete aDownload;
 	}

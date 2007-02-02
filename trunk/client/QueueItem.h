@@ -160,8 +160,8 @@ public:
 	virtual ~QueueItem() { 
 	}
 
-	int countOnlineUsers() const {
-		int n = 0;
+	size_t countOnlineUsers() const {
+		size_t n = 0;
 		SourceConstIter i = sources.begin();
 		for(; i != sources.end(); ++i) {
 			if(i->getUser()->isOnline())
@@ -183,7 +183,7 @@ public:
 	SourceList& getBadSources() { return badSources; }
 	const SourceList& getBadSources() const { return badSources; }
 
-	void getOnlineUsers(User::List& l) const  {
+	void getOnlineUsers(User::List& l) const {
 		for(SourceConstIter i = sources.begin(); i != sources.end(); ++i)
 			if(i->getUser()->isOnline())
 				l.push_back(i->getUser());
@@ -213,7 +213,6 @@ public:
 	bool isCurrent(const User::Ptr& aUser) const {
 		dcassert(isSource(aUser));
 		return find(currents.begin(), currents.end(), aUser) != currents.end();
-	
 	}
 
 	// All setCurrent(NULL) should be replaced with this
@@ -262,8 +261,7 @@ public:
 	GETSET(size_t, averageSpeed, AverageSpeed);
 	FileChunksInfo::Ptr chunkInfo;
 
-	QueueItem::Priority calculateAutoPriority(){
-		
+	QueueItem::Priority calculateAutoPriority() const {
 		if(getAutoPriority()){
 			QueueItem::Priority p;
 			int percent = (int)(getDownloadedBytes() * 10.0 / getSize());
@@ -301,7 +299,7 @@ public:
 			return (status != STATUS_RUNNING);
 		} else {
 			return ((currents.size() < maxSegments) &&
-					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) >= averageSpeed)));
+					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > averageSpeed)));
 		}
 	}
 

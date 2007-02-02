@@ -47,7 +47,7 @@ File::File(const string& aFileName, int access, int mode) throw(FileException) {
 	}
 }
 
-uint32_t File::getLastModified() throw() {
+uint32_t File::getLastModified() const throw() {
 	FILETIME f = {0};
 	::GetFileTime(h, NULL, NULL, &f);
 	return convertTime(&f);
@@ -66,7 +66,7 @@ uint32_t File::convertTime(FILETIME* f) {
 	return 0;
 }
 
-bool File::isOpen() throw() {
+bool File::isOpen() const throw() {
 	return h != INVALID_HANDLE_VALUE;
 }
 
@@ -77,7 +77,7 @@ void File::close() throw() {
 	}
 }
 
-int64_t File::getSize() throw() {
+int64_t File::getSize() const throw() {
 	DWORD x;
 	DWORD l = ::GetFileSize(h, &x);
 
@@ -86,7 +86,7 @@ int64_t File::getSize() throw() {
 
 	return (int64_t)l | ((int64_t)x)<<32;
 }
-int64_t File::getPos() throw() {
+int64_t File::getPos() const throw() {
 	LONG x = 0;
 	DWORD l = ::SetFilePointer(h, 0, &x, FILE_CURRENT);
 
@@ -225,7 +225,7 @@ File::File(const string& aFileName, int access, int mode) throw(FileException) {
 		throw FileException("Could not open file");
 }
 
-uint32_t File::getLastModified() throw() {
+uint32_t File::getLastModified() const throw() {
 	struct stat s;
 	if (::fstat(h, &s) == -1)
 		return 0;
@@ -233,7 +233,7 @@ uint32_t File::getLastModified() throw() {
 	return (uint32_t)s.st_mtime;
 }
 
-bool File::isOpen() throw() {
+bool File::isOpen() const throw() {
 	return h != -1;
 }
 
@@ -244,7 +244,7 @@ void File::close() throw() {
 	}
 }
 
-int64_t File::getSize() throw() {
+int64_t File::getSize() const throw() {
 	struct stat s;
 	if(::fstat(h, &s) == -1)
 		return -1;
@@ -252,7 +252,7 @@ int64_t File::getSize() throw() {
 	return (int64_t)s.st_size;
 }
 
-int64_t File::getPos() throw() {
+int64_t File::getPos() const throw() {
 	return (int64_t)lseek(h, 0, SEEK_CUR);
 }
 

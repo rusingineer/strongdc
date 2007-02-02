@@ -91,7 +91,7 @@ public:
 		return len;
 	}
 
-	size_t getSize() { return size; }
+	size_t getSize() const { return size; }
 
 private:
 	size_t pos;

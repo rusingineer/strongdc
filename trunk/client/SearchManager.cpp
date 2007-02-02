@@ -320,7 +320,7 @@ int SearchManager::ResultsQueue::run() {
 				file, hubName, remoteIp, TTHValue(tth), Util::emptyString);
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
-		} else if(x.compare(0, 5, "$PSR ") == 0) {
+		} else if(x.compare(0, 5, "$PSR ") == 0) {	// TODO completely remove $PSR support in the future
 			string::size_type i, j;
 			// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
 			i = 5;
@@ -333,7 +333,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.find('$', i)) == string::npos) {
 				continue;
 			}
-			unsigned short UdpPort = (unsigned short)Util::toInt(x.substr(i, j-i));
+			uint16_t UdpPort = (uint16_t)Util::toInt(x.substr(i, j-i));
 			i = j + 1;
 
 			if( (j = x.find('$', i)) == string::npos) {
@@ -388,10 +388,10 @@ int SearchManager::ResultsQueue::run() {
 			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
 
 			if((UdpPort > 0) && !outPartialInfo.empty()) {
-				const string& myNick = ClientManager::getInstance()->getMyNMDCNick(user);
+				const string myNick = ClientManager::getInstance()->getMyNMDCNick(user);
 				if(!myNick.empty()) {
 					char buf[1024];
-					snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), 0, hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, GetPartsString(outPartialInfo).c_str());
+					snprintf(buf, sizeof(buf), "$PSR %s$0$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, SearchManager::getInstance()->getPartsString(outPartialInfo).c_str());
 					try {
 						Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
 					} catch(...) {}
@@ -433,7 +433,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 
 		c.getParameters().erase(c.getParameters().begin());
 
-		unsigned short udpPort = 0;
+		uint16_t udpPort = 0;
 		uint32_t partialCount = 0;
 		string tth;
 		string hubIpPort;
@@ -443,7 +443,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 		for(StringIterC i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
 			const string& str = *i;
 			if(str.compare(0, 2, "U4") == 0) {
-				udpPort = (unsigned short)Util::toInt(str.substr(2));
+				udpPort = (uint16_t)Util::toInt(str.substr(2));
 			} else if(str.compare(0, 2, "NI") == 0) {
 				nick = str.substr(2);
 			} else if(str.compare(0, 2, "HI") == 0) {
@@ -477,7 +477,6 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 			}
 		}
 
-		dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
 		if(partialInfo.size() != partialCount) {
 			// what to do now ? just ignore partial search result :-/
 			return;
@@ -603,11 +602,11 @@ void SearchManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	}
 }
 
-int SearchManager::getSearchQueueNumber(int* aWindow) {
+int SearchManager::getSearchQueueNumber(const int* aWindow) {
 	Lock l(cs);
 	if(!searchQueue.empty()){
 		int queueNumber = 0;
-		for(SearchQueueIter sqi = searchQueue.begin(); sqi != searchQueue.end(); ++sqi) {
+		for(SearchQueueIterC sqi = searchQueue.begin(); sqi != searchQueue.end(); ++sqi) {
 			if(sqi->getWindow() == aWindow) {
 				return queueNumber;
 			}
@@ -617,9 +616,19 @@ int SearchManager::getSearchQueueNumber(int* aWindow) {
 	return 0;
 }
 
+string SearchManager::getPartsString(const PartsInfo& partsInfo) const {
+	string ret;
+
+	for(PartsInfo::const_iterator i = partsInfo.begin(); i < partsInfo.end(); i+=2){
+		ret += Util::toString(*i) + "," + Util::toString(*(i+1)) + ",";
+	}
+
+	return ret.substr(0, ret.size()-1);
+}
+
 void SearchManager::sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo) {
 	if(myNick.empty()) return;
-	Socket s;
+
 	try {
 		AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
 		cmd.addParam("NI", Text::utf8ToAcp(myNick));
@@ -627,15 +636,9 @@ void SearchManager::sendPSR(const string& ip, uint16_t port, bool wantResponse, 
 		cmd.addParam("U4", Util::toString(wantResponse ? getPort() : 0));
 		cmd.addParam("TR", tth);
 		cmd.addParam("PC", Util::toString(partialInfo.size() / 2));
-		cmd.addParam("PI", GetPartsString(partialInfo));
+		cmd.addParam("PI", getPartsString(partialInfo));
 			
-		/* We might use old $PSR in some cases
-		char buf[1024];
-		// $PSR user myUdpPort hubIpPort TTH partialCount partialInfo
-		string user = Text::utf8ToAcp(myNick);
-		snprintf(buf, sizeof(buf), "$PSR %s$%d$%s$%s$%d$%s$|", user.c_str(), wantResponse ? getPort() : 0, hubIpPort.c_str(), tth.c_str(), partialInfo.size() / 2, GetPartsString(partialInfo).c_str());
-		*/
-
+		Socket s;
 		s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMyCID()));
 	} catch(...) {
 		dcdebug("Partial search caught error\n");		

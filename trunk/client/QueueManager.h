@@ -127,7 +127,7 @@ public:
 
 	bool getQueueInfo(const User::Ptr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
-	void putDownload(Download* aDownload, bool finished, bool connectSources = true) throw();
+	void putDownload(const Download* aDownload, bool finished, bool connectSources = true) throw();
 
 	/** @return The highest priority download the user has, PAUSED may also mean no downloads */
 	QueueItem::Priority hasDownload(const User::Ptr& aUser) throw();
@@ -161,7 +161,6 @@ public:
 		target = ql.front()->getTarget();
 		tempTarget = ql.front()->getTempTarget();
 		return true;
-		
 	}
 	
 	GETSET(uint32_t, lastSave, LastSave);

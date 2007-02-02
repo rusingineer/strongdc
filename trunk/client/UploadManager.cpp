@@ -504,7 +504,7 @@ void UploadManager::logUpload(Upload* u) {
 	fire(UploadManagerListener::Complete(), u);
 }
 
-void UploadManager::addFailedUpload(const User::Ptr& User, string file, int64_t pos, int64_t size) {
+void UploadManager::addFailedUpload(const User::Ptr& User, const string& file, int64_t pos, int64_t size) {
 	uint32_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMap::iterator j = waitingUsers.find(User);
@@ -518,16 +518,15 @@ void UploadManager::addFailedUpload(const User::Ptr& User, string file, int64_t 
 		}
 	}
 	if(found == false) {
-		UploadQueueItem* qi = new UploadQueueItem(User, file, pos, size, itime);
-		//UploadQueueItem::UserMap::iterator i = waitingUsers.find(User);
+		UploadQueueItem* uqi = new UploadQueueItem(User, file, pos, size, itime);
 		if(j == waitingUsers.end()) {
 			UploadQueueItem::List l;
-			l.push_back(qi);
+			l.push_back(uqi);
 			waitingUsers.insert(make_pair(User, l));
 		} else {
-			j->second.push_back(qi);
+			j->second.push_back(uqi);
 		}
-		fire(UploadManagerListener::QueueAdd(), qi);
+		fire(UploadManagerListener::QueueAdd(), uqi);
 	}
 }
 
@@ -543,7 +542,7 @@ void UploadManager::clearUserFiles(const User::Ptr& source) {
 	}
 }
 
-UploadQueueItem::UserMap UploadManager::getWaitingUsers() {
+const UploadQueueItem::UserMap UploadManager::getWaitingUsers() {
 	Lock l(cs);
 	return waitingUsers;
 }
@@ -598,8 +597,8 @@ void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 				}
 
 				if(u->isSet(Upload::FLAG_PENDING_KICK)) {
-						disconnects.push_back(u->getUser());
-						continue;
+					disconnects.push_back(u->getUser());
+					continue;
 				}
 
 				if(BOOLSETTING(AUTO_KICK_NO_FAVS) && FavoriteManager::getInstance()->isFavoriteUser(u->getUser())) {

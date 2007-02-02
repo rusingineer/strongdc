@@ -130,33 +130,10 @@ private:
 
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
 {
-	class ResultsQueue: public Thread {
-	public:
-		bool stop;
-		CriticalSection cs;
-		Semaphore s;
-		deque<pair<string, string>> resultList;
-
-		ResultsQueue() : stop(false) {}
-		virtual ~ResultsQueue() throw() { shutdown(); }
-
-		int run();
-		void shutdown() {
-			stop = true;
-			s.signal();
-		}
-		void addResult(const string& buf, const string& ip) {
-			{
-				Lock l(cs);
-				resultList.push_back(make_pair(buf, ip));
-			}
-			s.signal();
-		}
-	
-	};
 public:
 	typedef deque<SearchQueueItem> SearchQueueItemList;
 	typedef SearchQueueItemList::iterator SearchQueueIter;
+	typedef SearchQueueItemList::const_iterator SearchQueueIterC;
 
 	enum SizeModes {
 		SIZE_DONTCARE = 0x00,
@@ -207,18 +184,40 @@ public:
 	void sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo);
 
 	uint32_t getLastSearch() const { return lastSearch; }
-	int getSearchQueueNumber(int* aWindow);
+	int getSearchQueueNumber(const int* aWindow);
 	
 
 private:
-	
+	class ResultsQueue: public Thread {
+	public:
+		ResultsQueue() : stop(false) {}
+		virtual ~ResultsQueue() throw() { shutdown(); }
+
+		int run();
+		void shutdown() {
+			stop = true;
+			s.signal();
+		}
+		void addResult(const string& buf, const string& ip) {
+			{
+				Lock l(cs);
+				resultList.push_back(make_pair(buf, ip));
+			}
+			s.signal();
+		}
+	private:
+		bool stop;
+		CriticalSection cs;
+		Semaphore s;
+		deque<pair<string, string>> resultList;
+	} queue;
+
 	Socket* socket;
 	uint16_t port;
 	bool stop;
 	uint32_t lastSearch;
 	friend class Singleton<SearchManager>;
 	SearchQueueItemList searchQueue;
-	ResultsQueue queue;
 	CriticalSection cs;
 
 	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
@@ -242,7 +241,9 @@ private:
 	}
 
 	void setLastSearch(uint32_t aTime) { lastSearch = aTime; };
-	void onData(const uint8_t* buf, size_t aLen, const string& address);	
+	void onData(const uint8_t* buf, size_t aLen, const string& address);
+
+	string getPartsString(const PartsInfo& partsInfo) const;
 };
 
 #endif // !defined(SEARCH_MANAGER_H)

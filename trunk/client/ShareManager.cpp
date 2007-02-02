@@ -1359,7 +1359,7 @@ void ShareManager::search(SearchResult::List& results, const StringList& params,
 	}
 }
 
-ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
+ShareManager::Directory* ShareManager::getDirectory(const string& fname) const {
 	for(Directory::MapIter mi = directories.begin(); mi != directories.end(); ++mi) {
 		if(Util::strnicmp(fname, mi->first, mi->first.length()) == 0) {
 			Directory* d = mi->second;

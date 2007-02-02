@@ -79,7 +79,7 @@ public:
 		return InsertItem(LVIF_PARAM | LVIF_TEXT | LVIF_IMAGE, nItem, aString.c_str(), 0, 0, iImage, lParam);
 	}
 
-	int getItemImage(int aItem) {
+	int getItemImage(int aItem) const {
 		LVITEM lvi;
 		lvi.iItem = aItem;
 		lvi.iSubItem = 0;
@@ -88,14 +88,14 @@ public:
 		return lvi.iImage;
 	}
 	
-	int find(LPARAM lParam, int aStart = -1) {
+	int find(LPARAM lParam, int aStart = -1) const {
 		LV_FINDINFO fi;
 		fi.flags = LVFI_PARAM;
 		fi.lParam = lParam;
 		return FindItem(&fi, aStart);
 	}
 
-	int find(const tstring& aText, int aStart = -1, bool aPartial = false) {
+	int find(const tstring& aText, int aStart = -1, bool aPartial = false) const {
 		LV_FINDINFO fi;
 		fi.flags = aPartial ? LVFI_PARTIAL : LVFI_STRING;
 		fi.psz = aText.c_str();
