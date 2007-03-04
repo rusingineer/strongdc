@@ -243,6 +243,7 @@ private:
 
 		// TypedListViewCtrl functions
 		const tstring& getText(int col) {
+			dcassert(col >= 0 && col < COLUMN_LAST);
 			return getDisplay()->columns[col];
 		}
 		static int compareItems(const QueueItemInfo* a, const QueueItemInfo* b, int col) {
@@ -256,8 +257,8 @@ private:
 		}
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
-		QueueItem::SourceList& getSources() { return sources; }
-		QueueItem::SourceList& getBadSources() { return badSources; }
+		//const QueueItem::SourceList& getSources() const { return sources; }
+		//const QueueItem::SourceList& getBadSources() const { return badSources; }
 		const string getPath() const { return Util::getFilePath(getTarget()); }
 
 		const Display* getDisplay() {
@@ -357,7 +358,6 @@ private:
 	typedef HASH_MULTIMAP_X(string, QueueItemInfo*, noCaseStringHash, noCaseStringEq, noCaseStringLess) DirectoryMap;
 	typedef DirectoryMap::iterator DirectoryIter;
 	typedef DirectoryMap::const_iterator DirectoryIterC;
-	//typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
 	typedef pair<DirectoryIterC, DirectoryIterC> DirectoryPairC;
 	DirectoryMap directories;
 	string curDir;
@@ -391,7 +391,7 @@ private:
 	 * something, they're not correctly processed anyway...thanks windows.
 	 */
 	void speak(Tasks t, Task* p) {
-        tasks.add(t, p);
+        tasks.add(static_cast<uint8_t>(t), p);
 		if(!spoken) {
 			spoken = true;
 			PostMessage(WM_SPEAKER);

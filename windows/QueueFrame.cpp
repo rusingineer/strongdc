@@ -189,7 +189,7 @@ void QueueFrame::QueueItemInfo::update() {
 		if(colMask & MASK_USERS || colMask & MASK_STATUS) {
 			tstring tmp;
 
-			for(QueueItem::SourceIter j = getSources().begin(); j != getSources().end(); ++j) {
+			for(QueueItem::SourceConstIter j = getSources().begin(); j != getSources().end(); ++j) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
 
@@ -272,7 +272,7 @@ void QueueFrame::QueueItemInfo::update() {
 
 		if(colMask & MASK_ERRORS) {
 			tstring tmp;
-			for(QueueItem::SourceIter j = getBadSources().begin(); j != getBadSources().end(); ++j) {
+			for(QueueItem::SourceConstIter j = getBadSources().begin(); j != getBadSources().end(); ++j) {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
@@ -815,7 +815,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			menuItems = 0;
 			int pmItems = 0;
 			if(ii) {
-				for(QueueItem::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
+				for(QueueItem::SourceConstIter i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
 					tstring nick = WinUtil::escapeMenu(Text::toT(i->getUser()->getFirstNick()));
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
@@ -835,7 +835,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					menuItems++;
 				}
 				readdItems = 0;
-				for(QueueItem::SourceIter i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
+				for(QueueItem::SourceConstIter i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
 					tstring nick = Text::toT(i->getUser()->getFirstNick());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
@@ -1005,7 +1005,7 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		readdMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		if(wID == IDC_READD) {
 			// re-add all sources
-			for(QueueItem::SourceIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); s++) {
+			for(QueueItem::SourceConstIter s = ii->getBadSources().begin(); s != ii->getBadSources().end(); s++) {
 				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
 			}
 		} else {
@@ -1027,7 +1027,7 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		if(wID == IDC_REMOVE_SOURCE) {
-			for(QueueItem::SourceIter si = ii->getSources().begin(); si != ii->getSources().end(); si++) {
+			for(QueueItem::SourceConstIter si = ii->getSources().begin(); si != ii->getSources().end(); si++) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), si->getUser(), QueueItem::Source::FLAG_REMOVED);
 			}
 		} else {
@@ -1435,9 +1435,7 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 				v.clear();
 
 				// downloaded chunks
-				v.push_back(0);
 				qii->chunkInfo->getAllChunks(v, 0);
-				v.push_back(qii->getSize());
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 				}
@@ -1495,7 +1493,7 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
-		for(QueueItem::SourceIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
+		for(QueueItem::SourceConstIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
 			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
 			}

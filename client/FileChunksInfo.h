@@ -160,6 +160,7 @@ public:
 
 
 	void getAllChunks(vector<int64_t>& v, int type);
+	//void getDownloadedChunks(vector<pair<pair<uint64_t, uint64_t>, bool> v);
 
     int64_t getDownloadedSize() const
     {
@@ -203,7 +204,7 @@ public:
 	 * Debug
 	 */
 
-	inline void selfCheck();
+	inline void selfCheck() const;
 
 	typedef HASH_MAP_X(TTHValue*, Ptr, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) tthMap;
 	

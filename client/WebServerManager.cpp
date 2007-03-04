@@ -7,7 +7,7 @@
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of+
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
 *
@@ -75,11 +75,10 @@ void WebServerManager::Stop() {
 	page404 = NULL;
 
 	for(WebPages::iterator p = pages.begin(); p != pages.end(); ++p){
-			if(p->second != NULL){
-				delete p->second;
-				p->second = NULL;
-
-			}
+		if(p->second != NULL){
+			delete p->second;
+			p->second = NULL;
+		}
 	}
 
 #ifdef _DEBUG 
@@ -542,7 +541,7 @@ int WebServerSocket::run(){
 
 } 
 
-void WebServerManager::onSearchResult(SearchResult* aResult) {
+void WebServerManager::onSearchResult(const SearchResult* aResult) {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);

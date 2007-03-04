@@ -698,7 +698,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 	
 }
 
-void QueueManager::readd(const string& target, User::Ptr& aUser) throw(QueueException) {
+void QueueManager::readd(const string& target, const User::Ptr& aUser) throw(QueueException) {
 	bool wantConnection = false;
 	{
 		Lock l(cs);
@@ -1276,7 +1276,7 @@ void QueueManager::remove(const string& aTarget) throw() {
 	}
 }
 
-void QueueManager::removeSource(const string& aTarget, User::Ptr& aUser, Flags::MaskType reason, bool removeConn /* = true */) throw() {
+void QueueManager::removeSource(const string& aTarget, const User::Ptr& aUser, Flags::MaskType reason, bool removeConn /* = true */) throw() {
 	bool isRunning = false;
 	bool removeCompletely = false;
 	{
