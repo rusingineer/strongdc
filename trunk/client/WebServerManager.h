@@ -65,7 +65,7 @@ public:
 		onSearchResult(sr);
 	}
 		
-	void onSearchResult(SearchResult* aResult) throw();
+	void onSearchResult(const SearchResult* aResult) throw();
 	
 	void Start();
 	void Restart(){		

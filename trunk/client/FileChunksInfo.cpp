@@ -553,7 +553,7 @@ void FileChunksInfo::markVerifiedBlock(uint16_t start, uint16_t end)
 	{
 		// check dupe
 		if(start >= i->first && start < i->second){
-
+			dcassert(0);
 			return;
 		}
 
@@ -849,13 +849,12 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 
 }
 
-void FileChunksInfo::selfCheck()
+void FileChunksInfo::selfCheck() const
 {
 #ifdef _DEBUG
 
 	// check running
 	for(Chunk::Iter i = running.begin(); i != running.end();){
-
 		dcassert(i->first <= i->second->pos);
 		dcassert(i->second->pos <= i->second->end);
 
@@ -904,6 +903,7 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - dow
 
 	switch(type) {
 	case 0 :
+		v.push_back(0);
 		for(Chunk::Iter i = waiting.begin(); i != waiting.end(); ++i) {
 			v.push_back(i->second->pos);
 			v.push_back(i->second->end);
@@ -912,6 +912,7 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - dow
 			v.push_back(i->second->pos);
 			v.push_back(i->second->end);
 		}
+		v.push_back(fileSize);
 		break;
 	case 1 :
 		for(Chunk::Iter i = running.begin(); i != running.end(); ++i) {

@@ -30,9 +30,7 @@
 #include "File.h"
 #include "SimpleXML.h"
 
-#ifdef _WIN32
-#include <ShlObj.h>
-#else
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

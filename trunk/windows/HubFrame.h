@@ -485,10 +485,10 @@ private:
 	virtual void on(CheatMessage, const Client*, const string&) throw();	
 	virtual void on(HubTopic, const Client*, const string&) throw();
 
-	void speak(Tasks s) { tasks.add(s, 0); PostMessage(WM_SPEAKER); }
-	void speak(Tasks s, const string& msg) { tasks.add(s, new StringTask(msg)); PostMessage(WM_SPEAKER); }
-	void speak(Tasks s, const OnlineUser& u) { tasks.add(s, new UserTask(u)); updateUsers = true; }
-	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(s, new MessageTask(&from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, line));  PostMessage(WM_SPEAKER); }
+	void speak(Tasks s) { tasks.add(static_cast<uint8_t>(s), 0); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const string& msg) { tasks.add(static_cast<uint8_t>(s), new StringTask(msg)); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const OnlineUser& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
+	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(&from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, line));  PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

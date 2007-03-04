@@ -44,14 +44,6 @@
 #define USE_SYS_STL 1
 #endif
 
-#ifdef HAVE_STLPORT
-# define _STLP_DONT_USE_SHORT_STRING_OPTIM 1	// Uses small string buffer, so it saves memory for a lot of strings
-# define _STLP_USE_PTR_SPECIALIZATIONS 1		// Reduces some code bloat
-# define _STLP_USE_TEMPLATE_EXPRESSION 1		// Speeds up string concatenation
-# define _STLP_NO_ANACHRONISMS 1				// Disables anachronistic constructs
-//# define _STLP_NO_CUSTOM_IO 1					// Saves compile time, object and executable size (already defined in my STLPort)
-#endif
-
 #ifdef _MSC_VER
 
 //disable the deprecated warnings for the CRT functions.
@@ -91,17 +83,11 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0501
-# define _WIN32_IE	0x0500
+# define _WIN32_IE	0x0501
 # define _USE_32BIT_TIME_T
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
-#define _WTL_NO_CSTRING
-#define _ATL_NO_OPENGL
-#define _ATL_NO_MSIMG
-#define _ATL_NO_COM
-#define _ATL_NO_HOSTING
-#define _ATL_NO_OLD_NAMES
 
 #if _MSC_VER == 1400
 #define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
@@ -109,11 +95,11 @@ typedef unsigned __int64 uint64_t;
 #pragma warning(disable: 4996)
 #endif
 
-#include <Winsock2.h>
+#include <winsock2.h>
 
 #include <windows.h>
-#include <crtdbg.h>
 #include <tchar.h>
+#include <shlobj.h>
 
 #else
 #include <unistd.h>
@@ -127,9 +113,16 @@ typedef unsigned __int64 uint64_t;
 #define memset memset2
 #define memzero memzero2
 
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#else
+#include <assert.h>
+#endif
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <memory>
+#include <memory.h>
 #include <sys/types.h>
 #include <time.h>
 #include <locale.h>
@@ -143,6 +136,7 @@ typedef unsigned __int64 uint64_t;
 #include <list>
 #include <utility>
 #include <functional>
+#include <memory>
 
 #ifdef _STLPORT_VERSION
 # define HASH_SET hash_set

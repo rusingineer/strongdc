@@ -28,6 +28,7 @@
 #include "Client.h"
 #include "Singleton.h"
 #include "SettingsManager.h"
+#include "User.h"
 #include "DirectoryListing.h"
 
 #include "ClientManagerListener.h"

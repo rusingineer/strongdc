@@ -1,3 +1,8 @@
+** cvs211
+	reverted to old data verification, but verified blocks are immediately flushed; it's very safe but slow down fast downloads :( so it must be improved
+	some changes from DC++ SVN
+	added constness to another functions
+
 ** cvs210
 	added constness to another functions
 	webserver moved to berlios' server

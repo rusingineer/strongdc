@@ -307,7 +307,7 @@ private:
 		uint8_t flagImage;
 	};
 
-	void speak(int type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }
+	void speak(uint8_t type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }
 
 	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
 	static int columnIndexes[];
