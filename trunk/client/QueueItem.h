@@ -38,8 +38,6 @@ public:
 	typedef QueueItem* Ptr;
 	typedef deque<Ptr> List;
 	typedef List::const_iterator Iter;
-	//typedef map<string*, Ptr, noCaseStringLess> StringMap;
-	//test the hash_map
 	typedef HASH_MAP<string*, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
 	typedef StringMap::const_iterator StringIter;
 	typedef HASH_MAP_X(User::Ptr, Ptr, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
@@ -65,7 +63,7 @@ public:
 		LAST
 	};
 
-	enum {
+	enum FileFlags {
 		/** Normal download, no flags set */
 		FLAG_NORMAL = 0x00, 
 		/** This download should be resumed if possible */
@@ -99,19 +97,18 @@ public:
 		enum {
 			FLAG_NONE = 0x00,
 			FLAG_FILE_NOT_AVAILABLE = 0x01,
-			FLAG_ROLLBACK_INCONSISTENCY = 0x02,
-			FLAG_PASSIVE = 0x04,
-			FLAG_REMOVED = 0x08,
-			FLAG_CRC_FAILED = 0x10,
-			FLAG_CRC_WARN = 0x20,
-			FLAG_NO_TTHF = 0x40,
-			FLAG_BAD_TREE = 0x80,
-			FLAG_SLOW = 0x100,
-			FLAG_NO_TREE = 0x200,
-			FLAG_NO_NEED_PARTS = 0x400,
-			FLAG_PARTIAL = 0x800,
-			FLAG_TTH_INCONSISTENCY = 0x1000,
-			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE | FLAG_ROLLBACK_INCONSISTENCY 
+			FLAG_PASSIVE = 0x02,
+			FLAG_REMOVED = 0x04,
+			FLAG_CRC_FAILED = 0x08,
+			FLAG_CRC_WARN = 0x10,
+			FLAG_NO_TTHF = 0x20,
+			FLAG_BAD_TREE = 0x40,
+			FLAG_SLOW = 0x80,
+			FLAG_NO_TREE = 0x100,
+			FLAG_NO_NEED_PARTS = 0x200,
+			FLAG_PARTIAL = 0x400,
+			FLAG_TTH_INCONSISTENCY = 0x800,
+			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_BAD_TREE
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};

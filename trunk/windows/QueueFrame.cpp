@@ -282,8 +282,6 @@ void QueueFrame::QueueItemInfo::update() {
 						tmp += TSTRING(FILE_NOT_AVAILABLE);
 					} else if(j->isSet(QueueItem::Source::FLAG_PASSIVE)) {
 						tmp += TSTRING(PASSIVE_USER);
-					} else if(j->isSet(QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY)) {
-						tmp += TSTRING(ROLLBACK_INCONSISTENCY);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						tmp += TSTRING(INVALID_TREE);
 					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
@@ -841,8 +839,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_PASSIVE)) {
 						nick += _T(" (") + TSTRING(PASSIVE_USER) + _T(")");
-					} else if(i->isSet(QueueItem::Source::FLAG_ROLLBACK_INCONSISTENCY)) {
-						nick += _T(" (") + TSTRING(ROLLBACK_INCONSISTENCY) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						nick += _T(" (") + TSTRING(INVALID_TREE) + _T(")");
 					} else if(i->isSet(QueueItem::Source::FLAG_SLOW)) {

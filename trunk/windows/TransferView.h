@@ -206,7 +206,7 @@ private:
 		int64_t speed;
 		int64_t timeLeft;
 		tstring Target;
-		uint32_t fileBegin;
+		uint64_t fileBegin;
 		bool multiSource;
 
 		tstring columns[COLUMN_LAST];

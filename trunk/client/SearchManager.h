@@ -183,7 +183,7 @@ public:
 	void onRES(const AdcCommand& cmd, const User::Ptr& from, const string& removeIp = Util::emptyString);
 	void sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo);
 
-	uint32_t getLastSearch() const { return lastSearch; }
+	uint64_t getLastSearch() const { return lastSearch; }
 	int getSearchQueueNumber(const int* aWindow);
 	
 
@@ -215,7 +215,7 @@ private:
 	Socket* socket;
 	uint16_t port;
 	bool stop;
-	uint32_t lastSearch;
+	uint64_t lastSearch;
 	friend class Singleton<SearchManager>;
 	SearchQueueItemList searchQueue;
 	CriticalSection cs;

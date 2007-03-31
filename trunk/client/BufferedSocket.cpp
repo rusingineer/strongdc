@@ -139,7 +139,7 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, bool pro
 		return;
 	fire(BufferedSocketListener::Connecting());
 
-	uint32_t startTime = GET_TICK();
+	uint64_t startTime = GET_TICK();
 	if(proxy) {
 		sock->socksConnect(aAddr, aPort, CONNECT_TIMEOUT);
 	} else {
@@ -307,7 +307,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum;
-	uint32_t start = 0, current= 0;
+	uint64_t start = 0, current= 0;
 	bool throttling;
 	while(true) {
 		if(disconnecting)
@@ -398,7 +398,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 			if(throttling) {
 				uint32_t cycle_time = um->throttleCycleTime();
 				current = TimerManager::getTick();
-				uint32_t sleep_time = cycle_time - (current - start);
+				uint64_t sleep_time = cycle_time - (current - start);
 				if (sleep_time > 0 && sleep_time <= cycle_time) {
 					Thread::sleep(sleep_time);
 				}

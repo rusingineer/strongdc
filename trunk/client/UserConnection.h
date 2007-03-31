@@ -150,8 +150,8 @@ public:
 	UserConnection& getUserConnection() { return userConnection; }
 	const UserConnection& getUserConnection() const { return userConnection; }
 
-	GETSET(uint32_t, start, Start);
-	GETSET(uint32_t, lastTick, LastTick);
+	GETSET(uint64_t, start, Start);
+	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
 	GETSET(TTHValue, tth, TTH);
 	GETSET(int64_t, fileSize, FileSize);
@@ -249,7 +249,7 @@ public:
 	short getNumber() const { return (short)((((size_t)this)>>2) & 0x7fff); }
 
 	// NMDC stuff
-	void myNick(const string& aNick) { send("$MyNick " + Text::utf8ToAcp(aNick) + '|'); }
+	void myNick(const string& aNick) { send("$MyNick " + Text::fromUtf8(aNick, encoding) + '|'); }
 	void lock(const string& aLock, const string& aPk) { send ("$Lock " + aLock + " Pk=" + aPk + '|'); }
 	void key(const string& aKey) { send("$Key " + aKey + '|'); }
 	void direction(const string& aDirection, int aNumber) { send("$Direction " + aDirection + " " + Util::toString(aNumber) + '|'); }
@@ -328,8 +328,9 @@ public:
 
 	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
+	GETSET(string, encoding, Encoding);
 	GETSET(States, state, State);
-	GETSET(uint32_t, lastActivity, LastActivity);
+	GETSET(uint64_t, lastActivity, LastActivity);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	void garbageCommand() { 
@@ -354,8 +355,8 @@ private:
 	};
 
 	// We only want ConnectionManager to create this...
-	UserConnection(bool secure_) throw() : state(STATE_UNCONNECTED), lastActivity(0), 
-		socket(0), secure(secure_), download(NULL) { 
+	UserConnection(bool secure_) throw() : encoding(Text::getSystemCharset()), state(STATE_UNCONNECTED), 
+		lastActivity(0), socket(0), secure(secure_), download(NULL) { 
 	}
 
 	virtual ~UserConnection() throw() {

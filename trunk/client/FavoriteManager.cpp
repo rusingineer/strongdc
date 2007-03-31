@@ -306,7 +306,7 @@ void FavoriteManager::onHttpFinished(bool fromHttp) throw() {
 		} else {
 			i = 0;
 
-			string utfText = Text::acpToUtf8(*x);
+			string utfText = Text::toUtf8(*x);
 
 			while( (i < utfText.size()) && ((j=utfText.find("\r\n", i)) != string::npos)) {
 				StringTokenizer<string> tok(utfText.substr(i, j-i), '|');
@@ -395,6 +395,7 @@ void FavoriteManager::save() {
 			xml.addChildAttrib("Password", (*i)->getPassword());
 			xml.addChildAttrib("Server", (*i)->getServer());
 			xml.addChildAttrib("UserDescription", (*i)->getUserDescription());
+			xml.addChildAttrib("Encoding", (*i)->getEncoding());
 			xml.addChildAttrib("WindowPosX", (*i)->getWindowPosX());
 			xml.addChildAttrib("WindowPosY", (*i)->getWindowPosY());
 			xml.addChildAttrib("WindowSizeX", (*i)->getWindowSizeX());
@@ -559,6 +560,7 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			e->setPassword(aXml.getChildAttrib("Password"));
 			e->setServer(aXml.getChildAttrib("Server"));
 			e->setUserDescription(aXml.getChildAttrib("UserDescription"));
+			e->setEncoding(aXml.getChildAttrib("Encoding"));
 			e->setWindowPosX(aXml.getIntChildAttrib("WindowPosX"));
 			e->setWindowPosY(aXml.getIntChildAttrib("WindowPosY"));
 			e->setWindowSizeX(aXml.getIntChildAttrib("WindowSizeX"));

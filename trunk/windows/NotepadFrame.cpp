@@ -38,14 +38,6 @@ LRESULT NotepadFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		// ...
 	}
 	
-	if(tmp.empty()) {
-		tmp = SETTING(NOTEPAD_TEXT);
-		if(!tmp.empty()) {
-			dirty = true;
-			SettingsManager::getInstance()->set(SettingsManager::NOTEPAD_TEXT, Util::emptyString);
-		}
-	}
-
 	ctrlPad.SetWindowText(Text::toT(tmp).c_str());
 	ctrlPad.EmptyUndoBuffer();
 	ctrlClientContainer.SubclassWindow(ctrlPad.m_hWnd);

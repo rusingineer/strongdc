@@ -57,7 +57,7 @@ bool HashManager::getTree(const TTHValue& root, TigerTree& tt) {
 	return store.getTree(root, tt);
 }
 
-void HashManager::hashDone(const string& aFileName, uint32_t aTimeStamp, const TigerTree& tth, int64_t speed) {
+void HashManager::hashDone(const string& aFileName, uint64_t aTimeStamp, const TigerTree& tth, int64_t speed) {
 	try {
 		Lock l(cs);
 		store.addFile(aFileName, aTimeStamp, tth, true);
@@ -82,7 +82,7 @@ void HashManager::hashDone(const string& aFileName, uint32_t aTimeStamp, const T
 	}
 }
 
-void HashManager::HashStore::addFile(const string& aFileName, uint32_t aTimeStamp, const TigerTree& tth, bool aUsed) {
+void HashManager::HashStore::addFile(const string& aFileName, uint64_t aTimeStamp, const TigerTree& tth, bool aUsed) {
 	addTree(tth);
 
 	string fname = Text::toLower(Util::getFileName(aFileName));
@@ -505,7 +505,7 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 	
 	bool ok = false;
 
-	uint32_t lastRead = GET_TICK();
+	uint64_t lastRead = GET_TICK();
 	if(!::ReadFile(h, hbuf, BUF_SIZE, &hn, &over)) {
 		if(GetLastError() == ERROR_HANDLE_EOF) {
 			hn = 0;
@@ -529,10 +529,10 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 			// Start a new overlapped read
 			ResetEvent(over.hEvent);
 			if(SETTING(MAX_HASH_SPEED) > 0) {
-				uint32_t now = GET_TICK();
-				uint32_t minTime = hn * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
+				uint64_t now = GET_TICK();
+				uint64_t minTime = hn * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
 				if(lastRead + minTime > now) {
-					uint32_t diff = now - lastRead;
+					uint64_t diff = now - lastRead;
 					Thread::sleep(minTime - diff);
 				} 
 				lastRead = lastRead + minTime;
@@ -589,7 +589,7 @@ cleanup:
 static const int64_t BUF_SIZE = 0x1000000 - (0x1000000 % getpagesize());
 
 bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree& tth, int64_t size, CRC32Filter* xcrc32) {
-	int fd = open(filename.c_str(), O_RDONLY);
+	int fd = open(Text::fromUtf8(filename).c_str(), O_RDONLY);
 	if(fd == -1)
 		return false;
 
@@ -695,8 +695,8 @@ int HashManager::Hasher::run() {
 			try {
 				File f(fname, File::READ, File::OPEN);
 				int64_t bs = max(TigerTree::calcBlockSize(f.getSize(), 10), MIN_BLOCK_SIZE);
-				uint32_t start = GET_TICK();
-				uint32_t timestamp = f.getLastModified();
+				uint64_t start = GET_TICK();
+				uint64_t timestamp = f.getLastModified();
 				TigerTree slowTTH(bs);
 				TigerTree* tth = &slowTTH;
 				size_t n = 0;
@@ -708,13 +708,13 @@ int HashManager::Hasher::run() {
 				if(!BOOLSETTING(FAST_HASH) || !fastHash(fname, 0, fastTTH, size)) {
 #endif
 					tth = &slowTTH;
-					uint32_t lastRead = GET_TICK();
+					uint64_t lastRead = GET_TICK();
 
 					do {
 						size_t bufSize = BUF_SIZE;
 						if(SETTING(MAX_HASH_SPEED) > 0) {
-							uint32_t now = GET_TICK();
-							uint32_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
+							uint64_t now = GET_TICK();
+							uint64_t minTime = n * 1000LL / (SETTING(MAX_HASH_SPEED) * 1024LL * 1024LL);
 							if(lastRead + minTime > now) {
 								Thread::sleep(minTime - (now - lastRead));
 							}
@@ -737,7 +737,7 @@ int HashManager::Hasher::run() {
 
 				f.close();
 				tth->finalize();
-				uint32_t end = GET_TICK();
+				uint64_t end = GET_TICK();
 				int64_t speed = 0;
 				if(end > start) {
 					speed = size * _LL(1000) / (end - start);

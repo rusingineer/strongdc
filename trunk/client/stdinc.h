@@ -84,7 +84,7 @@ typedef unsigned __int64 uint64_t;
 #ifdef _WIN32
 # define _WIN32_WINNT 0x0501
 # define _WIN32_IE	0x0501
-# define _USE_32BIT_TIME_T
+# define WINVER 0x501
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -137,6 +137,8 @@ typedef unsigned __int64 uint64_t;
 #include <utility>
 #include <functional>
 #include <memory>
+#include <numeric>
+#include <limits>
 
 #ifdef _STLPORT_VERSION
 # define HASH_SET hash_set

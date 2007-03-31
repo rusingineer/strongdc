@@ -21,28 +21,47 @@
 
 #include "TimerManager.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+DWORD TimerManager::lastTick = 0;
+uint32_t TimerManager::cycles = 0;
+#else
 timeval TimerManager::tv;
 #endif
 
 int TimerManager::run() {
 	int nextMin = 0;
 
-	uint32_t x = getTick();
-	uint32_t nextTick = x + 1000;
+	uint64_t x = getTick();
+	uint64_t nextTick = x + 1000;
 
-	while(!s.wait(nextTick > x ? nextTick - x : 0)) {
-		uint32_t z = getTick();
+	while(!s.wait(nextTick > x ? static_cast<uint32_t>(nextTick - x) : 0)) {
+		uint64_t z = getTick();
 		nextTick = z + 1000;
-		fire(TimerManagerListener::Second(), z);
+		fire(TimerManagerListener::Second(), static_cast<uint32_t>(z));
 		if(nextMin++ >= 60) {
-			fire(TimerManagerListener::Minute(), z);
+			fire(TimerManagerListener::Minute(), static_cast<uint32_t>(z));
 			nextMin = 0;
 		}
 		x = getTick();
 	}
 
 	return 0;
+}
+
+uint64_t TimerManager::getTick() {
+#ifdef _WIN32
+	DWORD tick = ::GetTickCount();
+	if(tick < lastTick) {
+		cycles++;
+	}
+	lastTick = tick;
+	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
+#else
+	timeval tv2;
+	gettimeofday(&tv2, NULL);
+	/// @todo check conversions to use uint64_t fully
+	return static_cast<uint64_t>(((tv2.tv_sec - tv.tv_sec) * 1000 ) + ( (tv2.tv_usec - tv.tv_usec) / 1000));
+#endif
 }
 
 /**

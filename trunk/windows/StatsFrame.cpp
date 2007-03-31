@@ -135,7 +135,7 @@ LRESULT StatsFrame::onPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	return 0;
 }
 
-void StatsFrame::addTick(int64_t bdiff, int64_t tdiff, StatList& lst, AvgList& avg, int scroll) {
+void StatsFrame::addTick(int64_t bdiff, uint64_t tdiff, StatList& lst, AvgList& avg, int scroll) {
 	while((int)lst.size() > ((width / PIX_PER_SEC) + 1) ) {
 		lst.pop_back();
 	}
@@ -156,13 +156,13 @@ void StatsFrame::addTick(int64_t bdiff, int64_t tdiff, StatList& lst, AvgList& a
 }
 
 LRESULT StatsFrame::onTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	uint32_t tick = GET_TICK();
-	uint32_t tdiff = tick - lastTick;
+	uint64_t tick = GET_TICK();
+	uint64_t tdiff = tick - lastTick;
 	if(tdiff == 0)
 		return 0;
 
-	uint32_t scrollms = (tdiff + scrollTick)*PIX_PER_SEC;
-	uint32_t scroll = scrollms / 1000;
+	uint64_t scrollms = (tdiff + scrollTick)*PIX_PER_SEC;
+	uint64_t scroll = scrollms / 1000;
 
 	if(scroll == 0)
 		return 0;
@@ -179,8 +179,8 @@ LRESULT StatsFrame::onTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	int64_t u = Socket::getTotalUp();
 	int64_t udiff = u - lastUp;
 
-	addTick(ddiff, tdiff, down, downAvg, scroll);
-	addTick(udiff, tdiff, up, upAvg, scroll);
+	addTick(ddiff, tdiff, down, downAvg, (int)scroll);
+	addTick(udiff, tdiff, up, upAvg, (int)scroll);
 
 	int64_t mspeed = 0;
 	StatIter i;

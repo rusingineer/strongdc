@@ -179,8 +179,6 @@ int Util::getNetLimiterLimit() {
 }
 
 void Util::initialize() {
-	setlocale(LC_ALL, "");
-
 	Text::initialize();
 
 	sgenrand((unsigned long)time(NULL));
@@ -196,7 +194,7 @@ void Util::initialize() {
 #else
 	systemPath = "/etc/";
 	char* home = getenv("HOME");
-	configPath = home ? home + string("/.dc++/") : "/tmp/";
+	configPath = home ? Text::toUtf8(home) + string("/.dc++/") : "/tmp/";
 	dataPath = configPath; // dataPath in linux is usually prefix + /share/app_name, so we can't represent it here
 #endif
 
@@ -383,7 +381,7 @@ string Util::getShortTimeString() {
 	} else {
 		strftime(buf, 254, SETTING(TIME_STAMPS_FORMAT).c_str(), _tm);
 	}
-	return Text::acpToUtf8(buf);
+	return Text::toUtf8(buf);
 }
 
 /**
@@ -930,7 +928,7 @@ string Util::formatTime(const string &msg, const time_t t) {
 			buf = new char[bufsize];
 		}
 
-		return string(buf);
+		return Text::toUtf8(string(buf));
 #endif
 	}
 	return Util::emptyString;

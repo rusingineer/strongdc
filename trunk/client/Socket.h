@@ -103,7 +103,7 @@ public:
 	 * @param aLen Data length
 	 * @throw SocketExcpetion Send failed.
 	 */
-	void writeAll(const void* aBuffer, int aLen, uint32_t timeout = 0) throw(SocketException);
+	void writeAll(const void* aBuffer, int aLen, uint64_t timeout = 0) throw(SocketException);
 	virtual int write(const void* aBuffer, int aLen) throw(SocketException);
 	int write(const string& aData) throw(SocketException) { return write(aData.data(), (int)aData.length()); }
 	virtual void writeTo(const string& aIp, uint16_t aPort, const void* aBuffer, int aLen, bool proxy = true) throw(SocketException);
@@ -135,14 +135,14 @@ public:
 	 * actually read is returned.
 	 * On exception, an unspecified amount of bytes might have already been read.
 	 */
-	int readAll(void* aBuffer, int aBufLen, uint32_t timeout = 0) throw(SocketException);
+	int readAll(void* aBuffer, int aBufLen, uint64_t timeout = 0) throw(SocketException);
 	
-	virtual int wait(uint32_t millis, int waitFor) throw(SocketException);
+	virtual int wait(uint64_t millis, int waitFor) throw(SocketException);
 	bool isConnected() { return connected; }
 	
 	static string resolve(const string& aDns);
-	static int64_t getTotalDown() { return stats.totalDown; }
-	static int64_t getTotalUp() { return stats.totalUp; }
+	static uint64_t getTotalDown() { return stats.totalDown; }
+	static uint64_t getTotalUp() { return stats.totalUp; }
 	
 #ifdef _WIN32
 	void setBlocking(bool block) throw() {
@@ -192,8 +192,8 @@ protected:
 
 	class Stats {
 	public:
-		int64_t totalDown;
-		int64_t totalUp;
+		uint64_t totalDown;
+		uint64_t totalUp;
 	};
 	static Stats stats;
 
@@ -205,7 +205,7 @@ private:
 	Socket& operator=(const Socket&);
 
 
-	void socksAuth(uint32_t timeout) throw(SocketException);
+	void socksAuth(uint64_t timeout) throw(SocketException);
 
 #ifdef _WIN32
 	static int getLastError() {  return ::WSAGetLastError(); }

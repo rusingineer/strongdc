@@ -163,7 +163,7 @@ public:
 		return true;
 	}
 	
-	GETSET(uint32_t, lastSave, LastSave);
+	GETSET(uint64_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
 	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;

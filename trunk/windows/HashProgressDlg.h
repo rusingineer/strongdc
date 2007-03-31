@@ -80,7 +80,7 @@ public:
 		string file;
 		int64_t bytes = 0;
 		size_t files = 0;
-		uint32_t tick = GET_TICK();
+		uint64_t tick = GET_TICK();
 
 		HashManager::getInstance()->getStats(file, bytes, files);
 		if(bytes > startBytes)
@@ -93,7 +93,7 @@ public:
 			PostMessage(WM_CLOSE);
 			return;
 		}
-		double diff = tick - startTime;
+		double diff = static_cast<double>(tick - startTime);
 		if(diff < 1000 || files == 0 || bytes == 0) {
 			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((uint32_t)files) + " " + STRING(FILES_LEFT)).c_str());
 			SetDlgItemText(IDC_HASH_SPEED, (_T("-.-- B/s, ") + Util::formatBytesW(bytes) + _T(" ") + TSTRING(LEFT)).c_str());
@@ -140,7 +140,7 @@ private:
 	bool autoClose;
 	int64_t startBytes;
 	size_t startFiles;
-	uint32_t startTime;
+	uint64_t startTime;
 	CProgressBarCtrl progress;
 	
 };

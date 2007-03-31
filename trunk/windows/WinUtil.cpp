@@ -850,9 +850,9 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 }
 
 #ifdef isCVS
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.sf.net  <StrongDC++ ") _T(VERSIONSTRING) _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #else
-#define LINE2 _T("-- http://strongdc.berlios.de  <StrongDC++ ") _T(VERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
+#define LINE2 _T("-- http://strongdc.sf.net  <StrongDC++ ") _T(VERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #endif
 TCHAR *msgs[] = { _T("\r\n-- I'm a happy StrongDC++ user. You could be happy too.\r\n") LINE2,
 _T("\r\n-- CZ-...what? Nope...never heard of it...\r\n") LINE2,

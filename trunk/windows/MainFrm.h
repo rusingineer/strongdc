@@ -400,7 +400,7 @@ private:
 	bool bIsPM;
 	
 	static bool bShutdown;
-	static uint32_t iCurrentShutdownTime;
+	static uint64_t iCurrentShutdownTime;
 	HICON hShutdownIcon;
 	static bool isShutdownStatus;
 
@@ -409,7 +409,7 @@ private:
 	UINT trayMessage;
 	/** Was the window maximized when minimizing it? */
 	bool maximized;
-	uint32_t lastMove;
+	uint64_t lastMove;
 	uint32_t lastUpdate;
 	int64_t lastUp;
 	int64_t lastDown;

@@ -65,7 +65,7 @@ public:
 
 	void setThreadPriority(Priority p) throw() { ::SetThreadPriority(threadHandle, p); }
 	
-	static void sleep(uint32_t millis) { ::Sleep(millis); }
+	static void sleep(uint64_t millis) { ::Sleep(static_cast<DWORD>(millis)); }
 	static void yield() { ::Sleep(1); }
 	
 #ifdef __MINGW32__

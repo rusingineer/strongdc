@@ -88,7 +88,7 @@ public:
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
-	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint32_t itime) :
+	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
 		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
 	typedef UploadQueueItem* Ptr;
@@ -131,7 +131,7 @@ public:
 	string File;
 	int64_t pos;
 	int64_t size;
-	uint32_t iTime;
+	uint64_t iTime;
 	int icon;
 };
 
@@ -192,13 +192,13 @@ public:
 	
 	GETSET(uint8_t, running, Running);
 	GETSET(uint8_t, extra, Extra);
-	GETSET(uint32_t, lastGrant, LastGrant);
+	GETSET(uint64_t, lastGrant, LastGrant);
 private:
 	Upload::List uploads;
 	Upload::List delayUploads;
 	CriticalSection cs;
 	
-	typedef HASH_MAP<User::Ptr, uint32_t, User::HashFunction> SlotMap;
+	typedef HASH_MAP<User::Ptr, uint64_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 	

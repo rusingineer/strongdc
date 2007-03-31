@@ -104,8 +104,8 @@ private:
 	UINT_PTR timerId;
 	int twidth;
 
-	uint32_t lastTick;
-	uint32_t scrollTick;
+	uint64_t lastTick;
+	uint64_t scrollTick;
 	int64_t lastUp;
 	int64_t lastDown;
 
@@ -113,7 +113,7 @@ private:
 	bool closed;
 
 	void drawLine(CDC& dc, StatIter begin, StatIter end, CRect& rc, CRect& crc);
-	void addTick(int64_t bdiff, int64_t tdiff, StatList& lst, AvgList& avg, int scroll);
+	void addTick(int64_t bdiff, uint64_t tdiff, StatList& lst, AvgList& avg, int scroll);
 };
 
 #endif // !defined(STATS_FRAME_H)

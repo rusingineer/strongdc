@@ -49,19 +49,18 @@ public:
 	enum {
 		FLAG_USER_LIST = 0x01,
 		FLAG_RESUME = 0x02,
-		FLAG_ROLLBACK = 0x04,
-		FLAG_ZDOWNLOAD = 0x08,
+		FLAG_ZDOWNLOAD = 0x04,
+		FLAG_MULTI_CHUNK = 0x08,
 		FLAG_CRC32_OK = 0x10,
 		FLAG_ANTI_FRAG = 0x20,
 		FLAG_TREE_DOWNLOAD = 0x40,
-		FLAG_TREE_TRIED = 0x80,
-		FLAG_PARTIAL_LIST = 0x100,
-		FLAG_TESTSUR = 0x200,
-		FLAG_CHECK_FILE_LIST = 0x400,
-		FLAG_MULTI_CHUNK = 0x800,
-		FLAG_PARTIAL = 0x1000,
-		FLAG_TTH_CHECK = 0x2000,
-		FLAG_CHUNKED = 0x4000
+		FLAG_CHUNKED = 0x80,
+		FLAG_TREE_TRIED = 0x100,
+		FLAG_PARTIAL_LIST = 0x200,
+		FLAG_TTH_CHECK = 0x400,
+		FLAG_TESTSUR = 0x800,
+		FLAG_CHECK_FILE_LIST = 0x1000,
+		FLAG_PARTIAL = 0x2000
 	};
 
 	Download(UserConnection& conn) throw();
@@ -97,7 +96,7 @@ public:
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
-	uint32_t quickTick;
+	uint64_t quickTick;
 	
 private:
 	Download(const Download&);
@@ -227,7 +226,6 @@ private:
 	Download::List downloads;
 	UserConnection::List idlers;
 
-	bool checkRollback(Download* aDownload, const uint8_t* aBuf, int aLen) throw(FileException);
 	void removeConnection(UserConnection::Ptr aConn);
 	void removeDownload(Download* aDown);
 	void fileNotAvailable(UserConnection* aSource);

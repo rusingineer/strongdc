@@ -65,7 +65,7 @@
 
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
-uint32_t MainFrame::iCurrentShutdownTime = 0;
+uint64_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
 CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
@@ -269,7 +269,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, CTSTRING(MENU_EXIT));
 
 	c->addListener(this);
-	c->downloadFile("http://strongdc.berlios.de/download/version.xml");
+	c->downloadFile("http://strongdc.sf.net/download/version.xml");
 
 	// ZoneAlarm - ref: http://www.unixwiz.net/backstealth/
 	if (BOOLSETTING(DETECT_BADSOFT)) {
@@ -497,7 +497,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				UpdateLayout(TRUE);
 		}
 		if (bShutdown) {
-			uint32_t iSec = GET_TICK() / 1000;
+			uint64_t iSec = GET_TICK() / 1000;
 			if (ctrlStatus.IsWindow()) {
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
@@ -987,12 +987,12 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	tstring site;
 	bool isFile = false;
 	switch(wID) {
-		case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.berlios.de"); break;
+		case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.sf.net"); break;
 		case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
-		case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=3818"); break;
-		case IDC_HELP_FAQ: site = _T("http://strongdc.berlios.de/forum/viewtopic.php?t=4067"); break;
-		case IDC_HELP_DISCUSS: site = _T("http://strongdc.berlios.de/forum/index.php"); break;
-		case IDC_HELP_DONATE: site = _T("http://strongdc.berlios.de/donate.php"); break;
+		case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.sf.net/forum/viewtopic.php?t=3818"); break;
+		case IDC_HELP_FAQ: site = _T("http://strongdc.sf.net/forum/viewtopic.php?t=4067"); break;
+		case IDC_HELP_DISCUSS: site = _T("http://strongdc.sf.net/forum/index.php"); break;
+		case IDC_HELP_DONATE: site = _T("http://strongdc.sf.net/donate.php"); break;
 		default: dcassert(0);
 	}
 

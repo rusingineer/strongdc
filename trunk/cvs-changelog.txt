@@ -1,3 +1,10 @@
+** svn278
+	64bit times (DC++ SVN)
+	removed rollback support (DC++ SVN)
+	removed unnecessary resume position reset (DC++ SVN)
+	only refresh if there are directories shared (DC++ SVN)
+	some other changes from DC++ SVN
+
 ** cvs211
 	reverted to old data verification, but verified blocks are immediately flushed; it's very safe but slow down fast downloads :( so it must be improved
 	some changes from DC++ SVN
