@@ -53,10 +53,10 @@ Transfer::Transfer(UserConnection& conn) : start(GET_TICK()), lastTick(GET_TICK(
 		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn) { }
 
 void Transfer::updateRunningAverage() {
-	uint32_t tick = GET_TICK();
+	uint64_t tick = GET_TICK();
 	// Update 4 times/sec at most
 	if(tick > (lastTick + 250)) {
-		uint32_t diff = tick - lastTick;
+		uint64_t diff = tick - lastTick;
 		int64_t tot = getTotal();
 		if( ((tick - getStart()) < AVG_PERIOD) ) {
 			runningAverage = getAverageSpeed();
@@ -134,7 +134,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
     
 	if(cmd == "$MyNick") {
 		if(!param.empty())
-			fire(UserConnectionListener::MyNick(), this, Text::acpToUtf8(param));
+			fire(UserConnectionListener::MyNick(), this, Text::toUtf8(param, encoding));
 	} else if(cmd == "$Direction") {
 		x = param.find(" ");
 		if(x != string::npos) {
@@ -155,7 +155,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 	} else if(cmd == "$Get") {
 		x = param.find('$');
 		if(x != string::npos) {
-			fire(UserConnectionListener::Get(), this, Text::acpToUtf8(param.substr(0, x)), Util::toInt64(param.substr(x+1)) - (int64_t)1);
+			fire(UserConnectionListener::Get(), this, Text::toUtf8(param.substr(0, x), encoding), Util::toInt64(param.substr(x+1)) - (int64_t)1);
 	    }
 	} else if(cmd == "$Key") {
 		if(!param.empty())

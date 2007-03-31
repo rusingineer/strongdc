@@ -46,7 +46,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2007 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2006 Jacek Sieka\n\nhttp://strongdc.berlios.de"));
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2007 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2006 Jacek Sieka\n\nhttp://strongdc.sf.net"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);
@@ -66,7 +66,7 @@ public:
 		}
 		CenterWindow(GetParent());
 		c.addListener(this);
-		c.downloadFile("http://strongdc.berlios.de/download/version.xml");
+		c.downloadFile("http://strongdc.sf.net/download/version.xml");
 		return TRUE;
 	}
 

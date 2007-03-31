@@ -248,7 +248,7 @@ int ConnectionManager::Server::run() throw() {
  * It's always the other fellow that starts sending if he made the connection.
  */
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
-	uint32_t now = GET_TICK();
+	uint64_t now = GET_TICK();
 
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
@@ -278,13 +278,14 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	}
 }
 
-void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, bool stealth) {
+void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, const string& encoding, bool stealth) {
 	if(shuttingDown)
 		return;
 
 	UserConnection* uc = getConnection(true, false);
 	uc->setToken(aNick);
 	uc->setHubUrl(hubUrl);
+	uc->setEncoding(encoding);
 	uc->setState(UserConnection::STATE_CONNECT);
 	uc->setFlag(UserConnection::FLAG_NMDC);
 	if(stealth) {
@@ -304,6 +305,7 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 
 	UserConnection* uc = getConnection(false, secure);
 	uc->setToken(aToken);
+	uc->setEncoding(Text::utf8);
 	uc->setState(UserConnection::STATE_CONNECT);
 	if(aUser.getIdentity().isOp()) {
 		uc->setFlag(UserConnection::FLAG_OP);

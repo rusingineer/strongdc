@@ -103,7 +103,7 @@ public:
 	}
 
 	uint32_t id;
-	uint32_t visible;
+	uint64_t visible;
 
 private:
 	tstring  msg, title;

@@ -843,9 +843,6 @@ void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
 		if(d->isSet(Download::FLAG_CHUNKED)) {
 			statusString += _T("[C]");
 		}
-		if(d->isSet(Download::FLAG_ROLLBACK)) {
-			statusString += _T("[R]");
-		}
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}

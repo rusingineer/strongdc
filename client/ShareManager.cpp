@@ -594,10 +594,11 @@ public:
 	}
 
 	FileFindIter(const string& name) {
-		dir = opendir(name.c_str());
+		string filename = Text::fromUtf8(name);
+		dir = opendir(filename.c_str());
 		if (!dir)
 			return;
-		data.base = name;
+		data.base = filename;
 		data.ent = readdir(dir);
 		if (!data.ent) {
 			closedir(dir);
@@ -625,7 +626,7 @@ public:
 		DirData() : ent(NULL) {}
 		string getFileName() {
 			if (!ent) return Util::emptyString;
-			return string(ent->d_name);
+			return Text::toUtf8(ent->d_name);
 		}
 		bool isDirectory() {
 			struct stat inode;
@@ -811,12 +812,17 @@ StringPairList ShareManager::getDirectories() const throw() {
 }
 
 int ShareManager::run() {
-	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED));
+		
+	StringPairList dirs = getDirectories();
+	// Don't need to refresh if no directories are shared
+	if(dirs.begin() == dirs.end())		
+		refreshDirs = false;
+
 	{
 		if(refreshDirs) {
+			LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED));
 			sharedSize = 0;
 			lastFullUpdate = GET_TICK();
-			StringPairList dirs = getDirectories();
 
 			Directory::Map newDirs;
 			for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
@@ -835,11 +841,11 @@ int ShareManager::run() {
 				rebuildIndices();
 			}
 			refreshDirs = false;
+	
+			LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED));
 		}
 	}
 
-	
-	LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FINISHED));
 	if(update) {
 		ClientManager::getInstance()->infoUpdated(false);
 	}

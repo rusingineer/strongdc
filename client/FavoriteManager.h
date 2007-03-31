@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(FAVORITE_MANAGER_H)
-#define FAVORITE_MANAGER_H
+#ifndef DCPLUSPLUS_CLIENT_FAVORITE_MANAGER_H
+#define DCPLUSPLUS_CLIENT_FAVORITE_MANAGER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -79,16 +79,16 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	FavoriteHubEntry() throw() : connect(false), windowposx(0), windowposy(0), windowsizex(0), 
+	FavoriteHubEntry() throw() : connect(false), encoding(Text::getSystemCharset()), windowposx(0), windowposy(0), windowsizex(0), 
 		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
-	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), 
+	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), encoding(Text::getSystemCharset()),
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
 		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
 		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
 		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
-		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip),
+		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip), encoding(rhs.getEncoding()),
 		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { }
 	~FavoriteHubEntry() throw() { }
 	
@@ -107,6 +107,7 @@ public:
 	GETSET(string, headerWidths, HeaderWidths);
 	GETSET(string, headerVisible, HeaderVisible);
 	GETSET(bool, connect, Connect);
+	GETSET(string, encoding, Encoding);
 	GETSET(int, windowposx, WindowPosX);
 	GETSET(int, windowposy, WindowPosY);
 	GETSET(int, windowsizex, WindowSizeX);

@@ -103,7 +103,7 @@ string WebServerManager::getLoginPage(){
 	pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
     pagehtml += "<meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "   	<meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
-	pagehtml += "	<link rel='stylesheet' href='https://strongdc.berlios.de/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+	pagehtml += "	<link rel='stylesheet' href='https://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
     pagehtml += "<div id='index_obsah'>";
@@ -117,7 +117,7 @@ string WebServerManager::getLoginPage(){
     pagehtml += "		</form>";
     pagehtml += "	</div>";
     pagehtml += "	<div id='paticka'>";
-    pagehtml += "		2004 | Big Muscle | <a href='http://strongdc.berlios.de/'>StrongDC++</a>";
+    pagehtml += "		2004 | Big Muscle | <a href='http://strongdc.sf.net/'>StrongDC++</a>";
     pagehtml += "	</div>";
     pagehtml += "</div>";                                
     pagehtml += "</body>";
@@ -145,7 +145,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
     pagehtml += "    <meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "    <meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
 	
-    pagehtml += "	<link rel='stylesheet' href='https://strongdc.berlios.de/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+    pagehtml += "	<link rel='stylesheet' href='https://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
 
@@ -203,7 +203,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
 			break;
 
 		case LOGOUT: {
-			map<string, uint32_t>::iterator i;
+			map<string, uint64_t>::iterator i;
 			if((i = loggedin.find(IP)) != loggedin.end())
 				loggedin.erase(i);
 

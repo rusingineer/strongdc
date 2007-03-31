@@ -54,7 +54,7 @@ public:
 	const User::Ptr& getUser() const { return user; }
 	
 	GETSET(State, state, State);
-	GETSET(uint32_t, lastAttempt, LastAttempt);
+	GETSET(uint64_t, lastAttempt, LastAttempt);
 	GETSET(bool, download, Download);
 	GETSET(string, token, Token);
 private:
@@ -104,7 +104,7 @@ public:
 		expectedConnections.add(aNick, aMyNick, aHubUrl);
 	}
 
-	void nmdcConnect(const string& aServer, uint16_t aPort, const string& aMyNick, const string& hubUrl, bool stealth);
+	void nmdcConnect(const string& aServer, uint16_t aPort, const string& aMyNick, const string& hubUrl, const string& encoding, bool stealth);
 	void adcConnect(const OnlineUser& aUser, uint16_t aPort, const string& aToken, bool secure);
 
 	void getDownloadConnection(const User::Ptr& aUser);
@@ -155,7 +155,7 @@ private:
 
 	ExpectedMap expectedConnections;
 
-	uint32_t floodCounter;
+	uint64_t floodCounter;
 
 	Server* server;
 	Server* secureServer;

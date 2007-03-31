@@ -39,9 +39,9 @@ string SearchResult::toSR(const Client& c) const {
 	string tmp;
 	tmp.reserve(128);
 	tmp.append("$SR ", 4);
-	tmp.append(Text::utf8ToAcp(c.getMyNick()));
+	tmp.append(Text::fromUtf8(c.getMyNick(), c.getEncoding()));
 	tmp.append(1, ' ');
-	string acpFile = Text::utf8ToAcp(file);
+	string acpFile = Text::fromUtf8(file, c.getEncoding());
 	if(type == TYPE_FILE) {
 		tmp.append(acpFile);
 		tmp.append(1, '\x05');
@@ -234,7 +234,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.find(' ', i)) == string::npos) {
 				continue;
 			}
-			string nick = Text::acpToUtf8(x.substr(i, j-i));
+		string nick = x.substr(i, j-i);
 			i = j + 1;
 
 			// A file has 2 0x05, a directory only one
@@ -259,12 +259,12 @@ int SearchManager::ResultsQueue::run() {
 				if(j < i + 1) {
 					continue;
 				}	
-				file = Text::acpToUtf8(x.substr(i, j-i)) + '\\';
+			file = x.substr(i, j-i) + '\\';
 			} else if(cnt == 2) {
 				if( (j = x.find((char)5, i)) == string::npos) {
 					continue;
 				}
-				file = Text::acpToUtf8(x.substr(i, j-i));
+			file = x.substr(i, j-i);
 				i = j + 1;
 				if( (j = x.find(' ', i)) == string::npos) {
 					continue;
@@ -286,7 +286,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.rfind(" (")) == string::npos) {
 				continue;
 			}
-			string hubName = Text::acpToUtf8(x.substr(i, j-i));
+		string hubName = x.substr(i, j-i);
 			i = j + 2;
 			if( (j = x.rfind(')')) == string::npos) {
 				continue;
@@ -294,6 +294,11 @@ int SearchManager::ResultsQueue::run() {
 
 			string hubIpPort = x.substr(i, j-i);
 			string url = ClientManager::getInstance()->findHub(hubIpPort);
+
+		string encoding = ClientManager::getInstance()->findHubEncoding(url);
+		nick = Text::toUtf8(nick, encoding);
+		file = Text::toUtf8(file, encoding);
+		hubName = Text::toUtf8(hubName, encoding);
 
 			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
 			if(!user) {

@@ -25,8 +25,6 @@
 #include "WinUtil.h"
 
 PropPage::TextItem SDCPage::texts[] = {
-	{ IDC_SETTINGS_ROLLBACK, ResourceManager::SETTINGS_ROLLBACK },
-	{ IDC_SETTINGS_B, ResourceManager::B },
 	{ IDC_SETTINGS_WRITE_BUFFER, ResourceManager::SETTINGS_WRITE_BUFFER },
 	{ IDC_SETTINGS_KB, ResourceManager::KB },
 	{ IDC_SETTINGS_MAX_TAB_ROWS, ResourceManager::SETTINGS_MAX_TAB_ROWS },
@@ -52,7 +50,6 @@ PropPage::TextItem SDCPage::texts[] = {
 };
 
 PropPage::Item SDCPage::items[] = {
-	{ IDC_ROLLBACK, SettingsManager::ROLLBACK, PropPage::T_INT }, 
 	{ IDC_BUFFERSIZE, SettingsManager::BUFFER_SIZE, PropPage::T_INT },
 	{ IDC_MAX_TAB_ROWS, SettingsManager::MAX_TAB_ROWS, PropPage::T_INT },
 	{ IDC_MAX_HASH_SPEED, SettingsManager::MAX_HASH_SPEED, PropPage::T_INT },
@@ -84,7 +81,6 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	PropPage::read((HWND)*this, items);
 
 	CUpDownCtrl updown;
-	setMinMax(IDC_ROLLBACK_SPIN, 0, 65536);
 	setMinMax(IDC_BUFFER_SPIN, 0, 4096);
 	setMinMax(IDC_HASH_SPIN, 0, 999);
 	setMinMax(IDC_READ_SPIN, 1024, 1024*1024);

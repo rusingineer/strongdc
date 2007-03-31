@@ -153,7 +153,7 @@ public:
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
-		//dcassert(socket);
+		dcassert(socket);
 		if(!socket)
 			return;
 		updateActivity();
@@ -174,9 +174,10 @@ public:
 
 	GETSET(string, defpassword, Password);
 	GETSET(uint32_t, reconnDelay, ReconnDelay);
-	GETSET(uint32_t, lastActivity, LastActivity);
+	GETSET(uint64_t, lastActivity, LastActivity);
 	GETSET(bool, registered, Registered);
 	GETSET(bool, autoReconnect, AutoReconnect);
+	GETSET(string, encoding, Encoding);
 	
 	GETSET(string, currentNick, CurrentNick);
 	GETSET(string, currentDescription, CurrentDescription);

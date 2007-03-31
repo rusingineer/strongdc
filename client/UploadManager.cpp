@@ -505,7 +505,7 @@ void UploadManager::logUpload(Upload* u) {
 }
 
 void UploadManager::addFailedUpload(const User::Ptr& User, const string& file, int64_t pos, int64_t size) {
-	uint32_t itime = GET_TIME();
+	uint64_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMap::iterator j = waitingUsers.find(User);
 	if(j != waitingUsers.end()) {

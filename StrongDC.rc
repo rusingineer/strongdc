@@ -360,8 +360,6 @@ BEGIN
     COMBOBOX        IDC_TRANSFERLIST_DBLCLICK,143,191,113,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     RTEXT           "Chat double click on user action",IDC_CHATDBLCLICKACTION,7,210,130,10
     COMBOBOX        IDC_CHAT_DBLCLICK,143,209,113,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    RTEXT           "Rollback",IDC_SETTINGS_ROLLBACK,7,71,64,8
-    LTEXT           "B",IDC_SETTINGS_B,122,71,8,8
     RTEXT           "File write buffer",IDC_SETTINGS_WRITE_BUFFER,145,71,66,8
     RTEXT           "Max tab rows",IDC_SETTINGS_MAX_TAB_ROWS,145,111,78,8
     LTEXT           "Max Hash Speed",IDC_SETTINGS_MAX_HASH_SPEED,7,111,78,8,0,WS_EX_RIGHT
@@ -376,8 +374,6 @@ BEGIN
     EDITTEXT        IDC_AUTO_REFRESH_TIME,89,154,30,13,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_REFRESH_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,108,154,11,14
     LTEXT           "m",IDC_STATIC,122,156,8,8
-    EDITTEXT        IDC_ROLLBACK,75,69,44,13,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_ROLLBACK_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,108,68,11,14
     LTEXT           "MB/s",IDC_SETTINGS_MBS,122,111,18,8
     RTEXT           "Socket write buffer",IDC_SETTINGS_SOCKET_OUT_BUFFER,136,86,75,8
     LTEXT           "B",IDC_STATIC,122,86,8,8
@@ -1406,8 +1402,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,9,7
- PRODUCTVERSION 2,0,3,0
+ FILEVERSION 0,6,9,9
+ PRODUCTVERSION 2,0,3,60
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1422,9 +1418,9 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "http://strongdc.berlios.de"
+            VALUE "Comments", "http://strongdc.sf.net"
             VALUE "FileDescription", "StrongDC++"
-            VALUE "FileVersion", "0, 6, 9, 7"
+            VALUE "FileVersion", "0, 6, 9, 9"
             VALUE "InternalName", "StrongDC++"
             VALUE "OriginalFilename", "StrongDC.exe"
             VALUE "ProductName", "StrongDC++"

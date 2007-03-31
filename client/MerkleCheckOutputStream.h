@@ -55,24 +55,7 @@ public:
 			verified = cur.getLeaves().size();
 	}
 
-	virtual ~MerkleCheckOutputStream() throw() { 
-		if(managed) delete s;
-/*
-		if(d) {
-			size_t skippingBytes = (size_t)(d->getStartPos() % real.getBlockSize());
-			if(skippingBytes > 0)
-				skippingBytes = (size_t)(real.getBlockSize() - skippingBytes);
-
-			int64_t start = (d->getStartPos() + skippingBytes) / real.getBlockSize();
-			if(verified > start) {
-				fileChunks->markFlushedBlock((uint16_t)start, (uint16_t)verified);
-			}
-			//if(d->getPos() > 0) {
-			//	fileChunks->verifyBlock(d->getPos() - 1, real, d->getTempTarget());
-			//}
-		}
-*/
-	}
+	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
 	virtual size_t flush() throw(FileException) {
 		if(!d) {
@@ -91,31 +74,9 @@ public:
 		return s->flush();
 	}
 
-	virtual size_t write(const void* b, size_t len) throw(FileException) {
+	virtual void commitBytes(const void* b, size_t len, size_t pos = 0) throw(FileException) {
 		uint8_t* xb = (uint8_t*)b;
-		size_t pos = 0;
-		bool verifyFlag = false;
-
-		
-		if(d && (skippingBytes > 0))
-		{
-			if(skippingBytes >= len)
-			{
-				skippingBytes -= len;
-				size_t ret = s->write(b, len);
-				if(skippingBytes == 0){
-					s->flush();
-					dcassert(verified > 0);
-					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
-					fileChunks->verifyBlock(offset, real, d->getTempTarget());
-				}
-				return ret;
-	        }else{
-				pos = skippingBytes;
-				skippingBytes = 0;
-				verifyFlag = true;
-			}
-		}
+		//size_t pos = 0;
 		
 		if(bufPos != 0) {
 			size_t bytes = min(TreeType::BASE_BLOCK_SIZE - bufPos, len);
@@ -141,6 +102,32 @@ public:
 			memcpy(buf, xb + pos, left);
 			bufPos = left;
 		}
+	}
+
+	virtual size_t write(const void* b, size_t len) throw(FileException) {
+		bool verifyFlag = false;
+		size_t pos = 0;
+		
+		if(d && (skippingBytes > 0))
+		{
+			if(skippingBytes >= len)
+			{
+				skippingBytes -= len;
+				size_t ret = s->write(b, len);
+				if(skippingBytes == 0){
+					s->flush();
+					dcassert(verified > 0);
+					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
+					fileChunks->verifyBlock(offset, real, d->getTempTarget());
+				}
+				return ret;
+	        }else{
+				pos = skippingBytes;
+				skippingBytes = 0;
+				verifyFlag = true;
+			}
+		}
+		commitBytes(b, len, pos);
 
 		size_t old = verified;
 		checkTrees();

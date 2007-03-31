@@ -199,7 +199,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				setAutoReconnect(false);
 			}
 		}
-		string line = fromAcp(aLine);
+		string line = toUtf8(aLine);
 		if(line[0] != '<') {
 			fire(ClientListener::Message(), this, *(OnlineUser*)NULL, unescape(line));
 			return;
@@ -238,7 +238,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		cmd = aLine;
 	} else {
 		cmd = aLine.substr(0, x);
-		param = fromAcp(aLine.substr(x+1));
+		param = toUtf8(aLine.substr(x+1));
 	}
 
 	if(cmd == "$Search") {
@@ -273,7 +273,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 		i = j + 1;
 		
-		uint32_t tick = GET_TICK();
+		uint64_t tick = GET_TICK();
 		clearFlooders(tick);
 
 		seekers.push_back(make_pair(seeker, tick));
@@ -489,7 +489,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 		string port = param.substr(j+1);
-		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getStealth());
+		// For simplicity, we make the assumption that users on a hub have the same character encoding
+		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getEncoding(), getStealth());
 	} else if(cmd == "$RevConnectToMe") {
 		if(state != STATE_NORMAL) {
 			return;
@@ -580,7 +581,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		state = STATE_IDENTIFY;
 
-		// Param must not be fromAcp'd...
+		// Param must not be toUtf8'd...
 		param = aLine.substr(6);
 
 		if(!param.empty()) {
@@ -690,10 +691,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				string tmp;
 				// Let's assume 10 characters per nick...
 				tmp.reserve(v.size() * (11 + 10 + getMyNick().length())); 
-				string n = ' ' +  toAcp(getMyNick()) + '|';
+				string n = ' ' + fromUtf8(getMyNick()) + '|';
 				for(OnlineUser::List::const_iterator i = v.begin(); i != v.end(); ++i) {
 					tmp += "$GetINFO ";
-					tmp += toAcp((*i)->getIdentity().getNick());
+					tmp += fromUtf8((*i)->getIdentity().getNick());
 					tmp += n;
 				}
 				if(!tmp.empty()) {
@@ -811,20 +812,20 @@ void NmdcHub::connectToMe(const OnlineUser& aUser) {
 	string userNick = aUser.getIdentity().getNick();
 	dcdebug("NmdcHub::connectToMe %s\n", userNick.c_str());
 	ConnectionManager::getInstance()->nmdcExpect(userNick, getMyNick(), getHubUrl());
-	send("$ConnectToMe " + toAcp(userNick) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
+	send("$ConnectToMe " + fromUtf8(userNick) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
 }
 
 void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 	checkstate(); 
 	dcdebug("NmdcHub::revConnectToMe %s\n", aUser.getIdentity().getNick().c_str());
-	send("$RevConnectToMe " + toAcp(getMyNick()) + " " + toAcp(aUser.getIdentity().getNick()) + "|");
+	send("$RevConnectToMe " + fromUtf8(getMyNick()) + " " + fromUtf8(aUser.getIdentity().getNick()) + "|");
 }
 
 void NmdcHub::hubMessage(const string& aMessage) { 
 	checkstate(); 
 	char buf[256];
 	snprintf(buf, sizeof(buf), "<%s> ", getMyNick().c_str());
-	send(toAcp(string(buf)+ escape(aMessage) + "|"));
+	send(fromUtf8(string(buf)+ escape(aMessage) + "|"));
 }
 
 void NmdcHub::myInfo() {
@@ -878,9 +879,9 @@ void NmdcHub::myInfo() {
 	}
 
 	char myinfo[512];
-	snprintf(myinfo, sizeof(myinfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", toAcp(getCurrentNick()).c_str(),
-		toAcp(escape(getCurrentDescription())).c_str(), tag, connection.c_str(), StatusMode, 
-		toAcp(escape(SETTING(EMAIL))).c_str());
+	snprintf(myinfo, sizeof(myinfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
+		fromUtf8(escape(getCurrentDescription())).c_str(), tag, connection.c_str(), StatusMode, 
+		fromUtf8(escape(SETTING(EMAIL))).c_str());
 	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
 		lastmyinfo = myinfo;
@@ -897,7 +898,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
-	string tmp = ((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : toAcp(escape(aString)));
+	string tmp = ((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : fromUtf8(escape(aString)));
 	string::size_type i;
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';
@@ -912,7 +913,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	} else {
 		BUF_SIZE = getMyNick().length() + aString.length() + 64;
 		buf = new char[BUF_SIZE];
-		chars = snprintf(buf, BUF_SIZE, "$Search Hub:%s %c?%c?%I64d?%d?%s|", toAcp(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		chars = snprintf(buf, BUF_SIZE, "$Search Hub:%s %c?%c?%I64d?%d?%s|", fromUtf8(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	}
 	send(buf, chars);
 }
@@ -968,7 +969,7 @@ string NmdcHub::validateMessage(string tmp, bool reverse) {
 void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) { 
 	checkstate();
 
-	send("$To: " + toAcp(aUser.getIdentity().getNick()) + " From: " + toAcp(getMyNick()) + " $" + toAcp(escape("<" + getMyNick() + "> " + aMessage)) + "|");
+	send("$To: " + fromUtf8(aUser.getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + aMessage)) + "|");
 	// Emulate a returning message...
 	Lock l(cs);
 	OnlineUser* ou = findUser(getMyNick());
@@ -977,7 +978,7 @@ void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) {
 	}
 }
 
-void NmdcHub::clearFlooders(uint32_t aTick) {
+void NmdcHub::clearFlooders(uint64_t aTick) {
 	while(!seekers.empty() && seekers.front().second + (5 * 1000) < aTick) {
 		seekers.pop_front();
 	}
