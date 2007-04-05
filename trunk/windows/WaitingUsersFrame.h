@@ -206,7 +206,7 @@ private:
 
 	// UploadManagerListener
 	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() { PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI); }
-	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new UserInfoBase(aUser));	}
+	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new Identity(aUser, 0));	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() { aUQI->inc(); PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI); }
 	virtual void on(UploadManagerListener::QueueUpdate) throw() { PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL); }
 

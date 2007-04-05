@@ -98,7 +98,7 @@ string ResourceManager::strings[] = {
 "Copy Nick+IP", 
 "Copy TAG", 
 "Copy URL", 
-"Corruption detected at position", 
+"Corruption detected for TTH: %s, at position %d", 
 "Could not open target file: ", 
 "Count", 
 "Country", 

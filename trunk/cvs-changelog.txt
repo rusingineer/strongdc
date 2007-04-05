@@ -1,9 +1,16 @@
-** svn278
+** svn281
+	readded missing chunk finish verify
+	begun work on userlist memory optimization
+	"Corruption detected" message will display TTH of corrupted file	
+
+** svn280
 	64bit times (DC++ SVN)
 	removed rollback support (DC++ SVN)
 	removed unnecessary resume position reset (DC++ SVN)
 	only refresh if there are directories shared (DC++ SVN)
 	some other changes from DC++ SVN
+
+*** MOVED FROM CVS TO SVN ***
 
 ** cvs211
 	reverted to old data verification, but verified blocks are immediately flushed; it's very safe but slow down fast downloads :( so it must be improved

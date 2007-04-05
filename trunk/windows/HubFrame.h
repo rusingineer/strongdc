@@ -39,7 +39,6 @@
 
 #include "WinUtil.h"
 #include "UCHandler.h"
-#include "UserInfo.h"
 
 #define EDIT_MESSAGE_MAP 10		// This could be any number, really...
 #define FILTER_MESSAGE_MAP 8
@@ -273,11 +272,11 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			if(!ChatCtrl::sSelectedUser.empty()) {
-				const UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
-				if(ui) ignoreList.insert(ui->user);
+				const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+				if(ui) ignoreList.insert(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.insert(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
+					ignoreList.insert(((OnlineUser*)ctrlUsers.getItemData(i))->getUser());
 				}
 			}
 		}
@@ -288,19 +287,25 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			if(!ChatCtrl::sSelectedUser.empty()) {
-				const UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
-				if(ui) ignoreList.erase(ui->user);
+				const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+				if(ui) ignoreList.erase(ui->getUser());
 			} else {
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ignoreList.erase(((UserInfo*)ctrlUsers.getItemData(i))->getUser());
+					ignoreList.erase(((OnlineUser*)ctrlUsers.getItemData(i))->getUser());
 				}
 			}
 		}
 		return 0;
 	}
 
-	TypedListViewCtrl<UserInfo, IDC_USERS>& getUserList() { return ctrlUsers; }
+	TypedListViewCtrl<OnlineUser, IDC_USERS>& getUserList() { return ctrlUsers; }
 private:
+	enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
+		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
+		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
+		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
+	};
+
 	enum FilterModes{
 		NONE,
 		EQUAL,
@@ -309,6 +314,27 @@ private:
 		GREATER,
 		LESS,
 		NOT_EQUAL
+	};
+
+	struct UserTask : public Task {
+		UserTask(const OnlineUser& ou) : onlineUser(&ou)/*user(ou.getUser()), identity(ou.getIdentity())*/ { }
+
+		const OnlineUser* onlineUser;
+		//const User::Ptr user;
+		//Identity identity;
+	};
+
+	struct MessageTask : public StringTask {
+		MessageTask(const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const string& m) : StringTask(m),
+			from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
+			hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
+			
+		const Identity from;
+		const User::Ptr to;
+		const User::Ptr replyTo;
+
+		bool hub;
+		bool bot;
 	};
 	
 	friend class PrivateFrame;
@@ -360,8 +386,8 @@ private:
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
-	typedef HASH_MAP<User::Ptr, const UserInfo*, User::HashFunction> UserMap;
-	typedef UserMap::const_iterator UserMapIter;
+	//typedef HASH_MAP<User::Ptr, pair<const OnlineUser*, bool>, User::HashFunction> UserMap;
+	//typedef UserMap::const_iterator UserMapIter;
 
 	tstring redirect;
 	bool timeStamps;
@@ -408,7 +434,7 @@ private:
 	CEdit ctrlMessage;
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
-	typedef TypedListViewCtrl<UserInfo, IDC_USERS> CtrlUsers;
+	typedef TypedListViewCtrl<OnlineUser, IDC_USERS> CtrlUsers;
 	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
 	
@@ -421,7 +447,7 @@ private:
 	TStringMap tabParams;
 	bool tabMenuShown;
 
-	UserMap userMap;
+	//UserMap userMap;
 	TaskQueue tasks;
 	bool updateUsers;
 	bool resort;
@@ -437,12 +463,12 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	
 	bool updateUser(const UserTask& u);
-	void removeUser(const User::Ptr& aUser);
+	void removeUser(const OnlineUser* aUser);
 
-	void updateUserList(const UserInfo* ui = NULL);
+	void updateUserList(const OnlineUser* ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);
-	bool matchFilter(const UserInfo& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
-	const UserInfo* findUser(const tstring& nick) const;
+	bool matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
+	//const OnlineUser* findUser(const tstring& nick) const;
 
 	void addAsFavorite();
 	void removeFavoriteHub();

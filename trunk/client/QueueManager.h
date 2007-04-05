@@ -116,7 +116,7 @@ public:
 
 	void remove(const string& aTarget) throw();
 	void removeSource(const string& aTarget, const User::Ptr& aUser, Flags::MaskType reason, bool removeConn = true) throw();
-	void removeSource(User::Ptr& aUser, Flags::MaskType reason) throw();
+	void removeSource(const User::Ptr& aUser, Flags::MaskType reason) throw();
 
 	void setPriority(const string& aTarget, QueueItem::Priority p) throw();
 	void setAutoPriority(const string& aTarget, bool ap) throw();

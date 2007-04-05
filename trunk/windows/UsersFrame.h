@@ -101,7 +101,7 @@ private:
 
 	class UserInfo : public UserInfoBase {
 	public:
-		UserInfo(const FavoriteUser& u) : UserInfoBase(u.getUser()) { 
+		UserInfo(const FavoriteUser& u) : user(u.getUser()) { 
 			update(u);
 		}
 
@@ -120,6 +120,9 @@ private:
 		void update(const FavoriteUser& u);
 
 		tstring columns[COLUMN_LAST];
+
+		const User::Ptr& getUser() const { return user; }
+		User::Ptr user;
 	};
 
 	CStatusBarCtrl ctrlStatus;
@@ -137,7 +140,7 @@ private:
 	// FavoriteManagerListener
 	virtual void on(UserAdded, const FavoriteUser& aUser) throw() { addUser(aUser); }
 	virtual void on(UserRemoved, const FavoriteUser& aUser) throw() { removeUser(aUser); }
-	virtual void on(StatusChanged, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, (WPARAM)USER_UPDATED, (LPARAM)new UserInfoBase(aUser)); }
+	virtual void on(StatusChanged, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, (WPARAM)USER_UPDATED, (LPARAM)new Identity(aUser, 0)); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
 

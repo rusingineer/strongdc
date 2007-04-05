@@ -518,9 +518,8 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		if(BOOLSETTING(BOLD_WAITING_USERS))
 			setDirty();		
 	} else if(wParam == REMOVE) {
-		RemoveUser(((UserInfoBase*)lParam)->user);
+		RemoveUser(((Identity*)lParam)->getUser());
 		updateStatus();
-		delete (UserInfoBase*)lParam;
 		if(BOOLSETTING(BOLD_WAITING_USERS))
 			setDirty();		
 	} else if(wParam == ADD_ITEM) {

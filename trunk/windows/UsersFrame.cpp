@@ -260,7 +260,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		}
 
 		bHandled = FALSE;
-	return 0;
+		return 0;
 	}
 }
 
@@ -273,9 +273,7 @@ void UsersFrame::UserInfo::update(const FavoriteUser& u) {
 
 LRESULT UsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	if(wParam == USER_UPDATED) {
-		UserInfoBase* uib = (UserInfoBase*)lParam;
-		updateUser(uib->getUser());
-		delete uib;
+		updateUser(((Identity*)lParam)->getUser());
 	}
 	return 0;
 }

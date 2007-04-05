@@ -48,7 +48,7 @@
 #include "MagnetDlg.h"
 #include "winamp.h"
 #include "BarShader.h"
-#include "../client/cvsversion.h"
+#include "../client/svnversion.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
 int WinUtil::fileImageCount;
@@ -242,7 +242,7 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 
 void UserInfoBase::matchQueue() {
 	try {
-		QueueManager::getInstance()->addList(user, QueueItem::FLAG_MATCH_QUEUE);
+		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_MATCH_QUEUE);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());
 	}
@@ -250,19 +250,19 @@ void UserInfoBase::matchQueue() {
 
 void UserInfoBase::getUserResponses() {
 	try {
-		QueueManager::getInstance()->addTestSUR(user, false);
+		QueueManager::getInstance()->addTestSUR(getUser(), false);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 
 void UserInfoBase::doReport() {
-	ClientManager::getInstance()->reportUser(user);
+	ClientManager::getInstance()->reportUser(getUser());
 }
 
 void UserInfoBase::getList() {
 	try {
-		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);
+		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
@@ -271,41 +271,41 @@ void UserInfoBase::browseList() {
 	if(getUser()->getCID().isZero())
 		return;
 	try {
-		QueueManager::getInstance()->addPfs(user, "");
+		QueueManager::getInstance()->addPfs(getUser(), "");
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::checkList() {
 	try {
-		QueueManager::getInstance()->addList(user, QueueItem::FLAG_CHECK_FILE_LIST);
+		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
 void UserInfoBase::addFav() {
-	FavoriteManager::getInstance()->addFavoriteUser(user);
+	FavoriteManager::getInstance()->addFavoriteUser(getUser());
 }
 void UserInfoBase::pm() {
-	PrivateFrame::openWindow(user);
+	PrivateFrame::openWindow(getUser());
 }
 void UserInfoBase::grant() {
-	UploadManager::getInstance()->reserveSlot(user, 600);
+	UploadManager::getInstance()->reserveSlot(getUser(), 600);
 }
 void UserInfoBase::removeAll() {
-	QueueManager::getInstance()->removeSource(user, QueueItem::Source::FLAG_REMOVED);
+	QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
 }
 void UserInfoBase::grantSlotHour() {
-	UploadManager::getInstance()->reserveSlot(user, 3600);
+	UploadManager::getInstance()->reserveSlot(getUser(), 3600);
 }
 void UserInfoBase::grantSlotDay() {
-	UploadManager::getInstance()->reserveSlot(user, 24*3600);
+	UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
 }
 void UserInfoBase::grantSlotWeek() {
-	UploadManager::getInstance()->reserveSlot(user, 7*24*3600);
+	UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
 }
 void UserInfoBase::ungrantSlot() {
-	UploadManager::getInstance()->unreserveSlot(user);
+	UploadManager::getInstance()->unreserveSlot(getUser());
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {
@@ -849,8 +849,8 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 	return true;
 }
 
-#ifdef isCVS
-#define LINE2 _T("-- http://strongdc.sf.net  <StrongDC++ ") _T(VERSIONSTRING) _T(CVSVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
+#ifdef SVNVERSION
+#define LINE2 _T("-- http://strongdc.sf.net  <StrongDC++ ") _T(VERSIONSTRING) _T(SVNVERSION) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #else
 #define LINE2 _T("-- http://strongdc.sf.net  <StrongDC++ ") _T(VERSIONSTRING) _T(" / ") _T(DCVERSIONSTRING) _T(">")
 #endif

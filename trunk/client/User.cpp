@@ -29,9 +29,10 @@
 #include "pme.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"
+#include "FavoriteManager.h"
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
-
+	inc();
 }
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
@@ -159,7 +160,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 		set("CT", "DC++ Stealth");
 		set("BC", "1");
 		set("BF", "1");
-		sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
+		ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
 		return report;
 	} else if( getUser()->isSet(User::DCPLUSPLUS) &&
 		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
@@ -168,7 +169,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 			set("CT", "Faked DC++");
 			set("CM", "Supports corrupted files...");
 			set("BC", "1");
-			sendRawCommand(ou.getClient(), SETTING(LISTLEN_MISMATCH));
+			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
 			return report;
 	}
 	int64_t tick = GET_TICK();
@@ -239,7 +240,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 		string report = Util::emptyString;
 		if(!get("BC").empty()) report = setCheat(ou.getClient(), get("CS"), true);
 		if(cp.getRawToSend() > 0) {
-			sendRawCommand(ou.getClient(), cp.getRawToSend());
+			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), cp.getRawToSend());
 		}
 		return report;
 	}
@@ -272,14 +273,76 @@ string Identity::splitVersion(const string& aExp, const string& aTag, const int 
 	return reg[part];
 }
 
-void Identity::sendRawCommand(const Client& c, const int aRawCommand) {
-	string rawCommand = c.getRawCommand(aRawCommand);
-	if (!rawCommand.empty()) {
-		StringMap ucParams;
-
-		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "");
-		ClientManager::getInstance()->userCommand(user, uc, ucParams, true);
+int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col)  {
+	if(col == COLUMN_NICK) {
+		bool a_isOp = a->getIdentity().isOp(),
+			b_isOp = b->getIdentity().isOp();
+		if(a_isOp && !b_isOp)
+			return -1;
+		if(!a_isOp && b_isOp)
+			return 1;
+		if(BOOLSETTING(SORT_FAVUSERS_FIRST)) {
+			bool a_isFav = FavoriteManager::getInstance()->isFavoriteUser(a->getIdentity().getUser()),
+				b_isFav = FavoriteManager::getInstance()->isFavoriteUser(b->getIdentity().getUser());
+			if(a_isFav && !b_isFav)
+				return -1;
+			if(!a_isFav && b_isFav)
+				return 1;
+		}
 	}
+	switch(col) {
+		case COLUMN_SHARED:
+		case COLUMN_EXACT_SHARED: return compare(a->identity.getBytesShared(), b->identity.getBytesShared());
+		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
+		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
+		case COLUMN_UPLOAD_SPEED: return compare(a->identity.getUser()->getLastDownloadSpeed(), b->identity.getUser()->getLastDownloadSpeed());
+	}
+	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
+}
+
+tstring old, tmp;
+bool OnlineUser::update(int sortCol) {
+	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());
+
+	if(sortCol != -1)
+		old = getText(static_cast<uint8_t>(sortCol));
+
+	if (identity.getUser()->getLastDownloadSpeed() > 0) {
+		setText(COLUMN_UPLOAD_SPEED, Util::toStringW(identity.getUser()->getLastDownloadSpeed()) + _T(" kB/s"));
+	} else if(identity.getUser()->isSet(User::FIREBALL)) {
+		setText(COLUMN_UPLOAD_SPEED, _T(">= 100 kB/s"));
+	} else {
+		setText(COLUMN_UPLOAD_SPEED, _T("N/A"));
+	}
+
+	const tstring hn = Text::toT(identity.get("HN"), tmp);
+	const tstring hr = Text::toT(identity.get("HR"), tmp);
+	const tstring ho = Text::toT(identity.get("HO"), tmp);
+
+	setText(COLUMN_NICK, Text::toT(identity.getNick(), tmp));
+	setText(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()));
+	setText(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()));
+	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription(), tmp));
+	setText(COLUMN_TAG, Text::toT(identity.getTag(), tmp));
+	setText(COLUMN_EMAIL, Text::toT(identity.getEmail(), tmp));
+	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection(), tmp));
+	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"), tmp));
+	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
+	setText(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
+	setText(COLUMN_SLOTS, Text::toT(identity.get("SL"), tmp));
+	string ip = identity.getIp();
+	string country = ip.empty()?Util::emptyString:Util::getIpCountry(ip);
+	if (!country.empty())
+		ip = country + " (" + ip + ")";
+	setText(COLUMN_IP, Text::toT(ip, tmp));
+	setText(COLUMN_PK, Text::toT(identity.get("PK"), tmp));
+
+	if(sortCol != -1) {
+		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));
+	}
+
+	//setIdentity(identity);
+	return needsSort;
 }
 
 /**

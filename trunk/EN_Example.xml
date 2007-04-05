@@ -102,7 +102,7 @@
 		<String Name="CopyNickIp">Copy Nick+IP</String>
 		<String Name="CopyTag">Copy TAG</String>
 		<String Name="CopyUrl">Copy URL</String>
-		<String Name="CorruptionDetected">Corruption detected at position</String>
+		<String Name="CorruptionDetected">Corruption detected for TTH: %s, at position %d</String>
 		<String Name="CouldNotOpenTargetFile">Could not open target file: </String>
 		<String Name="Count">Count</String>
 		<String Name="Country">Country</String>

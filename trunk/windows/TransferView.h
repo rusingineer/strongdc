@@ -212,6 +212,9 @@ private:
 		tstring columns[COLUMN_LAST];
 		void update(const UpdateInfo& ui);
 
+		const User::Ptr& getUser() const { return user; }
+		User::Ptr user;
+
 		void disconnect();
 		void removeAll();
 

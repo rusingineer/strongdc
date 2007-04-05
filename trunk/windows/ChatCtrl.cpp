@@ -37,7 +37,7 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://") };
 
-void ChatCtrl::SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS>* pUsers) { m_pUsers = pUsers; }
+void ChatCtrl::SetUsers(TypedListViewCtrl<OnlineUser, IDC_USERS>* pUsers) { m_pUsers = pUsers; }
 
 void ChatCtrl::AdjustTextSize() {
 	if(GetWindowTextLength() > 25000) {

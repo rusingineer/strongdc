@@ -57,7 +57,7 @@ public:
 	}    
 
 	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
-
+	
 	virtual string escape(string const& str) const { return validateMessage(str, false); }
 	static string unescape(const string& str) { return validateMessage(str, true); }
 
@@ -80,6 +80,17 @@ private:
 	typedef NickMap::const_iterator NickIter;
 
 	NickMap users;
+
+	struct get_second : std::unary_function<NickMap::value_type, OnlineUser*> {
+		result_type operator() (argument_type p) const {
+			return p.second;
+		}
+	};	
+
+	void getUserList(OnlineUser::List& list) const {
+		Lock l(cs);
+		std::transform(users.begin(), users.end(), std::back_inserter(list), get_second());
+	}
 
 	int supportFlags;
 	string lastmyinfo;

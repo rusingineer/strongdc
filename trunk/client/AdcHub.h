@@ -67,6 +67,17 @@ private:
 	typedef HASH_MAP<uint32_t, OnlineUser*> SIDMap;
 	typedef SIDMap::iterator SIDIter;
 
+	struct get_second : std::unary_function<SIDMap::value_type, OnlineUser*> {
+		result_type operator() (argument_type p) const {
+			return p.second;
+		}
+	};
+
+	void getUserList(OnlineUser::List& list) const {
+		Lock l(cs);
+		std::transform(users.begin(), users.end(), std::back_inserter(list), get_second());	
+	}
+
 	Socket udp;
 	SIDMap users;
 	StringMap lastInfoMap;
@@ -86,6 +97,7 @@ private:
 	OnlineUser& getUser(const uint32_t aSID, const CID& aCID);
 	OnlineUser* findUser(const uint32_t sid) const;
 	OnlineUser* findUser(const CID& cid) const;
+	OnlineUser* findUser(const string&) const { return NULL; }
 	void putUser(const uint32_t sid);
 
 	void clearUsers();

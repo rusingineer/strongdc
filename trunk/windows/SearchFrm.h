@@ -307,12 +307,14 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : UserInfoBase(aSR->getUser()), sr(aSR), collapsed(true), main(NULL) { 
+		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), main(NULL) { 
 			sr->incRef(); update();
 		}
 		~SearchInfo() {
 			sr->decRef(); 
 		}
+
+		const User::Ptr& getUser() const { return sr->getUser(); }
 
 		bool collapsed;
 		SearchInfo* main;

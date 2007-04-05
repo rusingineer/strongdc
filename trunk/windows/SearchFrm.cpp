@@ -1383,7 +1383,7 @@ void SearchFrame::SearchInfo::update() {
 	}
 	if (sr->getUser()->getLastDownloadSpeed() > 0) {
 		columns[COLUMN_UPLOAD] = Util::toStringW(sr->getUser()->getLastDownloadSpeed()) + _T(" kB/s");
-	} else if(user->isSet(User::FIREBALL)) {
+	} else if(getUser()->isSet(User::FIREBALL)) {
 		columns[COLUMN_UPLOAD] = _T(">=100 kB/s");
 	} else {
 		columns[COLUMN_UPLOAD] = _T("N/A");

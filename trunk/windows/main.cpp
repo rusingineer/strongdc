@@ -37,7 +37,7 @@
 #include "WinUtil.h"
 #include "SingleInstance.h"
 
-#include "../client/cvsversion.h"
+#include "../client/svnversion.h"
 #include "../client/MerkleTree.h"
 #include "PopupManager.h"
 
@@ -138,9 +138,9 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 		exceptionCode, VERSIONSTRING);
 
 	f.write(buf, strlen(buf));
-#if defined(isCVS)
-	sprintf(buf, "CVS: %s\r\n", 
-		CVSVERSION);	
+#if defined(SVNVERSION)
+	sprintf(buf, "SVN: %s\r\n", 
+		SVNVERSION);	
 	f.write(buf, strlen(buf));
 #endif	
 	

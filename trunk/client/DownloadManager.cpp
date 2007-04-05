@@ -628,6 +628,11 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} catch(const ChunkDoneException e) {
 			dcdebug("ChunkDoneException.....\n");
 
+			if(d->getTreeValid() && e.pos > 0) {
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
+				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
+			}
+			
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
 				//fire(DownloadManagerListener::Failed(), d, e.getError());
@@ -715,6 +720,12 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			}
 			else{ // peer's partial size < chunk size
 				//fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
+
+				if(d->getTreeValid()) {
+					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
+					lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
+				}
+				
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);

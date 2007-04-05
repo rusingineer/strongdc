@@ -468,10 +468,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\cvsversion.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\DCPlusPlus.h"
 				>
 			</File>
@@ -668,6 +664,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\svnversion.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\TaskQueue.h"
 				>
 			</File>
@@ -705,6 +705,10 @@
 			</File>
 			<File
 				RelativePath=".\client\UserConnection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\UserInfoBase.h"
 				>
 			</File>
 			<File

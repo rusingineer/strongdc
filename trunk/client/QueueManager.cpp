@@ -1302,7 +1302,7 @@ endCheck:
 	}	
 }
 
-void QueueManager::removeSource(User::Ptr& aUser, Flags::MaskType reason) throw() {
+void QueueManager::removeSource(const User::Ptr& aUser, Flags::MaskType reason) throw() {
 	bool isRunning = false;
 	string removeRunning;
 	{

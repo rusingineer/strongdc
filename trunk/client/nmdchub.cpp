@@ -35,7 +35,7 @@
 #include "QueueManager.h"
 #include "ZUtils.h"
 
-#include "cvsversion.h"
+#include "svnversion.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
 	lastbytesshared(0)
@@ -100,7 +100,6 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 			setMyIdentity(u->getIdentity());
 		}
 	}
-
 	ClientManager::getInstance()->putOnline(u);
 	return *u;
 }
@@ -129,8 +128,11 @@ void NmdcHub::putUser(const string& aNick) {
 		ou = i->second;
 		users.erase(i);
 	}
+	availableBytes -= ou->getIdentity().getBytesShared();
+
 	ClientManager::getInstance()->putOffline(ou);
-	delete ou;
+	ou->dec();
+	//delete ou;
 }
 
 void NmdcHub::clearUsers() {
@@ -144,7 +146,8 @@ void NmdcHub::clearUsers() {
 
 	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
 		ClientManager::getInstance()->putOffline(i->second);
-		delete i->second;
+		i->second->dec();
+		//delete i->second;
 	}
 }
 
@@ -452,7 +455,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		j = param.find('$', i);
 		if(j == string::npos)
 			return;
+
+		availableBytes -= u.getIdentity().getBytesShared();
 		u.getIdentity().setBytesShared(param.substr(i, j-i));
+		availableBytes += u.getIdentity().getBytesShared();
 
 		if(u.getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u.getIdentity());
@@ -852,8 +858,8 @@ void NmdcHub::myInfo() {
 
 	if (getStealth() == false) {
 		dc = "<StrgDC++";
-#ifdef isCVS
-		version = VERSIONSTRING CVSVERSION;
+#ifdef SVNVERSION
+		version = VERSIONSTRING SVNVERSION;
 #else
 		version = VERSIONSTRING;
 #endif
