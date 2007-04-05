@@ -435,6 +435,16 @@ void ClientManager::userCommand(const User::Ptr& p, const ::UserCommand& uc, Str
 	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params, false));
 }
 
+void ClientManager::sendRawCommand(const User::Ptr& user, const Client& c, const int aRawCommand) {
+	string rawCommand = c.getRawCommand(aRawCommand);
+	if (!rawCommand.empty()) {
+		StringMap ucParams;
+
+		::UserCommand uc = ::UserCommand(0, 0, 0, 0, "", rawCommand, "");
+		userCommand(user, uc, ucParams, true);
+	}
+}
+
 void ClientManager::on(AdcSearch, const Client*, const AdcCommand& adc, const CID& from) throw() {
 	SearchManager::getInstance()->respond(adc, from);
 }
@@ -587,7 +597,7 @@ void ClientManager::fileListDisconnected(const User::Ptr& p) {
 			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 				c = &ou.getClient();
 				report = ou.getIdentity().setCheat(ou.getClient(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
-				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(DISCONNECT_RAW));
+				ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(DISCONNECT_RAW));
 			}
 		}
 	}
@@ -616,7 +626,7 @@ void ClientManager::connectionTimeout(const User::Ptr& p) {
 				c = &ou.getClient();
 				report = ou.getIdentity().setCheat(ou.getClient(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 				remove = true;
-				ou.getIdentity().sendRawCommand(ou.getClient(), SETTING(TIMEOUT_RAW));
+				sendRawCommand(ou.getUser(), ou.getClient(), SETTING(TIMEOUT_RAW));
 			}
 		}
 	}
@@ -672,7 +682,7 @@ void ClientManager::checkCheating(const User::Ptr& p, DirectoryListing* dl) {
 			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 
 			report = ou->getIdentity().setCheat(ou->getClient(), detectString, false);
-			ou->getIdentity().sendRawCommand(ou->getClient(), SETTING(FAKESHARE_RAW));
+			sendRawCommand(ou->getUser(), ou->getClient(), SETTING(FAKESHARE_RAW));
 		}
 		ou->getIdentity().set("FC", "1");
 	}
@@ -700,7 +710,7 @@ void ClientManager::setCheating(const User::Ptr& p, const string& aTestSURString
 			report = ou->getIdentity().setCheat(ou->getClient(), aCheatString, aBadClient);
 		}
 		if(aRawCommand != -1)
-			ou->getIdentity().sendRawCommand(ou->getClient(), aRawCommand);
+			sendRawCommand(ou->getUser(), ou->getClient(), aRawCommand);
 	}
 	ou->getClient().updated(*ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))

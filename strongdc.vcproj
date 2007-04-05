@@ -728,10 +728,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\UserInfo.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\UserListColours.cpp"
 				>
 			</File>
@@ -1058,10 +1054,6 @@
 			</File>
 			<File
 				RelativePath=".\windows\upnp.h"
-				>
-			</File>
-			<File
-				RelativePath=".\windows\UserInfo.h"
 				>
 			</File>
 			<File

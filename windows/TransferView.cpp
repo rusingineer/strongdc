@@ -650,7 +650,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	return 0;
 }
 	
-TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : UserInfoBase(u), download(aDownload), transferFailed(false),
+TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : user(u), download(aDownload), transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
 	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 

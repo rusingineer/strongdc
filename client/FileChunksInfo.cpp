@@ -411,7 +411,10 @@ bool FileChunksInfo::verify(const unsigned char* data, int64_t start, int64_t en
 		dcassert(0);
 	}
 #endif
-	LogManager::getInstance()->message(STRING(CORRUPTION_DETECTED) + " " + Util::toString(start));
+	const size_t BUF_SIZE = STRING(CORRUPTION_DETECTED).size() + 128;
+	AutoArray<char> tmp(BUF_SIZE);
+	snprintf(tmp, BUF_SIZE, CSTRING(CORRUPTION_DETECTED), aTree.getRoot().toBase32(), start);
+	LogManager::getInstance()->message(string(tmp));
 	return false;
 }
 

@@ -152,6 +152,7 @@ public:
 	void privateMessage(const User::Ptr& p, const string& msg);
 
 	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
+	void sendRawCommand(const User::Ptr& user, const Client& c, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
 	bool isActive(const string& aHubUrl) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }

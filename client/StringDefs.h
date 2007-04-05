@@ -101,7 +101,7 @@ enum Strings { // @DontAdd
 	COPY_NICK_IP, // "Copy Nick+IP"
 	COPY_TAG, // "Copy TAG"
 	COPY_URL, // "Copy URL"
-	CORRUPTION_DETECTED, // "Corruption detected at position"
+	CORRUPTION_DETECTED, // "Corruption detected for TTH: %s, at position %d"
 	COULD_NOT_OPEN_TARGET_FILE, // "Could not open target file: "
 	COUNT, // "Count"
 	COUNTRY, // "Country"

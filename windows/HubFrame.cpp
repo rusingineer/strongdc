@@ -319,7 +319,7 @@ void HubFrame::onEnter() {
 				removeFavoriteHub();
 			} else if(Util::stricmp(cmd.c_str(), _T("getlist")) == 0){
 				if( !param.empty() ){
-					UserInfo* ui = const_cast<UserInfo*>(findUser(param));
+					OnlineUser* ui = client->findUser(Text::fromT(param));
 					if(ui) {
 						ui->getList();
 					}
@@ -380,18 +380,18 @@ void HubFrame::onEnter() {
 				string::size_type j = param.find(_T(' '));
 				if(j != string::npos) {
 					tstring nick = param.substr(0, j);
-					const UserInfo* ui = findUser(nick);
+					const OnlineUser* ui = client->findUser(Text::fromT(nick));
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->user, param.substr(j+1));
+							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->user);
+							PrivateFrame::openWindow(ui->getUser());
 					}
 				} else if(!param.empty()) {
-					const UserInfo* ui = findUser(param);
+					const OnlineUser* ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui->user);
+						PrivateFrame::openWindow(ui->getUser());
 					}
 				}
 			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
@@ -436,20 +436,11 @@ void HubFrame::onEnter() {
 
 struct CompareItems {
 	CompareItems(uint8_t aCol) : col(aCol) { }
-	bool operator()(const UserInfo& a, const UserInfo& b) const {
-		return UserInfo::compareItems(&a, &b, col) < 0;
+	bool operator()(const OnlineUser& a, const OnlineUser& b) const {
+		return OnlineUser::compareItems(&a, &b, col) < 0;
 	}
 	const uint8_t col;
 };
-
-/*const tstring& HubFrame::getNick(const User::Ptr& aUser) {
-	UserMapIter i = userMap.find(aUser);
-	if(i == userMap.end())
-		return Util::emptyStringT;
-
-	UserInfo* ui = i->second;
-	return ui->columns[COLUMN_NICK];
-}*/
 
 void HubFrame::addAsFavorite() {
 	const FavoriteHubEntry* existingHub = FavoriteManager::getInstance()->getFavoriteHubEntry(client->getHubUrl());
@@ -502,9 +493,8 @@ LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 
 LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
-
 	if(!ChatCtrl::sSelectedUser.empty()) {
-		const UserInfo* ui = findUser(ChatCtrl::sSelectedUser);
+		const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
 		if(ui) {
 			switch (wID) {
 				case IDC_COPY_NICK:
@@ -593,7 +583,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				if(ctrlUsers.getItemData(item->iItem)->user != ClientManager::getInstance()->getMe())
+				if(ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())
 		         	 ctrlUsers.getItemData(item->iItem)->pm();
 		        break;
 		    case 3:
@@ -637,12 +627,15 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return true;
 
-	UserMapIter i = userMap.find(u.user);
-	if(i == userMap.end()) {
-		const UserInfo* ui = new UserInfo(u);
-		userMap.insert(make_pair(u.user, ui));
+	//UserMapIter i = userMap.find(u.onlineUser->getUser());
+	//if(i == userMap.end()) {
+	if(u.onlineUser->getText(COLUMN_NICK).empty()) {
+		//const UserInfo* ui = new UserInfo(u);
+		OnlineUser* ui = const_cast<OnlineUser*>(u.onlineUser);
+		ui->update(-1);
+		//userMap.insert(make_pair(u.onlineUser->getUser(), make_pair(ui, false)));
 		if(!ui->isHidden())
-			ctrlUsers.insertItem(ui, WinUtil::getImage(u.identity));
+			ctrlUsers.insertItem(ui, WinUtil::getImage(u.onlineUser->getIdentity()));
 
 		if(!filter.empty())
 			updateUserList(ui);
@@ -650,19 +643,18 @@ bool HubFrame::updateUser(const UserTask& u) {
 		client->availableBytes += ui->getIdentity().getBytesShared();
 		return true;
 	} else {
-		UserInfo* ui = const_cast<UserInfo*>(i->second);
-		if(!ui->isHidden() && u.identity.isHidden()) {
+		OnlineUser* ui = const_cast<OnlineUser*>(u.onlineUser);
+		if(!ui->isHidden() && u.onlineUser->getIdentity().isHidden()) {
 			ctrlUsers.deleteItem(ui);
 		}
 		
-		client->availableBytes -= ui->getIdentity().getBytesShared();
-		resort = ui->update(u.identity, ctrlUsers.getSortColumn()) || resort;
-		client->availableBytes += ui->getIdentity().getBytesShared();
+		resort = ui->update(ctrlUsers.getSortColumn()) || resort;
+		ui->getIdentity().set("WO", ui->getIdentity().isOp() ? "1" : "0");
 
 		int pos = ctrlUsers.findItem(ui);
 		if(pos != -1) {
 			ctrlUsers.updateItem(pos);
-			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.identity), 0, 0, NULL);
+			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
 		}
 
 		updateUserList(ui);
@@ -670,27 +662,27 @@ bool HubFrame::updateUser(const UserTask& u) {
 	}
 }
 
-void HubFrame::removeUser(const User::Ptr& aUser) {
-	UserMap::iterator i = userMap.find(aUser);
+void HubFrame::removeUser(const OnlineUser* aUser) {
+	/*UserMap::iterator i = userMap.find(aUser);
 	if(i == userMap.end()) return;
 
-	const UserInfo* ui = i->second;
-	if(!ui->isHidden())
-		ctrlUsers.deleteItem(ui);
+	OnlineUser* ui = const_cast<OnlineUser*>(i->second.first);*/
+	if(!aUser->isHidden())
+		ctrlUsers.deleteItem(aUser);
 
-	client->availableBytes -= ui->getIdentity().getBytesShared();
-	userMap.erase(i);
-	delete ui;
+	//userMap.erase(i);
+	const_cast<OnlineUser*>(aUser)->dec();
+	//delete ui;
 }
-
-const UserInfo* HubFrame::findUser(const tstring& nick) const {
+/*
+const OnlineUser* HubFrame::findUser(const tstring& nick) const {
 	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		if(i->second->getText(COLUMN_NICK) == nick)
-			return i->second;
+		if(i->second.first->getText(COLUMN_NICK) == nick)
+			return i->second.first;
 	}
 	return 0;
 }
-
+*/
 LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam */, BOOL& /*bHandled*/) {
 	TaskQueue::List t;
 	tasks.get(t);
@@ -705,20 +697,20 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(i->first == UPDATE_USER_JOIN) {
 			UserTask& u = *static_cast<UserTask*>(i->second);
 			if(updateUser(u)) {
-				bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u.user);
+				bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser());
 				if (isFavorite && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 					PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 				if(isFavorite && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
-					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.identity.getNick() + " - " + client->getHubName()).c_str(), CTSTRING(FAVUSER_ONLINE));
+					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.onlineUser->getIdentity().getNick() + " - " + client->getHubName()).c_str(), CTSTRING(FAVUSER_ONLINE));
 				}
 
 				if (showJoins || (favShowJoins && isFavorite)) {
-				 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.identity.getNick()), WinUtil::m_ChatTextSystem);
+				 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 				}	
 
-				if(client->isOp() && !u.identity.isBot() && !u.identity.isHub()) {
-					int64_t bytesSharedInt64 = u.identity.getBytesShared();
+				if(client->isOp() && !u.onlineUser->getIdentity().isBot() && !u.onlineUser->getIdentity().isHub()) {
+					int64_t bytesSharedInt64 = u.onlineUser->getIdentity().getBytesShared();
 					if(bytesSharedInt64 > 0) {
 						string bytesShared = Util::toString(bytesSharedInt64);
 						bool samenumbers = false;
@@ -730,11 +722,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							}
 						}
 						if(samenumbers) {
-							tstring detectString = Util::formatExactSize(u.identity.getBytesShared()) + _T(" - the share size had too many same numbers in it");
-							ClientManager::getInstance()->setFakeList(u.user, Text::fromT(detectString));
+							tstring detectString = Util::formatExactSize(u.onlineUser->getIdentity().getBytesShared()) + _T(" - the share size had too many same numbers in it");
+							ClientManager::getInstance()->setFakeList(u.onlineUser->getUser(), Text::fromT(detectString));
 							
 							TCHAR buf[512];
-							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.identity.getNick()).c_str(), detectString.c_str());
+							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.onlineUser->getIdentity().getNick()).c_str(), detectString.c_str());
 
 							if(BOOLSETTING(POPUP_CHEATING_USER)) {
 								MainFrame::getMainFrame()->ShowBalloonTip(buf, CTSTRING(CHEATING_USER));
@@ -753,14 +745,14 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 								addLine((tstring)buf, cf);
 							}
 
-							u.identity.sendRawCommand(*client, SETTING(FAKESHARE_RAW));
+							ClientManager::getInstance()->sendRawCommand(u.onlineUser->getUser(), *client, SETTING(FAKESHARE_RAW));
 						}
 					}
 						
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
-						if(u.identity.isTcpActive() || client->isActive()) {
+						if(u.onlineUser->getIdentity().isTcpActive() || client->isActive()) {
 							try {
-								QueueManager::getInstance()->addTestSUR(u.user, true);
+								QueueManager::getInstance()->addTestSUR(u.onlineUser->getUser(), true);
 							} catch(const Exception&) {
 							}
 						}
@@ -770,9 +762,9 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(i->first == REMOVE_USER) {
 			const UserTask& u = *static_cast<UserTask*>(i->second);
 			if(showUsers)
-				removeUser(u.user);
-			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.user))) {
-				addLine(Text::toT("*** " + STRING(PARTS) + u.identity.getNick()), WinUtil::m_ChatTextSystem);
+				removeUser(u.onlineUser);
+			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser()))) {
+				addLine(Text::toT("*** " + STRING(PARTS) + u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 			}
 		} else if(i->first == CONNECTED) {
 			addClientLine(TSTRING(CONNECTED), WinUtil::m_ChatTextServer);
@@ -1066,10 +1058,12 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 void HubFrame::clearUserList() {
 	ctrlUsers.DeleteAllItems();
-	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		delete i->second;
+	/*for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
+		OnlineUser* ou = const_cast<OnlineUser*>(i->second.first);
+		ou->dec();
+		//delete i->second;
 	}
-	userMap.clear();
+	userMap.clear();*/
 }
 
 void HubFrame::clearTaskList() {
@@ -1160,14 +1154,14 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 
 			// Nickname click, let's see if we can find one like it in the name list...
 			tstring nick = x.substr(start, end - start);
-			UserInfo* ui = const_cast<UserInfo*>(findUser(nick));
+			OnlineUser* ui = client->findUser(Text::fromT(nick));
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->user);
+					PrivateFrame::openWindow(ui->getUser());
 				} else if (wParam & MK_SHIFT) {
 					try {
-						QueueManager::getInstance()->addList(ui->user, QueueItem::FLAG_CLIENT_VIEW);
+						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
 						addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
@@ -1211,7 +1205,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						if(ui->user != ClientManager::getInstance()->getMe())
+						if(ui->getUser() != ClientManager::getInstance()->getMe())
 					          ui->pm();
 					     break;
 					case 3:
@@ -1322,7 +1316,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			int i = -1;
 			i = ctrlUsers.GetNextItem(i, LVNI_SELECTED);
 			if ( i >= 0 ) {
-				ChatCtrl::sSelectedUser = Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
+				ChatCtrl::sSelectedUser = Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getNick());
 			}
 		}
 
@@ -1427,12 +1421,12 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		client->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams, false));
 	} else {
 		int sel;
-		UserInfo* u = NULL;
+		OnlineUser* u = NULL;
 		if (!ChatCtrl::sSelectedUser.empty()) {
 			sel = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 			if ( sel >= 0 ) { 
 				u = ctrlUsers.getItemData(sel);
-				if(u->user->isOnline()) {
+				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;		
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp); 
@@ -1443,7 +1437,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 			sel = -1;
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
 				u = ctrlUsers.getItemData(sel);
-				if(u->user->isOnline()) {
+				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;
 					u->getIdentity().getParams(tmp, "user", true);
 					client->escapeParams(tmp);
@@ -1499,7 +1493,7 @@ void HubFrame::onTab() {
 		if(!firstPass)
 			i = 0;
 		while(firstPass || (!firstPass && i < start)) {
-			UserInfo* ui = ctrlUsers.getItemData(i);
+			OnlineUser* ui = ctrlUsers.getItemData(i);
 			const tstring& nick = ui->getText(COLUMN_NICK);
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
 			tstring::size_type x = 0;
@@ -1737,7 +1731,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	int item = ctrlUsers.GetNextItem(-1, LVNI_FOCUSED);
 	if(item != -1) {
 		try {
-			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->user, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			addClientLine(Text::toT(e.getError()));
 		}
@@ -1846,6 +1840,7 @@ void HubFrame::on(UsersUpdated, const Client*, const OnlineUser::List& aList) th
 }
 
 void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUser& user) throw() {
+	(const_cast<OnlineUser&>(user)).inc();
 	speak(REMOVE_USER, user);
 }
 
@@ -2012,7 +2007,7 @@ bool HubFrame::parseFilter(FilterModes& mode, int64_t& size) {
 	return true;
 }
 
-void HubFrame::updateUserList(const UserInfo* ui) {
+void HubFrame::updateUserList(const OnlineUser* ui) {
 	int64_t size = -1;
 	FilterModes mode = NONE;
 	
@@ -2045,9 +2040,12 @@ void HubFrame::updateUserList(const UserInfo* ui) {
 		ctrlUsers.SetRedraw(FALSE);
 		ctrlUsers.DeleteAllItems();
 
+		OnlineUser::List l;
+		client->getUserList(l);
+
 		if(filter.empty()) {
-			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i){
-				const UserInfo* ui = i->second;
+			for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i){
+				const OnlineUser* ui = *i;
 				if(!ui->isHidden())
 					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));	
 			}
@@ -2055,8 +2053,8 @@ void HubFrame::updateUserList(const UserInfo* ui) {
 			int sel = ctrlFilterSel.GetCurSel();
 			bool doSizeCompare = sel == COLUMN_SHARED && parseFilter(mode, size);
 
-			for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-				const UserInfo* ui = i->second;
+			for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i) {
+				const OnlineUser* ui = *i;
 				if(!ui->isHidden() && matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
 				}
@@ -2064,6 +2062,7 @@ void HubFrame::updateUserList(const UserInfo* ui) {
 		}
 		ctrlUsers.SetRedraw(TRUE);
 	}
+
 }
 
 void HubFrame::handleTab(bool reverse) {
@@ -2096,7 +2095,7 @@ void HubFrame::handleTab(bool reverse) {
 	}
 }
 
-bool HubFrame::matchFilter(const UserInfo& ui, int sel, bool doSizeCompare, FilterModes mode, int64_t size) {
+bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, FilterModes mode, int64_t size) {
 
 	if(filter.empty())
 		return true;
@@ -2271,10 +2270,10 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 				pMenu->AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 				int i = ctrlUsers.findItem(sNick);
 				if ( i >= 0 ) {
-					UserInfo* ui = ctrlUsers.getItemData(i);
+					OnlineUser* ui = ctrlUsers.getItemData(i);
 					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
-						if(ignoreList.find(ui->user) == ignoreList.end()) {
+						if(ignoreList.find(ui->getUser()) == ignoreList.end()) {
 							pMenu->AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
 						} else {    
 							pMenu->AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
@@ -2388,7 +2387,7 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			if (!sUsers.empty())
   				sUsers += _T(", ");
-			sUsers += Text::toT(((UserInfo*)ctrlUsers.getItemData(i))->getNick());
+			sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getNick());
 		}
 	}
 
@@ -2475,7 +2474,7 @@ LRESULT HubFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 
 LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
-	UserInfo* ui = NULL;
+	OnlineUser* ui = NULL;
 	if(!ChatCtrl::sSelectedUser.empty()) {
 		int k = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 		if(k != -1) ui = ctrlUsers.getItemData(k);
@@ -2491,7 +2490,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	params["userNI"] = ui->getNick();
 	params["hubNI"] = client->getHubName();
 	params["myNI"] = client->getMyNick();
-	params["userCID"] = ui->user->getCID().toBase32();
+	params["userCID"] = ui->getUser()->getCID().toBase32();
 	params["hubURL"] = client->getHubUrl();
 	tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false)));
 	if(Util::fileExists(Text::fromT(file))) {
@@ -2566,16 +2565,16 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 		return CDRF_NOTIFYITEMDRAW;
 
 	case CDDS_ITEMPREPAINT: {
-			UserInfo* ui = (UserInfo*)cd->nmcd.lItemlParam;
-			if (FavoriteManager::getInstance()->isFavoriteUser(ui->user)) {
+			OnlineUser* ui = (OnlineUser*)cd->nmcd.lItemlParam;
+			if (FavoriteManager::getInstance()->isFavoriteUser(ui->getUser())) {
 				cd->clrText = SETTING(FAVORITE_COLOR);
-			} else if (UploadManager::getInstance()->hasReservedSlot(ui->user)) {
+			} else if (UploadManager::getInstance()->hasReservedSlot(ui->getUser())) {
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
-			} else if (ignoreList.find(ui->user) != ignoreList.end()) {
+			} else if (ignoreList.find(ui->getUser()) != ignoreList.end()) {
 				cd->clrText = SETTING(IGNORED_COLOR);
-			} else if(ui->user->isSet(User::FIREBALL)) {
+			} else if(ui->getUser()->isSet(User::FIREBALL)) {
 				cd->clrText = SETTING(FIREBALL_COLOR);
-			} else if(ui->user->isSet(User::SERVER)) {
+			} else if(ui->getUser()->isSet(User::SERVER)) {
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);

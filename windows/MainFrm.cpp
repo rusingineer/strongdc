@@ -58,7 +58,7 @@
 #include "../client/SimpleXML.h"
 #include "../client/ShareManager.h"
 #include "../client/LogManager.h"
-#include "../client/cvsversion.h"
+#include "../client/svnversion.h"
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
 
@@ -165,11 +165,13 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	TimerManager::getInstance()->start();
 
 	// Set window name
-#ifdef isCVS
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(CVSVERSION));
-#else
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING));
+
+	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) 
+#ifdef SVNVERSION
+		_T(SVNVERSION)
 #endif
+		);
+
 
 	// Load images
 	// create command bar window

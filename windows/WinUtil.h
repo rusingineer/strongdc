@@ -27,6 +27,7 @@
 #include "../client/SettingsManager.h"
 #include "../client/User.h"
 #include "../client/MerkleTree.h"
+//#include "../client/UserInfoBase.h"
 
 #include "resource.h"
 #include "OMenu.h"
@@ -46,29 +47,6 @@ HLSCOLOR RGB2HLS (COLORREF rgb);
 COLORREF HLS2RGB (HLSCOLOR hls);
 
 COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S);
-
-class UserInfoBase {
-public:
-	UserInfoBase(const User::Ptr& u) : user(u) { }
-	
-	void getList();
-	void browseList();
-	void getUserResponses();
-	void checkList();
-	void doReport();
-	void matchQueue();
-	void pm();
-	void grant();
-	void grantSlotHour();
-	void grantSlotDay();
-	void grantSlotWeek();
-	void ungrantSlot();
-	void addFav();
-	void removeAll();
-	
-	User::Ptr& getUser() { return user; }
-	User::Ptr user;
-};
 
 template<class T, bool B = false>
 class UserInfoBaseHandler {

@@ -25,7 +25,6 @@
 
 #include "TypedListViewCtrl.h"
 #include "ImageDataObject.h"
-#include "UserInfo.h"
 
 #ifndef _RICHEDIT_VER
 # define _RICHEDIT_VER 0x0300
@@ -53,7 +52,7 @@ public:
 	void GoToEnd();
 	bool GetAutoScroll() const { return m_boAutoScroll; }
 	void SetAutoScroll(bool boAutoScroll);
-	void SetUsers(TypedListViewCtrl<UserInfo, IDC_USERS> *pUsers);
+	void SetUsers(TypedListViewCtrl<OnlineUser, IDC_USERS> *pUsers);
 	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
 
 	static tstring sSelectedLine;
@@ -61,7 +60,7 @@ public:
 	static tstring sSelectedUser;
 
 private:
-	TypedListViewCtrl<UserInfo, IDC_USERS> *m_pUsers;
+	TypedListViewCtrl<OnlineUser, IDC_USERS> *m_pUsers;
 	bool m_boAutoScroll;
 };
 

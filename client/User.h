@@ -137,7 +137,6 @@ public:
 	void set(const char* name, const string& val);
 	string getSIDString() const { return string((const char*)&sid, 4); }
 	
-	void sendRawCommand(const Client& c, const int aRawCommand);
 	const string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
 	const string getReport() const;
 	const string updateClientType(const OnlineUser& ou);
@@ -159,13 +158,34 @@ private:
 };
 
 class NmdcHub;
+#include "UserInfoBase.h"
 
-class OnlineUser : public FastAlloc<OnlineUser> {
+enum {
+	COLUMN_FIRST,
+	COLUMN_NICK = COLUMN_FIRST, 
+	COLUMN_SHARED, 
+	COLUMN_EXACT_SHARED, 
+	COLUMN_DESCRIPTION, 
+	COLUMN_TAG,
+	COLUMN_CONNECTION, 
+	COLUMN_EMAIL, 
+	COLUMN_VERSION, 
+	COLUMN_MODE, 
+	COLUMN_HUBS, 
+	COLUMN_SLOTS,
+	COLUMN_UPLOAD_SPEED, 
+	COLUMN_IP, 
+	COLUMN_PK, 
+	COLUMN_LAST
+};
+
+class OnlineUser : public FastAlloc<OnlineUser>, public ColumnBase, public PointerBase, public UserInfoBase {
 public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
+	~OnlineUser() throw() { }
 
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }
@@ -175,6 +195,13 @@ public:
 	Identity& getIdentity() { return identity; }
 	Client& getClient() { return client; }
 	const Client& getClient() const { return client; }
+
+	/* UserInfo */
+	bool update(int sortCol);
+	uint8_t imageIndex() const { return 1;/*WinUtil::getImage(identity);*/ }
+	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
+	const string getNick() const { return identity.getNick(); }
+	bool isHidden() const { return identity.isHidden(); }
 
 	GETSET(Identity, identity, Identity);
 private:

@@ -111,6 +111,8 @@ public:
 	bool isOp() const { return getMyIdentity().isOp(); }
 
 	virtual void refreshUserList(bool) = 0;
+	virtual OnlineUser* findUser(const string& aNick) const = 0;
+	virtual void getUserList(OnlineUser::List& list) const = 0;
 
 	uint16_t getPort() const { return port; }
 	const string& getAddress() const { return address; }
