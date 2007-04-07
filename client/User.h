@@ -185,20 +185,19 @@ public:
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() throw() { }
 
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }
 
-	User::Ptr& getUser() { return getIdentity().getUser(); }
-	const User::Ptr& getUser() const { return getIdentity().getUser(); }
-	Identity& getIdentity() { return identity; }
+	inline User::Ptr& getUser() { return getIdentity().getUser(); }
+	inline const User::Ptr& getUser() const { return getIdentity().getUser(); }
+	inline Identity& getIdentity() { return identity; }
 	Client& getClient() { return client; }
 	const Client& getClient() const { return client; }
 
 	/* UserInfo */
 	bool update(int sortCol);
-	uint8_t imageIndex() const { return 1;/*WinUtil::getImage(identity);*/ }
+	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	const string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }

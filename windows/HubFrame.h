@@ -317,11 +317,9 @@ private:
 	};
 
 	struct UserTask : public Task {
-		UserTask(const OnlineUser& ou) : onlineUser(&ou)/*user(ou.getUser()), identity(ou.getIdentity())*/ { }
+		UserTask(const OnlineUser& ou) : onlineUser(&ou) { }
 
 		const OnlineUser* onlineUser;
-		//const User::Ptr user;
-		//Identity identity;
 	};
 
 	struct MessageTask : public StringTask {
@@ -386,9 +384,6 @@ private:
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
-	//typedef HASH_MAP<User::Ptr, pair<const OnlineUser*, bool>, User::HashFunction> UserMap;
-	//typedef UserMap::const_iterator UserMapIter;
-
 	tstring redirect;
 	bool timeStamps;
 	bool showJoins;
@@ -447,7 +442,6 @@ private:
 	TStringMap tabParams;
 	bool tabMenuShown;
 
-	//UserMap userMap;
 	TaskQueue tasks;
 	bool updateUsers;
 	bool resort;
@@ -468,7 +462,6 @@ private:
 	void updateUserList(const OnlineUser* ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);
 	bool matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
-	//const OnlineUser* findUser(const tstring& nick) const;
 
 	void addAsFavorite();
 	void removeFavoriteHub();

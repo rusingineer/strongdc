@@ -80,6 +80,31 @@ LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
+LRESULT ClientsPage::onItemchangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+{
+	NM_LISTVIEW* lv = (NM_LISTVIEW*) pnmh;
+	::EnableWindow(GetDlgItem(IDC_MOVE_CLIENT_UP), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_MOVE_CLIENT_DOWN), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_CHANGE_CLIENT), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_REMOVE_CLIENT), (lv->uNewState & LVIS_FOCUSED));
+	return 0;
+}
+
+LRESULT ClientsPage::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
+	NMLVKEYDOWN* kd = (NMLVKEYDOWN*) pnmh;
+	switch(kd->wVKey) {
+	case VK_INSERT:
+		PostMessage(WM_COMMAND, IDC_ADD_CLIENT, 0);
+		break;
+	case VK_DELETE:
+		PostMessage(WM_COMMAND, IDC_REMOVE_CLIENT, 0);
+		break;
+	default:
+		bHandled = FALSE;
+	}
+	return 0;
+}
+
 LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 	if(ctrlProfiles.GetSelectedCount() == 1) {
 		int sel = ctrlProfiles.GetSelectedIndex();

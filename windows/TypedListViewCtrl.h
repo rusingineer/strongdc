@@ -196,8 +196,9 @@ public:
 		return InsertItem(LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE, i, 
 			LPSTR_TEXTCALLBACK, 0, 0, image, (LPARAM)item);
 	}
-	T* getItemData(int iItem) { return (T*)GetItemData(iItem); }
-	T* getSelectedItem() { return (GetSelectedCount() > 0 ? getItemData(GetNextItem(-1, LVNI_SELECTED)) : NULL); }
+
+	T* getItemData(int iItem) const { return (T*)GetItemData(iItem); }
+	const T* getSelectedItem() const { return (GetSelectedCount() > 0 ? getItemData(GetNextItem(-1, LVNI_SELECTED)) : NULL); }
 
 	int findItem(const T* item) const { 
 		LVFINDINFO fi = { LVFI_PARAM, NULL, (LPARAM)item };
@@ -209,7 +210,7 @@ public:
 			return Util::stricmp(a.getText(0), b) < 0;
 		}
 	};
-	int findItem(const tstring& b, int start = -1, bool aPartial = false) {
+	int findItem(const tstring& b, int start = -1, bool aPartial = false) const {
 		LVFINDINFO fi = { aPartial ? LVFI_PARTIAL : LVFI_STRING, b.c_str() };
 		return FindItem(&fi, start);
 	}
@@ -250,7 +251,7 @@ public:
 	void updateItem(const T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
 	void deleteItem(const T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
-	int getSortPos(const T* a) {
+	int getSortPos(const T* a) const {
 		int high = GetItemCount();
 		if((sortColumn == -1) || (high == 0))
 			return high;

@@ -1,3 +1,8 @@
+** svn282
+	hopefully fixed userlist crash
+	memory usage optimization for queue items - need to test queue item status
+	applied some patches from Patrol
+
 ** svn281
 	readded missing chunk finish verify
 	begun work on userlist memory optimization

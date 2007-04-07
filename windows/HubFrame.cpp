@@ -627,15 +627,13 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return true;
 
-	//UserMapIter i = userMap.find(u.onlineUser->getUser());
-	//if(i == userMap.end()) {
+	// TODO	introduce some better condition
 	if(u.onlineUser->getText(COLUMN_NICK).empty()) {
-		//const UserInfo* ui = new UserInfo(u);
 		OnlineUser* ui = const_cast<OnlineUser*>(u.onlineUser);
 		ui->update(-1);
-		//userMap.insert(make_pair(u.onlineUser->getUser(), make_pair(ui, false)));
+
 		if(!ui->isHidden())
-			ctrlUsers.insertItem(ui, WinUtil::getImage(u.onlineUser->getIdentity()));
+			ctrlUsers.insertItem(ui, UserInfoBase::getImage(u.onlineUser->getIdentity()));
 
 		if(!filter.empty())
 			updateUserList(ui);
@@ -649,12 +647,12 @@ bool HubFrame::updateUser(const UserTask& u) {
 		}
 		
 		resort = ui->update(ctrlUsers.getSortColumn()) || resort;
-		ui->getIdentity().set("WO", ui->getIdentity().isOp() ? "1" : "0");
+		ui->getIdentity().set("WO", ui->getIdentity().isOp() ? "1" : "");
 
 		int pos = ctrlUsers.findItem(ui);
 		if(pos != -1) {
 			ctrlUsers.updateItem(pos);
-			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, WinUtil::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
+			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, UserInfoBase::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
 		}
 
 		updateUserList(ui);
@@ -663,26 +661,12 @@ bool HubFrame::updateUser(const UserTask& u) {
 }
 
 void HubFrame::removeUser(const OnlineUser* aUser) {
-	/*UserMap::iterator i = userMap.find(aUser);
-	if(i == userMap.end()) return;
-
-	OnlineUser* ui = const_cast<OnlineUser*>(i->second.first);*/
 	if(!aUser->isHidden())
 		ctrlUsers.deleteItem(aUser);
 
-	//userMap.erase(i);
 	const_cast<OnlineUser*>(aUser)->dec();
-	//delete ui;
 }
-/*
-const OnlineUser* HubFrame::findUser(const tstring& nick) const {
-	for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		if(i->second.first->getText(COLUMN_NICK) == nick)
-			return i->second.first;
-	}
-	return 0;
-}
-*/
+
 LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam */, BOOL& /*bHandled*/) {
 	TaskQueue::List t;
 	tasks.get(t);
@@ -1058,12 +1042,6 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 void HubFrame::clearUserList() {
 	ctrlUsers.DeleteAllItems();
-	/*for(UserMapIter i = userMap.begin(); i != userMap.end(); ++i) {
-		OnlineUser* ou = const_cast<OnlineUser*>(i->second.first);
-		ou->dec();
-		//delete i->second;
-	}
-	userMap.clear();*/
 }
 
 void HubFrame::clearTaskList() {
@@ -1421,11 +1399,10 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		client->sendUserCmd(Util::formatParams(uc.getCommand(), ucParams, false));
 	} else {
 		int sel;
-		OnlineUser* u = NULL;
 		if (!ChatCtrl::sSelectedUser.empty()) {
 			sel = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
 			if ( sel >= 0 ) { 
-				u = ctrlUsers.getItemData(sel);
+				const OnlineUser* u = ctrlUsers.getItemData(sel);
 				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;		
 					u->getIdentity().getParams(tmp, "user", true);
@@ -1436,7 +1413,7 @@ void HubFrame::runUserCommand(::UserCommand& uc) {
 		} else {
 			sel = -1;
 			while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
-				u = ctrlUsers.getItemData(sel);
+				const OnlineUser* u = ctrlUsers.getItemData(sel);
 				if(u->getUser()->isOnline()) {
 					StringMap tmp = ucParams;
 					u->getIdentity().getParams(tmp, "user", true);
@@ -1493,7 +1470,7 @@ void HubFrame::onTab() {
 		if(!firstPass)
 			i = 0;
 		while(firstPass || (!firstPass && i < start)) {
-			OnlineUser* ui = ctrlUsers.getItemData(i);
+			const OnlineUser* ui = ctrlUsers.getItemData(i);
 			const tstring& nick = ui->getText(COLUMN_NICK);
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
 			tstring::size_type x = 0;
@@ -1829,7 +1806,10 @@ void HubFrame::on(Connecting, const Client*) throw() {
 void HubFrame::on(Connected, const Client*) throw() { 
 	speak(CONNECTED);
 }
-void HubFrame::on(UserUpdated, const Client*, const OnlineUser& user) throw() { 
+void HubFrame::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
+	if(user.unique()) {
+		(const_cast<OnlineUser&>(user)).inc();
+	}
 	speak(UPDATE_USER_JOIN, user);
 }
 void HubFrame::on(UsersUpdated, const Client*, const OnlineUser::List& aList) throw() {
@@ -1840,7 +1820,6 @@ void HubFrame::on(UsersUpdated, const Client*, const OnlineUser::List& aList) th
 }
 
 void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUser& user) throw() {
-	(const_cast<OnlineUser&>(user)).inc();
 	speak(REMOVE_USER, user);
 }
 
@@ -2020,7 +1999,7 @@ void HubFrame::updateUserList(const OnlineUser* ui) {
 		}
 		if(filter.empty()) {
 			if(ctrlUsers.findItem(ui) == -1) {
-				ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+				ctrlUsers.insertItem(ui, UserInfoBase::getImage(ui->getIdentity()));
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -2028,7 +2007,7 @@ void HubFrame::updateUserList(const OnlineUser* ui) {
 
 			if(matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 				if(ctrlUsers.findItem(ui) == -1) {
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui, UserInfoBase::getImage(ui->getIdentity()));
 				}
 			} else {
 				//deleteItem checks to see that the item exists in the list
@@ -2047,7 +2026,7 @@ void HubFrame::updateUserList(const OnlineUser* ui) {
 			for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i){
 				const OnlineUser* ui = *i;
 				if(!ui->isHidden())
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));	
+					ctrlUsers.insertItem(ui, UserInfoBase::getImage(ui->getIdentity()));	
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -2056,7 +2035,7 @@ void HubFrame::updateUserList(const OnlineUser* ui) {
 			for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i) {
 				const OnlineUser* ui = *i;
 				if(!ui->isHidden() && matchFilter(*ui, sel, doSizeCompare, mode, size)) {
-					ctrlUsers.insertItem(ui, WinUtil::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui, UserInfoBase::getImage(ui->getIdentity()));
 				}
 			}
 		}
@@ -2096,7 +2075,6 @@ void HubFrame::handleTab(bool reverse) {
 }
 
 bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, FilterModes mode, int64_t size) {
-
 	if(filter.empty())
 		return true;
 
@@ -2116,14 +2094,12 @@ bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, Fi
 			insert = true;
 		} else if(sel >= COLUMN_LAST) {
 			for(uint8_t i = COLUMN_FIRST; i < COLUMN_LAST; ++i) {
-				//if(Util::findSubString(ui.getText(i), filter) != string::npos) {
 				if(reg.match(ui.getText(i))) {
 					insert = true;
 					break;
 				}
 			}
 		} else {
-			//if(Util::findSubString(ui.getText(sel), filter) != string::npos)
 			if(reg.match(ui.getText(static_cast<uint8_t>(sel))))
 				insert = true;
 		}
@@ -2270,7 +2246,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMe
 				pMenu->AppendMenu(MF_POPUP, (UINT)(HMENU)grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 				int i = ctrlUsers.findItem(sNick);
 				if ( i >= 0 ) {
-					OnlineUser* ui = ctrlUsers.getItemData(i);
+					const OnlineUser* ui = ctrlUsers.getItemData(i);
 					if (client->isOp() || !ui->getIdentity().isOp()) {
 						pMenu->AppendMenu(MF_SEPARATOR);
 						if(ignoreList.find(ui->getUser()) == ignoreList.end()) {

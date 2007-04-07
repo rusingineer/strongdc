@@ -43,6 +43,70 @@ public:
 	void removeAll();
 	
 	virtual const User::Ptr& getUser() const = 0;
+
+	static uint8_t getImage(const Identity& u) {
+		uint8_t image = 12;
+
+		if(u.isOp()) {
+			image = 0;
+		} else if(u.getUser()->isSet(User::FIREBALL)) {
+			image = 1;
+		} else if(u.getUser()->isSet(User::SERVER)) {
+			image = 2;
+		} else {
+			string conn = u.getConnection();
+		
+			if(	(conn == "28.8Kbps") ||
+				(conn == "33.6Kbps") ||
+				(conn == "56Kbps") ||
+				(conn == "Modem") ||
+				(conn == "ISDN")) {
+				image = 6;
+			} else
+			if(	(conn == "Satellite") ||
+				(conn == "Microwave") ||
+				(conn == "Wireless")) {
+				image = 8;
+			} else
+			if(	(conn == "DSL") ||
+				(conn == "Cable")) {
+				image = 9;
+			} else
+			if(	(strncmp(conn.c_str(), "LAN", 3) == 0)) {
+				image = 11;
+			} else
+			if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
+				image = 3;
+			} else
+			if( (conn == "0.005")) {
+				image = 5;
+			} else {
+				double us = Util::toDouble(conn);
+				if(us >= 10) {
+					image = 10;
+				} else 
+				if(us > 0.1) {
+					image = 7;
+				} else
+				if(us >= 0.01) {
+					image = 4;
+				}
+			}
+		}
+		if(u.getUser()->isSet(User::AWAY)) {
+			image+=13;
+		}
+		if(u.getUser()->isSet(User::DCPLUSPLUS)) {
+			image+=26;
+		}
+
+		if(!u.isTcpActive()) {
+			// Users we can't connect to...
+			image+=52;
+		}		
+
+		return image;
+	}
 };
 
 #endif

@@ -134,13 +134,12 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		
 		if(ctrlTransfers.GetSelectedCount() > 0) {
 			int i = -1;
-			ItemInfo* itemI;
 			bool bCustomMenu = false;
-			ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
+			const ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
 			bool main = ii->subItems.size() > 1;
 
 			if(!main && (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				itemI = ctrlTransfers.getItemData(i);
+				const ItemInfo* itemI = ctrlTransfers.getItemData(i);
 				bCustomMenu = true;
 	
 				usercmdsMenu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
@@ -221,7 +220,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo* itemI = ctrlTransfers.getItemData(i);
+		const ItemInfo* itemI = ctrlTransfers.getItemData(i);
 		if(!itemI->user->isOnline())
 			continue;
 
@@ -461,16 +460,16 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 		if(/*!i->multiSource || */i->subItems.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
-					ctrlTransfers.getItemData(item->iItem)->pm();
+					i->pm();
 					break;
 				case 1:
-					ctrlTransfers.getItemData(item->iItem)->getList();
+					i->getList();
 					break;
 				case 2:
-					ctrlTransfers.getItemData(item->iItem)->matchQueue();
+					i->matchQueue();
 					break;
 				case 4:
-					ctrlTransfers.getItemData(item->iItem)->addFav();
+					i->addFav();
 					break;
 			}
 		}
@@ -539,7 +538,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			} else {
 				int ic = ctrlTransfers.GetItemCount();
 				for(int j = 0; j < ic; ++j) {
-					ItemInfo* ii = ctrlTransfers.getItemData(j);
+					const ItemInfo* ii = ctrlTransfers.getItemData(j);
 					if(*ui == *ii) {
 						ctrlTransfers.DeleteItem(j);
 						delete ii;
@@ -637,7 +636,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo *ii = ctrlTransfers.getItemData(i);
+		const ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		string target = Text::fromT(ii->Target);
 
@@ -1006,7 +1005,7 @@ void TransferView::ItemInfo::disconnect() {
 LRESULT TransferView::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/){
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo *ii = ctrlTransfers.getItemData(i);
+		const ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
@@ -1049,7 +1048,7 @@ void TransferView::ExpandAll() {
 LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo* ii = ctrlTransfers.getItemData(i);
+		const ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 		for(ItemInfo::Iter j = ii->subItems.begin(); j != ii->subItems.end(); ++j) {
 			int h = ctrlTransfers.findItem(*j);
@@ -1064,7 +1063,7 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo* ii = ctrlTransfers.getItemData(i);
+		const ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		for(ItemInfo::Iter j = ii->subItems.begin(); j != ii->subItems.end(); ++j) {
 			int h = ctrlTransfers.findItem(*j);
@@ -1079,7 +1078,7 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		ItemInfo *ii = ctrlTransfers.getItemData(i);
+		const ItemInfo *ii = ctrlTransfers.getItemData(i);
 
 		const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 

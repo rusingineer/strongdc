@@ -142,7 +142,6 @@ public:
 
 private:
 	class ItemInfo;	
-	int PreviewAppsSize;
 public:
 	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; }
 private:
@@ -325,6 +324,7 @@ private:
 	TaskQueue tasks;
 
 	StringMap ucLineParams;
+	int PreviewAppsSize;
 
 	virtual void on(ConnectionManagerListener::Added, const ConnectionQueueItem* aCqi) throw();
 	virtual void on(ConnectionManagerListener::Failed, const ConnectionQueueItem* aCqi, const string& aReason) throw();

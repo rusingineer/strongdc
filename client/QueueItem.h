@@ -33,7 +33,7 @@ class Download;
 #include "HashManager.h"
 #include "SettingsManager.h"
 
-class QueueItem : public Flags, public FastAlloc<QueueItem> {
+class QueueItem : public Flags, public FastAlloc<QueueItem>, public PointerBase {
 public:
 	typedef QueueItem* Ptr;
 	typedef deque<Ptr> List;
@@ -136,12 +136,15 @@ public:
 		Priority aPriority, Flags::MaskType aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
 	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
 	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
-	tthRoot(tth), autoPriority(false), chunkInfo(NULL)
-	{ 
+	tthRoot(tth), autoPriority(false)
+	{
+		inc();
+		dcassert(chunksInfo == NULL);
+
 		if(BOOLSETTING(DISCONNECTING_ENABLE)) {
 			setFlag(FLAG_AUTODROP);
 		}
-		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size < 2097153)) {
+		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size <= MIN_CHUNK_SIZE*2)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}
 	}
@@ -150,8 +153,11 @@ public:
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents),
 		currentDownload(rhs.currentDownload), added(rhs.added), tthRoot(rhs.tthRoot),
-		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority), chunkInfo(rhs.chunkInfo)
+		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority)
 	{
+		inc();
+		if(rhs.getCurrentDownload() == NULL)
+			setChunksInfo(rhs.getChunksInfo());
 	}
 
 	virtual ~QueueItem() { 
@@ -221,8 +227,8 @@ public:
 	}
 
 	int64_t getDownloadedBytes() const {
-		if(chunkInfo)
-			return chunkInfo->getDownloadedSize();
+		if(isSet(QueueItem::FLAG_MULTI_SOURCE))
+			return chunksInfo->getDownloadedSize();
 		return downloadedBytes;
 	}
 
@@ -230,6 +236,11 @@ public:
 		downloadedBytes = pos;
 	}
 	
+	const Download* getCurrentDownload() const { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); return currentDownload; }
+	void setCurrentDownload(Download* aCurrentDownload) { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); currentDownload = aCurrentDownload; }
+	FileChunksInfo* getChunksInfo() const { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); return chunksInfo; }
+	void setChunksInfo(FileChunksInfo* aChunksInfo) { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); chunksInfo = aChunksInfo; }
+
 	string getListName() const {
 		dcassert(isSet(QueueItem::FLAG_USER_LIST));
 		if(isSet(QueueItem::FLAG_XML_BZLIST)) {
@@ -250,13 +261,11 @@ public:
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
 	GETSET(User::List, currents, Currents);
-	GETSET(Download*, currentDownload, CurrentDownload);
 	GETSET(time_t, added, Added);
 	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(uint8_t, maxSegments, MaxSegments);
 	GETSET(size_t, averageSpeed, AverageSpeed);
-	FileChunksInfo::Ptr chunkInfo;
 
 	QueueItem::Priority calculateAutoPriority() const {
 		if(getAutoPriority()){
@@ -306,6 +315,11 @@ private:
 	friend class QueueManager;
 	SourceList sources;
 	SourceList badSources;
+
+	union {
+		const Download* currentDownload;
+		FileChunksInfo* chunksInfo;
+	};
 
 	void addSource(const User::Ptr& aUser);
 	void removeSource(const User::Ptr& aUser, Flags::MaskType reason);
