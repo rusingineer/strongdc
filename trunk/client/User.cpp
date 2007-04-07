@@ -341,7 +341,6 @@ bool OnlineUser::update(int sortCol) {
 		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));
 	}
 
-	//setIdentity(identity);
 	return needsSort;
 }
 

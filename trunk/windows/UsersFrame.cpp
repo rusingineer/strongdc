@@ -197,7 +197,7 @@ LRESULT UsersFrame::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 LRESULT UsersFrame::onConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
 	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
-		UserInfo *ui = ctrlUsers.getItemData(i);
+		const UserInfo *ui = ctrlUsers.getItemData(i);
 		FavoriteManager::FavoriteMap favUsers = FavoriteManager::getInstance()->getFavoriteUsers();
 		const FavoriteUser u = favUsers.find(ui->user->getCID())->second;
 		if(u.getUrl().length() > 0)
@@ -234,7 +234,7 @@ void UsersFrame::updateUser(const User::Ptr& aUser) {
 
 void UsersFrame::removeUser(const FavoriteUser& aUser) {
 	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
-		UserInfo *ui = ctrlUsers.getItemData(i);
+		const UserInfo *ui = ctrlUsers.getItemData(i);
 		if(ui->user == aUser.getUser()) {
 			ctrlUsers.DeleteItem(i);
 			delete ui;
@@ -281,7 +281,7 @@ LRESULT UsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL&
 LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlUsers.GetSelectedCount() == 1) {
 		int i = ctrlUsers.GetNextItem(-1, LVNI_SELECTED);
-		UserInfo* ui = ctrlUsers.getItemData(i);
+		const UserInfo* ui = ctrlUsers.getItemData(i);
 		dcassert(i != -1);
 
 		StringMap params;

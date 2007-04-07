@@ -185,7 +185,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		}
 		
 		pChunksInfo = new FileChunksInfo(const_cast<TTHValue*>(&qi->getTTH()), qi->getSize(), &v);
-		qi->chunkInfo = pChunksInfo;
+		qi->setChunksInfo(pChunksInfo);
 
 		if(pChunksInfo && !isMissing && verifiedBlocks != Util::emptyString){
 			vector<uint16_t> v;
@@ -421,12 +421,12 @@ void QueueManager::UserQueue::setWaiting(QueueItem* qi, const User::Ptr& aUser) 
 		qi->setStatus(QueueItem::STATUS_WAITING);
 		qi->setAverageSpeed(0);
 	}
-	qi->setCurrentDownload(0);	
 
    	// Add to the userQueue
 	if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		add(qi, aUser);
 	} else {
+		qi->setCurrentDownload(0);
 		add(qi);
 	}
 }
@@ -627,7 +627,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 
 		QueueItem* q = fileQueue.find(target);
 		
-		if(q == NULL && (aSize > 2097153) ){
+		if(q == NULL && (aSize > MIN_CHUNK_SIZE*2) ){
 			QueueItem::List ql;
 			fileQueue.find(ql, root);
 			if(!ql.empty()){
@@ -960,14 +960,16 @@ again:
 	}
 	
 	int64_t freeBlock = 0;
+	FileChunksInfo::Ptr fileChunksInfo;
 
 	QueueItem::SourceConstIter source = q->getSource(aUser);
 	bool useChunks = true;
-	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && q->chunkInfo) {
+	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+		fileChunksInfo = q->getChunksInfo();
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->chunkInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
+			freeBlock = fileChunksInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
 		} else {
-			freeBlock = q->chunkInfo->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
+			freeBlock = fileChunksInfo->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
 		}
 
 		if(freeBlock < 0) {
@@ -1000,8 +1002,8 @@ again:
 			d->setSize(-1);
 			d->unsetFlag(Download::FLAG_RESUME);
 			
-			if(q->chunkInfo) {
-				q->chunkInfo->putChunk(freeBlock);
+			if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+				fileChunksInfo->putChunk(freeBlock);
 			}
 		} else if (!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 			// Use the root as tree to get some sort of validation at least...
@@ -1013,12 +1015,14 @@ again:
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		bool supportsChunks = !aSource.isSet(UserConnection::FLAG_STEALTH) && (aSource.isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aSource.isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aSource.isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST));
 		d->setStartPos(freeBlock);
-		q->chunkInfo->setDownload(freeBlock, d, supportsChunks && useChunks);
+		fileChunksInfo->setDownload(freeBlock, d, supportsChunks && useChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
-		}		
-		q->setCurrentDownload(d);
+		}
+		if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+			q->setCurrentDownload(d);
+		}
 	}
 
 	fire(QueueManagerListener::StatusUpdated(), q);
@@ -1432,11 +1436,12 @@ void QueueManager::saveQueue() throw() {
 				f.write(Util::toString(qi->getSize()));
 				f.write(LIT("\" Priority=\""));
 				f.write(Util::toString((int)qi->getPriority()));
-				if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->chunkInfo) {
+				if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+					FileChunksInfo::Ptr fileChunksInfo = qi->getChunksInfo();
 					f.write(LIT("\" FreeBlocks=\""));
-					f.write(qi->chunkInfo->getFreeChunksString());
+					f.write(fileChunksInfo->getFreeChunksString());
 					f.write(LIT("\" VerifiedParts=\""));
-					f.write(qi->chunkInfo->getVerifiedBlocksString());
+					f.write(fileChunksInfo->getVerifiedBlocksString());
 				}
 				f.write(LIT("\" Added=\""));
 				f.write(Util::toString(qi->getAdded()));

@@ -27,11 +27,9 @@
 #include "../client/SettingsManager.h"
 #include "../client/User.h"
 #include "../client/MerkleTree.h"
-//#include "../client/UserInfoBase.h"
 
 #include "resource.h"
 #include "OMenu.h"
-//#include "ChatCtrl.h"
 
 class ChatCtrl;
 
@@ -532,7 +530,6 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, string target);
 	static string formatTime(long rest);
-	static uint8_t getImage(const Identity& u);
 	static uint8_t getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
 	static string disableCzChars(string message);

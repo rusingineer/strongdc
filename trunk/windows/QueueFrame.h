@@ -205,7 +205,7 @@ private:
 	class QueueItemInfo;
 	friend class QueueItemInfo;
 	
-	class QueueItemInfo : public Flags, public FastAlloc<QueueItemInfo> {
+	class QueueItemInfo : public FastAlloc<QueueItemInfo> {
 	public:
 
 		struct Display : public FastAlloc<Display> {
@@ -227,15 +227,14 @@ private:
 			MASK_TYPE = 1 << COLUMN_TYPE
 		};
 
-		QueueItemInfo(const QueueItem& aQI) : Flags(aQI), chunkInfo(aQI.chunkInfo),
-			target(aQI.getTarget()), autoPriority(aQI.getAutoPriority()),
-			size(aQI.getSize()), downloadedBytes(aQI.getDownloadedBytes()), 
-			added(aQI.getAdded()), tth(aQI.getTTH()), priority(aQI.getPriority()), status(aQI.getStatus()),
-			updateMask((uint32_t)-1), display(0), sources(aQI.getSources()), badSources(aQI.getBadSources())
-		{ 
+		QueueItemInfo(const QueueItem* aQI) : qi(const_cast<QueueItem*>(aQI)), updateMask((uint32_t)-1), display(0)	{
+			qi->inc();
 		}
 
-		~QueueItemInfo() { delete display; }
+		~QueueItemInfo() { 
+			qi->dec();
+			delete display;
+		}
 
 		void update();
 
@@ -257,8 +256,7 @@ private:
 		}
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
-		//const QueueItem::SourceList& getSources() const { return sources; }
-		//const QueueItem::SourceList& getBadSources() const { return badSources; }
+		const FileChunksInfo::Ptr getChunksInfo() const { return qi->getChunksInfo(); }
 		const string getPath() const { return Util::getFilePath(getTarget()); }
 
 		const Display* getDisplay() {
@@ -269,29 +267,31 @@ private:
 			return display;
 		}
 
-		bool isSource(const User::Ptr& u) const {
-			return find(sources.begin(), sources.end(), u) != sources.end();
-		}
-		bool isBadSource(const User::Ptr& u) const {
-			return find(badSources.begin(), badSources.end(), u) != badSources.end();
-		}
+		bool isSource(const User::Ptr& u) const { return qi->isSource(u); }
+		bool isBadSource(const User::Ptr& u) const { return qi->isBadSource(u); }
 		
-		GETSET(string, target, Target);
-		GETSET(int64_t, size, Size);
-		GETSET(int64_t, downloadedBytes, DownloadedBytes);
-		GETSET(time_t, added, Added);
-		GETSET(QueueItem::Priority, priority, Priority);
-		GETSET(QueueItem::Status, status, Status);
-		GETSET(TTHValue, tth, TTH);
-		GETSET(QueueItem::SourceList, sources, Sources);
-		GETSET(QueueItem::SourceList, badSources, BadSources);
-		GETSET(bool, autoPriority, AutoPriority);
+		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
+
+		const string& getTarget() const { return qi->getTarget(); }
+
+		int64_t getSize() const { return qi->getSize(); }
+		int64_t getDownloadedBytes() const { return qi->getDownloadedBytes(); }
+
+		time_t getAdded() const { return qi->getAdded(); }
+		const TTHValue& getTTH() const { return qi->getTTH(); }
+
+		QueueItem::Priority getPriority() const { return qi->getPriority(); }
+		QueueItem::Status getStatus() const { return qi->getStatus(); }
+		const QueueItem::SourceList& getSources() const { return qi->getSources(); }
+		const QueueItem::SourceList& getBadSources() const { return qi->getBadSources(); }
+
+		bool getAutoPriority() const { return qi->getAutoPriority(); }
+
 		uint32_t updateMask;
-		FileChunksInfo::Ptr chunkInfo;
 	
 	private:
-
 		Display* display;
+		QueueItem* qi;
 
 		QueueItemInfo(const QueueItemInfo&);
 		QueueItemInfo& operator=(const QueueItemInfo&);
@@ -303,21 +303,8 @@ private:
 	};
 
 	struct UpdateTask : FastAlloc<UpdateTask>, public Task {
-		UpdateTask(const QueueItem& source) : target(source.getTarget()), priority(source.getPriority()), size(source.getSize()),
-			status(source.getStatus()), downloadedBytes(source.getDownloadedBytes()), sources(source.getSources()), badSources(source.getBadSources()),
-			autoPriority(source.getAutoPriority())
-		{
-		}
-
+		UpdateTask(const QueueItem& source) : target(source.getTarget()) { }
 		string target;
-		QueueItem::Priority priority;
-		QueueItem::Status status;
-		int64_t downloadedBytes;
-		int64_t size;
-		bool autoPriority;
-
-		QueueItem::SourceList sources;
-		QueueItem::SourceList badSources;
 	};
 
 	TaskQueue tasks;

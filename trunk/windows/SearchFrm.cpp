@@ -622,8 +622,8 @@ LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		dcassert(i != -1);
-		SearchInfo* si = ctrlResults.getItemData(i);
-		SearchResult* sr = si->sr;
+		const SearchInfo* si = ctrlResults.getItemData(i);
+		const SearchResult* sr = si->sr;
 	
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->columns[COLUMN_FILENAME];
@@ -1323,7 +1323,7 @@ LRESULT SearchFrame::onItemChangedHub(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* b
 	if(lv->iItem == 0 && (lv->uNewState ^ lv->uOldState) & LVIS_STATEIMAGEMASK) {
 		if (((lv->uNewState & LVIS_STATEIMAGEMASK) >> 12) - 1) {
 			for(int iItem = 0; (iItem = ctrlHubs.GetNextItem(iItem, LVNI_ALL)) != -1; ) {
-				HubInfo* client = ctrlHubs.getItemData(iItem);
+				const HubInfo* client = ctrlHubs.getItemData(iItem);
 				if (!client->op)
 					ctrlHubs.SetCheckState(iItem, false);
 			}

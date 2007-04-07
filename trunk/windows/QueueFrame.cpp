@@ -312,7 +312,7 @@ void QueueFrame::QueueItemInfo::update() {
 }
 
 void QueueFrame::on(QueueManagerListener::Added, const QueueItem* aQI) {
-	QueueItemInfo* ii = new QueueItemInfo(*aQI);
+	QueueItemInfo* ii = new QueueItemInfo(aQI);
 
 	speak(ADD_ITEM,	new QueueItemInfoTask(ii));
 }
@@ -357,7 +357,7 @@ void QueueFrame::addQueueList(const QueueItem::StringMap& li) {
 	ctrlDirs.SetRedraw(FALSE);
 	for(QueueItem::StringMap::const_iterator j = li.begin(); j != li.end(); ++j) {
 		QueueItem* aQI = j->second;
-		QueueItemInfo* ii = new QueueItemInfo(*aQI);
+		QueueItemInfo* ii = new QueueItemInfo(aQI);
 		addQueueItem(ii, true);
 	}
 	ctrlQueue.resort();
@@ -574,7 +574,7 @@ void QueueFrame::on(QueueManagerListener::Removed, const QueueItem* aQI) {
 
 void QueueFrame::on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) {
 	speak(REMOVE_ITEM, new StringTask(oldTarget));
-	speak(ADD_ITEM,	new QueueItemInfoTask(new QueueItemInfo(*aQI)));
+	speak(ADD_ITEM,	new QueueItemInfoTask(new QueueItemInfo(aQI)));
 }
 
 void QueueFrame::on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) {
@@ -596,7 +596,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			updateStatus();
 		} else if(ti->first == REMOVE_ITEM) {
 			auto_ptr<StringTask> target(static_cast<StringTask*>(ti->second));
-			QueueItemInfo* ii = getItemInfo(target->str);
+			const QueueItemInfo* ii = getItemInfo(target->str);
 			if(!ii) {
 				dcassert(ii);
 				continue;
@@ -640,14 +640,6 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			if(!ii)
 				continue;
 
-			ii->setAutoPriority(ui->autoPriority);
-			ii->setPriority(ui->priority);
-			ii->setStatus(ui->status);
-			ii->setDownloadedBytes(ui->downloadedBytes);
-			ii->setSources(ui->sources);
-			ii->setBadSources(ui->badSources);
-			ii->setSize(ui->size);
-
 			ii->updateMask |= QueueItemInfo::MASK_PRIORITY | QueueItemInfo::MASK_USERS | QueueItemInfo::MASK_ERRORS | QueueItemInfo::MASK_STATUS | QueueItemInfo::MASK_DOWNLOADED;
 
 			if(!showTree || isCurDir(ii->getPath())) {
@@ -676,7 +668,7 @@ void QueueFrame::moveSelected() {
 	int n = ctrlQueue.GetSelectedCount();
 	if(n == 1) {
 		// Single file, get the full filename and move...
-		QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+		const QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 		tstring target = Text::toT(ii->getTarget());
 		tstring ext = Util::getFileExt(target);
 		tstring ext2;
@@ -705,7 +697,7 @@ void QueueFrame::moveSelected() {
 		if(WinUtil::browseDirectory(name, m_hWnd)) {
 			int i = -1;
 			while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				QueueItemInfo* ii = ctrlQueue.getItemData(i);
+				const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 				QueueManager::getInstance()->move(ii->getTarget(), Text::fromT(name) + Util::getFileName(ii->getTarget()));
 			}			
 		}
@@ -785,7 +777,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		multiMenu.InsertSeparatorFirst(TSTRING(FILES));			
 		
 		if(ctrlQueue.GetSelectedCount() == 1) {
-			QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+			const QueueItemInfo* ii = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 			QueueItem* qi = QueueManager::getInstance()->fileQueue.find(ii->getTarget());
 			if(!qi) return 0;
 
@@ -957,7 +949,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		WinUtil::searchHash(ii->getTTH());
 	}	
 	return 0;
@@ -966,7 +958,7 @@ LRESULT QueueFrame::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 LRESULT QueueFrame::onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		WinUtil::copyMagnet(ii->getTTH(), Text::toT(Util::getFileName(ii->getTarget())), ii->getSize());
 	}
 	return 0;
@@ -993,7 +985,7 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		CMenuItemInfo mi;
 		mi.fMask = MIIM_DATA;
@@ -1021,7 +1013,7 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 	
 	if(ctrlQueue.GetSelectedCount() == 1) {
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		if(wID == IDC_REMOVE_SOURCE) {
 			for(QueueItem::SourceConstIter si = ii->getSources().begin(); si != ii->getSources().end(); si++) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), si->getUser(), QueueItem::Source::FLAG_REMOVED);
@@ -1195,7 +1187,7 @@ void QueueFrame::updateStatus() {
 			cnt = ctrlQueue.GetItemCount();
 			if(showTree) {
 				for(int i = 0; i < cnt; ++i) {
-					QueueItemInfo* ii = ctrlQueue.getItemData(i);
+					const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 					total += (ii->getSize() > 0) ? ii->getSize() : 0;
 				}
 			} else {
@@ -1204,7 +1196,7 @@ void QueueFrame::updateStatus() {
 		} else {
 			int i = -1;
 			while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				QueueItemInfo* ii = ctrlQueue.getItemData(i);
+				const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 				total += (ii->getSize() > 0) ? ii->getSize() : 0;
 			}
 
@@ -1420,25 +1412,26 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
-			if(qii->chunkInfo) {
+			FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();
+			if(fileChunksInfo) {
 				vector<int64_t> v;
 
 				// running chunks
-				qii->chunkInfo->getAllChunks(v, 1);
+				fileChunksInfo->getAllChunks(v, 1);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
 				}
 				v.clear();
 
 				// downloaded chunks
-				qii->chunkInfo->getAllChunks(v, 0);
+				fileChunksInfo->getAllChunks(v, 0);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 				}
 				v.clear();
 
 				// verified chunks
-				qii->chunkInfo->getAllChunks(v, 2);
+				fileChunksInfo->getAllChunks(v, 2);
 				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
 				}
@@ -1476,7 +1469,7 @@ LRESULT QueueFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOO
 
 LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	if(ctrlQueue.GetSelectedCount() == 1) {
-		QueueItemInfo* i = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
+		const QueueItemInfo* i = ctrlQueue.getItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 		QueueItem* qi = QueueManager::getInstance()->fileQueue.find(i->getTarget());
 		if(qi)
 			WinUtil::RunPreviewCommand(wID - IDC_PREVIEW_APP, qi->getTempTarget());
@@ -1487,7 +1480,7 @@ LRESULT QueueFrame::onPreviewCommand(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		QueueItemInfo* ii = ctrlQueue.getItemData(i);
+		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
 		for(QueueItem::SourceConstIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
 			if(!i->getUser()->isOnline()) {

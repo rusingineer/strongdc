@@ -196,11 +196,12 @@ public:
 			queue.erase(const_cast<string*>(&qi->getTarget()));
 
 			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				qi->chunkInfo = NULL;
+				qi->setChunksInfo(NULL);
 				FileChunksInfo::Free(&qi->getTTH());
 			}
 
-			delete qi;
+			qi->dec();
+			//delete qi;
 		}
 
 	private:

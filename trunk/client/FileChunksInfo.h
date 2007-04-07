@@ -40,6 +40,9 @@
 // it's used when a source's download speed is unknown
 #define DEFAULT_SPEED 5120
 
+// minimum chunk size
+#define MIN_CHUNK_SIZE 1048576
+
 // PFS purpose
 typedef vector<uint16_t> PartsInfo;
 
@@ -74,7 +77,7 @@ private:
 
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
-	uint16_t overlappedCount;
+	uint8_t overlappedCount;
 };
 
 /**
