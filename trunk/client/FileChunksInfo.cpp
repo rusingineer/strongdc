@@ -88,7 +88,11 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 	Lock l(cs);
 
 	Chunk::Iter i = running.find(start);
-	dcassert(i != running.end());
+	if(i == running.end()) {
+		dcassert(0);
+		return CHUNK_LOST;
+	}
+
 	Chunk* chunk = i->second;
 
 	if(chunk->pos != pos) return CHUNK_LOST;

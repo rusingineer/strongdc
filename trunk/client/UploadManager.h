@@ -89,11 +89,12 @@ public:
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
 	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
-		User(u), File(file), pos(p), size(sz), iTime(itime), icon(0) { inc(); }
+		user(u), file(file), pos(p), size(sz), time(itime), icon(0) { inc(); }
 	virtual ~UploadQueueItem() throw() { }
-	typedef UploadQueueItem* Ptr;
-	typedef vector<Ptr> List;
+	
+	typedef vector<UploadQueueItem*> List;
 	typedef List::const_iterator Iter;
+	
 	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
@@ -105,8 +106,8 @@ public:
 			case COLUMN_HUB: return Util::stricmp(a->getText(COLUMN_HUB), b->getText(COLUMN_HUB));
 			case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 			case COLUMN_SIZE: return compare(a->size, b->size);
-			case COLUMN_ADDED: return compare(a->iTime, b->iTime);
-			case COLUMN_WAITING: return compare(a->iTime, b->iTime);
+			case COLUMN_ADDED:
+			case COLUMN_WAITING: return compare(a->time, b->time);
 		}
 		return 0;
 	}
@@ -127,11 +128,23 @@ public:
 	int imageIndex() const { return icon; }
 	void update();
 
-	User::Ptr User;
-	string File;
+	const string& getFile() const { return file; }
+	const User::Ptr& getUser() const { return user; }
+	int64_t getSize() const { return size; }
+	uint64_t getTime() const { return time; }
+
+	int getIcon() const { return icon; }
+	void setIcon(int aIcon) { icon = aIcon; }
+
+	int64_t getPos() const { return pos; }
+	void setPos(int64_t aPos) { pos = aPos; }
+
+private:
+	User::Ptr user;
+	string file;
 	int64_t pos;
 	int64_t size;
-	uint64_t iTime;
+	uint64_t time;
 	int icon;
 };
 

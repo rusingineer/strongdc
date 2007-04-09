@@ -102,7 +102,7 @@
 		<String Name="CopyNickIp">Kopírovat přezdívku a IP</String>
 		<String Name="CopyTag">Kopírovat TAG</String>
 		<String Name="CopyUrl">Kopírovat odkaz</String>
-		<String Name="CorruptionDetected">Chyba nalezena na pozici</String>
+		<String Name="CorruptionDetected">Chyba nalezena pro TTH: %s, na pozici %d</String>
 		<String Name="CouldNotOpenTargetFile">Nelze otevřít cílový soubor: </String>
 		<String Name="Count">Počet</String>
 		<String Name="Country">Země</String>

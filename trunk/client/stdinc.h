@@ -23,9 +23,7 @@
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
 #ifdef _DEBUG
-//# define _STLP_DEBUG 1
 # define _STLP_DO_CLEAN_NODE_ALLOC 1
-//# define _STLP_DEBUG_ALLOC 1
 #else
 # define _SECURE_SCL  0
 #endif

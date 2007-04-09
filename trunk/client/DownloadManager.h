@@ -82,12 +82,14 @@ public:
 	}
 
 	int64_t getChunkSize() const { return getSize() - getStartPos(); }
+	
 	/** @internal */
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }
 	
 	const TigerTree& getTigerTree() const { return tt; }
 	const string& getPFS() const { return pfs; }
+
 	/** @internal */
 	AdcCommand getCommand(bool zlib) const;
 

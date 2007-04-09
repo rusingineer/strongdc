@@ -157,7 +157,7 @@ private:
 		User::List RemoveUsers;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			// Ok let's cheat here, if you try to remove more users here is not working :(
-			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
 			UploadManager::getInstance()->clearUserFiles(*i);

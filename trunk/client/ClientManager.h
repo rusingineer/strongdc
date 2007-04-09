@@ -60,7 +60,7 @@ public:
 	User::Ptr getUser(const CID& cid) throw();
 
 	string findHub(const string& ipPort) const;
-	string findHubEncoding(const string& aUrl) const;
+	const string& findHubEncoding(const string& aUrl) const;
 
 	User::Ptr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	User::Ptr findUser(const CID& cid) const throw();
@@ -195,17 +195,16 @@ private:
 
 	User::Ptr me;
 	
+	uint64_t quickTick;
+	
 	string cachedIp;
 	CID pid;	
 
-	uint64_t quickTick;
-
 	friend class Singleton<ClientManager>;
 
-	ClientManager() { 
+	ClientManager() : quickTick(GET_TICK()) { 
 		TimerManager::getInstance()->addListener(this); 
 		SettingsManager::getInstance()->addListener(this);
-		quickTick = GET_TICK();
 	}
 
 	virtual ~ClientManager() throw() { 

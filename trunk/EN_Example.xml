@@ -286,7 +286,6 @@
 		<String Name="LastChange">Last change: </String>
 		<String Name="LastSeen">Time last seen</String>
 		<String Name="LatestVersion">Latest version</String>
-		<String Name="LeafCorrupted">File was corrupted, redownloading %s...</String>
 		<String Name="Left">left</String>
 		<String Name="LeftColor">Left color</String>
 		<String Name="LibCrash">Application \"%s\" caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product.</String>

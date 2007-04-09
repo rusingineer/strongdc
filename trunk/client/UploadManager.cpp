@@ -510,8 +510,8 @@ void UploadManager::addFailedUpload(const User::Ptr& User, const string& file, i
 	UploadQueueItem::UserMap::iterator j = waitingUsers.find(User);
 	if(j != waitingUsers.end()) {
 		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
-			if((*i)->File == file) {
-				(*i)->pos = pos;
+			if((*i)->getFile() == file) {
+				(*i)->setPos(pos);
 				found = true;
 				break;
 			}

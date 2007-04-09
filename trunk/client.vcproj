@@ -440,6 +440,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\ClientListener.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\ClientManager.h"
 				>
 			</File>
@@ -500,6 +504,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\FavoriteManagerListener.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\FavoriteUser.h"
 				>
 			</File>
@@ -517,6 +525,10 @@
 			</File>
 			<File
 				RelativePath=".\client\FinishedManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\forward.h"
 				>
 			</File>
 			<File

@@ -53,20 +53,7 @@ public:
 	const string& getString(Strings x) const { /*dcassert(x >= 0 && x < LAST);*/ return strings[x]; }
 	const wstring& getStringW(Strings x) const { /*dcassert(x >= 0 && x < LAST);*/ return wstrings[x]; }
 	bool isRTL() { return rtl; }
-/*	
-	template<typename T>
-	TStringList getStrings(const T& t) const {
-		const size_t n = sizeof(t) / sizeof(t[0]);
-		TStringList ret(n);
-		for(size_t i = 0; i < n; ++i) {
-#ifdef UNICODE
-			ret[i] = wstrings[t[i]];
-#else
-			ret[i] = strings[t[i]];
-#endif
-		}
-		return ret;
-	}*/
+
 private:
 	friend class Singleton<ResourceManager>;
 	
