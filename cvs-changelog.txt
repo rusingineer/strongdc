@@ -1,3 +1,8 @@
+** svn283
+	fixed invalid QueueItem deletion on exit
+	made workaround to avoid crash in FileChunksInfo::addChunkPos
+	small code changes in UploadQueueItem
+
 ** svn282
 	hopefully fixed userlist crash
 	memory usage optimization for queue items - need to test queue item status

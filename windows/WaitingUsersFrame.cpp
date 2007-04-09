@@ -181,7 +181,7 @@ LRESULT WaitingUsersFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			QueueManager::getInstance()->addList(((UploadQueueItem*)ctrlList.getItemData(i))->User, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 		}
 	}
 	return 0;
@@ -198,7 +198,7 @@ LRESULT WaitingUsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		User::List RemoveUsers;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			// Ok let's cheat here, if you try to remove more users here is not working :(
-			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
 			UploadManager::getInstance()->clearUserFiles(*i);
@@ -252,7 +252,7 @@ LRESULT WaitingUsersFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, 
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			PrivateFrame::openWindow(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			PrivateFrame::openWindow(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 	}
 	return 0;
@@ -267,7 +267,7 @@ LRESULT WaitingUsersFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 600);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), 600);
 		}
 	}
 	return 0; 
@@ -282,7 +282,7 @@ LRESULT WaitingUsersFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 3600);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), 3600);
 		}
 	}
 	return 0;
@@ -297,7 +297,7 @@ LRESULT WaitingUsersFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 24*3600);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), 24*3600);
 		}
 	}
 	return 0;
@@ -312,7 +312,7 @@ LRESULT WaitingUsersFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, H
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User, 7*24*3600);
+			UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), 7*24*3600);
 		}
 	}
 	return 0;
@@ -327,7 +327,7 @@ LRESULT WaitingUsersFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			UploadManager::getInstance()->unreserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			UploadManager::getInstance()->unreserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 	}
 	return 0;
@@ -342,7 +342,7 @@ LRESULT WaitingUsersFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, 
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			FavoriteManager::getInstance()->addFavoriteUser(((UploadQueueItem*)ctrlList.getItemData(i))->User);
+			FavoriteManager::getInstance()->addFavoriteUser(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 	}
 	return 0;
@@ -435,27 +435,27 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 
 	if(userNode) {
 		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-			if(*i == aUQI->User) {
+			if(*i == aUQI->getUser()) {
 				add = false;
 				break;
 			}
 		}
 	}
 	if(add) {
-		UQFUsers.push_back(aUQI->User);
-		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str(), 
-			0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->User)), TVI_ROOT, TVI_LAST);
+		UQFUsers.push_back(aUQI->getUser());
+		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
+			0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->getUser())), TVI_ROOT, TVI_LAST);
 	}	
 	if(selNode) {
 		TCHAR selBuf[256];
 		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		if(_tcscmp(selBuf, (Text::toT(aUQI->User->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->User).first).c_str()) != 0) {
+		if(_tcscmp(selBuf, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str()) != 0) {
 			return;
 		}
 	}
 	aUQI->update();
-	aUQI->icon = WinUtil::getIconIndex(Text::toT(aUQI->File));
-	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->icon);
+	aUQI->setIcon(WinUtil::getIconIndex(Text::toT(aUQI->getFile())));
+	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->getIcon());
 }
 
 HTREEITEM WaitingUsersFrame::GetParentItem() {
@@ -497,14 +497,14 @@ void WaitingUsersFrame::updateStatus() {
 
 
 void UploadQueueItem::update() {
-	setText(COLUMN_FILE, Text::toT(Util::getFileName(File)));
-	setText(COLUMN_PATH, Text::toT(Util::getFilePath(File)));
-	setText(COLUMN_NICK, Text::toT(User->getFirstNick()));
-	setText(COLUMN_HUB, WinUtil::getHubNames(User).first);
+	setText(COLUMN_FILE, Text::toT(Util::getFileName(file)));
+	setText(COLUMN_PATH, Text::toT(Util::getFilePath(file)));
+	setText(COLUMN_NICK, Text::toT(user->getFirstNick()));
+	setText(COLUMN_HUB, WinUtil::getHubNames(user).first);
 	setText(COLUMN_TRANSFERRED, Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)"));
 	setText(COLUMN_SIZE, Util::formatBytesW(size));
-	setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", iTime)));
-	setText(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - iTime));
+	setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time)));
+	setText(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - time));
 
 }
 
@@ -533,8 +533,8 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
 			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			UQI->setText(COLUMN_TRANSFERRED, Util::formatBytesW(UQI->pos) + _T(" (") + Util::toStringW((double)UQI->pos*100.0/(double)UQI->size) + _T("%)"));
-			UQI->setText(COLUMN_WAITING, Util::formatSeconds(itime - UQI->iTime));
+			UQI->setText(COLUMN_TRANSFERRED, Util::formatBytesW(UQI->getPos()) + _T(" (") + Util::toStringW((double)UQI->getPos()*100.0/(double)UQI->getSize()) + _T("%)"));
+			UQI->setText(COLUMN_WAITING, Util::formatSeconds(itime - UQI->getTime()));
 			ctrlList.updateItem(i);
 		}
 	}
@@ -602,8 +602,8 @@ LRESULT WaitingUsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHan
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 
-				CBarShader statusBar(rc.Height(), rc.Width(), RGB(150, 0, 0), ii->size);
-				statusBar.FillRange(0, ii->pos, RGB(222, 160, 0));
+				CBarShader statusBar(rc.Height(), rc.Width(), RGB(150, 0, 0), ii->getSize());
+				statusBar.FillRange(0, ii->getPos(), RGB(222, 160, 0));
 				statusBar.Draw(cdc, 0, 0, SETTING(PROGRESS_3DDEPTH));
 
 				SetTextColor(dc, SETTING(PROGRESS_TEXT_COLOR_UP));

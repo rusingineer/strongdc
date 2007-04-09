@@ -285,7 +285,6 @@ enum Strings { // @DontAdd
 	LAST_CHANGE, // "Last change: "
 	LAST_SEEN, // "Time last seen"
 	LATEST_VERSION, // "Latest version"
-	LEAF_CORRUPTED, // "File was corrupted, redownloading %s..."
 	LEFT, // "left"
 	LEFT_COLOR, // "Left color"
 	LIB_CRASH, // "Application \"%s\" caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product."

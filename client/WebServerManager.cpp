@@ -440,8 +440,8 @@ string WebServerManager::getULQueue(){
 	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 	for(UploadQueueItem::UserMapIter ii = users.begin(); ii != users.end(); ++ii) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
-			ret+="<tr><td>" + (*i)->User->getFirstNick() + "</td>";
-			ret+="<td>" + Util::getFileName((*i)->File) + "</td></tr>";
+			ret+="<tr><td>" + (*i)->getUser()->getFirstNick() + "</td>";
+			ret+="<td>" + Util::getFileName((*i)->getFile()) + "</td></tr>";
 		}
 	}
 	ret+="</table>";

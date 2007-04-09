@@ -638,7 +638,6 @@ bool HubFrame::updateUser(const UserTask& u) {
 		if(!filter.empty())
 			updateUserList(ui);
 
-		client->availableBytes += ui->getIdentity().getBytesShared();
 		return true;
 	} else {
 		OnlineUser* ui = const_cast<OnlineUser*>(u.onlineUser);
@@ -1661,7 +1660,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 	} else {
 		showUsers = false;
 		clearUserList();
-		client->availableBytes = 0;
+		//client->availableBytes = 0;
 	}
 
 	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);

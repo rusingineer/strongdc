@@ -638,7 +638,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				//fire(DownloadManagerListener::Failed(), d, e.getError());
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false);
+				QueueManager::getInstance()->putDownload(d, false, false);
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
@@ -671,10 +671,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
-						char buf[128];
-						snprintf(buf, sizeof(buf), CSTRING(LEAF_CORRUPTED), Util::formatBytes(d->getSize() - lpFileDataInfo->getDownloadedSize()).c_str());
-
-						failDownload(aSource, buf);
+						failDownload(aSource, Util::emptyString);
 						return;
 					}
 					d->setFlag(Download::FLAG_CRC32_OK);

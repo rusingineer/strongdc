@@ -161,7 +161,7 @@ string ClientManager::findHub(const string& ipPort) const {
 		if(c->getIp() == ip) {
 			// If exact match is found, return it
 			if(c->getPort() == port)
-			return c->getHubUrl();
+				return c->getHubUrl();
 
 			// Port is not always correct, so use this as a best guess...
 			url = c->getHubUrl();
@@ -171,7 +171,7 @@ string ClientManager::findHub(const string& ipPort) const {
 	return url;
 }
 
-string ClientManager::findHubEncoding(const string& aUrl) const {
+const string& ClientManager::findHubEncoding(const string& aUrl) const {
 	Lock l(cs);
 
 	for(Client::List::const_iterator i = clients.begin(); i != clients.end(); ++i) {

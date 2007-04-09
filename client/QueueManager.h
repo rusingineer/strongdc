@@ -175,7 +175,7 @@ public:
 		FileQueue() { }
 		~FileQueue() {
 			for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i)
-				delete i->second;
+				i->second->dec();
 			}
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
@@ -201,7 +201,6 @@ public:
 			}
 
 			qi->dec();
-			//delete qi;
 		}
 
 	private:

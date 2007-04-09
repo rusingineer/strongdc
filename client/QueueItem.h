@@ -274,18 +274,16 @@ public:
 			switch(percent){
 					case 0:
 					case 1:
-/*						p = QueueItem::LOWEST;
-						break;*/
 					case 2:
-					case 3:
 						p = QueueItem::LOW;
 						break;
+					case 3:
 					case 4:
 					case 5:						
-					case 6:
 					default:
 						p = QueueItem::NORMAL;
 						break;
+					case 6:
 					case 7:
 					case 8:
 						p = QueueItem::HIGH;
