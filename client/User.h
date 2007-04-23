@@ -185,7 +185,8 @@ public:
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
-
+	~OnlineUser() { }
+	
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }
 

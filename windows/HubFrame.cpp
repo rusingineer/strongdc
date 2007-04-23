@@ -640,6 +640,8 @@ bool HubFrame::updateUser(const UserTask& u) {
 
 		return true;
 	} else {
+	
+	
 		OnlineUser* ui = const_cast<OnlineUser*>(u.onlineUser);
 		if(!ui->isHidden() && u.onlineUser->getIdentity().isHidden()) {
 			ctrlUsers.deleteItem(ui);
@@ -744,8 +746,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			}
 		} else if(i->first == REMOVE_USER) {
 			const UserTask& u = *static_cast<UserTask*>(i->second);
-			if(showUsers)
-				removeUser(u.onlineUser);
+			removeUser(u.onlineUser);
 			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser()))) {
 				addLine(Text::toT("*** " + STRING(PARTS) + u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 			}
@@ -791,17 +792,12 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			} else {
 				ctrlStatus.SetText(1, (Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
 			}
-			if(showUsers) {
-				int64_t available = client->getAvailable();
-				ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
-				if(AllUsers > 0)
-					ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
-				else
-					ctrlStatus.SetText(3, _T(""));
-			} else {
-				ctrlStatus.SetText(2, _T(""));
+			int64_t available = client->getAvailable();
+			ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
+			if(AllUsers > 0)
+				ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
+			else
 				ctrlStatus.SetText(3, _T(""));
-			}
 		} else if(i->first == GET_PASSWORD) {
 			if(client->getPassword().size() > 0) {
 				client->password(client->getPassword());
@@ -1041,6 +1037,14 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 
 void HubFrame::clearUserList() {
 	ctrlUsers.DeleteAllItems();
+
+	OnlineUser::List l;
+	client->getUserList(l);
+
+	for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i) {
+		OnlineUser* ui = *i;
+		ui->dec();
+	}
 }
 
 void HubFrame::clearTaskList() {
@@ -1659,7 +1663,8 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		client->refreshUserList(true);
 	} else {
 		showUsers = false;
-		clearUserList();
+		ctrlUsers.DeleteAllItems();
+		//clearUserList();
 		//client->availableBytes = 0;
 	}
 
@@ -1813,6 +1818,9 @@ void HubFrame::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
 }
 void HubFrame::on(UsersUpdated, const Client*, const OnlineUser::List& aList) throw() {
 	for(OnlineUser::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
+		if((*i)->unique()) {
+			(*i)->inc();
+		}
 		tasks.add(UPDATE_USER, new UserTask(*(*i)));
 	}
 	updateUsers = true;

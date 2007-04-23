@@ -1,3 +1,8 @@
+** svn284
+	fixed hang up/crash during readd/remove all sources
+	fixed bugs during show/hide userlist
+	hopefully fixed crash in QueueFrame
+
 ** svn283
 	fixed invalid QueueItem deletion on exit
 	made workaround to avoid crash in FileChunksInfo::addChunkPos
