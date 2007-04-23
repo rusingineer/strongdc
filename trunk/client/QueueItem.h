@@ -160,7 +160,11 @@ public:
 			setChunksInfo(rhs.getChunksInfo());
 	}
 
-	virtual ~QueueItem() { 
+	virtual ~QueueItem() {
+		if(isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+			setChunksInfo(NULL);
+			FileChunksInfo::Free(&getTTH());
+		}	
 	}
 
 	size_t countOnlineUsers() const {

@@ -194,12 +194,6 @@ public:
 		void move(QueueItem* qi, const string& aTarget);
 		void remove(QueueItem* qi) {
 			queue.erase(const_cast<string*>(&qi->getTarget()));
-
-			if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				qi->setChunksInfo(NULL);
-				FileChunksInfo::Free(&qi->getTTH());
-			}
-
 			qi->dec();
 		}
 
