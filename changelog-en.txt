@@ -10,7 +10,8 @@
 * fixed bug when "too many same numbers" mainchat cheat message could not be disabled
 * hopefully fixed silent crash in queue Filelists node (THX BugMaster for hint)
 * improved the response time to close connections
-* some performance tweaks
+* decreased memory usage for large queue and userlists
+* right clicks on users work also with disabled userlists
 
 	-- StrongDC++ 2.03 --
 

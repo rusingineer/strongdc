@@ -10,7 +10,8 @@
 * opravena chyba, že hláška "too many same numbers" nemohla být vypnuta
 * snad opraven tichý pád v seznamu filelistù ve frontì (THX BugMaster za nalezení problému)
 * vylepšen èas reakce na zavøení pøipojení
-* trochu zlepšen výkon
+* sníženy nároky na pamìt s velkou frontou a velkými seznamy uživatelù
+* klepnutím pravým myšítkem na uživatele funguje i pøi vypnutém seznamu uživatelù
 
 	-- StrongDC++ 2.03 --
 

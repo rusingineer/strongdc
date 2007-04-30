@@ -44,7 +44,7 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	CClientDC dc(NULL);
 
 	IMAGEINFO ii;
-	m_pImagesList->GetImageInfo(getImagePos(), &ii);
+	m_pImagesList->GetImageInfo(m_ImagePos, &ii);
 
 	int nWidth = ii.rcImage.right - ii.rcImage.left;
 	int nHeight = ii.rcImage.bottom - ii.rcImage.top;
@@ -55,7 +55,7 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	HBITMAP pOldBitmap = (HBITMAP) SelectObject(memDC, dist);
 	
 	memDC.FillSolidRect(0, 0, nWidth, nHeight, clrBkColor);
-	m_pImagesList->Draw(memDC, getImagePos(), CPoint(0, 0), ILD_NORMAL);
+	m_pImagesList->Draw(memDC, m_ImagePos, CPoint(0, 0), ILD_NORMAL);
 	//BitBlt(dc, ii.rcImage.left, ii.rcImage.top, nWidth, nHeight, memDC.m_hDC, 0, 0, SRCCOPY);
 
 	SelectObject(memDC, pOldBitmap);

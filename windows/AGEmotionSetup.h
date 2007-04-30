@@ -42,7 +42,6 @@ public:
 	HBITMAP getEmotionBmp() const {	return m_EmotionBmp; }
 	HBITMAP getEmotionBmp(const COLORREF &clrBkColor);
 	const string& getEmotionBmpPath() const { return m_EmotionBmpPath; }
-	long getImagePos() const { return m_ImagePos; }
 	
 	void setImagePos(long ImagePos) { m_ImagePos = ImagePos; }
 	void setImageList(CImageList* pImagesList) { m_pImagesList = pImagesList; }

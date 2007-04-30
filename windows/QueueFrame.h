@@ -227,12 +227,12 @@ private:
 			MASK_TYPE = 1 << COLUMN_TYPE
 		};
 
-		QueueItemInfo(const QueueItem* aQI) : qi(const_cast<QueueItem*>(aQI)), updateMask((uint32_t)-1), display(0)	{
-			qi->inc();
+		QueueItemInfo(const QueueItem* aQI) : qi(aQI), updateMask((uint32_t)-1), display(0)	{
+			const_cast<QueueItem*>(qi)->inc();
 		}
 
 		~QueueItemInfo() { 
-			qi->dec();
+			const_cast<QueueItem*>(qi)->dec();
 			delete display;
 		}
 
@@ -291,7 +291,7 @@ private:
 	
 	private:
 		Display* display;
-		QueueItem* qi;
+		const QueueItem* qi;
 
 		QueueItemInfo(const QueueItemInfo&);
 		QueueItemInfo& operator=(const QueueItemInfo&);

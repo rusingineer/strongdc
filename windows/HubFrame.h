@@ -317,9 +317,10 @@ private:
 	};
 
 	struct UserTask : public Task {
-		UserTask(const OnlineUser& ou) : onlineUser(&ou) { }
-
-		const OnlineUser* onlineUser;
+		UserTask(const OnlineUser& ou) : onlineUser(const_cast<OnlineUser*>(&ou)) { onlineUser->inc(); }
+		~UserTask() { onlineUser->dec(); }
+		
+		OnlineUser* onlineUser;
 	};
 
 	struct MessageTask : public StringTask {
@@ -457,7 +458,7 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	
 	bool updateUser(const UserTask& u);
-	void removeUser(const OnlineUser* aUser);
+	void removeUser(OnlineUser* aUser);
 
 	void updateUserList(const OnlineUser* ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);

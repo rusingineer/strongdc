@@ -202,7 +202,7 @@ public:
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	const string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
-
+	
 	GETSET(Identity, identity, Identity);
 private:
 	friend class NmdcHub;

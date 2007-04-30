@@ -37,8 +37,6 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://") };
 
-void ChatCtrl::SetUsers(TypedListViewCtrl<OnlineUser, IDC_USERS>* pUsers) { m_pUsers = pUsers; }
-
 void ChatCtrl::AdjustTextSize() {
 	if(GetWindowTextLength() > 25000) {
 		// We want to limit the buffer to 25000 characters...after that, w95 becomes sad...
@@ -281,9 +279,8 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 }
 
 bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
-	if(!m_pUsers) 
-		return FALSE;
-
+	if(client == NULL) return false;
+	
 	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos) + 1;
 	long lSelBegin = 0, lSelEnd = 0;
 	if(len < 3)
@@ -327,7 +324,7 @@ bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 	if(sN.size() == 0)
 		return false;
 
-	if(m_pUsers->findItem(sN) >= 0) {
+	if(client->findUser(Text::fromT(sN)) != NULL) {
 		sNick = sN;
 		iBegin = lSelBegin + iLeft;
 		iEnd = lSelBegin + iLeft + iCRLF;
@@ -340,7 +337,7 @@ bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 	// A pak prvni i posledni :-)
 	if(iCRLF > 1) {
 		sN = sText.substr(iLeft, iCRLF - 1);
-		if(m_pUsers->findItem(sN) >= 0) {
+		if(client->findUser(Text::fromT(sN)) != NULL) {
 			sNick = sN;
    			iBegin = lSelBegin + iLeft;
    			iEnd = lSelBegin + iLeft + iCRLF - 1;
@@ -348,7 +345,7 @@ bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 		}
 
 		sN = sText.substr(iLeft + 1, iCRLF - 1);
-		if(m_pUsers->findItem(sN) >= 0) {
+		if(client->findUser(Text::fromT(sN)) != NULL) {
         	sNick = sN;
 			iBegin = lSelBegin + iLeft + 1;
 			iEnd = lSelBegin + iLeft + iCRLF;
@@ -356,7 +353,7 @@ bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 		}
 
 		sN = sText.substr(iLeft + 1, iCRLF - 2);
-		if(m_pUsers->findItem(sN) >= 0) {
+		if(client->findUser(Text::fromT(sN)) != NULL) {
 			sNick = sN;
    			iBegin = lSelBegin + iLeft + 1;
 			iEnd = lSelBegin + iLeft + iCRLF - 1;

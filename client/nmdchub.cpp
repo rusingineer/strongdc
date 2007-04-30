@@ -132,7 +132,6 @@ void NmdcHub::putUser(const string& aNick) {
 
 	ClientManager::getInstance()->putOffline(ou);
 	ou->dec();
-	//delete ou;
 }
 
 void NmdcHub::clearUsers() {
@@ -146,8 +145,10 @@ void NmdcHub::clearUsers() {
 
 	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
 		ClientManager::getInstance()->putOffline(i->second);
+		if(!i->second->unique()) {
+			i->second->dec();
+		}
 		i->second->dec();
-		//delete i->second;
 	}
 }
 

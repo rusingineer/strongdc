@@ -625,6 +625,8 @@ public:
 		else
 			info[name] = val;
 	}
+	
+	void clearData() { info.clear(); }
 private:
 	typedef map<const uint8_t, tstring> InfMap;
 	InfMap info;
