@@ -23,6 +23,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "../client/Client.h"
+
 #include "TypedListViewCtrl.h"
 #include "ImageDataObject.h"
 
@@ -34,7 +36,7 @@ class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
 public:
-	ChatCtrl() : m_boAutoScroll(true), m_pUsers(NULL) { };
+	ChatCtrl() : m_boAutoScroll(true), client(NULL) { };
 	virtual ~ChatCtrl() { }
 
 	LRESULT OnRButtonDown(POINT pt);
@@ -52,16 +54,17 @@ public:
 	void GoToEnd();
 	bool GetAutoScroll() const { return m_boAutoScroll; }
 	void SetAutoScroll(bool boAutoScroll);
-	void SetUsers(TypedListViewCtrl<OnlineUser, IDC_USERS> *pUsers);
 	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
+	
+	void setClient(const Client* pClient) { client = pClient; }
 
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
 	static tstring sSelectedUser;
 
 private:
-	TypedListViewCtrl<OnlineUser, IDC_USERS> *m_pUsers;
-	bool m_boAutoScroll;
+    const Client* client;
+    bool m_boAutoScroll;
 };
 
 

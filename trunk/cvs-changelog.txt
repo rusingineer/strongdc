@@ -1,3 +1,10 @@
+** svn285
+	fixed another crash in QueueFrame
+	fixed crash during Follow redirect
+	fixed memory leak when hub is disconnected automatically
+	fixed memory leak in ImageDataObject
+	right clicks on users work also with disabled userlists
+
 ** svn284
 	fixed hang up/crash during readd/remove all sources
 	fixed bugs during show/hide userlist

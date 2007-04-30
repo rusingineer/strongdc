@@ -1416,8 +1416,8 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
-			FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();
-			if(fileChunksInfo) {
+			if(qii->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+				FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
 				vector<int64_t> v;
 
 				// running chunks
