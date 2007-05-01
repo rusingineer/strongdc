@@ -81,15 +81,12 @@ private:
 
 	NickMap users;
 
-	struct get_second : std::unary_function<NickMap::value_type, OnlineUser*> {
-		result_type operator() (argument_type p) const {
-			return p.second;
-		}
-	};	
-
 	void getUserList(OnlineUser::List& list) const {
 		Lock l(cs);
-		std::transform(users.begin(), users.end(), std::back_inserter(list), get_second());
+		for(NickIter i = users.begin(); i != users.end(); i++) {
+			i->second->inc();
+			list.push_back(i->second);
+		}
 	}
 
 	int supportFlags;
