@@ -87,7 +87,7 @@ void AdcHub::putUser(const uint32_t aSID) {
 	OnlineUser* ou = 0;
 	{
 		Lock l(cs);
-		SIDIter i = users.find(aSID);
+		SIDMap::iterator i = users.find(aSID);
 		if(i == users.end())
 			return;
 		ou = i->second;
@@ -98,7 +98,6 @@ void AdcHub::putUser(const uint32_t aSID) {
 		ClientManager::getInstance()->putOffline(ou);
 		
 	fire(ClientListener::UserRemoved(), this, *ou);
-	//delete ou;
 	ou->dec();
 }
 
@@ -112,7 +111,6 @@ void AdcHub::clearUsers() {
 	for(SIDIter i = tmp.begin(); i != tmp.end(); ++i) {
 		if(i->first != AdcCommand::HUB_SID)
 			ClientManager::getInstance()->putOffline(i->second);
-		//delete i->second;
 		i->second->dec();
 	}
 }

@@ -65,17 +65,14 @@ private:
 
 	/** Map session id to OnlineUser */
 	typedef HASH_MAP<uint32_t, OnlineUser*> SIDMap;
-	typedef SIDMap::iterator SIDIter;
-
-	struct get_second : std::unary_function<SIDMap::value_type, OnlineUser*> {
-		result_type operator() (argument_type p) const {
-			return p.second;
-		}
-	};
+	typedef SIDMap::const_iterator SIDIter;
 
 	void getUserList(OnlineUser::List& list) const {
 		Lock l(cs);
-		std::transform(users.begin(), users.end(), std::back_inserter(list), get_second());	
+		for(SIDIter i = users.begin(); i != users.end(); i++) {
+			i->second->inc();
+			list.push_back(i->second);
+		}
 	}
 
 	Socket udp;

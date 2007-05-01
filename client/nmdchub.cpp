@@ -145,9 +145,6 @@ void NmdcHub::clearUsers() {
 
 	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
 		ClientManager::getInstance()->putOffline(i->second);
-		if(!i->second->unique()) {
-			i->second->dec();
-		}
 		i->second->dec();
 	}
 }

@@ -460,14 +460,14 @@ private:
 	bool updateUser(const UserTask& u);
 	void removeUser(OnlineUser* aUser);
 
-	void updateUserList(const OnlineUser* ui = NULL);
+	void updateUserList(OnlineUser* ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);
 	bool matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
 
 	void addAsFavorite();
 	void removeFavoriteHub();
 
-	void clearUserList();
+	void clearUserList(bool clearData = false);
 	void clearTaskList();
 
 	int hubchatusersplit;

@@ -1,3 +1,6 @@
+** svn286
+	another fixes for userlist optimization
+
 ** svn285
 	fixed another crash in QueueFrame
 	fixed crash during Follow redirect
