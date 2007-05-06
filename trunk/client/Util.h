@@ -615,35 +615,24 @@ struct noCaseStringLess {
 // parent class for objects with a lot of empty columns in list
 class ColumnBase {
 public:
-	ColumnBase() : thread(0) { }
+	ColumnBase() { }
 
 	const tstring& getText(const uint8_t col) const {
-		if(thread == 0) thread = GetCurrentThreadId();
-		dcassert(thread == GetCurrentThreadId());
-		
 		InfMap::const_iterator i = info.find(col);
 		return i == info.end() ? Util::emptyStringT : i->second;
 	}
 	void setText(const uint8_t name, const tstring& val) {
-		if(thread == 0) thread = GetCurrentThreadId();
-		dcassert(thread == GetCurrentThreadId());
-		
 		if(val.empty())
 			info.erase(name);
 		else
 			info[name] = val;
 	}
 	
-	void clearData() {
-		if(thread == 0) thread = GetCurrentThreadId();
-		dcassert(thread == GetCurrentThreadId());
-		info.clear();
-	}
+	void clearData() { info.clear(); }
+	
 private:
 	typedef map<const uint8_t, tstring> InfMap;
 	InfMap info;
-	
-	mutable DWORD thread;
 };
 
 #endif // !defined(UTIL_H)

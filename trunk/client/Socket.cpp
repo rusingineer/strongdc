@@ -58,7 +58,7 @@ string SocketException::errorToString(int aError) throw() {
 	return msg;
 }
 
-void Socket::create(int aType /* = TYPE_TCP */) throw(SocketException) {
+void Socket::create(uint8_t aType /* = TYPE_TCP */) throw(SocketException) {
 	if(sock != INVALID_SOCKET)
 		disconnect();
 

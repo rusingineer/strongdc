@@ -597,7 +597,7 @@
 		<String Name="SettingsConfirmDialogOptions">Potvrzovat dialogy nastavení</String>
 		<String Name="SettingsConfirmExit">Potvrzovat ukončení StrongDC++</String>
 		<String Name="SettingsConfirmHubRemoval">Potvrzovat odebrání hubu z oblíbených</String>
-		<String Name="SettingsConfirmItemRemoval">Potvrzovat při oodebírání položek z fronty stahování</String>
+		<String Name="SettingsConfirmItemRemoval">Potvrzovat při odebírání položek z fronty stahování</String>
 		<String Name="SettingsCzdc">StrongDC++</String>
 		<String Name="SettingsCzdcExtraDownloads">Extra sloty pro soubory s nejvyšší prioritou</String>
 		<String Name="SettingsDebugCommands">Debug příkazy</String>
@@ -639,13 +639,13 @@
 		<String Name="SettingsLanguageFile">Soubor s překladem</String>
 		<String Name="SettingsLimit">Limity</String>
 		<String Name="SettingsLogDir">Adresář pro záznamy</String>
-		<String Name="SettingsLogDownloads">Zaznamenávat stažené</String>
+		<String Name="SettingsLogDownloads">Zaznamenávat stažené soubory</String>
 		<String Name="SettingsLogFilelistTransfers">Zaznamenávat filelisty</String>
 		<String Name="SettingsLogMainChat">Zaznamenávat Hlavní chat</String>
 		<String Name="SettingsLogPrivateChat">Zaznamenávat Soukromé zprávy</String>
 		<String Name="SettingsLogStatusMessages">Zaznamenávat Stavové zprávy</String>
 		<String Name="SettingsLogSystemMessages">Zaznamenávat Systémové zprávy</String>
-		<String Name="SettingsLogUploads">Zaznamenávat Odeslané</String>
+		<String Name="SettingsLogUploads">Zaznamenávat odeslané soubory</String>
 		<String Name="SettingsLogging">Záznamy</String>
 		<String Name="SettingsLogs">Záznamy</String>
 		<String Name="SettingsMaxCompress">Max kompresní poměr</String>

@@ -641,16 +641,17 @@ bool HubFrame::updateUser(const UserTask& u) {
 		return true;
 	} else {		
 		resort = u.onlineUser->update(ctrlUsers.getSortColumn()) || resort;
-		u.onlineUser->getIdentity().set("WO", u.onlineUser->getIdentity().isOp() ? "1" : "");
+		u.onlineUser->getIdentity().set("WO", u.onlineUser->getIdentity().isOp() ? "1" : Util::emptyString);
 
 		int pos = ctrlUsers.findItem(u.onlineUser);
 		if(pos != -1) {
 			if(u.onlineUser->isHidden()) {
 				ctrlUsers.DeleteItem(pos);
 				u.onlineUser->dec();				
+			} else {
+				ctrlUsers.updateItem(pos);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, UserInfoBase::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
 			}
-			ctrlUsers.updateItem(pos);
-			ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, UserInfoBase::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
 		}
 
 		updateUserList(u.onlineUser);

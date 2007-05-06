@@ -89,8 +89,9 @@ public:
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
 	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
-		user(u), file(file), pos(p), size(sz), time(itime), icon(0) { inc(); }
-	virtual ~UploadQueueItem() throw() { }
+		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }
+	
+	~UploadQueueItem() throw() { }
 	
 	typedef vector<UploadQueueItem*> List;
 	typedef List::const_iterator Iter;
@@ -125,16 +126,13 @@ public:
 		COLUMN_LAST
 	};
 		
-	int imageIndex() const { return icon; }
+	int imageIndex() const;
 	void update();
 
 	const string& getFile() const { return file; }
 	const User::Ptr& getUser() const { return user; }
 	int64_t getSize() const { return size; }
 	uint64_t getTime() const { return time; }
-
-	int getIcon() const { return icon; }
-	void setIcon(int aIcon) { icon = aIcon; }
 
 	int64_t getPos() const { return pos; }
 	void setPos(int64_t aPos) { pos = aPos; }
@@ -145,7 +143,6 @@ private:
 	int64_t pos;
 	int64_t size;
 	uint64_t time;
-	int icon;
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>

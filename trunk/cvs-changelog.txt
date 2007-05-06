@@ -1,3 +1,9 @@
+** svn287
+	fixed invalid user updating when trying to update hidden user
+	hopefully fixed executing on Win9x due to missing DLL export
+	small memory save in Waiting users queue
+	fixed some old links to berlios
+
 ** svn286
 	another fixes for userlist optimization
 

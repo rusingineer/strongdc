@@ -230,7 +230,7 @@ public:
 			}
 
 			bool bShellMenuShown = false;
-			if(BOOLSETTING(SHOW_SHELL_MENU) && (ctrlList.GetSelectedCount() == 1)) {
+			if(BOOLSETTING(SHOW_SHELL_MENU) && (ctrlList.GetSelectedCount() == 1) && (LOBYTE(LOWORD(GetVersion())) >= 5)) {
 				tstring path = Text::toT(((ItemInfo*)ctrlList.GetItemData(ctrlList.GetSelectedIndex()))->entry->getTarget());
 				if(GetFileAttributes(path.c_str()) != 0xFFFFFFFF) { // Check that the file still exists
 					CShellContextMenu shellMenu;
@@ -464,9 +464,9 @@ template <class T, int title, int id, int icon>
 int FinishedFrameBase<T, title, id, icon>::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED };
 
 template <class T, int title, int id, int icon>
-int FinishedFrameBase<T, title, id, icon>::columnSizes[] = { 100, 110, 290, 125, 80, 80, 80 };
+int FinishedFrameBase<T, title, id, icon>::columnSizes[] = { 100, 110, 290, 125, 80, 80 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
-ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED, ResourceManager::CRC_CHECKED
+ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED
 };
 
 #endif // !defined(FINISHED_FRAME_BASE_H)

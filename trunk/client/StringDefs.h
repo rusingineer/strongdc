@@ -105,7 +105,6 @@ enum Strings { // @DontAdd
 	COULD_NOT_OPEN_TARGET_FILE, // "Could not open target file: "
 	COUNT, // "Count"
 	COUNTRY, // "Country"
-	CRC_CHECKED, // "TTH Checked"
 	CREATING_HASH, // "Hashing"
 	CURRENT_VERSION, // "Current version"
 	DATA_RETRIEVED, // "Data retrieved"
