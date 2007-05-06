@@ -38,9 +38,9 @@ public:
 
 	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
-		bool aCrc32 = false, const string& aTTH = Util::emptyString) : 
+		const string& aTTH = Util::emptyString) : 
 		target(aTarget), user(aUser), cid(aCID), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), crc32Checked(aCrc32), tth(aTTH)
+		milliSeconds(aMSeconds), time(aTime), tth(aTTH)
 	{
 	}
 
@@ -54,7 +54,6 @@ public:
 	GETSET(int64_t, chunkSize, ChunkSize);
 	GETSET(int64_t, milliSeconds, MilliSeconds);
 	GETSET(time_t, time, Time);
-	GETSET(bool, crc32Checked, Crc32Checked)
 	GETSET(string, tth, TTH);
 private:
 	friend class FinishedManager;

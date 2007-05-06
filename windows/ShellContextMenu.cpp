@@ -48,7 +48,10 @@ void CShellContextMenu::SetPath(const tstring& strPath)
 	psfDesktop->ParseDisplayName(NULL, 0, (LPOLESTR)const_cast<TCHAR*>(strPath.c_str()), NULL, &pidl, NULL);
 
 	// now we need the parent IShellFolder interface of pidl, and the relative PIDL to that interface
-	SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&m_psfFolder, NULL);
+	typedef HRESULT (CALLBACK* LPFUNC)(LPCITEMIDLIST pidl, REFIID riid, void **ppv, LPCITEMIDLIST *ppidlLast);
+	LPFUNC MySHBindToParent = (LPFUNC)GetProcAddress(LoadLibrary(_T("shell32")), "SHBindToParent");
+
+	MySHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&m_psfFolder, NULL);
 
 	// get interface to IMalloc (need to free the PIDLs allocated by the shell functions)
 	LPMALLOC lpMalloc = NULL;
@@ -59,7 +62,7 @@ void CShellContextMenu::SetPath(const tstring& strPath)
 	IShellFolder* psfFolder = NULL;
 	psfDesktop->ParseDisplayName (NULL, 0, (LPOLESTR)const_cast<TCHAR*>(strPath.c_str()), NULL, &pidl, NULL);
 	LPITEMIDLIST pidlItem = NULL;
-	SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psfFolder, (LPCITEMIDLIST*)&pidlItem);
+	MySHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psfFolder, (LPCITEMIDLIST*)&pidlItem);
 
 	// copy pidlItem to m_pidlArray
 	m_pidlArray = (LPITEMIDLIST *) realloc(m_pidlArray, sizeof (LPITEMIDLIST));

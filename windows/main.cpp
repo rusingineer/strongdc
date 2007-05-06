@@ -184,8 +184,8 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 	_tcscpy(m_nid.szInfoTitle, _T("StrongDC++ has crashed"));
 	Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
-	if(MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered a fatal bug and should have written an exceptioninfo.txt the same directory as the executable. You can upload this file at http://strongdc.berlios.de/crash/ to help us find out what happened. Go there now?"), _T("StrongDC++ Has Crashed"), MB_YESNO | MB_ICONERROR) == IDYES) {
-		WinUtil::openLink(_T("http://strongdc.berlios.de/crash/"));
+	if(MessageBox(WinUtil::mainWnd, _T("StrongDC++ just encountered a fatal bug and should have written an exceptioninfo.txt the same directory as the executable. You can upload this file at http://strongdc.sf.net/crash/ to help us find out what happened. Go there now?"), _T("StrongDC++ Has Crashed"), MB_YESNO | MB_ICONERROR) == IDYES) {
+		WinUtil::openLink(_T("http://strongdc.sf.net/crash/"));
 	}
 
 #ifndef _DEBUG

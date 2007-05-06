@@ -104,7 +104,6 @@ AdcCommand Download::getCommand(bool zlib) const {
 void Download::getParams(const UserConnection& aSource, StringMap& params) {
 	Transfer::getParams(aSource, params);
 	params["target"] = getTarget();
-	//params["sfv"] = Util::toString(isSet(Download::FLAG_CRC32_OK) ? 1 : 0);
 }
 
 DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSent(0), mBytesSpokenFor(0),
@@ -674,7 +673,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 						failDownload(aSource, Util::emptyString);
 						return;
 					}
-					d->setFlag(Download::FLAG_CRC32_OK);
 				}
 			}
 

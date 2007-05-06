@@ -166,7 +166,7 @@ public:
 	string getLocalIp() const throw();
 
 	// Low level interface
-	virtual void create(int aType = TYPE_TCP) throw(SocketException);
+	virtual void create(uint8_t aType = TYPE_TCP) throw(SocketException);
 
 	/** Binds a socket to a certain local port and possibly IP. */
 	virtual uint16_t bind(uint16_t aPort = 0, const string& aIp = "0.0.0.0") throw(SocketException);
@@ -181,12 +181,12 @@ public:
 
 	/** When socks settings are updated, this has to be called... */
 	static void socksUpdated();
-
-	GETSET(string, ip, Ip);
 	static const string getRemoteHost(const string& aIp);
+	
+	GETSET(string, ip, Ip);
 	socket_t sock;
 protected:
-	int type;
+	uint8_t type;
 	bool connected;
 	bool blocking;
 

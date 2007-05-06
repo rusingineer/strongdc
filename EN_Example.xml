@@ -106,7 +106,6 @@
 		<String Name="CouldNotOpenTargetFile">Could not open target file: </String>
 		<String Name="Count">Count</String>
 		<String Name="Country">Country</String>
-		<String Name="CrcChecked">TTH Checked</String>
 		<String Name="CreatingHash">Hashing</String>
 		<String Name="CurrentVersion">Current version</String>
 		<String Name="DataRetrieved">Data retrieved</String>

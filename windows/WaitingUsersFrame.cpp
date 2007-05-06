@@ -454,8 +454,7 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 		}
 	}
 	aUQI->update();
-	aUQI->setIcon(WinUtil::getIconIndex(Text::toT(aUQI->getFile())));
-	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->getIcon());
+	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->imageIndex());
 }
 
 HTREEITEM WaitingUsersFrame::GetParentItem() {
@@ -495,6 +494,9 @@ void WaitingUsersFrame::updateStatus() {
 	}
 }
 
+int UploadQueueItem::imageIndex() const {
+	return WinUtil::getIconIndex(Text::toT(file));
+}
 
 void UploadQueueItem::update() {
 	setText(COLUMN_FILE, Text::toT(Util::getFileName(file)));
