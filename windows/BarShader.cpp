@@ -248,11 +248,14 @@ void CBarShader::FillRect(CDC& dc, LPCRECT rectSpan, COLORREF crColor)
 	}
 }
 
+// OperaColors
 #define MIN(a,b)            (((a) < (b)) ? (a) : (b))
 #define MIN3(a, b, c) (((a) < (b)) ? ((((a) < (c)) ? (a) : (c))) : ((((b) < (c)) ? (b) : (c))))
 #define MAX3(a, b, c) (((a) > (b)) ? ((((a) > (c)) ? (a) : (c))) : ((((b) > (c)) ? (b) : (c))))
 #define CENTER(a, b, c) ((((a) < (b)) && ((a) < (c))) ? (((b) < (c)) ? (b) : (c)) : ((((b) < (a)) && ((b) < (c))) ? (((a) < (c)) ? (a) : (c)) : (((a) < (b)) ? (a) : (b))))
 #define ABS(a) (((a) < 0) ? (-(a)): (a))
+
+OperaColors::FCIMap OperaColors::flood_cache;
 
 double OperaColors::RGB2HUE(double r, double g, double b) {
 	double H;
@@ -382,4 +385,21 @@ COLORREF OperaColors::TextFromBackground(COLORREF bg) {
 		return RGB(0, 0, 0);
 	else
 		return RGB(255, 255, 255);
+}
+
+void OperaColors::ClearCache() {
+	FCIIter i = flood_cache.begin();
+	for (; !flood_cache.empty(); i = flood_cache.begin()) {
+		FloodCacheItem* fci = i->second;
+		flood_cache.erase(i);
+		delete fci;
+	}
+}
+
+OperaColors::FloodCacheItem::FloodCacheItem() : w(0), h(0), hDC(NULL) { }
+
+OperaColors::FloodCacheItem::~FloodCacheItem() {
+	if (hDC) {
+		DeleteDC(hDC);
+	}
 }

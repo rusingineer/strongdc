@@ -789,13 +789,7 @@ LRESULT PrivateFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
 		delete g_pEmotionsSetup;
-		g_pEmotionsSetup = NULL;
-		g_pEmotionsSetup = new CAGEmotionSetup;
-		if ((g_pEmotionsSetup == NULL)||
-			(!g_pEmotionsSetup->Create())){
-			dcassert(FALSE);
-			return -1;
-		}
+		g_pEmotionsSetup = new CAGEmotionSetup();
 	}
 	return 0;
 }

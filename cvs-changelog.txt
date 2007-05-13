@@ -1,7 +1,12 @@
+** svn288
+	some fixes for emoticons
+	fast floating-points operations
+	cache for progressbar drawings, now it's much faster, but we must optimize it
+
 ** svn287
 	fixed invalid user updating when trying to update hidden user
 	hopefully fixed executing on Win9x due to missing DLL export
-	small memory save in Waiting users queue
+	very small memory save in Waiting users queue, Finished frames and Socket code
 	fixed some old links to berlios
 
 ** svn286

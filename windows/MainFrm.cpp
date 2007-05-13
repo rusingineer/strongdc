@@ -327,10 +327,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
 	}
 
-	g_pEmotionsSetup = new CAGEmotionSetup;
-	if((g_pEmotionsSetup == NULL) || !g_pEmotionsSetup->Create()) {
-		dcassert(0);
-	}
+	g_pEmotionsSetup = new CAGEmotionSetup();
 
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;

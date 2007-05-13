@@ -107,22 +107,91 @@ public:
 		if (x2 <= x1 || y2 <= y1 || x2 > 10000)
 			return;
 
+		int w = x2 - x1;
+		int h = y2 - y1;
+
+		FloodCacheItem::FCIMapper fcim = {c1 & (light ? 0x80FFFFFF : 0x00FFFFFF), c2 & 0x00FFFFFF}; // Make it hash-safe
+		FCIIter i = flood_cache.find(fcim);
+
+		FloodCacheItem* fci = NULL;
+		if (i != flood_cache.end()) {
+			fci = i->second;
+			if (fci->h >= h && fci->w >= w) {
+				// Perfect, this kindof flood already exist in memory, lets paint it stretched
+				SetStretchBltMode(hDC.m_hDC, HALFTONE);
+				StretchBlt(hDC.m_hDC, x1, y1, w, h, fci->hDC, 0, 0, fci->w, fci->h, SRCCOPY);
+				return;
+			}
+			DeleteDC(fci->hDC);
+		} else {
+			fci = new FloodCacheItem();
+			flood_cache[fcim] = fci;
+		}
+
+		fci->hDC = ::CreateCompatibleDC(hDC.m_hDC);
+		fci->w = w;
+		fci->h = h;
+		fci->mapper = fcim;
+		
+		HBITMAP hBitmap = CreateBitmap(w, h, 1, 32, NULL);
+		::DeleteObject(::SelectObject(fci->hDC, hBitmap));
+
 		if (!light) {
-			for (int _x = x1; _x <= x2; ++_x) {
-				CRect r(_x, y1, _x + 1, y2);
-				hDC.FillSolidRect(&r, blendColors(c2, c1, (double)(_x - x1) / (double)(x2 - x1)));
+			for (int _x = 0; _x < w; ++_x) {
+				HBRUSH hBr = CreateSolidBrush(blendColors(c2, c1, (double)(_x - x1) / (double)(w)));
+				RECT rc = { _x, 0, _x + 1, h };
+				::FillRect(fci->hDC, &rc, hBr);
+				DeleteObject(hBr);
 			}
 		} else {
-			int height = y2 - y1;
-			int delta_x = x2 - x1;
-			for (int _x = x1; _x <= x2; ++_x) {
-				COLORREF cr = blendColors(c2, c1, (double)(_x - x1) / (double)(delta_x));
-				for (int _y = y1; _y < y2; ++_y) {
-					hDC.SetPixelV(_x, _y, brightenColor(cr, (double)blend_vector[(size_t)floor(((double)(_y) / height) * MAX_SHADE - 1)] / (double)SHADE_LEVEL));
+			for (int _x = 0; _x <= w; ++_x) {
+				COLORREF cr = blendColors(c2, c1, (double)(_x) / (double)(w));
+				for (int _y = 0; _y < h; ++_y) {
+					SetPixelV(fci->hDC, _x, _y, brightenColor(cr, (double)blend_vector[(size_t)floor(((double)(_y) / h) * MAX_SHADE - 1)] / (double)SHADE_LEVEL));
 				}
 			}
 		}
+		BitBlt(hDC.m_hDC, x1, y1, x2, y2, fci->hDC, 0, 0, SRCCOPY);
 	}
 	static void EnlightenFlood(const COLORREF& clr, COLORREF& a, COLORREF& b);
 	static COLORREF TextFromBackground(COLORREF bg);
+
+	static void ClearCache(); // A _lot_ easier than to clear certain cache items
+	
+private:
+	struct FloodCacheItem {
+		FloodCacheItem();
+		virtual ~FloodCacheItem();
+
+		struct FCIMapper {
+			COLORREF c1;
+			COLORREF c2;
+		} mapper;
+
+		int w;
+		int h;
+		HDC hDC;
+	};
+
+	struct fci_hash {
+#ifdef _MSC_VER 
+		static const size_t bucket_size = 4;
+		static const size_t min_buckets = 8;
+#endif
+		size_t operator()(FloodCacheItem::FCIMapper __x) const { return (__x.c1 ^ __x.c2); }
+		bool operator()(const FloodCacheItem::FCIMapper& a, const FloodCacheItem::FCIMapper& b) {
+			return a.c1 < b.c1 && a.c2 < b.c2;
+		};
+	};
+	
+	struct fci_equal_to : public binary_function<FloodCacheItem::FCIMapper, FloodCacheItem::FCIMapper, bool> {
+		bool operator()(const FloodCacheItem::FCIMapper& __x, const FloodCacheItem::FCIMapper& __y) const {
+			return (__x.c1 == __y.c1) && (__x.c2 == __y.c2);
+		}
+	};
+
+	typedef HASH_MAP<FloodCacheItem::FCIMapper, FloodCacheItem*, fci_hash, fci_equal_to> FCIMap;
+	typedef FCIMap::iterator FCIIter;
+	
+	static FCIMap flood_cache;
 };

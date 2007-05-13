@@ -160,7 +160,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	sText += "\n";
 
 	// Insert emoticons
-	if(g_pEmotionsSetup->getUseEmoticons() && bUseEmo) {
+	if(bUseEmo && g_pEmotionsSetup->getUseEmoticons()) {
 		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 		uint8_t smiles = 0; int nIdxFound = -1;
 		while(true) {

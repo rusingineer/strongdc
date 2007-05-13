@@ -24,59 +24,43 @@
 #include "AGEmotionSetup.h"
 #include <math.h>
 
-bool CAGEmotion::Create(const tstring& strEmotionText, const string& strEmotionBmpPath) {
+CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath) : 
+	m_EmotionText(strEmotionText), m_EmotionBmpPath(strEmotionBmpPath)
+{
 	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	if (m_EmotionBmp == NULL) {
-		dcassert(FALSE);
-		return false;
-	}
-
-	m_EmotionText = strEmotionText;
-	m_EmotionBmpPath = strEmotionBmpPath;
-	return true;
 }
 
 HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
-	if ((m_pImagesList == NULL) || (m_ImagePos <0))
-		return NULL;
-
-	CBitmap dist;
-	CClientDC dc(NULL);
-
-	IMAGEINFO ii;
-	m_pImagesList->GetImageInfo(m_ImagePos, &ii);
-
-	int nWidth = ii.rcImage.right - ii.rcImage.left;
-	int nHeight = ii.rcImage.bottom - ii.rcImage.top;
-
-	dist.CreateCompatibleBitmap(dc, nWidth, nHeight);
-	CDC memDC;
-	memDC.CreateCompatibleDC(dc);
-	HBITMAP pOldBitmap = (HBITMAP) SelectObject(memDC, dist);
+	HDC DirectDC = CreateCompatibleDC(NULL);
+	HDC memDC = CreateCompatibleDC(DirectDC);
 	
-	memDC.FillSolidRect(0, 0, nWidth, nHeight, clrBkColor);
-	m_pImagesList->Draw(memDC, m_ImagePos, CPoint(0, 0), ILD_NORMAL);
-	//BitBlt(dc, ii.rcImage.left, ii.rcImage.top, nWidth, nHeight, memDC.m_hDC, 0, 0, SRCCOPY);
+	BITMAP bm;
+	GetObject(m_EmotionBmp, sizeof(bm), &bm);
 
-	SelectObject(memDC, pOldBitmap);
+	HBITMAP DirectBitmap = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 32, NULL);
+
+	SelectObject(memDC, m_EmotionBmp);
+	SelectObject(DirectDC, DirectBitmap);
+
+	SetBkColor(DirectDC, clrBkColor);
 	
-	return (HBITMAP)dist.Detach();
+	RECT rc = { 0, 0, bm.bmWidth, bm.bmHeight };
+	ExtTextOut(DirectDC, 0, 0, ETO_OPAQUE, &rc, NULL, 0, NULL);
+	TransparentBlt(DirectDC, 0, 0, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, GetPixel(memDC, 0, 0));
+
+	DeleteDC(memDC);
+	DeleteDC(DirectDC);
+
+    return DirectBitmap;
 }
 
-CAGEmotionSetup::~CAGEmotionSetup() {
-	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
-	m_images.Destroy();
-}
-
-bool CAGEmotionSetup::Create() {
+CAGEmotionSetup::CAGEmotionSetup() {
 	setUseEmoticons(false);
-	m_images.Destroy();
 
-	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" ))
-		return true;
+	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" )) {
+		return;
+	}
 
-	int nMaxSizeCX = 0;
-	int nMaxSizeCY = 0;
 	
 	try {
 		SimpleXML xml;
@@ -99,18 +83,10 @@ bool CAGEmotionSetup::Create() {
 					else strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 				}
 
-				CAGEmotion* pEmotion = new CAGEmotion();
-				if (!pEmotion->Create(strEmotionText, strEmotionBmpPath)) {
-					delete pEmotion;
-					continue;
-				}
+				CAGEmotion* pEmotion = new CAGEmotion(strEmotionText, strEmotionBmpPath);
 
 				BITMAP bm;
 				GetObject(pEmotion->getEmotionBmp(), sizeof(BITMAP), &bm);
-				if (nMaxSizeCX < bm.bmWidth)
-					nMaxSizeCX = bm.bmWidth;
-				if (nMaxSizeCY < bm.bmHeight)
-					nMaxSizeCY = bm.bmHeight;
 
 				EmotionsList.push_back(pEmotion);
 			}
@@ -118,35 +94,14 @@ bool CAGEmotionSetup::Create() {
 		}
 	} catch(const Exception& e) {
 		dcdebug("CAGEmotionSetup::Create: %s\n", e.getError().c_str());
-		return false;
-	}
-	if (nMaxSizeCX == 0)	// Nejsou zadne ikony ? tak to ani pouzivat nebudeme
-		return true;
-
-	if (!m_images.Create(nMaxSizeCX, nMaxSizeCY, ILC_COLORDDB|ILC_MASK, 0, 1)) {
-		dcassert(FALSE);
-		return false;
-	}
-
-	CDC oTestDC;
-	if (!oTestDC.CreateCompatibleDC(NULL))
-		return FALSE;
-
-	for(CAGEmotion::Iter pEmotion = EmotionsList.begin(); pEmotion != EmotionsList.end(); ++pEmotion) {
-		HBITMAP hBmp = (*pEmotion)->getEmotionBmp();
-
-	 	HBITMAP poPrevSourceBmp = (HBITMAP) SelectObject(oTestDC, hBmp);
-		COLORREF clrTransparent = GetPixel(oTestDC,0,0);
-	 	SelectObject(oTestDC, poPrevSourceBmp);
-
-		int nImagePos = m_images.Add(hBmp, clrTransparent);
-
-		(*pEmotion)->setImagePos(nImagePos);
-		(*pEmotion)->setImageList(&m_images);
-
-		DeleteObject(hBmp);
+		return;
 	}
 	
 	setUseEmoticons(true);
-	return true;
+	return;
+}
+
+CAGEmotionSetup::~CAGEmotionSetup() {
+	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
+	/*m_images.Destroy();*/
 }
