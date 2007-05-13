@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="bzip2"
 	ProjectGUID="{8B162F1B-5D6C-41C1-8A80-858B379DE07D}"
+	RootNamespace="bzip2"
 	>
 	<Platforms>
 		<Platform
@@ -54,6 +55,7 @@
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				FloatingPointModel="2"
 				DefaultCharIsUnsigned="true"
 				TreatWChar_tAsBuiltInType="true"
 				ForceConformanceInForLoopScope="true"

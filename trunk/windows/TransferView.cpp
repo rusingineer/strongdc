@@ -38,6 +38,7 @@ ResourceManager::IP_BARE, ResourceManager::RATIO};
 
 TransferView::~TransferView() {
 	arrows.Destroy();
+	OperaColors::ClearCache();
 }
 
 LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {

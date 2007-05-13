@@ -33,35 +33,26 @@ public:
 	typedef list<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	CAGEmotion() : m_EmotionBmp(NULL), m_ImagePos(-1), m_pImagesList(NULL) { }
+	CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath);
 	~CAGEmotion() {	}
 	
-	bool Create(const tstring& strEmotionText, const string& strEmotionBmpPath);
-
 	const tstring& getEmotionText() const { return m_EmotionText; }
 	HBITMAP getEmotionBmp() const {	return m_EmotionBmp; }
 	HBITMAP getEmotionBmp(const COLORREF &clrBkColor);
 	const string& getEmotionBmpPath() const { return m_EmotionBmpPath; }
-	
-	void setImagePos(long ImagePos) { m_ImagePos = ImagePos; }
-	void setImageList(CImageList* pImagesList) { m_pImagesList = pImagesList; }
 
 protected:
 	tstring		m_EmotionText;
 	string		m_EmotionBmpPath;
 	HBITMAP		m_EmotionBmp;
-	long		m_ImagePos;
-	CImageList*	m_pImagesList;
 };
 
 // CAGEmotionSetup
 
 class CAGEmotionSetup {
 public:
-	CAGEmotionSetup() : useEmoticons(false) { }
+	CAGEmotionSetup();
 	virtual ~CAGEmotionSetup();
-
-	bool Create();
 
 	// Variables
 	GETSET(bool, useEmoticons, UseEmoticons);
@@ -69,7 +60,6 @@ public:
 	const CAGEmotion::List& getEmoticonsList() const { return EmotionsList; }
 
 protected:
-	CImageList		 m_images;
 	CAGEmotion::List EmotionsList;
 };
 

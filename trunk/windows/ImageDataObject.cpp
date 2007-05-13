@@ -31,7 +31,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 		return;
 	}
 	dcassert(lpLockBytes != NULL);
-	
+
 	// Initialize a Storage Object
 	IStorage *pStorage = NULL;	
 	sc = ::StgCreateDocfileOnILockBytes(lpLockBytes,
@@ -63,8 +63,7 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 		OleSetContainedObject(pOleObject, TRUE);		
 
 		// Now Add the object to the RichEdit 
-		REOBJECT reobject;
-		memzero(&reobject, sizeof(REOBJECT));
+		REOBJECT reobject = { 0 };
 		reobject.cbStruct = sizeof(REOBJECT);
 	
 		CLSID clsid;
