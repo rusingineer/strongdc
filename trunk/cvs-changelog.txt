@@ -1,3 +1,8 @@
+** svn289
+	fixed "Bump" option in menubar settings
+	changed emoticon setup loading, should be more stable :-)
+	DC++ SVN merge
+
 ** svn288
 	some fixes for emoticons
 	fast floating-points operations

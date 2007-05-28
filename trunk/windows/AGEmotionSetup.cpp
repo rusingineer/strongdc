@@ -54,7 +54,7 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
     return DirectBitmap;
 }
 
-CAGEmotionSetup::CAGEmotionSetup() {
+void CAGEmotionSetup::Load() {
 	setUseEmoticons(false);
 
 	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" )) {
@@ -101,7 +101,7 @@ CAGEmotionSetup::CAGEmotionSetup() {
 	return;
 }
 
-CAGEmotionSetup::~CAGEmotionSetup() {
+void CAGEmotionSetup::Unload() {
 	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
-	/*m_images.Destroy();*/
+	EmotionsList.clear();
 }

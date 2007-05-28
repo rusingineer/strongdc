@@ -25,7 +25,7 @@
 #include "AGEmotionSetup.h"
 #include "atlstr.h"
 
-extern CAGEmotionSetup* g_pEmotionsSetup;
+CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
 #define MAX_EMOTICONS 48
 
@@ -37,6 +37,23 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://") };
 
+ChatCtrl::ChatCtrl() : m_boAutoScroll(true), client(NULL) {
+	if(g_pEmotionsSetup == NULL) {
+		g_pEmotionsSetup = new CAGEmotionSetup();
+	}
+	
+	g_pEmotionsSetup->inc();
+}
+
+ChatCtrl::~ChatCtrl() {
+	if(g_pEmotionsSetup->unique()) {
+		g_pEmotionsSetup->dec();
+		g_pEmotionsSetup = NULL;
+	} else {
+		g_pEmotionsSetup->dec();
+	}
+}
+	
 void ChatCtrl::AdjustTextSize() {
 	if(GetWindowTextLength() > 25000) {
 		// We want to limit the buffer to 25000 characters...after that, w95 becomes sad...

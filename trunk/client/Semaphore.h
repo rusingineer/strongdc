@@ -41,8 +41,7 @@ public:
 	}
 
 	bool wait() throw() { return WaitForSingleObject(h, INFINITE) == WAIT_OBJECT_0; }
-	bool wait(uint32_t millis) throw() { 
-		return WaitForSingleObject(h, millis) == WAIT_OBJECT_0; }
+	bool wait(uint32_t millis) throw() { return WaitForSingleObject(h, millis) == WAIT_OBJECT_0; }
 
 	~Semaphore() throw() {
 		CloseHandle(h);

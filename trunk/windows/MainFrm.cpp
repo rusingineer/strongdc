@@ -48,7 +48,6 @@
 #include "CDMDebugFrame.h"
 #include "InputBox.h"
 #include "PopupManager.h"
-#include "AGEmotionSetup.h"
 
 #include "../client/ConnectionManager.h"
 #include "../client/DownloadManager.h"
@@ -67,7 +66,6 @@ MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
 uint64_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
-CAGEmotionSetup* g_pEmotionsSetup = NULL;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
@@ -79,7 +77,6 @@ bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), 
 
 MainFrame::~MainFrame() {
 	m_CmdBar.m_hImageList = NULL;
-	delete g_pEmotionsSetup;
 
 	images.Destroy();
 	largeImages.Destroy();
@@ -326,8 +323,6 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(SETTING(NICK).empty()) {
 		PostMessage(WM_COMMAND, ID_FILE_SETTINGS);
 	}
-
-	g_pEmotionsSetup = new CAGEmotionSetup();
 
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;

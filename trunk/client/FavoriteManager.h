@@ -80,9 +80,9 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	FavoriteHubEntry() throw() : connect(false), encoding(Text::getSystemCharset()), windowposx(0), windowposy(0), windowsizex(0), 
+	FavoriteHubEntry() throw() : connect(false), encoding(Text::systemCharset), windowposx(0), windowposy(0), windowsizex(0), 
 		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
-	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), encoding(Text::getSystemCharset()),
+	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), encoding(Text::systemCharset),
 		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
 		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
