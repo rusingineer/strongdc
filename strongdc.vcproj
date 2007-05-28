@@ -194,7 +194,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="SHFolder.lib unicows.lib ws2_32.lib powrprof.lib"
+				AdditionalDependencies="SHFolder.lib unicows.lib ws2_32.lib powrprof.lib  msimg32.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				Version=""
 				LinkIncremental="1"

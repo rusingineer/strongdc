@@ -179,7 +179,7 @@ const string& ClientManager::findHubEncoding(const string& aUrl) const {
 			return (*i)->getEncoding();
 		}
 	}
-	return Text::getSystemCharset();
+	return Text::systemCharset;
 }
 
 User::Ptr ClientManager::findLegacyUser(const string& aNick) const throw() {

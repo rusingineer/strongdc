@@ -36,8 +36,8 @@ class UserInfo;
 
 class ChatCtrl: public CRichEditCtrl {
 public:
-	ChatCtrl() : m_boAutoScroll(true), client(NULL) { };
-	virtual ~ChatCtrl() { }
+	ChatCtrl();
+	~ChatCtrl();
 
 	LRESULT OnRButtonDown(POINT pt);
 

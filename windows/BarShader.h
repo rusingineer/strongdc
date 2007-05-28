@@ -110,7 +110,7 @@ public:
 		int w = x2 - x1;
 		int h = y2 - y1;
 
-		FloodCacheItem::FCIMapper fcim = {c1 & (light ? 0x80FFFFFF : 0x00FFFFFF), c2 & 0x00FFFFFF}; // Make it hash-safe
+		FloodCacheItem::FCIMapper fcim = {c1 & (light ? 0x80FF : 0x00FF), c2 & 0x00FF}; // Make it hash-safe
 		FCIIter i = flood_cache.find(fcim);
 
 		FloodCacheItem* fci = NULL;

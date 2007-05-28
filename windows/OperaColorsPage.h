@@ -65,7 +65,7 @@ public:
 	LRESULT onInitDialog(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT onDrawItem(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT onMenubarClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-		LRESULT onClickedProgressOverride(WORD /* wNotifyCode */, WORD /* wID */, HWND /* hWndCtl */, BOOL& /* bHandled */) {
+	LRESULT onClickedProgressOverride(WORD /* wNotifyCode */, WORD /* wID */, HWND /* hWndCtl */, BOOL& /* bHandled */) {
 		updateProgress();
 		return S_OK;
 	}

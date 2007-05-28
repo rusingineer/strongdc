@@ -494,13 +494,14 @@ wstring Util::formatExactSize(int64_t aBytes) {
 	NUMBERFMT nf;
 	snwprintf(number, sizeof(number), _T("%I64d"), aBytes);
 	wchar_t Dummy[16];
+	TCHAR sep[2] = _T(",");
     
 	/*No need to read these values from the system because they are not
 	used to format the exact size*/
 	nf.NumDigits = 0;
 	nf.LeadingZero = 0;
 	nf.NegativeOrder = 0;
-	nf.lpDecimalSep = _T(",");
+	nf.lpDecimalSep = sep;
 
 	GetLocaleInfo( LOCALE_USER_DEFAULT, LOCALE_SGROUPING, Dummy, 16 );
 	nf.Grouping = _wtoi(Dummy);

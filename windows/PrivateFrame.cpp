@@ -788,8 +788,8 @@ LRESULT PrivateFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
 	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
-		delete g_pEmotionsSetup;
-		g_pEmotionsSetup = new CAGEmotionSetup();
+		g_pEmotionsSetup->Unload();
+		g_pEmotionsSetup->Load();
 	}
 	return 0;
 }

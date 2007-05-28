@@ -49,17 +49,20 @@ protected:
 
 // CAGEmotionSetup
 
-class CAGEmotionSetup {
+class CAGEmotionSetup : public PointerBase {
 public:
-	CAGEmotionSetup();
-	virtual ~CAGEmotionSetup();
+	CAGEmotionSetup() { Load(); }
+	~CAGEmotionSetup() { Unload(); }
 
 	// Variables
 	GETSET(bool, useEmoticons, UseEmoticons);
 
 	const CAGEmotion::List& getEmoticonsList() const { return EmotionsList; }
 
-protected:
+	void Load();
+	void Unload();
+	
+private:
 	CAGEmotion::List EmotionsList;
 };
 
