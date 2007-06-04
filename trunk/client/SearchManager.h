@@ -110,9 +110,9 @@ private:
 class SearchQueueItem {
 public:
 	SearchQueueItem() { }
-	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, const string& aToken) : 
+	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const int *aWindow, const string& aToken) : 
 	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
-	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, int *aWindow, const string& aToken) : 
+	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const int *aWindow, const string& aToken) : 
 	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
 
 	GETSET(string, target, Target);
@@ -120,12 +120,14 @@ public:
 	GETSET(int64_t, size, Size);
 	GETSET(int, typeMode, TypeMode);
 	GETSET(int, sizeMode, SizeMode);
-	GETSET(int*, window, Window);
-	StringList& getHubs() { return hubs; };
-	void setHubs(StringList aHubs) { hubs = aHubs; };
 
+	StringList& getHubs() { return hubs; }
+	void setHubs(StringList aHubs) { hubs = aHubs; }
+	const int* getWindow() const { return window; }
 private:
 	StringList hubs;
+	
+	const int* window;
 };
 
 class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
@@ -154,16 +156,16 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL);
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL) {
+	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL);
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL) {
 		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
 	}
 
-	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL);
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, int *aWindow = NULL) {
+	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL);
+	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL) {
 		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
  	}
-	void stopSearch(int *aWindow = NULL);
+	void stopSearch(const int *aWindow);
 
 	static string clean(const string& aSearchString);
 	

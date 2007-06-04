@@ -1,3 +1,10 @@
+** svn290
+	fixed setting Auto priority from directory's menu
+	fixed invalid text color for IP column in Search frame
+	workaround for crash in FileChunksInfo::verifyBlock when can't allocate memory block
+	hopefully fixed crash in QueueFrame due to invalide sources list synchronization
+	reserved and commit stack size set to 64 kB
+
 ** svn289
 	fixed "Bump" option in menubar settings
 	changed emoticon setup loading, should be more stable :-)

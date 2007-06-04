@@ -46,7 +46,7 @@ public:
 		HIGH = THREAD_PRIORITY_ABOVE_NORMAL
 	};
 
-	Thread() throw() : threadHandle(INVALID_HANDLE_VALUE), threadId(0){ }
+	Thread() throw() : threadHandle(INVALID_HANDLE_VALUE)/*, threadId(0)*/ { }
 	virtual ~Thread() { 
 		if(threadHandle != INVALID_HANDLE_VALUE)
 			CloseHandle(threadHandle);
@@ -134,7 +134,7 @@ private:
 
 #ifdef _WIN32
 	HANDLE threadHandle;
-	DWORD threadId;
+	//DWORD threadId;
 	static unsigned int  WINAPI starter(void* p) {
 		Thread* t = (Thread*)p;
 		t->run();

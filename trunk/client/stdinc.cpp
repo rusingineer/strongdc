@@ -18,7 +18,7 @@
 
 #include "stdinc.h"
 
-#if defined(HAVE_STLPORT) && (_STLPORT_VERSION < 0x520)
+#if defined(_STLPORT_VERSION) && (_STLPORT_VERSION < 0x520)
 #error I use STLport SVN. Remove this if you know what you're doing.
 #endif
 

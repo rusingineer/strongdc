@@ -1813,16 +1813,10 @@ void HubFrame::on(Connected, const Client*) throw() {
 	speak(CONNECTED);
 }
 void HubFrame::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
-	//if(user.unique()) {
-	//	(const_cast<OnlineUser&>(user)).inc();
-	//}
 	speak(UPDATE_USER_JOIN, user);
 }
 void HubFrame::on(UsersUpdated, const Client*, const OnlineUser::List& aList) throw() {
 	for(OnlineUser::List::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-		//if((*i)->unique()) {
-		//	(*i)->inc();
-		//}
 		tasks.add(UPDATE_USER, new UserTask(*(*i)));
 	}
 	updateUsers = true;

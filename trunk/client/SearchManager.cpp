@@ -70,7 +70,7 @@ AdcCommand SearchResult::toRES(char type) const {
 	return cmd;
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */) {
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const int* aWindow /* = NULL */) {
 	Lock l(cs);
 	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
 	if(aWindow != NULL) {
@@ -97,7 +97,7 @@ void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMo
 	}
 }
 
-void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, int* aWindow /* = NULL */) {
+void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const int* aWindow /* = NULL */) {
 	Lock l(cs);
 	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
 	if(aWindow != NULL) {
@@ -124,7 +124,7 @@ void SearchManager::search(StringList& who, const string& aName, int64_t aSize /
 	}
 }
 
-void SearchManager::stopSearch(int *aWindow) {
+void SearchManager::stopSearch(const int *aWindow) {
 	Lock l(cs);
 	for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
 		if(qi->getWindow() == aWindow) {
@@ -234,7 +234,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.find(' ', i)) == string::npos) {
 				continue;
 			}
-		string nick = x.substr(i, j-i);
+			string nick = x.substr(i, j-i);
 			i = j + 1;
 
 			// A file has 2 0x05, a directory only one
@@ -259,12 +259,12 @@ int SearchManager::ResultsQueue::run() {
 				if(j < i + 1) {
 					continue;
 				}	
-			file = x.substr(i, j-i) + '\\';
+				file = x.substr(i, j-i) + '\\';
 			} else if(cnt == 2) {
 				if( (j = x.find((char)5, i)) == string::npos) {
 					continue;
 				}
-			file = x.substr(i, j-i);
+				file = x.substr(i, j-i);
 				i = j + 1;
 				if( (j = x.find(' ', i)) == string::npos) {
 					continue;
@@ -286,7 +286,7 @@ int SearchManager::ResultsQueue::run() {
 			if( (j = x.rfind(" (")) == string::npos) {
 				continue;
 			}
-		string hubName = x.substr(i, j-i);
+			string hubName = x.substr(i, j-i);
 			i = j + 2;
 			if( (j = x.rfind(')')) == string::npos) {
 				continue;
@@ -295,10 +295,10 @@ int SearchManager::ResultsQueue::run() {
 			string hubIpPort = x.substr(i, j-i);
 			string url = ClientManager::getInstance()->findHub(hubIpPort);
 
-		string encoding = ClientManager::getInstance()->findHubEncoding(url);
-		nick = Text::toUtf8(nick, encoding);
-		file = Text::toUtf8(file, encoding);
-		hubName = Text::toUtf8(hubName, encoding);
+			string encoding = ClientManager::getInstance()->findHubEncoding(url);
+			nick = Text::toUtf8(nick, encoding);
+			file = Text::toUtf8(file, encoding);
+			hubName = Text::toUtf8(hubName, encoding);
 
 			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
 			if(!user) {
