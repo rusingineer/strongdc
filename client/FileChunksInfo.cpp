@@ -840,20 +840,26 @@ bool FileChunksInfo::verifyBlock(int64_t anyPos, const TigerTree& aTree, const s
 	// yield to allow other threads flush their data
 	Thread::yield();
 
-	// for exception free
-	auto_ptr<unsigned char> buf(new unsigned char[len]);
+	try {
+		// for exception free
+		AutoArray<unsigned char> buf(len);
+		//auto_ptr<unsigned char> buf(new unsigned char[len]);
 
-	// reread all bytes from stream
-	SharedFileStream file(tempTargetName, start);
+		// reread all bytes from stream
+		SharedFileStream file(tempTargetName, start);
 
-	size_t tmpLen = len;
-	file.read(buf.get(), tmpLen);
+		size_t tmpLen = len;
+		file.read(buf, tmpLen);
 
-	dcassert(len == tmpLen);
+		dcassert(len == tmpLen);
 
-	// check against tiger tree
-	return verify(buf.get(), start, end, aTree);
-
+		// check against tiger tree
+		return verify(buf, start, end, aTree);
+	} catch(...) {
+		// maybe not enough memory
+	}
+	
+	return true;
 }
 
 void FileChunksInfo::selfCheck() const

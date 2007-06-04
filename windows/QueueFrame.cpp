@@ -189,7 +189,8 @@ void QueueFrame::QueueItemInfo::update() {
 		if(colMask & MASK_USERS || colMask & MASK_STATUS) {
 			tstring tmp;
 
-			for(QueueItem::SourceConstIter j = getSources().begin(); j != getSources().end(); ++j) {
+			QueueItem::SourceList sources = getSources();
+			for(QueueItem::SourceConstIter j = sources.begin(); j != sources.end(); ++j) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
 
@@ -272,7 +273,8 @@ void QueueFrame::QueueItemInfo::update() {
 
 		if(colMask & MASK_ERRORS) {
 			tstring tmp;
-			for(QueueItem::SourceConstIter j = getBadSources().begin(); j != getBadSources().end(); ++j) {
+			QueueItem::SourceList badSources = getBadSources();
+			for(QueueItem::SourceConstIter j = badSources.begin(); j != badSources.end(); ++j) {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
@@ -733,6 +735,8 @@ void QueueFrame::moveDir(HTREEITEM ht, const string& target) {
 	}			
 }
 
+QueueItem::SourceList sources;
+QueueItem::SourceList badSources;
 LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if (reinterpret_cast<HWND>(wParam) == ctrlQueue && ctrlQueue.GetSelectedCount() > 0) { 
 		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -805,7 +809,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			menuItems = 0;
 			int pmItems = 0;
 			if(ii) {
-				for(QueueItem::SourceConstIter i = ii->getSources().begin(); i != ii->getSources().end(); ++i) {
+				sources = ii->getSources();
+				for(QueueItem::SourceConstIter i = sources.begin(); i != sources.end(); ++i) {
 					tstring nick = WinUtil::escapeMenu(Text::toT(i->getUser()->getFirstNick()));
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 					mi.fType = MFT_STRING;
@@ -825,7 +830,9 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					menuItems++;
 				}
 				readdItems = 0;
-				for(QueueItem::SourceConstIter i = ii->getBadSources().begin(); i != ii->getBadSources().end(); ++i) {
+				
+				badSources = ii->getBadSources();
+				for(QueueItem::SourceConstIter i = badSources.begin(); i != badSources.end(); ++i) {
 					tstring nick = Text::toT(i->getUser()->getFirstNick());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
 						nick += _T(" (") + TSTRING(FILE_NOT_AVAILABLE) + _T(")");
@@ -993,10 +1000,9 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		readdMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		if(wID == IDC_READD) {
 			// re-add all sources
-			for(QueueItem::SourceConstIter s = ii->getBadSources().begin(); s != ii->getBadSources().end();) {
+			QueueItem::SourceList badSources = ii->getBadSources();
+			for(QueueItem::SourceConstIter s = badSources.begin(); s != badSources.end(); s++) {
 				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
-				//reset the iterator since it won't be valid after the call to readd
-				s = ii->getBadSources().begin();
 			}
 		} else {
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
@@ -1017,10 +1023,9 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		if(wID == IDC_REMOVE_SOURCE) {
-			for(QueueItem::SourceConstIter si = ii->getSources().begin(); si != ii->getSources().end(); si++) {
+			QueueItem::SourceList sources = ii->getSources();
+			for(QueueItem::SourceConstIter si = sources.begin(); si != sources.end(); si++) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), si->getUser(), QueueItem::Source::FLAG_REMOVED);
-				//reset the iterator since it won't be valid after the call to removeSource
-				si = ii->getSources().begin();
 			}
 		} else {
 			CMenuItemInfo mi;
@@ -1148,7 +1153,7 @@ void QueueFrame::changePriority(bool inc){
 			case QueueItem::LOWEST:  p = inc ? QueueItem::LOW     : QueueItem::PAUSED; break;
 			case QueueItem::PAUSED:  p = QueueItem::LOWEST; break;
 		}
-
+		QueueManager::getInstance()->setAutoPriority(ctrlQueue.getItemData(i)->getTarget(), false);
 		QueueManager::getInstance()->setPriority(ctrlQueue.getItemData(i)->getTarget(), p);
 	}
 }
@@ -1164,6 +1169,7 @@ void QueueFrame::setPriority(HTREEITEM ht, const QueueItem::Priority& p) {
 	const string& name = getDir(ht);
 	DirectoryPairC dp = directories.equal_range(name);
 	for(DirectoryIterC i = dp.first; i != dp.second; ++i) {
+		QueueManager::getInstance()->setAutoPriority(i->second->getTarget(), false);
 		QueueManager::getInstance()->setPriority(i->second->getTarget(), p);
 	}
 }
@@ -1486,11 +1492,10 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
-		for(QueueItem::SourceConstIter i = ii->getSources().begin(); i != ii->getSources().end(); i++) {
+		QueueItem::SourceList sources = ii->getSources();
+		for(QueueItem::SourceConstIter i =	sources.begin(); i != sources.end(); i++) {
 			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
-				//reset the iterator since it won't be valid after the call to removeSource
-				i = ii->getBadSources().begin();
 			}
 		}
 	}

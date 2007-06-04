@@ -490,7 +490,7 @@ void ClientManager::on(Load, SimpleXML&) throw() {
 	users.insert(make_pair(getMe()->getCID(), getMe()));
 }
 
-void ClientManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
+void ClientManager::on(TimerManagerListener::Minute, uint32_t /*aTick*/) throw() {
 	{
 		Lock l(cs);
 
@@ -508,8 +508,8 @@ void ClientManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 			(*j)->info();
 		}
 	}
-	if((aTick / 60000) % 5 == 0)
-		SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
+	//if((aTick / 60000) % 5 == 0)
+	//	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
 User::Ptr& ClientManager::getMe() {

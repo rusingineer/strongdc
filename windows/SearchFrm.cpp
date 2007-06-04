@@ -498,7 +498,7 @@ void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
 }
 
 void SearchFrame::on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw() {
-	if((searches >= 0) && (aSearch->getWindow() == (int*)this)) {
+	if((searches > 0) && (aSearch->getWindow() == (int*)this)) {
 		searches--;
 		dcassert(searches >= 0);
 		PostMessage(WM_SPEAKER, SEARCH_START, (LPARAM)new SearchQueueItem(*aSearch));
@@ -1465,7 +1465,7 @@ LRESULT SearchFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 			} else {
 				color = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
-				SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+				SetTextColor(cd->nmcd.hdc, cd->clrText/*WinUtil::textColor*/);
 			}
 			HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID, 0, color));
 			HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(color));

@@ -94,7 +94,18 @@ private:
 	OnlineUser& getUser(const uint32_t aSID, const CID& aCID);
 	OnlineUser* findUser(const uint32_t sid) const;
 	OnlineUser* findUser(const CID& cid) const;
-	OnlineUser* findUser(const string&) const { return NULL; }
+	
+	// just a workaround
+	OnlineUser* AdcHub::findUser(const string& aNick) const { 
+	   Lock l(cs); 
+	   for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) { 
+		  if(i->second->getIdentity().getNick() == aNick) { 
+			 return i->second; 
+		  } 
+	   } 
+	   return 0; 
+	}
+
 	void putUser(const uint32_t sid);
 
 	void clearUsers();
