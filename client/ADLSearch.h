@@ -68,6 +68,10 @@ public:
 			}
 		}
 	}
+	
+	void unprepare() {
+		stringSearchList.clear();
+	}
 
 	// The search string
 	string searchString;									 
@@ -307,6 +311,10 @@ private:
 				root->directories.push_back(id->dir);
 			}
 		}
+		
+		for(SearchCollection::iterator ip = collection.begin(); ip != collection.end(); ++ip) {
+			ip->unprepare();
+		}		
 	}
 
 	string getConfigFile() { return Util::getConfigPath() + "ADLSearch.xml"; }

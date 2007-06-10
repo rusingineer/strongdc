@@ -124,12 +124,11 @@ int utf8ToWc(const char* str, wchar_t& c) {
 		c = (unsigned char)str[0];
 		return 1;
 	}
-	//dcassert(0);
 }
 
 void wcToUtf8(wchar_t c, string& str) {
 	if(c >= 0x0800) {
-		str += (char)(0x80 | 0x40 | 0x20  | (c >> 12));
+		str += (char)(0x80 | 0x40 | 0x20 | (c >> 12));
 		str += (char)(0x80 | ((c >> 6) & 0x3f));
 		str += (char)(0x80 | (c & 0x3f));
 	} else if(c >= 0x0080) {
@@ -182,7 +181,7 @@ const wstring& acpToWide(const string& str, wstring& tmp) throw() {
 			src += rv;
 			n -= rv;
 		}
-	}
+	}	
 	return tmp;
 #endif
 }
@@ -191,27 +190,13 @@ const string& wideToUtf8(const wstring& str, string& tgt) throw() {
 	if(str.empty()) {
 		return Util::emptyString;
 	}
-#ifdef _WIN32
-	int size = 0;
-	tgt.resize( str.length() * 2 );
-
-	while( ( size = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), &tgt[0], tgt.length(), NULL, NULL) ) == 0 ){
-		if( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
-			tgt.resize( tgt.size() * 2 );
-		else
-			break;
-	}
 	
-	tgt.resize( size );
-	return tgt;
-#else
 	string::size_type n = str.length();
 	tgt.clear();
 	for(string::size_type i = 0; i < n; ++i) {
 		wcToUtf8(str[i], tgt);
 	}
 	return tgt;
-#endif
 }
 
 const string& wideToAcp(const wstring& str, string& tmp) throw() {
@@ -263,20 +248,6 @@ const string& utf8ToAcp(const string& str, string& tmp) throw() {
 }
 
 const wstring& utf8ToWide(const string& str, wstring& tgt) throw() {
-#ifdef _WIN32
-	int size = 0;
-	tgt.resize( str.length()+1 );
-	while( ( size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &tgt[0], (int)tgt.length()) ) == 0 ){
-		if( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
-			tgt.resize( tgt.size()*2 );
-		} else {
-			break;
-		}
-
-	}
-	tgt.resize( size );
-	return tgt;
-#else
 	tgt.reserve(str.length());
 	string::size_type n = str.length();
 	for(string::size_type i = 0; i < n; ) {
@@ -291,12 +262,12 @@ const wstring& utf8ToWide(const string& str, wstring& tgt) throw() {
 		}
 	}
 	return tgt;
-#endif	
 }
 
 wchar_t toLower(wchar_t c) throw() {
 #ifdef _WIN32
-		return static_cast<wchar_t>(reinterpret_cast<ptrdiff_t>(CharLowerW((LPWSTR)c)));
+		//return static_cast<wchar_t>(reinterpret_cast<ptrdiff_t>(CharLowerW((LPWSTR)c)));
+		return (wchar_t)CharLowerW((LPWSTR)c);
 #else
 		return (wchar_t)towlower(c);
 #endif
@@ -366,7 +337,7 @@ const string& convert(const string& str, string& tmp, const string& fromCharset,
 		return acpToUtf8(str, tmp);
 	if(fromCharset == utf8 || toLower(fromCharset, tmp) == utf8)
 		return utf8ToAcp(str, tmp);
-	
+
 	// We don't know how to convert arbitrary charsets
 	dcdebug("Unknown conversion from %s to %s\n", fromCharset.c_str(), toCharset.c_str());
 	return str;
@@ -411,9 +382,25 @@ const string& convert(const string& str, string& tmp, const string& fromCharset,
 	return tmp;
 #endif
 }
-} 
+}
 
-/**
- * @file
- * $Id$
- */
+string Text::toDOS(string tmp) {
+	if(tmp.empty())
+		return Util::emptyString;
+
+	if(tmp[0] == '\r' && (tmp.size() == 1 || tmp[1] != '\n')) {
+		tmp.insert(1, "\n");
+	}
+	for(string::size_type i = 1; i < tmp.size() - 1; ++i) {
+		if(tmp[i] == '\r' && tmp[i+1] != '\n') {
+			// Mac ending
+			tmp.insert(i+1, "\n");
+			i++;
+		} else if(tmp[i] == '\n' && tmp[i-1] != '\r') {
+			// Unix encoding
+			tmp.insert(i, "\r");
+			i++;
+		}
+	}
+	return tmp;
+}

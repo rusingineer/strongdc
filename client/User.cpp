@@ -300,7 +300,7 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
 }
 
-tstring old, tmp;
+tstring old;
 bool OnlineUser::update(int sortCol) {
 	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());
 
@@ -315,27 +315,27 @@ bool OnlineUser::update(int sortCol) {
 		setText(COLUMN_UPLOAD_SPEED, _T("N/A"));
 	}
 
-	const tstring hn = Text::toT(identity.get("HN"), tmp);
-	const tstring hr = Text::toT(identity.get("HR"), tmp);
-	const tstring ho = Text::toT(identity.get("HO"), tmp);
+	const tstring hn = Text::toT(identity.get("HN"));
+	const tstring hr = Text::toT(identity.get("HR"));
+	const tstring ho = Text::toT(identity.get("HO"));
 
-	setText(COLUMN_NICK, Text::toT(identity.getNick(), tmp));
+	setText(COLUMN_NICK, Text::toT(identity.getNick()));
 	setText(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()));
 	setText(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()));
-	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription(), tmp));
-	setText(COLUMN_TAG, Text::toT(identity.getTag(), tmp));
-	setText(COLUMN_EMAIL, Text::toT(identity.getEmail(), tmp));
-	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection(), tmp));
-	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"), tmp));
+	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()));
+	setText(COLUMN_TAG, Text::toT(identity.getTag()));
+	setText(COLUMN_EMAIL, Text::toT(identity.getEmail()));
+	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection()));
+	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")));
 	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
 	setText(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
-	setText(COLUMN_SLOTS, Text::toT(identity.get("SL"), tmp));
+	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
 	string ip = identity.getIp();
 	string country = ip.empty()?Util::emptyString:Util::getIpCountry(ip);
 	if (!country.empty())
 		ip = country + " (" + ip + ")";
-	setText(COLUMN_IP, Text::toT(ip, tmp));
-	setText(COLUMN_PK, Text::toT(identity.get("PK"), tmp));
+	setText(COLUMN_IP, Text::toT(ip));
+	setText(COLUMN_PK, Text::toT(identity.get("PK")));
 
 	if(sortCol != -1) {
 		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));

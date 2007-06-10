@@ -353,6 +353,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			d->setSource(Transfer::USER_LIST_NAME);
 		}
 		d->setStartPos(0);
+		if(d->isSet(Download::FLAG_CHECK_FILE_LIST)) {
+			d->setSize(1);
+		}
 	}
 
 	{
