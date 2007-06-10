@@ -266,7 +266,6 @@ public:
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }
 	static string formatMessage(const string& message);
-	static string toDOS(const string& tmp);
 
 	static string getShortTimeString();
 
@@ -480,16 +479,8 @@ public:
 	static bool getAway() { return away; }
 	static void setAway(bool aAway);
 	static string getAwayMessage();
-	static string replace(string message, string r, string rw){
-		string::size_type  k = 0, j = 0;
-		while(( k = message .find( r , j ) ) != string::npos ){
-			message.replace(k,r.size(), rw);
-			j=k+rw.size();
-		}
-		return message;
-	}
-
 	static void setAwayMessage(const string& aMsg) { awayMsg = aMsg; }
+
 	static uint64_t getDirSize(const string &sFullPath);
 	static bool validatePath(const string &sPath);
 	static bool fileExists(const string &aFile);
@@ -498,9 +489,6 @@ public:
 	static uint32_t rand(uint32_t high) { return rand() % high; }
 	static uint32_t rand(uint32_t low, uint32_t high) { return rand(high-low) + low; }
 	static double randd() { return ((double)rand()) / ((double)0xffffffff); }
-	static bool isNumeric(wchar_t c) {
-		return (c >= '0' && c <= '9') ? true : false;
-	}
 
 	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 	static int getNetLimiterLimit();

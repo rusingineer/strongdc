@@ -483,7 +483,7 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
-			defFeatures.push_back(UserConnection::FEATURE_GET_ZBLOCK);
+			//defFeatures.push_back(UserConnection::FEATURE_GET_ZBLOCK);
 			defFeatures.push_back(UserConnection::FEATURE_ZLIB_GET);
 		}
 

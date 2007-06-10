@@ -37,7 +37,7 @@ public:
 	typedef vector<StringSearch> List;
 	typedef List::const_iterator Iter;
 
-	explicit StringSearch(const string& aPattern) throw() : pattern(Text::toLower(aPattern)) { 
+	explicit StringSearch(const string& aPattern) throw() : pattern(Text::toLower(aPattern)) {
 		initDelta1();
 	}
 	StringSearch(const StringSearch& rhs) throw() : pattern(rhs.pattern) { 
@@ -52,6 +52,9 @@ public:
 		pattern = Text::toLower(rhs);
 		initDelta1();
 		return *this;
+	}
+	~StringSearch() {
+		dcdebug("Deleted\n");
 	}
 
 	bool operator==(const StringSearch& rhs) { return pattern == rhs.pattern; }

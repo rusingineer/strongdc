@@ -1,3 +1,7 @@
+** svn291
+	fixed invalid texts in userlist
+	something from DC++
+
 ** svn290
 	fixed setting Auto priority from directory's menu
 	fixed invalid text color for IP column in Search frame

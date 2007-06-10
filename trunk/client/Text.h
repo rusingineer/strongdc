@@ -98,7 +98,7 @@ namespace Text {
 	inline char asciiToLower(char c) { dcassert((((uint8_t)c) & 0x80) == 0); return (char)tolower(c); }
 
 	wchar_t toLower(wchar_t c) throw();
-
+	
 	const wstring& toLower(const wstring& str, wstring& tmp) throw();
 	inline wstring toLower(const wstring& str) throw() {
 		wstring tmp;
@@ -128,11 +128,8 @@ namespace Text {
 		string tmp;
 		return fromUtf8(str, toCharset, tmp);
 	}
+	
+	string toDOS(string tmp);
 }
 
 #endif
-
-/**
- * @file
- * $Id$
- */

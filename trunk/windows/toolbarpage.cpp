@@ -46,7 +46,7 @@ PropPage::Item ToolbarPage::items[] = {
 
 
 string ToolbarPage::filter(string s){
-	s = Util::replace(s, "&","");
+//	s = Util::replace(s, "&","");
 	s = s.substr(0,s.find("\t"));
 	return s;
 }

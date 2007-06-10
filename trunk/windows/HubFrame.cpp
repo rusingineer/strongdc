@@ -1865,7 +1865,7 @@ void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& 
 		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
 			// Do nothing...
 		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
-			speak(KICK_MSG, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Util::toDOS(msg));
+			speak(KICK_MSG, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Text::toDOS(msg));
 			return;
 		}
 	}
