@@ -45,7 +45,7 @@ public:
 	{
 	}
 
-	virtual ~QueueFrame() {
+	~QueueFrame() {
 		// Clear up dynamicly allocated menu objects
 		browseMenu.ClearMenu();
 		removeMenu.ClearMenu();
@@ -412,7 +412,7 @@ private:
 	virtual void on(QueueManagerListener::Removed, const QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();
 	virtual void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(QUEUE_FRAME_H)

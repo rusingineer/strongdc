@@ -628,7 +628,7 @@ bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool do
 	return insert;
 }
 
-void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
 		ctrlHubs.SetBkColor(WinUtil::bgColor);

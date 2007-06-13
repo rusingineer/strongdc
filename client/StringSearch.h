@@ -53,10 +53,11 @@ public:
 		initDelta1();
 		return *this;
 	}
-	~StringSearch() {
-		dcdebug("Deleted\n");
-	}
 
+	~StringSearch() {
+		dcdebug("StringSearch deleted: %s\n", pattern.c_str());
+	}
+	
 	bool operator==(const StringSearch& rhs) { return pattern == rhs.pattern; }
 
 	const string& getPattern() const { return pattern; }

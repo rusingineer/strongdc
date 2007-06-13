@@ -52,9 +52,9 @@ public:
 	typedef List::const_iterator Iter;
 	
 	Upload(UserConnection& conn);
-	virtual ~Upload();
+	~Upload();
 	
-	virtual void getParams(const UserConnection& aSource, StringMap& params);
+	void getParams(const UserConnection& aSource, StringMap& params);
 	
 	GETSET(string, sourceFile, SourceFile);
 	GETSET(InputStream*, stream, Stream);

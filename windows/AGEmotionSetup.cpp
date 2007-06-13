@@ -27,7 +27,31 @@
 CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath) : 
 	m_EmotionText(strEmotionText), m_EmotionBmpPath(strEmotionBmpPath)
 {
-	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	
+	BITMAP bm;
+	GetObject(m_EmotionBmp, sizeof(bm), &bm);
+	
+	if(bm.bmBitsPixel == 32) {
+		BYTE *pBits = new BYTE[bm.bmWidth * bm.bmHeight * 4];
+		GetBitmapBits(m_EmotionBmp, bm.bmWidth * bm.bmHeight * 4, pBits);
+		
+		// oprava alfa kanalu	
+		for (int y = 0; y < bm.bmHeight; y++) {
+			BYTE * pPixel = (BYTE *) pBits + bm.bmWidth * 4 * y;
+
+			for (int x = 0; x < bm.bmWidth; x++) {
+				pPixel[0] = pPixel[0] * pPixel[3] / 255; 
+				pPixel[1] = pPixel[1] * pPixel[3] / 255; 
+				pPixel[2] = pPixel[2] * pPixel[3] / 255; 
+
+				pPixel += 4;
+			}
+		}
+		SetBitmapBits(m_EmotionBmp, bm.bmWidth * bm.bmHeight * 4, pBits);
+	    
+		delete[] pBits;
+	}
 }
 
 HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
@@ -46,7 +70,13 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	
 	RECT rc = { 0, 0, bm.bmWidth, bm.bmHeight };
 	ExtTextOut(DirectDC, 0, 0, ETO_OPAQUE, &rc, NULL, 0, NULL);
-	TransparentBlt(DirectDC, 0, 0, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, GetPixel(memDC, 0, 0));
+
+	if(bm.bmBitsPixel == 32) {
+		BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+		AlphaBlend(DirectDC, 0, 0, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf);
+	} else {
+		TransparentBlt(DirectDC, 0, 0, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, GetPixel(memDC, 0, 0));	
+	}
 
 	DeleteDC(memDC);
 	DeleteDC(DirectDC);

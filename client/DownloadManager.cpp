@@ -602,6 +602,10 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			d->setFile(NULL);
 			failDownload(aSource, e.getError());
 			return false;
+		} catch(...) {
+			delete d->getFile();
+			d->setFile(NULL);
+			return false;			
 		}
 	}
 	

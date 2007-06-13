@@ -116,7 +116,7 @@ public:
 	/**
      * Smart pointer based destructor
      */
-	virtual ~FileChunksInfo();
+	~FileChunksInfo();
 
 	/**
      * Get start offset of a free chunk, the end offset of chunk is unpredictable

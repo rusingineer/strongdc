@@ -160,7 +160,7 @@ public:
 			setChunksInfo(rhs.getChunksInfo());
 	}
 
-	virtual ~QueueItem() {
+	~QueueItem() {
 		if(isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 			setChunksInfo(NULL);
 			FileChunksInfo::Free(&getTTH());
@@ -262,15 +262,15 @@ public:
 	string tempTarget;
 	int64_t downloadedBytes;
 	GETSET(int64_t, size, Size);
+	GETSET(time_t, added, Added);
+	GETSET(size_t, averageSpeed, AverageSpeed);
+	GETSET(User::List, currents, Currents);
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
-	GETSET(User::List, currents, Currents);
-	GETSET(time_t, added, Added);
 	GETSET(TTHValue, tthRoot, TTH);
-	GETSET(bool, autoPriority, AutoPriority);
 	GETSET(uint8_t, maxSegments, MaxSegments);
-	GETSET(size_t, averageSpeed, AverageSpeed);
-
+	GETSET(bool, autoPriority, AutoPriority);
+	
 	QueueItem::Priority calculateAutoPriority() const {
 		if(getAutoPriority()){
 			QueueItem::Priority p;

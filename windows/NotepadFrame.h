@@ -82,7 +82,7 @@ private:
 	CEdit ctrlPad;
 	CContainedWindow ctrlClientContainer;
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(NOTEPAD_FRAME_H)

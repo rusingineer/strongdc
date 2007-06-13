@@ -544,7 +544,7 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 	return 0;
 }
 
-void WaitingUsersFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void WaitingUsersFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
 		ctrlList.SetBkColor(WinUtil::bgColor);

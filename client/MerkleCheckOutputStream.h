@@ -55,9 +55,9 @@ public:
 			verified = cur.getLeaves().size();
 	}
 
-	virtual ~MerkleCheckOutputStream() throw() { if(managed) delete s; }
+	~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
-	virtual size_t flush() throw(FileException) {
+	size_t flush() throw(FileException) {
 		if(!d) {
 			if (bufPos != 0)
 				cur.update(buf, bufPos);
@@ -74,7 +74,7 @@ public:
 		return s->flush();
 	}
 
-	virtual void commitBytes(const void* b, size_t len, size_t pos = 0) throw(FileException) {
+	void commitBytes(const void* b, size_t len, size_t pos = 0) throw(FileException) {
 		uint8_t* xb = (uint8_t*)b;
 		//size_t pos = 0;
 		
@@ -104,7 +104,7 @@ public:
 		}
 	}
 
-	virtual size_t write(const void* b, size_t len) throw(FileException) {
+	size_t write(const void* b, size_t len) throw(FileException) {
 		bool verifyFlag = false;
 		size_t pos = 0;
 		

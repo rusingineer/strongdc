@@ -93,16 +93,20 @@ private:
 
 	SearchResult(const SearchResult& rhs);
 
+	TTHValue tth;
+	
 	string file;
 	string hubName;
-	User::Ptr user;
+	string IP;
+	string token;
+	
 	int64_t size;
+	
+	User::Ptr user;
 	Types type;
+
 	uint8_t slots;
 	uint8_t freeSlots;
-	string IP;
-	TTHValue tth;
-	string token;
 	
 	volatile long ref;
 };
@@ -193,7 +197,7 @@ private:
 	class ResultsQueue: public Thread {
 	public:
 		ResultsQueue() : stop(false) {}
-		virtual ~ResultsQueue() throw() { shutdown(); }
+		~ResultsQueue() throw() { shutdown(); }
 
 		int run();
 		void shutdown() {

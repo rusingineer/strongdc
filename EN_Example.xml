@@ -256,7 +256,7 @@
 		<String Name="CheckInflated">filelist was inflated %s times</String>
 		<String Name="CheckMismatchedShareSize">Mismatched share size - </String>
 		<String Name="CheckOnConnect">Check user on join</String>
-		<String Name="CheckShowRealShare">, stated size = %[statedshareformat], real size = %[realshareformat]</String>
+		<String Name="CheckShowRealShare">, stated size = %[shareshort], real size = %[realshareformat]</String>
 		<String Name="CheckingClient">Checking client...</String>
 		<String Name="ChooseFolder">Choose folder</String>
 		<String Name="ChunkOverlapped">Chunk overlapped by faster user</String>

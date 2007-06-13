@@ -127,7 +127,7 @@ private:
 	};
 
 	struct TaskData { 
-		virtual ~TaskData() { }
+		~TaskData() { }
 	};
 	struct ConnectInfo : public TaskData {
 		ConnectInfo(string addr_, uint16_t port_, bool proxy_) : addr(addr_), port(port_), proxy(proxy_) { }
@@ -146,27 +146,27 @@ private:
 	BufferedSocket(const BufferedSocket&);
 	BufferedSocket& operator=(const BufferedSocket&);
 
-	virtual ~BufferedSocket() throw();
+	~BufferedSocket() throw();
 
 	CriticalSection cs;
-
 	Semaphore taskSem;
-	vector<pair<Tasks, TaskData*> > tasks;
-
 	Modes mode;
+
 	UnZFilter *filterIn;
+	Socket* sock;
+	bool disconnecting;
+	bool failed;
+
 	int64_t dataBytes;
 	size_t rollback;
-	bool failed;
 	string line;
+
+	vector<pair<Tasks, TaskData*> > tasks;
 	vector<uint8_t> inbuf;
 	vector<uint8_t> writeBuf;
 	vector<uint8_t> sendBuf;
-
-	Socket* sock;
-	bool disconnecting;
-
-	virtual int run();
+	
+	int run();
 
 	void threadConnect(const string& aAddr, uint16_t aPort, bool proxy) throw(SocketException);
 	void threadRead() throw(SocketException);

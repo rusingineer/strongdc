@@ -418,9 +418,10 @@ private:
 			}
 		}
 
-		GETSET(uint8_t, flagimage, FlagImage);
-		SearchResult* sr;
 		tstring columns[COLUMN_LAST];
+		SearchResult* sr;
+				
+		GETSET(uint8_t, flagimage, FlagImage);
 	};
 
 	struct HubInfo : public FastAlloc<HubInfo> {
@@ -554,7 +555,7 @@ private:
 	virtual void on(ClientConnected, const Client* c) throw() { speak(HUB_ADDED, c); }
 	virtual void on(ClientUpdated, const Client* c) throw() { speak(HUB_CHANGED, c); }
 	virtual void on(ClientDisconnected, const Client* c) throw() { speak(HUB_REMOVED, c); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

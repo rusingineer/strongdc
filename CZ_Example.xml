@@ -256,7 +256,7 @@
 		<String Name="CheckInflated">Filelist byl zvětšen %s krát</String>
 		<String Name="CheckMismatchedShareSize">Velikost podvodného sdílení - </String>
 		<String Name="CheckOnConnect">Kontroluj uživatele po připojení</String>
-		<String Name="CheckShowRealShare">, hlášené sdílení = %[statedshareformat], opravdové sdílení = %[realshareformat]</String>
+		<String Name="CheckShowRealShare">, hlášené sdílení = %[shareshort], opravdové sdílení = %[realshareformat]</String>
 		<String Name="CheckingClient">Kontroluji klienta...</String>
 		<String Name="ChooseFolder">Zvolte složku</String>
 		<String Name="ChunkOverlapped">Segment překryt rychlejším uživatelem</String>

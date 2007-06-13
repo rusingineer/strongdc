@@ -77,7 +77,7 @@ public:
 
 	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
 
-	virtual ~User() throw() { }
+	~User() throw() { }
 
 	const CID& getCID() const { return cid; }
 	operator const CID&() const { return cid; }
