@@ -1470,9 +1470,7 @@ LRESULT QueueFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOO
 	QueueItemInfo *ii = (QueueItemInfo*)ctrlQueue.GetItemData(ctrlQueue.GetNextItem(-1, LVNI_SELECTED));
 
 	if(ii != NULL) {
-		int tmp = wID - IDC_COPY;
-	
-		WinUtil::setClipboard(ii->getText(tmp));
+		WinUtil::setClipboard(ii->getText(wID - IDC_COPY));
 	}
 	return 0;
 }
@@ -1502,7 +1500,7 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	return 0;
 }
 
-void QueueFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void QueueFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlQueue.GetBkColor() != WinUtil::bgColor) {
 		ctrlQueue.SetBkColor(WinUtil::bgColor);

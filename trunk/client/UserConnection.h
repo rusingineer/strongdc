@@ -328,8 +328,8 @@ public:
 	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
 	GETSET(string, encoding, Encoding);
-	GETSET(States, state, State);
 	GETSET(uint64_t, lastActivity, LastActivity);
+	GETSET(States, state, State);
 
 	BufferedSocket const* getSocket() { return socket; } 
 	void garbageCommand() { 
@@ -343,8 +343,8 @@ public:
 
 private:
 	BufferedSocket* socket;
-	bool secure;
 	User::Ptr user;
+	bool secure;	
 
 	static const string UPLOAD, DOWNLOAD;
 	
@@ -358,7 +358,7 @@ private:
 		lastActivity(0), socket(0), secure(secure_), download(NULL) { 
 	}
 
-	virtual ~UserConnection() throw() {
+	~UserConnection() throw() {
 		BufferedSocket::putSocket(socket);
 	}
 	friend struct DeleteFunction;
@@ -378,25 +378,25 @@ private:
 		socket->write(aString);
 	}
 
-	virtual void on(Connected) throw() {
+	void on(Connected) throw() {
         lastActivity = GET_TICK();
         fire(UserConnectionListener::Connected(), this); 
     }
-	virtual void on(Line, const string&) throw();
-	virtual void on(Data, uint8_t* data, size_t len) throw() { 
+	void on(Line, const string&) throw();
+	void on(Data, uint8_t* data, size_t len) throw() { 
         lastActivity = GET_TICK(); 
         fire(UserConnectionListener::Data(), this, data, len); 
     }
-	virtual void on(BytesSent, size_t bytes, size_t actual) throw() { 
+	void on(BytesSent, size_t bytes, size_t actual) throw() { 
         lastActivity = GET_TICK();
         fire(UserConnectionListener::BytesSent(), this, bytes, actual); 
     }
-	virtual void on(ModeChange) throw() { 
+	void on(ModeChange) throw() { 
         lastActivity = GET_TICK(); 
         fire(UserConnectionListener::ModeChange(), this); 
     }
-	virtual void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
-	virtual void on(Failed, const string&) throw();
+	void on(TransmitDone) throw() { fire(UserConnectionListener::TransmitDone(), this); }
+	void on(Failed, const string&) throw();
 };
 
 #endif // !defined(USER_CONNECTION_H)

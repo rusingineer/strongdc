@@ -52,12 +52,12 @@ LRESULT RecentHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	
 	ctrlHubs.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
 	
-	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_CONNECT);
 	ctrlConnect.SetWindowText(CTSTRING(CONNECT));
 	ctrlConnect.SetFont(WinUtil::font);
 
-	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REMOVE);
 	ctrlRemove.SetWindowText(CTSTRING(REMOVE));
 	ctrlRemove.SetFont(WinUtil::font);
@@ -208,7 +208,7 @@ LRESULT RecentHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	return 0;
 }
 
-void RecentHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void RecentHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
 		ctrlHubs.SetBkColor(WinUtil::bgColor);
@@ -222,4 +222,13 @@ void RecentHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) thro
 	if(refresh == true) {
 		RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 	}
+}
+
+
+LRESULT RecentHubsFrame::onItemchangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+{
+	NM_LISTVIEW* lv = (NM_LISTVIEW*) pnmh;
+	::EnableWindow(GetDlgItem(IDC_CONNECT), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_REMOVE), (lv->uNewState & LVIS_FOCUSED));
+	return 0;
 }

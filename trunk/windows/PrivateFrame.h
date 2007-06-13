@@ -243,7 +243,7 @@ private:
 		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(PRIVATE_FRAME_H)

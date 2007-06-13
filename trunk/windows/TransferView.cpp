@@ -1100,7 +1100,7 @@ LRESULT TransferView::onSlowDisconnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	return 0;
 }
 
-void TransferView::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void TransferView::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlTransfers.GetBkColor() != WinUtil::bgColor) {
 		ctrlTransfers.SetBkColor(WinUtil::bgColor);

@@ -252,7 +252,7 @@ string ResourceManager::strings[] = {
 "filelist was inflated %s times", 
 "Mismatched share size - ", 
 "Check user on join", 
-", stated size = %[statedshareformat], real size = %[realshareformat]", 
+", stated size = %[shareshort], real size = %[realshareformat]", 
 "Checking client...", 
 "Choose folder", 
 "Chunk overlapped by faster user", 

@@ -778,7 +778,7 @@ LRESULT PrivateFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	return 0;
 }
 
-void PrivateFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void PrivateFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	ctrlClient.SetBackgroundColor(WinUtil::bgColor);
 	RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 }

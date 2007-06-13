@@ -53,7 +53,7 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	
 	ctrlHubs.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
 	
-	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlConnect.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_CONNECT);
 	ctrlConnect.SetWindowText(CTSTRING(CONNECT));
 	ctrlConnect.SetFont(WinUtil::font);
@@ -63,12 +63,12 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlNew.SetWindowText(CTSTRING(NEW));
 	ctrlNew.SetFont(WinUtil::font);
 
-	ctrlProps.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlProps.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_EDIT);
 	ctrlProps.SetWindowText(CTSTRING(PROPERTIES));
 	ctrlProps.SetFont(WinUtil::font);
 
-	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REMOVE);
 	ctrlRemove.SetWindowText(CTSTRING(REMOVE));
 	ctrlRemove.SetFont(WinUtil::font);
@@ -328,6 +328,9 @@ LRESULT FavoriteHubsFrame::onMoveDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 
 LRESULT FavoriteHubsFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	NMITEMACTIVATE* l = (NMITEMACTIVATE*)pnmh;
+	::EnableWindow(GetDlgItem(IDC_CONNECT), (l->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_REMOVE), (l->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_EDIT), (l->uNewState & LVIS_FOCUSED));
 	if(!nosave && l->iItem != -1 && ((l->uNewState & LVIS_STATEIMAGEMASK) != (l->uOldState & LVIS_STATEIMAGEMASK))) {
 		FavoriteHubEntry* f = (FavoriteHubEntry*)ctrlHubs.GetItemData(l->iItem);
 		f->setConnect(ctrlHubs.GetCheckState(l->iItem) != FALSE);
@@ -410,7 +413,7 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 	return 0;
 }
 
-void FavoriteHubsFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void FavoriteHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
 		ctrlHubs.SetBkColor(WinUtil::bgColor);

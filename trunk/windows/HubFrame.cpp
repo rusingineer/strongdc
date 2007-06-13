@@ -2525,7 +2525,7 @@ LRESULT HubFrame::onStyleChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
-void HubFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void HubFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
 	//ctrlUsers.Invalidate();
 	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {

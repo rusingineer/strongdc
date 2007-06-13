@@ -65,9 +65,9 @@ public:
 	Download(UserConnection& conn) throw();
 	Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter aSource) throw();
 
-	virtual void getParams(const UserConnection& aSource, StringMap& params);
+	void getParams(const UserConnection& aSource, StringMap& params);
 
-	virtual ~Download();
+	~Download();
 
 	/** @return Target filename without path. */
 	string getTargetFileName() const {
@@ -95,9 +95,11 @@ public:
 	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
+
+	uint64_t quickTick;
+
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
-	uint64_t quickTick;
 	
 private:
 	Download(const Download&);

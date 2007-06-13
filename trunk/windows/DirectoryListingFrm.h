@@ -388,7 +388,7 @@ private:
 
 	static FrameMap frames;
 	
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 class ThreadedDirectoryListing : public Thread

@@ -46,7 +46,7 @@ public:
 	DECLARE_WND_CLASS(_T("TransferView"))
 
 	TransferView() : PreviewAppsSize(0) { }
-	virtual ~TransferView(void);
+	~TransferView(void);
 
 	typedef UserInfoBaseHandler<TransferView> uibBase;
 	typedef UCHandler<TransferView> ucBase;
@@ -341,7 +341,7 @@ private:
 	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
 	virtual void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void onTransferComplete(const Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree);
 

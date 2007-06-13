@@ -1,3 +1,9 @@
+** svn292
+	emoticons with alpha channels are supported
+	fixed problem with changing colors and missing userlist icons
+	fixed invalid texts in search frame
+	some memory optimizations (removed unnecessary virtual functions, grouped same-sized class members)
+
 ** svn291
 	fixed invalid texts in userlist
 	something from DC++

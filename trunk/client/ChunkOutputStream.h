@@ -21,14 +21,14 @@
 class ChunkDoneException : public Exception {
 public:
 	ChunkDoneException(const string& aError, int64_t aPos) throw() : Exception(aError), pos(aPos) { };
-	virtual ~ChunkDoneException() { }; 
+	~ChunkDoneException() { }; 
 	int64_t pos;
 };
 
 class FileDoneException : public Exception {
 public:
 	FileDoneException(const string& aError, int64_t aPos) throw() : Exception(aError), pos(aPos) { };
-	virtual ~FileDoneException() { }; 
+	~FileDoneException() { }; 
 	int64_t pos;
 };
 
@@ -49,12 +49,12 @@ public:
 		}
     }
 
-	virtual ~ChunkOutputStream()
+	~ChunkOutputStream()
     {
 		if(managed) delete os;
     }
 
-	virtual size_t write(const void* buf, size_t len) throw(Exception)
+	size_t write(const void* buf, size_t len) throw(Exception)
 	{
 		if(chunk == -1) return 0;
 		if(len == 0) return 0;
@@ -98,7 +98,7 @@ public:
         return len;
     }
 
-	virtual size_t flush() throw(Exception) 
+	size_t flush() throw(Exception) 
 	{
 		return os->flush();
 	}

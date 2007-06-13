@@ -45,6 +45,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_LIST_REMOVE, onRemove);
 		COMMAND_ID_HANDLER(IDOK, onCloseCmd)
 		COMMAND_ID_HANDLER(IDCANCEL, onCloseCmd)
+		NOTIFY_HANDLER(IDC_LIST_LIST, LVN_ITEMCHANGED, onItemchangedDirectories)
 	END_MSG_MAP();
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -156,6 +157,15 @@ public:
 			SettingsManager::getInstance()->set(SettingsManager::HUBLIST_SERVERS, tmp);
 		}
 		EndDialog(wID);
+		return 0;
+	}
+
+	LRESULT onItemchangedDirectories(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+			NM_LISTVIEW* lv = (NM_LISTVIEW*) pnmh;
+			::EnableWindow(GetDlgItem(IDC_LIST_UP), (lv->uNewState & LVIS_FOCUSED));
+			::EnableWindow(GetDlgItem(IDC_LIST_DOWN), (lv->uNewState & LVIS_FOCUSED));
+			::EnableWindow(GetDlgItem(IDC_LIST_EDIT), (lv->uNewState & LVIS_FOCUSED));
+			::EnableWindow(GetDlgItem(IDC_LIST_REMOVE), (lv->uNewState & LVIS_FOCUSED));
 		return 0;
 	}
 

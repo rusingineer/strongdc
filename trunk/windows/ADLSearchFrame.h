@@ -140,7 +140,7 @@ private:
 	// Column parameters
 	static int columnIndexes[];
 	static int columnSizes[];
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(ADL_SEARCH_FRAME_H)

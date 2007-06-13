@@ -85,12 +85,12 @@ LRESULT ADLSearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ctrlAdd.SetWindowText(CTSTRING(NEW));
 	ctrlAdd.SetFont(WinUtil::font);
 
-	ctrlEdit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlEdit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_EDIT);
 	ctrlEdit.SetWindowText(CTSTRING(PROPERTIES));
 	ctrlEdit.SetFont(WinUtil::font);
 
-	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+	ctrlRemove.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_REMOVE);
 	ctrlRemove.SetWindowText(CTSTRING(REMOVE));
 	ctrlRemove.SetFont(WinUtil::font);
@@ -487,6 +487,10 @@ LRESULT ADLSearchFrame::onMoveDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 // Clicked 'Active' check box
 LRESULT ADLSearchFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) 
 {
+	NM_LISTVIEW* lv = (NM_LISTVIEW*) pnmh;
+	::EnableWindow(GetDlgItem(IDC_EDIT), (lv->uNewState & LVIS_FOCUSED));
+	::EnableWindow(GetDlgItem(IDC_REMOVE), (lv->uNewState & LVIS_FOCUSED));
+
 	NMITEMACTIVATE* item = (NMITEMACTIVATE*)pnmh;
 
 	if((item->uChanged & LVIF_STATE) == 0)
@@ -585,7 +589,7 @@ void ADLSearchFrame::UpdateSearch(int index, BOOL doDelete)
 	ctrlList.SetCheckState(index, search.isActive);
 }
 
-void ADLSearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void ADLSearchFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlList.GetBkColor() != WinUtil::bgColor) {
 		ctrlList.SetBkColor(WinUtil::bgColor);

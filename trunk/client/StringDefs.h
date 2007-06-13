@@ -255,7 +255,7 @@ enum Strings { // @DontAdd
 	CHECK_INFLATED, // "filelist was inflated %s times"
 	CHECK_MISMATCHED_SHARE_SIZE, // "Mismatched share size - "
 	CHECK_ON_CONNECT, // "Check user on join"
-	CHECK_SHOW_REAL_SHARE, // ", stated size = %[statedshareformat], real size = %[realshareformat]"
+	CHECK_SHOW_REAL_SHARE, // ", stated size = %[shareshort], real size = %[realshareformat]"
 	CHECKING_CLIENT, // "Checking client..."
 	CHOOSE_FOLDER, // "Choose folder"
 	CHUNK_OVERLAPPED, // "Chunk overlapped by faster user"

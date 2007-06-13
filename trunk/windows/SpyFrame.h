@@ -111,7 +111,7 @@ private:
 	
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, uint32_t) throw();
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(SPY_FRAME_H)

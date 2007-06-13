@@ -1340,46 +1340,45 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 	return 0;
 }
 
-tstring tmp1;
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-			columns[COLUMN_FILENAME] = Text::toT(sr->getFile(), tmp1);
+			columns[COLUMN_FILENAME] = Text::toT(sr->getFile());
 		} else {
-			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getFile()), tmp1);
-			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getFile()), tmp1);
+			columns[COLUMN_FILENAME] = Text::toT(Util::getFileName(sr->getFile()));
+			columns[COLUMN_PATH] = Text::toT(Util::getFilePath(sr->getFile()));
 		}
 
-		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])), tmp1);
+		columns[COLUMN_TYPE] = Text::toT(Util::getFileExt(Text::fromT(columns[COLUMN_FILENAME])));
 		if(!columns[COLUMN_TYPE].empty() && columns[COLUMN_TYPE][0] == _T('.'))
 			columns[COLUMN_TYPE].erase(0, 1);
 		columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
 		columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 	} else {
-		columns[COLUMN_FILENAME] = Text::toT(sr->getFileName(), tmp1);
-		columns[COLUMN_PATH] = Text::toT(sr->getFile(), tmp1);
+		columns[COLUMN_FILENAME] = Text::toT(sr->getFileName());
+		columns[COLUMN_PATH] = Text::toT(sr->getFile());
 		columns[COLUMN_TYPE] = TSTRING(DIRECTORY);
 		if(sr->getSize() > 0) {
 			columns[COLUMN_SIZE] = Util::formatBytesW(sr->getSize());
 			columns[COLUMN_EXACT_SIZE] = Util::formatExactSize(sr->getSize());
 		}
 	}
-	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick(), tmp1);
-	columns[COLUMN_CONNECTION] = Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()), tmp1);
-	columns[COLUMN_HUB] = Text::toT(sr->getHubName(), tmp1);
-	columns[COLUMN_SLOTS] = Text::toT(sr->getSlotString(), tmp1);
-	columns[COLUMN_IP] = Text::toT(sr->getIP(), tmp1);
+	columns[COLUMN_NICK] = Text::toT(sr->getUser()->getFirstNick());
+	columns[COLUMN_CONNECTION] = Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()));
+	columns[COLUMN_HUB] = Text::toT(sr->getHubName());
+	columns[COLUMN_SLOTS] = Text::toT(sr->getSlotString());
+	columns[COLUMN_IP] = Text::toT(sr->getIP());
 	flagimage = 0;
 	if (!columns[COLUMN_IP].empty()) {
 		// Only attempt to grab a country mapping if we actually have an IP address
-		tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()), tmp1);
+		tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
 		if(!tmpCountry.empty()) {
 			columns[COLUMN_IP] = tmpCountry + _T(" (") + columns[COLUMN_IP] + _T(")");
 			flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
 		}
 	}
 	if(sr->getType() == SearchResult::TYPE_FILE) {
-		columns[COLUMN_TTH] = Text::toT(sr->getTTH().toBase32(), tmp1);
+		columns[COLUMN_TTH] = Text::toT(sr->getTTH().toBase32());
 	}
 	if (sr->getUser()->getLastDownloadSpeed() > 0) {
 		columns[COLUMN_UPLOAD] = Util::toStringW(sr->getUser()->getLastDownloadSpeed()) + _T(" kB/s");
@@ -1649,7 +1648,7 @@ LRESULT SearchFrame::onSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	return 0;
 }
 
-void SearchFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void SearchFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlResults.GetBkColor() != WinUtil::bgColor) {
 		ctrlResults.SetBkColor(WinUtil::bgColor);

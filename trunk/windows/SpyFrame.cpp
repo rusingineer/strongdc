@@ -233,7 +233,7 @@ void SpyFrame::on(TimerManagerListener::Second, uint32_t) throw() {
 	PostMessage(WM_SPEAKER, TICK_AVG, (LPARAM)f);
 }
 
-void SpyFrame::on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw() {
+void SpyFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlSearches.GetBkColor() != WinUtil::bgColor) {
 		ctrlSearches.SetBkColor(WinUtil::bgColor);

@@ -486,7 +486,7 @@ private:
 
 	// TimerManagerListener
 	virtual void on(TimerManagerListener::Second, uint32_t /*aTick*/) throw();
-	virtual void on(SettingsManagerListener::Save, SimpleXML* /*xml*/) throw();
+	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	// ClientListener
 	virtual void on(Connecting, const Client*) throw();
