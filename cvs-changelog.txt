@@ -1,3 +1,9 @@
+** svn293
+	if there's no password for a hub, we will use default nick when adding this hub as favorite
+	Favorite hubs frame allow column sorting
+	much faster mainitem search in TypedTreeListView
+	fixed socket signal interrupts (DC++ SVN)
+
 ** svn292
 	emoticons with alpha channels are supported
 	fixed problem with changing colors and missing userlist icons

@@ -66,10 +66,10 @@ public:
 
 		~File() { }
 
+		GETSET(TTHValue, tthRoot, TTH);
 		GETSET(string, name, Name);
 		GETSET(int64_t, size, Size);
 		GETSET(Directory*, parent, Parent);
-		GETSET(TTHValue, tthRoot, TTH);
 		GETSET(bool, adls, Adls);
 	};
 

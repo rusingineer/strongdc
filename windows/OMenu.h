@@ -38,7 +38,7 @@ struct OMenuItem {
 class OMenu : public CMenu {
 public:
 	OMenu();
-	virtual ~OMenu();
+	~OMenu();
 
 	BOOL CreatePopupMenu();
 

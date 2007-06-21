@@ -1052,8 +1052,8 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					}	 	
 				}
 			} else {
-				for(vector<SearchInfo*>::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
-					SearchInfo* si2 = *s;
+				for(SearchInfoList::TreeMap::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+					SearchInfo* si2 = (*s).second;
 	                SearchResult* sr2 = si2->sr;
 					if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
 						delete si;	 	
@@ -1072,7 +1072,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
 					ctrlResults.insertItem(si, si->imageIndex());
-					ctrlResults.mainItems.push_back(si);
+					ctrlResults.mainItems.insert(make_pair(const_cast<tstring*>(&Util::emptyStringT), si));
 				}
 
 				if(!filter.empty())
@@ -1614,8 +1614,8 @@ void SearchFrame::updateSearchList(SearchInfo* si) {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();
 
-		for(vector<SearchInfo*>::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
-			SearchInfo* si = *i;
+		for(SearchInfoList::TreeMap::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+			SearchInfo* si = (*i).second;
 			si->collapsed = true;
 			if(matchFilter(si, sel, doSizeCompare, mode, size)) {
 				dcassert(ctrlResults.findItem(si) == -1);

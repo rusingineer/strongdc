@@ -865,7 +865,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="UserCmdType">Typ příkazu</String>
 		<String Name="UserCmdUserMenu">User Menu</String>
 		<String Name="UserCmdWindow">Vytvořit / Změnit příkaz</String>
-		<String Name="UserDescription">Popis</String>
+		<String Name="UserDescription">Popis uživatele</String>
 		<String Name="UserOffline">Uživatel odpojen</String>
 		<String Name="UserOnline">Běží... (uživatel připojen)</String>
 		<String Name="UserWentOffline">Uživatel se odpojil</String>

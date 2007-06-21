@@ -81,7 +81,7 @@ public:
 	};
 	
 	DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed);
-	virtual ~DirectoryListingFrame() { 
+	~DirectoryListingFrame() { 
 		dcassert(lists.find(dl->getUser()) != lists.end());
 		lists.erase(dl->getUser());
 	}
@@ -406,7 +406,7 @@ protected:
 	tstring mDir;
 
 private:
-	virtual int run() {
+	int run() {
 		try {
 			if(!mFile.empty()) {
 				mWindow->dl->loadFile(mFile);

@@ -143,7 +143,8 @@ public:
 private:
 	class ItemInfo;	
 public:
-	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS>& getUserList() { return ctrlTransfers; }
+	typedef TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ItemInfoList;
+	ItemInfoList& getUserList() { return ctrlTransfers; }
 private:
 	enum {
 		ADD_ITEM,
@@ -175,8 +176,7 @@ private:
 	struct UpdateInfo;
 	class ItemInfo : public UserInfoBase {
 	public:
-		typedef ItemInfo* Ptr;
-		typedef vector<Ptr> List;
+		typedef vector<ItemInfo*> List;
 		typedef List::const_iterator Iter;
 
 		ItemInfo::List subItems;
@@ -195,18 +195,18 @@ private:
 		bool download;
 		bool transferFailed;
 		bool collapsed;
+		bool multiSource;		
+		uint8_t flagImage;
 		ItemInfo* main;
 		Status status;
-		uint8_t flagImage;
 		int64_t pos;
 		int64_t size;
 		int64_t start;
 		int64_t actual;
 		int64_t speed;
 		int64_t timeLeft;
-		tstring Target;
 		uint64_t fileBegin;
-		bool multiSource;
+		tstring Target;
 
 		tstring columns[COLUMN_LAST];
 		void update(const UpdateInfo& ui);
@@ -282,7 +282,7 @@ private:
 		bool download;
 		bool transferFailed;
 		bool fileList;
-		tstring target;
+		uint8_t flagImage;		
 		void setMultiSource(bool aSeg) { multiSource = aSeg; updateMask |= MASK_SEGMENT; }
 		bool multiSource;
 		void setStatus(ItemInfo::Status aStatus) { status = aStatus; updateMask |= MASK_STATUS; }
@@ -306,12 +306,12 @@ private:
 		tstring path;
 		void setIP(const tstring& aIP) { IP = aIP; updateMask |= MASK_IP; }
 		tstring IP;
-		uint8_t flagImage;
+		tstring target;		
 	};
 
 	void speak(uint8_t type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }
 
-	TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ctrlTransfers;
+	ItemInfoList ctrlTransfers;
 	static int columnIndexes[];
 	static int columnSizes[];
 

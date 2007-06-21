@@ -429,6 +429,19 @@ void FavoriteHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) th
 	}
 }
 
+LRESULT FavoriteHubsFrame::onColumnClickHublist(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	NMLISTVIEW* l = (NMLISTVIEW*)pnmh;
+	if(l->iSubItem == ctrlHubs.getSortColumn()) {
+		if (!ctrlHubs.isAscending())
+			ctrlHubs.setSort(-1, ctrlHubs.getSortType());
+		else
+			ctrlHubs.setSortDirection(false);
+	} else {
+		ctrlHubs.setSort(l->iSubItem, ExListViewCtrl::SORT_STRING_NOCASE);
+	}
+	return 0;
+}
+
 /**
  * @file
  * $Id$

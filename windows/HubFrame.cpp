@@ -452,8 +452,10 @@ void HubFrame::addAsFavorite() {
 		aEntry.setName(Text::fromT(buf));
 		aEntry.setDescription(Text::fromT(buf));
 		aEntry.setConnect(false);
-		aEntry.setNick(client->getMyNick());
-		aEntry.setPassword(client->getPassword());
+		if(!client->getPassword().empty()) {
+			aEntry.setNick(client->getMyNick());
+			aEntry.setPassword(client->getPassword());
+		}
 		aEntry.setConnect(false);
 		FavoriteManager::getInstance()->addFavorite(aEntry);
 		addClientLine(TSTRING(FAVORITE_HUB_ADDED), WinUtil::m_ChatTextSystem );

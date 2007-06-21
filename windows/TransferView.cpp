@@ -525,8 +525,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
 			if(ui->download) {
 				bool found = false;
-				for(ItemInfo::Iter k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
-					for(ItemInfo::Iter j = (*k)->subItems.begin(); j != (*k)->subItems.end(); j++) {
+				for(ItemInfoList::TreeMap::const_iterator k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
+					ItemInfo* l = (*k).second;
+					for(ItemInfo::Iter j = l->subItems.begin(); j != l->subItems.end(); j++) {
 						ItemInfo* ii = *j;
 						if(*ui == *ii) {
 							ctrlTransfers.removeGroupedItem(ii);
@@ -551,8 +552,9 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
 			if(ui->download) {
 				bool found = false;
-				for(ItemInfo::Iter k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
-					for(ItemInfo::Iter j = (*k)->subItems.begin(); j != (*k)->subItems.end(); j++) {
+				for(ItemInfoList::TreeMap::const_iterator k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
+					ItemInfo* l = (*k).second;
+					for(ItemInfo::Iter j = l->subItems.begin(); j != l->subItems.end(); j++) {
 						ItemInfo* ii = *j;
 						if(*ui == *ii) {
 							ii->update(*ui);
@@ -1039,9 +1041,10 @@ void TransferView::CollapseAll() {
 }
 
 void TransferView::ExpandAll() {
-	for(vector<ItemInfo*>::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
-		if((*i)->collapsed) {
-			ctrlTransfers.Expand(*i, ctrlTransfers.findItem(*i));
+	for(ItemInfoList::TreeMap::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
+		ItemInfo* l = (*i).second;
+		if(l->collapsed) {
+			ctrlTransfers.Expand(l, ctrlTransfers.findItem(l));
 		}
 	}
 }

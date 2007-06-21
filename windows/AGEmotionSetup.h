@@ -41,7 +41,7 @@ public:
 	HBITMAP getEmotionBmp(const COLORREF &clrBkColor);
 	const string& getEmotionBmpPath() const { return m_EmotionBmpPath; }
 
-protected:
+private:
 	tstring		m_EmotionText;
 	string		m_EmotionBmpPath;
 	HBITMAP		m_EmotionBmp;

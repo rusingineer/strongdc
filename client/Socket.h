@@ -27,8 +27,10 @@
 #include "Exception.h"
 
 #ifdef _WIN32
+#undef EINTR
 // Berkely constants converted to the windows equivs...
-#	define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
+#define EADDRNOTAVAIL WSAEADDRNOTAVAIL
+#define EINTR         WSAEINTR
 
 typedef int socklen_t;
 typedef SOCKET socket_t;

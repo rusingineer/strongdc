@@ -150,10 +150,10 @@ public:
 	UserConnection& getUserConnection() { return userConnection; }
 	const UserConnection& getUserConnection() const { return userConnection; }
 
+	GETSET(TTHValue, tth, TTH);
 	GETSET(uint64_t, start, Start);
 	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);
-	GETSET(TTHValue, tth, TTH);
 	GETSET(int64_t, fileSize, FileSize);
 private:
 	Transfer(const Transfer&);
@@ -213,8 +213,7 @@ public:
 		FLAG_ASSOCIATED = FLAG_INCOMING << 1,
 		FLAG_HASSLOT = FLAG_ASSOCIATED << 1,
 		FLAG_HASEXTRASLOT = FLAG_HASSLOT << 1,
-		FLAG_SUPPORTS_GETZBLOCK = FLAG_HASEXTRASLOT << 1,
-		FLAG_SUPPORTS_MINISLOTS = FLAG_SUPPORTS_GETZBLOCK << 1,
+		FLAG_SUPPORTS_MINISLOTS = FLAG_HASEXTRASLOT << 1,
 		FLAG_SUPPORTS_XML_BZLIST = FLAG_SUPPORTS_MINISLOTS << 1,
 		FLAG_SUPPORTS_ADCGET = FLAG_SUPPORTS_XML_BZLIST << 1,
 		FLAG_SUPPORTS_ZLIB_GET = FLAG_SUPPORTS_ADCGET << 1,

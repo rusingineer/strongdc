@@ -161,7 +161,7 @@ public:
 private:
 	struct FloodCacheItem {
 		FloodCacheItem();
-		virtual ~FloodCacheItem();
+		~FloodCacheItem();
 
 		struct FCIMapper {
 			COLORREF c1;
