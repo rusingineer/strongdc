@@ -108,13 +108,27 @@ public:
 	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
-	GS(Nick, "NI")
+	//GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Connection, "CO")
 	GS(Status, "ST")
+
+	void setNick(const string& aNick) {
+		if(!user || !user->isSet(User::NMDC)) {
+			set("NI", aNick);
+		}
+	}
+
+	string getNick() const {
+		if(user && user->isSet(User::NMDC)) {
+			return user->getFirstNick();
+		} else {
+			return get("NI");
+		}
+	}
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }

@@ -576,6 +576,7 @@ private:
 			lvcl.pszText = buf;
 			lvcl.cchTextMax = 128;
 			GetColumn(i, &lvcl);
+			
 			for(size_t j = 0; j < columnList.size(); ++j) {
 				if(Util::stricmp(columnList[j]->name.c_str(), lvcl.pszText) == 0) {
 					columnIndexes.push_back(static_cast<uint8_t>(j));
@@ -598,8 +599,9 @@ public:
 	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
 	
-	// TODO: rewrite to hash_map
-	typedef vector<T*> TreeItem;
+	//typedef vector<T*> subItemsList;
+	//typedef pair<T*, subItemsList> treePair;
+	typedef HASH_MAP<tstring*, T*, noCaseStringHash, noCaseStringEq> TreeMap;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -677,8 +679,8 @@ public:
 	}
 
 	inline T* findMainItem(const tstring& groupingString) const {
-		TreeItem::const_iterator i = find_if(mainItems.begin(), mainItems.end(), TStringComp(groupingString));
-		return i != mainItems.end() ? (*i) : NULL;
+		TreeMap::const_iterator i = mainItems.find(const_cast<tstring*>(&groupingString));
+		return i != mainItems.end() ? (*i).second : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
@@ -691,7 +693,7 @@ public:
 
 		if(mainItem == NULL) {
 			mainItem = item->createMainItem();
-			mainItems.push_back(mainItem);
+			mainItems.insert(make_pair(const_cast<tstring*>(&mainItem->getGroupingString()), mainItem));
 
 			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
@@ -732,7 +734,7 @@ public:
 			delete *i;
 		}
 		mainItem->subItems.clear();
-		mainItems.erase(remove(mainItems.begin(), mainItems.end(), mainItem), mainItems.end());
+		mainItems.erase(const_cast<tstring*>(&mainItem->getGroupingString()));
 	}
 
 	void removeGroupedItem(T* item, bool removeFromMemory = true) {
@@ -776,13 +778,14 @@ public:
 
 	void deleteAllItems() {
 		// HACK: ugly hack but at least it doesn't crash and there's no memory leak
-		for(TreeItem::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
-			for(T::List::iterator j = (*i)->subItems.begin(); j != (*i)->subItems.end(); j++) {
+		for(TreeMap::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+			T* ti = (*i).second;
+			for(T::List::iterator j = ti->subItems.begin(); j != ti->subItems.end(); j++) {
 				deleteItem(*j);
 				delete *j;
 			}
-			deleteItem(*i);
-			delete *i;
+			deleteItem(ti);
+			delete ti;
 		}
 		for(int i = 0; i < GetItemCount(); i++) {
 			T* si = getItemData(i);
@@ -859,19 +862,11 @@ public:
 		return mid;
 	}
 
-   	TreeItem mainItems;
+   	TreeMap mainItems;
 
 private:
 	CImageList states;
 	bool uniqueMainItem;
-
-	struct TStringComp {
-		TStringComp(const tstring& s) : a(s) { }
-		bool operator()(const T* b) const { return b->getGroupingString() == a; }
-		const tstring& a;
-	private:
-		TStringComp& operator=(const TStringComp&);
-	};
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;

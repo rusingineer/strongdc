@@ -1013,9 +1013,8 @@ again:
 	}
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
-		bool supportsChunks = !aSource.isSet(UserConnection::FLAG_STEALTH) && (aSource.isSet(UserConnection::FLAG_SUPPORTS_ADCGET) || aSource.isSet(UserConnection::FLAG_SUPPORTS_GETZBLOCK) || aSource.isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST));
 		d->setStartPos(freeBlock);
-		fileChunksInfo->setDownload(freeBlock, d, supportsChunks && useChunks);
+		fileChunksInfo->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && useChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());

@@ -560,7 +560,7 @@ void FileChunksInfo::markVerifiedBlock(uint16_t start, uint16_t end)
 	{
 		// check dupe
 		if(start >= i->first && start < i->second){
-			dcassert(0);
+			//dcassert(0);
 			return;
 		}
 

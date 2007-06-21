@@ -261,7 +261,8 @@ private:
 	class SearchInfo;
 
 public:
-	TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS>& getUserList() { return ctrlResults; }
+	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS> SearchInfoList;
+	SearchInfoList& getUserList() { return ctrlResults; }
 
 private:
 	enum {
@@ -494,7 +495,7 @@ private:
 	bool showUI;
 
 	CImageList images;
-	TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS> ctrlResults;
+	SearchInfoList ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
 	OMenu grantMenu;
