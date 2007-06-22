@@ -449,9 +449,9 @@ void SearchFrame::onEnter() {
 	// Can this be done in a better way?
 	TimerManager::getInstance()->addListener(this);
 
+	searches++;
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
 		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this);
-	searches++;
 }
 
 void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {

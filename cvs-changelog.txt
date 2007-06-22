@@ -1,3 +1,10 @@
+** svn294
+	minimize to system tray sets "below normal" priority
+	thread yield during an upload for better CPU time layout
+	added "ProxyFilter - Hide My IP 2007" to crash libraries
+	fixed assertion in PublicHubsListDlg (now it allows only single selection)
+	fixed rare crash when searching for some escaped characters (i.e. |||)
+
 ** svn293
 	if there's no password for a hub, we will use default nick when adding this hub as favorite
 	Favorite hubs frame allow column sorting

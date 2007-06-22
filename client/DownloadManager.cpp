@@ -353,9 +353,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			d->setSource(Transfer::USER_LIST_NAME);
 		}
 		d->setStartPos(0);
-		if(d->isSet(Download::FLAG_CHECK_FILE_LIST)) {
-			d->setSize(1);
-		}
 	}
 
 	{
@@ -490,7 +487,7 @@ void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcComm
 		(type == Transfer::TYPE_LIST && aSource->getDownload()->isSet(Download::FLAG_PARTIAL_LIST))) )
 	{
 		// Uhh??? We didn't ask for this?
-		aSource->disconnect();
+		aSource->disconnect(true);
 		return;
 	}
 
@@ -586,14 +583,12 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			
 			typedef MerkleCheckOutputStream<TigerTree, true> MerkleStream;
 			if(d->getTreeValid()) {
-				const TigerTree& tt = d->getTigerTree();
-			//else
-			//	tt.getLeaves().push_back(d->getTTH());					
-				MerkleStream* stream = new MerkleStream(tt, d->getFile(), blockPos, d->isSet(Download::FLAG_MULTI_CHUNK) ? d : NULL);
+				MerkleStream* stream = new MerkleStream(d->getTigerTree(), d->getFile(), blockPos, d->isSet(Download::FLAG_MULTI_CHUNK) ? d : NULL);
 				if(!d->isSet(Download::FLAG_MULTI_CHUNK)) stream->commitBytes(&(*bufPtr)[0], blockLeft);
 				d->setFile(stream);
 				d->setFlag(Download::FLAG_TTH_CHECK);
 			}
+			
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 				d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos()));
 			}

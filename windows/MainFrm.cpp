@@ -857,11 +857,13 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 		if(BOOLSETTING(MINIMIZE_TRAY) != WinUtil::isShift()) {
 			updateTray(true);
 			ShowWindow(SW_HIDE);
+			SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 		} else {
 			updateTray(false);
 		}
 		maximized = IsZoomed() > 0;
 	} else if( (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) ) {
+		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		if(BOOLSETTING(AUTO_AWAY)) {
 			if(awaybyminimize == true) {
 				awaybyminimize = false;

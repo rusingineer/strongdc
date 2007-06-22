@@ -1,1 +1,1 @@
-#define SVNVERSION "svn293"
+#define SVNVERSION "svn294"

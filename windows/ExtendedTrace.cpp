@@ -58,13 +58,14 @@ static void checkBuggyLibrary(PCSTR library) {
 	libraries.insert(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
 	libraries.insert(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
 	libraries.insert(make_pair(L"mshp32", L"Worm: W32.Worm.Feebs"));
+	libraries.insert(make_pair(L"ProxyFilter", L"Hide My IP 2007"));
 
 	for(map<tstring, tstring>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
 		string lib = Text::fromT(i->first); tstring app = i->second;
 		if(Util::stricmp(library, lib) == 0) {
 			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;
 			AutoArray<TCHAR> buf(BUF_SIZE);
-			snwprintf(buf, BUF_SIZE, CTSTRING(LIB_CRASH), app.c_str());
+			snwprintf(buf, BUF_SIZE - 1, CTSTRING(LIB_CRASH), app.c_str());
 		
 			MessageBox(0, buf, _T("Unhandled exception"), MB_OK);
 			exit(1);
