@@ -104,7 +104,6 @@ public:
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
-		//dcassert(socket);
 		if(!socket)
 			return;
 		updateActivity();

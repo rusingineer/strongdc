@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio 2005\StrongDC\StrongDC.rc
+// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Visual Studio 2005\StrongDC++\trunk\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101

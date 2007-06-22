@@ -911,11 +911,11 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	size_t BUF_SIZE;	
 	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp();
-		BUF_SIZE = x.length() + aString.length() + 64;
+		BUF_SIZE = x.length() + tmp.length() + 64;
 		buf = new char[BUF_SIZE];
 		chars = snprintf(buf, BUF_SIZE, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	} else {
-		BUF_SIZE = getMyNick().length() + aString.length() + 64;
+		BUF_SIZE = getMyNick().length() + tmp.length() + 64;
 		buf = new char[BUF_SIZE];
 		chars = snprintf(buf, BUF_SIZE, "$Search Hub:%s %c?%c?%I64d?%d?%s|", fromUtf8(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
 	}
