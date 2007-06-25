@@ -371,7 +371,7 @@ private:
 		}
 	}
 
-	virtual ~HubFrame() {
+	~HubFrame() {
 		ClientManager::getInstance()->putClient(client);
 
 		dcassert(frames.find(server) != frames.end());

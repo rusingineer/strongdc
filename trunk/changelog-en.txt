@@ -1,6 +1,6 @@
 	-- StrongDC++ 2.04 --
 
-* DC++ 0.699 update
+* DC++ 0.699 SVN update
 * fixed deadlock on some queue operations
 * fixed some memory leaks (THX redsaq)
 * TTH inconsistency doesn't remove the source from queue anymore
@@ -12,6 +12,15 @@
 * improved the response time to close connections
 * decreased memory usage for large queue and userlists
 * right clicks on users work also with disabled userlists
+* minimize to system tray sets "below normal" priority
+* added "ProxyFilter - Hide My IP 2007" to crash libraries
+* fixed rare crash when searching for some escaped characters (i.e. |||)
+* if there's no password for a hub, we will use default nick when adding this hub as favorite
+* Favorite hubs frame allow column sorting
+* emoticons with alpha channels are supported
+* fixed problem with changing colors and missing userlist icons
+* workaround for crash in FileChunksInfo::verifyBlock when can't allocate memory block
+* cache for progressbar drawings, now it's much faster
 
 	-- StrongDC++ 2.03 --
 

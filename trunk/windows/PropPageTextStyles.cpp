@@ -523,7 +523,7 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	}
 
 	SendMessage(WM_DESTROY,0,0);
-	SettingsManager::getInstance()->save();
+	//SettingsManager::getInstance()->save();
 	PropertiesDlg::needUpdate = true;
 	SendMessage(WM_INITDIALOG,0,0);
 

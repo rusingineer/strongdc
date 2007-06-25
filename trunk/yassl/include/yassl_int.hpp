@@ -2,7 +2,8 @@
  *
  * Copyright (C) 2003 Sawtooth Consulting Ltd.
  *
- * This file is part of yaSSL.
+ * This file is part of yaSSL, an SSL implementation written by Todd A Ouska
+ * (todd at yassl.com, see www.yassl.com).
  *
  * yaSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@
 #ifndef yaSSL_INT_HPP
 #define yaSSL_INT_HPP
 
+#include <errno.h>
 #include "yassl_imp.hpp"
 #include "yassl_error.hpp"
 #include "crypto_wrapper.hpp"
@@ -591,6 +593,9 @@ class SSL {
     Socket              socket_;                // socket wrapper
     Buffers             buffers_;               // buffered handshakes and data
     Log                 log_;                   // logger
+
+    // optimization variables
+    bool                has_data_;              // buffered data ready?
 public:
     SSL(SSL_CTX* ctx);
 
@@ -612,6 +617,8 @@ public:
     Socket&    useSocket();
     Log&       useLog();
     Buffers&   useBuffers();
+
+    bool       HasData() const;
 
     // sets
     void set_pending(Cipher suite);

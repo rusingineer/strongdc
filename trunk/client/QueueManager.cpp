@@ -941,7 +941,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 	if(pi != pfsQueue.end()) {
 		Download* d = new Download(aSource);
 		d->setFlag(Download::FLAG_PARTIAL_LIST);
-		d->setSource(pi->second);
+		d->setSource(const_cast<string*>(&pi->second));
 		return d;
 	}
 
@@ -1040,7 +1040,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 
 		if(aDownload->isSet(Download::FLAG_PARTIAL_LIST)) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
-			PfsIter i = find_if(range.first, range.second, CompareSecond<CID, string>(aDownload->getSource()));
+			PfsIter i = find_if(range.first, range.second, CompareSecond<CID, string>(*(aDownload->getSource())));
 			if(i != range.second) {
 				pfsQueue.erase(i);
 				fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
@@ -1050,7 +1050,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 
 			if(q) {
 				if(aDownload->isSet(Download::FLAG_USER_LIST)) {
-					if(aDownload->getSource() == Transfer::USER_LIST_NAME_BZ) {
+					if(*(aDownload->getSource()) == Transfer::USER_LIST_NAME_BZ) {
 						q->setFlag(QueueItem::FLAG_XML_BZLIST);
 					} else {
 						q->unsetFlag(QueueItem::FLAG_XML_BZLIST);

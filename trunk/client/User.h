@@ -102,10 +102,10 @@ class OnlineUser;
 class Identity {
 public:
 
-	Identity() : sid(0) { }
-	Identity(const User::Ptr& ptr, uint32_t aSID) : user(ptr), sid(aSID) { }
-	Identity(const Identity& rhs) : user(rhs.user), sid(rhs.sid), info(rhs.info) { }
-	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; sid = rhs.sid; info = rhs.info; return *this; }
+	Identity() { }
+	Identity(const User::Ptr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
+	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
+	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	//GS(Nick, "NI")
@@ -149,7 +149,10 @@ public:
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 	const string get(const char* name) const;
 	void set(const char* name, const string& val);
-	string getSIDString() const { return string((const char*)&sid, 4); }
+	string getSIDString() const { uint32_t sid = getSID(); return string((const char*)&sid, 4); }
+	
+	uint32_t getSID() const { return Util::toUInt32(get("SI")); }
+	void setSID(uint32_t sid) { if(sid != 0) set("SI", Util::toString(sid)); }
 	
 	const string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
 	const string getReport() const;
@@ -159,7 +162,6 @@ public:
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
 	User::Ptr& getUser() { return user; }
 	GETSET(User::Ptr, user, User);
-	GETSET(uint32_t, sid, SID);
 private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
@@ -199,7 +201,6 @@ public:
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() { }
 	
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }

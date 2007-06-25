@@ -486,7 +486,6 @@
 		<String Name="ReportAlternates">Hlásit automatické hledání ve stavovém řádku</String>
 		<String Name="RetrievingData">Přijímám data</String>
 		<String Name="RightColor">Barva vpravo</String>
-		<String Name="RollbackInconsistency">Ověření:stahováný soubor neodpovídá existujícímu</String>
 		<String Name="Running">Probíhá...</String>
 		<String Name="Search">Hledat</String>
 		<String Name="SearchFor">Hledat...</String>
@@ -550,7 +549,6 @@
 		<String Name="SettingsAddFolder">&amp;Přidat složku</String>
 		<String Name="SettingsAdlsBreakOnFirst">Zastavit na prvním vyhovujícím ADL hledání</String>
 		<String Name="SettingsAdvanced">Pokročilé</String>
-		<String Name="SettingsAdvancedResume">Pokročilé obnovení použitím TTH</String>
 		<String Name="SettingsAdvancedShowShareCheckedUsers">Zobrazit uživatele se zkontrolovaným sdílením</String>
 		<String Name="SettingsAdvancedSuppressMainChat">Nezobrazovat hlavní chat</String>
 		<String Name="SettingsAdvanced3">Pro experty</String>
@@ -690,10 +688,9 @@
 		<String Name="SettingsRenameFolder">Přejmenovat</String>
 		<String Name="SettingsRequiresRestart">Upozornění - většina těchto nastavení vyžaduje restartování programu StrongDC++</String>
 		<String Name="SettingsReset">Restart</String>
-		<String Name="SettingsRollback">Rollback</String>
 		<String Name="SettingsSbMaxSources">Max zdrojů pro porovnání fronty</String>
 		<String Name="SettingsSearchHistory">Historie hledání</String>
-		<String Name="SettingsSegment">Segmentové Stahování</String>
+		<String Name="SettingsSegment">Segmentové stahování</String>
 		<String Name="SettingsSelectColor">Zvolte barvu</String>
 		<String Name="SettingsSelectTextFace">&amp;Druh písma</String>
 		<String Name="SettingsSelectWindowColor">Barva okna</String>
@@ -701,15 +698,17 @@
 		<String Name="SettingsShareHidden">Sdílet skryté soubory</String>
 		<String Name="SettingsShareSize">Celkem:</String>
 		<String Name="SettingsSharedDirectories">Sdílené adresáře</String>
-		<String Name="SettingsShowInfoTips">Zobrazova infotipy v seznamu</String>
+		<String Name="SettingsShowInfoTips">Zobrazovat infotipy v seznamu</String>
 		<String Name="SettingsShowJoins">Zobrazovat příchody/odchody v chatu</String>
 		<String Name="SettingsShowProgressBars">Zobrazovat progressbary</String>
+		<String Name="SettingsShowShellMenu">Zobrazovat nabídku systému Windows v dokončených přenosech</String>
 		<String Name="SettingsSkipZeroByte">Přeskakovat soubory s nulovou velikostí</String>
 		<String Name="SettingsSocks5">SOCKS5</String>
 		<String Name="SettingsSocks5Ip">Socks IP</String>
 		<String Name="SettingsSocks5Port">Port</String>
 		<String Name="SettingsSocks5Resolve">Použít SOCKS5 server pro vyřešení hostname</String>
 		<String Name="SettingsSocks5Username">Uživatelské jméno</String>
+		<String Name="SettingsSortFavusersFirst">Zařadit oblíbené uživatele na začátek seznamu uživatelů</String>
 		<String Name="SettingsSound">Zvuky</String>
 		<String Name="SettingsSounds">Zvuky</String>
 		<String Name="SettingsSpeedsNotAccurate">Pozn.: Kvůli kolísání připojení nejsou údaje o rychlosti 100% přesné...</String>
