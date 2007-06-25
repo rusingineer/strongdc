@@ -148,8 +148,8 @@ private:
 			string getFullName() const { return parent->getFullName() + name; }
 			string getRealPath() const { return parent->getRealPath() + name; }
 
-			GETSET(string, name, Name);
 			GETSET(TTHValue, tth, TTH);
+			GETSET(string, name, Name);
 			GETSET(int64_t, size, Size);
 			GETSET(Directory*, parent, Parent);
 		};
@@ -158,9 +158,9 @@ private:
 		typedef HASH_MAP_X(string, Ptr, noCaseStringHash, noCaseStringEq, noCaseStringLess) Map;
 		typedef Map::const_iterator MapIter;
 
-		int64_t size;
 		Map directories;
 		File::Set files;
+		int64_t size;
 
 		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
 			name(aName), parent(aParent), fileTypes(0) {

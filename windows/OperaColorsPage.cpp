@@ -143,6 +143,13 @@ LRESULT OperaColorsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 
 void OperaColorsPage::write()
 {
+	if(PropertiesDlg::needUpdate)
+	{
+		SendMessage(WM_DESTROY,0,0);
+		SendMessage(WM_INITDIALOG,0,0);
+		PropertiesDlg::needUpdate = false;
+	}
+	
 	PropPage::write((HWND)*this, items);
 	
 	// Do specialized writing here

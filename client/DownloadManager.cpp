@@ -51,7 +51,7 @@ treeValid(false) {
 
 Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter aSource) throw() :
 	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0), 
-	quickTick(GET_TICK()), treeValid(false) 
+	quickTick(static_cast<uint32_t>(GET_TICK())), treeValid(false), source(NULL)
 {
 	conn.setDownload(this);
 
@@ -87,7 +87,7 @@ AdcCommand Download::getCommand(bool zlib) const {
 		cmd.addParam(Transfer::TYPE_FILE);
 	}
 	if(isSet(FLAG_PARTIAL_LIST) || isSet(FLAG_USER_LIST)) {
-		cmd.addParam(Util::toAdcFile(getSource()));
+		cmd.addParam(Util::toAdcFile(*getSource()));
 	} else {
 		cmd.addParam("TTH/" + getTTH().toBase32());
 	}
@@ -348,9 +348,9 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	if(d->isSet(Download::FLAG_USER_LIST)) {
 		if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
-			d->setSource(Transfer::USER_LIST_NAME_BZ);
+			d->setSource(const_cast<string*>(&Transfer::USER_LIST_NAME_BZ));
 		} else {
-			d->setSource(Transfer::USER_LIST_NAME);
+			d->setSource(const_cast<string*>(&Transfer::USER_LIST_NAME));
 		}
 		d->setStartPos(0);
 	}

@@ -258,16 +258,15 @@ public:
 	void setTempTarget(const string& aTempTarget) {
 		tempTarget = aTempTarget;
 	}
+
+	GETSET(TTHValue, tthRoot, TTH);
+	GETSET(User::List, currents, Currents);
 	GETSET(string, target, Target);
-	string tempTarget;
-	int64_t downloadedBytes;
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
 	GETSET(size_t, averageSpeed, AverageSpeed);
-	GETSET(User::List, currents, Currents);
 	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
-	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(uint8_t, maxSegments, MaxSegments);
 	GETSET(bool, autoPriority, AutoPriority);
 	
@@ -317,6 +316,9 @@ private:
 	friend class QueueManager;
 	SourceList sources;
 	SourceList badSources;
+
+	string tempTarget;
+	int64_t downloadedBytes;
 
 	union {
 		const Download* currentDownload;

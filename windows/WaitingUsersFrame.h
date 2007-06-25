@@ -187,8 +187,6 @@ private:
 	bool closed;
 	bool usingUserMenu;
 	
-	User::List UQFUsers;
-
 	TypedListViewCtrl<UploadQueueItem, IDC_UPLOAD_QUEUE> ctrlList;
 	CTreeViewCtrl ctrlQueued;
 	

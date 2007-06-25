@@ -92,12 +92,12 @@ public:
 	/** @internal */
 	AdcCommand getCommand(bool zlib) const;
 
-	GETSET(string, source, Source);
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
 
-	uint64_t quickTick;
+	uint32_t quickTick;
 
+	GETSET(string*, source, Source);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
 	

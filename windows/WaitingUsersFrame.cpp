@@ -128,7 +128,7 @@ LRESULT WaitingUsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 			userNode = ctrlQueued.GetNextSiblingItem(userNode);
 		}
 		ctrlList.DeleteAllItems();
-		UQFUsers.clear();
+
 		SettingsManager::getInstance()->set(SettingsManager::UPLOADQUEUEFRAME_SHOW_TREE, ctrlShowTree.GetCheck() == BST_CHECKED);
 		ctrlList.saveHeaderOrder(SettingsManager::UPLOADQUEUEFRAME_ORDER, SettingsManager::UPLOADQUEUEFRAME_WIDTHS,
 			SettingsManager::UPLOADQUEUEFRAME_VISIBLE);
@@ -359,12 +359,10 @@ void WaitingUsersFrame::LoadAll() {
 	}
 	ctrlList.DeleteAllItems();
 	ctrlQueued.DeleteAllItems();
-	UQFUsers.clear();
 
 	// Load queue
 	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
-		UQFUsers.push_back(uit->first);
 		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserPtr(uit->first)), TVI_ROOT, TVI_LAST);
 		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
@@ -380,13 +378,6 @@ void WaitingUsersFrame::LoadAll() {
 
 void WaitingUsersFrame::RemoveUser(const User::Ptr& aUser) {
 	HTREEITEM userNode = ctrlQueued.GetRootItem();
-
-	for(User::List::iterator i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-		if(*i == aUser) {
-			UQFUsers.erase(i);
-			break;
-		}
-	}
 
 	while(userNode) {
 		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
@@ -433,16 +424,16 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 
 	HTREEITEM selNode = ctrlQueued.GetSelectedItem();
 
-	if(userNode) {
-		for(User::Iter i = UQFUsers.begin(); i != UQFUsers.end(); ++i) {
-			if(*i == aUQI->getUser()) {
-				add = false;
-				break;
-			}
+	while(userNode) {
+		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+		if (aUQI->getUser() == u->u) {
+			add = false;
+			break;
 		}
+		userNode = ctrlQueued.GetNextSiblingItem(userNode);
 	}
+
 	if(add) {
-		UQFUsers.push_back(aUQI->getUser());
 		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->getUser())), TVI_ROOT, TVI_LAST);
 	}	

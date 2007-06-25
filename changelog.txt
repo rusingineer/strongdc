@@ -12,6 +12,15 @@
 * vylepšen èas reakce na zavøení pøipojení
 * sníženy nároky na pamìt s velkou frontou a velkými seznamy uživatelù
 * klepnutím pravým myšítkem na uživatele funguje i pøi vypnutém seznamu uživatelù
+* pøi minimalizaci do systémové lišty se nastaví podprùmìrná priorita procesu
+* pøidán "ProxyFilter - Hide My IP 2007" do seznamu aplikací zpùsobujících pád StrongDC++
+* opraven vzácný pád pøi hledání escape znakù (napø. |||)
+* pokud nemáme pro hub heslo, použijeme výchozí pøezdívku pøi vložení tohoto hubu do oblíbených
+* okno Oblíbené huby umí øazení sloupcù
+* pøidána podpora pro smajlíky s alfa kanály
+* opraven problém se zmìnou barev a chybìjícími ikonkami v seznamu uživatelù
+* "opraven" pád ve FileChunksInfo::verifyBlock pokud nelze alokovat blok v pamìti
+* cache pro vykreslování progressbarù, je to mnohem rychlejší
 
 	-- StrongDC++ 2.03 --
 

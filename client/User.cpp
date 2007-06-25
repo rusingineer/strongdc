@@ -301,7 +301,7 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
 }
 
-tstring old;
+tstring old = Util::emptyStringT;
 bool OnlineUser::update(int sortCol) {
 	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());
 

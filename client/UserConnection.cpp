@@ -134,7 +134,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
     
 	if(cmd == "$MyNick") {
 		if(!param.empty())
-			fire(UserConnectionListener::MyNick(), this, Text::toUtf8(param, encoding));
+			fire(UserConnectionListener::MyNick(), this, Text::toUtf8(param, *encoding));
 	} else if(cmd == "$Direction") {
 		x = param.find(" ");
 		if(x != string::npos) {
@@ -155,7 +155,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 	} else if(cmd == "$Get") {
 		x = param.find('$');
 		if(x != string::npos) {
-			fire(UserConnectionListener::Get(), this, Text::toUtf8(param.substr(0, x), encoding), Util::toInt64(param.substr(x+1)) - (int64_t)1);
+			fire(UserConnectionListener::Get(), this, Text::toUtf8(param.substr(0, x), *encoding), Util::toInt64(param.substr(x+1)) - (int64_t)1);
 	    }
 	} else if(cmd == "$Key") {
 		if(!param.empty())
@@ -208,14 +208,14 @@ void UserConnection::connect(const string& aServer, uint16_t aPort) throw(Socket
 
 	socket = BufferedSocket::getSocket(0);
 	socket->addListener(this);
-	socket->connect(aServer, aPort, secure, BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS), true);
+	socket->connect(aServer, aPort, isSet(FLAG_SECURE), BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS), true);
 }
 
 void UserConnection::accept(const Socket& aServer) throw(SocketException, ThreadException) {
 	dcassert(!socket);
 	socket = BufferedSocket::getSocket(0);
 	socket->addListener(this);
-	socket->accept(aServer, secure, BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS));
+	socket->accept(aServer, isSet(FLAG_SECURE), BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS));
 }
 
 void UserConnection::inf(bool withToken) { 

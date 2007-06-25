@@ -176,7 +176,7 @@ const string& ClientManager::findHubEncoding(const string& aUrl) const {
 
 	for(Client::List::const_iterator i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->getHubUrl() == aUrl) {
-			return (*i)->getEncoding();
+			return *((*i)->getEncoding());
 		}
 	}
 	return Text::systemCharset;

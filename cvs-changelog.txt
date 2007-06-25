@@ -1,3 +1,9 @@
+** svn295
+	updated yaSSL
+	userlist E-mail column is hidden by default
+	fixed invalid importing progressbar colors from theme file
+	very small memory save for downloads, connections and in WaitingUsersFrame
+
 ** svn294
 	minimize to system tray sets "below normal" priority
 	thread yield during an upload for better CPU time layout

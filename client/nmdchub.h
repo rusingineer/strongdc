@@ -112,8 +112,8 @@ private:
 	OnlineUser* findUser(const string& aNick) const;
 	void putUser(const string& aNick);
 	
-	string toUtf8(const string& str) const { return Text::toUtf8(str, getEncoding()); }
-	string fromUtf8(const string& str) const { return Text::fromUtf8(str, getEncoding()); }
+	string toUtf8(const string& str) const { return Text::toUtf8(str, *getEncoding()); }
+	string fromUtf8(const string& str) const { return Text::fromUtf8(str, *getEncoding()); }
 
 	void validateNick(const string& aNick) { send("$ValidateNick " + fromUtf8(aNick) + "|"); }
 	void key(const string& aKey) { send("$Key " + aKey + "|"); }

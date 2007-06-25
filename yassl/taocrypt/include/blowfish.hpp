@@ -2,7 +2,8 @@
  *
  * Copyright (C) 2003 Sawtooth Consulting Ltd.
  *
- * This file is part of yaSSL.
+ * This file is part of yaSSL, an SSL implementation written by Todd A Ouska
+ * (todd at yassl.com, see www.yassl.com).
  *
  * yaSSL is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +90,7 @@ typedef BlockCipher<DECRYPTION, Blowfish, CBC> Blowfish_CBC_Decryption;
 
 
 
-} // naemspace
+} // namespace
 
 #endif // TAO_CRYPT_BLOWFISH_HPP
 

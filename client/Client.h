@@ -123,22 +123,26 @@ public:
 	GETSET(Identity, hubIdentity, HubIdentity);
 
 	GETSET(string, defpassword, Password);
-	GETSET(uint32_t, reconnDelay, ReconnDelay);
-	GETSET(uint64_t, lastActivity, LastActivity);
-	GETSET(bool, registered, Registered);
-	GETSET(bool, autoReconnect, AutoReconnect);
-	GETSET(string, encoding, Encoding);
 	
 	GETSET(string, currentNick, CurrentNick);
 	GETSET(string, currentDescription, CurrentDescription);
 		
-	GETSET(bool, stealth, Stealth);
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
 	GETSET(string, rawThree, RawThree);
 	GETSET(string, rawFour, RawFour);
 	GETSET(string, rawFive, RawFive);
 	GETSET(string, favIp, FavIp);
+	
+	GETSET(uint64_t, lastActivity, LastActivity);
+	GETSET(uint32_t, reconnDelay, ReconnDelay);
+	
+	GETSET(string*, encoding, Encoding);	
+		
+	GETSET(bool, registered, Registered);
+	GETSET(bool, autoReconnect, AutoReconnect);
+	GETSET(bool, stealth, Stealth);
+
 protected:
 	friend class ClientManager;
 	Client(const string& hubURL, char separator, bool secure_);
@@ -195,13 +199,14 @@ private:
 	Client(const Client&);
 	Client& operator=(const Client&);
 
+	CountType countType;
+	
 	string hubUrl;
 	string address;
 	string ip;
 	uint16_t port;
 	char separator;
 	bool secure;
-	CountType countType;
 };
 
 #endif // !defined(CLIENT_H)
