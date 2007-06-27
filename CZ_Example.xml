@@ -520,7 +520,7 @@
 		<String Name="SetczdcErrorColor">Barva chybových hlášení</String>
 		<String Name="SetczdcHDownSpeed">A rychlost celého souboru přesahuje</String>
 		<String Name="SetczdcIDownSpeed">Odpojit, když je rychlost pod</String>
-		<String Name="SetczdcMagnetUriHandler">Spustit Magnet URL funkci po spuštění</String>
+		<String Name="SetczdcMagnetUriHandler">Instalovat odchytávač magnet odkazů</String>
 		<String Name="SetczdcMinFileSize">A velikost souboru je větší než</String>
 		<String Name="SetczdcNoteDownload">* Je-li limitováno odesílání, je limit stahování max 7x větší.</String>
 		<String Name="SetczdcNoteSmallUp">* "Malé sloty" =&gt; Sloty pro seznam souborů a malé soubory.</String>
@@ -729,7 +729,7 @@
 		<String Name="SettingsUploads">Sdílení</String>
 		<String Name="SettingsUploadsMinSpeed">Automaticky otevřít další slot, když je rychlost pod (0 = vyp.)</String>
 		<String Name="SettingsUploadsSlots">Sloty pro Odesílání</String>
-		<String Name="SettingsUrlHandler">Spustit URL funkci po spuštění (pro zprovoznění dchub:// odkazů)</String>
+		<String Name="SettingsUrlHandler">Instalovat ochytávač odkazů dchub://</String>
 		<String Name="SettingsUseCtrlForLineHistory">Použít CTRL (+šipka nahoru/dolu) pro historii odeslaného textu</String>
 		<String Name="SettingsUseExtensionDownto">Použít přípony souborů pro funkci "Stáhnout do" v okně hledání</String>
 		<String Name="SettingsUseOemMonofont">Použít OEM písmo pro zobrazování textových souborů</String>

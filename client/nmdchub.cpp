@@ -35,8 +35,6 @@
 #include "QueueManager.h"
 #include "ZUtils.h"
 
-#include "svnversion.h"
-
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
 	lastbytesshared(0)
 {

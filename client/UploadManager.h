@@ -86,7 +86,7 @@ public:
 
 };
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase<UploadQueueItem::COLUMN_LAST> {
 public:
 	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
 		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }
@@ -134,15 +134,14 @@ public:
 	int64_t getSize() const { return size; }
 	uint64_t getTime() const { return time; }
 
-	int64_t getPos() const { return pos; }
-	void setPos(int64_t aPos) { pos = aPos; }
+	GETSET(int64_t, pos, Pos);
 
 private:
-	User::Ptr user;
 	string file;
-	int64_t pos;
 	int64_t size;
 	uint64_t time;
+	
+	User::Ptr user;	
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>

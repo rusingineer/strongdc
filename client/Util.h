@@ -600,27 +600,42 @@ struct noCaseStringLess {
 	}
 };
 
-// parent class for objects with a lot of empty columns in list
+template<int I>
 class ColumnBase {
 public:
-	ColumnBase() { }
-
-	const tstring& getText(const uint8_t col) const {
-		InfMap::const_iterator i = info.find(col);
-		return i == info.end() ? Util::emptyStringT : i->second;
+	ColumnBase() { 	memzero(columns, sizeof(TCHAR*) * I); }
+	~ColumnBase() { clearData(); }
+	
+	inline const TCHAR* getText(const uint8_t col) const {
+		return columns[col] ? columns[col] : Util::emptyStringT.c_str();
 	}
+	
 	void setText(const uint8_t name, const tstring& val) {
-		if(val.empty())
-			info.erase(name);
-		else
-			info[name] = val;
+		if(columns[name] == NULL || _tcscmp(columns[name], val.c_str()) != 0) {
+			delete[] columns[name];
+			columns[name] = NULL;
+			
+			if(!val.empty()) {
+				TCHAR* tmp = new TCHAR[val.size() + 1];
+				_tcscpy(tmp, val.c_str());
+				tmp[val.size()] = NULL;
+				
+				columns[name] = tmp;
+			}
+		}
 	}
 	
-	void clearData() { info.clear(); }
-	
+	void clearData() {
+		for(int i = 0; i < I; i++) {
+			if(columns[i] != NULL) {
+				delete[] columns[i];
+				columns[i] = NULL;
+			}
+		}
+	}
+
 private:
-	typedef map<const uint8_t, tstring> InfMap;
-	InfMap info;
+	TCHAR* columns[I];
 };
 
 #endif // !defined(UTIL_H)

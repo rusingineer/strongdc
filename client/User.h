@@ -184,18 +184,16 @@ enum {
 	COLUMN_DESCRIPTION, 
 	COLUMN_TAG,
 	COLUMN_CONNECTION, 
+	COLUMN_IP,
 	COLUMN_EMAIL, 
 	COLUMN_VERSION, 
 	COLUMN_MODE, 
 	COLUMN_HUBS, 
 	COLUMN_SLOTS,
-	COLUMN_UPLOAD_SPEED, 
-	COLUMN_IP, 
-	COLUMN_PK, 
 	COLUMN_LAST
 };
 
-class OnlineUser : public FastAlloc<OnlineUser>, public ColumnBase, public PointerBase, public UserInfoBase {
+class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase, public ColumnBase<COLUMN_LAST> {
 public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;

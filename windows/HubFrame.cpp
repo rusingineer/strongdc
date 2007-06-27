@@ -43,14 +43,12 @@
 HubFrame::FrameMap HubFrame::frames;
 HubFrame::IgnoreMap HubFrame::ignoreList;
 
-int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 50, 40, 40, 40, 40, 40, 100, 100 };
+int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 100, 100, 50, 40, 40, 40 };
 int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARED, COLUMN_DESCRIPTION, COLUMN_TAG,
-	COLUMN_CONNECTION, COLUMN_EMAIL, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS,
-	COLUMN_UPLOAD_SPEED, COLUMN_IP, COLUMN_PK };
+	COLUMN_CONNECTION, COLUMN_IP, COLUMN_EMAIL, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS };
 static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
-ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::EMAIL,
-ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS,
-ResourceManager::AVERAGE_UPLOAD, ResourceManager::IP_BARE, ResourceManager::PK };
+ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
+ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS };
 
 tstring sSelectedURL = Util::emptyStringT;
 extern CAGEmotionSetup* g_pEmotionsSetup;
@@ -535,9 +533,7 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 						_T("\tMode: ") + ui->getText(COLUMN_MODE) + _T("\r\n") +
 						_T("\tHubs: ") + ui->getText(COLUMN_HUBS) + _T("\r\n") +
 						_T("\tSlots: ") + ui->getText(COLUMN_SLOTS) + _T("\r\n") +
-						_T("\tUpLimit: ") + ui->getText(COLUMN_UPLOAD_SPEED) + _T("\r\n") +
 						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
-						_T("\tPk String: ") + Text::toT(ui->getIdentity().get("PK")) + _T("\r\n") +
 						_T("\tLock: " )+ Text::toT(ui->getIdentity().get("LO")) + _T("\r\n")+
 						_T("\tSupports: ") + Text::toT(ui->getIdentity().get("SU"));
 					break;		
@@ -629,8 +625,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return false;
 	
-	// TODO	introduce some better condition
-	if(u.onlineUser->getText(COLUMN_NICK).empty()) {
+	if(u.onlineUser->getText(COLUMN_NICK)[0] == NULL) {
 		u.onlineUser->update(-1);
 
 		if(!u.onlineUser->isHidden()) {

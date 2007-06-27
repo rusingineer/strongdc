@@ -350,7 +350,7 @@ private:
 			tstring tth;
 		};
         
-		const tstring& getText(uint8_t col) const { return columns[col]; }
+		const TCHAR* getText(uint8_t col) const { return columns[col].c_str(); }
 
 		static int compareItems(const SearchInfo* a, const SearchInfo* b, uint8_t col) {
 			if(!a->sr || !b->sr)
@@ -371,7 +371,7 @@ private:
 				case COLUMN_SIZE:
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
 				case COLUMN_UPLOAD: return compare(a->columns[COLUMN_UPLOAD],b->columns[COLUMN_UPLOAD]);
-				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
+				default: return lstrcmpi(a->getText(col), b->getText(col));
 			}
 		}
 
@@ -429,8 +429,8 @@ private:
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
 
-		const tstring& getText(uint8_t col) const {
-			return (col == 0) ? name : Util::emptyStringT;
+		const TCHAR* getText(uint8_t col) const {
+			return (col == 0) ? name.c_str() : Util::emptyStringT.c_str();
 		}
 		static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;

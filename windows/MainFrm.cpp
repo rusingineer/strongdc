@@ -57,7 +57,6 @@
 #include "../client/SimpleXML.h"
 #include "../client/ShareManager.h"
 #include "../client/LogManager.h"
-#include "../client/svnversion.h"
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
 

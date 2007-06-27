@@ -71,10 +71,11 @@ private:
 		: download(NULL), pos(startOffset), end(endOffset), overlappedCount(0)
 	{}
 
-	Download* download;
 	int64_t pos;
 	int64_t end;
 
+	Download* download;
+	
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
 	uint8_t overlappedCount;
@@ -214,20 +215,20 @@ public:
 	static tthMap vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;
 
+	CriticalSection cs;
+	
 	// chunk start position must be unique in both waiting and running
 	Chunk::Map waiting;
 	Chunk::Map running;
 
     BlockMap verifiedBlocks;
 
-    size_t	tthBlockSize;					// tiger tree hash block size
-
 	int64_t fileSize;
     int64_t downloadedSize;
     int64_t verifiedSize;
 	int64_t minChunkSize;					// it'll be doubled when last verifying fail
 
-	CriticalSection cs;
+    size_t	tthBlockSize;					// tiger tree hash block size
 
 private:
 	bool verify(const unsigned char* data, int64_t start, int64_t end, const TigerTree& aTree);
