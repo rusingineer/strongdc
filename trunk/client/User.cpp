@@ -296,9 +296,8 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 		case COLUMN_EXACT_SHARED: return compare(a->identity.getBytesShared(), b->identity.getBytesShared());
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
 		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
-		case COLUMN_UPLOAD_SPEED: return compare(a->identity.getUser()->getLastDownloadSpeed(), b->identity.getUser()->getLastDownloadSpeed());
 	}
-	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());	
+	return lstrcmpi(a->getText(col), b->getText(col));	
 }
 
 tstring old = Util::emptyStringT;
@@ -307,14 +306,6 @@ bool OnlineUser::update(int sortCol) {
 
 	if(sortCol != -1)
 		old = getText(static_cast<uint8_t>(sortCol));
-
-	if (identity.getUser()->getLastDownloadSpeed() > 0) {
-		setText(COLUMN_UPLOAD_SPEED, Util::toStringW(identity.getUser()->getLastDownloadSpeed()) + _T(" kB/s"));
-	} else if(identity.getUser()->isSet(User::FIREBALL)) {
-		setText(COLUMN_UPLOAD_SPEED, _T(">= 100 kB/s"));
-	} else {
-		setText(COLUMN_UPLOAD_SPEED, _T("N/A"));
-	}
 
 	const tstring hn = Text::toT(identity.get("HN"));
 	const tstring hr = Text::toT(identity.get("HR"));
@@ -336,7 +327,6 @@ bool OnlineUser::update(int sortCol) {
 	if (!country.empty())
 		ip = country + " (" + ip + ")";
 	setText(COLUMN_IP, Text::toT(ip));
-	setText(COLUMN_PK, Text::toT(identity.get("PK")));
 
 	if(sortCol != -1) {
 		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));

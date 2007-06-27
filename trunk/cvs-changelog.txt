@@ -1,3 +1,8 @@
+** svn296
+	reverted to faster unicode converting
+	changed storing userlist texts
+	removed Pk and Upload speed columns from userlist
+
 ** svn295
 	updated yaSSL
 	userlist E-mail column is hidden by default

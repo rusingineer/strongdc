@@ -427,7 +427,6 @@ enum Strings { // @DontAdd
 	PAUSED, // "Paused"
 	PB, // "PB"
 	PICTURE, // "Picture"
-	PK, // "PK String"
 	PLAY, // "Play"
 	POPUP_DOWNLOAD_FAILED, // "Show popup on download failed"
 	POPUP_DOWNLOAD_FINISHED, // "Show popup on download finished"

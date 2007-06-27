@@ -53,10 +53,6 @@ public:
 		initDelta1();
 		return *this;
 	}
-
-	~StringSearch() {
-		dcdebug("StringSearch deleted: %s\n", pattern.c_str());
-	}
 	
 	bool operator==(const StringSearch& rhs) { return pattern == rhs.pattern; }
 

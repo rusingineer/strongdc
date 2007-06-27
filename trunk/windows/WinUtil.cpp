@@ -48,7 +48,6 @@
 #include "MagnetDlg.h"
 #include "winamp.h"
 #include "BarShader.h"
-#include "../client/svnversion.h"
 
 WinUtil::ImageMap WinUtil::fileIndexes;
 int WinUtil::fileImageCount;

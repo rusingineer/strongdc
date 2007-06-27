@@ -150,21 +150,22 @@ private:
 
 	CriticalSection cs;
 	Semaphore taskSem;
+
+	vector<pair<Tasks, TaskData*> > tasks;
+	vector<uint8_t> inbuf;
+	vector<uint8_t> writeBuf;
+	vector<uint8_t> sendBuf;
+	
+	string line;
+	int64_t dataBytes;
+	size_t rollback;
+
 	Modes mode;
 
 	UnZFilter *filterIn;
 	Socket* sock;
 	bool disconnecting;
 	bool failed;
-
-	int64_t dataBytes;
-	size_t rollback;
-	string line;
-
-	vector<pair<Tasks, TaskData*> > tasks;
-	vector<uint8_t> inbuf;
-	vector<uint8_t> writeBuf;
-	vector<uint8_t> sendBuf;
 	
 	int run();
 

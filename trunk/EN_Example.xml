@@ -428,7 +428,6 @@
 		<String Name="Paused">Paused</String>
 		<String Name="Pb">PB</String>
 		<String Name="Picture">Picture</String>
-		<String Name="Pk">PK String</String>
 		<String Name="Play">Play</String>
 		<String Name="PopupDownloadFailed">Show popup on download failed</String>
 		<String Name="PopupDownloadFinished">Show popup on download finished</String>

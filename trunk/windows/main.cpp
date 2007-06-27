@@ -37,7 +37,6 @@
 #include "WinUtil.h"
 #include "SingleInstance.h"
 
-#include "../client/svnversion.h"
 #include "../client/MerkleTree.h"
 #include "PopupManager.h"
 
