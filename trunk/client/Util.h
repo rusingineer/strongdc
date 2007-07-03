@@ -265,7 +265,7 @@ public:
 	}
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }
-	static string formatMessage(const string& message);
+	static string formatMessage(const string& nick, const string& message);
 
 	static string getShortTimeString();
 
@@ -598,44 +598,6 @@ struct noCaseStringLess {
 	bool operator()(const wstring& a, const wstring& b) const {
 		return Util::stricmp(a, b) < 0;
 	}
-};
-
-template<int I>
-class ColumnBase {
-public:
-	ColumnBase() { 	memzero(columns, sizeof(TCHAR*) * I); }
-	~ColumnBase() { clearData(); }
-	
-	inline const TCHAR* getText(const uint8_t col) const {
-		return columns[col] ? columns[col] : Util::emptyStringT.c_str();
-	}
-	
-	void setText(const uint8_t name, const tstring& val) {
-		if(columns[name] == NULL || _tcscmp(columns[name], val.c_str()) != 0) {
-			delete[] columns[name];
-			columns[name] = NULL;
-			
-			if(!val.empty()) {
-				TCHAR* tmp = new TCHAR[val.size() + 1];
-				_tcscpy(tmp, val.c_str());
-				tmp[val.size()] = NULL;
-				
-				columns[name] = tmp;
-			}
-		}
-	}
-	
-	void clearData() {
-		for(int i = 0; i < I; i++) {
-			if(columns[i] != NULL) {
-				delete[] columns[i];
-				columns[i] = NULL;
-			}
-		}
-	}
-
-private:
-	TCHAR* columns[I];
 };
 
 #endif // !defined(UTIL_H)

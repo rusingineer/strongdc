@@ -3,11 +3,11 @@
 
 #include "forward.h"
 
-class ClientListener  
+class ClientListener
 {
 public:
 	virtual ~ClientListener() { }
-	template<int I>	struct X { enum { TYPE = I };  };
+	template<int I>	struct X { enum { TYPE = I }; };
 
 	typedef X<0> Connecting;
 	typedef X<1> Connected;
@@ -19,7 +19,7 @@ public:
 	typedef X<8> GetPassword;
 	typedef X<9> HubUpdated;
 	typedef X<11> Message;
-	//typedef X<12> StatusMessage;
+	typedef X<12> StatusMessage;
 	typedef X<13> PrivateMessage;
 	typedef X<14> UserCommand;
 	typedef X<15> HubFull;
@@ -40,7 +40,7 @@ public:
 	virtual void on(GetPassword, const Client*) throw() { }
 	virtual void on(HubUpdated, const Client*) throw() { }
 	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw() { }
-	//virtual void on(StatusMessage, const Client*, const string&) throw() { }
+	virtual void on(StatusMessage, const Client*, const string&) throw() { }
 	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw() { }
 	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, const Client*) throw() { }

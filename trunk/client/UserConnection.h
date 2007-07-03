@@ -107,7 +107,7 @@ public:
 	static const string USER_LIST_NAME_BZ;
 
 	Transfer(UserConnection& conn);
-	virtual ~Transfer() { };
+	~Transfer() { };
 	
 	int64_t getPos() const { return pos; }
 	void setPos(int64_t aPos) { pos = aPos; }
@@ -142,7 +142,7 @@ public:
 		return getSize() - getPos();
 	}
 
-	virtual void getParams(const UserConnection& aSource, StringMap& params);
+	void getParams(const UserConnection& aSource, StringMap& params);
 
 	User::Ptr getUser();
 	const User::Ptr getUser() const;

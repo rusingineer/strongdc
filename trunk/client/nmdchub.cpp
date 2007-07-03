@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -200,23 +200,26 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		string line = toUtf8(aLine);
 		if(line[0] != '<') {
-			fire(ClientListener::Message(), this, *(OnlineUser*)NULL, unescape(line));
+			fire(ClientListener::StatusMessage(), this, unescape(line));
 			return;
 		}
 		string::size_type i = line.find('>', 2);
 		if(i == string::npos) {
-			fire(ClientListener::Message(), this, *(OnlineUser*)NULL, unescape(line));
+			fire(ClientListener::StatusMessage(), this, unescape(line));
 			return;
 		}
 		string nick = line.substr(1, i-1);
-		OnlineUser* ou = findUser(nick);
-
-		if(line.size() > i+5 && Util::stricmp(line.substr(i+2, 3), "/me") == 0) {
-			line = "* " + nick + line.substr(i+5);
+		string message;
+		if((line.length()-1) > i) {
+			message = line.substr(i+2);
+		} else {
+			fire(ClientListener::StatusMessage(), this, unescape(line));
+			return;
 		}
 
+		OnlineUser* ou = findUser(nick);
 		if(ou) {
-			fire(ClientListener::Message(), this, *ou, unescape(line));
+			fire(ClientListener::Message(), this, *ou, unescape(message));
 		} else {
 			OnlineUser& o = getUser(nick);
 			// Assume that messages from unknown users come from the hub
@@ -224,7 +227,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			o.getIdentity().setHidden(true);
 			fire(ClientListener::UserUpdated(), this, o);
 
-			fire(ClientListener::Message(), this, o, unescape(line));
+			fire(ClientListener::Message(), this, o, unescape(message));
 		}
 		return;
     }
@@ -529,10 +532,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		if(i == string::npos) {
 			i = param.find(' ');
 			if(i == string::npos) {
-			getHubIdentity().setNick(unescape(param));
-			getHubIdentity().setDescription(Util::emptyString);			
-		} else {
-			getHubIdentity().setNick(unescape(param.substr(0, i)));
+				getHubIdentity().setNick(unescape(param));
+				getHubIdentity().setDescription(Util::emptyString);			
+			} else {
+				getHubIdentity().setNick(unescape(param.substr(0, i)));
 				getHubIdentity().setDescription(unescape(param.substr(i+1)));
 			}
 		} else {
@@ -578,7 +581,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			fire(ClientListener::UserCommand(), this, type, ctx, name, command);
 		}
 	} else if(cmd == "$Lock") {
-		if(state != STATE_PROTOCOL) {
+		if(state != STATE_PROTOCOL || aLine.size() < 6) {
 			return;
 		}
 		state = STATE_IDENTIFY;
@@ -758,7 +761,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
         OnlineUser* replyTo = findUser(rtNick);
 		OnlineUser* from = findUser(fromNick);
 
-		string msg = param.substr(i);
+		string msg = param.substr(j + 2);
 		if(replyTo == NULL || from == NULL) {
 			if(replyTo == 0) {
 				// Assume it's from the hub
@@ -774,7 +777,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				from->getIdentity().setHidden(true);
 				fire(ClientListener::UserUpdated(), this, *from);
 			}
-			
+
 			// Update pointers just in case they've been invalidated
 			replyTo = findUser(rtNick);
 			from = findUser(fromNick);
@@ -976,7 +979,7 @@ void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) {
 	Lock l(cs);
 	OnlineUser* ou = findUser(getMyNick());
 	if(ou) {
-		fire(ClientListener::PrivateMessage(), this, *ou, aUser, *ou, "<" + getMyNick() + "> " + aMessage);
+		fire(ClientListener::PrivateMessage(), this, *ou, aUser, *ou, aMessage);
 	}
 }
 

@@ -518,7 +518,7 @@ string ResourceManager::strings[] = {
 "And file size is more than", 
 "* If upload limit is set, download limit is max 7 x upload limit !!!", 
 "* Small Uploads Slots => Slots for filelist and Small Files.", 
-"* Minimal upload limit is set to 5x(slots + 1) !!!", 
+"* Minimal upload limit is set to 5×slots + 4 !!!", 
 "Always use passive mode for Search (Use only if you know what this doing !!!)", 
 "Lines from log on new PM", 
 "Preview", 

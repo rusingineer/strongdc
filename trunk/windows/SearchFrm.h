@@ -350,7 +350,7 @@ private:
 			tstring tth;
 		};
         
-		const TCHAR* getText(uint8_t col) const { return columns[col].c_str(); }
+		inline const TCHAR* getText(uint8_t col) const { return columns[col].c_str(); }
 
 		static int compareItems(const SearchInfo* a, const SearchInfo* b, uint8_t col) {
 			if(!a->sr || !b->sr)

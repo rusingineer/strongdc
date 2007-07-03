@@ -198,6 +198,7 @@ private:
 		bool multiSource;		
 		uint8_t flagImage;
 		ItemInfo* main;
+		User::Ptr user;
 		Status status;
 		int64_t pos;
 		int64_t size;
@@ -212,7 +213,6 @@ private:
 		void update(const UpdateInfo& ui);
 
 		const User::Ptr& getUser() const { return user; }
-		User::Ptr user;
 
 		void disconnect();
 		void removeAll();

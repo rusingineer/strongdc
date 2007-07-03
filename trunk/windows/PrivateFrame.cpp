@@ -379,18 +379,9 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	CRect r;
 	ctrlClient.GetClientRect(r);
 
-	tstring line = aLine;
-	string::size_type i = line.find('>', 2);
-	if(i != string::npos) {
-		tstring nick = line.substr(1, i-1);
-		if((line.size() > i+5) && Util::stricmp(line.substr(i+2, 3), _T("/me")) == 0) {
-			line = _T("* ") + nick + line.substr(i+5);
-		}
-	}
-
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
-		params["message"] = Text::fromT(line);
+		params["message"] = Text::fromT(aLine);
 		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 		params["userCID"] = replyTo->getCID().toBase32(); 
@@ -400,9 +391,9 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	}
 
 	if(BOOLSETTING(TIME_STAMPS)) {
-		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), Text::toT("[" + Util::getShortTimeString() + "] "), line.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf);
 	} else {
-		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), _T(""), line.c_str(), cf);
+		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), _T(""), aLine.c_str(), cf);
 	}
 	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
 

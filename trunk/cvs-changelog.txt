@@ -1,3 +1,13 @@
+** svn297
+	corrected removing user commands on hub exit (DC++ SVN)
+	faster getting user's nick
+	fixed one of possible remote exploits
+	fixed chat nick completion + invalid chat coloring
+	fixed /me in ADC hubs	
+	changed way of processing hub status messages (more similar to DC++ now)
+	completely removed $PSR support
+	some code cleanup (THX Crise)
+
 ** svn296
 	reverted to faster unicode converting
 	changed storing userlist texts

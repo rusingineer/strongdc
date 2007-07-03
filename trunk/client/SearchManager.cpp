@@ -325,85 +325,8 @@ int SearchManager::ResultsQueue::run() {
 				file, hubName, remoteIp, TTHValue(tth), Util::emptyString);
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			sr->decRef();
-		} else if(x.compare(0, 5, "$PSR ") == 0) {	// TODO completely remove $PSR support in the future
-			string::size_type i, j;
-			// Syntax: $PSR <nick>$<UdpPort>$<Hubip:port>$<TTH>$<PartialCount>$<PartialInfo>$|
-			i = 5;
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			string nick = Text::acpToUtf8(x.substr(i, j-i));
-			i = j + 1;
-
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			uint16_t UdpPort = (uint16_t)Util::toInt(x.substr(i, j-i));
-			i = j + 1;
-
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			string hubIpPort = x.substr(i, j-i);
-			i = j + 1;
-
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			string tth = x.substr(i, j-i);
-			i = j + 1;
-
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			uint32_t partialCount = Util::toUInt32(x.substr(i, j-i)) * 2;
-			i = j + 1;
-
-			if( (j = x.find('$', i)) == string::npos) {
-				continue;
-			}
-			string partialInfoBlocks = x.substr(i, j-i);
-
-			PartsInfo partialInfo;
-			i = 0; j = 0;
-			while(j != string::npos) {
-				j = partialInfoBlocks.find(',', i);
-				partialInfo.push_back((uint16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
-				i = j + 1;
-			}
-			dcdebug(("PartialInfo Size = "+Util::toString(partialInfo.size())+"\n").c_str());
-		
-			if(partialInfo.size() != partialCount) {
-				// what to do now ? just ignore partial search result :-/
-				continue;
-			}
-
-			string url = ClientManager::getInstance()->findHub(hubIpPort);
-			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
-			if(!user) {
-				// Could happen if hub has multiple URLs / IPs
-				user = ClientManager::getInstance()->findLegacyUser(nick);
-				if(!user) {
-					dcdebug("Search result from unknown user");
-					continue;
-				}
-			}
-
-			PartsInfo outPartialInfo;
-			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
-
-			if((UdpPort > 0) && !outPartialInfo.empty()) {
-				const string myNick = ClientManager::getInstance()->getMyNMDCNick(user);
-				if(!myNick.empty()) {
-					char buf[1024];
-					snprintf(buf, sizeof(buf), "$PSR %s$0$%s$%s$%d$%s$|", Text::utf8ToAcp(myNick).c_str(), hubIpPort.c_str(), tth.c_str(), outPartialInfo.size() / 2, SearchManager::getInstance()->getPartsString(outPartialInfo).c_str());
-					try {
-						Socket s; s.writeTo(Socket::resolve(remoteIp), UdpPort, buf);
-					} catch(...) {}
-				}
-			}
-		}	
-		Thread::sleep(9);
+		}
+		Thread::sleep(10);
 	}
 	return 0;
 }
@@ -470,6 +393,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 
 		User::Ptr user = ClientManager::getInstance()->findUser(CID(cid));
 		if(!user) {
+			// for NMDC support
 			string url = ClientManager::getInstance()->findHub(hubIpPort);
 			user = ClientManager::getInstance()->findUser(nick, url);
 			if(!user) {

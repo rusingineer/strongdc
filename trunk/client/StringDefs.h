@@ -521,7 +521,7 @@ enum Strings { // @DontAdd
 	SETCZDC_MIN_FILE_SIZE, // "And file size is more than"
 	SETCZDC_NOTE_DOWNLOAD, // "* If upload limit is set, download limit is max 7 x upload limit !!!"
 	SETCZDC_NOTE_SMALL_UP, // "* Small Uploads Slots => Slots for filelist and Small Files."
-	SETCZDC_NOTE_UPLOAD, // "* Minimal upload limit is set to 5x(slots + 1) !!!"
+	SETCZDC_NOTE_UPLOAD, // "* Minimal upload limit is set to 5×slots + 4 !!!"
 	SETCZDC_PASSIVE_SEARCH, // "Always use passive mode for Search (Use only if you know what this doing !!!)"
 	SETCZDC_PM_LINES, // "Lines from log on new PM"
 	SETCZDC_PREVIEW, // "Preview"

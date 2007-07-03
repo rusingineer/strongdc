@@ -524,7 +524,7 @@
 		<String Name="SetczdcMinFileSize">A velikost souboru je větší než</String>
 		<String Name="SetczdcNoteDownload">* Je-li limitováno odesílání, je limit stahování max 7x větší.</String>
 		<String Name="SetczdcNoteSmallUp">* "Malé sloty" =&gt; Sloty pro seznam souborů a malé soubory.</String>
-		<String Name="SetczdcNoteUpload">* Miminální limit odesílání nastaven na 5x(sloty + 1) !!!</String>
+		<String Name="SetczdcNoteUpload">* Miminální limit odesílání nastaven na 5×sloty + 4 !!!</String>
 		<String Name="SetczdcPassiveSearch">Vždy používat pasivní mód při vyhledávání (zapněte jen víte-li co to dělá!!!)</String>
 		<String Name="SetczdcPmLines">Řádků z logu do PM</String>
 		<String Name="SetczdcPreview">Náhled</String>
