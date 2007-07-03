@@ -85,8 +85,8 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	GETSET(string, firstNick, FirstNick);
 	GETSET(uint16_t, lastDownloadSpeed, LastDownloadSpeed);
+	GETSET(string, firstNick, FirstNick);
 
 private:
 	User(const User&);
@@ -122,11 +122,13 @@ public:
 		}
 	}
 
-	string getNick() const {
+	const string& getNick() const {
 		if(user && user->isSet(User::NMDC)) {
 			return user->getFirstNick();
 		} else {
-			return get("NI");
+			Lock l(cs);
+			InfMap::const_iterator i = info.find(*(short*)"NI");
+			return i == info.end() ? Util::emptyString : i->second;
 		}
 	}
 
@@ -193,13 +195,14 @@ enum {
 	COLUMN_LAST
 };
 
-class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase, public ColumnBase<COLUMN_LAST> {
+class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase {
 public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
-	
+	~OnlineUser() { clearData(); }
+
 	operator User::Ptr&() { return getUser(); }
 	operator const User::Ptr&() const { return getUser(); }
 
@@ -213,9 +216,16 @@ public:
 	bool update(int sortCol);
 	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
-	const string getNick() const { return identity.getNick(); }
+	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
+	void setText(const uint8_t name, const tstring& val);
+	void clearData();
+	
+	inline const TCHAR* getText(const uint8_t col) const {
+		return columns[col] ? columns[col] : Util::emptyStringT.c_str();
+	}
+
 	GETSET(Identity, identity, Identity);
 private:
 	friend class NmdcHub;
@@ -223,6 +233,7 @@ private:
 	OnlineUser(const OnlineUser&);
 	OnlineUser& operator=(const OnlineUser&);
 
+	const TCHAR* columns[COLUMN_LAST];
 	Client& client;
 };
 

@@ -149,15 +149,6 @@ void UploadPage::write()
 	if(SETTING(SET_MINISLOT_SIZE) < 64)
 		settings->set(SettingsManager::SET_MINISLOT_SIZE, 64);
 
-	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * SETTING(SLOTS)) + 3) ) {
-			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * SETTING(SLOTS)) + 3) );
-		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
-		}
-	}
-
 	if(SETTING(HUB_SLOTS) < 0)
 		settings->set(SettingsManager::HUB_SLOTS, 0);
 

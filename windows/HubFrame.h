@@ -324,10 +324,10 @@ private:
 	};
 
 	struct MessageTask : public StringTask {
+		MessageTask(const Identity& from_, const string& m) : StringTask(m), from(from_) { }
 		MessageTask(const Identity& from_, const OnlineUser& to_, const OnlineUser& replyTo_, const string& m) : StringTask(m),
-			from(from_), to(&to_ ? to_.getUser() : NULL), replyTo(&replyTo_ ? replyTo_.getUser() : NULL), 
-			hub(&replyTo_ ? replyTo_.getIdentity().isHub() : false), bot(&replyTo_ ? replyTo_.getIdentity().isBot() : false) { }
-			
+			from(from_), to(to_.getUser()), replyTo(replyTo_.getUser()), hub(replyTo_.getIdentity().isHub()), bot(replyTo_.getIdentity().isBot()) { }
+
 		const Identity from;
 		const User::Ptr to;
 		const User::Ptr replyTo;
@@ -499,6 +499,7 @@ private:
 	virtual void on(GetPassword, const Client*) throw();
 	virtual void on(HubUpdated, const Client*) throw();
 	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw();
+	virtual void on(StatusMessage, const Client*, const string&) throw();
 	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
 	virtual void on(NickTaken, const Client*) throw();
 	virtual void on(SearchFlood, const Client*, const string&) throw();
@@ -508,7 +509,8 @@ private:
 	void speak(Tasks s) { tasks.add(static_cast<uint8_t>(s), 0); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const string& msg) { tasks.add(static_cast<uint8_t>(s), new StringTask(msg)); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const OnlineUser& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
-	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(&from ? from.getIdentity() : Identity(NULL, 0), to, replyTo, line));  PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const Identity& from, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from, line));  PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from.getIdentity(), to, replyTo, line));  PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

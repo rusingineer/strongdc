@@ -508,8 +508,6 @@ void ClientManager::on(TimerManagerListener::Minute, uint32_t /*aTick*/) throw()
 			(*j)->info();
 		}
 	}
-	//if((aTick / 60000) % 5 == 0)
-	//	SetProcessWorkingSetSize(GetCurrentProcess(), 0xffffffff, 0xffffffff);
 }
 
 User::Ptr& ClientManager::getMe() {
@@ -536,7 +534,6 @@ CID ClientManager::getMyCID() {
 }
 
 void ClientManager::on(Failed, const Client* client, const string&) throw() { 
-	FavoriteManager::getInstance()->removeUserCommand(client->getHubUrl());
 	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 

@@ -33,6 +33,7 @@
 
 OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
 	inc();
+	memzero(columns, sizeof(TCHAR*) * COLUMN_LAST);
 }
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
@@ -298,6 +299,30 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
 	}
 	return lstrcmpi(a->getText(col), b->getText(col));	
+}
+
+void OnlineUser::setText(const uint8_t name, const tstring& val) {
+	if(columns[name] == NULL || _tcscmp(columns[name], val.c_str()) != 0) {
+		delete[] columns[name];
+		columns[name] = NULL;
+			
+		if(!val.empty()) {
+			TCHAR* tmp = new TCHAR[val.size() + 1];
+			_tcscpy(tmp, val.c_str());
+			tmp[val.size()] = NULL;
+				
+			columns[name] = tmp;
+		}
+	}
+}
+	
+void OnlineUser::clearData() {
+	for(int i = 0; i < COLUMN_LAST; i++) {
+		if(columns[i] != NULL) {
+			delete[] columns[i];
+			columns[i] = NULL;
+		}
+	}
 }
 
 tstring old = Util::emptyStringT;

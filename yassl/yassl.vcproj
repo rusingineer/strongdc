@@ -127,6 +127,7 @@
 				MinimalRebuild="true"
 				ExceptionHandling="1"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
 				DefaultCharIsUnsigned="true"

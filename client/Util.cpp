@@ -1034,8 +1034,13 @@ string Util::getIpCountry (string IP) {
 	return Util::emptyString; //if doesn't returned anything already, something is wrong...
 }
 
-string Util::formatMessage(const string& message) {
-	string tmp = message;
+string Util::formatMessage(const string& nick, const string& message) {
+	string tmp;
+	if(Util::strnicmp(message, "/me ", 4) == 0) {
+		tmp = "* " + nick + message.substr(3);
+	} else {
+		tmp = '<' + nick + "> " + message;
+	}
 	// Check all '<' and '[' after newlines as they're probably pasts...
 	size_t i = 0;
 	while( (i = tmp.find('\n', i)) != string::npos) {

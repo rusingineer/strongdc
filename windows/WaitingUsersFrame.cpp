@@ -489,16 +489,17 @@ int UploadQueueItem::imageIndex() const {
 	return WinUtil::getIconIndex(Text::toT(file));
 }
 
-void UploadQueueItem::update() {
-	setText(COLUMN_FILE, Text::toT(Util::getFileName(file)));
-	setText(COLUMN_PATH, Text::toT(Util::getFilePath(file)));
-	setText(COLUMN_NICK, Text::toT(user->getFirstNick()));
-	setText(COLUMN_HUB, WinUtil::getHubNames(user).first);
-	setText(COLUMN_TRANSFERRED, Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)"));
-	setText(COLUMN_SIZE, Util::formatBytesW(size));
-	setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time)));
-	setText(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - time));
-
+void UploadQueueItem::update(bool onSecond) {
+	if(!onSecond) {
+		columns[COLUMN_FILE] = Text::toT(Util::getFileName(file));
+		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(file));
+		columns[COLUMN_NICK] = Text::toT(user->getFirstNick());
+		columns[COLUMN_HUB] = WinUtil::getHubNames(user).first;
+		columns[COLUMN_SIZE] = Util::formatBytesW(size);
+		columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time));
+	}
+	columns[COLUMN_TRANSFERRED] = Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)");
+	columns[COLUMN_WAITING] = Util::formatSeconds(GET_TIME() - time);
 }
 
 LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -523,11 +524,8 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 			setDirty();		
 	} else if(wParam == UPDATE_ITEMS) {
 		int j = ctrlList.GetItemCount();
-		int64_t itime = GET_TIME();
 		for(int i = 0; i < j; i++) {
-			UploadQueueItem* UQI = ctrlList.getItemData(i);
-			UQI->setText(COLUMN_TRANSFERRED, Util::formatBytesW(UQI->getPos()) + _T(" (") + Util::toStringW((double)UQI->getPos()*100.0/(double)UQI->getSize()) + _T("%)"));
-			UQI->setText(COLUMN_WAITING, Util::formatSeconds(itime - UQI->getTime()));
+			ctrlList.getItemData(i)->update(true);
 			ctrlList.updateItem(i);
 		}
 	}

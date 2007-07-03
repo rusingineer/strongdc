@@ -217,16 +217,6 @@ public:
 			value = 10;
 		}
 
-		if((key == MAX_UPLOAD_SPEED_LIMIT_NORMAL) && (value > 0)) {
-			if (value < ((2 * (slots)) + 3) ) {
-				value = ((2 * (slots)) + 3);
-			}
-		}
-		if((key == MAX_UPLOAD_SPEED_LIMIT_TIME) && (value > 0)) {
-			if (value < ((2 * (slots)) + 3) ) {
-				value = ((2 * (slots)) + 3);
-			}
-		}
 		intSettings[key - INT_FIRST] = value;
 		isSet[key] = true;
 	}

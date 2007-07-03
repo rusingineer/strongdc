@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1858,21 +1858,30 @@ void HubFrame::on(HubUpdated, const Client*) throw() {
 	speak(SET_WINDOW_TITLE, hubName);
 }
 void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& msg) throw() {
-	if(&from == NULL || from.getIdentity().isOp() || from.getIdentity().isHub()) {
-		if((msg.find("Hub-Security") != string::npos) && (msg.find("was kicked by") != string::npos)) {
+	speak(ADD_CHAT_LINE, from.getIdentity(), Util::formatMessage(from.getIdentity().getNick(), msg));
+}	
+
+void HubFrame::on(StatusMessage, const Client*, const string& line) {
+	if(SETTING(FILTER_MESSAGES)) {
+		if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
 			// Do nothing...
-		} else if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
-			speak(KICK_MSG, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Text::toDOS(msg));
-			return;
+		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
+			speak(KICK_MSG, Identity(NULL, 0), Text::toDOS(line));
+		} else {
+			speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));
+	
+	
+	
 		}
+	} else {
+		speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));
 	}
-	speak(ADD_CHAT_LINE, from, *(OnlineUser*)NULL, *(OnlineUser*)NULL, Util::formatMessage(msg));
 }
 
 void HubFrame::on(PrivateMessage, const Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(line));
+	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(from.getIdentity().getNick(), line));
 }
-void HubFrame::on(NickTaken, const Client*) throw() { 
+void HubFrame::on(NickTaken, const Client*) throw() {
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
 }
 void HubFrame::on(SearchFlood, const Client*, const string& line) throw() {

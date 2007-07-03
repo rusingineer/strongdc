@@ -45,6 +45,9 @@ Client::Client(const string& hubURL, char separator_, bool secure_) :
 
 Client::~Client() throw() {
 	dcassert(!socket);
+	
+	// In case we were deleted before we Failed
+	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	TimerManager::getInstance()->removeListener(this);
 	updateCounts(true);
 }
@@ -101,7 +104,7 @@ void Client::connect() {
 		BufferedSocket::putSocket(socket);
 
 	// TODO should this be done also on disconnect ???
-	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
+	//FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	availableBytes = 0;
 
 	setAutoReconnect(true);
@@ -135,6 +138,7 @@ void Client::on(Connected) throw() {
 
 void Client::on(Failed, const string& aLine) throw() {
 	state = STATE_DISCONNECTED;
+	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	socket->removeListener(this);
 	fire(ClientListener::Failed(), this, aLine);
 }

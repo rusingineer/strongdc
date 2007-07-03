@@ -241,7 +241,7 @@ private:
 		void remove() { QueueManager::getInstance()->remove(getTarget()); }
 
 		// TypedListViewCtrl functions
-		const TCHAR* getText(int col) {
+		inline const TCHAR* getText(int col) {
 			dcassert(col >= 0 && col < COLUMN_LAST);
 			return getDisplay()->columns[col].c_str();
 		}

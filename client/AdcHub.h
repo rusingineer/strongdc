@@ -88,7 +88,7 @@ private:
 	static const string ADCS_FEATURE;
 	static const string TCP4_FEATURE;
 	static const string UDP4_FEATURE;
-	 
+
 	virtual string checkNick(const string& nick);
 
 	OnlineUser& getUser(const uint32_t aSID, const CID& aCID);
@@ -103,7 +103,7 @@ private:
 			 return i->second; 
 		  } 
 	   } 
-	   return 0; 
+	   return NULL; 
 	}
 
 	void putUser(const uint32_t sid);

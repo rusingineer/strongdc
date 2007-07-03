@@ -522,7 +522,7 @@
 		<String Name="SetczdcMinFileSize">And file size is more than</String>
 		<String Name="SetczdcNoteDownload">* If upload limit is set, download limit is max 7 x upload limit !!!</String>
 		<String Name="SetczdcNoteSmallUp">* Small Uploads Slots =&gt; Slots for filelist and Small Files.</String>
-		<String Name="SetczdcNoteUpload">* Minimal upload limit is set to 5x(slots + 1) !!!</String>
+		<String Name="SetczdcNoteUpload">* Minimal upload limit is set to 5×slots + 4 !!!</String>
 		<String Name="SetczdcPassiveSearch">Always use passive mode for Search (Use only if you know what this doing !!!)</String>
 		<String Name="SetczdcPmLines">Lines from log on new PM</String>
 		<String Name="SetczdcPreview">Preview</String>

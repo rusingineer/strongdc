@@ -616,9 +616,9 @@ void SettingsManager::load(string const& aFileName)
 			set(LOG_FILE_DOWNLOAD, Util::emptyString);
 			set(LOG_FILE_SYSTEM, Util::emptyString);
 		}
-#ifdef _DEBUG
-		set(PRIVATE_ID, CID::generate().toBase32());
-#endif
+//#ifdef _DEBUG
+//		set(PRIVATE_ID, CID::generate().toBase32());
+//#endif
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
 
 		File::ensureDirectory(SETTING(TLS_TRUSTED_CERTIFICATES_PATH));
