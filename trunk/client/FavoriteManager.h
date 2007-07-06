@@ -19,10 +19,6 @@
 #ifndef DCPLUSPLUS_CLIENT_FAVORITE_MANAGER_H
 #define DCPLUSPLUS_CLIENT_FAVORITE_MANAGER_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #include "SettingsManager.h"
 
 #include "CriticalSection.h"
@@ -38,7 +34,6 @@
 class HubEntry {
 public:
 	typedef vector<HubEntry> List;
-	typedef List::const_iterator Iter;
 	
 	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
 	name(aName), server(aServer), description(aDescription), country(Util::emptyString), 
@@ -190,15 +185,15 @@ public:
 	FavoriteMap getFavoriteUsers() { Lock l(cs); return users; }
 	PreviewApplication::List& getPreviewApps() { return previewApplications; }
 
-	void addFavoriteUser(const User::Ptr& aUser);
-	bool isFavoriteUser(const User::Ptr& aUser) const { Lock l(cs); return users.find(aUser->getCID()) != users.end(); }
-	void removeFavoriteUser(const User::Ptr& aUser);
+	void addFavoriteUser(const UserPtr& aUser);
+	bool isFavoriteUser(const UserPtr& aUser) const { Lock l(cs); return users.find(aUser->getCID()) != users.end(); }
+	void removeFavoriteUser(const UserPtr& aUser);
 
-	bool hasSlot(const User::Ptr& aUser) const;
-	void setUserDescription(const User::Ptr& aUser, const string& description);
-	void setAutoGrant(const User::Ptr& aUser, bool grant);
+	bool hasSlot(const UserPtr& aUser) const;
+	void setUserDescription(const UserPtr& aUser, const string& description);
+	void setAutoGrant(const UserPtr& aUser, bool grant);
 	void userUpdated(const OnlineUser& info);
-	time_t getLastSeen(const User::Ptr& aUser) const;
+	time_t getLastSeen(const UserPtr& aUser) const;
 // Favorite Hubs
 	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; }
 
@@ -327,8 +322,8 @@ private:
 
 	// ClientManagerListener
 	virtual void on(UserUpdated, const OnlineUser& user) throw();
-	virtual void on(UserConnected, const User::Ptr& user) throw();
-	virtual void on(UserDisconnected, const User::Ptr& user) throw();
+	virtual void on(UserConnected, const UserPtr& user) throw();
+	virtual void on(UserDisconnected, const UserPtr& user) throw();
 
 	// HttpConnectionListener
 	virtual void on(Data, HttpConnection*, const uint8_t*, size_t) throw();

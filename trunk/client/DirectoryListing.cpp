@@ -36,7 +36,7 @@
 #undef ff
 #endif
 
-User::Ptr DirectoryListing::getUserFromFilename(const string& fileName) {
+UserPtr DirectoryListing::getUserFromFilename(const string& fileName) {
 	// General file list name format: [username].[CID].[xml|xml.bz2|DcLst]
 
 	string name = Util::getFileName(fileName);
@@ -69,7 +69,7 @@ User::Ptr DirectoryListing::getUserFromFilename(const string& fileName) {
 	if(cid.isZero())
 		return NULL;
 
-	User::Ptr p = ClientManager::getInstance()->getUser(cid);
+	UserPtr p = ClientManager::getInstance()->getUser(cid);
 	if(p->getFirstNick().empty())
 		p->setFirstNick(name.substr(0, i));
 	return p;
@@ -108,7 +108,7 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 
 class ListLoader : public SimpleXMLReader::CallBack {
 public:
-	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const User::Ptr& user) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
+	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const UserPtr& user) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
 	}
 
 	virtual ~ListLoader() { }
@@ -120,7 +120,7 @@ public:
 private:
 	DirectoryListing* list;
 	DirectoryListing::Directory* cur;
-	User::Ptr uziv;
+	UserPtr uziv;
 
 	StringMap params;
 	string base;

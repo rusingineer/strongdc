@@ -12,9 +12,8 @@
 #include "Singleton.h"
 
 class ClientProfile {
-	public:
+public:
 	typedef vector<ClientProfile> List;
-	typedef List::iterator Iter;
 
 	ClientProfile() : id(0), priority(0), rawToSend(0) { };
 
@@ -188,7 +187,7 @@ public:
 
 	bool getClientProfile(int id, ClientProfile& cp) {
 		Lock l(ccs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
+		for(ClientProfile::List::const_iterator i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
 			if(i->getId() == id) {
 				cp = *i;
 				return true;
@@ -199,7 +198,7 @@ public:
 
 	void removeClientProfile(int id) {
 		Lock l(ccs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
+		for(ClientProfile::List::iterator i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
 			if(i->getId() == id) {
 				clientProfiles.erase(i);
 				break;
@@ -209,7 +208,7 @@ public:
 
 	void updateClientProfile(const ClientProfile& cp) {
 		Lock l(ccs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
+		for(ClientProfile::List::iterator i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
 			if(i->getId() == cp.getId()) {
 				*i = cp;
 				break;
@@ -220,7 +219,7 @@ public:
 	bool moveClientProfile(int id, int pos) {
 		dcassert(pos == -1 || pos == 1);
 		Lock l(ccs);
-		for(ClientProfile::Iter i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
+		for(ClientProfile::List::iterator i = clientProfiles.begin(); i != clientProfiles.end(); ++i) {
 			if(i->getId() == id) {
 				swap(*i, *(i + pos));
 				return true;
@@ -242,8 +241,8 @@ public:
 		clientProfiles.clear();
 		params.clear();
 		loadClientProfiles();
-		for(ClientProfile::Iter j = clientProfiles.begin(); j != clientProfiles.end(); ++j) {
-			for(ClientProfile::Iter k = oldProfiles.begin(); k != oldProfiles.end(); ++k) {
+		for(ClientProfile::List::iterator j = clientProfiles.begin(); j != clientProfiles.end(); ++j) {
+			for(ClientProfile::List::const_iterator k = oldProfiles.begin(); k != oldProfiles.end(); ++k) {
 				if((*k).getName().compare((*j).getName()) == 0) {
 					(*j).setRawToSend((*k).getRawToSend());
 					(*j).setCheatingDescription((*k).getCheatingDescription());

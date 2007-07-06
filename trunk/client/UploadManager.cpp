@@ -32,25 +32,13 @@
 #include "AdcCommand.h"
 #include "FavoriteManager.h"
 #include "CryptoManager.h"
+#include "Upload.h"
+#include "UserConnection.h"
 #include "QueueManager.h"
 #include "FinishedManager.h"
 #include "SharedFileStream.h"
 
 static const string UPLOAD_AREA = "Uploads";
-
-Upload::Upload(UserConnection& conn) : Transfer(conn), stream(0) { 
-	conn.setUpload(this);
-}
-
-Upload::~Upload() { 
-	getUserConnection().setUpload(0);
-	delete stream; 
-}
-
-void Upload::getParams(const UserConnection& aSource, StringMap& params) {
-	Transfer::getParams(aSource, params);
-	params["source"] = getSourceFile();
-}
 
 UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
 	mBytesSent(0), mBytesSpokenFor(0), mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
@@ -287,7 +275,7 @@ ok:
 	clearUserFiles(aSource.getUser());
 
 	bool resumed = false;
-	for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
+	for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
 		Upload* up = *i;
 		if(&aSource == &up->getUserConnection()) {
 			delayUploads.erase(i);
@@ -352,7 +340,7 @@ ok:
 int64_t UploadManager::getRunningAverage() {
 	Lock l(cs);
 	int64_t avg = 0;
-	for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+	for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
 		Upload* u = *i;
 		avg += (int)u->getRunningAverage();
 	}
@@ -384,7 +372,7 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	}
 }
 
-void UploadManager::reserveSlot(const User::Ptr& aUser, uint32_t aTime) {
+void UploadManager::reserveSlot(const UserPtr& aUser, uint32_t aTime) {
 	{
 		Lock l(cs);
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
@@ -393,7 +381,7 @@ void UploadManager::reserveSlot(const User::Ptr& aUser, uint32_t aTime) {
 		ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()));	
 }
 
-void UploadManager::unreserveSlot(const User::Ptr& aUser) {
+void UploadManager::unreserveSlot(const UserPtr& aUser) {
 	SlotIter uis = reservedSlots.find(aUser);
 	if(uis != reservedSlots.end())
 		reservedSlots.erase(uis);
@@ -504,7 +492,7 @@ void UploadManager::logUpload(Upload* u) {
 	fire(UploadManagerListener::Complete(), u);
 }
 
-void UploadManager::addFailedUpload(const User::Ptr& User, const string& file, int64_t pos, int64_t size) {
+void UploadManager::addFailedUpload(const UserPtr& User, const string& file, int64_t pos, int64_t size) {
 	uint64_t itime = GET_TIME();
 	bool found = false;
 	UploadQueueItem::UserMap::iterator j = waitingUsers.find(User);
@@ -530,7 +518,7 @@ void UploadManager::addFailedUpload(const User::Ptr& User, const string& file, i
 	}
 }
 
-void UploadManager::clearUserFiles(const User::Ptr& source) {
+void UploadManager::clearUserFiles(const UserPtr& source) {
 	UploadQueueItem::UserMap::iterator ii = waitingUsers.find(source);
 	if(ii != waitingUsers.end()) {
 		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
@@ -547,6 +535,11 @@ const UploadQueueItem::UserMap UploadManager::getWaitingUsers() {
 	return waitingUsers;
 }
 
+void UploadManager::addConnection(UserConnectionPtr conn) {
+	conn->addListener(this);
+	conn->setState(UserConnection::STATE_GET);
+}
+	
 void UploadManager::removeConnection(UserConnection* aSource) {
 	dcassert(aSource->getUpload() == NULL);
 	aSource->removeListener(this);
@@ -562,7 +555,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 
 		int freeSlots = getFreeSlots()*2;
 		for(UploadQueueItem::UserMapIter i = u.begin(); i != u.end(); ++i) {
-			User::Ptr aUser = i->first;
+			UserPtr aUser = i->first;
 			if(aUser->isOnline()) {
 				ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()));
 				freeSlots--;
@@ -577,7 +570,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 }
 
 void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
-	User::List disconnects;
+	UserList disconnects;
 	{
 		Lock l(cs);
 		for(SlotIter j = reservedSlots.begin(); j != reservedSlots.end();) {
@@ -589,7 +582,7 @@ void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 		}
 	
 		if( BOOLSETTING(AUTO_KICK) ) {
-			for(Upload::Iter i = uploads.begin(); i != uploads.end(); ++i) {
+			for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
 				Upload* u = *i;
 				if(u->getUser()->isOnline()) {
 					u->unsetFlag(Upload::FLAG_PENDING_KICK);
@@ -610,7 +603,7 @@ void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 		}
 	}
 		
-	for(User::Iter i = disconnects.begin(); i != disconnects.end(); ++i) {
+	for(UserList::const_iterator i = disconnects.begin(); i != disconnects.end(); ++i) {
 		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + (*i)->getFirstNick());
 		ConnectionManager::getInstance()->disconnect(*i, false);
 	}
@@ -647,7 +640,7 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 		throttleSetup();
 
 		if((aTick / 1000) % 10 == 0) {
-			for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end();) {
+			for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
 				Upload* u = *i;
 				if((aTick - u->getStart()) > 15000) {
 					logUpload(u);
@@ -689,7 +682,7 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	}
 }
 
-void UploadManager::on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
+void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
 	if(!aUser->isOnline()) {
 		Lock l(cs);
 		clearUserFiles(aUser);
@@ -747,6 +740,18 @@ void UploadManager::throttleSetup() {
 	}
 }
 
+void UploadManager::removeDelayUpload(const UserPtr& aUser) {
+	Lock l(cs);
+	for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
+		Upload* up = *i;
+		if(aUser == up->getUser()) {
+			delayUploads.erase(i);
+			delete up;
+			break;
+		}
+	}		
+}
+	
 /**
  * Abort upload of specific file
  */
@@ -756,8 +761,8 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 	{
 		Lock l(cs);
 
-		for(Upload::Iter i = uploads.begin(); i != uploads.end(); i++){
-			Upload::Ptr u = (*i);
+		for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); i++){
+			Upload* u = (*i);
 
 			if(u->getSourceFile() == aFile){
 				u->getUserConnection().disconnect(true);
@@ -775,8 +780,8 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 			Lock l(cs);
 
 			nowait = true;
-			for(Upload::Iter i = uploads.begin(); i != uploads.end(); i++){
-				Upload::Ptr u = (*i);
+			for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); i++){
+				Upload* u = (*i);
 
 				if(u->getSourceFile() == aFile){
 					dcdebug("upload %s is not removed\n", aFile);

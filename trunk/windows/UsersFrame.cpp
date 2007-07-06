@@ -215,7 +215,7 @@ void UsersFrame::addUser(const FavoriteUser& aUser) {
 	updateUser(aUser.getUser());
 }
 
-void UsersFrame::updateUser(const User::Ptr& aUser) {
+void UsersFrame::updateUser(const UserPtr& aUser) {
 	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
 		UserInfo *ui = ctrlUsers.getItemData(i);
 		if(ui->user == aUser) {

@@ -315,7 +315,7 @@ private:
 			sr->decRef(); 
 		}
 
-		const User::Ptr& getUser() const { return sr->getUser(); }
+		const UserPtr& getUser() const { return sr->getUser(); }
 
 		bool collapsed;
 		SearchInfo* main;

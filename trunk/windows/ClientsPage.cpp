@@ -41,8 +41,8 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	// Do specialized reading here
 	ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
 
-	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
-		ClientProfile& cp = *i;	
+	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+		const ClientProfile& cp = *i;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
 	}
 	
@@ -140,8 +140,8 @@ LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteAllItems();
 		ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
-		for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
-			ClientProfile& cp = *j;	
+		for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
+			const ClientProfile& cp = *j;	
 			addEntry(cp, ctrlProfiles.GetItemCount());
 		}
 		ctrlProfiles.SelectItem(sel);
@@ -226,8 +226,8 @@ void ClientsPage::reload() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
 	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfiles();
-	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
-		ClientProfile& cp = *j;	
+	for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
+		const ClientProfile& cp = *j;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
 	}
 	ctrlProfiles.SetRedraw(TRUE);
@@ -237,8 +237,8 @@ void ClientsPage::reloadFromHttp() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
 	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfilesFromHttp();
-	for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
-		ClientProfile& cp = *j;	
+	for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
+		const ClientProfile& cp = *j;	
 		addEntry(cp, ctrlProfiles.GetItemCount());
 	}
 	ctrlProfiles.SetRedraw(TRUE);

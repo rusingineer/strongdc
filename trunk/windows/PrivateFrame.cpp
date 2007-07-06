@@ -101,10 +101,10 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
 	bool myPM = replyTo == ClientManager::getInstance()->getMe();
-	const User::Ptr& user = myPM ? to : replyTo;
+	const UserPtr& user = myPM ? to : replyTo;
 	
 	FrameIter i = frames.find(user);
 	if(i == frames.end()) {
@@ -148,7 +148,7 @@ void PrivateFrame::gotMessage(const Identity& from, const User::Ptr& to, const U
 	}
 }
 
-void PrivateFrame::openWindow(const User::Ptr& replyTo, const tstring& msg) {
+void PrivateFrame::openWindow(const UserPtr& replyTo, const tstring& msg) {
 	PrivateFrame* p = NULL;
 	FrameIter i = frames.find(replyTo);
 	if(i == frames.end()) {
@@ -325,7 +325,7 @@ void PrivateFrame::onEnter()
 		} else {
 			if(replyTo->isOnline()) {
 				if(BOOLSETTING(CZCHARS_DISABLE))
-					s = Text::toT(WinUtil::disableCzChars(Text::fromT(s)));
+					s = WinUtil::disableCzChars(s);
 
 				sendMessage(s);
 			} else {

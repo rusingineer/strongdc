@@ -56,28 +56,28 @@ public:
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void infoUpdated(bool antispam);
 
-	User::Ptr getUser(const string& aNick, const string& aHubUrl) throw();
-	User::Ptr getUser(const CID& cid) throw();
+	UserPtr getUser(const string& aNick, const string& aHubUrl) throw();
+	UserPtr getUser(const CID& cid) throw();
 
 	string findHub(const string& ipPort) const;
 	const string& findHubEncoding(const string& aUrl) const;
 
-	User::Ptr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
-	User::Ptr findUser(const CID& cid) const throw();
-	User::Ptr findLegacyUser(const string& aNick) const throw();
+	UserPtr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
+	UserPtr findUser(const CID& cid) const throw();
+	UserPtr findLegacyUser(const string& aNick) const throw();
 
-	bool isOnline(const User::Ptr& aUser) const {
+	bool isOnline(const UserPtr& aUser) const {
 		Lock l(cs);
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
-	void setIPUser(const string& IP, const User::Ptr& user) {
+	void setIPUser(const string& IP, const UserPtr& user) {
 		Lock l(cs);
 		OnlinePairC p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIterC i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
 	}	
 	
-	const string getMyNMDCNick(const User::Ptr& p) const {
+	const string getMyNMDCNick(const UserPtr& p) const {
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i != onlineUsers.end()) {
@@ -86,7 +86,7 @@ public:
 		return Util::emptyString;
 	}
 
-	void reportUser(const User::Ptr& p) {
+	void reportUser(const UserPtr& p) {
 		string nick; string report;
 		Client* c;
 		{
@@ -101,7 +101,7 @@ public:
 		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}
 
-	void setPkLock(const User::Ptr& p, const string& aPk, const string& aLock) {
+	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
 		OnlineUser* ou;
 		{
 			Lock l(cs);
@@ -115,28 +115,28 @@ public:
 		//ou->getClient().updated(*ou);
 	}
 
-	void setSupports(const User::Ptr& p, const string& aSupports) {
+	void setSupports(const UserPtr& p, const string& aSupports) {
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 		i->second->getIdentity().set("SU", aSupports);
 	}
 
-	void setGenerator(const User::Ptr& p, const string& aGenerator) {
+	void setGenerator(const UserPtr& p, const string& aGenerator) {
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 		i->second->getIdentity().set("GE", aGenerator);
 	}
 
-	void setUnknownCommand(const User::Ptr& p, const string& aUnknownCommand) {
+	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand) {
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(p->getCID());
 		if(i == onlineUsers.end()) return;
 		i->second->getIdentity().set("UC", aUnknownCommand);
 	}
 
-	bool isOp(const User::Ptr& aUser, const string& aHubUrl) const;
+	bool isOp(const UserPtr& aUser, const string& aHubUrl) const;
 	bool isStealth(const string& aHubUrl) const;
 
 	/** Constructs a synthetic, hopefully unique CID */
@@ -145,14 +145,14 @@ public:
 	void putOnline(OnlineUser* ou) throw();
 	void putOffline(OnlineUser* ou) throw();
 
-	User::Ptr& getMe();
+	UserPtr& getMe();
 	
-	void connect(const User::Ptr& p, const string& token);
+	void connect(const UserPtr& p, const string& token);
 	void send(AdcCommand& c, const CID& to);
-	void privateMessage(const User::Ptr& p, const string& msg);
+	void privateMessage(const UserPtr& p, const string& msg);
 
-	void userCommand(const User::Ptr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
-	void sendRawCommand(const User::Ptr& user, const Client& c, const int aRawCommand);
+	void userCommand(const UserPtr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
+	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
 	bool isActive(const string& aHubUrl) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
@@ -160,7 +160,7 @@ public:
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 
-	const string& getHubUrl(const User::Ptr& aUser) const;
+	const string& getHubUrl(const UserPtr& aUser) const;
 
 	const Client::List& getClients() const { return clients; }
 
@@ -170,15 +170,15 @@ public:
 	const CID& getMyPID();
 	
 	// fake detection methods
-	void setListLength(const User::Ptr& p, const string& listLen);
-	void fileListDisconnected(const User::Ptr& p);
-	void connectionTimeout(const User::Ptr& p);
-	void checkCheating(const User::Ptr& p, DirectoryListing* dl);
-	void setCheating(const User::Ptr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
-	void setFakeList(const User::Ptr& p, const string& aCheatString);
+	void setListLength(const UserPtr& p, const string& listLen);
+	void fileListDisconnected(const UserPtr& p);
+	void connectionTimeout(const UserPtr& p);
+	void checkCheating(const UserPtr& p, DirectoryListing* dl);
+	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
+	void setFakeList(const UserPtr& p, const string& aCheatString);
 
 private:
-	typedef HASH_MAP_X(CID, User::Ptr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
+	typedef HASH_MAP_X(CID, UserPtr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
 	typedef UserMap::iterator UserIter;
 
 	typedef HASH_MULTIMAP_X(CID, OnlineUser*, CID::Hash, equal_to<CID>, less<CID>) OnlineMap;
@@ -193,7 +193,7 @@ private:
 	UserMap users;
 	OnlineMap onlineUsers;
 
-	User::Ptr me;
+	UserPtr me;
 	
 	uint64_t quickTick;
 	
@@ -220,7 +220,7 @@ private:
 	// ClientListener
 	virtual void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
 	virtual void on(UserUpdated, const Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
-	virtual void on(UsersUpdated, const Client* c, const User::List&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	virtual void on(UsersUpdated, const Client* c, const UserList&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
 	virtual void on(Failed, const Client*, const string&) throw();
 	virtual void on(HubUpdated, const Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
 	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw();

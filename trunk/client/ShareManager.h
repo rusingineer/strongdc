@@ -125,7 +125,6 @@ private:
 				bool operator()(const File& a, const File& b) const { return (Util::stricmp(a.getName(), b.getName()) < 0); }
 			};
 			typedef set<File, FileLess> Set;
-			typedef Set::const_iterator Iter;
 
 			File() : size(0), parent(0) { }
 			File(const string& aName, int64_t aSize, Directory* aParent, const TTHValue& aRoot) : 
@@ -211,7 +210,7 @@ private:
 		AdcSearch(const StringList& params);
 
 		bool isExcluded(const string& str) const {
-			for(StringSearch::Iter i = exclude.begin(); i != exclude.end(); ++i) {
+			for(StringSearch::List::const_iterator i = exclude.begin(); i != exclude.end(); ++i) {
 				if(i->match(str))
 					return true;
 			}
@@ -279,7 +278,7 @@ private:
 	void rebuildIndices();
 
 	void addTree(Directory& aDirectory);
-	void addFile(Directory& dir, Directory::File::Iter i);
+	void addFile(Directory& dir, const Directory::File::Set::const_iterator& i);
 	void generateXmlList();
 	StringList notShared;
 	bool loadCache() throw();

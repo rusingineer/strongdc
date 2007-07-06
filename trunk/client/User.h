@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,63 +16,42 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(USER_H)
-#define USER_H
+#ifndef DCPLUSPLUS_CLIENT_USER_H
+#define DCPLUSPLUS_CLIENT_USER_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
+#include "forward.h"
 #include "Util.h"
 #include "Pointer.h"
 #include "CID.h"
 #include "FastAlloc.h"
 #include "CriticalSection.h"
+#include "Flags.h"
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
 {
 public:
-	enum Bits {
-		ONLINE_BIT,
-		DCPLUSPLUS_BIT,
-		PASSIVE_BIT,
-		NMDC_BIT,
-		BOT_BIT,
-		TTH_GET_BIT,
-		TLS_BIT,
-		OLD_CLIENT_BIT,		
-		AWAY_BIT,
-		SERVER_BIT,
-		FIREBALL_BIT
-	};
-
 	/** Each flag is set if it's true in at least one hub */
 	enum UserFlags {
-		ONLINE = 1<<ONLINE_BIT,
-		DCPLUSPLUS = 1<<DCPLUSPLUS_BIT,
-		PASSIVE = 1<<PASSIVE_BIT,
-		NMDC = 1<<NMDC_BIT,
-		BOT = 1<<BOT_BIT,
-		TTH_GET = 1<<TTH_GET_BIT,		//< User supports getting files by tth -> don't have path in queue...
-		TLS = 1<<TLS_BIT,				//< Client supports TLS
-		OLD_CLIENT = 1<<OLD_CLIENT_BIT, //< Can't download - old client
-		AWAY = 1 << AWAY_BIT,
-		SERVER = 1 << SERVER_BIT,
-		FIREBALL = 1 << FIREBALL_BIT
+		ONLINE		= 0x01,
+		DCPLUSPLUS	= 0x02,
+		PASSIVE		= 0x04,
+		NMDC		= 0x08,
+		BOT			= 0x10,
+		TLS			= 0x20,	//< Client supports TLS
+		OLD_CLIENT	= 0x40, //< Can't download - old client
+		AWAY		= 0x80,
+		SERVER		= 0x100,
+		FIREBALL	= 0x200
 	};
-
-	typedef Pointer<User> Ptr;
-	typedef vector<Ptr> List;
-	typedef List::const_iterator Iter;
 
 	struct HashFunction {
 #ifdef _MSC_VER
 		static const size_t bucket_size = 4;
 		static const size_t min_buckets = 8;
 #endif
-		size_t operator()(const Ptr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
-		bool operator()(const Ptr& a, const Ptr& b) const { return (&(*a)) < (&(*b)); }
+		size_t operator()(const UserPtr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
+		bool operator()(const UserPtr& a, const UserPtr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
 	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
@@ -87,7 +66,6 @@ public:
 
 	GETSET(uint16_t, lastDownloadSpeed, LastDownloadSpeed);
 	GETSET(string, firstNick, FirstNick);
-
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -95,15 +73,12 @@ private:
 	CID cid;
 };
 
-class Client;
-class OnlineUser;
-
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity {
 public:
 
 	Identity() { }
-	Identity(const User::Ptr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
+	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
 
@@ -162,8 +137,8 @@ public:
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
-	User::Ptr& getUser() { return user; }
-	GETSET(User::Ptr, user, User);
+	UserPtr& getUser() { return user; }
+	GETSET(UserPtr, user, User);
 private:
 	typedef map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
@@ -200,14 +175,14 @@ public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
-	OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_);
+	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
 	~OnlineUser() { clearData(); }
 
-	operator User::Ptr&() { return getUser(); }
-	operator const User::Ptr&() const { return getUser(); }
+	operator UserPtr&() { return getUser(); }
+	operator const UserPtr&() const { return getUser(); }
 
-	inline User::Ptr& getUser() { return getIdentity().getUser(); }
-	inline const User::Ptr& getUser() const { return getIdentity().getUser(); }
+	inline UserPtr& getUser() { return getIdentity().getUser(); }
+	inline const UserPtr& getUser() const { return getIdentity().getUser(); }
 	inline Identity& getIdentity() { return identity; }
 	Client& getClient() { return client; }
 	const Client& getClient() const { return client; }

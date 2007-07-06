@@ -126,14 +126,14 @@ private:
 	static int columnSizes[COLUMN_LAST];
 	static int columnIndexes[COLUMN_LAST];
 
-	struct UserPtr {
-		User::Ptr u;
-		UserPtr(User::Ptr u) : u(u) { }
+	struct UserItem {
+		UserPtr u;
+		UserItem(UserPtr u) : u(u) { }
 	};
 		
-	const User::Ptr getSelectedUser() {
+	const UserPtr getSelectedUser() {
 		HTREEITEM selectedItem = GetParentItem();
-		return selectedItem ? reinterpret_cast<UserPtr*>(ctrlQueued.GetItemData(selectedItem))->u : User::Ptr(0);
+		return selectedItem ? reinterpret_cast<UserItem*>(ctrlQueued.GetItemData(selectedItem))->u : UserPtr(0);
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -154,19 +154,19 @@ private:
 
 	void removeSelected() {
 		int i = -1;
-		User::List RemoveUsers;
+		UserList RemoveUsers;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			// Ok let's cheat here, if you try to remove more users here is not working :(
 			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
-		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
+		for(UserList::const_iterator i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
 			UploadManager::getInstance()->clearUserFiles(*i);
 		}
 		updateStatus();
 	}
 	
 	void removeSelectedUser() {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->clearUserFiles(User);
 		}
@@ -197,14 +197,14 @@ private:
 	OMenu contextMenu;
 	
 	void AddFile(UploadQueueItem* aUQI);
-	void RemoveUser(const User::Ptr& aUser);
+	void RemoveUser(const UserPtr& aUser);
 	
 	void addAllFiles(Upload * /*aUser*/);
 	void updateStatus();
 
 	// UploadManagerListener
 	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() { PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI); }
-	virtual void on(UploadManagerListener::QueueRemove, const User::Ptr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new Identity(aUser, 0));	}
+	virtual void on(UploadManagerListener::QueueRemove, const UserPtr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new Identity(aUser, 0));	}
 	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() { aUQI->inc(); PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI); }
 	virtual void on(UploadManagerListener::QueueUpdate) throw() { PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL); }
 

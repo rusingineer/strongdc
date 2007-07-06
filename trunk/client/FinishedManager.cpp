@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 #include "FileChunksInfo.h"
 #include "LogManager.h"
 #include "ResourceManager.h"
+#include "FinishedManagerListener.h"
+#include "Download.h"
+#include "Upload.h"
 
 FinishedManager::~FinishedManager() throw() {
 	DownloadManager::getInstance()->removeListener(this);
@@ -33,11 +36,11 @@ FinishedManager::~FinishedManager() throw() {
 	for_each(uploads.begin(), uploads.end(), DeleteFunction());
 }
 
-void FinishedManager::remove(FinishedItem *item, bool upload /* = false */) {
+void FinishedManager::remove(FinishedItemPtr item, bool upload /* = false */) {
 	{
 		Lock l(cs);
-		FinishedItem::List *listptr = upload ? &uploads : &downloads;
-		FinishedItem::List::iterator it = find(listptr->begin(), listptr->end(), item);
+		FinishedItemList *listptr = upload ? &uploads : &downloads;
+		FinishedItemList::iterator it = find(listptr->begin(), listptr->end(), item);
 
 		if(it != listptr->end())
 			listptr->erase(it);
@@ -54,7 +57,7 @@ void FinishedManager::remove(FinishedItem *item, bool upload /* = false */) {
 void FinishedManager::removeAll(bool upload /* = false */) {
 	{
 		Lock l(cs);
-		FinishedItem::List *listptr = upload ? &uploads : &downloads;
+		FinishedItemList *listptr = upload ? &uploads : &downloads;
 		for_each(listptr->begin(), listptr->end(), DeleteFunction());
 		listptr->clear();
 	}
@@ -71,7 +74,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 	}
 		
 	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
-		FinishedItem *item = new FinishedItem(
+		FinishedItemPtr item = new FinishedItem(
 			d->getTarget(), d->getUser()->getFirstNick(), d->getUser()->getCID(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUser()->getCID())),
 			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
@@ -98,7 +101,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
-		FinishedItem *item = new FinishedItem(
+		FinishedItemPtr item = new FinishedItem(
 			u->getSourceFile(), u->getUser()->getFirstNick(), u->getUser()->getCID(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUser()->getCID())),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
@@ -125,7 +128,7 @@ string FinishedManager::getTarget(const string& aTTH){
 	{
 		Lock l(cs);
 
-		for(FinishedItem::Iter i = downloads.begin(); i != downloads.end(); i++)
+		for(FinishedItemList::const_iterator i = downloads.begin(); i != downloads.end(); i++)
 		{
 			if((*i)->getTTH() == aTTH)
 				return (*i)->getTarget();

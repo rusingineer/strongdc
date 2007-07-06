@@ -83,7 +83,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 			return *i->second;
 	}
 
-	User::Ptr p;
+	UserPtr p;
 	if(aNick == getCurrentNick()) {
 		p = ClientManager::getInstance()->getMe();
 	} else {
@@ -817,6 +817,7 @@ void NmdcHub::connectToMe(const OnlineUser& aUser) {
 	string userNick = aUser.getIdentity().getNick();
 	dcdebug("NmdcHub::connectToMe %s\n", userNick.c_str());
 	ConnectionManager::getInstance()->nmdcExpect(userNick, getMyNick(), getHubUrl());
+	ConnectionManager::iConnToMeCount++;
 	send("$ConnectToMe " + fromUtf8(userNick) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
 }
 

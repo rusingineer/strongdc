@@ -42,7 +42,7 @@ static ResourceManager::Strings columnNames[] = { ResourceManager::FILE, Resourc
 
 DirectoryListingFrame::UserMap DirectoryListingFrame::lists;
 
-void DirectoryListingFrame::openWindow(const tstring& aFile, const tstring& aDir, const User::Ptr& aUser, int64_t aSpeed) {
+void DirectoryListingFrame::openWindow(const tstring& aFile, const tstring& aDir, const UserPtr& aUser, int64_t aSpeed) {
 	UserIter i = lists.find(aUser);
 	if(i != lists.end()) {
 		if(!BOOLSETTING(POPUNDER_FILELIST)) {
@@ -66,7 +66,7 @@ void DirectoryListingFrame::openWindow(const tstring& aFile, const tstring& aDir
 	}
 }
 
-void DirectoryListingFrame::openWindow(const User::Ptr& aUser, const string& txt, int64_t aSpeed) {
+void DirectoryListingFrame::openWindow(const UserPtr& aUser, const string& txt, int64_t aSpeed) {
 	UserIter i = lists.find(aUser);
 	if(i != lists.end()) {
 		i->second->speed = aSpeed;
@@ -83,7 +83,7 @@ void DirectoryListingFrame::openWindow(const User::Ptr& aUser, const string& txt
 	}
 }
 
-DirectoryListingFrame::DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed) :
+DirectoryListingFrame::DirectoryListingFrame(const UserPtr& aUser, int64_t aSpeed) :
 	statusContainer(STATUSCLASSNAME, this, STATUS_MESSAGE_MAP), treeContainer(WC_TREEVIEW, this, CONTROL_MESSAGE_MAP),
 		listContainer(WC_LISTVIEW, this, CONTROL_MESSAGE_MAP), historyIndex(0), loading(true),
 		treeRoot(NULL), skipHits(0), files(0), speed(aSpeed), updating(false), dl(new DirectoryListing(aUser)), searching(false)
@@ -594,14 +594,14 @@ LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/,
 }
 
 LRESULT DirectoryListingFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	User::Ptr pUser = dl->getUser();
+	UserPtr pUser = dl->getUser();
 	if(pUser != (User*) NULL)
 		FavoriteManager::getInstance()->addFavoriteUser(pUser);
 	return 0;
 }
 
 LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	User::Ptr pUser = dl->getUser();
+	UserPtr pUser = dl->getUser();
 	if(pUser != (User*) NULL)
 		PrivateFrame::openWindow(pUser);
 	return 0;
@@ -1128,7 +1128,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 
 	StringMap ucParams = ucLineParams;
 
-	set<User::Ptr> nicks;
+	set<UserPtr> nicks;
 
 	int sel = -1;
 	while((sel = ctrlList.GetNextItem(sel, LVNI_SELECTED)) != -1) {
@@ -1161,7 +1161,7 @@ void DirectoryListingFrame::runUserCommand(UserCommand& uc) {
 		ucParams["tth"] = ucParams["fileTR"];
 
 		StringMap tmp = ucParams;
-		User::Ptr tmpPtr = dl->getUser();
+		UserPtr tmpPtr = dl->getUser();
 		ClientManager::getInstance()->userCommand(dl->getUser(), uc, tmp, true);
 	}
 }
@@ -1233,7 +1233,7 @@ LRESULT DirectoryListingFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 
 	tstring nick = _T("");
-	User::Ptr pUser = dl->getUser();
+	UserPtr pUser = dl->getUser();
 	if(pUser != (User*) NULL)
 		nick = Text::toT(pUser->getFirstNick());
 

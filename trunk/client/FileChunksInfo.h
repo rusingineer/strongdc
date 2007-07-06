@@ -28,11 +28,15 @@
  *     PFS    : partial file sharing
  */
 
-#pragma once
+#ifndef FILECHUNKSINFO_H_
+#define FILECHUNKSINFO_H_
+
+#include "forward.h"
 
 #include "Pointer.h"
 #include "CriticalSection.h"
 #include "MerkleTree.h"
+#include "Download.h"
 
 // minimum file size to be PFS : 20M
 #define PARTIAL_SHARE_MIN_SIZE 20971520
@@ -42,16 +46,6 @@
 
 // minimum chunk size
 #define MIN_CHUNK_SIZE 1048576
-
-// PFS purpose
-typedef vector<uint16_t> PartsInfo;
-
-// ...
-typedef map<uint16_t, uint16_t> BlockMap;
-typedef BlockMap::const_iterator BlockIter;
-
-class Download;
-
 
 /**
  * Hold basic information of a chunk
@@ -236,3 +230,5 @@ private:
 	// for debug purpose
 	void dumpVerifiedBlocks();
 };
+
+#endif

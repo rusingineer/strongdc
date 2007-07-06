@@ -88,7 +88,7 @@ public:
 			updateVars();
 			if(adding) {
 				ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
-				for(ClientProfile::Iter j = lst.begin(); j != lst.end(); ++j) {
+				for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
 					if((*j).getName().compare(Text::fromT(name)) == 0) {
 						MessageBox(_T("A client profile with this name already exists"), _T("Error!"), MB_ICONSTOP);
 						return 0;

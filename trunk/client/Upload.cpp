@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+/*
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,25 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.04"
-#define VERSIONFLOAT 2.040
+#include "stdinc.h"
+#include "DCPlusPlus.h"
 
-#define DCVERSIONSTRING "0.699"
-#define DCVERSIONFLOAT 0.6991
+#include "Upload.h"
 
-#define SVNVERSION "svn298"
+#include "UserConnection.h"
+#include "Streams.h"
 
-/* Update the .rc file as well... */
+Upload::Upload(UserConnection& conn) : Transfer(conn), stream(0) { 
+	conn.setUpload(this);
+}
 
-/**
- * @file
- * $Id$
- */
+Upload::~Upload() { 
+	getUserConnection().setUpload(0);
+	delete stream; 
+}
+
+void Upload::getParams(const UserConnection& aSource, StringMap& params) {
+	Transfer::getParams(aSource, params);
+	params["source"] = getSourceFile();
+}
+

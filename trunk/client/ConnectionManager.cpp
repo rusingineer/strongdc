@@ -31,6 +31,8 @@
 
 #include "UserConnection.h"
 
+uint16_t ConnectionManager::iConnToMeCount = 0;
+
 ConnectionManager::ConnectionManager() : floodCounter(0), server(0), secureServer(0), shuttingDown(false) {
 	TimerManager::getInstance()->addListener(this);
 
@@ -66,7 +68,7 @@ void ConnectionManager::listen() throw(SocketException){
  * for downloading.
  * @param aUser The user to connect to.
  */
-void ConnectionManager::getDownloadConnection(const User::Ptr& aUser) {
+void ConnectionManager::getDownloadConnection(const UserPtr& aUser) {
 	dcassert((bool)aUser);
 	{
 		Lock l(cs);
@@ -80,7 +82,7 @@ void ConnectionManager::getDownloadConnection(const User::Ptr& aUser) {
 	}
 }
 
-ConnectionQueueItem* ConnectionManager::getCQI(const User::Ptr& aUser, bool download) {
+ConnectionQueueItem* ConnectionManager::getCQI(const UserPtr& aUser, bool download) {
 	ConnectionQueueItem* cqi = new ConnectionQueueItem(aUser, download);
 	if(download) {
 		dcassert(find(downloads.begin(), downloads.end(), aUser) == downloads.end());
@@ -128,9 +130,9 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 }
 
 void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
-	User::List passiveUsers;
+	UserList passiveUsers;
 	ConnectionQueueItem::List removed;
-	User::List idlers;
+	UserList idlers;
 
 	{
 		Lock l(cs);
@@ -197,11 +199,11 @@ void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw()
 
 	}
 
-	for(User::Iter i = idlers.begin(); i != idlers.end(); ++i) {
+	for(UserList::const_iterator i = idlers.begin(); i != idlers.end(); ++i) {
 		DownloadManager::getInstance()->checkIdle(*i);
 	}
 
-	for(User::List::iterator ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
+	for(UserList::iterator ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
 		QueueManager::getInstance()->removeSource(*ui, QueueItem::Source::FLAG_PASSIVE);
 	}
 }
@@ -209,7 +211,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw()
 void ConnectionManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {	
 	Lock l(cs);
 
-	for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
+	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
 		if(((*j)->getLastActivity() + 180*1000) < aTick) {
 			(*j)->disconnect(true);
 		}
@@ -250,10 +252,13 @@ int ConnectionManager::Server::run() throw() {
 void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	uint64_t now = GET_TICK();
 
+	if(iConnToMeCount > 0)
+		iConnToMeCount--;
+
 	if(now > floodCounter) {
 		floodCounter = now + FLOOD_ADD;
 	} else {
-		if(false && now + FLOOD_TRIGGER < floodCounter) {
+		if(now + FLOOD_TRIGGER < floodCounter) {
 			Socket s;
 			try {
 				s.accept(sock);
@@ -263,7 +268,8 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 			dcdebug("Connection flood detected!\n");
 			return;
 		} else {
-			floodCounter += FLOOD_ADD;
+			if(iConnToMeCount <= 0)
+				floodCounter += FLOOD_ADD;
 		}
 	}
 	UserConnection* uc = getConnection(false, secure);
@@ -278,8 +284,28 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	}
 }
 
+bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
+	Lock l(cs);
+
+	// We don't want to be used as flooding instruments
+	uint8_t count = 0;
+	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
+		if((*j)->getRemoteIp() == aServer && (*j)->getPort() == aPort) {
+			if(++count >= 5) {
+				// More than 5 outbound connections to the same addr/port? Can't trust that..
+				dcdebug("ConnectionManager::connect Tried to connect more than 5 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
+				return true;
+			}
+		}
+	}
+	return false;
+} 
+	
 void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, string* encoding, bool stealth) {
 	if(shuttingDown)
+		return;
+		
+	if(checkIpFlood(aServer, aPort))
 		return;
 
 	UserConnection* uc = getConnection(true, false);
@@ -301,6 +327,9 @@ void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const
 
 void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, const string& aToken, bool secure) {
 	if(shuttingDown)
+		return;
+
+	if(checkIpFlood(aUser.getIdentity().getIp(), aPort))
 		return;
 
 	UserConnection* uc = getConnection(false, secure);
@@ -661,7 +690,7 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 	}
 }
 
-void ConnectionManager::force(const User::Ptr& aUser) {
+void ConnectionManager::force(const UserPtr& aUser) {
 	Lock l(cs);
 
 	ConnectionQueueItem::Iter i = find(downloads.begin(), downloads.end(), aUser);
@@ -693,9 +722,9 @@ void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSour
 	putConnection(aSource);
 }
 
-void ConnectionManager::disconnect(const User::Ptr& aUser, int isDownload) {
+void ConnectionManager::disconnect(const UserPtr& aUser, int isDownload) {
 	Lock l(cs);
-	for(UserConnection::Iter i = userConnections.begin(); i != userConnections.end(); ++i) {
+	for(UserConnectionList::const_iterator i = userConnections.begin(); i != userConnections.end(); ++i) {
 		UserConnection* uc = *i;
 		if(uc->getUser() == aUser && uc->isSet((Flags::MaskType)(isDownload ? UserConnection::FLAG_DOWNLOAD : UserConnection::FLAG_UPLOAD))) {
 			uc->disconnect(true);
@@ -710,7 +739,7 @@ void ConnectionManager::shutdown() {
 	disconnect();
 	{
 		Lock l(cs);
-		for(UserConnection::Iter j = userConnections.begin(); j != userConnections.end(); ++j) {
+		for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
 			(*j)->disconnect(true);
 		}
 	}
@@ -743,8 +772,6 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHL);
 		} else if(*i == UserConnection::FEATURE_TTHF) {
 			conn->setFlag(UserConnection::FLAG_SUPPORTS_TTHF);
-			if(conn->getUser()) 
-				conn->getUser()->setFlag(User::TTH_GET);
 		}
 	}
 

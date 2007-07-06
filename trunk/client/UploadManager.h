@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,79 +16,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(UPLOAD_MANAGER_H)
-#define UPLOAD_MANAGER_H
+#ifndef DCPLUSPLUS_CLIENT_UPLOAD_MANAGER_H
+#define DCPLUSPLUS_CLIENT_UPLOAD_MANAGER_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#include "UserConnection.h"
+#include "forward.h"
+#include "UserConnectionListener.h"
 #include "Singleton.h"
-
+#include "UploadManagerListener.h"
 #include "Client.h"
 #include "ClientManager.h"
 #include "ClientManagerListener.h"
 #include "MerkleTree.h"
 #include "FastAlloc.h"
 
-class InputStream;
-
-class Upload : public Transfer, public Flags {
-public:
-	enum Flags {
-		FLAG_USER_LIST = 0x01,
-		FLAG_TTH_LEAVES = 0x02,
-		FLAG_ZUPLOAD = 0x04,
-		FLAG_PARTIAL_LIST = 0x08,
-		FLAG_PENDING_KICK = 0x10,
-		FLAG_PARTIAL_SHARE = 0x20,
-		FLAG_RESUMED = 0x40,
-		FLAG_CHUNKED = 0x80
-	};
-
-	typedef Upload* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::const_iterator Iter;
-	
-	Upload(UserConnection& conn);
-	~Upload();
-	
-	void getParams(const UserConnection& aSource, StringMap& params);
-	
-	GETSET(string, sourceFile, SourceFile);
-	GETSET(InputStream*, stream, Stream);
-};
-
-class UploadManagerListener {
-	friend class UploadQueueItem; 
-public:
-	virtual ~UploadManagerListener() { }
-	template<int I>	struct X { enum { TYPE = I };  };
-	
-	typedef X<0> Complete;
-	typedef X<1> Failed;
-	typedef X<2> Starting;
-	typedef X<3> Tick;
-	typedef X<4> QueueAdd;
-	typedef X<5> QueueRemove;
-	typedef X<6> QueueItemRemove;
-	typedef X<7> QueueUpdate;
-
-	virtual void on(Starting, const Upload*) throw() { }
-	virtual void on(Tick, const Upload::List&) throw() { }
-	virtual void on(Complete, const Upload*) throw() { }
-	virtual void on(Failed, const Upload*, const string&) throw() { }
-	virtual void on(QueueAdd, UploadQueueItem*) throw() { }
-	virtual void on(QueueRemove, const User::Ptr&) throw() { }
-	virtual void on(QueueItemRemove, UploadQueueItem*) throw() { }
-	virtual void on(QueueUpdate) throw() { }
-
-};
-
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
 public:
-	UploadQueueItem(User::Ptr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
+	UploadQueueItem(UserPtr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
 		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }
 	
 	~UploadQueueItem() throw() { }
@@ -96,7 +39,7 @@ public:
 	typedef vector<UploadQueueItem*> List;
 	typedef List::const_iterator Iter;
 	
-	typedef HASH_MAP<User::Ptr, UploadQueueItem::List, User::HashFunction> UserMap;
+	typedef HASH_MAP<UserPtr, UploadQueueItem::List, User::HashFunction> UserMap;
 	typedef UserMap::const_iterator UserMapIter;
 
 	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, uint8_t col) {
@@ -132,7 +75,7 @@ public:
 	inline const TCHAR* getText(uint8_t col) const { return columns[col].c_str(); }
 
 	const string& getFile() const { return file; }
-	const User::Ptr& getUser() const { return user; }
+	const UserPtr& getUser() const { return user; }
 	int64_t getSize() const { return size; }
 	uint64_t getTime() const { return time; }
 
@@ -145,7 +88,7 @@ private:
 	int64_t size;
 	uint64_t time;
 	
-	User::Ptr user;	
+	UserPtr user;	
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
@@ -172,31 +115,17 @@ public:
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
-	void reserveSlot(const User::Ptr& aUser, uint32_t aTime);
-	void unreserveSlot(const User::Ptr& aUser);
-	void clearUserFiles(const User::Ptr&);
+	void reserveSlot(const UserPtr& aUser, uint32_t aTime);
+	void unreserveSlot(const UserPtr& aUser);
+	void clearUserFiles(const UserPtr&);
 	const UploadQueueItem::UserMap getWaitingUsers();
 	bool getFireballStatus() const { return isFireball; }
 	bool getFileServerStatus() const { return isFileServer; }
-	bool hasReservedSlot(const User::Ptr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
+	bool hasReservedSlot(const UserPtr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
 
 	/** @internal */
-	void addConnection(UserConnection::Ptr conn) {
-		conn->addListener(this);
-		conn->setState(UserConnection::STATE_GET);
-	}
-	void removeDelayUpload(const User::Ptr& aUser) {
-		Lock l(cs);
-		for(Upload::List::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
-			Upload* up = *i;
-			if(aUser == up->getUser()) {
-				delayUploads.erase(i);
-				delete up;
-				break;
-			}
-		}		
-	}
-
+	void addConnection(UserConnectionPtr conn);
+	void removeDelayUpload(const UserPtr& aUser);
 	void abortUpload(const string& aFile, bool waiting = true);
 	
 	// Upload throttling
@@ -207,16 +136,16 @@ public:
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
 private:
-	Upload::List uploads;
-	Upload::List delayUploads;
+	UploadList uploads;
+	UploadList delayUploads;
 	CriticalSection cs;
 	
-	typedef HASH_MAP<User::Ptr, uint64_t, User::HashFunction> SlotMap;
+	typedef HASH_MAP<UserPtr, uint64_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 	
 	UploadQueueItem::UserMap waitingUsers;
-	void addFailedUpload(const User::Ptr& User, const string& file, int64_t pos, int64_t size);
+	void addFailedUpload(const UserPtr& User, const string& file, int64_t pos, int64_t size);
 	
 	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
@@ -242,7 +171,7 @@ private:
 	void logUpload(Upload* u);
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw();
+	virtual void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
 	
 	// TimerManagerListener
 	virtual void on(Second, uint32_t aTick) throw();

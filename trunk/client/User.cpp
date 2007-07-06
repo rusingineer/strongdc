@@ -31,7 +31,7 @@
 #include "ResourceManager.h"
 #include "FavoriteManager.h"
 
-OnlineUser::OnlineUser(const User::Ptr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
+OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
 	inc();
 	memzero(columns, sizeof(TCHAR*) * COLUMN_LAST);
 }
@@ -179,7 +179,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 	StringMap params;
 	ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
 
-	for(ClientProfile::Iter i = lst.begin(); i != lst.end(); ++i) {
+	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
 		ClientProfile& cp = const_cast<ClientProfile&>(*i);
 		string version, pkVersion, extraVersion, formattedTagExp, verTagExp;
 

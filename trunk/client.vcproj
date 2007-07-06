@@ -240,6 +240,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\Download.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\DownloadManager.cpp"
 				>
 			</File>
@@ -368,6 +372,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\Transfer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\client\Upload.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\UploadManager.cpp"
 				>
 			</File>
@@ -422,6 +434,10 @@
 			</File>
 			<File
 				RelativePath=".\client\BufferedSocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\BufferedSocketListener.h"
 				>
 			</File>
 			<File
@@ -485,7 +501,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\Download.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\DownloadManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\DownloadManagerListener.h"
 				>
 			</File>
 			<File
@@ -526,6 +550,14 @@
 			</File>
 			<File
 				RelativePath=".\client\FinishedManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\FinishedManagerListener.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\Flags.h"
 				>
 			</File>
 			<File
@@ -705,7 +737,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\Transfer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\Upload.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\UploadManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\UploadManagerListener.h"
 				>
 			</File>
 			<File
@@ -718,6 +762,10 @@
 			</File>
 			<File
 				RelativePath=".\client\UserConnection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\UserConnectionListener.h"
 				>
 			</File>
 			<File

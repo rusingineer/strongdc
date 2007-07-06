@@ -19,6 +19,7 @@
 #ifndef DCPLUSPLUS_CLIENT_CLIENT_MANAGER_LISTENER_H
 #define DCPLUSPLUS_CLIENT_CLIENT_MANAGER_LISTENER_H
 
+#include "forward.h"
 
 class ClientManagerListener {
 public:
@@ -34,10 +35,10 @@ public:
 	typedef X<6> ClientDisconnected;
 
 	/** User online in at least one hub */
-	virtual void on(UserConnected, const User::Ptr&) throw() { }
+	virtual void on(UserConnected, const UserPtr&) throw() { }
 	virtual void on(UserUpdated, const OnlineUser&) throw() { }
 	/** User offline in all hubs */
-	virtual void on(UserDisconnected, const User::Ptr&) throw() { }
+	virtual void on(UserDisconnected, const UserPtr&) throw() { }
 	virtual void on(IncomingSearch, const string&) throw() { }
 	virtual void on(ClientConnected, const Client*) throw() { }
 	virtual void on(ClientUpdated, const Client*) throw() { }

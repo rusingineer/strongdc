@@ -144,6 +144,7 @@ void Socket::connect(const string& aAddr, uint16_t aPort) throw(SocketException)
 
 	connected = true;
 	setIp(addr);
+	setPort(aPort);
 }
 
 namespace {

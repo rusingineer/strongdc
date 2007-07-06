@@ -29,8 +29,7 @@
 
 class CAGEmotion {
 public:
-	typedef CAGEmotion* Ptr;
-	typedef list<Ptr> List;
+	typedef list<CAGEmotion*> List;
 	typedef List::const_iterator Iter;
 
 	CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath);

@@ -1,3 +1,10 @@
+** svn298
+	fixed "kick" messages filtering
+	factor out some classes
+	fixed invalid secure connection to webserver's .css file
+	reverted flood control
+	stack size set to 128kB
+
 ** svn297
 	corrected removing user commands on hub exit (DC++ SVN)
 	faster getting user's nick

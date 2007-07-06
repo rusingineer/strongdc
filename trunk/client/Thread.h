@@ -31,7 +31,7 @@
 #pragma warning(disable: 4201) // nonstandard extension used: nameless struct/union
 #include <Mmsystem.h>
 #endif
-
+#include "Util.h"
 #include "Exception.h"
 STANDARD_EXCEPTION(ThreadException);
 
@@ -133,10 +133,37 @@ private:
 	Thread& operator=(const Thread&);
 
 #ifdef _WIN32
+/*
+	static void DbgDumpStack()
+	{
+	#ifdef _DEBUG
+		OutputDebugString(_T("### Stack Dump Start\n"));
+		PBYTE pPtr;
+		_asm mov pPtr, esp; // Get stack pointer.
+		// Get the stack last page.
+		MEMORY_BASIC_INFORMATION stMemBasicInfo;
+		VirtualQuery(pPtr, &stMemBasicInfo, sizeof(stMemBasicInfo));
+		PBYTE pPos = (PBYTE) stMemBasicInfo.AllocationBase;
+		size_t stackSize = 0;
+		do
+		{
+			VirtualQuery(pPos, &stMemBasicInfo, sizeof(stMemBasicInfo));
+			pPos += stMemBasicInfo.RegionSize;
+			stackSize += stMemBasicInfo.RegionSize;
+
+		} while (pPos < pPtr);
+		TCHAR szTxt[0x100];
+		wsprintf(szTxt, _T("Stack size: %s\n"), Util::formatBytesW(stackSize));
+		OutputDebugString(szTxt);    
+		OutputDebugString(_T("### Stack Dump Finish\n"));
+	#endif // _DEBUG
+	}
+*/
 	HANDLE threadHandle;
-	//DWORD threadId;
+
 	static unsigned int  WINAPI starter(void* p) {
 		Thread* t = (Thread*)p;
+		//DbgDumpStack();
 		t->run();
 		return 0;
 	}
