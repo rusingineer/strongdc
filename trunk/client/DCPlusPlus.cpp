@@ -53,6 +53,12 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	// Nev's great contribution to dc++
 	while(1) break;
 
+
+#ifdef _WIN32
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
 	Util::initialize();
 
 	ResourceManager::newInstance();
@@ -96,7 +102,6 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	if(f != NULL)
 		(*f)(p, TSTRING(DOWNLOAD_QUEUE));
 	QueueManager::getInstance()->loadQueue();
-
 }
 
 void shutdown() {
@@ -129,6 +134,10 @@ void shutdown() {
 	TimerManager::deleteInstance();
 	DebugManager::deleteInstance();
 	ResourceManager::deleteInstance();
+
+#ifdef _WIN32	
+	::WSACleanup();
+#endif
 }
 
 /**

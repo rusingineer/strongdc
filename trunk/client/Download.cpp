@@ -24,13 +24,12 @@
 #include "UserConnection.h"
 #include "QueueItem.h"
 
-Download::Download(UserConnection& conn) throw() : Transfer(conn), file(0),
-treeValid(false) {
+Download::Download(UserConnection& conn) throw() : Transfer(conn), file(0), treeValid(false) {
 	conn.setDownload(this);
 }
 
-Download::Download(UserConnection& conn, QueueItem& qi/*, const Source& aSource*/) throw() :
-	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0), 
+Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() :
+	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0),
 	quickTick(static_cast<uint32_t>(GET_TICK())), treeValid(false), source(NULL)
 {
 	conn.setDownload(this);
@@ -50,8 +49,8 @@ Download::Download(UserConnection& conn, QueueItem& qi/*, const Source& aSource*
 	if(qi.isSet(QueueItem::FLAG_MULTI_SOURCE))
 		setFlag(Download::FLAG_MULTI_CHUNK);
 
-	//if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
-	//	setFlag(Download::FLAG_PARTIAL);
+	if(partial)
+		setFlag(Download::FLAG_PARTIAL);
 }
 Download::~Download() {
 	getUserConnection().setDownload(0);

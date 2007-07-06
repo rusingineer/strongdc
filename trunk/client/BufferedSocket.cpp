@@ -28,6 +28,7 @@
 #include "Streams.h"
 #include "SSLSocket.h"
 #include "CryptoManager.h"
+#include "ZUtils.h"
 
 #include "UploadManager.h"
 #include "DownloadManager.h"

@@ -33,7 +33,7 @@ public:
 	};
 
 	Download(UserConnection& conn) throw();
-	Download(UserConnection& conn, QueueItem& qi/*, const Source& aSource*/) throw();
+	Download(UserConnection& conn, QueueItem& qi, bool partial) throw();
 
 	void getParams(const UserConnection& aSource, StringMap& params);
 

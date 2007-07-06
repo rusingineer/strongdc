@@ -55,7 +55,12 @@ OnlineUser& AdcHub::getUser(const uint32_t aSID, const CID& aCID) {
 		return *ou;
 	}
 
-	UserPtr p = ClientManager::getInstance()->getUser(aCID);
+	UserPtr p;
+	if(aSID == sid) {
+		p = ClientManager::getInstance()->getMe();
+	} else {
+		p = ClientManager::getInstance()->getUser(aCID);
+	}
 
 	{
 		Lock l(cs);
@@ -537,7 +542,7 @@ void AdcHub::info() {
 		lastInfoMap[var] = tmp; \
 	}
 
-	updateCounts(false); \
+//	updateCounts(false); \
 
 	ADDPARAM("ID", ClientManager::getInstance()->getMyCID().toBase32());
 	ADDPARAM("PD", ClientManager::getInstance()->getMyPID().toBase32());
@@ -550,11 +555,16 @@ void AdcHub::info() {
 	ADDPARAM("HN", Util::toString(counts.normal));
 	ADDPARAM("HR", Util::toString(counts.registered));
 	ADDPARAM("HO", Util::toString(counts.op));
-	ADDPARAM("VE", "++ " DCVERSIONSTRING);
-	ADDPARAM("US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024)));
+	ADDPARAM("VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VERSIONSTRING));
+	
+	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+		ADDPARAM("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024*8));
+	} else {
+		ADDPARAM("US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024)));
+	}
 
-	if(SETTING(MAX_DOWNLOAD_SPEED) > 0) {
-		ADDPARAM("DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED)*1024*8)));
+	if(SETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) != 0) {
+		ADDPARAM("DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024*8)));
 	} else {
 		ADDPARAM("DS", Util::emptyString);
 	}
@@ -595,15 +605,6 @@ void AdcHub::info() {
 		send(c);
 	}
 }
-
-/*int64_t AdcHub::getAvailable() const {
-	Lock l(cs);
-	int64_t x = 0;
-	for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) {
-		x+=i->second->getIdentity().getBytesShared();
-	}
-	return x;
-}*/
 
 string AdcHub::checkNick(const string& aNick) {
 	string tmp = aNick;

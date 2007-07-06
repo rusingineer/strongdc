@@ -88,7 +88,7 @@ public:
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
-	GS(Connection, "CO")
+	//GS(Connection, "CO")
 	GS(Status, "ST")
 
 	void setNick(const string& aNick) {
@@ -110,6 +110,9 @@ public:
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
+	void setConnection(const string& name) { set("CO", name); }
+	string getConnection() const;
+
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
 	void setHub(bool hub) { set("HU", hub ? "1" : Util::emptyString); }
 	void setBot(bool bot) { set("BO", bot ? "1" : Util::emptyString); }

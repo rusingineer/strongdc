@@ -25,12 +25,13 @@
 #include "SearchManager.h"
 #include "CryptoManager.h"
 #include "FavoriteManager.h"
-#include "QueueManager.h"
-#include "FinishedManager.h"
 #include "SimpleXML.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"
 #include "LogManager.h"
+
+#include "QueueManager.h"
+#include "FinishedManager.h"
 
 #include "AdcHub.h"
 #include "NmdcHub.h"
@@ -491,22 +492,20 @@ void ClientManager::on(Load, SimpleXML&) throw() {
 }
 
 void ClientManager::on(TimerManagerListener::Minute, uint32_t /*aTick*/) throw() {
-	{
-		Lock l(cs);
+	Lock l(cs);
 
-		// Collect some garbage...
-		UserIter i = users.begin();
-		while(i != users.end()) {
-			if(i->second->unique()) {
-				users.erase(i++);
-			} else {
-				++i;
-			}
+	// Collect some garbage...
+	UserIter i = users.begin();
+	while(i != users.end()) {
+		if(i->second->unique()) {
+			users.erase(i++);
+		} else {
+			++i;
 		}
+	}
 
-		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-			(*j)->info();
-		}
+	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
+		(*j)->info();
 	}
 }
 

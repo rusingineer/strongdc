@@ -30,14 +30,15 @@
 #endif
 
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "MainFrm.h"
-#include "ExtendedTrace.h"
-#include "WinUtil.h"
 #include "SingleInstance.h"
+#include "WinUtil.h"
 
 #include "../client/MerkleTree.h"
+
+#include "Resource.h"
+#include "ExtendedTrace.h"
+
+#include "MainFrm.h"
 #include "PopupManager.h"
 
 #include <delayimp.h>
@@ -383,7 +384,6 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		SetProcessDefaultLayout(LAYOUT_RTL);
 	}
 
-
 	MainFrame wndMain;
 
 	rc = wndMain.rcDefault;
@@ -423,9 +423,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	return nRet;
 }
 
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
-{
-
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow) {
 #ifndef _DEBUG
 	SingleInstance dcapp(_T("{STRONGDC-AEE8350A-B49A-4753-AB4B-E55479A48351}"));
 #else
@@ -470,9 +468,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldSEHFilter = NULL;
 	pOldSEHFilter = SetUnhandledExceptionFilter(&DCUnhandledExceptionFilter);
 	
-	WSADATA wsaData;
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
-	
 	AtlInitCommonControls(ICC_COOL_CLASSES | ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_PROGRESS_CLASS | ICC_STANDARD_CLASSES |
 		ICC_TAB_CLASSES | ICC_UPDOWN_CLASS | ICC_USEREX_CLASSES);	// add flags to support other controls
 	
@@ -509,10 +504,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	_Module.Term();
 	::CoUninitialize();
-	::WSACleanup();
+
 #ifdef _DEBUG
 	EXTENDEDTRACEUNINITIALIZE();
 #endif
+
 	return nRet;
 }
 

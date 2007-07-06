@@ -97,14 +97,14 @@ void Client::reloadSettings(bool updateNick) {
 	}
 }
 
-bool Client::isActive() const { return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
+bool Client::isActive() const {
+	return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE;
+}
 
 void Client::connect() {
 	if(socket)
 		BufferedSocket::putSocket(socket);
 
-	// TODO should this be done also on disconnect ???
-	//FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	availableBytes = 0;
 
 	setAutoReconnect(true);

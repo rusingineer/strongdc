@@ -60,9 +60,9 @@ public:
 	bool isOp() const { return getMyIdentity().isOp(); }
 
 	virtual void refreshUserList(bool) = 0;
-	virtual OnlineUser* findUser(const string& aNick) const = 0;
 	virtual void getUserList(OnlineUser::List& list) const = 0;
-
+	virtual OnlineUser* findUser(const string& aNick) const = 0;
+	
 	uint16_t getPort() const { return port; }
 	const string& getAddress() const { return address; }
 
@@ -91,6 +91,7 @@ public:
 		}
 		return Util::emptyString;
 	}
+	
 	StringMap& escapeParams(StringMap& sm) {
 		for(StringMapIter i = sm.begin(); i != sm.end(); ++i) {
 			i->second = escape(i->second);
@@ -126,7 +127,7 @@ public:
 	
 	GETSET(string, currentNick, CurrentNick);
 	GETSET(string, currentDescription, CurrentDescription);
-		
+
 	GETSET(string, rawOne, RawOne);
 	GETSET(string, rawTwo, RawTwo);
 	GETSET(string, rawThree, RawThree);
@@ -200,7 +201,6 @@ private:
 	Client& operator=(const Client&);
 
 	CountType countType;
-	
 	string hubUrl;
 	string address;
 	string ip;
