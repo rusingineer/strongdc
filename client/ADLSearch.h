@@ -18,7 +18,7 @@
 
 /*
  * Automatic Directory Listing Search
- * Henrik Engström, henrikengstrom at home se
+ * Henrik Engstrï¿½m, henrikengstrom at home se
  */
 
 #if !defined(ADL_SEARCH_H)
@@ -48,8 +48,8 @@ public:
 
 	// Constructor
 	ADLSearch() : searchString("<Enter string>"), isActive(true), isAutoQueue(false), sourceType(OnlyFile), 
-		minFileSize(-1), maxFileSize(-1), typeFileSize(SizeBytes), destDir("ADLSearch"), ddIndex(0)
-		, isForbidden(false), raw(0) {}
+		minFileSize(-1), maxFileSize(-1), typeFileSize(SizeBytes), destDir("ADLSearch"), ddIndex(0),
+		isForbidden(false), raw(0) {}
 
 	// Prepare search
 	void Prepare(StringMap& params) {
@@ -69,15 +69,14 @@ public:
 		}
 	}
 	
-	void unprepare() {
-		stringSearchList.clear();
-	}
+	void unprepare() { stringSearchList.clear(); }
 
 	// The search string
 	string searchString;									 
 
 	// Active search
 	bool isActive;
+	
 	// Forbidden file
 	bool isForbidden;
 	int raw;
@@ -269,8 +268,8 @@ public:
 	void Save();
 
 	// Settings
-	GETSET(bool, breakOnFirst, BreakOnFirst)
 	GETSET(UserPtr, user, User)
+	GETSET(bool, breakOnFirst, BreakOnFirst)
 	GETSET(bool, sentRaw, SentRaw);
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing

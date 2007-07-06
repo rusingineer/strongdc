@@ -31,7 +31,7 @@
 #pragma warning(disable: 4201) // nonstandard extension used: nameless struct/union
 #include <Mmsystem.h>
 #endif
-#include "Util.h"
+
 #include "Exception.h"
 STANDARD_EXCEPTION(ThreadException);
 
@@ -46,7 +46,7 @@ public:
 		HIGH = THREAD_PRIORITY_ABOVE_NORMAL
 	};
 
-	Thread() throw() : threadHandle(INVALID_HANDLE_VALUE)/*, threadId(0)*/ { }
+	Thread() throw() : threadHandle(INVALID_HANDLE_VALUE) { }
 	virtual ~Thread() { 
 		if(threadHandle != INVALID_HANDLE_VALUE)
 			CloseHandle(threadHandle);

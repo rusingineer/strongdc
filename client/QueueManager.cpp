@@ -29,7 +29,8 @@
 #include "LogManager.h"
 #include "ResourceManager.h"
 #include "version.h"
-
+#include "Download.h"
+#include "Transfer.h"
 #include "UserConnection.h"
 #include "SimpleXML.h"
 #include "StringTokenizer.h"
@@ -989,7 +990,7 @@ again:
 
 	userQueue.setRunning(q, aUser);
 
-	Download* d = new Download(aSource, *q/*, source*/);
+	Download* d = new Download(aSource, *q, source->isSet(QueueItem::Source::FLAG_PARTIAL));
 	
 	if(d->getSize() != -1) {
 		if(HashManager::getInstance()->getTree(d->getTTH(), d->getTigerTree())) {

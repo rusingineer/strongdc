@@ -44,15 +44,17 @@ public:
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	virtual void password(const string& pwd);
 	virtual void info();
-	virtual void cheatMessage(const string&) { } 
-
+	
 	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
 
 	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); }
 	virtual void send(const AdcCommand& cmd);
-	void refreshUserList(bool) { }
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
+
+	/* these functions not implemented yet */
+	void refreshUserList(bool) { }
+	void cheatMessage(const string&) { }
 private:
 	friend class ClientManager;
 	friend class CommandHandler<AdcHub>;

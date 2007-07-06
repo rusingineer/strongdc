@@ -1,3 +1,14 @@
+** svn299
+	code cleanup
+	fixed flag for partial downloads
+	[ADC] optionable emulation
+	[ADC] download/upload speed limit is sent
+	added some hublists
+	[ADC] fixed setting own identity
+	[ADC] workaround for hub count
+	[ADC] fixed multiline messages
+	single download fix (DC++ SVN)
+
 ** svn298
 	fixed "kick" messages filtering
 	factor out some classes

@@ -168,7 +168,7 @@ string AdcCommand::toString(uint32_t sid /* = 0 */, bool nmdc /* = false */) con
 string AdcCommand::escape(const string& str, bool old) {
 	string tmp = str;
 	string::size_type i = 0;
-	while( (i = tmp.find_first_of(" \n\\", i)) != string::npos) {
+	while( (i = tmp.find_first_of(" \n\\\r", i)) != string::npos) {
 		if(old) {
 			tmp.insert(i, "\\");
 		} else {
@@ -176,6 +176,7 @@ string AdcCommand::escape(const string& str, bool old) {
 				case ' ': tmp.replace(i, 1, "\\s"); break;
 				case '\n': tmp.replace(i, 1, "\\n"); break;
 				case '\\': tmp.replace(i, 1, "\\\\"); break;
+				case '\r': tmp.replace(i, 1, ""); continue;
 			}
 		}
 		i+=2;
