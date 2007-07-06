@@ -29,6 +29,7 @@ class Download;
 #include "User.h"
 #include "FastAlloc.h"
 #include "MerkleTree.h"
+#include "Flags.h"
 #include "FileChunksInfo.h"
 #include "HashManager.h"
 #include "SettingsManager.h"
@@ -40,9 +41,9 @@ public:
 	typedef List::const_iterator Iter;
 	typedef HASH_MAP<string*, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
 	typedef StringMap::const_iterator StringIter;
-	typedef HASH_MAP_X(User::Ptr, Ptr, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
+	typedef HASH_MAP_X(UserPtr, Ptr, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserMap;
 	typedef UserMap::const_iterator UserIter;
-	typedef HASH_MAP_X(User::Ptr, List, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserListMap;
+	typedef HASH_MAP_X(UserPtr, List, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserListMap;
 	typedef UserListMap::const_iterator UserListIter;
 
 	enum Status {
@@ -113,11 +114,11 @@ public:
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
 
-		Source(const User::Ptr& aUser) : user(aUser) { }
+		Source(const UserPtr& aUser) : user(aUser) { }
 		Source(const Source& aSource) : Flags(aSource), user(aSource.user), partialInfo(aSource.partialInfo) { }
 
-		bool operator==(const User::Ptr& aUser) const { return user == aUser; }
-		User::Ptr& getUser() { return user; }
+		bool operator==(const UserPtr& aUser) const { return user == aUser; }
+		UserPtr& getUser() { return user; }
 
 		/**
 		 * Source parts info
@@ -125,7 +126,7 @@ public:
 		 * If this source is not bad source, empty parts info means full file
 		 */
 		GETSET(PartsInfo, partialInfo, PartialInfo);
-		GETSET(User::Ptr, user, User);
+		GETSET(UserPtr, user, User);
 	};
 
 	typedef vector<Source> SourceList;
@@ -190,7 +191,7 @@ public:
 	SourceList& getBadSources() { return badSources; }
 	const SourceList& getBadSources() const { return badSources; }
 
-	void getOnlineUsers(User::List& l) const {
+	void getOnlineUsers(UserList& l) const {
 		for(SourceConstIter i = sources.begin(); i != sources.end(); ++i)
 			if(i->getUser()->isOnline())
 				l.push_back(i->getUser());
@@ -198,32 +199,32 @@ public:
 
 	string getTargetFileName() const { return Util::getFileName(getTarget()); }
 
-	SourceIter getSource(const User::Ptr& aUser) { return find(sources.begin(), sources.end(), aUser); }
-	SourceIter getBadSource(const User::Ptr& aUser) { return find(badSources.begin(), badSources.end(), aUser); }
-	SourceConstIter getSource(const User::Ptr& aUser) const { return find(sources.begin(), sources.end(), aUser); }
-	SourceConstIter getBadSource(const User::Ptr& aUser) const { return find(badSources.begin(), badSources.end(), aUser); }
+	SourceIter getSource(const UserPtr& aUser) { return find(sources.begin(), sources.end(), aUser); }
+	SourceIter getBadSource(const UserPtr& aUser) { return find(badSources.begin(), badSources.end(), aUser); }
+	SourceConstIter getSource(const UserPtr& aUser) const { return find(sources.begin(), sources.end(), aUser); }
+	SourceConstIter getBadSource(const UserPtr& aUser) const { return find(badSources.begin(), badSources.end(), aUser); }
 
-	bool isSource(const User::Ptr& aUser) const { return getSource(aUser) != sources.end(); }
-	bool isBadSource(const User::Ptr& aUser) const { return getBadSource(aUser) != badSources.end(); }
-	bool isBadSourceExcept(const User::Ptr& aUser, Flags::MaskType exceptions) const {
+	bool isSource(const UserPtr& aUser) const { return getSource(aUser) != sources.end(); }
+	bool isBadSource(const UserPtr& aUser) const { return getBadSource(aUser) != badSources.end(); }
+	bool isBadSourceExcept(const UserPtr& aUser, Flags::MaskType exceptions) const {
 		SourceConstIter i = getBadSource(aUser);
 		if(i != badSources.end())
 			return i->isAnySet((Flags::MaskType)(exceptions^Source::FLAG_MASK));
 		return false;
 	}
 	
-	void addCurrent(const User::Ptr& aUser) {
+	void addCurrent(const UserPtr& aUser) {
 		dcassert(isSource(aUser));
 		currents.push_back(aUser);
 	}
 	
-	bool isCurrent(const User::Ptr& aUser) const {
+	bool isCurrent(const UserPtr& aUser) const {
 		dcassert(isSource(aUser));
 		return find(currents.begin(), currents.end(), aUser) != currents.end();
 	}
 
 	// All setCurrent(NULL) should be replaced with this
-	void removeCurrent(const User::Ptr& aUser) {
+	void removeCurrent(const UserPtr& aUser) {
 		dcassert(isSource(aUser));
 		dcassert(find(currents.begin(), currents.end(), aUser) != currents.end());
 
@@ -260,7 +261,7 @@ public:
 	}
 
 	GETSET(TTHValue, tthRoot, TTH);
-	GETSET(User::List, currents, Currents);
+	GETSET(UserList, currents, Currents);
 	GETSET(string, target, Target);
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
@@ -325,8 +326,8 @@ private:
 		FileChunksInfo* chunksInfo;
 	};
 
-	void addSource(const User::Ptr& aUser);
-	void removeSource(const User::Ptr& aUser, Flags::MaskType reason);
+	void addSource(const UserPtr& aUser);
+	void removeSource(const UserPtr& aUser, Flags::MaskType reason);
 };
 
 #endif // !defined(QUEUE_ITEM_H)

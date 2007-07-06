@@ -91,8 +91,7 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)compiled/$(ProjectName).pdb"
 				SubSystem="2"
-				StackReserveSize="65536"
-				StackCommitSize="65536"
+				StackReserveSize="131072"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -209,10 +208,7 @@
 				GenerateMapFile="false"
 				MapFileName=""
 				SubSystem="2"
-				HeapReserveSize="1"
-				HeapCommitSize="1"
-				StackReserveSize="65536"
-				StackCommitSize="65536"
+				StackReserveSize="131072"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"

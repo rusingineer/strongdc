@@ -13,7 +13,7 @@ void ClientProfileManager::saveClientProfiles() {
 
 		xml.addTag("ClientProfilesV2");
 		xml.stepIn();
-		for(ClientProfile::Iter l = clientProfiles.begin(); l != clientProfiles.end(); ++l) {
+		for(ClientProfile::List::const_iterator l = clientProfiles.begin(); l != clientProfiles.end(); ++l) {
 			xml.addTag("ClientProfile");
 			xml.stepIn();
 			xml.addTag("Name", l->getName());

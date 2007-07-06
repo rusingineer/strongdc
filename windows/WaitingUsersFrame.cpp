@@ -124,7 +124,7 @@ LRESULT WaitingUsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		HTREEITEM userNode = ctrlQueued.GetRootItem();
 
 		while (userNode) {
-			delete reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+			delete reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 			userNode = ctrlQueued.GetNextSiblingItem(userNode);
 		}
 		ctrlList.DeleteAllItems();
@@ -174,7 +174,7 @@ void WaitingUsersFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 LRESULT WaitingUsersFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			QueueManager::getInstance()->addList(User, QueueItem::FLAG_CLIENT_VIEW);
 		}
@@ -189,18 +189,18 @@ LRESULT WaitingUsersFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 
 LRESULT WaitingUsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->clearUserFiles(User);
 		}
 	} else {
 		int i = -1;
-		User::List RemoveUsers;
+		UserList RemoveUsers;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			// Ok let's cheat here, if you try to remove more users here is not working :(
 			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
-		for(User::Iter i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
+		for(UserList::const_iterator i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
 			UploadManager::getInstance()->clearUserFiles(*i);
 		}
 	}
@@ -245,7 +245,7 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 
 LRESULT WaitingUsersFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			PrivateFrame::openWindow(User);
 		}
@@ -260,7 +260,7 @@ LRESULT WaitingUsersFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, 
 
 LRESULT WaitingUsersFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlot(User, 600);
 		}
@@ -275,7 +275,7 @@ LRESULT WaitingUsersFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 
 LRESULT WaitingUsersFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlot(User, 3600);
 		}
@@ -290,7 +290,7 @@ LRESULT WaitingUsersFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, H
 
 LRESULT WaitingUsersFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlot(User, 24*3600);
 		}
@@ -305,7 +305,7 @@ LRESULT WaitingUsersFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 
 LRESULT WaitingUsersFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->reserveSlot(User, 7*24*3600);
 		}
@@ -320,7 +320,7 @@ LRESULT WaitingUsersFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, H
 
 LRESULT WaitingUsersFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			UploadManager::getInstance()->unreserveSlot(User);
 		}
@@ -335,7 +335,7 @@ LRESULT WaitingUsersFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 LRESULT WaitingUsersFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
-		User::Ptr User = getSelectedUser();
+		UserPtr User = getSelectedUser();
 		if(User) {
 			FavoriteManager::getInstance()->addFavoriteUser(User);
 		}
@@ -354,7 +354,7 @@ void WaitingUsersFrame::LoadAll() {
 	
 	HTREEITEM userNode = ctrlQueued.GetRootItem();
 	while (userNode) {
-		delete reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+		delete reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 		userNode = ctrlQueued.GetNextSiblingItem(userNode);
 	}
 	ctrlList.DeleteAllItems();
@@ -364,7 +364,7 @@ void WaitingUsersFrame::LoadAll() {
 	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
-			0, 0, 0, 0, (LPARAM)(new UserPtr(uit->first)), TVI_ROOT, TVI_LAST);
+			0, 0, 0, 0, (LPARAM)(new UserItem(uit->first)), TVI_ROOT, TVI_LAST);
 		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
 			AddFile(*i);
 		}
@@ -376,11 +376,11 @@ void WaitingUsersFrame::LoadAll() {
 	updateStatus();
 }
 
-void WaitingUsersFrame::RemoveUser(const User::Ptr& aUser) {
+void WaitingUsersFrame::RemoveUser(const UserPtr& aUser) {
 	HTREEITEM userNode = ctrlQueued.GetRootItem();
 
 	while(userNode) {
-		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 		if (aUser == u->u) {
 			delete u;
 			ctrlQueued.DeleteItem(userNode);
@@ -396,7 +396,7 @@ LRESULT WaitingUsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOO
 
 	while(userNode) {
 		ctrlList.DeleteAllItems();
-		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 		UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
 		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 			if(uit->first == u->u) {
@@ -425,7 +425,7 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 	HTREEITEM selNode = ctrlQueued.GetSelectedItem();
 
 	while(userNode) {
-		UserPtr *u = reinterpret_cast<UserPtr *>(ctrlQueued.GetItemData(userNode));
+		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 		if (aUQI->getUser() == u->u) {
 			add = false;
 			break;
@@ -435,7 +435,7 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 
 	if(add) {
 		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
-			0, 0, 0, 0, (LPARAM)(new UserPtr(aUQI->getUser())), TVI_ROOT, TVI_LAST);
+			0, 0, 0, 0, (LPARAM)(new UserItem(aUQI->getUser())), TVI_ROOT, TVI_LAST);
 	}	
 	if(selNode) {
 		TCHAR selBuf[256];

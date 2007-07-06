@@ -300,7 +300,7 @@ int SearchManager::ResultsQueue::run() {
 			file = Text::toUtf8(file, encoding);
 			hubName = Text::toUtf8(hubName, encoding);
 
-			User::Ptr user = ClientManager::getInstance()->findUser(nick, url);
+			UserPtr user = ClientManager::getInstance()->findUser(nick, url);
 			if(!user) {
 				// Could happen if hub has multiple URLs / IPs
 				user = ClientManager::getInstance()->findLegacyUser(nick);
@@ -342,7 +342,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 		if(cid.size() != 39)
 			return;
 
-		User::Ptr user = ClientManager::getInstance()->findUser(CID(cid));
+		UserPtr user = ClientManager::getInstance()->findUser(CID(cid));
 		if(!user)
 			return;
 
@@ -391,7 +391,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 			}
 		}
 
-		User::Ptr user = ClientManager::getInstance()->findUser(CID(cid));
+		UserPtr user = ClientManager::getInstance()->findUser(CID(cid));
 		if(!user) {
 			// for NMDC support
 			string url = ClientManager::getInstance()->findHub(hubIpPort);
@@ -428,7 +428,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 	}
 }
 
-void SearchManager::onRES(const AdcCommand& cmd, const User::Ptr& from, const string& remoteIp) {
+void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const string& remoteIp) {
 	int freeSlots = -1;
 	int64_t size = -1;
 	string file;
@@ -473,7 +473,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 	if(from == ClientManager::getInstance()->getMe()->getCID())
 		return;
 
-	User::Ptr p = ClientManager::getInstance()->findUser(from);
+	UserPtr p = ClientManager::getInstance()->findUser(from);
 	if(!p)
 		return;
 

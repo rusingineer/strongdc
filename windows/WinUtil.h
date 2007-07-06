@@ -469,7 +469,7 @@ public:
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
 	/*static tstring getNicks(const CID& cid) throw();
-	static tstring getNicks(const User::Ptr& u) {
+	static tstring getNicks(const UserPtr& u) {
 		if(u->isSet(User::NMDC)) {
 			return Text::toT(u->getFirstNick());
 		} else  {
@@ -478,7 +478,7 @@ public:
 	}*/
 	/** @return Pair of hubnames as a string and a bool representing the user's online status */
 	static pair<tstring, bool> getHubNames(const CID& cid) throw();
-	static pair<tstring, bool> getHubNames(const User::Ptr& u) { return getHubNames(u->getCID()); }
+	static pair<tstring, bool> getHubNames(const UserPtr& u) { return getHubNames(u->getCID()); }
 
 	static void splitTokens(int* array, const string& tokens, int maxItems = -1) throw();
 	static void saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
@@ -532,7 +532,7 @@ public:
 	static string formatTime(long rest);
 	static uint8_t getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
-	static string disableCzChars(string message);
+	static tstring disableCzChars(tstring message);
 	static bool shutDown(int action);
 	static int getFirstSelectedIndex(CListViewCtrl& list);
 	static int setButtonPressed(int nID, bool bPressed = true);

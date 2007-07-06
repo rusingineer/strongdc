@@ -73,7 +73,7 @@ public:
 			}
 			menu.AppendMenu(MF_SEPARATOR);
 			CMenuHandle cur = menu.m_hMenu;
-			for(UserCommand::Iter ui = userCommands.begin(); ui != userCommands.end(); ++ui) {
+			for(UserCommand::List::iterator ui = userCommands.begin(); ui != userCommands.end(); ++ui) {
 				UserCommand& uc = *ui;
 				if(uc.getType() == UserCommand::TYPE_SEPARATOR) {
 					// Avoid double separators...

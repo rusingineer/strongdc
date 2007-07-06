@@ -267,8 +267,8 @@ private:
 			return display;
 		}
 
-		bool isSource(const User::Ptr& u) const { return qi->isSource(u); }
-		bool isBadSource(const User::Ptr& u) const { return qi->isBadSource(u); }
+		bool isSource(const UserPtr& u) const { return qi->isSource(u); }
+		bool isBadSource(const UserPtr& u) const { return qi->isBadSource(u); }
 		
 		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
 

@@ -21,6 +21,10 @@
 * opraven problém se zmìnou barev a chybìjícími ikonkami v seznamu uživatelù
 * "opraven" pád ve FileChunksInfo::verifyBlock pokud nelze alokovat blok v pamìti
 * cache pro vykreslování progressbarù, je to mnohem rychlejší
+* odstranìny sloupce Pk a Rychlost uploadu ze seznamu uživatelù
+* opraven jeden z možných vzdálených útokù
+* úplnì odstranìna podpora $PSR
+
 
 	-- StrongDC++ 2.03 --
 

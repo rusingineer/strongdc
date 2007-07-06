@@ -40,7 +40,7 @@ public:
 	virtual void on(Moved, const QueueItem*, const string&) throw() { }
 	virtual void on(SourcesUpdated, const QueueItem*) throw() { }
 	virtual void on(StatusUpdated, const QueueItem*) throw() { }
-	virtual void on(PartialList, const User::Ptr&, const string&) throw() { }
+	virtual void on(PartialList, const UserPtr&, const string&) throw() { }
 };
 
 #endif // !defined(QUEUE_MANAGER_LISTENER_H)

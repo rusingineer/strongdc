@@ -20,8 +20,9 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
-#include "DownloadManager.h"
 #include "FileChunksInfo.h"
+
+#include "User.h"
 #include "SharedFileStream.h"
 #include "ResourceManager.h"
 #include "LogManager.h"

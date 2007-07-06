@@ -103,7 +103,7 @@ string WebServerManager::getLoginPage(){
 	pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
     pagehtml += "<meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "   	<meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
-	pagehtml += "	<link rel='stylesheet' href='https://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+	pagehtml += "	<link rel='stylesheet' href='http://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
     pagehtml += "<div id='index_obsah'>";
@@ -145,7 +145,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
     pagehtml += "    <meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "    <meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
 	
-    pagehtml += "	<link rel='stylesheet' href='https://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
+    pagehtml += "	<link rel='stylesheet' href='http://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
     pagehtml += "</head>";
     pagehtml += "<body>";
 
@@ -376,7 +376,7 @@ string WebServerManager::getSearch(){
 string WebServerManager::getFinished(bool uploads){
 	string ret;
 
-	const FinishedItem::List& fl = FinishedManager::getInstance()->lockList(uploads);
+	const FinishedItemList& fl = FinishedManager::getInstance()->lockList(uploads);
 	ret = "	<h1>Finished ";
 	ret += (uploads ? "Uploads" : "Downloads");
 	ret += "</h1>";
@@ -386,7 +386,7 @@ string WebServerManager::getFinished(bool uploads){
 	ret += "			<td>Name</td>";
 	ret += "			<td>Size</td>";
 	ret += "		</tr>";
-	for(FinishedItem::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
+	for(FinishedItemList::const_iterator i = fl.begin(); i != fl.end(); ++i) {
 		ret+="<tr>";
 		ret+="	<td>" + Util::formatTime("%Y-%m-%d %H:%M:%S", (*i)->getTime()) + "</td>";
 		ret+="	<td>" + Util::getFileName((*i)->getTarget()) + "</td>";

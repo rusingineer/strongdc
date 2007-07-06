@@ -21,6 +21,9 @@
 * fixed problem with changing colors and missing userlist icons
 * workaround for crash in FileChunksInfo::verifyBlock when can't allocate memory block
 * cache for progressbar drawings, now it's much faster
+* removed Pk and Upload speed columns from userlist
+* fixed one of possible remote exploits
+* completely removed $PSR support
 
 	-- StrongDC++ 2.03 --
 

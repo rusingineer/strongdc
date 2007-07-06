@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +16,19 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(FINISHED_MANAGER_H)
-#define FINISHED_MANAGER_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
+#ifndef DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
+#define DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
 
 #include "DownloadManager.h"
 #include "UploadManager.h"
 
 #include "CriticalSection.h"
 #include "Singleton.h"
+#include "FinishedManagerListener.h"
 
 class FinishedItem
 {
 public:
-	typedef FinishedItem* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::const_iterator Iter;
-
 	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
 		const string& aTTH = Util::emptyString) : 
@@ -60,35 +53,14 @@ private:
 
 };
 
-class FinishedManagerListener {
-public:
-	virtual ~FinishedManagerListener() { }
-	template<int I>	struct X { enum { TYPE = I };  };
-
-	typedef X<0> AddedUl;
-	typedef X<1> AddedDl;
-	typedef X<2> RemovedUl;
-	typedef X<3> RemovedDl;
-	typedef X<4> RemovedAllUl;
-	typedef X<5> RemovedAllDl;
-
-	virtual void on(AddedDl, const FinishedItem*) throw() { }
-	virtual void on(RemovedDl, const FinishedItem*) throw() { }
-	virtual void on(RemovedAllDl) throw() { }
-	virtual void on(AddedUl, const FinishedItem*) throw() { }
-	virtual void on(RemovedUl, const FinishedItem*) throw() { }
-	virtual void on(RemovedAllUl) throw() { }
-
-}; 
-
 class FinishedManager : public Singleton<FinishedManager>,
 	public Speaker<FinishedManagerListener>, private DownloadManagerListener, private UploadManagerListener
 {
 public:
-	const FinishedItem::List& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
+	const FinishedItemList& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
 	void unlockList() { cs.leave(); }
 
-	void remove(FinishedItem *item, bool upload = false);
+	void remove(FinishedItemPtr item, bool upload = false);
 	void removeAll(bool upload = false);
 
 	/** Get file full path by tth to share */
@@ -109,7 +81,7 @@ private:
 	virtual void on(UploadManagerListener::Complete, const Upload*) throw();
 
 	CriticalSection cs;
-	FinishedItem::List downloads, uploads;
+	FinishedItemList downloads, uploads;
 };
 
 #endif // !defined(FINISHED_MANAGER_H)

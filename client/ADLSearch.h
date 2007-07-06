@@ -228,7 +228,7 @@ private:
 	StringSearch::List stringSearchList;
 	bool SearchAll(const string& s) {
 		// Match all substrings
-		for(StringSearch::Iter i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
+		for(StringSearch::List::const_iterator i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
 			if(!i->match(s)) {
 				return false;
 			}
@@ -270,7 +270,7 @@ public:
 
 	// Settings
 	GETSET(bool, breakOnFirst, BreakOnFirst)
-	GETSET(User::Ptr, user, User)
+	GETSET(UserPtr, user, User)
 	GETSET(bool, sentRaw, SentRaw);
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing

@@ -44,8 +44,8 @@ class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame
 
 {
 public:
-	static void openWindow(const tstring& aFile, const tstring& aDir, const User::Ptr& aUser, int64_t aSpeed);
-	static void openWindow(const User::Ptr& aUser, const string& txt, int64_t aSpeed);
+	static void openWindow(const tstring& aFile, const tstring& aDir, const UserPtr& aUser, int64_t aSpeed);
+	static void openWindow(const UserPtr& aUser, const string& txt, int64_t aSpeed);
 	static void closeAll();
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
@@ -80,7 +80,7 @@ public:
 		STATUS_LAST
 	};
 	
-	DirectoryListingFrame(const User::Ptr& aUser, int64_t aSpeed);
+	DirectoryListingFrame(const UserPtr& aUser, int64_t aSpeed);
 	~DirectoryListingFrame() { 
 		dcassert(lists.find(dl->getUser()) != lists.end());
 		lists.erase(dl->getUser());
@@ -374,7 +374,7 @@ private:
 
 	StringMap ucLineParams;
 
-	typedef HASH_MAP_X(User::Ptr, DirectoryListingFrame*, User::HashFunction, equal_to<User::Ptr>, less<User::Ptr>) UserMap;
+	typedef HASH_MAP_X(UserPtr, DirectoryListingFrame*, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserMap;
 	typedef UserMap::const_iterator UserIter;
 	
 	static UserMap lists;

@@ -128,7 +128,7 @@ public:
 		GETSET(string, fullPath, FullPath);
 	};
 
-	DirectoryListing(const User::Ptr& aUser) : user(aUser), abort(false), root(new Directory(NULL, Util::emptyString, false, false)) {
+	DirectoryListing(const UserPtr& aUser) : user(aUser), abort(false), root(new Directory(NULL, Util::emptyString, false, false)) {
 	}
 	
 	~DirectoryListing() {
@@ -152,9 +152,9 @@ public:
 	const Directory* getRoot() const { return root; }
 	Directory* getRoot() { return root; }
 
-	static User::Ptr getUserFromFilename(const string& fileName);
+	static UserPtr getUserFromFilename(const string& fileName);
 
-	GETSET(User::Ptr, user, User);
+	GETSET(UserPtr, user, User);
 	GETSET(bool, abort, Abort);
 	
 private:

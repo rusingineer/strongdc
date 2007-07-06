@@ -48,10 +48,10 @@ public:
 		ACTIVE						// In one up/downmanager
 	};
 
-	ConnectionQueueItem(const User::Ptr& aUser, bool aDownload) : state(WAITING), lastAttempt(0), download(aDownload), token(Util::toString(Util::rand())), user(aUser) { }
+	ConnectionQueueItem(const UserPtr& aUser, bool aDownload) : state(WAITING), lastAttempt(0), download(aDownload), token(Util::toString(Util::rand())), user(aUser) { }
 	
-	User::Ptr& getUser() { return user; }
-	const User::Ptr& getUser() const { return user; }
+	UserPtr& getUser() { return user; }
+	const UserPtr& getUser() const { return user; }
 	
 	GETSET(State, state, State);
 	GETSET(uint64_t, lastAttempt, LastAttempt);
@@ -61,7 +61,7 @@ private:
 	ConnectionQueueItem(const ConnectionQueueItem&);
 	ConnectionQueueItem& operator=(const ConnectionQueueItem&);
 	
-	User::Ptr user;
+	UserPtr user;
 };
 
 class ExpectedMap {
@@ -93,7 +93,7 @@ private:
 };
 
 // Comparing with a user...
-inline bool operator==(ConnectionQueueItem::Ptr ptr, const User::Ptr& aUser) { return ptr->getUser() == aUser; }
+inline bool operator==(ConnectionQueueItem::Ptr ptr, const UserPtr& aUser) { return ptr->getUser() == aUser; }
 
 class ConnectionManager : public Speaker<ConnectionManagerListener>, 
 	public UserConnectionListener, TimerManagerListener, 
@@ -107,10 +107,10 @@ public:
 	void nmdcConnect(const string& aServer, uint16_t aPort, const string& aMyNick, const string& hubUrl, string* encoding, bool stealth);
 	void adcConnect(const OnlineUser& aUser, uint16_t aPort, const string& aToken, bool secure);
 
-	void getDownloadConnection(const User::Ptr& aUser);
-	void force(const User::Ptr& aUser);
+	void getDownloadConnection(const UserPtr& aUser);
+	void force(const UserPtr& aUser);
 	
-	void disconnect(const User::Ptr& aUser, int isDownload);
+	void disconnect(const UserPtr& aUser, int isDownload);
 
 	void shutdown();
 	bool isShuttingDown() const { return shuttingDown; }
@@ -121,6 +121,7 @@ public:
 
 	uint16_t getPort() const { return server ? static_cast<uint16_t>(server->getPort()) : 0; }
 	uint16_t getSecurePort() const { return secureServer ? static_cast<uint16_t>(secureServer->getPort()) : 0; }
+	static uint16_t iConnToMeCount;	
 private:
 
 	class Server : public Thread {
@@ -146,9 +147,9 @@ private:
 	ConnectionQueueItem::List uploads;
 
 	/** All active connections */
-	UserConnection::List userConnections;
+	UserConnectionList userConnections;
 
-	User::List checkIdle;
+	UserList checkIdle;
 
 	StringList features;
 	StringList adcFeatures;
@@ -173,11 +174,13 @@ private:
 	void addUploadConnection(UserConnection* uc);
 	void addDownloadConnection(UserConnection* uc);
 
-	ConnectionQueueItem* getCQI(const User::Ptr& aUser, bool download);
+	ConnectionQueueItem* getCQI(const UserPtr& aUser, bool download);
 	void putCQI(ConnectionQueueItem* cqi);
 
 	void accept(const Socket& sock, bool secure) throw();
 
+	bool checkIpFlood(const string& aServer, uint16_t aPort);
+	
 	// UserConnectionListener
 	virtual void on(Connected, UserConnection*) throw();
 	virtual void on(Failed, UserConnection*, const string&) throw();

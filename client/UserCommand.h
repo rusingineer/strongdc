@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(USER_COMMAND_H)
-#define USER_COMMAND_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
+#ifndef DCPLUSPLUS_CLIENT_USER_COMMAND_H
+#define DCPLUSPLUS_CLIENT_USER_COMMAND_H
 
 #include "Util.h"
+#include "Flags.h"
 
 class UserCommand : public Flags {
 public:
 	typedef vector<UserCommand> List;
-	typedef List::iterator Iter;
 
 	enum {
 		TYPE_SEPARATOR,

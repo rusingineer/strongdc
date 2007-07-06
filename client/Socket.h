@@ -184,6 +184,7 @@ public:
 	static const string getRemoteHost(const string& aIp);
 	
 	GETSET(string, ip, Ip);
+	GETSET(uint16_t, port, Port);
 	socket_t sock;
 protected:
 	uint8_t type;

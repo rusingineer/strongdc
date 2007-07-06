@@ -41,9 +41,9 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const Identity& from, const User::Ptr& to, const User::Ptr& replyTo, const tstring& aMessage);
-	static void openWindow(const User::Ptr& replyTo, const tstring& aMessage = Util::emptyStringT);
-	static bool isOpen(const User::Ptr u) { return frames.find(u) != frames.end(); }
+	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage);
+	static void openWindow(const UserPtr& replyTo, const tstring& aMessage = Util::emptyStringT);
+	static bool isOpen(const UserPtr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
 	static void closeAllOffline();
 
@@ -190,16 +190,16 @@ public:
 	
 	void sendMessage(const tstring& msg);
 	
-	const User::Ptr& getUser() const { return replyTo; }
+	const UserPtr& getUser() const { return replyTo; }
 private:
-	PrivateFrame(const User::Ptr& replyTo_) : replyTo(replyTo_), 
+	PrivateFrame(const UserPtr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
 	
 	virtual ~PrivateFrame() { }
 
 	bool created;
-	typedef HASH_MAP<User::Ptr, PrivateFrame*, User::HashFunction> FrameMap;
+	typedef HASH_MAP<UserPtr, PrivateFrame*, User::HashFunction> FrameMap;
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 	ChatCtrl ctrlClient;
@@ -215,7 +215,7 @@ private:
 	CButton ctrlEmoticons;
 	HBITMAP hEmoticonBmp;
 
-	User::Ptr replyTo;
+	UserPtr replyTo;
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlClientContainer;
 
@@ -235,11 +235,11 @@ private:
 		if(aUser.getUser() == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(ClientManagerListener::UserConnected, const User::Ptr& aUser) throw() {
+	virtual void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
 		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(ClientManagerListener::UserDisconnected, const User::Ptr& aUser) throw() {
+	virtual void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
 		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}

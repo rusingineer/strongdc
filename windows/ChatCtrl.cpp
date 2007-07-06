@@ -182,7 +182,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		uint8_t smiles = 0; int nIdxFound = -1;
 		while(true) {
 			TCHAR *rpl = NULL;
-			CAGEmotion::Ptr pFoundEmotion = NULL;
+			CAGEmotion* pFoundEmotion = NULL;
 			int len = sText.GetLength();
 			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 				nIdxFound = -1;

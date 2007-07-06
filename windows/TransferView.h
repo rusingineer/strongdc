@@ -23,12 +23,14 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../client/DownloadManager.h"
-#include "../client/UploadManager.h"
-#include "../client/ConnectionManagerListener.h"
-#include "../client/TaskQueue.h"
-#include "../client/ConnectionManager.h"
-#include "../client/HashManager.h"
+#include "..\client\DownloadManagerListener.h"
+#include "..\client\UploadManagerListener.h"
+#include "..\client\ConnectionManagerListener.h"
+#include "..\client\TaskQueue.h"
+#include "..\client\forward.h"
+#include "..\client\Util.h"
+#include "..\client\Download.h"
+#include "..\client\Upload.h"
 
 #include "OMenu.h"
 #include "UCHandler.h"
@@ -190,7 +192,7 @@ private:
 			DOWNLOAD_FINISHED,
 		};
 
-		ItemInfo(const User::Ptr& u, bool aDownload);
+		ItemInfo(const UserPtr& u, bool aDownload);
 
 		bool download;
 		bool transferFailed;
@@ -198,7 +200,7 @@ private:
 		bool multiSource;		
 		uint8_t flagImage;
 		ItemInfo* main;
-		User::Ptr user;
+		UserPtr user;
 		Status status;
 		int64_t pos;
 		int64_t size;
@@ -212,7 +214,7 @@ private:
 		tstring columns[COLUMN_LAST];
 		void update(const UpdateInfo& ui);
 
-		const User::Ptr& getUser() const { return user; }
+		const UserPtr& getUser() const { return user; }
 
 		void disconnect();
 		void removeAll();
@@ -274,11 +276,11 @@ private:
 
 		bool operator==(const ItemInfo& ii) { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const User::Ptr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
+		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
 
 		uint32_t updateMask;
 
-		User::Ptr user;
+		UserPtr user;
 		bool download;
 		bool transferFailed;
 		bool fileList;
@@ -334,11 +336,11 @@ private:
 	virtual void on(DownloadManagerListener::Complete, const Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, Util::getFileName(aDownload->getTarget()), isTree);}
 	virtual void on(DownloadManagerListener::Failed, const Download* aDownload, const string& aReason) throw();
 	virtual void on(DownloadManagerListener::Starting, const Download* aDownload) throw();
-	virtual void on(DownloadManagerListener::Tick, const Download::List& aDownload) throw();
+	virtual void on(DownloadManagerListener::Tick, const DownloadList& aDownload) throw();
 	virtual void on(DownloadManagerListener::Status, const UserConnection*, const string&) throw();
 
 	virtual void on(UploadManagerListener::Starting, const Upload* aUpload) throw();
-	virtual void on(UploadManagerListener::Tick, const Upload::List& aUpload) throw();
+	virtual void on(UploadManagerListener::Tick, const UploadList& aUpload) throw();
 	virtual void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
 
 	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();

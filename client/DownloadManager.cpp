@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,13 @@
 #include "ResourceManager.h"
 #include "QueueManager.h"
 #include "HashManager.h"
-
+#include "Download.h"
 #include "LogManager.h"
 #include "User.h"
 #include "File.h"
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
+#include "UserConnection.h"
 #include "SharedFileStream.h"
 #include "ChunkOutputStream.h"
 #include "UploadManager.h"
@@ -43,68 +44,6 @@
 
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
-
-Download::Download(UserConnection& conn) throw() : Transfer(conn), file(0),
-treeValid(false) {
-	conn.setDownload(this);
-}
-
-Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter aSource) throw() :
-	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0), 
-	quickTick(static_cast<uint32_t>(GET_TICK())), treeValid(false), source(NULL)
-{
-	conn.setDownload(this);
-
-	setTTH(qi.getTTH());	
-	setSize(qi.getSize());
-	setFileSize(qi.getSize());
-
-	if(qi.isSet(QueueItem::FLAG_USER_LIST))
-		setFlag(Download::FLAG_USER_LIST);
-	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
-		setFlag(Download::FLAG_CHECK_FILE_LIST);
-	if(qi.isSet(QueueItem::FLAG_TESTSUR))
-		setFlag(Download::FLAG_TESTSUR);
-	if(qi.isSet(QueueItem::FLAG_RESUME))
-		setFlag(Download::FLAG_RESUME);
-	if(qi.isSet(QueueItem::FLAG_MULTI_SOURCE))
-		setFlag(Download::FLAG_MULTI_CHUNK);
-
-	if(aSource->isSet(QueueItem::Source::FLAG_PARTIAL))
-		setFlag(Download::FLAG_PARTIAL);
-}
-Download::~Download() {
-	getUserConnection().setDownload(0);
-}
-
-AdcCommand Download::getCommand(bool zlib) const {
-	AdcCommand cmd(AdcCommand::CMD_GET);
-	if(isSet(FLAG_TREE_DOWNLOAD)) {
-		cmd.addParam(Transfer::TYPE_TTHL);
-	} else if(isSet(FLAG_PARTIAL_LIST)) {
-		cmd.addParam(Transfer::TYPE_LIST);
-	} else {
-		cmd.addParam(Transfer::TYPE_FILE);
-	}
-	if(isSet(FLAG_PARTIAL_LIST) || isSet(FLAG_USER_LIST)) {
-		cmd.addParam(Util::toAdcFile(*getSource()));
-	} else {
-		cmd.addParam("TTH/" + getTTH().toBase32());
-	}
-	cmd.addParam(Util::toString(getPos()));
-	cmd.addParam(Util::toString(getSize() - getPos()));
-
-	if(zlib && BOOLSETTING(COMPRESS_TRANSFERS)) {
-		cmd.addParam("ZL1");
-	}
-
-	return cmd;
-}
-
-void Download::getParams(const UserConnection& aSource, StringMap& params) {
-	Transfer::getParams(aSource, params);
-	params["target"] = getTarget();
-}
 
 DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSent(0), mBytesSpokenFor(0),
 	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
@@ -126,11 +65,11 @@ DownloadManager::~DownloadManager() throw() {
 void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 	Lock l(cs);
 
-	Download::List tickList;
+	DownloadList tickList;
 	throttleSetup();
 
 	// Tick each ongoing download
-	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 
 		if(d->getTotal() > 0) {
@@ -197,7 +136,7 @@ int DownloadManager::FileMover::run() {
 	}
 }
 
-void DownloadManager::removeConnection(UserConnection::Ptr aConn) {
+void DownloadManager::removeConnection(UserConnectionPtr aConn) {
 	dcassert(aConn->getDownload() == NULL);
 	aConn->removeListener(this);
 	aConn->disconnect();
@@ -242,9 +181,9 @@ private:
 	size_t bufPos;
 };
 
-void DownloadManager::checkIdle(const User::Ptr& user) {	
+void DownloadManager::checkIdle(const UserPtr& user) {	
 	Lock l(cs);	
-	for(UserConnection::List::iterator i = idlers.begin(); i != idlers.end(); ++i) {	
+	for(UserConnectionList::iterator i = idlers.begin(); i != idlers.end(); ++i) {	
 		UserConnection* uc = *i;	
 		if(uc->getUser() == user) {	
 			idlers.erase(i);	
@@ -254,7 +193,7 @@ void DownloadManager::checkIdle(const User::Ptr& user) {
 	}	
 }
 
-void DownloadManager::addConnection(UserConnection::Ptr conn) {
+void DownloadManager::addConnection(UserConnectionPtr conn) {
 	if(!conn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) || !conn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) {
 		// Can't download from these...
 		conn->getUser()->setFlag(User::OLD_CLIENT);
@@ -688,7 +627,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				{
 					Lock l(cs);
 					
-					for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+					for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 						Download* download = *i;
 						if(download != d && download->getTarget() == d->getTarget()) {
 							download->getUserConnection().disconnect(true);
@@ -823,7 +762,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 int64_t DownloadManager::getRunningAverage() {
 	Lock l(cs);
 	int64_t avg = 0;
-	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 		avg += d->getRunningAverage();
 	}
@@ -951,7 +890,7 @@ void DownloadManager::removeDownload(Download* d) {
 void DownloadManager::abortDownload(const string& aTarget, const Download* except) {
 	Lock l(cs);
 	
-	for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
+	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 		if(d != except && d->getTarget() == aTarget) {
 			d->getUserConnection().disconnect(true);

@@ -20,6 +20,11 @@
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 
+#include "../client/ResourceManager.h"
+#include "../client/SettingsManager.h"
+#include "../client/ConnectionManager.h"
+#include "../client/DownloadManager.h"
+#include "../client/UploadManager.h"
 #include "../client/QueueManager.h"
 #include "../client/QueueItem.h"
 
@@ -145,7 +150,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	
 				usercmdsMenu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
 	
-				if(itemI->user != (User::Ptr)NULL)
+				if(itemI->user != (UserPtr)NULL)
 					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(itemI->user->getCID()));
 			}
 			WinUtil::ClearPreviewMenu(previewMenu);
@@ -652,7 +657,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	return 0;
 }
 	
-TransferView::ItemInfo::ItemInfo(const User::Ptr& u, bool aDownload) : user(u), download(aDownload), transferFailed(false),
+TransferView::ItemInfo::ItemInfo(const UserPtr& u, bool aDownload) : user(u), download(aDownload), transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), start(0), actual(0), speed(0), timeLeft(0),
 	Target(Util::emptyStringT), flagImage(0), collapsed(true), main(NULL)
 { 
@@ -795,10 +800,10 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 	speak(UPDATE_ITEM, ui);
 }
 
-void TransferView::on(DownloadManagerListener::Tick, const Download::List& dl) {
+void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 	AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
 
-	for(Download::List::const_iterator j = dl.begin(); j != dl.end(); ++j) {
+	for(DownloadList::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 		Download* d = *j;
 
 		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
@@ -926,10 +931,10 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 	speak(UPDATE_ITEM, ui);
 }
 
-void TransferView::on(UploadManagerListener::Tick, const Upload::List& ul) {
+void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 	AutoArray<TCHAR> buf(TSTRING(UPLOADED_BYTES).size() + 64);
 
-	for(Upload::List::const_iterator j = ul.begin(); j != ul.end(); ++j) {
+	for(UploadList::const_iterator j = ul.begin(); j != ul.end(); ++j) {
 		Upload* u = *j;
 
 		if (u->getTotal() == 0) continue;

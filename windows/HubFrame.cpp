@@ -422,7 +422,7 @@ void HubFrame::onEnter() {
 			ctrlMessage.SetSel(10, 10);
 		} else {
 			if(BOOLSETTING(CZCHARS_DISABLE))
-				s = Text::toT(WinUtil::disableCzChars(Text::fromT(s)));
+				s = WinUtil::disableCzChars(s);
 
 			client->hubMessage(Text::fromT(s));
 			ctrlMessage.SetWindowText(_T(""));
@@ -829,7 +829,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
 			  (pm.from.isOp() && !client->isOp())) {
 				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
-				const User::Ptr& user = myPM ? pm.to : pm.replyTo;
+				const UserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
@@ -1858,6 +1858,12 @@ void HubFrame::on(HubUpdated, const Client*) throw() {
 	speak(SET_WINDOW_TITLE, hubName);
 }
 void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& msg) throw() {
+	if(SETTING(FILTER_MESSAGES) && from.getIdentity().isOp()) {
+		if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
+			speak(KICK_MSG, Identity(NULL, 0), Util::formatMessage(from.getIdentity().getNick(), msg));
+			return;
+		}	
+	}
 	speak(ADD_CHAT_LINE, from.getIdentity(), Util::formatMessage(from.getIdentity().getNick(), msg));
 }	
 
@@ -1869,9 +1875,6 @@ void HubFrame::on(StatusMessage, const Client*, const string& line) {
 			speak(KICK_MSG, Identity(NULL, 0), Text::toDOS(line));
 		} else {
 			speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));
-	
-	
-	
 		}
 	} else {
 		speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));

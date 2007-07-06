@@ -329,8 +329,8 @@ private:
 			from(from_), to(to_.getUser()), replyTo(replyTo_.getUser()), hub(replyTo_.getIdentity().isHub()), bot(replyTo_.getIdentity().isBot()) { }
 
 		const Identity from;
-		const User::Ptr to;
-		const User::Ptr replyTo;
+		const UserPtr to;
+		const UserPtr replyTo;
 
 		bool hub;
 		bool bot;
@@ -399,7 +399,7 @@ private:
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;		//can't use an iterator because StringList is a vector, and vector iterators become invalid after resizing
 
-	typedef hash_set<User::Ptr, User::HashFunction> IgnoreMap;
+	typedef hash_set<UserPtr, User::HashFunction> IgnoreMap;
 	static IgnoreMap ignoreList;
 
 	tstring currentNeedle;		// search in chat window

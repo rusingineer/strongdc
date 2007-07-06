@@ -25,6 +25,7 @@
 
 #include "StringTokenizer.h"
 #include "AdcCommand.h"
+#include "Transfer.h"
 #include "DebugManager.h"
 
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
@@ -39,66 +40,8 @@ const string UserConnection::FEATURE_ADC_BZIP = "BZIP";
 
 const string UserConnection::FILE_NOT_AVAILABLE = "File Not Available";
 
-const string Transfer::TYPE_FILE = "file";
-const string Transfer::TYPE_LIST = "list";
-const string Transfer::TYPE_TTHL = "tthl";
-
-const string Transfer::USER_LIST_NAME = "files.xml";
-const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
-
 const string UserConnection::UPLOAD = "Upload";
 const string UserConnection::DOWNLOAD = "Download";
-
-Transfer::Transfer(UserConnection& conn) : start(GET_TICK()), lastTick(GET_TICK()), runningAverage(0),
-		last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn) { }
-
-void Transfer::updateRunningAverage() {
-	uint64_t tick = GET_TICK();
-	// Update 4 times/sec at most
-	if(tick > (lastTick + 250)) {
-		uint64_t diff = tick - lastTick;
-		int64_t tot = getTotal();
-		if( ((tick - getStart()) < AVG_PERIOD) ) {
-			runningAverage = getAverageSpeed();
-		} else {
-			int64_t bdiff = tot - last;
-			int64_t avg = bdiff * (int64_t)1000 / diff;
-			if(diff > AVG_PERIOD) {
-				runningAverage = avg;
-			} else {
-				// Weighted average...
-				runningAverage = ((avg * diff) + (runningAverage*(AVG_PERIOD-diff)))/AVG_PERIOD;
-			}
-		}
-		last = tot;
-	}
-	lastTick = tick;
-}
-
-void Transfer::getParams(const UserConnection& aSource, StringMap& params) {
-	params["userNI"] = aSource.getUser()->getFirstNick();
-	params["userI4"] = aSource.getRemoteIp();
-	StringList hubNames = ClientManager::getInstance()->getHubNames(aSource.getUser()->getCID());
-	if(hubNames.empty())
-		hubNames.push_back(STRING(OFFLINE));
-	params["hub"] = Util::toString(hubNames);
-	StringList hubs = ClientManager::getInstance()->getHubs(aSource.getUser()->getCID());
-	if(hubs.empty())
-		hubs.push_back(STRING(OFFLINE));
-	params["hubURL"] = Util::toString(hubs);
-	params["fileSI"] = Util::toString(getSize());
-	params["fileSIshort"] = Util::formatBytes(getSize());
-	params["fileSIchunk"] = Util::toString(getTotal());
-	params["fileSIchunkshort"] = Util::formatBytes(getTotal());
-	params["fileSIactual"] = Util::toString(getActual());
-	params["fileSIactualshort"] = Util::formatBytes(getActual());
-	params["speed"] = Util::formatBytes(getAverageSpeed()) + "/s";
-	params["time"] = Text::fromT(Util::formatSeconds((GET_TICK() - getStart()) / 1000));
-	params["fileTR"] = getTTH().toBase32();
-}
-
-User::Ptr Transfer::getUser() { return getUserConnection().getUser(); }
-const User::Ptr Transfer::getUser() const { return getUserConnection().getUser(); }
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 
@@ -227,7 +170,31 @@ void UserConnection::inf(bool withToken) {
 	send(c);
 }
 
-void UserConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
+void UserConnection::on(Connected) throw() {
+	lastActivity = GET_TICK();
+    fire(UserConnectionListener::Connected(), this); 
+}
+
+void UserConnection::on(Data, uint8_t* data, size_t len) throw() { 
+	lastActivity = GET_TICK(); 
+	fire(UserConnectionListener::Data(), this, data, len); 
+}
+
+void UserConnection::on(BytesSent, size_t bytes, size_t actual) throw() { 
+	lastActivity = GET_TICK();
+	fire(UserConnectionListener::BytesSent(), this, bytes, actual); 
+}
+
+void UserConnection::on(ModeChange) throw() { 
+	lastActivity = GET_TICK(); 
+	fire(UserConnectionListener::ModeChange(), this); 
+}
+
+void UserConnection::on(TransmitDone) throw() {
+	fire(UserConnectionListener::TransmitDone(), this);
+}
+
+void UserConnection::on(Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
 

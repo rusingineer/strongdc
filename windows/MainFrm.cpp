@@ -108,7 +108,7 @@ public:
 	}
 	virtual int run() {
 		for(StringIter i = files.begin(); i != files.end(); ++i) {
-			User::Ptr u = DirectoryListing::getUserFromFilename(*i);
+			UserPtr u = DirectoryListing::getUserFromFilename(*i);
 			if(!u)
 				continue;
 			DirectoryListing dl(u);
@@ -1092,7 +1092,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	}
 
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), types)) {
-		User::Ptr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
+		UserPtr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
 		if(u) {
 			DirectoryListingFrame::openWindow(file, Text::toT(Util::emptyString), u, 0);
 		} else {
@@ -1301,7 +1301,7 @@ void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const
 	versionInfo += string((const char*)buf, len);
 }
 
-void MainFrame::on(PartialList, const User::Ptr& aUser, const string& text) throw() {
+void MainFrame::on(PartialList, const UserPtr& aUser, const string& text) throw() {
 	PostMessage(WM_SPEAKER, BROWSE_LISTING, (LPARAM)new DirectoryBrowseInfo(aUser, text));
 }
 

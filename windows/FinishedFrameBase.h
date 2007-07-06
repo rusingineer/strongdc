@@ -275,7 +275,7 @@ public:
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			ItemInfo *ii = ctrlList.getItemData(i);
 			if(ii) {
-				User::Ptr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
+				UserPtr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
 				if(u) {
 					QueueManager::getInstance()->addList(u, QueueItem::FLAG_CLIENT_VIEW);
 				} else {
@@ -294,7 +294,7 @@ public:
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			ItemInfo *ii = ctrlList.getItemData(i);
 			if(ii) {
-				User::Ptr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
+				UserPtr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
 				if(u) {
 					UploadManager::getInstance()->reserveSlot(u, 600);
 				} else {
@@ -422,9 +422,9 @@ protected:
 		ctrlStatus.SetText(3, (Util::formatBytesW((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + _T("/s")).c_str());
 	}
 
-	void updateList(const FinishedItem::List& fl) {
+	void updateList(const FinishedItemList& fl) {
 		ctrlList.SetRedraw(FALSE);
-		for(FinishedItem::List::const_iterator i = fl.begin(); i != fl.end(); ++i) {
+		for(FinishedItemList::const_iterator i = fl.begin(); i != fl.end(); ++i) {
 			addEntry(*i);
 		}
 		ctrlList.SetRedraw(TRUE);

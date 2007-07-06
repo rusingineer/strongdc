@@ -27,26 +27,69 @@
 
 class AdcCommand;
 
+class BufferedSocket;
+
 class CID;
+
+typedef std::vector<uint16_t> PartsInfo;
+typedef map<uint16_t, uint16_t> BlockMap;
+typedef BlockMap::const_iterator BlockIter;
 
 class Client;
 
 class ClientManager;
 
-class FavoriteHubEntry;
+class ConnectionQueueItem;
 
-class RecentHubEntry;
+class Download;
+typedef Download* DownloadPtr;
+typedef std::vector<DownloadPtr> DownloadList;
+
+class FavoriteHubEntry;
 
 class FavoriteUser;
 
+class File;
+
+class FinishedItem;
+typedef FinishedItem* FinishedItemPtr;
+typedef std::vector<FinishedItemPtr> FinishedItemList;
+
+
+
 class Identity;
+
+class InputStream;
 
 class OnlineUser;
 
 class QueueItem;
 
+class RecentHubEntry;
+
+class ServerSocket;
+
+class Socket;
+class SocketException;
+
+class StringSearch;
+
+class Transfer;
+
+class UnZFilter;
+
+class Upload;
+typedef Upload* UploadPtr;
+typedef std::vector<UploadPtr> UploadList;
+
 class User;
+typedef Pointer<User> UserPtr;
+typedef std::vector<UserPtr> UserList;
 
+class UserCommand;
 
+class UserConnection;
+typedef UserConnection* UserConnectionPtr;
+typedef std::vector<UserConnectionPtr> UserConnectionList;
 
 #endif /*DCPLUSPLUS_CLIENT_FORWARD_H_*/

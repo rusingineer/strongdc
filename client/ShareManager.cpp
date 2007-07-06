@@ -32,6 +32,9 @@
 #include "File.h"
 #include "FilteredFile.h"
 #include "BZUtils.h"
+#include "Transfer.h"
+#include "UserConnection.h"
+#include "Download.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -746,7 +749,7 @@ void ShareManager::addTree(Directory& dir) {
 
 	dir.size = 0;
 
-	for(Directory::File::Iter i = dir.files.begin(); i != dir.files.end(); ) {
+	for(Directory::File::Set::const_iterator i = dir.files.begin(); i != dir.files.end(); ) {
 		addFile(dir, i++);
 	}
 }
@@ -761,7 +764,7 @@ void ShareManager::rebuildIndices() {
 	}
 }
 
-void ShareManager::addFile(Directory& dir, Directory::File::Iter i) {
+void ShareManager::addFile(Directory& dir, const Directory::File::Set::const_iterator& i) {
 	const Directory::File& f = *i;
 
 	HashFileIter j = tthIndex.find(f.getTTH());
@@ -1147,7 +1150,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 	auto_ptr<StringSearch::List> newStr;
 
 	// Find any matches in the directory name
-	for(StringSearch::Iter k = aStrings.begin(); k != aStrings.end(); ++k) {
+	for(StringSearch::List::const_iterator k = aStrings.begin(); k != aStrings.end(); ++k) {
 		if(k->match(name)) {
 			if(!newStr.get()) {
 				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(aStrings));
@@ -1177,7 +1180,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, StringSearch:
 			} else if(aSearchType == SearchManager::SIZE_ATMOST && aSize < i->getSize()) {
 				continue;
 			}	
-			StringSearch::Iter j = cur->begin();
+			StringSearch::List::const_iterator j = cur->begin();
 			for(; j != cur->end() && j->match(i->getName()); ++j) 
 				;	// Empty
 			
@@ -1278,7 +1281,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, AdcSearch& aS
 	auto_ptr<StringSearch::List> newStr;
 
 	// Find any matches in the directory name
-	for(StringSearch::Iter k = cur->begin(); k != cur->end(); ++k) {
+	for(StringSearch::List::const_iterator k = cur->begin(); k != cur->end(); ++k) {
 		if(k->match(name) && !aStrings.isExcluded(name)) {
 			if(!newStr.get()) {
 				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(*cur));
@@ -1311,7 +1314,7 @@ void ShareManager::Directory::search(SearchResult::List& aResults, AdcSearch& aS
 			if(aStrings.isExcluded(i->getName()))
 				continue;
 
-			StringSearch::Iter j = cur->begin();
+			StringSearch::List::const_iterator j = cur->begin();
 			for(; j != cur->end() && j->match(i->getName()); ++j) 
 				;	// Empty
 
@@ -1355,7 +1358,7 @@ void ShareManager::search(SearchResult::List& results, const StringList& params,
 		return;
 	}
 
-	for(StringSearch::Iter i = srch.includeX.begin(); i != srch.includeX.end(); ++i) {
+	for(StringSearch::List::const_iterator i = srch.includeX.begin(); i != srch.includeX.end(); ++i) {
 		if(!bloom.match(i->getPattern()))
 			return;
 	}
@@ -1420,7 +1423,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 		} else {
 			string name = Util::getFileName(fname);
 			int64_t size = File::getSize(fname);
-			Directory::File::Iter it = d->files.insert(Directory::File(name, size, d, root)).first;
+			Directory::File::Set::const_iterator it = d->files.insert(Directory::File(name, size, d, root)).first;
 			addFile(*d, it);
 		}
 		setDirty();

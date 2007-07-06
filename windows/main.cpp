@@ -408,7 +408,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		ATLTRACE(_T("Main window creation failed!\n"));
 		return 0;
 	}
-
+	
 	if(BOOLSETTING(MINIMIZE_ON_STARTUP)) {
 		wndMain.ShowWindow(SW_SHOWMINIMIZED);
 	} else {
