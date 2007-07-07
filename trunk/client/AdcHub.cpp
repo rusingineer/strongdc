@@ -555,7 +555,14 @@ void AdcHub::info() {
 	ADDPARAM("HN", Util::toString(counts.normal));
 	ADDPARAM("HR", Util::toString(counts.registered));
 	ADDPARAM("HO", Util::toString(counts.op));
-	ADDPARAM("VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VERSIONSTRING));
+
+#ifdef SVNVERSION
+#define VER VERSIONSTRING SVNVERSION
+#else
+#define VER VERSIONSTRING
+#endif		
+
+	ADDPARAM("VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VER));
 	
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 		ADDPARAM("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024*8));

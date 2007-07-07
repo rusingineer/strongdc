@@ -24,6 +24,9 @@
 * removed Pk and Upload speed columns from userlist
 * fixed one of possible remote exploits
 * completely removed $PSR support
+* ADC fixes
+* added some hublists
+
 
 	-- StrongDC++ 2.03 --
 

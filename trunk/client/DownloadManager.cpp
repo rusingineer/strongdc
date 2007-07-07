@@ -514,7 +514,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 						stream = new MerkleStream(d->getTigerTree(), d->getFile(), blockPos);
 						// @todo catch exceptions
 						if(blockLeft > 0) {
-							std::vector<uint8_t> buf(std::min(blockLeft, static_cast<int64_t>(64*1024)));
+							std::vector<uint8_t> buf(static_cast<size_t>(std::min(blockLeft, static_cast<int64_t>(64*1024))));
 						
 							((File*)file)->setPos(blockPos);
 							

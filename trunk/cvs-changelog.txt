@@ -1,3 +1,7 @@
+** svn300
+	fixed compilation warning
+	fixed removing Czech chars from chat/PM messages
+
 ** svn299
 	code cleanup
 	fixed flag for partial downloads
