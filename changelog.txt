@@ -24,6 +24,8 @@
 * odstranìny sloupce Pk a Rychlost uploadu ze seznamu uživatelù
 * opraven jeden z možných vzdálených útokù
 * úplnì odstranìna podpora $PSR
+* opravy pro ADC
+* pøidáno pár hublistù
 
 
 	-- StrongDC++ 2.03 --

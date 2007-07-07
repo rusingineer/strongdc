@@ -60,33 +60,26 @@ public:
 				(conn == "Modem") ||
 				(conn == "ISDN")) {
 				image = 6;
-			} else
-			if(	(conn == "Satellite") ||
-				(conn == "Microwave") ||
-				(conn == "Wireless")) {
+			} else if(	(conn == "Satellite") ||
+						(conn == "Microwave") ||
+						(conn == "Wireless")) {
 				image = 8;
-			} else
-			if(	(conn == "DSL") ||
-				(conn == "Cable")) {
+			} else if(	(conn == "DSL") ||
+						(conn == "Cable")) {
 				image = 9;
-			} else
-			if(	(strncmp(conn.c_str(), "LAN", 3) == 0)) {
+			} else if(	(strncmp(conn.c_str(), "LAN", 3) == 0)) {
 				image = 11;
-			} else
-			if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
+			} else if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
 				image = 3;
-			} else
-			if( (conn == "0.005")) {
-				image = 5;
 			} else {
 				double us = Util::toDouble(conn);
-				if(us >= 10) {
+				if(us == 0.005) {
+					image = 5;
+				} else if(us >= 10) {
 					image = 10;
-				} else 
-				if(us > 0.1) {
+				} else if(us > 0.1) {
 					image = 7;
-				} else
-				if(us >= 0.01) {
+				} else if(us >= 0.01) {
 					image = 4;
 				}
 			}

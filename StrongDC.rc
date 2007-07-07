@@ -1403,7 +1403,7 @@ END
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 0,6,9,9
- PRODUCTVERSION 2,0,3,60
+ PRODUCTVERSION 2,0,4,300
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1422,9 +1422,10 @@ BEGIN
             VALUE "FileDescription", "StrongDC++"
             VALUE "FileVersion", "0, 6, 9, 9"
             VALUE "InternalName", "StrongDC++"
+            VALUE "LegalCopyright", "Based on DC++"
             VALUE "OriginalFilename", "StrongDC.exe"
             VALUE "ProductName", "StrongDC++"
-            VALUE "ProductVersion", "2.03"
+            VALUE "ProductVersion", "2.04"
         END
     END
     BLOCK "VarFileInfo"

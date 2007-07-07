@@ -709,10 +709,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\svnversion.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\TaskQueue.h"
 				>
 			</File>

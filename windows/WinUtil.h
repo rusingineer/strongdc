@@ -532,7 +532,7 @@ public:
 	static string formatTime(long rest);
 	static uint8_t getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();
-	static tstring disableCzChars(tstring message);
+	static const tstring& disableCzChars(tstring& message);
 	static bool shutDown(int action);
 	static int getFirstSelectedIndex(CListViewCtrl& list);
 	static int setButtonPressed(int nID, bool bPressed = true);
