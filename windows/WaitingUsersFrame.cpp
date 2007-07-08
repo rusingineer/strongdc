@@ -361,7 +361,7 @@ void WaitingUsersFrame::LoadAll() {
 	ctrlQueued.DeleteAllItems();
 
 	// Load queue
-	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
+	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingFiles();
 	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserItem(uit->first)), TVI_ROOT, TVI_LAST);
@@ -397,7 +397,7 @@ LRESULT WaitingUsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOO
 	while(userNode) {
 		ctrlList.DeleteAllItems();
 		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
-		UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingUsers();
+		UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingFiles();
 		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
 			if(uit->first == u->u) {
 				ctrlList.SetRedraw(FALSE);

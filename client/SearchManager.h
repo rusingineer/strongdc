@@ -211,45 +211,36 @@ private:
 			}
 			s.signal();
 		}
+
 	private:
-		bool stop;
 		CriticalSection cs;
 		Semaphore s;
+		
 		deque<pair<string, string>> resultList;
+		
+		bool stop;
 	} queue;
 
+	CriticalSection cs;
+	SearchQueueItemList searchQueue;	
+
+	uint64_t lastSearch;
 	Socket* socket;
 	uint16_t port;
 	bool stop;
-	uint64_t lastSearch;
 	friend class Singleton<SearchManager>;
-	SearchQueueItemList searchQueue;
-	CriticalSection cs;
 
-	SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
-		TimerManager::getInstance()->addListener(this);
-	}
-
-	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	SearchManager();
 
 	virtual int run();
 
-	virtual ~SearchManager() throw() {
-		TimerManager::getInstance()->removeListener(this);
-		if(socket) {
-			stop = true;
-			socket->disconnect();
-#ifdef _WIN32
-			join();
-#endif
-			delete socket;
-		}
-	}
+	virtual ~SearchManager() throw();
 
 	void setLastSearch(uint32_t aTime) { lastSearch = aTime; };
 	void onData(const uint8_t* buf, size_t aLen, const string& address);
 
 	string getPartsString(const PartsInfo& partsInfo) const;
+	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
 };
 
 #endif // !defined(SEARCH_MANAGER_H)

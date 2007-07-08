@@ -105,8 +105,8 @@ private:
 			update(u);
 		}
 
-		const TCHAR* getText(int col) const {
-			return columns[col].c_str();
+		const tstring& getText(int col) const {
+			return columns[col];
 		}
 
 		static int compareItems(const UserInfo* a, const UserInfo* b, int col) {

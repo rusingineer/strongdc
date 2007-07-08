@@ -72,7 +72,7 @@ public:
 	int imageIndex() const;
 	void update(bool onSecond = false);
 
-	inline const TCHAR* getText(uint8_t col) const { return columns[col].c_str(); }
+	inline const tstring& getText(uint8_t col) const { return columns[col]; }
 
 	const string& getFile() const { return file; }
 	const UserPtr& getUser() const { return user; }
@@ -118,10 +118,11 @@ public:
 	void reserveSlot(const UserPtr& aUser, uint32_t aTime);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
-	const UploadQueueItem::UserMap getWaitingUsers();
+	const UploadQueueItem::UserMap getWaitingFiles();
 	bool getFireballStatus() const { return isFireball; }
 	bool getFileServerStatus() const { return isFileServer; }
 	bool hasReservedSlot(const UserPtr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
+	bool isConnecting(const UserPtr& aUser) const { return connectingUsers.find(aUser) != connectingUsers.end(); }
 
 	/** @internal */
 	void addConnection(UserConnectionPtr conn);
@@ -132,9 +133,10 @@ public:
 	size_t throttleGetSlice();
 	size_t throttleCycleTime() const;
 	
-	GETSET(uint8_t, running, Running);
+	uint8_t running;
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
+
 private:
 	UploadList uploads;
 	UploadList delayUploads;
@@ -143,8 +145,12 @@ private:
 	typedef HASH_MAP<UserPtr, uint64_t, User::HashFunction> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
-	
-	UploadQueueItem::UserMap waitingUsers;
+	SlotMap connectingUsers;
+
+	typedef deque<UserPtr> SlotQueue;
+	SlotQueue waitingUsers;
+
+	UploadQueueItem::UserMap waitingFiles;
 	void addFailedUpload(const UserPtr& User, const string& file, int64_t pos, int64_t size);
 	
 	void throttleBytesTransferred(uint32_t i);
@@ -169,6 +175,8 @@ private:
 	void removeConnection(UserConnection* aConn);
 	void removeUpload(Upload* aUpload, bool delay = false);
 	void logUpload(Upload* u);
+
+	void notifyQueuedUsers();
 
 	// ClientManagerListener
 	virtual void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();

@@ -1006,8 +1006,10 @@ int MainFrame::run() {
 		Thread::setThreadPriority(Thread::LOW);
 		lastTTHdir = Util::getFilePath(file);
 
-		char TTH[192*8/(5*8)+2];
-		char buf[512*1024];
+		//char TTH[192*8/(5*8)+2];
+		//char buf[512*1024];
+		AutoArray<char> TTH(192*8/(5*8)+2);
+		AutoArray<char> buf(512*1024);
 
 		try {
 			File f(Text::fromT(file), File::READ, File::OPEN);
@@ -1031,7 +1033,7 @@ int MainFrame::run() {
 			string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
 			f.close();
 			
-			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
+			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT((char*)TTH).c_str(), Text::toT(magnetlink).c_str());
 		} catch(...) { }
 		Thread::setThreadPriority(Thread::NORMAL);
 		WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);

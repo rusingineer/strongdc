@@ -373,7 +373,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				SearchResult* sr = *i;
 				str += sr->toSR(*aClient);
 				str[str.length()-1] = 5;
-				str += name;
+				str += Text::fromUtf8(name, *(aClient->getEncoding()));
 				str += '|';
 
 				sr->decRef();

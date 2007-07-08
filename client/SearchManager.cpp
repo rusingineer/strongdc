@@ -70,6 +70,22 @@ AdcCommand SearchResult::toRES(char type) const {
 	return cmd;
 }
 
+SearchManager::SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
+	TimerManager::getInstance()->addListener(this);
+}
+
+SearchManager::~SearchManager() throw() {
+	TimerManager::getInstance()->removeListener(this);
+	if(socket) {
+		stop = true;
+		socket->disconnect();
+#ifdef _WIN32
+		join();
+#endif
+		delete socket;
+	}
+}
+
 void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const int* aWindow /* = NULL */) {
 	Lock l(cs);
 	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);

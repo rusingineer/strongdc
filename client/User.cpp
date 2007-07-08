@@ -33,7 +33,6 @@
 
 OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
 	inc();
-	memzero(columns, sizeof(TCHAR*) * COLUMN_LAST);
 }
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
@@ -102,21 +101,18 @@ bool Identity::supports(const string& name) const {
 }
 
 string Identity::getConnection() const {
-	if(user->isNMDC()) {
-		return get("CO");
+	string connection = get("US");
+	double us = Util::toDouble(connection);
+	if(us > 0) {
+		char buf[16];
+		snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
+
+		char *cp;
+		if( (cp=strchr(buf, ',')) != NULL) *cp='.';
+
+		return buf;
 	} else {
-		double us = Util::toDouble(get("US"));
-		if(us > 0) {
-			char buf[16];
-			snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
-
-			char *cp;
-			if( (cp=strchr(buf, ',')) != NULL) *cp='.';
-
-			return buf;
-		} else {
-			return get("US");
-		}
+		return connection;
 	}
 }
 
@@ -317,33 +313,16 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
 		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
 	}
-	return lstrcmpi(a->getText(col), b->getText(col));	
+	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 }
 
 void OnlineUser::setText(const uint8_t name, const tstring& val) {
-	if(columns[name] == NULL || _tcscmp(columns[name], val.c_str()) != 0) {
-		delete[] columns[name];
-		columns[name] = NULL;
-			
-		if(!val.empty()) {
-			TCHAR* tmp = new TCHAR[val.size() + 1];
-			_tcscpy(tmp, val.c_str());
-			tmp[val.size()] = NULL;
-				
-			columns[name] = tmp;
-		}
-	}
+	if(val.empty())
+		info.erase((uint8_t)name);
+	else
+		info[(uint8_t)name] = val;
 }
 	
-void OnlineUser::clearData() {
-	for(int i = 0; i < COLUMN_LAST; i++) {
-		if(columns[i] != NULL) {
-			delete[] columns[i];
-			columns[i] = NULL;
-		}
-	}
-}
-
 tstring old = Util::emptyStringT;
 bool OnlineUser::update(int sortCol) {
 	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());

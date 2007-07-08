@@ -83,12 +83,10 @@ public:
 	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
-	//GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
-	//GS(Connection, "CO")
 	GS(Status, "ST")
 
 	void setNick(const string& aNick) {
@@ -110,7 +108,7 @@ public:
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
-	void setConnection(const string& name) { set("CO", name); }
+	void setConnection(const string& name) { set("US", name); }
 	string getConnection() const;
 
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
@@ -179,7 +177,7 @@ public:
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() { clearData(); }
+	~OnlineUser() { /*clearData();*/ }
 
 	operator UserPtr&() { return getUser(); }
 	operator const UserPtr&() const { return getUser(); }
@@ -198,10 +196,11 @@ public:
 	bool isHidden() const { return identity.isHidden(); }
 	
 	void setText(const uint8_t name, const tstring& val);
-	void clearData();
+	void clearData() { info.clear(); }
 	
-	inline const TCHAR* getText(const uint8_t col) const {
-		return columns[col] ? columns[col] : Util::emptyStringT.c_str();
+	inline const tstring& getText(const uint8_t col) const {
+		InfMap::const_iterator i = info.find((uint8_t)col);
+		return i == info.end() ? Util::emptyStringT : i->second;
 	}
 
 	GETSET(Identity, identity, Identity);
@@ -211,7 +210,9 @@ private:
 	OnlineUser(const OnlineUser&);
 	OnlineUser& operator=(const OnlineUser&);
 
-	const TCHAR* columns[COLUMN_LAST];
+	typedef map<uint8_t, tstring> InfMap;
+	InfMap info;
+
 	Client& client;
 };
 

@@ -17,13 +17,13 @@
  */
 
 #define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.04"
-#define VERSIONFLOAT 2.040
+#define VERSIONSTRING "2.05"
+#define VERSIONFLOAT 2.050
 
 #define DCVERSIONSTRING "0.699"
-#define DCVERSIONFLOAT 0.6991
+#define DCVERSIONFLOAT 0.6992
 
-//#define SVNVERSION "svn300"
+#define SVNVERSION "svn304"
 
 /* Update the .rc file as well... */
 
