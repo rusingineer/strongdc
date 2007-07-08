@@ -285,8 +285,8 @@ private:
 			columns[COLUMN_SIZE] = Util::formatBytesW(d->getTotalSize());
 		}
 
-		const TCHAR* getText(int col) const {
-			return columns[col].c_str();
+		const tstring& getText(int col) const {
+			return columns[col];
 		}
 		
 		struct TotalSize {

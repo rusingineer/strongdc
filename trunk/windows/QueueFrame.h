@@ -241,9 +241,9 @@ private:
 		void remove() { QueueManager::getInstance()->remove(getTarget()); }
 
 		// TypedListViewCtrl functions
-		inline const TCHAR* getText(int col) {
+		inline const tstring& getText(int col) {
 			dcassert(col >= 0 && col < COLUMN_LAST);
-			return getDisplay()->columns[col].c_str();
+			return getDisplay()->columns[col];
 		}
 		static int compareItems(const QueueItemInfo* a, const QueueItemInfo* b, int col) {
 			switch(col) {

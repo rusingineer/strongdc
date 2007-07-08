@@ -1,3 +1,13 @@
+** svn304
+	fixed Stack overflow on Get TTH menu item
+	[NMDC] fixed displaying own Connection type
+	[NMDC] fixed passive searches for unicode nicknames (THX PPK for report)
+	better userlist optimization for empty columns
+	begun work on real upload queue (idea from Possum mod)
+
+** svn301 - svn303
+	some SVN repository changes for better uploading to "tags"
+
 ** svn300
 	fixed compilation warning
 	fixed removing Czech chars from chat/PM messages

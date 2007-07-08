@@ -221,8 +221,8 @@ private:
 
 		double getRatio() const { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
 
-		const TCHAR* getText(uint8_t col) const {
-			return columns[col].c_str();
+		const tstring& getText(uint8_t col) const {
+			return columns[col];
 		}
 
 		static int compareItems(const ItemInfo* a, const ItemInfo* b, uint8_t col);

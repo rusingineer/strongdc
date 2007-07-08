@@ -367,9 +367,9 @@ protected:
 		}
 		tstring columns[COLUMN_LAST];
 
-		const TCHAR* getText(int col) const {
+		const tstring& getText(int col) const {
 			dcassert(col >= 0 && col < COLUMN_LAST);
-			return columns[col].c_str();
+			return columns[col];
 		}
 
 		const tstring& copy(int col) {

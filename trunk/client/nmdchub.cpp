@@ -391,6 +391,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		u.getIdentity().setHub(false);
 		u.getIdentity().setHidden(false);
 
+		double us = Util::toDouble(connection);
+		if(us > 0) {
+			connection = Util::toString((long)(us*1024*1024));
+		}
 		u.getIdentity().setConnection(connection);
 
 		char status = param[j-1];
