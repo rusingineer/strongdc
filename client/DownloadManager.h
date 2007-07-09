@@ -100,7 +100,7 @@ private:
 	void removeConnection(UserConnectionPtr aConn);
 	void removeDownload(Download* aDown);
 	void fileNotAvailable(UserConnection* aSource);
-	void noSlots(UserConnection* aSource);
+	void noSlots(UserConnection* aSource, string param = Util::emptyString);
 	
 	void moveFile(const string& source, const string&target);
 	void logDownload(UserConnection* aSource, Download* d);
@@ -122,7 +122,7 @@ private:
 	virtual void on(Failed, UserConnection*, const string&) throw();
 	virtual void on(Sending, UserConnection*, int64_t) throw();
 	virtual void on(FileLength, UserConnection*, int64_t) throw();
-	virtual void on(MaxedOut, UserConnection*) throw();
+	virtual void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
 	virtual	void on(FileNotAvailable, UserConnection*) throw();
 	void on(ListLength, UserConnection* aSource, const string& aListLength);
 	

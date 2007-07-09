@@ -1,5 +1,11 @@
+** svn305
+	fixed crash #3624
+	when slots are increased, queued users will be notified
+	position in upload queue is sent and displayed for "no slots" message (not in emulation mode)
+	workaround for menu crash on Windows Vista (crash #3599)
+
 ** svn304
-	fixed Stack overflow on Get TTH menu item
+	fixed Stack overflow on Get TTH menu item (crash #3604/3635)
 	[NMDC] fixed displaying own Connection type
 	[NMDC] fixed passive searches for unicode nicknames (THX PPK for report)
 	better userlist optimization for empty columns

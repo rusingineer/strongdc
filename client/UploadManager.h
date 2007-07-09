@@ -37,10 +37,7 @@ public:
 	~UploadQueueItem() throw() { }
 	
 	typedef vector<UploadQueueItem*> List;
-	typedef List::const_iterator Iter;
-	
-	typedef HASH_MAP<UserPtr, UploadQueueItem::List, User::HashFunction> UserMap;
-	typedef UserMap::const_iterator UserMapIter;
+	typedef deque<pair<UserPtr, UploadQueueItem::List>> SlotQueue;
 
 	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, uint8_t col) {
 		switch(col) {
@@ -118,7 +115,7 @@ public:
 	void reserveSlot(const UserPtr& aUser, uint32_t aTime);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
-	const UploadQueueItem::UserMap getWaitingFiles();
+	UploadQueueItem::SlotQueue getWaitingUsers();
 	bool getFireballStatus() const { return isFireball; }
 	bool getFileServerStatus() const { return isFileServer; }
 	bool hasReservedSlot(const UserPtr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
@@ -146,12 +143,9 @@ private:
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 	SlotMap connectingUsers;
+	UploadQueueItem::SlotQueue waitingUsers;
 
-	typedef deque<UserPtr> SlotQueue;
-	SlotQueue waitingUsers;
-
-	UploadQueueItem::UserMap waitingFiles;
-	void addFailedUpload(const UserPtr& User, const string& file, int64_t pos, int64_t size);
+	int addFailedUpload(const UserPtr& aUser, const string& file, int64_t pos, int64_t size);
 	
 	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
@@ -169,7 +163,7 @@ private:
 	
 	friend class Singleton<UploadManager>;
 	UploadManager() throw();
-	virtual ~UploadManager() throw();
+	~UploadManager() throw();
 
 	bool getAutoSlot();
 	void removeConnection(UserConnection* aConn);

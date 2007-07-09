@@ -195,7 +195,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 	ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
 
 	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
-		ClientProfile& cp = const_cast<ClientProfile&>(*i);
+		const ClientProfile& cp = *i;
 		string version, pkVersion, extraVersion, formattedTagExp, verTagExp;
 
 		verTagExp = Util::formatRegExp(cp.getTag(), params);

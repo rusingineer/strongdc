@@ -437,9 +437,9 @@ string WebServerManager::getULQueue(){
 	ret += "			<td>User</td>";
 	ret += "			<td>Filename</td>";
 	ret += "		</tr>";
-	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingFiles();
-	for(UploadQueueItem::UserMapIter ii = users.begin(); ii != users.end(); ++ii) {
-		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
+	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
+	for(UploadQueueItem::SlotQueue::const_iterator ii = users.begin(); ii != users.end(); ++ii) {
+		for(UploadQueueItem::List::const_iterator i = ii->second.begin(); i != ii->second.end(); ++i) {
 			ret+="<tr><td>" + (*i)->getUser()->getFirstNick() + "</td>";
 			ret+="<td>" + Util::getFileName((*i)->getFile()) + "</td></tr>";
 		}

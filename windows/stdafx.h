@@ -49,6 +49,7 @@
 extern CAppModule _Module;
 
 #define _WTL_MDIWINDOWMENU_TEXT CTSTRING(MENU_WINDOW)
+#define _WTL_CMDBAR_VISTA_MENUS 0
 #include <atlwin.h>
 #include <atlframe.h>
 #include <atlctrls.h>

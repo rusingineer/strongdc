@@ -127,7 +127,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 			bytes = Util::toInt64(param);
 		fire(UserConnectionListener::Sending(), this, bytes);
 	} else if(cmd == "$MaxedOut") {
-		fire(UserConnectionListener::MaxedOut(), this);
+		fire(UserConnectionListener::MaxedOut(), this, param);
 	} else if(cmd == "$Supports") {
 		if(!param.empty()) {
 			fire(UserConnectionListener::Supports(), this, StringTokenizer<string>(param, ' ').getTokens());
