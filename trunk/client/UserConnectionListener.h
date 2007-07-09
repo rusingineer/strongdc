@@ -65,7 +65,7 @@ public:
 	virtual void on(FileLength, UserConnection*, int64_t) throw() { }
 	virtual void on(Send, UserConnection*) throw() { }
 	virtual void on(GetListLength, UserConnection*) throw() { }
-	virtual void on(MaxedOut, UserConnection*) throw() { }
+	virtual void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw() { }
 	virtual void on(ModeChange, UserConnection*) throw() { }
 	virtual void on(MyNick, UserConnection*, const string&) throw() { }
 	virtual void on(TransmitDone, UserConnection*) throw() { }

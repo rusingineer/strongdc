@@ -664,7 +664,10 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 				if(d->getTreeValid()) {
 					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-					lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
+					if(!(lpFileDataInfo == (FileChunksInfo*)NULL)) {
+						dcassert(d->getPos() > 0);
+						lpFileDataInfo->verifyBlock(d->getPos() - 1, d->getTigerTree(), d->getTempTarget());
+					}
 				}
 				
 				aSource->setDownload(NULL);
@@ -806,16 +809,17 @@ void DownloadManager::moveFile(const string& source, const string& target) {
 
 }
 
-void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource) throw() { 
-	noSlots(aSource);
+void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource, string param) throw() { 
+	noSlots(aSource, param);
 }
-void DownloadManager::noSlots(UserConnection* aSource) {
+void DownloadManager::noSlots(UserConnection* aSource, string param) {
 	if(aSource->getState() != UserConnection::STATE_FILELENGTH && aSource->getState() != UserConnection::STATE_TREE) {
 		dcdebug("DM::onMaxedOut Bad state, ignoring\n");
 		return;
 	}
 
-	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE), false);
+	string extra = param.empty() ? Util::emptyString : " - Queued: " + param;
+	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE) + extra, false);
 }
 
 void DownloadManager::on(UserConnectionListener::Error, UserConnection* aSource, const string& aError) throw() {
@@ -938,7 +942,8 @@ void DownloadManager::on(AdcCommand::STA, UserConnection* aSource, const AdcComm
 			fileNotAvailable(aSource);
 			return;
 		case AdcCommand::ERROR_SLOTS_FULL:
-			noSlots(aSource);
+			string param;
+			noSlots(aSource, cmd.getParam("QP", 0, param) ? param : Util::emptyString);
 			return;
 		}
 	}

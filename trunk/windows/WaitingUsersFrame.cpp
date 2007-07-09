@@ -47,7 +47,7 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlQueued.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP, 
 		 WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
-	
+
 	ctrlQueued.SetImageList(WinUtil::fileImages, TVSIL_NORMAL);
 	ctrlList.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
 
@@ -361,11 +361,11 @@ void WaitingUsersFrame::LoadAll() {
 	ctrlQueued.DeleteAllItems();
 
 	// Load queue
-	UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingFiles();
-	for(UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
+	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
+	for(UploadQueueItem::SlotQueue::const_iterator uit = users.begin(); uit != users.end(); ++uit) {
 		ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserItem(uit->first)), TVI_ROOT, TVI_LAST);
-		for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
+		for(UploadQueueItem::List::const_iterator i = uit->second.begin(); i != uit->second.end(); ++i) {
 			AddFile(*i);
 		}
 	}
@@ -397,12 +397,12 @@ LRESULT WaitingUsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOO
 	while(userNode) {
 		ctrlList.DeleteAllItems();
 		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
-		UploadQueueItem::UserMap users = UploadManager::getInstance()->getWaitingFiles();
-		for (UploadQueueItem::UserMapIter uit = users.begin(); uit != users.end(); ++uit) {
+		UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
+		for (UploadQueueItem::SlotQueue::const_iterator uit = users.begin(); uit != users.end(); ++uit) {
 			if(uit->first == u->u) {
 				ctrlList.SetRedraw(FALSE);
 				ctrlQueued.SetRedraw(FALSE);
-				for(UploadQueueItem::Iter i = uit->second.begin(); i != uit->second.end(); ++i) {
+				for(UploadQueueItem::List::const_iterator i = uit->second.begin(); i != uit->second.end(); ++i) {
 					AddFile(*i);
 				}
 				ctrlList.resort();

@@ -52,12 +52,12 @@ UploadManager::~UploadManager() throw() {
 	ClientManager::getInstance()->removeListener(this);
 	{
 		Lock l(cs);
-		for(UploadQueueItem::UserMapIter ii = waitingFiles.begin(); ii != waitingFiles.end(); ++ii) {
-			for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
+		for(UploadQueueItem::SlotQueue::const_iterator ii = waitingUsers.begin(); ii != waitingUsers.end(); ++ii) {
+			for(UploadQueueItem::List::const_iterator i = ii->second.begin(); i != ii->second.end(); ++i) {
 				(*i)->dec();
 			}
 		}
-		waitingFiles.clear();
+		waitingUsers.clear();
 	}
 
 	while(true) {
@@ -256,7 +256,7 @@ ok:
 		bool hasReserved = (reservedSlots.find(aSource.getUser()) != reservedSlots.end());
 		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource.getUser());
 
-		if(!(hasReserved || isFavorite /*|| getFreeSlots() > 0*/ || getAutoSlot())) {
+		if(!(hasReserved || isFavorite || getAutoSlot())) {
 			bool supportsFree = aSource.isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource.isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource.isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
 			if(free && supportsFree && allowedFree) {
@@ -264,8 +264,7 @@ ok:
 			} else {
 				if(	(getFreeSlots() <= 0) || (!(waitingUsers.empty() || isConnecting(aSource.getUser())))) {
 					delete is;
-					aSource.maxedOut();
-					addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size);
+					aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size));
 					aSource.disconnect();
 					return false;
 				}
@@ -500,12 +499,13 @@ void UploadManager::logUpload(Upload* u) {
 	fire(UploadManagerListener::Complete(), u);
 }
 
-void UploadManager::addFailedUpload(const UserPtr& User, const string& file, int64_t pos, int64_t size) {
-	uint64_t itime = GET_TIME();
+int UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, int64_t pos, int64_t size) {
+	uint64_t currentTime = GET_TIME();
 	bool found = false;
-	UploadQueueItem::UserMap::iterator j = waitingFiles.find(User);
-	if(j != waitingFiles.end()) {
-		for(UploadQueueItem::Iter i = j->second.begin(); i != j->second.end(); ++i) {
+
+	UploadQueueItem::SlotQueue::iterator it = find_if(waitingUsers.begin(), waitingUsers.end(), CompareFirst<UserPtr, UploadQueueItem::List>(aUser));
+	if(it != waitingUsers.end()) {
+		for(UploadQueueItem::List::const_iterator i = it->second.begin(); i != it->second.end(); i++) {
 			if((*i)->getFile() == file) {
 				(*i)->setPos(pos);
 				found = true;
@@ -513,44 +513,38 @@ void UploadManager::addFailedUpload(const UserPtr& User, const string& file, int
 			}
 		}
 	}
+
 	if(found == false) {
-		UploadQueueItem* uqi = new UploadQueueItem(User, file, pos, size, itime);
-		if(j == waitingFiles.end()) {
-			UploadQueueItem::List l;
-			l.push_back(uqi);
-			waitingFiles.insert(make_pair(User, l));
-			waitingUsers.push_back(User);
-			dcdebug("Added user %s to upload queue.\n", User->getFirstNick());
+		UploadQueueItem* uqi = new UploadQueueItem(aUser, file, pos, size, currentTime);
+		if(it == waitingUsers.end()) {
+			UploadQueueItem::List list;
+			list.push_back(uqi);
+			it = waitingUsers.insert(it, make_pair(aUser, list));
+			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick());
 		} else {
-			j->second.push_back(uqi);
+			it->second.push_back(uqi);
 		}
 		fire(UploadManagerListener::QueueAdd(), uqi);
 	}
+
+	return it - waitingUsers.begin() + 1;
 }
 
-void UploadManager::clearUserFiles(const UserPtr& source) {
-	UploadQueueItem::UserMap::iterator ii = waitingFiles.find(source);
-	if(ii != waitingFiles.end()) {
-		for(UploadQueueItem::Iter i = ii->second.begin(); i != ii->second.end(); ++i) {
+void UploadManager::clearUserFiles(const UserPtr& aUser) {
+	UploadQueueItem::SlotQueue::iterator it = find_if(waitingUsers.begin(), waitingUsers.end(), CompareFirst<UserPtr, UploadQueueItem::List>(aUser));
+	if(it != waitingUsers.end()) {
+		for(UploadQueueItem::List::const_iterator i = it->second.begin(); i != it->second.end(); i++) {
 			fire(UploadManagerListener::QueueItemRemove(), (*i));
 			(*i)->dec();
 		}
-		waitingFiles.erase(ii);
-		
-		for(SlotQueue::iterator wl = waitingUsers.begin(); wl != waitingUsers.end(); wl++) {
-			if(*wl == source) {
-				waitingUsers.erase(wl);
-				break;
-			}
-		}
-
-		fire(UploadManagerListener::QueueRemove(), source);
+		waitingUsers.erase(it);
+		fire(UploadManagerListener::QueueRemove(), aUser);
 	}
 }
 
-const UploadQueueItem::UserMap UploadManager::getWaitingFiles() {
+UploadQueueItem::SlotQueue UploadManager::getWaitingUsers() {
 	Lock l(cs);
-	return waitingFiles;
+	return waitingUsers;
 }
 
 void UploadManager::addConnection(UserConnectionPtr conn) {
@@ -564,7 +558,6 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 	if(aSource->isSet(UserConnection::FLAG_HASSLOT)) {
 		running--;
 		aSource->unsetFlag(UserConnection::FLAG_HASSLOT);
-		notifyQueuedUsers();
 	} 
 	if(aSource->isSet(UserConnection::FLAG_HASEXTRASLOT)) {
 		extra--;
@@ -573,12 +566,6 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 }
 
 void UploadManager::notifyQueuedUsers() {
-	Lock l(cs);
-	//get rid of offline users
-	while (!waitingUsers.empty() && !waitingUsers.front()->isOnline()) {
-		clearUserFiles(waitingUsers.front());
-	}
-
 	if (waitingUsers.empty()) return;		//no users to notify
 
 	int freeslots = getFreeSlots();
@@ -587,8 +574,9 @@ void UploadManager::notifyQueuedUsers() {
 		freeslots -= connectingUsers.size();
 		while(freeslots > 0){
 			// let's keep him in the connectingList until he asks for a file
-			UserPtr u = waitingUsers.front();
-			waitingUsers.pop_front();
+			UserPtr u = waitingUsers.front().first;
+			clearUserFiles(u);
+			//waitingUsers.pop_front();
 			
 			dcdebug("Contacting an user: %s\n", u->getFirstNick());
 			connectingUsers[u] = GET_TICK();
@@ -645,8 +633,6 @@ void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
 		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + (*i)->getFirstNick());
 		ConnectionManager::getInstance()->disconnect(*i, false);
 	}
-
-	notifyQueuedUsers();
 }
 
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
@@ -694,6 +680,7 @@ void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 		if(uploads.size() > 0)
 			fire(UploadManagerListener::Tick(), uploads);
 
+		notifyQueuedUsers();
 		fire(UploadManagerListener::QueueUpdate());
 	}
 	if(!isFireball) {

@@ -110,7 +110,22 @@ public:
 	void sending(int64_t bytes) { send(bytes == -1 ? string("$Sending|") : "$Sending " + Util::toString(bytes) + "|"); }
 	void error(const string& aError) { send("$Error " + aError + '|'); }
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); }
-	void maxedOut() { isSet(FLAG_NMDC) ? send("$MaxedOut|") : send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full")); }
+	
+	void maxedOut(int qPos = -1) {
+		bool sendPos = !isSet(UserConnection::FLAG_STEALTH) && qPos >= 0;
+
+		if(isSet(FLAG_NMDC)) {
+			send("$MaxedOut" + (sendPos ? (" " + Util::toString(qPos)) : Util::emptyString) + "|");
+		} else {
+			AdcCommand cmd(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full");
+			if(sendPos) {
+				cmd.addParam("QP", Util::toString(qPos));
+			}
+			send(cmd);
+		}
+	}
+	
+	
 	void fileNotAvail(const std::string& msg = FILE_NOT_AVAILABLE) { isSet(FLAG_NMDC) ? send("$Error " + msg + "|") : send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_FILE_NOT_AVAILABLE, msg)); }
 	void getListLen() { send("$GetListLen|"); }
 
