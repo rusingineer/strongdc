@@ -50,6 +50,7 @@ void CShellContextMenu::SetPath(const tstring& strPath)
 	// now we need the parent IShellFolder interface of pidl, and the relative PIDL to that interface
 	typedef HRESULT (CALLBACK* LPFUNC)(LPCITEMIDLIST pidl, REFIID riid, void **ppv, LPCITEMIDLIST *ppidlLast);
 	LPFUNC MySHBindToParent = (LPFUNC)GetProcAddress(LoadLibrary(_T("shell32")), "SHBindToParent");
+	if(MySHBindToParent == NULL) return;
 
 	MySHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&m_psfFolder, NULL);
 

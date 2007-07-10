@@ -47,8 +47,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent06", "KickMsgRecent07", "KickMsgRecent08", "KickMsgRecent09", "KickMsgRecent10", 
 	"KickMsgRecent11", "KickMsgRecent12", "KickMsgRecent13", "KickMsgRecent14", "KickMsgRecent15", 
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
-	"Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage",
-	"UploadQueueFrameOrder", "UploadQueueFrameWidths", "DownSpeed", "UpSpeed",
+	"Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage", "UploadQueueFrameOrder", "UploadQueueFrameWidths",
 	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline", "SoundTypingNotify",
 	"WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
@@ -95,7 +94,7 @@ const string SettingsManager::settingTags[] =
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
 	"SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "GetUserCountry", "DisableCZDiacritic",
-	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI", "ShowDescriptionSpeed",
+	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI",
 	"FavShowJoins", "LogStatusMessages", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
 	"ReportFoundAlternates", "CheckNewUsers", "GarbageIn", "GarbageOut", 
 	"SearchTime", "DontBeginSegment", "DontBeginSegmentSpeed", "PopunderPm", "PopunderFilelist",
@@ -129,9 +128,6 @@ const string SettingsManager::settingTags[] =
 	"TotalUpload", "TotalDownload",
 	"SENTRY"
 };
-
-const string SettingsManager::speeds[] = {"64K","128K","150K","192K",
-"256K","384K","512K","600K","768K","1M","1.5M","2M","4M+" };
 
 SettingsManager::SettingsManager()
 {
@@ -432,7 +428,6 @@ SettingsManager::SettingsManager()
 	setDefault(CZCHARS_DISABLE, true);
 	setDefault(REPORT_ALTERNATES, true);	
 
-	setDefault(SHOW_DESCRIPTION_SPEED, false);
 	setDefault(SOUNDS_DISABLED, false);
 	setDefault(CHECK_NEW_USERS, false);
 	setDefault(GARBAGE_COMMAND_INCOMING, false);
@@ -518,7 +513,6 @@ SettingsManager::SettingsManager()
 	setDefault(EMOTICONS_FILE, "Kolobok");
 	setDefault(GROUP_SEARCH_RESULTS, true);
 	setDefault(TABS_ON_TOP, false);
-	setDefault(BWSETTING_MODE, BWSETTINGS_DEFAULT);
 	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
 	setDefault(DOWNCONN_PER_SEC, 2);
 	setDefault(FILTER_ENTER, false);

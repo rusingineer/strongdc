@@ -106,7 +106,6 @@
 		<String Name="CouldNotOpenTargetFile">Nelze otevřít cílový soubor: </String>
 		<String Name="Count">Počet</String>
 		<String Name="Country">Země</String>
-		<String Name="CrcChecked">TTH Zkontrolováno</String>
 		<String Name="CreatingHash">Hashuji</String>
 		<String Name="CurrentVersion">Současná verze</String>
 		<String Name="DataRetrieved">Data přijata</String>
@@ -143,7 +142,6 @@
 		<String Name="Downloading">Stahuji...</String>
 		<String Name="DownloadingHubList">Stahuji seznam veřejných hubů...</String>
 		<String Name="DownloadingList">Stahuji seznam...</String>
-		<String Name="Du">DL/UL:</String>
 		<String Name="DuplicateSource">Duplicitní zdroj</String>
 		<String Name="Eb">EB</String>
 		<String Name="EditAccel">&amp;Upravit</String>
@@ -243,6 +241,7 @@
 		<String Name="HubList">Seznam veřejných hubů</String>
 		<String Name="HubListDownloaded">Seznam hubů stažen...</String>
 		<String Name="HubListEdit">Editovat seznam veřejných hubů</String>
+		<String Name="HubListLoadedFromCache">Seznam hubů načten z mezipaměti...</String>		
 		<String Name="HubName">Název</String>
 		<String Name="HubSegments">Segmenty / Hub</String>
 		<String Name="HubTopic">Téma hubu :</String>		
@@ -285,7 +284,6 @@
 		<String Name="LastChange">Poslední změna: </String>
 		<String Name="LastSeen">Naposledy viděn</String>
 		<String Name="LatestVersion">Aktuální verze</String>
-		<String Name="LeafCorrupted">Soubor poškozen, stahuji znovu %s...</String>
 		<String Name="Left">Zbývá</String>
 		<String Name="LeftColor">Barva vlevo</String>
 		<String Name="LibCrash">Aplikace \"%s\" způsobila výjimku ve StrongDC++. Přeinstalujte ji, upgradujte, nebo použijte alternativní produkt.</String>
@@ -429,7 +427,6 @@
 		<String Name="Paused">Pozastaveno</String>
 		<String Name="Pb">PB</String>
 		<String Name="Picture">Obrázek</String>
-		<String Name="Pk">PK String</String>
 		<String Name="Play">Přehrát</String>
 		<String Name="PopupDownloadFailed">Zobrazit popup při selhání stahování</String>
 		<String Name="PopupDownloadFinished">Zobrazit popup při dokončení stahování</String>
@@ -573,8 +570,6 @@
 		<String Name="SettingsBindAddress">Rozhraní sítě</String>
 		<String Name="SettingsBindAddressHelp">Rozhraní sítě pro všechny připojení</String>
 		<String Name="SettingsBoldOptions">Označit tučně při změně</String>
-		<String Name="SettingsBwboth">Typy připojení (Staré DC++)</String>
-		<String Name="SettingsBwsingle">Standardní (Nové DC++)</String>
 		<String Name="SettingsCertificates">Bezpečnostní certifikáty</String>
 		<String Name="SettingsClearSearch">Vyčistit hledání po každém vyhledání</String>
 		<String Name="SettingsClients">Klienti</String>
@@ -732,7 +727,6 @@
 		<String Name="SettingsUrlHandler">Instalovat ochytávač odkazů dchub://</String>
 		<String Name="SettingsUseCtrlForLineHistory">Použít CTRL (+šipka nahoru/dolu) pro historii odeslaného textu</String>
 		<String Name="SettingsUseExtensionDownto">Použít přípony souborů pro funkci "Stáhnout do" v okně hledání</String>
-		<String Name="SettingsUseOemMonofont">Použít OEM písmo pro zobrazování textových souborů</String>
 		<String Name="SettingsUseOldSharingUi">Použít staré prostředí pro sdílení</String>
 		<String Name="SettingsUseSystemIcons">Použít systémové ikonky při prohlížení souborů</String>
 		<String Name="SettingsUseTls">Použít šifrované připojení TLS, pokud to klient podporuje</String>
@@ -750,7 +744,6 @@
 		<String Name="SharedFiles">Sdílení souborů</String>
 		<String Name="ShowPopupAway">Zobrazit popup jen v módu "Nepřítomný"</String>
 		<String Name="ShowPopupMinimized">Zobrazit popup jen když je StrongDC++ minimalizován</String>
-		<String Name="ShowSpeed">Ukázat rychlost</String>
 		<String Name="Shutdown">Vypnout počítač</String>
 		<String Name="ShutdownAction">Akce pro vypnutí</String>
 		<String Name="ShutdownOff">Automatické vypnutí deaktivováno...</String>
@@ -774,6 +767,7 @@
 		<String Name="SoundException">Nečekaná chyba</String>
 		<String Name="SoundFakerFound">Nalezen FAKER</String>
 		<String Name="SoundSourceAdded">Alternativní zdroj přidán</String>
+		<String Name="SourceTooOld">Vzdálený klient nepodporuje TTH úplně - nelze stahovat</String>
 		<String Name="SoundTthInvalid">Soubor je poškozen</String>
 		<String Name="SoundTypingNotify">Zvuk při stisknutí klávesy</String>
 		<String Name="SoundUploadFinished">Odesílání dokončeno</String>

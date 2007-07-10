@@ -60,28 +60,24 @@ public:
 
 	// the following functions were added to help download throttle
 	inline bool throttle() const { return mThrottleEnable; }
-	void throttleReturnBytes(uint32_t b);
+	void throttleReturnBytes(size_t b);
 	size_t throttleGetSlice();
-	uint32_t throttleCycleTime() const;
+	inline size_t throttleCycleTime() const { return mThrottleEnable ? mCycleTime : 0; }
 
 private:
-	void throttleBytesTransferred(uint32_t i);
 	void throttleSetup();
 	bool mThrottleEnable;
 	uint32_t mCycleTime;
-	size_t mBytesSent,
-		   mBytesSpokenFor,
-		   mDownloadLimit,
-		   mByteSlice;
+	size_t mBytesSpokenFor, mDownloadLimit, mByteSlice;
 	
 	enum { MOVER_LIMIT = 10*1024*1024 };
 	class FileMover : public Thread {
 	public:
 		FileMover() : active(false) { }
-		virtual ~FileMover() { join(); }
+		~FileMover() { join(); }
 
 		void moveFile(const string& source, const string& target);
-		virtual int run();
+		int run();
 	private:
 		typedef pair<string, string> FilePair;
 		typedef vector<FilePair> FileList;
@@ -111,27 +107,27 @@ private:
 	friend class Singleton<DownloadManager>;
 
 	DownloadManager();
-	virtual ~DownloadManager() throw();
+	~DownloadManager() throw();
 
 	void checkDownloads(UserConnection* aConn, bool reconn = false);
 	void handleEndData(UserConnection* aSource);
 
 	// UserConnectionListener
-	virtual void on(Data, UserConnection*, const uint8_t*, size_t) throw();
-	virtual void on(Error, UserConnection*, const string&) throw();
-	virtual void on(Failed, UserConnection*, const string&) throw();
-	virtual void on(Sending, UserConnection*, int64_t) throw();
-	virtual void on(FileLength, UserConnection*, int64_t) throw();
-	virtual void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
-	virtual	void on(FileNotAvailable, UserConnection*) throw();
+	void on(Data, UserConnection*, const uint8_t*, size_t) throw();
+	void on(Error, UserConnection*, const string&) throw();
+	void on(Failed, UserConnection*, const string&) throw();
+	void on(Sending, UserConnection*, int64_t) throw();
+	void on(FileLength, UserConnection*, int64_t) throw();
+	void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
+	void on(FileNotAvailable, UserConnection*) throw();
 	void on(ListLength, UserConnection* aSource, const string& aListLength);
 	
-	virtual void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw();
-	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
 
 	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint32_t aTick) throw();
 };
 
 #endif // !defined(DOWNLOAD_MANAGER_H)

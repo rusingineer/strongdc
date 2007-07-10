@@ -33,15 +33,13 @@ public:
 		SetTitle(CTSTRING(SETTINGS_GENERAL));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~GeneralPage() { ConnTypes.Destroy(); }
+	virtual ~GeneralPage() { }
 
 	BEGIN_MSG_MAP_EX(GeneralPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
 		COMMAND_HANDLER(IDC_NICK, EN_CHANGE, onTextChanged)
 		COMMAND_HANDLER(IDC_EMAIL, EN_CHANGE, onTextChanged)
 		COMMAND_HANDLER(IDC_DESCRIPTION, EN_CHANGE, onTextChanged)
-		COMMAND_ID_HANDLER(IDC_BW_BOTH, onClickedRadioButton)
-		COMMAND_ID_HANDLER(IDC_BW_SIMPLE, onClickedRadioButton)
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -56,12 +54,9 @@ public:
 private:
 	static Item items[];
 	static TextItem texts[];
-	CComboBoxEx ctrlConnectionType;
 	CComboBox ctrlConnection;	
-	CComboBox ctrlDownloadSpeed, ctrlUploadSpeed;
 	CEdit nick;
-	CImageList ConnTypes;
-	void fixControls();
+	CEdit desc;
 
 };
 
