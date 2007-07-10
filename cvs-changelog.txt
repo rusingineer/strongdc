@@ -1,3 +1,8 @@
+** svn306
+	fixed Invalid request when AntiDefrag downloading was disabled
+	removed old-styled connection types
+	some code cleanup
+
 ** svn305
 	fixed crash #3624
 	when slots are increased, queued users will be notified

@@ -45,7 +45,7 @@
 static const string DOWNLOAD_AREA = "Downloads";
 const string Download::ANTI_FRAG_EXT = ".antifrag";
 
-DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSent(0), mBytesSpokenFor(0),
+DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSpokenFor(0),
 	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
 	TimerManager::getInstance()->addListener(this);
 }
@@ -277,7 +277,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 			{
 				d->setStartPos(getResumePos(d->getDownloadTarget(), d->getTigerTree(), start));
 			} else {
-				d->setStartPos(start);
+				d->setStartPos(max((int64_t)0, start));
 			}
 	
 		} else {
@@ -974,7 +974,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
-void DownloadManager::throttleReturnBytes(uint32_t b) {
+void DownloadManager::throttleReturnBytes(size_t b) {
 	if (b > 0 && b < 2*mByteSlice) {
 		mBytesSpokenFor -= b;
 		if (mBytesSpokenFor < 0)
@@ -1000,21 +1000,10 @@ size_t DownloadManager::throttleGetSlice() {
 	}
 }
 
-uint32_t DownloadManager::throttleCycleTime() const {
-	if (mThrottleEnable)
-		return mCycleTime;
-	return 0;
-}
-
-void DownloadManager::throttleBytesTransferred(uint32_t i) {
-	mBytesSent += i;
-}
-
 void DownloadManager::throttleSetup() {
-// called once a second, plus when a download starts
-// from the constructor to BufferedSocket
-// with 64k, a few people get winsock error 0x2747
-	unsigned int num_transfers = downloads.size();
+	// called once a second
+	// with 64k, a few people get winsock error 0x2747
+	size_t num_transfers = downloads.size();
 	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
@@ -1030,7 +1019,6 @@ void DownloadManager::throttleSetup() {
 		}
 	}
 	mBytesSpokenFor = 0;
-	mBytesSent = 0;
 }
 
 /**

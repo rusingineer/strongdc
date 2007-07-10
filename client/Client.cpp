@@ -69,19 +69,15 @@ void Client::shutdown() {
 void Client::reloadSettings(bool updateNick) {
 	const FavoriteHubEntry* hub = FavoriteManager::getInstance()->getFavoriteHubEntry(getHubUrl());
 	
-	string speedDescription = Util::emptyString;
-	if(BOOLSETTING(SHOW_DESCRIPTION_SPEED))
-		speedDescription = "["+SETTING(DOWN_SPEED)+"/"+SETTING(UP_SPEED)+"]";
-
 	if(hub) {
 		if(updateNick) {
 			setCurrentNick(checkNick(hub->getNick(true)));
 		}		
 
 		if(!hub->getUserDescription().empty()) {
-			setCurrentDescription(speedDescription + hub->getUserDescription());
+			setCurrentDescription(hub->getUserDescription());
 		} else {
-			setCurrentDescription(speedDescription + SETTING(DESCRIPTION));
+			setCurrentDescription(SETTING(DESCRIPTION));
 		}
 		if(!hub->getPassword().empty())
 			setPassword(hub->getPassword());
@@ -91,7 +87,7 @@ void Client::reloadSettings(bool updateNick) {
 		if(updateNick) {
 			setCurrentNick(checkNick(SETTING(NICK)));
 		}
-		setCurrentDescription(speedDescription + SETTING(DESCRIPTION));
+		setCurrentDescription(SETTING(DESCRIPTION));
 		setStealth(true);
 		setFavIp(Util::emptyString);
 	}

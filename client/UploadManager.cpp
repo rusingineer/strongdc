@@ -41,7 +41,7 @@
 static const string UPLOAD_AREA = "Uploads";
 
 UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
-	mBytesSent(0), mBytesSpokenFor(0), mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
+	mBytesSpokenFor(0), mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -324,7 +324,6 @@ ok:
 
 	uploads.push_back(u);
 
-	throttleSetup();
 	if(!aSource.isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
 			if(!aSource.isSet(UserConnection::FLAG_HASEXTRASLOT)) {
@@ -369,7 +368,6 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	Lock l(cs);
 	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
 	uploads.erase(remove(uploads.begin(), uploads.end(), aUpload), uploads.end());
-	throttleSetup();
 	
 	if(delay) {
 		aUpload->setStart(GET_TICK());
@@ -457,7 +455,6 @@ void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSourc
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);
 	u->addPos(aBytes, aActual);
-	throttleBytesTransferred(aActual);
 }
 
 void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
@@ -735,20 +732,9 @@ size_t UploadManager::throttleGetSlice()  {
 	}
 }
 
-size_t UploadManager::throttleCycleTime() const {
-	if (mThrottleEnable)
-		return mCycleTime;
-	return 0;
-}
-
-void UploadManager::throttleBytesTransferred(uint32_t i)  {
-	mBytesSent += i;
-}
-
 void UploadManager::throttleSetup() {
-// called once a second, plus when uploads start
-// from the constructor to BufferedSocket
-	unsigned int num_transfers = uploads.size();
+	// called once a second
+	size_t num_transfers = uploads.size();
 	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (num_transfers > 0);
 	if (mThrottleEnable) {
@@ -763,7 +749,6 @@ void UploadManager::throttleSetup() {
 			mCycleTime = 1000 * inbufSize / mUploadLimit;
 		}
 		mBytesSpokenFor = 0;
-		mBytesSent = 0;
 	}
 }
 

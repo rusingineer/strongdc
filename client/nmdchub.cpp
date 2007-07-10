@@ -860,7 +860,9 @@ void NmdcHub::myInfo() {
 	int NetLimit = Util::getNetLimiterLimit();
 	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(UPLOAD_SPEED);
 
-	if (getStealth() == false) {
+	if (getStealth()) {
+		dc = "<++";
+	} else {
 		dc = "<StrgDC++";
 #ifdef SVNVERSION
 		version = VERSIONSTRING SVNVERSION;
@@ -876,10 +878,6 @@ void NmdcHub::myInfo() {
 		if(Util::getAway()) {
 			StatusMode += 2;
 		}
-	} else {
-		dc = "<++";
-		if (connection == "Modem") { connection = "56Kbps"; }
-		else if (connection == "Wireless") { connection = "Satellite"; }
 	}
 
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {

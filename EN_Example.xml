@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.04" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.05" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -142,7 +142,6 @@
 		<String Name="Downloading">Downloading...</String>
 		<String Name="DownloadingHubList">Downloading public hub list...</String>
 		<String Name="DownloadingList">Downloading list...</String>
-		<String Name="Du">Down/Up:</String>
 		<String Name="DuplicateSource">Duplicate source</String>
 		<String Name="Eb">EB</String>
 		<String Name="EditAccel">&amp;Edit</String>
@@ -571,8 +570,6 @@
 		<String Name="SettingsBindAddress">Bind address</String>
 		<String Name="SettingsBindAddressHelp">Network interface for all connections</String>
 		<String Name="SettingsBoldOptions">Tab bolding on content change</String>
-		<String Name="SettingsBwboth">Connection type (like old DC++)</String>
-		<String Name="SettingsBwsingle">Default (like plain DC++)</String>
 		<String Name="SettingsCertificates">Security Certificates</String>
 		<String Name="SettingsClearSearch">Clear search box after each search</String>
 		<String Name="SettingsClients">Clients</String>
@@ -653,7 +650,6 @@
 		<String Name="SettingsName">Name</String>
 		<String Name="SettingsNetwork">Connection settings</String>
 		<String Name="SettingsNoAwaymsgToBots">Don't send the away message to bots</String>
-		<String Name="SettingsNominalBandwidth">Nominal bandwidth</String>
 		<String Name="SettingsNormal">Normal</String>
 		<String Name="SettingsOdcShutdowntimeout">timeout</String>
 		<String Name="SettingsOnlyHashed">Note; Files appear in the share only after they've been hashed!</String>
@@ -747,7 +743,6 @@
 		<String Name="SharedFiles">Shared Files</String>
 		<String Name="ShowPopupAway">Display popup in away mode only</String>
 		<String Name="ShowPopupMinimized">Display popup when minimized only</String>
-		<String Name="ShowSpeed">Show speed</String>
 		<String Name="Shutdown">Shutdown computer</String>
 		<String Name="ShutdownAction">Shutdown action</String>
 		<String Name="ShutdownOff">Shutdown sequence deactivated...</String>
