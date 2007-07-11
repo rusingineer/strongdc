@@ -77,19 +77,19 @@ public:
 	File(const string& aFileName, int access, int mode) throw(FileException);
 
 	bool isOpen() const throw();
-	virtual void close() throw();
-	virtual int64_t getSize() const throw();
-	virtual void setSize(int64_t newSize) throw(FileException);
+	void close() throw();
+	int64_t getSize() const throw();
+	void setSize(int64_t newSize) throw(FileException);
 
-	virtual int64_t getPos() const throw();
-	virtual void setPos(int64_t pos) throw();
-	virtual void setEndPos(int64_t pos) throw();
-	virtual void movePos(int64_t pos) throw();
-	virtual void setEOF() throw(FileException);
+	int64_t getPos() const throw();
+	void setPos(int64_t pos) throw();
+	void setEndPos(int64_t pos) throw();
+	void movePos(int64_t pos) throw();
+	void setEOF() throw(FileException);
 
-	virtual size_t read(void* buf, size_t& len) throw(FileException);
-	virtual size_t write(const void* buf, size_t len) throw(FileException);
-	virtual size_t flush() throw(FileException);
+	size_t read(void* buf, size_t& len) throw(FileException);
+	size_t write(const void* buf, size_t len) throw(FileException);
+	size_t flush() throw(FileException);
 
 	uint32_t getLastModified() const throw();
 
@@ -102,7 +102,7 @@ public:
 	static void ensureDirectory(const string& aFile) throw();
 	static bool isAbsolute(const string& path) throw();
 
-	virtual ~File() throw() { File::close(); }
+	~File() throw() { File::close(); }
 
 	string read(size_t len) throw(FileException);
 	string read() throw(FileException);

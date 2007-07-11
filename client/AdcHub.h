@@ -35,20 +35,20 @@ public:
 	using Client::send;
 	using Client::connect;
 
-	virtual void connect(const OnlineUser& user, const string& token);
+	void connect(const OnlineUser& user, const string& token);
 	void connect(const OnlineUser& user, string const& token, bool secure);
 	
-	virtual void hubMessage(const string& aMessage);
-	virtual void privateMessage(const OnlineUser& user, const string& aMessage);
-	virtual void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
-	virtual void password(const string& pwd);
-	virtual void info();
+	void hubMessage(const string& aMessage);
+	void privateMessage(const OnlineUser& user, const string& aMessage);
+	void sendUserCmd(const string& aUserCmd) { send(aUserCmd); }
+	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
+	void password(const string& pwd);
+	void info();
 	
-	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
+	size_t getUserCount() const { Lock l(cs); return users.size(); }
 
-	virtual string escape(string const& str) const { return AdcCommand::escape(str, false); }
-	virtual void send(const AdcCommand& cmd);
+	string escape(string const& str) const { return AdcCommand::escape(str, false); }
+	void send(const AdcCommand& cmd);
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
 
@@ -63,7 +63,7 @@ private:
 
 	AdcHub(const AdcHub&);
 	AdcHub& operator=(const AdcHub&);
-	virtual ~AdcHub() throw();
+	~AdcHub() throw();
 
 	/** Map session id to OnlineUser */
 	typedef HASH_MAP<uint32_t, OnlineUser*> SIDMap;
@@ -91,7 +91,7 @@ private:
 	static const string TCP4_FEATURE;
 	static const string UDP4_FEATURE;
 
-	virtual string checkNick(const string& nick);
+	string checkNick(const string& nick);
 
 	OnlineUser& getUser(const uint32_t aSID, const CID& aCID);
 	OnlineUser* findUser(const uint32_t sid) const;
@@ -129,12 +129,12 @@ private:
 
 	void sendUDP(const AdcCommand& cmd) throw();
 
-	virtual void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
-	virtual void on(Connected) throw();
-	virtual void on(Line, const string& aLine) throw();
-	virtual void on(Failed, const string& aLine) throw();
+	void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
+	void on(Connected) throw();
+	void on(Line, const string& aLine) throw();
+	void on(Failed, const string& aLine) throw();
 
-	virtual void on(Second, uint32_t aTick) throw();
+	void on(Second, uint32_t aTick) throw();
 
 };
 

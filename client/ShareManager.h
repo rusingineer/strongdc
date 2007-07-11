@@ -204,7 +204,7 @@ private:
 	friend class Singleton<ShareManager>;
 	ShareManager();
 	
-	virtual ~ShareManager();
+	~ShareManager();
 	
 	struct AdcSearch {
 		AdcSearch(const StringList& params);
@@ -287,24 +287,24 @@ private:
 
 	Directory* getDirectory(const string& fname) const;
 
-	virtual int run();
+	int run();
 
 	// DownloadManagerListener
-	virtual void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
+	void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
 
 	// HashManagerListener
-	virtual void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
+	void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
+	void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
 		save(xml);
 	}
-	virtual void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
+	void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
 		load(xml);
 	}
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, uint32_t tick) throw();
+	void on(TimerManagerListener::Minute, uint32_t tick) throw();
 	void load(SimpleXML& aXml);
 	void save(SimpleXML& aXml);
 	

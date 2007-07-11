@@ -43,25 +43,25 @@ public:
 	using Client::send;
 	using Client::connect;
 
-	virtual void connect(const OnlineUser& aUser, const string&);
+	void connect(const OnlineUser& aUser, const string&);
 
-	virtual void hubMessage(const string& aMessage);
-	virtual void privateMessage(const OnlineUser& aUser, const string& aMessage);
-	virtual void sendUserCmd(const string& aUserCmd) throw() { send(fromUtf8(aUserCmd)); }
-	virtual void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
-	virtual void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
-	virtual void info() { myInfo(); }
+	void hubMessage(const string& aMessage);
+	void privateMessage(const OnlineUser& aUser, const string& aMessage);
+	void sendUserCmd(const string& aUserCmd) throw() { send(fromUtf8(aUserCmd)); }
+	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
+	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
+	void info() { myInfo(); }
 
-	virtual void cheatMessage(const string& aLine) {
+	void cheatMessage(const string& aLine) {
 		fire(ClientListener::CheatMessage(), this, unescape(aLine));
 	}    
 
-	virtual size_t getUserCount() const { Lock l(cs); return users.size(); }
+	size_t getUserCount() const { Lock l(cs); return users.size(); }
 	
-	virtual string escape(string const& str) const { return validateMessage(str, false); }
+	string escape(string const& str) const { return validateMessage(str, false); }
 	static string unescape(const string& str) { return validateMessage(str, true); }
 
-	virtual void send(const AdcCommand&) { dcassert(0); }
+	void send(const AdcCommand&) { dcassert(0); }
 
 	static string validateMessage(string tmp, bool reverse);
 	void refreshUserList(bool);
@@ -99,7 +99,7 @@ private:
 	FloodMap flooders;
 
 	NmdcHub(const string& aHubURL);
-	virtual ~NmdcHub() throw();
+	~NmdcHub() throw();
 
 	// Dummy
 	NmdcHub(const NmdcHub&);
@@ -127,14 +127,14 @@ private:
 
 	void updateFromTag(Identity& id, const string& tag);
 
-	virtual string checkNick(const string& aNick);
+	string checkNick(const string& aNick);
 
 	// TimerManagerListener
-	virtual void on(Second, uint32_t aTick) throw();
+	void on(Second, uint32_t aTick) throw();
 
-	virtual void on(Connected) throw();
-	virtual void on(Line, const string& l) throw();
-	virtual void on(Failed, const string&) throw();
+	void on(Connected) throw();
+	void on(Line, const string& l) throw();
+	void on(Failed, const string&) throw();
 
 };
 

@@ -46,13 +46,13 @@ public:
 
     SharedFileStream(const string& name, int64_t _pos, int64_t size = 0, bool shareDelete = false);
 
-    virtual ~SharedFileStream();
+    ~SharedFileStream();
 
-	virtual size_t write(const void* buf, size_t len) throw(Exception);
+	size_t write(const void* buf, size_t len) throw(Exception);
 
-	virtual size_t read(void* buf, size_t& len) throw(Exception);
+	size_t read(void* buf, size_t& len) throw(Exception);
 
-	virtual size_t flush() throw(Exception) 
+	size_t flush() throw(Exception) 
 	{
 		Lock l(*shared_handle_ptr);
 
@@ -61,7 +61,7 @@ public:
 		return 0;
 	}
 
-	virtual void setPos(int64_t _pos) 
+	void setPos(int64_t _pos) 
 	{ pos = _pos; }
 
     static CriticalSection critical_section;

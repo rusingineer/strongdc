@@ -298,7 +298,7 @@ private:
 	friend class Singleton<FavoriteManager>;
 	
 	FavoriteManager();
-	virtual ~FavoriteManager() throw();
+	~FavoriteManager() throw();
 	
 	FavoriteHubEntry::Iter getFavoriteHub(const string& aServer) {
 		for(FavoriteHubEntry::Iter i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
@@ -321,28 +321,28 @@ private:
 	}
 
 	// ClientManagerListener
-	virtual void on(UserUpdated, const OnlineUser& user) throw();
-	virtual void on(UserConnected, const UserPtr& user) throw();
-	virtual void on(UserDisconnected, const UserPtr& user) throw();
+	void on(UserUpdated, const OnlineUser& user) throw();
+	void on(UserConnected, const UserPtr& user) throw();
+	void on(UserDisconnected, const UserPtr& user) throw();
 
 	// HttpConnectionListener
-	virtual void on(Data, HttpConnection*, const uint8_t*, size_t) throw();
-	virtual void on(Failed, HttpConnection*, const string&) throw();
-	virtual void on(Complete, HttpConnection*, const string&) throw();
-	virtual void on(Redirected, HttpConnection*, const string&) throw();
-	virtual void on(TypeNormal, HttpConnection*) throw();
-	virtual void on(TypeBZ2, HttpConnection*) throw();
+	void on(Data, HttpConnection*, const uint8_t*, size_t) throw();
+	void on(Failed, HttpConnection*, const string&) throw();
+	void on(Complete, HttpConnection*, const string&) throw();
+	void on(Redirected, HttpConnection*, const string&) throw();
+	void on(TypeNormal, HttpConnection*) throw();
+	void on(TypeBZ2, HttpConnection*) throw();
 
 	void onHttpFinished(bool fromHttp) throw();
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
+	void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
 		load(xml);
 		recentload(xml);
 		previewload(xml);
 	}
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
+	void on(SettingsManagerListener::Save, SimpleXML& xml) throw() {
 		previewsave(xml);
 	}
 

@@ -84,7 +84,7 @@ public:
 		delete[] buf;
 	}
 
-	virtual size_t read(void* tgt, size_t& len) throw(Exception) {
+	size_t read(void* tgt, size_t& len) throw(Exception) {
 		len = min(len, size - pos);
 		memcpy(tgt, buf+pos, len);
 		pos += len;
@@ -107,7 +107,7 @@ class LimitedInputStream : public InputStream {
 public:
 	LimitedInputStream(InputStream* is, int64_t aMaxBytes) : s(is), maxBytes(aMaxBytes) {
 	}
-	virtual ~LimitedInputStream() throw() { if(managed) delete s; }
+	~LimitedInputStream() throw() { if(managed) delete s; }
 
 	size_t read(void* buf, size_t& len) throw(FileException) {
 		dcassert(maxBytes >= 0);
@@ -130,7 +130,7 @@ public:
 	using OutputStream::write;
 
 	BufferedOutputStream(OutputStream* aStream, size_t aBufSize = SETTING(BUFFER_SIZE) * 1024) : s(aStream), pos(0), bufSize(aBufSize), buf(aBufSize) { }
-	virtual ~BufferedOutputStream() throw() {
+	~BufferedOutputStream() throw() {
 		try {
 			// We must do this in order not to lose bytes when a download
 			// is disconnected prematurely
@@ -140,7 +140,7 @@ public:
 		if(managed) delete s;
 	}
 
-	virtual size_t flush() throw(Exception) {
+	size_t flush() throw(Exception) {
 		if(pos > 0)
 			s->write(buf, pos);
 		pos = 0;
@@ -148,7 +148,7 @@ public:
 		return 0;
 	}
 
-	virtual size_t write(const void* wbuf, size_t len) throw(Exception) {
+	size_t write(const void* wbuf, size_t len) throw(Exception) {
 		uint8_t* b = (uint8_t*)wbuf;
 		size_t l2 = len;
 		while(len > 0) {
@@ -179,11 +179,11 @@ private:
 class StringOutputStream : public OutputStream {
 public:
 	StringOutputStream(string& out) : str(out) { }
-	virtual ~StringOutputStream() throw() { }
+	~StringOutputStream() throw() { }
 	using OutputStream::write;
 
-	virtual size_t flush() throw(Exception) { return 0; }
-	virtual size_t write(const void* buf, size_t len) throw(Exception) {
+	size_t flush() throw(Exception) { return 0; }
+	size_t write(const void* buf, size_t len) throw(Exception) {
 		str.append((char*)buf, len);
 		return len;
 	}

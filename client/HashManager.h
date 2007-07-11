@@ -61,7 +61,7 @@ public:
 	HashManager() {
 		TimerManager::getInstance()->addListener(this);
 	}
-	virtual ~HashManager() throw() {
+	~HashManager() throw() {
 		TimerManager::getInstance()->removeListener(this);
 		hasher.join();
 	}
@@ -111,7 +111,7 @@ private:
 		void hashFile(const string& fileName, int64_t size);
 
 		void stopHashing(const string& baseDir);
-		virtual int run();
+		int run();
 		bool fastHash(const string& fname, uint8_t* buf, TigerTree& tth, int64_t size);
 		void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft);
 		void shutdown() { stop = true; s.signal(); }
@@ -219,7 +219,7 @@ private:
 		Lock l(cs);
 		store.rebuild();
 	}
-	virtual void on(TimerManagerListener::Minute, uint32_t) throw() {
+	void on(TimerManagerListener::Minute, uint32_t) throw() {
 		Lock l(cs);
 		store.save();
 	}

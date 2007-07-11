@@ -75,10 +75,10 @@ private:
 		DownloadManager::getInstance()->addListener(this);
 		UploadManager::getInstance()->addListener(this);
 	}
-	virtual ~FinishedManager() throw();
+	~FinishedManager() throw();
 
-	virtual void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
-	virtual void on(UploadManagerListener::Complete, const Upload*) throw();
+	void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
+	void on(UploadManagerListener::Complete, const Upload*) throw();
 
 	CriticalSection cs;
 	FinishedItemList downloads, uploads;

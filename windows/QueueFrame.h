@@ -256,6 +256,7 @@ private:
 		}
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
+		const QueueItem* getQueueItem() const { return qi; }
 		const FileChunksInfo::Ptr getChunksInfo() const { return qi->getChunksInfo(); }
 		const string getPath() const { return Util::getFilePath(getTarget()); }
 
@@ -267,9 +268,6 @@ private:
 			return display;
 		}
 
-		bool isSource(const UserPtr& u) const { return qi->isSource(u); }
-		bool isBadSource(const UserPtr& u) const { return qi->isBadSource(u); }
-		
 		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
 
 		const string& getTarget() const { return qi->getTarget(); }
@@ -282,8 +280,6 @@ private:
 
 		QueueItem::Priority getPriority() const { return qi->getPriority(); }
 		QueueItem::Status getStatus() const { return qi->getStatus(); }
-		const QueueItem::SourceList& getSources() const { return qi->getSources(); }
-		const QueueItem::SourceList& getBadSources() const { return qi->getBadSources(); }
 
 		bool getAutoPriority() const { return qi->getAutoPriority(); }
 

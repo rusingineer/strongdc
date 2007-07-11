@@ -60,7 +60,7 @@ private:
 		createWide();
 	}
 
-	virtual ~ResourceManager() { }
+	~ResourceManager() { }
 	
 	static string strings[LAST];
 	static wstring wstrings[LAST];

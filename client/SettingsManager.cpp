@@ -425,7 +425,7 @@ SettingsManager::SettingsManager()
 	setDefault(MENUBAR_BUMPED, true);
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
-	setDefault(CZCHARS_DISABLE, true);
+	setDefault(CZCHARS_DISABLE, false);
 	setDefault(REPORT_ALTERNATES, true);	
 
 	setDefault(SOUNDS_DISABLED, false);

@@ -273,7 +273,7 @@ private:
 	
 	ClientProfileManager() : lastProfile(0) {}
 
-	virtual ~ClientProfileManager() {
+	~ClientProfileManager() {
 	}
 	
 	void loadClientProfiles(SimpleXML* aXml);

@@ -125,6 +125,10 @@ public:
 	const QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
 	void unlockQueue() throw() { cs.leave(); }
 
+	QueueItem::SourceList getSources(const QueueItem* qi) const { Lock l(cs); return qi->getSources(); }
+	QueueItem::SourceList getBadSources(const QueueItem* qi) const { Lock l(cs); return qi->getBadSources(); }
+	size_t getSourcesCount(const QueueItem* qi) const { Lock l(cs); return qi->getSources().size(); }
+
 	bool getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
 	void putDownload(const Download* aDownload, bool finished, bool connectSources = true) throw();
@@ -231,7 +235,7 @@ private:
 	friend class Singleton<QueueManager>;
 	
 	QueueManager();
-	virtual ~QueueManager() throw();
+	~QueueManager() throw();
 	
 	mutable CriticalSection cs;
 	
@@ -266,15 +270,15 @@ private:
 	}
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
-	virtual void on(TimerManagerListener::Minute, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	void on(TimerManagerListener::Minute, uint32_t aTick) throw();
 	
 	// SearchManagerListener
-	virtual void on(SearchManagerListener::SR, SearchResult*) throw();
+	void on(SearchManagerListener::SR, SearchResult*) throw();
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw();
-	virtual void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
+	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw();
+	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
 };
 
 #endif // !defined(QUEUE_MANAGER_H)

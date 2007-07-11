@@ -111,10 +111,10 @@ public:
 	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const UserPtr& user) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
 	}
 
-	virtual ~ListLoader() { }
+	~ListLoader() { }
 
-	virtual void startTag(const string& name, StringPairList& attribs, bool simple);
-	virtual void endTag(const string& name, const string& data);
+	void startTag(const string& name, StringPairList& attribs, bool simple);
+	void endTag(const string& name, const string& data);
 
 	const string& getBase() const { return base; }
 private:
