@@ -257,7 +257,7 @@ public:
 
 	// Constructor/destructor
 	ADLSearchManager() { Load(); }
-	virtual ~ADLSearchManager() { Save(); }
+	~ADLSearchManager() { Save(); }
 
 	// Search collection
 	typedef vector<ADLSearch> SearchCollection;

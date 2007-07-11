@@ -150,7 +150,7 @@ public:
 	TreeOutputStream(TigerTree& aTree) : tree(aTree), bufPos(0) {
 	}
 
-	virtual size_t write(const void* xbuf, size_t len) throw(Exception) {
+	size_t write(const void* xbuf, size_t len) throw(Exception) {
 		size_t pos = 0;
 		uint8_t* b = (uint8_t*)xbuf;
 		while(pos < len) {
@@ -172,7 +172,7 @@ public:
 		return len;
 	}
 
-	virtual size_t flush() throw(Exception) {
+	size_t flush() throw(Exception) {
 		return 0;
 	}
 private:
@@ -304,8 +304,8 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 class DummyOutputStream : public OutputStream {
 public:
-	virtual size_t write(const void*, size_t n) throw(Exception) { return n; }
-	virtual size_t flush() throw(Exception) { return 0; }
+	size_t write(const void*, size_t n) throw(Exception) { return n; }
+	size_t flush() throw(Exception) { return 0; }
 };
 
 int64_t DownloadManager::getResumePos(const string& file, const TigerTree& tt, int64_t startPos) {

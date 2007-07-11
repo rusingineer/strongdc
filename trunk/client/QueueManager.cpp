@@ -1496,9 +1496,9 @@ void QueueManager::saveQueue() throw() {
 class QueueLoader : public SimpleXMLReader::CallBack {
 public:
 	QueueLoader() : cur(NULL), inDownloads(false) { }
-	virtual ~QueueLoader() { }
-	virtual void startTag(const string& name, StringPairList& attribs, bool simple);
-	virtual void endTag(const string& name, const string& data);
+	~QueueLoader() { }
+	void startTag(const string& name, StringPairList& attribs, bool simple);
+	void endTag(const string& name, const string& data);
 private:
 	string target;
 

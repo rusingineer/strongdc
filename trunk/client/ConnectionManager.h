@@ -128,9 +128,9 @@ private:
 	public:
 		Server(bool secure_, uint16_t port, const string& ip = "0.0.0.0");
 		uint16_t getPort() const { return port; }
-		virtual ~Server() { die = true; join(); }
+		~Server() { die = true; join(); }
 	private:
-		virtual int run() throw();
+		int run() throw();
 
 		Socket sock;
 		uint16_t port;
@@ -166,7 +166,7 @@ private:
 	friend class Singleton<ConnectionManager>;
 	ConnectionManager();
 
-	virtual ~ConnectionManager() throw() { shutdown(); }
+	~ConnectionManager() throw() { shutdown(); }
 	
 	UserConnection* getConnection(bool aNmdc, bool secure) throw();
 	void putConnection(UserConnection* aConn);
@@ -182,21 +182,21 @@ private:
 	bool checkIpFlood(const string& aServer, uint16_t aPort);
 	
 	// UserConnectionListener
-	virtual void on(Connected, UserConnection*) throw();
-	virtual void on(Failed, UserConnection*, const string&) throw();
-	virtual void on(CLock, UserConnection*, const string&, const string&) throw();
-	virtual void on(Key, UserConnection*, const string&) throw();
-	virtual void on(Direction, UserConnection*, const string&, const string&) throw();
-	virtual void on(MyNick, UserConnection*, const string&) throw();
-	virtual void on(Supports, UserConnection*, const StringList&) throw();
+	void on(Connected, UserConnection*) throw();
+	void on(Failed, UserConnection*, const string&) throw();
+	void on(CLock, UserConnection*, const string&, const string&) throw();
+	void on(Key, UserConnection*, const string&) throw();
+	void on(Direction, UserConnection*, const string&, const string&) throw();
+	void on(MyNick, UserConnection*, const string&) throw();
+	void on(Supports, UserConnection*, const StringList&) throw();
 
-	virtual void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw();
-	virtual void on(AdcCommand::INF, UserConnection*, const AdcCommand&) throw();
-	virtual void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::INF, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();	
-	virtual void on(TimerManagerListener::Minute, uint32_t aTick) throw();	
+	void on(TimerManagerListener::Second, uint32_t aTick) throw();	
+	void on(TimerManagerListener::Minute, uint32_t aTick) throw();	
 
 };
 

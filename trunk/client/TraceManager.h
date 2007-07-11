@@ -49,7 +49,7 @@ private:
 		f = new File("error.log", File::WRITE, File::OPEN | File::CREATE);
 		f->setEndPos(0);
 	};
-	virtual ~TraceManager() {delete f; };
+	~TraceManager() {delete f; };
 
 };
 

@@ -21,6 +21,10 @@
 
 // Static member functions
 void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap) {
+	
+	if(!pRichEditOle)
+		return;
+
 	LPLOCKBYTES lpLockBytes = NULL;
 	SCODE sc = ::CreateILockBytesOnHGlobal(NULL, TRUE, &lpLockBytes);
 

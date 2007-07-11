@@ -207,7 +207,7 @@ private:
 		SettingsManager::getInstance()->addListener(this);
 	}
 
-	virtual ~ClientManager() throw() { 
+	~ClientManager() throw() { 
 		SettingsManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this); 
 	}
@@ -215,20 +215,20 @@ private:
 	void updateCachedIp();
 
 	// SettingsManagerListener
-	virtual void on(Load, SimpleXML&) throw();
+	void on(Load, SimpleXML&) throw();
 
 	// ClientListener
-	virtual void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
-	virtual void on(UserUpdated, const Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
-	virtual void on(UsersUpdated, const Client* c, const UserList&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
-	virtual void on(Failed, const Client*, const string&) throw();
-	virtual void on(HubUpdated, const Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
-	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw();
-	virtual void on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
+	void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }
+	void on(UserUpdated, const Client*, const OnlineUser& user) throw() { fire(ClientManagerListener::UserUpdated(), user); }
+	void on(UsersUpdated, const Client* c, const UserList&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	void on(Failed, const Client*, const string&) throw();
+	void on(HubUpdated, const Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
+	void on(UserCommand, const Client*, int, int, const string&, const string&) throw();
+	void on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 		int aFileType, const string& aString, bool) throw();
-	virtual void on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw();
+	void on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw();
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Minute, uint32_t aTick) throw();
+	void on(TimerManagerListener::Minute, uint32_t aTick) throw();
 };
 
 #endif // !defined(CLIENT_MANAGER_H)

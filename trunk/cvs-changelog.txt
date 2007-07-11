@@ -1,5 +1,10 @@
+** svn307
+	hopefully fixed crashes #3667 and #3669
+	removing diacritics from Czech chars is disabled by default
+	optimized vtables in client part
+
 ** svn306
-	fixed Invalid request when AntiDefrag downloading was disabled
+	fixed Invalid request when AntiFrag downloading was disabled
 	removed old-styled connection types
 	some code cleanup
 

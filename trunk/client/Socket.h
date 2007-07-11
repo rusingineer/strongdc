@@ -57,7 +57,7 @@ public:
 #endif // _DEBUG
 	
 	SocketException(int aError) throw();
-	virtual ~SocketException() throw() { }
+	~SocketException() throw() { }
 private:
 	static string errorToString(int aError) throw();
 };

@@ -58,7 +58,7 @@ private:
 	friend class Singleton<CryptoManager>;
 	
 	CryptoManager();
-	virtual ~CryptoManager();
+	~CryptoManager();
 
 	SSL_CTX* clientContext;
 	SSL_CTX* clientVerContext;

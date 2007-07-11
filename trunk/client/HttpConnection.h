@@ -52,7 +52,7 @@ class HttpConnection : BufferedSocketListener, public Speaker<HttpConnectionList
 public:
 	void downloadFile(const string& aUrl);
 	HttpConnection() : ok(false), port(80), size(-1), moved302(false), socket(NULL) { }
-	virtual ~HttpConnection() throw() { 
+	~HttpConnection() throw() { 
 		if(socket) {
 			socket->removeListener(this); 
 			BufferedSocket::putSocket(socket);
@@ -75,11 +75,11 @@ private:
 	BufferedSocket* socket;
 
 	// BufferedSocketListener
-	virtual void on(Connected) throw();
-	virtual void on(Line, const string&) throw();
-	virtual void on(Data, uint8_t*, size_t) throw();
-	virtual void on(ModeChange) throw();
-	virtual void on(Failed, const string&) throw();
+	void on(Connected) throw();
+	void on(Line, const string&) throw();
+	void on(Data, uint8_t*, size_t) throw();
+	void on(ModeChange) throw();
+	void on(Failed, const string&) throw();
 
 	void onConnected(); 
 	void onLine(const string& aLine);

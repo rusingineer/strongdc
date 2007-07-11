@@ -189,7 +189,7 @@ void QueueFrame::QueueItemInfo::update() {
 		if(colMask & MASK_USERS || colMask & MASK_STATUS) {
 			tstring tmp;
 
-			QueueItem::SourceList sources = getSources();
+			QueueItem::SourceList sources = QueueManager::getInstance()->getSources(qi);
 			for(QueueItem::SourceConstIter j = sources.begin(); j != sources.end(); ++j) {
 				if(tmp.size() > 0)
 					tmp += _T(", ");
@@ -206,35 +206,38 @@ void QueueFrame::QueueItemInfo::update() {
 
 				TCHAR buf[64];
 				if(online > 0) {
-					if(getSources().size() == 1) {
+					size_t size = QueueManager::getInstance()->getSourcesCount(qi);
+					if(size == 1) {
 						display->columns[COLUMN_STATUS] = TSTRING(WAITING_USER_ONLINE);
 					} else {
-						_stprintf(buf, CTSTRING(WAITING_USERS_ONLINE), online, getSources().size());
+						_stprintf(buf, CTSTRING(WAITING_USERS_ONLINE), online, size);
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				} else {
-					if(getSources().empty()) {
+					size_t size = QueueManager::getInstance()->getSourcesCount(qi);
+					if(size == 0) {
 						display->columns[COLUMN_STATUS] = TSTRING(NO_USERS_TO_DOWNLOAD_FROM);
-					} else if(getSources().size() == 1) {
+					} else if(size == 1) {
 						display->columns[COLUMN_STATUS] = TSTRING(USER_OFFLINE);
-					} else if(getSources().size() == 2) {
+					} else if(size == 2) {
 						display->columns[COLUMN_STATUS] = TSTRING(BOTH_USERS_OFFLINE);
-					} else if(getSources().size() == 3) {
+					} else if(size == 3) {
 						display->columns[COLUMN_STATUS] = TSTRING(ALL_3_USERS_OFFLINE);
-					} else if(getSources().size() == 4) {
+					} else if(size == 4) {
 						display->columns[COLUMN_STATUS] = TSTRING(ALL_4_USERS_OFFLINE);
 					} else {
-						_stprintf(buf, CTSTRING(ALL_USERS_OFFLINE), getSources().size());
+						_stprintf(buf, CTSTRING(ALL_USERS_OFFLINE), size);
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				}
 			} else if(getStatus() == QueueItem::STATUS_RUNNING) {
 				TCHAR buf[64];
 				if(online > 0) {
-					if(getSources().size() == 1) {
+					size_t size = QueueManager::getInstance()->getSourcesCount(qi);
+					if(size == 1) {
 						display->columns[COLUMN_STATUS] = TSTRING(USER_ONLINE);
 					} else {
-						_stprintf(buf, CTSTRING(USERS_ONLINE), online, getSources().size());
+						_stprintf(buf, CTSTRING(USERS_ONLINE), online, size);
 						display->columns[COLUMN_STATUS] = buf;
 					}
 				} else {
@@ -273,7 +276,7 @@ void QueueFrame::QueueItemInfo::update() {
 
 		if(colMask & MASK_ERRORS) {
 			tstring tmp;
-			QueueItem::SourceList badSources = getBadSources();
+			QueueItem::SourceList badSources = QueueManager::getInstance()->getBadSources(qi);
 			for(QueueItem::SourceConstIter j = badSources.begin(); j != badSources.end(); ++j) {
 				if(!j->isSet(QueueItem::Source::FLAG_REMOVED)) {
 				if(tmp.size() > 0)
@@ -809,7 +812,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			menuItems = 0;
 			int pmItems = 0;
 			if(ii) {
-				sources = ii->getSources();
+				sources = QueueManager::getInstance()->getSources(ii->getQueueItem());
 				for(QueueItem::SourceConstIter i = sources.begin(); i != sources.end(); ++i) {
 					tstring nick = WinUtil::escapeMenu(Text::toT(i->getUser()->getFirstNick()));
 					mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
@@ -831,7 +834,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 				}
 				readdItems = 0;
 				
-				badSources = ii->getBadSources();
+				badSources = QueueManager::getInstance()->getBadSources(ii->getQueueItem());
 				for(QueueItem::SourceConstIter i = badSources.begin(); i != badSources.end(); ++i) {
 					tstring nick = Text::toT(i->getUser()->getFirstNick());
 					if(i->isSet(QueueItem::Source::FLAG_FILE_NOT_AVAILABLE)) {
@@ -1000,7 +1003,7 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		readdMenu.GetMenuItemInfo(wID, FALSE, &mi);
 		if(wID == IDC_READD) {
 			// re-add all sources
-			QueueItem::SourceList badSources = ii->getBadSources();
+			QueueItem::SourceList badSources = QueueManager::getInstance()->getBadSources(ii->getQueueItem());
 			for(QueueItem::SourceConstIter s = badSources.begin(); s != badSources.end(); s++) {
 				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
 			}
@@ -1023,7 +1026,7 @@ LRESULT QueueFrame::onRemoveSource(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCt
 		int i = ctrlQueue.GetNextItem(-1, LVNI_SELECTED);
 		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		if(wID == IDC_REMOVE_SOURCE) {
-			QueueItem::SourceList sources = ii->getSources();
+			QueueItem::SourceList sources = QueueManager::getInstance()->getSources(ii->getQueueItem());
 			for(QueueItem::SourceConstIter si = sources.begin(); si != sources.end(); si++) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), si->getUser(), QueueItem::Source::FLAG_REMOVED);
 			}
@@ -1401,10 +1404,10 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 
 	case CDDS_ITEMPREPAINT:
 		{
-			if(!(((QueueItemInfo*)cd->nmcd.lItemlParam)->getBadSources().empty())) {
+			if(!(((QueueItemInfo*)cd->nmcd.lItemlParam)->getQueueItem()->getBadSources().empty())) {
 				cd->clrText = SETTING(ERROR_COLOR);
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
-			}				
+			}		
 		}
 		return CDRF_NOTIFYSUBITEMDRAW;
 
@@ -1490,7 +1493,7 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const QueueItemInfo* ii = ctrlQueue.getItemData(i);
 
-		QueueItem::SourceList sources = ii->getSources();
+		QueueItem::SourceList sources = QueueManager::getInstance()->getSources(ii->getQueueItem());
 		for(QueueItem::SourceConstIter i =	sources.begin(); i != sources.end(); i++) {
 			if(!i->getUser()->isOnline()) {
 				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);

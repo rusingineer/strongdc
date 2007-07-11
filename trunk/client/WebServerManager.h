@@ -53,7 +53,7 @@ public:
 
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 		if(BOOLSETTING(WEBSERVER)){
 			Restart();
 		} else {
@@ -61,7 +61,7 @@ public:
 		}
 	}
 	// SearchManagerListener
-	virtual void on(SearchManagerListener::SR, SearchResult* sr) throw() {
+	void on(SearchManagerListener::SR, SearchResult* sr) throw() {
 		onSearchResult(sr);
 	}
 		
@@ -129,7 +129,7 @@ private:
 	bool started;
 	CriticalSection cs;
 	// ServerSocketListener
-	virtual void on(ServerSocketListener::IncomingConnection) throw();
+	void on(ServerSocketListener::IncomingConnection) throw();
 
 	ServerSocket socket;
 	HWND m_hWnd;
@@ -194,7 +194,7 @@ public:
 	}
 
 	StringMap getArgs(const string& arguments); 
-	virtual int run();
+	int run();
 
 private:
 	sockaddr_in from;

@@ -66,12 +66,12 @@ private:
 #endif
 	}
 	
-	virtual ~TimerManager() throw() {
+	~TimerManager() throw() {
 		dcassert(listeners.empty());
 		shutdown();
 	}
 	
-	virtual int run();
+	int run();
 	
 #ifdef _WIN32
 	static DWORD lastTick;

@@ -36,18 +36,18 @@ class CryptoManager;
 
 class SSLSocket : public Socket {
 public:
-	virtual ~SSLSocket() throw() {}
+	~SSLSocket() throw() {}
 
-	virtual void accept(const Socket& listeningSocket) throw(SocketException);
-	virtual void connect(const string& aIp, uint16_t aPort) throw(SocketException);
-	virtual int read(void* aBuffer, int aBufLen) throw(SocketException);
-	virtual int write(const void* aBuffer, int aLen) throw(SocketException);
-	virtual int wait(uint32_t millis, int waitFor) throw(SocketException);
-	virtual void shutdown() throw();
-	virtual void close() throw();
+	void accept(const Socket& listeningSocket) throw(SocketException);
+	void connect(const string& aIp, uint16_t aPort) throw(SocketException);
+	int read(void* aBuffer, int aBufLen) throw(SocketException);
+	int write(const void* aBuffer, int aLen) throw(SocketException);
+	int wait(uint32_t millis, int waitFor) throw(SocketException);
+	void shutdown() throw();
+	void close() throw();
 
-	virtual bool isSecure() const throw() { return true; }
-	virtual bool isTrusted() const throw();
+	bool isSecure() const throw() { return true; }
+	bool isTrusted() const throw();
 
 private:
 	friend class CryptoManager;

@@ -31,7 +31,7 @@ class CountOutputStream : public OutputStream {
 public:
 	using OutputStream::write;
 	CountOutputStream(OutputStream* aStream) : s(aStream), count(0) { }
-	virtual ~CountOutputStream() throw() { if(managed) delete s; }
+	~CountOutputStream() throw() { if(managed) delete s; }
 
 	size_t flush() throw(Exception) {
 		size_t n = s->flush();
@@ -56,7 +56,7 @@ public:
 	using OutputStream::write;
 
 	CalcOutputStream(OutputStream* aStream) : s(aStream) { }
-	virtual ~CalcOutputStream() throw() { if(managed) delete s; }
+	~CalcOutputStream() throw() { if(managed) delete s; }
 
 	size_t flush() throw(Exception) {
 		return s->flush();
@@ -78,7 +78,7 @@ template<class Filter, bool managed>
 class CalcInputStream : public InputStream {
 public:
 	CalcInputStream(InputStream* aStream) : s(aStream) { }
-	virtual ~CalcInputStream() throw() { if(managed) delete s; }
+	~CalcInputStream() throw() { if(managed) delete s; }
 
 	size_t read(void* buf, size_t& len) throw(Exception) {
 		size_t x = s->read(buf, len);
@@ -161,7 +161,7 @@ template<class Filter, bool managed>
 class FilteredInputStream : public InputStream {
 public:
 	FilteredInputStream(InputStream* aFile) : f(aFile), buf(BUF_SIZE), pos(0), valid(0), more(true) { }
-	virtual ~FilteredInputStream() throw() { if(managed) delete f; }
+	~FilteredInputStream() throw() { if(managed) delete f; }
 
 	/**
 	* Read data through filter, keep calling until len returns 0.

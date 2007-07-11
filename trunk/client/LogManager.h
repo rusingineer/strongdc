@@ -108,7 +108,7 @@ private:
 		logOptions[WEBSERVER][FILE]		= SettingsManager::LOG_FILE_WEBSERVER;
 		logOptions[WEBSERVER][FORMAT]	= SettingsManager::WEBSERVER_FORMAT;
 	}
-	virtual ~LogManager() throw() { }
+	~LogManager() throw() { }
 
 };
 

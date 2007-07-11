@@ -308,7 +308,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
 	size_t sendMaximum;
-	uint64_t start = 0, current= 0;
+	uint64_t start = 0;
 	bool throttling;
 	while(true) {
 		if(disconnecting)
@@ -318,7 +318,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 			// Fill read buffer
 			size_t bytesRead = readBuf.size() - readPos;
 			if(throttling) {
-				start = TimerManager::getTick();
+				start = GET_TICK();
 				sendMaximum = um->throttleGetSlice();
 				if (sendMaximum < 0) {
 					throttling = false;
@@ -365,7 +365,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 					// Read a little since we're blocking anyway...
 					size_t bytesRead = min(readBuf.size() - readPos, readBuf.size() / 2);
 					if(throttling) {
-						start = TimerManager::getTick();
+						start = GET_TICK();
 						sendMaximum = um->throttleGetSlice();
 						if (sendMaximum < 0) {
 							throttling = false;
@@ -398,8 +398,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 			}
 			if(throttling) {
 				uint32_t cycle_time = um->throttleCycleTime();
-				current = TimerManager::getTick();
-				uint64_t sleep_time = cycle_time - (current - start);
+				uint64_t sleep_time = cycle_time - (GET_TICK() - start);
 				if (sleep_time > 0 && sleep_time <= cycle_time) {
 					Thread::sleep(sleep_time);
 				}

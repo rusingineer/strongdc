@@ -266,7 +266,7 @@ public:
 private:
 	friend class Singleton<SettingsManager>;
 	SettingsManager();
-	virtual ~SettingsManager() throw() { }
+	~SettingsManager() throw() { }
 
 	static const string settingTags[SETTINGS_LAST+1];
 
