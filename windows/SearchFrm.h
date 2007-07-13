@@ -139,7 +139,7 @@ public:
 		useGrouping = BOOLSETTING(GROUP_SEARCH_RESULTS);
 	}
 
-	virtual ~SearchFrame() {
+	~SearchFrame() {
 		images.Destroy();
 		searchTypes.Destroy();
 	}
@@ -547,16 +547,16 @@ private:
 
 	void download(SearchResult* aSR, const tstring& aDir, bool view);
 	
-	virtual void on(SearchManagerListener::SR, SearchResult* aResult) throw();
-	virtual void on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw();
+	void on(SearchManagerListener::SR, SearchResult* aResult) throw();
+	void on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw();
 
-	virtual void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 
 	// ClientManagerListener
-	virtual void on(ClientConnected, const Client* c) throw() { speak(HUB_ADDED, c); }
-	virtual void on(ClientUpdated, const Client* c) throw() { speak(HUB_CHANGED, c); }
-	virtual void on(ClientDisconnected, const Client* c) throw() { speak(HUB_REMOVED, c); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(ClientConnected, const Client* c) throw() { speak(HUB_ADDED, c); }
+	void on(ClientUpdated, const Client* c) throw() { speak(HUB_CHANGED, c); }
+	void on(ClientDisconnected, const Client* c) throw() { speak(HUB_REMOVED, c); }
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void initHubs();
 	void onHubAdded(HubInfo* info);

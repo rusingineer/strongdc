@@ -196,7 +196,7 @@ private:
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
 	
-	virtual ~PrivateFrame() { }
+	~PrivateFrame() { }
 
 	bool created;
 	typedef HASH_MAP<UserPtr, PrivateFrame*, User::HashFunction> FrameMap;
@@ -231,19 +231,19 @@ private:
 	TStringList::size_type curCommandPosition;
 
 	// ClientManagerListener
-	virtual void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
+	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
 		if(aUser.getUser() == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
+	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
 		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
+	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
 		if(aUser == replyTo)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(PRIVATE_FRAME_H)

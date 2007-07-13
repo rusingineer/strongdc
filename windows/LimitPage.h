@@ -13,7 +13,7 @@ public:
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~LimitPage() {
+	~LimitPage() {
 		free(title);
 	};
 
@@ -29,7 +29,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 private:
 	static Item items[];

@@ -36,7 +36,7 @@ public:
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
 	AboutDlg() { }
-	virtual ~AboutDlg() { }
+	~AboutDlg() { }
 
 	BEGIN_MSG_MAP(AboutDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -87,11 +87,11 @@ private:
 
 	AboutDlg(const AboutDlg&) { dcassert(0); }
 	
-	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
+	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
 
-	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
 		if(!downBuf.empty()) {
 			SimpleXML xml;
 			xml.fromXML(downBuf);
@@ -106,7 +106,7 @@ private:
 		conn->removeListener(this);
 	}
 
-	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
+	void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
 		tstring* x = new tstring(Text::toT(aLine));
 		PostMessage(WM_VERSIONDATA, (WPARAM) x);
 		conn->removeListener(this);

@@ -34,7 +34,7 @@ public:
 	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) {
 
 	}
-	virtual ~HashProgressDlg() { }
+	~HashProgressDlg() { }
 
 	BEGIN_MSG_MAP(HashProgressDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)

@@ -652,7 +652,7 @@ void AdcHub::on(Failed, const string& aLine) throw() {
 	Client::on(Failed(), aLine);
 }
 
-void AdcHub::on(Second, uint32_t aTick) throw() {
+void AdcHub::on(Second, uint64_t aTick) throw() {
 	Client::on(Second(), aTick);
 	if(state == STATE_NORMAL && (aTick > (getLastActivity() + 120*1000)) ) {
 		send("\n", 1);

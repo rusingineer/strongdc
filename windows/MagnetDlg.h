@@ -36,7 +36,7 @@ public:
 	enum { IDD = IDD_MAGNET };
 
 	MagnetDlg(const tstring& aHash, const tstring& aFileName, const int64_t aSize) : mHash(aHash), mFileName(aFileName), mSize(aSize) { }
-	virtual ~MagnetDlg() { }
+	~MagnetDlg() { }
 
 	BEGIN_MSG_MAP(MagnetDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)

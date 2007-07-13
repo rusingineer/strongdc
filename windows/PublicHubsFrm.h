@@ -41,7 +41,7 @@ public:
 		filterContainer(WC_EDIT, this, FILTER_MESSAGE_MAP) {
 	}
 
-	virtual ~PublicHubsFrame() { }
+	~PublicHubsFrame() { }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("PublicHubsFrame"), IDR_PUBLICHUBS, 0, COLOR_3DFACE);
 		
@@ -164,11 +164,11 @@ private:
 	static int columnIndexes[];
 	static int columnSizes[];
 	
-	virtual void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
-	virtual void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
-	virtual void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
-	virtual void on(LoadedFromCache, const string& l) throw() { speak(LOADED_FROM_CACHE, l); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
+	void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
+	void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
+	void on(LoadedFromCache, const string& l) throw() { speak(LOADED_FROM_CACHE, l); }
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void speak(int x, const string& l) {
 		PostMessage(WM_SPEAKER, x, (LPARAM)new tstring(Text::toT(l)));

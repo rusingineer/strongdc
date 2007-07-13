@@ -130,7 +130,7 @@ private:
 	string checkNick(const string& aNick);
 
 	// TimerManagerListener
-	void on(Second, uint32_t aTick) throw();
+	void on(Second, uint64_t aTick) throw();
 
 	void on(Connected) throw();
 	void on(Line, const string& l) throw();

@@ -403,12 +403,12 @@ private:
 	
 	const string& getDir(HTREEITEM ht) const { dcassert(ht != NULL); return *reinterpret_cast<string*>(ctrlDirs.GetItemData(ht)); }
 
-	virtual void on(QueueManagerListener::Added, const QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) throw();
-	virtual void on(QueueManagerListener::Removed, const QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();
-	virtual void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(QueueManagerListener::Added, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) throw();
+	void on(QueueManagerListener::Removed, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(QUEUE_FRAME_H)

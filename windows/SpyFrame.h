@@ -42,8 +42,7 @@ public:
 		SettingsManager::getInstance()->addListener(this);
 	}
 
-	virtual ~SpyFrame() {
-	}
+	~SpyFrame() { }
 
 	enum {
 		COLUMN_FIRST,
@@ -107,11 +106,11 @@ private:
 	bool ignoreTth;
 	
   	// ClientManagerListener
-	virtual void on(ClientManagerListener::IncomingSearch, const string& s) throw();
+	void on(ClientManagerListener::IncomingSearch, const string& s) throw();
 	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t) throw();
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(TimerManagerListener::Second, uint64_t) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(SPY_FRAME_H)

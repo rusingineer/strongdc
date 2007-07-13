@@ -30,7 +30,7 @@ public:
 		SetTitle(CTSTRING(SETTINGS_CZDC));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~CZDCPage() { };
+	~CZDCPage() { };
 
 	BEGIN_MSG_MAP_EX(CZDCPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -42,7 +42,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 private:
 	static Item items[];

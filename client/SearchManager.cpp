@@ -527,7 +527,7 @@ string SearchManager::clean(const string& aSearchString) {
 	return tmp;
 }
 
-void SearchManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void SearchManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	if((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick) {
 		SearchQueueItem sqi;
 		{

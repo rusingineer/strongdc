@@ -35,7 +35,7 @@ class UsersFrame : public MDITabChildWindowImpl<UsersFrame, RGB(0, 0, 0), IDR_US
 public:
 	
 	UsersFrame() : closed(false), startup(true) { }
-	virtual ~UsersFrame() { images.Destroy(); }
+	~UsersFrame() { images.Destroy(); }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("UsersFrame"), IDR_USERS, 0, COLOR_3DFACE);
 		
@@ -138,11 +138,11 @@ private:
 	static int columnIndexes[COLUMN_LAST];
 
 	// FavoriteManagerListener
-	virtual void on(UserAdded, const FavoriteUser& aUser) throw() { addUser(aUser); }
-	virtual void on(UserRemoved, const FavoriteUser& aUser) throw() { removeUser(aUser); }
-	virtual void on(StatusChanged, const UserPtr& aUser) throw() { PostMessage(WM_SPEAKER, (WPARAM)USER_UPDATED, (LPARAM)new Identity(aUser, 0)); }
+	void on(UserAdded, const FavoriteUser& aUser) throw() { addUser(aUser); }
+	void on(UserRemoved, const FavoriteUser& aUser) throw() { removeUser(aUser); }
+	void on(StatusChanged, const UserPtr& aUser) throw() { PostMessage(WM_SPEAKER, (WPARAM)USER_UPDATED, (LPARAM)new Identity(aUser, 0)); }
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML&s /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML&s /*xml*/) throw();
 
 	void addUser(const FavoriteUser& aUser);
 	void updateUser(const UserPtr& aUser);

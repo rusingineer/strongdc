@@ -480,31 +480,31 @@ private:
 	void updateStatusBar() { if(m_hWnd) speak(STATS); }
 
 	// FavoriteManagerListener
-	virtual void on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) throw();
-	virtual void on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) throw();
+	void on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) throw();
+	void on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) throw();
 	void resortForFavsFirst(bool justDoIt = false);
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t /*aTick*/) throw();
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(TimerManagerListener::Second, uint64_t /*aTick*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	// ClientListener
-	virtual void on(Connecting, const Client*) throw();
-	virtual void on(Connected, const Client*) throw();
-	virtual void on(UserUpdated, const Client*, const OnlineUser&) throw();
-	virtual void on(UsersUpdated, const Client*, const OnlineUser::List&) throw();
-	virtual void on(ClientListener::UserRemoved, const Client*, const OnlineUser&) throw();
-	virtual void on(Redirect, const Client*, const string&) throw();
-	virtual void on(Failed, const Client*, const string&) throw();
-	virtual void on(GetPassword, const Client*) throw();
-	virtual void on(HubUpdated, const Client*) throw();
-	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw();
-	virtual void on(StatusMessage, const Client*, const string&) throw();
-	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
-	virtual void on(NickTaken, const Client*) throw();
-	virtual void on(SearchFlood, const Client*, const string&) throw();
-	virtual void on(CheatMessage, const Client*, const string&) throw();	
-	virtual void on(HubTopic, const Client*, const string&) throw();
+	void on(Connecting, const Client*) throw();
+	void on(Connected, const Client*) throw();
+	void on(UserUpdated, const Client*, const OnlineUser&) throw();
+	void on(UsersUpdated, const Client*, const OnlineUser::List&) throw();
+	void on(ClientListener::UserRemoved, const Client*, const OnlineUser&) throw();
+	void on(Redirect, const Client*, const string&) throw();
+	void on(Failed, const Client*, const string&) throw();
+	void on(GetPassword, const Client*) throw();
+	void on(HubUpdated, const Client*) throw();
+	void on(Message, const Client*, const OnlineUser&, const string&) throw();
+	void on(StatusMessage, const Client*, const string&) throw();
+	void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
+	void on(NickTaken, const Client*) throw();
+	void on(SearchFlood, const Client*, const string&) throw();
+	void on(CheatMessage, const Client*, const string&) throw();	
+	void on(HubTopic, const Client*, const string&) throw();
 
 	void speak(Tasks s) { tasks.add(static_cast<uint8_t>(s), 0); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const string& msg) { tasks.add(static_cast<uint8_t>(s), new StringTask(msg)); PostMessage(WM_SPEAKER); }

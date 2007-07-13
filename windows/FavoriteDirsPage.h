@@ -36,7 +36,7 @@ public:
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~FavoriteDirsPage() {
+	~FavoriteDirsPage() {
 		ctrlDirectories.Detach();
 		free(title);
 	}
@@ -63,7 +63,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
 protected:
 	static TextItem texts[];

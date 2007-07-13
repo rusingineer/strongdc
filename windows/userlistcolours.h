@@ -17,7 +17,7 @@ public:
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
-	virtual ~UserListColours() { free(title); };
+	~UserListColours() { free(title); };
 
 	BEGIN_MSG_MAP(UserListColours)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -32,7 +32,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 	CRichEditCtrl n_Preview;
 private:

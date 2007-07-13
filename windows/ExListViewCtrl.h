@@ -173,7 +173,7 @@ public:
 
 	ExListViewCtrl() : sortType(SORT_STRING), ascending(true), sortColumn(-1) { }
 
-	virtual ~ExListViewCtrl() { }
+	~ExListViewCtrl() { }
 };
 
 #endif // !defined(EX_LIST_VIEW_CTRL_H)

@@ -134,7 +134,7 @@ private:
 	void on(Line, const string& aLine) throw();
 	void on(Failed, const string& aLine) throw();
 
-	void on(Second, uint32_t aTick) throw();
+	void on(Second, uint64_t aTick) throw();
 
 };
 

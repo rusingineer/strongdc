@@ -127,7 +127,7 @@ private:
 
 	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
 	// TimerManagerListener
-	void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 };
 
 #endif // !defined(DOWNLOAD_MANAGER_H)

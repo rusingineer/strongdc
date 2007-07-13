@@ -35,7 +35,7 @@ public:
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~QueuePage() { free(title);	}
+	~QueuePage() { free(title);	}
 
 	BEGIN_MSG_MAP(QueuePage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -45,7 +45,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
 protected:
 

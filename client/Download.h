@@ -64,9 +64,7 @@ public:
 
 	GETSET(string, target, Target);
 	GETSET(string, tempTarget, TempTarget);
-
-	uint32_t quickTick;
-
+	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(string*, source, Source);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);

@@ -105,7 +105,7 @@ class FolderTree : public CWindowImpl<FolderTree, CTreeViewCtrl>
 {
 public:
 	FolderTree();
-	virtual ~FolderTree();
+	~FolderTree();
 	
 	BEGIN_MSG_MAP(FolderTree)
 		REFLECTED_NOTIFY_CODE_HANDLER(NM_CLICK, OnClick)
@@ -145,17 +145,17 @@ public:
 	LRESULT OnItemExpanding(int idCtrl, LPNMHDR pnmh, BOOL &bHandled);
 	LRESULT OnDeleteItem(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
-	virtual LRESULT OnChecked(HTREEITEM hItem, BOOL &bHandled);
-	virtual LRESULT OnUnChecked(HTREEITEM hItem, BOOL &bHandled);
+	LRESULT OnChecked(HTREEITEM hItem, BOOL &bHandled);
+	LRESULT OnUnChecked(HTREEITEM hItem, BOOL &bHandled);
 
-	virtual void PopulateTree();
-	virtual void Refresh();
-	virtual tstring ItemToPath(HTREEITEM hItem) const;
+	void PopulateTree();
+	void Refresh();
+	tstring ItemToPath(HTREEITEM hItem) const;
 	void Clear();
 	HTREEITEM SetSelectedPath(const tstring& sPath, bool bExpanded = false);
-	virtual bool IsDrive(HTREEITEM hItem);
-	virtual bool IsDrive(const tstring& sPath);
-	virtual bool IsFolder(const tstring& sPath);
+	bool IsDrive(HTREEITEM hItem);
+	bool IsDrive(const tstring& sPath);
+	bool IsFolder(const tstring& sPath);
 	bool GetChecked(HTREEITEM hItem) const;
     BOOL SetChecked(HTREEITEM hItem, bool fCheck);
 	void SetStaticCtrl(CStatic *staticCtrl);
@@ -163,31 +163,31 @@ public:
 
 protected:
 	bool IsExpanded(HTREEITEM hItem);
-	virtual int GetIconIndex(const tstring& sFilename);
-	virtual int GetIconIndex(HTREEITEM hItem);
-	virtual int GetIconIndex(LPITEMIDLIST lpPIDL);
-	virtual int GetSelIconIndex(const tstring& sFilename);
-	virtual int GetSelIconIndex(HTREEITEM hItem);
-	virtual int GetSelIconIndex(LPITEMIDLIST lpPIDL);
-	virtual HTREEITEM InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo* pItem, bool bShared, int nIcon, int nSelIcon, bool bCheckForChildren);
-	virtual void DisplayDrives(HTREEITEM hParent, bool bUseSetRedraw = true);
-	virtual void DisplayPath(const tstring& sPath, HTREEITEM hParent, bool bUseSetRedraw = true);
-	virtual tstring GetDriveLabel(const tstring& sDrive);
+	int GetIconIndex(const tstring& sFilename);
+	int GetIconIndex(HTREEITEM hItem);
+	int GetIconIndex(LPITEMIDLIST lpPIDL);
+	int GetSelIconIndex(const tstring& sFilename);
+	int GetSelIconIndex(HTREEITEM hItem);
+	int GetSelIconIndex(LPITEMIDLIST lpPIDL);
+	HTREEITEM InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo* pItem, bool bShared, int nIcon, int nSelIcon, bool bCheckForChildren);
+	void DisplayDrives(HTREEITEM hParent, bool bUseSetRedraw = true);
+	void DisplayPath(const tstring& sPath, HTREEITEM hParent, bool bUseSetRedraw = true);
+	tstring GetDriveLabel(const tstring& sDrive);
 	tstring GetCorrectedLabel(FolderTreeItemInfo* pItem);
-	virtual bool HasGotSubEntries(const tstring& sDirectory);
-	virtual bool CanDisplayDrive(const tstring& sDrive);
-	virtual bool IsShared(const tstring& sPath);
+	bool HasGotSubEntries(const tstring& sDirectory);
+	bool CanDisplayDrive(const tstring& sDrive);
+	bool IsShared(const tstring& sPath);
 	static int CALLBACK CompareByFilenameNoCase(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	void SetHasPlusButton(HTREEITEM hItem, bool bHavePlus);
 	bool HasPlusButton(HTREEITEM hItem);
 	void DoExpand(HTREEITEM hItem);
 	HTREEITEM FindServersNode(HTREEITEM hFindFrom) const;
-	virtual HTREEITEM FindSibling(HTREEITEM hParent, const tstring& sItem) const;
-	virtual bool DriveHasRemovableMedia(const tstring& sPath);
-	virtual bool IsMediaValid(const tstring& sDrive);
-	virtual bool EnumNetwork(HTREEITEM hParent);
-	virtual int DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator);
-	virtual BOOL GetSerialNumber(const tstring& sDrive, DWORD& dwSerialNumber);
+	HTREEITEM FindSibling(HTREEITEM hParent, const tstring& sItem) const;
+	bool DriveHasRemovableMedia(const tstring& sPath);
+	bool IsMediaValid(const tstring& sDrive);
+	bool EnumNetwork(HTREEITEM hParent);
+	int DeleteChildren(HTREEITEM hItem, bool bUpdateChildIndicator);
+	BOOL GetSerialNumber(const tstring& sDrive, DWORD& dwSerialNumber);
 	void SetHasSharedChildren(HTREEITEM hItem, bool bHasSharedChildren);
 	void SetHasSharedChildren(HTREEITEM hItem);
 	bool GetHasSharedChildren(HTREEITEM hItem);

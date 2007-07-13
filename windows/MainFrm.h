@@ -52,7 +52,7 @@ class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFr
 {
 public:
 	MainFrame();
-	virtual ~MainFrame();
+	~MainFrame();
 	DECLARE_FRAME_WND_CLASS(_T(APPNAME), IDR_MAINFRAME)
 
 	CMDICommandBarCtrl m_CmdBar;
@@ -77,7 +77,7 @@ public:
 		SET_PM_TRAY_ICON
 	};
 
-	virtual BOOL PreTranslateMessage(MSG* pMsg)
+	BOOL PreTranslateMessage(MSG* pMsg)
 	{
 		if((pMsg->message >= WM_MOUSEFIRST) && (pMsg->message <= WM_MOUSELAST))
 			ctrlLastLines.RelayEvent(pMsg);
@@ -95,7 +95,7 @@ public:
 		return FALSE;
 	}
 	
-	virtual BOOL OnIdle()
+	BOOL OnIdle()
 	{
 		UIUpdateToolBar();
 		return FALSE;
@@ -326,7 +326,7 @@ public:
 
 	static void setShutDown(bool b) {
 		if (b)
-			iCurrentShutdownTime = TimerManager::getTick() / 1000;
+			iCurrentShutdownTime = GET_TICK() / 1000;
 		bShutdown = b;
 	}
 	static bool getShutDown() { return bShutdown; }
@@ -338,7 +338,7 @@ public:
 	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
 
 	CImageList largeImages, largeImagesHot;
-	virtual int run();
+	int run();
 	
 
 private:
@@ -367,11 +367,11 @@ private:
 		list<DirectoryListInfo*> fileLists;
 
 		FileListQueue() : stop(true) {}
-		virtual ~FileListQueue() throw() {
+		~FileListQueue() throw() {
 			shutdown();
 		}
 
-		virtual int run();
+		int run();
 		void shutdown() {
 			stop = true;
 			s.signal();
@@ -410,7 +410,7 @@ private:
 	/** Was the window maximized when minimizing it? */
 	bool maximized;
 	uint64_t lastMove;
-	uint32_t lastUpdate;
+	uint64_t lastUpdate;
 	int64_t lastUp;
 	int64_t lastDown;
 	tstring lastTTHdir;
@@ -444,21 +444,21 @@ private:
 	MainFrame(const MainFrame&) { dcassert(0); }
 
 	// LogManagerListener
-	virtual void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); }
+	void on(LogManagerListener::Message, const string& m) throw() { PostMessage(WM_SPEAKER, STATUS_MESSAGE, (LPARAM)new tstring(Text::toT(m))); }
 
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second type, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 	
 	// HttpConnectionListener
-	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
-	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw();	
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
+	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw();	
 	// WebServerListener
-	virtual void on(WebServerListener::Setup);
-	virtual void on(WebServerListener::ShutdownPC, int);
+	void on(WebServerListener::Setup);
+	void on(WebServerListener::ShutdownPC, int);
 
 	// QueueManagerListener
-	virtual void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, int64_t speed) throw();
-	virtual void on(PartialList, const UserPtr&, const string& text) throw();
+	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, int64_t speed) throw();
+	void on(PartialList, const UserPtr&, const string& text) throw();
 
 	// UPnP connectors
 	UPnP* UPnP_TCPConnection;

@@ -40,7 +40,7 @@ public:
 		foregr.CreatePen(PS_SOLID, 0, WinUtil::textColor);
 	}
 
-	virtual ~StatsFrame() { }
+	~StatsFrame() { }
 
 	static CFrameWndClassInfo& GetWndClassInfo() { 
 		static CFrameWndClassInfo wc = { 

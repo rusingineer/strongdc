@@ -267,8 +267,12 @@ ok:
 					aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size));
 					aSource.disconnect();
 					return false;
+				} else {
+					clearUserFiles(aSource.getUser());
 				}
 			}
+		} else {
+			clearUserFiles(aSource.getUser());
 		}
 
 		setLastGrant(GET_TICK());
@@ -278,8 +282,6 @@ ok:
 	if(cu != connectingUsers.end()) {
 		connectingUsers.erase(cu);
 	}
-
-	clearUserFiles(aSource.getUser());
 
 	bool resumed = false;
 	for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
@@ -514,10 +516,11 @@ int UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, int
 	if(found == false) {
 		UploadQueueItem* uqi = new UploadQueueItem(aUser, file, pos, size, currentTime);
 		if(it == waitingUsers.end()) {
+			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick());
 			UploadQueueItem::List list;
 			list.push_back(uqi);
-			it = waitingUsers.insert(it, make_pair(aUser, list));
-			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick());
+			waitingUsers.push_back(make_pair(aUser, list));
+			it = waitingUsers.end() - 1;
 		} else {
 			it->second.push_back(uqi);
 		}
@@ -584,7 +587,7 @@ void UploadManager::notifyQueuedUsers() {
 	}
 }
 
-void UploadManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	UserList disconnects;
 	{
 		Lock l(cs);
@@ -657,7 +660,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	{
 		Lock l(cs);
 		throttleSetup();

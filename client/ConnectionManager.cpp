@@ -129,7 +129,7 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 	userConnections.erase(remove(userConnections.begin(), userConnections.end(), aConn), userConnections.end());
 }
 
-void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	UserList passiveUsers;
 	ConnectionQueueItem::List removed;
 	UserList idlers;
@@ -208,7 +208,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint32_t aTick) throw()
 	}
 }
 
-void ConnectionManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {	
+void ConnectionManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {	
 	Lock l(cs);
 
 	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {

@@ -15,7 +15,7 @@ class CShellContextMenu
 {
 public:
 	CShellContextMenu();
-	virtual ~CShellContextMenu();
+	~CShellContextMenu();
 
 	void SetPath(const tstring& strPath);
 	CMenu* GetMenu();

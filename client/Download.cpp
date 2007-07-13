@@ -30,7 +30,7 @@ Download::Download(UserConnection& conn) throw() : Transfer(conn), file(0), tree
 
 Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() :
 	Transfer(conn), target(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0),
-	quickTick(static_cast<uint32_t>(GET_TICK())), treeValid(false), source(NULL)
+	lastTick(GET_TICK()), treeValid(false), source(NULL)
 {
 	conn.setDownload(this);
 	

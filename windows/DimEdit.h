@@ -76,7 +76,7 @@ public:
   }
 
   //  Destructor
-  virtual ~CDimEdit( ) {
+  ~CDimEdit( ) {
   }
 
 	// Actions.

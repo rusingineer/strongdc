@@ -328,22 +328,22 @@ private:
 	StringMap ucLineParams;
 	int PreviewAppsSize;
 
-	virtual void on(ConnectionManagerListener::Added, const ConnectionQueueItem* aCqi) throw();
-	virtual void on(ConnectionManagerListener::Failed, const ConnectionQueueItem* aCqi, const string& aReason) throw();
-	virtual void on(ConnectionManagerListener::Removed, const ConnectionQueueItem* aCqi) throw();
-	virtual void on(ConnectionManagerListener::StatusChanged, const ConnectionQueueItem* aCqi) throw();
+	void on(ConnectionManagerListener::Added, const ConnectionQueueItem* aCqi) throw();
+	void on(ConnectionManagerListener::Failed, const ConnectionQueueItem* aCqi, const string& aReason) throw();
+	void on(ConnectionManagerListener::Removed, const ConnectionQueueItem* aCqi) throw();
+	void on(ConnectionManagerListener::StatusChanged, const ConnectionQueueItem* aCqi) throw();
 
-	virtual void on(DownloadManagerListener::Complete, const Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, Util::getFileName(aDownload->getTarget()), isTree);}
-	virtual void on(DownloadManagerListener::Failed, const Download* aDownload, const string& aReason) throw();
-	virtual void on(DownloadManagerListener::Starting, const Download* aDownload) throw();
-	virtual void on(DownloadManagerListener::Tick, const DownloadList& aDownload) throw();
-	virtual void on(DownloadManagerListener::Status, const UserConnection*, const string&) throw();
+	void on(DownloadManagerListener::Complete, const Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, Util::getFileName(aDownload->getTarget()), isTree);}
+	void on(DownloadManagerListener::Failed, const Download* aDownload, const string& aReason) throw();
+	void on(DownloadManagerListener::Starting, const Download* aDownload) throw();
+	void on(DownloadManagerListener::Tick, const DownloadList& aDownload) throw();
+	void on(DownloadManagerListener::Status, const UserConnection*, const string&) throw();
 
-	virtual void on(UploadManagerListener::Starting, const Upload* aUpload) throw();
-	virtual void on(UploadManagerListener::Tick, const UploadList& aUpload) throw();
-	virtual void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
+	void on(UploadManagerListener::Starting, const Upload* aUpload) throw();
+	void on(UploadManagerListener::Tick, const UploadList& aUpload) throw();
+	void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void onTransferComplete(const Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree);
 
