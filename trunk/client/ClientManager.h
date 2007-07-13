@@ -228,7 +228,7 @@ private:
 		int aFileType, const string& aString, bool) throw();
 	void on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw();
 	// TimerManagerListener
-	void on(TimerManagerListener::Minute, uint32_t aTick) throw();
+	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 };
 
 #endif // !defined(CLIENT_MANAGER_H)

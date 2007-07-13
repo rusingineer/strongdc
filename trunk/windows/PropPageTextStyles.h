@@ -18,7 +18,7 @@ public:
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~PropPageTextStyles() {
+	~PropPageTextStyles() {
 		free(title);
 	};
 
@@ -75,7 +75,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 private:
 	void RefreshPreview();

@@ -106,7 +106,7 @@ public:
 	ListMatcher(StringList files_) : files(files_) {
 
 	}
-	virtual int run() {
+	int run() {
 		for(StringIter i = files.begin(); i != files.end(); ++i) {
 			UserPtr u = DirectoryListing::getUserFromFilename(*i);
 			if(!u)
@@ -1235,7 +1235,7 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		Util::increaseUptime();
 		int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 		int64_t updiff = Socket::getTotalUp() - lastUp;

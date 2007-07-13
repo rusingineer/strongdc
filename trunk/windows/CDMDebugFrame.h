@@ -39,7 +39,7 @@ public:
 	 }
 	
 	~CDMDebugFrame() { DebugManager::getInstance()->removeListener(this); }
-	virtual void OnFinalMessage(HWND /*hWnd*/) { delete this; }
+	void OnFinalMessage(HWND /*hWnd*/) { delete this; }
 
 	typedef MDITabChildWindowImpl<CDMDebugFrame, RGB(0, 0, 0), IDR_CDM> baseClass;
 	BEGIN_MSG_MAP(CDMDebugFrame)

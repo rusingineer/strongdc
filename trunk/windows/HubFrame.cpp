@@ -1791,7 +1791,7 @@ void HubFrame::resortForFavsFirst(bool justDoIt /* = false */) {
 	}
 }
 
-void HubFrame::on(Second, uint32_t /*aTick*/) throw() {
+void HubFrame::on(Second, uint64_t /*aTick*/) throw() {
 	if(updateUsers) {
 		updateStatusBar();
 		updateUsers = false;

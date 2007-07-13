@@ -36,7 +36,7 @@ public:
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
 
-	virtual ~LogPage() { free(title); }
+	~LogPage() { free(title); }
 
 	BEGIN_MSG_MAP_EX(LogPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -50,7 +50,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 protected:
 	static Item items[];

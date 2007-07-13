@@ -33,7 +33,7 @@ public:
 		SetTitle(CTSTRING(SETTINGS_DOWNLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~DownloadPage() { }
+	~DownloadPage() { }
 
 	BEGIN_MSG_MAP_EX(DownloadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -49,7 +49,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
 protected:
 	static Item items[];

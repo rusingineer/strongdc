@@ -36,21 +36,21 @@ public:
 		columnVisible = SettingsManager::FINISHED_UL_VISIBLE;
 	}
 
-	virtual ~FinishedULFrame() { }
+	~FinishedULFrame() { }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedULFrame"), IDR_FINISHED_UL, 0, COLOR_3DFACE);
 		
 private:
 
-	virtual void on(AddedUl, const FinishedItem* entry) throw() {
+	void on(AddedUl, const FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 	}
-	virtual void on(RemovedUl, const FinishedItem* entry) throw() { 
+	void on(RemovedUl, const FinishedItem* entry) throw() { 
 		totalBytes -= entry->getChunkSize();
 		totalTime -= entry->getMilliSeconds();
 		PostMessage(WM_SPEAKER, SPEAK_REMOVE);
 	}
-	virtual void on(RemovedAllUl) throw() { 
+	void on(RemovedAllUl) throw() { 
 		PostMessage(WM_SPEAKER, SPEAK_REMOVE_ALL);
 		totalBytes = 0;
 		totalTime = 0;

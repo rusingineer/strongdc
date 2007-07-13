@@ -33,7 +33,7 @@ public:
 		SetTitle(CTSTRING(SETTINGS_NETWORK));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~NetworkPage() { }
+	~NetworkPage() { }
 
 	BEGIN_MSG_MAP(NetworkPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -50,7 +50,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
 private:
 	static Item items[];

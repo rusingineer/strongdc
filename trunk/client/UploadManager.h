@@ -140,7 +140,7 @@ private:
 	bool mThrottleEnable;
 	uint8_t running;
 
-	uint32_t m_iHighSpeedStartTick;
+	uint64_t m_iHighSpeedStartTick;
 
 	size_t mBytesSpokenFor, mUploadLimit, mCycleTime, mByteSlice;
 
@@ -172,8 +172,8 @@ private:
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
 	
 	// TimerManagerListener
-	void on(Second, uint32_t aTick) throw();
-	void on(Minute, uint32_t aTick) throw();
+	void on(Second, uint64_t aTick) throw();
+	void on(Minute, uint64_t aTick) throw();
 
 	// UserConnectionListener
 	void on(BytesSent, UserConnection*, size_t, size_t) throw();

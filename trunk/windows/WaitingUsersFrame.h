@@ -41,7 +41,7 @@ public:
 	WaitingUsersFrame() : showTree(true), closed(false), usingUserMenu(false), 
 		showTreeContainer(_T("BUTTON"), this, SHOWTREE_MESSAGE_MAP) { }
 	
-	virtual ~WaitingUsersFrame() { }
+	~WaitingUsersFrame() { }
 
 	enum {
 		ADD_ITEM,
@@ -203,13 +203,13 @@ private:
 	void updateStatus();
 
 	// UploadManagerListener
-	virtual void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() { PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI); }
-	virtual void on(UploadManagerListener::QueueRemove, const UserPtr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new Identity(aUser, 0));	}
-	virtual void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() { aUQI->inc(); PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI); }
-	virtual void on(UploadManagerListener::QueueUpdate) throw() { PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL); }
+	void on(UploadManagerListener::QueueAdd, UploadQueueItem* aUQI) throw() { PostMessage(WM_SPEAKER, ADD_ITEM, (LPARAM)aUQI); }
+	void on(UploadManagerListener::QueueRemove, const UserPtr& aUser) throw() { PostMessage(WM_SPEAKER, REMOVE, (LPARAM)new Identity(aUser, 0));	}
+	void on(UploadManagerListener::QueueItemRemove, UploadQueueItem* aUQI) throw() { aUQI->inc(); PostMessage(WM_SPEAKER, REMOVE_ITEM, (LPARAM)aUQI); }
+	void on(UploadManagerListener::QueueUpdate) throw() { PostMessage(WM_SPEAKER, UPDATE_ITEMS, NULL); }
 
 	// SettingsManagerListener
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif

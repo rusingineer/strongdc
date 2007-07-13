@@ -133,6 +133,7 @@ void Client::on(Connected) throw() {
 }
 
 void Client::on(Failed, const string& aLine) throw() {
+	updateActivity(); 
 	state = STATE_DISCONNECTED;
 	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	socket->removeListener(this);
@@ -198,7 +199,7 @@ void Client::on(Line, const string& aLine) throw() {
 	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
 }
 
-void Client::on(Second, uint32_t aTick) throw() {
+void Client::on(Second, uint64_t aTick) throw() {
 	if(state == STATE_DISCONNECTED && getAutoReconnect() && (aTick > (getLastActivity() + getReconnDelay() * 1000)) ) {
 		// Try to reconnect...
 		connect();

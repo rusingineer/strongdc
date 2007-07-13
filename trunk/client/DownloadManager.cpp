@@ -62,7 +62,7 @@ DownloadManager::~DownloadManager() throw() {
 	}
 }
 
-void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	Lock l(cs);
 
 	DownloadList tickList;
@@ -85,12 +85,12 @@ void DownloadManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
 					continue;
 			} else if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
 				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED) * 1024)) {
-					if(	(((aTick - d->quickTick)/1000) > (uint32_t)SETTING(DOWN_TIME)) &&
+					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DOWN_TIME)) &&
 						(!QueueManager::getInstance()->dropSource(d, false))) {
 							continue;
 					}
 				} else {
-					d->quickTick = aTick;
+					d->setLastTick(aTick);
 				}
 			}
 		}

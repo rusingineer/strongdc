@@ -37,9 +37,9 @@ int TimerManager::run() {
 	while(!s.wait(nextTick > x ? static_cast<uint32_t>(nextTick - x) : 0)) {
 		uint64_t z = getTick();
 		nextTick = z + 1000;
-		fire(TimerManagerListener::Second(), static_cast<uint32_t>(z));
+		fire(TimerManagerListener::Second(), z);
 		if(nextMin++ >= 60) {
-			fire(TimerManagerListener::Minute(), static_cast<uint32_t>(z));
+			fire(TimerManagerListener::Minute(), z);
 			nextMin = 0;
 		}
 		x = getTick();
@@ -55,7 +55,10 @@ uint64_t TimerManager::getTick() {
 		cycles++;
 	}
 	lastTick = tick;
-	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
+
+	uint64_t currentTick = static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
+	//dcassert(currentTick
+	return currentTick;
 #else
 	timeval tv2;
 	gettimeofday(&tv2, NULL);

@@ -505,7 +505,7 @@ void SearchFrame::on(SearchManagerListener::Searching, const SearchQueueItem* aS
 	}
 }
 
-void SearchFrame::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void SearchFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	if(searches > 0) {
 		uint64_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
 		TCHAR buf[64];

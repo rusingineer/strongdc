@@ -36,7 +36,7 @@ public:
 	TextFrame(const tstring& fileName) : file(fileName) {
 		SettingsManager::getInstance()->addListener(this);
 	}
-	virtual ~TextFrame() { }
+	~TextFrame() { }
 	
 	typedef MDITabChildWindowImpl<TextFrame> baseClass;
 	BEGIN_MSG_MAP(TextFrame)
@@ -73,7 +73,7 @@ private:
 	
 	tstring file;
 	CEdit ctrlPad;
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(TEXT_FRAME_H)

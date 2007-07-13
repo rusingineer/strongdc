@@ -1662,10 +1662,10 @@ void WinUtil::RunPreviewCommand(unsigned int index, string target){
 	}
 }
 
-string WinUtil::formatTime(long rest) {
+string WinUtil::formatTime(uint64_t rest) {
 	char buf[128];
 	string formatedTime;
-	long n, i;
+	uint64_t n, i;
 	i = 0;
 	n = rest / (24*3600*7);
 	rest %= (24*3600*7);
@@ -1785,7 +1785,7 @@ string WinUtil::generateStats() {
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
 			Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
-			formatTime(::GetTickCount()/1000).c_str(), ProcSpeedCalc());
+			formatTime(GET_TICK()/1000).c_str(), ProcSpeedCalc());
 		return buf;
 	} else {
 		return "Not supported by OS";

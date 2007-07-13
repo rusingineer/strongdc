@@ -42,7 +42,7 @@ public:
     BOOL DoModal(LPCTSTR szCaption, LPCTSTR szPrompt, LPCTSTR szText, LPCTSTR szText1);
 
 	CInputBox(HWND hWndParent);
-	virtual ~CInputBox();
+	~CInputBox();
 
 };
 

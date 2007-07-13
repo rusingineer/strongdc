@@ -250,7 +250,7 @@ private:
 	/** The queue needs to be saved */
 	bool dirty;
 	/** Next search */
-	uint32_t nextSearch;
+	uint64_t nextSearch;
 	/** map for storing initial dir for file lists */
 	StringMap dirMap;
 	/** Sanity check for the target filename */
@@ -270,8 +270,8 @@ private:
 	}
 
 	// TimerManagerListener
-	void on(TimerManagerListener::Second, uint32_t aTick) throw();
-	void on(TimerManagerListener::Minute, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
+	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 	
 	// SearchManagerListener
 	void on(SearchManagerListener::SR, SearchResult*) throw();

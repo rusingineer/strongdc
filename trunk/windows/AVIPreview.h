@@ -38,7 +38,7 @@ public:
 		SetTitle(title);
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
-	virtual ~AVIPreview() {
+	~AVIPreview() {
 		ctrlCommands.Detach();
 		free(title);
 	};
@@ -66,7 +66,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();	
+	void write();	
 protected:
 	ExListViewCtrl ctrlCommands;
 	static TextItem texts[];

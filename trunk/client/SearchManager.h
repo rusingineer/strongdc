@@ -236,11 +236,11 @@ private:
 
 	~SearchManager() throw();
 
-	void setLastSearch(uint32_t aTime) { lastSearch = aTime; };
+	void setLastSearch(uint64_t aTime) { lastSearch = aTime; };
 	void onData(const uint8_t* buf, size_t aLen, const string& address);
 
 	string getPartsString(const PartsInfo& partsInfo) const;
-	void on(TimerManagerListener::Second, uint32_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 };
 
 #endif // !defined(SEARCH_MANAGER_H)

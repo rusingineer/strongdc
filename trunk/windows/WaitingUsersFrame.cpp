@@ -398,20 +398,19 @@ LRESULT WaitingUsersFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOO
 		ctrlList.DeleteAllItems();
 		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
 		UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
-		for (UploadQueueItem::SlotQueue::const_iterator uit = users.begin(); uit != users.end(); ++uit) {
-			if(uit->first == u->u) {
-				ctrlList.SetRedraw(FALSE);
-				ctrlQueued.SetRedraw(FALSE);
-				for(UploadQueueItem::List::const_iterator i = uit->second.begin(); i != uit->second.end(); ++i) {
-					AddFile(*i);
-				}
-				ctrlList.resort();
-				ctrlList.SetRedraw(TRUE);
-				ctrlQueued.SetRedraw(TRUE);
-				ctrlQueued.Invalidate(); 
-				updateStatus();
-				return 0;
+		UploadQueueItem::SlotQueue::const_iterator it = find_if(users.begin(), users.end(), CompareFirst<UserPtr, UploadQueueItem::List>(u->u));
+		if(it != users.end()) {
+			ctrlList.SetRedraw(FALSE);
+			ctrlQueued.SetRedraw(FALSE);
+			for(UploadQueueItem::List::const_iterator i = it->second.begin(); i != it->second.end(); ++i) {
+				AddFile(*i);
 			}
+			ctrlList.resort();
+			ctrlList.SetRedraw(TRUE);
+			ctrlQueued.SetRedraw(TRUE);
+			ctrlQueued.Invalidate(); 
+			updateStatus();
+			return 0;
 		}
 		userNode = ctrlQueued.GetNextSiblingItem(userNode);
 	}
@@ -504,30 +503,35 @@ void UploadQueueItem::update(bool onSecond) {
 
 LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 	ctrlList.SetRedraw(FALSE);
-	if(wParam == REMOVE_ITEM) {
+	switch(wParam) {
+	case REMOVE_ITEM: {
 		UploadQueueItem* i = (UploadQueueItem*)lParam;
 		ctrlList.deleteItem(i);
 		updateStatus();
 		i->dec();
 		if(BOOLSETTING(BOLD_WAITING_USERS))
-			setDirty();		
-	} else if(wParam == REMOVE) {
+			setDirty();
+		break;
+	}
+	case REMOVE:
 		RemoveUser(((Identity*)lParam)->getUser());
 		updateStatus();
 		if(BOOLSETTING(BOLD_WAITING_USERS))
-			setDirty();		
-	} else if(wParam == ADD_ITEM) {
+			setDirty();
+		break;
+	case ADD_ITEM:
 		AddFile((UploadQueueItem*)lParam);
 		updateStatus();
 		ctrlList.resort();
 		if(BOOLSETTING(BOLD_WAITING_USERS))
-			setDirty();		
-	} else if(wParam == UPDATE_ITEMS) {
-		int j = ctrlList.GetItemCount();
-		for(int i = 0; i < j; i++) {
+			setDirty();
+		break;
+	case UPDATE_ITEMS:
+		for(int i = 0; i < ctrlList.GetItemCount(); i++) {
 			ctrlList.getItemData(i)->update(true);
 			ctrlList.updateItem(i);
 		}
+		break;
 	}
 	ctrlList.SetRedraw(TRUE);
 	return 0;

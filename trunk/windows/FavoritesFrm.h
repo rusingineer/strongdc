@@ -37,7 +37,7 @@ public:
 	typedef MDITabChildWindowImpl<FavoriteHubsFrame, RGB(0, 0, 0), IDR_FAVORITES> baseClass;
 
 	FavoriteHubsFrame() : nosave(true), closed(false) { }
-	virtual ~FavoriteHubsFrame() { }
+	~FavoriteHubsFrame() { }
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("FavoriteHubsFrame"), IDR_FAVORITES, 0, COLOR_3DFACE);
 		
@@ -134,9 +134,9 @@ private:
 	}
 
 	void addEntry(const FavoriteHubEntry* entry, int pos);
-	virtual void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { addEntry(e, ctrlHubs.GetItemCount()); }
-	virtual void on(FavoriteRemoved, const FavoriteHubEntry* e) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)e)); }
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { addEntry(e, ctrlHubs.GetItemCount()); }
+	void on(FavoriteRemoved, const FavoriteHubEntry* e) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)e)); }
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(FAVORITE_HUBS_FRM_H)

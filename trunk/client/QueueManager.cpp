@@ -510,7 +510,7 @@ bool QueueManager::getTTH(const string& name, TTHValue& tth) const throw() {
 	return false;
 }
 
-void QueueManager::on(TimerManagerListener::Minute, uint32_t aTick) throw() {
+void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	string searchString;
 
 	{
@@ -961,16 +961,14 @@ again:
 	}
 	
 	int64_t freeBlock = 0;
-	FileChunksInfo::Ptr fileChunksInfo;
 
 	QueueItem::SourceConstIter source = q->getSource(aUser);
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-		fileChunksInfo = q->getChunksInfo();
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = fileChunksInfo->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
+			freeBlock = q->getChunksInfo()->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
 		} else {
-			freeBlock = fileChunksInfo->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
+			freeBlock = q->getChunksInfo()->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
 		}
 
 		if(freeBlock < 0) {
@@ -1004,7 +1002,7 @@ again:
 			d->unsetFlag(Download::FLAG_RESUME);
 			
 			if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				fileChunksInfo->putChunk(freeBlock);
+				q->getChunksInfo()->putChunk(freeBlock);
 			}
 		} else if (!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 			// Use the root as tree to get some sort of validation at least...
@@ -1015,7 +1013,7 @@ again:
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->setStartPos(freeBlock);
-		fileChunksInfo->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && useChunks);
+		q->getChunksInfo()->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && useChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
@@ -1699,7 +1697,7 @@ void QueueManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aU
 		removeTestSUR(aUser);
 }
 
-void QueueManager::on(TimerManagerListener::Second, uint32_t aTick) throw() {
+void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	if(dirty && ((lastSave + 10000) < aTick)) {
 		saveQueue();
 	}

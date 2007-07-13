@@ -38,7 +38,7 @@ public:
 		ctrlClientContainer(_T("edit"), this, NOTEPAD_MESSAGE_MAP) {
 		SettingsManager::getInstance()->addListener(this);
 	}
-	virtual ~NotepadFrame() { }
+	~NotepadFrame() { }
 	
 	typedef MDITabChildWindowImpl<NotepadFrame, RGB(0, 0, 0), IDR_NOTEPAD> baseClass;
 	BEGIN_MSG_MAP(NotepadFrame)
@@ -82,7 +82,7 @@ private:
 	CEdit ctrlPad;
 	CContainedWindow ctrlClientContainer;
 
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(NOTEPAD_FRAME_H)

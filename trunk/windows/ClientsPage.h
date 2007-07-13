@@ -24,7 +24,7 @@ public:
 		c.addListener(this);
 	};
 
-	virtual ~ClientsPage() { 
+	~ClientsPage() { 
 		ctrlProfiles.Detach();
 		free(title);
 		c.removeListener(this);
@@ -65,21 +65,21 @@ public:
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
-protected:
+private:
 	ExListViewCtrl ctrlProfiles;
 
 	static Item items[];
 	static TextItem texts[];
 	TCHAR* title;
 	void addEntry(const ClientProfile& cp, int pos);
-private:
-	virtual void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
+
+	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
 
-	virtual void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
 			string fname = Util::getConfigPath() + "Profiles.xml";
@@ -94,7 +94,7 @@ private:
 		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
 
-	virtual void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
+	void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
 		conn->removeListener(this);
 		{
 			string msg = "Client profiles download failed.\r\n" + aLine;

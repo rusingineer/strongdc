@@ -39,7 +39,7 @@ public:
 	END_MSG_MAP()
 
 	PropertiesDlg(HWND parent, SettingsManager *s);
-	virtual ~PropertiesDlg();
+	~PropertiesDlg();
 	static bool needUpdate;
 
 	LRESULT onOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

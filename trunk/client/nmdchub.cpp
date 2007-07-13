@@ -1015,7 +1015,7 @@ void NmdcHub::on(Failed, const string& aLine) throw() {
 	updateCounts(true);	
 }
 
-void NmdcHub::on(Second, uint32_t aTick) throw() {
+void NmdcHub::on(Second, uint64_t aTick) throw() {
 	Client::on(Second(), aTick);
 
 	if(state == STATE_NORMAL && (aTick > (getLastActivity() + 120*1000)) ) {

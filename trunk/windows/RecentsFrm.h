@@ -34,11 +34,11 @@ public:
 	typedef MDITabChildWindowImpl<RecentHubsFrame, RGB(0, 0, 0), IDR_RECENTS> baseClass;
 		
 	RecentHubsFrame() : closed(false) { };
-	virtual ~RecentHubsFrame() { };
+	~RecentHubsFrame() { };
 
 	DECLARE_FRAME_WND_CLASS_EX(_T("RecentHubsFrame"), IDR_RECENTS, 0, COLOR_3DFACE);
 		
-	virtual void OnFinalMessage(HWND /*hWnd*/) {
+	void OnFinalMessage(HWND /*hWnd*/) {
 		delete this;
 	}
 
@@ -170,9 +170,9 @@ private:
 	}
 
 	
-	virtual void on(RecentAdded, const RecentHubEntry* entry) throw() { addEntry(entry, ctrlHubs.GetItemCount()); }
-	virtual void on(RecentRemoved, const RecentHubEntry* entry) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry)); }
-	virtual void on(RecentUpdated, const RecentHubEntry* entry) throw() {
+	void on(RecentAdded, const RecentHubEntry* entry) throw() { addEntry(entry, ctrlHubs.GetItemCount()); }
+	void on(RecentRemoved, const RecentHubEntry* entry) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)entry)); }
+	void on(RecentUpdated, const RecentHubEntry* entry) throw() {
 		int i = -1;
 		if((i = ctrlHubs.find((LPARAM)entry)) != -1) {
 			ctrlHubs.SetItemText(i, COLUMN_NAME, Text::toT(entry->getName()).c_str());
@@ -182,7 +182,7 @@ private:
 			ctrlHubs.SetItemText(i, COLUMN_SERVER, Text::toT(entry->getServer()).c_str());
 		}
 	}
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif

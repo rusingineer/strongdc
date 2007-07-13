@@ -491,7 +491,7 @@ void ClientManager::on(Load, SimpleXML&) throw() {
 	users.insert(make_pair(getMe()->getCID(), getMe()));
 }
 
-void ClientManager::on(TimerManagerListener::Minute, uint32_t /*aTick*/) throw() {
+void ClientManager::on(TimerManagerListener::Minute, uint64_t /*aTick*/) throw() {
 	Lock l(cs);
 
 	// Collect some garbage...

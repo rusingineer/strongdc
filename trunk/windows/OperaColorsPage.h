@@ -37,7 +37,7 @@ public:
 		m_psp.dwFlags |= PSP_RTLREADING;
 	};
 
-	virtual ~OperaColorsPage() { free(title);};
+	~OperaColorsPage() { free(title);};
 
 	BEGIN_MSG_MAP(OperaColorsPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -106,7 +106,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 
 private:
 	friend UINT_PTR CALLBACK MenuBarCommDlgProc(HWND, UINT, WPARAM, LPARAM);

@@ -37,7 +37,7 @@ public:
 		SetTitle(CTSTRING(SETTINGS_UPLOADS));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	virtual ~UploadPage() {
+	~UploadPage() {
 		ctrlDirectories.Detach();
 		ctrlTotal.Detach();
 	}
@@ -67,7 +67,7 @@ public:
 
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
-	virtual void write();
+	void write();
 	
 protected:
 	static Item items[];

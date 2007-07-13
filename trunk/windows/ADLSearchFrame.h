@@ -49,7 +49,7 @@ public:
 
 	// Constructor/destructor
 	ADLSearchFrame() : closed(false) {}
-	virtual ~ADLSearchFrame() { }
+	~ADLSearchFrame() { }
 
 	// Frame window declaration
 	DECLARE_FRAME_WND_CLASS_EX(_T("ADLSearchFrame"), IDR_ADLSEARCH, 0, COLOR_3DFACE);
@@ -140,7 +140,7 @@ private:
 	// Column parameters
 	static int columnIndexes[];
 	static int columnSizes[];
-	virtual void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };
 
 #endif // !defined(ADL_SEARCH_FRAME_H)

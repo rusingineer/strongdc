@@ -1,3 +1,9 @@
+** svn308
+	optimized vtables in windows part
+	hopefully fixed crash #3666
+	onSecond and onMinute ticks supports 64bit times
+	first try to fix Hub reconnect (THX adrian_007 for some ideas)
+
 ** svn307
 	hopefully fixed crashes #3667 and #3669
 	removing diacritics from Czech chars is disabled by default

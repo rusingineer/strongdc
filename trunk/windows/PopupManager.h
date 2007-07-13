@@ -76,7 +76,7 @@ private:
 	uint32_t id;
  	
 	// TimerManagerListener
-	virtual void on(TimerManagerListener::Second, uint32_t tick) throw();
+	void on(TimerManagerListener::Second, uint64_t tick) throw();
 
 };
 
