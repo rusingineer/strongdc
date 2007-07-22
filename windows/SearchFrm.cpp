@@ -1371,7 +1371,7 @@ void SearchFrame::SearchInfo::update() {
 	flagimage = 0;
 	if (!columns[COLUMN_IP].empty()) {
 		// Only attempt to grab a country mapping if we actually have an IP address
-		tstring tmpCountry = Text::toT(Util::getIpCountry(sr->getIP()));
+		tstring tmpCountry = Util::getIpCountry(columns[COLUMN_IP]);
 		if(!tmpCountry.empty()) {
 			columns[COLUMN_IP] = tmpCountry + _T(" (") + columns[COLUMN_IP] + _T(")");
 			flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());

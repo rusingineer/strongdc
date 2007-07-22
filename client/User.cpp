@@ -102,15 +102,19 @@ bool Identity::supports(const string& name) const {
 
 string Identity::getConnection() const {
 	string connection = get("US");
-	double us = Util::toDouble(connection);
-	if(us > 0) {
-		char buf[16];
-		snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
+	if(connection.find_first_not_of("0123456789.,") == string::npos) {
+		double us = Util::toDouble(connection);
+		if(us > 0) {
+			char buf[16];
+			snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
 
-		char *cp;
-		if( (cp=strchr(buf, ',')) != NULL) *cp='.';
+			char *cp;
+			if( (cp=strchr(buf, ',')) != NULL) *cp='.';
 
-		return buf;
+			return buf;
+		} else {
+			return connection;
+		}
 	} else {
 		return connection;
 	}
@@ -316,42 +320,38 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 }
 
-void OnlineUser::setText(const uint8_t name, const tstring& val) {
-	if(val.empty())
-		info.erase((uint8_t)name);
-	else
-		info[(uint8_t)name] = val;
-}
-	
 tstring old = Util::emptyStringT;
 bool OnlineUser::update(int sortCol) {
 	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());
+	bool firstUpdate = (sortCol == -1);
 
-	if(sortCol != -1)
+	if(!firstUpdate)
 		old = getText(static_cast<uint8_t>(sortCol));
 
 	const tstring hn = Text::toT(identity.get("HN"));
 	const tstring hr = Text::toT(identity.get("HR"));
 	const tstring ho = Text::toT(identity.get("HO"));
 
-	setText(COLUMN_NICK, Text::toT(identity.getNick()));
-	setText(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()));
-	setText(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()));
-	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()));
-	setText(COLUMN_TAG, Text::toT(identity.getTag()));
-	setText(COLUMN_EMAIL, Text::toT(identity.getEmail()));
-	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection()));
-	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")));
-	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"));
-	setText(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho));
-	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")));
-	string ip = identity.getIp();
-	string country = ip.empty()?Util::emptyString:Util::getIpCountry(ip);
+	setText(COLUMN_NICK, Text::toT(identity.getNick()), firstUpdate);
+	setText(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()), firstUpdate);
+	setText(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()), firstUpdate);
+	setText(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()), firstUpdate);
+	setText(COLUMN_TAG, Text::toT(identity.getTag()), firstUpdate);
+	setText(COLUMN_EMAIL, Text::toT(identity.getEmail()), firstUpdate);
+	setText(COLUMN_CONNECTION, Text::toT(identity.getConnection()), firstUpdate);
+	setText(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")), firstUpdate);
+	setText(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"), firstUpdate);
+	setText(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho), firstUpdate);
+	setText(COLUMN_SLOTS, Text::toT(identity.get("SL")), firstUpdate);
+	
+	tstring ip = Text::toT(identity.getIp());
+	tstring country = ip.empty() ? Util::emptyStringT : Util::getIpCountry(ip);
 	if (!country.empty())
-		ip = country + " (" + ip + ")";
-	setText(COLUMN_IP, Text::toT(ip));
+		ip = country + _T(" (") + ip + _T(")");
+	
+	setText(COLUMN_IP, ip, firstUpdate);
 
-	if(sortCol != -1) {
+	if(!firstUpdate) {
 		needsSort = needsSort || (old != getText(static_cast<uint8_t>(sortCol)));
 	}
 

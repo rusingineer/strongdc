@@ -255,21 +255,18 @@ ok:
 	if(!aSource.isSet(UserConnection::FLAG_HASSLOT)) {
 		bool hasReserved = (reservedSlots.find(aSource.getUser()) != reservedSlots.end());
 		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource.getUser());
-
-		if(!(hasReserved || isFavorite || getAutoSlot())) {
+		bool hasFreeSlot = (getFreeSlots() > 0) && (!BOOLSETTING(ENABLE_REAL_UPLOAD_QUEUE) || (waitingUsers.empty() && connectingUsers.empty()) || isConnecting(aSource.getUser()));
+			
+		if(!(hasReserved || isFavorite || getAutoSlot() || hasFreeSlot)) {
 			bool supportsFree = aSource.isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
 			bool allowedFree = aSource.isSet(UserConnection::FLAG_HASEXTRASLOT) || aSource.isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
 			if(free && supportsFree && allowedFree) {
 				extraSlot = true;
 			} else {
-				if(	(getFreeSlots() <= 0) || (!(waitingUsers.empty() || isConnecting(aSource.getUser())))) {
-					delete is;
-					aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size));
-					aSource.disconnect();
-					return false;
-				} else {
-					clearUserFiles(aSource.getUser());
-				}
+				delete is;
+				aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size));
+				aSource.disconnect();
+				return false;
 			}
 		} else {
 			clearUserFiles(aSource.getUser());
@@ -293,7 +290,7 @@ ok:
 			} else {
 				resumed = true;
 			}
-			dcdebug("Upload from %s removed on next chunk\n", up->getUserConnection().getUser()->getFirstNick());
+			dcdebug("Upload from %s removed on next chunk\n", up->getUserConnection().getUser()->getFirstNick().c_str());
 			delete up;
 			break;
 		}
@@ -566,7 +563,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 }
 
 void UploadManager::notifyQueuedUsers() {
-	if (waitingUsers.empty()) return;		//no users to notify
+	if (!BOOLSETTING(ENABLE_REAL_UPLOAD_QUEUE) || waitingUsers.empty()) return;		//no users to notify
 
 	int freeslots = getFreeSlots();
 	if(freeslots > 0)
@@ -576,9 +573,9 @@ void UploadManager::notifyQueuedUsers() {
 			// let's keep him in the connectingList until he asks for a file
 			UserPtr u = waitingUsers.front().first;
 			clearUserFiles(u);
-			//waitingUsers.pop_front();
+
 			
-			dcdebug("Contacting an user: %s\n", u->getFirstNick());
+			dcdebug("Contacting an user: %s\n", u->getFirstNick().c_str());
 			connectingUsers[u] = GET_TICK();
 			ClientManager::getInstance()->connect(u, Util::toString(Util::rand()));
 

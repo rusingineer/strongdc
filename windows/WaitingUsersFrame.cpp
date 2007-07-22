@@ -197,7 +197,6 @@ LRESULT WaitingUsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 		int i = -1;
 		UserList RemoveUsers;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			// Ok let's cheat here, if you try to remove more users here is not working :(
 			RemoveUsers.push_back(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
 		}
 		for(UserList::const_iterator i = RemoveUsers.begin(); i != RemoveUsers.end(); ++i) {
@@ -489,16 +488,18 @@ int UploadQueueItem::imageIndex() const {
 }
 
 void UploadQueueItem::update(bool onSecond) {
+	bool firstUpdate = (getRoot() == NULL);
+
 	if(!onSecond) {
-		columns[COLUMN_FILE] = Text::toT(Util::getFileName(file));
-		columns[COLUMN_PATH] = Text::toT(Util::getFilePath(file));
-		columns[COLUMN_NICK] = Text::toT(user->getFirstNick());
-		columns[COLUMN_HUB] = WinUtil::getHubNames(user).first;
-		columns[COLUMN_SIZE] = Util::formatBytesW(size);
-		columns[COLUMN_ADDED] = Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time));
+		setText(COLUMN_FILE, Text::toT(Util::getFileName(file)), firstUpdate);
+		setText(COLUMN_PATH, Text::toT(Util::getFilePath(file)), firstUpdate);
+		setText(COLUMN_NICK, Text::toT(user->getFirstNick()), firstUpdate);
+		setText(COLUMN_HUB, WinUtil::getHubNames(user).first, firstUpdate);
+		setText(COLUMN_SIZE, Util::formatBytesW(size), firstUpdate);
+		setText(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time)), firstUpdate);
 	}
-	columns[COLUMN_TRANSFERRED] = Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)");
-	columns[COLUMN_WAITING] = Util::formatSeconds(GET_TIME() - time);
+	setText(COLUMN_TRANSFERRED, Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)"), firstUpdate);
+	setText(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - time), firstUpdate);
 }
 
 LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {

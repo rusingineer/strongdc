@@ -25,7 +25,6 @@
 #include "SearchFrm.h"
 #include "PrivateFrame.h"
 #include "AGEmotionSetup.h"
-#include "atlstr.h"
 
 #include "../client/QueueManager.h"
 #include "../client/ShareManager.h"
@@ -558,14 +557,12 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 		        break;
 		    case 1: {
 				tstring sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getNick());
-				CAtlString sText = "";
 	            int iSelBegin, iSelEnd;
 	            ctrlMessage.GetSel(iSelBegin, iSelEnd);
-	            ctrlMessage.GetWindowText(sText);
 
 	            if((iSelBegin == 0) && (iSelEnd == 0)) {
 					sUser += _T(": ");
-					if(sText.GetLength() == 0) {
+					if(ctrlMessage.GetWindowTextLength() == 0) {
 			            ctrlMessage.SetWindowText(sUser.c_str());
 			            ctrlMessage.SetFocus();
 			            ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
@@ -617,7 +614,7 @@ LRESULT HubFrame::onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	HWND focus = GetFocus();
 	if ( focus == ctrlClient.m_hWnd ) {
-		ctrlClient.SetWindowText(_T(""));
+		ctrlClient.SetWindowText(Util::emptyStringT.c_str());
 	}
 	return 0;
 }
@@ -625,7 +622,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return false;
 	
-	if(u.onlineUser->getText(COLUMN_NICK)[0] == NULL) {
+	if(u.onlineUser->getRoot() == NULL) {
 		u.onlineUser->update(-1);
 
 		if(!u.onlineUser->isHidden()) {
@@ -1164,14 +1161,12 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					}    
 					case 1: {
 					     tstring sUser = ui->getText(COLUMN_NICK);
-						 CAtlString sText = "";
 					     int iSelBegin, iSelEnd;
 					     ctrlMessage.GetSel(iSelBegin, iSelEnd);
-					     ctrlMessage.GetWindowText(sText);
 
 					     if((iSelBegin == 0) && (iSelEnd == 0)) {
 							sUser += _T(": ");
-							if(sText.GetLength() == 0) {   
+							if(ctrlMessage.GetWindowTextLength() == 0) {   
 			                    ctrlMessage.SetWindowText(sUser.c_str());
 			                    ctrlMessage.SetFocus();
 			                    ctrlMessage.SetSel(ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength());
@@ -2374,7 +2369,6 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	tstring sUsers = Util::emptyStringT;
-	CAtlString sText = "";
 
 	if(!client->isConnected())
 		return 0;
@@ -2391,11 +2385,10 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 	int iSelBegin, iSelEnd;
 	ctrlMessage.GetSel( iSelBegin, iSelEnd );
-	ctrlMessage.GetWindowText(sText);
 
 	if ( ( iSelBegin == 0 ) && ( iSelEnd == 0 ) ) {
 		sUsers += _T(": ");
-		if (sText.GetLength() == 0) {	
+		if (ctrlMessage.GetWindowTextLength() == 0) {	
 			ctrlMessage.SetWindowText(sUsers.c_str());
 			ctrlMessage.SetFocus();
 			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );

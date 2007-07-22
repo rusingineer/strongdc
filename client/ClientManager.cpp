@@ -201,8 +201,7 @@ UserPtr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw
 
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
-		if(ui->second->getFirstNick().empty())
-			ui->second->setFirstNick(aNick);	
+		ui->second->setFirstNick(aNick);	
 		ui->second->setFlag(User::NMDC);
 		return ui->second;
 	}
