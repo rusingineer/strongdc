@@ -81,17 +81,17 @@ public:
 		ctrlList.SetTextColor(WinUtil::textColor);
 
 		// Create listview columns
-		WinUtil::splitTokens(columnIndexes, SettingsManager::getInstance()->get(columnOrder), COLUMN_LAST);
-		WinUtil::splitTokens(columnSizes, SettingsManager::getInstance()->get(columnWidth), COLUMN_LAST);
+		WinUtil::splitTokens(columnIndexes, SettingsManager::getInstance()->get(columnOrder), FinishedItem::COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, SettingsManager::getInstance()->get(columnWidth), FinishedItem::COLUMN_LAST);
 
-		for(uint8_t j=0; j<COLUMN_LAST; j++) {
-			int fmt = (j == COLUMN_SIZE || j == COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+		for(uint8_t j=0; j<FinishedItem::COLUMN_LAST; j++) {
+			int fmt = (j == FinishedItem::COLUMN_SIZE || j == FinishedItem::COLUMN_SPEED) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 			ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 		}
 
-		ctrlList.SetColumnOrderArray(COLUMN_LAST, columnIndexes);
+		ctrlList.SetColumnOrderArray(FinishedItem::COLUMN_LAST, columnIndexes);
 		ctrlList.setVisible(SettingsManager::getInstance()->get(columnVisible));
-		ctrlList.setSortColumn(COLUMN_DONE);
+		ctrlList.setSortColumn(FinishedItem::COLUMN_DONE);
 
 		UpdateLayout();
 
@@ -126,13 +126,7 @@ public:
 			return 0;
 		} else {
 			ctrlList.saveHeaderOrder(columnOrder, columnWidth, columnVisible);
-
 			frame = NULL;
-
-			//cleanup to avoid memory leak
-			for(int i = 0; i < ctrlList.GetItemCount(); ++i) {
-				delete ctrlList.getItemData(i);
-			}
 			ctrlList.DeleteAllItems();
 
 			bHandled = FALSE;
@@ -144,27 +138,18 @@ public:
 		NMITEMACTIVATE * const item = (NMITEMACTIVATE*) pnmh;
 
 		if(item->iItem != -1) {
-			ItemInfo *ii = ctrlList.getItemData(item->iItem);
-			WinUtil::openFile(Text::toT(ii->entry->getTarget()));
+			FinishedItem *ii = ctrlList.getItemData(item->iItem);
+			WinUtil::openFile(Text::toT(ii->getTarget()));
 		}
 		return 0;
 	}
 
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
 		if(wParam == SPEAK_ADD_LINE) {
-			const FinishedItem* entry = reinterpret_cast<const FinishedItem*>(lParam);
+			FinishedItem* entry = reinterpret_cast<FinishedItem*>(lParam);
 			addEntry(entry);
 			if(SettingsManager::getInstance()->get(boldFinished))
 				setDirty();
-			updateStatus();
-		} else if(wParam == SPEAK_REMOVE) {
-			updateStatus();
-		} else if(wParam == SPEAK_REMOVE_ALL) {
-			//cleanup to avoid memory leak
-			for(int i = 0; i < ctrlList.GetItemCount(); ++i) {
-				delete ctrlList.getItemData(i);
-			}
-			ctrlList.DeleteAllItems();
 			updateStatus();
 		}
 		return 0;
@@ -177,15 +162,29 @@ public:
 			{
 				int i = -1;
 				while((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-					ItemInfo *ii = ctrlList.getItemData(i);
-					FinishedManager::getInstance()->remove(const_cast<FinishedItem*>(ii->entry), upload);
+					FinishedItem *ii = ctrlList.getItemData(i);
+					FinishedManager::getInstance()->remove(ii, upload);
 					ctrlList.DeleteItem(i);
+					
+					totalBytes -= ii->getChunkSize();
+					totalTime -= ii->getMilliSeconds();
+					
 					delete ii;
 				}
+				updateStatus();
 				break;
 			}
 		case IDC_TOTAL:
 			FinishedManager::getInstance()->removeAll(upload);
+			
+			ctrlList.DeleteAllItems();
+			for(int i = 0; i < ctrlList.GetItemCount(); ++i) {
+				delete ctrlList.getItemData(i);
+			}
+			
+			totalBytes = 0;
+			totalTime = 0;
+			updateStatus();
 			break;
 		}
 		return 0;
@@ -194,9 +193,9 @@ public:
 	LRESULT onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ItemInfo *ii = ctrlList.getItemData(i);
+			FinishedItem *ii = ctrlList.getItemData(i);
 			if(ii != NULL)
-				TextFrame::openWindow(Text::toT(ii->entry->getTarget()));
+				TextFrame::openWindow(Text::toT(ii->getTarget()));
 		}
 		return 0;
 	}
@@ -204,9 +203,9 @@ public:
 	LRESULT onOpenFile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ItemInfo *ii = ctrlList.getItemData(i);
+			FinishedItem *ii = ctrlList.getItemData(i);
 			if(ii != NULL)
-				WinUtil::openFile(Text::toT(ii->entry->getTarget()));
+				WinUtil::openFile(Text::toT(ii->getTarget()));
 		}
 		return 0;
 	}
@@ -214,9 +213,9 @@ public:
 	LRESULT onOpenFolder(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ItemInfo *ii = ctrlList.getItemData(i);
+			FinishedItem *ii = ctrlList.getItemData(i);
 			if(ii != NULL)
-				::ShellExecute(NULL, NULL, Text::toT(Util::getFilePath(ii->entry->getTarget())).c_str(), NULL, NULL, SW_SHOWNORMAL);
+				::ShellExecute(NULL, NULL, Text::toT(Util::getFilePath(ii->getTarget())).c_str(), NULL, NULL, SW_SHOWNORMAL);
 		}
 		return 0;
 	}
@@ -231,7 +230,7 @@ public:
 
 			bool bShellMenuShown = false;
 			if(BOOLSETTING(SHOW_SHELL_MENU) && (ctrlList.GetSelectedCount() == 1) && (LOBYTE(LOWORD(GetVersion())) >= 5)) {
-				tstring path = Text::toT(((ItemInfo*)ctrlList.GetItemData(ctrlList.GetSelectedIndex()))->entry->getTarget());
+				tstring path = Text::toT(ctrlList.getItemData(ctrlList.GetSelectedIndex())->getTarget());
 				if(GetFileAttributes(path.c_str()) != 0xFFFFFFFF) { // Check that the file still exists
 					CShellContextMenu shellMenu;
 					shellMenu.SetPath(path);
@@ -273,18 +272,12 @@ public:
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ItemInfo *ii = ctrlList.getItemData(i);
-			if(ii) {
-				UserPtr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
-				if(u) {
-					QueueManager::getInstance()->addList(u, QueueItem::FLAG_CLIENT_VIEW);
-				} else {
-					addStatusLine(TSTRING(USER_OFFLINE));
-				}
+			FinishedItem *ii = ctrlList.getItemData(i);
+			if(ii->getUser()->isOnline()) {
+				QueueManager::getInstance()->addList(ii->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 			} else {
 				addStatusLine(TSTRING(USER_OFFLINE));
 			}
-
 		}
 		return 0;
 	}
@@ -292,14 +285,9 @@ public:
 	LRESULT onGrant(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
-			ItemInfo *ii = ctrlList.getItemData(i);
-			if(ii) {
-				UserPtr u = ClientManager::getInstance()->findUser(ii->entry->getCID());
-				if(u) {
-					UploadManager::getInstance()->reserveSlot(u, 600);
-				} else {
-					addStatusLine(TSTRING(USER_OFFLINE));
-				}
+			FinishedItem *ii = ctrlList.getItemData(i);
+			if(ii->getUser()->isOnline()) {
+				UploadManager::getInstance()->reserveSlot(ii->getUser(), 600);
 			} else {
 				addStatusLine(TSTRING(USER_OFFLINE));
 			}
@@ -338,64 +326,14 @@ public:
 protected:
 	enum {
 		SPEAK_ADD_LINE,
-		SPEAK_REMOVE,
-		SPEAK_REMOVE_ALL
-	};
-
-	enum {
-		COLUMN_FIRST,
-		COLUMN_FILE = COLUMN_FIRST,
-		COLUMN_DONE,
-		COLUMN_PATH,
-		COLUMN_NICK,
-		COLUMN_HUB,
-		COLUMN_SIZE,
-		COLUMN_SPEED,
-		COLUMN_LAST
-	};
-
-	class ItemInfo {
-	public:
-		ItemInfo(const FinishedItem* fi) : entry(fi) {
-			columns[COLUMN_FILE]  = Text::toT(Util::getFileName(entry->getTarget()));
-			columns[COLUMN_DONE]  = Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime()));
-			columns[COLUMN_PATH]  = Text::toT(Util::getFilePath(entry->getTarget()));
-			columns[COLUMN_NICK]  = Text::toT(entry->getUser());
-			columns[COLUMN_HUB]   = Text::toT(entry->getHub());
-			columns[COLUMN_SIZE]  = Util::formatBytesW(entry->getSize());
-			columns[COLUMN_SPEED] = Util::formatBytesW(entry->getAvgSpeed()) + _T("/s");
-		}
-		tstring columns[COLUMN_LAST];
-
-		const tstring& getText(int col) const {
-			dcassert(col >= 0 && col < COLUMN_LAST);
-			return columns[col];
-		}
-
-		const tstring& copy(int col) {
-			if(col >= 0 && col < COLUMN_LAST)
-				return getText(col);
-
-			return Util::emptyStringT;
-		}
-
-		static int compareItems(const ItemInfo* a, const ItemInfo* b, int col) {
-			switch(col) {
-				case COLUMN_SPEED:	return compare(a->entry->getAvgSpeed(), b->entry->getAvgSpeed());
-				case COLUMN_SIZE:	return compare(a->entry->getSize(), b->entry->getSize());
-				default:			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
-			}
-		}
-
-		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(entry->getTarget())); }
-
-		const FinishedItem* entry;
+		//SPEAK_REMOVE,
+		//SPEAK_REMOVE_ALL
 	};
 
 	CStatusBarCtrl ctrlStatus;
 	CMenu ctxMenu;
 
-	TypedListViewCtrl<ItemInfo, id> ctrlList;
+	TypedListViewCtrl<FinishedItem, id> ctrlList;
 
 	int64_t totalBytes;
 	int64_t totalTime;
@@ -409,8 +347,8 @@ protected:
 	SettingsManager::StrSetting columnVisible;
 	
 
-	static int columnSizes[COLUMN_LAST];
-	static int columnIndexes[COLUMN_LAST];
+	static int columnSizes[FinishedItem::COLUMN_LAST];
+	static int columnIndexes[FinishedItem::COLUMN_LAST];
 
 	void addStatusLine(const tstring& aLine) {
 		ctrlStatus.SetText(0, (Text::toT(Util::getShortTimeString()) + _T(" ") + aLine).c_str());
@@ -432,13 +370,20 @@ protected:
 		updateStatus();
 	}
 
-	void addEntry(const FinishedItem* entry) {
-		ItemInfo *ii = new ItemInfo(entry);
+	void addEntry(FinishedItem* entry) {
+		entry->columns.set(FinishedItem::COLUMN_FILE, Text::toT(Util::getFileName(entry->getTarget())));
+		entry->columns.set(FinishedItem::COLUMN_DONE, Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
+		entry->columns.set(FinishedItem::COLUMN_PATH, Text::toT(Util::getFilePath(entry->getTarget())));
+		entry->columns.set(FinishedItem::COLUMN_NICK, Text::toT(entry->getUser()->getFirstNick()));
+		entry->columns.set(FinishedItem::COLUMN_HUB, Text::toT(entry->getHub()));
+		entry->columns.set(FinishedItem::COLUMN_SIZE, Util::formatBytesW(entry->getSize()));
+		entry->columns.set(FinishedItem::COLUMN_SPEED, Util::formatBytesW(entry->getAvgSpeed()) + _T("/s"));
+
 		totalBytes += entry->getChunkSize();
 		totalTime += entry->getMilliSeconds();
 
 		int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
-		int loc = ctrlList.insertItem(ii, image);
+		int loc = ctrlList.insertItem(entry, image);
 		ctrlList.EnsureVisible(loc, FALSE);
 	}
 
@@ -461,13 +406,16 @@ protected:
 };
 
 template <class T, int title, int id, int icon>
-int FinishedFrameBase<T, title, id, icon>::columnIndexes[] = { COLUMN_DONE, COLUMN_FILE, COLUMN_PATH, COLUMN_NICK, COLUMN_HUB, COLUMN_SIZE, COLUMN_SPEED };
+int FinishedFrameBase<T, title, id, icon>::columnIndexes[] = { FinishedItem::COLUMN_DONE, FinishedItem::COLUMN_FILE,
+FinishedItem::COLUMN_PATH, FinishedItem::COLUMN_NICK, FinishedItem::COLUMN_HUB, FinishedItem::COLUMN_SIZE, FinishedItem::COLUMN_SPEED };
 
 template <class T, int title, int id, int icon>
 int FinishedFrameBase<T, title, id, icon>::columnSizes[] = { 100, 110, 290, 125, 80, 80 };
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::TIME, ResourceManager::PATH, 
 ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED
 };
+
+int FinishedItem::imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget())); }
 
 #endif // !defined(FINISHED_FRAME_BASE_H)
 

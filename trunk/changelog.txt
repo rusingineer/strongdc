@@ -1,3 +1,18 @@
+	-- StrongDC++ 2.05 --
+	
+* opravena spousta pádù
+* opraveno zobrazování typu pøipojení
+* opraveno pasivní vyhledávání s pøezdívkami v unikódu (THX PPK za nahlášení)
+* další optimalizace pamìti pro seznam uživatelù
+* pøidána opravdová fronta na sloty (nápad z Possum modu)
+* opravena hláška "Invalid request", pokud bylo vypnuto antifragmentaèní stahování
+* odstranìny staré typy pøipojení
+* odstraòování diakritiky z èeských znakù je nyní standardnì vypnuto
+* pøidán "Malware MSIU32" do seznamu aplikací zpùsobujících pád StrongDC++
+* pøíkaz bordelu není odesílán pøi zaplé emulaci DC++
+* optimalizovány tabulky virtuálních funkcí
+
+
 	-- StrongDC++ 2.04 --
 
 * aktualizace na DC++ 0.699

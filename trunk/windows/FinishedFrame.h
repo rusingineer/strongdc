@@ -40,18 +40,8 @@ public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("FinishedFrame"), IDR_FINISHED_DL, 0, COLOR_3DFACE);
 		
 private:
-	void on(AddedDl, const FinishedItem* entry) throw() {
+	void on(AddedDl, FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
-	}
-	void on(RemovedDl, const FinishedItem* entry) throw() { 
-		totalBytes -= entry->getChunkSize();
-		totalTime -= entry->getMilliSeconds();
-		PostMessage(WM_SPEAKER, SPEAK_REMOVE);
-	}
-	void on(RemovedAllDl) throw() { 
-		PostMessage(WM_SPEAKER, SPEAK_REMOVE_ALL);
-		totalBytes = 0;
-		totalTime = 0;
 	}
 };
 

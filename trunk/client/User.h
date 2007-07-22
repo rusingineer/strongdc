@@ -155,25 +155,25 @@ class NmdcHub;
 #include "UserInfoBase.h"
 #include "ColumnBase.h"
 
-enum {
-	COLUMN_FIRST,
-	COLUMN_NICK = COLUMN_FIRST, 
-	COLUMN_SHARED, 
-	COLUMN_EXACT_SHARED, 
-	COLUMN_DESCRIPTION, 
-	COLUMN_TAG,
-	COLUMN_CONNECTION, 
-	COLUMN_IP,
-	COLUMN_EMAIL, 
-	COLUMN_VERSION, 
-	COLUMN_MODE, 
-	COLUMN_HUBS, 
-	COLUMN_SLOTS,
-	COLUMN_LAST
-};
-
-class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase, public ColumnBase {
+class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase {
 public:
+	enum {
+		COLUMN_FIRST,
+		COLUMN_NICK = COLUMN_FIRST, 
+		COLUMN_SHARED, 
+		COLUMN_EXACT_SHARED, 
+		COLUMN_DESCRIPTION, 
+		COLUMN_TAG,
+		COLUMN_CONNECTION, 
+		COLUMN_IP,
+		COLUMN_EMAIL, 
+		COLUMN_VERSION, 
+		COLUMN_MODE, 
+		COLUMN_HUBS, 
+		COLUMN_SLOTS,
+		COLUMN_LAST
+	};
+
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
@@ -196,7 +196,10 @@ public:
 	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
+	inline const tstring& getText(uint8_t col) const { return columns.get(col); }
+
 	GETSET(Identity, identity, Identity);
+	ColumnBase columns;
 private:
 	friend class NmdcHub;
 

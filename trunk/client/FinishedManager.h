@@ -29,25 +29,61 @@
 class FinishedItem
 {
 public:
-	FinishedItem(string const& aTarget, string const& aUser, CID const& aCID, string const& aHub, 
+	enum {
+		COLUMN_FIRST,
+		COLUMN_FILE = COLUMN_FIRST,
+		COLUMN_DONE,
+		COLUMN_PATH,
+		COLUMN_NICK,
+		COLUMN_HUB,
+		COLUMN_SIZE,
+		COLUMN_SPEED,
+		COLUMN_LAST
+	};
+
+	FinishedItem(string const& aTarget, const UserPtr& aUser, string const& aHub, 
 		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
 		const string& aTTH = Util::emptyString) : 
-		target(aTarget), user(aUser), cid(aCID), hub(aHub), size(aSize), chunkSize(aChunkSize),
+		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
 		milliSeconds(aMSeconds), time(aTime), tth(aTTH)
 	{
 	}
 
 	int64_t getAvgSpeed() const { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
 
+	const tstring& getText(uint8_t col) const {
+		dcassert(col >= 0 && col < COLUMN_LAST);
+		return columns[col];
+	}
+
+	const tstring& copy(uint8_t col) {
+		if(col >= 0 && col < COLUMN_LAST)
+			return getText(col);
+
+		return Util::emptyStringT;
+	}
+
+	static int compareItems(const FinishedItem* a, const FinishedItem* b, uint8_t col) {
+		switch(col) {
+			case COLUMN_SPEED:	return compare(a->getAvgSpeed(), b->getAvgSpeed());
+			case COLUMN_SIZE:	return compare(a->getSize(), b->getSize());
+			default:			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
+		}
+	}
+	int imageIndex() const;
+
 	GETSET(string, target, Target);
-	GETSET(string, user, User);
-	GETSET(CID, cid, CID);
 	GETSET(string, hub, Hub);
+	GETSET(string, tth, TTH);
+
 	GETSET(int64_t, size, Size);
 	GETSET(int64_t, chunkSize, ChunkSize);
 	GETSET(int64_t, milliSeconds, MilliSeconds);
 	GETSET(time_t, time, Time);
-	GETSET(string, tth, TTH);
+	GETSET(UserPtr, user, User);
+
+	ColumnBase columns;
+
 private:
 	friend class FinishedManager;
 

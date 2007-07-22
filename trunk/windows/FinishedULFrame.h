@@ -42,18 +42,8 @@ public:
 		
 private:
 
-	void on(AddedUl, const FinishedItem* entry) throw() {
+	void on(AddedUl, FinishedItem* entry) throw() {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
-	}
-	void on(RemovedUl, const FinishedItem* entry) throw() { 
-		totalBytes -= entry->getChunkSize();
-		totalTime -= entry->getMilliSeconds();
-		PostMessage(WM_SPEAKER, SPEAK_REMOVE);
-	}
-	void on(RemovedAllUl) throw() { 
-		PostMessage(WM_SPEAKER, SPEAK_REMOVE_ALL);
-		totalBytes = 0;
-		totalTime = 0;
 	}
 };
 

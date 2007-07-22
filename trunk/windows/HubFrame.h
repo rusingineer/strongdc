@@ -454,8 +454,8 @@ private:
 	tstring lastLines;
 	CToolTipCtrl ctrlLastLines;
 	
-	static int columnIndexes[COLUMN_LAST];
-	static int columnSizes[COLUMN_LAST];
+	static int columnIndexes[OnlineUser::COLUMN_LAST];
+	static int columnSizes[OnlineUser::COLUMN_LAST];
 	
 	bool updateUser(const UserTask& u);
 	void removeUser(OnlineUser* aUser);
