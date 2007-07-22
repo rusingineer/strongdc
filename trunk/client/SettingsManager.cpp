@@ -122,7 +122,7 @@ const string SettingsManager::settingTags[] =
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
-	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu",
+	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "EnableRealUploadQueue",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -516,6 +516,7 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
 	setDefault(DOWNCONN_PER_SEC, 2);
 	setDefault(FILTER_ENTER, false);
+	setDefault(ENABLE_REAL_UPLOAD_QUEUE, true);
 
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

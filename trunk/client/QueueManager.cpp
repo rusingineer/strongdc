@@ -404,9 +404,8 @@ void QueueManager::UserQueue::setRunning(QueueItem* qi, const UserPtr& aUser) {
 void QueueManager::UserQueue::setWaiting(QueueItem* qi, const UserPtr& aUser) {
 	// This might have been set to wait by removesource already...
 	if (running.find(aUser) == running.end()) {
-		QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
-		QueueItem::UserListIter j = ulm.find(aUser);
-		if((j == ulm.end()) && qi->isSource(aUser))
+		const QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
+		if((ulm.find(aUser) == ulm.end()) && qi->isSource(aUser))
 			add(qi, aUser);
 		return;
 	}
@@ -1219,24 +1218,17 @@ void QueueManager::remove(const string& aTarget) throw() {
 			directories.erase(q->getSources()[0].getUser());
 		}
 
-		string temptarget = q->getTempTarget();
-
 		// For partial-share
-		UploadManager::getInstance()->abortUpload(temptarget);
+		UploadManager::getInstance()->abortUpload(q->getTempTarget());
 
 		if(q->getStatus() == QueueItem::STATUS_RUNNING) {
 			x = q->getTarget();
+			dirMap.erase(q->getSources()[0].getUser()->getCID().toBase32());
 		} else if(!q->getTempTarget().empty() && q->getTempTarget() != q->getTarget()) {
 			File::deleteFile(q->getTempTarget() + Download::ANTI_FRAG_EXT);
 			File::deleteFile(q->getTempTarget());
 		}
 
-		if(q->isSet(QueueItem::FLAG_USER_LIST)) {
-			StringMapIter i = dirMap.find(q->getSources()[0].getUser()->getCID().toBase32());
-			if (i != dirMap.end()) {
-				dirMap.erase(i);
-			}
-		}
 
 		fire(QueueManagerListener::Removed(), q);
 

@@ -153,6 +153,7 @@ private:
 
 class NmdcHub;
 #include "UserInfoBase.h"
+#include "ColumnBase.h"
 
 enum {
 	COLUMN_FIRST,
@@ -171,13 +172,13 @@ enum {
 	COLUMN_LAST
 };
 
-class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase {
+class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase, public ColumnBase {
 public:
 	typedef vector<OnlineUser*> List;
 	typedef List::const_iterator Iter;
 
 	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() { /*clearData();*/ }
+	~OnlineUser() { }
 
 	operator UserPtr&() { return getUser(); }
 	operator const UserPtr&() const { return getUser(); }
@@ -195,23 +196,12 @@ public:
 	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
-	void setText(const uint8_t name, const tstring& val);
-	void clearData() { info.clear(); }
-	
-	inline const tstring& getText(const uint8_t col) const {
-		InfMap::const_iterator i = info.find((uint8_t)col);
-		return i == info.end() ? Util::emptyStringT : i->second;
-	}
-
 	GETSET(Identity, identity, Identity);
 private:
 	friend class NmdcHub;
 
 	OnlineUser(const OnlineUser&);
 	OnlineUser& operator=(const OnlineUser&);
-
-	typedef map<uint8_t, tstring> InfMap;
-	InfMap info;
 
 	Client& client;
 };

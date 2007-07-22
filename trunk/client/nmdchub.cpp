@@ -78,21 +78,24 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 	{
 		Lock l(cs);
 
-		NickIter i = users.find(aNick);
+		NickIter i = users.find(const_cast<string*>(&aNick));
 		if(i != users.end())
 			return *i->second;
 	}
 
 	UserPtr p;
+	bool isMe = false;
 	if(aNick == getCurrentNick()) {
 		p = ClientManager::getInstance()->getMe();
+		isMe = true;
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 	}
 
 	{
 		Lock l(cs);
-		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
+		dcassert(isMe || (aNick == p->getFirstNick()));
+		u = users.insert(make_pair(const_cast<string*>(&(isMe ? getCurrentNick() : p->getFirstNick())), new OnlineUser(p, *this, 0))).first->second;
 		u->getIdentity().setNick(aNick);
 		if(u->getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u->getIdentity());
@@ -112,7 +115,7 @@ void NmdcHub::supports(const StringList& feat) {
 
 OnlineUser* NmdcHub::findUser(const string& aNick) const {
 	Lock l(cs);
-	NickIter i = users.find(aNick);
+	NickIter i = users.find(const_cast<string*>(&aNick));
 	return i == users.end() ? NULL : i->second;
 }
 
@@ -120,7 +123,7 @@ void NmdcHub::putUser(const string& aNick) {
 	OnlineUser* ou = NULL;
 	{
 		Lock l(cs);
-		NickMap::iterator i = users.find(aNick);
+		NickMap::iterator i = users.find(const_cast<string*>(&aNick));
 		if(i == users.end())
 			return;
 		ou = i->second;
@@ -391,9 +394,11 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		u.getIdentity().setHub(false);
 		u.getIdentity().setHidden(false);
 
-		double us = Util::toDouble(connection);
-		if(us > 0) {
-			connection = Util::toString((long)(us*1024*1024));
+		if(connection.find_first_not_of("0123456789.,") == string::npos) {
+			double us = Util::toDouble(connection);
+			if(us > 0) {
+				connection = Util::toString((long)(us*1024*1024));
+			}
 		}
 		u.getIdentity().setConnection(connection);
 

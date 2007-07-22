@@ -1,8 +1,19 @@
+** svn309
+	[NMDC] optimized userlist's memory usage a bit
+	translatable "Queued: " string
+	added "Malware MSIU32" to crash libraries
+	crash libraries saved in vector
+	garbage command is not sent in stealth mode
+	implemented ColumnBase class to allow further columns optimization
+	fixed problem with some Connection strings
+	real upload queue is optional and enabled by default
+
 ** svn308
 	optimized vtables in windows part
 	hopefully fixed crash #3666
 	onSecond and onMinute ticks supports 64bit times
 	first try to fix Hub reconnect (THX adrian_007 for some ideas)
+	user is not removed from upload queue when using small slot
 
 ** svn307
 	hopefully fixed crashes #3667 and #3669

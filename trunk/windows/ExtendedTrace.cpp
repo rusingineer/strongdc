@@ -30,37 +30,38 @@
 #define BUFFERSIZE   0x200
 
 static void checkBuggyLibrary(PCSTR library) {
-	map<tstring, tstring> libraries;
-	libraries.insert(make_pair(L"Vlsp", L"V-One Smartpass"));
-	libraries.insert(make_pair(L"mclsp", L"McAfee AV"));
-	libraries.insert(make_pair(L"Niphk", L"Norman AV"));
-	libraries.insert(make_pair(L"aslsp", L"Aventail Corporation VPN"));
-	libraries.insert(make_pair(L"AXShlEx", L"Alcohol 120%"));
-	libraries.insert(make_pair(L"gdlsphlr", L"McAfee"));
-	libraries.insert(make_pair(L"mlang", L"IE"));
-	libraries.insert(make_pair(L"cslsp", L"McAfee"));
-	libraries.insert(make_pair(L"winsflt", L"PureSight Internet Content Filter"));
-	libraries.insert(make_pair(L"imslsp", L"ZoneLabs IM Secure"));
-	libraries.insert(make_pair(L"apitrap", L"Norton Cleansweep [?]"));
-	libraries.insert(make_pair(L"sockspy", L"BitDefender Antivirus"));
-	libraries.insert(make_pair(L"imon", L"Eset NOD32"));
-	libraries.insert(make_pair(L"KvWspXp(_1)", L"Kingsoft Antivirus"));
-	libraries.insert(make_pair(L"nl_lsp", L"NetLimiter"));
-	libraries.insert(make_pair(L"OSMIM", L"Marketscore Internet Accelerator"));
-	libraries.insert(make_pair(L"opls", L"Opinion Square [malware]"));
-	libraries.insert(make_pair(L"PavTrc", L"Panda Anti-Virus"));
-	libraries.insert(make_pair(L"pavlsp", L"Panda Anti-Virus"));
-	libraries.insert(make_pair(L"AppToPort", L"Wyvern Works  Firewall"));
-	libraries.insert(make_pair(L"SpyDll", L"Nice Spy [malware]"));
-	libraries.insert(make_pair(L"WBlind", L"Window Blinds"));
-	libraries.insert(make_pair(L"UPS10", L"Uniscribe Unicode Script Processor Library"));
-	libraries.insert(make_pair(L"SOCKS32", L"Sockscap [?]"));
-	libraries.insert(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
-	libraries.insert(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
-	libraries.insert(make_pair(L"mshp32", L"Worm: W32.Worm.Feebs"));
-	libraries.insert(make_pair(L"ProxyFilter", L"Hide My IP 2007"));
+	vector<pair<tstring, tstring>> libraries;
+	libraries.push_back(make_pair(L"Vlsp", L"V-One Smartpass"));
+	libraries.push_back(make_pair(L"mclsp", L"McAfee AV"));
+	libraries.push_back(make_pair(L"Niphk", L"Norman AV"));
+	libraries.push_back(make_pair(L"aslsp", L"Aventail Corporation VPN"));
+	libraries.push_back(make_pair(L"AXShlEx", L"Alcohol 120%"));
+	libraries.push_back(make_pair(L"gdlsphlr", L"McAfee"));
+	libraries.push_back(make_pair(L"mlang", L"IE"));
+	libraries.push_back(make_pair(L"cslsp", L"McAfee"));
+	libraries.push_back(make_pair(L"winsflt", L"PureSight Internet Content Filter"));
+	libraries.push_back(make_pair(L"imslsp", L"ZoneLabs IM Secure"));
+	libraries.push_back(make_pair(L"apitrap", L"Norton Cleansweep [?]"));
+	libraries.push_back(make_pair(L"sockspy", L"BitDefender Antivirus"));
+	libraries.push_back(make_pair(L"imon", L"Eset NOD32"));
+	libraries.push_back(make_pair(L"KvWspXp(_1)", L"Kingsoft Antivirus"));
+	libraries.push_back(make_pair(L"nl_lsp", L"NetLimiter"));
+	libraries.push_back(make_pair(L"OSMIM", L"Marketscore Internet Accelerator"));
+	libraries.push_back(make_pair(L"opls", L"Opinion Square [malware]"));
+	libraries.push_back(make_pair(L"PavTrc", L"Panda Anti-Virus"));
+	libraries.push_back(make_pair(L"pavlsp", L"Panda Anti-Virus"));
+	libraries.push_back(make_pair(L"AppToPort", L"Wyvern Works  Firewall"));
+	libraries.push_back(make_pair(L"SpyDll", L"Nice Spy [malware]"));
+	libraries.push_back(make_pair(L"WBlind", L"Window Blinds"));
+	libraries.push_back(make_pair(L"UPS10", L"Uniscribe Unicode Script Processor Library"));
+	libraries.push_back(make_pair(L"SOCKS32", L"Sockscap [?]"));
+	libraries.push_back(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
+	libraries.push_back(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
+	libraries.push_back(make_pair(L"mshp32", L"Worm: W32.Worm.Feebs"));
+	libraries.push_back(make_pair(L"ProxyFilter", L"Hide My IP 2007"));
+	libraries.push_back(make_pair(L"msui32", L"Malware MSUI32"));
 
-	for(map<tstring, tstring>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
+	for(vector<pair<tstring, tstring>>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
 		string lib = Text::fromT(i->first); tstring app = i->second;
 		if(Util::stricmp(library, lib) == 0) {
 			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;

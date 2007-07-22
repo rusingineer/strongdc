@@ -784,8 +784,9 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 	ui->setFile(Text::toT(aDownload->getTarget()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 	ui->setMultiSource(aDownload->isSet(Download::FLAG_MULTI_CHUNK));
-	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection().getRemoteIp()));
+	
 	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
+	tstring country = Util::getIpCountry(ip);
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {
@@ -872,8 +873,9 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	ui->setStatusString(Text::toT(aReason));
 	ui->setSize(aDownload->getSize());
 	ui->setFile(Text::toT(aDownload->getTarget()));
-	tstring country = Text::toT(Util::getIpCountry(aDownload->getUserConnection().getRemoteIp()));
+
 	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
+	tstring country = Util::getIpCountry(ip);
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {
@@ -916,8 +918,8 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));
 	}
 
-	tstring country = Text::toT(Util::getIpCountry(aUpload->getUserConnection().getRemoteIp()));
 	tstring ip = Text::toT(aUpload->getUserConnection().getRemoteIp());
+	tstring country = Util::getIpCountry(ip);
 	if(country.empty()) {
 		ui->setIP(ip);
 	} else {

@@ -29,7 +29,7 @@
 #include "MerkleTree.h"
 #include "FastAlloc.h"
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase {
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public PointerBase, public ColumnBase {
 public:
 	UploadQueueItem(UserPtr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
 		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }
@@ -41,10 +41,10 @@ public:
 
 	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, uint8_t col) {
 		switch(col) {
-			case COLUMN_FILE: return Util::stricmp(a->columns[COLUMN_FILE], b->columns[COLUMN_FILE]);
-			case COLUMN_PATH: return Util::stricmp(a->columns[COLUMN_PATH], b->columns[COLUMN_PATH]);
-			case COLUMN_NICK: return Util::stricmp(a->columns[COLUMN_NICK], b->columns[COLUMN_NICK]);
-			case COLUMN_HUB: return Util::stricmp(a->columns[COLUMN_HUB], b->columns[COLUMN_HUB]);
+			case COLUMN_FILE: return Util::stricmp(a->getText(COLUMN_FILE), b->getText(COLUMN_FILE));
+			case COLUMN_PATH: return Util::stricmp(a->getText(COLUMN_PATH), b->getText(COLUMN_PATH));
+			case COLUMN_NICK: return Util::stricmp(a->getText(COLUMN_NICK), b->getText(COLUMN_NICK));
+			case COLUMN_HUB: return Util::stricmp(a->getText(COLUMN_HUB), b->getText(COLUMN_HUB));
 			case COLUMN_TRANSFERRED: return compare(a->pos, b->pos);
 			case COLUMN_SIZE: return compare(a->size, b->size);
 			case COLUMN_ADDED:
@@ -69,8 +69,6 @@ public:
 	int imageIndex() const;
 	void update(bool onSecond = false);
 
-	inline const tstring& getText(uint8_t col) const { return columns[col]; }
-
 	const string& getFile() const { return file; }
 	const UserPtr& getUser() const { return user; }
 	int64_t getSize() const { return size; }
@@ -79,8 +77,6 @@ public:
 	GETSET(int64_t, pos, Pos);
 
 private:
-	tstring columns[COLUMN_LAST];
-
 	string file;
 	int64_t size;
 	uint64_t time;

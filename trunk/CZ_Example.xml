@@ -147,6 +147,7 @@
 		<String Name="EditAccel">&amp;Upravit</String>
 		<String Name="Email">E-Mail</String>
 		<String Name="EnableMultiSource">Stahování z více zdrojů</String>
+		<String Name="EnableRealUploadQueue">Zapnout skutečnou frontu na sloty pro odesílání</String>		
 		<String Name="EnterNick">Zadejte v nastavení vaši přezdívku!</String>
 		<String Name="EnterPassword">Prosím zadejte heslo</String>
 		<String Name="EnterSearchString">Zadejte hledaný výraz</String>
