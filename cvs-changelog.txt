@@ -1,3 +1,8 @@
+** svn310
+	ColumnBase used as a data member and not parent class
+	removed ItemInfo instance in finished frames + clean up source
+	added root "All" to upload queue frame to display all files of all users
+
 ** svn309
 	[NMDC] optimized userlist's memory usage a bit
 	translatable "Queued: " string
@@ -7,6 +12,7 @@
 	implemented ColumnBase class to allow further columns optimization
 	fixed problem with some Connection strings
 	real upload queue is optional and enabled by default
+	tstring used for countries list
 
 ** svn308
 	optimized vtables in windows part

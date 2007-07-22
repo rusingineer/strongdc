@@ -1,3 +1,18 @@
+	-- StrongDC++ 2.05 --
+
+* fixed many crashes
+* fixed displaying connection type string
+* fixed passive searches for unicode nicknames (THX PPK for report)
+* another userlist memory optimization
+* added real upload queue (idea from Possum mod)
+* fixed Invalid request when AntiFrag downloading was disabled
+* removed old-styled connection types
+* removing diacritics from Czech chars is disabled by default
+* added "Malware MSIU32" to crash libraries
+* garbage command is not sent in DC++ emulation mode
+* optimized vtables
+
+
 	-- StrongDC++ 2.04 --
 
 * DC++ 0.699 SVN update

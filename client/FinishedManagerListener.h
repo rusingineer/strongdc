@@ -28,17 +28,9 @@ public:
 
 	typedef X<0> AddedUl;
 	typedef X<1> AddedDl;
-	typedef X<2> RemovedUl;
-	typedef X<3> RemovedDl;
-	typedef X<4> RemovedAllUl;
-	typedef X<5> RemovedAllDl;
 
-	virtual void on(AddedDl, const FinishedItem*) throw() { }
-	virtual void on(RemovedDl, const FinishedItem*) throw() { }
-	virtual void on(RemovedAllDl) throw() { }
-	virtual void on(AddedUl, const FinishedItem*) throw() { }
-	virtual void on(RemovedUl, const FinishedItem*) throw() { }
-	virtual void on(RemovedAllUl) throw() { }
+	virtual void on(AddedDl, FinishedItem*) throw() { }
+	virtual void on(AddedUl, FinishedItem*) throw() { }
 
 };
 

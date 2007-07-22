@@ -43,11 +43,12 @@ HubFrame::FrameMap HubFrame::frames;
 HubFrame::IgnoreMap HubFrame::ignoreList;
 
 int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 100, 100, 50, 40, 40, 40 };
-int HubFrame::columnIndexes[] = { COLUMN_NICK, COLUMN_SHARED, COLUMN_EXACT_SHARED, COLUMN_DESCRIPTION, COLUMN_TAG,
-	COLUMN_CONNECTION, COLUMN_IP, COLUMN_EMAIL, COLUMN_VERSION, COLUMN_MODE, COLUMN_HUBS, COLUMN_SLOTS };
+int HubFrame::columnIndexes[] = { OnlineUser::COLUMN_NICK, OnlineUser::COLUMN_SHARED, OnlineUser::COLUMN_EXACT_SHARED,
+	OnlineUser::COLUMN_DESCRIPTION, OnlineUser::COLUMN_TAG,	OnlineUser::COLUMN_CONNECTION, OnlineUser::COLUMN_IP, OnlineUser::COLUMN_EMAIL,
+	OnlineUser::COLUMN_VERSION, OnlineUser::COLUMN_MODE, OnlineUser::COLUMN_HUBS, OnlineUser::COLUMN_SLOTS };
 static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
-ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
-ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS };
+	ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
+	ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS };
 
 tstring sSelectedURL = Util::emptyStringT;
 extern CAGEmotionSetup* g_pEmotionsSetup;
@@ -116,19 +117,19 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	const FavoriteHubEntry *fhe = FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
 	if(fhe) {
-		WinUtil::splitTokens(columnIndexes, fhe->getHeaderOrder(), COLUMN_LAST);
-		WinUtil::splitTokens(columnSizes, fhe->getHeaderWidths(), COLUMN_LAST);
+		WinUtil::splitTokens(columnIndexes, fhe->getHeaderOrder(), OnlineUser::COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, fhe->getHeaderWidths(), OnlineUser::COLUMN_LAST);
 	} else {
-		WinUtil::splitTokens(columnIndexes, SETTING(HUBFRAME_ORDER), COLUMN_LAST);
-		WinUtil::splitTokens(columnSizes, SETTING(HUBFRAME_WIDTHS), COLUMN_LAST);                           
+		WinUtil::splitTokens(columnIndexes, SETTING(HUBFRAME_ORDER), OnlineUser::COLUMN_LAST);
+		WinUtil::splitTokens(columnSizes, SETTING(HUBFRAME_WIDTHS), OnlineUser::COLUMN_LAST);                           
 	}
     	
-	for(uint8_t j=0; j<COLUMN_LAST; j++) {
-		int fmt = (j == COLUMN_SHARED || j == COLUMN_EXACT_SHARED || j == COLUMN_SLOTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
+	for(uint8_t j=0; j<OnlineUser::COLUMN_LAST; j++) {
+		int fmt = (j == OnlineUser::COLUMN_SHARED || j == OnlineUser::COLUMN_EXACT_SHARED || j == OnlineUser::COLUMN_SLOTS) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlUsers.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	
-	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
+	ctrlUsers.setColumnOrderArray(OnlineUser::COLUMN_LAST, columnIndexes);
 
 	if(fhe) {
 		ctrlUsers.setVisible(fhe->getHeaderVisible());
@@ -142,7 +143,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	ctrlUsers.setFlickerFree(WinUtil::bgBrush);
 	ctrlClient.SetBackgroundColor(WinUtil::bgColor); 
 	
-	ctrlUsers.setSortColumn(COLUMN_NICK);
+	ctrlUsers.setSortColumn(OnlineUser::COLUMN_NICK);
 				
 	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
 
@@ -171,7 +172,7 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 	showJoins = BOOLSETTING(SHOW_JOINS);
 	favShowJoins = BOOLSETTING(FAV_SHOW_JOINS);
 
-	for(int j=0; j<COLUMN_LAST; j++) {
+	for(int j=0; j<OnlineUser::COLUMN_LAST; j++) {
 		ctrlFilterSel.AddString(CTSTRING_I(columnNames[j]));
 	}
 	ctrlFilterSel.AddString(CTSTRING(ANY));
@@ -529,9 +530,9 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 						_T("\tE-Mail: ") + Text::toT(ui->getIdentity().getEmail()) + _T("\r\n") +
 						_T("\tClient: ") + Text::toT(ui->getIdentity().get("CT")) + _T("\r\n") + 
 						_T("\tVersion: ") + Text::toT(ui->getIdentity().get("VE")) + _T("\r\n") +
-						_T("\tMode: ") + ui->getText(COLUMN_MODE) + _T("\r\n") +
-						_T("\tHubs: ") + ui->getText(COLUMN_HUBS) + _T("\r\n") +
-						_T("\tSlots: ") + ui->getText(COLUMN_SLOTS) + _T("\r\n") +
+						_T("\tMode: ") + ui->getText(OnlineUser::COLUMN_MODE) + _T("\r\n") +
+						_T("\tHubs: ") + ui->getText(OnlineUser::COLUMN_HUBS) + _T("\r\n") +
+						_T("\tSlots: ") + ui->getText(OnlineUser::COLUMN_SLOTS) + _T("\r\n") +
 						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
 						_T("\tLock: " )+ Text::toT(ui->getIdentity().get("LO")) + _T("\r\n")+
 						_T("\tSupports: ") + Text::toT(ui->getIdentity().get("SU"));
@@ -622,7 +623,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return false;
 	
-	if(u.onlineUser->getRoot() == NULL) {
+	if(u.onlineUser->columns.getRoot() == NULL) {
 		u.onlineUser->update(-1);
 
 		if(!u.onlineUser->isHidden()) {
@@ -1038,7 +1039,7 @@ void HubFrame::clearUserList(bool clearData) {
 		OnlineUser& ou = *i;
 		
 		if(clearData) {
-			ou.clearData();
+			ou.columns.clearData();
 		}
 		ou.dec();
 	}
@@ -1160,7 +1161,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					    break;
 					}    
 					case 1: {
-					     tstring sUser = ui->getText(COLUMN_NICK);
+					     tstring sUser = ui->getText(OnlineUser::COLUMN_NICK);
 					     int iSelBegin, iSelEnd;
 					     ctrlMessage.GetSel(iSelBegin, iSelEnd);
 
@@ -1470,7 +1471,7 @@ void HubFrame::onTab() {
 			i = 0;
 		while(firstPass || (!firstPass && i < start)) {
 			const OnlineUser* ui = ctrlUsers.getItemData(i);
-			const tstring& nick = ui->getText(COLUMN_NICK);
+			const tstring& nick = ui->getText(OnlineUser::COLUMN_NICK);
 			bool found = (Util::strnicmp(nick, complete, complete.length()) == 0);
 			tstring::size_type x = 0;
 			if(!found) {
@@ -2011,7 +2012,7 @@ void HubFrame::updateUserList(OnlineUser* ui) {
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
-			bool doSizeCompare = sel == COLUMN_SHARED && parseFilter(mode, size);
+			bool doSizeCompare = sel == OnlineUser::COLUMN_SHARED && parseFilter(mode, size);
 
 			if(matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 				if(ctrlUsers.findItem(ui) == -1) {
@@ -2045,7 +2046,7 @@ void HubFrame::updateUserList(OnlineUser* ui) {
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
-			bool doSizeCompare = sel == COLUMN_SHARED && parseFilter(mode, size);
+			bool doSizeCompare = sel == OnlineUser::COLUMN_SHARED && parseFilter(mode, size);
 
 			for(OnlineUser::Iter i = l.begin(); i != l.end(); ++i) {
 				OnlineUser* ui = *i;
@@ -2109,8 +2110,8 @@ bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, Fi
 		PME reg(filter,_T("i"));
 		if(!reg.IsValid()) { 
 			insert = true;
-		} else if(sel >= COLUMN_LAST) {
-			for(uint8_t i = COLUMN_FIRST; i < COLUMN_LAST; ++i) {
+		} else if(sel >= OnlineUser::COLUMN_LAST) {
+			for(uint8_t i = OnlineUser::COLUMN_FIRST; i < OnlineUser::COLUMN_LAST; ++i) {
 				if(reg.match(ui.getText(i))) {
 					insert = true;
 					break;

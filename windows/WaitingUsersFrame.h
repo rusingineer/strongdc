@@ -103,6 +103,7 @@ public:
 		bHandled = FALSE;
 		showTree = (wParam == BST_CHECKED);
 		UpdateLayout(FALSE);
+		DeleteAll();
 		LoadAll();
 		return 0;
 	}
@@ -111,20 +112,8 @@ public:
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 
 private:
-	enum {
-		COLUMN_FIRST,
-		COLUMN_FILE = COLUMN_FIRST,
-		COLUMN_PATH,
-		COLUMN_NICK,
-		COLUMN_HUB,
-		COLUMN_TRANSFERRED,
-		COLUMN_SIZE,
-		COLUMN_ADDED,
-		COLUMN_WAITING,
-		COLUMN_LAST
-	};
-	static int columnSizes[COLUMN_LAST];
-	static int columnIndexes[COLUMN_LAST];
+	static int columnSizes[UploadQueueItem::COLUMN_LAST];
+	static int columnIndexes[UploadQueueItem::COLUMN_LAST];
 
 	struct UserItem {
 		UserPtr u;
@@ -132,8 +121,9 @@ private:
 	};
 		
 	const UserPtr getSelectedUser() {
-		HTREEITEM selectedItem = GetParentItem();
-		return selectedItem ? reinterpret_cast<UserItem*>(ctrlQueued.GetItemData(selectedItem))->u : UserPtr(0);
+		HTREEITEM selectedItem = ctrlQueued.GetSelectedItem();
+		UserItem* ui = reinterpret_cast<UserItem*>(ctrlQueued.GetItemData(selectedItem));
+		return (selectedItem && ui) ? ui->u : UserPtr(NULL);
 	}
 
 	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -148,9 +138,9 @@ private:
 		NMTVKEYDOWN* kd = (NMTVKEYDOWN*) pnmh;
 		if(kd->wVKey == VK_DELETE) {
 			removeSelectedUser();
-			}
-			return 0;
 		}
+		return 0;
+	}
 
 	void removeSelected() {
 		int i = -1;
@@ -175,9 +165,9 @@ private:
 
 	// Communication with manager
 	void LoadAll();
-	void UpdateSearch(int index, BOOL doDelete = TRUE);
+	void DeleteAll();
 
-	HTREEITEM GetParentItem();
+	HTREEITEM rootItem;
 
 	// Contained controls
 	CButton ctrlShowTree;

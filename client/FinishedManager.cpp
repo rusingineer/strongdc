@@ -47,11 +47,6 @@ void FinishedManager::remove(FinishedItemPtr item, bool upload /* = false */) {
 		else
 			return;
 	}
-	if (!upload)
-		fire(FinishedManagerListener::RemovedDl(), item);
-	else
-		fire(FinishedManagerListener::RemovedUl(), item);
-	delete item;		
 }
 	
 void FinishedManager::removeAll(bool upload /* = false */) {
@@ -61,10 +56,6 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 		for_each(listptr->begin(), listptr->end(), DeleteFunction());
 		listptr->clear();
 	}
-	if (!upload)
-		fire(FinishedManagerListener::RemovedAllDl());
-	else
-		fire(FinishedManagerListener::RemovedAllUl());
 }
 
 void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw()
@@ -75,7 +66,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 		
 	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		FinishedItemPtr item = new FinishedItem(
-			d->getTarget(), d->getUser()->getFirstNick(), d->getUser()->getCID(),
+			d->getTarget(), d->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUser()->getCID())),
 			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
 		{
@@ -102,7 +93,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 		FinishedItemPtr item = new FinishedItem(
-			u->getSourceFile(), u->getUser()->getFirstNick(), u->getUser()->getCID(),
+			u->getSourceFile(), u->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUser()->getCID())),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
 		{
