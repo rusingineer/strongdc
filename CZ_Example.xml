@@ -459,6 +459,7 @@
 		<String Name="PublicHubs">Veřejné huby</String>
 		<String Name="Purge">Vyčistit</String>
 		<String Name="QueueUpdating">Zapnout aktualizaci fronty v reálném čase (používá více CPU!!!)</String>
+		<String Name="Queued">Ve frontě: </String>		
 		<String Name="QuickConnect">Rychlé připojení</String>
 		<String Name="Rating">Hodnocení</String>
 		<String Name="Ratio">Poměr</String>
