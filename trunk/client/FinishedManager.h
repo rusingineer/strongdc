@@ -51,23 +51,23 @@ public:
 
 	int64_t getAvgSpeed() const { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
 
-	const tstring& getText(uint8_t col) const {
+	inline const wchar_t* getText(uint8_t col) const {
 		dcassert(col >= 0 && col < COLUMN_LAST);
 		return columns[col];
 	}
 
-	const tstring& copy(uint8_t col) {
+	const wchar_t* copy(uint8_t col) {
 		if(col >= 0 && col < COLUMN_LAST)
 			return getText(col);
 
-		return Util::emptyStringT;
+		return Util::emptyStringT.c_str();
 	}
 
 	static int compareItems(const FinishedItem* a, const FinishedItem* b, uint8_t col) {
 		switch(col) {
 			case COLUMN_SPEED:	return compare(a->getAvgSpeed(), b->getAvgSpeed());
 			case COLUMN_SIZE:	return compare(a->getSize(), b->getSize());
-			default:			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
+			default:			return lstrcmpi(a->columns[col], b->columns[col]);
 		}
 	}
 	int imageIndex() const;

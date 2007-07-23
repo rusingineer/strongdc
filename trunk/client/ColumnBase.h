@@ -30,22 +30,41 @@
  * It must be called within one thread.
  */
 
-struct Node {
+struct Node : public FastAlloc<Node> {
 public:
-	Node(uint8_t _key, const tstring& _data, Node* _next = NULL) : key(_key), data(_data), next(_next) { }
-	~Node() { }
+	Node(const uint8_t _key, const tstring& _data, Node* _next = NULL) : key(_key), data(NULL), next(_next)
+	{
+		setData(_data);
+	}
 
-	inline const tstring& getData() const { return data; }
+	~Node()
+	{
+		delete[] data;
+	}
+
+	inline const uint8_t getKey() const { return key; }
+	inline const wchar_t* getData() const { return data; }
 	inline Node* getNext() const { return next; }
-	inline uint8_t getKey() const { return key; }
 
-	inline void setData(const tstring& value) { data = value; }
+	void setData(const tstring& value) {
+		dcassert(!value.empty());
+
+		if(!data || _tcscmp(value.c_str(), data) != 0) {
+			delete[] data;
+
+			size_t len = value.size();
+			data = new wchar_t[len + 1];
+			_tcscpy(data, value.c_str());
+			data[len] = NULL;
+		}
+	}
+
 	inline void setNext(Node* nextNode) { next = nextNode; }
 
 private:
-	tstring data;
-	Node* next;
 	uint8_t key;
+	wchar_t* data;
+	Node* next;
 };
 
 class ColumnBase {
@@ -53,14 +72,14 @@ public:
 	ColumnBase() : root(NULL) { }
 	~ColumnBase() { clearData(); }
 
-	inline const tstring& operator[](uint8_t col) const { return get(col); }
+	inline const wchar_t* operator[](uint8_t col) const { return get(col); }
 	inline const void* getRoot() const { return root; }
 
 	/*
 	 * Returns reference to col's text.
 	 * Complexity: linear
 	 */
-	const tstring& get(const uint8_t col) const {
+	const wchar_t* get(const uint8_t col) const {
 		Node* node = root;
 		while(node != NULL) {
 			if(node->getKey() == col) {
@@ -68,7 +87,7 @@ public:
 			}
 			node = node->getNext();
 		}
-		return Util::emptyStringT;
+		return Util::emptyStringT.c_str();
 	}
 
 	/*

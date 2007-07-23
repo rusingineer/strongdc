@@ -19,6 +19,7 @@
 #if !defined(AGEMOTIONSETUP_H__)
 #define AGEMOTIONSETUP_H__
 
+#include "../client/FastAlloc.h"
 #include "../client/Util.h"
 
 #if _MSC_VER > 1000
@@ -27,7 +28,7 @@
 
 // CAGEmotion
 
-class CAGEmotion {
+class CAGEmotion : public FastAlloc<CAGEmotion> {
 public:
 	typedef list<CAGEmotion*> List;
 	typedef List::const_iterator Iter;

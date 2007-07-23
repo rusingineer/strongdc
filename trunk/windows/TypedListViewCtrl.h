@@ -118,11 +118,14 @@ public:
 		return 1;
 	}
 
+	inline TCHAR* getText(const tstring& text) const { return const_cast<TCHAR*>(text.c_str()); }
+	inline TCHAR* getText(const wchar_t* text) const { return const_cast<TCHAR*>(text); }
+
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			di->item.pszText = const_cast<TCHAR*>(((T*)di->item.lParam)->getText(columnIndexes[di->item.iSubItem]).c_str());
+			di->item.pszText = getText(((T*)di->item.lParam)->getText(columnIndexes[di->item.iSubItem]));
 		}
 		return 0;
 	}

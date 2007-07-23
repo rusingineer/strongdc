@@ -196,7 +196,7 @@ public:
 	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
-	inline const tstring& getText(uint8_t col) const { return columns.get(col); }
+	inline const wchar_t* getText(uint8_t col) const { return columns.get(col); }
 
 	GETSET(Identity, identity, Identity);
 	ColumnBase columns;

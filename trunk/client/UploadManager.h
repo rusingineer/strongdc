@@ -45,7 +45,7 @@ public:
 			case COLUMN_SIZE: return compare(a->size, b->size);
 			case COLUMN_ADDED:
 			case COLUMN_WAITING: return compare(a->time, b->time);
-			default: return Util::stricmp(a->columns[col].c_str(), b->columns[col].c_str());
+			default: return Util::stricmp(a->columns[col], b->columns[col]);
 		}
 		return 0;
 	}
@@ -63,7 +63,7 @@ public:
 		COLUMN_LAST
 	};
 		
-	inline const tstring& getText(uint8_t col) const { return columns[col]; }
+	inline const wchar_t* getText(uint8_t col) const { return columns[col]; }
 	int imageIndex() const;
 	void update(bool onSecond = false);
 

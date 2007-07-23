@@ -1,3 +1,7 @@
+** svn311
+	ColumnBase's Node stores texts as an array of wchars to save very small memory
+	ColumnBase's Node and Emoticons use fast memory allocation
+
 ** svn310
 	ColumnBase used as a data member and not parent class
 	removed ItemInfo instance in finished frames + clean up source
