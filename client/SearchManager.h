@@ -75,7 +75,10 @@ public:
 	Types getType() const { return type; }
 	uint8_t getSlots() const { return slots; }
 	uint8_t getFreeSlots() const { return freeSlots; }
-	TTHValue getTTH() const { return tth; }
+	
+	//TTHValue getTTH() const { return tth; }
+	const TTHValue& getTTH() const { return tth; }
+	
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
 

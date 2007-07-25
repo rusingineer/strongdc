@@ -33,10 +33,10 @@ public:
 	void matchQueue();
 	void pm();
 	void grant();
-	void grantSlotHour();
-	void grantSlotDay();
-	void grantSlotWeek();
-	void ungrantSlot();
+	void grantHour();
+	void grantDay();
+	void grantWeek();
+	void ungrant();
 	void addFav();
 	void removeAll();
 	

@@ -623,7 +623,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 bool HubFrame::updateUser(const UserTask& u) {
 	if(!showUsers) return false;
 	
-	if(u.onlineUser->columns.getRoot() == NULL) {
+	if(!u.onlineUser->isInList) {
 		u.onlineUser->update(-1);
 
 		if(!u.onlineUser->isHidden()) {
@@ -634,12 +634,14 @@ bool HubFrame::updateUser(const UserTask& u) {
 		if(!filter.empty())
 			updateUserList(u.onlineUser);
 		return true;
-	} else {		
-		resort = u.onlineUser->update(ctrlUsers.getSortColumn()) || resort;
-		u.onlineUser->getIdentity().set("WO", u.onlineUser->getIdentity().isOp() ? "1" : Util::emptyString);
-
+	} else {
 		int pos = ctrlUsers.findItem(u.onlineUser);
+
 		if(pos != -1) {
+			TCHAR buf[255];
+			ListView_GetItemText(ctrlUsers, pos, ctrlUsers.getSortColumn(), buf, 255);
+			
+			resort = u.onlineUser->update(ctrlUsers.getSortColumn(), buf) || resort;
 			if(u.onlineUser->isHidden()) {
 				ctrlUsers.DeleteItem(pos);
 				u.onlineUser->dec();				
@@ -649,6 +651,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 			}
 		}
 
+		u.onlineUser->getIdentity().set("WO", u.onlineUser->getIdentity().isOp() ? "1" : Util::emptyString);
 		updateUserList(u.onlineUser);
 		return false;
 	}
@@ -1034,14 +1037,9 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	}
 }
 
-void HubFrame::clearUserList(bool clearData) {
+void HubFrame::clearUserList() {
 	for(CtrlUsers::iterator i = ctrlUsers.begin(); i != ctrlUsers.end(); i++) {
-		OnlineUser& ou = *i;
-		
-		if(clearData) {
-			ou.columns.clearData();
-		}
-		ou.dec();
+		(*i).dec();
 	}
 	ctrlUsers.DeleteAllItems();
 }
@@ -1660,7 +1658,7 @@ LRESULT HubFrame::onShowUsers(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, B
 		client->refreshUserList(true);
 	} else {
 		showUsers = false;
-		clearUserList(true);
+		clearUserList();
 	}
 
 	SettingsManager::getInstance()->set(SettingsManager::GET_USER_INFO, showUsers);
@@ -2608,6 +2606,133 @@ LRESULT HubFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
 		g_pEmotionsSetup->Unload();
 		g_pEmotionsSetup->Load();
+	}
+	return 0;
+}
+
+
+LRESULT HubFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->matchQueue();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::matchQueue);
+	}
+	return 0;
+}
+LRESULT HubFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->getList();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::getList);
+	}
+	return 0;
+}
+LRESULT HubFrame::onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->browseList();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::browseList);
+	}
+	return 0;
+}
+LRESULT HubFrame::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->doReport();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::doReport);
+	}
+	return 0;
+}
+
+LRESULT HubFrame::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->getUserResponses();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::getUserResponses);
+	}
+	return 0;
+}
+
+LRESULT HubFrame::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->checkList();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::checkList);
+	}
+	return 0;
+}
+
+LRESULT HubFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->addFav();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::addFav);
+	}
+	return 0;
+}
+LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->pm();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::pm);
+	}		
+	return 0;
+}
+LRESULT HubFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			switch(wID) {
+				case IDC_GRANTSLOT:		ui->grant(); break;
+				case IDC_GRANTSLOT_DAY:	ui->grantDay(); break;
+				case IDC_GRANTSLOT_HOUR:	ui->grantHour(); break;
+				case IDC_GRANTSLOT_WEEK:	ui->grantWeek(); break;
+				case IDC_UNGRANTSLOT:	ui->ungrant(); break;
+			}
+		}
+	} else {
+		switch(wID) {
+			case IDC_GRANTSLOT:		ctrlUsers.forEachSelected(&UserInfoBase::grant); break;
+			case IDC_GRANTSLOT_DAY:	ctrlUsers.forEachSelected(&UserInfoBase::grantDay); break;
+			case IDC_GRANTSLOT_HOUR:	ctrlUsers.forEachSelected(&UserInfoBase::grantHour); break;
+			case IDC_GRANTSLOT_WEEK:	ctrlUsers.forEachSelected(&UserInfoBase::grantWeek); break;
+			case IDC_UNGRANTSLOT:	ctrlUsers.forEachSelected(&UserInfoBase::ungrant); break;
+		}
+	}
+	return 0;
+}
+LRESULT HubFrame::onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
+	if(!ChatCtrl::sSelectedUser.empty()) {
+		OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			ui->removeAll();
+		}
+	} else {
+		ctrlUsers.forEachSelected(&UserInfoBase::removeAll);
 	}
 	return 0;
 }

@@ -80,7 +80,8 @@ public:
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
-	Identity& operator=(const Identity& rhs) { Lock l(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
+	Identity& operator=(const Identity& rhs) { Lock l1(cs); Lock l2(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
+	~Identity() { Lock l(cs); /* don't allow destroying before all critical sections are left */ }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Description, "DE")
@@ -153,7 +154,6 @@ private:
 
 class NmdcHub;
 #include "UserInfoBase.h"
-#include "ColumnBase.h"
 
 class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase {
 public:
@@ -190,16 +190,16 @@ public:
 	const Client& getClient() const { return client; }
 
 	/* UserInfo */
-	bool update(int sortCol);
+	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
 	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	const string& getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
-	inline const wchar_t* getText(uint8_t col) const { return columns.get(col); }
+	const tstring getText(uint8_t col) const;
 
+	bool isInList;
 	GETSET(Identity, identity, Identity);
-	ColumnBase columns;
 private:
 	friend class NmdcHub;
 

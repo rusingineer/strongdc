@@ -473,10 +473,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\ColumnBase.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\ConnectionManager.h"
 				>
 			</File>

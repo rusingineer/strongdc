@@ -376,7 +376,7 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	}
 }
 
-void UploadManager::reserveSlot(const UserPtr& aUser, uint32_t aTime) {
+void UploadManager::reserveSlot(const UserPtr& aUser, uint64_t aTime) {
 	{
 		Lock l(cs);
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
@@ -539,7 +539,7 @@ void UploadManager::clearUserFiles(const UserPtr& aUser) {
 	}
 }
 
-UploadQueueItem::SlotQueue UploadManager::getWaitingUsers() {
+const UploadQueueItem::SlotQueue UploadManager::getWaitingUsers() {
 	Lock l(cs);
 	return waitingUsers;
 }

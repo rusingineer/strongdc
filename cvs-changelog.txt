@@ -1,3 +1,11 @@
+** svn312
+	try to fix numerous crashes in Identity
+	fixed another remote exploit (crash #3762)
+	fixed user menu in mainchat
+	clean up Grant slot menus
+	saved memory for large searches, userlists and finished items
+	removed ColumnBase
+
 ** svn311
 	ColumnBase's Node stores texts as an array of wchars to save very small memory
 	ColumnBase's Node and Emoticons use fast memory allocation

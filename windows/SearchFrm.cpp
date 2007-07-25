@@ -528,14 +528,14 @@ void SearchFrame::SearchInfo::view() {
 void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 	try {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
-			string target = Text::fromT(tgt + si->columns[COLUMN_FILENAME]);
+			string target = Text::fromT(tgt + si->getText(COLUMN_FILENAME));
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
 				si->sr->getTTH(), si->sr->getUser());
 			
 			for(SearchInfo::Iter i = si->subItems.begin(); i != si->subItems.end(); i++) {
 				SearchInfo* j = *i;
 				try {
-					QueueManager::getInstance()->add(Text::fromT(tgt + si->columns[COLUMN_FILENAME]), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser());
+					QueueManager::getInstance()->add(Text::fromT(tgt + si->getText(COLUMN_FILENAME)), j->sr->getSize(), j->sr->getTTH(), j->sr->getUser());
 				} catch(const Exception&) {
 				}
 			}
@@ -553,7 +553,7 @@ void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
 	try {
 		QueueItem::Priority prio = WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT;
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
-			QueueManager::getInstance()->addDirectory(Text::fromT(si->columns[COLUMN_PATH]), 
+			QueueManager::getInstance()->addDirectory(Text::fromT(si->getText(COLUMN_PATH)),
 			si->sr->getUser(), Text::fromT(tgt), prio);
 		} else {
 			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), 
@@ -582,7 +582,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 
 void SearchFrame::SearchInfo::getList() {
 	try {
-		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW, Text::fromT(columns[COLUMN_PATH]));
+		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW, Text::fromT(getText(COLUMN_PATH)));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}
@@ -590,7 +590,7 @@ void SearchFrame::SearchInfo::getList() {
 
 void SearchFrame::SearchInfo::browseList() {
 	try {
-		QueueManager::getInstance()->addPfs(sr->getUser(), Text::fromT(columns[COLUMN_PATH]));
+		QueueManager::getInstance()->addPfs(sr->getUser(), Text::fromT(getText(COLUMN_PATH)));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}
@@ -598,11 +598,11 @@ void SearchFrame::SearchInfo::browseList() {
 
 void SearchFrame::SearchInfo::CheckTTH::operator()(SearchInfo* si) {
 	if(firstTTH) {
-		tth = si->columns[COLUMN_TTH];
+		tth = si->getText(COLUMN_TTH);
 		hasTTH = true;
 		firstTTH = false;
 	} else if(hasTTH) {
-		if(tth != si->columns[COLUMN_TTH]) {
+		if(tth != si->getText(COLUMN_TTH)) {
 			hasTTH = false;
 		}
 	} 
@@ -622,11 +622,11 @@ LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		dcassert(i != -1);
-		const SearchInfo* si = ctrlResults.getItemData(i);
+		SearchInfo* si = ctrlResults.getItemData(i);
 		const SearchResult* sr = si->sr;
 	
 		if(sr->getType() == SearchResult::TYPE_FILE) {
-			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->columns[COLUMN_FILENAME];
+			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->getText(COLUMN_FILENAME);
 			if(WinUtil::browseFile(target, m_hWnd)) {
 				WinUtil::addLastDir(Util::getFilePath(target));
 				ctrlResults.forEachSelectedT(SearchInfo::DownloadTarget(target));
@@ -1037,8 +1037,8 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchInfo* si = (SearchInfo*)lParam;
 			SearchResult* sr = si->sr;
             // Check previous search results for dupes
-			if(!si->columns[COLUMN_TTH].empty() && useGrouping) {
-				SearchInfo* main = ctrlResults.findMainItem(si->columns[COLUMN_TTH]);
+			if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
+				SearchInfo* main = ctrlResults.findMainItem(sr->getTTH());
 				if(main) {
 					if((sr->getUser()->getCID() == main->sr->getUser()->getCID()) && (sr->getFile() == main->sr->getFile())) {	 	
 						delete si;	 	
@@ -1068,11 +1068,11 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					resort = true;
 				}
 
-				if(!si->columns[COLUMN_TTH].empty() && useGrouping) {
+				if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(si, expandSR);
 				} else {
 					ctrlResults.insertItem(si, si->imageIndex());
-					ctrlResults.mainItems.insert(make_pair(const_cast<tstring*>(&Util::emptyStringT), si));
+					ctrlResults.mainItems.insert(make_pair(const_cast<TTHValue*>(&sr->getTTH()), si));
 				}
 
 				if(!filter.empty())
@@ -1339,7 +1339,7 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 	lastSearches.clear();
 	return 0;
 }
-
+/*
 void SearchFrame::SearchInfo::update() { 
 	if(sr->getType() == SearchResult::TYPE_FILE) {
 		if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
@@ -1387,7 +1387,7 @@ void SearchFrame::SearchInfo::update() {
 	} else {
 		columns[COLUMN_UPLOAD] = _T("N/A");
 	}
-}
+}*/
 
 LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);

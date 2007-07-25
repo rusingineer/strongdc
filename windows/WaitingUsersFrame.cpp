@@ -448,7 +448,6 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 			return;
 		}
 	}
-	aUQI->update();
 	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->imageIndex());
 }
 
@@ -486,19 +485,18 @@ int UploadQueueItem::imageIndex() const {
 	return WinUtil::getIconIndex(Text::toT(file));
 }
 
-void UploadQueueItem::update(bool onSecond) {
-	bool firstUpdate = (columns.getRoot() == NULL);
-
-	if(!onSecond) {
-		columns.set(COLUMN_FILE, Text::toT(Util::getFileName(file)), firstUpdate);
-		columns.set(COLUMN_PATH, Text::toT(Util::getFilePath(file)), firstUpdate);
-		columns.set(COLUMN_NICK, Text::toT(user->getFirstNick()), firstUpdate);
-		columns.set(COLUMN_HUB, WinUtil::getHubNames(user).first, firstUpdate);
-		columns.set(COLUMN_SIZE, Util::formatBytesW(size), firstUpdate);
-		columns.set(COLUMN_ADDED, Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time)), firstUpdate);
+const tstring UploadQueueItem::getText(uint8_t col) const {
+	switch(col) {
+		case COLUMN_FILE: return Text::toT(Util::getFileName(file));
+		case COLUMN_PATH: return Text::toT(Util::getFilePath(file));
+		case COLUMN_NICK: return Text::toT(user->getFirstNick());
+		case COLUMN_HUB: return WinUtil::getHubNames(user).first;
+		case COLUMN_SIZE: return Util::formatBytesW(size);
+		case COLUMN_ADDED: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time));
+		case COLUMN_TRANSFERRED: return Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)");
+		case COLUMN_WAITING: return Util::formatSeconds(GET_TIME() - time);
+		default: return Util::emptyStringT;
 	}
-	columns.set(COLUMN_TRANSFERRED, Util::formatBytesW(pos) + _T(" (") + Util::toStringW((double)pos*100.0/(double)size) + _T("%)"), firstUpdate);
-	columns.set(COLUMN_WAITING, Util::formatSeconds(GET_TIME() - time), firstUpdate);
 }
 
 LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -528,8 +526,8 @@ LRESULT WaitingUsersFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam
 		break;
 	case UPDATE_ITEMS:
 		for(int i = 0; i < ctrlList.GetItemCount(); i++) {
-			ctrlList.getItemData(i)->update(true);
-			ctrlList.updateItem(i);
+			ctrlList.updateItem(i, UploadQueueItem::COLUMN_TRANSFERRED);
+			ctrlList.updateItem(i, UploadQueueItem::COLUMN_WAITING);
 		}
 		break;
 	}

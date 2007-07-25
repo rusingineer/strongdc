@@ -65,6 +65,14 @@ public:
 
 	static string validateMessage(string tmp, bool reverse);
 	void refreshUserList(bool);
+
+	void getUserList(OnlineUser::List& list) const {
+		Lock l(cs);
+		for(NickIter i = users.begin(); i != users.end(); i++) {
+			i->second->inc();
+			list.push_back(i->second);
+		}
+	}
 	
 private:
 	friend class ClientManager;
@@ -81,17 +89,9 @@ private:
 
 	NickMap users;
 
-	void getUserList(OnlineUser::List& list) const {
-		Lock l(cs);
-		for(NickIter i = users.begin(); i != users.end(); i++) {
-			i->second->inc();
-			list.push_back(i->second);
-		}
-	}
-
-	int supportFlags;
 	string lastmyinfo;
 	int64_t lastbytesshared;
+	int supportFlags;
 
 	typedef list<pair<string, uint64_t> > FloodMap;
 	typedef FloodMap::const_iterator FloodIter;

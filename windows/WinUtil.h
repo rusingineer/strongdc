@@ -46,7 +46,7 @@ COLORREF HLS2RGB (HLSCOLOR hls);
 
 COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S);
 
-template<class T, bool B = false>
+template<class T>
 class UserInfoBaseHandler {
 public:
 	BEGIN_MSG_MAP(UserInfoBaseHandler)
@@ -59,169 +59,56 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
 		COMMAND_ID_HANDLER(IDC_GRANTSLOT, onGrantSlot)
 		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_HOUR, onGrantSlotHour)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_DAY, onGrantSlotDay)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_WEEK, onGrantSlotWeek)
-		COMMAND_ID_HANDLER(IDC_UNGRANTSLOT, onUnGrantSlot)
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
 	END_MSG_MAP()
 
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::matchQueue);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::matchQueue);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::matchQueue);
 		return 0;
 	}
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getList);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::getList);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::getList);
 		return 0;
 	}
 	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::browseList);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::browseList);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::browseList);
 		return 0;
 	}
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::doReport);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::doReport);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::doReport);
 		return 0;
 	}
 
 	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::getUserResponses);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::getUserResponses);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::getUserResponses);
 		return 0;
 	}
 
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::checkList);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::checkList);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::checkList);
 		return 0;
 	}
 
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::addFav);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::addFav);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::addFav);
 		return 0;
 	}
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::pm);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::pm);
-		}		
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::pm);
 		return 0;
 	}
-	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grant);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::grant);
+	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		switch(wID) {
+			case IDC_GRANTSLOT:		((T*)this)->getUserList().forEachSelected(&UserInfoBase::grant); break;
+			case IDC_GRANTSLOT_DAY:	((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantDay); break;
+			case IDC_GRANTSLOT_HOUR:	((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantHour); break;
+			case IDC_GRANTSLOT_WEEK:	((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantWeek); break;
+			case IDC_UNGRANTSLOT:	((T*)this)->getUserList().forEachSelected(&UserInfoBase::ungrant); break;
 		}
 		return 0;
 	}
 	LRESULT onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::removeAll);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::removeAll);
-		}
-		return 0;
-	}
-	LRESULT onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotHour);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantSlotHour);
-		}
-		return 0;
-	}
-	LRESULT onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotDay);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantSlotDay);
-		}
-		return 0;
-	}
-	LRESULT onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::grantSlotWeek);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::grantSlotWeek);
-		}
-		return 0;
-	}
-
-	LRESULT onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/){ 
-		if(B && !ChatCtrl::sSelectedUser.empty()) {
-			int nAtPos = ((T*)this)->getUserList().findItem(ChatCtrl::sSelectedUser);
-			if ( nAtPos >= 0 ) {
-				((T*)this)->getUserList().forEachAtPos(nAtPos, &UserInfoBase::ungrantSlot);
-			}
-		} else {
-			((T*)this)->getUserList().forEachSelected(&UserInfoBase::ungrantSlot);
-		}
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::removeAll);
 		return 0;
 	}
 

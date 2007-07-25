@@ -294,16 +294,16 @@ void UserInfoBase::grant() {
 void UserInfoBase::removeAll() {
 	QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
 }
-void UserInfoBase::grantSlotHour() {
+void UserInfoBase::grantHour() {
 	UploadManager::getInstance()->reserveSlot(getUser(), 3600);
 }
-void UserInfoBase::grantSlotDay() {
+void UserInfoBase::grantDay() {
 	UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
 }
-void UserInfoBase::grantSlotWeek() {
+void UserInfoBase::grantWeek() {
 	UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
 }
-void UserInfoBase::ungrantSlot() {
+void UserInfoBase::ungrant() {
 	UploadManager::getInstance()->unreserveSlot(getUser());
 }
 

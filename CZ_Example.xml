@@ -332,7 +332,7 @@
 		<String Name="MenuCloseAllSearchframe">Zavři všechna vyhledávání</String>
 		<String Name="MenuCloseDisconnected">Zavřít odpojené</String>
 		<String Name="MenuDiscuss">StrongDC++ diskuzní fórum</String>
-		<String Name="MenuDonate">Podpořit</String>
+		<String Name="MenuDonate">Podpořit vývoj</String>
 		<String Name="MenuDownloadQueue">&amp;Fronta stahování	Ctrl+D</String>
 		<String Name="MenuExit">&amp;Zavřít</String>
 		<String Name="MenuFaq">Nejčastěji kladené dotazy</String>	
@@ -722,7 +722,7 @@
 		<String Name="SettingsToolbarRemove">&lt;-- Odebrat</String>
 		<String Name="SettingsUdpPort">UDP</String>
 		<String Name="SettingsUnfinishedDownloadDirectory">Složka pro nedokončené stahování</String>
-		<String Name="SettingsUploadLineSpeed">Rychlost linky</String>
+		<String Name="SettingsUploadLineSpeed">Rychlost uploadu linky</String>
 		<String Name="SettingsUploads">Sdílení</String>
 		<String Name="SettingsUploadsMinSpeed">Automaticky otevřít další slot, když je rychlost pod (0 = vyp.)</String>
 		<String Name="SettingsUploadsSlots">Sloty pro Odesílání</String>
