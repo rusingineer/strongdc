@@ -45,7 +45,7 @@ public:
 			case COLUMN_SIZE: return compare(a->size, b->size);
 			case COLUMN_ADDED:
 			case COLUMN_WAITING: return compare(a->time, b->time);
-			default: return Util::stricmp(a->columns[col], b->columns[col]);
+			default: return Util::stricmp(a->getText(col), b->getText(col));
 		}
 		return 0;
 	}
@@ -63,9 +63,8 @@ public:
 		COLUMN_LAST
 	};
 		
-	inline const wchar_t* getText(uint8_t col) const { return columns[col]; }
+	const tstring getText(uint8_t col) const;
 	int imageIndex() const;
-	void update(bool onSecond = false);
 
 	const string& getFile() const { return file; }
 	const UserPtr& getUser() const { return user; }
@@ -73,7 +72,6 @@ public:
 	uint64_t getTime() const { return time; }
 
 	GETSET(int64_t, pos, Pos);
-	ColumnBase columns;
 private:
 	string file;
 	int64_t size;
@@ -106,10 +104,10 @@ public:
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
-	void reserveSlot(const UserPtr& aUser, uint32_t aTime);
+	void reserveSlot(const UserPtr& aUser, uint64_t aTime);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
-	UploadQueueItem::SlotQueue getWaitingUsers();
+	const UploadQueueItem::SlotQueue getWaitingUsers();
 	bool hasReservedSlot(const UserPtr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
 	bool isConnecting(const UserPtr& aUser) const { return connectingUsers.find(aUser) != connectingUsers.end(); }
 

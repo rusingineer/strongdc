@@ -31,7 +31,7 @@
 #include "ResourceManager.h"
 #include "FavoriteManager.h"
 
-OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_) { 
+OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
 	inc();
 }
 
@@ -310,6 +310,8 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 			if(!a_isFav && b_isFav)
 				return 1;
 		}
+		// workaround for faster hub loading
+		return lstrcmpiA(a->identity.getNick().c_str(), b->identity.getNick().c_str());
 	}
 	switch(col) {
 		case COLUMN_SHARED:
@@ -317,42 +319,46 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 		case COLUMN_SLOTS: return compare(Util::toInt(a->identity.get("SL")), Util::toInt(b->identity.get("SL")));
 		case COLUMN_HUBS: return compare(Util::toInt(a->identity.get("HN"))+Util::toInt(a->identity.get("HR"))+Util::toInt(a->identity.get("HO")), Util::toInt(b->identity.get("HN"))+Util::toInt(b->identity.get("HR"))+Util::toInt(b->identity.get("HO")));
 	}
-	return lstrcmpi(a->columns[col], b->columns[col]);
+	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
+}
+
+const tstring OnlineUser::getText(uint8_t col) const {
+	switch(col) {
+		case COLUMN_NICK: return Text::toT(identity.getNick());
+		case COLUMN_SHARED: return Util::formatBytesW(identity.getBytesShared());
+		case COLUMN_EXACT_SHARED: return Util::formatExactSize(identity.getBytesShared());
+		case COLUMN_DESCRIPTION: return Text::toT(identity.getDescription());
+		case COLUMN_TAG: return Text::toT(identity.getTag());
+		case COLUMN_CONNECTION: return Text::toT(identity.getConnection());
+		case COLUMN_IP: {
+			tstring ip = Text::toT(identity.getIp());
+			tstring country = ip.empty() ? Util::emptyStringT : Util::getIpCountry(ip);
+			if (!country.empty())
+				ip = country + _T(" (") + ip + _T(")");
+			return ip;
+		}
+		case COLUMN_EMAIL: return Text::toT(identity.getEmail());
+		case COLUMN_VERSION: return Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"));
+		case COLUMN_MODE: return identity.isTcpActive() ? _T("A") : _T("P");
+		case COLUMN_HUBS: {
+			const tstring hn = Text::toT(identity.get("HN"));
+			const tstring hr = Text::toT(identity.get("HR"));
+			const tstring ho = Text::toT(identity.get("HO"));
+			return (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho);
+		}
+		case COLUMN_SLOTS: return Text::toT(identity.get("SL"));
+		default: return Util::emptyStringT;
+	}
 }
 
 tstring old = Util::emptyStringT;
-bool OnlineUser::update(int sortCol) {
+bool OnlineUser::update(int sortCol, const tstring& oldText) {
 	bool needsSort = ((identity.get("WO").empty() ? false : true) != identity.isOp());
-	bool firstUpdate = (sortCol == -1);
-
-	if(!firstUpdate)
-		old = columns.get(static_cast<uint8_t>(sortCol));
-
-	const tstring hn = Text::toT(identity.get("HN"));
-	const tstring hr = Text::toT(identity.get("HR"));
-	const tstring ho = Text::toT(identity.get("HO"));
-
-	columns.set(COLUMN_NICK, Text::toT(identity.getNick()), firstUpdate);
-	columns.set(COLUMN_SHARED, Util::formatBytesW(identity.getBytesShared()), firstUpdate);
-	columns.set(COLUMN_EXACT_SHARED, Util::formatExactSize(identity.getBytesShared()), firstUpdate);
-	columns.set(COLUMN_DESCRIPTION, Text::toT(identity.getDescription()), firstUpdate);
-	columns.set(COLUMN_TAG, Text::toT(identity.getTag()), firstUpdate);
-	columns.set(COLUMN_EMAIL, Text::toT(identity.getEmail()), firstUpdate);
-	columns.set(COLUMN_CONNECTION, Text::toT(identity.getConnection()), firstUpdate);
-	columns.set(COLUMN_VERSION, Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT")), firstUpdate);
-	columns.set(COLUMN_MODE, identity.isTcpActive() ? _T("A") : _T("P"), firstUpdate);
-	columns.set(COLUMN_HUBS, (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho), firstUpdate);
-	columns.set(COLUMN_SLOTS, Text::toT(identity.get("SL")), firstUpdate);
 	
-	tstring ip = Text::toT(identity.getIp());
-	tstring country = ip.empty() ? Util::emptyStringT : Util::getIpCountry(ip);
-	if (!country.empty())
-		ip = country + _T(" (") + ip + _T(")");
-	
-	columns.set(COLUMN_IP, ip, firstUpdate);
-
-	if(!firstUpdate) {
-		needsSort = needsSort || (old != columns.get(static_cast<uint8_t>(sortCol)));
+	if(sortCol == -1) {
+		isInList = true;
+	} else {
+		needsSort = needsSort || (oldText != getText(static_cast<uint8_t>(sortCol)));
 	}
 
 	return needsSort;

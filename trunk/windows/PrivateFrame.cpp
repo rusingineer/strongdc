@@ -468,30 +468,23 @@ LRESULT PrivateFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
-LRESULT PrivateFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlot(replyTo, 600);
+LRESULT PrivateFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	uint64_t time = 0;
+	switch(wID) {
+		case IDC_GRANTSLOT:			time = 600; break;
+		case IDC_GRANTSLOT_DAY:		time = 3600; break;
+		case IDC_GRANTSLOT_HOUR:	time = 24*3600; break;
+		case IDC_GRANTSLOT_WEEK:	time = 7*24*3600; break;
+		case IDC_UNGRANTSLOT:		time = 0; break;
+	}
+	
+	if(time > 0)
+		UploadManager::getInstance()->reserveSlot(replyTo, time);
+	else
+		UploadManager::getInstance()->unreserveSlot(replyTo);
+
 	return 0;
 }
-
-LRESULT PrivateFrame::onGrantSlotHour(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlot(replyTo, 3600);
-	return 0;
-};
-
-LRESULT PrivateFrame::onGrantSlotDay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlot(replyTo, 24*3600);
-	return 0;
-};
-
-LRESULT PrivateFrame::onGrantSlotWeek(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->reserveSlot(replyTo, 7*24*3600);
-	return 0;
-};
-
-LRESULT PrivateFrame::onUnGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	UploadManager::getInstance()->unreserveSlot(replyTo);
-	return 0;
-};
 
 LRESULT PrivateFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	FavoriteManager::getInstance()->addFavoriteUser(replyTo);

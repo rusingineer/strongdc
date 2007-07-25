@@ -371,14 +371,6 @@ protected:
 	}
 
 	void addEntry(FinishedItem* entry) {
-		entry->columns.set(FinishedItem::COLUMN_FILE, Text::toT(Util::getFileName(entry->getTarget())));
-		entry->columns.set(FinishedItem::COLUMN_DONE, Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", entry->getTime())));
-		entry->columns.set(FinishedItem::COLUMN_PATH, Text::toT(Util::getFilePath(entry->getTarget())));
-		entry->columns.set(FinishedItem::COLUMN_NICK, Text::toT(entry->getUser()->getFirstNick()));
-		entry->columns.set(FinishedItem::COLUMN_HUB, Text::toT(entry->getHub()));
-		entry->columns.set(FinishedItem::COLUMN_SIZE, Util::formatBytesW(entry->getSize()));
-		entry->columns.set(FinishedItem::COLUMN_SPEED, Util::formatBytesW(entry->getAvgSpeed()) + _T("/s"));
-
 		totalBytes += entry->getChunkSize();
 		totalTime += entry->getMilliSeconds();
 

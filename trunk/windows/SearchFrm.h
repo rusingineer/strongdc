@@ -261,7 +261,7 @@ private:
 	class SearchInfo;
 
 public:
-	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS> SearchInfoList;
+	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS, TTHValue, TTHValue::PtrHash, TTHValue::PtrHash> SearchInfoList;
 	SearchInfoList& getUserList() { return ctrlResults; }
 
 private:
@@ -309,7 +309,7 @@ private:
 		SearchInfo::List subItems;
 
 		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), main(NULL) { 
-			sr->incRef(); update();
+			sr->incRef(); /*update()*/;
 		}
 		~SearchInfo() {
 			sr->decRef(); 
@@ -350,7 +350,65 @@ private:
 			tstring tth;
 		};
         
-		inline const tstring& getText(uint8_t col) const { return columns[col]; }
+		inline const tstring getText(uint8_t col) const {
+			switch(col) {
+				case COLUMN_FILENAME:
+					if(sr->getType() == SearchResult::TYPE_FILE) {
+    					if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
+    						return Text::toT(sr->getFile());
+    					} else {
+	    					return Text::toT(Util::getFileName(sr->getFile()));
+						}      
+					} else {
+						return Text::toT(sr->getFileName());
+					}
+				case COLUMN_HITS: return subItems.empty() ? Util::emptyStringT : Util::toStringW(subItems.size() + 1) + _T(' ') + TSTRING(USERS);
+				case COLUMN_NICK: return Text::toT(sr->getUser()->getFirstNick());
+				case COLUMN_TYPE:
+					if(sr->getType() == SearchResult::TYPE_FILE) {
+						tstring type = Text::toT(Util::getFileExt(Text::fromT(getText(COLUMN_FILENAME))));
+						if(!type.empty() && type[0] == _T('.'))
+							type.erase(0, 1);
+						return type;
+					} else {
+						return TSTRING(DIRECTORY);
+					}
+				case COLUMN_SIZE: return sr->getSize() > 0 ? Util::formatBytesW(sr->getSize()) : Util::emptyStringT;
+				case COLUMN_PATH:
+					if(sr->getType() == SearchResult::TYPE_FILE) {
+						return Text::toT(Util::getFilePath(sr->getFile()));
+					} else {
+						return Text::toT(sr->getFile());
+					}
+				case COLUMN_SLOTS: return Text::toT(sr->getSlotString());
+				case COLUMN_CONNECTION: return Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()));
+				case COLUMN_HUB: return Text::toT(sr->getHubName());
+				case COLUMN_EXACT_SIZE: return sr->getSize() > 0 ? Util::formatExactSize(sr->getSize()) : Util::emptyStringT;
+				case COLUMN_UPLOAD:
+					if (sr->getUser()->getLastDownloadSpeed() > 0) {
+ 						return Util::toStringW(sr->getUser()->getLastDownloadSpeed()) + _T(" kB/s");
+ 					} else if(getUser()->isSet(User::FIREBALL)) {
+ 						return _T(">=100 kB/s");
+ 					} else {
+ 						return _T("N/A");
+ 					}		
+				case COLUMN_IP: {
+					tstring ip = Text::toT(sr->getIP());
+ 					//flagimage = 0;
+ 					if (!ip.empty()) {
+ 						// Only attempt to grab a country mapping if we actually have an IP address
+ 						tstring tmpCountry = Util::getIpCountry(ip);
+ 						if(!tmpCountry.empty()) {
+ 							ip = tmpCountry + _T(" (") + ip + _T(")");
+ 							//flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
+ 						}
+ 					}
+ 					return ip;
+				}
+				case COLUMN_TTH: return sr->getType() == SearchResult::TYPE_FILE ? Text::toT(sr->getTTH().toBase32()) : Util::emptyStringT;
+				default: return Util::emptyStringT;
+			}
+		}
 
 		static int compareItems(const SearchInfo* a, const SearchInfo* b, uint8_t col) {
 			if(!a->sr || !b->sr)
@@ -359,7 +417,7 @@ private:
 			switch(col) {
 				case COLUMN_TYPE: 
 					if(a->sr->getType() == b->sr->getType())
-						return lstrcmpi(a->columns[COLUMN_TYPE].c_str(), b->columns[COLUMN_TYPE].c_str());
+						return lstrcmpi(a->getText(COLUMN_TYPE).c_str(), b->getText(COLUMN_TYPE).c_str());
 					else
 						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
 				case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
@@ -370,7 +428,7 @@ private:
 						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
 				case COLUMN_SIZE:
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_UPLOAD: return compare(a->columns[COLUMN_UPLOAD],b->columns[COLUMN_UPLOAD]);
+				case COLUMN_UPLOAD: return compare(a->getText(COLUMN_UPLOAD), b->getText(COLUMN_UPLOAD));
 				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}
@@ -402,24 +460,24 @@ private:
 			return image;
 		}
 
-		void update();
+		/*void update();*/
 		
 		SearchInfo* createMainItem() { return this; }
-		const tstring& getGroupingString() const { return columns[COLUMN_TTH]; }
+		const TTHValue& getGroupingString() const { return sr->getTTH(); }
 		void updateMainItem() {
-			if(!main->subItems.empty()) {
-				TCHAR buf[256];
-				snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size() + 1, CTSTRING(USERS));
-				main->columns[COLUMN_HITS] = buf;
-				
-				//if(total == 1)
-				//	main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
-			} else {
-				main->columns[COLUMN_HITS] = Util::emptyStringT;
-			}
+			//if(!main->subItems.empty()) {
+			//	TCHAR buf[256];
+			//	snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size() + 1, CTSTRING(USERS));
+			//	main->columns[COLUMN_HITS] = buf;
+			//	
+			//	//if(total == 1)
+			//	//	main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
+			//} else {
+			//	main->columns[COLUMN_HITS] = Util::emptyStringT;
+			//}
 		}
 
-		tstring columns[COLUMN_LAST];
+		//tstring columns[COLUMN_LAST];
 		SearchResult* sr;
 				
 		GETSET(uint8_t, flagimage, FlagImage);
@@ -429,8 +487,8 @@ private:
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
 
-		const tstring& getText(uint8_t col) const {
-			return (col == 0) ? name : Util::emptyStringT;
+		const TCHAR* getText(uint8_t col) const {
+			return (col == 0) ? name.c_str() : Util::emptyStringT.c_str();
 		}
 		static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;

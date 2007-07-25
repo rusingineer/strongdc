@@ -118,14 +118,14 @@ public:
 		return 1;
 	}
 
-	inline TCHAR* getText(const tstring& text) const { return const_cast<TCHAR*>(text.c_str()); }
-	inline TCHAR* getText(const wchar_t* text) const { return const_cast<TCHAR*>(text); }
+	inline void setText(LVITEMW& i, const tstring text) { lstrcpyn(i.pszText, text.c_str(), i.cchTextMax); }
+	inline void setText(LVITEMW& i, const wchar_t* text) { i.pszText = const_cast<TCHAR*>(text); }
 
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
 		if(di->item.mask & LVIF_TEXT) {
 			di->item.mask |= LVIF_DI_SETITEM;
-			di->item.pszText = getText(((T*)di->item.lParam)->getText(columnIndexes[di->item.iSubItem]));
+			setText(di->item, ((T*)di->item.lParam)->getText(columnIndexes[di->item.iSubItem]));
 		}
 		return 0;
 	}
@@ -251,6 +251,8 @@ public:
 		for(int j = 0; j < k; ++j)
 			SetItemText(i, j, LPSTR_TEXTCALLBACK);
 	}
+	
+	void updateItem(int i, int col) { SetItemText(i, col, LPSTR_TEXTCALLBACK); }
 	void updateItem(const T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
 	void deleteItem(const T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
@@ -591,7 +593,7 @@ private:
 };
 
 // Copyright (C) 2005-2007 Big Muscle, StrongDC++
-template<class T, int ctrlId>
+template<class T, int ctrlId, class key = tstring, class hashFunc = noCaseStringHash, class equalKey = noCaseStringEq>
 class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
 {
 public:
@@ -604,7 +606,7 @@ public:
 	
 	//typedef vector<T*> subItemsList;
 	//typedef pair<T*, subItemsList> treePair;
-	typedef HASH_MAP<tstring*, T*, noCaseStringHash, noCaseStringEq> TreeMap;
+	typedef HASH_MAP<key*, T*, hashFunc, equalKey> TreeMap;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -681,8 +683,8 @@ public:
 		InsertItem(&lvi);
 	}
 
-	inline T* findMainItem(const tstring& groupingString) const {
-		TreeMap::const_iterator i = mainItems.find(const_cast<tstring*>(&groupingString));
+	inline T* findMainItem(const key& groupingString) const {
+		TreeMap::const_iterator i = mainItems.find(const_cast<key*>(&groupingString));
 		return i != mainItems.end() ? (*i).second : NULL;
 	}
 
@@ -696,7 +698,7 @@ public:
 
 		if(mainItem == NULL) {
 			mainItem = item->createMainItem();
-			mainItems.insert(make_pair(const_cast<tstring*>(&mainItem->getGroupingString()), mainItem));
+			mainItems.insert(make_pair(const_cast<key*>(&mainItem->getGroupingString()), mainItem));
 
 			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
@@ -737,7 +739,8 @@ public:
 			delete *i;
 		}
 		mainItem->subItems.clear();
-		mainItems.erase(const_cast<tstring*>(&mainItem->getGroupingString()));
+		//dcassert(mainItems.find(const_cast<key*>(&mainItem->getGroupingString())) != mainItems.end());
+		mainItems.erase(const_cast<key*>(&mainItem->getGroupingString()));
 	}
 
 	void removeGroupedItem(T* item, bool removeFromMemory = true) {

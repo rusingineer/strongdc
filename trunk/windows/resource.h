@@ -160,7 +160,6 @@
 #define IDC_RAW_THREE                   1046
 #define IDC_HUBDESCR                    1047
 #define IDC_HUBADDR                     1048
-#define IDC_GRANTSLOT                   1049
 #define IDC_RAW_FOUR                    1049
 #define IDC_SETTINGS_LIST_CONFIG        1049
 #define IDC_FORCE                       1050
@@ -629,7 +628,6 @@
 #define IDC_EXTRA_DOWN_SLOT             10003
 #define IDC_EXTRA_DOWNLOADS_MAX         10004
 #define IDC_ERROR_COLOR                 10005
-#define IDC_UNGRANTSLOT                 10006
 #define IDC_UPTIME                      10007
 #define IDD_LIMITPAGE                   10008
 #define IDC_CZDC_SLOW_DISCONNECT        10009
@@ -699,9 +697,11 @@
 #define IDC_BW_END_TIME                 10075
 #define IDC_UPLOADSPEEDSPIN_TIME        10077
 #define IDC_DOWNLOADSPEEDSPIN_TIME      10078
-#define IDC_GRANTSLOT_HOUR              10079
-#define IDC_GRANTSLOT_DAY               10080
-#define IDC_GRANTSLOT_WEEK              10081
+#define IDC_GRANTSLOT                   10080
+#define IDC_GRANTSLOT_HOUR              10081
+#define IDC_GRANTSLOT_DAY               10082
+#define IDC_GRANTSLOT_WEEK              10083
+#define IDC_UNGRANTSLOT                 10084
 #define IDC_UPLOAD_QUEUE                10085
 #define IDC_THROTTLE_ENABLE             10093
 #define IDC_DISCONNECTING_ENABLE        10094

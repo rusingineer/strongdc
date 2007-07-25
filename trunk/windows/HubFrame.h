@@ -46,7 +46,7 @@ struct CompareItems;
 
 class HubFrame : public MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF>, private ClientListener, 
 	public CSplitterImpl<HubFrame>, private FavoriteManagerListener, private TimerManagerListener,
-	public UCHandler<HubFrame>, public UserInfoBaseHandler<HubFrame, true>, private SettingsManagerListener
+	public UCHandler<HubFrame>, private SettingsManagerListener
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("HubFrame"), IDR_HUB, 0, COLOR_3DFACE);
@@ -54,7 +54,6 @@ public:
 	typedef CSplitterImpl<HubFrame> splitBase;
 	typedef MDITabChildWindowImpl<HubFrame, RGB(255, 0, 0), IDR_HUB, IDR_HUB_OFF> baseClass;
 	typedef UCHandler<HubFrame> ucBase;
-	typedef UserInfoBaseHandler<HubFrame, true> uibBase;
 	
 	BEGIN_MSG_MAP(HubFrame)
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)
@@ -103,6 +102,20 @@ public:
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_WHOIS_IP, onWhoisIP)
 		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
+		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
+		COMMAND_ID_HANDLER(IDC_BROWSELIST, onBrowseList)
+		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
+		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
+		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
+		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPrivateMessage)
+		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
+		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
+		COMMAND_ID_HANDLER(IDC_GRANTSLOT, onGrantSlot)
+		COMMAND_ID_HANDLER(IDC_GRANTSLOT_HOUR, onGrantSlot)
+		COMMAND_ID_HANDLER(IDC_GRANTSLOT_DAY, onGrantSlot)
+		COMMAND_ID_HANDLER(IDC_GRANTSLOT_WEEK, onGrantSlot)
+		COMMAND_ID_HANDLER(IDC_UNGRANTSLOT, onGrantSlot)
+		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
 		COMMAND_RANGE_HANDLER(IDC_EMOMENU, IDC_EMOMENU + menuItems, onEmoPackChange);
 		NOTIFY_HANDLER(IDC_USERS, NM_CUSTOMDRAW, onCustomDraw)
 		COMMAND_ID_HANDLER(IDC_COPY_IP, onCopyUserInfo)
@@ -113,7 +126,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_IGNORE, onIgnore)
 		COMMAND_ID_HANDLER(IDC_UNIGNORE, onUnignore)
 		CHAIN_COMMANDS(ucBase)
-		CHAIN_COMMANDS(uibBase)
 		CHAIN_MSG_MAP(baseClass)
 		CHAIN_MSG_MAP(splitBase)
 	ALT_MSG_MAP(EDIT_MESSAGE_MAP)
@@ -173,6 +185,17 @@ public:
 	LRESULT onSizeMove(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled); 
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+
+	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onRemoveAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
 		if (hWndCtl != ctrlEmoticons.m_hWnd) {
@@ -467,7 +490,7 @@ private:
 	void addAsFavorite();
 	void removeFavoriteHub();
 
-	void clearUserList(bool clearData = false);
+	void clearUserList();
 	void clearTaskList();
 
 	int hubchatusersplit;
